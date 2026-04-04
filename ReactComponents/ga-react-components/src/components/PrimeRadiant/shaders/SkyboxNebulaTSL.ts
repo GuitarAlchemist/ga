@@ -21,7 +21,7 @@ import {
   mix, smoothstep, step,
   normalize, length, max, abs, sin, cos, pow,
 } from 'three/tsl';
-import { fbm6, hash3 } from './TSLNoiseLib';
+import { fbm3, noise3, hash3 } from './TSLNoiseLib';
 import type { QualityTier } from './TSLUniforms';
 
 export interface SkyboxNebulaOptions {
@@ -53,7 +53,9 @@ export function createSkyboxNebulaMaterialTSL(
     // ─── Cosmic web as DARKENING ───
     // Real voids are where filaments aren't — we model filaments as subtle
     // brightness (barely), voids as additional darkness. No purple-ish tint.
-    const web = fbm6(dir.mul(1.3).add(vec3(11.3, 4.7, 8.1)));
+    // fbm3 (3 octaves) is sufficient at this low-frequency scale; fbm6 was
+    // overkill — dropping halves the noise samples per fragment.
+    const web = fbm3(dir.mul(1.3).add(vec3(11.3, 4.7, 8.1)));
     const voidMask = smoothstep(0.55, 0.35, web); // dark where noise is low
     baseColor.mulAssign(float(1.0).sub(voidMask.mul(0.55)));
     // Very subtle warm hint in filament crests
@@ -61,18 +63,22 @@ export function createSkyboxNebulaMaterialTSL(
     baseColor.addAssign(vec3(1.0, 0.6, 0.4).mul(filamentHint));
 
     // ─── Regional nebulae — small, sparse, tight masks ───
+    // Nebulae cover only a few percent of the sphere (masked by distance),
+    // and at their high sampling scales a single noise3 gives plenty of
+    // texture. Using fbm6 here burned 12 noise samples per fragment for
+    // pixels that were almost always going to have mask=0.
     // Orion-like (pink-red)
     const orionCenter = normalize(vec3(0.5, 0.2, -0.8));
     const orionDist = length(dir.sub(orionCenter));
     const orionMask = smoothstep(0.45, 0.05, orionDist);
-    const orionNoise = fbm6(dir.mul(5.0).add(vec3(1.3, 2.7, 0.5)));
+    const orionNoise = noise3(dir.mul(5.0).add(vec3(1.3, 2.7, 0.5)));
     baseColor.addAssign(vec3(0.07, 0.015, 0.025).mul(orionMask).mul(orionNoise));
 
     // Carina-like (blue-teal)
     const carinaCenter = normalize(vec3(-0.6, -0.3, 0.7));
     const carinaDist = length(dir.sub(carinaCenter));
     const carinaMask = smoothstep(0.40, 0.05, carinaDist);
-    const carinaNoise = fbm6(dir.mul(6.0).add(vec3(3.1, 0.4, 1.8)));
+    const carinaNoise = noise3(dir.mul(6.0).add(vec3(3.1, 0.4, 1.8)));
     baseColor.addAssign(vec3(0.012, 0.035, 0.055).mul(carinaMask).mul(carinaNoise));
 
     // Grid helpers
