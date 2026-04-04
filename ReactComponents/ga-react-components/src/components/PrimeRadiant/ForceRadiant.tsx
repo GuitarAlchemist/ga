@@ -85,6 +85,9 @@ import { createComplianceRivers, type ComplianceRiverHandle } from './Compliance
 // MoebiusShader, CausticsShader, DispersionShader — TSL port pending (old GLSL imports removed)
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
+import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
+import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
+import { createGodRayMaterialTSL } from './shaders/GodRayTSL';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
@@ -315,123 +318,19 @@ function generateFractalTexture(baseColor: THREE.Color, complexity: number): THR
 }
 
 // ---------------------------------------------------------------------------
-// Raymarched volumetric sphere shader — fractal noise inside each node
-// Each node looks like a glowing plasma orb with swirling internal structure
+// Volumetric node material — TSL fractal FBM glow (replaces GLSL ShaderMaterial)
+// Cache by color+complexity+intensity; create fresh instances (no clone — NodeMaterial).
 // ---------------------------------------------------------------------------
-const volumetricVertexShader = /* glsl */ `
-  varying vec3 vWorldPos;
-  varying vec3 vNormal;
-  varying vec3 vViewDir;
-  varying vec2 vUv;
+const volumetricMaterialCache = new Map<string, { color: THREE.Color; complexity: number; intensity: number }>();
 
-  void main() {
-    vUv = uv;
-    vNormal = normalize(normalMatrix * normal);
-    vec4 worldPos = modelMatrix * vec4(position, 1.0);
-    vWorldPos = worldPos.xyz;
-    vViewDir = normalize(cameraPosition - worldPos.xyz);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const volumetricFragmentShader = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uTime;
-  uniform float uComplexity;
-  uniform float uIntensity;
-
-  varying vec3 vWorldPos;
-  varying vec3 vNormal;
-  varying vec3 vViewDir;
-  varying vec2 vUv;
-
-  // Simplex-like 3D noise (compact hash-based)
-  vec3 hash33(vec3 p) {
-    p = fract(p * vec3(443.897, 441.423, 437.195));
-    p += dot(p, p.yzx + 19.19);
-    return fract((p.xxy + p.yxx) * p.zyx);
-  }
-
-  float noise3d(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    float n = mix(
-      mix(mix(dot(hash33(i), f), dot(hash33(i + vec3(1,0,0)), f - vec3(1,0,0)), f.x),
-          mix(dot(hash33(i + vec3(0,1,0)), f - vec3(0,1,0)), dot(hash33(i + vec3(1,1,0)), f - vec3(1,1,0)), f.x), f.y),
-      mix(mix(dot(hash33(i + vec3(0,0,1)), f - vec3(0,0,1)), dot(hash33(i + vec3(1,0,1)), f - vec3(1,0,1)), f.x),
-          mix(dot(hash33(i + vec3(0,1,1)), f - vec3(0,1,1)), dot(hash33(i + vec3(1,1,1)), f - vec3(1,1,1)), f.x), f.y), f.z);
-    return n * 0.5 + 0.5;
-  }
-
-  // Fractal Brownian motion — self-similar at multiple scales
-  float fbm(vec3 p, int octaves) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-    for (int i = 0; i < 3; i++) {
-      if (i >= octaves) break;
-      value += amplitude * noise3d(p * frequency);
-      frequency *= 2.0;
-      amplitude *= 0.5;
-    }
-    return value;
-  }
-
-  void main() {
-    // Fresnel rim glow
-    float fresnel = 1.0 - dot(vNormal, vViewDir);
-    fresnel = pow(fresnel, 2.5);
-
-    // Fractal noise in object space (animated)
-    vec3 noiseCoord = vWorldPos * 0.3 + uTime * 0.15;
-    int octaves = int(uComplexity) + 2;
-    float fractalNoise = fbm(noiseCoord, octaves);
-
-    // Second noise layer at different frequency (creates swirling)
-    float swirl = fbm(noiseCoord * 2.3 + vec3(uTime * 0.1, 0.0, uTime * -0.08), octaves);
-
-    // Combine: core brightness + fractal pattern + Fresnel rim
-    float coreBright = smoothstep(0.6, 0.0, length(vUv - 0.5) * 2.0);
-    float pattern = mix(fractalNoise, swirl, 0.4) * coreBright;
-
-    // Color: base color modulated by fractal, brighter at center
-    vec3 col = uColor * (0.3 + pattern * 1.5);
-    col += uColor * fresnel * 0.8; // rim glow in node color
-    col += vec3(1.0) * coreBright * 0.15; // white-hot center
-
-    // Alpha: solid at center, fractal fade at edges, Fresnel rim
-    float alpha = coreBright * 0.8 + fresnel * 0.6 + pattern * 0.3;
-    alpha = clamp(alpha * uIntensity, 0.0, 1.0);
-
-    gl_FragColor = vec4(col, alpha);
-  }
-`;
-
-// Cache shader materials per color+complexity
-const shaderMaterialCache = new Map<string, THREE.ShaderMaterial>();
-
-function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.ShaderMaterial {
+function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.Material {
   const key = `${color.getHexString()}-${complexity}-${intensity}`;
-  if (shaderMaterialCache.has(key)) return shaderMaterialCache.get(key)!.clone();
-
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: color },
-      uTime: { value: 0 },
-      uComplexity: { value: complexity },
-      uIntensity: { value: intensity },
-    },
-    vertexShader: volumetricVertexShader,
-    fragmentShader: volumetricFragmentShader,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.FrontSide,
-  });
-
-  shaderMaterialCache.set(key, mat);
-  return mat.clone();
+  // Always create a fresh TSL material — NodeMaterial.clone() is unreliable
+  // Cache the params only to deduplicate within a single batch if needed later
+  if (!volumetricMaterialCache.has(key)) {
+    volumetricMaterialCache.set(key, { color: color.clone(), complexity, intensity });
+  }
+  return createVolumetricCoreMaterialTSL({ color, complexity, intensity });
 }
 
 // ---------------------------------------------------------------------------
@@ -1868,15 +1767,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Phase 2.2: Activity effects — dim stale nodes (cached refs, no traverse)
         if (staleness > 0.5) {
           // Use cached core mesh ref if available; fall back to traverse on first encounter
-          const cachedCore = group.userData._cachedCoreMesh as (THREE.Mesh & { material: THREE.ShaderMaterial }) | undefined;
-          if (cachedCore?.material?.uniforms?.uOpacity) {
-            cachedCore.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
+          // TSL materials: set .opacity on the material directly (transparent is already true)
+          const cachedCore = group.userData._cachedCoreMesh as THREE.Mesh | undefined;
+          if (cachedCore?.material && 'opacity' in cachedCore.material) {
+            (cachedCore.material as { opacity: number }).opacity = prom.opacity * stalenessDim;
           } else {
             // One-time traverse to cache the reference
             group.traverse((child: THREE.Object3D) => {
-              if (child instanceof THREE.Mesh && child.material instanceof THREE.ShaderMaterial && child.material.uniforms?.uOpacity) {
+              if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
                 group.userData._cachedCoreMesh = child;
-                child.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
+                if ('opacity' in child.material) {
+                  (child.material as { opacity: number }).opacity = prom.opacity * stalenessDim;
+                }
               }
             });
           }
@@ -1907,36 +1809,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         }
 
-        // Update volumetric shader time for fractal swirl
+        // TSL volumetric cores use auto-updating `time` — no manual uniform needed.
+        // IXQL overrides: pulse/visibility via group transform; color/glow/opacity
+        // cannot be changed per-frame on TSL materials (baked at creation).
         for (const child of group.children) {
           if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
-            const mat = child.material as THREE.ShaderMaterial;
-            if (mat.uniforms?.uTime) {
-              mat.uniforms.uTime.value = t;
-            }
-            // IXQL visual overrides — color, glow, pulse, opacity
             const overrides = group.userData.ixqlOverrides as Record<string, unknown> | undefined;
             if (overrides) {
-              // Color override — use pre-allocated _tickColor (no allocation per tick)
-              if (overrides.color && mat.uniforms?.uColor) {
-                try {
-                  _tickColor.set(String(overrides.color));
-                  (mat.uniforms.uColor.value as THREE.Color).copy(_tickColor);
-                } catch { /* invalid color string — skip */ }
-              }
-              // Glow: boost emissive intensity (in-place, no clone)
-              if (overrides.glow && mat.uniforms?.uColor) {
-                const boost = 1.0 + Math.sin(t * 3.0) * 0.3;
-                (mat.uniforms.uColor.value as THREE.Color).multiplyScalar(boost);
-              }
               // Pulse: oscillate scale
               if (overrides.pulse) {
                 const pulseScale = 1.0 + Math.sin(t * 5.0) * 0.25;
                 group.scale.setScalar(pulseScale);
               }
-              // Opacity override
-              if (overrides.opacity !== undefined && mat.uniforms?.uOpacity) {
-                mat.uniforms.uOpacity.value = Number(overrides.opacity);
+              // Opacity: adjust mesh visibility as an approximation
+              if (overrides.opacity !== undefined) {
+                const mat = child.material as THREE.Material;
+                if ('opacity' in mat) {
+                  (mat as { opacity: number }).opacity = Number(overrides.opacity);
+                }
               }
               // Visibility
               if (overrides.visible === false) {
@@ -2032,9 +1922,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── God ray animation ───
-      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t * 0.3; // slower god rays
-      const gr2Mat = godRay2.material as THREE.ShaderMaterial;
-      if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
+      // TSL god ray materials use auto-updating `time` from three/tsl — no manual uniform needed
 
       // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
@@ -2266,149 +2154,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      uniforms: {},
-      vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        varying vec3 vWorldPos;
-
-        vec3 hash33(vec3 p) {
-          p = fract(p * vec3(443.897, 441.423, 437.195));
-          p += dot(p, p.yzx + 19.19);
-          return fract((p.xxy + p.yxx) * p.zyx);
-        }
-        float noise3d(vec3 p) {
-          vec3 i = floor(p); vec3 f = fract(p);
-          f = f*f*(3.0-2.0*f);
-          return mix(mix(mix(dot(hash33(i),f), dot(hash33(i+vec3(1,0,0)),f-vec3(1,0,0)), f.x),
-            mix(dot(hash33(i+vec3(0,1,0)),f-vec3(0,1,0)), dot(hash33(i+vec3(1,1,0)),f-vec3(1,1,0)), f.x), f.y),
-            mix(mix(dot(hash33(i+vec3(0,0,1)),f-vec3(0,0,1)), dot(hash33(i+vec3(1,0,1)),f-vec3(1,0,1)), f.x),
-            mix(dot(hash33(i+vec3(0,1,1)),f-vec3(0,1,1)), dot(hash33(i+vec3(1,1,1)),f-vec3(1,1,1)), f.x), f.y), f.z)*0.5+0.5;
-        }
-        float fbm(vec3 p) {
-          float v=0.0, a=0.5;
-          for(int i=0;i<4;i++) { v+=a*noise3d(p); p*=2.1; a*=0.5; }
-          return v;
-        }
-
-        void main() {
-          vec3 dir = normalize(vWorldPos);
-          float y = dir.y;
-
-          // Base gradient — near black space
-          vec3 col = mix(vec3(0.003, 0.002, 0.008), vec3(0.001, 0.001, 0.004), smoothstep(-0.5, 0.8, y));
-
-          // Orion-like nebula — reddish-pink cloud region
-          float neb1 = fbm(dir * 3.0 + vec3(1.5, 0.0, 2.3));
-          neb1 = smoothstep(0.4, 0.7, neb1);
-          float neb1Mask = smoothstep(0.3, 0.0, length(dir - vec3(0.5, 0.2, -0.8)));
-          col += vec3(0.12, 0.02, 0.04) * neb1 * neb1Mask;
-
-          // Carina-like nebula — blue-teal cloud
-          float neb2 = fbm(dir * 4.0 + vec3(-2.0, 1.0, 0.5));
-          neb2 = smoothstep(0.45, 0.7, neb2);
-          float neb2Mask = smoothstep(0.35, 0.0, length(dir - vec3(-0.6, -0.3, 0.7)));
-          col += vec3(0.02, 0.06, 0.1) * neb2 * neb2Mask;
-
-          // Pillars of creation — golden dust cloud
-          float neb3 = fbm(dir * 5.0 + vec3(0.0, 3.0, -1.0));
-          neb3 = smoothstep(0.5, 0.75, neb3);
-          float neb3Mask = smoothstep(0.25, 0.0, length(dir - vec3(-0.3, 0.7, 0.4)));
-          col += vec3(0.08, 0.05, 0.01) * neb3 * neb3Mask;
-
-          // Milky Way band — bright horizontal band
-          float milkyWay = exp(-8.0 * y * y);
-          float mwNoise = fbm(dir * 6.0);
-          col += vec3(0.03, 0.025, 0.04) * milkyWay * mwNoise;
-
-          // Sagittarius A* — supermassive black hole at galactic center
-          // Gravitational lensing ring: bright accretion disk around a dark core
-          vec3 sgrADir = normalize(vec3(0.0, -0.02, -1.0)); // galactic center direction
-          float sgrDist = length(dir - sgrADir);
-          // Dark core — subtle dimming, not a visible black sphere
-          float blackHole = 1.0 - smoothstep(0.0, 0.006, sgrDist);
-          col *= (1.0 - blackHole * 0.3); // very subtle dimming
-          // Accretion disk — hot glowing ring around the event horizon
-          float ring = exp(-800.0 * pow(sgrDist - 0.015, 2.0));
-          col += vec3(1.0, 0.7, 0.3) * ring * 0.15; // hot orange-white ring
-          // Outer halo — warped light from behind
-          float halo = exp(-200.0 * pow(sgrDist - 0.025, 2.0));
-          col += vec3(0.8, 0.5, 0.2) * halo * 0.06;
-          // Faint relativistic jet hint (vertical)
-          float jet = exp(-2000.0 * (dir.x - sgrADir.x) * (dir.x - sgrADir.x))
-                    * exp(-50.0 * (dir.z - sgrADir.z) * (dir.z - sgrADir.z))
-                    * smoothstep(0.0, 0.1, abs(dir.y));
-          col += vec3(0.3, 0.4, 1.0) * jet * 0.03; // faint blue jets
-
-          // Nearby bright stars (fixed positions, glowing)
-          vec3 stars[5];
-          vec3 starColors[5];
-          stars[0] = normalize(vec3(0.8, 0.1, -0.5));  // Sirius — blue-white
-          stars[1] = normalize(vec3(-0.3, 0.6, 0.7));  // Betelgeuse — orange
-          stars[2] = normalize(vec3(0.1, -0.8, 0.5));  // Rigel — blue
-          stars[3] = normalize(vec3(-0.7, 0.2, -0.6)); // Aldebaran — orange-red
-          stars[4] = normalize(vec3(0.4, 0.7, 0.5));   // Vega — white
-          starColors[0] = vec3(0.7, 0.8, 1.0);
-          starColors[1] = vec3(1.0, 0.5, 0.2);
-          starColors[2] = vec3(0.5, 0.6, 1.0);
-          starColors[3] = vec3(1.0, 0.4, 0.15);
-          starColors[4] = vec3(0.9, 0.92, 1.0);
-
-          for (int i = 0; i < 5; i++) {
-            float d = length(dir - stars[i]);
-            float glow = exp(-500.0 * d * d) * 0.5;   // tight small core
-            float halo = exp(-40.0 * d * d) * 0.08;   // subtle halo
-            col += starColors[i] * (glow + halo);
-          }
-
-          // ─── Nearby galaxies (boosted visibility) ───
-          // Andromeda (M31) — large, tilted elliptical smudge
-          vec3 andromedaDir = normalize(vec3(0.2, 0.35, -0.9));
-          float andrDist = length(dir - andromedaDir);
-          float andrCore = exp(-600.0 * andrDist * andrDist) * 0.4;
-          float andrDisk = exp(-40.0 * andrDist * andrDist) * 0.12;
-          vec3 andrLocal = dir - andromedaDir;
-          float andrTilt = dot(andrLocal, normalize(vec3(0.5, 1.0, 0.2)));
-          float andrEllipse = exp(-120.0 * andrTilt * andrTilt);
-          col += vec3(0.85, 0.82, 0.95) * (andrCore + andrDisk * andrEllipse);
-
-          // Triangulum Galaxy (M33) — smaller, near Andromeda
-          vec3 m33Dir = normalize(vec3(0.35, 0.5, -0.78));
-          float m33Dist = length(dir - m33Dir);
-          float m33Glow = exp(-400.0 * m33Dist * m33Dist) * 0.12;
-          float m33Halo = exp(-50.0 * m33Dist * m33Dist) * 0.05;
-          col += vec3(0.7, 0.75, 0.9) * (m33Glow + m33Halo);
-
-          // Large Magellanic Cloud (LMC) — southern sky, irregular, blue
-          vec3 lmcDir = normalize(vec3(0.6, -0.7, 0.35));
-          float lmcDist = length(dir - lmcDir);
-          float lmcCore = exp(-60.0 * lmcDist * lmcDist) * 0.15;
-          float lmcNoise = fbm(dir * 8.0 + vec3(5.0, 2.0, 1.0));
-          col += vec3(0.5, 0.6, 0.9) * lmcCore * (0.6 + lmcNoise);
-
-          // Small Magellanic Cloud (SMC) — companion to LMC
-          vec3 smcDir = normalize(vec3(0.45, -0.6, 0.6));
-          float smcDist = length(dir - smcDir);
-          float smcGlow = exp(-150.0 * smcDist * smcDist) * 0.08;
-          col += vec3(0.5, 0.6, 0.8) * smcGlow;
-
-          // ─── Cosmic Microwave Background ───
-          // Very faint, large-scale temperature anisotropy pattern
-          // Subtle warm/cool spots across the entire sky
-          float cmb = fbm(dir * 2.0 + vec3(42.0, 17.0, 73.0));
-          float cmbAnisotropy = (cmb - 0.5) * 0.008; // extremely subtle
-          // CMB is ~2.7K — map to faint red-blue temperature fluctuations
-          vec3 cmbWarm = vec3(0.015, 0.003, 0.0);   // warm spots (red)
-          vec3 cmbCool = vec3(0.0, 0.003, 0.015);    // cool spots (blue)
-          col += cmbAnisotropy > 0.0 ? cmbWarm * cmbAnisotropy * 100.0
-                                     : cmbCool * abs(cmbAnisotropy) * 100.0;
-
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `,
-    });
+    const skyMat = createSkyboxNebulaMaterialTSL();
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
@@ -2535,36 +2281,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── GOD RAY LIGHT SHAFTS from center ───
     // Volumetric light cone pointing outward from the graph center
     const godRayGeo = new THREE.ConeGeometry(80, 300, 32, 1, true);
-    const godRayMat = new THREE.ShaderMaterial({
-      transparent: true,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color('#FF6B35') } },
-      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec3 uColor;
-        varying vec2 vUv;
-        void main() {
-          float fade = smoothstep(0.0, 0.5, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
-          float rays = sin(vUv.x * 40.0 + uTime * 0.5) * 0.5 + 0.5;
-          rays *= sin(vUv.x * 17.0 - uTime * 0.3) * 0.5 + 0.5;
-          float alpha = fade * rays * 0.03;
-          gl_FragColor = vec4(uColor, alpha);
-        }
-      `,
-    });
+    const godRayMat = createGodRayMaterialTSL('#FF6B35');
     const godRay = new THREE.Mesh(godRayGeo, godRayMat);
     godRay.rotation.x = Math.PI; // point upward
     fg.scene().add(godRay);
 
-    // Second god ray at different angle
-    const godRay2 = godRay.clone();
-    (godRay2.material as THREE.ShaderMaterial).uniforms = {
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#00CED1') },
-    };
+    // Second god ray at different angle — fresh TSL material (no clone)
+    const godRay2Geo = new THREE.ConeGeometry(80, 300, 32, 1, true);
+    const godRay2 = new THREE.Mesh(godRay2Geo, createGodRayMaterialTSL('#00CED1'));
     godRay2.rotation.set(Math.PI * 0.7, 0, Math.PI * 0.3);
     fg.scene().add(godRay2);
 
