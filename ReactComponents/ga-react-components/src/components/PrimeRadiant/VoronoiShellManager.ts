@@ -135,6 +135,12 @@ export function createVoronoiShells(
     mesh.name = `voronoi-shell-${type}`;
     mesh.frustumCulled = false;
     mesh.renderOrder = -1; // render before opaque nodes
+    // Tag for hover raycaster — the UI layer reads this to show a label
+    // with "Constitutional Jurisdiction" + node count + color accent.
+    mesh.userData.isVoronoiShell = true;
+    mesh.userData.shellType = type;
+    mesh.userData.shellNodeCount = nodeIds.size;
+    mesh.userData.shellColorHex = '#' + color.getHexString();
 
     scene.add(mesh);
     shells.push({

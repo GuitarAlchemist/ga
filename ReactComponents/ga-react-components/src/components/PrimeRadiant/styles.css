@@ -10946,3 +10946,117 @@
   background: #33CC66;
   box-shadow: 0 0 4px #33CC66;
 }
+
+/* ── Jurisdiction membrane legend ─────────────────────────────────────── */
+.prime-radiant__jurisdiction-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10;
+  background: rgba(22, 27, 34, 0.88);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 8px 10px;
+  backdrop-filter: blur(8px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #c9d1d9;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  max-width: 260px;
+  user-select: none;
+}
+.prime-radiant__jurisdiction-legend:hover {
+  border-color: #58a6ff;
+  background: rgba(22, 27, 34, 0.95);
+}
+.prime-radiant__jurisdiction-legend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.prime-radiant__jurisdiction-legend-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #8b949e;
+}
+.prime-radiant__jurisdiction-legend-caret {
+  font-size: 10px;
+  color: #8b949e;
+}
+.prime-radiant__jurisdiction-legend-swatches {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.prime-radiant__jurisdiction-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.prime-radiant__jurisdiction-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.prime-radiant__jurisdiction-legend-label {
+  font-size: 10px;
+  color: #c9d1d9;
+  white-space: nowrap;
+}
+.prime-radiant__jurisdiction-legend-body {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #30363d;
+  cursor: default;
+}
+.prime-radiant__jurisdiction-legend-body-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #c9d1d9;
+  margin-bottom: 4px;
+}
+.prime-radiant__jurisdiction-legend-body-desc {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #8b949e;
+  margin-bottom: 6px;
+}
+.prime-radiant__jurisdiction-legend-body-desc em {
+  color: #58a6ff;
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ── Shell hover label (follows cursor when hovering a Voronoi shell) ── */
+.prime-radiant__shell-label {
+  position: absolute;
+  z-index: 15;
+  pointer-events: none;
+  background: rgba(22, 27, 34, 0.94);
+  border: 1px solid var(--shell-accent, #58a6ff);
+  border-radius: 6px;
+  padding: 6px 10px;
+  backdrop-filter: blur(6px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #c9d1d9;
+  white-space: nowrap;
+  transform: translate(12px, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.prime-radiant__shell-label-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--shell-accent, #58a6ff);
+  margin-bottom: 2px;
+}
+.prime-radiant__shell-label-meta {
+  font-size: 9px;
+  color: #8b949e;
+}
