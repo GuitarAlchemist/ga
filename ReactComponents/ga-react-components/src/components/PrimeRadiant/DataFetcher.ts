@@ -172,6 +172,7 @@ export async function resolve(
   source: string,
   predicates: IxqlPredicate[] = [],
   graphContext?: GraphContext,
+  signal?: AbortSignal,
 ): Promise<unknown[]> {
   const kind = classifySource(source);
 
@@ -215,7 +216,7 @@ export async function resolve(
       case 'governance': {
         const url = toApiUrl(source, kind);
         try {
-          const res = await fetch(url);
+          const res = await fetch(url, { signal });
           if (!res.ok) {
             console.warn(`[DataFetcher] ${res.status} from ${url} — trying offline fallback`);
             raw = OFFLINE_FALLBACK[source.trim()] ?? [];
@@ -223,7 +224,9 @@ export async function resolve(
           }
           const json: unknown = await res.json();
           raw = Array.isArray(json) ? json : [json];
-        } catch {
+        } catch (err) {
+          // Aborted fetches are expected (unmount/cleanup) — propagate so caller skips setState
+          if ((err as Error).name === 'AbortError') throw err;
           // Network error — use offline fallback
           console.warn(`[DataFetcher] Network error for ${url} — using offline fallback`);
           raw = OFFLINE_FALLBACK[source.trim()] ?? [];
@@ -235,6 +238,8 @@ export async function resolve(
         return [];
     }
   } catch (err) {
+    // Propagate AbortError so callers can skip state updates after unmount
+    if ((err as Error).name === 'AbortError') throw err;
     console.warn(`[DataFetcher] Failed to resolve "${source}":`, err);
     return [];
   }
@@ -273,11 +278,21 @@ export function poll(
   graphContext?: GraphContext,
 ): () => void {
   let active = true;
+  // AbortController cancels in-flight fetches on unsubscribe. Without this,
+  // a slow fetch racing an unmount would call callback() after the component
+  // was gone (→ setState-after-unmount warning) or let a stale late response
+  // overwrite a newer fresh one (→ race condition displaying old data).
+  const controller = new AbortController();
 
   const tick = async () => {
     if (!active) return;
-    const data = await resolve(source, predicates, graphContext);
-    if (active) callback(data);
+    try {
+      const data = await resolve(source, predicates, graphContext, controller.signal);
+      if (active) callback(data);
+    } catch (err) {
+      // AbortError is expected when the component unmounts mid-fetch. Swallow it.
+      if ((err as Error).name !== 'AbortError') throw err;
+    }
   };
 
   // Initial fetch
@@ -287,5 +302,6 @@ export function poll(
   return () => {
     active = false;
     window.clearInterval(id);
+    controller.abort();
   };
 }
