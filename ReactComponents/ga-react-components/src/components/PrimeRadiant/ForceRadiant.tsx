@@ -1772,6 +1772,43 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _linkColorA = new THREE.Color(); // pre-allocated for edge propagation lerp
     const _linkColorB = new THREE.Color();
 
+    // ─── Per-tick profiler (enabled via ?perf=profile) ───
+    // Tracks per-label ms accumulated over a 3s window, then logs the top
+    // offenders + their share of the frame budget. Zero cost when disabled.
+    const profileEnabled = typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('perf') === 'profile';
+    const profAcc = new Map<string, { total: number; calls: number }>();
+    let profLastFlush = performance.now();
+    const profMark = (label: string, fn: () => void) => {
+      if (!profileEnabled) { fn(); return; }
+      const t0 = performance.now();
+      fn();
+      const dt = performance.now() - t0;
+      const entry = profAcc.get(label) ?? { total: 0, calls: 0 };
+      entry.total += dt; entry.calls += 1;
+      profAcc.set(label, entry);
+    };
+    const profFlush = () => {
+      if (!profileEnabled) return;
+      const now = performance.now();
+      const window_ms = now - profLastFlush;
+      if (window_ms < 3000) return;
+      const rows = Array.from(profAcc.entries())
+        .map(([k, v]) => ({ k, total: v.total, calls: v.calls, pct: (v.total / window_ms) * 100 }))
+        .sort((a, b) => b.total - a.total);
+      const top = rows.slice(0, 10);
+      // eslint-disable-next-line no-console
+      console.group(`[PR profile] ${window_ms.toFixed(0)}ms window`);
+      for (const r of top) {
+        // eslint-disable-next-line no-console
+        console.log(`  ${r.k.padEnd(22)} ${r.total.toFixed(1).padStart(6)}ms  ${r.pct.toFixed(1).padStart(4)}%  (${r.calls} calls, ${(r.total / r.calls).toFixed(2)}ms avg)`);
+      }
+      // eslint-disable-next-line no-console
+      console.groupEnd();
+      profAcc.clear();
+      profLastFlush = now;
+    };
+
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
@@ -1896,7 +1933,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
       }
 
-      fg.graphData().nodes.forEach((node: object) => {
+      profMark('nodeUndulation', () => fg.graphData().nodes.forEach((node: object) => {
         const n = node as GraphNode & { __threeObj?: THREE.Object3D };
         if (!n.__threeObj) return;
 
@@ -2029,7 +2066,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             }
           }
         }
-      });
+      }));
 
       // ─── Starfield follows camera (skybox behavior) ───
       // Stars follow camera exactly, but Milky Way lags slightly for parallax depth
@@ -2127,14 +2164,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (dispersionPassRef.current) dispersionPassRef.current.uniforms.uTime.value = t;
 
       // TARS — far left, lower
-      updateTarsRobot(tarsRobot, t);
+      profMark('updateTarsRobot', () => updateTarsRobot(tarsRobot, t));
       _tarsOffset.set(-50, -28, -50);
       _tarsOffset.applyQuaternion(cam.quaternion);
       tarsRobot.position.copy(cam.position).add(_tarsOffset);
       tarsRobot.quaternion.copy(cam.quaternion);
 
       // Demerzel procedural face — far left, above TARS
-      updateDemerzelFace(demerzelFace, t, cam.position, false);
+      profMark('updateDemerzelFace', () => updateDemerzelFace(demerzelFace, t, cam.position, false));
       _faceOffset.set(-50, -8, -40);
       _faceOffset.applyQuaternion(cam.quaternion);
       demerzelFace.position.copy(cam.position).add(_faceOffset);
@@ -2170,21 +2207,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (qualityLevel !== 'low') {
         solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
         if (qualityLevel === 'high' || frameCount % 3 === 0) {
-          updateSolarSystem(solarSystem, t, fg.camera());
+          profMark('updateSolarSystem', () => updateSolarSystem(solarSystem, t, fg.camera()));
           // Update GIS layer animations (pulse rings, animated paths)
-          for (const mgr of gisManagersRef.current.values()) mgr.update(t);
+          profMark('gisManagers.update', () => {
+            for (const mgr of gisManagersRef.current.values()) mgr.update(t);
+          });
         }
       }
 
 
       // ─── Voronoi jurisdiction shells — update seed positions from force layout ───
       if (voronoiShellsHandle && isTemporalFrame) {
-        voronoiShellsHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
+        profMark('voronoiShells.update', () =>
+          voronoiShellsHandle!.update(fg.graphData().nodes as GraphNode[], qualityBudget),
+        );
       }
 
       // ─── Compliance rivers — flow field particle advection ───
       if (complianceRiversHandle) {
-        complianceRiversHandle.update(0.016, qualityBudget); // ~60fps dt
+        profMark('complianceRivers.update', () => complianceRiversHandle!.update(0.016, qualityBudget)); // ~60fps dt
         // Periodically rebuild field as force layout moves nodes
         if (isTemporalFrame) {
           complianceRiversHandle.rebuild(
@@ -2196,8 +2237,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Crisis textures — reaction-diffusion simulation (2Hz internally) ───
       if (crisisTexturesHandle) {
-        crisisTexturesHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
+        profMark('crisisTextures.update', () =>
+          crisisTexturesHandle!.update(fg.graphData().nodes as GraphNode[], qualityBudget),
+        );
       }
+      profFlush();
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
       if (filamentsHandle && isTemporalFrame) {
@@ -2210,7 +2254,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             v.set(n.x, n.y ?? 0, n.z ?? 0);
           }
         }
-        filamentsHandle.update(t, _filamentPosMap);
+        profMark('filaments.update', () => filamentsHandle!.update(t, _filamentPosMap));
       }
 
       // ─── Crystal Eiffel Tower — sparking below the graph ───
