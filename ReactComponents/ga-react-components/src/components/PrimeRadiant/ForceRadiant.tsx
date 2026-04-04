@@ -83,6 +83,7 @@ import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './Cryst
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
+import { CLUSTER_COLORS } from './shaders/VoronoiShellTSL';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
 import { MoebiusShader } from './shaders/MoebiusPassTSL';
 import { CausticsShader } from './shaders/CausticsPass';
@@ -2168,6 +2169,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
 
+
       // ─── Voronoi jurisdiction shells — update seed positions from force layout ───
       if (voronoiShellsHandle && isTemporalFrame) {
         voronoiShellsHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
@@ -3384,6 +3386,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               </div>
             )}
           </span>
+
+          <span style={{ color: '#30363d' }}>|</span>
+
+          {/* JURIS — jurisdictional membrane legend */}
+          <span
+            className={`prime-radiant__health-metric ${activeHealthTip === 'juris' ? 'prime-radiant__health-metric--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setActiveHealthTip(prev => prev === 'juris' ? null : 'juris'); }}
+          >
+            <span>
+              JURIS
+            </span>
+            {activeHealthTip === 'juris' && (
+              <div className="prime-radiant__health-tooltip" onClick={e => e.stopPropagation()}>
+                <div className="prime-radiant__health-tooltip-title">Jurisdictional Membranes</div>
+                <div className="prime-radiant__health-tooltip-desc">
+                  Each cluster of governance artifacts occupies a <em>jurisdiction</em> — a territory of authority. The translucent shells you see around clusters are the boundaries where one jurisdiction meets another. They make visible the invisible fact that every new artifact displaces the authority of its neighbors — <strong>Jurisdictional Pressure</strong>.
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '12px 1fr', gap: '4px 8px', marginTop: 8, fontSize: 10 }}>
+                  {Object.entries(CLUSTER_COLORS).filter(([k]) => k !== 'default').map(([kind, c]) => (
+                    <React.Fragment key={kind}>
+                      <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: `#${c.getHexString()}`, alignSelf: 'center' }} />
+                      <span style={{ color: '#c9d1d9', textTransform: 'capitalize' }}>{kind}</span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+          </span>
+
+          <span style={{ color: '#30363d' }}>|</span>
 
           {/* Admin indicator */}
           <span className="prime-radiant__health-metric" title={isAdmin ? 'Admin mode (full access)' : 'Read-only mode'}>
