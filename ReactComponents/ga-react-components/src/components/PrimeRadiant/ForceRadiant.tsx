@@ -1587,6 +1587,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let _filamentPosMap: Map<string, THREE.Vector3> | null = null;
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
+    // Forward-declare solarSystem — created later but referenced in onEngineTick
+    let solarSystem: THREE.Group | null = null;
     const _stationOffset = new THREE.Vector3();
     const _trackWp = new THREE.Vector3();
     const _trackOffset = new THREE.Vector3();
@@ -1953,6 +1955,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
+      if (!solarSystem) return; // not yet initialized
       solarSystem.visible = qualityBudget > -0.9;
       // Solar system always parented to camera — never detach.
       // Position fixed at (0, Y, 0) in camera space = no Float32 jitter.
@@ -2314,7 +2317,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
-    const solarSystem = createSolarSystem(8.0);
+    solarSystem = createSolarSystem(8.0);
     solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
     fg.camera().add(solarSystem);
 
