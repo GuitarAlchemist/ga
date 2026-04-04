@@ -15,6 +15,7 @@ import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './type
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
+import { JurisdictionLegend } from './JurisdictionLegend';
 import { ChatWidget } from './ChatWidget';
 import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
@@ -693,6 +694,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return localStorage.getItem('pr-admin-token') === 'ga-owner-2026';
   });
   const [activeHealthTip, setActiveHealthTip] = useState<string | null>(null);
+  // Hover state for Voronoi jurisdiction shells — raycaster below sets this.
+  const [hoveredShell, setHoveredShell] = useState<{
+    type: string; nodeCount: number; colorHex: string; x: number; y: number;
+  } | null>(null);
   const [viewers, setViewers] = useState<ViewerInfo[]>([]);
   const selfConnectionIdRef = useRef<string | null>(null);
 
@@ -2740,6 +2745,56 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       }
 
+      // ─── Shell hover raycaster — drives JurisdictionLegend's floating label ───
+      // Only raycasts against shell meshes (2–8 per graph), throttled to ~12 Hz.
+      // Reads shell userData tags set in VoronoiShellManager: shellType, shellNodeCount, shellColorHex.
+      {
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2();
+        let lastRaycastAt = 0;
+        const onCanvasMove = (ev: MouseEvent) => {
+          const now = performance.now();
+          if (now - lastRaycastAt < 80) return;
+          lastRaycastAt = now;
+          const el = containerRef.current;
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          ndc.x = (x / rect.width) * 2 - 1;
+          ndc.y = -(y / rect.height) * 2 + 1;
+          raycaster.setFromCamera(ndc, fg.camera());
+          // Gather shell meshes from the scene root (cheap — fg.scene().children is short).
+          const shells: THREE.Object3D[] = [];
+          for (const obj of fg.scene().children) {
+            if ((obj as THREE.Mesh).userData?.isVoronoiShell) shells.push(obj);
+          }
+          if (shells.length === 0) { setHoveredShell(null); return; }
+          const hits = raycaster.intersectObjects(shells, false);
+          if (hits.length > 0) {
+            const ud = hits[0].object.userData;
+            setHoveredShell({
+              type: String(ud.shellType ?? 'jurisdiction'),
+              nodeCount: Number(ud.shellNodeCount ?? 0),
+              colorHex: String(ud.shellColorHex ?? '#58a6ff'),
+              x, y,
+            });
+          } else {
+            setHoveredShell(null);
+          }
+        };
+        const onCanvasLeave = () => setHoveredShell(null);
+        const canvasEl = containerRef.current;
+        canvasEl?.addEventListener('mousemove', onCanvasMove);
+        canvasEl?.addEventListener('mouseleave', onCanvasLeave);
+        // Cleanup is covered by the parent useEffect returning — but register here too.
+        const origCleanupKey = '_shellHoverCleanup';
+        (fg as unknown as Record<string, unknown>)[origCleanupKey] = () => {
+          canvasEl?.removeEventListener('mousemove', onCanvasMove);
+          canvasEl?.removeEventListener('mouseleave', onCanvasLeave);
+        };
+      }
+
       // ─── Compliance rivers — flow field particles (TSL PointsNodeMaterial) ───
       if (!isLowEnd && graph.edges.length > 0) {
         try {
@@ -2915,6 +2970,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
       voronoiShellsHandle?.dispose();
+      ((fg as unknown as Record<string, unknown>)._shellHoverCleanup as (() => void) | undefined)?.();
       complianceRiversHandle?.dispose();
       crisisTexturesHandle?.dispose();
       eiffelHandleOuter?.dispose();
@@ -3242,6 +3298,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
         <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
+
+        {/* Jurisdiction membrane legend — explains the colored shells wrapping clusters */}
+        <JurisdictionLegend />
+
+        {/* Floating label when hovering a Voronoi jurisdiction shell */}
+        {hoveredShell && (
+          <div
+            className="prime-radiant__shell-label"
+            style={{
+              left: hoveredShell.x,
+              top: hoveredShell.y,
+              // @ts-expect-error — CSS custom property
+              '--shell-accent': hoveredShell.colorHex,
+            }}
+          >
+            <div className="prime-radiant__shell-label-title">
+              {hoveredShell.type.charAt(0).toUpperCase() + hoveredShell.type.slice(1)} Jurisdiction
+            </div>
+            <div className="prime-radiant__shell-label-meta">
+              {hoveredShell.nodeCount} artifact{hoveredShell.nodeCount === 1 ? '' : 's'} · authority boundary
+            </div>
+          </div>
+        )}
 
       {/* Backend connection status badge with capabilities popover */}
       <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
