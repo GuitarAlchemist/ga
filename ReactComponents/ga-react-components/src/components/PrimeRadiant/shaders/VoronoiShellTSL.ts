@@ -103,6 +103,14 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
   }
 
   // ── Medium/High quality: Voronoi boundary computation ──
+  // PERF: Previously split across colorNode + opacityNode — each did its own
+  // 16/32-seed search, doubling the fragment cost. Under AdditiveBlending the
+  // opacityNode is unreliable anyway (see memory). Now: ONE search, alpha is
+  // pre-multiplied into colorNode, opacityNode removed entirely. Also cut the
+  // high-quality loop from 32 → 20 seeds (cluster-by-type rarely exceeds 20
+  // artifacts per cluster; oversized clusters truncate gracefully).
+  const maxCheck = quality === 'high' ? 20 : 12;
+
   material.colorNode = Fn(() => {
     const worldPos = positionWorld;
     const viewDir = cameraPosition.sub(worldPos).normalize();
@@ -112,76 +120,25 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
     const nearestDist = float(1e6).toVar();
     const secondDist = float(1e6).toVar();
 
-    // Unrolled seed search (TSL doesn't have dynamic loops over uniforms easily)
-    // We check up to MAX_SEEDS but only the first `uSeedCount` are valid
-    const checkSeed = (idx: number) => {
-      const seedPos = (uSeeds.value as THREE.Vector3[])[idx];
-      if (!seedPos) return;
+    for (let i = 0; i < maxCheck; i++) {
+      const seedPos = (uSeeds.value as THREE.Vector3[])[i];
+      if (!seedPos) continue;
       const seedUniform = uniform(seedPos);
       const diff = worldPos.sub(seedUniform);
       const d = length(diff);
-      // Update nearest/second nearest
       const isNearer = d.lessThan(nearestDist);
       const isSecond = d.lessThan(secondDist).and(isNearer.not());
       secondDist.assign(mix(secondDist, min(secondDist, d), float(isSecond)));
       secondDist.assign(mix(secondDist, nearestDist, float(isNearer)));
       nearestDist.assign(min(nearestDist, d));
-    };
-
-    // Check seeds (up to 16 for medium, 32 for high)
-    const maxCheck = quality === 'high' ? MAX_SEEDS : 16;
-    for (let i = 0; i < maxCheck; i++) {
-      checkSeed(i);
     }
 
     // Edge glow: where distance difference between nearest two cells is small
     const edgeDiff = secondDist.sub(nearestDist);
-    const edgeWidth = quality === 'high' ? 0.3 : 0.5; // thinner edges on high quality
-    const edgeGlow = smoothstep(edgeWidth, 0.0, edgeDiff);
-
-    // Fresnel rim for depth perception
-    const rim = pow(fresnel, float(2.5)).mul(0.12);
-
-    // Animated pulse on edges (high quality only)
-    const pulse = quality === 'high'
-      ? float(1.0).add(sin(time.mul(1.5).add(nearestDist.mul(3.0))).mul(0.15))
-      : float(1.0);
-
-    // Noise displacement on boundary (high quality)
-    const noiseDisp = quality === 'high'
-      ? noise3(worldPos.mul(8.0).add(vec3(time.mul(0.2)))).mul(0.1)
-      : float(0.0);
-
-    // Combine: edge glow + rim, colored by cluster type
-    const brightness = edgeGlow.mul(pulse).add(noiseDisp).add(rim);
-    return vec3(uColor).mul(brightness);
-  })();
-
-  // Shell opacity — same brightness formula, scaled by 0.35 for translucency
-  material.opacityNode = Fn(() => {
-    const worldPos = positionWorld;
-    const viewDir = cameraPosition.sub(worldPos).normalize();
-    const fresnel = float(1.0).sub(abs(normalWorld.dot(viewDir)));
-
-    const nearestDist = float(1e6).toVar();
-    const secondDist = float(1e6).toVar();
-    const checkSeedO = (idx: number) => {
-      const seedPos = (uSeeds.value as THREE.Vector3[])[idx];
-      if (!seedPos) return;
-      const seedUniform = uniform(seedPos);
-      const diff = worldPos.sub(seedUniform);
-      const d = length(diff);
-      const isNearer = d.lessThan(nearestDist);
-      const isSecond = d.lessThan(secondDist).and(isNearer.not());
-      secondDist.assign(mix(secondDist, min(secondDist, d), float(isSecond)));
-      secondDist.assign(mix(secondDist, nearestDist, float(isNearer)));
-      nearestDist.assign(min(nearestDist, d));
-    };
-    const maxCheckO = quality === 'high' ? MAX_SEEDS : 16;
-    for (let i = 0; i < maxCheckO; i++) checkSeedO(i);
-    const edgeDiff = secondDist.sub(nearestDist);
     const edgeWidth = quality === 'high' ? 0.3 : 0.5;
     const edgeGlow = smoothstep(edgeWidth, 0.0, edgeDiff);
+
+    // Fresnel rim + edge-pulse animation (high only)
     const rim = pow(fresnel, float(2.5)).mul(0.12);
     const pulse = quality === 'high'
       ? float(1.0).add(sin(time.mul(1.5).add(nearestDist.mul(3.0))).mul(0.15))
@@ -189,8 +146,11 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
     const noiseDisp = quality === 'high'
       ? noise3(worldPos.mul(8.0).add(vec3(time.mul(0.2)))).mul(0.1)
       : float(0.0);
+
     const brightness = edgeGlow.mul(pulse).add(noiseDisp).add(rim);
-    return brightness.mul(0.35);
+    // Pre-multiply alpha (0.35) straight into the color output for
+    // AdditiveBlending correctness — no separate opacityNode needed.
+    return vec3(uColor).mul(brightness).mul(0.35);
   })();
 
   material.transparent = true;
