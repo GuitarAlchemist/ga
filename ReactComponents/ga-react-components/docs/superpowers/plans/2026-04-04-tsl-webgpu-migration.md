@@ -4,9 +4,78 @@
 
 **Goal:** Migrate Prime Radiant from GLSL ShaderMaterial + WebGLRenderer to TSL NodeMaterial + WebGPURenderer, activating all 22 existing TSL shader files.
 
-**Architecture:** Flip `useWebGPU: true` on 3d-force-graph (which passes it to `three-render-objects` to create `WebGPURenderer` instead of `WebGLRenderer`). Replace old `EffectComposer` postprocessing with TSL-native `PostProcessing` using duck-type replacement. Swap all GLSL `ShaderMaterial` instances for their pre-written TSL `NodeMaterial` equivalents. WebGPURenderer auto-falls back to WebGL2 backend when WebGPU is unavailable.
+**Status (2026-04-04 update):** Partial execution done via `/octo:embrace`. Foundation fix (TSL imports) committed at `8a4627d4`. ProceduralMoonTSL.ts library committed at `7b116ad3`. See **Discovery Findings** and **CRITICAL: Sequencing Correction** sections below before resuming execution.
 
 **Tech Stack:** Three.js r180, TSL (`three/tsl`), WebGPURenderer (`three/webgpu`), 3d-force-graph v1.79.1, `PostProcessing` + `bloom()` + `chromaticAberration()`
+
+---
+
+## CRITICAL: Sequencing Correction (from debate gate)
+
+**The original plan had a fatal ordering bug.** It said to flip `useWebGPU: true` FIRST then swap materials. This is wrong because:
+
+> **WebGPURenderer silently replaces any `ShaderMaterial` with a blank NodeMaterial** (grey/white). No exception — just a console error and wrong visuals. Source: `three/webgpu` renders through `library.fromMaterial()` which is not registered for `ShaderMaterial`.
+
+**Correct sequence:**
+1. Fix TSL imports (DONE — commit `8a4627d4`)
+2. Swap ALL `ShaderMaterial` instances → `NodeMaterial` **WHILE STILL ON WebGLRenderer** — TSL auto-compiles to GLSL on WebGL2, so each swap is visually verifiable immediately
+3. Extend `PlanetSurfaceTSL.ts` to support `nightMap` + `specularMap` + `atmosphereType` (otherwise Earth loses city lights and ocean shimmer)
+4. Only after ALL ShaderMaterials are gone: flip `useWebGPU: true`
+5. Then tackle PostProcessing via `patch-package`
+
+---
+
+## Discovery Findings
+
+### Bug 1: 5 TSL files had broken imports (FIXED in `8a4627d4`)
+`THREE.MeshBasicNodeMaterial` does not exist on the `three` namespace — it's exported from `three/webgpu`. Fixed in: SunMaterialTSL, CymaticsTSL, VoronoiShellTSL, ReactionDiffusionTSL, FlowFieldParticleTSL. Also corrected SaturnRingsTSL.ts return type annotation.
+
+### Bug 2: `fg.postProcessingComposer()` is getter-only
+Kapsule method registered at `three-render-objects.js` line 102228, not a prop. `fg.postProcessingComposer(newValue)` silently returns the old composer, ignoring the argument. The internal `state.postProcessingComposer` slot cannot be swapped via public API.
+
+**Solution path:** `patch-package` on `three-render-objects` to add (a) a setter prop for `postProcessingComposer`, (b) null-guard in tick loop (`state.postProcessingComposer?.render()`), (c) null-guard in resize filter. ~3 lines total.
+
+### Bug 3: PlanetSurfaceTSL.ts is INCOMPLETE
+Current interface only accepts `planetTexture`, `displacementMap`, `displacementScale`, `isEarth`. The old GLSL shader supported:
+- `nightMap` — Earth city lights (night side)
+- `specularMap` — ocean shimmer
+- `atmosphereType` ('blue' | 'orange' | 'none') — sunrise glow tint
+- `uSunPosView` — manual sun direction uniform
+
+Without these, Earth will render without city lights and ocean highlights. **Must extend PlanetSurfaceTSL before swapping `createPlanetMesh`.**
+
+### Bug 4: Procedural moons (15 variants) not covered in original plan
+SolarSystem.ts has 15 inline GLSL moon fragments (Io, Europa, Ganymede, Callisto, Titan, Enceladus, Mimas, Iapetus, Triton, Miranda + rocky/icy base variants). These are now written as TSL factories in `shaders/ProceduralMoonTSL.ts` (commit `7b116ad3`). Use `MOON_TSL_FACTORIES[key]()` to look up by legacy fragment constant name, or match `def.fragment === IO_FRAG` by reference identity.
+
+### Bug 5: Async render collision risk with Object.assign duck-type
+TSL `PostProcessing.render()` returns a Promise (WebGPU command submission). The three-render-objects tick loop calls it fire-and-forget, which causes command buffer races. This rules out Option A (monkey-patching EffectComposer's `.render()`).
+
+### Finding: BloomNode uniforms differ from UnrealBloomPass
+Old: `bloomPass.strength = x` (direct property)
+TSL: `bloomNode.strength.value = x` (UniformNode)
+The surge bloom code at `ForceRadiant.tsx:2248-2257` needs updating when the swap happens.
+
+### Finding: `useWebGPU: true` IS a supported init option
+`three-render-objects` v1.40.5 supports it at line 102251. When set, it creates `WebGPURenderer` internally. But the library still creates EffectComposer unconditionally (line 102363) — that's the blocker requiring `patch-package`.
+
+---
+
+## Execution Status
+
+| Task | Status | Commit |
+|------|--------|--------|
+| Fix 5 TSL import bugs | DONE | `8a4627d4` |
+| Create ProceduralMoonTSL.ts (15 variants) | DONE | `7b116ad3` |
+| Extend PlanetSurfaceTSL (night/spec/atmosphere) | TODO | — |
+| Swap 13 ShaderMaterials in SolarSystem.ts | TODO | — |
+| Rewrite createPlanetMesh + createMoonMesh for TSL | TODO | — |
+| Update uniform setters in updateSolarSystem | TODO | — |
+| Swap 3 ShaderMaterials in ForceRadiant.tsx | TODO | — |
+| patch-package three-render-objects | TODO | — |
+| Flip useWebGPU: true | TODO | — |
+| Wire TSL PostProcessing | TODO | — |
+| Remove dead GLSL constants | TODO | — |
+| Visual verification | TODO | — |
 
 ---
 
