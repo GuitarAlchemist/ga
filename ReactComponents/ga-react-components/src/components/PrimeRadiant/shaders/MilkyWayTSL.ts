@@ -121,13 +121,18 @@ export function createMilkyWayMaterialTSL(): MeshBasicNodeMaterial {
     const starPoint = smoothstep(0.08, 0.0, starDist).mul(brightness).mul(0.8);
 
     // ── Final composition ──
-    const col = baseColor.mul(galMask).mul(dustAttenuation).toVar();
-    col.addAssign(vec3(1.0, 0.98, 0.9).mul(starPoint));
+    // Reduce overall brightness so the galactic band reads as a FAINT band of
+    // light (like real night sky) instead of dominant cream clouds. Space is
+    // dark — the MilkyWay should whisper, not shout.
+    const col = baseColor.mul(galMask).mul(dustAttenuation).mul(0.35).toVar();
+    col.addAssign(vec3(1.0, 0.98, 0.9).mul(starPoint).mul(0.6));
 
-    // ── Outer glow: wide Gaussian + noise variation ──
-    const outerGlow = exp(galLat.mul(galLat).negate().div(float(0.6)));
+    // ── Outer glow: tight Gaussian, very faint, stays near the plane ──
+    // Previous: width 0.6, intensity 0.15 → purple haze over the whole sky.
+    // Now: width 0.25, intensity 0.04 → only a hint of glow bordering the band.
+    const outerGlow = exp(galLat.mul(galLat).negate().div(float(0.25)));
     const glowNoise = fbm3(vec3(galLon.mul(2.0), galLat.mul(4.0), float(5.0)));
-    col.addAssign(vec3(0.15, 0.12, 0.18).mul(outerGlow.mul(float(0.3).add(glowNoise.mul(0.15)))));
+    col.addAssign(vec3(0.04, 0.03, 0.05).mul(outerGlow.mul(float(0.3).add(glowNoise.mul(0.15)))));
 
     return col;
   })();
