@@ -4,7 +4,15 @@
 // Orbit trails, Kepler speeds, realistic proportions
 
 import * as THREE from 'three';
+import { MeshStandardNodeMaterial } from 'three/webgpu';
 import { createSunMaterialTSL } from './shaders/SunMaterialTSL';
+import { createPlanetSurfaceMaterialTSL } from './shaders/PlanetSurfaceTSL';
+import { createCoronaMaterialTSL, createAtmosphereMaterialTSL, createTitanAtmosphereMaterialTSL, createMarkerMaterialTSL } from './shaders/FresnelGlowTSL';
+import { createOrbitTrailMaterialTSL } from './shaders/OrbitTrailTSL';
+import { createSaturnRingsMaterialTSL } from './shaders/SaturnRingsTSL';
+import { createAuroraMaterialTSL } from './shaders/AuroraTSL';
+import { createRingGlowMaterialTSL } from './shaders/RingGlowTSL';
+import { createStormVortexMaterialTSL } from './shaders/StormVortexTSL';
 import type { QualityTier } from './shaders/TSLUniforms';
 
 // ── Texture paths (served from public/textures/planets/) ──
@@ -23,18 +31,9 @@ function loadTex(file: string): THREE.Texture {
   return tex;
 }
 
-// ── Shared vertex shader for procedural moons ──
-const VERT = /* glsl */ `
-  varying vec3 vPos;
-  varying vec3 vNormal;
-  varying vec2 vUv;
-  void main() {
-    vPos = position;
-    vNormal = normalize(normalMatrix * normal);
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
+// ── Moon color definitions for procedural (non-textured) moons ──
+// These replace the old GLSL fragment shaders with simple color values
+// used by MeshStandardNodeMaterial for consistent PBR lighting.
 
 // ── Astronomical data for planet tooltips ──
 export interface PlanetAstroData {
@@ -64,7 +63,7 @@ interface MoonDef {
   distance: number;
   speed: number;
   inclination?: number;
-  fragment: string;
+  moonColor?: THREE.ColorRepresentation;  // base color for procedural moons (PBR lit)
   texture?: string;              // optional texture file
   textureDisplacement?: string;  // height map for terrain displacement
   irregular?: {                  // non-spherical body shape
@@ -80,7 +79,6 @@ interface PlanetDef {
   distance: number;
   speed: number;
   tilt?: number;
-  fragment: string;
   texture?: string;           // main color map
   textureNight?: string;      // night-side emission
   textureClouds?: string;     // cloud layer
@@ -121,122 +119,26 @@ function getRealOrbitalAngle(planetName: string): number {
   return L * Math.PI / 180;
 }
 
-// ── Noise library for procedural moon shaders ──
-const NOISE_LIB = `
-float h(vec3 p){return fract(sin(dot(p,vec3(1.3,1.7,1.9)))*43758.5);}
-float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
-float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++,p*=2.){v+=a*n(p);a*=0.5;}return v;}
-`;
-
-// ── Procedural moon shader fragments ──
-const ROCKY_GREY = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*40.,vec3(12.99,78.23,45.16)))*43758.55);gl_FragColor=vec4(vec3(.55,.53,.5)*(.4+c*.6),1.);}`;
-const ROCKY_DARK = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*50.,vec3(9.1,37.2,71.8)))*43758.5);gl_FragColor=vec4(vec3(.3,.28,.26)*(.5+c*.5),1.);}`;
-const ROCKY_REDDISH = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*35.,vec3(15.7,42.3,8.9)))*43758.5);gl_FragColor=vec4(vec3(.5,.35,.25)*(.4+c*.6),1.);}`;
-const ICY_WHITE = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*30.,vec3(11.3,47.9,23.1)))*43758.5);gl_FragColor=vec4(vec3(.85,.87,.9)*(.7+c*.3),1.);}`;
-const ICY_BLUE = `varying vec3 vPos;void main(){float c=fract(sin(dot(vPos*25.,vec3(7.3,31.7,59.1)))*43758.5);gl_FragColor=vec4(vec3(.6,.65,.75)*(.6+c*.4),1.);}`;
-
-// Io — volcanic sulfur
-const IO_FRAG = NOISE_LIB + `
-  uniform float uTime;varying vec3 vPos;
-  void main(){
-    float v=fbm(vPos*4.);float spots=smoothstep(.55,.65,n(vPos*8.+uTime*.01));
-    vec3 sulfur=mix(vec3(.9,.85,.2),vec3(.95,.6,.1),v);
-    vec3 lava=vec3(.1,.05,.02);vec3 col=mix(sulfur,lava,spots);
-    float hotspot=smoothstep(.7,.9,n(vPos*12.))*spots;
-    col+=vec3(1.,.3,.05)*hotspot*.6;
-    gl_FragColor=vec4(col,1.);}`;
-
-// Europa — ice cracks
-const EUROPA_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    vec3 ice=vec3(.82,.85,.9);
-    float crack1=abs(sin(vPos.x*15.+vPos.z*8.))*abs(cos(vPos.y*12.+vPos.x*6.));
-    float crack2=abs(sin(vPos.z*18.+vPos.y*10.))*abs(cos(vPos.x*14.+vPos.z*7.));
-    float cracks=smoothstep(.85,.95,max(crack1,crack2));
-    vec3 col=mix(ice,vec3(.55,.3,.15),cracks*.7);
-    col+=vec3(.05,.08,.12)*n(vPos*20.)*.3;
-    gl_FragColor=vec4(col,1.);}`;
-
-// Ganymede — grooved terrain
-const GANYMEDE_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    float t=fbm(vPos*3.);
-    vec3 dark=vec3(.3,.28,.25);vec3 light=vec3(.7,.72,.75);
-    vec3 col=mix(dark,light,smoothstep(.4,.6,t));
-    float grooves=sin(vPos.y*30.+vPos.x*5.)*.5+.5;
-    col*=.85+grooves*.15;
-    gl_FragColor=vec4(col,1.);}`;
-
-// Callisto — heavily cratered
-const CALLISTO_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    float t=fbm(vPos*5.);float craters=smoothstep(.6,.7,n(vPos*10.));
-    vec3 col=vec3(.35,.32,.3)*(0.6+t*.4);
-    col=mix(col,vec3(.55,.52,.5),craters*.4);
-    gl_FragColor=vec4(col,1.);}`;
-
-// Titan — orange haze
-const TITAN_FRAG = NOISE_LIB + `
-  uniform float uTime;varying vec3 vPos;
-  void main(){
-    float haze=fbm(vPos*2.5+vec3(uTime*.005,0,uTime*.003));
-    vec3 col=mix(vec3(.7,.5,.15),vec3(.85,.65,.25),haze);
-    float bands=sin(vPos.y*8.)*.5+.5;col*=.8+bands*.2;
-    gl_FragColor=vec4(col,1.);}`;
-
-// Enceladus — tiger stripes
-const ENCELADUS_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    vec3 ice=vec3(.92,.94,.97);
-    float lat=vPos.y/length(vPos);
-    float stripes=abs(sin(vPos.x*20.+vPos.z*15.))*smoothstep(-.8,-.5,lat);
-    stripes=smoothstep(.85,.95,stripes);
-    vec3 col=mix(ice,vec3(.4,.6,.85),stripes*.5);
-    gl_FragColor=vec4(col,1.);}`;
-
-// Mimas — Herschel crater
-const MIMAS_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    float c=n(vPos*20.)*.3;vec3 col=vec3(.6,.58,.55)*(.6+c);
-    float crater=1.-smoothstep(.0,.25,length(vec2(vPos.x/length(vPos)-.7,vPos.y/length(vPos))));
-    col=mix(col,vec3(.45,.42,.4),crater*.5);
-    gl_FragColor=vec4(col,1.);}`;
-
-// Iapetus — two-tone
-const IAPETUS_FRAG = `
-  varying vec3 vPos;
-  void main(){
-    float side=step(0.,vPos.z);
-    vec3 dark=vec3(.12,.1,.08);vec3 bright=vec3(.75,.73,.7);
-    gl_FragColor=vec4(mix(dark,bright,side),1.);}`;
-
-// Triton — nitrogen ice
-const TRITON_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    float t=fbm(vPos*4.);
-    vec3 ice=mix(vec3(.78,.7,.72),vec3(.85,.75,.78),t);
-    float streaks=smoothstep(.6,.8,n(vPos*vec3(3,15,3)));
-    vec3 col=mix(ice,vec3(.2,.15,.12),streaks*.4);
-    gl_FragColor=vec4(col,1.);}`;
-
-// Miranda — chaotic terrain
-const MIRANDA_FRAG = NOISE_LIB + `
-  varying vec3 vPos;
-  void main(){
-    float t=fbm(vPos*6.);float chaos=n(vPos*15.);
-    vec3 col=vec3(.55,.53,.5)*(.5+t*.5);
-    float chevron=smoothstep(.5,.7,abs(sin(vPos.x*10.+vPos.y*8.)));
-    col=mix(col,vec3(.7,.68,.65),chevron*.3*chaos);
-    gl_FragColor=vec4(col,1.);}`;
-
-// ── Unused placeholder for procedural planet fallback ──
-const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
+// ── Moon color palette — base colors for procedural moons ──
+// Each moon type maps to a base color; PBR lighting adds realism automatically.
+const MOON_COLORS: Record<string, THREE.ColorRepresentation> = {
+  ROCKY_GREY: 0x8c8880,
+  ROCKY_DARK: 0x4d4744,
+  ROCKY_REDDISH: 0x805940,
+  ICY_WHITE: 0xd9dee6,
+  ICY_BLUE: 0x99a6bf,
+  // Named moons with distinctive colors
+  io: 0xe6d933,          // sulfur yellow
+  europa: 0xd1d9e6,      // icy white-blue
+  ganymede: 0x7f7e78,    // grey-brown mix
+  callisto: 0x595552,     // dark grey-brown
+  titan: 0xcc9933,        // orange haze
+  enceladus: 0xebeef2,    // bright ice
+  mimas: 0x999590,        // grey
+  iapetus: 0x665d54,      // two-tone average
+  triton: 0xc7b3b8,       // pinkish ice
+  miranda: 0x8c8880,      // grey
+};
 
 // ── Astronomically accurate planet scaling ──
 // Sizes: TRUE linear ratio to Earth (Jupiter really is 11x Earth).
@@ -306,7 +208,6 @@ const PLANETS: PlanetDef[] = [
     speed: keplerSpeed(0.39),          // 12.3 (fast!)
     texture: '2k_mercury.jpg',
     textureDisplacement: '2k_mercury_displacement.jpg',
-    fragment: PROC_PLACEHOLDER,
   },
   {
     name: 'venus',
@@ -316,7 +217,6 @@ const PLANETS: PlanetDef[] = [
     texture: '2k_venus_surface.jpg',
     textureDisplacement: '2k_venus_displacement.jpg',
     atmosphere: { color: '0.95, 0.75, 0.25', intensity: 0.45, power: 2.5 },
-    fragment: PROC_PLACEHOLDER,
   },
   {
     name: 'earth',
@@ -330,9 +230,8 @@ const PLANETS: PlanetDef[] = [
     textureSpecular: '2k_earth_specular.jpg',
     // textureDisplacement removed — file doesn't exist, causes load errors
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: keplerRadius(3_474), distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
+      { name: 'moon', radius: keplerRadius(3_474), distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', moonColor: MOON_COLORS.ROCKY_GREY },
     ],
   },
   {
@@ -344,10 +243,9 @@ const PLANETS: PlanetDef[] = [
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
     atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.08, power: 5.0 }, // Mars: extremely thin (~1% of Earth)
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'phobos', radius: 0.06, distance: 0.6, speed: 4.0, fragment: ROCKY_DARK },   // enlarged for visibility (real: 11km)
-      { name: 'deimos', radius: 0.04, distance: 0.9, speed: 2.5, fragment: ROCKY_DARK },   // enlarged for visibility (real: 6km)
+      { name: 'phobos', radius: 0.06, distance: 0.6, speed: 4.0, moonColor: MOON_COLORS.ROCKY_DARK },   // enlarged for visibility (real: 11km)
+      { name: 'deimos', radius: 0.04, distance: 0.9, speed: 2.5, moonColor: MOON_COLORS.ROCKY_DARK },   // enlarged for visibility (real: 6km)
     ],
   },
   {
@@ -357,17 +255,16 @@ const PLANETS: PlanetDef[] = [
     speed: keplerSpeed(5.2),           // 0.253
     texture: '2k_jupiter.jpg',
     atmosphere: { color: '0.9, 0.7, 0.4', intensity: 0.25, power: 3.5 },
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'io', radius: keplerRadius(3_643), distance: 1.8, speed: 3.5, fragment: IO_FRAG },
-      { name: 'europa', radius: keplerRadius(3_122), distance: 2.3, speed: 2.8, fragment: EUROPA_FRAG },
-      { name: 'ganymede', radius: keplerRadius(5_268), distance: 2.9, speed: 2.0, fragment: GANYMEDE_FRAG },
-      { name: 'callisto', radius: keplerRadius(4_821), distance: 3.6, speed: 1.4, fragment: CALLISTO_FRAG },
-      { name: 'amalthea', radius: 0.025, distance: 1.4, speed: 4.5, fragment: ROCKY_REDDISH },
-      { name: 'thebe', radius: 0.015, distance: 1.55, speed: 4.2, fragment: ROCKY_DARK },
-      { name: 'metis', radius: 0.01, distance: 1.25, speed: 5.0, fragment: ROCKY_DARK },
-      { name: 'adrastea', radius: 0.008, distance: 1.28, speed: 4.9, fragment: ROCKY_DARK },
-      { name: 'himalia', radius: 0.02, distance: 5.0, speed: 0.5, inclination: 0.5, fragment: ROCKY_DARK },
+      { name: 'io', radius: keplerRadius(3_643), distance: 1.8, speed: 3.5, moonColor: MOON_COLORS.io },
+      { name: 'europa', radius: keplerRadius(3_122), distance: 2.3, speed: 2.8, moonColor: MOON_COLORS.europa },
+      { name: 'ganymede', radius: keplerRadius(5_268), distance: 2.9, speed: 2.0, moonColor: MOON_COLORS.ganymede },
+      { name: 'callisto', radius: keplerRadius(4_821), distance: 3.6, speed: 1.4, moonColor: MOON_COLORS.callisto },
+      { name: 'amalthea', radius: 0.025, distance: 1.4, speed: 4.5, moonColor: MOON_COLORS.ROCKY_REDDISH },
+      { name: 'thebe', radius: 0.015, distance: 1.55, speed: 4.2, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'metis', radius: 0.01, distance: 1.25, speed: 5.0, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'adrastea', radius: 0.008, distance: 1.28, speed: 4.9, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'himalia', radius: 0.02, distance: 5.0, speed: 0.5, inclination: 0.5, moonColor: MOON_COLORS.ROCKY_DARK },
     ],
   },
   {
@@ -377,53 +274,52 @@ const PLANETS: PlanetDef[] = [
     speed: keplerSpeed(9.54),          // 0.102
     texture: '2k_saturn.jpg',
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'mimas', radius: keplerRadius(396), distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
-      { name: 'enceladus', radius: keplerRadius(504), distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG },
-      { name: 'tethys', radius: keplerRadius(1_066), distance: 2.2, speed: 3.0, fragment: ICY_WHITE },
-      { name: 'dione', radius: keplerRadius(1_123), distance: 2.6, speed: 2.5, fragment: ICY_WHITE },
-      { name: 'rhea', radius: keplerRadius(1_527), distance: 3.1, speed: 2.0, fragment: ICY_WHITE },
-      { name: 'titan', radius: keplerRadius(5_150), distance: 3.8, speed: 1.3, fragment: TITAN_FRAG },
-      { name: 'hyperion', radius: keplerRadius(270), distance: 4.3, speed: 1.1, fragment: ROCKY_GREY },
-      { name: 'iapetus', radius: keplerRadius(1_469), distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG },
-      { name: 'phoebe', radius: 0.02, distance: 5.8, speed: 0.3, inclination: 2.7, fragment: ROCKY_DARK },
-      { name: 'pan', radius: 0.006, distance: 1.15, speed: 5.5, fragment: ICY_WHITE },
-      { name: 'atlas', radius: 0.006, distance: 1.18, speed: 5.4, fragment: ICY_WHITE },
-      { name: 'prometheus', radius: 0.01, distance: 1.22, speed: 5.2, fragment: ICY_WHITE },
-      { name: 'pandora', radius: 0.009, distance: 1.24, speed: 5.1, fragment: ICY_WHITE },
-      { name: 'epimetheus', radius: 0.01, distance: 1.35, speed: 4.6, fragment: ICY_WHITE },
-      { name: 'janus', radius: 0.012, distance: 1.36, speed: 4.5, fragment: ICY_WHITE },
+      { name: 'mimas', radius: keplerRadius(396), distance: 1.6, speed: 4.0, moonColor: MOON_COLORS.mimas },
+      { name: 'enceladus', radius: keplerRadius(504), distance: 1.9, speed: 3.5, moonColor: MOON_COLORS.enceladus },
+      { name: 'tethys', radius: keplerRadius(1_066), distance: 2.2, speed: 3.0, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'dione', radius: keplerRadius(1_123), distance: 2.6, speed: 2.5, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'rhea', radius: keplerRadius(1_527), distance: 3.1, speed: 2.0, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'titan', radius: keplerRadius(5_150), distance: 3.8, speed: 1.3, moonColor: MOON_COLORS.titan },
+      { name: 'hyperion', radius: keplerRadius(270), distance: 4.3, speed: 1.1, moonColor: MOON_COLORS.ROCKY_GREY },
+      { name: 'iapetus', radius: keplerRadius(1_469), distance: 5.0, speed: 0.7, inclination: 0.27, moonColor: MOON_COLORS.iapetus },
+      { name: 'phoebe', radius: 0.02, distance: 5.8, speed: 0.3, inclination: 2.7, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'pan', radius: 0.006, distance: 1.15, speed: 5.5, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'atlas', radius: 0.006, distance: 1.18, speed: 5.4, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'prometheus', radius: 0.01, distance: 1.22, speed: 5.2, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'pandora', radius: 0.009, distance: 1.24, speed: 5.1, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'epimetheus', radius: 0.01, distance: 1.35, speed: 4.6, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'janus', radius: 0.012, distance: 1.36, speed: 4.5, moonColor: MOON_COLORS.ICY_WHITE },
       // Trojan moons (co-orbital with larger moons)
-      { name: 'calypso', radius: 0.005, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },    // Tethys trailing trojan
-      { name: 'telesto', radius: 0.005, distance: 2.2, speed: 3.0, fragment: ICY_WHITE },    // Tethys leading trojan
-      { name: 'helene', radius: 0.006, distance: 2.6, speed: 2.5, fragment: ICY_WHITE },     // Dione leading trojan
-      { name: 'polydeuces', radius: 0.003, distance: 2.6, speed: 2.5, fragment: ICY_WHITE }, // Dione trailing trojan
+      { name: 'calypso', radius: 0.005, distance: 2.2, speed: 3.0, moonColor: MOON_COLORS.ICY_WHITE },    // Tethys trailing trojan
+      { name: 'telesto', radius: 0.005, distance: 2.2, speed: 3.0, moonColor: MOON_COLORS.ICY_WHITE },    // Tethys leading trojan
+      { name: 'helene', radius: 0.006, distance: 2.6, speed: 2.5, moonColor: MOON_COLORS.ICY_WHITE },     // Dione leading trojan
+      { name: 'polydeuces', radius: 0.003, distance: 2.6, speed: 2.5, moonColor: MOON_COLORS.ICY_WHITE }, // Dione trailing trojan
       // Outer irregular moons
-      { name: 'siarnaq', radius: 0.008, distance: 6.5, speed: 0.2, inclination: 0.8, fragment: ROCKY_DARK },
-      { name: 'paaliaq', radius: 0.007, distance: 7.0, speed: 0.18, inclination: 0.7, fragment: ROCKY_DARK },
-      { name: 'ymir', radius: 0.006, distance: 8.0, speed: -0.1, inclination: 2.8, fragment: ROCKY_DARK },   // retrograde
-      { name: 'tarvos', radius: 0.005, distance: 7.5, speed: 0.15, inclination: 0.6, fragment: ROCKY_DARK },
+      { name: 'siarnaq', radius: 0.008, distance: 6.5, speed: 0.2, inclination: 0.8, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'paaliaq', radius: 0.007, distance: 7.0, speed: 0.18, inclination: 0.7, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'ymir', radius: 0.006, distance: 8.0, speed: -0.1, inclination: 2.8, moonColor: MOON_COLORS.ROCKY_DARK },   // retrograde
+      { name: 'tarvos', radius: 0.005, distance: 7.5, speed: 0.15, inclination: 0.6, moonColor: MOON_COLORS.ROCKY_DARK },
       // Ring shepherds and inner small moons
-      { name: 'daphnis', radius: 0.004, distance: 1.13, speed: 5.6, fragment: ICY_WHITE },   // Keeler gap shepherd
-      { name: 'methone', radius: 0.003, distance: 1.7, speed: 3.8, fragment: ICY_WHITE },    // egg-shaped
-      { name: 'anthe', radius: 0.002, distance: 1.75, speed: 3.7, fragment: ICY_WHITE },
-      { name: 'pallene', radius: 0.003, distance: 1.8, speed: 3.6, fragment: ICY_WHITE },
+      { name: 'daphnis', radius: 0.004, distance: 1.13, speed: 5.6, moonColor: MOON_COLORS.ICY_WHITE },   // Keeler gap shepherd
+      { name: 'methone', radius: 0.003, distance: 1.7, speed: 3.8, moonColor: MOON_COLORS.ICY_WHITE },    // egg-shaped
+      { name: 'anthe', radius: 0.002, distance: 1.75, speed: 3.7, moonColor: MOON_COLORS.ICY_WHITE },
+      { name: 'pallene', radius: 0.003, distance: 1.8, speed: 3.6, moonColor: MOON_COLORS.ICY_WHITE },
       // Norse group (retrograde irregulars, >5km)
-      { name: 'skathi', radius: 0.004, distance: 7.8, speed: -0.12, inclination: 2.6, fragment: ROCKY_DARK },
-      { name: 'mundilfari', radius: 0.004, distance: 8.2, speed: -0.1, inclination: 2.7, fragment: ROCKY_DARK },
-      { name: 'thrymr', radius: 0.004, distance: 8.5, speed: -0.09, inclination: 2.8, fragment: ROCKY_DARK },
-      { name: 'narvi', radius: 0.004, distance: 8.8, speed: -0.08, inclination: 2.5, fragment: ROCKY_DARK },
-      { name: 'suttungr', radius: 0.004, distance: 8.0, speed: -0.11, inclination: 2.9, fragment: ROCKY_DARK },
-      { name: 'bergelmir', radius: 0.003, distance: 9.0, speed: -0.07, inclination: 2.7, fragment: ROCKY_DARK },
-      { name: 'fornjot', radius: 0.003, distance: 9.5, speed: -0.06, inclination: 2.8, fragment: ROCKY_DARK },
+      { name: 'skathi', radius: 0.004, distance: 7.8, speed: -0.12, inclination: 2.6, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'mundilfari', radius: 0.004, distance: 8.2, speed: -0.1, inclination: 2.7, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'thrymr', radius: 0.004, distance: 8.5, speed: -0.09, inclination: 2.8, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'narvi', radius: 0.004, distance: 8.8, speed: -0.08, inclination: 2.5, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'suttungr', radius: 0.004, distance: 8.0, speed: -0.11, inclination: 2.9, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'bergelmir', radius: 0.003, distance: 9.0, speed: -0.07, inclination: 2.7, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'fornjot', radius: 0.003, distance: 9.5, speed: -0.06, inclination: 2.8, moonColor: MOON_COLORS.ROCKY_DARK },
       // Inuit group (prograde irregulars)
-      { name: 'ijiraq', radius: 0.005, distance: 6.8, speed: 0.2, inclination: 0.8, fragment: ROCKY_DARK },
-      { name: 'kiviuq', radius: 0.005, distance: 6.6, speed: 0.22, inclination: 0.8, fragment: ROCKY_DARK },
+      { name: 'ijiraq', radius: 0.005, distance: 6.8, speed: 0.2, inclination: 0.8, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'kiviuq', radius: 0.005, distance: 6.6, speed: 0.22, inclination: 0.8, moonColor: MOON_COLORS.ROCKY_DARK },
       // Gallic group
-      { name: 'albiorix', radius: 0.008, distance: 7.2, speed: 0.16, inclination: 0.6, fragment: ROCKY_GREY },
-      { name: 'erriapus', radius: 0.004, distance: 7.3, speed: 0.15, inclination: 0.6, fragment: ROCKY_DARK },
-      { name: 'bebhionn', radius: 0.003, distance: 7.4, speed: 0.14, inclination: 0.6, fragment: ROCKY_DARK },
+      { name: 'albiorix', radius: 0.008, distance: 7.2, speed: 0.16, inclination: 0.6, moonColor: MOON_COLORS.ROCKY_GREY },
+      { name: 'erriapus', radius: 0.004, distance: 7.3, speed: 0.15, inclination: 0.6, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'bebhionn', radius: 0.003, distance: 7.4, speed: 0.14, inclination: 0.6, moonColor: MOON_COLORS.ROCKY_DARK },
     ],
   },
   {
@@ -434,15 +330,14 @@ const PLANETS: PlanetDef[] = [
     tilt: 1.71,
     texture: '2k_uranus.jpg',
     atmosphere: { color: '0.4, 0.85, 0.75', intensity: 0.3, power: 3.0 },
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'miranda', radius: keplerRadius(472), distance: 1.0, speed: 3.5, fragment: MIRANDA_FRAG },
-      { name: 'ariel', radius: keplerRadius(1_158), distance: 1.4, speed: 2.8, fragment: ICY_BLUE },
-      { name: 'umbriel', radius: keplerRadius(1_170), distance: 1.8, speed: 2.2, fragment: ROCKY_DARK },
-      { name: 'titania', radius: keplerRadius(1_578), distance: 2.3, speed: 1.6, fragment: ICY_BLUE },
-      { name: 'oberon', radius: keplerRadius(1_523), distance: 2.8, speed: 1.2, fragment: ICY_BLUE },
-      { name: 'puck', radius: 0.012, distance: 0.8, speed: 4.2, fragment: ROCKY_DARK },
-      { name: 'portia', radius: 0.01, distance: 0.7, speed: 4.5, fragment: ROCKY_DARK },
+      { name: 'miranda', radius: keplerRadius(472), distance: 1.0, speed: 3.5, moonColor: MOON_COLORS.miranda },
+      { name: 'ariel', radius: keplerRadius(1_158), distance: 1.4, speed: 2.8, moonColor: MOON_COLORS.ICY_BLUE },
+      { name: 'umbriel', radius: keplerRadius(1_170), distance: 1.8, speed: 2.2, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'titania', radius: keplerRadius(1_578), distance: 2.3, speed: 1.6, moonColor: MOON_COLORS.ICY_BLUE },
+      { name: 'oberon', radius: keplerRadius(1_523), distance: 2.8, speed: 1.2, moonColor: MOON_COLORS.ICY_BLUE },
+      { name: 'puck', radius: 0.012, distance: 0.8, speed: 4.2, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'portia', radius: 0.01, distance: 0.7, speed: 4.5, moonColor: MOON_COLORS.ROCKY_DARK },
     ],
   },
   {
@@ -452,14 +347,13 @@ const PLANETS: PlanetDef[] = [
     speed: keplerSpeed(30.06),         // 0.0182
     texture: '2k_neptune.jpg',
     atmosphere: { color: '0.2, 0.4, 1.0', intensity: 0.35, power: 3.0 },
-    fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'triton', radius: keplerRadius(2_707), distance: 1.5, speed: -1.8, fragment: TRITON_FRAG },
-      { name: 'proteus', radius: keplerRadius(420), distance: 0.9, speed: 3.0, fragment: ROCKY_DARK },
-      { name: 'nereid', radius: 0.02, distance: 3.0, speed: 0.4, inclination: 0.5, fragment: ROCKY_GREY },
-      { name: 'larissa', radius: 0.012, distance: 0.7, speed: 3.8, fragment: ROCKY_DARK },
-      { name: 'despina', radius: 0.01, distance: 0.6, speed: 4.2, fragment: ROCKY_DARK },
-      { name: 'galatea', radius: 0.01, distance: 0.65, speed: 4.0, fragment: ROCKY_DARK },
+      { name: 'triton', radius: keplerRadius(2_707), distance: 1.5, speed: -1.8, moonColor: MOON_COLORS.triton },
+      { name: 'proteus', radius: keplerRadius(420), distance: 0.9, speed: 3.0, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'nereid', radius: 0.02, distance: 3.0, speed: 0.4, inclination: 0.5, moonColor: MOON_COLORS.ROCKY_GREY },
+      { name: 'larissa', radius: 0.012, distance: 0.7, speed: 3.8, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'despina', radius: 0.01, distance: 0.6, speed: 4.2, moonColor: MOON_COLORS.ROCKY_DARK },
+      { name: 'galatea', radius: 0.01, distance: 0.65, speed: 4.0, moonColor: MOON_COLORS.ROCKY_DARK },
     ],
   },
 ];
@@ -472,215 +366,11 @@ interface MoonInstance {
   orbitGroup: THREE.Group;
 }
 
-// ── Planet shader: day/night terminator, bump mapping, specular, atmosphere, displacement ──
-// All lighting computed in VIEW space so camera-parented groups work correctly.
-// (World-space cameraPosition is the camera's own position — useless when the
-//  solar system is a child of the camera.)
-const PLANET_VERT = /* glsl */ `
-  uniform sampler2D uDisplacementMap;
-  uniform float uDisplacementScale;  // 0 = no displacement
-  uniform float uHasDisplacement;
+// Planet surface shading now handled by PlanetSurfaceTSL (MeshStandardNodeMaterial).
+// PBR lighting via PointLight at sun handles day/night automatically.
+// Earth seasonal tinting handled by PlanetSurfaceTSL's monthUniform.
 
-  varying vec3 vViewPos;
-  varying vec3 vViewNormal;
-  varying vec2 vUv;
-  varying vec3 vViewDir;
-
-  void main() {
-    vUv = uv;
-
-    // Displace vertex along normal based on height map
-    vec3 displacedPos = position;
-    if (uHasDisplacement > 0.5) {
-      float height = texture2D(uDisplacementMap, uv).r;
-      // Offset from 0.5 so mid-grey = no displacement, white = peak, black = valley
-      displacedPos += normal * (height - 0.3) * uDisplacementScale;
-    }
-
-    vec4 mvPos = modelViewMatrix * vec4(displacedPos, 1.0);
-    vViewPos = mvPos.xyz;
-    vViewNormal = normalize(normalMatrix * normal);
-    vViewDir = normalize(-mvPos.xyz);
-    gl_Position = projectionMatrix * mvPos;
-  }
-`;
-
-// Day/night with smooth terminator, bump-derived shading, specular, atmosphere rim
-// All varyings are in VIEW space (camera-parenting safe).
-const PLANET_FRAG = /* glsl */ `
-  uniform sampler2D uMap;
-  uniform sampler2D uNightMap;
-  uniform sampler2D uSpecMap;
-  uniform vec3 uSunPosView;   // sun position in view space (set per frame)
-  uniform float uHasNight;
-  uniform float uHasSpec;
-  uniform float uAtmoColor;   // 0=none, 1=blue(earth), 2=orange(venus/titan)
-  uniform float uRoughness;
-  uniform vec2 uTexelSize;    // 1/textureWidth, 1/textureHeight for bump
-  uniform float uMonth;       // 1-12, current month (for seasonal snow on Earth)
-  uniform float uIsEarth;     // 1.0 for Earth, 0.0 otherwise
-
-  varying vec3 vViewPos;
-  varying vec3 vViewNormal;
-  varying vec2 vUv;
-  varying vec3 vViewDir;
-
-  vec3 getBumpNormal() {
-    // Derive bump from luminance differences in texture
-    float tl = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-    float t  = dot(texture2D(uMap, vUv + vec2(0.0, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-    float tr = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-    float l  = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
-    float r  = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
-    float bl = dot(texture2D(uMap, vUv + vec2(-uTexelSize.x, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-    float b  = dot(texture2D(uMap, vUv + vec2(0.0, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-    float br = dot(texture2D(uMap, vUv + vec2(uTexelSize.x, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
-
-    float dX = (tr + 2.0*r + br) - (tl + 2.0*l + bl);
-    float dY = (bl + 2.0*b + br) - (tl + 2.0*t + tr);
-
-    // Perturb normal (strength factor controls bump intensity)
-    float bumpStrength = 1.5;
-    vec3 N = normalize(vViewNormal);
-    vec3 T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
-    vec3 B = cross(N, T);
-    return normalize(N + (T * dX + B * dY) * bumpStrength);
-  }
-
-  void main() {
-    vec3 sunDir = normalize(uSunPosView - vViewPos);
-    vec3 N = getBumpNormal();
-    float NdotL = dot(N, sunDir);
-
-    // Smooth terminator — gradual transition from day to night
-    float dayFactor = smoothstep(-0.15, 0.2, NdotL);
-
-    // Day color from texture
-    // Day color from texture (anisotropy=8 handles sharpness; mip bias removed — caused flicker)
-    vec3 dayColor = texture2D(uMap, vUv).rgb;
-
-    // Seasonal snow/ice coverage (Earth only)
-    if (uIsEarth > 0.5) {
-      // Latitude from UV: 0.0 = south pole, 0.5 = equator, 1.0 = north pole
-      float lat = (vUv.y - 0.5) * 2.0; // -1 (south) to +1 (north)
-      float absLat = abs(lat);
-
-      // Seasonal offset: northern winter = months 11,12,1,2 → snow pushes south
-      // uMonth 1-12; convert to seasonal factor where 0 = summer solstice, 1 = winter solstice
-      // For northern hemisphere: winter peak at month ~1 (Jan), summer at ~7 (Jul)
-      float monthRad = (uMonth - 1.0) / 12.0 * 6.28318;
-      float winterFactorN = (1.0 + cos(monthRad)) * 0.5;          // 1.0 in Jan, 0.0 in Jul
-      float winterFactorS = (1.0 + cos(monthRad + 3.14159)) * 0.5; // opposite
-
-      // Snow line: how far from pole snow extends (0.5 = 60deg, 0.7 = 45deg, 0.9 = near equator)
-      // Permanent ice caps above ~75deg (absLat > 0.83)
-      // Seasonal snow extends further in winter
-      float snowLineN = 0.55 + winterFactorN * 0.25; // 0.55 (summer) to 0.80 (winter)
-      float snowLineS = 0.55 + winterFactorS * 0.25;
-
-      float snowAmount = 0.0;
-      if (lat > 0.0) {
-        // Northern hemisphere
-        snowAmount = smoothstep(snowLineN - 0.15, snowLineN + 0.05, absLat);
-      } else {
-        // Southern hemisphere
-        snowAmount = smoothstep(snowLineS - 0.15, snowLineS + 0.05, absLat);
-      }
-
-      // Permanent polar ice caps (always white above ~80deg)
-      float iceCap = smoothstep(0.78, 0.88, absLat);
-      snowAmount = max(snowAmount, iceCap);
-
-      // Blend: snow is bright white with slight blue tint
-      vec3 snowColor = vec3(0.92, 0.95, 1.0);
-      dayColor = mix(dayColor, snowColor, snowAmount * 0.7);
-    }
-
-    // Diffuse shading (Lambert with slight ambient)
-    float diffuse = max(NdotL, 0.0);
-    // Venus special: thick clouds reflect strongly (albedo ~0.75)
-    float albedoBoost = uAtmoColor > 1.5 ? 1.5 : 1.0;
-    vec3 litDay = dayColor * (0.03 + 0.97 * diffuse) * albedoBoost;
-
-    // Specular (Blinn-Phong) — toned down to prevent overblown day side
-    vec3 halfDir = normalize(sunDir + vViewDir);
-    float specAngle = max(dot(N, halfDir), 0.0);
-    float specPower = mix(16.0, 64.0, 1.0 - uRoughness);
-    float spec = pow(specAngle, specPower) * (1.0 - uRoughness) * 0.35;
-    if (uHasSpec > 0.5) {
-      float specMask = texture2D(uSpecMap, vUv).r;
-      spec *= specMask;
-    }
-    litDay += vec3(1.0, 0.95, 0.9) * spec * dayFactor;
-
-    // Night side
-    vec3 nightColor = vec3(0.0);
-    if (uHasNight > 0.5) {
-      nightColor = texture2D(uNightMap, vUv).rgb * 0.8;
-    }
-
-    // Blend day/night across terminator
-    vec3 surfaceColor = mix(nightColor, litDay, dayFactor);
-
-    // ── Sunrise/sunset glow at the terminator ──
-    // Warm orange-red band where NdotL is near zero (the golden hour zone)
-    if (uAtmoColor > 0.5) {
-      // Terminator band: strongest glow where sun is right at the horizon
-      float terminatorBand = exp(-NdotL * NdotL / 0.03); // wider Gaussian — prevents sub-pixel aliasing flicker
-      // Warm gradient: deep red at the darkest edge, golden at the bright edge
-      vec3 sunriseColorDeep = vec3(0.8, 0.2, 0.05);   // deep red/orange
-      vec3 sunriseColorWarm = vec3(1.0, 0.6, 0.2);    // golden orange
-      float warmBlend = smoothstep(-0.08, 0.08, NdotL); // red→gold across terminator
-      vec3 sunriseColor = mix(sunriseColorDeep, sunriseColorWarm, warmBlend);
-      // Intensity scales with atmosphere (Earth gets more, Mars gets less)
-      float atmoStrength = uAtmoColor < 1.5 ? 0.35 : uAtmoColor < 2.5 ? 0.2 : 0.1;
-      surfaceColor += sunriseColor * terminatorBand * atmoStrength * 0.5; // halved to prevent bright streak
-    }
-
-    // Atmosphere rim glow
-    float fresnel = pow(1.0 - abs(dot(normalize(vViewNormal), vViewDir)), 3.0);
-    if (uAtmoColor > 0.5 && uAtmoColor < 1.5) {
-      // Earth — blue atmosphere on day side, warm orange at terminator rim
-      surfaceColor += vec3(0.25, 0.45, 1.0) * fresnel * 0.35 * dayFactor;
-      surfaceColor += vec3(0.05, 0.1, 0.3) * fresnel * 0.2 * (1.0 - dayFactor); // faint blue on night side
-      // Warm terminator rim — the atmosphere scatters orange light at the edge
-      float terminatorFresnel = fresnel * exp(-NdotL * NdotL / 0.02);
-      surfaceColor += vec3(1.0, 0.5, 0.15) * terminatorFresnel * 0.4;
-    } else if (uAtmoColor > 1.5) {
-      // Venus — orange haze (intensified at terminator)
-      surfaceColor += vec3(1.0, 0.7, 0.2) * fresnel * 0.3;
-      float venusTerminator = fresnel * exp(-NdotL * NdotL / 0.02);
-      surfaceColor += vec3(1.0, 0.5, 0.1) * venusTerminator * 0.25;
-    }
-
-    // ── Cinematic realism: 5 fixes from multi-AI brainstorm ──
-
-    // Limb darkening — gentle quadratic falloff instead of exponential extinction.
-    // Exponential path length caused flicker: tiny NdotV changes got amplified.
-    // Quadratic is smooth, stable, and still reads as atmospheric.
-    float NdotV_limb = max(dot(normalize(vViewNormal), vViewDir), 0.0);
-    float limbDarken = mix(0.35, 1.0, NdotV_limb * NdotV_limb); // quadratic: 0.35 at edge, 1.0 at center
-    surfaceColor *= limbDarken;
-
-    // Atmospheric in-scattering — haze at limb, Rayleigh phase function
-    // Uses 1-NdotV instead of exponential path (stable, no flicker)
-    if (uAtmoColor > 0.5) {
-      float inScatter = pow(1.0 - NdotV_limb, 2.0) * 0.5; // strongest at limb
-      float cosTheta = dot(vViewDir, sunDir);
-      float rayleigh = 0.75 * (1.0 + cosTheta * cosTheta);
-      vec3 atmoTint = uAtmoColor < 1.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.9, 0.6, 0.2);
-      surfaceColor += atmoTint * inScatter * rayleigh * 0.25;
-    }
-
-    // Roughness noise and cloud shadows removed — both caused flicker.
-    // Roughness noise: GPU sin() hash has inconsistent precision across frames.
-    // Cloud shadows: sunDir.xz changes per frame as planet orbits → shadow shifts.
-
-    gl_FragColor = vec4(surfaceColor, 1.0);
-  }
-`;
-
-// ── Create a textured planet mesh with realistic shading ──
+// ── Create a textured planet mesh with TSL PBR material ──
 function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
   // More segments for smoother appearance at all zoom levels
   const baseSegments = def.radius > 0.5 ? 64 : def.radius > 0.1 ? 48 : 32;
@@ -690,46 +380,38 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
 
   if (def.texture) {
     const map = loadTex(def.texture);
-    const texSize = 2048; // 2K textures
+    const displacementMap = def.textureDisplacement ? loadTex(def.textureDisplacement) : undefined;
+    // Scale displacement relative to planet radius — Mars gets more (Olympus Mons!)
+    const displacementScale = def.textureDisplacement
+      ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05)
+      : 0;
 
-    const uniforms: Record<string, THREE.IUniform> = {
-      uMap: { value: map },
-      uNightMap: { value: def.textureNight ? loadTex(def.textureNight) : null },
-      uSpecMap: { value: def.textureSpecular ? loadTex(def.textureSpecular) : null },
-      uSunPosView: { value: new THREE.Vector3(0, 0, 0) }, // updated per frame (view space)
-      uHasNight: { value: def.textureNight ? 1.0 : 0.0 },
-      uHasSpec: { value: def.textureSpecular ? 1.0 : 0.0 },
-      uAtmoColor: { value: def.name === 'earth' ? 1.0 : def.name === 'venus' ? 2.0 : 0.0 },
-      uRoughness: { value: def.name === 'earth' ? 0.6 : 0.85 },
-      uTexelSize: { value: new THREE.Vector2(1 / texSize, 1 / texSize) },
-      uMonth: { value: new Date().getMonth() + 1 }, // 1-12
-      uIsEarth: { value: def.name === 'earth' ? 1.0 : 0.0 },
-      uDisplacementMap: { value: def.textureDisplacement ? loadTex(def.textureDisplacement) : null },
-      uHasDisplacement: { value: def.textureDisplacement ? 1.0 : 0.0 },
-      // Scale displacement relative to planet radius — Mars gets more (Olympus Mons!)
-      uDisplacementScale: { value: def.textureDisplacement ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05) : 0.0 },
-    };
-
-    const mat = new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader: PLANET_VERT,
-      fragmentShader: PLANET_FRAG,
+    const mat = createPlanetSurfaceMaterialTSL({
+      planetTexture: map,
+      displacementMap,
+      displacementScale,
+      isEarth: def.name === 'earth',
     });
+
+    // Set initial month for Earth seasonal tinting
+    if (def.name === 'earth' && mat.userData.monthUniform) {
+      mat.userData.monthUniform.value = new Date().getMonth() + 1; // 1-12
+    }
+
     const mesh = new THREE.Mesh(geo, mat);
     mesh.userData.isPlanetShader = true;
     return mesh;
   }
 
-  // Procedural fallback
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: VERT,
-    fragmentShader: def.fragment,
-  });
+  // Procedural fallback — simple grey MeshStandardNodeMaterial
+  const mat = new MeshStandardNodeMaterial();
+  mat.color = new THREE.Color(0x808080);
+  mat.roughness = 0.9;
+  mat.metalness = 0;
   return new THREE.Mesh(geo, mat);
 }
 
-// ── Create a textured moon mesh, or fall back to procedural shader ──
+// ── Create a textured moon mesh, or fall back to colored PBR material ──
 function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
   const baseSegments = def.radius > 0.02 ? 24 : 16;
   const segments = def.textureDisplacement ? Math.max(baseSegments, 48) : baseSegments;
@@ -737,22 +419,22 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
 
   if (def.texture) {
     const map = loadTex(def.texture);
-    const matOpts: THREE.MeshStandardMaterialParameters = { map, roughness: 0.95, metalness: 0 };
-    if (def.textureDisplacement) {
-      matOpts.displacementMap = loadTex(def.textureDisplacement);
-      matOpts.displacementScale = def.radius * scale * 0.06;
-      matOpts.displacementBias = -def.radius * scale * 0.02;
-    }
-    const mat = new THREE.MeshStandardMaterial(matOpts);
+    const displacementMap = def.textureDisplacement ? loadTex(def.textureDisplacement) : undefined;
+    const displacementScale = def.textureDisplacement ? def.radius * scale * 0.06 : 0;
+
+    const mat = createPlanetSurfaceMaterialTSL({
+      planetTexture: map,
+      displacementMap,
+      displacementScale,
+    });
     return new THREE.Mesh(geo, mat);
   }
 
-  const hasTime = def.fragment.includes('uTime');
-  const mat = new THREE.ShaderMaterial({
-    uniforms: hasTime ? { uTime: { value: 0 } } : {},
-    vertexShader: VERT,
-    fragmentShader: def.fragment,
-  });
+  // Procedural moon — use MeshStandardNodeMaterial with base color for PBR lighting
+  const mat = new MeshStandardNodeMaterial();
+  mat.color = new THREE.Color(def.moonColor ?? 0x808080);
+  mat.roughness = 0.95;
+  mat.metalness = 0;
   return new THREE.Mesh(geo, mat);
 }
 
@@ -779,29 +461,7 @@ function createOrbitTrail(distance: number, scale: number, color: number = 0x334
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
 
-  const col = new THREE.Color(color);
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: col },
-    },
-    vertexShader: /* glsl */ `
-      attribute float aAlpha;
-      varying float vAlpha;
-      void main() {
-        vAlpha = aAlpha;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor;
-      varying float vAlpha;
-      void main() {
-        gl_FragColor = vec4(uColor, vAlpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-  });
+  const mat = createOrbitTrailMaterialTSL(color);
   const line = new THREE.Line(geo, mat);
   line.userData.trailSegments = segments;
   line.userData.trailDistance = distance;
@@ -912,100 +572,9 @@ export function createSolarSystem(scale: number): THREE.Group {
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
 
-  // Sun material — GLSL ShaderMaterial (fully self-luminous, no lighting response).
-  // Note: TSL MeshBasicNodeMaterial does NOT work with 3d-force-graph's WebGLRenderer.
-  // TSL materials require WebGPURenderer (renderers/common + renderers/webgpu paths).
-  // The TSL version in shaders/SunMaterialTSL.ts is ready for when we upgrade the renderer.
-  const sunMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uSunTex: { value: sunTex },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
-      void main() {
-        vUv = uv;
-        vPos = position;
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPos.xyz);
-        gl_Position = projectionMatrix * mvPos;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      uniform sampler2D uSunTex;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
-
-      float hash(vec3 p) { return fract(sin(dot(p, vec3(1.3, 1.7, 1.9))) * 43758.5); }
-      float noise(vec3 x) {
-        vec3 i = floor(x), f = fract(x);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
-      }
-      float fbm(vec3 p) {
-        float v = 0.0, a = 0.5;
-        for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.1; a *= 0.48; }
-        return v;
-      }
-
-      void main() {
-        float t = uTime * 0.08;
-        vec3 baseTex = texture2D(uSunTex, vUv).rgb;
-
-        // Multi-scale convection
-        float fineGran = fbm(vPos * 18.0 + vec3(t * 0.4, t * 0.3, t * 0.35));
-        float medGran = fbm(vPos * 6.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
-        float flow = fbm(vPos * 2.0 + vec3(t * 0.05, t * 0.03, -t * 0.04));
-
-        // Sunspots
-        float spotNoise = fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01));
-        float spots = smoothstep(0.58, 0.68, spotNoise);
-        float penumbra = smoothstep(0.52, 0.58, spotNoise) * (1.0 - spots);
-        float faculae = smoothstep(0.45, 0.52, spotNoise) * (1.0 - spots) * (1.0 - penumbra);
-
-        // Vivid photosphere palette
-        vec3 photosphere = mix(vec3(1.0, 0.75, 0.3), vec3(1.0, 0.9, 0.6), fineGran * 0.5);
-        photosphere = mix(photosphere, vec3(1.0, 0.5, 0.08), (1.0 - medGran) * 0.2);
-        vec3 col = mix(baseTex * 1.05, photosphere, 0.6);
-
-        col = mix(col, vec3(0.7, 0.15, 0.02), spots * 0.75);
-        col = mix(col, vec3(1.0, 0.5, 0.08), penumbra * 0.4);
-        col = mix(col, vec3(1.0, 0.85, 0.5), faculae * 0.25);
-
-        // Prominences at limb
-        float edgeFresnel = 1.0 - abs(dot(normalize(vNormal), normalize(vViewDir)));
-        float prominence = smoothstep(0.7, 0.95, edgeFresnel) * smoothstep(0.6, 0.75, noise(vPos * 5.0 + vec3(t * 0.3)));
-        col += vec3(1.0, 0.4, 0.1) * prominence * 0.5;
-
-        // Edge glow (fully self-luminous — NO darkening)
-        col += vec3(1.0, 0.4, 0.08) * pow(edgeFresnel, 4.0) * 0.2;
-
-        // Center boost
-        float centerBoost = pow(1.0 - edgeFresnel, 2.0);
-        col *= 0.9 + 0.15 * centerBoost;
-
-        // Magnetic field lines
-        float magField = sin(vPos.y * 30.0 + flow * 5.0) * 0.02 * edgeFresnel;
-        col += vec3(1.0, 0.8, 0.4) * magField;
-
-        // Gentle pulsing
-        col *= 1.0 + 0.02 * sin(uTime * 0.3) + 0.01 * sin(uTime * 0.8);
-
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-  });
+  // Sun material — TSL MeshBasicNodeMaterial (fully self-luminous, no lighting response).
+  // Auto-compiles to GLSL (WebGL2) or WGSL (WebGPU).
+  const sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: 'high' as QualityTier });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -1055,12 +624,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   // Sun corona glow (subtle — bloom post-process amplifies this)
   // Corona: just slightly larger than the Sun — subtle limb glow, not a giant halo
   const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.08 * scale, 16, 16);
-  const coronaMat = new THREE.ShaderMaterial({
-    uniforms: {},
-    vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vViewDir=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
-    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,3.5);gl_FragColor=vec4(1.,.7,.2,f*.15);}`,
-    transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-  });
+  const coronaMat = createCoronaMaterialTSL();
   group.add(new THREE.Mesh(coronaGeo, coronaMat));
 
   // ── Planets + Moons ──
@@ -1119,38 +683,11 @@ export function createSolarSystem(scale: number): THREE.Group {
     if (def.atmosphere) {
       const atmoSegs = def.radius > 0.5 ? 32 : 24;
       const atmoGeo = new THREE.SphereGeometry(def.radius * 1.06 * scale, atmoSegs, atmoSegs);
-      const atmoMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: new THREE.Vector3(...def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number]) },
-          uIntensity: { value: def.atmosphere.intensity },
-          uPower: { value: def.atmosphere.power },
-        },
-        vertexShader: /* glsl */ `
-          varying vec3 vNormal;
-          varying vec3 vViewDir;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-            vViewDir = normalize(-mvPos.xyz);
-            gl_Position = projectionMatrix * mvPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform vec3 uColor;
-          uniform float uIntensity;
-          uniform float uPower;
-          varying vec3 vNormal;
-          varying vec3 vViewDir;
-          void main() {
-            float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
-            float atmo = pow(fresnel, uPower) * uIntensity;
-            gl_FragColor = vec4(uColor, atmo);
-          }
-        `,
-        transparent: true,
-        side: THREE.BackSide,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
+      const atmoColor = def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number];
+      const atmoMat = createAtmosphereMaterialTSL({
+        color: atmoColor,
+        intensity: def.atmosphere.intensity,
+        power: def.atmosphere.power,
       });
       const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
       atmoMesh.name = `atmo-${def.name}`;
@@ -1240,7 +777,7 @@ export function createSolarSystem(scale: number): THREE.Group {
 
     // Saturn rings (textured)
     if (def.name === 'saturn') {
-      // Saturn rings — lit ShaderMaterial with Cassini division, backlit glow, sun response
+      // Saturn rings — TSL NodeMaterial with Cassini division, backlit glow, sun response
       const ringInner = 1.3, ringOuter = 2.2;
       const ringGeo = new THREE.RingGeometry(ringInner * scale, ringOuter * scale, 128, 1);
       // Remap UVs to radial 0-1 for ring texture
@@ -1253,69 +790,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         ringUv.setXY(i, rNorm, 0.5);
       }
       const ringTex = loadTex('2k_saturn_ring_alpha.png');
-      const ringMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uRingTex: { value: ringTex },
-          uSunPosView: { value: new THREE.Vector3(0, 0, 0) },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          varying vec3 vViewPos;
-          varying vec3 vViewNorm;
-          void main() {
-            vUv = uv;
-            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-            vViewPos = mvPos.xyz;
-            vViewNorm = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * mvPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform sampler2D uRingTex;
-          uniform vec3 uSunPosView;
-          varying vec2 vUv;
-          varying vec3 vViewPos;
-          varying vec3 vViewNorm;
-
-          void main() {
-            float r = vUv.x; // 0 = inner edge, 1 = outer edge
-
-            // Sample ring texture (color + alpha from texture)
-            vec4 tex = texture2D(uRingTex, vec2(r, 0.5));
-
-            // Procedural Cassini division and ring density variation
-            // Cassini division: gap at ~0.55-0.60 of ring width
-            float cassini = smoothstep(0.53, 0.55, r) * (1.0 - smoothstep(0.58, 0.60, r));
-            // Encke gap: thin gap at ~0.85
-            float encke = smoothstep(0.83, 0.84, r) * (1.0 - smoothstep(0.86, 0.87, r));
-            float gapAlpha = 1.0 - cassini * 0.9 - encke * 0.7;
-
-            // Ring density: denser in B ring (0.3-0.5), thinner in C ring (0.0-0.2)
-            float density = smoothstep(0.0, 0.15, r) * (1.0 - smoothstep(0.95, 1.0, r));
-            density *= mix(0.4, 1.0, smoothstep(0.2, 0.35, r)); // C ring thinner
-
-            // Sun-facing illumination (view space)
-            vec3 sunDir = normalize(uSunPosView - vViewPos);
-            float NdotL = dot(vViewNorm, sunDir);
-
-            // Front-lit: warm gold. Back-lit: cool transmitted glow
-            vec3 frontColor = tex.rgb * max(NdotL, 0.0) * 1.2;
-            vec3 backColor = tex.rgb * max(-NdotL, 0.0) * 0.4 * vec3(1.0, 0.85, 0.6); // backlit glow
-            vec3 ringColor = frontColor + backColor;
-
-            // Ambient minimum so rings aren't invisible on the dark side
-            ringColor += tex.rgb * 0.05;
-
-            float alpha = tex.a * density * gapAlpha;
-            if (alpha < 0.01) discard;
-
-            gl_FragColor = vec4(ringColor, alpha * 0.85);
-          }
-        `,
-        side: THREE.DoubleSide,
-        transparent: true,
-        depthWrite: false,
-      });
+      const ringMat = createSaturnRingsMaterialTSL({ ringTexture: ringTex });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.name = 'saturn-ring';
       ring.rotation.x = Math.PI / 2; // flat equatorial plane
@@ -1370,12 +845,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         // Titan atmosphere
         if (moonDef.name === 'titan') {
           const titanAtmoGeo = new THREE.SphereGeometry((moonDef.radius + 0.03) * scale, 12, 12);
-          const titanAtmoMat = new THREE.ShaderMaterial({
-            uniforms: {},
-            vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
-            fragmentShader: `varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.-abs(dot(vN,vV)),3.);gl_FragColor=vec4(0.85,0.6,0.2,f*.35);}`,
-            transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-          });
+          const titanAtmoMat = createTitanAtmosphereMaterialTSL();
           const titanAtmo = new THREE.Mesh(titanAtmoGeo, titanAtmoMat);
           titanAtmo.position.copy(moonMesh.position);
           moonOrbit.add(titanAtmo);
@@ -1439,18 +909,8 @@ export function togglePlanetAtmosphere(group: THREE.Group, planetName: string): 
     atmoMesh.visible = !atmoMesh.visible;
   }
 
-  // Also toggle the shader's atmosphere rim on the planet surface
-  const planets = group.userData.planets as { mesh: THREE.Mesh; def: PlanetDef }[] | undefined;
-  if (planets) {
-    const entry = planets.find(p => p.def.name === planetName);
-    if (entry?.mesh.material instanceof THREE.ShaderMaterial) {
-      const u = entry.mesh.material.uniforms;
-      if (u.uAtmoColor) {
-        u.uAtmoColor.value = u.uAtmoColor.value > 0 ? 0.0 :
-          planetName === 'earth' ? 1.0 : planetName === 'venus' ? 2.0 : 0.0;
-      }
-    }
-  }
+  // With TSL PBR materials, atmosphere is a separate mesh only — no inline shader uniform to toggle.
+  // The atmosphere mesh visibility toggle above handles everything.
 
   return atmoMesh?.visible ?? false;
 }
@@ -1588,7 +1048,7 @@ export function toggleAurora(group: THREE.Group): boolean {
   if (existing) {
     existing.parent?.remove(existing);
     existing.geometry.dispose();
-    (existing.material as THREE.ShaderMaterial).dispose();
+    (existing.material as THREE.Material).dispose();
     delete group.userData.auroraMesh;
     return false;
   }
@@ -1609,56 +1069,7 @@ export function toggleAurora(group: THREE.Group): boolean {
 
   const auroraGeo = new THREE.TorusGeometry(auroraRadius, tubeRadius, 16, 64);
 
-  const auroraMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vPos;
-      varying vec2 vUv;
-      void main() {
-        vPos = position;
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec3 vPos;
-      varying vec2 vUv;
-
-      float hash(float p) { return fract(sin(p * 127.1) * 43758.5453); }
-      float noise(float p) {
-        float i = floor(p);
-        float f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(hash(i), hash(i + 1.0), f);
-      }
-
-      void main() {
-        // Flowing curtain effect along the torus
-        float curtain = sin(vUv.x * 20.0 + uTime * 2.0) * 0.5 + 0.5;
-        curtain *= noise(vUv.x * 30.0 + uTime * 1.5);
-
-        // Vertical fade — strongest at tube center
-        float vFade = 1.0 - abs(vUv.y - 0.5) * 2.0;
-        vFade = pow(vFade, 0.8);
-
-        // Color: green core with purple edges
-        vec3 green = vec3(0.1, 0.9, 0.3);
-        vec3 purple = vec3(0.5, 0.1, 0.8);
-        float colorMix = sin(vUv.x * 8.0 + uTime * 0.7) * 0.5 + 0.5;
-        vec3 col = mix(green, purple, colorMix * 0.4);
-
-        float alpha = curtain * vFade * 0.5;
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
-  });
+  const auroraMat = createAuroraMaterialTSL();
 
   const auroraMesh = new THREE.Mesh(auroraGeo, auroraMat);
   auroraMesh.name = 'earth-aurora';
@@ -1683,7 +1094,7 @@ export function toggleRingGlow(group: THREE.Group): boolean {
   if (existing) {
     existing.parent?.remove(existing);
     existing.geometry.dispose();
-    (existing.material as THREE.ShaderMaterial).dispose();
+    (existing.material as THREE.Material).dispose();
     delete group.userData.ringGlowMesh;
     return false;
   }
@@ -1706,41 +1117,7 @@ export function toggleRingGlow(group: THREE.Group): boolean {
     128,
   );
 
-  const glowMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      varying vec3 vPos;
-      void main() {
-        vUv = uv;
-        vPos = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec2 vUv;
-      varying vec3 vPos;
-
-      void main() {
-        // Radial position for edge fade
-        float r = length(vPos.xy);
-        float pulse = 0.6 + 0.4 * sin(uTime * 1.2);
-        // Golden glow color
-        vec3 gold = vec3(1.0, 0.85, 0.3);
-        // Fade at inner/outer edges
-        float edgeFade = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
-        float alpha = edgeFade * pulse * 0.35;
-        gl_FragColor = vec4(gold, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
-  });
+  const glowMat = createRingGlowMaterialTSL();
 
   const glowMesh = new THREE.Mesh(glowGeo, glowMat);
   glowMesh.name = 'saturn-ring-glow';
@@ -1764,7 +1141,7 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
   if (existing) {
     existing.parent?.remove(existing);
     existing.geometry.dispose();
-    (existing.material as THREE.ShaderMaterial).dispose();
+    (existing.material as THREE.Material).dispose();
     delete group.userData.stormMesh;
     return false;
   }
@@ -1787,46 +1164,7 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
   }
   posAttr.needsUpdate = true;
 
-  const stormMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec2 vUv;
-
-      void main() {
-        // Center UVs
-        vec2 c = vUv - 0.5;
-        float dist = length(c);
-
-        // Rotating spiral pattern
-        float angle = atan(c.y, c.x);
-        float spiral = sin(angle * 3.0 - dist * 20.0 + uTime * 1.5) * 0.5 + 0.5;
-
-        // Red/brown storm colors
-        vec3 red = vec3(0.75, 0.2, 0.1);
-        vec3 brown = vec3(0.55, 0.3, 0.15);
-        vec3 col = mix(red, brown, spiral);
-
-        // Fade at edges (circular falloff)
-        float fade = smoothstep(0.5, 0.2, dist);
-        float alpha = fade * 0.7;
-
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
+  const stormMat = createStormVortexMaterialTSL();
 
   const stormMesh = new THREE.Mesh(stormGeo, stormMat);
   stormMesh.name = 'jupiter-storm';
@@ -2454,33 +1792,7 @@ export function addLocationMarker(group: THREE.Group): () => void {
   const earthR = earthGeo.parameters.radius;
   const markerSize = earthR * 0.02; // 2% of Earth radius
   const markerGeo = new THREE.SphereGeometry(markerSize, 8, 8);
-  const markerMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPos.xyz);
-        gl_Position = projectionMatrix * mvPos;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        float pulse = 0.7 + 0.3 * sin(uTime * 3.0);
-        float fresnel = pow(1.0 - abs(dot(vNormal, vViewDir)), 2.0);
-        vec3 color = mix(vec3(0.2, 0.8, 1.0), vec3(1.0, 1.0, 1.0), fresnel);
-        gl_FragColor = vec4(color * pulse, 1.0);
-      }
-    `,
-    transparent: false,
-  });
+  const markerMat = createMarkerMaterialTSL();
   const marker = new THREE.Mesh(markerGeo, markerMat);
   marker.name = 'location-marker';
 
