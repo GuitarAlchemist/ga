@@ -43,10 +43,13 @@ export function createGodRayMaterialTSL(
     const rays2 = sin(uvCoord.x.mul(17.0).sub(t.mul(0.3))).mul(0.5).add(0.5);
     const rays = rays1.mul(rays2);
 
-    // Subtle (0.008 at peak — WebGPU additive blending accumulates faster
-    // than WebGL2 did, especially with 40+17 overlapping sine-wave bands
-    // stretched across a 300-unit cone viewed from inside)
-    const scale = fade.mul(rays).mul(0.008);
+    // Very subtle (0.002 at peak). The 300-unit cone is rendered from the
+    // graph center outward; when the camera sits AT or near the cone apex
+    // (which happens frequently since the selected node is near origin),
+    // all 40+17 sine-wave ray bands converge radially on screen, stacking
+    // into a dominant yellow starburst. Keeping the per-pixel contribution
+    // tiny limits the maximum possible convergence brightness.
+    const scale = fade.mul(rays).mul(0.002);
     return uColor.mul(scale);
   })();
 
