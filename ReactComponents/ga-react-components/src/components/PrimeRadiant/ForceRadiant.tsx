@@ -1372,6 +1372,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let lodCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+    let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
@@ -2787,9 +2788,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const canvasEl = containerRef.current;
         canvasEl?.addEventListener('mousemove', onCanvasMove);
         canvasEl?.addEventListener('mouseleave', onCanvasLeave);
-        // Cleanup is covered by the parent useEffect returning — but register here too.
-        const origCleanupKey = '_shellHoverCleanup';
-        (fg as unknown as Record<string, unknown>)[origCleanupKey] = () => {
+        // Expose cleanup to the outer useEffect-return via an outer-scoped ref.
+        shellHoverCleanup = () => {
           canvasEl?.removeEventListener('mousemove', onCanvasMove);
           canvasEl?.removeEventListener('mouseleave', onCanvasLeave);
         };
@@ -2970,7 +2970,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
       voronoiShellsHandle?.dispose();
-      ((fg as unknown as Record<string, unknown>)._shellHoverCleanup as (() => void) | undefined)?.();
+      shellHoverCleanup?.();
       complianceRiversHandle?.dispose();
       crisisTexturesHandle?.dispose();
       eiffelHandleOuter?.dispose();
