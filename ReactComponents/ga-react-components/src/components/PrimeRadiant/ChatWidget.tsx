@@ -60,20 +60,103 @@ const OLLAMA_ENABLED = typeof import.meta !== 'undefined'
   ? (import.meta as { env?: Record<string, string> }).env?.VITE_OLLAMA_LOCAL !== '0'
   : true;
 
-function classifyTier(userMessage: string, historyLen: number): 'light' | 'medium' | 'heavy' | 'cloud' {
+// Embedding-based domain classifier — mirrors demerzel-bot/src/domain-classifier.js.
+// Anchor sentences represent each domain; at classify time we embed the user
+// query (via /proxy/ollama/api/embed → nomic-embed-text) and route by cosine
+// similarity to each domain centroid. Adding a new domain = append 3-5 anchors.
+const DOMAIN_ANCHORS: Record<string, { route: 'cloud' | 'local'; anchors: string[] }> = {
+  governance: {
+    route: 'cloud',
+    anchors: [
+      'What is Article 3 of the Demerzel Constitution?',
+      'Explain the Zeroth Law of Robotics',
+      'How does hexavalent logic assign truth values?',
+      'What does the Asimov mandate say about Daneel?',
+      'Is this policy superseded by a newer amendment?',
+      'What is an ERGOL binding versus a LOLLI reference?',
+    ],
+  },
+  music: {
+    route: 'cloud',
+    anchors: [
+      'How do I play a C major chord on guitar?',
+      'What notes are in the pentatonic scale?',
+      'Show me the A minor fretboard shape',
+      'Explain the circle of fifths',
+      'What is a barre chord?',
+      'How do I tune a guitar to drop D?',
+    ],
+  },
+  general: {
+    route: 'local',
+    anchors: [
+      'ok thanks',
+      'what is governance in one sentence',
+      'explain this briefly',
+      'tell me more',
+      'what does that mean',
+      'summarize the status',
+    ],
+  },
+};
+
+let domainCentroids: Record<string, { vec: number[]; route: 'cloud' | 'local' }> | null = null;
+
+async function embedText(text: string): Promise<number[] | null> {
+  try {
+    const res = await fetch('/proxy/ollama/api/embed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'nomic-embed-text:latest', input: text }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.embeddings?.[0] ?? data.embedding ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function cosine(a: number[], b: number[]): number {
+  let d = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { d += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  return d / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+async function buildCentroids() {
+  const out: Record<string, { vec: number[]; route: 'cloud' | 'local' }> = {};
+  for (const [name, cfg] of Object.entries(DOMAIN_ANCHORS)) {
+    const vecs = (await Promise.all(cfg.anchors.map(embedText))).filter((v): v is number[] => !!v);
+    if (vecs.length === 0) return null;
+    const dim = vecs[0].length;
+    const mean = new Array(dim).fill(0);
+    for (const v of vecs) for (let i = 0; i < dim; i++) mean[i] += v[i] / vecs.length;
+    out[name] = { vec: mean, route: cfg.route };
+  }
+  return out;
+}
+
+async function classifyDomainAsync(userMessage: string): Promise<'cloud' | 'local'> {
+  if (!domainCentroids) domainCentroids = await buildCentroids();
+  if (!domainCentroids) return 'local'; // embeddings unreachable → let tier fallback decide
+  const qvec = await embedText(userMessage);
+  if (!qvec) return 'local';
+  let bestName = 'general', bestScore = -1;
+  for (const [name, c] of Object.entries(domainCentroids)) {
+    const s = cosine(qvec, c.vec);
+    if (s > bestScore) { bestScore = s; bestName = name; }
+  }
+  return domainCentroids[bestName].route;
+}
+
+async function classifyTier(userMessage: string, historyLen: number): Promise<'light' | 'medium' | 'heavy' | 'cloud'> {
+  // Short-circuit long context before the embedding call.
+  if (userMessage.length > 2000 || historyLen > 10) return 'heavy';
+  const domainRoute = await classifyDomainAsync(userMessage);
+  if (domainRoute === 'cloud') return 'cloud';
+  // Local — pick tier by length + reasoning signal.
   const msg = userMessage.toLowerCase();
-  // Constitutional / Asimov / governance-critical terms — route to Claude.
-  // Broader than bot.js because chat users speak more casually about Laws,
-  // Robotics, Daneel, Foundation — all of which trigger context-mismatch on
-  // local models (gemma3:4b answered "Zeroth Law" as thermodynamics).
-  const constitutional = [
-    'article', 'zeroth', 'constitution', 'amendment', 'precedent',
-    'supersede', 'override', 'asimov', 'daneel', 'demerzel', 'seldon',
-    'foundation', 'robotics', 'law of', 'laws of', 'three laws', 'first law', 'second law', 'third law',
-    'ergol', 'lolli', 'mandate',
-  ].some(k => msg.includes(k));
-  if (constitutional) return 'cloud';
-  if (msg.length > 2000 || historyLen > 10) return 'heavy';
   const reasoning = ['why', 'because', 'imply', 'prove', 'derive', 'hexavalent', 'tetravalent', 'therefore', 'reason'].some(k => msg.includes(k));
   if (reasoning) return 'medium';
   return userMessage.length > 400 ? 'medium' : 'light';
@@ -107,7 +190,7 @@ async function askLocalOllama(
   locale?: string,
 ): Promise<string> {
   const last = messages[messages.length - 1];
-  const tier = classifyTier(last?.content ?? '', messages.length);
+  const tier = await classifyTier(last?.content ?? '', messages.length);
   if (tier === 'cloud') throw new Error('route-to-cloud');
   const model = TIER_MODELS[tier];
   const langName = locale && locale !== 'auto' ? SUPPORTED_LANGS.find(l => l.code === locale)?.name : null;
