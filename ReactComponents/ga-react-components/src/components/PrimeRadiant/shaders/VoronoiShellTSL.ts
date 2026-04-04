@@ -69,7 +69,12 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
   const { color, seedCount, quality } = options;
   const material = new MeshBasicNodeMaterial();
   material.transparent = true;
-  material.side = THREE.DoubleSide;
+  // FrontSide only: a jurisdiction shell is a membrane seen from OUTSIDE the
+  // cluster. When the camera enters the cluster (user zooms to a governance
+  // node inside it), the shell's backface would otherwise render a huge
+  // yellow/silver/bronze cymatics-like dome that fills the view. FrontSide
+  // makes the shell invisible from inside — user sees the nodes cleanly.
+  material.side = THREE.FrontSide;
   material.depthWrite = false;
   material.blending = THREE.AdditiveBlending;
 
