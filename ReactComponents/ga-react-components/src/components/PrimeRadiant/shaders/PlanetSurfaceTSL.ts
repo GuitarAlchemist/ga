@@ -1,143 +1,260 @@
 // src/components/PrimeRadiant/shaders/PlanetSurfaceTSL.ts
-// TSL planet surface material — texture, displacement mapping, Earth seasonal tint.
-// Uses MeshStandardNodeMaterial for proper PBR lighting on planetary surfaces.
+// TSL planet surface material — full port of the legacy PLANET_VERT/PLANET_FRAG
+// GLSL shaders from SolarSystem.ts.
+//
+// Features (match legacy GLSL 1:1):
+//  - Texture-derived bump normals (3x3 Sobel over luminance)
+//  - Day/night blend via manual NdotL using uSunPosView (view-space sun)
+//  - Optional night map (Earth city lights) with emissive blend
+//  - Optional specular map (Earth ocean shimmer) with Blinn-Phong
+//  - Seasonal snow/ice coverage for Earth (uMonth 1-12)
+//  - Sunrise/sunset terminator glow (golden hour band)
+//  - Atmosphere Fresnel rim (Earth blue, Venus orange)
+//  - Limb darkening (quadratic, stable)
+//  - Atmospheric in-scattering with Rayleigh phase
+//  - Optional vertex displacement via height map
+//
+// Renderer: MeshBasicNodeMaterial — fully self-lit, manual lighting computed in
+// fragment shader from uSunPosView. Does NOT respond to scene lights. Matches
+// legacy behavior exactly.
+//
 // Renderer-agnostic: auto-compiles to GLSL (WebGL2) or WGSL (WebGPU).
 
 import * as THREE from 'three';
-import { MeshStandardNodeMaterial } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
-  Fn, float, vec3, vec2, vec4,
+  Fn, float, vec2, vec3,
   uniform, texture, uv,
-  normalLocal, positionLocal,
-  mix, smoothstep, sin, cos, abs, clamp,
+  positionLocal, normalLocal,
+  positionView, normalView,
+  mix, smoothstep, cos, abs, max, pow, exp, dot, normalize, cross,
 } from 'three/tsl';
 
+export type AtmosphereType = 'none' | 'blue' | 'orange';
+
 export interface PlanetSurfaceMaterialOptions {
-  planetTexture: THREE.Texture;
+  map: THREE.Texture;
+  nightMap?: THREE.Texture;
+  specularMap?: THREE.Texture;
   displacementMap?: THREE.Texture;
   displacementScale?: number;
   isEarth?: boolean;
+  atmosphereType?: AtmosphereType;
+  roughness?: number;
+  textureSize?: number; // for bump-map pixel size; default 2048
 }
 
 /**
- * Create a TSL-based planet surface material.
+ * Create a TSL-based planet surface material that matches the legacy
+ * PLANET_FRAG GLSL shader exactly.
  *
- * Features:
- * - Base texture color with PBR lighting (MeshStandardNodeMaterial)
- * - Optional displacement mapping (vertex displacement along normal)
- * - Earth-specific seasonal tinting based on uMonth uniform
- *
- * For Earth, expose `userData.monthUniform` for per-frame month updates:
- *   material.userData.monthUniform.value = currentMonth; // 1-12
+ * Exposes these uniforms for per-frame updates via `material.userData`:
+ *   - sunPosUniform: THREE.Vector3  (sun position in VIEW space — update each frame)
+ *   - monthUniform: number          (1-12, for Earth seasonal snow)
+ *   - dispScaleUniform: number      (displacement scale multiplier)
  */
 export function createPlanetSurfaceMaterialTSL(
   options: PlanetSurfaceMaterialOptions,
-): MeshStandardNodeMaterial {
-  const material = new MeshStandardNodeMaterial();
+): MeshBasicNodeMaterial {
+  const material = new MeshBasicNodeMaterial();
   const {
-    planetTexture,
+    map,
+    nightMap,
+    specularMap,
     displacementMap,
     displacementScale = 0.05,
     isEarth = false,
+    atmosphereType = 'none',
+    roughness = 0.85,
+    textureSize = 2048,
   } = options;
 
-  planetTexture.colorSpace = THREE.SRGBColorSpace;
-  planetTexture.minFilter = THREE.LinearMipmapLinearFilter;
-  planetTexture.magFilter = THREE.LinearFilter;
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.magFilter = THREE.LinearFilter;
 
-  // Uniforms
-  const uMonth = uniform(1.0);       // 1-12 calendar month
+  // ── Uniforms ──
+  const uSunPosView = uniform(new THREE.Vector3(0, 0, 0));
+  const uMonth = uniform(1.0);
   const uDispScale = uniform(displacementScale);
+  const uTexelSize = uniform(new THREE.Vector2(1 / textureSize, 1 / textureSize));
 
-  // Expose uniforms for per-frame updates
+  material.userData.sunPosUniform = uSunPosView;
   material.userData.monthUniform = uMonth;
   material.userData.dispScaleUniform = uDispScale;
 
-  const planetTex = texture(planetTexture);
+  const atmoCode =
+    atmosphereType === 'blue' ? 1.0 : atmosphereType === 'orange' ? 2.0 : 0.0;
+  const uAtmoColor = float(atmoCode);
+  const uRoughness = float(roughness);
+  const uIsEarth = float(isEarth ? 1.0 : 0.0);
+  const uHasNight = float(nightMap ? 1.0 : 0.0);
+  const uHasSpec = float(specularMap ? 1.0 : 0.0);
 
-  // ── Color node ──
-  material.colorNode = Fn(() => {
-    const uvCoord = uv();
-    const baseColor = planetTex.sample(uvCoord).rgb.toVar();
+  const mapTex = texture(map);
+  const nightTex = nightMap ? texture(nightMap) : null;
+  const specTex = specularMap ? texture(specularMap) : null;
 
-    if (isEarth) {
-      // Seasonal tinting for Earth
-      // Summer (month 6-7): warm green boost in northern hemisphere
-      // Winter (month 12-1): cool blue tint in northern hemisphere
-      // UV.y < 0.5 = northern hemisphere (texture top), > 0.5 = southern
-
-      // Seasonal phase: 0 at Jan, 1 at Jul, back to 0 at Dec
-      const seasonPhase = sin(uMonth.sub(1.0).mul(Math.PI / 6.0)); // -1 to 1
-
-      // Latitude factor: +1 at north pole, -1 at south pole
-      const latitude = float(1.0).sub(uvCoord.y.mul(2.0));
-
-      // Hemisphere-aware season: northern summer when seasonPhase > 0
-      const localSeason = seasonPhase.mul(latitude);
-
-      // Summer warmth: green-yellow tint
-      const summerTint = vec3(0.02, 0.04, -0.02);
-      // Winter cool: blue tint
-      const winterTint = vec3(-0.02, -0.01, 0.03);
-
-      const tint = mix(winterTint, summerTint, smoothstep(-0.5, 0.5, localSeason));
-
-      // Apply tint only to land areas (approximate: greener pixels are land)
-      // Simple heuristic: if green channel is dominant, it's likely land
-      const landMask = smoothstep(0.0, 0.15, baseColor.g.sub(baseColor.b.mul(0.8)));
-      baseColor.addAssign(tint.mul(landMask.mul(0.6)));
-    }
-
-    return baseColor;
-  })();
-
-  // ── Displacement node ──
+  // ── Vertex displacement (optional) ──
   if (displacementMap) {
     displacementMap.minFilter = THREE.LinearMipmapLinearFilter;
     displacementMap.magFilter = THREE.LinearFilter;
-
     const dispTex = texture(displacementMap);
-
     material.positionNode = Fn(() => {
       const uvCoord = uv();
-      const pos = positionLocal.toVar();
-
-      // Sample displacement height (grayscale)
       const height = dispTex.sample(uvCoord).r;
-
-      // Displace along local normal
-      const displaced = pos.add(normalLocal.mul(height.mul(uDispScale)));
-
-      return displaced;
-    })();
-
-    // Compute approximate normals from displacement for better lighting.
-    // Use central-difference sampling of the height map.
-    material.normalNode = Fn(() => {
-      const uvCoord = uv();
-      const texelSize = float(1.0 / 1024.0); // assume 1024px texture
-
-      // Sample neighboring heights
-      const hL = dispTex.sample(uvCoord.sub(vec2(texelSize, 0.0))).r;
-      const hR = dispTex.sample(uvCoord.add(vec2(texelSize, 0.0))).r;
-      const hD = dispTex.sample(uvCoord.sub(vec2(0.0, texelSize))).r;
-      const hU = dispTex.sample(uvCoord.add(vec2(0.0, texelSize))).r;
-
-      // Tangent-space normal from height differences
-      const scale = uDispScale.mul(2.0);
-      const n = vec3(
-        hL.sub(hR).mul(scale),
-        hD.sub(hU).mul(scale),
-        float(1.0),
-      ).normalize();
-
-      return n;
+      // Legacy: (height - 0.3) * scale
+      return positionLocal.add(normalLocal.mul(height.sub(0.3).mul(uDispScale)));
     })();
   }
 
-  // PBR properties
-  material.roughness = 0.85;
-  material.metalness = 0.0;
+  // ── Luminance helper ──
+  const luma = (rgb: ReturnType<typeof vec3>) =>
+    rgb.dot(vec3(0.299, 0.587, 0.114));
+
+  // ── Bump normal from texture luminance (3x3 Sobel) ──
+  const getBumpNormal = Fn(() => {
+    const uvCoord = uv();
+    const tx = uTexelSize.x;
+    const ty = uTexelSize.y;
+
+    const tl = luma(mapTex.sample(uvCoord.add(vec2(tx.negate(), ty))).rgb);
+    const t = luma(mapTex.sample(uvCoord.add(vec2(float(0.0), ty))).rgb);
+    const tr = luma(mapTex.sample(uvCoord.add(vec2(tx, ty))).rgb);
+    const l = luma(mapTex.sample(uvCoord.add(vec2(tx.negate(), float(0.0)))).rgb);
+    const r = luma(mapTex.sample(uvCoord.add(vec2(tx, float(0.0)))).rgb);
+    const bl = luma(mapTex.sample(uvCoord.add(vec2(tx.negate(), ty.negate()))).rgb);
+    const b = luma(mapTex.sample(uvCoord.add(vec2(float(0.0), ty.negate()))).rgb);
+    const br = luma(mapTex.sample(uvCoord.add(vec2(tx, ty.negate()))).rgb);
+
+    // Sobel
+    const dX = tr.add(r.mul(2.0)).add(br).sub(tl.add(l.mul(2.0)).add(bl));
+    const dY = bl.add(b.mul(2.0)).add(br).sub(tl.add(t.mul(2.0)).add(tr));
+
+    const bumpStrength = float(1.5);
+    const N = normalize(normalView);
+    const T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
+    const B = cross(N, T);
+    return normalize(N.add(T.mul(dX).add(B.mul(dY)).mul(bumpStrength)));
+  });
+
+  // ── Color node: full lighting pipeline ──
+  material.colorNode = Fn(() => {
+    const uvCoord = uv();
+
+    // View-space vectors
+    const viewPos = positionView;
+    const viewDir = normalize(viewPos.negate());
+    const sunDir = normalize(uSunPosView.sub(viewPos));
+
+    const N = getBumpNormal();
+    const NdotL = dot(N, sunDir);
+    const dayFactor = smoothstep(-0.15, 0.2, NdotL);
+
+    // Day color
+    const dayColorBase = mapTex.sample(uvCoord).rgb.toVar();
+
+    // ── Seasonal snow (Earth only) ──
+    if (isEarth) {
+      const lat = uvCoord.y.sub(0.5).mul(2.0); // -1 (south) to +1 (north)
+      const absLat = abs(lat);
+
+      const monthRad = uMonth.sub(1.0).div(12.0).mul(6.28318);
+      const winterFactorN = cos(monthRad).add(1.0).mul(0.5);
+      const winterFactorS = cos(monthRad.add(3.14159)).add(1.0).mul(0.5);
+
+      const snowLineN = winterFactorN.mul(0.25).add(0.55);
+      const snowLineS = winterFactorS.mul(0.25).add(0.55);
+
+      const snowNorth = smoothstep(snowLineN.sub(0.15), snowLineN.add(0.05), absLat);
+      const snowSouth = smoothstep(snowLineS.sub(0.15), snowLineS.add(0.05), absLat);
+      const latIsNorth = smoothstep(-0.01, 0.01, lat);
+      const snowAmount = mix(snowSouth, snowNorth, latIsNorth);
+
+      const iceCap = smoothstep(0.78, 0.88, absLat);
+      const finalSnow = max(snowAmount, iceCap);
+
+      const snowColor = vec3(0.92, 0.95, 1.0);
+      dayColorBase.assign(mix(dayColorBase, snowColor, finalSnow.mul(0.7)));
+    }
+
+    // ── Diffuse + Venus albedo boost ──
+    const diffuse = max(NdotL, 0.0);
+    const isVenus = smoothstep(1.5, 1.51, uAtmoColor); // 1.0 if uAtmoColor > 1.5
+    const albedoBoost = mix(float(1.0), float(1.5), isVenus);
+    const litDay = dayColorBase.mul(diffuse.mul(0.97).add(0.03)).mul(albedoBoost).toVar();
+
+    // ── Specular (Blinn-Phong) ──
+    const halfDir = normalize(sunDir.add(viewDir));
+    const specAngle = max(dot(N, halfDir), 0.0);
+    const specPower = mix(float(16.0), float(64.0), float(1.0).sub(uRoughness));
+    const specBase = pow(specAngle, specPower).mul(float(1.0).sub(uRoughness)).mul(0.35).toVar();
+    if (specTex) {
+      const specMask = specTex.sample(uvCoord).r;
+      specBase.assign(specBase.mul(specMask));
+    }
+    litDay.assign(litDay.add(vec3(1.0, 0.95, 0.9).mul(specBase).mul(dayFactor)));
+
+    // ── Night side ──
+    const nightColor = nightTex
+      ? nightTex.sample(uvCoord).rgb.mul(0.8)
+      : vec3(0.0, 0.0, 0.0);
+
+    // ── Day/night blend across terminator ──
+    const surfaceColor = mix(nightColor, litDay, dayFactor).toVar();
+
+    // ── Sunrise/sunset terminator glow ──
+    const hasAtmo = smoothstep(0.49, 0.51, uAtmoColor); // 1.0 if uAtmoColor > 0.5
+    const terminatorBand = exp(NdotL.mul(NdotL).negate().div(0.03));
+    const sunriseColorDeep = vec3(0.8, 0.2, 0.05);
+    const sunriseColorWarm = vec3(1.0, 0.6, 0.2);
+    const warmBlend = smoothstep(-0.08, 0.08, NdotL);
+    const sunriseColor = mix(sunriseColorDeep, sunriseColorWarm, warmBlend);
+    // Intensity: Earth (1) = 0.35, Venus (2) = 0.2, Mars (handled separately) = 0.1
+    const isEarthAtmo = float(1.0).sub(smoothstep(1.49, 1.51, uAtmoColor)).mul(hasAtmo);
+    const isVenusAtmo = smoothstep(1.49, 1.51, uAtmoColor);
+    const atmoStrength = isEarthAtmo.mul(0.35).add(isVenusAtmo.mul(0.2));
+    surfaceColor.assign(
+      surfaceColor.add(sunriseColor.mul(terminatorBand).mul(atmoStrength).mul(0.5).mul(hasAtmo)),
+    );
+
+    // ── Atmosphere Fresnel rim glow ──
+    const viewN = normalize(normalView);
+    const fresnel = pow(float(1.0).sub(abs(dot(viewN, viewDir))), float(3.0));
+
+    // Earth (blue) atmosphere
+    const earthDayRim = vec3(0.25, 0.45, 1.0).mul(fresnel).mul(0.35).mul(dayFactor);
+    const earthNightRim = vec3(0.05, 0.1, 0.3).mul(fresnel).mul(0.2).mul(float(1.0).sub(dayFactor));
+    const earthTerminatorFresnel = fresnel.mul(exp(NdotL.mul(NdotL).negate().div(0.02)));
+    const earthWarmRim = vec3(1.0, 0.5, 0.15).mul(earthTerminatorFresnel).mul(0.4);
+    surfaceColor.assign(
+      surfaceColor.add(earthDayRim.add(earthNightRim).add(earthWarmRim).mul(isEarthAtmo)),
+    );
+
+    // Venus (orange) atmosphere
+    const venusHaze = vec3(1.0, 0.7, 0.2).mul(fresnel).mul(0.3);
+    const venusTerminatorFresnel = fresnel.mul(exp(NdotL.mul(NdotL).negate().div(0.02)));
+    const venusWarmRim = vec3(1.0, 0.5, 0.1).mul(venusTerminatorFresnel).mul(0.25);
+    surfaceColor.assign(surfaceColor.add(venusHaze.add(venusWarmRim).mul(isVenusAtmo)));
+
+    // ── Limb darkening (quadratic — stable, no flicker) ──
+    const NdotV_limb = max(dot(viewN, viewDir), 0.0);
+    const limbDarken = mix(float(0.35), float(1.0), NdotV_limb.mul(NdotV_limb));
+    surfaceColor.assign(surfaceColor.mul(limbDarken));
+
+    // ── Atmospheric in-scattering (Rayleigh) ──
+    const inScatter = pow(float(1.0).sub(NdotV_limb), float(2.0)).mul(0.5);
+    const cosTheta = dot(viewDir, sunDir);
+    const rayleigh = cosTheta.mul(cosTheta).add(1.0).mul(0.75);
+    const atmoTintEarth = vec3(0.3, 0.5, 1.0).mul(isEarthAtmo);
+    const atmoTintVenus = vec3(0.9, 0.6, 0.2).mul(isVenusAtmo);
+    const atmoTint = atmoTintEarth.add(atmoTintVenus);
+    surfaceColor.assign(
+      surfaceColor.add(atmoTint.mul(inScatter).mul(rayleigh).mul(0.25).mul(hasAtmo)),
+    );
+
+    return surfaceColor;
+  })();
 
   return material;
 }
