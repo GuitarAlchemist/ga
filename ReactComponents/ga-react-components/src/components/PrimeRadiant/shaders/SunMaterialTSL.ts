@@ -4,6 +4,7 @@
 // Works with both WebGPU and WebGL renderers (auto-compiles to GLSL fallback)
 
 import * as THREE from 'three';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
   Fn, float, vec3,
   texture, uv, time,
@@ -24,8 +25,8 @@ export interface SunMaterialOptions {
  * Fully emissive (no lighting) with animated plasma, convection, sunspots,
  * prominences, and edge glow. Quality-adaptive FBM octaves.
  */
-export function createSunMaterialTSL(options: SunMaterialOptions): THREE.MeshBasicNodeMaterial {
-  const material = new THREE.MeshBasicNodeMaterial();
+export function createSunMaterialTSL(options: SunMaterialOptions): MeshBasicNodeMaterial {
+  const material = new MeshBasicNodeMaterial();
   const { sunTexture, quality = 'high' } = options;
   const fbm = quality === 'low' ? fbm3 : fbm6;
 
