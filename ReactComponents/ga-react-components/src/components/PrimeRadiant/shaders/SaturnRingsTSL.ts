@@ -31,7 +31,7 @@ export interface SaturnRingsMaterialOptions {
  */
 export function createSaturnRingsMaterialTSL(
   options: SaturnRingsMaterialOptions,
-): THREE.MeshBasicNodeMaterial {
+): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial();
   const { ringTexture } = options;
 
