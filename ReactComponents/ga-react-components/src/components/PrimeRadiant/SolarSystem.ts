@@ -1193,34 +1193,19 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
 // ─────────────────────────────────────────────────────────────
 // UPDATE
 // ─────────────────────────────────────────────────────────────
-const _sunViewPos = new THREE.Vector3();
-const _viewMatrix = new THREE.Matrix4();
+const _sunWorldPos = new THREE.Vector3();
 
-export function updateSolarSystem(group: THREE.Group, time: number, camera?: THREE.Camera): void {
+export function updateSolarSystem(group: THREE.Group, time: number, _camera?: THREE.Camera): void {
   const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
   // Sun is at group origin (0,0,0 in local space).
-  // Compute its view-space position by multiplying through the group's own modelViewMatrix.
-  // This is camera-parenting safe — no world-space roundtrip needed.
-  const cam = camera ?? (group.parent as THREE.Camera | null);
-  if (cam) {
-    cam.updateMatrixWorld();
-    group.updateWorldMatrix(true, false);
-    // group.modelViewMatrix = camera.matrixWorldInverse * group.matrixWorld
-    _viewMatrix.multiplyMatrices(cam.matrixWorldInverse, group.matrixWorld);
-    // Sun at local origin → view-space position = translation column of modelViewMatrix
-    _sunViewPos.setFromMatrixPosition(_viewMatrix);
-  } else {
-    group.updateWorldMatrix(true, false);
-    group.getWorldPosition(_sunViewPos);
-  }
+  // TSL materials use world-space positions (positionWorld, normalWorld),
+  // so compute the sun's world position for Saturn rings' custom lighting.
+  group.updateWorldMatrix(true, false);
+  group.getWorldPosition(_sunWorldPos);
 
-  // Animate sun shader (GLSL ShaderMaterial needs manual time update)
-  const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
-  if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial && sunMesh.material.uniforms.uTime) {
-    sunMesh.material.uniforms.uTime.value = time;
-  }
+  // Sun TSL material uses built-in `time` node — no manual update needed.
 
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
@@ -1297,10 +1282,7 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
         marker.position.z = x * Math.sin(rotY) + z * Math.cos(rotY);
         // Add Earth mesh local position offset
         marker.position.add(mesh.position);
-        // Update marker shader time
-        if (marker.material instanceof THREE.ShaderMaterial && marker.material.uniforms.uTime) {
-          marker.material.uniforms.uTime.value = time;
-        }
+        // Marker TSL material uses built-in `time` node — no manual update needed.
         // Sync ring position with marker
         const ring = group.userData.locationRing as THREE.Mesh | undefined;
         if (ring) {
@@ -1314,18 +1296,15 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       if (cloudsHigh) cloudsHigh.rotation.y = time * 0.45;
     }
 
-    // Update planet shader uniforms — sun position in view space for day/night + bump
-    if (mesh.material instanceof THREE.ShaderMaterial) {
-      const u = mesh.material.uniforms;
-      if (u.uSunPosView) u.uSunPosView.value.copy(_sunViewPos);
-      if (u.uTime) u.uTime.value = time;
-    }
+    // TSL PlanetSurface (MeshStandardNodeMaterial) responds to PointLight automatically —
+    // no manual sun position or time update needed.
 
-    // Update Saturn ring shader sun position (view space)
+    // Update Saturn ring TSL material — sun position in world space for custom lighting
     if (def.name === 'saturn') {
       const satRing = mesh.getObjectByName('saturn-ring') as THREE.Mesh | undefined;
-      if (satRing && satRing.material instanceof THREE.ShaderMaterial && satRing.material.uniforms.uSunPosView) {
-        satRing.material.uniforms.uSunPosView.value.copy(_sunViewPos);
+      const satMat = satRing?.material as THREE.Material | undefined;
+      if (satMat?.userData?.sunPosUniform) {
+        satMat.userData.sunPosUniform.value.copy(_sunWorldPos);
       }
     }
 
@@ -1398,25 +1377,12 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       orbitGroup.rotation.y = moonPhase + time * def.speed * 0.3;
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
 
-      if (mesh.material instanceof THREE.ShaderMaterial) {
-        if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
-      }
+      // Moon TSL materials use built-in `time` node — no manual update needed.
     }
   }
 
-  // ── Animate shader effects (aurora, storm, ring glow) ──
-  const auroraMesh = group.userData.auroraMesh as THREE.Mesh | undefined;
-  if (auroraMesh && auroraMesh.material instanceof THREE.ShaderMaterial) {
-    auroraMesh.material.uniforms.uTime.value = time;
-  }
-  const stormMesh = group.userData.stormMesh as THREE.Mesh | undefined;
-  if (stormMesh && stormMesh.material instanceof THREE.ShaderMaterial) {
-    stormMesh.material.uniforms.uTime.value = time;
-  }
-  const ringGlowMesh = group.userData.ringGlowMesh as THREE.Mesh | undefined;
-  if (ringGlowMesh && ringGlowMesh.material instanceof THREE.ShaderMaterial) {
-    ringGlowMesh.material.uniforms.uTime.value = time;
-  }
+  // TSL shader effects (aurora, storm, ring glow) use built-in `time` node —
+  // no manual time updates needed.
 }
 
 // ─────────────────────────────────────────────────────────────
