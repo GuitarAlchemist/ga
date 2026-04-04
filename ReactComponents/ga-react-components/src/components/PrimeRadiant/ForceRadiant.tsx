@@ -2149,7 +2149,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (qualityLevel !== 'low') {
         solarSystem.userData.qualityLevel = qualityLevel; // pass to flare system
         if (qualityLevel === 'high' || frameCount % 3 === 0) {
-          updateSolarSystem(solarSystem, t);
+          updateSolarSystem(solarSystem, t, fg.camera());
           // Update GIS layer animations (pulse rings, animated paths)
           for (const mgr of gisManagersRef.current.values()) mgr.update(t);
         }
@@ -2664,7 +2664,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
     const solarSystem = createSolarSystem(8.0);
-    solarSystem.position.set(0, isLowEnd ? 20 : 80, 0);
+    solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
     fg.camera().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───

@@ -473,13 +473,16 @@ interface MoonInstance {
 }
 
 // ── Planet shader: day/night terminator, bump mapping, specular, atmosphere, displacement ──
+// All lighting computed in VIEW space so camera-parented groups work correctly.
+// (World-space cameraPosition is the camera's own position — useless when the
+//  solar system is a child of the camera.)
 const PLANET_VERT = /* glsl */ `
   uniform sampler2D uDisplacementMap;
   uniform float uDisplacementScale;  // 0 = no displacement
   uniform float uHasDisplacement;
 
-  varying vec3 vWorldPos;
-  varying vec3 vWorldNormal;
+  varying vec3 vViewPos;
+  varying vec3 vViewNormal;
   varying vec2 vUv;
   varying vec3 vViewDir;
 
@@ -494,20 +497,21 @@ const PLANET_VERT = /* glsl */ `
       displacedPos += normal * (height - 0.3) * uDisplacementScale;
     }
 
-    vec4 worldPos = modelMatrix * vec4(displacedPos, 1.0);
-    vWorldPos = worldPos.xyz;
-    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
-    vViewDir = normalize(cameraPosition - worldPos.xyz);
-    gl_Position = projectionMatrix * viewMatrix * worldPos;
+    vec4 mvPos = modelViewMatrix * vec4(displacedPos, 1.0);
+    vViewPos = mvPos.xyz;
+    vViewNormal = normalize(normalMatrix * normal);
+    vViewDir = normalize(-mvPos.xyz);
+    gl_Position = projectionMatrix * mvPos;
   }
 `;
 
 // Day/night with smooth terminator, bump-derived shading, specular, atmosphere rim
+// All varyings are in VIEW space (camera-parenting safe).
 const PLANET_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   uniform sampler2D uNightMap;
   uniform sampler2D uSpecMap;
-  uniform vec3 uSunPos;
+  uniform vec3 uSunPosView;   // sun position in view space (set per frame)
   uniform float uHasNight;
   uniform float uHasSpec;
   uniform float uAtmoColor;   // 0=none, 1=blue(earth), 2=orange(venus/titan)
@@ -516,8 +520,8 @@ const PLANET_FRAG = /* glsl */ `
   uniform float uMonth;       // 1-12, current month (for seasonal snow on Earth)
   uniform float uIsEarth;     // 1.0 for Earth, 0.0 otherwise
 
-  varying vec3 vWorldPos;
-  varying vec3 vWorldNormal;
+  varying vec3 vViewPos;
+  varying vec3 vViewNormal;
   varying vec2 vUv;
   varying vec3 vViewDir;
 
@@ -537,14 +541,14 @@ const PLANET_FRAG = /* glsl */ `
 
     // Perturb normal (strength factor controls bump intensity)
     float bumpStrength = 1.5;
-    vec3 N = normalize(vWorldNormal);
+    vec3 N = normalize(vViewNormal);
     vec3 T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
     vec3 B = cross(N, T);
     return normalize(N + (T * dX + B * dY) * bumpStrength);
   }
 
   void main() {
-    vec3 sunDir = normalize(uSunPos - vWorldPos);
+    vec3 sunDir = normalize(uSunPosView - vViewPos);
     vec3 N = getBumpNormal();
     float NdotL = dot(N, sunDir);
 
@@ -634,7 +638,7 @@ const PLANET_FRAG = /* glsl */ `
     }
 
     // Atmosphere rim glow
-    float fresnel = pow(1.0 - abs(dot(normalize(vWorldNormal), vViewDir)), 3.0);
+    float fresnel = pow(1.0 - abs(dot(normalize(vViewNormal), vViewDir)), 3.0);
     if (uAtmoColor > 0.5 && uAtmoColor < 1.5) {
       // Earth — blue atmosphere on day side, warm orange at terminator rim
       surfaceColor += vec3(0.25, 0.45, 1.0) * fresnel * 0.35 * dayFactor;
@@ -654,7 +658,7 @@ const PLANET_FRAG = /* glsl */ `
     // Limb darkening — gentle quadratic falloff instead of exponential extinction.
     // Exponential path length caused flicker: tiny NdotV changes got amplified.
     // Quadratic is smooth, stable, and still reads as atmospheric.
-    float NdotV_limb = max(dot(normalize(vWorldNormal), vViewDir), 0.0);
+    float NdotV_limb = max(dot(normalize(vViewNormal), vViewDir), 0.0);
     float limbDarken = mix(0.35, 1.0, NdotV_limb * NdotV_limb); // quadratic: 0.35 at edge, 1.0 at center
     surfaceColor *= limbDarken;
 
@@ -692,7 +696,7 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
       uMap: { value: map },
       uNightMap: { value: def.textureNight ? loadTex(def.textureNight) : null },
       uSpecMap: { value: def.textureSpecular ? loadTex(def.textureSpecular) : null },
-      uSunPos: { value: new THREE.Vector3(0, 0, 0) }, // updated per frame
+      uSunPosView: { value: new THREE.Vector3(0, 0, 0) }, // updated per frame (view space)
       uHasNight: { value: def.textureNight ? 1.0 : 0.0 },
       uHasSpec: { value: def.textureSpecular ? 1.0 : 0.0 },
       uAtmoColor: { value: def.name === 'earth' ? 1.0 : def.name === 'venus' ? 2.0 : 0.0 },
@@ -926,9 +930,9 @@ export function createSolarSystem(scale: number): THREE.Group {
         vUv = uv;
         vPos = position;
         vNormal = normalize(normalMatrix * normal);
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vViewDir = normalize(cameraPosition - wp.xyz);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        vViewDir = normalize(-mvPos.xyz);
+        gl_Position = projectionMatrix * mvPos;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -1053,7 +1057,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.08 * scale, 16, 16);
   const coronaMat = new THREE.ShaderMaterial({
     uniforms: {},
-    vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 wp=modelMatrix*vec4(position,1.);vViewDir=normalize(cameraPosition-wp.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vViewDir=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
     fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,3.5);gl_FragColor=vec4(1.,.7,.2,f*.15);}`,
     transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
   });
@@ -1126,9 +1130,9 @@ export function createSolarSystem(scale: number): THREE.Group {
           varying vec3 vViewDir;
           void main() {
             vNormal = normalize(normalMatrix * normal);
-            vec4 wp = modelMatrix * vec4(position, 1.0);
-            vViewDir = normalize(cameraPosition - wp.xyz);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+            vViewDir = normalize(-mvPos.xyz);
+            gl_Position = projectionMatrix * mvPos;
           }
         `,
         fragmentShader: /* glsl */ `
@@ -1252,26 +1256,26 @@ export function createSolarSystem(scale: number): THREE.Group {
       const ringMat = new THREE.ShaderMaterial({
         uniforms: {
           uRingTex: { value: ringTex },
-          uSunPos: { value: new THREE.Vector3(0, 0, 0) },
+          uSunPosView: { value: new THREE.Vector3(0, 0, 0) },
         },
         vertexShader: /* glsl */ `
           varying vec2 vUv;
-          varying vec3 vWorldPos;
-          varying vec3 vWorldNormal;
+          varying vec3 vViewPos;
+          varying vec3 vViewNorm;
           void main() {
             vUv = uv;
-            vec4 wp = modelMatrix * vec4(position, 1.0);
-            vWorldPos = wp.xyz;
-            vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
-            gl_Position = projectionMatrix * viewMatrix * wp;
+            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+            vViewPos = mvPos.xyz;
+            vViewNorm = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * mvPos;
           }
         `,
         fragmentShader: /* glsl */ `
           uniform sampler2D uRingTex;
-          uniform vec3 uSunPos;
+          uniform vec3 uSunPosView;
           varying vec2 vUv;
-          varying vec3 vWorldPos;
-          varying vec3 vWorldNormal;
+          varying vec3 vViewPos;
+          varying vec3 vViewNorm;
 
           void main() {
             float r = vUv.x; // 0 = inner edge, 1 = outer edge
@@ -1290,9 +1294,9 @@ export function createSolarSystem(scale: number): THREE.Group {
             float density = smoothstep(0.0, 0.15, r) * (1.0 - smoothstep(0.95, 1.0, r));
             density *= mix(0.4, 1.0, smoothstep(0.2, 0.35, r)); // C ring thinner
 
-            // Sun-facing illumination
-            vec3 sunDir = normalize(uSunPos - vWorldPos);
-            float NdotL = dot(vWorldNormal, sunDir);
+            // Sun-facing illumination (view space)
+            vec3 sunDir = normalize(uSunPosView - vViewPos);
+            float NdotL = dot(vViewNorm, sunDir);
 
             // Front-lit: warm gold. Back-lit: cool transmitted glow
             vec3 frontColor = tex.rgb * max(NdotL, 0.0) * 1.2;
@@ -1368,7 +1372,7 @@ export function createSolarSystem(scale: number): THREE.Group {
           const titanAtmoGeo = new THREE.SphereGeometry((moonDef.radius + 0.03) * scale, 12, 12);
           const titanAtmoMat = new THREE.ShaderMaterial({
             uniforms: {},
-            vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 w=modelMatrix*vec4(position,1.);vV=normalize(cameraPosition-w.xyz);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+            vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
             fragmentShader: `varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.-abs(dot(vN,vV)),3.);gl_FragColor=vec4(0.85,0.6,0.2,f*.35);}`,
             transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
           });
@@ -1851,15 +1855,28 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
 // ─────────────────────────────────────────────────────────────
 // UPDATE
 // ─────────────────────────────────────────────────────────────
-const _sunWorldPos = new THREE.Vector3();
+const _sunViewPos = new THREE.Vector3();
+const _viewMatrix = new THREE.Matrix4();
 
-export function updateSolarSystem(group: THREE.Group, time: number): void {
+export function updateSolarSystem(group: THREE.Group, time: number, camera?: THREE.Camera): void {
   const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
-  // Sun world position (group origin) — force matrix update for correct terminator
-  group.updateWorldMatrix(true, false);
-  group.getWorldPosition(_sunWorldPos);
+  // Sun is at group origin (0,0,0 in local space).
+  // Compute its view-space position by multiplying through the group's own modelViewMatrix.
+  // This is camera-parenting safe — no world-space roundtrip needed.
+  const cam = camera ?? (group.parent as THREE.Camera | null);
+  if (cam) {
+    cam.updateMatrixWorld();
+    group.updateWorldMatrix(true, false);
+    // group.modelViewMatrix = camera.matrixWorldInverse * group.matrixWorld
+    _viewMatrix.multiplyMatrices(cam.matrixWorldInverse, group.matrixWorld);
+    // Sun at local origin → view-space position = translation column of modelViewMatrix
+    _sunViewPos.setFromMatrixPosition(_viewMatrix);
+  } else {
+    group.updateWorldMatrix(true, false);
+    group.getWorldPosition(_sunViewPos);
+  }
 
   // Animate sun shader (GLSL ShaderMaterial needs manual time update)
   const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
@@ -1959,18 +1976,18 @@ export function updateSolarSystem(group: THREE.Group, time: number): void {
       if (cloudsHigh) cloudsHigh.rotation.y = time * 0.45;
     }
 
-    // Update planet shader uniforms — sun position for day/night + bump
+    // Update planet shader uniforms — sun position in view space for day/night + bump
     if (mesh.material instanceof THREE.ShaderMaterial) {
       const u = mesh.material.uniforms;
-      if (u.uSunPos) u.uSunPos.value.copy(_sunWorldPos);
+      if (u.uSunPosView) u.uSunPosView.value.copy(_sunViewPos);
       if (u.uTime) u.uTime.value = time;
     }
 
-    // Update Saturn ring shader sun position
+    // Update Saturn ring shader sun position (view space)
     if (def.name === 'saturn') {
       const satRing = mesh.getObjectByName('saturn-ring') as THREE.Mesh | undefined;
-      if (satRing && satRing.material instanceof THREE.ShaderMaterial && satRing.material.uniforms.uSunPos) {
-        satRing.material.uniforms.uSunPos.value.copy(_sunWorldPos);
+      if (satRing && satRing.material instanceof THREE.ShaderMaterial && satRing.material.uniforms.uSunPosView) {
+        satRing.material.uniforms.uSunPosView.value.copy(_sunViewPos);
       }
     }
 
@@ -2446,9 +2463,9 @@ export function addLocationMarker(group: THREE.Group): () => void {
       varying vec3 vViewDir;
       void main() {
         vNormal = normalize(normalMatrix * normal);
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vViewDir = normalize(cameraPosition - wp.xyz);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+        vViewDir = normalize(-mvPos.xyz);
+        gl_Position = projectionMatrix * mvPos;
       }
     `,
     fragmentShader: /* glsl */ `
