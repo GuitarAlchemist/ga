@@ -43,8 +43,10 @@ export function createGodRayMaterialTSL(
     const rays2 = sin(uvCoord.x.mul(17.0).sub(t.mul(0.3))).mul(0.5).add(0.5);
     const rays = rays1.mul(rays2);
 
-    // Very subtle (0.03 at peak)
-    const scale = fade.mul(rays).mul(0.03);
+    // Subtle (0.008 at peak — WebGPU additive blending accumulates faster
+    // than WebGL2 did, especially with 40+17 overlapping sine-wave bands
+    // stretched across a 300-unit cone viewed from inside)
+    const scale = fade.mul(rays).mul(0.008);
     return uColor.mul(scale);
   })();
 
