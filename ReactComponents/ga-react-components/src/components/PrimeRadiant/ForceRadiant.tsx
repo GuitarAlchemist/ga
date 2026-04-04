@@ -1448,7 +1448,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      // useWebGPU: true, // ready — deferred until all ShaderMaterials swapped to TSL
+      // useWebGPU: true — DISABLED. WebGPURenderer (even WebGL2 fallback) is incompatible
+      // with existing ShaderMaterial (sun, planets, god rays) and EffectComposer.
+      // All ShaderMaterials must be migrated to NodeMaterial before enabling.
     })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
@@ -1607,35 +1609,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // ─── Renderer detection ───
-    const _renderer = fg.renderer();
-    const _isWebGPU = !!(_renderer as Record<string, unknown>).isWebGPURenderer;
-    console.info(`[PrimeRadiant] Renderer: ${_renderer.constructor.name} (WebGPU: ${_isWebGPU})`);
-
-    // WebGPU: bypass EffectComposer (WebGL-only internals crash on WebGPU)
-    if (_isWebGPU) {
-      const _composer = fg.postProcessingComposer();
-      if (_composer) {
-        _composer.passes = [];
-        _composer.render = () => {
-          try { fg.renderer().render(fg.scene(), fg.camera()); }
-          catch { /* suppress first-frame init */ }
-        };
-      }
-    }
-
-    // Post-processing: WebGL gets bloom, WebGPU skips (TODO: TSL PostProcessing)
+    // Add bloom post-processing — always half-resolution (bloom is a blur effect,
+    // full-res produces identical visual quality but costs 4x fill rate per internal pass)
     const bloomSize = new THREE.Vector2(
       Math.floor(container.clientWidth * 0.5),
       Math.floor(container.clientHeight * 0.5),
     );
-    const bloomPass = _isWebGPU ? null : new UnrealBloomPass(
+    const bloomPass = new UnrealBloomPass(
       bloomSize,
       isLowEnd ? 0.3 : 0.6,   // strength
       isLowEnd ? 0.3 : 0.6,   // radius
       isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
     );
-    if (bloomPass) fg.postProcessingComposer().addPass(bloomPass);
+    fg.postProcessingComposer().addPass(bloomPass);
     bloomPassRef.current = bloomPass;
 
     // Set renderer pixel ratio — cap DPR on mobile/tablet to save fill rate and reduce heat
@@ -1645,71 +1631,71 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
-    // Post-processing effects — WebGL only (EffectComposer + ShaderPass are WebGL-only)
-    // TODO Phase 2: migrate to WebGPU PostProcessing (pass(), bloom() TSL nodes)
-    if (!_isWebGPU) {
-      const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
-        try {
-          const pass = new ShaderPass(shader);
-          if (overrides) {
-            for (const [k, v] of Object.entries(overrides)) pass.uniforms[k].value = v;
-          }
-          if (pass.uniforms.uResolution) {
-            (pass.uniforms.uResolution.value as THREE.Vector2).set(container.clientWidth, container.clientHeight);
-          }
-          fg.postProcessingComposer().addPass(pass);
-          ref.current = pass;
-        } catch (e) {
-          console.warn(`[PrimeRadiant] ${name} shader failed:`, e);
+    // Post-processing effects — each wrapped in try/catch to prevent chain breakage.
+    // A shader compile error in one pass would black out the entire screen if uncaught.
+    const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
+      try {
+        const pass = new ShaderPass(shader);
+        if (overrides) {
+          for (const [k, v] of Object.entries(overrides)) pass.uniforms[k].value = v;
         }
+        if (pass.uniforms.uResolution) {
+          (pass.uniforms.uResolution.value as THREE.Vector2).set(container.clientWidth, container.clientHeight);
+        }
+        fg.postProcessingComposer().addPass(pass);
+        ref.current = pass;
+      } catch (e) {
+        console.warn(`[PrimeRadiant] ${name} shader failed:`, e);
+      }
+    };
+
+    // Post-processing effects — desktop only, each starts disabled.
+    // Each pass is wrapped in try/catch; if GLSL compile fails, the pass is skipped.
+    if (!isLowEnd && !isTablet) {
+      try {
+        const cp = new ShaderPass(CausticsShader);
+        cp.uniforms.uIntensity.value = 0.0;
+        cp.enabled = false; // completely skip until toggled
+        fg.postProcessingComposer().addPass(cp);
+        causticsPassRef.current = cp;
+      } catch (e) { console.warn('[PR] Caustics pass failed:', e); }
+
+      try {
+        const dp = new ShaderPass(DispersionShader);
+        dp.uniforms.uSpread.value = 0.0;
+        dp.enabled = false;
+        fg.postProcessingComposer().addPass(dp);
+        dispersionPassRef.current = dp;
+      } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
+    }
+    if (!isLowEnd) {
+      try {
+        const mp = new ShaderPass(MoebiusShader);
+        mp.uniforms.uEnabled.value = 0.0;
+        mp.enabled = false;
+        fg.postProcessingComposer().addPass(mp);
+        moebiusPassRef.current = mp;
+      } catch (e) { console.warn('[PR] Moebius pass failed:', e); }
+    }
+
+    // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
+    if (!isLowEnd) {
+      const chromaticShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
+        },
+        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
+      void main() {
+        float r = texture2D(tDiffuse, vUv + uOffset).r;
+        float g = texture2D(tDiffuse, vUv).g;
+        float b = texture2D(tDiffuse, vUv - uOffset).b;
+        float a = texture2D(tDiffuse, vUv).a;
+        gl_FragColor = vec4(r, g, b, a);
+      }`,
       };
-
-      if (!isLowEnd && !isTablet) {
-        try {
-          const cp = new ShaderPass(CausticsShader);
-          cp.uniforms.uIntensity.value = 0.0;
-          cp.enabled = false;
-          fg.postProcessingComposer().addPass(cp);
-          causticsPassRef.current = cp;
-        } catch (e) { console.warn('[PR] Caustics pass failed:', e); }
-
-        try {
-          const dp = new ShaderPass(DispersionShader);
-          dp.uniforms.uSpread.value = 0.0;
-          dp.enabled = false;
-          fg.postProcessingComposer().addPass(dp);
-          dispersionPassRef.current = dp;
-        } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
-      }
-      if (!isLowEnd) {
-        try {
-          const mp = new ShaderPass(MoebiusShader);
-          mp.uniforms.uEnabled.value = 0.0;
-          mp.enabled = false;
-          fg.postProcessingComposer().addPass(mp);
-          moebiusPassRef.current = mp;
-        } catch (e) { console.warn('[PR] Moebius pass failed:', e); }
-      }
-
-      if (!isLowEnd) {
-        const chromaticShader = {
-          uniforms: {
-            tDiffuse: { value: null },
-            uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
-          },
-          vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-          fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
-        void main() {
-          float r = texture2D(tDiffuse, vUv + uOffset).r;
-          float g = texture2D(tDiffuse, vUv).g;
-          float b = texture2D(tDiffuse, vUv - uOffset).b;
-          float a = texture2D(tDiffuse, vUv).a;
-          gl_FragColor = vec4(r, g, b, a);
-        }`,
-        };
-        fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
-      }
-      void addSafePass; // suppress unused warning
+      fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
     }
 
     // ─── ADAPTIVE QUALITY — auto-downgrade on crappy GPUs ───
@@ -1865,13 +1851,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // 6. Pixel ratio (nuclear option — reduces resolution)
         ambientDust.visible = qualityBudget > -0.7;
         // Bloom: disable entirely at very low budget (saves full-screen post-process pass)
-        if (bloomPass) {
-          if (qualityBudget < -0.8) {
-            bloomPass.enabled = false;
-          } else {
-            bloomPass.enabled = true;
-            bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
-          }
+        if (qualityBudget < -0.8) {
+          bloomPass.enabled = false;
+        } else {
+          bloomPass.enabled = true;
+          bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
         }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
         starField.visible = qualityBudget > -0.6;
@@ -2677,8 +2661,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
-    const solarSystem = createSolarSystem(0.06);
-    solarSystem.position.set(0, isLowEnd ? 15 : 40, 0);
+    const solarSystem = createSolarSystem(1.0);
+    solarSystem.position.set(0, isLowEnd ? 8 : 15, 0);
     fg.camera().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
@@ -2831,18 +2815,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (centralNode) {
       setSelectedNode(centralNode);
       onNodeSelect?.(centralNode);
-      // Zoom to it after force layout settles (Phase 1.4: cancellable)
+      // Start: camera near Earth (scale=1.0, Earth orbit=6.5 units, y=15)
+      // Camera at Earth orbit distance, looking at sun
+      fg.cameraPosition(
+        { x: 7, y: 15.5, z: 1 },  // just outside Earth orbit
+        { x: 0, y: 15, z: 0 },     // look at sun center
+        10,                          // instant
+      );
       autoZoomTimeout = setTimeout(() => {
-        if (userInteracted) return; // User already clicked something — don't override
+        if (userInteracted) return;
         const fNode = nodeMap.get(centralNode.id) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
         if (fNode?.x !== undefined) {
           fg.cameraPosition(
             { x: fNode.x, y: (fNode.y ?? 0) + 30, z: (fNode.z ?? 0) + 80 },
             { x: fNode.x, y: fNode.y ?? 0, z: fNode.z ?? 0 },
-            1500,
+            2500,
           );
         }
-      }, 2000);
+      }, 5000);
     }
 
     graphRef.current = fg;
