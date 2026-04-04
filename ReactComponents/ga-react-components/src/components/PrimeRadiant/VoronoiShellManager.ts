@@ -39,60 +39,44 @@ export interface VoronoiShellHandle {
 
 // ── Cluster detection ──
 
-/** Find connected components via constitutional-hierarchy edges */
+/**
+ * Group nodes into jurisdictions by governance type.
+ *
+ * Prior implementation used edge-flood Union-Find on both
+ * constitutional-hierarchy AND policy-persona edges, which collapsed ~75%
+ * of the graph into one mega-cluster labelled "constitutional" because
+ * dominantType hardcoded constitution as winner. The resulting shell was
+ * an opaque dome wrapping almost every node — no bounded meaning.
+ *
+ * Type-based clustering gives one jurisdiction per governance type
+ * (constitution, department, policy, persona, pipeline, schema, test).
+ * Each cluster has a clean boundary, a matching legend swatch, and the
+ * shell's color/label is determined deterministically by the type itself
+ * — no dominant-type voting, no edge-flood.
+ */
 function detectClusters(
   nodes: GovernanceNode[],
-  edges: GovernanceEdge[],
+  _edges: GovernanceEdge[],
 ): Map<string, Set<string>> {
-  // Union-Find
-  const parent = new Map<string, string>();
-  const find = (x: string): string => {
-    if (!parent.has(x)) parent.set(x, x);
-    if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!));
-    return parent.get(x)!;
-  };
-  const union = (a: string, b: string) => {
-    const ra = find(a), rb = find(b);
-    if (ra !== rb) parent.set(ra, rb);
-  };
-
-  // Initialize all nodes
-  for (const n of nodes) find(n.id);
-
-  // Union via hierarchy edges (constitutional-hierarchy and policy-persona)
-  for (const e of edges) {
-    if (e.type === 'constitutional-hierarchy' || e.type === 'policy-persona') {
-      union(e.source, e.target);
-    }
-  }
-
-  // Group by root
   const clusters = new Map<string, Set<string>>();
   for (const n of nodes) {
-    const root = find(n.id);
-    if (!clusters.has(root)) clusters.set(root, new Set());
-    clusters.get(root)!.add(n.id);
+    const key = n.type; // one cluster per type
+    if (!clusters.has(key)) clusters.set(key, new Set());
+    clusters.get(key)!.add(n.id);
   }
-
   return clusters;
 }
 
-/** Find the dominant governance type in a cluster */
+/**
+ * Dominant type is now trivial: every cluster's key IS the type.
+ * Kept as a function so the shell-creation callsite stays unchanged.
+ */
 function dominantType(nodeIds: Set<string>, nodeMap: Map<string, GovernanceNode>): string {
-  const counts = new Map<string, number>();
   for (const id of nodeIds) {
     const n = nodeMap.get(id);
-    if (!n) continue;
-    counts.set(n.type, (counts.get(n.type) ?? 0) + 1);
+    if (n) return n.type;
   }
-  let best = 'default';
-  let bestCount = 0;
-  for (const [type, count] of counts) {
-    if (count > bestCount) { best = type; bestCount = count; }
-  }
-  // Constitution always wins if present
-  if (counts.has('constitution')) return 'constitution';
-  return best;
+  return 'default';
 }
 
 // ── Manager ──
