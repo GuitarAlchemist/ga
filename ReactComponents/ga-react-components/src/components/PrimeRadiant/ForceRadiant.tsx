@@ -1851,12 +1851,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         ].join('');
 
         // ─── Auto-regulation: smooth FPS-driven quality control ───
-        // Target: 40 FPS. Governance viz is mostly-static; this is a realistic
-        // ceiling for rich TSL scenes (7 Voronoi shells + procedural skybox +
-        // MilkyWay + solar system + LOD Earth). Lowering from 45 → 40 so the
-        // typical desktop steady-state has a NON-NEGATIVE budget, which
-        // combined with the hysteresis below keeps the scene at 'high' label.
-        const TARGET_FPS = 40;
+        // Target: 45 FPS. Adjusts multiple knobs gradually, not in hard steps.
+        // Each knob has a cost (FPS impact) and visual importance (what to shed first).
+        const TARGET_FPS = 45;
         const fpsDelta = currentFps - TARGET_FPS;
 
         // Quality budget: -1.0 (shed everything) to +1.0 (max quality)
@@ -1895,22 +1892,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         }
 
-        // Update quality level with HYSTERESIS so transient FPS dips don't
-        // bounce us out of 'high'. Promote bands are tighter than demote bands:
-        //   high    → needs budget > 0.05 to ENTER, drops only if < -0.05
-        //   medium  → needs budget > -0.4 to ENTER, drops only if < -0.55
-        // The asymmetric bands mean once 'high' is earned, the scene defends
-        // it through small fluctuations (camera drift, momentary draw-call
-        // spikes) instead of oscillating.
-        if (qualityLevel === 'high') {
-          if (qualityBudget < -0.05) qualityLevel = 'medium';
-        } else if (qualityLevel === 'medium') {
-          if (qualityBudget > 0.05) qualityLevel = 'high';
-          else if (qualityBudget < -0.55) qualityLevel = 'low';
-        } else {
-          // low
-          if (qualityBudget > -0.4) qualityLevel = 'medium';
-        }
+        // Update quality level label for display
+        qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
       }
 
       fg.graphData().nodes.forEach((node: object) => {
