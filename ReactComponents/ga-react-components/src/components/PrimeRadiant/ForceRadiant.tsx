@@ -1448,7 +1448,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      useWebGPU: true, // patched via patch-package (patches/3d-force-graph+1.79.1.patch)
+      // useWebGPU: true, // ready — deferred until all ShaderMaterials swapped to TSL
     })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
