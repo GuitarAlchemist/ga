@@ -1438,12 +1438,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let userInteracted = false;
 
     // Create force graph
+    // useWebGPU: true activates WebGPURenderer (auto-falls back to WebGL2 if unavailable).
+    // All ShaderMaterials have been migrated to TSL NodeMaterial, so WebGPURenderer is
+    // now safe. The old EffectComposer + UnrealBloomPass + ShaderPass chain is disabled
+    // when useWebGPU is on (those use ShaderMaterial internally which breaks on WebGPU).
+    // TSL PostProcessing replacement (bloom + chromatic aberration) is a follow-up task.
+    const USE_WEBGPU = true;
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      // useWebGPU: true — DISABLED. WebGPURenderer (even WebGL2 fallback) is incompatible
-      // with existing ShaderMaterial (sun, planets, god rays) and EffectComposer.
-      // All ShaderMaterials must be migrated to NodeMaterial before enabling.
+      useWebGPU: USE_WEBGPU,
     })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
@@ -1602,20 +1606,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // Add bloom post-processing — always half-resolution (bloom is a blur effect,
-    // full-res produces identical visual quality but costs 4x fill rate per internal pass)
-    const bloomSize = new THREE.Vector2(
-      Math.floor(container.clientWidth * 0.5),
-      Math.floor(container.clientHeight * 0.5),
-    );
-    const bloomPass = new UnrealBloomPass(
-      bloomSize,
-      isLowEnd ? 0.3 : 0.6,   // strength
-      isLowEnd ? 0.3 : 0.6,   // radius
-      isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
-    );
-    fg.postProcessingComposer().addPass(bloomPass);
-    bloomPassRef.current = bloomPass;
+    // Add bloom post-processing (WebGL path only — UnrealBloomPass uses ShaderMaterial
+    // internally which is incompatible with WebGPURenderer). TSL PostProcessing
+    // equivalent is a follow-up task.
+    if (!USE_WEBGPU) {
+      const bloomSize = new THREE.Vector2(
+        Math.floor(container.clientWidth * 0.5),
+        Math.floor(container.clientHeight * 0.5),
+      );
+      const bloomPass = new UnrealBloomPass(
+        bloomSize,
+        isLowEnd ? 0.3 : 0.6,   // strength
+        isLowEnd ? 0.3 : 0.6,   // radius
+        isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
+      );
+      fg.postProcessingComposer().addPass(bloomPass);
+      bloomPassRef.current = bloomPass;
+    }
 
     // Set renderer pixel ratio — cap DPR on mobile/tablet to save fill rate and reduce heat
     // Tablet at DPR 2.625 renders at 2399x3056 = 7.3M pixels — causes thermal throttling
@@ -1644,7 +1651,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Post-processing effects — desktop only, each starts disabled.
     // Each pass is wrapped in try/catch; if GLSL compile fails, the pass is skipped.
-    if (!isLowEnd && !isTablet) {
+    // Skipped entirely on WebGPU (ShaderPass uses ShaderMaterial — incompatible).
+    if (!USE_WEBGPU && !isLowEnd && !isTablet) {
       try {
         const cp = new ShaderPass(CausticsShader);
         cp.uniforms.uIntensity.value = 0.0;
@@ -1661,7 +1669,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         dispersionPassRef.current = dp;
       } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
     }
-    if (!isLowEnd) {
+    if (!USE_WEBGPU && !isLowEnd) {
       try {
         const mp = new ShaderPass(MoebiusShader);
         mp.uniforms.uEnabled.value = 0.0;
@@ -1672,7 +1680,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
-    if (!isLowEnd) {
+    // Skipped on WebGPU (ShaderPass uses ShaderMaterial).
+    if (!USE_WEBGPU && !isLowEnd) {
       const chromaticShader = {
         uniforms: {
           tDiffuse: { value: null },
