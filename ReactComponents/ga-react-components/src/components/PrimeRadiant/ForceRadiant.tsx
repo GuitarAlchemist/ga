@@ -2663,7 +2663,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
-    const solarSystem = createSolarSystem(1.0);
+    const solarSystem = createSolarSystem(8.0);
     solarSystem.position.set(0, isLowEnd ? 8 : 15, 0);
     fg.camera().add(solarSystem);
 
@@ -3725,24 +3725,32 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Navigate to planet — solar system is parented to camera, so use LOCAL position
-          // and offset camera + controls.target in camera-local space to avoid chase loop
+          // Navigate to planet — solar system is parented to camera
+          // Get planet's LOCAL position within the solar system group,
+          // then set controls.target so orbit controls center on it
           const navSolarGroup = navCam.getObjectByName('sun')?.parent;
           if (navSolarGroup) {
             const navObj = navSolarGroup.getObjectByName(target);
             if (navObj) {
-              // Get planet position relative to solar system group
-              const localPos = new THREE.Vector3();
-              navObj.getWorldPosition(localPos);
-              // Solar system group world position (= camera world pos + local offset)
-              const groupWorld = new THREE.Vector3();
-              navSolarGroup.getWorldPosition(groupWorld);
-              // Planet offset from camera = planet world pos - camera world pos
-              const offsetFromCam = localPos.sub(navCam.position);
-              // Set controls.target to the planet's offset from camera origin
-              // This makes orbit controls rotate around the planet
+              // Planet position in solar system LOCAL space
+              const planetLocal = new THREE.Vector3();
+              navObj.getWorldPosition(planetLocal);
+              // Planet's world pos = camera pos + solar system offset + planet offset
+              // controls.target in world space:
               const navControls = fg.controls() as { target?: THREE.Vector3 };
-              if (navControls.target) navControls.target.copy(offsetFromCam.clone().add(navCam.position));
+              if (navControls.target) {
+                navControls.target.copy(planetLocal);
+                // Move camera close to the planet (0.5 units away)
+                const navMesh = navObj as THREE.Mesh;
+                navMesh.geometry?.computeBoundingSphere();
+                const pRadius = navMesh.geometry?.boundingSphere?.radius ?? 0.1;
+                const viewDist = Math.max(pRadius * 5, 0.3);
+                // Camera offset: slightly above and to the side
+                const camTarget = planetLocal.clone();
+                camTarget.y += viewDist * 0.3;
+                camTarget.x += viewDist;
+                navCam.position.copy(camTarget);
+              }
             }
           }
           trackedPlanetRef.current = target;
