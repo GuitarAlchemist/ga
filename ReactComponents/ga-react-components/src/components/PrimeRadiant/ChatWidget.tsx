@@ -50,6 +50,86 @@ function getUserApiKey(): string | null {
   try { return localStorage.getItem('ga-anthropic-key'); } catch { return null; }
 }
 
+// ---------------------------------------------------------------------------
+// Local-first Ollama streaming (dev only — Vite proxies /proxy/ollama → :11434)
+// Mirrors the router tiers in demerzel-bot/src/llm-router.js. Zero-token,
+// runs on RTX 5080 locally. Falls through to Claude on any error.
+// ---------------------------------------------------------------------------
+
+const OLLAMA_ENABLED = typeof import.meta !== 'undefined'
+  ? (import.meta as { env?: Record<string, string> }).env?.VITE_OLLAMA_LOCAL !== '0'
+  : true;
+
+function classifyTier(userMessage: string, historyLen: number): 'light' | 'medium' | 'heavy' | 'cloud' {
+  const msg = userMessage.toLowerCase();
+  const constitutional = ['article', 'zeroth', 'constitution', 'amendment', 'precedent', 'supersede', 'override', 'asimov'].some(k => msg.includes(k));
+  if (constitutional) return 'cloud';
+  if (msg.length > 2000 || historyLen > 10) return 'heavy';
+  const reasoning = ['why', 'because', 'imply', 'prove', 'derive', 'hexavalent', 'tetravalent', 'therefore'].some(k => msg.includes(k));
+  if (reasoning) return 'medium';
+  return msg.length > 400 ? 'medium' : 'light';
+}
+
+const TIER_MODELS = {
+  light: 'gemma3:4b',
+  medium: 'mistral:7b',
+  heavy: 'qwen3:14b',
+};
+
+async function askLocalOllama(
+  messages: { role: string; content: string }[],
+  onChunk: (text: string) => void,
+  signal?: AbortSignal,
+  locale?: string,
+): Promise<string> {
+  const last = messages[messages.length - 1];
+  const tier = classifyTier(last?.content ?? '', messages.length);
+  if (tier === 'cloud') throw new Error('route-to-cloud');
+  const model = TIER_MODELS[tier];
+  const langName = locale && locale !== 'auto' ? SUPPORTED_LANGS.find(l => l.code === locale)?.name : null;
+  const langInstruction = langName
+    ? `Respond entirely in ${langName}.`
+    : 'Detect the user\'s language and respond in that language.';
+  const system = `You are Demerzel, a governance AI from the Prime Radiant. ${langInstruction}`;
+
+  const response = await fetch('/proxy/ollama/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'system', content: system }, ...messages],
+      stream: true,
+    }),
+    signal,
+  });
+
+  if (!response.ok) throw new Error(`ollama ${response.status}`);
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('no body');
+
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed.message?.content) {
+          fullText += parsed.message.content;
+          onChunk(parsed.message.content);
+        }
+      } catch { /* partial chunk */ }
+    }
+  }
+  return fullText;
+}
+
 async function askClaudeStreaming(
   messages: { role: string; content: string }[],
   onChunk: (text: string) => void,
@@ -621,17 +701,26 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ selectedNode, onNavigate
       const ctxHint = selectedNode ? ` [Context: viewing "${selectedNode.name}" (${selectedNode.type})]` : '';
       apiMessages.push({ role: 'user', content: trimmed + ctxHint });
 
-      const fullText = await askClaudeStreaming(
-        apiMessages,
-        (chunk) => {
-          // Stream chunks into the placeholder message
-          setMessages((prev) => prev.map(m =>
-            m.id === botMsgId ? { ...m, content: m.content + chunk } : m,
-          ));
-        },
-        undefined,
-        locale,
-      );
+      const streamChunk = (chunk: string) => {
+        setMessages((prev) => prev.map(m =>
+          m.id === botMsgId ? { ...m, content: m.content + chunk } : m,
+        ));
+      };
+
+      // Try local Ollama first (zero-token, sub-second for most queries).
+      // Falls through to Claude on route-to-cloud / unavailable / timeout.
+      let fullText = '';
+      if (OLLAMA_ENABLED) {
+        try {
+          fullText = await askLocalOllama(apiMessages, streamChunk, undefined, locale);
+        } catch {
+          // Reset the streamed placeholder; Claude will refill it.
+          setMessages((prev) => prev.map(m => m.id === botMsgId ? { ...m, content: '' } : m));
+        }
+      }
+      if (!fullText) {
+        fullText = await askClaudeStreaming(apiMessages, streamChunk, undefined, locale);
+      }
 
       // Parse navigation actions from Claude's response
       const actionMatch = fullText.match(/\{"action":"navigate[^}]+\}/);
