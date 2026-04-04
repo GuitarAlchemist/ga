@@ -5,6 +5,37 @@
 
 import * as THREE from 'three';
 import { createSunMaterialTSL } from './shaders/SunMaterialTSL';
+import { createPlanetSurfaceMaterialTSL, type AtmosphereType } from './shaders/PlanetSurfaceTSL';
+import {
+  createCoronaMaterialTSL,
+  createAtmosphereMaterialTSL,
+  createTitanAtmosphereMaterialTSL,
+  createMarkerMaterialTSL,
+} from './shaders/FresnelGlowTSL';
+import { createSaturnRingsMaterialTSL } from './shaders/SaturnRingsTSL';
+import { createOrbitTrailMaterialTSL } from './shaders/OrbitTrailTSL';
+import { createAuroraMaterialTSL } from './shaders/AuroraTSL';
+import { createRingGlowMaterialTSL } from './shaders/RingGlowTSL';
+import { createStormVortexMaterialTSL } from './shaders/StormVortexTSL';
+import {
+  createRockyGreyMaterialTSL,
+  createRockyDarkMaterialTSL,
+  createRockyReddishMaterialTSL,
+  createIcyWhiteMaterialTSL,
+  createIcyBlueMaterialTSL,
+  createIoMaterialTSL,
+  createEuropaMaterialTSL,
+  createGanymedeMaterialTSL,
+  createCallistoMaterialTSL,
+  createTitanMaterialTSL,
+  createEnceladusMaterialTSL,
+  createMimasMaterialTSL,
+  createIapetusMaterialTSL,
+  createTritonMaterialTSL,
+  createMirandaMaterialTSL,
+  createProceduralPlaceholderMaterialTSL,
+} from './shaders/ProceduralMoonTSL';
+import type { MeshBasicNodeMaterial } from 'three/webgpu';
 import type { QualityTier } from './shaders/TSLUniforms';
 
 // ── Texture paths (served from public/textures/planets/) ──
@@ -680,6 +711,28 @@ const PLANET_FRAG = /* glsl */ `
   }
 `;
 
+// ── Map from legacy GLSL constant reference to TSL factory ──
+// Moons declare `fragment: IO_FRAG` (etc.) — match by reference equality since
+// these are all module-level string constants.
+function getMoonMaterialTSL(fragmentSrc: string): MeshBasicNodeMaterial {
+  if (fragmentSrc === IO_FRAG) return createIoMaterialTSL();
+  if (fragmentSrc === EUROPA_FRAG) return createEuropaMaterialTSL();
+  if (fragmentSrc === GANYMEDE_FRAG) return createGanymedeMaterialTSL();
+  if (fragmentSrc === CALLISTO_FRAG) return createCallistoMaterialTSL();
+  if (fragmentSrc === TITAN_FRAG) return createTitanMaterialTSL();
+  if (fragmentSrc === ENCELADUS_FRAG) return createEnceladusMaterialTSL();
+  if (fragmentSrc === MIMAS_FRAG) return createMimasMaterialTSL();
+  if (fragmentSrc === IAPETUS_FRAG) return createIapetusMaterialTSL();
+  if (fragmentSrc === TRITON_FRAG) return createTritonMaterialTSL();
+  if (fragmentSrc === MIRANDA_FRAG) return createMirandaMaterialTSL();
+  if (fragmentSrc === ROCKY_GREY) return createRockyGreyMaterialTSL();
+  if (fragmentSrc === ROCKY_DARK) return createRockyDarkMaterialTSL();
+  if (fragmentSrc === ROCKY_REDDISH) return createRockyReddishMaterialTSL();
+  if (fragmentSrc === ICY_WHITE) return createIcyWhiteMaterialTSL();
+  if (fragmentSrc === ICY_BLUE) return createIcyBlueMaterialTSL();
+  return createProceduralPlaceholderMaterialTSL();
+}
+
 // ── Create a textured planet mesh with realistic shading ──
 function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
   // More segments for smoother appearance at all zoom levels
@@ -689,43 +742,31 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
   geo.computeBoundingSphere(); // pre-compute for zoom-to-planet framing
 
   if (def.texture) {
-    const map = loadTex(def.texture);
-    const texSize = 2048; // 2K textures
-
-    const uniforms: Record<string, THREE.IUniform> = {
-      uMap: { value: map },
-      uNightMap: { value: def.textureNight ? loadTex(def.textureNight) : null },
-      uSpecMap: { value: def.textureSpecular ? loadTex(def.textureSpecular) : null },
-      uSunPosView: { value: new THREE.Vector3(0, 0, 0) }, // updated per frame (view space)
-      uHasNight: { value: def.textureNight ? 1.0 : 0.0 },
-      uHasSpec: { value: def.textureSpecular ? 1.0 : 0.0 },
-      uAtmoColor: { value: def.name === 'earth' ? 1.0 : def.name === 'venus' ? 2.0 : 0.0 },
-      uRoughness: { value: def.name === 'earth' ? 0.6 : 0.85 },
-      uTexelSize: { value: new THREE.Vector2(1 / texSize, 1 / texSize) },
-      uMonth: { value: new Date().getMonth() + 1 }, // 1-12
-      uIsEarth: { value: def.name === 'earth' ? 1.0 : 0.0 },
-      uDisplacementMap: { value: def.textureDisplacement ? loadTex(def.textureDisplacement) : null },
-      uHasDisplacement: { value: def.textureDisplacement ? 1.0 : 0.0 },
-      // Scale displacement relative to planet radius — Mars gets more (Olympus Mons!)
-      uDisplacementScale: { value: def.textureDisplacement ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05) : 0.0 },
-    };
-
-    const mat = new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader: PLANET_VERT,
-      fragmentShader: PLANET_FRAG,
+    const atmoType: AtmosphereType =
+      def.name === 'earth' ? 'blue' : def.name === 'venus' ? 'orange' : 'none';
+    const dispScale = def.textureDisplacement
+      ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05)
+      : 0;
+    const mat = createPlanetSurfaceMaterialTSL({
+      map: loadTex(def.texture),
+      nightMap: def.textureNight ? loadTex(def.textureNight) : undefined,
+      specularMap: def.textureSpecular ? loadTex(def.textureSpecular) : undefined,
+      displacementMap: def.textureDisplacement ? loadTex(def.textureDisplacement) : undefined,
+      displacementScale: dispScale,
+      isEarth: def.name === 'earth',
+      atmosphereType: atmoType,
+      roughness: def.name === 'earth' ? 0.6 : 0.85,
+      textureSize: 2048,
     });
+    // Initialize uMonth to current month for Earth seasonal snow
+    mat.userData.monthUniform.value = new Date().getMonth() + 1;
     const mesh = new THREE.Mesh(geo, mat);
     mesh.userData.isPlanetShader = true;
     return mesh;
   }
 
-  // Procedural fallback
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: VERT,
-    fragmentShader: def.fragment,
-  });
+  // Procedural fallback — use TSL moon-style material
+  const mat = getMoonMaterialTSL(def.fragment);
   return new THREE.Mesh(geo, mat);
 }
 
@@ -747,12 +788,7 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
     return new THREE.Mesh(geo, mat);
   }
 
-  const hasTime = def.fragment.includes('uTime');
-  const mat = new THREE.ShaderMaterial({
-    uniforms: hasTime ? { uTime: { value: 0 } } : {},
-    vertexShader: VERT,
-    fragmentShader: def.fragment,
-  });
+  const mat = getMoonMaterialTSL(def.fragment);
   return new THREE.Mesh(geo, mat);
 }
 
@@ -779,29 +815,7 @@ function createOrbitTrail(distance: number, scale: number, color: number = 0x334
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
 
-  const col = new THREE.Color(color);
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: col },
-    },
-    vertexShader: /* glsl */ `
-      attribute float aAlpha;
-      varying float vAlpha;
-      void main() {
-        vAlpha = aAlpha;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor;
-      varying float vAlpha;
-      void main() {
-        gl_FragColor = vec4(uColor, vAlpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-  });
+  const mat = createOrbitTrailMaterialTSL(color);
   const line = new THREE.Line(geo, mat);
   line.userData.trailSegments = segments;
   line.userData.trailDistance = distance;
@@ -912,100 +926,9 @@ export function createSolarSystem(scale: number): THREE.Group {
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadTex('2k_sun.jpg');
 
-  // Sun material — GLSL ShaderMaterial (fully self-luminous, no lighting response).
-  // Note: TSL MeshBasicNodeMaterial does NOT work with 3d-force-graph's WebGLRenderer.
-  // TSL materials require WebGPURenderer (renderers/common + renderers/webgpu paths).
-  // The TSL version in shaders/SunMaterialTSL.ts is ready for when we upgrade the renderer.
-  const sunMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uSunTex: { value: sunTex },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
-      void main() {
-        vUv = uv;
-        vPos = position;
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPos.xyz);
-        gl_Position = projectionMatrix * mvPos;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      uniform sampler2D uSunTex;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      varying vec2 vUv;
-      varying vec3 vPos;
-
-      float hash(vec3 p) { return fract(sin(dot(p, vec3(1.3, 1.7, 1.9))) * 43758.5); }
-      float noise(vec3 x) {
-        vec3 i = floor(x), f = fract(x);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
-      }
-      float fbm(vec3 p) {
-        float v = 0.0, a = 0.5;
-        for (int i = 0; i < 6; i++) { v += a * noise(p); p *= 2.1; a *= 0.48; }
-        return v;
-      }
-
-      void main() {
-        float t = uTime * 0.08;
-        vec3 baseTex = texture2D(uSunTex, vUv).rgb;
-
-        // Multi-scale convection
-        float fineGran = fbm(vPos * 18.0 + vec3(t * 0.4, t * 0.3, t * 0.35));
-        float medGran = fbm(vPos * 6.0 + vec3(t * 0.15, -t * 0.1, t * 0.12));
-        float flow = fbm(vPos * 2.0 + vec3(t * 0.05, t * 0.03, -t * 0.04));
-
-        // Sunspots
-        float spotNoise = fbm(vPos * 4.5 + vec3(t * 0.02, t * 0.015, -t * 0.01));
-        float spots = smoothstep(0.58, 0.68, spotNoise);
-        float penumbra = smoothstep(0.52, 0.58, spotNoise) * (1.0 - spots);
-        float faculae = smoothstep(0.45, 0.52, spotNoise) * (1.0 - spots) * (1.0 - penumbra);
-
-        // Vivid photosphere palette
-        vec3 photosphere = mix(vec3(1.0, 0.75, 0.3), vec3(1.0, 0.9, 0.6), fineGran * 0.5);
-        photosphere = mix(photosphere, vec3(1.0, 0.5, 0.08), (1.0 - medGran) * 0.2);
-        vec3 col = mix(baseTex * 1.05, photosphere, 0.6);
-
-        col = mix(col, vec3(0.7, 0.15, 0.02), spots * 0.75);
-        col = mix(col, vec3(1.0, 0.5, 0.08), penumbra * 0.4);
-        col = mix(col, vec3(1.0, 0.85, 0.5), faculae * 0.25);
-
-        // Prominences at limb
-        float edgeFresnel = 1.0 - abs(dot(normalize(vNormal), normalize(vViewDir)));
-        float prominence = smoothstep(0.7, 0.95, edgeFresnel) * smoothstep(0.6, 0.75, noise(vPos * 5.0 + vec3(t * 0.3)));
-        col += vec3(1.0, 0.4, 0.1) * prominence * 0.5;
-
-        // Edge glow (fully self-luminous — NO darkening)
-        col += vec3(1.0, 0.4, 0.08) * pow(edgeFresnel, 4.0) * 0.2;
-
-        // Center boost
-        float centerBoost = pow(1.0 - edgeFresnel, 2.0);
-        col *= 0.9 + 0.15 * centerBoost;
-
-        // Magnetic field lines
-        float magField = sin(vPos.y * 30.0 + flow * 5.0) * 0.02 * edgeFresnel;
-        col += vec3(1.0, 0.8, 0.4) * magField;
-
-        // Gentle pulsing
-        col *= 1.0 + 0.02 * sin(uTime * 0.3) + 0.01 * sin(uTime * 0.8);
-
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-  });
+  // Sun material — TSL MeshBasicNodeMaterial (fully self-luminous, no lighting response).
+  // Auto-compiles to GLSL on WebGL2 or WGSL on WebGPU.
+  const sunMat = createSunMaterialTSL({ sunTexture: sunTex, quality: 'high' });
   const sun = new THREE.Mesh(sunGeo, sunMat);
   sun.name = 'sun';
   group.add(sun);
@@ -1055,12 +978,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   // Sun corona glow (subtle — bloom post-process amplifies this)
   // Corona: just slightly larger than the Sun — subtle limb glow, not a giant halo
   const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.08 * scale, 16, 16);
-  const coronaMat = new THREE.ShaderMaterial({
-    uniforms: {},
-    vertexShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){vNormal=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vViewDir=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
-    fragmentShader: `varying vec3 vNormal;varying vec3 vViewDir;void main(){float f=1.-abs(dot(vNormal,vViewDir));f=pow(f,3.5);gl_FragColor=vec4(1.,.7,.2,f*.15);}`,
-    transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-  });
+  const coronaMat = createCoronaMaterialTSL();
   group.add(new THREE.Mesh(coronaGeo, coronaMat));
 
   // ── Planets + Moons ──
@@ -1119,38 +1037,11 @@ export function createSolarSystem(scale: number): THREE.Group {
     if (def.atmosphere) {
       const atmoSegs = def.radius > 0.5 ? 32 : 24;
       const atmoGeo = new THREE.SphereGeometry(def.radius * 1.06 * scale, atmoSegs, atmoSegs);
-      const atmoMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: new THREE.Vector3(...def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number]) },
-          uIntensity: { value: def.atmosphere.intensity },
-          uPower: { value: def.atmosphere.power },
-        },
-        vertexShader: /* glsl */ `
-          varying vec3 vNormal;
-          varying vec3 vViewDir;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-            vViewDir = normalize(-mvPos.xyz);
-            gl_Position = projectionMatrix * mvPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform vec3 uColor;
-          uniform float uIntensity;
-          uniform float uPower;
-          varying vec3 vNormal;
-          varying vec3 vViewDir;
-          void main() {
-            float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
-            float atmo = pow(fresnel, uPower) * uIntensity;
-            gl_FragColor = vec4(uColor, atmo);
-          }
-        `,
-        transparent: true,
-        side: THREE.BackSide,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
+      const atmoColorParts = def.atmosphere.color.split(',').map(c => parseFloat(c.trim())) as [number, number, number];
+      const atmoMat = createAtmosphereMaterialTSL({
+        color: atmoColorParts,
+        intensity: def.atmosphere.intensity,
+        power: def.atmosphere.power,
       });
       const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
       atmoMesh.name = `atmo-${def.name}`;
@@ -1253,69 +1144,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         ringUv.setXY(i, rNorm, 0.5);
       }
       const ringTex = loadTex('2k_saturn_ring_alpha.png');
-      const ringMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uRingTex: { value: ringTex },
-          uSunPosView: { value: new THREE.Vector3(0, 0, 0) },
-        },
-        vertexShader: /* glsl */ `
-          varying vec2 vUv;
-          varying vec3 vViewPos;
-          varying vec3 vViewNorm;
-          void main() {
-            vUv = uv;
-            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-            vViewPos = mvPos.xyz;
-            vViewNorm = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * mvPos;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform sampler2D uRingTex;
-          uniform vec3 uSunPosView;
-          varying vec2 vUv;
-          varying vec3 vViewPos;
-          varying vec3 vViewNorm;
-
-          void main() {
-            float r = vUv.x; // 0 = inner edge, 1 = outer edge
-
-            // Sample ring texture (color + alpha from texture)
-            vec4 tex = texture2D(uRingTex, vec2(r, 0.5));
-
-            // Procedural Cassini division and ring density variation
-            // Cassini division: gap at ~0.55-0.60 of ring width
-            float cassini = smoothstep(0.53, 0.55, r) * (1.0 - smoothstep(0.58, 0.60, r));
-            // Encke gap: thin gap at ~0.85
-            float encke = smoothstep(0.83, 0.84, r) * (1.0 - smoothstep(0.86, 0.87, r));
-            float gapAlpha = 1.0 - cassini * 0.9 - encke * 0.7;
-
-            // Ring density: denser in B ring (0.3-0.5), thinner in C ring (0.0-0.2)
-            float density = smoothstep(0.0, 0.15, r) * (1.0 - smoothstep(0.95, 1.0, r));
-            density *= mix(0.4, 1.0, smoothstep(0.2, 0.35, r)); // C ring thinner
-
-            // Sun-facing illumination (view space)
-            vec3 sunDir = normalize(uSunPosView - vViewPos);
-            float NdotL = dot(vViewNorm, sunDir);
-
-            // Front-lit: warm gold. Back-lit: cool transmitted glow
-            vec3 frontColor = tex.rgb * max(NdotL, 0.0) * 1.2;
-            vec3 backColor = tex.rgb * max(-NdotL, 0.0) * 0.4 * vec3(1.0, 0.85, 0.6); // backlit glow
-            vec3 ringColor = frontColor + backColor;
-
-            // Ambient minimum so rings aren't invisible on the dark side
-            ringColor += tex.rgb * 0.05;
-
-            float alpha = tex.a * density * gapAlpha;
-            if (alpha < 0.01) discard;
-
-            gl_FragColor = vec4(ringColor, alpha * 0.85);
-          }
-        `,
-        side: THREE.DoubleSide,
-        transparent: true,
-        depthWrite: false,
-      });
+      const ringMat = createSaturnRingsMaterialTSL({ ringTexture: ringTex });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.name = 'saturn-ring';
       ring.rotation.x = Math.PI / 2; // flat equatorial plane
@@ -1370,12 +1199,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         // Titan atmosphere
         if (moonDef.name === 'titan') {
           const titanAtmoGeo = new THREE.SphereGeometry((moonDef.radius + 0.03) * scale, 12, 12);
-          const titanAtmoMat = new THREE.ShaderMaterial({
-            uniforms: {},
-            vertexShader: `varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
-            fragmentShader: `varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.-abs(dot(vN,vV)),3.);gl_FragColor=vec4(0.85,0.6,0.2,f*.35);}`,
-            transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
-          });
+          const titanAtmoMat = createTitanAtmosphereMaterialTSL();
           const titanAtmo = new THREE.Mesh(titanAtmoGeo, titanAtmoMat);
           titanAtmo.position.copy(moonMesh.position);
           moonOrbit.add(titanAtmo);
@@ -1609,56 +1433,7 @@ export function toggleAurora(group: THREE.Group): boolean {
 
   const auroraGeo = new THREE.TorusGeometry(auroraRadius, tubeRadius, 16, 64);
 
-  const auroraMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vPos;
-      varying vec2 vUv;
-      void main() {
-        vPos = position;
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec3 vPos;
-      varying vec2 vUv;
-
-      float hash(float p) { return fract(sin(p * 127.1) * 43758.5453); }
-      float noise(float p) {
-        float i = floor(p);
-        float f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(hash(i), hash(i + 1.0), f);
-      }
-
-      void main() {
-        // Flowing curtain effect along the torus
-        float curtain = sin(vUv.x * 20.0 + uTime * 2.0) * 0.5 + 0.5;
-        curtain *= noise(vUv.x * 30.0 + uTime * 1.5);
-
-        // Vertical fade — strongest at tube center
-        float vFade = 1.0 - abs(vUv.y - 0.5) * 2.0;
-        vFade = pow(vFade, 0.8);
-
-        // Color: green core with purple edges
-        vec3 green = vec3(0.1, 0.9, 0.3);
-        vec3 purple = vec3(0.5, 0.1, 0.8);
-        float colorMix = sin(vUv.x * 8.0 + uTime * 0.7) * 0.5 + 0.5;
-        vec3 col = mix(green, purple, colorMix * 0.4);
-
-        float alpha = curtain * vFade * 0.5;
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
-  });
+  const auroraMat = createAuroraMaterialTSL();
 
   const auroraMesh = new THREE.Mesh(auroraGeo, auroraMat);
   auroraMesh.name = 'earth-aurora';
@@ -1706,41 +1481,7 @@ export function toggleRingGlow(group: THREE.Group): boolean {
     128,
   );
 
-  const glowMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      varying vec3 vPos;
-      void main() {
-        vUv = uv;
-        vPos = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec2 vUv;
-      varying vec3 vPos;
-
-      void main() {
-        // Radial position for edge fade
-        float r = length(vPos.xy);
-        float pulse = 0.6 + 0.4 * sin(uTime * 1.2);
-        // Golden glow color
-        vec3 gold = vec3(1.0, 0.85, 0.3);
-        // Fade at inner/outer edges
-        float edgeFade = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
-        float alpha = edgeFade * pulse * 0.35;
-        gl_FragColor = vec4(gold, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
-  });
+  const glowMat = createRingGlowMaterialTSL();
 
   const glowMesh = new THREE.Mesh(glowGeo, glowMat);
   glowMesh.name = 'saturn-ring-glow';
@@ -1787,46 +1528,7 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
   }
   posAttr.needsUpdate = true;
 
-  const stormMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec2 vUv;
-
-      void main() {
-        // Center UVs
-        vec2 c = vUv - 0.5;
-        float dist = length(c);
-
-        // Rotating spiral pattern
-        float angle = atan(c.y, c.x);
-        float spiral = sin(angle * 3.0 - dist * 20.0 + uTime * 1.5) * 0.5 + 0.5;
-
-        // Red/brown storm colors
-        vec3 red = vec3(0.75, 0.2, 0.1);
-        vec3 brown = vec3(0.55, 0.3, 0.15);
-        vec3 col = mix(red, brown, spiral);
-
-        // Fade at edges (circular falloff)
-        float fade = smoothstep(0.5, 0.2, dist);
-        float alpha = fade * 0.7;
-
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
+  const stormMat = createStormVortexMaterialTSL();
 
   const stormMesh = new THREE.Mesh(stormGeo, stormMat);
   stormMesh.name = 'jupiter-storm';
@@ -1878,11 +1580,11 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
     group.getWorldPosition(_sunViewPos);
   }
 
-  // Animate sun shader (GLSL ShaderMaterial needs manual time update)
-  const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
-  if (sunMesh && sunMesh.material instanceof THREE.ShaderMaterial && sunMesh.material.uniforms.uTime) {
-    sunMesh.material.uniforms.uTime.value = time;
-  }
+  // Sun TSL material uses built-in `time` node — no manual update needed.
+
+  // Sun world position (sun is at local origin of the group)
+  const _sunWorldPos = new THREE.Vector3();
+  group.getWorldPosition(_sunWorldPos);
 
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
@@ -1959,10 +1661,7 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
         marker.position.z = x * Math.sin(rotY) + z * Math.cos(rotY);
         // Add Earth mesh local position offset
         marker.position.add(mesh.position);
-        // Update marker shader time
-        if (marker.material instanceof THREE.ShaderMaterial && marker.material.uniforms.uTime) {
-          marker.material.uniforms.uTime.value = time;
-        }
+        // Marker TSL material uses built-in `time` node — no manual update needed.
         // Sync ring position with marker
         const ring = group.userData.locationRing as THREE.Mesh | undefined;
         if (ring) {
@@ -1976,18 +1675,18 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       if (cloudsHigh) cloudsHigh.rotation.y = time * 0.45;
     }
 
-    // Update planet shader uniforms — sun position in view space for day/night + bump
-    if (mesh.material instanceof THREE.ShaderMaterial) {
-      const u = mesh.material.uniforms;
-      if (u.uSunPosView) u.uSunPosView.value.copy(_sunViewPos);
-      if (u.uTime) u.uTime.value = time;
+    // Update planet TSL uniforms — sun position in view space for day/night + bump
+    const planetUserData = mesh.material.userData;
+    if (planetUserData?.sunPosUniform) {
+      planetUserData.sunPosUniform.value.copy(_sunViewPos);
     }
 
-    // Update Saturn ring shader sun position (view space)
+    // Update Saturn ring TSL uniform — sun position in WORLD space (ring uses positionWorld)
     if (def.name === 'saturn') {
       const satRing = mesh.getObjectByName('saturn-ring') as THREE.Mesh | undefined;
-      if (satRing && satRing.material instanceof THREE.ShaderMaterial && satRing.material.uniforms.uSunPosView) {
-        satRing.material.uniforms.uSunPosView.value.copy(_sunViewPos);
+      const ringUserData = satRing?.material.userData;
+      if (ringUserData?.sunPosUniform) {
+        ringUserData.sunPosUniform.value.copy(_sunWorldPos);
       }
     }
 
@@ -2060,25 +1759,11 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       orbitGroup.rotation.y = moonPhase + time * def.speed * 0.3;
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
 
-      if (mesh.material instanceof THREE.ShaderMaterial) {
-        if (mesh.material.uniforms?.uTime) mesh.material.uniforms.uTime.value = time;
-      }
+      // Moon TSL materials use built-in `time` node — no manual update needed.
     }
   }
 
-  // ── Animate shader effects (aurora, storm, ring glow) ──
-  const auroraMesh = group.userData.auroraMesh as THREE.Mesh | undefined;
-  if (auroraMesh && auroraMesh.material instanceof THREE.ShaderMaterial) {
-    auroraMesh.material.uniforms.uTime.value = time;
-  }
-  const stormMesh = group.userData.stormMesh as THREE.Mesh | undefined;
-  if (stormMesh && stormMesh.material instanceof THREE.ShaderMaterial) {
-    stormMesh.material.uniforms.uTime.value = time;
-  }
-  const ringGlowMesh = group.userData.ringGlowMesh as THREE.Mesh | undefined;
-  if (ringGlowMesh && ringGlowMesh.material instanceof THREE.ShaderMaterial) {
-    ringGlowMesh.material.uniforms.uTime.value = time;
-  }
+  // Aurora / storm / ring glow TSL materials use built-in `time` node — no manual update needed.
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2454,33 +2139,7 @@ export function addLocationMarker(group: THREE.Group): () => void {
   const earthR = earthGeo.parameters.radius;
   const markerSize = earthR * 0.02; // 2% of Earth radius
   const markerGeo = new THREE.SphereGeometry(markerSize, 8, 8);
-  const markerMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-        vViewDir = normalize(-mvPos.xyz);
-        gl_Position = projectionMatrix * mvPos;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec3 vNormal;
-      varying vec3 vViewDir;
-      void main() {
-        float pulse = 0.7 + 0.3 * sin(uTime * 3.0);
-        float fresnel = pow(1.0 - abs(dot(vNormal, vViewDir)), 2.0);
-        vec3 color = mix(vec3(0.2, 0.8, 1.0), vec3(1.0, 1.0, 1.0), fresnel);
-        gl_FragColor = vec4(color * pulse, 1.0);
-      }
-    `,
-    transparent: false,
-  });
+  const markerMat = createMarkerMaterialTSL();
   const marker = new THREE.Mesh(markerGeo, markerMat);
   marker.name = 'location-marker';
 
