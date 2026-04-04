@@ -1852,12 +1852,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // 5. Demerzel face (3D mesh)
         // 6. Pixel ratio (nuclear option — reduces resolution)
         ambientDust.visible = qualityBudget > -0.7;
-        // Bloom: disable entirely at very low budget (saves full-screen post-process pass)
-        if (qualityBudget < -0.8) {
-          bloomPass.enabled = false;
-        } else {
-          bloomPass.enabled = true;
-          bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+        // Bloom: disable entirely at very low budget (saves full-screen post-process pass).
+        // bloomPass only exists on the WebGL path — null on WebGPU (ref stays null).
+        const bp = bloomPassRef.current;
+        if (bp) {
+          if (qualityBudget < -0.8) {
+            bp.enabled = false;
+          } else {
+            bp.enabled = true;
+            bp.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+          }
         }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
         starField.visible = qualityBudget > -0.6;
@@ -2245,16 +2249,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Compounding surge bloom ease-back ───
       const surgeBloom = surgeBloomRef.current;
-      if (surgeBloom && bloomPass) {
+      const surgeBP = bloomPassRef.current;
+      if (surgeBloom && surgeBP) {
         const elapsed = t - surgeBloom.startTime;
         if (elapsed >= SURGE_BLOOM_DURATION) {
-          bloomPass.strength = surgeBloom.originalStrength;
+          surgeBP.strength = surgeBloom.originalStrength;
           surgeBloomRef.current = null;
         } else {
           // Ease back from SURGE_BLOOM_STRENGTH to original
           const progress = elapsed / SURGE_BLOOM_DURATION;
           const eased = progress * progress; // ease-in (slow start)
-          bloomPass.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
+          surgeBP.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
         }
       }
       } catch (err) {

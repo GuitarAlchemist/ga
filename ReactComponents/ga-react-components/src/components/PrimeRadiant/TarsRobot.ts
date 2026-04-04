@@ -4,6 +4,8 @@
 // Holographic wireframe aesthetic matching Prime Radiant
 
 import * as THREE from 'three';
+import type { MeshBasicNodeMaterial } from 'three/webgpu';
+import { createHolographicMaterialTSL } from './shaders/HolographicTSL';
 
 // ---------------------------------------------------------------------------
 // TARS locomotion modes
@@ -68,20 +70,12 @@ const slabFragmentShader = /* glsl */ `
   }
 `;
 
-function createSlabMaterial(opacity: number = 0.5): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#B0C4DE') }, // light steel blue
-      uOpacity: { value: opacity },
-    },
-    vertexShader: slabVertexShader,
-    fragmentShader: slabFragmentShader,
-    transparent: true,
+function createSlabMaterial(opacity: number = 0.5): MeshBasicNodeMaterial {
+  return createHolographicMaterialTSL({
+    color: '#B0C4DE', // light steel blue
+    opacity,
     wireframe: false,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
+    dataStream: true,
   });
 }
 
@@ -258,13 +252,7 @@ export function updateTarsRobot(
     }
   });
 
-  // ── Shader time update ──
-  group.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      const mat = child.material as THREE.ShaderMaterial;
-      if (mat.uniforms?.uTime) mat.uniforms.uTime.value = time;
-    }
-  });
+  // TSL holographic slabs use built-in `time` node — no manual update needed.
 
   // ── Holographic glitch ──
   if (Math.sin(Math.floor(time * 7) * 99999.1) > 0.96) {
