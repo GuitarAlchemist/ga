@@ -1414,18 +1414,23 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       if (clouds) clouds.rotation.y = mesh.rotation.y + time * 0.003;
       if (cloudsHigh) cloudsHigh.rotation.y = mesh.rotation.y - time * 0.002;
 
-      // Sync ArcGIS overlays with Earth rotation
+      // Sync ArcGIS overlays with Earth rotation AND position — Earth moves
+      // every frame along its elliptical orbit, and overlays are parented to
+      // the orbit group, not the planet. Without position sync they drift
+      // and the user sees TWO Earths: the real planet and the orphaned overlay.
       const overlays = group.userData.arcgisOverlays as Record<string, THREE.Mesh> | undefined;
       if (overlays) {
         for (const overlay of Object.values(overlays)) {
           overlay.rotation.y = mesh.rotation.y;
+          overlay.position.copy(mesh.position);
         }
       }
 
-      // Sync focused patch with Earth rotation
+      // Sync focused patch with Earth rotation + position (same bug class)
       const focusedPatch = group.userData.focusedPatch as THREE.Mesh | undefined;
       if (focusedPatch) {
         focusedPatch.rotation.y = mesh.rotation.y;
+        focusedPatch.position.copy(mesh.position);
       }
 
       // Sync location marker with Earth rotation
@@ -2106,6 +2111,13 @@ export function enableEarthAutoLOD(
       newMesh.position.copy(earth.mesh.position);
       newMesh.rotation.copy(earth.mesh.rotation);
       earth.orbit.add(newMesh);
+      // Register so the per-frame sync loop keeps it tracking Earth's position
+      // and rotation — otherwise the overlay stays frozen while Earth orbits.
+      {
+        const reg = (group.userData.arcgisOverlays ?? {}) as Record<string, THREE.Mesh>;
+        group.userData.arcgisOverlays = reg;
+        reg[LOD_KEY] = newMesh;
+      }
 
       // Crossfade animation
       const crossfade = () => {
