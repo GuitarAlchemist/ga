@@ -2439,17 +2439,54 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     dimStars.matrixAutoUpdate = false; dimStars.updateMatrix();
     fg.scene().add(starField);
 
-    // M key toggles Milky Way visibility
+    // Restore persisted visibility preferences
+    const visPref = (k: string, dflt: boolean) => {
+      try { const v = localStorage.getItem(k); return v === null ? dflt : v === 'true'; }
+      catch { return dflt; }
+    };
+    skySphere.visible = visPref('pr-vis-sky', true);
+
+    // Keyboard toggles for visualization layers (no reload needed).
+    // Capital letters (shifted) to avoid clashing with text input.
+    //   Shift+M → Milky Way          Shift+S → Skybox
+    //   Shift+J → Jurisdiction shells  Shift+B → Solar system (Background)
+    //   A → Moebius  C → Caustics  D → Dispersion
     milkyWayToggleHandler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+      const persist = (k: string, v: boolean) => {
+        try { localStorage.setItem(k, v ? 'true' : 'false'); } catch { /* ignore */ }
+      };
+
       if (e.key === 'm' || e.key === 'M') {
         milkyWayMesh.visible = !milkyWayMesh.visible;
-        try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
+        persist('prime-radiant-milky-way', milkyWayMesh.visible);
+        console.info(`[PR] MilkyWay ${milkyWayMesh.visible ? 'ON' : 'OFF'}`);
+      }
+      if (e.key === 'S') {
+        skySphere.visible = !skySphere.visible;
+        persist('pr-vis-sky', skySphere.visible);
+        console.info(`[PR] Skybox ${skySphere.visible ? 'ON' : 'OFF'}`);
+      }
+      if (e.key === 'J') {
+        // Toggle all meshes tagged as Voronoi jurisdiction shells
+        let count = 0; let firstVis = true;
+        for (const obj of fg.scene().children) {
+          if ((obj as THREE.Object3D).userData?.isVoronoiShell) {
+            if (count === 0) firstVis = obj.visible;
+            obj.visible = !firstVis;
+            count++;
+          }
+        }
+        console.info(`[PR] Jurisdictions ${!firstVis ? 'ON' : 'OFF'} (${count} shells)`);
+      }
+      if (e.key === 'B') {
+        solarSystem.visible = !solarSystem.visible;
+        console.info(`[PR] Solar system ${solarSystem.visible ? 'ON' : 'OFF'}`);
       }
 
-      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion
+      // 'a' = Audit Mode (Moebius), 'c' = Caustics, 'd' = Dispersion (lowercase for post-fx)
       if (e.key === 'a' || e.key === 'A') {
         const pass = moebiusPassRef.current;
         if (pass) {
@@ -2540,8 +2577,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const removeLocationMarker = addLocationMarker(solarSystem);
 
     // Auto-LOD: load high-res satellite imagery when camera is close to Earth
-    // Disabled on mobile — fetches large tile textures that blow the memory budget
-    const stopEarthLOD = isLowEnd ? (() => {}) : enableEarthAutoLOD(solarSystem, () => fg.camera());
+    // Disabled on mobile — fetches large tile textures that blow the memory budget.
+    // DEFERRED by 2.5s after init so the startup shader-compile + material-warmup
+    // burst doesn't compete with LOD tile decoding — keeps first-paint FPS higher.
+    let disposeLOD: () => void = () => {};
+    let lodTimer: ReturnType<typeof setTimeout> | null = null;
+    if (!isLowEnd) {
+      lodTimer = setTimeout(() => {
+        disposeLOD = enableEarthAutoLOD(solarSystem, () => fg.camera());
+        lodTimer = null;
+      }, 2500);
+    }
+    const stopEarthLOD = () => {
+      if (lodTimer) { clearTimeout(lodTimer); lodTimer = null; }
+      disposeLOD();
+    };
 
     // GIS layers — on mobile, only Earth to save memory
     const gisMgrs = new Map<string, GisLayerManager>();
