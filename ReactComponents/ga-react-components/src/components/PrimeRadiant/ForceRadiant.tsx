@@ -1796,13 +1796,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const rows = Array.from(profAcc.entries())
         .map(([k, v]) => ({ k, total: v.total, calls: v.calls, pct: (v.total / window_ms) * 100 }))
         .sort((a, b) => b.total - a.total);
-      const top = rows.slice(0, 8);
-      // Emit as console.warn so the observer log captures it for remote QA.
-      const summary = top
-        .map((r) => `${r.k}=${r.total.toFixed(0)}ms(${r.pct.toFixed(0)}%)`)
-        .join(' ');
+      const top = rows.slice(0, 10);
       // eslint-disable-next-line no-console
-      console.warn(`[PR profile ${window_ms.toFixed(0)}ms] ${summary}`);
+      console.group(`[PR profile] ${window_ms.toFixed(0)}ms window`);
+      for (const r of top) {
+        // eslint-disable-next-line no-console
+        console.log(`  ${r.k.padEnd(22)} ${r.total.toFixed(1).padStart(6)}ms  ${r.pct.toFixed(1).padStart(4)}%  (${r.calls} calls, ${(r.total / r.calls).toFixed(2)}ms avg)`);
+      }
+      // eslint-disable-next-line no-console
+      console.groupEnd();
       profAcc.clear();
       profLastFlush = now;
     };
