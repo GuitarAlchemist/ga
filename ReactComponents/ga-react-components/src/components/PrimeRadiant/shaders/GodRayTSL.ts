@@ -25,9 +25,11 @@ export function createGodRayMaterialTSL(
   const c = new THREE.Color(color);
   const uColor = vec3(c.r, c.g, c.b);
 
-  material.colorNode = uColor;
-
-  material.opacityNode = Fn(() => {
+  // Pre-multiply the color by the fade — works with AdditiveBlending regardless
+  // of how opacityNode is handled. The final color output becomes
+  //   uColor * fade * rays * 0.03
+  // which with GL_ONE+GL_ONE blending adds that subtle amount per pixel.
+  material.colorNode = Fn(() => {
     const uvCoord = uv();
     const t = time;
 
@@ -41,8 +43,9 @@ export function createGodRayMaterialTSL(
     const rays2 = sin(uvCoord.x.mul(17.0).sub(t.mul(0.3))).mul(0.5).add(0.5);
     const rays = rays1.mul(rays2);
 
-    // Final alpha — very subtle (0.03 at peak)
-    return fade.mul(rays).mul(0.03);
+    // Very subtle (0.03 at peak)
+    const scale = fade.mul(rays).mul(0.03);
+    return uColor.mul(scale);
   })();
 
   return material;
