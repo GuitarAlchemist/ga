@@ -24,6 +24,7 @@ export type GovernanceEdgeType =
   | 'policy-persona'            // thin colored lines
   | 'pipeline-flow'             // animated particle streams
   | 'cross-repo'                // dashed arcs
+  | 'contains'                  // fractal dive: parent → child (sub-graph recursion)
   | 'lolli';                    // red pulsing (dead references)
 
 // ---------------------------------------------------------------------------
@@ -66,7 +67,9 @@ export interface GovernanceNode {
   health?: HealthMetrics;
   healthStatus?: GovernanceHealthStatus;
   filePath?: string;             // relative path to governance file
-  children?: string[];           // child node IDs
+  children?: string[];           // child node IDs (dive targets for fractal zoom)
+  parentIds?: string[];          // multi-parent: a node can belong to several parents
+  scale?: number;                // LOD depth — 0=root, 1=constitution-articles, 2=clauses...
   metadata?: Record<string, unknown>;
   fileTree?: FileTreeNode[];
 }

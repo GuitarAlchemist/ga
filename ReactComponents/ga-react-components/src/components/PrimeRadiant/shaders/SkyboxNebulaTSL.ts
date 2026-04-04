@@ -20,23 +20,69 @@ export function createSkyboxNebulaMaterialTSL(): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial();
   material.side = THREE.BackSide;
   material.depthWrite = false;
+  // Opaque base — AdditiveBlending on full-coverage BackSide sphere stacks
+  // with other additive layers under WebGPU and dominates the view. Normal
+  // blending on an opaque sphere gives clean deep space behind everything.
+  material.transparent = false;
 
-  // Simple deep-space gradient for now. The original FBM-based nebula was
-  // rendering as a bright cellular dome under WebGPU AdditiveBlending — needs
-  // further investigation. This minimal version returns to clean deep space.
   material.colorNode = Fn(() => {
+    // Direction from local position (skybox sphere)
     const dir = normalize(positionLocal);
-    return mix(
+
+    // Base gradient: near-black space, slight blue-purple tint varies by y
+    const baseColor = mix(
       vec3(0.002, 0.002, 0.008),
       vec3(0.005, 0.003, 0.012),
       dir.y.mul(0.5).add(0.5),
-    );
-  })();
+    ).toVar();
 
-  // Do NOT use AdditiveBlending on a full-coverage BackSide sphere — under
-  // WebGPU it stacks with other additive layers and dominates the view.
-  // Normal blending on an opaque base gives clean deep-space behind everything.
-  material.transparent = false;
+    // ─── Orion-like nebula (reddish-pink) ───
+    const orionCenter = normalize(vec3(0.5, 0.2, -0.8));
+    const orionDist = length(dir.sub(orionCenter));
+    const orionMask = smoothstep(1.2, 0.2, orionDist);
+    const orionNoise = fbm6(dir.mul(4.0).add(vec3(1.3, 2.7, 0.5)));
+    const orionColor = vec3(0.12, 0.02, 0.03);
+    baseColor.addAssign(orionColor.mul(orionMask).mul(orionNoise));
+
+    // ─── Carina-like nebula (blue-teal) ───
+    const carinaCenter = normalize(vec3(-0.6, -0.3, 0.7));
+    const carinaDist = length(dir.sub(carinaCenter));
+    const carinaMask = smoothstep(1.0, 0.15, carinaDist);
+    const carinaNoise = fbm6(dir.mul(5.0).add(vec3(3.1, 0.4, 1.8)));
+    const carinaColor = vec3(0.02, 0.05, 0.08);
+    baseColor.addAssign(carinaColor.mul(carinaMask).mul(carinaNoise));
+
+    // ─── Faint dust wisps ───
+    const dust = fbm6(dir.mul(2.5).add(vec3(7.3, 3.1, 5.7)));
+    baseColor.addAssign(vec3(0.003, 0.002, 0.004).mul(dust));
+
+    // ─── Starfield (hash-based points) ───
+    const starGrid = dir.mul(300.0);
+    const starHash = hash3(vec3(
+      starGrid.x.floor(),
+      starGrid.y.floor(),
+      starGrid.z.floor(),
+    ));
+    const starBright = step(0.997, starHash).mul(starHash);
+    const starColor = mix(
+      vec3(0.8, 0.85, 1.0),
+      vec3(1.0, 0.9, 0.7),
+      hash3(vec3(starGrid.x.floor().add(100.0), starGrid.y.floor(), starGrid.z.floor())),
+    );
+    baseColor.addAssign(starColor.mul(starBright).mul(0.08));
+
+    // ─── Dim secondary star layer ───
+    const starGrid2 = dir.mul(150.0);
+    const starHash2 = hash3(vec3(
+      starGrid2.x.floor(),
+      starGrid2.y.floor(),
+      starGrid2.z.floor(),
+    ));
+    const starBright2 = step(0.998, starHash2).mul(starHash2);
+    baseColor.addAssign(vec3(0.7, 0.75, 0.9).mul(starBright2).mul(0.04));
+
+    return baseColor;
+  })();
 
   return material;
 }
