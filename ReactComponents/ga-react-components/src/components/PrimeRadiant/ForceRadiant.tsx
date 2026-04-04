@@ -11,7 +11,6 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
 import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
-import { createGodRayMaterialTSL } from './shaders/GodRayTSL';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
@@ -1631,6 +1630,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
+    // Under WebGPURenderer, default tone mapping + output color space can wash out /
+    // shift fully-emissive TSL materials (Sun, corona) vs the old WebGLRenderer baseline.
+    // Match the WebGL defaults we tuned against to keep the Sun surface looking like
+    // the baseline GLSL shader. NoToneMapping prevents desaturation of saturated oranges.
+    if (USE_WEBGPU) {
+      const r = fg.renderer() as THREE.WebGLRenderer;
+      r.outputColorSpace = THREE.SRGBColorSpace;
+      r.toneMapping = THREE.NoToneMapping;
+    }
+
     // Post-processing effects — each wrapped in try/catch to prevent chain breakage.
     // A shader compile error in one pass would black out the entire screen if uncaught.
     const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
@@ -2469,19 +2478,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       ringMeshes.push(ring);
     }
 
-    // ─── GOD RAY LIGHT SHAFTS from center ───
-    // Volumetric light cone pointing outward from the graph center
-    const godRayGeo = new THREE.ConeGeometry(80, 300, 32, 1, true);
-    const godRayMat = createGodRayMaterialTSL('#FF6B35');
-    const godRay = new THREE.Mesh(godRayGeo, godRayMat);
-    godRay.rotation.x = Math.PI; // point upward
-    fg.scene().add(godRay);
-
-    // Second god ray — different color, separate TSL instance (clone has quirks)
-    const godRay2Mat = createGodRayMaterialTSL('#00CED1');
-    const godRay2 = new THREE.Mesh(godRayGeo, godRay2Mat);
-    godRay2.rotation.set(Math.PI * 0.7, 0, Math.PI * 0.3);
-    fg.scene().add(godRay2);
+    // God rays removed — the 300-unit cones originated at graph center (0,0,0)
+    // where the selected governance node sits, causing the sine-wave ray bands
+    // to converge on-screen into a dominant yellow starburst. See GodRayTSL.ts
+    // for the dormant material factory if we want to revisit with repositioning.
 
     // Effects are animated in the main onEngineTick (merged below)
 
