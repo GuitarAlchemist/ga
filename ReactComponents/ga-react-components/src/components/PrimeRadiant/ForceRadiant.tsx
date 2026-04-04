@@ -1777,6 +1777,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // offenders + their share of the frame budget. Zero cost when disabled.
     const profileEnabled = typeof window !== 'undefined'
       && new URLSearchParams(window.location.search).get('perf') === 'profile';
+    if (profileEnabled) {
+      // eslint-disable-next-line no-console
+      console.warn('[PR profile] ENABLED — first flush in 3s');
+    }
     const profAcc = new Map<string, { total: number; calls: number }>();
     let profLastFlush = performance.now();
     const profMark = (label: string, fn: () => void) => {
