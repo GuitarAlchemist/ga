@@ -359,17 +359,53 @@ export default defineConfig({
                 secure: false,
                 ws: true,
             },
-            // Ollama proxy — avoids CORS when checking local Ollama
+            // Ollama proxy — avoids CORS when checking local Ollama.
+            // SECURITY: the dev server binds to all interfaces (host:true) so
+            // tablet/phone can reach Prime Radiant on the LAN. Without an
+            // Origin check, any webpage visited on any device on the LAN
+            // could POST to http://<dev-host>:5176/proxy/ollama/api/chat and
+            // drive local inference / cause VRAM DoS. We reject requests
+            // whose Origin/Referer isn't one of our own addresses.
             '/proxy/ollama': {
                 target: 'http://localhost:11434',
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/ollama/, ''),
+                configure: (proxy) => {
+                    proxy.on('proxyReq', (proxyReq, req, res) => {
+                        const origin = req.headers.origin || '';
+                        const referer = req.headers.referer || '';
+                        const host = req.headers.host || '';
+                        // Allow: same-host origin/referer, or empty (curl/server-side).
+                        // Reject: explicit origin that doesn't match our host.
+                        const hostOnly = host.split(':')[0];
+                        const ok = !origin || origin.includes(hostOnly) || referer.includes(hostOnly);
+                        if (!ok) {
+                            res.writeHead(403, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: 'origin not allowed', origin }));
+                            proxyReq.destroy();
+                        }
+                    });
+                },
             },
-            // Docker Model Runner proxy — avoids CORS
+            // Docker Model Runner proxy — avoids CORS. Same origin guard.
             '/proxy/docker-models': {
                 target: 'http://localhost:12434',
                 changeOrigin: true,
                 rewrite: (p: string) => p.replace(/^\/proxy\/docker-models/, ''),
+                configure: (proxy) => {
+                    proxy.on('proxyReq', (proxyReq, req, res) => {
+                        const origin = req.headers.origin || '';
+                        const referer = req.headers.referer || '';
+                        const host = req.headers.host || '';
+                        const hostOnly = host.split(':')[0];
+                        const ok = !origin || origin.includes(hostOnly) || referer.includes(hostOnly);
+                        if (!ok) {
+                            res.writeHead(403, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: 'origin not allowed', origin }));
+                            proxyReq.destroy();
+                        }
+                    });
+                },
             },
             // ACP /proxy/acp/agents served by primeRadiantControlPlugin middleware
             // (no proxy to port 8200 needed — mock agents served directly)
