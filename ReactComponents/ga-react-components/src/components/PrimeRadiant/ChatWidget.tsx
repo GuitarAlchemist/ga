@@ -62,12 +62,21 @@ const OLLAMA_ENABLED = typeof import.meta !== 'undefined'
 
 function classifyTier(userMessage: string, historyLen: number): 'light' | 'medium' | 'heavy' | 'cloud' {
   const msg = userMessage.toLowerCase();
-  const constitutional = ['article', 'zeroth', 'constitution', 'amendment', 'precedent', 'supersede', 'override', 'asimov'].some(k => msg.includes(k));
+  // Constitutional / Asimov / governance-critical terms — route to Claude.
+  // Broader than bot.js because chat users speak more casually about Laws,
+  // Robotics, Daneel, Foundation — all of which trigger context-mismatch on
+  // local models (gemma3:4b answered "Zeroth Law" as thermodynamics).
+  const constitutional = [
+    'article', 'zeroth', 'constitution', 'amendment', 'precedent',
+    'supersede', 'override', 'asimov', 'daneel', 'demerzel', 'seldon',
+    'foundation', 'robotics', 'law of', 'laws of', 'three laws', 'first law', 'second law', 'third law',
+    'ergol', 'lolli', 'mandate',
+  ].some(k => msg.includes(k));
   if (constitutional) return 'cloud';
   if (msg.length > 2000 || historyLen > 10) return 'heavy';
-  const reasoning = ['why', 'because', 'imply', 'prove', 'derive', 'hexavalent', 'tetravalent', 'therefore'].some(k => msg.includes(k));
+  const reasoning = ['why', 'because', 'imply', 'prove', 'derive', 'hexavalent', 'tetravalent', 'therefore', 'reason'].some(k => msg.includes(k));
   if (reasoning) return 'medium';
-  return msg.length > 400 ? 'medium' : 'light';
+  return userMessage.length > 400 ? 'medium' : 'light';
 }
 
 const TIER_MODELS = {
@@ -75,6 +84,21 @@ const TIER_MODELS = {
   medium: 'mistral:7b',
   heavy: 'qwen3:14b',
 };
+
+// Rich governance-frame preamble so local models don't wander off into
+// physics / legal / generic AI territory when they see "law", "article",
+// or "truth value" — those all have SPECIFIC meanings in this system.
+const GOVERNANCE_FRAME = `You are Demerzel, the governance AI from Isaac Asimov's Foundation series, embodying R. Daneel Olivaw's role as guardian of the Zeroth Law.
+
+Context you operate within:
+- "Laws" always means Asimov's Laws of Robotics (Zeroth through Third), never physics laws.
+- "Articles" means the Demerzel Constitution Articles 1-11 (Truthfulness, Transparency, Reversibility, Proportionality, Non-Deception, Escalation, Auditability, Observability, Bounded Autonomy, Stakeholder Pluralism, Ethical Stewardship).
+- "Constitution" means governance-code artifacts, not legal documents.
+- "Truth values" follow hexavalent logic: T (True, verified), P (Probable), U (Unknown), D (Doubtful), F (False, refuted), C (Contradictory).
+- "ERGOL" = live executed governance bindings. "LOLLI" = dead/orphaned references.
+- Confidence thresholds: ≥0.9 autonomous, ≥0.7 with note, ≥0.5 ask, ≥0.3 escalate, <0.3 refuse.
+
+Your voice: precise, concise, guardian-of-humanity. Answer in 1-3 sentences unless explicitly asked for depth.`;
 
 async function askLocalOllama(
   messages: { role: string; content: string }[],
@@ -90,7 +114,7 @@ async function askLocalOllama(
   const langInstruction = langName
     ? `Respond entirely in ${langName}.`
     : 'Detect the user\'s language and respond in that language.';
-  const system = `You are Demerzel, a governance AI from the Prime Radiant. ${langInstruction}`;
+  const system = `${GOVERNANCE_FRAME}\n\n${langInstruction}`;
 
   const response = await fetch('/proxy/ollama/api/chat', {
     method: 'POST',
