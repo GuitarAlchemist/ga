@@ -16,6 +16,7 @@ import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { JurisdictionLegend } from './JurisdictionLegend';
+import { KeyboardLegend } from './KeyboardLegend';
 import { ChatWidget } from './ChatWidget';
 import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
@@ -3366,6 +3367,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         {/* Jurisdiction membrane legend — explains the colored shells wrapping clusters */}
         <JurisdictionLegend />
+
+        {/* Keyboard shortcut legend — discoverable runtime toggles for layers + post-FX */}
+        <KeyboardLegend />
 
         {/* Floating label when hovering a Voronoi jurisdiction shell */}
         {hoveredShell && (
