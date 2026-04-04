@@ -724,10 +724,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
     console.warn = (...args: unknown[]) => {
       const msg = args.map(String).join(' ');
-      if (
-        msg.includes('THREE') || msg.includes('WebGL') || msg.includes('shader') || msg.includes('GLSL')
-        || msg.includes('[PR ') || msg.includes('[PrimeRadiant]')
-      ) {
+      if (msg.includes('THREE') || msg.includes('WebGL') || msg.includes('shader') || msg.includes('GLSL')) {
         buf.push('[WARN] ' + msg);
         if (buf.length > 50) buf.shift();
       }
