@@ -6,9 +6,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
-import { PostProcessing } from 'three/webgpu';
-import { pass } from 'three/tsl';
-import { bloom } from 'three/examples/jsm/tsl/display/BloomNode.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
@@ -82,12 +81,11 @@ import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
-// MoebiusShader, CausticsShader, DispersionShader — TSL port pending (old GLSL imports removed)
+import { MoebiusShader } from './shaders/MoebiusPassTSL';
+import { CausticsShader } from './shaders/CausticsPass';
+import { DispersionShader } from './shaders/DispersionPass';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
-import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
-import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
-import { createGodRayMaterialTSL } from './shaders/GodRayTSL';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
@@ -318,19 +316,123 @@ function generateFractalTexture(baseColor: THREE.Color, complexity: number): THR
 }
 
 // ---------------------------------------------------------------------------
-// Volumetric node material — TSL fractal FBM glow (replaces GLSL ShaderMaterial)
-// Cache by color+complexity+intensity; create fresh instances (no clone — NodeMaterial).
+// Raymarched volumetric sphere shader — fractal noise inside each node
+// Each node looks like a glowing plasma orb with swirling internal structure
 // ---------------------------------------------------------------------------
-const volumetricMaterialCache = new Map<string, { color: THREE.Color; complexity: number; intensity: number }>();
+const volumetricVertexShader = /* glsl */ `
+  varying vec3 vWorldPos;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  varying vec2 vUv;
 
-function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.Material {
-  const key = `${color.getHexString()}-${complexity}-${intensity}`;
-  // Always create a fresh TSL material — NodeMaterial.clone() is unreliable
-  // Cache the params only to deduplicate within a single batch if needed later
-  if (!volumetricMaterialCache.has(key)) {
-    volumetricMaterialCache.set(key, { color: color.clone(), complexity, intensity });
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vWorldPos = worldPos.xyz;
+    vViewDir = normalize(cameraPosition - worldPos.xyz);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-  return createVolumetricCoreMaterialTSL({ color, complexity, intensity });
+`;
+
+const volumetricFragmentShader = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uTime;
+  uniform float uComplexity;
+  uniform float uIntensity;
+
+  varying vec3 vWorldPos;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  varying vec2 vUv;
+
+  // Simplex-like 3D noise (compact hash-based)
+  vec3 hash33(vec3 p) {
+    p = fract(p * vec3(443.897, 441.423, 437.195));
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.xxy + p.yxx) * p.zyx);
+  }
+
+  float noise3d(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float n = mix(
+      mix(mix(dot(hash33(i), f), dot(hash33(i + vec3(1,0,0)), f - vec3(1,0,0)), f.x),
+          mix(dot(hash33(i + vec3(0,1,0)), f - vec3(0,1,0)), dot(hash33(i + vec3(1,1,0)), f - vec3(1,1,0)), f.x), f.y),
+      mix(mix(dot(hash33(i + vec3(0,0,1)), f - vec3(0,0,1)), dot(hash33(i + vec3(1,0,1)), f - vec3(1,0,1)), f.x),
+          mix(dot(hash33(i + vec3(0,1,1)), f - vec3(0,1,1)), dot(hash33(i + vec3(1,1,1)), f - vec3(1,1,1)), f.x), f.y), f.z);
+    return n * 0.5 + 0.5;
+  }
+
+  // Fractal Brownian motion — self-similar at multiple scales
+  float fbm(vec3 p, int octaves) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    for (int i = 0; i < 3; i++) {
+      if (i >= octaves) break;
+      value += amplitude * noise3d(p * frequency);
+      frequency *= 2.0;
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+
+  void main() {
+    // Fresnel rim glow
+    float fresnel = 1.0 - dot(vNormal, vViewDir);
+    fresnel = pow(fresnel, 2.5);
+
+    // Fractal noise in object space (animated)
+    vec3 noiseCoord = vWorldPos * 0.3 + uTime * 0.15;
+    int octaves = int(uComplexity) + 2;
+    float fractalNoise = fbm(noiseCoord, octaves);
+
+    // Second noise layer at different frequency (creates swirling)
+    float swirl = fbm(noiseCoord * 2.3 + vec3(uTime * 0.1, 0.0, uTime * -0.08), octaves);
+
+    // Combine: core brightness + fractal pattern + Fresnel rim
+    float coreBright = smoothstep(0.6, 0.0, length(vUv - 0.5) * 2.0);
+    float pattern = mix(fractalNoise, swirl, 0.4) * coreBright;
+
+    // Color: base color modulated by fractal, brighter at center
+    vec3 col = uColor * (0.3 + pattern * 1.5);
+    col += uColor * fresnel * 0.8; // rim glow in node color
+    col += vec3(1.0) * coreBright * 0.15; // white-hot center
+
+    // Alpha: solid at center, fractal fade at edges, Fresnel rim
+    float alpha = coreBright * 0.8 + fresnel * 0.6 + pattern * 0.3;
+    alpha = clamp(alpha * uIntensity, 0.0, 1.0);
+
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+// Cache shader materials per color+complexity
+const shaderMaterialCache = new Map<string, THREE.ShaderMaterial>();
+
+function createVolumetricMaterial(color: THREE.Color, complexity: number, intensity: number): THREE.ShaderMaterial {
+  const key = `${color.getHexString()}-${complexity}-${intensity}`;
+  if (shaderMaterialCache.has(key)) return shaderMaterialCache.get(key)!.clone();
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: color },
+      uTime: { value: 0 },
+      uComplexity: { value: complexity },
+      uIntensity: { value: intensity },
+    },
+    vertexShader: volumetricVertexShader,
+    fragmentShader: volumetricFragmentShader,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.FrontSide,
+  });
+
+  shaderMaterialCache.set(key, mat);
+  return mat.clone();
 }
 
 // ---------------------------------------------------------------------------
@@ -605,12 +707,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
   const edgePropagationsRef = useRef<Map<string, EdgePropagation>>(new Map());
   const pleasureWindowRef = useRef<number[]>([]);
-  // TSL PostProcessing ref — duck-typed wrapper around the real PostProcessing instance
-  const tslPostProcessingRef = useRef<{
-    postProcessing: PostProcessing | null;
-    bloomEnabled: boolean;
-    bloomStrength: number;
-  }>({ postProcessing: null, bloomEnabled: true, bloomStrength: 0.6 });
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
+  const moebiusPassRef = useRef<ShaderPass | null>(null);
+  const causticsPassRef = useRef<ShaderPass | null>(null);
+  const dispersionPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
   const consoleErrorsRef = useRef<string[]>([]);
   // Capture console errors + WebGL warnings for remote debugging
@@ -947,15 +1047,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ── RENDER <target> ON|OFF|TOGGLE ──
     if (cmd.type === 'render') {
-      const tslPendingPasses = ['moebius', 'caustics', 'dispersion'];
-      if (tslPendingPasses.includes(cmd.target)) {
-        console.warn(`[PrimeRadiant] RENDER ${cmd.target} — TSL port pending, pass not available`);
-      }
-      if (cmd.target === 'bloom') {
-        const tslRef = tslPostProcessingRef.current;
-        if (tslRef.postProcessing) {
-          tslRef.bloomEnabled = cmd.action === 'toggle' ? !tslRef.bloomEnabled : cmd.action === 'on';
+      const passMap: Record<string, React.MutableRefObject<ShaderPass | null>> = {
+        moebius: moebiusPassRef,
+        caustics: causticsPassRef,
+        dispersion: dispersionPassRef,
+      };
+      const ref = passMap[cmd.target];
+      if (ref?.current) {
+        const pass = ref.current;
+        if (cmd.action === 'toggle') {
+          pass.enabled = !pass.enabled;
+        } else {
+          pass.enabled = cmd.action === 'on';
         }
+        // Set the primary uniform
+        const uniformKey = cmd.target === 'moebius' ? 'uEnabled'
+          : cmd.target === 'caustics' ? 'uIntensity' : 'uSpread';
+        if (pass.uniforms[uniformKey]) {
+          pass.uniforms[uniformKey].value = pass.enabled ? (cmd.value ?? (cmd.target === 'dispersion' ? 0.4 : cmd.target === 'caustics' ? 0.5 : 1.0)) : 0.0;
+        }
+      }
+      if (cmd.target === 'bloom' && bloomPassRef.current) {
+        bloomPassRef.current.enabled = cmd.action === 'toggle' ? !bloomPassRef.current.enabled : cmd.action === 'on';
       }
       return;
     }
@@ -1152,14 +1265,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     }
 
-    // Boost bloom (TSL — track strength in ref)
-    const tslRef = tslPostProcessingRef.current;
-    if (tslRef.postProcessing) {
+    // Boost bloom
+    const bloomPass = bloomPassRef.current;
+    if (bloomPass) {
       surgeBloomRef.current = {
         startTime: now,
-        originalStrength: tslRef.bloomStrength,
+        originalStrength: bloomPass.strength,
       };
-      tslRef.bloomStrength = SURGE_BLOOM_STRENGTH;
+      bloomPass.strength = SURGE_BLOOM_STRENGTH;
     }
 
     // Edge propagation from source with unlimited hops (use all edges)
@@ -1335,7 +1448,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      useWebGPU: true,
+      // useWebGPU: true — DISABLED. WebGPURenderer (even WebGL2 fallback) is incompatible
+      // with existing ShaderMaterial (sun, planets, god rays) and EffectComposer.
+      // All ShaderMaterials must be migrated to NodeMaterial before enabling.
     })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
@@ -1494,40 +1609,20 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // ─── TSL PostProcessing — replaces EffectComposer + UnrealBloomPass ───
-    // WebGPURenderer uses TSL node-based post-processing instead of the old
-    // EffectComposer pipeline. We create a PostProcessing instance with bloom,
-    // then inject a duck-type wrapper so three-render-objects' internal
-    // composer.render() / composer.setSize() calls hit our TSL pipeline.
-    const bloomStrength = isLowEnd ? 0.3 : 0.6;
-    try {
-      const renderer = fg.renderer();
-      const scene = fg.scene();
-      const camera = fg.camera();
-      const scenePass = pass(scene, camera);
-      const scenePassColor = scenePass.getTextureNode('output');
-      const bloomPass = bloom(scenePassColor, bloomStrength, 0.0, isLowEnd ? 0.8 : 0.5);
-      const tslPP = new PostProcessing(renderer, scenePassColor.add(bloomPass));
-
-      tslPostProcessingRef.current = {
-        postProcessing: tslPP,
-        bloomEnabled: true,
-        bloomStrength,
-      };
-
-      // Duck-type wrapper — three-render-objects calls .render() and .setSize()
-      // on the internal postProcessingComposer. We intercept with our TSL pipeline.
-      const duckComposer = {
-        render: () => { tslPP.render(); },
-        setSize: (_w: number, _h: number) => { /* renderer handles resize */ },
-        addPass: () => { /* no-op — TSL uses node graph, not pass chain */ },
-        passes: [],
-      };
-      // Inject the duck-type composer to replace the internal EffectComposer
-      fg.postProcessingComposer(duckComposer as unknown);
-    } catch (e) {
-      console.warn('[PrimeRadiant] TSL PostProcessing setup failed, falling back to no post-processing:', e);
-    }
+    // Add bloom post-processing — always half-resolution (bloom is a blur effect,
+    // full-res produces identical visual quality but costs 4x fill rate per internal pass)
+    const bloomSize = new THREE.Vector2(
+      Math.floor(container.clientWidth * 0.5),
+      Math.floor(container.clientHeight * 0.5),
+    );
+    const bloomPass = new UnrealBloomPass(
+      bloomSize,
+      isLowEnd ? 0.3 : 0.6,   // strength
+      isLowEnd ? 0.3 : 0.6,   // radius
+      isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
+    );
+    fg.postProcessingComposer().addPass(bloomPass);
+    bloomPassRef.current = bloomPass;
 
     // Set renderer pixel ratio — cap DPR on mobile/tablet to save fill rate and reduce heat
     // Tablet at DPR 2.625 renders at 2399x3056 = 7.3M pixels — causes thermal throttling
@@ -1536,9 +1631,72 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
-    // NOTE: Moebius, Caustics, Dispersion, and Chromatic Aberration passes are
-    // pending TSL port. The old GLSL ShaderPass pipeline is incompatible with
-    // WebGPURenderer. Toggle commands will log warnings until TSL versions are ready.
+    // Post-processing effects — each wrapped in try/catch to prevent chain breakage.
+    // A shader compile error in one pass would black out the entire screen if uncaught.
+    const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
+      try {
+        const pass = new ShaderPass(shader);
+        if (overrides) {
+          for (const [k, v] of Object.entries(overrides)) pass.uniforms[k].value = v;
+        }
+        if (pass.uniforms.uResolution) {
+          (pass.uniforms.uResolution.value as THREE.Vector2).set(container.clientWidth, container.clientHeight);
+        }
+        fg.postProcessingComposer().addPass(pass);
+        ref.current = pass;
+      } catch (e) {
+        console.warn(`[PrimeRadiant] ${name} shader failed:`, e);
+      }
+    };
+
+    // Post-processing effects — desktop only, each starts disabled.
+    // Each pass is wrapped in try/catch; if GLSL compile fails, the pass is skipped.
+    if (!isLowEnd && !isTablet) {
+      try {
+        const cp = new ShaderPass(CausticsShader);
+        cp.uniforms.uIntensity.value = 0.0;
+        cp.enabled = false; // completely skip until toggled
+        fg.postProcessingComposer().addPass(cp);
+        causticsPassRef.current = cp;
+      } catch (e) { console.warn('[PR] Caustics pass failed:', e); }
+
+      try {
+        const dp = new ShaderPass(DispersionShader);
+        dp.uniforms.uSpread.value = 0.0;
+        dp.enabled = false;
+        fg.postProcessingComposer().addPass(dp);
+        dispersionPassRef.current = dp;
+      } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
+    }
+    if (!isLowEnd) {
+      try {
+        const mp = new ShaderPass(MoebiusShader);
+        mp.uniforms.uEnabled.value = 0.0;
+        mp.enabled = false;
+        fg.postProcessingComposer().addPass(mp);
+        moebiusPassRef.current = mp;
+      } catch (e) { console.warn('[PR] Moebius pass failed:', e); }
+    }
+
+    // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
+    if (!isLowEnd) {
+      const chromaticShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
+        },
+        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
+      void main() {
+        float r = texture2D(tDiffuse, vUv + uOffset).r;
+        float g = texture2D(tDiffuse, vUv).g;
+        float b = texture2D(tDiffuse, vUv - uOffset).b;
+        float a = texture2D(tDiffuse, vUv).a;
+        gl_FragColor = vec4(r, g, b, a);
+      }`,
+      };
+      fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
+    }
 
     // ─── ADAPTIVE QUALITY — auto-downgrade on crappy GPUs ───
     let frameCount = 0;
@@ -1587,8 +1745,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let _filamentPosMap: Map<string, THREE.Vector3> | null = null;
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
-    // Forward-declare solarSystem — created later but referenced in onEngineTick
-    let solarSystem: THREE.Group | null = null;
     const _stationOffset = new THREE.Vector3();
     const _trackWp = new THREE.Vector3();
     const _trackOffset = new THREE.Vector3();
@@ -1654,7 +1810,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           triangles: ri.render.triangles,
           textures: ri.memory.textures,
           geometries: ri.memory.geometries,
-          bloomEnabled: tslPostProcessingRef.current.bloomEnabled,
+          bloomEnabled: bloomPassRef.current?.enabled ?? false,
           solarVisible: !!fg.scene().getObjectByName('sun')?.parent?.visible,
         };
         // Performance grade from FPS
@@ -1696,10 +1852,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         ambientDust.visible = qualityBudget > -0.7;
         // Bloom: disable entirely at very low budget (saves full-screen post-process pass)
         if (qualityBudget < -0.8) {
-          tslPostProcessingRef.current.bloomEnabled = false;
+          bloomPass.enabled = false;
         } else {
-          tslPostProcessingRef.current.bloomEnabled = true;
-          tslPostProcessingRef.current.bloomStrength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+          bloomPass.enabled = true;
+          bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
         }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
         starField.visible = qualityBudget > -0.6;
@@ -1770,18 +1926,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // Phase 2.2: Activity effects — dim stale nodes (cached refs, no traverse)
         if (staleness > 0.5) {
           // Use cached core mesh ref if available; fall back to traverse on first encounter
-          // TSL materials: set .opacity on the material directly (transparent is already true)
-          const cachedCore = group.userData._cachedCoreMesh as THREE.Mesh | undefined;
-          if (cachedCore?.material && 'opacity' in cachedCore.material) {
-            (cachedCore.material as { opacity: number }).opacity = prom.opacity * stalenessDim;
+          const cachedCore = group.userData._cachedCoreMesh as (THREE.Mesh & { material: THREE.ShaderMaterial }) | undefined;
+          if (cachedCore?.material?.uniforms?.uOpacity) {
+            cachedCore.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
           } else {
             // One-time traverse to cache the reference
             group.traverse((child: THREE.Object3D) => {
-              if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
+              if (child instanceof THREE.Mesh && child.material instanceof THREE.ShaderMaterial && child.material.uniforms?.uOpacity) {
                 group.userData._cachedCoreMesh = child;
-                if ('opacity' in child.material) {
-                  (child.material as { opacity: number }).opacity = prom.opacity * stalenessDim;
-                }
+                child.material.uniforms.uOpacity.value = prom.opacity * stalenessDim;
               }
             });
           }
@@ -1812,24 +1965,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         }
 
-        // TSL volumetric cores use auto-updating `time` — no manual uniform needed.
-        // IXQL overrides: pulse/visibility via group transform; color/glow/opacity
-        // cannot be changed per-frame on TSL materials (baked at creation).
+        // Update volumetric shader time for fractal swirl
         for (const child of group.children) {
           if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
+            const mat = child.material as THREE.ShaderMaterial;
+            if (mat.uniforms?.uTime) {
+              mat.uniforms.uTime.value = t;
+            }
+            // IXQL visual overrides — color, glow, pulse, opacity
             const overrides = group.userData.ixqlOverrides as Record<string, unknown> | undefined;
             if (overrides) {
+              // Color override — use pre-allocated _tickColor (no allocation per tick)
+              if (overrides.color && mat.uniforms?.uColor) {
+                try {
+                  _tickColor.set(String(overrides.color));
+                  (mat.uniforms.uColor.value as THREE.Color).copy(_tickColor);
+                } catch { /* invalid color string — skip */ }
+              }
+              // Glow: boost emissive intensity (in-place, no clone)
+              if (overrides.glow && mat.uniforms?.uColor) {
+                const boost = 1.0 + Math.sin(t * 3.0) * 0.3;
+                (mat.uniforms.uColor.value as THREE.Color).multiplyScalar(boost);
+              }
               // Pulse: oscillate scale
               if (overrides.pulse) {
                 const pulseScale = 1.0 + Math.sin(t * 5.0) * 0.25;
                 group.scale.setScalar(pulseScale);
               }
-              // Opacity: adjust mesh visibility as an approximation
-              if (overrides.opacity !== undefined) {
-                const mat = child.material as THREE.Material;
-                if ('opacity' in mat) {
-                  (mat as { opacity: number }).opacity = Number(overrides.opacity);
-                }
+              // Opacity override
+              if (overrides.opacity !== undefined && mat.uniforms?.uOpacity) {
+                mat.uniforms.uOpacity.value = Number(overrides.opacity);
               }
               // Visibility
               if (overrides.visible === false) {
@@ -1925,7 +2090,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── God ray animation ───
-      // TSL god ray materials use auto-updating `time` from three/tsl — no manual uniform needed
+      (godRay.material as THREE.ShaderMaterial).uniforms.uTime.value = t * 0.3; // slower god rays
+      const gr2Mat = godRay2.material as THREE.ShaderMaterial;
+      if (gr2Mat.uniforms?.uTime) gr2Mat.uniforms.uTime.value = t;
 
       // ─── HUD companions — positioned in world space near graph ───
       const cam = fg.camera() as THREE.PerspectiveCamera;
@@ -1933,7 +2100,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── TSL shared uniforms — single update per frame ───
       updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
 
-      // Post-processing pass time updates — moebius/caustics/dispersion pending TSL port
+      // Post-processing pass time updates
+      if (moebiusPassRef.current) moebiusPassRef.current.uniforms.uTime.value = t;
+      if (causticsPassRef.current) causticsPassRef.current.uniforms.uTime.value = t;
+      if (dispersionPassRef.current) dispersionPassRef.current.uniforms.uTime.value = t;
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
@@ -1955,7 +2125,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Solar system — follows camera X/Z but fixed Y offset ───
       // Hide entirely on very low quality to save draw calls
-      if (!solarSystem) return; // not yet initialized
       solarSystem.visible = qualityBudget > -0.9;
       // Solar system always parented to camera — never detach.
       // Position fixed at (0, Y, 0) in camera space = no Float32 jitter.
@@ -2076,16 +2245,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Compounding surge bloom ease-back ───
       const surgeBloom = surgeBloomRef.current;
-      if (surgeBloom && tslPostProcessingRef.current.postProcessing) {
+      if (surgeBloom && bloomPass) {
         const elapsed = t - surgeBloom.startTime;
         if (elapsed >= SURGE_BLOOM_DURATION) {
-          tslPostProcessingRef.current.bloomStrength = surgeBloom.originalStrength;
+          bloomPass.strength = surgeBloom.originalStrength;
           surgeBloomRef.current = null;
         } else {
           // Ease back from SURGE_BLOOM_STRENGTH to original
           const progress = elapsed / SURGE_BLOOM_DURATION;
           const eased = progress * progress; // ease-in (slow start)
-          tslPostProcessingRef.current.bloomStrength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
+          bloomPass.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
         }
       }
       } catch (err) {
@@ -2158,7 +2327,149 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
-    const skyMat = createSkyboxNebulaMaterialTSL();
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {},
+      vertexShader: `varying vec3 vWorldPos; void main() { vWorldPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        varying vec3 vWorldPos;
+
+        vec3 hash33(vec3 p) {
+          p = fract(p * vec3(443.897, 441.423, 437.195));
+          p += dot(p, p.yzx + 19.19);
+          return fract((p.xxy + p.yxx) * p.zyx);
+        }
+        float noise3d(vec3 p) {
+          vec3 i = floor(p); vec3 f = fract(p);
+          f = f*f*(3.0-2.0*f);
+          return mix(mix(mix(dot(hash33(i),f), dot(hash33(i+vec3(1,0,0)),f-vec3(1,0,0)), f.x),
+            mix(dot(hash33(i+vec3(0,1,0)),f-vec3(0,1,0)), dot(hash33(i+vec3(1,1,0)),f-vec3(1,1,0)), f.x), f.y),
+            mix(mix(dot(hash33(i+vec3(0,0,1)),f-vec3(0,0,1)), dot(hash33(i+vec3(1,0,1)),f-vec3(1,0,1)), f.x),
+            mix(dot(hash33(i+vec3(0,1,1)),f-vec3(0,1,1)), dot(hash33(i+vec3(1,1,1)),f-vec3(1,1,1)), f.x), f.y), f.z)*0.5+0.5;
+        }
+        float fbm(vec3 p) {
+          float v=0.0, a=0.5;
+          for(int i=0;i<4;i++) { v+=a*noise3d(p); p*=2.1; a*=0.5; }
+          return v;
+        }
+
+        void main() {
+          vec3 dir = normalize(vWorldPos);
+          float y = dir.y;
+
+          // Base gradient — near black space
+          vec3 col = mix(vec3(0.003, 0.002, 0.008), vec3(0.001, 0.001, 0.004), smoothstep(-0.5, 0.8, y));
+
+          // Orion-like nebula — reddish-pink cloud region
+          float neb1 = fbm(dir * 3.0 + vec3(1.5, 0.0, 2.3));
+          neb1 = smoothstep(0.4, 0.7, neb1);
+          float neb1Mask = smoothstep(0.3, 0.0, length(dir - vec3(0.5, 0.2, -0.8)));
+          col += vec3(0.12, 0.02, 0.04) * neb1 * neb1Mask;
+
+          // Carina-like nebula — blue-teal cloud
+          float neb2 = fbm(dir * 4.0 + vec3(-2.0, 1.0, 0.5));
+          neb2 = smoothstep(0.45, 0.7, neb2);
+          float neb2Mask = smoothstep(0.35, 0.0, length(dir - vec3(-0.6, -0.3, 0.7)));
+          col += vec3(0.02, 0.06, 0.1) * neb2 * neb2Mask;
+
+          // Pillars of creation — golden dust cloud
+          float neb3 = fbm(dir * 5.0 + vec3(0.0, 3.0, -1.0));
+          neb3 = smoothstep(0.5, 0.75, neb3);
+          float neb3Mask = smoothstep(0.25, 0.0, length(dir - vec3(-0.3, 0.7, 0.4)));
+          col += vec3(0.08, 0.05, 0.01) * neb3 * neb3Mask;
+
+          // Milky Way band — bright horizontal band
+          float milkyWay = exp(-8.0 * y * y);
+          float mwNoise = fbm(dir * 6.0);
+          col += vec3(0.03, 0.025, 0.04) * milkyWay * mwNoise;
+
+          // Sagittarius A* — supermassive black hole at galactic center
+          // Gravitational lensing ring: bright accretion disk around a dark core
+          vec3 sgrADir = normalize(vec3(0.0, -0.02, -1.0)); // galactic center direction
+          float sgrDist = length(dir - sgrADir);
+          // Dark core — subtle dimming, not a visible black sphere
+          float blackHole = 1.0 - smoothstep(0.0, 0.006, sgrDist);
+          col *= (1.0 - blackHole * 0.3); // very subtle dimming
+          // Accretion disk — hot glowing ring around the event horizon
+          float ring = exp(-800.0 * pow(sgrDist - 0.015, 2.0));
+          col += vec3(1.0, 0.7, 0.3) * ring * 0.15; // hot orange-white ring
+          // Outer halo — warped light from behind
+          float halo = exp(-200.0 * pow(sgrDist - 0.025, 2.0));
+          col += vec3(0.8, 0.5, 0.2) * halo * 0.06;
+          // Faint relativistic jet hint (vertical)
+          float jet = exp(-2000.0 * (dir.x - sgrADir.x) * (dir.x - sgrADir.x))
+                    * exp(-50.0 * (dir.z - sgrADir.z) * (dir.z - sgrADir.z))
+                    * smoothstep(0.0, 0.1, abs(dir.y));
+          col += vec3(0.3, 0.4, 1.0) * jet * 0.03; // faint blue jets
+
+          // Nearby bright stars (fixed positions, glowing)
+          vec3 stars[5];
+          vec3 starColors[5];
+          stars[0] = normalize(vec3(0.8, 0.1, -0.5));  // Sirius — blue-white
+          stars[1] = normalize(vec3(-0.3, 0.6, 0.7));  // Betelgeuse — orange
+          stars[2] = normalize(vec3(0.1, -0.8, 0.5));  // Rigel — blue
+          stars[3] = normalize(vec3(-0.7, 0.2, -0.6)); // Aldebaran — orange-red
+          stars[4] = normalize(vec3(0.4, 0.7, 0.5));   // Vega — white
+          starColors[0] = vec3(0.7, 0.8, 1.0);
+          starColors[1] = vec3(1.0, 0.5, 0.2);
+          starColors[2] = vec3(0.5, 0.6, 1.0);
+          starColors[3] = vec3(1.0, 0.4, 0.15);
+          starColors[4] = vec3(0.9, 0.92, 1.0);
+
+          for (int i = 0; i < 5; i++) {
+            float d = length(dir - stars[i]);
+            float glow = exp(-500.0 * d * d) * 0.5;   // tight small core
+            float halo = exp(-40.0 * d * d) * 0.08;   // subtle halo
+            col += starColors[i] * (glow + halo);
+          }
+
+          // ─── Nearby galaxies (boosted visibility) ───
+          // Andromeda (M31) — large, tilted elliptical smudge
+          vec3 andromedaDir = normalize(vec3(0.2, 0.35, -0.9));
+          float andrDist = length(dir - andromedaDir);
+          float andrCore = exp(-600.0 * andrDist * andrDist) * 0.4;
+          float andrDisk = exp(-40.0 * andrDist * andrDist) * 0.12;
+          vec3 andrLocal = dir - andromedaDir;
+          float andrTilt = dot(andrLocal, normalize(vec3(0.5, 1.0, 0.2)));
+          float andrEllipse = exp(-120.0 * andrTilt * andrTilt);
+          col += vec3(0.85, 0.82, 0.95) * (andrCore + andrDisk * andrEllipse);
+
+          // Triangulum Galaxy (M33) — smaller, near Andromeda
+          vec3 m33Dir = normalize(vec3(0.35, 0.5, -0.78));
+          float m33Dist = length(dir - m33Dir);
+          float m33Glow = exp(-400.0 * m33Dist * m33Dist) * 0.12;
+          float m33Halo = exp(-50.0 * m33Dist * m33Dist) * 0.05;
+          col += vec3(0.7, 0.75, 0.9) * (m33Glow + m33Halo);
+
+          // Large Magellanic Cloud (LMC) — southern sky, irregular, blue
+          vec3 lmcDir = normalize(vec3(0.6, -0.7, 0.35));
+          float lmcDist = length(dir - lmcDir);
+          float lmcCore = exp(-60.0 * lmcDist * lmcDist) * 0.15;
+          float lmcNoise = fbm(dir * 8.0 + vec3(5.0, 2.0, 1.0));
+          col += vec3(0.5, 0.6, 0.9) * lmcCore * (0.6 + lmcNoise);
+
+          // Small Magellanic Cloud (SMC) — companion to LMC
+          vec3 smcDir = normalize(vec3(0.45, -0.6, 0.6));
+          float smcDist = length(dir - smcDir);
+          float smcGlow = exp(-150.0 * smcDist * smcDist) * 0.08;
+          col += vec3(0.5, 0.6, 0.8) * smcGlow;
+
+          // ─── Cosmic Microwave Background ───
+          // Very faint, large-scale temperature anisotropy pattern
+          // Subtle warm/cool spots across the entire sky
+          float cmb = fbm(dir * 2.0 + vec3(42.0, 17.0, 73.0));
+          float cmbAnisotropy = (cmb - 0.5) * 0.008; // extremely subtle
+          // CMB is ~2.7K — map to faint red-blue temperature fluctuations
+          vec3 cmbWarm = vec3(0.015, 0.003, 0.0);   // warm spots (red)
+          vec3 cmbCool = vec3(0.0, 0.003, 0.015);    // cool spots (blue)
+          col += cmbAnisotropy > 0.0 ? cmbWarm * cmbAnisotropy * 100.0
+                                     : cmbCool * abs(cmbAnisotropy) * 100.0;
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
@@ -2248,15 +2559,28 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
       }
 
-      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion — TSL port pending
+      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion
       if (e.key === 'a' || e.key === 'A') {
-        console.warn('[PrimeRadiant] Moebius toggle — TSL port pending');
+        const pass = moebiusPassRef.current;
+        if (pass) {
+          const on = !pass.enabled;
+          pass.enabled = on;
+          pass.uniforms.uEnabled.value = on ? 1.0 : 0.0;
+        }
       }
       if (e.key === 'c' || e.key === 'C') {
-        console.warn('[PrimeRadiant] Caustics toggle — TSL port pending');
+        const pass = causticsPassRef.current;
+        if (pass) {
+          pass.enabled = !pass.enabled;
+          pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
+        }
       }
       if (e.key === 'd' || e.key === 'D') {
-        console.warn('[PrimeRadiant] Dispersion toggle — TSL port pending');
+        const pass = dispersionPassRef.current;
+        if (pass) {
+          pass.enabled = !pass.enabled;
+          pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
+        }
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
@@ -2285,14 +2609,36 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── GOD RAY LIGHT SHAFTS from center ───
     // Volumetric light cone pointing outward from the graph center
     const godRayGeo = new THREE.ConeGeometry(80, 300, 32, 1, true);
-    const godRayMat = createGodRayMaterialTSL('#FF6B35');
+    const godRayMat = new THREE.ShaderMaterial({
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color('#FF6B35') } },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float fade = smoothstep(0.0, 0.5, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
+          float rays = sin(vUv.x * 40.0 + uTime * 0.5) * 0.5 + 0.5;
+          rays *= sin(vUv.x * 17.0 - uTime * 0.3) * 0.5 + 0.5;
+          float alpha = fade * rays * 0.03;
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
+    });
     const godRay = new THREE.Mesh(godRayGeo, godRayMat);
     godRay.rotation.x = Math.PI; // point upward
     fg.scene().add(godRay);
 
-    // Second god ray at different angle — fresh TSL material (no clone)
-    const godRay2Geo = new THREE.ConeGeometry(80, 300, 32, 1, true);
-    const godRay2 = new THREE.Mesh(godRay2Geo, createGodRayMaterialTSL('#00CED1'));
+    // Second god ray at different angle
+    const godRay2 = godRay.clone();
+    (godRay2.material as THREE.ShaderMaterial).uniforms = {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#00CED1') },
+    };
     godRay2.rotation.set(Math.PI * 0.7, 0, Math.PI * 0.3);
     fg.scene().add(godRay2);
 
@@ -2317,7 +2663,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
     // Parented to camera to eliminate Float32 jitter from large world coordinates.
     // Position (0, Y, 0) in camera-local space keeps all numbers small.
-    solarSystem = createSolarSystem(8.0);
+    const solarSystem = createSolarSystem(8.0);
     solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
     fg.camera().add(solarSystem);
 
@@ -2542,11 +2888,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Voronoi jurisdiction shells — governance authority boundaries ───
+      // TSL materials (MeshBasicNodeMaterial) require WebGPURenderer — skip on WebGLRenderer
       if (!isLowEnd && graph.nodes.length >= 6) {
         try {
           voronoiShellsHandle = createVoronoiShells(graph.nodes, graph.edges, fg.scene(), budgetToTier(qualityBudget));
         } catch (e) {
-          console.warn('[PrimeRadiant] Voronoi shells disabled:', (e as Error).message);
+          console.warn('[PrimeRadiant] Voronoi shells disabled (TSL requires WebGPURenderer):', (e as Error).message);
         }
       }
 
@@ -2899,7 +3246,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         Array.from(gisManagersRef.current.entries()).map(([k, m]) => [k, { pins: m.pinCount, paths: m.pathCount, clusters: m.clusterCount }])
       ),
       godotFullscreen,
-      moebius: false, // TSL port pending
+      moebius: moebiusPassRef.current ? (moebiusPassRef.current.uniforms.uEnabled.value as number) > 0.5 : false,
       render: renderMetricsRef.current,
       errors: consoleErrorsRef.current.slice(-10), // last 10 errors
       device: {
@@ -2958,14 +3305,38 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       trackedPlanetRef.current = planet;
       setTrackedPlanetName(planet);
     },
-    setMoebiusEnabled: (_amount) => {
-      console.warn('[PrimeRadiant] setMoebiusEnabled — TSL port pending');
+    setMoebiusEnabled: (amount) => {
+      const pass = moebiusPassRef.current;
+      if (!pass) return;
+      if (amount < 0) {
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uEnabled.value = pass.enabled ? 1.0 : 0.0;
+      } else {
+        pass.enabled = amount > 0.01;
+        pass.uniforms.uEnabled.value = amount;
+      }
     },
-    setCausticsIntensity: (_intensity) => {
-      console.warn('[PrimeRadiant] setCausticsIntensity — TSL port pending');
+    setCausticsIntensity: (intensity) => {
+      const pass = causticsPassRef.current;
+      if (!pass) return;
+      if (intensity < 0) {
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
+      } else {
+        pass.enabled = intensity > 0.01;
+        pass.uniforms.uIntensity.value = intensity;
+      }
     },
-    setDispersionSpread: (_spread) => {
-      console.warn('[PrimeRadiant] setDispersionSpread — TSL port pending');
+    setDispersionSpread: (spread) => {
+      const pass = dispersionPassRef.current;
+      if (!pass) return;
+      if (spread < 0) {
+        pass.enabled = !pass.enabled;
+        pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
+      } else {
+        pass.enabled = spread > 0.01;
+        pass.uniforms.uSpread.value = spread;
+      }
     },
     captureScreenshot: async () => {
       const { captureCanvas } = await import('./ScreenshotCapture');
