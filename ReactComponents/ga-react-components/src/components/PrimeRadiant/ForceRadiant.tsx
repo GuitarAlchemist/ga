@@ -6,8 +6,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { PostProcessing } from 'three/webgpu';
+import { pass } from 'three/tsl';
+import { bloom } from 'three/examples/jsm/tsl/display/BloomNode.js';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
@@ -81,9 +82,7 @@ import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
-import { MoebiusShader } from './shaders/MoebiusPassTSL';
-import { CausticsShader } from './shaders/CausticsPass';
-import { DispersionShader } from './shaders/DispersionPass';
+// MoebiusShader, CausticsShader, DispersionShader — TSL port pending (old GLSL imports removed)
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
@@ -707,10 +706,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const activeRipplesRef = useRef<Map<string, ActiveRipple>>(new Map());
   const edgePropagationsRef = useRef<Map<string, EdgePropagation>>(new Map());
   const pleasureWindowRef = useRef<number[]>([]);
-  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
-  const moebiusPassRef = useRef<ShaderPass | null>(null);
-  const causticsPassRef = useRef<ShaderPass | null>(null);
-  const dispersionPassRef = useRef<ShaderPass | null>(null);
+  // TSL PostProcessing ref — duck-typed wrapper around the real PostProcessing instance
+  const tslPostProcessingRef = useRef<{
+    postProcessing: PostProcessing | null;
+    bloomEnabled: boolean;
+    bloomStrength: number;
+  }>({ postProcessing: null, bloomEnabled: true, bloomStrength: 0.6 });
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
   const consoleErrorsRef = useRef<string[]>([]);
   // Capture console errors + WebGL warnings for remote debugging
@@ -1047,28 +1048,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ── RENDER <target> ON|OFF|TOGGLE ──
     if (cmd.type === 'render') {
-      const passMap: Record<string, React.MutableRefObject<ShaderPass | null>> = {
-        moebius: moebiusPassRef,
-        caustics: causticsPassRef,
-        dispersion: dispersionPassRef,
-      };
-      const ref = passMap[cmd.target];
-      if (ref?.current) {
-        const pass = ref.current;
-        if (cmd.action === 'toggle') {
-          pass.enabled = !pass.enabled;
-        } else {
-          pass.enabled = cmd.action === 'on';
-        }
-        // Set the primary uniform
-        const uniformKey = cmd.target === 'moebius' ? 'uEnabled'
-          : cmd.target === 'caustics' ? 'uIntensity' : 'uSpread';
-        if (pass.uniforms[uniformKey]) {
-          pass.uniforms[uniformKey].value = pass.enabled ? (cmd.value ?? (cmd.target === 'dispersion' ? 0.4 : cmd.target === 'caustics' ? 0.5 : 1.0)) : 0.0;
-        }
+      const tslPendingPasses = ['moebius', 'caustics', 'dispersion'];
+      if (tslPendingPasses.includes(cmd.target)) {
+        console.warn(`[PrimeRadiant] RENDER ${cmd.target} — TSL port pending, pass not available`);
       }
-      if (cmd.target === 'bloom' && bloomPassRef.current) {
-        bloomPassRef.current.enabled = cmd.action === 'toggle' ? !bloomPassRef.current.enabled : cmd.action === 'on';
+      if (cmd.target === 'bloom') {
+        const tslRef = tslPostProcessingRef.current;
+        if (tslRef.postProcessing) {
+          tslRef.bloomEnabled = cmd.action === 'toggle' ? !tslRef.bloomEnabled : cmd.action === 'on';
+        }
       }
       return;
     }
@@ -1265,14 +1253,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     }
 
-    // Boost bloom
-    const bloomPass = bloomPassRef.current;
-    if (bloomPass) {
+    // Boost bloom (TSL — track strength in ref)
+    const tslRef = tslPostProcessingRef.current;
+    if (tslRef.postProcessing) {
       surgeBloomRef.current = {
         startTime: now,
-        originalStrength: bloomPass.strength,
+        originalStrength: tslRef.bloomStrength,
       };
-      bloomPass.strength = SURGE_BLOOM_STRENGTH;
+      tslRef.bloomStrength = SURGE_BLOOM_STRENGTH;
     }
 
     // Edge propagation from source with unlimited hops (use all edges)
@@ -1448,9 +1436,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const fg = ForceGraph3D({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
-      // useWebGPU: true — DISABLED. WebGPURenderer (even WebGL2 fallback) is incompatible
-      // with existing ShaderMaterial (sun, planets, god rays) and EffectComposer.
-      // All ShaderMaterials must be migrated to NodeMaterial before enabling.
+      useWebGPU: true,
     })(container)
       .graphData(forceData)
       .backgroundColor('#000008')
@@ -1609,20 +1595,39 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
-    // Add bloom post-processing — always half-resolution (bloom is a blur effect,
-    // full-res produces identical visual quality but costs 4x fill rate per internal pass)
-    const bloomSize = new THREE.Vector2(
-      Math.floor(container.clientWidth * 0.5),
-      Math.floor(container.clientHeight * 0.5),
-    );
-    const bloomPass = new UnrealBloomPass(
-      bloomSize,
-      isLowEnd ? 0.3 : 0.6,   // strength
-      isLowEnd ? 0.3 : 0.6,   // radius
-      isLowEnd ? 0.8 : 0.5,   // threshold (higher on mobile = less bloom)
-    );
-    fg.postProcessingComposer().addPass(bloomPass);
-    bloomPassRef.current = bloomPass;
+    // ─── TSL PostProcessing — replaces EffectComposer + UnrealBloomPass ───
+    // WebGPURenderer uses TSL node-based post-processing instead of the old
+    // EffectComposer pipeline. We create a PostProcessing instance with bloom,
+    // then inject a duck-type wrapper so three-render-objects' internal
+    // composer.render() / composer.setSize() calls hit our TSL pipeline.
+    const bloomStrength = isLowEnd ? 0.3 : 0.6;
+    try {
+      const renderer = fg.renderer();
+      const scene = fg.scene();
+      const camera = fg.camera();
+      const scenePass = pass(scene, camera);
+      const bloomPass = bloom(scenePass, bloomStrength, 0.5); // strength, threshold
+      const tslPP = new PostProcessing(renderer, bloomPass);
+
+      tslPostProcessingRef.current = {
+        postProcessing: tslPP,
+        bloomEnabled: true,
+        bloomStrength,
+      };
+
+      // Duck-type wrapper — three-render-objects calls .render() and .setSize()
+      // on the internal postProcessingComposer. We intercept with our TSL pipeline.
+      const duckComposer = {
+        render: () => { tslPP.render(); },
+        setSize: (_w: number, _h: number) => { /* renderer handles resize */ },
+        addPass: () => { /* no-op — TSL uses node graph, not pass chain */ },
+        passes: [],
+      };
+      // Inject the duck-type composer to replace the internal EffectComposer
+      fg.postProcessingComposer(duckComposer as unknown);
+    } catch (e) {
+      console.warn('[PrimeRadiant] TSL PostProcessing setup failed, falling back to no post-processing:', e);
+    }
 
     // Set renderer pixel ratio — cap DPR on mobile/tablet to save fill rate and reduce heat
     // Tablet at DPR 2.625 renders at 2399x3056 = 7.3M pixels — causes thermal throttling
@@ -1631,72 +1636,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       fg.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     }
 
-    // Post-processing effects — each wrapped in try/catch to prevent chain breakage.
-    // A shader compile error in one pass would black out the entire screen if uncaught.
-    const addSafePass = (name: string, shader: Record<string, unknown>, ref: React.MutableRefObject<ShaderPass | null>, overrides?: Record<string, unknown>) => {
-      try {
-        const pass = new ShaderPass(shader);
-        if (overrides) {
-          for (const [k, v] of Object.entries(overrides)) pass.uniforms[k].value = v;
-        }
-        if (pass.uniforms.uResolution) {
-          (pass.uniforms.uResolution.value as THREE.Vector2).set(container.clientWidth, container.clientHeight);
-        }
-        fg.postProcessingComposer().addPass(pass);
-        ref.current = pass;
-      } catch (e) {
-        console.warn(`[PrimeRadiant] ${name} shader failed:`, e);
-      }
-    };
-
-    // Post-processing effects — desktop only, each starts disabled.
-    // Each pass is wrapped in try/catch; if GLSL compile fails, the pass is skipped.
-    if (!isLowEnd && !isTablet) {
-      try {
-        const cp = new ShaderPass(CausticsShader);
-        cp.uniforms.uIntensity.value = 0.0;
-        cp.enabled = false; // completely skip until toggled
-        fg.postProcessingComposer().addPass(cp);
-        causticsPassRef.current = cp;
-      } catch (e) { console.warn('[PR] Caustics pass failed:', e); }
-
-      try {
-        const dp = new ShaderPass(DispersionShader);
-        dp.uniforms.uSpread.value = 0.0;
-        dp.enabled = false;
-        fg.postProcessingComposer().addPass(dp);
-        dispersionPassRef.current = dp;
-      } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
-    }
-    if (!isLowEnd) {
-      try {
-        const mp = new ShaderPass(MoebiusShader);
-        mp.uniforms.uEnabled.value = 0.0;
-        mp.enabled = false;
-        fg.postProcessingComposer().addPass(mp);
-        moebiusPassRef.current = mp;
-      } catch (e) { console.warn('[PR] Moebius pass failed:', e); }
-    }
-
-    // Chromatic aberration post-processing — skip on mobile (extra shader pass = costly)
-    if (!isLowEnd) {
-      const chromaticShader = {
-        uniforms: {
-          tDiffuse: { value: null },
-          uOffset: { value: new THREE.Vector2(0.0008, 0.0008) },
-        },
-        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uOffset; varying vec2 vUv;
-      void main() {
-        float r = texture2D(tDiffuse, vUv + uOffset).r;
-        float g = texture2D(tDiffuse, vUv).g;
-        float b = texture2D(tDiffuse, vUv - uOffset).b;
-        float a = texture2D(tDiffuse, vUv).a;
-        gl_FragColor = vec4(r, g, b, a);
-      }`,
-      };
-      fg.postProcessingComposer().addPass(new ShaderPass(chromaticShader));
-    }
+    // NOTE: Moebius, Caustics, Dispersion, and Chromatic Aberration passes are
+    // pending TSL port. The old GLSL ShaderPass pipeline is incompatible with
+    // WebGPURenderer. Toggle commands will log warnings until TSL versions are ready.
 
     // ─── ADAPTIVE QUALITY — auto-downgrade on crappy GPUs ───
     let frameCount = 0;
@@ -1810,7 +1752,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           triangles: ri.render.triangles,
           textures: ri.memory.textures,
           geometries: ri.memory.geometries,
-          bloomEnabled: bloomPassRef.current?.enabled ?? false,
+          bloomEnabled: tslPostProcessingRef.current.bloomEnabled,
           solarVisible: !!fg.scene().getObjectByName('sun')?.parent?.visible,
         };
         // Performance grade from FPS
@@ -1852,10 +1794,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         ambientDust.visible = qualityBudget > -0.7;
         // Bloom: disable entirely at very low budget (saves full-screen post-process pass)
         if (qualityBudget < -0.8) {
-          bloomPass.enabled = false;
+          tslPostProcessingRef.current.bloomEnabled = false;
         } else {
-          bloomPass.enabled = true;
-          bloomPass.strength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
+          tslPostProcessingRef.current.bloomEnabled = true;
+          tslPostProcessingRef.current.bloomStrength = Math.max(0.05, 0.5 * Math.max(0, qualityBudget + 0.5));
         }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
         starField.visible = qualityBudget > -0.6;
@@ -2100,10 +2042,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── TSL shared uniforms — single update per frame ───
       updateTSLUniforms(qualityBudget, budgetToTier(qualityBudget), cam.position, fg.graphData().nodes.length);
 
-      // Post-processing pass time updates
-      if (moebiusPassRef.current) moebiusPassRef.current.uniforms.uTime.value = t;
-      if (causticsPassRef.current) causticsPassRef.current.uniforms.uTime.value = t;
-      if (dispersionPassRef.current) dispersionPassRef.current.uniforms.uTime.value = t;
+      // Post-processing pass time updates — moebius/caustics/dispersion pending TSL port
 
       // TARS — far left, lower
       updateTarsRobot(tarsRobot, t);
@@ -2245,16 +2184,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Compounding surge bloom ease-back ───
       const surgeBloom = surgeBloomRef.current;
-      if (surgeBloom && bloomPass) {
+      if (surgeBloom && tslPostProcessingRef.current.postProcessing) {
         const elapsed = t - surgeBloom.startTime;
         if (elapsed >= SURGE_BLOOM_DURATION) {
-          bloomPass.strength = surgeBloom.originalStrength;
+          tslPostProcessingRef.current.bloomStrength = surgeBloom.originalStrength;
           surgeBloomRef.current = null;
         } else {
           // Ease back from SURGE_BLOOM_STRENGTH to original
           const progress = elapsed / SURGE_BLOOM_DURATION;
           const eased = progress * progress; // ease-in (slow start)
-          bloomPass.strength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
+          tslPostProcessingRef.current.bloomStrength = SURGE_BLOOM_STRENGTH + (surgeBloom.originalStrength - SURGE_BLOOM_STRENGTH) * eased;
         }
       }
       } catch (err) {
@@ -2559,28 +2498,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         try { localStorage.setItem('prime-radiant-milky-way', milkyWayMesh.visible ? 'true' : 'false'); } catch { /* ignore */ }
       }
 
-      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion
+      // 'A' = Audit Mode (Moebius), 'C' = Caustics, 'D' = Dispersion — TSL port pending
       if (e.key === 'a' || e.key === 'A') {
-        const pass = moebiusPassRef.current;
-        if (pass) {
-          const on = !pass.enabled;
-          pass.enabled = on;
-          pass.uniforms.uEnabled.value = on ? 1.0 : 0.0;
-        }
+        console.warn('[PrimeRadiant] Moebius toggle — TSL port pending');
       }
       if (e.key === 'c' || e.key === 'C') {
-        const pass = causticsPassRef.current;
-        if (pass) {
-          pass.enabled = !pass.enabled;
-          pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
-        }
+        console.warn('[PrimeRadiant] Caustics toggle — TSL port pending');
       }
       if (e.key === 'd' || e.key === 'D') {
-        const pass = dispersionPassRef.current;
-        if (pass) {
-          pass.enabled = !pass.enabled;
-          pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
-        }
+        console.warn('[PrimeRadiant] Dispersion toggle — TSL port pending');
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
@@ -3246,7 +3172,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         Array.from(gisManagersRef.current.entries()).map(([k, m]) => [k, { pins: m.pinCount, paths: m.pathCount, clusters: m.clusterCount }])
       ),
       godotFullscreen,
-      moebius: moebiusPassRef.current ? (moebiusPassRef.current.uniforms.uEnabled.value as number) > 0.5 : false,
+      moebius: false, // TSL port pending
       render: renderMetricsRef.current,
       errors: consoleErrorsRef.current.slice(-10), // last 10 errors
       device: {
@@ -3305,38 +3231,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       trackedPlanetRef.current = planet;
       setTrackedPlanetName(planet);
     },
-    setMoebiusEnabled: (amount) => {
-      const pass = moebiusPassRef.current;
-      if (!pass) return;
-      if (amount < 0) {
-        pass.enabled = !pass.enabled;
-        pass.uniforms.uEnabled.value = pass.enabled ? 1.0 : 0.0;
-      } else {
-        pass.enabled = amount > 0.01;
-        pass.uniforms.uEnabled.value = amount;
-      }
+    setMoebiusEnabled: (_amount) => {
+      console.warn('[PrimeRadiant] setMoebiusEnabled — TSL port pending');
     },
-    setCausticsIntensity: (intensity) => {
-      const pass = causticsPassRef.current;
-      if (!pass) return;
-      if (intensity < 0) {
-        pass.enabled = !pass.enabled;
-        pass.uniforms.uIntensity.value = pass.enabled ? 0.5 : 0.0;
-      } else {
-        pass.enabled = intensity > 0.01;
-        pass.uniforms.uIntensity.value = intensity;
-      }
+    setCausticsIntensity: (_intensity) => {
+      console.warn('[PrimeRadiant] setCausticsIntensity — TSL port pending');
     },
-    setDispersionSpread: (spread) => {
-      const pass = dispersionPassRef.current;
-      if (!pass) return;
-      if (spread < 0) {
-        pass.enabled = !pass.enabled;
-        pass.uniforms.uSpread.value = pass.enabled ? 0.4 : 0.0;
-      } else {
-        pass.enabled = spread > 0.01;
-        pass.uniforms.uSpread.value = spread;
-      }
+    setDispersionSpread: (_spread) => {
+      console.warn('[PrimeRadiant] setDispersionSpread — TSL port pending');
     },
     captureScreenshot: async () => {
       const { captureCanvas } = await import('./ScreenshotCapture');
