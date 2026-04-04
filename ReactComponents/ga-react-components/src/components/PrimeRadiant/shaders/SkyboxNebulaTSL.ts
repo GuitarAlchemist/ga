@@ -5,10 +5,10 @@
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as THREE from 'three';
 import {
-  Fn, float, vec3, vec4,
+  Fn, vec3,
   positionLocal,
-  mix, smoothstep, pow, abs, max, step,
-  dot, normalize, length,
+  mix, smoothstep, step,
+  normalize, length,
 } from 'three/tsl';
 import { fbm6, hash3 } from './TSLNoiseLib';
 
@@ -80,7 +80,7 @@ export function createSkyboxNebulaMaterialTSL(): MeshBasicNodeMaterial {
     const starBright2 = step(0.998, starHash2).mul(starHash2);
     baseColor.addAssign(vec3(0.7, 0.75, 0.9).mul(starBright2).mul(0.04));
 
-    return vec4(baseColor, float(1.0));
+    return baseColor;
   })();
 
   return material;
