@@ -2129,7 +2129,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // Solar system always parented to camera — never detach.
       // Position fixed at (0, Y, 0) in camera space = no Float32 jitter.
 
-      // Planet tracking: smoothly point controls.target at tracked planet
+      // Planet tracking: point controls.target at tracked planet
+      // Solar system is parented to camera — use world position directly
+      // (no lerp chase — just set once per frame, the offset is stable in camera space)
       if (trackedPlanetRef.current && solarSystem.visible) {
         const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
         if (trackedObj) {
@@ -2137,7 +2139,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           trackedObj.getWorldPosition(pw);
           const controls = fg.controls() as { target?: THREE.Vector3 };
           if (controls.target) {
-            controls.target.lerp(pw, 0.03);
+            controls.target.copy(pw); // snap, don't lerp — avoids spin feedback loop
           }
         }
       }
@@ -2815,13 +2817,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (centralNode) {
       setSelectedNode(centralNode);
       onNodeSelect?.(centralNode);
-      // Start: camera near Earth (scale=1.0, Earth orbit=6.5 units, y=15)
-      // Camera at Earth orbit distance, looking at sun
-      fg.cameraPosition(
-        { x: 7, y: 15.5, z: 1 },  // just outside Earth orbit
-        { x: 0, y: 15, z: 0 },     // look at sun center
-        10,                          // instant
-      );
+      // Zoom to central node after force layout settles
       autoZoomTimeout = setTimeout(() => {
         if (userInteracted) return;
         const fNode = nodeMap.get(centralNode.id) as (GraphNode & { x?: number; y?: number; z?: number }) | undefined;
@@ -2829,10 +2825,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           fg.cameraPosition(
             { x: fNode.x, y: (fNode.y ?? 0) + 30, z: (fNode.z ?? 0) + 80 },
             { x: fNode.x, y: fNode.y ?? 0, z: fNode.z ?? 0 },
-            2500,
+            1500,
           );
         }
-      }, 5000);
+      }, 2000);
     }
 
     graphRef.current = fg;
@@ -3729,21 +3725,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
-          // Snap controls target + zoom to planet (same as MCP navigateToPlanet)
+          // Navigate to planet — solar system is parented to camera, so use LOCAL position
+          // and offset camera + controls.target in camera-local space to avoid chase loop
           const navSolarGroup = navCam.getObjectByName('sun')?.parent;
           if (navSolarGroup) {
             const navObj = navSolarGroup.getObjectByName(target);
             if (navObj) {
-              const navPw = new THREE.Vector3();
-              navObj.getWorldPosition(navPw);
+              // Get planet position relative to solar system group
+              const localPos = new THREE.Vector3();
+              navObj.getWorldPosition(localPos);
+              // Solar system group world position (= camera world pos + local offset)
+              const groupWorld = new THREE.Vector3();
+              navSolarGroup.getWorldPosition(groupWorld);
+              // Planet offset from camera = planet world pos - camera world pos
+              const offsetFromCam = localPos.sub(navCam.position);
+              // Set controls.target to the planet's offset from camera origin
+              // This makes orbit controls rotate around the planet
               const navControls = fg.controls() as { target?: THREE.Vector3 };
-              if (navControls.target) navControls.target.copy(navPw);
-              const navMesh = navObj as THREE.Mesh;
-              navMesh.geometry?.computeBoundingSphere();
-              const navR = navMesh.geometry?.boundingSphere?.radius ?? 0.5;
-              const navZoom = Math.max(navR * 4, 0.02);
-              const navDir = navPw.clone().sub(navCam.position).normalize();
-              navCam.position.copy(navPw.clone().sub(navDir.multiplyScalar(navZoom)));
+              if (navControls.target) navControls.target.copy(offsetFromCam.clone().add(navCam.position));
             }
           }
           trackedPlanetRef.current = target;
