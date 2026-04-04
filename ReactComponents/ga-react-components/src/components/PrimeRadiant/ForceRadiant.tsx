@@ -2538,12 +2538,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
 
       // ─── Voronoi jurisdiction shells — governance authority boundaries ───
-      // TSL materials (MeshBasicNodeMaterial) require WebGPURenderer — skip on WebGLRenderer
       if (!isLowEnd && graph.nodes.length >= 6) {
         try {
           voronoiShellsHandle = createVoronoiShells(graph.nodes, graph.edges, fg.scene(), budgetToTier(qualityBudget));
         } catch (e) {
-          console.warn('[PrimeRadiant] Voronoi shells disabled (TSL requires WebGPURenderer):', (e as Error).message);
+          console.warn('[PrimeRadiant] Voronoi shells disabled:', (e as Error).message);
         }
       }
 
