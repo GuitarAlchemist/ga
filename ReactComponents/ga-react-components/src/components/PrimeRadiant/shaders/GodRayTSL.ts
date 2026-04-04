@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
-  Fn, float, vec3, vec4,
+  Fn, vec3,
   uv, time, sin, smoothstep,
 } from 'three/tsl';
 
@@ -25,7 +25,9 @@ export function createGodRayMaterialTSL(
   const c = new THREE.Color(color);
   const uColor = vec3(c.r, c.g, c.b);
 
-  material.colorNode = Fn(() => {
+  material.colorNode = uColor;
+
+  material.opacityNode = Fn(() => {
     const uvCoord = uv();
     const t = time;
 
@@ -39,10 +41,8 @@ export function createGodRayMaterialTSL(
     const rays2 = sin(uvCoord.x.mul(17.0).sub(t.mul(0.3))).mul(0.5).add(0.5);
     const rays = rays1.mul(rays2);
 
-    // Final alpha — very subtle
-    const alpha = fade.mul(rays).mul(0.03);
-
-    return vec4(uColor, alpha);
+    // Final alpha — very subtle (0.03 at peak)
+    return fade.mul(rays).mul(0.03);
   })();
 
   return material;

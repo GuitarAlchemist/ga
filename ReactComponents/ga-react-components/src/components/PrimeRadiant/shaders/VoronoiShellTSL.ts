@@ -85,12 +85,15 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
 
   // ── Low quality: plain translucent shell, no Voronoi ──
   if (quality === 'low') {
-    material.colorNode = Fn(() => {
+    const rimLow = Fn(() => {
       const viewDir = cameraPosition.sub(positionWorld).normalize();
       const fresnel = float(1.0).sub(abs(normalWorld.dot(viewDir)));
-      const rim = pow(fresnel, float(3.0)).mul(0.08);
-      return vec4(vec3(uColor).mul(rim), rim);
-    })();
+      return pow(fresnel, float(3.0)).mul(0.08);
+    });
+    material.colorNode = Fn(() => vec3(uColor).mul(rimLow()))();
+    material.opacityNode = Fn(() => rimLow())();
+    material.transparent = true;
+    material.depthWrite = false;
     return { material, seedPositions: seedPositionsUniform, activeSeedCount: activeSeedCountUniform };
   }
 
@@ -146,10 +149,47 @@ export function createVoronoiShellMaterial(options: VoronoiShellOptions): {
 
     // Combine: edge glow + rim, colored by cluster type
     const brightness = edgeGlow.mul(pulse).add(noiseDisp).add(rim);
-    const alpha = brightness.mul(0.35); // keep translucent
-
-    return vec4(vec3(uColor).mul(brightness), alpha);
+    return vec3(uColor).mul(brightness);
   })();
+
+  // Shell opacity — same brightness formula, scaled by 0.35 for translucency
+  material.opacityNode = Fn(() => {
+    const worldPos = positionWorld;
+    const viewDir = cameraPosition.sub(worldPos).normalize();
+    const fresnel = float(1.0).sub(abs(normalWorld.dot(viewDir)));
+
+    const nearestDist = float(1e6).toVar();
+    const secondDist = float(1e6).toVar();
+    const checkSeedO = (idx: number) => {
+      const seedPos = (uSeeds.value as THREE.Vector3[])[idx];
+      if (!seedPos) return;
+      const seedUniform = uniform(seedPos);
+      const diff = worldPos.sub(seedUniform);
+      const d = length(diff);
+      const isNearer = d.lessThan(nearestDist);
+      const isSecond = d.lessThan(secondDist).and(isNearer.not());
+      secondDist.assign(mix(secondDist, min(secondDist, d), float(isSecond)));
+      secondDist.assign(mix(secondDist, nearestDist, float(isNearer)));
+      nearestDist.assign(min(nearestDist, d));
+    };
+    const maxCheckO = quality === 'high' ? MAX_SEEDS : 16;
+    for (let i = 0; i < maxCheckO; i++) checkSeedO(i);
+    const edgeDiff = secondDist.sub(nearestDist);
+    const edgeWidth = quality === 'high' ? 0.3 : 0.5;
+    const edgeGlow = smoothstep(edgeWidth, 0.0, edgeDiff);
+    const rim = pow(fresnel, float(2.5)).mul(0.12);
+    const pulse = quality === 'high'
+      ? float(1.0).add(sin(time.mul(1.5).add(nearestDist.mul(3.0))).mul(0.15))
+      : float(1.0);
+    const noiseDisp = quality === 'high'
+      ? noise3(worldPos.mul(8.0).add(vec3(time.mul(0.2)))).mul(0.1)
+      : float(0.0);
+    const brightness = edgeGlow.mul(pulse).add(noiseDisp).add(rim);
+    return brightness.mul(0.35);
+  })();
+
+  material.transparent = true;
+  material.depthWrite = false;
 
   return { material, seedPositions: seedPositionsUniform, activeSeedCount: activeSeedCountUniform };
 }
