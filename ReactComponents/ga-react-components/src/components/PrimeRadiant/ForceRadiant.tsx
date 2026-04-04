@@ -2349,7 +2349,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
-    const skyMat = createSkyboxNebulaMaterialTSL();
+    const skyMat = createSkyboxNebulaMaterialTSL({ quality: budgetToTier(qualityBudget) });
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
