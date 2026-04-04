@@ -129,10 +129,7 @@ export function createMilkyWayMaterialTSL(): MeshBasicNodeMaterial {
     const glowNoise = fbm3(vec3(galLon.mul(2.0), galLat.mul(4.0), float(5.0)));
     col.addAssign(vec3(0.15, 0.12, 0.18).mul(outerGlow.mul(float(0.3).add(glowNoise.mul(0.15)))));
 
-    // Dim down 10x — under WebGPU AdditiveBlending + BackSide sphere the
-    // MilkyWay was stacking with skybox and dominating the view.
-    // TODO: fine-tune brightness once full scene renders clean.
-    return col.mul(0.1);
+    return col;
   })();
 
   material.transparent = true;
