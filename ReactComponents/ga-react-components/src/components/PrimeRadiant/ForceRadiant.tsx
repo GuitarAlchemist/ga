@@ -2418,8 +2418,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Group all sky layers — follows camera together
     const starField = new THREE.Group();
     starField.name = 'starfield';
-    starField.add(milkyWayMesh); // behind everything (renderOrder -3)
-    starField.add(skySphere);
+    // Diagnostic query params (appended to URL for quick A/B testing):
+    //   ?perf=noSky       → skip the procedural skybox sphere
+    //   ?perf=noMilkyWay  → skip the galactic band
+    //   ?perf=noShells    → skip Voronoi jurisdiction shells (above)
+    //   ?perf=lite        → all of the above at once
+    const perfQ = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('perf') ?? ''
+      : '';
+    const skipSky = perfQ.includes('noSky') || perfQ.includes('lite');
+    const skipMilkyWay = perfQ.includes('noMilkyWay') || perfQ.includes('lite');
+    if (!skipMilkyWay) starField.add(milkyWayMesh); // behind everything (renderOrder -3)
+    if (!skipSky) starField.add(skySphere);
     starField.add(brightStars);
     starField.add(dimStars);
     starField.renderOrder = -1;
@@ -2738,7 +2748,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // ─── Voronoi jurisdiction shells — governance authority boundaries ───
       // TSL materials (MeshBasicNodeMaterial) require WebGPURenderer — skip on WebGLRenderer
-      if (!isLowEnd && graph.nodes.length >= 6) {
+      // Diagnostic: ?perf=noShells (or ?perf=lite) disables Voronoi shells.
+      const perfFlag = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('perf') ?? ''
+        : '';
+      const skipShells = perfFlag.includes('noShells') || perfFlag.includes('lite');
+      if (!isLowEnd && graph.nodes.length >= 6 && !skipShells) {
         try {
           voronoiShellsHandle = createVoronoiShells(graph.nodes, graph.edges, fg.scene(), budgetToTier(qualityBudget));
         } catch (e) {
