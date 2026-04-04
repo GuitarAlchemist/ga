@@ -1505,8 +1505,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const scene = fg.scene();
       const camera = fg.camera();
       const scenePass = pass(scene, camera);
-      const bloomPass = bloom(scenePass, bloomStrength, 0.5); // strength, threshold
-      const tslPP = new PostProcessing(renderer, bloomPass);
+      const scenePassColor = scenePass.getTextureNode('output');
+      const bloomPass = bloom(scenePassColor, bloomStrength, 0.0, isLowEnd ? 0.8 : 0.5);
+      const tslPP = new PostProcessing(renderer, scenePassColor.add(bloomPass));
 
       tslPostProcessingRef.current = {
         postProcessing: tslPP,
