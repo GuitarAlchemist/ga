@@ -65,20 +65,20 @@ export function createVolumetricCoreMaterialTSL(options: VolumetricCoreOptions):
     return { fresnel, coreBright, pattern };
   });
 
+  // Pre-multiply color by alpha for guaranteed AdditiveBlending behavior
+  // (opacityNode alone was not being honored for this combination under WebGPU,
+  // causing cores to render at full brightness as huge radial starbursts).
   material.colorNode = Fn(() => {
     const { fresnel, coreBright, pattern } = computeFields();
-    return uColor.mul(float(0.3).add(pattern.mul(1.5)))
+    const col = uColor.mul(float(0.3).add(pattern.mul(1.5)))
       .add(uColor.mul(fresnel).mul(0.8))
       .add(vec3(1.0, 1.0, 1.0).mul(coreBright).mul(0.15));
-  })();
-
-  material.opacityNode = Fn(() => {
-    const { fresnel, coreBright, pattern } = computeFields();
-    return clamp(
+    const alpha = clamp(
       coreBright.mul(0.8).add(fresnel.mul(0.6)).add(pattern.mul(0.3)),
       0.0,
       1.0,
     ).mul(uIntensity);
+    return col.mul(alpha);
   })();
 
   return material;
