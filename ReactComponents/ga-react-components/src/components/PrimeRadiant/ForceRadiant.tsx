@@ -2496,7 +2496,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // the user hovers the legend panel.
     jurisdictionHoverHandler = (e: Event) => {
       const detail = (e as CustomEvent<{ on: boolean }>).detail;
-      voronoiShellsHandle?.setRevealed(!!detail?.on);
+      const on = !!detail?.on;
+      voronoiShellsHandle?.setRevealed(on);
+      jurisdictionVolHandle?.setRevealed(on);
     };
     window.addEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
 
