@@ -7,7 +7,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "postinstall": "npx -y patch-package",
+    "postinstall": "npx -y patch-package || echo patch-package skipped (deps hoisted to parent)",
     "dev": "vite",
     "build": "vite build",
     "build:with-types": "tsc -b && vite build",
