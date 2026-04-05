@@ -1381,6 +1381,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
     let milkyWayToggleHandler: ((e: KeyboardEvent) => void) | null = null;
+    let jurisdictionHoverHandler: ((e: Event) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
@@ -2493,7 +2494,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // JurisdictionLegend emits this event on mouseenter/leave. Shells are
     // hidden by default so the graph stays readable, and appear only while
     // the user hovers the legend panel.
-    const jurisdictionHoverHandler = (e: Event) => {
+    jurisdictionHoverHandler = (e: Event) => {
       const detail = (e as CustomEvent<{ on: boolean }>).detail;
       voronoiShellsHandle?.setRevealed(!!detail?.on);
     };
@@ -3027,7 +3028,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => {
       disposed = true;
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
-      window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
+      if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
       signalRGisBridgeRef.current?.cleanup();
