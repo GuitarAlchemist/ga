@@ -24,11 +24,17 @@ const ORDERED_TYPES = ['constitution', 'department', 'policy', 'persona', 'pipel
 export function JurisdictionLegend(): JSX.Element {
   const [expanded, setExpanded] = useState(false);
 
+  const emitHover = (on: boolean) => {
+    window.dispatchEvent(new CustomEvent('prime-radiant:jurisdictions-hover', { detail: { on } }));
+  };
+
   return (
     <div
       className="prime-radiant__jurisdiction-legend"
       onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-      title="Click to learn about jurisdiction membranes"
+      onMouseEnter={() => emitHover(true)}
+      onMouseLeave={() => emitHover(false)}
+      title="Hover to reveal jurisdiction membranes · click to learn more"
     >
       <div className="prime-radiant__jurisdiction-legend-header">
         <span className="prime-radiant__jurisdiction-legend-title">JURISDICTIONS</span>
