@@ -5,8 +5,10 @@
 
 import * as THREE from 'three';
 import { createMilkyWayMaterialTSL } from './shaders/MilkyWayTSL';
+import { createMilkyWayTextureMaterial } from './shaders/MilkyWayTextureTSL';
+import { resolveTexturePath } from '../../assets/space';
 
-const MILKY_WAY_VERTEX = `
+const _MILKY_WAY_VERTEX = `
   varying vec3 vWorldPos;
   void main() {
     vWorldPos = position;
@@ -14,7 +16,7 @@ const MILKY_WAY_VERTEX = `
   }
 `;
 
-const MILKY_WAY_FRAGMENT = `
+const _MILKY_WAY_FRAGMENT = `
   varying vec3 vWorldPos;
 
   // --- Noise utilities ---
@@ -158,16 +160,60 @@ const MILKY_WAY_FRAGMENT = `
 `;
 
 /**
- * Create a Milky Way band mesh — a large sphere with a procedural galactic
- * plane shader. Should be added to the starfield group behind the sky-nebula.
+ * Create a Milky Way band mesh.
+ *
+ * Two paths:
+ *  - Texture mode (default): photographic panorama from Solar System Scope
+ *    (composite of real ESO/NASA imagery). Loaded from /textures/milky-way-8k.jpg.
+ *  - Procedural fallback: the original TSL shader with spiral arms, HII regions,
+ *    dust lanes. Used if texture loading fails.
+ *
  * @param radius Sphere radius (should be > skybox sphere, e.g. 8000)
+ * @param mode 'texture' | 'procedural' — default 'texture'
  */
-export function createMilkyWay(radius: number = 8000): THREE.Mesh {
+export function createMilkyWay(
+  radius: number = 8000,
+  mode: 'texture' | 'procedural' = 'texture',
+): THREE.Mesh {
   const geo = new THREE.SphereGeometry(radius, 48, 48);
-  const mat = createMilkyWayMaterialTSL();
-  // TSL Milky Way material configures BackSide + additive + transparent internally.
-  const mesh = new THREE.Mesh(geo, mat);
+
+  const mesh = new THREE.Mesh(geo, createMilkyWayMaterialTSL());
+  if (mode === 'texture') {
+    const canonicalPath = resolveTexturePath('milky-way', 'stars', '8k');
+    if (!canonicalPath) {
+      console.warn('[MilkyWay] canonical panorama missing, keeping procedural');
+      mesh.name = 'milky-way';
+      mesh.renderOrder = -3;
+      mesh.rotation.x = 1.047;
+      mesh.rotation.z = 0.35;
+      return mesh;
+    }
+
+    // Hide mesh until texture finishes loading — default 1×1 white placeholder
+    // would otherwise fill the whole view with white behind the scene.
+    mesh.visible = false;
+    new THREE.TextureLoader().load(
+      canonicalPath,
+      (tex) => {
+        mesh.material = createMilkyWayTextureMaterial(tex, {
+          brightness: 0.25,
+          saturation: 0.5,
+          flipU: true,
+        });
+        mesh.visible = true;
+      },
+      undefined,
+      (err) => {
+        console.warn('[MilkyWay] texture load failed, keeping procedural:', err);
+        mesh.visible = true; // fall back to the procedural material we started with
+      },
+    );
+  }
   mesh.name = 'milky-way';
   mesh.renderOrder = -3; // behind sky-nebula (-2)
+  // Rotate sphere so galactic plane tilts ~60° (matches procedural version's
+  // embedded transform, so switching modes doesn't reorient the sky).
+  mesh.rotation.x = 1.047;
+  mesh.rotation.z = 0.35;
   return mesh;
 }

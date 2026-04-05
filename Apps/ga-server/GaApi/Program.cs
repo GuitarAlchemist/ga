@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using AllProjects.ServiceDefaults;
+using Microsoft.AspNetCore.HttpOverrides;
 using GA.Business.Core.Session;
 using GaApi.Extensions;
 using GaApi.Hubs;
@@ -212,6 +213,10 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
         options.ClientId = googleClientId;
         options.ClientSecret = googleClientSecret;
         options.SignInScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+        // Route the OAuth callback through /api/* so Cloudflare Tunnel forwards it to the
+        // backend. The default /signin-google path gets swallowed by the SPA catch-all
+        // route and returns the React app instead of being handled by the Google middleware.
+        options.CallbackPath = "/api/auth/signin-google";
     });
 }
 
@@ -264,6 +269,48 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 // Add custom middleware (order matters!)
+
+// Trust X-Forwarded-* headers from the Cloudflare tunnel / reverse proxy so that
+// Request.Scheme, Request.Host, and generated OAuth redirect URIs match the public
+// origin (demos.guitaralchemist.com) instead of the upstream Kestrel host (localhost:5232).
+// Must run before UseAuthentication so OAuth middleware sees the corrected scheme/host.
+//
+// Safety: we only apply forwarded headers when X-Forwarded-Host matches the known public
+// origin. This prevents partial/inconsistent header sets (e.g. Vite dev proxy sending only
+// X-Forwarded-Proto=https) from producing bogus URIs like https://localhost:5232/.
+const string PublicHost = "demos.guitaralchemist.com";
+app.Use(async (ctx, next) =>
+{
+    // Cloudflare Tunnel (cloudflared) sets X-Forwarded-Proto + CF-Connecting-IP, but does
+    // NOT set X-Forwarded-Host — so we can't rely on the standard ForwardedHeaders
+    // middleware to recover the public origin. Detect CF-routed requests via CF headers
+    // and synthesise X-Forwarded-Host = demos.guitaralchemist.com so downstream code
+    // (OAuth redirect URI generation) produces the correct public URL.
+    var isCloudflareRequest = !string.IsNullOrEmpty(ctx.Request.Headers["CF-Connecting-IP"].ToString());
+    if (isCloudflareRequest)
+    {
+        ctx.Request.Headers["X-Forwarded-Host"] = PublicHost;
+    }
+    else
+    {
+        // Strip any stray forwarded headers on direct/localhost requests so generated URIs
+        // match the actual Kestrel host (localhost:5232) — avoids https://localhost:5232
+        // bogus URIs from partial header sets (e.g. Vite dev proxy sending only Proto).
+        ctx.Request.Headers.Remove("X-Forwarded-Proto");
+        ctx.Request.Headers.Remove("X-Forwarded-Host");
+        ctx.Request.Headers.Remove("X-Forwarded-For");
+    }
+    await next();
+});
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+    AllowedHosts = { PublicHost },
+};
+// Cloudflare can connect from any IP — clear the default localhost-only allowlist.
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 if (app.Environment.IsDevelopment())
 {

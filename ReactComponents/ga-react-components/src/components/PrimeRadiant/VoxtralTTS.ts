@@ -39,6 +39,12 @@ let activeBlobAudio: HTMLAudioElement | null = null;
 let activeBlobUrl: string | null = null;
 let currentAbortController: AbortController | null = null;
 
+// Audio output sink for TTS playback — empty string = browser default.
+// Set by the Devices panel via setTtsSinkId(). Applied to HTMLAudioElement (widely
+// supported) and AudioContext (Chrome 110+).
+let currentSinkId: string = '';
+export function setTtsSinkId(sinkId: string): void { currentSinkId = sinkId; }
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -158,7 +164,9 @@ function speakWithWebSpeech(text: string): Promise<void> {
 
 async function playBase64Audio(audioBase64: string): Promise<void> {
   const arrayBuffer = base64ToArrayBuffer(audioBase64);
-  const ctx = new AudioContext();
+  // AudioContext.setSinkId is Chrome 110+; pass sinkId in constructor options when available.
+  const ctxOptions: AudioContextOptions & { sinkId?: string } = currentSinkId ? { sinkId: currentSinkId } : {};
+  const ctx = new AudioContext(ctxOptions);
   activeAudioContext = ctx;
 
   const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
@@ -187,6 +195,11 @@ async function playAudioBlob(blob: Blob): Promise<void> {
 
   const audio = new Audio(url);
   activeBlobAudio = audio;
+  // Route to selected output device if the browser supports setSinkId on HTMLMediaElement.
+  if (currentSinkId && typeof (audio as HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }).setSinkId === 'function') {
+    try { await (audio as HTMLAudioElement & { setSinkId: (id: string) => Promise<void> }).setSinkId(currentSinkId); }
+    catch (err) { console.warn('[tts] setSinkId failed:', err); }
+  }
 
   return new Promise<void>((resolve) => {
     audio.onended = () => {

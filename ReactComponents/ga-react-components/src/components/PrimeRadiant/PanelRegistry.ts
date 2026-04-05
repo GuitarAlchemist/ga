@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -259,6 +259,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   // ── Knowledge ──
   { id: 'university', label: 'University',     icon: 'university', renderMode: 'overlay', group: 'knowledge' },
   { id: 'library',    label: 'Library',        icon: 'library',    renderMode: 'side',    group: 'knowledge' },
+  { id: 'assets',     label: 'Assets',         icon: 'grid',       renderMode: 'side',    group: 'knowledge' },
   { id: 'notebook',   label: 'Live Notebook',  icon: 'notebook',   renderMode: 'overlay', group: 'knowledge' },
   { id: 'brainstorm', label: "What's Next?",    icon: 'brainstorm', renderMode: 'side',    group: 'knowledge' },
   { id: 'faculty',    label: 'Faculty',          icon: 'faculty',    renderMode: 'side',    group: 'knowledge' },
