@@ -35,6 +35,10 @@ export interface VoronoiShellHandle {
   dispose(): void;
   /** Current shell count */
   readonly shellCount: number;
+  /** Toggle reveal of jurisdiction membranes (off by default) */
+  setRevealed(on: boolean): void;
+  /** Whether membranes are currently revealed */
+  readonly isRevealed: boolean;
 }
 
 // ── Cluster detection ──
@@ -143,12 +147,18 @@ export function createVoronoiShells(
   const _min = new THREE.Vector3();
   const _max = new THREE.Vector3();
 
+  // Shells are opt-in: hidden by default, revealed only while the user
+  // hovers the JurisdictionLegend (or toggles with the 'J' key).
+  let revealed = false;
+
   return {
     get shellCount() { return shells.length; },
+    setRevealed(on: boolean) { revealed = on; },
+    get isRevealed() { return revealed; },
 
     update(graphNodes: GraphNode[], qualityBudget: number) {
-      // Hide shells on very low quality
-      const visible = qualityBudget > 0.0; // only show on high quality — shells are expensive
+      // Hide shells on low quality OR when not revealed by the user.
+      const visible = qualityBudget > 0.0 && revealed;
 
       for (const shell of shells) {
         shell.mesh.visible = visible;

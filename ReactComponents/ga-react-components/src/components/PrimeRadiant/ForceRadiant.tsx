@@ -2451,16 +2451,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         console.info(`[PR] Skybox ${skySphere.visible ? 'ON' : 'OFF'}`);
       }
       if (e.key === 'J') {
-        // Toggle all meshes tagged as Voronoi jurisdiction shells
-        let count = 0; let firstVis = true;
-        for (const obj of fg.scene().children) {
-          if ((obj as THREE.Object3D).userData?.isVoronoiShell) {
-            if (count === 0) firstVis = obj.visible;
-            obj.visible = !firstVis;
-            count++;
-          }
+        // Toggle jurisdiction shells via manager (survives next update() tick).
+        if (voronoiShellsHandle) {
+          const on = !voronoiShellsHandle.isRevealed;
+          voronoiShellsHandle.setRevealed(on);
+          console.info(`[PR] Jurisdictions ${on ? 'ON' : 'OFF'}`);
         }
-        console.info(`[PR] Jurisdictions ${!firstVis ? 'ON' : 'OFF'} (${count} shells)`);
       }
       if (e.key === 'B') {
         solarSystem.visible = !solarSystem.visible;
@@ -2492,6 +2488,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     };
     window.addEventListener('keydown', milkyWayToggleHandler);
+
+    // ─── Jurisdiction legend hover → reveal membranes ───
+    // JurisdictionLegend emits this event on mouseenter/leave. Shells are
+    // hidden by default so the graph stays readable, and appear only while
+    // the user hovers the legend panel.
+    const jurisdictionHoverHandler = (e: Event) => {
+      const detail = (e as CustomEvent<{ on: boolean }>).detail;
+      voronoiShellsHandle?.setRevealed(!!detail?.on);
+    };
+    window.addEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
 
     // ─── ORBITAL RINGS on constitution/department nodes ───
     // Rings colored by health state — problems visible even at distance
@@ -3021,6 +3027,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => {
       disposed = true;
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
+      window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
       pollingHandleOuter?.stop();
       signalRGisBridgeRef.current?.cleanup();
