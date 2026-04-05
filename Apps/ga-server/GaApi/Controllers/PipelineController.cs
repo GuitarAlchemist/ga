@@ -69,14 +69,13 @@ public class PipelineController(
         }));
 
     /// <summary>
-    ///     Admin check: localhost or admin token header.
+    ///     Admin check: OAuth JWT role 'admin' OR localhost (dev convenience).
+    ///     Old X-Admin-Token hardcode removed in favor of the OAuth flow.
     /// </summary>
     private bool IsAdmin()
     {
+        if (User?.IsInRole("admin") == true) return true;
         var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-        if (remoteIp is "127.0.0.1" or "::1" or "localhost") return true;
-
-        var token = Request.Headers["X-Admin-Token"].FirstOrDefault();
-        return token == "ga-owner-2026";
+        return remoteIp is "127.0.0.1" or "::1" or "localhost";
     }
 }

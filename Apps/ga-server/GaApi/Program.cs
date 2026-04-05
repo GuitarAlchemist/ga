@@ -19,6 +19,12 @@ builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "../../
 // Add Aspire service defaults (telemetry, health checks, service discovery)
 builder.AddServiceDefaults();
 
+// Ensure user-secrets are loaded in Development (Aspire defaults may not include
+// them, and GenerateAssemblyInfo=false in the .csproj suppresses the auto-emitted
+// UserSecretsIdAttribute — so the generic variant can't find the ID).
+if (builder.Environment.IsDevelopment())
+    builder.Configuration.AddUserSecrets(userSecretsId: "0c749f53-3fda-4099-a8d4-ee77ffdd1913", reloadOnChange: false);
+
 // Add Redis distributed cache (Aspire integration)
 builder.AddRedisDistributedCache("redis");
 
