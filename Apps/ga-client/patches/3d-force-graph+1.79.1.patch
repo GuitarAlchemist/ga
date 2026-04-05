@@ -1,0 +1,46 @@
+diff --git a/node_modules/3d-force-graph/dist/3d-force-graph.js b/node_modules/3d-force-graph/dist/3d-force-graph.js
+index 5649676..a5da307 100644
+--- a/node_modules/3d-force-graph/dist/3d-force-graph.js
++++ b/node_modules/3d-force-graph/dist/3d-force-graph.js
+@@ -136257,14 +136257,16 @@ var<${access}> ${ name } : ${ structName };`;
+     stateInit: function stateInit(_ref5) {
+       var controlType = _ref5.controlType,
+         rendererConfig = _ref5.rendererConfig,
+-        extraRenderers = _ref5.extraRenderers;
++        extraRenderers = _ref5.extraRenderers,
++        useWebGPU = _ref5.useWebGPU;
+       var forceGraph = new threeForcegraph();
+       return {
+         forceGraph: forceGraph,
+         renderObjs: threeRenderObjects({
+           controlType: controlType,
+           rendererConfig: rendererConfig,
+-          extraRenderers: extraRenderers
++          extraRenderers: extraRenderers,
++          useWebGPU: useWebGPU
+         }).objects([forceGraph]) // Populate scene
+         .lights([new three.AmbientLight(0xcccccc, Math.PI), new three.DirectionalLight(0xffffff, 0.6 * Math.PI)])
+       };
+diff --git a/node_modules/3d-force-graph/dist/3d-force-graph.mjs b/node_modules/3d-force-graph/dist/3d-force-graph.mjs
+index e707c26..722a630 100644
+--- a/node_modules/3d-force-graph/dist/3d-force-graph.mjs
++++ b/node_modules/3d-force-graph/dist/3d-force-graph.mjs
+@@ -300,14 +300,16 @@ var _3dForceGraph = Kapsule({
+   stateInit: function stateInit(_ref5) {
+     var controlType = _ref5.controlType,
+       rendererConfig = _ref5.rendererConfig,
+-      extraRenderers = _ref5.extraRenderers;
++      extraRenderers = _ref5.extraRenderers,
++      useWebGPU = _ref5.useWebGPU;
+     var forceGraph = new ThreeForceGraph();
+     return {
+       forceGraph: forceGraph,
+       renderObjs: ThreeRenderObjects({
+         controlType: controlType,
+         rendererConfig: rendererConfig,
+-        extraRenderers: extraRenderers
++        extraRenderers: extraRenderers,
++        useWebGPU: useWebGPU
+       }).objects([forceGraph]) // Populate scene
+       .lights([new three.AmbientLight(0xcccccc, Math.PI), new three.DirectionalLight(0xffffff, 0.6 * Math.PI)])
+     };
