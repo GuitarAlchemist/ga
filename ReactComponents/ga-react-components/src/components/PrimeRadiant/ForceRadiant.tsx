@@ -19,6 +19,8 @@ import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
 import { AuthProvider } from './AuthContext';
 import { AuthBadge } from './AuthBadge';
+import { DeviceProvider } from './DeviceContext';
+import { DevicesPanel } from './DevicesPanel';
 import { ChatWidget } from './ChatWidget';
 import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
@@ -2121,15 +2123,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (Trantor removed — replaced by Earth + nebulae)
 
-      // ─── Solar system — follows camera X/Z but fixed Y offset ───
+      // ─── Solar system — scene-parented at world (0, Y, 0) ───
       // Hide entirely on very low quality to save draw calls
       solarSystem.visible = qualityBudget > -0.9;
-      // Solar system always parented to camera — never detach.
-      // Position fixed at (0, Y, 0) in camera space = no Float32 jitter.
 
       // Planet tracking: point controls.target at tracked planet
-      // Solar system is parented to camera — use world position directly
-      // (no lerp chase — just set once per frame, the offset is stable in camera space)
       if (trackedPlanetRef.current && solarSystem.visible) {
         const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
         if (trackedObj) {
@@ -2540,11 +2538,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Trantor removed — replaced by Earth + nebula clouds in skybox
 
     // ─── SOLAR SYSTEM — Sun + 8 planets + moons ───
-    // Parented to camera to eliminate Float32 jitter from large world coordinates.
-    // Position (0, Y, 0) in camera-local space keeps all numbers small.
+    // Scene-parented. Previously camera-parented for Float32 jitter fix, but that
+    // made every planet always sun-lit: sun and planets were both fixed at
+    // camera-local (0, 280, 0), so earth→camera · earth→sun = R² (always > 0) —
+    // no orbital position could show a planet's night side. Now scene-parented
+    // at world origin so camera can orbit around it via OrbitControls and actually
+    // observe day/night cycles from different angles.
     const solarSystem = createSolarSystem(8.0);
     solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
-    fg.camera().add(solarSystem);
+    fg.scene().add(solarSystem);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
@@ -3241,9 +3243,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Find planet in the camera-parented solar system
+      // Find planet in the scene-parented solar system
       const cam = fg.camera() as THREE.PerspectiveCamera;
-      const solarGroup = cam.getObjectByName('sun')?.parent;
+      const solarGroup = fg.scene().getObjectByName('sun')?.parent;
       if (!solarGroup) return;
       const obj = solarGroup.getObjectByName(planet);
       if (!obj) return;
@@ -3356,6 +3358,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
   return (
     <AuthProvider>
+    <DeviceProvider>
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
@@ -3389,6 +3392,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       {/* Auth chip — its own top-right slot so it doesn't crowd the backend-status card */}
       <div className="prime-radiant__auth-slot">
+        <DevicesPanel />
         <AuthBadge />
       </div>
 
@@ -3624,15 +3628,35 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {viewers.length > 0 && (
         <div
           className="prime-radiant__viewers"
-          title={`${viewers.length} viewer${viewers.length !== 1 ? 's' : ''} online:\n${viewers.map(v => `${v.browser} (${v.color})`).join('\n')}`}
+          title={`${viewers.length} viewer${viewers.length !== 1 ? 's' : ''} online:\n${viewers.map(v => `${v.displayName ?? 'Anonymous'} — ${v.browser}`).join('\n')}`}
         >
-          {viewers.slice(0, 8).map(v => (
-            <span
-              key={v.connectionId}
-              className={`prime-radiant__viewer-dot${v.connectionId === selfConnectionIdRef.current ? ' prime-radiant__viewer-dot--self' : ''}`}
-              style={{ backgroundColor: v.color }}
-            />
-          ))}
+          {viewers.slice(0, 8).map(v => {
+            const firstName = v.displayName?.split(' ')[0];
+            // Always show an identifier inline so viewers are recognizable
+            // even when not signed in. Priority: first name → short browser
+            // token → last 4 of connection id as a guest handle.
+            const shortBrowser = (() => {
+              const b = v.browser ?? '';
+              const m = b.match(/Edge|Chrome|Firefox|Safari|Opera|Mobile|iPhone|iPad|Android/i);
+              return m ? m[0] : '';
+            })();
+            const guestTag = `g-${v.connectionId.slice(-4)}`;
+            const inlineLabel = firstName || shortBrowser || guestTag;
+            const isSelf = v.connectionId === selfConnectionIdRef.current;
+            return (
+              <span
+                key={v.connectionId}
+                className="prime-radiant__viewer-chip"
+                title={`${v.displayName ?? 'Anonymous'} — ${v.browser}${isSelf ? ' (you)' : ''}`}
+              >
+                <span
+                  className={`prime-radiant__viewer-dot${isSelf ? ' prime-radiant__viewer-dot--self' : ''}`}
+                  style={{ backgroundColor: v.color }}
+                />
+                <span className="prime-radiant__viewer-dot-name">{inlineLabel}</span>
+              </span>
+            );
+          })}
           {viewers.length > 8 && (
             <span className="prime-radiant__viewer-count">+{viewers.length - 8}</span>
           )}
@@ -3796,15 +3820,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         onResetView={() => {
           const fg = graphRef.current;
           if (!fg) return;
-          // Reattach solar system to camera if detached
-          const cam = fg.camera() as THREE.PerspectiveCamera;
-          const sunObj = fg.scene().getObjectByName('sun');
-          const solarGroup = sunObj?.parent;
-          if (solarGroup && solarGroup.parent !== cam) {
-            fg.scene().remove(solarGroup);
-            solarGroup.position.set(0, 80, 0);
-            cam.add(solarGroup);
-          }
+          // Solar system is scene-parented — just reset camera and clear tracking.
           solarFollowCameraRef.current = true;
           trackedPlanetRef.current = null;
           setTrackedPlanetName(null);
@@ -4116,6 +4132,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       )}
 
     </div>
+    </DeviceProvider>
     </AuthProvider>
   );
 };
