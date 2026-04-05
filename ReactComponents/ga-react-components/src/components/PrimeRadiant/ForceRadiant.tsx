@@ -17,6 +17,8 @@ import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLive
 import { DetailPanel } from './DetailPanel';
 import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
+import { AuthProvider } from './AuthContext';
+import { AuthBadge } from './AuthBadge';
 import { ChatWidget } from './ChatWidget';
 import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
@@ -3333,6 +3335,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   });
 
   return (
+    <AuthProvider>
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
@@ -3371,6 +3374,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         <span className={`prime-radiant__admin-badge prime-radiant__admin-badge--${isAdmin ? 'admin' : 'view'}`}>
           {isAdmin ? 'Admin' : 'View'}
         </span>
+        <AuthBadge />
         <div className="prime-radiant__api-popover">
           {backendStatus === 'connected' ? (
             <>
@@ -4088,5 +4092,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       )}
 
     </div>
+    </AuthProvider>
   );
 };
