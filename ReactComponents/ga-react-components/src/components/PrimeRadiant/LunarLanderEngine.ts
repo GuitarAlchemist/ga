@@ -3,12 +3,15 @@
 // Renders Three.js directly into a provided container div — no iframe.
 
 import * as THREE from 'three';
+import { WebGPURenderer, PostProcessing, PointsNodeMaterial, MeshBasicNodeMaterial } from 'three/webgpu';
+import {
+  pass, Fn, vec2, vec3, vec4, float, abs as tslAbs, dot, normalize, pow, positionWorld,
+  normalWorld, cameraPosition, attribute, positionLocal, cameraProjectionMatrix,
+  modelViewMatrix, screenSize, uv, smoothstep as tslSmoothstep, length, mix, luminance,
+} from 'three/tsl';
+import { bloom } from 'three/examples/jsm/tsl/display/BloomNode.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { Lensflare, LensflareElement } from 'three/examples/jsm/objects/Lensflare.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ================================================================
 //  PUBLIC TYPES
@@ -248,8 +251,8 @@ export class LunarLanderEngine {
   // Three.js core
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
-  private renderer: THREE.WebGLRenderer;
-  private composer!: EffectComposer;
+  private renderer: WebGPURenderer;
+  private postProcessing!: PostProcessing;
   private orbitControls: OrbitControls;
   private clock: THREE.Clock;
   private container: HTMLDivElement;
@@ -259,6 +262,7 @@ export class LunarLanderEngine {
   private terrain!: THREE.Mesh;
   private terrainGeom!: THREE.BufferGeometry;
   private shadowLight!: THREE.DirectionalLight;
+  private earthshineLight!: THREE.DirectionalLight;
   private engineBellMesh: THREE.Mesh | null = null;
   private engineBellMat: THREE.MeshStandardMaterial | null = null;
   private earthGroupRef: THREE.Group | null = null;
@@ -366,24 +370,21 @@ export class LunarLanderEngine {
     this.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 50000);
     this.camera.position.set(40, START_ALTITUDE + 20, 80);
 
-    // Renderer — optimized WebGL with stencil/alpha disabled for perf
-    try {
-      this.renderer = new THREE.WebGLRenderer({
-        antialias: false,
-        powerPreference: 'high-performance',
-        alpha: false,
-        stencil: false,
-        depth: true,
-      });
-    } catch {
-      this.renderer = new THREE.WebGLRenderer({ antialias: false });
-    }
+    // WebGPURenderer with auto-fallback to WebGL2. Requires async init().
+    this.renderer = new WebGPURenderer({
+      antialias: true,
+      powerPreference: 'high-performance',
+      alpha: false,
+      stencil: false,
+      depth: true,
+    });
     this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.7;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.info.autoReset = false;
     container.appendChild(this.renderer.domElement);
 
@@ -412,17 +413,13 @@ export class LunarLanderEngine {
     this.buildLunarModule();
     this.buildParticleSystems();
 
-    // Post-processing: subtle bloom
-    this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(new RenderPass(this.scene, this.camera));
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(w, h),
-      0.15,  // strength
-      0.4,   // radius
-      0.85,  // threshold
-    );
-    this.composer.addPass(bloomPass);
-    this.composer.addPass(new OutputPass());
+    // TSL Post-processing: scene pass → bloom → output.
+    // Grading removed — it was lifting deep-space blacks to gray.
+    this.postProcessing = new PostProcessing(this.renderer);
+    const scenePass = pass(this.scene, this.camera);
+    const scenePassColor = scenePass.getTextureNode('output');
+    const bloomPass = bloom(scenePassColor, 0.25, 0.4, 0.9);
+    this.postProcessing.outputNode = scenePassColor.add(bloomPass);
 
     // Input
     this.boundKeyDown = this.onKeyDown.bind(this);
@@ -433,8 +430,13 @@ export class LunarLanderEngine {
     window.addEventListener('keyup', this.boundKeyUp);
     window.addEventListener('blur', this.boundBlur);
 
-    // Pre-render one frame
-    this.composer.render();
+    // First render is deferred until initialize() completes (WebGPU async init).
+  }
+
+  /** Must be awaited before start(): initializes the WebGPU device. */
+  public async initialize(): Promise<void> {
+    await this.renderer.init();
+    this.postProcessing.render();
   }
 
   // ── Public API ──────────────────────────────────────────────
@@ -542,7 +544,7 @@ export class LunarLanderEngine {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
-    if (this.composer) this.composer.setSize(width, height);
+    // PostProcessing auto-resizes with the renderer; nothing to call here.
   }
 
   cycleCamera(): void {
@@ -659,7 +661,7 @@ export class LunarLanderEngine {
     const mass = DRY_MASS + this.lm.fuel;
     if (hSpeed > 0.5 && alt < 200) {
       const hDir = new THREE.Vector3(this.lm.vel.x, 0, this.lm.vel.z).normalize();
-      const rcsForce = hDir.multiplyScalar(-RCS_THRUST * 0.5 / mass);
+      const rcsForce = hDir.multiplyScalar(-RCS_FORCE * 0.5 / mass);
       this.lm.vel.x += rcsForce.x * PHYSICS_DT;
       this.lm.vel.z += rcsForce.z * PHYSICS_DT;
     }
@@ -1149,25 +1151,31 @@ export class LunarLanderEngine {
     this.scene.add(this.shadowLight);
     this.scene.add(this.shadowLight.target);
 
-    // Fill light from opposite side — simulates terrain bounce
-    const fillLight = new THREE.DirectionalLight(0xc0c8d8, 0.15);
-    fillLight.position.set(-200, 50, 300);
+    // Very weak terrain bounce fill — vacuum has no atmospheric scattering, so bounce
+    // comes only from sunlit regolith below. Keep minimal to preserve deep shadows.
+    const fillLight = new THREE.DirectionalLight(0xc8bfa8, 0.08);
+    fillLight.position.set(-200, -50, 300);
     fillLight.castShadow = false;
     this.scene.add(fillLight);
 
-    // Rim light from behind — backlights LM silhouette
-    const rimLight = new THREE.DirectionalLight(0xdde4f0, 0.25);
+    // Rim light from behind — backlights LM silhouette against black space.
+    const rimLight = new THREE.DirectionalLight(0xdde4f0, 0.22);
     rimLight.position.set(-100, 60, -350);
     rimLight.castShadow = false;
     this.scene.add(rimLight);
 
-    // Earthshine ambient
-    const ambient = new THREE.AmbientLight(0x334466, 0.12);
-    this.scene.add(ambient);
+    // Directional Earthshine — blue light from the actual Earth position (300, 100, 400
+    // in buildEarth). Much more physically meaningful than flat ambient. This is what
+    // illuminates the Moon's shadow side when Earth is in view.
+    this.earthshineLight = new THREE.DirectionalLight(0x4a7aff, 0.35);
+    this.earthshineLight.position.set(300, 100, 400);
+    this.earthshineLight.castShadow = false;
+    this.scene.add(this.earthshineLight);
 
-    // Hemisphere for visual depth
-    const hemi = new THREE.HemisphereLight(0x444466, 0x111111, 0.08);
-    this.scene.add(hemi);
+    // Tiny ambient floor — prevents pure-black voids on unlit surfaces.
+    // Reduced from 0.12 → 0.03 to let form definition come from directional lights.
+    const ambient = new THREE.AmbientLight(0x1a2236, 0.03);
+    this.scene.add(ambient);
   }
 
   // ── Starfield ───────────────────────────────────────────────
@@ -1191,7 +1199,9 @@ export class LunarLanderEngine {
       const u = Math.random();
       sizes[i] = 0.5 + Math.pow(u, 3.0) * 2.5;
 
-      const brightness = 0.2 + Math.pow(u, 2.0) * 0.8;
+      // Boosted brightness range — 0.6 to 2.0 — so stars survive tone mapping
+      // and trigger bloom. Values >1 are HDR and feed selective bloom.
+      const brightness = 0.6 + Math.pow(u, 2.0) * 1.4;
       const temp = Math.random();
       if (temp < 0.06) {
         // Blue-white hot
@@ -1221,38 +1231,42 @@ export class LunarLanderEngine {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const starMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 1.5) },
-      },
-      vertexShader: [
-        'attribute float size;',
-        'varying vec3 vColor;',
-        'uniform float uPixelRatio;',
-        'void main() {',
-        '  vColor = color;',
-        '  vec4 mvp = modelViewMatrix * vec4(position, 1.0);',
-        '  gl_Position = projectionMatrix * mvp;',
-        '  gl_PointSize = size * uPixelRatio;',
-        '}',
-      ].join('\n'),
-      fragmentShader: [
-        'varying vec3 vColor;',
-        'void main() {',
-        '  vec2 c = gl_PointCoord - 0.5;',
-        '  float d = dot(c, c);',
-        '  if (d > 0.25) discard;',
-        '  float alpha = 1.0 - smoothstep(0.1, 0.25, d);',
-        '  gl_FragColor = vec4(vColor, alpha * 0.9);',
-        '}',
-      ].join('\n'),
-      vertexColors: true,
+    // Starfield — TSL-native PointsNodeMaterial. Classic PointsMaterial can
+    // silently drop on WebGPURenderer; this is the WebGPU-compatible path.
+    // Size is flat pixel-space (stars are point sources, angular diameter
+    // doesn't change with distance). Sprite gets a soft radial alpha disc
+    // from uv() so stars glow instead of being square sprites.
+    const starMat = new PointsNodeMaterial({
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
+    starMat.sizeNode = attribute('size').mul(3.0); // pixels
+    starMat.colorNode = Fn(() => {
+      const d = length(uv().sub(vec2(0.5, 0.5)));
+      const a = tslSmoothstep(0.5, 0.0, d);
+      return vec4(attribute('color').mul(a), a);
+    })();
 
     this.scene.add(new THREE.Points(geo, starMat));
+  }
+
+  /** Soft radial disc texture for point sprites (stars). */
+  private createStarDiscTexture(): THREE.CanvasTexture {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    grad.addColorStop(0.0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.25, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.6, 'rgba(255,255,255,0.25)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
   }
 
   // ── Earth ───────────────────────────────────────────────────
@@ -1319,36 +1333,19 @@ export class LunarLanderEngine {
     });
     earthGroup.add(new THREE.Mesh(earthGeo, earthMat));
 
-    // Fresnel atmosphere glow shell
+    // Fresnel atmosphere glow shell — TSL NodeMaterial (camera-aware).
     const atmosGeo = new THREE.SphereGeometry(36.5, 48, 48);
-    const atmosMat = new THREE.ShaderMaterial({
-      uniforms: {
-        glowColor: { value: new THREE.Color(0x4488ff) },
-        viewVector: { value: new THREE.Vector3() },
-      },
-      vertexShader: `
-        varying float vIntensity;
-        uniform vec3 viewVector;
-        void main() {
-          vec3 worldNormal = normalize(normalMatrix * normal);
-          vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-          vec3 viewDir = normalize(viewVector - worldPos);
-          vIntensity = pow(1.0 - abs(dot(worldNormal, viewDir)), 3.0);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 glowColor;
-        varying float vIntensity;
-        void main() {
-          gl_FragColor = vec4(glowColor, vIntensity * 0.6);
-        }
-      `,
+    const atmosMat = new MeshBasicNodeMaterial({
       side: THREE.FrontSide,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
+    const viewDirN = normalize(cameraPosition.sub(positionWorld));
+    const fresnel = pow(float(1.0).sub(tslAbs(dot(normalize(normalWorld), viewDirN))), float(3.0));
+    const glowColor = vec3(0.267, 0.533, 1.0); // 0x4488ff
+    // Premultiplied alpha for AdditiveBlending (opacityNode is unreliable with TSL).
+    atmosMat.colorNode = vec4(glowColor.mul(fresnel).mul(0.6), fresnel.mul(0.6));
     earthGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
 
     // Position Earth clearly above horizon at ~35 degrees elevation
@@ -1359,12 +1356,9 @@ export class LunarLanderEngine {
 
     this.scene.add(earthGroup);
 
-    // Store reference for Fresnel updates
+    // Store reference; TSL uses cameraPosition node directly — no manual uniform update.
     this.earthGroupRef = earthGroup;
-    // Store atmosMat reference for per-frame viewVector update
-    earthGroup.userData.updateFresnel = () => {
-      atmosMat.uniforms.viewVector.value.copy(this.camera.position);
-    };
+    earthGroup.userData.updateFresnel = () => { /* noop — handled by TSL */ };
   }
 
   // ── Sun Disc + Lens Flare ──────────────────────────────────
@@ -1398,17 +1392,21 @@ export class LunarLanderEngine {
     sunMesh.position.copy(sunPos);
     this.scene.add(sunMesh);
 
-    // Lens flare
-    const flareTexMain = this.createFlareTexture(256, 0.15);
-    const flareTexRing = this.createFlareTexture(128, 0.4);
-
-    const lensflare = new Lensflare();
-    lensflare.addElement(new LensflareElement(flareTexMain, 700, 0, new THREE.Color(0xfff8e0)));
-    lensflare.addElement(new LensflareElement(flareTexRing, 300, 0.15, new THREE.Color(0xffeedd)));
-    lensflare.addElement(new LensflareElement(flareTexRing, 150, 0.4, new THREE.Color(0xddccaa)));
-    lensflare.addElement(new LensflareElement(flareTexRing, 100, 0.7, new THREE.Color(0xccbbaa)));
-    lensflare.position.copy(sunPos);
-    this.scene.add(lensflare);
+    // Sun glow — billboard sprite at sun position (Lensflare is WebGL-only).
+    const flareTex = this.createFlareTexture(512, 0.2);
+    const flareMat = new THREE.SpriteMaterial({
+      map: flareTex,
+      color: 0xfff8e0,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    });
+    const flareSprite = new THREE.Sprite(flareMat);
+    flareSprite.scale.set(1400, 1400, 1);
+    flareSprite.position.copy(sunPos);
+    flareSprite.renderOrder = 10;
+    this.scene.add(flareSprite);
   }
 
   // ── Horizon Atmosphere Glow ────────────────────────────────
@@ -1426,10 +1424,30 @@ export class LunarLanderEngine {
     const pos = this.terrainGeom.attributes.position as THREE.BufferAttribute;
     const vCount = pos.count;
 
-    // Pre-generate craters
+    // Real Apollo landing site heightmap (optional).
+    // Drop an LROC NAC-derived 16-bit PNG at /public/textures/terrain/apollo_height.png
+    // (grayscale, 2048×2048+, covers 3km×3km) — if present, it displaces the terrain
+    // with actual lunar elevation. Falls back to procedural craters if missing.
+    // Source: https://wms.lroc.asu.edu/lroc/rdr_product_select (search for Apollo site DTMs)
+    // or pre-extracted GeoTIFFs from NASA PDS imaging node.
+    let realHeightmap: ImageData | null = null;
+    const heightImg = new Image();
+    heightImg.src = '/textures/terrain/apollo_height.png';
+    heightImg.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = heightImg.width; cv.height = heightImg.height;
+      const ctx = cv.getContext('2d')!;
+      ctx.drawImage(heightImg, 0, 0);
+      realHeightmap = ctx.getImageData(0, 0, heightImg.width, heightImg.height);
+      console.log('[LunarLander] Real Apollo site heightmap loaded:', heightImg.width, 'x', heightImg.height);
+    };
+
+    // Pre-generate procedural craters (fallback when no real heightmap is present).
     const craterList: Array<{ x: number; z: number; radius: number; depth: number; rimHeight: number }> = [];
     const rng = mulberry32(42);
-    for (let i = 0; i < 45; i++) {
+    // Power-law crater distribution: many small, few large (realistic for lunar surface).
+    const craterCount = 180;
+    for (let i = 0; i < craterCount; i++) {
       const cx = (rng() - 0.5) * TERRAIN_SIZE * 0.85;
       const cz = (rng() - 0.5) * TERRAIN_SIZE * 0.85;
       const d = Math.sqrt(cx * cx + cz * cz);
@@ -1483,13 +1501,19 @@ export class LunarLanderEngine {
       const curvatureDrop = (distFromCenter * distFromCenter) / (2 * MOON_RADIUS);
       h -= curvatureDrop;
 
-      // Circular edge blend — fade terrain features to flat near edges
-      // so the square PlaneGeometry edges merge seamlessly into the round skirt
+      // Circular edge blend — kill square corners by dropping any vertex beyond
+      // the inscribed circle (distFromCenter > TERRAIN_SIZE/2). Square corners
+      // are at TERRAIN_SIZE*√2/2 ≈ 1.41× the circle radius — bury them deep.
       const edgeDist = distFromCenter / (TERRAIN_SIZE / 2);
-      if (edgeDist > 0.75) {
-        const fade = 1 - smoothstep(0.75, 1.0, edgeDist);
+      if (edgeDist > 0.85) {
+        const fade = 1 - smoothstep(0.85, 1.0, edgeDist);
         h *= fade;
-        h -= (1 - fade) * curvatureDrop * 2; // extra droop at edges
+        h -= (1 - fade) * curvatureDrop * 2;
+      }
+      // Hard circular clip for corners: vertices beyond the inscribed circle
+      // get pushed far below the skirt so the square outline is invisible.
+      if (edgeDist > 1.0) {
+        h -= (edgeDist - 1.0) * 150; // 60m drop per radius unit
       }
 
       pos.setY(i, h);
@@ -1501,6 +1525,9 @@ export class LunarLanderEngine {
     const vertColors = new Float32Array(vCount * 3);
     const normals = this.terrainGeom.attributes.normal as THREE.BufferAttribute;
 
+    // Precompute crater-rim mask: vertices within [r, r*1.4] of any crater get
+    // a brightness lift (freshly-exposed ejecta has higher albedo than the
+    // surrounding aged regolith).
     for (let i = 0; i < vCount; i++) {
       const vx = pos.getX(i);
       const vy = pos.getY(i);
@@ -1508,34 +1535,70 @@ export class LunarLanderEngine {
       const ny = normals.getY(i);
       const slope = 1 - ny;
 
+      // Multi-octave noise — macro terrain variation + fine regolith speckle.
       const n1 = fbm(vx * 0.015, vz * 0.015, 2, 2.0, 0.5);
       const n2 = fbm(vx * 0.05, vz * 0.05, 2, 2.0, 0.5);
-      let base = 0.15 + n1 * 0.14 + n2 * 0.06; // darker regolith with more variation
-      base += vy * 0.002;
-      base -= slope * 0.2;
-      if (vy < -5) base -= 0.03;
-      base = Math.max(0.08, Math.min(0.5, base));
+      const n3 = fbm(vx * 0.2, vz * 0.2, 2, 2.0, 0.5);  // fine grain
+      const n4 = fbm(vx * 0.8, vz * 0.8, 1, 2.0, 0.5);  // micro speckle
 
-      vertColors[i * 3] = base * 1.03;
-      vertColors[i * 3 + 1] = base * 1.0;
-      vertColors[i * 3 + 2] = base * 0.93;
+      // Lunar regolith reflectance: mean albedo ~0.12, varies 0.08-0.20 across maria/highlands.
+      let base = 0.14 + n1 * 0.06 + n2 * 0.04 + n3 * 0.025 + n4 * 0.015;
+
+      // Slope darkening (steep faces catch less light) — softer than before.
+      base -= slope * 0.08;
+
+      // Fresh-ejecta rim boost: check proximity to any crater rim.
+      for (const c of craterList) {
+        const dx = vx - c.x;
+        const dz = vz - c.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist > c.radius && dist < c.radius * 1.5) {
+          // Gaussian bump centered at 1.15*r — bright ring around crater.
+          const rimT = (dist / c.radius - 1.15) / 0.2;
+          base += 0.06 * Math.exp(-rimT * rimT * 2.5);
+          break;
+        }
+      }
+
+      base = Math.max(0.06, Math.min(0.26, base));
+
+      // Vertex colors now ACT AS A MULTIPLIER on the NASA LRO albedo texture.
+      // Scale to stay near 1.0 (neutral) with slight ±20% variation for
+      // macro-scale crater-rim brightening and slope darkening.
+      const multiplier = 0.6 + (base - 0.14) * 3.5; // base=0.14 → 1.0; 0.06→0.32; 0.26→1.42
+      vertColors[i * 3] = multiplier * 0.99;
+      vertColors[i * 3 + 1] = multiplier * 1.0;
+      vertColors[i * 3 + 2] = multiplier * 1.02;
     }
 
     this.terrainGeom.setAttribute('color', new THREE.BufferAttribute(vertColors, 3));
 
-    // Apply lunar curvature: subtract d^2 / (2*R) from Y for each vertex
-    for (let ci = 0; ci < vCount; ci++) {
-      const cvx = pos.getX(ci);
-      const cvz = pos.getZ(ci);
-      const d2 = cvx * cvx + cvz * cvz;
-      pos.setY(ci, pos.getY(ci) - d2 / (2 * MOON_RADIUS));
-    }
-    this.terrainGeom.computeVertexNormals();
+    // (Curvature was already applied inside the sculpt loop above via
+    //  `h -= curvatureDrop` — no second pass needed.)
 
-    // Simple MeshStandardMaterial — vertex colors + shadow receiving = visible craters
+    // NASA LRO WAC-derived moon textures. Using MISMATCHED repeat counts +
+    // rotation offset on the bump map to break up the obvious 1:1 grid pattern
+    // that emerges from naive tiling.
+    const loader = new THREE.TextureLoader();
+    const moonAlbedo = loader.load('/textures/planets/2k_moon.jpg');
+    moonAlbedo.wrapS = moonAlbedo.wrapT = THREE.RepeatWrapping;
+    moonAlbedo.repeat.set(6, 6);
+    moonAlbedo.colorSpace = THREE.SRGBColorSpace;
+    moonAlbedo.anisotropy = 8;
+
+    const moonBump = loader.load('/textures/planets/2k_moon_displacement.jpg');
+    moonBump.wrapS = moonBump.wrapT = THREE.RepeatWrapping;
+    moonBump.repeat.set(9, 9);           // different count kills 1:1 alignment
+    moonBump.rotation = Math.PI * 0.21;  // ~37° rotation kills grid alignment
+    moonBump.center.set(0.5, 0.5);
+    moonBump.anisotropy = 8;
+
     const terrainMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.95,
+      map: moonAlbedo,
+      bumpMap: moonBump,
+      bumpScale: 0.5,   // was 1.5 — too aggressive, caused streak artifacts
+      roughness: 0.97,
       metalness: 0.0,
     });
 
@@ -1543,41 +1606,82 @@ export class LunarLanderEngine {
     this.terrain.receiveShadow = true;
     this.scene.add(this.terrain);
 
-    // Horizon skirt — circular disc that extends far beyond terrain, curving down
-    // Uses a circular PlaneGeometry so there are NO square edges at all
-    const skirtRadius = TERRAIN_SIZE * 6; // 6x terrain = 12km wide disc
-    const skirtSegs = 96;
-    const skirtGeo = new THREE.CircleGeometry(skirtRadius, skirtSegs);
-    skirtGeo.rotateX(-Math.PI / 2);
-    const skirtPos = skirtGeo.attributes.position as THREE.BufferAttribute;
-    const skirtColors = new Float32Array(skirtPos.count * 3);
-    const halfTerrain = TERRAIN_SIZE / 2;
-    for (let i = 0; i < skirtPos.count; i++) {
-      const sx = skirtPos.getX(i);
-      const sz = skirtPos.getZ(i);
-      const dist = Math.sqrt(sx * sx + sz * sz);
-      // Strong curvature drop — makes the disc curve over the horizon
-      const drop = (dist * dist) / (2 * MOON_RADIUS);
-      // Extra drop beyond terrain edge to push it below sightline
-      const beyondEdge = Math.max(0, dist - halfTerrain);
-      const extraDrop = beyondEdge * 0.08; // slope down aggressively
-      skirtPos.setY(i, -drop - extraDrop - 3);
-      // Color: match terrain gray near center, fade to pure black at edge
-      const t = Math.min(1, dist / skirtRadius);
-      const edgeFade = Math.max(0, dist - halfTerrain * 0.8) / (skirtRadius - halfTerrain * 0.8);
-      const brightness = 0.22 * Math.max(0, 1 - edgeFade * edgeFade);
-      skirtColors[i * 3] = brightness * 1.03;
-      skirtColors[i * 3 + 1] = brightness;
-      skirtColors[i * 3 + 2] = brightness * 0.93;
+    // Distant lunar surface — 50km radius textured disc with real curvature.
+    // From 640m altitude, true lunar horizon is ~46km (√(2·R·h) = 46900m).
+    // Same LRO albedo texture is tiled across this disc, bending below the
+    // observer via Moon-radius curvature. No gray skirt — continuous lunar
+    // ground from camera to true horizon.
+    const horizonRadius = 50000; // 50km — beyond true horizon at typical altitudes
+    const horizonSegs = 128;
+    const horizonGeo = new THREE.CircleGeometry(horizonRadius, horizonSegs, 0, Math.PI * 2);
+    horizonGeo.rotateX(-Math.PI / 2);
+    const horizonPos = horizonGeo.attributes.position as THREE.BufferAttribute;
+    // Apply Moon curvature: y = -d² / (2·R). Inner part stays near 0; outer
+    // points drop dramatically (50km ≈ 720m below horizon).
+    for (let i = 0; i < horizonPos.count; i++) {
+      const hx = horizonPos.getX(i);
+      const hz = horizonPos.getZ(i);
+      const hd2 = hx * hx + hz * hz;
+      horizonPos.setY(i, -hd2 / (2 * MOON_RADIUS) - 2);
     }
-    skirtGeo.setAttribute('color', new THREE.BufferAttribute(skirtColors, 3));
-    const skirtMat = new THREE.MeshBasicMaterial({
+    // Polar UV mapping: radial (log-compressed) + angular. Kills square tile
+    // seams because samples fall on concentric rings, not a Cartesian grid.
+    // Angular wraps cleanly at θ=0/2π since we use integer spoke count.
+    // Per-vertex hash jitter breaks residual ring banding.
+    const horizonUv = new Float32Array(horizonPos.count * 2);
+    const RING_COUNT = 6;     // radial tiles (log-compressed toward horizon)
+    const SPOKE_COUNT = 24;   // angular tiles — integer => seamless wrap
+    const hash2 = (x: number, y: number) => {
+      const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+      return s - Math.floor(s);
+    };
+    for (let i = 0; i < horizonPos.count; i++) {
+      const hx = horizonPos.getX(i);
+      const hz = horizonPos.getZ(i);
+      const r = Math.sqrt(hx * hx + hz * hz) / horizonRadius; // 0..1
+      const theta = Math.atan2(hz, hx) / (Math.PI * 2) + 0.5; // 0..1
+      // Log radial: tiles get finer toward horizon = matches perspective foreshortening.
+      const u = Math.log(1 + r * 15) / Math.log(16) * RING_COUNT;
+      const v = theta * SPOKE_COUNT;
+      // Low-freq hash jitter (0.15 tile units) warps tile edges into wavy lines.
+      const jx = (hash2(Math.floor(hx * 0.0005), Math.floor(hz * 0.0005)) - 0.5) * 0.3;
+      const jy = (hash2(Math.floor(hx * 0.0005) + 7, Math.floor(hz * 0.0005) + 13) - 0.5) * 0.3;
+      horizonUv[i * 2] = u + jx;
+      horizonUv[i * 2 + 1] = v + jy;
+    }
+    horizonGeo.setAttribute('uv', new THREE.BufferAttribute(horizonUv, 2));
+    // Vertex colors that darken with distance — hides distant tile pattern
+    // and simulates atmospheric-less extinction from low-angle sun on regolith.
+    const horizonColors = new Float32Array(horizonPos.count * 3);
+    for (let i = 0; i < horizonPos.count; i++) {
+      const hx = horizonPos.getX(i);
+      const hz = horizonPos.getZ(i);
+      const hd = Math.sqrt(hx * hx + hz * hz);
+      // Aggressive fade-to-black: full brightness in near field (0-8km),
+      // then exponential falloff. At horizon, pixels are near-black so
+      // tile seams / UV banding become invisible against the sky.
+      const t = Math.min(1, hd / horizonRadius);
+      const brightness = Math.pow(Math.max(0, 1.0 - t * 1.4), 2.2) * 0.95 + 0.02;
+      horizonColors[i * 3] = brightness;
+      horizonColors[i * 3 + 1] = brightness;
+      horizonColors[i * 3 + 2] = brightness;
+    }
+    horizonGeo.setAttribute('color', new THREE.BufferAttribute(horizonColors, 3));
+    const horizonAlbedo = loader.load('/textures/planets/2k_moon.jpg');
+    horizonAlbedo.wrapS = horizonAlbedo.wrapT = THREE.RepeatWrapping;
+    horizonAlbedo.colorSpace = THREE.SRGBColorSpace;
+    horizonAlbedo.anisotropy = 4;
+    const horizonMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      side: THREE.FrontSide, // only top face visible
+      map: horizonAlbedo,
+      roughness: 0.97,
+      metalness: 0.0,
+      side: THREE.FrontSide,
     });
-    const skirt = new THREE.Mesh(skirtGeo, skirtMat);
-    skirt.renderOrder = -1; // render behind terrain
-    this.scene.add(skirt);
+    const horizon = new THREE.Mesh(horizonGeo, horizonMat);
+    horizon.receiveShadow = true;
+    horizon.renderOrder = -1;
+    this.scene.add(horizon);
 
     // Landing zone markers — subtle dark lines, not bright blobs
     const markerMat = new THREE.MeshBasicMaterial({
@@ -1618,6 +1722,65 @@ export class LunarLanderEngine {
 
   private buildLunarModule(): void {
     this.lmGroup = new THREE.Group();
+    this.lmGroup.position.copy(this.lm.pos);
+    this.lmGroup.quaternion.copy(this.lm.quat);
+    this.scene.add(this.lmGroup);
+
+    // Try loading a high-res Apollo LM GLB. If the file is absent (404), fall
+    // back to the procedural LM built below. Drop a model at:
+    //   /public/models/apollo_lm.glb
+    // Recommended sources: NASA 3D Resources, Sketchfab (CC-BY).
+    new GLTFLoader().load(
+      '/models/apollo_lm.glb',
+      (gltf) => {
+        // Clear the procedural LM children so the real NASA geometry replaces it.
+        while (this.lmGroup.children.length > 0) {
+          this.lmGroup.remove(this.lmGroup.children[0]);
+        }
+        const model = gltf.scene;
+
+        // 1. Fit to real LM height (~7m ascent+descent combined).
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const targetHeight = 7.0;
+        const scaleFactor = targetHeight / Math.max(size.y, 0.001);
+        model.scale.setScalar(scaleFactor);
+
+        // 2. Reposition so footpads sit at y = -3.0 (matches procedural origin
+        //    used by physics + footpadWorldPositions). Without this, the NASA
+        //    model floats above ground or clips through it.
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        model.position.y -= scaledBox.min.y - (-3.0);
+
+        // 3. Shadows + ensure materials are visible.
+        model.traverse((obj) => {
+          if ((obj as THREE.Mesh).isMesh) {
+            const mesh = obj as THREE.Mesh;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            // GLTF materials sometimes ship with side:FrontSide + flipped normals;
+            // force DoubleSide to guarantee visibility on WebGPURenderer.
+            const mat = mesh.material as THREE.Material | THREE.Material[];
+            if (Array.isArray(mat)) {
+              mat.forEach(m => { m.side = THREE.DoubleSide; m.needsUpdate = true; });
+            } else if (mat) {
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            }
+          }
+        });
+
+        this.lmGroup.add(model);
+        console.log(
+          `[LunarLander] Loaded Apollo LM GLB — original size=${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}, scale=${scaleFactor.toFixed(3)}`,
+        );
+      },
+      undefined,
+      (err) => {
+        console.warn('[LunarLander] Apollo LM GLB failed to load — using procedural LM.', err);
+      },
+    );
 
     // Material palette — enhanced
     const kaptonGold = new THREE.MeshStandardMaterial({
@@ -2007,58 +2170,43 @@ export class LunarLanderEngine {
     geo.setAttribute('aAge', new THREE.BufferAttribute(ages, 1));
     geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
 
-    const vertexShader = `
-      attribute float aAge;
-      attribute float aSize;
-      varying float vAge;
-      void main() {
-        vAge = aAge;
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        // Size grows with age (expanding in vacuum)
-        float expand = ${type === 'exhaust' ? '1.0 + aAge * 2.5' : '1.0 + aAge * 0.5'};
-        gl_PointSize = aSize * expand * (300.0 / -mvPosition.z);
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `;
-
-    const fragmentShader = type === 'exhaust'
-      ? `
-      varying float vAge;
-      void main() {
-        // Soft circular shape
-        vec2 center = gl_PointCoord - vec2(0.5);
-        float dist = length(center);
-        float alpha = smoothstep(0.5, 0.15, dist);
-        // Color: white-blue core -> orange -> transparent
-        vec3 coreColor = vec3(0.85, 0.9, 1.0);
-        vec3 midColor = vec3(1.0, 0.6, 0.15);
-        vec3 outerColor = vec3(0.8, 0.25, 0.05);
-        vec3 color = mix(coreColor, midColor, smoothstep(0.0, 0.4, vAge));
-        color = mix(color, outerColor, smoothstep(0.3, 0.8, vAge));
-        float fadeOut = 1.0 - smoothstep(0.5, 1.0, vAge);
-        gl_FragColor = vec4(color, alpha * fadeOut);
-      }
-    `
-      : `
-      varying float vAge;
-      void main() {
-        // RCS: white-hot core fading to transparent very quickly
-        vec2 center = gl_PointCoord - vec2(0.5);
-        float dist = length(center);
-        float alpha = smoothstep(0.5, 0.05, dist);
-        vec3 color = mix(vec3(1.0, 1.0, 1.0), vec3(0.7, 0.8, 1.0), vAge);
-        float fadeOut = 1.0 - smoothstep(0.1, 0.6, vAge);
-        gl_FragColor = vec4(color, alpha * fadeOut * 1.5);
-      }
-    `;
-
-    const mat = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
+    // TSL PointsNodeMaterial — age-based color ramp + size expansion + soft disc.
+    const mat = new PointsNodeMaterial({
       transparent: true,
       blending,
       depthWrite: false,
     });
+    const aAge = attribute('aAge');
+    const aSize = attribute('aSize');
+    // Perspective-corrected point size that grows with age.
+    const mvZ = modelViewMatrix.mul(vec4(positionLocal, 1.0)).z.negate();
+    const expand = type === 'exhaust'
+      ? float(1.0).add(aAge.mul(2.5))
+      : float(1.0).add(aAge.mul(0.5));
+    mat.sizeNode = aSize.mul(expand).mul(float(300.0).div(mvZ));
+
+    // Radial alpha falloff (soft disc).
+    const uvC = uv().sub(0.5);
+    const dist = length(uvC);
+    let color: ReturnType<typeof vec3>;
+    let alpha: ReturnType<typeof float>;
+    if (type === 'exhaust') {
+      const alphaDisc = tslSmoothstep(float(0.5), float(0.15), dist);
+      const coreColor = vec3(0.85, 0.9, 1.0);
+      const midColor = vec3(1.0, 0.6, 0.15);
+      const outerColor = vec3(0.8, 0.25, 0.05);
+      const mid = mix(coreColor, midColor, tslSmoothstep(float(0.0), float(0.4), aAge));
+      color = mix(mid, outerColor, tslSmoothstep(float(0.3), float(0.8), aAge));
+      const fadeOut = float(1.0).sub(tslSmoothstep(float(0.5), float(1.0), aAge));
+      alpha = alphaDisc.mul(fadeOut);
+    } else {
+      const alphaDisc = tslSmoothstep(float(0.5), float(0.05), dist);
+      color = mix(vec3(1.0, 1.0, 1.0), vec3(0.7, 0.8, 1.0), aAge);
+      const fadeOut = float(1.0).sub(tslSmoothstep(float(0.1), float(0.6), aAge));
+      alpha = alphaDisc.mul(fadeOut).mul(1.5);
+    }
+    // Pre-multiply color by alpha for AdditiveBlending compatibility.
+    mat.colorNode = vec4(color.mul(alpha), alpha);
 
     const mesh = new THREE.Points(geo, mat);
     mesh.frustumCulled = false;
@@ -2898,6 +3046,6 @@ export class LunarLanderEngine {
     }
 
     this.renderer.info.reset();
-    this.composer.render();
+    this.postProcessing.render();
   };
 }
