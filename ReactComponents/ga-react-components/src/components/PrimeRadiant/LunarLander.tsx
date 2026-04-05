@@ -114,6 +114,7 @@ export const LunarLander: React.FC<LunarLanderProps> = ({
 
     const engine = new LunarLanderEngine(containerRef.current);
     engineRef.current = engine;
+    let cancelled = false;
 
     engine.onLanded((success, stats) => {
       setLandingResult({ success, stats });
@@ -127,7 +128,12 @@ export const LunarLander: React.FC<LunarLanderProps> = ({
       });
     });
 
-    engine.start();
+    // WebGPU init is async — await device before starting the loop.
+    void engine.initialize().then(() => {
+      if (!cancelled) engine.start();
+    }).catch((err) => {
+      console.error('[LunarLander] engine init failed:', err);
+    });
 
     // State polling for HUD
     const interval = setInterval(() => {
@@ -135,6 +141,7 @@ export const LunarLander: React.FC<LunarLanderProps> = ({
     }, 50);
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
       engine.stop();
       engine.dispose();
