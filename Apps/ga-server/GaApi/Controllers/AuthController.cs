@@ -50,10 +50,27 @@ public class AuthController : ControllerBase
 
     /// <summary>Kick off the OAuth flow with the selected provider.</summary>
     [HttpGet("challenge/{provider}")]
-    public IActionResult Challenge([FromRoute] string provider, [FromQuery] string? returnUrl)
+    public async Task<IActionResult> Challenge(
+        [FromRoute] string provider,
+        [FromQuery] string? returnUrl,
+        [FromServices] IAuthenticationSchemeProvider schemeProvider)
     {
         var scheme = ResolveScheme(provider);
         if (scheme is null) return BadRequest(new { error = "unsupported provider" });
+
+        // If the provider's handler isn't registered, it means the client ID/Secret
+        // aren't configured (Program.cs skips AddGoogle()/AddGitHub() when missing).
+        // Return a clean error instead of letting the framework throw a 500.
+        var registered = await schemeProvider.GetSchemeAsync(scheme);
+        if (registered is null)
+        {
+            _logger.LogWarning("OAuth provider {Provider} challenged but handler not registered — missing ClientId/Secret?", provider);
+            return BadRequest(new
+            {
+                error = "provider_not_configured",
+                detail = $"The {provider} OAuth handler is not registered. Set Authentication:{char.ToUpperInvariant(provider[0])}{provider[1..]}:ClientId and :ClientSecret via dotnet user-secrets.",
+            });
+        }
 
         // The callback endpoint reconstructs returnUrl from this item key
         var props = new AuthenticationProperties
