@@ -87,6 +87,7 @@ import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './Cryst
 import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
+import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
 import { CLUSTER_COLORS } from './shaders/VoronoiShellTSL';
 import { createComplianceRivers, type ComplianceRiverHandle } from './ComplianceRiverManager';
 import { MoebiusShader } from './shaders/MoebiusPassTSL';
@@ -1382,6 +1383,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
     let voronoiShellsHandle: VoronoiShellHandle | null = null;
+    let jurisdictionVolHandle: JurisdictionVolumetricsHandle | null = null;
     let complianceRiversHandle: ComplianceRiverHandle | null = null;
     let crisisTexturesHandle: CrisisTextureHandle | null = null;
     let zoomInertiaHandlerOuter: ((e: WheelEvent) => void) | null = null;
@@ -2157,6 +2159,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         voronoiShellsHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
       }
 
+      // ─── Jurisdiction volumetrics (LPR) — update AABBs from force layout ───
+      if (jurisdictionVolHandle && isTemporalFrame) {
+        jurisdictionVolHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
+      }
+
       // ─── Compliance rivers — flow field particle advection ───
       if (complianceRiversHandle) {
         complianceRiversHandle.update(0.016, qualityBudget); // ~60fps dt
@@ -2785,6 +2792,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         } catch (e) {
           console.warn('[PrimeRadiant] Voronoi shells disabled (TSL requires WebGPURenderer):', (e as Error).message);
         }
+
+        // Local Proxy Raymarching volumetrics — bounded fog per jurisdiction
+        // Toggle off with ?perf=noLPR
+        if (!perfFlag.includes('noLPR')) {
+          try {
+            jurisdictionVolHandle = createJurisdictionVolumetrics(
+              graph.nodes, fg.scene(), budgetToTier(qualityBudget),
+            );
+          } catch (e) {
+            console.warn('[PrimeRadiant] Jurisdiction volumetrics disabled:', (e as Error).message);
+          }
+        }
       }
 
       // ─── Shell hover raycaster — drives JurisdictionLegend's floating label ───
@@ -3011,6 +3030,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
       voronoiShellsHandle?.dispose();
+      jurisdictionVolHandle?.dispose();
       shellHoverCleanup?.();
       complianceRiversHandle?.dispose();
       crisisTexturesHandle?.dispose();
@@ -3367,6 +3387,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           </div>
         )}
 
+      {/* Auth chip — its own top-right slot so it doesn't crowd the backend-status card */}
+      <div className="prime-radiant__auth-slot">
+        <AuthBadge />
+      </div>
+
       {/* Backend connection status badge with capabilities popover */}
       <div className={`prime-radiant__backend-status prime-radiant__backend-status--${backendStatus}`}>
         <span className="prime-radiant__backend-dot" />
@@ -3374,7 +3399,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         <span className={`prime-radiant__admin-badge prime-radiant__admin-badge--${isAdmin ? 'admin' : 'view'}`}>
           {isAdmin ? 'Admin' : 'View'}
         </span>
-        <AuthBadge />
         <div className="prime-radiant__api-popover">
           {backendStatus === 'connected' ? (
             <>
