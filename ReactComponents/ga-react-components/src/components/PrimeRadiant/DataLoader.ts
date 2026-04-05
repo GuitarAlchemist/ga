@@ -243,8 +243,15 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
     if (!active || !hubUrl) return;
 
     try {
+      // Attach JWT from sessionStorage so the server can populate
+      // Context.User.Identity claims (displayName, avatar) in GovernanceHub.
       connection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl)
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => {
+            try { return sessionStorage.getItem('ga_jwt') ?? ''; }
+            catch { return ''; }
+          },
+        })
         .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 30000]) // exponential backoff
         .configureLogging(signalR.LogLevel.Warning)
         .build();
