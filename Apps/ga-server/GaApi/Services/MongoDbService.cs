@@ -35,6 +35,12 @@ public class MongoDbService
     public IMongoCollection<VoicingEntity> Voicings =>
         Database.GetCollection<VoicingEntity>(_settings.Collections.Voicings);
 
+    public IMongoCollection<User> Users =>
+        Database.GetCollection<User>(_settings.Collections.Users);
+
+    public IMongoCollection<AuthRefreshToken> AuthRefreshTokens =>
+        Database.GetCollection<AuthRefreshToken>(_settings.Collections.RefreshTokens);
+
 
     // Chord query methods
     public async Task<List<Chord>> GetChordsByQualityAsync(string quality, int limit = 100)

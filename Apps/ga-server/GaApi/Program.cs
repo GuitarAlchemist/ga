@@ -137,11 +137,92 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5176", "http://localhost:5177", "http://localhost:8501")
+        policy.WithOrigins(
+                "http://localhost:5173", "http://localhost:5174", "http://localhost:5176", "http://localhost:5177", "http://localhost:8501",
+                "https://demos.guitaralchemist.com", "https://guitaralchemist.com")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials(); // Required for SignalR WebSocket connections
+            .AllowCredentials(); // Required for SignalR WebSocket connections + OAuth refresh cookies
     });
+});
+
+// ─── OAuth2 + JWT authentication ─────────────────────────────────────────
+// Configuration path: Authentication:* (user-secrets in dev, env vars in prod)
+// See C:/Users/spare/source/repos/ga/Apps/ga-server/GaApi/Properties/launchSettings.json
+builder.Services.Configure<GaApi.Services.JwtSettings>(
+    builder.Configuration.GetSection("Authentication:Jwt"));
+builder.Services.Configure<GaApi.Services.AuthOwnerSettings>(
+    builder.Configuration.GetSection("Authentication"));
+builder.Services.AddSingleton<GaApi.Services.UserService>();
+builder.Services.AddSingleton<GaApi.Services.TokenService>();
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var githubClientId = builder.Configuration["Authentication:GitHub:ClientId"];
+var githubClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"];
+var jwtSigningKey = builder.Configuration["Authentication:Jwt:SigningKey"];
+
+// JWT is the default scheme for API auth. External providers are added as
+// extra schemes used only during the OAuth challenge/callback dance.
+var authBuilder = builder.Services
+    .AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        if (!string.IsNullOrWhiteSpace(jwtSigningKey))
+        {
+            var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                Convert.FromBase64String(jwtSigningKey));
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = builder.Configuration["Authentication:Jwt:Issuer"] ?? "ga-server",
+                ValidateAudience = true,
+                ValidAudience = builder.Configuration["Authentication:Jwt:Audience"] ?? "ga-clients",
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ClockSkew = TimeSpan.FromSeconds(30),
+            };
+        }
+        // Allow SignalR clients to send JWT via access_token query param on WebSocket handshake
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var accessToken = ctx.Request.Query["access_token"];
+                var path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    ctx.Token = accessToken;
+                return Task.CompletedTask;
+            },
+        };
+    })
+    .AddCookie(); // ephemeral cookie used during the OAuth round-trip only
+
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authBuilder.AddGoogle(options =>
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.SignInScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+    });
+}
+
+if (!string.IsNullOrWhiteSpace(githubClientId) && !string.IsNullOrWhiteSpace(githubClientSecret))
+{
+    authBuilder.AddGitHub(options =>
+    {
+        options.ClientId = githubClientId;
+        options.ClientSecret = githubClientSecret;
+        options.SignInScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+        options.Scope.Add("user:email");
+    });
+}
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
 });
 
 builder.Services.AddProblemDetails();
@@ -195,6 +276,10 @@ app.UseCors("AllowAll");
 
 // Use rate limiting (must be before UseAuthorization)
 app.UseRateLimiter();
+
+// Authentication + Authorization (JWT for APIs, OAuth cookie for the /api/auth flow)
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Dev-only guard: block unauthenticated access to the chatbot API in non-Development environments.
 // CORS + rate limiting provide weak protection; this gate prevents accidental public exposure

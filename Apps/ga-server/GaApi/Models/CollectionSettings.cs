@@ -7,4 +7,6 @@ public class CollectionSettings
     public string Scales { get; set; } = "scales";
     public string Progressions { get; set; } = "progressions";
     public string Voicings { get; set; } = "voicings";
+    public string Users { get; set; } = "users";
+    public string RefreshTokens { get; set; } = "refresh_tokens";
 }
