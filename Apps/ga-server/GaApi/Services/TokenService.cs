@@ -50,6 +50,8 @@ public class TokenService
             new("provider", user.Provider),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
+        if (!string.IsNullOrEmpty(user.AvatarUrl))
+            claims.Add(new Claim("avatar", user.AvatarUrl));
         foreach (var role in user.Roles)
             claims.Add(new Claim(ClaimTypes.Role, role));
 

@@ -36,22 +36,68 @@ import {
   createProceduralPlaceholderMaterialTSL,
 } from './shaders/ProceduralMoonTSL';
 import type { MeshBasicNodeMaterial } from 'three/webgpu';
-import type { QualityTier } from './shaders/TSLUniforms';
+import { resolveTexturePath } from '../../assets/space';
 
 // ── Texture paths (served from public/textures/planets/) ──
-const TEX_BASE = '/textures/planets/';
 const loader = new THREE.TextureLoader();
 
 // ── Live weather cloud refresh interval (ms) ──
 const CLOUD_REFRESH_MS = 15 * 60 * 1000; // 15 minutes
+const ENABLE_EARTH_CLOUD_LAYERS = false;
 
-function loadTex(file: string): THREE.Texture {
-  const tex = loader.load(TEX_BASE + file);
+function loadTex(path: string): THREE.Texture {
+  const tex = loader.load(path);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.anisotropy = 8; // sharper at oblique angles
   return tex;
+}
+
+function loadPlanetTexture(file: string): THREE.Texture {
+  return loadTex(`/textures/planets/${file}`);
+}
+
+function loadCanonicalTexture(
+  bodyId: 'sun' | 'mercury' | 'venus' | 'earth' | 'moon' | 'mars' | 'jupiter' | 'saturn' | 'uranus' | 'neptune' | 'stars',
+  mapKind: 'albedo' | 'night' | 'clouds' | 'specular' | 'displacement' | 'alpha' | 'stars' | 'overlay',
+  fallbackFile?: string,
+): THREE.Texture | undefined {
+  const resolved = resolveTexturePath(bodyId, mapKind, '2k');
+  if (resolved) return loadTex(resolved);
+  if (fallbackFile) return loadPlanetTexture(fallbackFile);
+  return undefined;
+}
+
+function getCanonicalBodyId(name: string):
+  | 'sun'
+  | 'mercury'
+  | 'venus'
+  | 'earth'
+  | 'moon'
+  | 'mars'
+  | 'jupiter'
+  | 'saturn'
+  | 'uranus'
+  | 'neptune'
+  | 'stars'
+  | undefined {
+  switch (name) {
+    case 'sun':
+    case 'mercury':
+    case 'venus':
+    case 'earth':
+    case 'moon':
+    case 'mars':
+    case 'jupiter':
+    case 'saturn':
+    case 'uranus':
+    case 'neptune':
+    case 'stars':
+      return name;
+    default:
+      return undefined;
+  }
 }
 
 // ── Shared vertex shader for procedural moons ──
@@ -258,13 +304,15 @@ const MIRANDA_FRAG = NOISE_LIB + `
 // ── Unused placeholder for procedural planet fallback ──
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
-// ── Astronomically accurate planet scaling ──
+// ── Planet scaling ──
 // Sizes: TRUE linear ratio to Earth (Jupiter really is 11x Earth).
 //   Camera zoom handles visibility — no artificial inflation.
-// Distances: TRUE linear AU ratio. Use zoom to explore.
+// Distances: sqrt(AU) compression — preserves relative ordering while keeping
+//   the orrery visually compact. Linear AU makes Neptune 30x further than Earth,
+//   which pushes the outer planets off-screen without extreme zoom.
 // Speed: Kepler's 3rd law: angular speed ∝ AU^-1.5
 // Orbits: Elliptical with real eccentricity from JPL data.
-const EARTH_DIST = 6.5;     // 1 AU in scene units
+const EARTH_DIST = 6.5;     // 1 AU in scene units (sqrt(1) = 1)
 const EARTH_RADIUS = 0.12;  // Earth's radius — small enough that inner orbits have visible gaps
 const EARTH_SPEED = 3.0;    // Earth's orbital speed (animation, not real-time)
 
@@ -281,8 +329,11 @@ const INCLINATION: Record<string, number> = {
 };
 
 function keplerDistance(au: number): number {
-  // TRUE linear AU — no compression. Camera zoom handles visibility.
-  return EARTH_DIST * au;
+  // sqrt compression: preserves relative ordering, keeps outer planets on-screen.
+  // Produces: Mercury 4.06, Venus 5.52, Earth 6.5, Mars 8.01, Jupiter 14.82,
+  // Saturn 20.08, Uranus 28.48, Neptune 35.63 scene units.
+  if (au <= 0) return 0;
+  return EARTH_DIST * Math.sqrt(au);
 }
 function keplerRadius(diameterKm: number): number {
   // TRUE linear ratio to Earth — real proportions.
@@ -348,7 +399,7 @@ const PLANETS: PlanetDef[] = [
     textureNight: '2k_earth_nightmap.jpg',
     textureClouds: '2k_earth_clouds.jpg',
     textureSpecular: '2k_earth_specular.jpg',
-    // textureDisplacement removed — file doesn't exist, causes load errors
+    textureDisplacement: '2k_earth_displacement.jpg',
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
@@ -531,16 +582,30 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
   geo.computeBoundingSphere(); // pre-compute for zoom-to-planet framing
 
   if (def.texture) {
+    const canonicalBodyId = getCanonicalBodyId(def.name);
+    const albedoMap = canonicalBodyId
+      ? loadCanonicalTexture(canonicalBodyId, 'albedo', def.texture)
+      : loadPlanetTexture(def.texture);
+    const nightMap = canonicalBodyId && def.textureNight
+      ? loadCanonicalTexture(canonicalBodyId, 'night', def.textureNight)
+      : def.textureNight ? loadPlanetTexture(def.textureNight) : undefined;
+    const specularMap = canonicalBodyId && def.textureSpecular
+      ? loadCanonicalTexture(canonicalBodyId, 'specular', def.textureSpecular)
+      : def.textureSpecular ? loadPlanetTexture(def.textureSpecular) : undefined;
+    const displacementMap = canonicalBodyId && def.textureDisplacement
+      ? loadCanonicalTexture(canonicalBodyId, 'displacement', def.textureDisplacement)
+      : def.textureDisplacement ? loadPlanetTexture(def.textureDisplacement) : undefined;
+
     const atmoType: AtmosphereType =
       def.name === 'earth' ? 'blue' : def.name === 'venus' ? 'orange' : 'none';
     const dispScale = def.textureDisplacement
       ? def.radius * scale * (def.name === 'mars' ? 0.12 : 0.05)
       : 0;
     const mat = createPlanetSurfaceMaterialTSL({
-      map: loadTex(def.texture),
-      nightMap: def.textureNight ? loadTex(def.textureNight) : undefined,
-      specularMap: def.textureSpecular ? loadTex(def.textureSpecular) : undefined,
-      displacementMap: def.textureDisplacement ? loadTex(def.textureDisplacement) : undefined,
+      map: albedoMap!,
+      nightMap,
+      specularMap,
+      displacementMap,
       displacementScale: dispScale,
       isEarth: def.name === 'earth',
       atmosphereType: atmoType,
@@ -566,10 +631,15 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
 
   if (def.texture) {
-    const map = loadTex(def.texture);
+    const canonicalBodyId = getCanonicalBodyId(def.name);
+    const map = canonicalBodyId
+      ? loadCanonicalTexture(canonicalBodyId, 'albedo', def.texture)
+      : loadPlanetTexture(def.texture);
     const matOpts: THREE.MeshStandardMaterialParameters = { map, roughness: 0.95, metalness: 0 };
     if (def.textureDisplacement) {
-      matOpts.displacementMap = loadTex(def.textureDisplacement);
+      matOpts.displacementMap = canonicalBodyId
+        ? loadCanonicalTexture(canonicalBodyId, 'displacement', def.textureDisplacement)
+        : loadPlanetTexture(def.textureDisplacement);
       matOpts.displacementScale = def.radius * scale * 0.06;
       matOpts.displacementBias = -def.radius * scale * 0.02;
     }
@@ -697,7 +767,10 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.userData.scale = scale;
 
   // ── Lighting for textured planets ──
-  const sunLight = new THREE.PointLight(0xffffff, 1.5, 80 * scale);
+  // Intensity bumped 1.5 → 4.0: planets were dim on their lit sides,
+  // especially Mars/Mercury where texture albedo is low. Real sun is
+  // overwhelmingly bright at these distances; 4.0 feels closer to that.
+  const sunLight = new THREE.PointLight(0xffffff, 4.0, 80 * scale);
   sunLight.position.set(0, 0, 0);
   group.add(sunLight);
 
@@ -713,7 +786,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   const jupiterVisualRadius = keplerRadius(139_820); // ~3.84 at linear
   const sunVisualRadius = jupiterVisualRadius * 1.3;  // Sun ~1.3x Jupiter visually
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
-  const sunTex = loadTex('2k_sun.jpg');
+  const sunTex = loadCanonicalTexture('sun', 'albedo', '2k_sun.jpg')!;
 
   // Sun material — TSL MeshBasicNodeMaterial (fully self-luminous, no lighting response).
   // Auto-compiles to GLSL on WebGL2 or WGSL on WebGPU.
@@ -742,21 +815,31 @@ export function createSolarSystem(scale: number): THREE.Group {
     return t;
   }
 
-  // Primary glow (subtle warm halo — bloom will amplify this)
+  // Primary glow — moderate halo, bloom amplifies. Opacity/size dialed
+  // back from initial overzealous values per "too extreme" feedback.
   const mainGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: createFlareTexture(256, 'rgba(255,220,150,0.08)', 0.4),
+    map: createFlareTexture(256, 'rgba(255,220,150,0.12)', 0.4),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  mainGlow.scale.set(4 * scale, 4 * scale, 1);
+  mainGlow.scale.set(5 * scale, 5 * scale, 1);
   flareGroup.add(mainGlow);
 
-  // Inner hot core (tiny, white)
+  // Inner hot core — brighter central disc, still restrained.
   const hotCore = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: createFlareTexture(128, 'rgba(255,255,240,0.12)', 0.3),
+    map: createFlareTexture(128, 'rgba(255,255,240,0.20)', 0.3),
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
-  hotCore.scale.set(2.5 * scale, 2.5 * scale, 1);
+  hotCore.scale.set(2.8 * scale, 2.8 * scale, 1);
   flareGroup.add(hotCore);
+
+  // Warm outer aurora — very subtle broad glow; gives sun "presence"
+  // when viewed from outer-planet distances without dominating the scene.
+  const outerAurora = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createFlareTexture(512, 'rgba(255,160,60,0.04)', 0.5),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  outerAurora.scale.set(8 * scale, 8 * scale, 1);
+  flareGroup.add(outerAurora);
 
   // Anamorphic streak and rainbow ghosts removed — caused distracting
   // horizontal bar and halo artifacts at typical viewing distances.
@@ -850,22 +933,24 @@ export function createSolarSystem(scale: number): THREE.Group {
 
     // Earth country borders overlay (initially hidden, toggled by user)
     if (def.name === 'earth') {
-      const bordersTex = loadTex('2k_earth_borders.png');
-      bordersTex.colorSpace = THREE.SRGBColorSpace;
-      const bordersMat = new THREE.MeshBasicMaterial({
-        map: bordersTex,
-        transparent: true,
-        opacity: 0.7,
-        depthWrite: false,
-      });
-      const bordersMesh = new THREE.Mesh(
-        new THREE.SphereGeometry((def.radius + 0.005) * scale, 32, 32),
-        bordersMat,
-      );
-      bordersMesh.name = 'earth-borders';
-      bordersMesh.visible = false; // off by default
-      bordersMesh.position.copy(mesh.position);
-      orbit.add(bordersMesh);
+      const bordersTex = loadCanonicalTexture('earth', 'overlay');
+      if (bordersTex) {
+        bordersTex.colorSpace = THREE.SRGBColorSpace;
+        const bordersMat = new THREE.MeshBasicMaterial({
+          map: bordersTex,
+          transparent: true,
+          opacity: 0.7,
+          depthWrite: false,
+        });
+        const bordersMesh = new THREE.Mesh(
+          new THREE.SphereGeometry((def.radius + 0.005) * scale, 32, 32),
+          bordersMat,
+        );
+        bordersMesh.name = 'earth-borders';
+        bordersMesh.visible = false; // off by default
+        bordersMesh.position.copy(mesh.position);
+        orbit.add(bordersMesh);
+      }
     }
 
     // Earth clouds — two layers for depth parallax
@@ -873,8 +958,8 @@ export function createSolarSystem(scale: number): THREE.Group {
     // The planet shader's atmosphere (limb darkening + in-scattering) provides
     // the blue haze effect. Clouds caused 58% per-frame pixel changes at the limb.
     // Re-enable when WebGPURenderer provides proper depth precision.
-    if (false && def.name === 'earth' && def.textureClouds) {
-      const cloudsTex = loadTex(def.textureClouds);
+    if (ENABLE_EARTH_CLOUD_LAYERS && def.name === 'earth' && def.textureClouds) {
+      const cloudsTex = loadPlanetTexture(def.textureClouds);
 
       // Primary cloud layer — alphaMap for defined cloud gaps
       // At scale 0.06, Earth radius is ~0.007 units — need generous offset
@@ -899,7 +984,7 @@ export function createSolarSystem(scale: number): THREE.Group {
       mesh.add(cloudsMesh);
 
       // High-altitude thin cloud layer — parallax depth
-      const cloudsHighTex = loadTex(def.textureClouds);
+      const cloudsHighTex = loadPlanetTexture(def.textureClouds);
       const cloudsHighMat = new THREE.MeshStandardMaterial({
         map: cloudsHighTex,
         alphaMap: cloudsHighTex,
@@ -932,7 +1017,7 @@ export function createSolarSystem(scale: number): THREE.Group {
         const rNorm = (r - ringInner * scale) / ((ringOuter - ringInner) * scale);
         ringUv.setXY(i, rNorm, 0.5);
       }
-      const ringTex = loadTex('2k_saturn_ring_alpha.png');
+      const ringTex = loadCanonicalTexture('saturn', 'alpha', '2k_saturn_ring_alpha.png')!;
       const ringMat = createSaturnRingsMaterialTSL({ ringTexture: ringTex });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.name = 'saturn-ring';
@@ -1501,6 +1586,40 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
         alphaAttr.setX(i, alpha);
       }
       alphaAttr.needsUpdate = true;
+    }
+  }
+
+  // ── Dynamic sun size: realistic subjective diameter near a planet ──
+  // From Earth (1 AU), the sun's angular diameter is 0.53°. In scene units,
+  // EARTH_DIST=6.5 means realistic radius = 6.5 * tan(0.265°) ≈ 0.03 units —
+  // invisible at orrery scale. So we blend: overview uses the "visible orrery"
+  // 1.3x-Jupiter size; close approach scales toward realistic angular size.
+  //
+  // Blend zones (distance from sun/group-origin in world units):
+  //   > 20: overview scale (1.0×)
+  //   8-20: linear interpolation
+  //   < 8: realistic-from-Earth angular size (~0.06 of overview)
+  if (cam) {
+    const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
+    if (sunMesh) {
+      const camWorld = new THREE.Vector3();
+      cam.getWorldPosition(camWorld);
+      const camDist = camWorld.distanceTo(_sunWorldPos);
+      // Smoothstep blend: 1.0 at far, realistic at close
+      const blend = Math.max(0, Math.min(1, (camDist - 8) / (20 - 8)));
+      // Realistic angular scale relative to overview. At dist=6.5 (Earth),
+      // we want ~0.06× the overview sun size. That gives apparent diameter
+      // close to real 0.53° (still a bit big for bloom headroom).
+      const minScale = 0.08;
+      const targetScale = minScale + (1.0 - minScale) * blend;
+      // Smooth ease — lerp current scale toward target (tick-rate independent)
+      const current = sunMesh.scale.x;
+      const smoothed = current + (targetScale - current) * 0.12;
+      sunMesh.scale.setScalar(smoothed);
+      // Shrink corona sphere + flare glow proportionally — they're cosmetic
+      // layers that should track sun visual size.
+      const corona = group.children.find(c => (c as THREE.Mesh).geometry?.type === 'SphereGeometry' && c !== sunMesh && c.name !== 'sun') as THREE.Mesh | undefined;
+      if (corona?.name === '') corona.scale.setScalar(smoothed);
     }
   }
 

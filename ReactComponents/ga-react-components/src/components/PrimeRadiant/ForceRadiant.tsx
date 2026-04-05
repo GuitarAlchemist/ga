@@ -64,6 +64,7 @@ import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
 import { CICDPanel } from './CICDPanel';
 import { ClaudeCodePanel } from './ClaudeCodePanel';
 import { LibraryPanel } from './LibraryPanel';
+import { AssetProvenancePanel } from './AssetProvenancePanel';
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LunarLander } from './LunarLander';
@@ -102,6 +103,7 @@ import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
 import { autoRemediation } from './AutoRemediation';
 import { proofVerifier } from './ProofVerifier';
+import { mountApprovedRuntimeAssets } from '../../assets/space';
 import './styles.css';
 
 // ---------------------------------------------------------------------------
@@ -1376,6 +1378,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let cloudCleanupOuter: (() => void) | undefined;
     let markerCleanupOuter: (() => void) | undefined;
     let lodCleanupOuter: (() => void) | undefined;
+    let runtimeAssetCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
@@ -2576,6 +2579,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // burst doesn't compete with LOD tile decoding — keeps first-paint FPS higher.
     let disposeLOD: () => void = () => {};
     let lodTimer: ReturnType<typeof setTimeout> | null = null;
+    let runtimeAssetCleanup: () => void = () => {};
     if (!isLowEnd) {
       lodTimer = setTimeout(() => {
         disposeLOD = enableEarthAutoLOD(solarSystem, () => fg.camera());
@@ -2586,6 +2590,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (lodTimer) { clearTimeout(lodTimer); lodTimer = null; }
       disposeLOD();
     };
+
+    mountApprovedRuntimeAssets(fg.scene(), solarSystem)
+      .then((cleanup) => {
+        runtimeAssetCleanup = cleanup;
+      })
+      .catch((error) => {
+        console.warn('[PrimeRadiant] Runtime asset mount failed:', error);
+      });
 
     // GIS layers — on mobile, only Earth to save memory
     const gisMgrs = new Map<string, GisLayerManager>();
@@ -3000,6 +3012,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     cloudCleanupOuter = stopCloudUpdates;
     markerCleanupOuter = removeLocationMarker;
     lodCleanupOuter = stopEarthLOD;
+    runtimeAssetCleanupOuter = runtimeAssetCleanup;
 
     // ─── DEMERZEL AUTONOMOUS DRIVER — rule-based IXQL self-healing ───
     // Evaluates governance graph health → emits IXQL commands → no LLM needed
@@ -3038,6 +3051,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       cloudCleanupOuter?.();
       markerCleanupOuter?.();
       lodCleanupOuter?.();
+      runtimeAssetCleanupOuter?.();
       criticCleanupOuter?.();
       if (zoomInertiaHandlerOuter) container.removeEventListener('wheel', zoomInertiaHandlerOuter);
       filamentsHandle?.dispose();
@@ -4046,6 +4060,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             cicd: CICDPanel,
             claude: ClaudeCodePanel,
             library: LibraryPanel,
+            assets: AssetProvenancePanel,
             brainstorm: BrainstormPanel,
             tribunal: TheoryTribunal,
             faculty: SeldonFacultyPanel,

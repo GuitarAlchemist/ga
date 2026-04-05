@@ -13,7 +13,9 @@ public sealed record ViewerInfo(
     string ConnectionId,
     string Color,
     string Browser,
-    DateTime ConnectedAt);
+    DateTime ConnectedAt,
+    string? DisplayName = null,
+    string? AvatarUrl = null);
 
 /// <summary>
 ///     SignalR hub for real-time governance graph updates.
@@ -70,7 +72,13 @@ public sealed class GovernanceHub(
         // Register viewer presence
         var userAgent = Context.GetHttpContext()?.Request.Headers.UserAgent.ToString();
         var color = ViewerPalette[Math.Abs(Context.ConnectionId.GetHashCode()) % ViewerPalette.Length];
-        var viewer = new ViewerInfo(Context.ConnectionId, color, ParseBrowser(userAgent), DateTime.UtcNow);
+        // Pull display name + avatar from the JWT claims if the connection is authenticated.
+        // Claims are set by AuthController.Callback when issuing the JWT (ClaimTypes.Name = user.Name).
+        var displayName = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                       ?? Context.User?.FindFirst("name")?.Value;
+        var avatarUrl = Context.User?.FindFirst("avatar")?.Value
+                     ?? Context.User?.FindFirst("picture")?.Value;
+        var viewer = new ViewerInfo(Context.ConnectionId, color, ParseBrowser(userAgent), DateTime.UtcNow, displayName, avatarUrl);
         ConnectedViewers.TryAdd(Context.ConnectionId, viewer);
 
         await Clients.Caller.SendAsync("Connected", new

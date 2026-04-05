@@ -118,8 +118,10 @@ public class AuthController : ControllerBase
 
         var user = await _userService.FindOrCreateAsync(provider, providerUserId, email, name, avatar, ct);
 
-        // Sign out the external scheme's cookie — we use JWT for API auth going forward
-        await HttpContext.SignOutAsync(scheme);
+        // Sign out the cookie that the OAuth middleware set during the round-trip — we
+        // use JWT for API auth going forward. Google/GitHub handlers don't implement
+        // SignOutAsync themselves; the ephemeral cookie lives in the Cookies scheme.
+        await HttpContext.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
 
         var jwt = _tokenService.IssueJwt(user);
         var clientInfo = HttpContext.Connection.RemoteIpAddress?.ToString();

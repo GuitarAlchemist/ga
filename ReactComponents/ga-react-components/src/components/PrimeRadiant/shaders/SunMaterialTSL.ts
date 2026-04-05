@@ -84,12 +84,31 @@ export function createSunMaterialTSL(options: SunMaterialOptions): MeshBasicNode
 
     // Medium+: prominences + magnetic field
     if (quality !== 'low') {
-      const prominence = smoothstep(0.7, 0.95, edgeFresnel).mul(
-        smoothstep(0.6, 0.75, noise3(pos.mul(5.0).add(vec3(t.mul(0.3))))),
+      // ── Layer 1: broad prominence band ──
+      // Wider edge band (0.5 → 0.95) reveals more limb plasma activity.
+      // Slow low-freq noise produces large coherent prominence arcs.
+      const promBroad = smoothstep(0.5, 0.95, edgeFresnel).mul(
+        smoothstep(0.55, 0.75, noise3(pos.mul(3.5).add(vec3(t.mul(0.25))))),
       );
-      col.addAssign(vec3(1.0, 0.4, 0.1).mul(prominence.mul(0.5)));
+      col.addAssign(vec3(1.0, 0.35, 0.08).mul(promBroad.mul(0.6)));
 
-      const magField = sin(pos.y.mul(30.0).add(flow.mul(5.0))).mul(0.02).mul(edgeFresnel);
+      // ── Layer 2: sharp eruptive jets ──
+      // Finer noise scale + tighter smoothstep gives thin, bright loops —
+      // the "filaments" astronomers see rising off the solar limb.
+      const promJets = smoothstep(0.75, 0.98, edgeFresnel).mul(
+        smoothstep(0.68, 0.78, noise3(pos.mul(9.0).add(vec3(t.mul(0.5), t.mul(0.3), t.negate().mul(0.4))))),
+      );
+      col.addAssign(vec3(1.0, 0.55, 0.2).mul(promJets.mul(0.9)));
+
+      // ── Layer 3: hot white-core arches ──
+      // Hottest parts of prominences are white-hot at the base.
+      const promCore = smoothstep(0.82, 0.97, edgeFresnel).mul(
+        smoothstep(0.72, 0.82, noise3(pos.mul(12.0).add(vec3(t.mul(0.7), t.negate().mul(0.3), t.mul(0.5))))),
+      );
+      col.addAssign(vec3(1.0, 0.85, 0.5).mul(promCore.mul(0.7)));
+
+      // Magnetic field ripples at the surface (enhanced)
+      const magField = sin(pos.y.mul(30.0).add(flow.mul(5.0))).mul(0.04).mul(edgeFresnel);
       col.addAssign(vec3(1.0, 0.8, 0.4).mul(magField));
     }
 
