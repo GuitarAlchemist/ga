@@ -451,14 +451,14 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.85, 0.75, 0.5', intensity: 0.2, power: 3.5 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'mimas', radius: keplerRadius(396), distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG },
-      { name: 'enceladus', radius: keplerRadius(504), distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG },
-      { name: 'tethys', radius: keplerRadius(1_066), distance: 2.2, speed: 3.0, fragment: ICY_WHITE },
-      { name: 'dione', radius: keplerRadius(1_123), distance: 2.6, speed: 2.5, fragment: ICY_WHITE },
-      { name: 'rhea', radius: keplerRadius(1_527), distance: 3.1, speed: 2.0, fragment: ICY_WHITE },
-      { name: 'titan', radius: keplerRadius(5_150), distance: 3.8, speed: 1.3, fragment: TITAN_FRAG },
+      { name: 'mimas', radius: keplerRadius(396), distance: 1.6, speed: 4.0, fragment: MIMAS_FRAG, texture: 'moons/mimas.jpg' },
+      { name: 'enceladus', radius: keplerRadius(504), distance: 1.9, speed: 3.5, fragment: ENCELADUS_FRAG, texture: 'moons/enceladus.jpg' },
+      { name: 'tethys', radius: keplerRadius(1_066), distance: 2.2, speed: 3.0, fragment: ICY_WHITE, texture: 'moons/tethys.jpg' },
+      { name: 'dione', radius: keplerRadius(1_123), distance: 2.6, speed: 2.5, fragment: ICY_WHITE, texture: 'moons/dione.jpg' },
+      { name: 'rhea', radius: keplerRadius(1_527), distance: 3.1, speed: 2.0, fragment: ICY_WHITE, texture: 'moons/rhea.jpg' },
+      { name: 'titan', radius: keplerRadius(5_150), distance: 3.8, speed: 1.3, fragment: TITAN_FRAG, texture: 'moons/titan.jpg' },
       { name: 'hyperion', radius: keplerRadius(270), distance: 4.3, speed: 1.1, fragment: ROCKY_GREY },
-      { name: 'iapetus', radius: keplerRadius(1_469), distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG },
+      { name: 'iapetus', radius: keplerRadius(1_469), distance: 5.0, speed: 0.7, inclination: 0.27, fragment: IAPETUS_FRAG, texture: 'moons/iapetus.jpg' },
       { name: 'phoebe', radius: 0.02, distance: 5.8, speed: 0.3, inclination: 2.7, fragment: ROCKY_DARK },
       { name: 'pan', radius: 0.006, distance: 1.15, speed: 5.5, fragment: ICY_WHITE },
       { name: 'atlas', radius: 0.006, distance: 1.18, speed: 5.4, fragment: ICY_WHITE },
@@ -627,7 +627,7 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
 
 // ── Create a textured moon mesh, or fall back to procedural shader ──
 function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
-  const baseSegments = def.radius > 0.02 ? 24 : 16;
+  const baseSegments = def.texture ? (def.radius > 0.02 ? 48 : 32) : (def.radius > 0.02 ? 24 : 16);
   const segments = def.textureDisplacement ? Math.max(baseSegments, 48) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
 
