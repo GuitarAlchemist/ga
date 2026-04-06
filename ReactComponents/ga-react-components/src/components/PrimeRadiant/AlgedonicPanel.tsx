@@ -173,7 +173,7 @@ export function createAlgedonicSignal(
     id: `alg-user-${Date.now()}-${_signalCounter}`,
     timestamp: new Date().toISOString(),
     signal: description
-      ? description.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40)
+      ? description.toLowerCase().split('').filter(c => (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c === ' ').join('').trim().split(' ').filter(Boolean).join('_').slice(0, 40)
       : `${type}_signal`,
     type,
     source,
@@ -347,7 +347,9 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
               disabled={remediation.remediating}
               onClick={() => {
                 const active = signals.filter(s => s.status === 'active');
-                if (active.length > 0) remediation.remediateAll(active);
+                if (active.length > 0 && window.confirm(`Fix ${active.length} active signals? This runs auto-remediation on all of them.`)) {
+                  remediation.remediateAll(active);
+                }
               }}
               title="Auto-fix all active signals via Demerzel ACP"
             >
