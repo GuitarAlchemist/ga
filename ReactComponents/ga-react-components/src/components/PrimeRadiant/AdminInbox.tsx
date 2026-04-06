@@ -1,13 +1,15 @@
 // src/components/PrimeRadiant/AdminInbox.tsx
 // Admin Inbox — review triaged items with category sections and actions
+// Wired to /api/governance/beliefs + /api/governance/backlog with fallback mode
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 type TriageCategory = 'urgent' | 'review' | 'deferred' | 'done';
+type DataSource = 'live' | 'fallback';
 
 interface InboxItem {
   id: string;
@@ -15,6 +17,26 @@ interface InboxItem {
   source: string;
   timestamp: number;        // epoch ms
   category: TriageCategory;
+}
+
+interface BeliefResponse {
+  id: string;
+  name?: string;
+  title?: string;
+  description?: string;
+  status: string;
+  source?: string;
+  updated_at?: string;
+  created_at?: string;
+}
+
+interface BacklogResponse {
+  id: string;
+  title?: string;
+  name?: string;
+  description?: string;
+  source?: string;
+  created_at?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,6 +52,8 @@ const CATEGORY_META: Record<TriageCategory, { label: string; color: string; defa
 
 const CATEGORY_ORDER: TriageCategory[] = ['urgent', 'review', 'deferred', 'done'];
 
+const AUTO_REFRESH_MS = 60_000;
+
 // ---------------------------------------------------------------------------
 // Fallback data
 // ---------------------------------------------------------------------------
@@ -43,6 +67,72 @@ function makeFallbackItems(): InboxItem[] {
     { id: 'fb-4', title: 'Refactor BSP room generator',    source: 'Backlog',           timestamp: now - 3 * 3600_000,   category: 'deferred' },
     { id: 'fb-5', title: 'Fixed Ollama model loading',     source: 'Auto-fix',          timestamp: now - 45 * 60_000,    category: 'done' },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// API helpers
+// ---------------------------------------------------------------------------
+
+function beliefToCategory(status: string): TriageCategory {
+  const lower = status.toLowerCase();
+  if (lower === 'contradictory' || lower === 'unknown') return 'urgent';
+  return 'review';
+}
+
+function parseTimestamp(dateStr?: string): number {
+  if (!dateStr) return Date.now();
+  const parsed = new Date(dateStr).getTime();
+  return Number.isNaN(parsed) ? Date.now() : parsed;
+}
+
+function mapBelief(b: BeliefResponse): InboxItem {
+  return {
+    id: `belief-${b.id}`,
+    title: b.title || b.name || b.description || `Belief ${b.id}`,
+    source: b.source || 'Governance beliefs',
+    timestamp: parseTimestamp(b.updated_at || b.created_at),
+    category: beliefToCategory(b.status),
+  };
+}
+
+function mapBacklogItem(b: BacklogResponse): InboxItem {
+  return {
+    id: `backlog-${b.id}`,
+    title: b.title || b.name || b.description || `Backlog ${b.id}`,
+    source: b.source || 'Governance backlog',
+    timestamp: parseTimestamp(b.created_at),
+    category: 'deferred',
+  };
+}
+
+async function fetchGovernanceItems(): Promise<InboxItem[]> {
+  const [beliefsRes, backlogRes] = await Promise.all([
+    fetch('/api/governance/beliefs'),
+    fetch('/api/governance/backlog'),
+  ]);
+
+  const items: InboxItem[] = [];
+
+  if (beliefsRes.ok) {
+    const beliefs: BeliefResponse[] = await beliefsRes.json();
+    items.push(...beliefs.map(mapBelief));
+  }
+
+  if (backlogRes.ok) {
+    const backlog: BacklogResponse[] = await backlogRes.json();
+    items.push(...backlog.map(mapBacklogItem));
+  }
+
+  if (items.length === 0) {
+    throw new Error('No governance data returned');
+  }
+
+  return items;
+}
+
+function extractRawId(compositeId: string): string {
+  // Strip 'belief-' or 'backlog-' prefix to get the API id
+  return compositeId.replace(/^(belief|backlog)-/, '');
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +163,8 @@ type ItemAnimation = 'fade-out' | 'shake-out' | null;
 
 export const AdminInbox: React.FC = () => {
   const [items, setItems] = useState<InboxItem[]>(makeFallbackItems);
+  const [dataSource, setDataSource] = useState<DataSource>('fallback');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Set<TriageCategory>>(() => {
     const s = new Set<TriageCategory>();
     for (const cat of CATEGORY_ORDER) {
@@ -82,6 +174,31 @@ export const AdminInbox: React.FC = () => {
   });
   const [animating, setAnimating] = useState<Map<string, ItemAnimation>>(new Map());
   const [askingDemerzel, setAskingDemerzel] = useState<Set<string>>(new Set());
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ------- Fetch governance data -------
+  const loadGovernanceData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const liveItems = await fetchGovernanceItems();
+      setItems(liveItems);
+      setDataSource('live');
+    } catch {
+      // Keep existing items (fallback on first load, or stale live data on refresh failure)
+      setDataSource(prev => prev === 'live' ? prev : 'fallback');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial fetch + auto-refresh every 60s
+  useEffect(() => {
+    loadGovernanceData();
+    refreshTimerRef.current = setInterval(loadGovernanceData, AUTO_REFRESH_MS);
+    return () => {
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    };
+  }, [loadGovernanceData]);
 
   // Tick relative times every 30s
   const [, setTick] = useState(0);
@@ -115,10 +232,26 @@ export const AdminInbox: React.FC = () => {
   }, []);
 
   const handleApprove = useCallback((id: string) => {
+    // Fire PUT to mark belief as true, then animate locally
+    if (id.startsWith('belief-')) {
+      fetch(`/api/governance/beliefs/${extractRawId(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'true' }),
+      }).catch(() => { /* proceed with local update on failure */ });
+    }
     animateAndRemove(id, 'fade-out', item => ({ ...item, category: 'done' }));
   }, [animateAndRemove]);
 
   const handleReject = useCallback((id: string) => {
+    // Fire PUT to mark belief as false, then animate out
+    if (id.startsWith('belief-')) {
+      fetch(`/api/governance/beliefs/${extractRawId(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'false' }),
+      }).catch(() => { /* proceed with local removal on failure */ });
+    }
     animateAndRemove(id, 'shake-out');
   }, [animateAndRemove]);
 
@@ -139,6 +272,13 @@ export const AdminInbox: React.FC = () => {
     }, 2000);
   }, []);
 
+  const handleManualRefresh = useCallback(() => {
+    // Reset the auto-refresh timer on manual refresh
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    loadGovernanceData();
+    refreshTimerRef.current = setInterval(loadGovernanceData, AUTO_REFRESH_MS);
+  }, [loadGovernanceData]);
+
   // Group items by category
   const grouped = new Map<TriageCategory, InboxItem[]>();
   for (const cat of CATEGORY_ORDER) grouped.set(cat, []);
@@ -156,6 +296,22 @@ export const AdminInbox: React.FC = () => {
           {pendingCount > 0 && (
             <span className="admin-inbox__total-badge">{pendingCount}</span>
           )}
+        </span>
+        <span className="admin-inbox__header-controls">
+          <span
+            className={`admin-inbox__source-indicator admin-inbox__source-indicator--${dataSource}`}
+            title={dataSource === 'live' ? 'Connected to governance API' : 'Using fallback data'}
+          >
+            {dataSource === 'live' ? 'Live' : 'Fallback'}
+          </span>
+          <button
+            className="admin-inbox__refresh-btn"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            title="Refresh governance data"
+          >
+            {isRefreshing ? '\u21BB' : '\u21BB'}
+          </button>
         </span>
       </div>
 
