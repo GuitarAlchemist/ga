@@ -1873,6 +1873,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         // ─── Auto-regulation: smooth FPS-driven quality control ───
         // Target: 45 FPS. Adjusts multiple knobs gradually, not in hard steps.
         // Each knob has a cost (FPS impact) and visual importance (what to shed first).
+
+        // ─── Presentation mode: lock to cast-friendly settings ───
+        // When casting to a TV, the adaptive system fights the encoder overhead,
+        // causing progressive quality degradation. Presentation mode locks to a
+        // reduced but stable preset so the cast image stays consistent.
+        const isPresentationMode = sceneOptionsRef.current.presentation === true;
+        if (isPresentationMode) {
+          qualityBudget = -0.2; // medium quality — stable, no shedding cascade
+          qualityLevel = 'medium';
+          // Lock pixel ratio low to give Chrome Cast encoder headroom
+          const renderer = fg.renderer();
+          if (renderer.getPixelRatio() > 1.0) renderer.setPixelRatio(1.0);
+          // Disable expensive post-processing
+          const bp = bloomPassRef.current;
+          if (bp) { bp.enabled = false; }
+          // Keep core visuals on, disable expensive particles
+          ambientDust.visible = false;
+          starField.visible = true;
+          demerzelFace.visible = true;
+          if (filamentsHandle) filamentsHandle.group.visible = false;
+        } else {
         const TARGET_FPS = 45;
         const fpsDelta = currentFps - TARGET_FPS;
 
@@ -1914,6 +1935,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         // Update quality level label for display
         qualityLevel = qualityBudget > 0.2 ? 'high' : qualityBudget > -0.3 ? 'medium' : 'low';
+        } // end !isPresentationMode
       }
 
       fg.graphData().nodes.forEach((node: object) => {
@@ -2678,15 +2700,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
 
     // Double-click on a planet/moon → fly camera closer to it
-    // Special: double-click on Moon launches Lunar Lander simulation
     const onSolarDblClick = () => {
       if (!currentHoveredPlanet) return;
-
-      // Moon → launch Lunar Lander
-      if (currentHoveredPlanet === 'moon') {
-        setActivePanel('lunar');
-        return;
-      }
 
       const group = fg.scene().getObjectByName('sun')?.parent;
       if (!group) return;
@@ -2718,12 +2733,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       setTimeout(() => { solarFollowCameraRef.current = true; }, 1600);
     };
 
+    // Triple-click on Moon → launch Apollo descent (Lunar Lander)
+    let lastDblClickTime = 0;
+    const onSolarTripleClick = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastDblClickTime < 500 && currentHoveredPlanet === 'moon') {
+        setActivePanel('lunar');
+      }
+    };
+    const onSolarDblClickWrapper = (e: MouseEvent) => {
+      lastDblClickTime = Date.now();
+      onSolarDblClick();
+    };
+
     solarMouseMoveHandler = onSolarMouseMove;
     solarClickHandler = onSolarClick;
-    solarDblClickHandler = onSolarDblClick;
+    solarDblClickHandler = onSolarDblClickWrapper;
     container.addEventListener('mousemove', onSolarMouseMove);
-    container.addEventListener('click', onSolarClick);
-    container.addEventListener('dblclick', onSolarDblClick);
+    container.addEventListener('click', onSolarTripleClick);
+    container.addEventListener('dblclick', onSolarDblClickWrapper);
 
     // ─── JARVIS SPACE STATION — modular station with docking animation ───
     const spaceStation = isLowEnd ? new THREE.Group() : createSpaceStation(0.12);
