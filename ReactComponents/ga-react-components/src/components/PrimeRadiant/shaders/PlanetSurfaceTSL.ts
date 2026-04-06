@@ -146,10 +146,7 @@ export function createPlanetSurfaceMaterialTSL(
     const viewPos = positionView;
     const viewDir = normalize(viewPos.negate());
     // Sun direction: from fragment toward sun (view space)
-    const toSun = uSunPosView.sub(viewPos);
-    const sunDist = length(toSun);
-    // Guard against degenerate case where sun is at fragment position
-    const sunDir = normalize(toSun.add(vec3(0.0001, 0.0001, 0.0001)));
+    const sunDir = normalize(uSunPosView.sub(viewPos));
 
     const N = getBumpNormal();
     const NdotL = dot(N, sunDir);
