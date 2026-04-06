@@ -576,9 +576,9 @@ function getMoonMaterialTSL(fragmentSrc: string): MeshBasicNodeMaterial {
 
 // ── Create a textured planet mesh with realistic shading ──
 function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
-  // High segment count for smooth edges at all zoom levels (8K textures need it)
-  const baseSegments = def.radius > 0.5 ? 128 : def.radius > 0.1 ? 96 : 64;
-  const segments = def.textureDisplacement ? Math.max(baseSegments, 96) : baseSegments;
+  // More segments for smoother appearance at all zoom levels
+  const baseSegments = def.radius > 0.5 ? 64 : def.radius > 0.1 ? 48 : 32;
+  const segments = def.textureDisplacement ? Math.max(baseSegments, 64) : baseSegments;
   const geo = new THREE.SphereGeometry(def.radius * scale, segments, segments);
   geo.computeBoundingSphere(); // pre-compute for zoom-to-planet framing
 
