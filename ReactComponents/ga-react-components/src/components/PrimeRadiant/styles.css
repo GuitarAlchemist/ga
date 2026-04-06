@@ -85,6 +85,8 @@
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -1232,6 +1234,8 @@
   z-index: 25;
   width: 36px;
   height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   border: 1px solid rgba(212, 160, 23, 0.35);
   background: rgba(13, 17, 23, 0.85);
@@ -3709,6 +3713,7 @@
     border-left: none;
     border-top: 1px solid #30363d;
     padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
     justify-content: space-around;
     flex-shrink: 0;
     z-index: 40;               /* above everything — the primary navigation on phone */
@@ -3912,6 +3917,7 @@
     min-height: 44px;
     font-size: 14px;
     z-index: 41;
+    margin-left: env(safe-area-inset-left, 0);
   }
   .prime-radiant__tutorial-btn { display: none; }
   .brainstorm-trigger { display: none; }
@@ -3957,7 +3963,20 @@
   .prime-radiant__planet-bar { display: none; }        /* planets accessible via PlanetNav toggle */
   .prime-radiant__triage { display: none; }            /* triage accessible via backlog panel */
   .prime-radiant__perf-info { display: none; }         /* FPS counter not needed on phone */
-  .rail-popover { display: none; }                     /* popovers don't work on touch */
+  .rail-popover {
+    position: fixed;
+    bottom: 56px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    transform: none;
+    border-radius: 12px;
+    pointer-events: auto;
+    z-index: 50;
+    max-height: 40vh;
+    overflow-y: auto;
+    animation: rail-popover-slide-up 0.2s ease-out;
+  }
   .icicle-drawer { display: none; }                    /* drawer is desktop-only file browser */
 
   /* Planet nav — top-left, below chat trigger */
@@ -4153,6 +4172,27 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
+
+  @keyframes rail-popover-slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Landscape phone: icon rail becomes horizontal scrollable */
+@media (max-width: 640px) and (orientation: landscape) {
+  .icon-rail {
+    flex-direction: row;
+    overflow-x: auto;
+    height: 48px;
+    width: 100%;
+    bottom: 0;
+    right: 0;
+    padding: 0 env(safe-area-inset-right, 0) 0 env(safe-area-inset-left, 0);
+  }
+  .icon-rail__group { flex-direction: row; }
+  .prime-radiant__canvas-area { padding-bottom: 48px; }
+  .prime-radiant__side-panel { max-height: 60vh; }
 }
 
 /* ─── Touch-friendly tap targets ─── */
