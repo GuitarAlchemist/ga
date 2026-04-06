@@ -1829,6 +1829,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         lastFpsCheck = now;
         // Expose to state API for remote QA
         const ri = fg.renderer().info;
+        // Detect renderer backend (WebGPU vs WebGL2 fallback)
+        const rendererBackend = (() => {
+          try {
+            const r = fg.renderer() as Record<string, unknown>;
+            if (r.backend && typeof r.backend === 'object' && (r.backend as Record<string, unknown>).isWebGPUBackend) return 'WebGPU';
+          } catch { /* ignore */ }
+          return 'WebGL2';
+        })();
+
         renderMetricsRef.current = {
           fps: currentFps,
           qualityLevel,
@@ -1840,12 +1849,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           geometries: ri.memory.geometries,
           bloomEnabled: bloomPassRef.current?.enabled ?? false,
           solarVisible: !!fg.scene().getObjectByName('sun')?.parent?.visible,
+          rendererBackend,
         };
         // Performance grade from FPS
         const grade = currentFps >= 60 ? 'Excellent' : currentFps >= 45 ? 'Good' : currentFps >= 30 ? 'Fair' : 'Poor';
         const gradeColor = currentFps >= 60 ? '#33CC66' : currentFps >= 45 ? '#88CC33' : currentFps >= 30 ? '#FFB300' : '#FF4444';
+        const backendColor = rendererBackend === 'WebGPU' ? '#00CCFF' : '#FF9900';
         const qualityTag = qualityLevel !== 'high' ? ` [${qualityLevel}]` : '';
-        badgeEl.innerHTML = `<span style="color:${gradeColor}">${currentFps} FPS</span> <span class="prime-radiant__perf-grade" style="color:${gradeColor}">${grade}</span>${qualityTag}`;
+        badgeEl.innerHTML = `<span style="color:${gradeColor}">${currentFps} FPS</span> <span class="prime-radiant__perf-grade" style="color:${gradeColor}">${grade}</span>${qualityTag} <span style="color:${backendColor};font-size:0.75em;opacity:0.8">${rendererBackend}</span>`;
         // Update details (only when expanded — cheap innerHTML update once per second)
         const perf = performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
         const heapInfo = perf.memory
