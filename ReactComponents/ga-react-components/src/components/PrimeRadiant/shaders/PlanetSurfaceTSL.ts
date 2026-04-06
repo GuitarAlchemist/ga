@@ -4,7 +4,7 @@
 //
 // Features (match legacy GLSL 1:1):
 //  - Texture-derived bump normals (3x3 Sobel over luminance)
-//  - Day/night blend via manual NdotL using uSunPosView (view-space sun)
+//  - Day/night blend via manual NdotL using uSunPosWorld (world-space sun)
 //  - Optional night map (Earth city lights) with emissive blend
 //  - Optional specular map (Earth ocean shimmer) with Blinn-Phong
 //  - Seasonal snow/ice coverage for Earth (uMonth 1-12)
@@ -15,7 +15,7 @@
 //  - Optional vertex displacement via height map
 //
 // Renderer: MeshBasicNodeMaterial — fully self-lit, manual lighting computed in
-// fragment shader from uSunPosView. Does NOT respond to scene lights. Matches
+// fragment shader from uSunPosWorld. Does NOT respond to scene lights. Matches
 // legacy behavior exactly.
 //
 // Renderer-agnostic: auto-compiles to GLSL (WebGL2) or WGSL (WebGPU).
@@ -26,7 +26,7 @@ import {
   Fn, float, vec2, vec3,
   uniform, texture, uv,
   positionLocal, normalLocal,
-  positionView, normalView,
+  positionWorld, normalWorld, cameraPosition,
   mix, smoothstep, cos, abs, max, pow, exp, dot, normalize, cross,
 } from 'three/tsl';
 
@@ -49,7 +49,7 @@ export interface PlanetSurfaceMaterialOptions {
  * PLANET_FRAG GLSL shader exactly.
  *
  * Exposes these uniforms for per-frame updates via `material.userData`:
- *   - sunPosUniform: THREE.Vector3  (sun position in VIEW space — update each frame)
+ *   - sunPosUniform: THREE.Vector3  (sun position in WORLD space — update each frame)
  *   - monthUniform: number          (1-12, for Earth seasonal snow)
  *   - dispScaleUniform: number      (displacement scale multiplier)
  */
@@ -74,12 +74,12 @@ export function createPlanetSurfaceMaterialTSL(
   map.magFilter = THREE.LinearFilter;
 
   // ── Uniforms ──
-  const uSunPosView = uniform(new THREE.Vector3(0, 0, 0));
+  const uSunPosWorld = uniform(new THREE.Vector3(0, 0, 0));
   const uMonth = uniform(1.0);
   const uDispScale = uniform(displacementScale);
   const uTexelSize = uniform(new THREE.Vector2(1 / textureSize, 1 / textureSize));
 
-  material.userData.sunPosUniform = uSunPosView;
+  material.userData.sunPosUniform = uSunPosWorld;
   material.userData.monthUniform = uMonth;
   material.userData.dispScaleUniform = uDispScale;
 
@@ -132,7 +132,7 @@ export function createPlanetSurfaceMaterialTSL(
     const dY = bl.add(b.mul(2.0)).add(br).sub(tl.add(t.mul(2.0)).add(tr));
 
     const bumpStrength = float(0.4);
-    const N = normalize(normalView);
+    const N = normalize(normalWorld);
     const T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
     const B = cross(N, T);
     return normalize(N.add(T.mul(dX).add(B.mul(dY)).mul(bumpStrength)));
@@ -142,10 +142,10 @@ export function createPlanetSurfaceMaterialTSL(
   material.colorNode = Fn(() => {
     const uvCoord = uv();
 
-    // View-space vectors
-    const viewPos = positionView;
-    const viewDir = normalize(viewPos.negate());
-    const sunDir = normalize(uSunPosView.sub(viewPos));
+    // World-space vectors
+    const worldPos = positionWorld;
+    const viewDir = normalize(cameraPosition.sub(worldPos));
+    const sunDir = normalize(uSunPosWorld.sub(worldPos));
 
     const N = getBumpNormal();
     const NdotL = dot(N, sunDir);
@@ -222,7 +222,7 @@ export function createPlanetSurfaceMaterialTSL(
     );
 
     // ── Atmosphere Fresnel rim glow ──
-    const viewN = normalize(normalView);
+    const viewN = normalize(normalWorld);
     const fresnel = pow(float(1.0).sub(abs(dot(viewN, viewDir))), float(3.0));
 
     // Earth (blue) atmosphere
