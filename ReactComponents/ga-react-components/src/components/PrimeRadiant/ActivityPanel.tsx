@@ -1,8 +1,10 @@
 // src/components/PrimeRadiant/ActivityPanel.tsx
 // Top-left accordion panel — Activities, Commits, and more
+// Data sourced from central GitHubPollingManager (single polling loop)
 
 import React, { useEffect, useState } from 'react';
 import { timeAgo } from './utils';
+import { gitHubPollingManager } from './GitHubPollingManager';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,111 +43,38 @@ interface IssueInfo {
 }
 
 // ---------------------------------------------------------------------------
-// GitHub API configuration
+// GitHub configuration (repos list — fetching delegated to polling manager)
 // ---------------------------------------------------------------------------
 const GITHUB_OWNER = 'GuitarAlchemist';
 const GITHUB_REPOS = ['ga', 'Demerzel', 'hari', 'tars', 'ix', 'demerzel-bot', 'guitar-singularity'];
-const GITHUB_API = 'https://api.github.com';
 
-// Resolve GitHub token once at module level (priority: env var > localStorage > none)
-const githubToken: string | null =
-  (typeof import.meta !== 'undefined' && (import.meta as Record<string, unknown>).env
-    ? (((import.meta as Record<string, unknown>).env) as Record<string, string | undefined>)['VITE_GITHUB_TOKEN'] ?? null
-    : null)
-  ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('ga-github-token') : null);
+// ---------------------------------------------------------------------------
+// Fallback data (used when API is unavailable / all repos return empty)
+// ---------------------------------------------------------------------------
+const FALLBACK_COMMITS: CommitInfo[] = [
+  { hash: 'abc1234', message: 'feat: algedonic research + belief monitor pipeline', repo: 'Demerzel', time: 'just now', timestamp: Date.now() },
+  { hash: 'def5678', message: 'feat: demo improvement — routing, fallbacks, categories', repo: 'ga', time: '1h ago', timestamp: Date.now() - 3600000 },
+  { hash: 'ghi9012', message: 'fix: update System.Text.Json to patched versions', repo: 'tars', time: '2h ago', timestamp: Date.now() - 7200000 },
+  { hash: 'jkl3456', message: 'feat: hexavalent logic — 6-valued system (T/P/U/D/F/C)', repo: 'Demerzel', time: '1d ago', timestamp: Date.now() - 86400000 },
+  { hash: 'mno7890', message: 'feat: Governance module — memristive Markov', repo: 'ix', time: '2d ago', timestamp: Date.now() - 172800000 },
+];
 
-const GITHUB_HEADERS: HeadersInit = {
-  'Accept': 'application/vnd.github.v3+json',
-  ...(githubToken ? { 'Authorization': `Bearer ${githubToken}` } : {}),
-};
+const FALLBACK_ISSUES: IssueInfo[] = [
+  { number: 180, title: 'Project Jarvis Phase 2 — Voice Integration', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/180' },
+  { number: 53, title: 'AI probes — autonomous codebase exploration', repo: 'Demerzel', url: 'https://github.com/GuitarAlchemist/Demerzel/issues/53' },
+  { number: 12, title: 'Memristive Markov state persistence', repo: 'ix', url: 'https://github.com/GuitarAlchemist/ix/issues/12' },
+  { number: 8, title: 'Seldon Plan — long-horizon prediction engine', repo: 'hari', url: 'https://github.com/GuitarAlchemist/hari/issues/8' },
+  { number: 42, title: 'F# reasoning agent — belief propagation', repo: 'tars', url: 'https://github.com/GuitarAlchemist/tars/issues/42' },
+];
 
-const DEFAULT_REFRESH_MS = 60_000;
-const THROTTLED_REFRESH_MS = 300_000; // 5 minutes when rate-limited
-const RATE_LIMIT_THRESHOLD = 10;
-
-// Shared mutable rate-limit state (updated by every GitHub fetch)
-let rateLimitRemaining: number | null = null;
-
-function updateRateLimit(res: Response): void {
-  const header = res.headers.get('X-RateLimit-Remaining');
-  if (header !== null) {
-    rateLimitRemaining = parseInt(header, 10);
-  }
-}
-
-function isRateLimited(): boolean {
-  return rateLimitRemaining !== null && rateLimitRemaining < RATE_LIMIT_THRESHOLD;
-}
-
-
-// ─── Fetch real commits from GitHub API ───
-async function fetchCommits(): Promise<CommitInfo[]> {
-  try {
-    const allCommits: CommitInfo[] = [];
-    for (const repo of GITHUB_REPOS) {
-      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/commits?per_page=8`, {
-        headers: GITHUB_HEADERS,
-      });
-      updateRateLimit(res);
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const commit of data) {
-        const dateStr = commit.commit?.committer?.date ?? new Date().toISOString();
-        allCommits.push({
-          hash: commit.sha ?? '?',
-          message: commit.commit?.message?.split('\n')[0] ?? '',
-          repo,
-          time: timeAgo(dateStr),
-          timestamp: new Date(dateStr).getTime(),
-        });
-      }
-    }
-    return allCommits.sort((a, b) => b.timestamp - a.timestamp).slice(0, 15);
-  } catch {
-    // Fallback: realistic ecosystem activity when GitHub API is unavailable
-    return [
-      { hash: 'abc1234', message: 'feat: algedonic research + belief monitor pipeline', repo: 'Demerzel', time: 'just now', timestamp: Date.now() },
-      { hash: 'def5678', message: 'feat: demo improvement — routing, fallbacks, categories', repo: 'ga', time: '1h ago', timestamp: Date.now() - 3600000 },
-      { hash: 'ghi9012', message: 'fix: update System.Text.Json to patched versions', repo: 'tars', time: '2h ago', timestamp: Date.now() - 7200000 },
-      { hash: 'jkl3456', message: 'feat: hexavalent logic — 6-valued system (T/P/U/D/F/C)', repo: 'Demerzel', time: '1d ago', timestamp: Date.now() - 86400000 },
-      { hash: 'mno7890', message: 'feat: Governance module — memristive Markov', repo: 'ix', time: '2d ago', timestamp: Date.now() - 172800000 },
-    ];
-  }
-}
-
-// ─── Fetch real issues from GitHub API ───
-async function fetchIssues(): Promise<IssueInfo[]> {
-  try {
-    const allIssues: IssueInfo[] = [];
-    for (const repo of GITHUB_REPOS) {
-      const res = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/issues?state=open&per_page=10&sort=updated`, {
-        headers: GITHUB_HEADERS,
-      });
-      updateRateLimit(res);
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const issue of data) {
-        if (issue.pull_request) continue; // skip PRs
-        allIssues.push({
-          number: issue.number,
-          title: issue.title,
-          repo,
-          url: issue.html_url,
-        });
-      }
-    }
-    return allIssues.slice(0, 10);
-  } catch {
-    // Fallback: representative open issues when GitHub API is unavailable
-    return [
-      { number: 180, title: 'Project Jarvis Phase 2 — Voice Integration', repo: 'ga', url: 'https://github.com/GuitarAlchemist/ga/issues/180' },
-      { number: 53, title: 'AI probes — autonomous codebase exploration', repo: 'Demerzel', url: 'https://github.com/GuitarAlchemist/Demerzel/issues/53' },
-      { number: 12, title: 'Memristive Markov state persistence', repo: 'ix', url: 'https://github.com/GuitarAlchemist/ix/issues/12' },
-      { number: 8, title: 'Seldon Plan — long-horizon prediction engine', repo: 'hari', url: 'https://github.com/GuitarAlchemist/hari/issues/8' },
-      { number: 42, title: 'F# reasoning agent — belief propagation', repo: 'tars', url: 'https://github.com/GuitarAlchemist/tars/issues/42' },
-    ];
-  }
-}
+const FALLBACK_ACTIVITIES: Activity[] = [
+  { id: 'fb-1', name: '[Demerzel] Governance audit cycle 004', status: 'active', progress: 60, eta: '2d', category: 'governance' },
+  { id: 'fb-2', name: 'PR #42 [ga] Prime Radiant command center', status: 'active', progress: 75, category: 'build' },
+  { id: 'fb-3', name: '[hari] AGI research — Lie algebra architecture', status: 'pending', progress: 20, category: 'research' },
+  { id: 'fb-4', name: '[tars] Belief propagation engine', status: 'active', progress: 45, category: 'build' },
+  { id: 'fb-5', name: '[ix] Memristive Markov — 34 tests passing', status: 'completed', progress: 100, eta: 'merged 1d ago', category: 'build' },
+  { id: 'fb-6', name: '[Demerzel] Red team cycle 003 — defense scoring', status: 'completed', progress: 100, eta: 'merged 2d ago', category: 'test' },
+];
 
 // ─── Category inference from repo name ───
 function categoryForRepo(repo: string): Activity['category'] {
@@ -160,145 +89,112 @@ function categoryForRepo(repo: string): Activity['category'] {
   }
 }
 
-// ─── Derive activities from GitHub PRs and milestones ───
-async function fetchActivities(): Promise<Activity[]> {
- try {
-  const headers = GITHUB_HEADERS;
+// ---------------------------------------------------------------------------
+// Transform raw API data into typed domain objects
+// ---------------------------------------------------------------------------
+function transformCommits(dataByRepo: Map<string, unknown[]>): CommitInfo[] {
+  const allCommits: CommitInfo[] = [];
+  for (const [repo, commits] of dataByRepo) {
+    for (const commit of commits as Array<Record<string, unknown>>) {
+      const commitObj = commit.commit as Record<string, unknown> | undefined;
+      const committer = commitObj?.committer as Record<string, unknown> | undefined;
+      const dateStr = (committer?.date as string) ?? new Date().toISOString();
+      const message = commitObj?.message as string | undefined;
+      allCommits.push({
+        hash: (commit.sha as string) ?? '?',
+        message: message?.split('\n')[0] ?? '',
+        repo,
+        time: timeAgo(dateStr),
+        timestamp: new Date(dateStr).getTime(),
+      });
+    }
+  }
+  allCommits.sort((a, b) => b.timestamp - a.timestamp);
+  return allCommits.length > 0 ? allCommits.slice(0, 15) : FALLBACK_COMMITS;
+}
+
+function transformIssues(dataByRepo: Map<string, unknown[]>): IssueInfo[] {
+  const allIssues: IssueInfo[] = [];
+  for (const [repo, issues] of dataByRepo) {
+    for (const issue of issues as Array<Record<string, unknown>>) {
+      if (issue.pull_request) continue; // skip PRs
+      allIssues.push({
+        number: issue.number as number,
+        title: issue.title as string,
+        repo,
+        url: issue.html_url as string,
+      });
+    }
+  }
+  return allIssues.length > 0 ? allIssues.slice(0, 10) : FALLBACK_ISSUES;
+}
+
+function transformMilestones(dataByRepo: Map<string, unknown[]>): Activity[] {
   const activities: Activity[] = [];
-
-  // 1. Fetch open milestones from all repos
-  const milestonePromises = GITHUB_REPOS.map(async (repo) => {
-    try {
-      const res = await fetch(
-        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/milestones?state=open&per_page=5`,
-        { headers },
-      );
-      updateRateLimit(res);
-      if (!res.ok) return [];
-      const data: Array<{
-        id: number;
-        title: string;
-        open_issues: number;
-        closed_issues: number;
-        due_on: string | null;
-      }> = await res.json();
-      return data.map((ms) => {
-        const total = ms.open_issues + ms.closed_issues;
-        const progress = total > 0 ? Math.round((ms.closed_issues / total) * 100) : 0;
-        const now = Date.now();
-        const dueSoon = ms.due_on && new Date(ms.due_on).getTime() - now < 7 * 24 * 3600 * 1000;
-        const overdue = ms.due_on && new Date(ms.due_on).getTime() < now;
-        const status: Activity['status'] = overdue ? 'blocked' : dueSoon ? 'active' : 'pending';
-        return {
-          id: `ms-${repo}-${ms.id}`,
-          name: `[${repo}] ${ms.title}`,
-          status,
-          progress,
-          eta: ms.due_on ? new Date(ms.due_on).toLocaleDateString() : undefined,
-          category: categoryForRepo(repo),
-        } satisfies Activity;
+  for (const [repo, milestones] of dataByRepo) {
+    for (const ms of milestones as Array<Record<string, unknown>>) {
+      const openIssues = ms.open_issues as number;
+      const closedIssues = ms.closed_issues as number;
+      const total = openIssues + closedIssues;
+      const progress = total > 0 ? Math.round((closedIssues / total) * 100) : 0;
+      const now = Date.now();
+      const dueOn = ms.due_on as string | null;
+      const dueSoon = dueOn && new Date(dueOn).getTime() - now < 7 * 24 * 3600 * 1000;
+      const overdue = dueOn && new Date(dueOn).getTime() < now;
+      const status: Activity['status'] = overdue ? 'blocked' : dueSoon ? 'active' : 'pending';
+      activities.push({
+        id: `ms-${repo}-${ms.id}`,
+        name: `[${repo}] ${ms.title as string}`,
+        status,
+        progress,
+        eta: dueOn ? new Date(dueOn).toLocaleDateString() : undefined,
+        category: categoryForRepo(repo),
       });
-    } catch {
-      return [];
     }
-  });
-
-  // 2. Fetch open PRs from all repos
-  const prPromises = GITHUB_REPOS.map(async (repo) => {
-    try {
-      const res = await fetch(
-        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=open&per_page=5&sort=updated&direction=desc`,
-        { headers },
-      );
-      updateRateLimit(res);
-      if (!res.ok) return [];
-      const data: Array<{
-        id: number;
-        number: number;
-        title: string;
-        draft: boolean;
-        requested_reviewers: unknown[];
-        created_at: string;
-      }> = await res.json();
-      return data.map((pr) => {
-        // Progress heuristic: draft=25%, awaiting review=50%, has reviewers=75%
-        const progress = pr.draft ? 25 : (pr.requested_reviewers?.length > 0 ? 50 : 75);
-        return {
-          id: `pr-${repo}-${pr.number}`,
-          name: `PR #${pr.number} [${repo}] ${pr.title}`,
-          status: 'active' as const,
-          progress,
-          eta: timeAgo(pr.created_at),
-          category: categoryForRepo(repo),
-        } satisfies Activity;
-      });
-    } catch {
-      return [];
-    }
-  });
-
-  // 3. Fetch recently closed/merged PRs from all repos
-  const closedPrPromises = GITHUB_REPOS.map(async (repo) => {
-    try {
-      const res = await fetch(
-        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/pulls?state=closed&per_page=3&sort=updated&direction=desc`,
-        { headers },
-      );
-      updateRateLimit(res);
-      if (!res.ok) return [];
-      const data: Array<{
-        id: number;
-        number: number;
-        title: string;
-        merged_at: string | null;
-        closed_at: string | null;
-      }> = await res.json();
-      // Only include PRs closed within the last 7 days
-      const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
-      return data
-        .filter((pr) => {
-          const closedTime = pr.merged_at ?? pr.closed_at;
-          return closedTime && new Date(closedTime).getTime() > cutoff;
-        })
-        .map((pr) => ({
-          id: `pr-closed-${repo}-${pr.number}`,
-          name: `PR #${pr.number} [${repo}] ${pr.title}`,
-          status: 'completed' as const,
-          progress: 100,
-          eta: pr.merged_at ? `merged ${timeAgo(pr.merged_at)}` : `closed ${timeAgo(pr.closed_at!)}`,
-          category: categoryForRepo(repo),
-        } satisfies Activity));
-    } catch {
-      return [];
-    }
-  });
-
-  // Await all in parallel
-  const [milestoneResults, prResults, closedPrResults] = await Promise.all([
-    Promise.all(milestonePromises),
-    Promise.all(prPromises),
-    Promise.all(closedPrPromises),
-  ]);
-
-  // Flatten and combine: open PRs first, then milestones, then recent closed
-  activities.push(
-    ...prResults.flat(),
-    ...milestoneResults.flat(),
-    ...closedPrResults.flat(),
-  );
-
+  }
   return activities;
- } catch {
-    // Fallback: representative activities when all GitHub API calls fail
-    return [
-      { id: 'fb-1', name: '[Demerzel] Governance audit cycle 004', status: 'active', progress: 60, eta: '2d', category: 'governance' },
-      { id: 'fb-2', name: 'PR #42 [ga] Prime Radiant command center', status: 'active', progress: 75, category: 'build' },
-      { id: 'fb-3', name: '[hari] AGI research — Lie algebra architecture', status: 'pending', progress: 20, category: 'research' },
-      { id: 'fb-4', name: '[tars] Belief propagation engine', status: 'active', progress: 45, category: 'build' },
-      { id: 'fb-5', name: '[ix] Memristive Markov — 34 tests passing', status: 'completed', progress: 100, eta: 'merged 1d ago', category: 'build' },
-      { id: 'fb-6', name: '[Demerzel] Red team cycle 003 — defense scoring', status: 'completed', progress: 100, eta: 'merged 2d ago', category: 'test' },
-    ];
- }
+}
+
+function transformOpenPRs(dataByRepo: Map<string, unknown[]>): Activity[] {
+  const activities: Activity[] = [];
+  for (const [repo, prs] of dataByRepo) {
+    for (const pr of prs as Array<Record<string, unknown>>) {
+      const draft = pr.draft as boolean;
+      const reviewers = pr.requested_reviewers as unknown[] | undefined;
+      const progress = draft ? 25 : (reviewers && reviewers.length > 0 ? 50 : 75);
+      activities.push({
+        id: `pr-${repo}-${pr.number}`,
+        name: `PR #${pr.number} [${repo}] ${pr.title as string}`,
+        status: 'active',
+        progress,
+        eta: timeAgo(pr.created_at as string),
+        category: categoryForRepo(repo),
+      });
+    }
+  }
+  return activities;
+}
+
+function transformClosedPRs(dataByRepo: Map<string, unknown[]>): Activity[] {
+  const activities: Activity[] = [];
+  const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+  for (const [repo, prs] of dataByRepo) {
+    for (const pr of prs as Array<Record<string, unknown>>) {
+      const mergedAt = pr.merged_at as string | null;
+      const closedAt = pr.closed_at as string | null;
+      const closedTime = mergedAt ?? closedAt;
+      if (!closedTime || new Date(closedTime).getTime() <= cutoff) continue;
+      activities.push({
+        id: `pr-closed-${repo}-${pr.number}`,
+        name: `PR #${pr.number} [${repo}] ${pr.title as string}`,
+        status: 'completed',
+        progress: 100,
+        eta: mergedAt ? `merged ${timeAgo(mergedAt)}` : `closed ${timeAgo(closedAt!)}`,
+        category: categoryForRepo(repo),
+      });
+    }
+  }
+  return activities;
 }
 
 // ---------------------------------------------------------------------------
@@ -379,35 +275,43 @@ export const ActivityPanel: React.FC = () => {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
+  // Subscribe to central polling manager for all data types
   useEffect(() => {
-    function refreshAll(): void {
-      fetchActivities().then(setActivities);
-      fetchCommits().then(setCommits);
-      fetchIssues().then(setIssues);
-      // Update rate-limit UI state after fetches settle
-      setTimeout(() => setRateLimited(isRateLimited()), 2000);
+    // Mutable accumulators for activities (composed from 3 data types)
+    let latestMilestones: Activity[] = [];
+    let latestOpenPRs: Activity[] = [];
+    let latestClosedPRs: Activity[] = [];
+
+    function mergeActivities(): void {
+      const merged = [...latestOpenPRs, ...latestMilestones, ...latestClosedPRs];
+      setActivities(merged.length > 0 ? merged : FALLBACK_ACTIVITIES);
+      setRateLimited(gitHubPollingManager.isRateLimited());
     }
 
-    // Initial fetch
-    refreshAll();
+    const unsubs = [
+      gitHubPollingManager.subscribe('milestones', GITHUB_REPOS, (data) => {
+        latestMilestones = transformMilestones(data);
+        mergeActivities();
+      }),
+      gitHubPollingManager.subscribe('pulls-open', GITHUB_REPOS, (data) => {
+        latestOpenPRs = transformOpenPRs(data);
+        mergeActivities();
+      }),
+      gitHubPollingManager.subscribe('pulls-closed', GITHUB_REPOS, (data) => {
+        latestClosedPRs = transformClosedPRs(data);
+        mergeActivities();
+      }),
+      gitHubPollingManager.subscribe('commits', GITHUB_REPOS, (data) => {
+        setCommits(transformCommits(data));
+        setRateLimited(gitHubPollingManager.isRateLimited());
+      }),
+      gitHubPollingManager.subscribe('issues', GITHUB_REPOS, (data) => {
+        setIssues(transformIssues(data));
+        setRateLimited(gitHubPollingManager.isRateLimited());
+      }),
+    ];
 
-    // Adaptive refresh: slow down when rate-limited
-    let intervalId: ReturnType<typeof setInterval>;
-    function scheduleRefresh(): void {
-      const ms = isRateLimited() ? THROTTLED_REFRESH_MS : DEFAULT_REFRESH_MS;
-      intervalId = setInterval(() => {
-        refreshAll();
-        // Re-schedule if rate-limit state changed
-        const newMs = isRateLimited() ? THROTTLED_REFRESH_MS : DEFAULT_REFRESH_MS;
-        if (newMs !== ms) {
-          clearInterval(intervalId);
-          scheduleRefresh();
-        }
-      }, ms);
-    }
-    scheduleRefresh();
-
-    return () => clearInterval(intervalId);
+    return () => unsubs.forEach((unsub) => unsub());
   }, []);
 
   const active = activities.filter((a) => a.status === 'active');

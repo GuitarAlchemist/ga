@@ -42,10 +42,16 @@ export async function captureCanvas(): Promise<string> {
     // drawImage can throw on tainted canvases — fall through
   }
 
-  // Strategy 3: Request one animation frame then capture immediately
-  // (renderer writes to back-buffer during rAF, we read before browser
-  // clears it for the next present)
+  // Strategy 3: Force-render one frame via the force-graph tick, then capture
+  // within the same rAF callback before the browser clears the back-buffer.
   return new Promise((resolve) => {
+    const graph = (window as Record<string, unknown>).__primeRadiantGraph as
+      { renderer?: () => { render: (s: unknown, c: unknown) => void }; scene?: () => unknown; camera?: () => unknown; tickFrame?: () => void } | undefined;
+    if (graph?.tickFrame) {
+      graph.tickFrame();
+    } else if (graph?.renderer && graph?.scene && graph?.camera) {
+      graph.renderer().render(graph.scene(), graph.camera());
+    }
     requestAnimationFrame(() => {
       const result = canvas.toDataURL('image/png');
       resolve(result);
