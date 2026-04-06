@@ -199,11 +199,11 @@ export function createPlanetSurfaceMaterialTSL(
     litDay.assign(litDay.add(vec3(1.0, 0.95, 0.9).mul(specBase).mul(dayFactor)));
 
     // ── Night side ──
-    // Earth: city lights from nightMap. Other planets: dim blue tint so the
-    // dark hemisphere is faintly visible against space.
+    // Earth: city lights from nightMap. Other planets: dim surface with blue tint
+    // (reflected starlight / zodiacal light) so the dark side is visible, not invisible.
     const nightColor = nightTex
       ? nightTex.sample(uvCoord).rgb.mul(0.8)
-      : vec3(0.005, 0.008, 0.02);
+      : dayColorBase.mul(0.04).add(vec3(0.005, 0.008, 0.015));
 
     // ── Day/night blend across terminator ──
     const surfaceColor = mix(nightColor, litDay, dayFactor).toVar();
