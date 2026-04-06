@@ -1,6 +1,43 @@
 /* src/components/PrimeRadiant/styles.css */
 /* Prime Radiant — Governance Visualization Engine */
 
+/* ── Accessibility: keyboard focus indicator (WCAG 2.1 SC 2.4.7) ── */
+.prime-radiant *:focus-visible {
+  outline: 2px solid #FFD700;
+  outline-offset: 2px;
+}
+.prime-radiant *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Accessibility: reduced motion (WCAG 2.1 SC 2.3.3) ── */
+@media (prefers-reduced-motion: reduce) {
+  .prime-radiant *,
+  .prime-radiant *::before,
+  .prime-radiant *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Skip to content (screen reader) ── */
+.prime-radiant__skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #FFD700;
+  color: #000;
+  padding: 8px 16px;
+  z-index: 10000;
+  font-size: 14px;
+  font-weight: 600;
+  transition: top 0.15s;
+}
+.prime-radiant__skip-link:focus {
+  top: 0;
+}
+
 @keyframes pulse-recording {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
@@ -835,7 +872,7 @@
 }
 
 .prime-radiant__legend-label {
-  color: #8b949e;
+  color: #b1b8c0; /* WCAG AA: ~5.0:1 on rgba(22,27,34,0.85) */
   white-space: nowrap;
 }
 
@@ -9535,12 +9572,6 @@
   background: linear-gradient(90deg, #33CC66, #DDBB33, #FF4444);
 }
 
-/* ─── Responsive: hide new panels on small screens ─── */
-@media (max-width: 768px) {
-  .prime-radiant__algedonic { display: none; }
-  .prime-radiant__belief-heatmap { display: none; }
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    Course Viewer — Streeling University course browser
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -9990,12 +10021,6 @@
   height: 6px;
   border-radius: 3px;
   background: linear-gradient(90deg, #33CC66, #DDBB33, #FF4444);
-}
-
-/* ─── Responsive: hide new panels on small screens ─── */
-@media (max-width: 768px) {
-  .prime-radiant__algedonic { display: none; }
-  .prime-radiant__belief-heatmap { display: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

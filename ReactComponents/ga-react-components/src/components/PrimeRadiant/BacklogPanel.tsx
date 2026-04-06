@@ -210,7 +210,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
           Backlog
           <span className="prime-radiant__backlog-count">{totalItems}</span>
         </span>
-        <span className="prime-radiant__backlog-toggle">{collapsed ? '>' : 'v'}</span>
+        <span className="prime-radiant__backlog-toggle">{collapsed ? '▶' : '▼'}</span>
       </div>
 
       {!collapsed && data && (
@@ -228,7 +228,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
                   className="prime-radiant__backlog-section-header"
                   onClick={() => toggleSection(key)}
                 >
-                  <span>{isExpanded ? 'v' : '>'}</span>
+                  <span>{isExpanded ? '▼' : '▶'}</span>
                   <span className="prime-radiant__backlog-section-title">{label}</span>
                   <span className="prime-radiant__backlog-section-count">{section.items.length}</span>
                 </div>
@@ -250,7 +250,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
                           >
                             <span className="prime-radiant__backlog-item-title">{title}</span>
                             {desc && <span className="prime-radiant__backlog-item-desc">{desc}</span>}
-                            <span className="prime-radiant__backlog-item-expand">{isSelected ? 'v' : '>'}</span>
+                            <span className="prime-radiant__backlog-item-expand">{isSelected ? '▼' : '▶'}</span>
                           </div>
 
                           {/* AI Assessment card */}
