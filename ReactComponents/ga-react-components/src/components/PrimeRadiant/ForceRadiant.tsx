@@ -2917,16 +2917,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         url: liveDataUrl ?? '',
         hubUrl: liveHubUrl,
         intervalMs: pollIntervalMs,
-        onScreenshotRequest: (reason: string) => {
+        onScreenshotRequest: async (reason: string) => {
           console.log('[PrimeRadiant] Screenshot requested:', reason);
-          const canvas = containerRef.current?.querySelector('canvas');
-          if (canvas) {
-            const dataUrl = canvas.toDataURL('image/png');
+          try {
+            const { captureCanvas } = await import('./ScreenshotCapture');
+            const dataUrl = await captureCanvas();
             pollingHandle?.submitScreenshot(dataUrl, 'image/png').catch(err =>
               console.warn('[PrimeRadiant] Screenshot submit failed:', err),
             );
-          } else {
-            console.warn('[PrimeRadiant] No canvas found for screenshot');
+          } catch (err) {
+            console.warn('[PrimeRadiant] Screenshot capture failed:', err);
           }
         },
         onUpdate: (freshGraph) => {

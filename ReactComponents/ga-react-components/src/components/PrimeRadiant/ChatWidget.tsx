@@ -616,10 +616,10 @@ async function askDemerzel(question: string, context?: GovernanceNode | null, on
   const isScreenshotIntent = /\b(picture|photo|screenshot|capture|snap|image|screen\s?shot)\b/i.test(q);
 
   if (isScreenshotIntent) {
-    // Take a screenshot of the canvas
-    const canvas = document.querySelector('.prime-radiant canvas') as HTMLCanvasElement | null;
-    if (canvas) {
-      const dataUrl = canvas.toDataURL('image/png');
+    // Take a screenshot via the WebGPU/WebGL-safe capture utility
+    try {
+      const { captureCanvas } = await import('./ScreenshotCapture');
+      const dataUrl = await captureCanvas();
       const link = document.createElement('a');
       link.download = `prime-radiant-${mentionedPlanet || 'screenshot'}-${Date.now()}.png`;
       link.href = dataUrl;
@@ -629,8 +629,9 @@ async function askDemerzel(question: string, context?: GovernanceNode | null, on
           ? `Capture enregistrée ! ${mentionedPlanet ? PLANET_FACTS[mentionedPlanet] ?? '' : ''}`
           : `Screenshot saved! ${mentionedPlanet ? PLANET_FACTS[mentionedPlanet] ?? '' : ''}`,
       };
+    } catch {
+      return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
     }
-    return { text: isFr ? 'Impossible de capturer — aucun canvas trouvé.' : 'Could not capture — no canvas found.' };
   }
 
   // ArcGIS / map overlay intent
