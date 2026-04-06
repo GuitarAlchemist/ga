@@ -13,7 +13,7 @@ import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
 import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo } from './DataLoader';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
 import { DetailPanel } from './DetailPanel';
 import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
@@ -718,6 +718,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const causticsPassRef = useRef<ShaderPass | null>(null);
   const dispersionPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
+  // Camera sync — incoming position from presentation leader (null = no pending sync)
+  const cameraSyncRef = useRef<CameraSyncData | null>(null);
   const consoleErrorsRef = useRef<string[]>([]);
   // Capture console errors + WebGL warnings for remote debugging
   useEffect(() => {
@@ -1622,6 +1624,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       .d3AlphaDecay(0.02)
       .d3VelocityDecay(0.3);
 
+    // ── WebGPU Backend Init ──
+    // WebGPURenderer.init() is async (calls requestAdapter + requestDevice).
+    // 3d-force-graph starts rendering immediately, which triggers .render()
+    // before init completes → falls back to WebGL2. Fix: pause animation,
+    // wait for init, then resume — so the first real frame uses WebGPU.
+    if (USE_WEBGPU) {
+      const renderer = fg.renderer() as Record<string, unknown>;
+      if (typeof renderer.init === 'function') {
+        fg.pauseAnimation();
+        (renderer.init as () => Promise<void>)()
+          .then(() => {
+            console.log('[PrimeRadiant] WebGPU backend initialized successfully');
+            fg.resumeAnimation();
+          })
+          .catch((err: unknown) => {
+            console.warn('[PrimeRadiant] WebGPU init failed, continuing with WebGL2:', err);
+            fg.resumeAnimation();
+          });
+      }
+    }
+
     // Add bloom post-processing (WebGL path only — UnrealBloomPass uses ShaderMaterial
     // internally which is incompatible with WebGPURenderer). TSL PostProcessing
     // equivalent is a follow-up task.
@@ -1767,6 +1790,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     perfEl.addEventListener('mouseleave', () => perfEl.classList.remove('prime-radiant__perf-info--expanded'));
 
     let lastCameraSave = 0;
+    let lastCameraSync = 0; // presentation mode: camera broadcast throttle
     // Pre-allocate reusable vectors OUTSIDE the tick loop (zero GC pressure)
     const _tarsOffset = new THREE.Vector3();
     const _faceOffset = new THREE.Vector3();
@@ -1780,7 +1804,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _tickColor = new THREE.Color();  // pre-allocated for IXQL color overrides
     const _linkColorA = new THREE.Color(); // pre-allocated for edge propagation lerp
     const _linkColorB = new THREE.Color();
-
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
@@ -1806,6 +1829,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         if (controls) controls.autoRotate = sOpts.autorotate !== false;
       }
 
+      // ─── Camera sync: apply incoming position from presentation leader ───
+      // Followers lock their orbit controls so the user can't fight the sync.
+      const pendingCam = cameraSyncRef.current;
+      const orbitControls = fg.controls() as { enabled?: boolean; target?: THREE.Vector3 } | undefined;
+      if (pendingCam && sceneOptionsRef.current.presentation !== true) {
+        // Disable local interaction while following
+        if (orbitControls) orbitControls.enabled = false;
+        // Smooth interpolation toward the leader's camera position + lookAt
+        const cam = fgCam;
+        cam.position.x += (pendingCam.px - cam.position.x) * 0.15;
+        cam.position.y += (pendingCam.py - cam.position.y) * 0.15;
+        cam.position.z += (pendingCam.pz - cam.position.z) * 0.15;
+        if (orbitControls?.target) {
+          orbitControls.target.x += (pendingCam.lx - orbitControls.target.x) * 0.15;
+          orbitControls.target.y += (pendingCam.ly - orbitControls.target.y) * 0.15;
+          orbitControls.target.z += (pendingCam.lz - orbitControls.target.z) * 0.15;
+        }
+        cameraSyncRef.current = null;
+      } else if (!pendingCam && orbitControls && !orbitControls.enabled && sceneOptionsRef.current.presentation !== true) {
+        // Re-enable controls when sync stops (leader disconnects or toggles off)
+        orbitControls.enabled = true;
+      }
+
       // ─── Save camera state every 2 seconds ───
       const now2 = Date.now();
       if (now2 - lastCameraSave > 2000) {
@@ -1818,6 +1864,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             lx: ct.x, ly: ct.y, lz: ct.z,
           }));
         } catch { /* quota exceeded or private browsing */ }
+      }
+
+      // ─── Presentation mode: broadcast camera at ~5 Hz to followers ───
+      if (sceneOptionsRef.current.presentation === true && pollingHandle) {
+        if (now2 - lastCameraSync > 200) {
+          lastCameraSync = now2;
+          const cp = fgCam.position;
+          // Use orbit controls target (lookAt point), not scene.position which is always (0,0,0)
+          const oc = fg.controls() as { target?: THREE.Vector3 } | undefined;
+          const lt = oc?.target ?? fg.scene().position;
+          pollingHandle.syncCamera(cp.x, cp.y, cp.z, lt.x, lt.y, lt.z);
+        }
       }
 
       // ─── FPS measurement + adaptive quality ───
@@ -3039,6 +3097,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               new Date(b.connectedAt).getTime() - new Date(a.connectedAt).getTime(),
             );
             selfConnectionIdRef.current = sorted[0].connectionId;
+          }
+        },
+        onCameraSync: (data) => {
+          // Store incoming camera position — applied in the tick loop
+          // Only follow if we're NOT the presentation leader
+          if (sceneOptionsRef.current.presentation !== true) {
+            cameraSyncRef.current = data;
+            console.debug('[PrimeRadiant] Camera sync received from', data.sender);
           }
         },
         onError: (err) => console.warn('[PrimeRadiant] Live poll error:', err.message),
