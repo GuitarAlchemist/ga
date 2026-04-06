@@ -124,6 +124,7 @@ export class AIApiService {
   // Intelligent BSP API
   // ==================
 
+    /** @deprecated No backend. IntelligentBspController is commented out. See GA.BSP.Service/Controllers/ */
   async generateLevel(
     pitchClassSets: string[],
     tuning?: string,
@@ -150,6 +151,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. IntelligentBspController is commented out. See GA.BSP.Service/Controllers/ */
   async getLevelStats(
     pitchClassSets: string[],
     tuning?: string,
@@ -205,6 +207,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated Backend commented out — pending actor system refactor. See _Parked/AdaptiveAIController.cs */
   async generateChallenge(
     playerId: string,
     pitchClassSets: string[],
@@ -228,6 +231,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated Backend commented out — pending actor system refactor. See _Parked/AdaptiveAIController.cs */
   async suggestShapes(
     playerId: string,
     pitchClassSets: string[],
@@ -279,6 +283,7 @@ export class AIApiService {
   // Advanced AI API
   // ==================
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async learnStyle(
     playerId: string,
     pitchClassSets: string[],
@@ -302,6 +307,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async generateStyleMatched(
     playerId: string,
     pitchClassSets: string[],
@@ -325,6 +331,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async getStyleProfile(playerId: string): Promise<PlayerStyleProfile> {
     const response = await this.client.get<ApiResponse<PlayerStyleProfile>>(
       `/api/advanced-ai/style-profile/${playerId}`
@@ -337,6 +344,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async getPatterns(playerId: string, topK: number = 10): Promise<RecognizedPattern[]> {
     const response = await this.client.get<ApiResponse<RecognizedPattern[]>>(
       `/api/advanced-ai/patterns/${playerId}?topK=${topK}`
@@ -349,6 +357,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async predictNext(
     playerId: string,
     currentShape: string,
@@ -370,6 +379,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async getTransitionMatrix(playerId: string): Promise<Record<string, Record<string, number>>> {
     const response = await this.client.get<ApiResponse<Record<string, Record<string, number>>>>(
       `/api/advanced-ai/transition-matrix/${playerId}`
@@ -382,6 +392,7 @@ export class AIApiService {
     return response.data.data;
   }
 
+    /** @deprecated No backend. AdvancedAiController is in _Parked/, excluded from build. */
   async recommendProgressions(
     playerId: string,
     pitchClassSets: string[],
