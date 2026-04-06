@@ -196,7 +196,7 @@ export const IxqlCommandInput: React.FC<IxqlCommandInputProps> = ({ onCommand })
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 setSelectedSuggestion(s => Math.max(s - 1, -1));
-              } else if (e.key === 'Tab' && selectedSuggestion >= 0) {
+              } else if ((e.key === 'Tab' || e.key === 'Enter') && selectedSuggestion >= 0) {
                 e.preventDefault();
                 const suggestion = suggestions[selectedSuggestion];
                 const lastSpace = value.lastIndexOf(' ');
