@@ -198,9 +198,10 @@ export function createPlanetSurfaceMaterialTSL(
     litDay.assign(litDay.add(vec3(1.0, 0.95, 0.9).mul(specBase).mul(dayFactor)));
 
     // ── Night side ──
+    // Earth: city lights from nightMap. Others: faint blue so dark side is visible.
     const nightColor = nightTex
       ? nightTex.sample(uvCoord).rgb.mul(0.8)
-      : vec3(0.0, 0.0, 0.0);
+      : vec3(0.005, 0.008, 0.02);
 
     // ── Day/night blend across terminator ──
     const surfaceColor = mix(nightColor, litDay, dayFactor).toVar();
