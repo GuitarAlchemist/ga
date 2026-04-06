@@ -196,8 +196,8 @@ export function createMilkyWay(
       canonicalPath,
       (tex) => {
         mesh.material = createMilkyWayTextureMaterial(tex, {
-          brightness: 0.25,
-          saturation: 0.5,
+          brightness: 0.7,
+          saturation: 0.9,
           flipU: true,
         });
         mesh.visible = true;
