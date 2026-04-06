@@ -307,20 +307,35 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
 
       {!collapsed && (
         <>
-          {/* Filter bar + New Signal button */}
+          {/* Tab bar + action buttons */}
           <div className="prime-radiant__algedonic-filters">
-            {(['all', 'pain', 'pleasure'] as const).map((f) => (
-              <button
-                key={f}
-                className={`prime-radiant__algedonic-filter${filter === f ? ' prime-radiant__algedonic-filter--active' : ''}`}
-                onClick={() => setFilter(f)}
-                style={{
-                  color: f === 'pain' ? '#FF4444' : f === 'pleasure' ? '#33CC66' : '#8b949e',
-                }}
-              >
-                {f === 'all' ? 'All' : f === 'pain' ? 'Pain' : 'Pleasure'}
-              </button>
-            ))}
+            <div role="tablist" style={{ display: 'flex', gap: '2px', flex: '0 1 auto' }}>
+              {([
+                { key: 'all' as const, label: 'All', count: allSignals.length, activeColor: '#888' },
+                { key: 'pain' as const, label: 'Pain', count: painCount, activeColor: '#ef5350' },
+                { key: 'pleasure' as const, label: 'Pleasure', count: pleasureCount, activeColor: '#4fc3f7' },
+              ]).map(({ key, label, count, activeColor }) => (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={filter === key}
+                  onClick={() => setFilter(key)}
+                  style={{
+                    padding: '6px 12px',
+                    border: 'none',
+                    borderBottom: filter === key ? `2px solid ${activeColor}` : '2px solid transparent',
+                    background: filter === key ? `${activeColor}18` : 'transparent',
+                    color: filter === key ? activeColor : '#666',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontFamily: 'inherit',
+                    transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+                  }}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
             <button
               className={`algedonic-panel__graph-toggle${showGraph ? ' algedonic-panel__graph-toggle--active' : ''}`}
               onClick={() => setShowGraph(v => !v)}
@@ -441,7 +456,7 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
           )}
 
           {/* Timeline */}
-          <div className="prime-radiant__algedonic-timeline">
+          <div role="tabpanel" className="prime-radiant__algedonic-timeline">
             {signals.map((s) => {
               const isExpanded = expandedId === s.id;
               const details = SIGNAL_DETAILS[s.signal];
