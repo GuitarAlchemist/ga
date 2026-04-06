@@ -11530,3 +11530,66 @@
   border-radius: 4px;
   margin-left: 8px;
 }
+
+/* ---------------------------------------------------------------------------
+   Agent Spectral Panel — topology visualization
+   --------------------------------------------------------------------------- */
+.spectral-demo-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #FFB300;
+  background: rgba(255, 179, 0, 0.12);
+  border: 1px solid rgba(255, 179, 0, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.spectral-topology-svg {
+  border-top: 1px solid #21262d;
+  border-bottom: 1px solid #21262d;
+  background: rgba(13, 17, 23, 0.5);
+}
+
+.spectral-metrics-bar {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px;
+  justify-content: space-between;
+}
+
+.spectral-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.spectral-metric-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.spectral-metric-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c9d1d9;
+}
+
+.spectral-hover-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  border-top: 1px solid #21262d;
+}

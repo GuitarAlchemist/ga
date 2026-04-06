@@ -4,6 +4,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import { departments, totalCourses, totalDepartments, type Course } from './courseData';
+import { timeAgo } from './utils';
 
 interface CourseViewerProps {
   open: boolean;
@@ -188,16 +189,6 @@ function pickRandomModel(): string {
   return AGENT_MODELS[Math.floor(Math.random() * AGENT_MODELS.length)];
 }
 
-function timeAgo(isoDate: string): string {
-  const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
-  if (seconds < 5) return 'just now';
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 export const CourseViewer: React.FC<CourseViewerProps> = ({ open, onClose }) => {
   const [selectedDept, setSelectedDept] = useState<string | null>(null);

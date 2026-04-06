@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -169,6 +169,14 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
     h('path', { key: 'shield', d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' }),
     h('polyline', { key: 'check', points: '9 12 11 14 15 10' }),
   ]),
+  'agent-spectral': svg([
+    h('circle', { key: 'c1', cx: 12, cy: 6, r: 2 }),
+    h('circle', { key: 'c2', cx: 6, cy: 18, r: 2 }),
+    h('circle', { key: 'c3', cx: 18, cy: 18, r: 2 }),
+    h('line', { key: 'l1', x1: 12, y1: 8, x2: 7, y2: 16 }),
+    h('line', { key: 'l2', x1: 12, y1: 8, x2: 17, y2: 16 }),
+    h('line', { key: 'l3', x1: 8, y1: 18, x2: 16, y2: 18 }),
+  ]),
   grid: svg([
     h('rect', { key: 'r1', x: 3, y: 3, width: 7, height: 7, rx: 1 }),
     h('rect', { key: 'r2', x: 14, y: 3, width: 7, height: 7, rx: 1 }),
@@ -272,6 +280,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'code-tribunal', label: 'Code Lab',       icon: 'claude',     renderMode: 'side',    group: 'ops' },
   { id: 'ixql-gen',      label: 'IXQL Gen',       icon: 'ixql-gen',   renderMode: 'side',    group: 'ops' },
   { id: 'qa',            label: 'QA',             icon: 'qa',         renderMode: 'side',    group: 'ops' },
+  { id: 'agent-spectral', label: 'Agent Topology', icon: 'agent-spectral', renderMode: 'side', group: 'ops' },
 ];
 
 for (const def of BUILTIN_PANELS) {
