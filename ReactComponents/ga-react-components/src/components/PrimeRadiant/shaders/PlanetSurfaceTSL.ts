@@ -149,11 +149,9 @@ export function createPlanetSurfaceMaterialTSL(
 
     const N = getBumpNormal();
     const NdotL = dot(N, sunDir);
-    // Tight terminator: at NdotL=0 the day/night is nearly 50/50 (not 43% day),
-    // and the full day/night transition happens within ±0.05 of NdotL=0.
-    // Previously: smoothstep(-0.15, 0.2, NdotL) biased heavily toward day and
-    // produced a wide twilight band that made night invisible at most angles.
-    const dayFactor = smoothstep(-0.05, 0.05, NdotL);
+    // Wider terminator for visible day/night transition from all camera angles.
+    // Range ±0.15 gives ~30° twilight zone.
+    const dayFactor = smoothstep(-0.15, 0.15, NdotL);
 
     // Day color
     const dayColorBase = mapTex.sample(uvCoord).rgb.toVar();
