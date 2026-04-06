@@ -296,7 +296,7 @@ export const ClaudeCodePanel: React.FC = () => {
         onClick={() => setCollapsed(!collapsed)}
       >
         <span className="prime-radiant__activity-title">
-          Claude Code
+          Claude Code<span className="prime-radiant__demo-badge">Demo</span>
           <span className="prime-radiant__activity-count">
             {commands.length} commands
             {pendingCount > 0 && (

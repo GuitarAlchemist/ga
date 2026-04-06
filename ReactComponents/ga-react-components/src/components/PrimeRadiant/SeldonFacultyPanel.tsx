@@ -194,7 +194,7 @@ export const SeldonFacultyPanel: React.FC = () => {
   return (
     <div className="faculty-panel">
       <div className="faculty-panel__header">
-        <h3 className="faculty-panel__heading">Seldon Faculty</h3>
+        <h3 className="faculty-panel__heading">Seldon Faculty<span className="prime-radiant__demo-badge">Demo</span></h3>
         <button
           className="faculty-panel__refresh"
           onClick={refresh}

@@ -110,13 +110,12 @@ export const TutorialOverlay: React.FC = () => {
             </div>
 
             <div className="prime-radiant__tutorial-section prime-radiant__tutorial-discord">
-              {/* TODO: Replace DISCORD_INVITE with real invite link */}
               <a
-                href={DISCORD_INVITE}
+                href="https://github.com/GuitarAlchemist"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Join the Demerzel community on Discord
+                Guitar Alchemist on GitHub
               </a>
             </div>
           </div>
