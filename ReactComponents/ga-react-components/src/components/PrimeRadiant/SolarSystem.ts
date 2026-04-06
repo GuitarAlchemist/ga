@@ -415,7 +415,7 @@ const PLANETS: PlanetDef[] = [
     tilt: 0.4396,                      // 25.19° axial tilt
     texture: '2k_mars.jpg',
     textureDisplacement: '2k_mars_displacement.jpg',
-    atmosphere: { color: '0.85, 0.45, 0.35', intensity: 0.08, power: 5.0 }, // Mars: extremely thin (~1% of Earth)
+    // No atmosphere shell — Mars's atmosphere is ~0.6% of Earth's, invisible from space
     fragment: PROC_PLACEHOLDER,
     moons: [
       { name: 'phobos', radius: 0.06, distance: 0.6, speed: 4.0, fragment: ROCKY_DARK },   // enlarged for visibility (real: 11km)
@@ -636,15 +636,13 @@ function createMoonMesh(def: MoonDef, scale: number): THREE.Mesh {
     const map = canonicalBodyId
       ? loadCanonicalTexture(canonicalBodyId, 'albedo', def.texture)
       : loadPlanetTexture(def.texture);
-    const matOpts: THREE.MeshStandardMaterialParameters = { map, roughness: 0.95, metalness: 0 };
+    // MeshLambertMaterial — airless bodies get direct sunlight only, no ambient
+    // environment response that would look like false atmosphere
+    const matOpts: THREE.MeshLambertMaterialParameters = { map };
     if (def.textureDisplacement) {
-      matOpts.displacementMap = canonicalBodyId
-        ? loadCanonicalTexture(canonicalBodyId, 'displacement', def.textureDisplacement)
-        : loadPlanetTexture(def.textureDisplacement);
-      matOpts.displacementScale = def.radius * scale * 0.06;
-      matOpts.displacementBias = -def.radius * scale * 0.02;
+      // Lambert doesn't support displacement — skip for moons (too small to matter)
     }
-    const mat = new THREE.MeshStandardMaterial(matOpts);
+    const mat = new THREE.MeshLambertMaterial(matOpts);
     return new THREE.Mesh(geo, mat);
   }
 
