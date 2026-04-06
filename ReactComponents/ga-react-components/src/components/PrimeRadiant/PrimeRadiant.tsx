@@ -22,6 +22,8 @@ class PrimeRadiantErrorBoundary extends Component<
   { children: React.ReactNode },
   ErrorBoundaryState
 > {
+  private retryKey = 0;
+
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -61,7 +63,7 @@ class PrimeRadiantErrorBoundary extends Component<
             Check browser console for details (F12)
           </div>
           <button
-            onClick={() => this.setState({ hasError: false, error: null })}
+            onClick={() => { this.retryKey++; this.setState({ hasError: false, error: null }); }}
             style={{
               marginTop: 8,
               padding: '8px 16px',
@@ -78,7 +80,8 @@ class PrimeRadiantErrorBoundary extends Component<
         </div>
       );
     }
-    return this.props.children;
+    // retryKey forces children to fully re-mount on retry (re-triggers useEffect init)
+    return <React.Fragment key={this.retryKey}>{this.props.children}</React.Fragment>;
   }
 }
 

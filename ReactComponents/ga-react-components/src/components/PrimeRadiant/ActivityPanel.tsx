@@ -2,6 +2,7 @@
 // Top-left accordion panel — Activities, Commits, and more
 
 import React, { useEffect, useState } from 'react';
+import { timeAgo } from './utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,16 +77,6 @@ function isRateLimited(): boolean {
   return rateLimitRemaining !== null && rateLimitRemaining < RATE_LIMIT_THRESHOLD;
 }
 
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 // ─── Fetch real commits from GitHub API ───
 async function fetchCommits(): Promise<CommitInfo[]> {

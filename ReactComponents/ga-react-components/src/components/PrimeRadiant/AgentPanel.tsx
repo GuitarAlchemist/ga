@@ -2,6 +2,7 @@
 // Shows active Claude Code agent teams and their members in the Prime Radiant
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { timeAgo } from './utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,7 +41,7 @@ export interface ClaudeSession {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function formatRelativeTime(iso: string): string {
+function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return 'just now';
@@ -224,7 +225,7 @@ export const AgentPanel: React.FC = () => {
                         {s.subagentCount} agent{s.subagentCount !== 1 ? 's' : ''}
                       </span>
                     )}
-                    <span className="prime-radiant__agents-session-time">{formatRelativeTime(s.lastActiveAt)}</span>
+                    <span className="prime-radiant__agents-session-time">{timeAgo(s.lastActiveAt)}</span>
                     <span className="prime-radiant__agents-session-size">{formatBytes(s.sizeBytes)}</span>
                   </div>
                 );

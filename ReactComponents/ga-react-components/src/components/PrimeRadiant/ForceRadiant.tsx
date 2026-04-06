@@ -102,6 +102,7 @@ import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 import { IxqlCodeGen } from './IxqlCodeGen';
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 import { QAPanel } from './QAPanel';
+import { AgentSpectralPanel } from './AgentSpectralPanel';
 import { autoRemediation } from './AutoRemediation';
 import { proofVerifier } from './ProofVerifier';
 import { mountApprovedRuntimeAssets } from '../../assets/space';
@@ -4229,6 +4230,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             'code-tribunal': CodeTribunal,
             inbox: AdminInbox,
             qa: QAPanel,
+            'agent-spectral': AgentSpectralPanel,
           };
           // IxqlCodeGen needs onRunCommand prop — handle specially
           if (activePanel === 'ixql-gen') {
