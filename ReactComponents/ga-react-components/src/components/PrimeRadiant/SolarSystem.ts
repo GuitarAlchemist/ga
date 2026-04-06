@@ -63,7 +63,8 @@ function loadCanonicalTexture(
   mapKind: 'albedo' | 'night' | 'clouds' | 'specular' | 'displacement' | 'alpha' | 'stars' | 'overlay',
   fallbackFile?: string,
 ): THREE.Texture | undefined {
-  const resolved = resolveTexturePath(bodyId, mapKind, '2k');
+  // Prefer 8K when available; resolveTexturePath falls back to 4K→2K→1K automatically
+  const resolved = resolveTexturePath(bodyId, mapKind, '8k');
   if (resolved) return loadTex(resolved);
   if (fallbackFile) return loadPlanetTexture(fallbackFile);
   return undefined;
