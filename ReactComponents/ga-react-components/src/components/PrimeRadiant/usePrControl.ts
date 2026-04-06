@@ -287,6 +287,35 @@ export function usePrControl(handlers: PrControlHandlers): void {
           } else { throw new Error('Video capture handler not available'); }
           break;
 
+        case 'diag:webgpu': {
+          const gpu = (navigator as Record<string, unknown>).gpu;
+          const hasGpu = !!gpu;
+          let adapterInfo: Record<string, unknown> | null = null;
+          let adapterError: string | null = null;
+          if (hasGpu) {
+            try {
+              const adapter = await (gpu as { requestAdapter: () => Promise<unknown> }).requestAdapter();
+              if (adapter) {
+                const info = (adapter as Record<string, unknown>).info ?? (adapter as { requestAdapterInfo?: () => Promise<unknown> }).requestAdapterInfo?.();
+                adapterInfo = info as Record<string, unknown>;
+              } else {
+                adapterError = 'requestAdapter() returned null — GPU blocked by browser or driver';
+              }
+            } catch (e) {
+              adapterError = (e as Error).message;
+            }
+          }
+          result.data = {
+            navigatorGpu: hasGpu,
+            secureContext: window.isSecureContext,
+            userAgent: navigator.userAgent,
+            adapterInfo,
+            adapterError,
+            rendererBackend: (h as Record<string, unknown>).rendererBackend ?? 'unknown',
+          };
+          break;
+        }
+
         default:
           throw new Error(`Unknown action: ${action}`);
       }
