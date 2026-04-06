@@ -26,20 +26,25 @@ interface PlanetPiPProps {
   screenY: number;
   containerWidth: number;
   containerHeight: number;
+  /** When true, show regardless of zoom distance (manual toggle from PlanetNav) */
+  forceShow?: boolean;
+  onClose?: () => void;
 }
 
 const ZOOM_THRESHOLD = 8; // show PiP when camera is closer than this
 
 export const PlanetPiP: React.FC<PlanetPiPProps> = ({
   planet, zoomDistance, screenX, screenY, containerWidth, containerHeight,
+  forceShow = false, onClose,
 }) => {
   const [dismissed, setDismissed] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Reset dismissed state when planet changes
   useEffect(() => { setDismissed(null); }, [planet]);
 
-  if (!planet || zoomDistance > ZOOM_THRESHOLD) return null;
+  if (!planet) return null;
+  // Show if forced (button toggle) OR if zoomed in close enough
+  if (!forceShow && zoomDistance > ZOOM_THRESHOLD) return null;
   if (dismissed === planet) return null;
 
   const video = PLANET_VIDEOS[planet];
@@ -82,7 +87,7 @@ export const PlanetPiP: React.FC<PlanetPiPProps> = ({
         style={{ border: 'none', display: 'block' }}
       />
       <button
-        onClick={() => setDismissed(planet)}
+        onClick={() => { setDismissed(planet); onClose?.(); }}
         style={{
           position: 'absolute', top: 4, right: 4,
           background: 'rgba(0,0,0,0.7)', border: 'none', color: '#8b949e',

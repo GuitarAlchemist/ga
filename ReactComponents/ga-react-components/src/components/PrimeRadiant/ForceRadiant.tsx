@@ -759,6 +759,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const [_trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
   const [pipState, setPipState] = useState<{ planet: string; x: number; y: number; zoom: number } | null>(null);
   const pipThrottleRef = useRef(0);
+  const [videoPlanet, setVideoPlanet] = useState<string | null>(null);
   const [_criticState, setCriticState] = useState<CriticState>({
     phase: 'idle', result: null, history: [], lastAnalysis: null,
   });
@@ -3533,15 +3534,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       <div className="prime-radiant__canvas-area">
         <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
 
-        {/* YouTube course PiP — appears near planet when zoomed in */}
-        {pipState && (
+        {/* YouTube course PiP — appears near planet when zoomed in OR toggled via PlanetNav */}
+        {(pipState || videoPlanet) && (
           <PlanetPiP
-            planet={pipState.planet}
-            zoomDistance={pipState.zoom}
-            screenX={pipState.x}
-            screenY={pipState.y}
+            planet={videoPlanet ?? pipState?.planet ?? null}
+            zoomDistance={pipState?.zoom ?? 0}
+            screenX={pipState?.x ?? (containerRef.current?.clientWidth ?? 1200) / 2}
+            screenY={pipState?.y ?? (containerRef.current?.clientHeight ?? 800) / 2}
             containerWidth={containerRef.current?.clientWidth ?? 1200}
             containerHeight={containerRef.current?.clientHeight ?? 800}
+            forceShow={!!videoPlanet}
+            onClose={() => setVideoPlanet(null)}
           />
         )}
 
@@ -4012,6 +4015,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           );
         }}
         onLaunchLunarLander={() => setActivePanel('lunar')}
+        onToggleVideo={(planet) => setVideoPlanet(prev => prev === planet ? null : planet)}
+        videoPlanet={videoPlanet}
         onLaunchGodot={() => {
           // Try WebSocket connection to Godot MCP
           try {
