@@ -1104,6 +1104,28 @@ export function createSolarSystem(scale: number): THREE.Group {
     planetMeshes.push({ mesh, orbit, def, clouds: cloudsMesh, cloudsHigh: cloudsHighMesh });
   }
 
+  // ── Moon Transit Shadows (Galilean moons → Jupiter) ──
+  // Dark disc meshes placed on Jupiter's surface where moons cast shadows.
+  // Updated each frame in updateSolarSystem() based on sun-moon-planet geometry.
+  const SHADOW_MOONS = ['io', 'europa', 'ganymede', 'callisto'];
+  const jupiterPlanet = planetMeshes.find(p => p.def.name === 'jupiter');
+  const shadowDiscs: Map<string, THREE.Mesh> = new Map();
+  if (jupiterPlanet) {
+    for (const moonName of SHADOW_MOONS) {
+      const discGeo = new THREE.CircleGeometry(0.03 * scale, 16);
+      const discMat = new THREE.MeshBasicMaterial({
+        color: 0x000000, transparent: true, opacity: 0.6,
+        depthWrite: false, side: THREE.DoubleSide,
+      });
+      const disc = new THREE.Mesh(discGeo, discMat);
+      disc.name = `shadow-${moonName}`;
+      disc.visible = false; // shown only when moon transits
+      jupiterPlanet.mesh.add(disc);
+      shadowDiscs.set(moonName, disc);
+    }
+  }
+  group.userData.shadowDiscs = shadowDiscs;
+
   group.userData.planets = planetMeshes;
   group.userData.moonInstances = moonInstances;
   group.userData.planetLabels = planetLabels;
@@ -1670,8 +1692,55 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       const moonPhase = def.distance * 3.14159 + def.speed * 1.618;
       orbitGroup.rotation.y = moonPhase + time * def.speed * 0.3;
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
+    }
+  }
 
-      // Moon TSL materials use built-in `time` node — no manual update needed.
+  // ── Moon Transit Shadows on Jupiter ──
+  const shadowDiscs = group.userData.shadowDiscs as Map<string, THREE.Mesh> | undefined;
+  if (shadowDiscs && moons) {
+    const jupiterData = planets.find(p => p.def.name === 'jupiter');
+    if (jupiterData) {
+      const jupiterWorldPos = new THREE.Vector3();
+      jupiterData.mesh.getWorldPosition(jupiterWorldPos);
+      const jupiterRadius = jupiterData.def.radius * (group.userData.scale as number ?? 1);
+
+      // Sun direction from Jupiter (sun is at group origin)
+      const sunWorldPos = new THREE.Vector3();
+      group.getWorldPosition(sunWorldPos);
+      const sunDir = sunWorldPos.clone().sub(jupiterWorldPos).normalize();
+
+      for (const [moonName, disc] of shadowDiscs) {
+        const moonInstance = moons.find(m => m.def.name === moonName);
+        if (!moonInstance) { disc.visible = false; continue; }
+
+        const moonWorldPos = new THREE.Vector3();
+        moonInstance.mesh.getWorldPosition(moonWorldPos);
+
+        // Vector from Jupiter center to moon
+        const jupiterToMoon = moonWorldPos.clone().sub(jupiterWorldPos);
+        // Is moon on the sun-side of Jupiter? (transit = moon between sun and planet)
+        const moonDotSun = jupiterToMoon.normalize().dot(sunDir);
+
+        if (moonDotSun > 0.1) {
+          // Moon is on sun-side — project shadow onto Jupiter surface
+          // Shadow position: where the sun-moon line intersects Jupiter's surface
+          const shadowPos = sunDir.clone().multiplyScalar(jupiterRadius * 1.01);
+          // Offset by moon's lateral position relative to sun direction
+          const lateral = jupiterToMoon.clone().sub(sunDir.clone().multiplyScalar(moonDotSun));
+          shadowPos.add(lateral.multiplyScalar(jupiterRadius * 0.8));
+
+          // Position in Jupiter's LOCAL space (disc is child of Jupiter mesh)
+          disc.position.copy(shadowPos);
+          disc.lookAt(jupiterWorldPos.clone().add(shadowPos).add(shadowPos.clone().normalize()));
+          // Scale shadow by moon size
+          const moonRadius = moonInstance.def.radius * (group.userData.scale as number ?? 1);
+          const shadowScale = Math.max(moonRadius * 2, 0.02);
+          disc.scale.setScalar(shadowScale / 0.03); // 0.03 = base CircleGeometry radius
+          disc.visible = true;
+        } else {
+          disc.visible = false;
+        }
+      }
     }
   }
 
