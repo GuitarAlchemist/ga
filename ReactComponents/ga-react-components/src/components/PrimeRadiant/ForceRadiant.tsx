@@ -2917,16 +2917,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         url: liveDataUrl ?? '',
         hubUrl: liveHubUrl,
         intervalMs: pollIntervalMs,
-        onScreenshotRequest: async (reason: string) => {
+        onScreenshotRequest: (reason: string) => {
           console.log('[PrimeRadiant] Screenshot requested:', reason);
-          try {
-            const { captureCanvas } = await import('./ScreenshotCapture');
-            const dataUrl = await captureCanvas();
+          const canvas = containerRef.current?.querySelector('canvas');
+          if (canvas) {
+            const dataUrl = canvas.toDataURL('image/png');
             pollingHandle?.submitScreenshot(dataUrl, 'image/png').catch(err =>
               console.warn('[PrimeRadiant] Screenshot submit failed:', err),
             );
-          } catch (err) {
-            console.warn('[PrimeRadiant] Screenshot capture failed:', err);
+          } else {
+            console.warn('[PrimeRadiant] No canvas found for screenshot');
           }
         },
         onUpdate: (freshGraph) => {
@@ -3325,8 +3325,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     },
     captureScreenshot: async () => {
-      const { captureCanvas } = await import('./ScreenshotCapture');
-      return captureCanvas();
+      const canvas = containerRef.current?.querySelector('canvas');
+      if (!canvas) throw new Error('No canvas found');
+      return canvas.toDataURL('image/png');
     },
     startVideoCapture: (durationMs = 10000) => {
       const canvas = containerRef.current?.querySelector('canvas');
