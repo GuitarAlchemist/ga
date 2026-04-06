@@ -12,6 +12,7 @@ import {
 import { bloom } from 'three/examples/jsm/tsl/display/BloomNode.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 // ================================================================
 //  PUBLIC TYPES
@@ -409,6 +410,7 @@ export class LunarLanderEngine {
     this.buildEarth();
     this.buildSunDisc();
     this.buildTerrain();
+    this.loadNasaTerrain(); // async — replaces procedural terrain with NASA STL when available
     this.buildHorizonGlow();
     this.buildLunarModule();
     this.buildParticleSystems();
@@ -1417,30 +1419,56 @@ export class LunarLanderEngine {
 
   // ── Terrain ─────────────────────────────────────────────────
 
+  /**
+   * Attempt to load the NASA Apollo 11 landing site STL as real terrain.
+   * If successful, replaces the procedural terrain mesh with the real
+   * 30×30km Sea of Tranquility relief (60× Z exaggeration, from NASA 3D Resources).
+   * Falls back silently to procedural terrain if the STL is missing.
+   */
+  private loadNasaTerrain(): void {
+    const stlLoader = new STLLoader();
+    stlLoader.load(
+      '/models/nasa/apollo-11-landing-site.stl',
+      (geometry) => {
+        // Center and scale the STL to match our terrain coordinate system
+        geometry.computeBoundingBox();
+        const box = geometry.boundingBox!;
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        // Translate to origin
+        geometry.translate(-center.x, -center.y, -center.z);
+
+        // Scale to fit TERRAIN_SIZE (the STL is 30×30km with 60× Z exaggeration)
+        const maxSpan = Math.max(size.x, size.z);
+        const scaleFactor = TERRAIN_SIZE / maxSpan;
+        geometry.scale(scaleFactor, scaleFactor * 0.3, scaleFactor); // reduce Z exaggeration from 60× to ~18×
+
+        // Rotate to Y-up (STL may be Z-up)
+        geometry.rotateX(-Math.PI / 2);
+
+        geometry.computeVertexNormals();
+
+        // Replace procedural terrain with NASA terrain
+        this.terrain.geometry.dispose();
+        this.terrain.geometry = geometry;
+        this.terrainGeom = geometry;
+
+        console.log('[LunarLander] NASA Apollo 11 terrain loaded — ', geometry.attributes.position.count, 'vertices');
+      },
+      undefined,
+      () => {
+        // STL not found — keep procedural terrain (already built)
+      },
+    );
+  }
+
   private buildTerrain(): void {
     this.terrainGeom = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
     this.terrainGeom.rotateX(-Math.PI / 2);
 
     const pos = this.terrainGeom.attributes.position as THREE.BufferAttribute;
     const vCount = pos.count;
-
-    // Real Apollo landing site heightmap (optional).
-    // Drop an LROC NAC-derived 16-bit PNG at /public/textures/terrain/apollo_height.png
-    // (grayscale, 2048×2048+, covers 3km×3km) — if present, it displaces the terrain
-    // with actual lunar elevation. Falls back to procedural craters if missing.
-    // Source: https://wms.lroc.asu.edu/lroc/rdr_product_select (search for Apollo site DTMs)
-    // or pre-extracted GeoTIFFs from NASA PDS imaging node.
-    let realHeightmap: ImageData | null = null;
-    const heightImg = new Image();
-    heightImg.src = '/textures/terrain/apollo_height.png';
-    heightImg.onload = () => {
-      const cv = document.createElement('canvas');
-      cv.width = heightImg.width; cv.height = heightImg.height;
-      const ctx = cv.getContext('2d')!;
-      ctx.drawImage(heightImg, 0, 0);
-      realHeightmap = ctx.getImageData(0, 0, heightImg.width, heightImg.height);
-      console.log('[LunarLander] Real Apollo site heightmap loaded:', heightImg.width, 'x', heightImg.height);
-    };
 
     // Pre-generate procedural craters (fallback when no real heightmap is present).
     const craterList: Array<{ x: number; z: number; radius: number; depth: number; rimHeight: number }> = [];
