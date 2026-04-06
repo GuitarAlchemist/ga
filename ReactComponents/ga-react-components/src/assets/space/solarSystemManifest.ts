@@ -10,7 +10,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_sun.jpg' },
+      albedo: { '2k': '/textures/planets/2k_sun.jpg', '8k': '/textures/planets/8k_sun.jpg' },
     },
   },
   mercury: {
@@ -20,7 +20,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_mercury.jpg' },
+      albedo: { '2k': '/textures/planets/2k_mercury.jpg', '8k': '/textures/planets/8k_mercury.jpg' },
       displacement: { '2k': '/textures/planets/2k_mercury_displacement.jpg' },
     },
   },
@@ -31,7 +31,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_venus_surface.jpg' },
+      albedo: { '2k': '/textures/planets/2k_venus_surface.jpg', '8k': '/textures/planets/8k_venus_surface.jpg' },
       displacement: { '2k': '/textures/planets/2k_venus_displacement.jpg' },
       atmosphere: { '2k': '/textures/planets/2k_venus_atmosphere.jpg' },
     },
@@ -43,14 +43,14 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_earth_daymap.jpg' },
-      night: { '2k': '/textures/planets/2k_earth_nightmap.jpg' },
-      clouds: { '2k': '/textures/planets/2k_earth_clouds.jpg' },
+      albedo: { '2k': '/textures/planets/2k_earth_daymap.jpg', '8k': '/textures/planets/8k_earth_daymap.jpg' },
+      night: { '2k': '/textures/planets/2k_earth_nightmap.jpg', '8k': '/textures/planets/8k_earth_nightmap.jpg' },
+      clouds: { '2k': '/textures/planets/2k_earth_clouds.jpg', '8k': '/textures/planets/8k_earth_clouds.jpg' },
       specular: { '2k': '/textures/planets/2k_earth_specular.jpg' },
       displacement: { '2k': '/textures/planets/2k_earth_displacement.jpg' },
       overlay: {},
     },
-    notes: 'Canonical Earth body supports layered rendering.',
+    notes: 'Canonical Earth body supports layered rendering. 8K available for albedo, night, clouds.',
   },
   moon: {
     id: 'moon',
@@ -59,7 +59,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_moon.jpg' },
+      albedo: { '2k': '/textures/planets/2k_moon.jpg', '8k': '/textures/planets/8k_moon.jpg' },
       displacement: { '2k': '/textures/planets/2k_moon_displacement.jpg' },
     },
   },
@@ -70,7 +70,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_mars.jpg' },
+      albedo: { '2k': '/textures/planets/2k_mars.jpg', '8k': '/textures/planets/8k_mars.jpg' },
       displacement: { '2k': '/textures/planets/2k_mars_displacement.jpg' },
     },
   },
@@ -81,7 +81,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_jupiter.jpg' },
+      albedo: { '2k': '/textures/planets/2k_jupiter.jpg', '8k': '/textures/planets/8k_jupiter.jpg' },
     },
   },
   saturn: {
@@ -91,8 +91,8 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      albedo: { '2k': '/textures/planets/2k_saturn.jpg' },
-      alpha: { '2k': '/textures/planets/2k_saturn_ring_alpha.png' },
+      albedo: { '2k': '/textures/planets/2k_saturn.jpg', '8k': '/textures/planets/8k_saturn.jpg' },
+      alpha: { '2k': '/textures/planets/2k_saturn_ring_alpha.png', '8k': '/textures/planets/8k_saturn_ring_alpha.png' },
     },
   },
   uranus: {
@@ -104,6 +104,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     textures: {
       albedo: { '2k': '/textures/planets/2k_uranus.jpg' },
     },
+    notes: 'No 8K available from Solar System Scope.',
   },
   neptune: {
     id: 'neptune',
@@ -114,6 +115,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     textures: {
       albedo: { '2k': '/textures/planets/2k_neptune.jpg' },
     },
+    notes: 'No 8K available from Solar System Scope.',
   },
   'milky-way': {
     id: 'milky-way',
@@ -136,7 +138,7 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
     sourceUrl: solarSystemScopeUrl,
     license: 'CC BY 4.0',
     textures: {
-      stars: { '2k': '/textures/planets/2k_stars.jpg' },
+      stars: { '2k': '/textures/planets/2k_stars.jpg', '8k': '/textures/planets/8k_stars.jpg' },
     },
   },
 };
