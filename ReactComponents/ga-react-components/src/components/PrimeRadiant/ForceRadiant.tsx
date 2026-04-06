@@ -14,16 +14,18 @@ import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
-import { DetailPanel } from './DetailPanel';
 import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
 import { AuthProvider } from './AuthContext';
 import { AuthBadge } from './AuthBadge';
 import { DeviceProvider } from './DeviceContext';
-import { DevicesPanel } from './DevicesPanel';
 import { ChatWidget } from './ChatWidget';
-import { BrainstormPanel } from './BrainstormPanel';
 import { PlanetNav } from './PlanetNav';
+
+// ── Lazy-loaded panels (code-split for faster initial load) ──
+const DetailPanel = React.lazy(() => import('./DetailPanel').then(m => ({ default: m.DetailPanel })));
+const DevicesPanel = React.lazy(() => import('./DevicesPanel').then(m => ({ default: m.DevicesPanel })));
+const BrainstormPanel = React.lazy(() => import('./BrainstormPanel').then(m => ({ default: m.BrainstormPanel })));
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createRiggedDemerzelFace, updateRiggedDemerzelFace } from './DemerzelRiggedFace';
@@ -34,8 +36,8 @@ import { createSpaceStation, updateSpaceStation } from './SpaceStation';
 import { createMilkyWay } from './MilkyWay';
 import { GalacticClock } from './GalacticClock';
 import { TutorialOverlay } from './TutorialOverlay';
-import { ActivityPanel } from './ActivityPanel';
-import { LLMStatus } from './LLMStatus';
+const ActivityPanel = React.lazy(() => import('./ActivityPanel').then(m => ({ default: m.ActivityPanel })));
+const LLMStatus = React.lazy(() => import('./LLMStatus').then(m => ({ default: m.LLMStatus })));
 import { IxqlCommandInput } from './IxqlCommandInput';
 import { IxqlDemoButton } from './IxqlDemoButton';
 import { parseIxqlCommand, evaluatePredicate, type IxqlParseResult } from './IxqlControlParser';
@@ -54,37 +56,39 @@ import { savedQueryStore } from './SavedQueryStore';
 import { type CriticPhase } from './VisualCriticLoop';
 import { startDemerzelDriver } from './DemerzelIxqlDriver';
 import { type CriticState } from './DemerzelCriticOverlay';
-import { BacklogPanel } from './BacklogPanel';
-import { AgentPanel } from './AgentPanel';
-import { SeldonDashboard } from './SeldonDashboard';
+const BacklogPanel = React.lazy(() => import('./BacklogPanel').then(m => ({ default: m.BacklogPanel })));
+const AgentPanel = React.lazy(() => import('./AgentPanel').then(m => ({ default: m.AgentPanel })));
+const SeldonDashboard = React.lazy(() => import('./SeldonDashboard').then(m => ({ default: m.SeldonDashboard })));
 import { IconRail } from './IconRail';
 import type { PanelId } from './PanelRegistry';
 import { panelRegistry } from './PanelRegistry';
-import { AlgedonicPanel, type AlgedonicSignal } from './AlgedonicPanel';
-import { CICDPanel } from './CICDPanel';
-import { ClaudeCodePanel } from './ClaudeCodePanel';
-import { LibraryPanel } from './LibraryPanel';
-import { AssetProvenancePanel } from './AssetProvenancePanel';
+import type { AlgedonicSignal } from './AlgedonicPanel';
+const AlgedonicPanel = React.lazy(() => import('./AlgedonicPanel').then(m => ({ default: m.AlgedonicPanel })));
+const CICDPanel = React.lazy(() => import('./CICDPanel').then(m => ({ default: m.CICDPanel })));
+const ClaudeCodePanel = React.lazy(() => import('./ClaudeCodePanel').then(m => ({ default: m.ClaudeCodePanel })));
+const LibraryPanel = React.lazy(() => import('./LibraryPanel').then(m => ({ default: m.LibraryPanel })));
+const AssetProvenancePanel = React.lazy(() => import('./AssetProvenancePanel').then(m => ({ default: m.AssetProvenancePanel })));
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
-import { CourseViewer } from './CourseViewer';
-import { LunarLander } from './LunarLander';
+const CourseViewer = React.lazy(() => import('./CourseViewer').then(m => ({ default: m.CourseViewer })));
+const LunarLander = React.lazy(() => import('./LunarLander').then(m => ({ default: m.LunarLander })));
 import { PlanetPiP } from './PlanetPiP';
-import { LiveNotebook } from './LiveNotebook';
+const LiveNotebook = React.lazy(() => import('./LiveNotebook').then(m => ({ default: m.LiveNotebook })));
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
-import { GodotScene, setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
+import { setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
+const GodotScene = React.lazy(() => import('./GodotScene').then(m => ({ default: m.GodotScene })));
 import { DemerzelFaceOverlay } from './DemerzelFaceOverlay';
-import { GisPanel } from './GisPanel';
-import { PresencePanel } from './PresencePanel';
+const GisPanel = React.lazy(() => import('./GisPanel').then(m => ({ default: m.GisPanel })));
+const PresencePanel = React.lazy(() => import('./PresencePanel').then(m => ({ default: m.PresencePanel })));
 import { getConnectionLog } from './ConnectionLog';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
 import { useAgentPresence } from './AgentPresence';
-import { TheoryTribunal } from './TheoryTribunal';
-import { SeldonFacultyPanel } from './SeldonFacultyPanel';
-import { CodeTribunal } from './CodeTribunal';
-import { AdminInbox } from './AdminInbox';
+const TheoryTribunal = React.lazy(() => import('./TheoryTribunal').then(m => ({ default: m.TheoryTribunal })));
+const SeldonFacultyPanel = React.lazy(() => import('./SeldonFacultyPanel').then(m => ({ default: m.SeldonFacultyPanel })));
+const CodeTribunal = React.lazy(() => import('./CodeTribunal').then(m => ({ default: m.CodeTribunal })));
+const AdminInbox = React.lazy(() => import('./AdminInbox').then(m => ({ default: m.AdminInbox })));
 import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
@@ -99,10 +103,10 @@ import { CausticsShader } from './shaders/CausticsPass';
 import { DispersionShader } from './shaders/DispersionPass';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
-import { IxqlCodeGen } from './IxqlCodeGen';
+const IxqlCodeGen = React.lazy(() => import('./IxqlCodeGen').then(m => ({ default: m.IxqlCodeGen })));
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
-import { QAPanel } from './QAPanel';
-import { AgentSpectralPanel } from './AgentSpectralPanel';
+const QAPanel = React.lazy(() => import('./QAPanel').then(m => ({ default: m.QAPanel })));
+const AgentSpectralPanel = React.lazy(() => import('./AgentSpectralPanel').then(m => ({ default: m.AgentSpectralPanel })));
 import { autoRemediation } from './AutoRemediation';
 import { proofVerifier } from './ProofVerifier';
 import { mountApprovedRuntimeAssets } from '../../assets/space';
@@ -2885,6 +2889,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     }
 
     graphRef.current = fg;
+    // Expose graph instance for screenshot capture (ScreenshotCapture.ts needs
+    // to call tick() to render a frame before reading the back-buffer).
+    (window as Record<string, unknown>).__primeRadiantGraph = fg;
 
     // ─── Terminal filaments — governance-driven tendrils on leaf nodes ───
     // Each filament represents a real governance relationship:
@@ -4167,6 +4174,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           </svg>
         </button>
 
+        {/* Suspense boundary for lazy-loaded panels */}
+        <React.Suspense fallback={<div style={{ padding: '2rem', color: '#666', textAlign: 'center' }}>Loading panel...</div>}>
         {/* Panels with custom props — explicit conditionals */}
         {activePanel === 'detail' && showDetailPanel && (
           <DetailPanel
@@ -4287,24 +4296,20 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           if (reg) return React.createElement('div', { style: { padding: '1rem', color: '#ccc' } }, `Panel: ${activePanel}`);
           return null;
         })()}
+        </React.Suspense>
       </div>
 
-      {/* CourseViewer renders as full-screen overlay, outside side panel */}
+      {/* Full-screen overlays — lazy-loaded */}
+      <React.Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#000', display: 'grid', placeItems: 'center', color: '#666', zIndex: 9999 }}>Loading...</div>}>
       {activePanel === 'university' && (
         <CourseViewer open={true} onClose={() => setActivePanel(null)} />
       )}
-
-      {/* LiveNotebook renders as full-screen overlay, outside side panel */}
       {activePanel === 'notebook' && (
         <LiveNotebook open={true} onClose={() => setActivePanel(null)} />
       )}
-
-      {/* Lunar Lander renders as full-screen overlay, outside side panel */}
       {activePanel === 'lunar' && (
         <LunarLander open={true} onClose={() => setActivePanel(null)} />
       )}
-
-      {/* Godot 3D fullscreen overlay — independent of panel state */}
       {godotFullscreen && (
         <GodotScene
           mode="fullscreen"
@@ -4319,6 +4324,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }}
         />
       )}
+      </React.Suspense>
 
     </div>
     </DeviceProvider>

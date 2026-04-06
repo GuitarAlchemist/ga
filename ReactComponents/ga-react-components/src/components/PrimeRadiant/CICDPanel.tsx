@@ -1,9 +1,11 @@
 // src/components/PrimeRadiant/CICDPanel.tsx
 // GitHub Actions CI/CD status panel for the Prime Radiant command center
+// Data sourced from central GitHubPollingManager (single polling loop)
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { PanelStatus } from './IconRail';
 import { timeAgo } from './utils';
+import { gitHubPollingManager } from './GitHubPollingManager';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,22 +23,9 @@ interface WorkflowRun {
 }
 
 // ---------------------------------------------------------------------------
-// GitHub API configuration (same pattern as ActivityPanel)
+// Configuration
 // ---------------------------------------------------------------------------
-const GITHUB_OWNER = 'GuitarAlchemist';
 const GITHUB_REPOS = ['Demerzel', 'ga', 'tars', 'ix'];
-const GITHUB_API = 'https://api.github.com';
-
-const githubToken: string | null =
-  (typeof import.meta !== 'undefined' && (import.meta as Record<string, unknown>).env
-    ? (((import.meta as Record<string, unknown>).env) as Record<string, string | undefined>)['VITE_GITHUB_TOKEN'] ?? null
-    : null)
-  ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('ga-github-token') : null);
-
-const GITHUB_HEADERS: HeadersInit = {
-  'Accept': 'application/vnd.github.v3+json',
-  ...(githubToken ? { 'Authorization': `Bearer ${githubToken}` } : {}),
-};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -60,40 +49,30 @@ function mapStatus(status: string, conclusion: string | null): WorkflowRun['stat
 }
 
 // ---------------------------------------------------------------------------
-// Fetch workflow runs from GitHub API
+// Transform raw API data into WorkflowRun[]
 // ---------------------------------------------------------------------------
-async function fetchWorkflowRuns(): Promise<WorkflowRun[]> {
-  try {
-    const allRuns: WorkflowRun[] = [];
-    for (const repo of GITHUB_REPOS) {
-      const res = await fetch(
-        `${GITHUB_API}/repos/${GITHUB_OWNER}/${repo}/actions/runs?per_page=5`,
-        { headers: GITHUB_HEADERS },
-      );
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const run of data.workflow_runs ?? []) {
-        allRuns.push({
-          id: `${repo}-${run.id}`,
-          name: run.name ?? 'Workflow',
-          repo,
-          branch: run.head_branch ?? 'main',
-          status: mapStatus(run.status, run.conclusion),
-          conclusion: run.conclusion ?? undefined,
-          startedAt: run.run_started_at ?? run.created_at,
-          duration: formatDuration(
-            run.run_started_at ?? run.created_at,
-            run.status === 'completed' ? run.updated_at : undefined,
-          ),
-          url: run.html_url,
-        });
-      }
+function transformWorkflowRuns(dataByRepo: Map<string, unknown[]>): WorkflowRun[] {
+  const allRuns: WorkflowRun[] = [];
+  for (const [repo, runs] of dataByRepo) {
+    for (const run of runs as Array<Record<string, unknown>>) {
+      const startedAt = (run.run_started_at as string) ?? (run.created_at as string);
+      allRuns.push({
+        id: `${repo}-${run.id}`,
+        name: (run.name as string) ?? 'Workflow',
+        repo,
+        branch: (run.head_branch as string) ?? 'main',
+        status: mapStatus(run.status as string, run.conclusion as string | null),
+        conclusion: (run.conclusion as string) ?? undefined,
+        startedAt,
+        duration: formatDuration(
+          startedAt,
+          run.status === 'completed' ? (run.updated_at as string) : undefined,
+        ),
+        url: run.html_url as string,
+      });
     }
-    if (allRuns.length > 0) return allRuns;
-    throw new Error('No runs fetched');
-  } catch {
-    return fallbackRuns();
   }
+  return allRuns.length > 0 ? allRuns : fallbackRuns();
 }
 
 function fallbackRuns(): WorkflowRun[] {
@@ -126,28 +105,25 @@ export interface CICDHealth {
 export function useCICDHealth(): CICDHealth {
   const [health, setHealth] = useState<CICDHealth>({ status: null, failCount: 0, runningCount: 0, totalCount: 0, failingRepos: [] });
 
-  const refresh = useCallback(async () => {
-    const runs = await fetchWorkflowRuns();
-    if (runs.length === 0) { setHealth({ status: null, failCount: 0, runningCount: 0, totalCount: 0, failingRepos: [] }); return; }
-    // Look at the most recent run per repo to determine overall status
-    const latestByRepo = new Map<string, WorkflowRun>();
-    for (const run of runs) {
-      if (!latestByRepo.has(run.repo)) latestByRepo.set(run.repo, run);
-    }
-    const latest = [...latestByRepo.values()];
-    const failing = latest.filter(r => r.status === 'failure');
-    const failCount = failing.length;
-    const failingRepos = failing.map(r => r.repo.toLowerCase());
-    const runningCount = runs.filter(r => r.status === 'in_progress' || r.status === 'queued').length;
-    const status: PanelStatus = failCount > 0 ? 'error' : runningCount > 0 ? 'warn' : 'ok';
-    setHealth({ status, failCount, runningCount, totalCount: runs.length, failingRepos });
-  }, []);
-
   useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, 60000);
-    return () => clearInterval(interval);
-  }, [refresh]);
+    const unsub = gitHubPollingManager.subscribe('workflow-runs', GITHUB_REPOS, (data) => {
+      const runs = transformWorkflowRuns(data);
+      if (runs.length === 0) { setHealth({ status: null, failCount: 0, runningCount: 0, totalCount: 0, failingRepos: [] }); return; }
+      // Look at the most recent run per repo to determine overall status
+      const latestByRepo = new Map<string, WorkflowRun>();
+      for (const run of runs) {
+        if (!latestByRepo.has(run.repo)) latestByRepo.set(run.repo, run);
+      }
+      const latest = [...latestByRepo.values()];
+      const failing = latest.filter(r => r.status === 'failure');
+      const failCount = failing.length;
+      const failingRepos = failing.map(r => r.repo.toLowerCase());
+      const runningCount = runs.filter(r => r.status === 'in_progress' || r.status === 'queued').length;
+      const status: PanelStatus = failCount > 0 ? 'error' : runningCount > 0 ? 'warn' : 'ok';
+      setHealth({ status, failCount, runningCount, totalCount: runs.length, failingRepos });
+    });
+    return unsub;
+  }, []);
 
   return health;
 }
@@ -202,10 +178,12 @@ export const CICDPanel: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [remediation, setRemediation] = useState<RemediationState>(loadRemediationState);
 
+  // Subscribe to central polling manager — no duplicate interval
   useEffect(() => {
-    fetchWorkflowRuns().then(setRuns);
-    const id = setInterval(() => fetchWorkflowRuns().then(setRuns), 60_000);
-    return () => clearInterval(id);
+    const unsub = gitHubPollingManager.subscribe('workflow-runs', GITHUB_REPOS, (data) => {
+      setRuns(transformWorkflowRuns(data));
+    });
+    return unsub;
   }, []);
 
   // Group by repo
