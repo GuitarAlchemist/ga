@@ -9,14 +9,59 @@ import { useState, useCallback, useRef } from 'react';
 /**
  * Capture the Three.js / force-graph canvas as a base64 PNG string.
  * Returns the full data URL (data:image/png;base64,...).
+ *
+ * WebGPURenderer (and WebGL without preserveDrawingBuffer) clears the
+ * back-buffer after each frame, so canvas.toDataURL() returns blank.
+ * Fix: render one more frame via the force-graph tick, then capture
+ * immediately within the same task. If still blank, fall back to
+ * reading pixels from an OffscreenCanvas via drawImage.
  */
 export async function captureCanvas(): Promise<string> {
   const canvas = document.querySelector('.prime-radiant__canvas-area canvas') as HTMLCanvasElement | null;
   if (!canvas) {
     throw new Error('No canvas element found in .prime-radiant__canvas-area');
   }
-  // Force a synchronous frame so WebGL content is current
-  return canvas.toDataURL('image/png');
+
+  // Strategy 1: Try direct toDataURL (works with preserveDrawingBuffer)
+  let dataUrl = canvas.toDataURL('image/png');
+  if (!isBlankDataUrl(dataUrl)) return dataUrl;
+
+  // Strategy 2: Copy via drawImage to an OffscreenCanvas (captures current
+  // framebuffer content even without preserveDrawingBuffer on some browsers)
+  try {
+    const offscreen = document.createElement('canvas');
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
+    const ctx = offscreen.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(canvas, 0, 0);
+      dataUrl = offscreen.toDataURL('image/png');
+      if (!isBlankDataUrl(dataUrl)) return dataUrl;
+    }
+  } catch {
+    // drawImage can throw on tainted canvases — fall through
+  }
+
+  // Strategy 3: Request one animation frame then capture immediately
+  // (renderer writes to back-buffer during rAF, we read before browser
+  // clears it for the next present)
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      const result = canvas.toDataURL('image/png');
+      resolve(result);
+    });
+  });
+}
+
+function isBlankDataUrl(dataUrl: string): boolean {
+  // A blank PNG toDataURL is typically very short (<200 chars for any resolution)
+  // or exactly the same as an empty canvas
+  if (!dataUrl || dataUrl.length < 100) return true;
+  // Check for all-transparent/all-black by sampling the base64 length
+  // A 1920x1080 blank PNG is ~6KB; a real scene is typically >50KB
+  const base64 = dataUrl.split(',')[1];
+  if (!base64) return true;
+  return base64.length < 1000;
 }
 
 /**

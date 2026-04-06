@@ -119,7 +119,8 @@ function simulateExecution(command: Command, update: (cmd: Command) => void): vo
       const canvas = document.querySelector('.prime-radiant__canvas-area canvas') as HTMLCanvasElement | null;
       if (canvas) {
         try {
-          const dataUrl = canvas.toDataURL('image/png');
+          const { captureCanvas } = await import('./ScreenshotCapture');
+          const dataUrl = await captureCanvas();
           const sizeKb = Math.round(dataUrl.length * 0.75 / 1024);
           // Store screenshot for governance pickup
           const screenshot = {
