@@ -115,6 +115,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
 
   const [selectedNode, setSelectedNode] = useState<GovernanceNode | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GovernanceNode[]>([]);
   const [graphData, setGraphData] = useState<GovernanceGraph | null>(null);
@@ -156,6 +157,13 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
       setIsLoading(false);
       console.log('[PrimeRadiant] Initialization complete');
 
+      // Track mouse for tooltip positioning
+      const handleMouseMove = (e: MouseEvent) => {
+        const rect = container.getBoundingClientRect();
+        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      };
+      container.addEventListener('mousemove', handleMouseMove);
+
       // Resize observer
       const resizeObserver = new ResizeObserver(() => {
         engine.resize();
@@ -163,6 +171,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
       resizeObserver.observe(container);
 
       return () => {
+        container.removeEventListener('mousemove', handleMouseMove);
         resizeObserver.disconnect();
         engine.dispose();
         engineRef.current = null;
@@ -390,14 +399,14 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
       {/* Time slider — removed (I9): value was stored but never consumed by any visualization.
          Re-add when node filtering by governance evolution phase is implemented. */}
 
-      {/* Tooltip */}
+      {/* Tooltip — follows mouse near the hovered node */}
       {hoveredNode && !selectedNode && (
         <div
           className="prime-radiant__tooltip"
           style={{
-            left: '50%',
-            top: 16,
-            transform: 'translateX(-50%)',
+            left: mousePos.x + 16,
+            top: mousePos.y - 8,
+            transform: 'none',
           }}
         >
           <div className="prime-radiant__tooltip-name" style={{ color: hoveredNode.color }}>

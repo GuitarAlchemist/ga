@@ -692,14 +692,16 @@
  * right) stays reachable by swipe. */
 @media (max-width: 768px) {
   .prime-radiant__health {
+    /* Move below search bar to avoid overlap (I7) */
+    top: 48px;
     left: 8px;
     right: 8px;
     transform: none;
     max-width: calc(100vw - 16px);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 8px 12px;
-    font-size: 11px;
+    padding: 6px 10px;
+    font-size: 10px;
     scrollbar-width: thin;
   }
   .prime-radiant__health::-webkit-scrollbar { height: 4px; }
