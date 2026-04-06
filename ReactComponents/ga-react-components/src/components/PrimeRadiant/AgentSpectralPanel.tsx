@@ -244,14 +244,17 @@ export const AgentSpectralPanel: React.FC = () => {
   const [snapshot, setSnapshot] = useState<TopologySnapshot | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
   const SVG_W = 380;
   const SVG_H = 300;
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     const data = await fetchTopology();
     setSnapshot(data);
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -289,15 +292,57 @@ export const AgentSpectralPanel: React.FC = () => {
       >
         <span className="prime-radiant__activity-title">
           Agent Topology
-          {isDemo && (
-            <span className="spectral-demo-badge">[DEMO]</span>
-          )}
+          <span
+            className="spectral-status-dot"
+            style={{
+              display: 'inline-block',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: isDemo ? '#eab308' : '#22c55e',
+              marginLeft: 6,
+              marginRight: 4,
+              verticalAlign: 'middle',
+              boxShadow: isDemo
+                ? '0 0 4px rgba(234,179,8,0.6)'
+                : '0 0 4px rgba(34,197,94,0.6)',
+            }}
+            title={isDemo ? 'Demo data — API unavailable' : 'Live — connected to API'}
+          />
+          <span style={{ fontSize: '0.6rem', color: isDemo ? '#eab308' : '#22c55e', marginRight: 6 }}>
+            {isDemo ? 'Demo' : 'Live'}
+          </span>
           <span className="prime-radiant__activity-count">
             {agents.length} agents &middot; {edges.length} edges
           </span>
         </span>
-        <span className="prime-radiant__activity-toggle">
-          {collapsed ? '\u25B6' : '\u25BC'}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            className="spectral-refresh-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              refresh();
+            }}
+            disabled={refreshing}
+            title="Refresh topology"
+            style={{
+              background: 'none',
+              border: '1px solid #30363d',
+              borderRadius: 4,
+              color: '#8b949e',
+              cursor: refreshing ? 'wait' : 'pointer',
+              padding: '2px 6px',
+              fontSize: '0.65rem',
+              fontFamily: "'JetBrains Mono', monospace",
+              opacity: refreshing ? 0.5 : 1,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {refreshing ? '\u21BB ...' : '\u21BB'}
+          </button>
+          <span className="prime-radiant__activity-toggle">
+            {collapsed ? '\u25B6' : '\u25BC'}
+          </span>
         </span>
       </div>
 
