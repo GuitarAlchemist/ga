@@ -194,7 +194,7 @@ export const AgentPanel: React.FC = () => {
             {teams.length} team{teams.length !== 1 ? 's' : ''}
           </span>
         </span>
-        <span className="prime-radiant__agents-toggle">{collapsed ? '>' : 'v'}</span>
+        <span className="prime-radiant__agents-toggle">{collapsed ? '▶' : '▼'}</span>
       </div>
 
       {!collapsed && (

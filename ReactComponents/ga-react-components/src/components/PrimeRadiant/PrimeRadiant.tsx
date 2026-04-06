@@ -222,6 +222,7 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
       className={`prime-radiant ${className}`}
       style={{ width, height }}
     >
+      <a href="#prime-radiant-controls" className="prime-radiant__skip-link">Skip to controls</a>
       {/* 3D Canvas */}
       <canvas ref={canvasRef} className="prime-radiant__canvas" />
 

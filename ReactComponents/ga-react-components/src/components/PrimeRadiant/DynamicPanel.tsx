@@ -98,7 +98,7 @@ const ListDetailLayout: React.FC<{ data: unknown[]; showFields: string[] }> = ({
               onClick={() => toggle(idx)}
             >
               <span className="prime-radiant__dynamic-list-title">{title}</span>
-              <span className="prime-radiant__dynamic-list-toggle">{isOpen ? 'v' : '>'}</span>
+              <span className="prime-radiant__dynamic-list-toggle">{isOpen ? '▼' : '▶'}</span>
             </div>
             {isOpen && detailFields.length > 0 && (
               <div className="prime-radiant__dynamic-list-detail">

@@ -261,7 +261,7 @@ export const LibraryPanel: React.FC = () => {
           Library
           <span className="prime-radiant__library-count">{langCount}</span>
         </span>
-        <span className="prime-radiant__library-toggle">{collapsed ? '>' : 'v'}</span>
+        <span className="prime-radiant__library-toggle">{collapsed ? '▶' : '▼'}</span>
       </div>
 
       {!collapsed && (
@@ -341,7 +341,7 @@ export const LibraryPanel: React.FC = () => {
                   >
                     <span className="prime-radiant__library-item-level" title={ref.level}>{levelIcon}</span>
                     <span className="prime-radiant__library-item-title">{FLAG_ICON[ref.language]} {ref.title}</span>
-                    <span className="prime-radiant__library-item-chevron">{expanded ? 'v' : '>'}</span>
+                    <span className="prime-radiant__library-item-chevron">{expanded ? '▼' : '▶'}</span>
                   </div>
                   <div className="prime-radiant__library-item-topic">{ref.topic}</div>
                   <div className="prime-radiant__library-item-depts">
