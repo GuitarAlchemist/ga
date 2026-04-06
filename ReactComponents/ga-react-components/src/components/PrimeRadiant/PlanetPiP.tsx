@@ -50,16 +50,12 @@ export const PlanetPiP: React.FC<PlanetPiPProps> = ({
   const video = PLANET_VIDEOS[planet];
   if (!video) return null;
 
-  // Position: offset to the right of the planet's screen position
+  // Position: anchor to bottom-right corner so it never covers the planet
   const pipWidth = 280;
   const pipHeight = 158; // 16:9
-  let left = screenX + 30;
-  let top = screenY - pipHeight / 2;
-
-  // Clamp to viewport
-  if (left + pipWidth > containerWidth - 20) left = screenX - pipWidth - 30;
-  if (top < 10) top = 10;
-  if (top + pipHeight > containerHeight - 10) top = containerHeight - pipHeight - 10;
+  const margin = 12;
+  const left = containerWidth - pipWidth - margin;
+  const top = containerHeight - pipHeight - margin;
 
   return (
     <div
