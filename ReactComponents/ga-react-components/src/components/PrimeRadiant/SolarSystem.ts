@@ -1452,32 +1452,13 @@ export function toggleJupiterStorm(group: THREE.Group): boolean {
 // ─────────────────────────────────────────────────────────────
 // UPDATE
 // ─────────────────────────────────────────────────────────────
-const _sunViewPos = new THREE.Vector3();
-const _viewMatrix = new THREE.Matrix4();
-
 export function updateSolarSystem(group: THREE.Group, time: number, camera?: THREE.Camera): void {
   const planets = group.userData.planets as { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] | undefined;
   if (!planets) return;
 
   // Sun is at group origin (0,0,0 in local space).
-  // Compute its view-space position by multiplying through the group's own modelViewMatrix.
-  // This is camera-parenting safe — no world-space roundtrip needed.
-  const cam = camera ?? (group.parent as THREE.Camera | null);
-  if (cam) {
-    cam.updateMatrixWorld();
-    group.updateWorldMatrix(true, false);
-    // group.modelViewMatrix = camera.matrixWorldInverse * group.matrixWorld
-    _viewMatrix.multiplyMatrices(cam.matrixWorldInverse, group.matrixWorld);
-    // Sun at local origin → view-space position = translation column of modelViewMatrix
-    _sunViewPos.setFromMatrixPosition(_viewMatrix);
-  } else {
-    group.updateWorldMatrix(true, false);
-    group.getWorldPosition(_sunViewPos);
-  }
-
-  // Sun TSL material uses built-in `time` node — no manual update needed.
-
-  // Sun world position (sun is at local origin of the group)
+  // Compute its world-space position for shader day/night terminator.
+  group.updateWorldMatrix(true, false);
   const _sunWorldPos = new THREE.Vector3();
   group.getWorldPosition(_sunWorldPos);
 
@@ -1575,10 +1556,10 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       if (cloudsHigh) cloudsHigh.rotation.y = time * 0.45;
     }
 
-    // Update planet TSL uniforms — sun position in view space for day/night + bump
+    // Update planet TSL uniforms — sun position in world space for day/night + bump
     const planetUserData = mesh.material.userData;
     if (planetUserData?.sunPosUniform) {
-      planetUserData.sunPosUniform.value.copy(_sunViewPos);
+      planetUserData.sunPosUniform.value.copy(_sunWorldPos);
     }
 
     // Update Saturn ring TSL uniform — sun position in WORLD space (ring uses positionWorld)
