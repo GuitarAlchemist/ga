@@ -145,17 +145,15 @@ export function createPlanetSurfaceMaterialTSL(
     // View-space vectors
     const viewPos = positionView;
     const viewDir = normalize(viewPos.negate());
-    // Sun direction: from fragment toward sun (view space)
-    const toSun = uSunPosView.sub(viewPos);
-    const sunDist = length(toSun);
-    // Guard against degenerate case where sun is at fragment position
-    const sunDir = normalize(toSun.add(vec3(0.0001, 0.0001, 0.0001)));
+    const sunDir = normalize(uSunPosView.sub(viewPos));
 
     const N = getBumpNormal();
     const NdotL = dot(N, sunDir);
-    // Wider terminator band for visible day/night transition.
-    // Range ±0.15 gives a ~30° twilight zone — visible from all angles.
-    const dayFactor = smoothstep(-0.15, 0.15, NdotL);
+    // Tight terminator: at NdotL=0 the day/night is nearly 50/50 (not 43% day),
+    // and the full day/night transition happens within ±0.05 of NdotL=0.
+    // Previously: smoothstep(-0.15, 0.2, NdotL) biased heavily toward day and
+    // produced a wide twilight band that made night invisible at most angles.
+    const dayFactor = smoothstep(-0.05, 0.05, NdotL);
 
     // Day color
     const dayColorBase = mapTex.sample(uvCoord).rgb.toVar();
@@ -202,11 +200,9 @@ export function createPlanetSurfaceMaterialTSL(
     litDay.assign(litDay.add(vec3(1.0, 0.95, 0.9).mul(specBase).mul(dayFactor)));
 
     // ── Night side ──
-    // Earth: city lights from nightMap. Other planets: dim surface with blue tint
-    // (reflected starlight / zodiacal light) so the dark side is visible, not invisible.
     const nightColor = nightTex
       ? nightTex.sample(uvCoord).rgb.mul(0.8)
-      : dayColorBase.mul(0.04).add(vec3(0.005, 0.008, 0.015));
+      : vec3(0.0, 0.0, 0.0);
 
     // ── Day/night blend across terminator ──
     const surfaceColor = mix(nightColor, litDay, dayFactor).toVar();
