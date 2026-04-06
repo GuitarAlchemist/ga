@@ -1696,18 +1696,23 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
   }
 
   // ── Moon Transit Shadows on Jupiter ──
+  // Parallel-ray approximation: sun is far enough that rays are effectively parallel.
+  // For each Galilean moon, project its position along the sun direction onto Jupiter's
+  // surface sphere. Shadow appears only when the moon is between the sun and Jupiter
+  // AND the lateral offset is small enough to hit the planet disc.
   const shadowDiscs = group.userData.shadowDiscs as Map<string, THREE.Mesh> | undefined;
   if (shadowDiscs && moons) {
     const jupiterData = planets.find(p => p.def.name === 'jupiter');
     if (jupiterData) {
       const jupiterWorldPos = new THREE.Vector3();
       jupiterData.mesh.getWorldPosition(jupiterWorldPos);
-      const jupiterRadius = jupiterData.def.radius * (group.userData.scale as number ?? 1);
+      const scl = group.userData.scale as number ?? 1;
+      const jupiterRadius = jupiterData.def.radius * scl;
 
-      // Sun direction from Jupiter (sun is at group origin)
+      // Direction from Jupiter toward the sun (sun is at group origin)
       const sunWorldPos = new THREE.Vector3();
       group.getWorldPosition(sunWorldPos);
-      const sunDir = sunWorldPos.clone().sub(jupiterWorldPos).normalize();
+      const toSun = sunWorldPos.clone().sub(jupiterWorldPos).normalize();
 
       for (const [moonName, disc] of shadowDiscs) {
         const moonInstance = moons.find(m => m.def.name === moonName);
@@ -1716,29 +1721,37 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
         const moonWorldPos = new THREE.Vector3();
         moonInstance.mesh.getWorldPosition(moonWorldPos);
 
-        // Vector from Jupiter center to moon
-        const jupiterToMoon = moonWorldPos.clone().sub(jupiterWorldPos);
-        // Is moon on the sun-side of Jupiter? (transit = moon between sun and planet)
-        const moonDotSun = jupiterToMoon.normalize().dot(sunDir);
+        // Moon position relative to Jupiter center
+        const moonRel = moonWorldPos.clone().sub(jupiterWorldPos);
+        // Component along the sun direction (positive = moon is on sun side)
+        const alongSun = moonRel.dot(toSun);
 
-        if (moonDotSun > 0.1) {
-          // Moon is on sun-side — project shadow onto Jupiter surface
-          // Shadow position: where the sun-moon line intersects Jupiter's surface
-          const shadowPos = sunDir.clone().multiplyScalar(jupiterRadius * 1.01);
-          // Offset by moon's lateral position relative to sun direction
-          const lateral = jupiterToMoon.clone().sub(sunDir.clone().multiplyScalar(moonDotSun));
-          shadowPos.add(lateral.multiplyScalar(jupiterRadius * 0.8));
+        if (alongSun > jupiterRadius * 0.1) {
+          // Lateral offset from the Jupiter–Sun axis
+          const lateral = moonRel.clone().sub(toSun.clone().multiplyScalar(alongSun));
+          const lateralDist = lateral.length();
 
-          // Position in Jupiter's LOCAL space (disc is child of Jupiter mesh)
-          disc.position.copy(shadowPos);
-          disc.lookAt(jupiterWorldPos.clone().add(shadowPos).add(shadowPos.clone().normalize()));
-          // Scale shadow by moon size
-          const moonRadius = moonInstance.def.radius * (group.userData.scale as number ?? 1);
-          const shadowScale = Math.max(moonRadius * 2, 0.02);
-          disc.scale.setScalar(shadowScale / 0.03); // 0.03 = base CircleGeometry radius
-          disc.visible = true;
+          if (lateralDist < jupiterRadius * 0.95) {
+            // Shadow hits the surface — compute position on the sun-facing hemisphere
+            const zComp = Math.sqrt(Math.max(0, jupiterRadius * jupiterRadius - lateralDist * lateralDist));
+            // Shadow point in Jupiter-relative world coords (on the lit hemisphere)
+            const shadowWorld = lateral.clone().add(toSun.clone().multiplyScalar(zComp * 1.005));
+
+            // Convert to Jupiter mesh local space (disc is a child of the mesh)
+            disc.position.copy(jupiterData.mesh.worldToLocal(jupiterWorldPos.clone().add(shadowWorld)));
+            // Face outward from Jupiter center (local origin)
+            disc.lookAt(0, 0, 0);
+
+            // Scale: moon angular size projected onto surface
+            const moonRadius = moonInstance.def.radius * scl;
+            const shadowSize = Math.max(moonRadius * 1.5, 0.015);
+            disc.scale.setScalar(shadowSize / 0.03); // 0.03 = CircleGeometry base radius
+            disc.visible = true;
+          } else {
+            disc.visible = false; // moon lateral offset too far — misses Jupiter
+          }
         } else {
-          disc.visible = false;
+          disc.visible = false; // moon behind Jupiter — no transit
         }
       }
     }
