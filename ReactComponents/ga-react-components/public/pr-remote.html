@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Prime Radiant Remote</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'JetBrains Mono', monospace; padding: 12px; max-width: 420px; margin: 0 auto; }
+  h1 { font-size: 14px; color: #58a6ff; text-align: center; margin-bottom: 12px; letter-spacing: 1px; }
+  .status { font-size: 11px; text-align: center; margin-bottom: 16px; padding: 6px; border-radius: 6px; }
+  .status.ok { background: rgba(51,204,102,0.15); color: #33CC66; }
+  .status.err { background: rgba(255,68,68,0.15); color: #FF4444; }
+  .section { margin-bottom: 16px; }
+  .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #8b949e; margin-bottom: 8px; }
+  .grid { display: grid; gap: 6px; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  button {
+    background: #161b22; border: 1px solid #30363d; color: #e6edf3;
+    padding: 12px 4px; border-radius: 8px; font-size: 13px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  button:active { background: #1f6feb; border-color: #58a6ff; transform: scale(0.95); }
+  button .icon { font-size: 20px; }
+  button .label { font-size: 9px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+  button.active { background: #1f6feb33; border-color: #58a6ff; }
+  .cam-pad { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 4px; max-width: 180px; margin: 0 auto; }
+  .cam-pad button { padding: 14px; }
+  .cam-pad .center { background: #1f6feb22; }
+  .feedback { font-size: 10px; color: #8b949e; text-align: center; margin-top: 8px; min-height: 14px; }
+</style>
+</head>
+<body>
+<h1>PRIME RADIANT REMOTE</h1>
+<div id="status" class="status err">Connecting...</div>
+
+<div class="section">
+  <div class="section-title">Planets</div>
+  <div class="grid grid-4" id="planets"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Camera</div>
+  <div class="cam-pad">
+    <button onclick="cmd('camera:fly',{x:0,y:5,z:0,durationMs:800})"><span class="icon">↖</span></button>
+    <button onclick="orbit('up')"><span class="icon">↑</span></button>
+    <button onclick="cmd('camera:fly',{x:0,y:5,z:0,durationMs:800})"><span class="icon">↗</span></button>
+    <button onclick="orbit('left')"><span class="icon">←</span></button>
+    <button class="center" onclick="cmd('navigate:planet',{planet:'sun'})"><span class="icon">☉</span></button>
+    <button onclick="orbit('right')"><span class="icon">→</span></button>
+    <button onclick="orbit('zoomIn')"><span class="icon">+</span></button>
+    <button onclick="orbit('down')"><span class="icon">↓</span></button>
+    <button onclick="orbit('zoomOut')"><span class="icon">−</span></button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Actions</div>
+  <div class="grid grid-3">
+    <button onclick="cmd('moebius:toggle')"><span class="icon">◎</span><span class="label">Moebius</span></button>
+    <button onclick="cmd('panel:open',{panelId:'gis'})"><span class="icon">🌍</span><span class="label">GIS</span></button>
+    <button onclick="cmd('panel:close')"><span class="icon">✕</span><span class="label">Close</span></button>
+    <button onclick="cmd('broadcast:message',{text:'Hello from Remote!',durationMs:5000})"><span class="icon">💬</span><span class="label">Message</span></button>
+    <button onclick="cmd('demerzel:emotion',{emotion:'pleased'})"><span class="icon">😊</span><span class="label">Pleased</span></button>
+    <button onclick="cmd('demerzel:emotion',{emotion:'alert'})"><span class="icon">⚡</span><span class="label">Alert</span></button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Panels</div>
+  <div class="grid grid-4">
+    <button onclick="cmd('panel:open',{panelId:'detail'})"><span class="label">Detail</span></button>
+    <button onclick="cmd('panel:open',{panelId:'beliefs'})"><span class="label">Beliefs</span></button>
+    <button onclick="cmd('panel:open',{panelId:'activity'})"><span class="label">Activity</span></button>
+    <button onclick="cmd('panel:open',{panelId:'cicd'})"><span class="label">CI/CD</span></button>
+  </div>
+</div>
+
+<div id="feedback" class="feedback"></div>
+
+<script>
+const PLANETS = [
+  { name: 'sun', icon: '☉', color: '#FFB300' },
+  { name: 'mercury', icon: '●', color: '#8B7355' },
+  { name: 'venus', icon: '●', color: '#DEB887' },
+  { name: 'earth', icon: '●', color: '#4488CC' },
+  { name: 'moon', icon: '☽', color: '#AAAAAA' },
+  { name: 'mars', icon: '●', color: '#CC5533' },
+  { name: 'jupiter', icon: '●', color: '#CC9955' },
+  { name: 'saturn', icon: '●', color: '#DAA520' },
+  { name: 'uranus', icon: '●', color: '#66BBBB' },
+  { name: 'neptune', icon: '●', color: '#4466CC' },
+  { name: 'titan', icon: '●', color: '#CC8833' },
+  { name: 'demerzel-head', icon: '★', color: '#33CC66' },
+];
+
+const grid = document.getElementById('planets');
+PLANETS.forEach(p => {
+  const btn = document.createElement('button');
+  btn.innerHTML = `<span class="icon" style="color:${p.color}">${p.icon}</span><span class="label">${p.name}</span>`;
+  btn.onclick = () => cmd('navigate:planet', { planet: p.name });
+  grid.appendChild(btn);
+});
+
+const BASE = location.origin;
+
+async function cmd(action, params = {}) {
+  const fb = document.getElementById('feedback');
+  try {
+    const res = await fetch(`${BASE}/pr/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, params }),
+    });
+    const data = await res.json();
+    fb.textContent = `${action} → ${data.ok ? 'OK' : 'FAIL'}`;
+    fb.style.color = data.ok ? '#33CC66' : '#FF4444';
+    setTimeout(() => { fb.textContent = ''; }, 2000);
+  } catch (e) {
+    fb.textContent = `Error: ${e.message}`;
+    fb.style.color = '#FF4444';
+  }
+}
+
+function orbit(dir) {
+  // Simulate camera orbit by flying relative to current position
+  const offsets = {
+    up:    { x: 0, y: 2, z: 0 },
+    down:  { x: 0, y: -2, z: 0 },
+    left:  { x: -2, y: 0, z: 0 },
+    right: { x: 2, y: 0, z: 0 },
+    zoomIn:  { x: 0, y: 0, z: -2 },
+    zoomOut: { x: 0, y: 0, z: 2 },
+  };
+  const o = offsets[dir] || { x: 0, y: 0, z: 0 };
+  cmd('camera:fly', { ...o, durationMs: 400 });
+}
+
+// Poll status
+async function checkStatus() {
+  const el = document.getElementById('status');
+  try {
+    const res = await fetch(`${BASE}/pr/state`);
+    const data = await res.json();
+    const r = data.render || {};
+    el.className = 'status ok';
+    el.textContent = `Connected — ${r.fps || '?'} FPS · ${r.rendererBackend || 'WebGL2'} · ${data.nodeCount || 0} nodes`;
+  } catch {
+    el.className = 'status err';
+    el.textContent = 'Disconnected';
+  }
+}
+checkStatus();
+setInterval(checkStatus, 5000);
+</script>
+</body>
+</html>
