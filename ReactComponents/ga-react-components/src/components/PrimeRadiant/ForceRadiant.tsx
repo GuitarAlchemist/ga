@@ -68,6 +68,7 @@ import { AssetProvenancePanel } from './AssetProvenancePanel';
 import type { AlgedonicSignalEvent, BeliefState } from './DataLoader';
 import { CourseViewer } from './CourseViewer';
 import { LunarLander } from './LunarLander';
+import { PlanetPiP } from './PlanetPiP';
 import { LiveNotebook } from './LiveNotebook';
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
@@ -756,6 +757,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const solarFollowCameraRef = useRef(true); // when false, solar system stays in place (planet zoom)
   const trackedPlanetRef = useRef<string | null>(null); // mutable for animation loop
   const [_trackedPlanetName, setTrackedPlanetName] = useState<string | null>(null); // for UI indicator
+  const [pipState, setPipState] = useState<{ planet: string; x: number; y: number; zoom: number } | null>(null);
+  const pipThrottleRef = useRef(0);
   const [_criticState, setCriticState] = useState<CriticState>({
     phase: 'idle', result: null, history: [], lastAnalysis: null,
   });
@@ -1467,7 +1470,27 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controlType: 'orbit',
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
       useWebGPU: USE_WEBGPU,
-    })(container)
+    })(container);
+
+    // WebGPURenderer requires async init() to acquire GPU adapter + device.
+    // 3d-force-graph doesn't call it, so the renderer uses its WebGL fallback.
+    // Fix: pause rendering, init(), then resume. The graph keeps computing
+    // forces during the pause — only the draw calls are deferred.
+    if (USE_WEBGPU) {
+      const renderer = fg.renderer();
+      if (typeof renderer.init === 'function') {
+        fg.pauseAnimation();
+        renderer.init().then(() => {
+          console.log('[PrimeRadiant] WebGPU backend initialized');
+          fg.resumeAnimation();
+        }).catch((err: Error) => {
+          console.warn('[PrimeRadiant] WebGPU init failed, resuming with WebGL2:', err.message);
+          fg.resumeAnimation();
+        });
+      }
+    }
+
+    fg
       .graphData(forceData)
       .backgroundColor('#000008')
       .showNavInfo(false)
@@ -2230,9 +2253,25 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           trackedObj.getWorldPosition(pw);
           const controls = fg.controls() as { target?: THREE.Vector3 };
           if (controls.target) {
-            controls.target.copy(pw); // snap, don't lerp — avoids spin feedback loop
+            controls.target.copy(pw);
+          }
+          // Update PiP state (throttled to ~4 Hz to avoid iframe re-renders)
+          const now = performance.now();
+          if (now - pipThrottleRef.current > 250) {
+            pipThrottleRef.current = now;
+            const cam = fg.camera() as THREE.PerspectiveCamera;
+            const zoom = cam.position.distanceTo(pw);
+            // Project planet world position to screen coordinates
+            const projected = pw.clone().project(cam);
+            const cw = containerRef.current?.clientWidth ?? 1;
+            const ch = containerRef.current?.clientHeight ?? 1;
+            const sx = (projected.x * 0.5 + 0.5) * cw;
+            const sy = (-projected.y * 0.5 + 0.5) * ch;
+            setPipState({ planet: trackedPlanetRef.current, x: sx, y: sy, zoom });
           }
         }
+      } else if (pipState) {
+        setPipState(null);
       }
       // When solarFollowCameraRef is false, solar system stays frozen in place
       // (planet zoom mode — user clicks Reset View to resume)
@@ -3493,6 +3532,18 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
         <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
+
+        {/* YouTube course PiP — appears near planet when zoomed in */}
+        {pipState && (
+          <PlanetPiP
+            planet={pipState.planet}
+            zoomDistance={pipState.zoom}
+            screenX={pipState.x}
+            screenY={pipState.y}
+            containerWidth={containerRef.current?.clientWidth ?? 1200}
+            containerHeight={containerRef.current?.clientHeight ?? 800}
+          />
+        )}
 
         {/* Jurisdiction membrane legend — explains the colored shells wrapping clusters */}
         <JurisdictionLegend />
