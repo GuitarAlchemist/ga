@@ -43,6 +43,8 @@ const OPTIONS: SceneOptionsDef[] = [
   { id: 'bloom',         label: 'Bloom',              icon: '\uD83D\uDD06', default: true,  group: 'Effects' },
   { id: 'godray',        label: 'God Rays',           icon: '\u2600', default: true,  group: 'Effects' },
   { id: 'tower',         label: 'Crystal Tower',      icon: '\uD83D\uDDFC', default: false, group: 'Effects' },
+  // Cast / Presentation
+  { id: 'presentation',  label: 'Presentation Mode',  icon: '\uD83D\uDCFA', default: false, group: 'Cast' },
 ];
 
 function getDefaults(): SceneOptionsState {

@@ -297,7 +297,7 @@ export const AlgedonicPanel: React.FC<AlgedonicPanelProps> = ({ signals: signals
         onClick={() => setCollapsed(!collapsed)}
       >
         <span className="prime-radiant__algedonic-title">
-          Algedonic
+          Algedonic<span className="prime-radiant__demo-badge">Demo</span>
           <span className="prime-radiant__algedonic-counts">
             <span style={{ color: '#FF4444' }}>{painCount}P</span>
             {' / '}

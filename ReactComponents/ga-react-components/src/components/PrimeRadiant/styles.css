@@ -1251,12 +1251,15 @@
 
 /* ── Demerzel face overlay — mini 3D canvas next to chat button ── */
 .demerzel-face-overlay {
-  background: rgba(13, 17, 23, 0.6);
+  background: rgba(22, 27, 34, 0.85);
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  border-radius: 8px;
   box-shadow: 0 0 12px rgba(212, 160, 23, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.4);
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 .demerzel-face-overlay:hover {
   box-shadow: 0 0 20px rgba(212, 160, 23, 0.6), inset 0 0 8px rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 160, 23, 0.7);
   transform: scale(1.08);
 }
 
@@ -11507,4 +11510,21 @@
   min-width: 52px;
   text-align: center;
   flex-shrink: 0;
+}
+
+/* ── Demo data badge — shown on panels using mock/fallback data ── */
+.prime-radiant__demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #FFB300;
+  background: rgba(255, 179, 0, 0.12);
+  border: 1px solid rgba(255, 179, 0, 0.25);
+  border-radius: 4px;
+  margin-left: 8px;
 }

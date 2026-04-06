@@ -387,22 +387,8 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
         ))}
       </div>
 
-      {/* Time slider */}
-      {showTimeSlider && (
-        <div className="prime-radiant__timeline">
-          <span className="prime-radiant__timeline-label">Governance Evolution</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={timeValue}
-            onChange={(e) => setTimeValue(Number(e.target.value))}
-          />
-          <span className="prime-radiant__timeline-label">
-            {timeValue === 100 ? 'Now' : `${timeValue}%`}
-          </span>
-        </div>
-      )}
+      {/* Time slider — removed (I9): value was stored but never consumed by any visualization.
+         Re-add when node filtering by governance evolution phase is implemented. */}
 
       {/* Tooltip */}
       {hoveredNode && !selectedNode && (

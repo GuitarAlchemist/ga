@@ -191,6 +191,8 @@ export interface LiveDataConfig {
   onAlgedonicSignal?: (signal: AlgedonicSignalEvent) => void;
   /** Called when viewer presence list changes */
   onViewersChanged?: (viewers: ViewerInfo[]) => void;
+  /** Called when another client broadcasts its camera position (presentation mode) */
+  onCameraSync?: (data: CameraSyncData) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,15 +222,23 @@ export interface ViewerInfo {
   avatarUrl?: string | null;
 }
 
+export interface CameraSyncData {
+  px: number; py: number; pz: number;
+  lx: number; ly: number; lz: number;
+  sender: string;
+}
+
 export interface LivePollingHandle {
   /** Stop polling and disconnect SignalR */
   stop: () => void;
   /** Submit a screenshot back to the server via SignalR */
   submitScreenshot: (base64Image: string, format: string) => Promise<void>;
+  /** Broadcast camera position to other connected clients (presentation mode) */
+  syncCamera: (px: number, py: number, pz: number, lx: number, ly: number, lz: number) => void;
 }
 
 export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal, onViewersChanged } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal, onViewersChanged, onCameraSync } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -297,6 +307,11 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
       connection.on('ViewersChanged', (data: ViewerInfo[]) => {
         console.log(`[Governance] Viewers changed: ${data.length} online`);
         onViewersChanged?.(data);
+      });
+
+      // Camera sync — presentation mode broadcasts camera from leader to followers
+      connection.on('CameraSync', (data: CameraSyncData) => {
+        onCameraSync?.(data);
       });
 
       connection.onreconnecting(() => {
@@ -403,6 +418,13 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         await connection.invoke('SubmitScreenshot', base64Image, format);
       } else {
         console.warn('[Governance] Cannot submit screenshot — SignalR not connected');
+      }
+    },
+    syncCamera: (px: number, py: number, pz: number, lx: number, ly: number, lz: number) => {
+      if (connection?.state === signalR.HubConnectionState.Connected) {
+        connection.invoke('SyncCamera', px, py, pz, lx, ly, lz).catch((err) => {
+          console.warn('[Governance] SyncCamera failed:', err);
+        });
       }
     },
   };

@@ -209,6 +209,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
         <span className="prime-radiant__backlog-title">
           Backlog
           <span className="prime-radiant__backlog-count">{totalItems}</span>
+          <span className="prime-radiant__demo-badge">Demo</span>
         </span>
         <span className="prime-radiant__backlog-toggle">{collapsed ? '▶' : '▼'}</span>
       </div>
@@ -297,7 +298,7 @@ export const BacklogPanel: React.FC<{ collapsed?: boolean }> = ({ collapsed: ini
                                     <button className="backlog-assess__refresh" onClick={(e) => { e.stopPropagation(); refresh(); }}>
                                       Re-analyze
                                     </button>
-                                    <button className="backlog-assess__start" onClick={(e) => { e.stopPropagation(); console.log('[BacklogPanel] Start /feature for:', item); }}>
+                                    <button className="backlog-assess__start" disabled title="Coming soon — feature branch creation not yet wired">
                                       Start /feature
                                     </button>
                                   </div>
