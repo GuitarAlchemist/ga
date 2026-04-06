@@ -133,15 +133,6 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
                 </span>
                 <span className="planet-nav__name">{p.name}</span>
               </button>
-              {onToggleVideo && PLANETS_WITH_VIDEO.has(p.target) && (
-                <button
-                  className={`planet-nav__play-btn ${videoPlanet === p.target ? 'planet-nav__play-btn--active' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); onToggleVideo(p.target); }}
-                  title={videoPlanet === p.target ? `Hide ${p.name} course` : `Watch ${p.name} course`}
-                >
-                  {videoPlanet === p.target ? '⏹' : '▶'}
-                </button>
-              )}
               {p.target === 'moon' && onLaunchLunarLander && (
                 <button
                   className="planet-nav__play-btn"
