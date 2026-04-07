@@ -1412,6 +1412,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let lodCleanupOuter: (() => void) | undefined;
     let runtimeAssetCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
+    let resizeObsOuter: ResizeObserver | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -1858,6 +1859,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       }
     });
     _resizeObs.observe(container);
+    resizeObsOuter = _resizeObs;
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
@@ -3317,7 +3319,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     return () => {
       disposed = true;
-      _resizeObs.disconnect();
+      resizeObsOuter?.disconnect();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
