@@ -28,6 +28,8 @@ const PLANETS = [
   { icon: '\u25CF', name: 'Earth', target: 'earth', color: '#4d88ff' },
   { icon: '\u263D', name: 'Moon', target: 'moon', color: '#cccccc' },
   { icon: '\u25CF', name: 'Mars', target: 'mars', color: '#ff4422' },
+  { icon: '\u25E6', name: 'Asteroid Belt', target: 'asteroid-belt', color: '#998877' },
+  { icon: '\u25CF', name: 'Ceres', target: 'ceres', color: '#887766' },
   { icon: '\u25CF', name: 'Jupiter', target: 'jupiter', color: '#ffaa77' },
   { icon: '\u25CF', name: 'Saturn', target: 'saturn', color: '#ffeecc' },
   { icon: '\u25CF', name: 'Uranus', target: 'uranus', color: '#88ccdd' },
