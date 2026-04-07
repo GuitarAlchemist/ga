@@ -94,7 +94,7 @@ import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
-import { createBorgCubeGeometry, createBorgCubeNode } from './BorgCubeNode';
+import { createBorgCubeGeometry, createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -1437,9 +1437,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // Load data — try API first, fall back to static
     const initGraph = async () => {
-      const graph = liveDataUrl
-        ? await loadGovernanceDataAsync(liveDataUrl)
-        : loadGovernanceData(data);
+      // Pre-load GLB models in parallel with governance data
+      const [graph] = await Promise.all([
+        liveDataUrl ? loadGovernanceDataAsync(liveDataUrl) : Promise.resolve(loadGovernanceData(data)),
+        preloadBorgCubeModel(), // loads /models/borg-cube.glb if present
+      ]);
       if (disposed) return;
       initScene(graph);
     };

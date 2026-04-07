@@ -1,15 +1,98 @@
 // src/components/PrimeRadiant/BorgCubeNode.ts
 // Borg-cube-style mesh for constitution governance nodes.
 // Inspired by BlenderKit "SciFi Cube Spaceship" by Dennis Hafemann.
-// Dark metallic hull with irregular extruded panels, green emissive dots,
-// orange conduit lines — procedurally generated in Three.js.
+//
+// Supports two modes:
+//   1. GLB model (preferred): loads /models/borg-cube.glb via GLTFLoader
+//   2. Procedural fallback: generates geometry if GLB not found
 //
 // Integration in ForceRadiant.tsx:
-//   import { createBorgCubeGeometry, createBorgCubeNode } from './BorgCubeNode';
-//   // In createNodeObject, for constitution nodes:
+//   import { createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
+//   // Call once at init: await preloadBorgCubeModel();
+//   // In createNodeObject for constitution nodes:
 //   if (node.type === 'constitution') return createBorgCubeNode(radius * 1.2, nodeColor);
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+// ---------------------------------------------------------------------------
+// GLB Model Loader — loads actual Blender model when available
+// ---------------------------------------------------------------------------
+
+const GLB_PATH = '/models/borg-cube.glb';
+let _cachedGLB: THREE.Group | null = null;
+let _glbLoadAttempted = false;
+
+/**
+ * Pre-load the Borg cube GLB model. Call once at scene init.
+ * If the file doesn't exist, silently falls back to procedural geometry.
+ */
+export async function preloadBorgCubeModel(): Promise<boolean> {
+  if (_glbLoadAttempted) return _cachedGLB !== null;
+  _glbLoadAttempted = true;
+
+  try {
+    // Quick HEAD check first to avoid loader errors when file is missing
+    const check = await fetch(GLB_PATH, { method: 'HEAD' });
+    if (!check.ok) {
+      console.info('[BorgCube] No GLB at', GLB_PATH, '— using procedural fallback');
+      return false;
+    }
+
+    const loader = new GLTFLoader();
+    const gltf = await new Promise<THREE.Group>((resolve, reject) => {
+      loader.load(GLB_PATH, (result) => resolve(result.scene), undefined, reject);
+    });
+
+    _cachedGLB = gltf;
+    console.info('[BorgCube] GLB model loaded:', GLB_PATH);
+    return true;
+  } catch (err) {
+    console.info('[BorgCube] GLB load failed, using procedural fallback:', err);
+    return false;
+  }
+}
+
+/**
+ * Create a Borg cube node from the loaded GLB model.
+ * Returns null if GLB not loaded — caller should fall back to procedural.
+ */
+function createFromGLB(size: number, healthColor?: THREE.Color): THREE.Group | null {
+  if (!_cachedGLB) return null;
+
+  const clone = _cachedGLB.clone(true);
+
+  // Normalize the model to fit our size parameter
+  const box = new THREE.Box3().setFromObject(clone);
+  const modelSize = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(modelSize.x, modelSize.y, modelSize.z);
+  const scale = size / maxDim;
+  clone.scale.setScalar(scale);
+
+  // Center the model
+  const center = box.getCenter(new THREE.Vector3()).multiplyScalar(scale);
+  clone.position.sub(center);
+
+  // Apply health-based emissive color to all materials
+  if (healthColor) {
+    clone.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mat = (child as THREE.Mesh).material;
+        if (mat && 'emissive' in mat) {
+          (mat as THREE.MeshStandardMaterial).emissive.copy(healthColor);
+          (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0.15;
+        }
+      }
+    });
+  }
+
+  clone.name = 'borg-cube';
+  return clone;
+}
+
+// ---------------------------------------------------------------------------
+// Procedural Fallback
+// ---------------------------------------------------------------------------
 
 // Deterministic hash for procedural panel placement
 function hash(x: number, y: number, z: number): number {
@@ -252,6 +335,11 @@ export function createBorgCubeNode(
   size: number,
   healthColor?: THREE.Color,
 ): THREE.Group {
+  // Try GLB model first (higher quality, artist-made)
+  const glbNode = createFromGLB(size, healthColor);
+  if (glbNode) return glbNode;
+
+  // Procedural fallback
   const group = new THREE.Group();
   const wireColor = healthColor ?? new THREE.Color(0x00ff88);
 
