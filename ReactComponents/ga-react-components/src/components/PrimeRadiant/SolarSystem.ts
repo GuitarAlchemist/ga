@@ -404,7 +404,7 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: keplerRadius(3_474), distance: 1.0, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },
+      { name: 'moon', radius: keplerRadius(3_474) * 2.5, distance: 1.2, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },  // 2.5x size boost for orrery visibility (real ratio 0.27 is invisible)
     ],
   },
   {
@@ -1601,11 +1601,11 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
   //   > 20: overview scale (1.0×)
   //   8-20: linear interpolation
   //   < 8: realistic-from-Earth angular size (~0.06 of overview)
-  if (cam) {
+  if (camera) {
     const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
     if (sunMesh) {
       const camWorld = new THREE.Vector3();
-      cam.getWorldPosition(camWorld);
+      camera.getWorldPosition(camWorld);
       const camDist = camWorld.distanceTo(_sunWorldPos);
       // Smoothstep blend: 1.0 at far, realistic at close
       const blend = Math.max(0, Math.min(1, (camDist - 8) / (20 - 8)));
