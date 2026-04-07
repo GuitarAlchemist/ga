@@ -90,7 +90,7 @@ export function createComplianceRivers(
 
   // Track last rebuild time
   let lastRebuildTime = 0;
-  const REBUILD_INTERVAL = 5000; // rebuild field every 5s as nodes move
+  const REBUILD_INTERVAL = 15000; // rebuild field every 15s (was 5s — caused stalls)
 
   return {
     get particleCount() { return engine.particles.length; },

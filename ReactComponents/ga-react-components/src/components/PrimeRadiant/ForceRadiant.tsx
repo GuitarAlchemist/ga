@@ -2529,14 +2529,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
     if (controls) {
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.3;
+      controls.autoRotateSpeed = 0.15;  // halved from 0.3
       controls.enableDamping = true;
       controls.dampingFactor = 0.12;   // smooth inertia on all movements
       controls.zoomSpeed = 1.2;        // faster zoom response
       (controls as Record<string, unknown>).minDistance = 0.005; // allow very close zoom for planet detail
       (controls as Record<string, unknown>).maxDistance = 500;
       (controls as Record<string, unknown>).enableZoom = true;
-      (controls as Record<string, unknown>).rotateSpeed = 0.8;
+      (controls as Record<string, unknown>).rotateSpeed = 0.4;  // halved from 0.8
       (controls as Record<string, unknown>).panSpeed = 0.6;
     }
 

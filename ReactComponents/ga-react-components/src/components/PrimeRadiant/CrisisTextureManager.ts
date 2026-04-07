@@ -67,7 +67,7 @@ export function createCrisisTextures(quality: QualityTier): CrisisTextureHandle 
   // One simulation per node type that has unhealthy nodes
   const sims = new Map<string, SimEntry>(); // key: `${type}-${health}`
   let lastUpdateTime = 0;
-  const UPDATE_INTERVAL_MS = 500; // 2Hz
+  const UPDATE_INTERVAL_MS = 2000; // 0.5Hz (was 2Hz — reaction-diffusion caused stalls)
 
   const iterations = QUALITY_ITERATIONS[quality];
 
