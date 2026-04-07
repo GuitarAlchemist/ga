@@ -32,23 +32,25 @@ export async function preloadBorgCubeModel(): Promise<boolean> {
   _glbLoadAttempted = true;
 
   try {
-    // Quick HEAD check first to avoid loader errors when file is missing
-    const check = await fetch(GLB_PATH, { method: 'HEAD' });
-    if (!check.ok) {
-      console.info('[BorgCube] No GLB at', GLB_PATH, '— using procedural fallback');
-      return false;
-    }
-
     const loader = new GLTFLoader();
     const gltf = await new Promise<THREE.Group>((resolve, reject) => {
-      loader.load(GLB_PATH, (result) => resolve(result.scene), undefined, reject);
+      loader.load(
+        GLB_PATH,
+        (result) => resolve(result.scene),
+        (progress) => {
+          if (progress.total > 0) {
+            console.info(`[BorgCube] Loading: ${Math.round(progress.loaded / progress.total * 100)}%`);
+          }
+        },
+        reject,
+      );
     });
 
     _cachedGLB = gltf;
-    console.info('[BorgCube] GLB model loaded:', GLB_PATH);
+    console.info('[BorgCube] GLB model loaded:', GLB_PATH, '—', gltf.children.length, 'children');
     return true;
   } catch (err) {
-    console.info('[BorgCube] GLB load failed, using procedural fallback:', err);
+    console.info('[BorgCube] GLB not found at', GLB_PATH, '— using procedural fallback');
     return false;
   }
 }
