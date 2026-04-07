@@ -101,6 +101,7 @@ export { autoRemediation } from './AutoRemediation';
 export type { ConsoleIssue, RemediationAction } from './AutoRemediation';
 // QA Panel — automated self-tests running in the live UI
 export { QAPanel } from './QAPanel';
+export { GovernanceCompliancePanel } from './GovernanceCompliancePanel';
 // User Identity — display name + future OAuth upgrade path
 export { identityStore, useUserIdentity } from './UserIdentity';
 export type { UserIdentity } from './UserIdentity';
