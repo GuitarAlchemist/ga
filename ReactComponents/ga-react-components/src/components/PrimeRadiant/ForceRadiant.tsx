@@ -29,6 +29,7 @@ const BrainstormPanel = React.lazy(() => import('./BrainstormPanel').then(m => (
 import { buildGraphIndex, type GraphIndex } from './DataLoader';
 import { createDemerzelFace, updateDemerzelFace } from './DemerzelFace';
 import { createRiggedDemerzelFace, updateRiggedDemerzelFace } from './DemerzelRiggedFace';
+import { createUncertaintyHalo, updateUncertaintyHalo, UNCERTAINTY_LEVEL } from './UncertaintyHalo';
 import { createTarsRobot, updateTarsRobot } from './TarsRobot';
 // TrantorGlobe removed — replaced by real Earth + nebulae
 import { createSolarSystem, updateSolarSystem, showPlanetLabel, loadArcGISOverlay, removeArcGISOverlay, addLocationMarker, enableEarthAutoLOD } from './SolarSystem';
@@ -92,7 +93,7 @@ const AdminInbox = React.lazy(() => import('./AdminInbox').then(m => ({ default:
 import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
-import { getNodeMaterialWithGlow } from './CrystalNodeMaterials';
+import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -2117,6 +2118,30 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         }
 
+        // ── Governance Redshift / Blueshift — compliance drift as color shift ──
+        const complianceDelta = group.userData.complianceDelta as number | undefined;
+        if (complianceDelta !== undefined && complianceDelta !== 0) {
+          // Apply to the crystal core mesh (MeshPhysicalMaterial)
+          const cachedPhysCore = group.userData._cachedPhysicalCore as THREE.Mesh | undefined;
+          if (cachedPhysCore) {
+            applyGovernanceShift(cachedPhysCore.material as THREE.MeshPhysicalMaterial, complianceDelta);
+          } else {
+            // One-time traverse to find + cache the physical material core
+            for (const child of group.children) {
+              if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshPhysicalMaterial) {
+                group.userData._cachedPhysicalCore = child;
+                applyGovernanceShift(child.material as THREE.MeshPhysicalMaterial, complianceDelta);
+                break;
+              }
+            }
+          }
+          // Decay delta toward 0 so the shift fades naturally
+          group.userData.complianceDelta = complianceDelta * 0.995;
+          if (Math.abs(group.userData.complianceDelta as number) < 0.001) {
+            group.userData.complianceDelta = 0;
+          }
+        }
+
         // Update volumetric shader time for fractal swirl
         for (const child of group.children) {
           if (child instanceof THREE.Mesh && child.userData.isVolumetricCore) {
@@ -3089,6 +3114,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
               const threeObj = (gn as GraphNode & { __threeObj?: THREE.Object3D }).__threeObj;
               if (threeObj) {
                 threeObj.userData.healthStatus = (gn as unknown as GovernanceNode).healthStatus;
+                // Track previous resilience score for redshift/blueshift
+                const prevResilience = threeObj.userData.previousResilience as number | undefined;
+                const curResilience = (gn as unknown as GovernanceNode).health?.resilienceScore ?? 0.5;
+                if (prevResilience !== undefined) {
+                  threeObj.userData.complianceDelta = Math.max(-1, Math.min(1,
+                    (curResilience - prevResilience) * 5, // amplify small diffs
+                  ));
+                }
+                threeObj.userData.previousResilience = curResilience;
               }
               // Update node map
               nodeMap.set(nodeId, gn);
