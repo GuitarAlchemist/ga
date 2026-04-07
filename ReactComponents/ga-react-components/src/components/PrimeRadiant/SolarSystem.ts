@@ -337,11 +337,11 @@ function keplerDistance(au: number): number {
   return EARTH_DIST * Math.sqrt(au);
 }
 function keplerRadius(diameterKm: number): number {
-  // Linear ratio to Earth with a minimum floor so tiny bodies stay visible.
-  // Jupiter is 11x Earth. Mercury is 0.38x Earth. Floor at 0.3x Earth prevents
-  // Mercury/Mars from becoming invisible dots at orrery zoom levels.
+  // Linear ratio to Earth with a small minimum floor.
+  // Jupiter is 11x Earth. Mercury is 0.38x Earth. Floor at 0.15x Earth prevents
+  // the smallest moons from vanishing but keeps planets proportional.
   const ratio = diameterKm / 12_742;
-  return EARTH_RADIUS * Math.max(ratio, 0.3);
+  return EARTH_RADIUS * Math.max(ratio, 0.15);
 }
 function keplerSpeed(au: number): number {
   // Kepler's 3rd law: angular speed ∝ distance^-1.5
@@ -782,11 +782,11 @@ export function createSolarSystem(scale: number): THREE.Group {
   // Sun: visually larger than Jupiter but not engulfing inner orbits.
   // Real ratio is 10x Jupiter, but the orrery distance scale is compressed
   // (1 AU = 6.5 scene units, Sun radius at real scale = 5.7 units → swallows Earth).
-  // Use 0.5x Jupiter at overview — the dynamic sun sizing code (line ~1604)
-  // blends toward realistic angular size on close approach anyway.
-  // At 0.5x Jupiter: Sun radius ~5.3 scene units vs Mercury orbit ~32 → 16% ratio (reasonable).
+  // Use 1.8x Jupiter at overview — Sun MUST be larger than Jupiter.
+  // Real ratio is 10x but that would swallow inner orbits in the compressed orrery.
+  // 1.8x gives a clearly dominant sun without overlapping Mercury's orbit.
   const jupiterVisualRadius = keplerRadius(139_820); // ~1.316
-  const sunVisualRadius = jupiterVisualRadius * 0.5;  // Sun ~0.5x Jupiter at overview
+  const sunVisualRadius = jupiterVisualRadius * 1.8;  // Sun ~1.8x Jupiter at overview
   const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
   const sunTex = loadCanonicalTexture('sun', 'albedo', '2k_sun.jpg')!;
 
