@@ -196,7 +196,7 @@ export function createBorgCubeMaterial(
     metalness: 0.95,
     roughness: 0.35,
     emissive: healthColor ?? new THREE.Color(0x00ff88),
-    emissiveIntensity: 0.08,
+    emissiveIntensity: 0.03,    // very subtle — hull should be dark, not glowing
     clearcoat: 0.3,
     clearcoatRoughness: 0.4,
   });
