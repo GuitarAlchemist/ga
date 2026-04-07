@@ -2233,22 +2233,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       });
 
-      // ─── Multi-layer star parallax (depth perception) ───
-      // Each layer tracks the camera at a different lerp rate.
-      // Skybox follows exactly (infinite distance), stars/milky way lag behind.
+      // ─── Star field follows camera (all at infinity) ───
+      // Stars and skybox follow camera exactly — Points with sizeAttenuation:false
+      // produce visible streaks if they lag behind via lerp.
+      // Only the Milky Way mesh gets subtle parallax (it's a solid surface, not points).
       const camPos = fg.camera().position;
-
-      // Skybox: follows exactly (infinite background)
       skySphere.position.copy(camPos);
+      brightStars.position.copy(camPos);
+      dimStars.position.copy(camPos);
 
-      // Milky Way: 3% lerp → galactic band drifts subtly
-      milkyWayMesh.position.lerp(camPos, 0.03);
-
-      // Bright stars: 2% lerp → noticeable shift on orbit
-      brightStars.position.lerp(camPos, 0.02);
-
-      // Dim stars: 0.5% lerp → nearly fixed background plate
-      dimStars.position.lerp(camPos, 0.005);
+      // Milky Way: 0.2% lerp → very subtle galactic drift
+      milkyWayMesh.position.lerp(camPos, 0.002);
 
       // Star twinkle — cheap: only every 10 frames, touch size attribute only
       if (frameCount % 10 === 0) {

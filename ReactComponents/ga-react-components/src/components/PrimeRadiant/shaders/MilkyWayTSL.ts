@@ -144,7 +144,9 @@ export function createMilkyWayMaterialTSL(): MeshBasicNodeMaterial {
     const coreDensityBoost = float(1.0).add(bulge.mul(1.5));
     const starDensity = armDensityBoost.mul(coreDensityBoost);
 
-    const starCoord = vec3(galLon.mul(200.0), galLat.mul(200.0), float(0.0));
+    // Use 3D direction vector for star grid — avoids latitude-aligned stripes
+    // that appear when using 2D galactic coordinates with flat grid scaling
+    const starCoord = dir.mul(200.0);
     const starCell = floor(starCoord);
     const starHash = hash33(starCell);
     const starFrac = fract(starCoord);
@@ -160,7 +162,8 @@ export function createMilkyWayMaterialTSL(): MeshBasicNodeMaterial {
     const starTint = mix(vec3(0.9, 0.95, 1.0), vec3(1.0, 0.9, 0.7), starWarmth);
 
     // ── Extra-bright resolved stars (Sirius/Canopus analogs) ──
-    const brightStarCoord = vec3(galLon.mul(50.0), galLat.mul(50.0), float(42.0));
+    // Bright stars also use 3D direction to avoid grid stripes
+    const brightStarCoord = dir.mul(50.0).add(vec3(42.0, 17.0, 83.0));
     const brightCell = floor(brightStarCoord);
     const brightHash = hash33(brightCell);
     const brightFrac = fract(brightStarCoord);
