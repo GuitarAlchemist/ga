@@ -1871,7 +1871,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Apply scene options toggles ───
       const sOpts = sceneOptionsRef.current;
       if (Object.keys(sOpts).length > 0) {
-        starField.visible = sOpts.stars !== false;
+        setStarsVisible(sOpts.stars !== false);
         ambientDust.visible = sOpts.dust !== false && qualityLevel !== 'low';
         if (filamentsHandle) filamentsHandle.group.visible = sOpts.filaments !== false && qualityLevel !== 'low';
         if (eiffelHandleOuter) eiffelHandleOuter.group.visible = sOpts.tower === true;
@@ -1997,7 +1997,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           if (bp) { bp.enabled = false; }
           // Keep core visuals on, disable expensive particles
           ambientDust.visible = false;
-          starField.visible = true;
+          setStarsVisible(true);
           demerzelFace.visible = true;
           if (filamentsHandle) filamentsHandle.group.visible = false;
         } else {
@@ -2029,7 +2029,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           }
         }
         if (filamentsHandle) filamentsHandle.group.visible = qualityBudget > -0.4;
-        starField.visible = qualityBudget > -0.6;
+        setStarsVisible(qualityBudget > -0.6);
         demerzelFace.visible = qualityBudget > -0.8;
 
         // Pixel ratio — only reduce as last resort, restore when budget recovers
@@ -2233,12 +2233,33 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         }
       });
 
-      // ─── Starfield follows camera (skybox behavior) ───
-      // Stars follow camera exactly, but Milky Way lags slightly for parallax depth
+      // ─── Multi-layer star parallax (depth perception) ───
+      // Each layer tracks the camera at a different lerp rate.
+      // Skybox follows exactly (infinite distance), stars/milky way lag behind.
       const camPos = fg.camera().position;
-      starField.position.copy(camPos);
-      // Milky Way parallax: offset by a fraction of camera position → feels infinitely far
-      milkyWayMesh.position.set(-camPos.x * 0.002, -camPos.y * 0.002, -camPos.z * 0.002);
+
+      // Skybox: follows exactly (infinite background)
+      skySphere.position.copy(camPos);
+
+      // Milky Way: 3% lerp → galactic band drifts subtly
+      milkyWayMesh.position.lerp(camPos, 0.03);
+
+      // Bright stars: 2% lerp → noticeable shift on orbit
+      brightStars.position.lerp(camPos, 0.02);
+
+      // Dim stars: 0.5% lerp → nearly fixed background plate
+      dimStars.position.lerp(camPos, 0.005);
+
+      // Star twinkle — cheap: only every 10 frames, touch size attribute only
+      if (frameCount % 10 === 0) {
+        const sizes = brightStars.geometry.getAttribute('size') as THREE.BufferAttribute;
+        const baseSizes = brightStars.userData.baseSizes as Float32Array;
+        for (let i = 0; i < sizes.count; i++) {
+          const twinkle = 0.85 + Math.random() * 0.3; // 85%-115% of base
+          sizes.setX(i, baseSizes[i] * twinkle);
+        }
+        sizes.needsUpdate = true;
+      }
 
       // ─── Temporal rendering — must be computed before any isTemporalFrame usage ───
       const temporalSkip = qualityLevel === 'high' ? 1 : qualityLevel === 'medium' ? 2 : 4;
@@ -2534,6 +2555,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dustMat = new THREE.PointsMaterial({
       size: 0.3, vertexColors: true, transparent: true, opacity: 0.35,
       blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+      fog: false, // cosmetic particles — exempt from atmospheric fog
     });
     const ambientDust = new THREE.Points(dustGeo, dustMat);
     ambientDust.name = 'ambient-dust';
@@ -2547,13 +2569,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
-    // Added to starField group below (follows camera — no parallax)
+    // Added directly to scene — follows camera exactly (infinite distance, no parallax)
 
-    // Layer 1: Bright prominent stars (few, large, colorful)
-    const brightCount = 200;
+    // Layer 1: Bright prominent stars (spectral class distribution)
+    const brightCount = 400;
     const brightPos = new Float32Array(brightCount * 3);
     const brightCol = new Float32Array(brightCount * 3);
     const brightSizes = new Float32Array(brightCount);
+    const brightBaseSizes = new Float32Array(brightCount); // cache for twinkle
     for (let i = 0; i < brightCount; i++) {
       const r = 4500;
       const theta = Math.random() * Math.PI * 2;
@@ -2561,13 +2584,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       brightPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
       brightPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
       brightPos[i*3+2] = r * Math.cos(phi);
-      // Varied star colors: white, blue-white, gold, orange
+      // Spectral class color distribution
       const hue = Math.random();
-      if (hue < 0.4) { brightCol[i*3] = 0.9; brightCol[i*3+1] = 0.92; brightCol[i*3+2] = 1.0; }       // blue-white
-      else if (hue < 0.6) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.95; brightCol[i*3+2] = 0.8; }   // warm white
-      else if (hue < 0.8) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.85; brightCol[i*3+2] = 0.4; }   // gold
-      else { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.6; brightCol[i*3+2] = 0.3; }                    // orange
-      brightSizes[i] = 1.5 + Math.random() * 3.0; // varied sizes
+      if (hue < 0.25) { brightCol[i*3] = 0.7; brightCol[i*3+1] = 0.8; brightCol[i*3+2] = 1.0; }        // O/B blue-white (hot)
+      else if (hue < 0.50) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 1.0; brightCol[i*3+2] = 0.95; }   // A white
+      else if (hue < 0.70) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.95; brightCol[i*3+2] = 0.8; }   // G yellow (Sun-like)
+      else if (hue < 0.85) { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.8; brightCol[i*3+2] = 0.5; }    // K orange
+      else { brightCol[i*3] = 1.0; brightCol[i*3+1] = 0.5; brightCol[i*3+2] = 0.3; }                     // M red (cool)
+      const sz = 1.5 + Math.random() * 4.5; // 1.5-6.0 range, a few extra-bright
+      brightSizes[i] = sz;
+      brightBaseSizes[i] = sz;
     }
     const brightGeo = new THREE.BufferGeometry();
     brightGeo.setAttribute('position', new THREE.BufferAttribute(brightPos, 3));
@@ -2579,9 +2605,10 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     });
     const brightStars = new THREE.Points(brightGeo, brightMat);
     brightStars.name = 'stars-bright';
+    brightStars.userData.baseSizes = brightBaseSizes; // cache for twinkle animation
 
-    // Layer 2: Dim background stars (many, tiny)
-    const dimCount = 1200;
+    // Layer 2: Dim background stars (many, tiny — cheap PointsMaterial)
+    const dimCount = 3000;
     const dimPos = new Float32Array(dimCount * 3);
     const dimCol = new Float32Array(dimCount * 3);
     for (let i = 0; i < dimCount; i++) {
@@ -2609,7 +2636,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const milkyWayPref = (() => { try { return localStorage.getItem('prime-radiant-milky-way'); } catch { return null; } })();
     milkyWayMesh.visible = milkyWayPref !== 'false'; // default ON
 
-    // Group all sky layers — follows camera together
+    // Multi-layer parallax starfield — each layer is a direct scene child
+    // so it can track the camera at a different rate for depth perception.
+    // Helper to propagate visibility to all parallax layers at once.
+    const setStarsVisible = (v: boolean) => {
+      brightStars.visible = v;
+      dimStars.visible = v;
+      skySphere.visible = v;
+      milkyWayMesh.visible = v;
+      starField.visible = v;
+    };
     const starField = new THREE.Group();
     starField.name = 'starfield';
     // Diagnostic query params (appended to URL for quick A/B testing):
@@ -2622,16 +2658,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       : '';
     const skipSky = perfQ.includes('noSky') || perfQ.includes('lite');
     const skipMilkyWay = perfQ.includes('noMilkyWay') || perfQ.includes('lite');
-    if (!skipMilkyWay) starField.add(milkyWayMesh); // behind everything (renderOrder -3)
-    if (!skipSky) starField.add(skySphere);
-    starField.add(brightStars);
-    starField.add(dimStars);
+    // Each layer added directly to scene for independent position tracking.
+    // starField group kept as a logical container for cleanup/visibility queries.
     starField.renderOrder = -1;
-    // Stars are static relative to the starField group — skip per-child matrix updates
-    skySphere.matrixAutoUpdate = false; skySphere.updateMatrix();
-    brightStars.matrixAutoUpdate = false; brightStars.updateMatrix();
-    dimStars.matrixAutoUpdate = false; dimStars.updateMatrix();
-    fg.scene().add(starField);
+    if (!skipMilkyWay) fg.scene().add(milkyWayMesh); // 3% parallax
+    if (!skipSky) fg.scene().add(skySphere);         // follows exactly (infinite)
+    fg.scene().add(brightStars);                      // 2% parallax
+    fg.scene().add(dimStars);                         // 0.5% parallax
+    fg.scene().add(starField);                        // empty group for legacy queries
 
     // Restore persisted visibility preferences
     const visPref = (k: string, dflt: boolean) => {
