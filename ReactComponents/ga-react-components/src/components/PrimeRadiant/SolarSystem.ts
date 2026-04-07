@@ -1124,6 +1124,75 @@ export function createSolarSystem(scale: number): THREE.Group {
     planetMeshes.push({ mesh, orbit, def, clouds: cloudsMesh, cloudsHigh: cloudsHighMesh });
   }
 
+  // ── Asteroid Belt — thousands of rocky fragments between Mars and Jupiter ──
+  const BELT_INNER_AU = 2.1;
+  const BELT_OUTER_AU = 3.3;
+  const BELT_COUNT = 3000;
+  const beltInner = keplerDistance(BELT_INNER_AU) * scale;
+  const beltOuter = keplerDistance(BELT_OUTER_AU) * scale;
+
+  const beltPositions = new Float32Array(BELT_COUNT * 3);
+  const beltSizes = new Float32Array(BELT_COUNT);
+  const beltColors = new Float32Array(BELT_COUNT * 3);
+
+  for (let i = 0; i < BELT_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = beltInner + Math.random() * (beltOuter - beltInner);
+    // Slight vertical spread (±5% of radius for belt thickness)
+    const y = (Math.random() - 0.5) * radius * 0.05;
+
+    const i3 = i * 3;
+    beltPositions[i3] = Math.cos(angle) * radius;
+    beltPositions[i3 + 1] = y;
+    beltPositions[i3 + 2] = Math.sin(angle) * radius;
+
+    // Size: mostly tiny, a few larger
+    beltSizes[i] = (0.02 + Math.pow(Math.random(), 4) * 0.15) * scale;
+
+    // Color: grey-brown rocky tones
+    const grey = 0.3 + Math.random() * 0.3;
+    beltColors[i3] = grey * 1.1;     // slightly warm
+    beltColors[i3 + 1] = grey;
+    beltColors[i3 + 2] = grey * 0.9; // slightly cool
+  }
+
+  const beltGeo = new THREE.BufferGeometry();
+  beltGeo.setAttribute('position', new THREE.BufferAttribute(beltPositions, 3));
+  beltGeo.setAttribute('size', new THREE.BufferAttribute(beltSizes, 1));
+  beltGeo.setAttribute('color', new THREE.BufferAttribute(beltColors, 3));
+
+  const beltMat = new THREE.PointsMaterial({
+    size: 0.15 * scale,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6,
+    sizeAttenuation: true,
+    depthWrite: false,
+  });
+  const asteroidBelt = new THREE.Points(beltGeo, beltMat);
+  asteroidBelt.name = 'asteroid-belt';
+  group.add(asteroidBelt);
+
+  // Named asteroids (larger, visible individually)
+  const namedAsteroids = [
+    { name: 'ceres', au: 2.77, radius: 0.04, color: 0x998877 },    // dwarf planet
+    { name: 'vesta', au: 2.36, radius: 0.025, color: 0xaaaaaa },
+    { name: 'pallas', au: 2.77, radius: 0.025, color: 0x887766 },
+    { name: 'hygiea', au: 3.14, radius: 0.02, color: 0x776655 },
+  ];
+  for (const ast of namedAsteroids) {
+    const dist = keplerDistance(ast.au) * scale;
+    const angle = Math.random() * Math.PI * 2; // random orbital position
+    const geo = new THREE.IcosahedronGeometry(ast.radius * scale, 0); // low-poly rock
+    const mat = new THREE.MeshLambertMaterial({ color: ast.color });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.name = ast.name;
+    mesh.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+    // Irregular shape: random scale per axis
+    mesh.scale.set(1 + Math.random() * 0.3, 0.7 + Math.random() * 0.3, 1 + Math.random() * 0.3);
+    group.add(mesh);
+  }
+
   // ── Moon Transit Shadows (Galilean moons → Jupiter) ──
   // Dark disc meshes placed on Jupiter's surface where moons cast shadows.
   // Updated each frame in updateSolarSystem() based on sun-moon-planet geometry.
@@ -1695,6 +1764,10 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       mesh.rotation.y = time * Math.abs(def.speed) * 0.15;
     }
   }
+
+  // ── Asteroid belt slow orbital drift ──
+  const belt = group.getObjectByName('asteroid-belt');
+  if (belt) belt.rotation.y += 0.00005;
 
   // ── Moon Transit Shadows on Jupiter ──
   // Parallel-ray approximation: sun is far enough that rays are effectively parallel.
