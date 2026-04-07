@@ -1,364 +1,191 @@
 // src/components/PrimeRadiant/BorgCubeNode.ts
-// Borg-cube-style mesh for constitution governance nodes.
-// Inspired by BlenderKit "SciFi Cube Spaceship" by Dennis Hafemann.
-//
-// Supports two modes:
-//   1. GLB model (preferred): loads /models/borg-cube.glb via GLTFLoader
-//   2. Procedural fallback: generates geometry if GLB not found
-//
-// Integration in ForceRadiant.tsx:
-//   import { createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
-//   // Call once at init: await preloadBorgCubeModel();
-//   // In createNodeObject for constitution nodes:
-//   if (node.type === 'constitution') return createBorgCubeNode(radius * 1.2, nodeColor);
+// Borg cube for constitution governance nodes — dark metallic hull with
+// irregular panel extrusions, green emissive windows, orange conduit lines.
+// Matches the look of the BlenderKit "SciFi Cube Spaceship" reference.
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// ---------------------------------------------------------------------------
-// GLB Model Loader — loads actual Blender model when available
-// ---------------------------------------------------------------------------
-
-const GLB_PATH = '/models/borg-cube.glb';
-let _cachedGLB: THREE.Group | null = null;
-let _glbLoadAttempted = false;
-
-/**
- * Pre-load the Borg cube GLB model. Call once at scene init.
- * If the file doesn't exist, silently falls back to procedural geometry.
- */
-export async function preloadBorgCubeModel(): Promise<boolean> {
-  if (_glbLoadAttempted) return _cachedGLB !== null;
-  _glbLoadAttempted = true;
-
-  try {
-    const loader = new GLTFLoader();
-    const gltf = await new Promise<THREE.Group>((resolve, reject) => {
-      loader.load(
-        GLB_PATH,
-        (result) => resolve(result.scene),
-        (progress) => {
-          if (progress.total > 0) {
-            console.info(`[BorgCube] Loading: ${Math.round(progress.loaded / progress.total * 100)}%`);
-          }
-        },
-        reject,
-      );
-    });
-
-    _cachedGLB = gltf;
-    console.info('[BorgCube] GLB model loaded:', GLB_PATH, '—', gltf.children.length, 'children');
-    return true;
-  } catch (err) {
-    console.info('[BorgCube] GLB not found at', GLB_PATH, '— using procedural fallback');
-    return false;
-  }
-}
-
-/**
- * Create a Borg cube node from the loaded GLB model.
- * Returns null if GLB not loaded — caller should fall back to procedural.
- */
-function createFromGLB(size: number, _healthColor?: THREE.Color): THREE.Group | null {
-  if (!_cachedGLB) return null;
-
-  const clone = _cachedGLB.clone(true);
-
-  // Normalize the model to fit our size parameter
-  const box = new THREE.Box3().setFromObject(clone);
-  const modelSize = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(modelSize.x, modelSize.y, modelSize.z);
-  const scale = size / maxDim;
-  clone.scale.setScalar(scale);
-
-  // Center the model
-  const center = box.getCenter(new THREE.Vector3()).multiplyScalar(scale);
-  clone.position.sub(center);
-
-  // Preserve the original Blender materials — do NOT override colors.
-  // The model already has the correct dark metallic hull with green/orange emissive.
-  // Only ensure materials are compatible with our renderer.
-  clone.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh) {
-      const mesh = child as THREE.Mesh;
-      // Ensure materials render on both sides for visibility at all angles
-      if (Array.isArray(mesh.material)) {
-        mesh.material.forEach(m => { m.side = THREE.DoubleSide; });
-      } else if (mesh.material) {
-        mesh.material.side = THREE.DoubleSide;
-      }
-    }
-  });
-
-  clone.name = 'borg-cube';
-  return clone;
-}
-
-// ---------------------------------------------------------------------------
-// Procedural Fallback
-// ---------------------------------------------------------------------------
-
-// Deterministic hash for procedural panel placement
-function hash(x: number, y: number, z: number): number {
-  let h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
-  h = ((h >> 16) ^ h) * 0x45d9f3b;
+// Deterministic hash
+function hash(a: number, b: number, c: number): number {
+  let h = (a * 73856093) ^ (b * 19349663) ^ (c * 83492791);
   h = ((h >> 16) ^ h) * 0x45d9f3b;
   return ((h >> 16) ^ h) & 0x7fffffff;
 }
-function hashF(x: number, y: number, z: number): number {
-  return (hash(x, y, z) % 10000) / 10000;
+function hashF(a: number, b: number, c: number): number {
+  return (hash(a, b, c) % 10000) / 10000;
 }
 
 // ---------------------------------------------------------------------------
-// Geometry — irregular multi-depth extruded panels on each face
+// Geometry — 8x8 panels with random depth extrusions per face
 // ---------------------------------------------------------------------------
 
 export function createBorgCubeGeometry(size: number): THREE.BufferGeometry {
-  // High subdivision for detail — 8x8 panels per face
-  const subdivisions = 8;
-  const geo = new THREE.BoxGeometry(size, size, size, subdivisions, subdivisions, subdivisions);
-
+  const sub = 8;
+  const geo = new THREE.BoxGeometry(size, size, size, sub, sub, sub);
   const pos = geo.attributes.position;
-  const halfSize = size / 2;
-  const cellSize = size / subdivisions;
-  const maxExtrude = size * 0.08; // max panel extrusion depth
+  const half = size / 2;
+  const cell = size / sub;
+  const maxDepth = size * 0.06;
 
   for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
-
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
     const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
-    const maxAx = Math.max(ax, ay, az);
+    const mx = Math.max(ax, ay, az);
+    if (Math.abs(mx - half) > 0.01) continue;
 
-    // Only modify face vertices
-    if (Math.abs(maxAx - halfSize) > 0.01) continue;
+    let fid: number, cu: number, cv: number;
+    if (ax === mx) { fid = x > 0 ? 0 : 1; cu = Math.floor((y + half) / cell); cv = Math.floor((z + half) / cell); }
+    else if (ay === mx) { fid = y > 0 ? 2 : 3; cu = Math.floor((x + half) / cell); cv = Math.floor((z + half) / cell); }
+    else { fid = z > 0 ? 4 : 5; cu = Math.floor((x + half) / cell); cv = Math.floor((y + half) / cell); }
 
-    // Determine which face and the 2D grid cell on that face
-    let faceId: number, cu: number, cv: number;
-    if (ax === maxAx) {
-      faceId = x > 0 ? 0 : 1;
-      cu = Math.floor((y + halfSize) / cellSize);
-      cv = Math.floor((z + halfSize) / cellSize);
-    } else if (ay === maxAx) {
-      faceId = y > 0 ? 2 : 3;
-      cu = Math.floor((x + halfSize) / cellSize);
-      cv = Math.floor((z + halfSize) / cellSize);
-    } else {
-      faceId = z > 0 ? 4 : 5;
-      cu = Math.floor((x + halfSize) / cellSize);
-      cv = Math.floor((y + halfSize) / cellSize);
-    }
+    const h = hashF(fid * 100 + cu, cv, 42);
+    const depth = h < 0.25 ? maxDepth * (0.5 + h * 2)
+      : h < 0.6 ? -maxDepth * (0.3 + (h - 0.25) * 1.5)
+      : -maxDepth * 0.1;
 
-    // Deterministic random extrusion per panel cell
-    const h = hashF(faceId * 100 + cu, cv, 42);
+    const nx = ax === mx ? Math.sign(x) : 0;
+    const ny = ay === mx ? Math.sign(y) : 0;
+    const nz = az === mx ? Math.sign(z) : 0;
 
-    // 30% of panels extrude outward, 40% are recessed, 30% are flat
-    let depth: number;
-    if (h < 0.3) {
-      depth = maxExtrude * (0.3 + h * 2); // extrude outward
-    } else if (h < 0.7) {
-      depth = -maxExtrude * (0.2 + (h - 0.3) * 1.5); // recess inward
-    } else {
-      depth = 0; // flush panels
-    }
+    // Seam grooves at cell boundaries
+    const gs = sub / size;
+    const uf = Math.abs((x * gs) % 1 - 0.5) * 2;
+    const vf = Math.abs((y * gs) % 1 - 0.5) * 2;
+    const wf = Math.abs((z * gs) % 1 - 0.5) * 2;
+    const seam = size * 0.012 * (1 - Math.min(1, Math.min(uf, vf, wf) * 4));
 
-    // Seam groove — vertices at cell boundaries get extra recess
-    const uPos = (y + halfSize) / cellSize;
-    const vPos = (z + halfSize) / cellSize;
-    if (ax === maxAx) { /* u=y, v=z already set */ }
-    else if (ay === maxAx) {
-      // Recompute for this face
-    }
-    const uFrac = Math.abs((uPos % 1) - 0.5) * 2; // 0 at seam, 1 at center
-    const vFrac = Math.abs((vPos % 1) - 0.5) * 2;
-    const seamFactor = Math.min(uFrac, vFrac);
-    const seamDepth = size * 0.015 * (1 - Math.min(1, seamFactor * 4));
-
-    // Apply along face normal
-    const nx = ax === maxAx ? Math.sign(x) : 0;
-    const ny = ay === maxAx ? Math.sign(y) : 0;
-    const nz = az === maxAx ? Math.sign(z) : 0;
-
-    const totalDisp = depth - seamDepth;
-    pos.setXYZ(i, x + nx * totalDisp, y + ny * totalDisp, z + nz * totalDisp);
+    pos.setXYZ(i, x + nx * (depth - seam), y + ny * (depth - seam), z + nz * (depth - seam));
   }
-
   geo.computeVertexNormals();
   return geo;
-}
-
-// ---------------------------------------------------------------------------
-// Material — dark metallic hull
-// ---------------------------------------------------------------------------
-
-export function createBorgCubeMaterial(
-  healthColor?: THREE.Color,
-): THREE.MeshPhysicalMaterial {
-  return new THREE.MeshPhysicalMaterial({
-    color: 0x0d0d1a,            // very dark blue-black
-    metalness: 0.95,
-    roughness: 0.35,
-    emissive: healthColor ?? new THREE.Color(0x00ff88),
-    emissiveIntensity: 0.03,    // very subtle — hull should be dark, not glowing
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.4,
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Orange conduit wireframe — like circuit traces between panels
-// ---------------------------------------------------------------------------
-
-function createConduitLines(size: number): THREE.LineSegments {
-  const segments: number[] = [];
-  const halfSize = size / 2;
-  const gridStep = size / 8;
-
-  // Horizontal and vertical conduit lines on each face
-  for (let face = 0; face < 6; face++) {
-    for (let i = 0; i <= 8; i++) {
-      const t = -halfSize + i * gridStep;
-      // Only draw ~40% of possible lines (random selection for irregularity)
-      if (hashF(face, i, 0) > 0.4) continue;
-
-      const offset = halfSize * 1.005; // slightly off face
-      switch (face) {
-        case 0: // +X face — horizontal lines
-          segments.push(offset, t, -halfSize, offset, t, halfSize);
-          break;
-        case 1: // -X face
-          segments.push(-offset, t, -halfSize, -offset, t, halfSize);
-          break;
-        case 2: // +Y face
-          segments.push(-halfSize, offset, t, halfSize, offset, t);
-          break;
-        case 3: // -Y face
-          segments.push(-halfSize, -offset, t, halfSize, -offset, t);
-          break;
-        case 4: // +Z face
-          segments.push(-halfSize, t, offset, halfSize, t, offset);
-          break;
-        case 5: // -Z face
-          segments.push(-halfSize, t, -offset, halfSize, t, -offset);
-          break;
-      }
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(segments, 3));
-  const mat = new THREE.LineBasicMaterial({
-    color: 0xff8833,  // orange conduit color
-    transparent: true,
-    opacity: 0.35,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
-  return new THREE.LineSegments(geo, mat);
-}
-
-// ---------------------------------------------------------------------------
-// Green sub-system emissive dots — scattered across panels
-// ---------------------------------------------------------------------------
-
-function createSubSystemDots(size: number): THREE.Points {
-  const dotsPerFace = 8; // more dots for denser look
-  const faceCount = 6;
-  const dotCount = faceCount * dotsPerFace;
-  const positions = new Float32Array(dotCount * 3);
-  const colors = new Float32Array(dotCount * 3);
-  const halfSize = size * 0.5;
-
-  const green = new THREE.Color(0x00ff88);
-  const cyan = new THREE.Color(0x00ccff);
-  const amber = new THREE.Color(0xffaa22);
-
-  let idx = 0;
-  for (let face = 0; face < faceCount; face++) {
-    for (let d = 0; d < dotsPerFace; d++) {
-      // Use deterministic placement so dots don't move on re-render
-      const u = (hashF(face, d, 1) - 0.5) * size * 0.85;
-      const v = (hashF(face, d, 2) - 0.5) * size * 0.85;
-      const i3 = idx * 3;
-
-      const offset = halfSize * 1.03;
-      switch (face) {
-        case 0: positions[i3] = offset;  positions[i3+1] = u; positions[i3+2] = v; break;
-        case 1: positions[i3] = -offset; positions[i3+1] = u; positions[i3+2] = v; break;
-        case 2: positions[i3] = u; positions[i3+1] = offset;  positions[i3+2] = v; break;
-        case 3: positions[i3] = u; positions[i3+1] = -offset; positions[i3+2] = v; break;
-        case 4: positions[i3] = u; positions[i3+1] = v; positions[i3+2] = offset;  break;
-        case 5: positions[i3] = u; positions[i3+1] = v; positions[i3+2] = -offset; break;
-      }
-
-      // 60% green, 25% cyan, 15% amber (like the reference)
-      const r = hashF(face, d, 3);
-      const c = r < 0.6 ? green : r < 0.85 ? cyan : amber;
-      colors[i3] = c.r; colors[i3+1] = c.g; colors[i3+2] = c.b;
-      idx++;
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  return new THREE.Points(geo, new THREE.PointsMaterial({
-    size: size * 0.06,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.9,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    sizeAttenuation: true,
-  }));
-}
-
-// ---------------------------------------------------------------------------
-// Green wireframe grid overlay — panel edges glow
-// ---------------------------------------------------------------------------
-
-function createWireframeOverlay(size: number, color: THREE.Color): THREE.Mesh {
-  const wireGeo = new THREE.BoxGeometry(size * 1.002, size * 1.002, size * 1.002, 8, 8, 8);
-  return new THREE.Mesh(wireGeo, new THREE.MeshBasicMaterial({
-    color,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.15,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  }));
 }
 
 // ---------------------------------------------------------------------------
 // Composite Borg cube node
 // ---------------------------------------------------------------------------
 
-export function createBorgCubeNode(
-  size: number,
-  healthColor?: THREE.Color,
-): THREE.Group {
-  // Try GLB model first (higher quality, artist-made)
-  const glbNode = createFromGLB(size, healthColor);
-  if (glbNode) return glbNode;
-
-  // Procedural fallback
+export function createBorgCubeNode(size: number, _healthColor?: THREE.Color): THREE.Group {
   const group = new THREE.Group();
-  const wireColor = healthColor ?? new THREE.Color(0x00ff88);
 
-  // 1. Hull — irregular extruded panels
-  const hull = new THREE.Mesh(createBorgCubeGeometry(size), createBorgCubeMaterial(healthColor));
+  // 1. HULL — very dark metallic, barely visible emissive
+  const hull = new THREE.Mesh(
+    createBorgCubeGeometry(size),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x080810,
+      metalness: 0.95,
+      roughness: 0.4,
+      emissive: 0x001108,
+      emissiveIntensity: 0.3,
+      clearcoat: 0.2,
+    }),
+  );
   group.add(hull);
 
-  // 2. Wireframe — subtle green grid
-  group.add(createWireframeOverlay(size, wireColor));
+  // 2. WIREFRAME — very faint dark blue-green grid (panel seams)
+  const wire = new THREE.Mesh(
+    new THREE.BoxGeometry(size * 1.001, size * 1.001, size * 1.001, 8, 8, 8),
+    new THREE.MeshBasicMaterial({
+      color: 0x1a3a2a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12,
+      depthWrite: false,
+    }),
+  );
+  group.add(wire);
 
-  // 3. Orange conduit lines — circuit traces between panels
-  group.add(createConduitLines(size));
+  // 3. ORANGE CONDUIT LINES — sparse circuit traces
+  const segs: number[] = [];
+  const half = size / 2;
+  const step = size / 8;
+  for (let face = 0; face < 6; face++) {
+    for (let i = 0; i <= 8; i++) {
+      if (hashF(face, i, 7) > 0.3) continue; // only ~30% of lines
+      const t = -half + i * step;
+      const off = half * 1.005;
+      // Alternate horizontal/vertical per face
+      const horiz = hashF(face, i, 99) > 0.5;
+      if (face < 2) {
+        const s = face === 0 ? off : -off;
+        if (horiz) segs.push(s, t, -half, s, t, half);
+        else segs.push(s, -half, t, s, half, t);
+      } else if (face < 4) {
+        const s = face === 2 ? off : -off;
+        if (horiz) segs.push(-half, s, t, half, s, t);
+        else segs.push(t, s, -half, t, s, half);
+      } else {
+        const s = face === 4 ? off : -off;
+        if (horiz) segs.push(-half, t, s, half, t, s);
+        else segs.push(t, -half, s, t, half, s);
+      }
+    }
+  }
+  const conduitGeo = new THREE.BufferGeometry();
+  conduitGeo.setAttribute('position', new THREE.Float32BufferAttribute(segs, 3));
+  group.add(new THREE.LineSegments(conduitGeo, new THREE.LineBasicMaterial({
+    color: 0xcc6622, transparent: true, opacity: 0.4, depthWrite: false,
+  })));
 
-  // 4. Sub-system emissive dots — green/cyan/amber
-  group.add(createSubSystemDots(size));
+  // 4. GREEN EMISSIVE WINDOWS — tiny bright dots scattered on panels
+  const dotCount = 80;
+  const dotPos = new Float32Array(dotCount * 3);
+  const dotCol = new Float32Array(dotCount * 3);
+  const green = [0.1, 1.0, 0.4];
+  const cyan = [0.2, 0.8, 1.0];
+  const amber = [1.0, 0.6, 0.1];
+  for (let i = 0; i < dotCount; i++) {
+    const face = Math.floor(hashF(i, 0, 11) * 6);
+    const u = (hashF(i, 1, 22) - 0.5) * size * 0.9;
+    const v = (hashF(i, 2, 33) - 0.5) * size * 0.9;
+    const off = half * 1.02;
+    const i3 = i * 3;
+    switch (face) {
+      case 0: dotPos[i3] = off; dotPos[i3+1] = u; dotPos[i3+2] = v; break;
+      case 1: dotPos[i3] = -off; dotPos[i3+1] = u; dotPos[i3+2] = v; break;
+      case 2: dotPos[i3] = u; dotPos[i3+1] = off; dotPos[i3+2] = v; break;
+      case 3: dotPos[i3] = u; dotPos[i3+1] = -off; dotPos[i3+2] = v; break;
+      case 4: dotPos[i3] = u; dotPos[i3+1] = v; dotPos[i3+2] = off; break;
+      default: dotPos[i3] = u; dotPos[i3+1] = v; dotPos[i3+2] = -off; break;
+    }
+    const r = hashF(i, 3, 44);
+    const c = r < 0.55 ? green : r < 0.8 ? cyan : amber;
+    dotCol[i3] = c[0]; dotCol[i3+1] = c[1]; dotCol[i3+2] = c[2];
+  }
+  const dotGeo = new THREE.BufferGeometry();
+  dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPos, 3));
+  dotGeo.setAttribute('color', new THREE.BufferAttribute(dotCol, 3));
+  group.add(new THREE.Points(dotGeo, new THREE.PointsMaterial({
+    size: size * 0.04,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.95,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })));
+
+  // 5. CORNER GLOW — faint orange emission at corners (like the reference AO glow)
+  const corners = [
+    [-1,-1,-1], [-1,-1,1], [-1,1,-1], [-1,1,1],
+    [1,-1,-1], [1,-1,1], [1,1,-1], [1,1,1],
+  ];
+  const cornerPos = new Float32Array(8 * 3);
+  for (let i = 0; i < 8; i++) {
+    cornerPos[i*3] = corners[i][0] * half * 0.95;
+    cornerPos[i*3+1] = corners[i][1] * half * 0.95;
+    cornerPos[i*3+2] = corners[i][2] * half * 0.95;
+  }
+  const cornerGeo = new THREE.BufferGeometry();
+  cornerGeo.setAttribute('position', new THREE.BufferAttribute(cornerPos, 3));
+  group.add(new THREE.Points(cornerGeo, new THREE.PointsMaterial({
+    size: size * 0.2,
+    color: 0xff6600,
+    transparent: true,
+    opacity: 0.15,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })));
 
   group.name = 'borg-cube';
   return group;
