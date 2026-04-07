@@ -94,7 +94,7 @@ import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
-import { createBorgCubeGeometry } from './BorgCubeNode';
+import { createBorgCubeGeometry, createBorgCubeNode } from './BorgCubeNode';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -492,6 +492,13 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
   const baseRadius = Math.pow(TYPE_SIZE[node.type] ?? 5, 0.5) * 0.8;
   const radius = baseRadius * prominence.sizeMult;
   const nodeColor = new THREE.Color(node.color);
+
+  // ── Constitution nodes: full Borg cube (dark hull + green wireframe + dots) ──
+  if (node.type === 'constitution' && !_isLowEndDevice) {
+    const borgGroup = createBorgCubeNode(radius * 1.2, nodeColor);
+    borgGroup.userData.healthStatus = hs;
+    return borgGroup;
+  }
 
   // ── Mobile fast path: simple emissive sphere, no shaders/dust/sprites ──
   if (_isLowEndDevice) {
