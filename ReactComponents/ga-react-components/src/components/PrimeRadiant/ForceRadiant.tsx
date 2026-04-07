@@ -471,6 +471,18 @@ const HEALTH_PROMINENCE: Record<GovernanceHealthStatus, {
   contradictory: { sizeMult: 1.5, particleMult: 2.0, opacity: 1.0, glowIntensity: 1.8, spinSpeed: 1.5 },
 };
 
+// Positional jitter amplitude per health state — governance nodes shimmer with uncertainty.
+// Healthy = stable (zero), uncertain states get proportionally more displacement.
+// These are visual-only offsets added to the group position each frame; they never
+// feed back into the force simulation.
+const JITTER_AMPLITUDE: Record<GovernanceHealthStatus, number> = {
+  healthy: 0,
+  warning: 0.05,
+  error: 0.15,
+  unknown: 0.1,
+  contradictory: 0.2,
+};
+
 function createNodeObject(node: GraphNode): THREE.Object3D {
   const group = new THREE.Group();
   const hs = node.healthStatus ?? 'unknown';
@@ -561,6 +573,13 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
     sizeAttenuation: true,
   });
   group.add(new THREE.Points(dustGeo, dustMat));
+
+  // 4. Uncertainty halo — probabilistic sphere for non-healthy nodes
+  const halo = createUncertaintyHalo(radius, hs);
+  if (halo) {
+    group.add(halo);
+    group.userData._uncertaintyHalo = halo;
+  }
 
   return group;
 }
@@ -2116,6 +2135,35 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           } else {
             group.rotation.y = t * prom.spinSpeed;
           }
+        }
+
+        // ── Uncertainty jitter — visual-only displacement, never feeds back to sim ──
+        const jitterAmp = JITTER_AMPLITUDE[hs] ?? 0;
+        if (jitterAmp > 0) {
+          // Per-node phase from id charCode avoids all nodes jittering in unison
+          const jPhase = t * 3 + (n.id?.charCodeAt(0) ?? 0);
+          // Error nodes get sharp, glitchy teleport-style displacement (step function)
+          if (hs === 'error') {
+            // Glitch: snap to quantized positions every ~0.3s
+            const glitchSeed = Math.floor(t * 3.3 + phase);
+            const gx = ((glitchSeed * 13 + 7) % 37) / 37 - 0.5;
+            const gy = ((glitchSeed * 17 + 11) % 41) / 41 - 0.5;
+            const gz = ((glitchSeed * 23 + 3) % 31) / 31 - 0.5;
+            group.position.x += gx * jitterAmp * 2;
+            group.position.y += gy * jitterAmp * 2;
+            group.position.z += gz * jitterAmp * 2;
+          } else {
+            // Smooth sinusoidal displacement — irrational frequency ratios prevent loops
+            group.position.x += Math.sin(jPhase * 2.3) * jitterAmp * 0.3;
+            group.position.y += Math.cos(jPhase * 1.7) * jitterAmp * 0.3;
+            group.position.z += Math.sin(jPhase * 3.1) * jitterAmp * 0.3;
+          }
+        }
+
+        // ── Uncertainty halo pulse — breathe the probabilistic sphere ──
+        const cachedHalo = group.userData._uncertaintyHalo as THREE.Mesh | undefined;
+        if (cachedHalo) {
+          updateUncertaintyHalo(cachedHalo, t, phase);
         }
 
         // ── Governance Redshift / Blueshift — compliance drift as color shift ──
