@@ -1095,6 +1095,23 @@ export function createSolarSystem(scale: number): THREE.Group {
           moonOrbit.add(geyser);
         }
 
+        // Thin orbit track for moon — faint dashed circle
+        const moonTrailSegments = 64;
+        const moonTrailPositions = new Float32Array((moonTrailSegments + 1) * 3);
+        for (let i = 0; i <= moonTrailSegments; i++) {
+          const angle = (i / moonTrailSegments) * Math.PI * 2;
+          moonTrailPositions[i * 3] = Math.cos(angle) * moonDef.distance * scale;
+          moonTrailPositions[i * 3 + 1] = 0;
+          moonTrailPositions[i * 3 + 2] = Math.sin(angle) * moonDef.distance * scale;
+        }
+        const moonTrailGeo = new THREE.BufferGeometry();
+        moonTrailGeo.setAttribute('position', new THREE.BufferAttribute(moonTrailPositions, 3));
+        const moonTrailMat = new THREE.LineBasicMaterial({
+          color: 0x556688, transparent: true, opacity: 0.15, depthWrite: false,
+        });
+        const moonTrail = new THREE.Line(moonTrailGeo, moonTrailMat);
+        moonOrbit.add(moonTrail);
+
         // Spread moons around orbit — deterministic phase from distance + speed
         moonOrbit.rotation.y = moonDef.distance * 3.14159 + moonDef.speed * 1.618;
 
@@ -2261,21 +2278,10 @@ export function enableEarthAutoLOD(
         if (t.img) mercCtx.drawImage(t.img, t.x * tileSize, t.y * tileSize, tileSize, tileSize);
       }
 
-      // Reproject Mercator → Equirectangular
-      const eqCanvas = document.createElement('canvas');
-      eqCanvas.width = mercSize;
-      eqCanvas.height = mercSize;
-      const eqCtx = eqCanvas.getContext('2d')!;
-      const MAX_LAT = 85.051 * Math.PI / 180;
-      for (let eqY = 0; eqY < mercSize; eqY++) {
-        const lat = Math.PI / 2 - (eqY / mercSize) * Math.PI;
-        const clampedLat = Math.max(-MAX_LAT, Math.min(MAX_LAT, lat));
-        const mercYNorm = (1 - (Math.log(Math.tan(Math.PI / 4 + clampedLat / 2)) / Math.PI)) / 2;
-        const srcY = Math.floor(mercYNorm * mercSize);
-        if (srcY >= 0 && srcY < mercSize) {
-          eqCtx.drawImage(mercCanvas, 0, srcY, mercSize, 1, 0, eqY, mercSize, 1);
-        }
-      }
+      // Use Mercator texture directly — reprojection was causing main-thread
+      // stalls (up to 8192 synchronous drawImage calls at zoom 5).
+      // Slight polar stretching is acceptable for an orrery overlay.
+      const eqCanvas = mercCanvas;
 
       const tex = new THREE.CanvasTexture(eqCanvas);
       tex.colorSpace = THREE.SRGBColorSpace;
