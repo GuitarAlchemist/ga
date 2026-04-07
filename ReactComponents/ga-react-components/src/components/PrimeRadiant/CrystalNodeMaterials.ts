@@ -302,6 +302,126 @@ export function applyGovernanceShift(
   material.emissiveIntensity = baseIntensity + shift * 0.3;
 }
 
+// ---------------------------------------------------------------------------
+// Fresnel rim glow — crystal edges glow brighter than centers
+// ---------------------------------------------------------------------------
+
+/**
+ * Enhance a material with Fresnel-style rim glow via sheen.
+ * Uses the material's emissive color at half intensity for a holographic edge.
+ * Call once after cloning; idempotent (caches base values).
+ */
+export function applyFresnelRimGlow(
+  material: THREE.MeshPhysicalMaterial,
+): void {
+  if (material.userData.fresnelApplied) return;
+  material.userData.fresnelApplied = true;
+
+  // Derive rim color from emissive at 50 % brightness
+  const rimColor = material.emissive.clone().multiplyScalar(0.5);
+  material.sheenColor.copy(rimColor);
+  material.sheen = Math.max(material.sheen, 0.3);
+}
+
+// ---------------------------------------------------------------------------
+// Stress fractures — roughness / clearcoat degrade with health
+// ---------------------------------------------------------------------------
+
+const STRESS_ROUGHNESS: Record<string, number> = {
+  healthy: 0.05,
+  warning: 0.25,
+  error: 0.55,
+  unknown: 0.35,
+  contradictory: 0.45,
+};
+
+const STRESS_CLEARCOAT: Record<string, number> = {
+  healthy: 1.0,
+  warning: 0.7,
+  error: 0.2,
+  unknown: 0.5,
+  contradictory: 0.3,
+};
+
+/**
+ * Modify material roughness and clearcoat based on node health.
+ *
+ * - Healthy: smooth crystal (low roughness, full clearcoat)
+ * - Warning: slight surface roughness (micro-fractures forming)
+ * - Error: high roughness + reduced clearcoat (fractured, dull)
+ * - Contradictory: anisotropic roughness (directional stress)
+ *
+ * Caches original values on first call so repeated invocations blend from
+ * the true baseline, not from a previously-shifted state.
+ */
+export function applyStressFractures(
+  material: THREE.MeshPhysicalMaterial,
+  health: string,
+): void {
+  if (material.userData.baseRoughness === undefined) {
+    material.userData.baseRoughness = material.roughness;
+    material.userData.baseClearcoat = material.clearcoat;
+  }
+  material.roughness = STRESS_ROUGHNESS[health] ?? 0.3;
+  material.clearcoat = STRESS_CLEARCOAT[health] ?? 0.5;
+}
+
+// ---------------------------------------------------------------------------
+// Crystal clarity — stable nodes become more transparent over time
+// ---------------------------------------------------------------------------
+
+/**
+ * Gradually increase transmission clarity for nodes that have been healthy
+ * for a sustained period. Only affects transmission-capable materials
+ * (persona, schema, test — those with baseTransmission > 0).
+ *
+ * @param stabilityDuration  Seconds since the last health-state change.
+ *                           Full clarity is reached at 86 400 s (24 h).
+ */
+export function applyCrystalClarity(
+  material: THREE.MeshPhysicalMaterial,
+  stabilityDuration: number,
+): void {
+  // Cache base transmission on first call
+  if (material.userData.baseTransmission === undefined) {
+    material.userData.baseTransmission = material.transmission;
+    material.userData.baseThickness = material.thickness;
+  }
+
+  const baseT = material.userData.baseTransmission as number;
+  if (baseT <= 0) return; // opaque metals — nothing to clarify
+
+  // 0 → 1 over 24 hours of uninterrupted stability
+  const clarity = Math.min(1, stabilityDuration / 86400);
+
+  material.transmission = Math.min(0.95, baseT + clarity * 0.2);
+  material.thickness = Math.max(0.3, (material.userData.baseThickness as number) - clarity * 0.5);
+}
+
+// ---------------------------------------------------------------------------
+// Governance activity iridescence — recent actions make nodes shimmer
+// ---------------------------------------------------------------------------
+
+/**
+ * Heighten iridescence on nodes that recently participated in a governance
+ * action (audit pass, policy evaluation, constitutional check, etc.).
+ *
+ * @param activityLevel  0-1 value that decays over time after an event.
+ */
+export function applyGovernanceActivity(
+  material: THREE.MeshPhysicalMaterial,
+  activityLevel: number,
+): void {
+  if (material.userData.baseIridescence === undefined) {
+    material.userData.baseIridescence = material.iridescence;
+    material.userData.baseIridescenceIOR = material.iridescenceIOR;
+  }
+
+  const baseIri = material.userData.baseIridescence as number;
+  material.iridescence = Math.min(1.0, baseIri + activityLevel * 0.6);
+  material.iridescenceIOR = (material.userData.baseIridescenceIOR as number) + activityLevel * 0.3;
+}
+
 /** Dispose all cached materials */
 export function disposeCrystalMaterials(): void {
   for (const mat of materialCache.values()) mat.dispose();
