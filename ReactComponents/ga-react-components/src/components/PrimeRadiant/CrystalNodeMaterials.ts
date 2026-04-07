@@ -262,6 +262,46 @@ export function getMaterialDef(type: GovernanceNodeType): NodeMaterialDef | unde
   return MATERIAL_DEFS[type];
 }
 
+// ---------------------------------------------------------------------------
+// Governance Redshift / Blueshift — compliance drift visible as color shift
+// ---------------------------------------------------------------------------
+
+// Pre-allocated colors to avoid per-frame allocation
+const _blueShift = new THREE.Color(0.1, 0.3, 1.0);
+const _redShift  = new THREE.Color(1.0, 0.2, 0.05);
+
+/**
+ * Apply a spectral shift to a node's emissive color based on compliance direction.
+ *
+ * - complianceDelta > 0 → blueshift  (moving toward compliance)
+ * - complianceDelta < 0 → redshift   (drifting away from compliance)
+ * - complianceDelta = 0 → neutral    (no shift)
+ *
+ * The shift is subtle (lerp capped at 0.4) so it tints rather than replaces
+ * the material's base emissive color.
+ */
+export function applyGovernanceShift(
+  material: THREE.MeshPhysicalMaterial,
+  complianceDelta: number, // -1.0 … +1.0
+): void {
+  // Lazily cache the original emissive so we can always blend from it
+  if (!material.userData.baseEmissive) {
+    material.userData.baseEmissive = material.emissive.clone();
+    material.userData.baseEmissiveIntensity = material.emissiveIntensity;
+  }
+
+  const base = material.userData.baseEmissive as THREE.Color;
+  const baseIntensity = material.userData.baseEmissiveIntensity as number;
+  const shift = Math.abs(complianceDelta);
+
+  const shiftColor = complianceDelta > 0 ? _blueShift : _redShift;
+
+  // Tint emissive toward the shift color — max 40 % blend
+  material.emissive.copy(base).lerp(shiftColor, shift * 0.4);
+  // Slightly boost emissive intensity proportional to drift magnitude
+  material.emissiveIntensity = baseIntensity + shift * 0.3;
+}
+
 /** Dispose all cached materials */
 export function disposeCrystalMaterials(): void {
   for (const mat of materialCache.values()) mat.dispose();
