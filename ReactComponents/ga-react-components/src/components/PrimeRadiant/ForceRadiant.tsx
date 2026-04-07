@@ -1505,9 +1505,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Fix: pause rendering, init(), then resume. The graph keeps computing
     // forces during the pause — only the draw calls are deferred.
     if (USE_WEBGPU) {
+      // Pause immediately — 3d-force-graph fires render calls in its constructor
+      // before we can init the WebGPU backend, producing noisy console warnings.
+      fg.pauseAnimation();
       const renderer = fg.renderer();
       if (typeof renderer.init === 'function') {
-        fg.pauseAnimation();
         renderer.init().then(() => {
           console.log('[PrimeRadiant] WebGPU backend initialized');
           fg.resumeAnimation();
@@ -1515,6 +1517,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           console.warn('[PrimeRadiant] WebGPU init failed, resuming with WebGL2:', err.message);
           fg.resumeAnimation();
         });
+      } else {
+        fg.resumeAnimation();
       }
     }
 
