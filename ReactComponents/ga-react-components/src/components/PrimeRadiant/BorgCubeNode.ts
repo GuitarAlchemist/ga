@@ -4,6 +4,67 @@
 // Matches the look of the BlenderKit "SciFi Cube Spaceship" reference.
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+// ---------------------------------------------------------------------------
+// GLB loader — use Blender geometry, replace materials for WebGL
+// ---------------------------------------------------------------------------
+
+const GLB_PATH = '/models/borg-cube.glb';
+let _cachedGLB: THREE.Group | null = null;
+let _glbAttempted = false;
+
+/** Pre-load the Blender GLB. Call once at init. */
+export async function preloadBorgCubeModel(): Promise<boolean> {
+  if (_glbAttempted) return _cachedGLB !== null;
+  _glbAttempted = true;
+  try {
+    const loader = new GLTFLoader();
+    const gltf = await new Promise<THREE.Group>((resolve, reject) => {
+      loader.load(GLB_PATH, (r) => resolve(r.scene), undefined, reject);
+    });
+    _cachedGLB = gltf;
+    console.info('[BorgCube] Blender model loaded — using real geometry');
+    return true;
+  } catch {
+    console.info('[BorgCube] No GLB found, using procedural geometry');
+    return false;
+  }
+}
+
+/** Create node from Blender GLB: keep geometry, replace materials */
+function createFromGLB(size: number): THREE.Group | null {
+  if (!_cachedGLB) return null;
+  const clone = _cachedGLB.clone(true);
+
+  // Scale to fit
+  const box = new THREE.Box3().setFromObject(clone);
+  const maxDim = box.getSize(new THREE.Vector3());
+  const scale = size / Math.max(maxDim.x, maxDim.y, maxDim.z);
+  clone.scale.setScalar(scale);
+  const center = box.getCenter(new THREE.Vector3()).multiplyScalar(scale);
+  clone.position.sub(center);
+
+  // Replace Blender materials with WebGL-optimized versions
+  clone.traverse((child) => {
+    if (!(child as THREE.Mesh).isMesh) return;
+    const mesh = child as THREE.Mesh;
+
+    // Dark metallic hull — matches the Blender Cycles look in WebGL
+    mesh.material = new THREE.MeshPhysicalMaterial({
+      color: 0x080810,
+      metalness: 0.95,
+      roughness: 0.35,
+      emissive: 0x001108,
+      emissiveIntensity: 0.3,
+      clearcoat: 0.2,
+      side: THREE.DoubleSide,
+    });
+  });
+
+  clone.name = 'borg-cube-glb';
+  return clone;
+}
 
 // Deterministic hash
 function hash(a: number, b: number, c: number): number {
@@ -67,19 +128,23 @@ export function createBorgCubeGeometry(size: number): THREE.BufferGeometry {
 export function createBorgCubeNode(size: number, _healthColor?: THREE.Color): THREE.Group {
   const group = new THREE.Group();
 
-  // 1. HULL — very dark metallic, barely visible emissive
-  const hull = new THREE.Mesh(
-    createBorgCubeGeometry(size),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x080810,
-      metalness: 0.95,
-      roughness: 0.4,
-      emissive: 0x001108,
-      emissiveIntensity: 0.3,
-      clearcoat: 0.2,
-    }),
-  );
-  group.add(hull);
+  // 1. HULL — try Blender GLB (real geometry), fall back to procedural
+  const glbHull = createFromGLB(size);
+  if (glbHull) {
+    group.add(glbHull);
+  } else {
+    group.add(new THREE.Mesh(
+      createBorgCubeGeometry(size),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x080810,
+        metalness: 0.95,
+        roughness: 0.4,
+        emissive: 0x001108,
+        emissiveIntensity: 0.3,
+        clearcoat: 0.2,
+      }),
+    ));
+  }
 
   // 2. WIREFRAME — very faint dark blue-green grid (panel seams)
   const wire = new THREE.Mesh(
