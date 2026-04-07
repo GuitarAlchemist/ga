@@ -94,6 +94,7 @@ import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
+import { createBorgCubeGeometry } from './BorgCubeNode';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -449,7 +450,7 @@ function createVolumetricMaterial(color: THREE.Color, complexity: number, intens
 // ---------------------------------------------------------------------------
 // Shape by type — each governance artifact type gets a distinct geometry
 const TYPE_GEOMETRY: Record<GovernanceNodeType, (r: number) => THREE.BufferGeometry> = {
-  constitution: (r) => new THREE.DodecahedronGeometry(r, 0),
+  constitution: (r) => createBorgCubeGeometry(r * 1.4),
   department: (r) => new THREE.OctahedronGeometry(r, 0),
   policy: (r) => new THREE.BoxGeometry(r * 1.4, r * 1.4, r * 1.4),
   persona: (r) => new THREE.ConeGeometry(r, r * 2, 8),
@@ -1844,6 +1845,19 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _tarsOffset = new THREE.Vector3();
     const _faceOffset = new THREE.Vector3();
     let _filamentPosMap: Map<string, THREE.Vector3> | null = null;
+    // Pre-allocated vectors for per-frame operations (zero GC pressure)
+    const _planetTrackPos = new THREE.Vector3();
+    const _planetProjected = new THREE.Vector3();
+    // Cached container dimensions — updated via ResizeObserver, not per-frame DOM read
+    let _cachedContainerW = container.clientWidth || 1;
+    let _cachedContainerH = container.clientHeight || 1;
+    const _resizeObs = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        _cachedContainerW = e.contentRect.width || 1;
+        _cachedContainerH = e.contentRect.height || 1;
+      }
+    });
+    _resizeObs.observe(container);
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
@@ -2344,24 +2358,21 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       if (trackedPlanetRef.current && solarSystem.visible) {
         const trackedObj = solarSystem.getObjectByName(trackedPlanetRef.current);
         if (trackedObj) {
-          const pw = new THREE.Vector3();
-          trackedObj.getWorldPosition(pw);
+          trackedObj.getWorldPosition(_planetTrackPos);
           const controls = fg.controls() as { target?: THREE.Vector3 };
           if (controls.target) {
-            controls.target.copy(pw);
+            controls.target.copy(_planetTrackPos);
           }
-          // Update PiP state (throttled to ~4 Hz to avoid iframe re-renders)
+          // Update PiP state (throttled to ~1 Hz to reduce React re-renders)
           const now = performance.now();
-          if (now - pipThrottleRef.current > 250) {
+          if (now - pipThrottleRef.current > 1000) {
             pipThrottleRef.current = now;
             const cam = fg.camera() as THREE.PerspectiveCamera;
-            const zoom = cam.position.distanceTo(pw);
+            const zoom = cam.position.distanceTo(_planetTrackPos);
             // Project planet world position to screen coordinates
-            const projected = pw.clone().project(cam);
-            const cw = containerRef.current?.clientWidth ?? 1;
-            const ch = containerRef.current?.clientHeight ?? 1;
-            const sx = (projected.x * 0.5 + 0.5) * cw;
-            const sy = (-projected.y * 0.5 + 0.5) * ch;
+            _planetProjected.copy(_planetTrackPos).project(cam);
+            const sx = (_planetProjected.x * 0.5 + 0.5) * _cachedContainerW;
+            const sy = (-_planetProjected.y * 0.5 + 0.5) * _cachedContainerH;
             setPipState({ planet: trackedPlanetRef.current, x: sx, y: sy, zoom });
           }
         }
@@ -3306,6 +3317,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     return () => {
       disposed = true;
+      _resizeObs.disconnect();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
