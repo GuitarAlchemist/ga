@@ -76,7 +76,7 @@ class ReactiveEngineImpl {
         rule.lastSnapshot = snapshot;
       };
       tick(); // initial fetch
-      const timer = setInterval(tick, 15_000);
+      const timer = setInterval(tick, 30_000); // 30s (was 15s — JSON.stringify caused GC pressure)
       rule.cleanup = () => clearInterval(timer);
     }
   }
