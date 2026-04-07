@@ -1,79 +1,100 @@
 // src/components/PrimeRadiant/BorgCubeNode.ts
-// Procedural Borg-cube-style mesh generator for constitution governance nodes.
-// Dark metallic panels with glowing green/cyan sub-system lines.
-// Designed via Octopus UI/UX Design Intelligence.
+// Borg-cube-style mesh for constitution governance nodes.
+// Inspired by BlenderKit "SciFi Cube Spaceship" by Dennis Hafemann.
+// Dark metallic hull with irregular extruded panels, green emissive dots,
+// orange conduit lines — procedurally generated in Three.js.
 //
 // Integration in ForceRadiant.tsx:
-//
 //   import { createBorgCubeGeometry, createBorgCubeNode } from './BorgCubeNode';
-//
-//   // Option A — geometry only (keeps existing material pipeline):
-//   // In TYPE_GEOMETRY map (~line 451), replace constitution entry:
-//   //   constitution: (r) => createBorgCubeGeometry(r * 1.4),
-//
-//   // Option B — full composite node (geometry + wireframe + sub-system dots):
-//   // In createNodeObject (~line 486), for constitution nodes:
-//   //   if (node.type === 'constitution') {
-//   //     const borgGroup = createBorgCubeNode(radius * 2, nodeColor);
-//   //     group.add(borgGroup);
-//   //     // skip default core geometry — the borg cube IS the core
-//   //   }
+//   // In createNodeObject, for constitution nodes:
+//   if (node.type === 'constitution') return createBorgCubeNode(radius * 1.2, nodeColor);
 
 import * as THREE from 'three';
 
+// Deterministic hash for procedural panel placement
+function hash(x: number, y: number, z: number): number {
+  let h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
+  h = ((h >> 16) ^ h) * 0x45d9f3b;
+  h = ((h >> 16) ^ h) * 0x45d9f3b;
+  return ((h >> 16) ^ h) & 0x7fffffff;
+}
+function hashF(x: number, y: number, z: number): number {
+  return (hash(x, y, z) % 10000) / 10000;
+}
+
 // ---------------------------------------------------------------------------
-// Geometry — paneled box with recessed grid seams
+// Geometry — irregular multi-depth extruded panels on each face
 // ---------------------------------------------------------------------------
 
-/**
- * Generates a Borg-cube-style BufferGeometry for constitution governance nodes.
- * A subdivided box whose face vertices are pushed inward at grid intersections,
- * creating the characteristic recessed panel-line look.
- *
- * Compatible with the TYPE_GEOMETRY factory signature `(r: number) => BufferGeometry`.
- */
 export function createBorgCubeGeometry(size: number): THREE.BufferGeometry {
-  // 4x4 subdivisions per axis give us a 4-panel grid on each face
-  const geo = new THREE.BoxGeometry(size, size, size, 4, 4, 4);
+  // High subdivision for detail — 8x8 panels per face
+  const subdivisions = 8;
+  const geo = new THREE.BoxGeometry(size, size, size, subdivisions, subdivisions, subdivisions);
 
   const pos = geo.attributes.position;
   const halfSize = size / 2;
-  const gridFreq = 4;
-  const seamDepth = 0.03 * size;
+  const cellSize = size / subdivisions;
+  const maxExtrude = size * 0.08; // max panel extrusion depth
 
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
 
-    const ax = Math.abs(x);
-    const ay = Math.abs(y);
-    const az = Math.abs(z);
-
-    // Only displace vertices that sit on a face (within tolerance of halfSize)
-    const onFace =
-      Math.abs(ax - halfSize) < 0.01 ||
-      Math.abs(ay - halfSize) < 0.01 ||
-      Math.abs(az - halfSize) < 0.01;
-
-    if (!onFace) continue;
-
-    // Grid-space position: 0 at seam, 1 at panel center
-    const gridScale = gridFreq / size;
-    const gx = Math.abs((x * gridScale) % 1 - 0.5) * 2;
-    const gy = Math.abs((y * gridScale) % 1 - 0.5) * 2;
-    const gz = Math.abs((z * gridScale) % 1 - 0.5) * 2;
-
-    const seamFactor = Math.min(gx, gy, gz);
-    const inset = seamDepth * (1 - Math.min(1, seamFactor * 3));
-
-    // Face normal — push inward along the dominant axis
+    const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
     const maxAx = Math.max(ax, ay, az);
+
+    // Only modify face vertices
+    if (Math.abs(maxAx - halfSize) > 0.01) continue;
+
+    // Determine which face and the 2D grid cell on that face
+    let faceId: number, cu: number, cv: number;
+    if (ax === maxAx) {
+      faceId = x > 0 ? 0 : 1;
+      cu = Math.floor((y + halfSize) / cellSize);
+      cv = Math.floor((z + halfSize) / cellSize);
+    } else if (ay === maxAx) {
+      faceId = y > 0 ? 2 : 3;
+      cu = Math.floor((x + halfSize) / cellSize);
+      cv = Math.floor((z + halfSize) / cellSize);
+    } else {
+      faceId = z > 0 ? 4 : 5;
+      cu = Math.floor((x + halfSize) / cellSize);
+      cv = Math.floor((y + halfSize) / cellSize);
+    }
+
+    // Deterministic random extrusion per panel cell
+    const h = hashF(faceId * 100 + cu, cv, 42);
+
+    // 30% of panels extrude outward, 40% are recessed, 30% are flat
+    let depth: number;
+    if (h < 0.3) {
+      depth = maxExtrude * (0.3 + h * 2); // extrude outward
+    } else if (h < 0.7) {
+      depth = -maxExtrude * (0.2 + (h - 0.3) * 1.5); // recess inward
+    } else {
+      depth = 0; // flush panels
+    }
+
+    // Seam groove — vertices at cell boundaries get extra recess
+    const uPos = (y + halfSize) / cellSize;
+    const vPos = (z + halfSize) / cellSize;
+    if (ax === maxAx) { /* u=y, v=z already set */ }
+    else if (ay === maxAx) {
+      // Recompute for this face
+    }
+    const uFrac = Math.abs((uPos % 1) - 0.5) * 2; // 0 at seam, 1 at center
+    const vFrac = Math.abs((vPos % 1) - 0.5) * 2;
+    const seamFactor = Math.min(uFrac, vFrac);
+    const seamDepth = size * 0.015 * (1 - Math.min(1, seamFactor * 4));
+
+    // Apply along face normal
     const nx = ax === maxAx ? Math.sign(x) : 0;
     const ny = ay === maxAx ? Math.sign(y) : 0;
     const nz = az === maxAx ? Math.sign(z) : 0;
 
-    pos.setXYZ(i, x - nx * inset, y - ny * inset, z - nz * inset);
+    const totalDisp = depth - seamDepth;
+    pos.setXYZ(i, x + nx * totalDisp, y + ny * totalDisp, z + nz * totalDisp);
   }
 
   geo.computeVertexNormals();
@@ -81,92 +102,113 @@ export function createBorgCubeGeometry(size: number): THREE.BufferGeometry {
 }
 
 // ---------------------------------------------------------------------------
-// Material — dark metallic hull with emissive sub-system glow
+// Material — dark metallic hull
 // ---------------------------------------------------------------------------
 
-/**
- * Creates the Borg cube material: dark blue-black hull with high metalness,
- * subtle emissive glow, and clearcoat for that polished-panel look.
- *
- * The emissive color can be overridden to match the node's health-based color
- * from the existing CrystalNodeMaterials glow system.
- */
 export function createBorgCubeMaterial(
   healthColor?: THREE.Color,
 ): THREE.MeshPhysicalMaterial {
-  const emissiveColor = healthColor ?? new THREE.Color(0x00ff88);
-
   return new THREE.MeshPhysicalMaterial({
-    color: 0x1a1a2e,
-    metalness: 0.9,
-    roughness: 0.3,
-    emissive: emissiveColor,
-    emissiveIntensity: 0.15,
-    clearcoat: 0.5,
-    clearcoatRoughness: 0.2,
-    envMapIntensity: 0.3,
+    color: 0x0d0d1a,            // very dark blue-black
+    metalness: 0.95,
+    roughness: 0.35,
+    emissive: healthColor ?? new THREE.Color(0x00ff88),
+    emissiveIntensity: 0.08,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.4,
   });
 }
 
 // ---------------------------------------------------------------------------
-// Wireframe overlay — glowing grid lines between panels
+// Orange conduit wireframe — like circuit traces between panels
 // ---------------------------------------------------------------------------
 
-function createWireframeOverlay(
-  size: number,
-  color: THREE.Color,
-): THREE.Mesh {
-  const wireGeo = new THREE.BoxGeometry(
-    size * 1.001, size * 1.001, size * 1.001, 4, 4, 4,
-  );
-  const wireMat = new THREE.MeshBasicMaterial({
-    color,
-    wireframe: true,
+function createConduitLines(size: number): THREE.LineSegments {
+  const segments: number[] = [];
+  const halfSize = size / 2;
+  const gridStep = size / 8;
+
+  // Horizontal and vertical conduit lines on each face
+  for (let face = 0; face < 6; face++) {
+    for (let i = 0; i <= 8; i++) {
+      const t = -halfSize + i * gridStep;
+      // Only draw ~40% of possible lines (random selection for irregularity)
+      if (hashF(face, i, 0) > 0.4) continue;
+
+      const offset = halfSize * 1.005; // slightly off face
+      switch (face) {
+        case 0: // +X face — horizontal lines
+          segments.push(offset, t, -halfSize, offset, t, halfSize);
+          break;
+        case 1: // -X face
+          segments.push(-offset, t, -halfSize, -offset, t, halfSize);
+          break;
+        case 2: // +Y face
+          segments.push(-halfSize, offset, t, halfSize, offset, t);
+          break;
+        case 3: // -Y face
+          segments.push(-halfSize, -offset, t, halfSize, -offset, t);
+          break;
+        case 4: // +Z face
+          segments.push(-halfSize, t, offset, halfSize, t, offset);
+          break;
+        case 5: // -Z face
+          segments.push(-halfSize, t, -offset, halfSize, t, -offset);
+          break;
+      }
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(segments, 3));
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xff8833,  // orange conduit color
     transparent: true,
-    opacity: 0.3,
+    opacity: 0.35,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
-  return new THREE.Mesh(wireGeo, wireMat);
+  return new THREE.LineSegments(geo, mat);
 }
 
 // ---------------------------------------------------------------------------
-// Sub-system dots — small emissive points on each face
+// Green sub-system emissive dots — scattered across panels
 // ---------------------------------------------------------------------------
 
-const _dotColorA = new THREE.Color(0x00ff88); // green sub-system
-const _dotColorB = new THREE.Color(0x00ccff); // cyan sub-system
-
 function createSubSystemDots(size: number): THREE.Points {
-  const dotsPerFace = 4;
+  const dotsPerFace = 8; // more dots for denser look
   const faceCount = 6;
   const dotCount = faceCount * dotsPerFace;
   const positions = new Float32Array(dotCount * 3);
   const colors = new Float32Array(dotCount * 3);
   const halfSize = size * 0.5;
 
+  const green = new THREE.Color(0x00ff88);
+  const cyan = new THREE.Color(0x00ccff);
+  const amber = new THREE.Color(0xffaa22);
+
   let idx = 0;
   for (let face = 0; face < faceCount; face++) {
     for (let d = 0; d < dotsPerFace; d++) {
-      const u = (Math.random() - 0.5) * size * 0.7;
-      const v = (Math.random() - 0.5) * size * 0.7;
+      // Use deterministic placement so dots don't move on re-render
+      const u = (hashF(face, d, 1) - 0.5) * size * 0.85;
+      const v = (hashF(face, d, 2) - 0.5) * size * 0.85;
       const i3 = idx * 3;
 
-      // Place dot slightly off the face surface (1.02x) so it floats above
+      const offset = halfSize * 1.03;
       switch (face) {
-        case 0: positions[i3] = halfSize * 1.02;  positions[i3 + 1] = u; positions[i3 + 2] = v; break;
-        case 1: positions[i3] = -halfSize * 1.02; positions[i3 + 1] = u; positions[i3 + 2] = v; break;
-        case 2: positions[i3] = u; positions[i3 + 1] = halfSize * 1.02;  positions[i3 + 2] = v; break;
-        case 3: positions[i3] = u; positions[i3 + 1] = -halfSize * 1.02; positions[i3 + 2] = v; break;
-        case 4: positions[i3] = u; positions[i3 + 1] = v; positions[i3 + 2] = halfSize * 1.02;  break;
-        case 5: positions[i3] = u; positions[i3 + 1] = v; positions[i3 + 2] = -halfSize * 1.02; break;
+        case 0: positions[i3] = offset;  positions[i3+1] = u; positions[i3+2] = v; break;
+        case 1: positions[i3] = -offset; positions[i3+1] = u; positions[i3+2] = v; break;
+        case 2: positions[i3] = u; positions[i3+1] = offset;  positions[i3+2] = v; break;
+        case 3: positions[i3] = u; positions[i3+1] = -offset; positions[i3+2] = v; break;
+        case 4: positions[i3] = u; positions[i3+1] = v; positions[i3+2] = offset;  break;
+        case 5: positions[i3] = u; positions[i3+1] = v; positions[i3+2] = -offset; break;
       }
 
-      // Alternate green / cyan sub-system colors
-      const c = Math.random() > 0.5 ? _dotColorA : _dotColorB;
-      colors[i3] = c.r;
-      colors[i3 + 1] = c.g;
-      colors[i3 + 2] = c.b;
+      // 60% green, 25% cyan, 15% amber (like the reference)
+      const r = hashF(face, d, 3);
+      const c = r < 0.6 ? green : r < 0.85 ? cyan : amber;
+      colors[i3] = c.r; colors[i3+1] = c.g; colors[i3+2] = c.b;
       idx++;
     }
   }
@@ -175,39 +217,37 @@ function createSubSystemDots(size: number): THREE.Points {
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-  const mat = new THREE.PointsMaterial({
-    size: size * 0.08,
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    size: size * 0.06,
     vertexColors: true,
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.9,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
-  });
-
-  return new THREE.Points(geo, mat);
+  }));
 }
 
 // ---------------------------------------------------------------------------
-// Composite node — hull + wireframe + sub-system dots
+// Green wireframe grid overlay — panel edges glow
 // ---------------------------------------------------------------------------
 
-/**
- * Creates a complete Borg cube node: paneled hull, glowing wireframe grid
- * overlay, and emissive sub-system dots. Returns a THREE.Group that can be
- * added directly to the scene or used as a replacement for the default
- * constitution node in ForceRadiant's createNodeObject.
- *
- * The wireframe overlay is the key visual element -- it creates the visible
- * panel grid lines that define the Borg aesthetic. The sub-system dots add
- * life without being GPU-expensive (24 points total).
- *
- * @param size        Cube edge length (matches the radius-based sizing in ForceRadiant)
- * @param healthColor Optional color override for emissive/wireframe glow.
- *                    When omitted, defaults to Borg green (0x00ff88).
- *                    Pass the node's health-derived color to integrate with
- *                    the existing CrystalNodeMaterials glow system.
- */
+function createWireframeOverlay(size: number, color: THREE.Color): THREE.Mesh {
+  const wireGeo = new THREE.BoxGeometry(size * 1.002, size * 1.002, size * 1.002, 8, 8, 8);
+  return new THREE.Mesh(wireGeo, new THREE.MeshBasicMaterial({
+    color,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.15,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Composite Borg cube node
+// ---------------------------------------------------------------------------
+
 export function createBorgCubeNode(
   size: number,
   healthColor?: THREE.Color,
@@ -215,16 +255,17 @@ export function createBorgCubeNode(
   const group = new THREE.Group();
   const wireColor = healthColor ?? new THREE.Color(0x00ff88);
 
-  // 1. Main hull — paneled geometry + dark metallic material
-  const geo = createBorgCubeGeometry(size);
-  const mat = createBorgCubeMaterial(healthColor);
-  const hull = new THREE.Mesh(geo, mat);
+  // 1. Hull — irregular extruded panels
+  const hull = new THREE.Mesh(createBorgCubeGeometry(size), createBorgCubeMaterial(healthColor));
   group.add(hull);
 
-  // 2. Wireframe overlay — glowing grid lines between panels
+  // 2. Wireframe — subtle green grid
   group.add(createWireframeOverlay(size, wireColor));
 
-  // 3. Sub-system glow points — small emissive dots on each panel
+  // 3. Orange conduit lines — circuit traces between panels
+  group.add(createConduitLines(size));
+
+  // 4. Sub-system emissive dots — green/cyan/amber
   group.add(createSubSystemDots(size));
 
   group.name = 'borg-cube';
