@@ -57,7 +57,7 @@ export async function preloadBorgCubeModel(): Promise<boolean> {
  * Create a Borg cube node from the loaded GLB model.
  * Returns null if GLB not loaded — caller should fall back to procedural.
  */
-function createFromGLB(size: number, healthColor?: THREE.Color): THREE.Group | null {
+function createFromGLB(size: number, _healthColor?: THREE.Color): THREE.Group | null {
   if (!_cachedGLB) return null;
 
   const clone = _cachedGLB.clone(true);
@@ -73,18 +73,20 @@ function createFromGLB(size: number, healthColor?: THREE.Color): THREE.Group | n
   const center = box.getCenter(new THREE.Vector3()).multiplyScalar(scale);
   clone.position.sub(center);
 
-  // Apply health-based emissive color to all materials
-  if (healthColor) {
-    clone.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mat = (child as THREE.Mesh).material;
-        if (mat && 'emissive' in mat) {
-          (mat as THREE.MeshStandardMaterial).emissive.copy(healthColor);
-          (mat as THREE.MeshStandardMaterial).emissiveIntensity = 0.15;
-        }
+  // Preserve the original Blender materials — do NOT override colors.
+  // The model already has the correct dark metallic hull with green/orange emissive.
+  // Only ensure materials are compatible with our renderer.
+  clone.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh;
+      // Ensure materials render on both sides for visibility at all angles
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(m => { m.side = THREE.DoubleSide; });
+      } else if (mesh.material) {
+        mesh.material.side = THREE.DoubleSide;
       }
-    });
-  }
+    }
+  });
 
   clone.name = 'borg-cube';
   return clone;
