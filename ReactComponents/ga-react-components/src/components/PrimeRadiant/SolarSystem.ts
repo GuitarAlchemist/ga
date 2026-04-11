@@ -619,6 +619,16 @@ function createPlanetMesh(def: PlanetDef, scale: number): THREE.Mesh {
     mat.userData.monthUniform.value = new Date().getMonth() + 1;
     const mesh = new THREE.Mesh(geo, mat);
     mesh.userData.isPlanetShader = true;
+    // Preserve the dispScale the material was built with so the
+    // update loop can attenuate it by camera altitude without
+    // losing the far-field target value. Without this, close-zoom
+    // attenuation would need to know the original scale and there
+    // is no other source of truth.
+    mesh.userData.baseDispScale = dispScale;
+    // Same for bump strength — the uniform default is 0.4 (matches
+    // the legacy hardcoded value) and the update loop scales it
+    // down toward 0 as the camera approaches the planet.
+    mesh.userData.baseBumpStrength = 0.4;
     return mesh;
   }
 
@@ -1657,6 +1667,53 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
     const planetUserData = mesh.material.userData;
     if (planetUserData?.sunPosUniform) {
       planetUserData.sunPosUniform.value.copy(_sunWorldPos);
+    }
+
+    // ── Altitude-driven displacement + bump attenuation ──
+    //
+    // The planet shaders use a 17×-exaggerated displacement map
+    // and a 3x3 Sobel bump normal computed from the daymap's
+    // luminance. Both look great at orbital distances and both
+    // break at close zoom:
+    //   - Displacement inflates mountains and continental shelves
+    //     by hundreds of km of equivalent height, visibly
+    //     distorting continent shapes
+    //   - Sobel bump amplifies daymap JPEG artifacts and foliage
+    //     variation into fake "terrain" shading
+    //
+    // Fade both to zero as the camera approaches the surface, so
+    // the close-zoom view shows a clean sphere textured with the
+    // 8k daymap. The fade band is defined as fractions of the
+    // planet's own radius so it generalizes to other planets if
+    // we extend this later.
+    //
+    // Fade curve (smoothstep of camera-altitude / planet-radius):
+    //   >= 2.0 × radius above surface: full strength (1.0)
+    //   <= 0.5 × radius above surface: zero strength (0.0)
+    //   between: smoothstep
+    if (camera && (mesh.userData.baseDispScale !== undefined || mesh.userData.baseBumpStrength !== undefined)) {
+      const camWorld = new THREE.Vector3();
+      camera.getWorldPosition(camWorld);
+      const meshWorld = new THREE.Vector3();
+      mesh.getWorldPosition(meshWorld);
+
+      // Radius of this planet in world units (scaled).
+      const geo = mesh.geometry as THREE.SphereGeometry;
+      const radius = geo.parameters.radius;
+
+      const altitude = camWorld.distanceTo(meshWorld) - radius;
+      const altFrac = altitude / radius;  // in units of planet radius
+
+      // smoothstep: 0 below 0.5, 1 above 2.0, cubic interp between
+      const tRaw = Math.max(0, Math.min(1, (altFrac - 0.5) / (2.0 - 0.5)));
+      const strengthFade = tRaw * tRaw * (3 - 2 * tRaw);  // Hermite smoothstep
+
+      if (planetUserData?.dispScaleUniform && mesh.userData.baseDispScale !== undefined) {
+        planetUserData.dispScaleUniform.value = mesh.userData.baseDispScale * strengthFade;
+      }
+      if (planetUserData?.bumpStrengthUniform && mesh.userData.baseBumpStrength !== undefined) {
+        planetUserData.bumpStrengthUniform.value = mesh.userData.baseBumpStrength * strengthFade;
+      }
     }
 
     // Update Saturn ring TSL uniform — sun position in WORLD space (ring uses positionWorld)
