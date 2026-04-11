@@ -115,6 +115,7 @@ const IxqlCodeGen = React.lazy(() => import('./IxqlCodeGen').then(m => ({ defaul
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 const QAPanel = React.lazy(() => import('./QAPanel').then(m => ({ default: m.QAPanel })));
 const AgentSpectralPanel = React.lazy(() => import('./AgentSpectralPanel').then(m => ({ default: m.AgentSpectralPanel })));
+const GodotSceneInspectorPanel = React.lazy(() => import('./GodotSceneInspectorPanel').then(m => ({ default: m.GodotSceneInspectorPanel })));
 const GovernanceCompliancePanel = React.lazy(() => import('./GovernanceCompliancePanel').then(m => ({ default: m.GovernanceCompliancePanel })));
 const GovernanceMetricsDashboard = React.lazy(() => import('./GovernanceMetricsDashboard').then(m => ({ default: m.GovernanceMetricsDashboard })));
 const KnowledgeGraphPanel = React.lazy(() => import('./KnowledgeGraphPanel').then(m => ({ default: m.KnowledgeGraphPanel })));
@@ -4451,6 +4452,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             inbox: AdminInbox,
             qa: QAPanel,
             'agent-spectral': AgentSpectralPanel,
+            'godot-inspector': GodotSceneInspectorPanel as unknown as React.FC,
             'compliance': GovernanceCompliancePanel as unknown as React.FC,
             'metrics': GovernanceMetricsDashboard as unknown as React.FC,
             'knowledge-graph': KnowledgeGraphPanel as unknown as React.FC,

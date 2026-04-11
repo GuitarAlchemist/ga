@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral' | 'compliance' | 'metrics' | 'knowledge-graph';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral' | 'compliance' | 'metrics' | 'knowledge-graph' | 'godot-inspector';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -276,6 +276,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'faculty',    label: 'Faculty',          icon: 'faculty',    renderMode: 'side',    group: 'knowledge' },
   // ── Visualization ──
   { id: 'godot',      label: 'Godot 3D',       icon: 'godot',      renderMode: 'side',    group: 'viz' },
+  { id: 'godot-inspector', label: 'Godot Inspector', icon: 'godot', renderMode: 'side',    group: 'viz' },
   { id: 'gis',        label: 'GIS',            icon: 'gis',        renderMode: 'side',    group: 'viz' },
   { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay', group: 'viz' },
   // ── Ops ──
