@@ -95,6 +95,8 @@ import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
 import { createBorgCubeGeometry, createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
+import { createAtmosphericPerspective, type AtmosphericPerspectiveHandle } from './AtmosphericPerspective';
+import { createGovernanceSkyReactor, computeHealthSummary, type SkyReactorHandle } from './GovernanceSkyReactor';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -1420,6 +1422,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let runtimeAssetCleanupOuter: (() => void) | undefined;
     let criticCleanupOuter: (() => void) | undefined;
     let resizeObsOuter: ResizeObserver | undefined;
+    let skyReactorHandleOuter: SkyReactorHandle | undefined;
+    let atmosphereHandleOuter: AtmosphericPerspectiveHandle | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -2434,6 +2438,17 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         crisisTexturesHandle.update(fg.graphData().nodes as GraphNode[], qualityBudget);
       }
 
+      // ─── Sky reactor — stars react to aggregate governance health ───
+      if (skyReactorHandleOuter && isTemporalFrame) {
+        const healthSummary = computeHealthSummary(fg.graphData().nodes as Parameters<typeof computeHealthSummary>[0]);
+        skyReactorHandleOuter.update(healthSummary, t);
+      }
+
+      // ─── Atmospheric perspective — fog density based on camera zoom ───
+      if (atmosphereHandleOuter && isTemporalFrame) {
+        atmosphereHandleOuter.updateForZoom(cam.position.length());
+      }
+
       // ─── Terminal filaments — organic sway + pulsing tips ───
       if (filamentsHandle && isTemporalFrame) {
         if (!_filamentPosMap) _filamentPosMap = new Map();
@@ -2587,6 +2602,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
     const skyMat = createSkyboxNebulaMaterialTSL({ quality: budgetToTier(qualityBudget) });
+    (skyMat as THREE.Material & { fog?: boolean }).fog = false; // opt out of atmospheric fog
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
@@ -2687,6 +2703,15 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(brightStars);                      // 2% parallax
     fg.scene().add(dimStars);                         // 0.5% parallax
     fg.scene().add(starField);                        // empty group for legacy queries
+
+    // ─── Governance Sky Reactor — stars react to aggregate health ───
+    // When governance is healthy, sky is beautiful. When troubled, stars go wrong.
+    const skyReactor: SkyReactorHandle = createGovernanceSkyReactor(fg.scene());
+    skyReactorHandleOuter = skyReactor;
+
+    // ─── Atmospheric Perspective — exponential fog for depth cues ───
+    const atmosphere: AtmosphericPerspectiveHandle = createAtmosphericPerspective(fg.scene());
+    atmosphereHandleOuter = atmosphere;
 
     // Restore persisted visibility preferences
     const visPref = (k: string, dflt: boolean) => {
@@ -3333,6 +3358,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     return () => {
       disposed = true;
       resizeObsOuter?.disconnect();
+      skyReactorHandleOuter?.dispose();
+      atmosphereHandleOuter?.dispose();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
