@@ -1,0 +1,24 @@
+# Git attributes for GA (Guitar Alchemist)
+#
+# Git-LFS tracking for large binary assets. The first asset to live
+# here is the GEBCO 2023 bathymetry texture used by the Prime Radiant
+# ocean renderer. See docs/brainstorms/2026-04-11-planet-ocean-zoom-v3-
+# production-spec.md for the full rationale.
+#
+# Adopting LFS affects every future clone of this repo: developers
+# need `git-lfs` installed to fetch the actual binary content
+# (placeholder text is stored in plain git). Setup:
+#   git lfs install      # one-time per developer machine
+#   git lfs pull         # one-time after first clone if LFS was
+#                        # added after the developer cloned
+#
+# If GitHub's LFS bandwidth quota becomes a concern (1 GB/month free,
+# 50 GB/month paid), move large assets to tile-on-demand from S3/CDN
+# per the Phase 3 plan in the ocean spec.
+
+# GEBCO bathymetry textures for the Prime Radiant ocean renderer.
+# Narrow pattern — we do NOT want to sweep every PNG in the repo into
+# LFS, only the large bathymetry assets under this specific path.
+# The path matches where the existing 2k_earth_* textures already live
+# in ReactComponents/ga-react-components/public/textures/planets/.
+ReactComponents/ga-react-components/public/textures/planets/bathymetry_*.png filter=lfs diff=lfs merge=lfs -text
