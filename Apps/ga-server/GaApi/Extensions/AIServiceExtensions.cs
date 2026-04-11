@@ -166,6 +166,9 @@ public static class AiServiceExtensions
             // Algedonic signal service (evaluates belief transitions → pain/pleasure signals)
             services.AddSingleton<AlgedonicSignalService>();
 
+            // Discord bridge (stub today; swap for real bot connection when available)
+            services.AddSingleton<IDiscordBridgeService, DiscordBridgeService>();
+
             // YouTube-to-tab pipeline services
             services.AddSingleton<VideoFrameExtractor>();
             services.AddSingleton<HandPosePipeline>();
