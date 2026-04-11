@@ -86,6 +86,9 @@ public static class AiServiceExtensions
             });
             services.AddSingleton<IVoxtralTtsService, VoxtralTtsService>();
 
+            // Kokoro-82M TTS — local Apache 2.0 provider, ~85x smaller than Voxtral
+            services.AddHttpClient<IKokoroTtsService, KokoroTtsService>();
+
             var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
 
             if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
@@ -140,6 +143,8 @@ public static class AiServiceExtensions
                 configuration.GetSection(GuitarAgentOptions.SectionName));
             services.Configure<VoxtralTtsOptions>(
                 configuration.GetSection(VoxtralTtsOptions.SectionName));
+            services.Configure<KokoroTtsOptions>(
+                configuration.GetSection(KokoroTtsOptions.SectionName));
 
             // Register Ollama embedding service (used by knowledge source)
             services.AddSingleton<OllamaEmbeddingService>();
