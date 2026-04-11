@@ -97,6 +97,8 @@ import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMate
 import { createBorgCubeGeometry, createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
 import { createAtmosphericPerspective, type AtmosphericPerspectiveHandle } from './AtmosphericPerspective';
 import { createGovernanceSkyReactor, computeHealthSummary, type SkyReactorHandle } from './GovernanceSkyReactor';
+import { GovernanceLensingShader, updateLensingSources, type LensingSource } from './shaders/GovernanceLensingPass';
+import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -753,6 +755,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const moebiusPassRef = useRef<ShaderPass | null>(null);
   const causticsPassRef = useRef<ShaderPass | null>(null);
   const dispersionPassRef = useRef<ShaderPass | null>(null);
+  const lensingPassRef = useRef<ShaderPass | null>(null);
+  const godRayPassRef = useRef<ShaderPass | null>(null);
   const renderMetricsRef = useRef<Record<string, unknown>>({ fps: 60, qualityLevel: 'high', qualityBudget: 1.0, dpr: 1.0 });
   // Camera sync — incoming position from presentation leader (null = no pending sync)
   const cameraSyncRef = useRef<CameraSyncData | null>(null);
@@ -1785,6 +1789,22 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         fg.postProcessingComposer().addPass(dp);
         dispersionPassRef.current = dp;
       } catch (e) { console.warn('[PR] Dispersion pass failed:', e); }
+
+      // God rays — sun light scatter through planets/atmosphere
+      try {
+        const grp = new ShaderPass(GodRayShader);
+        grp.enabled = false; // enabled dynamically when sun is in frame
+        fg.postProcessingComposer().addPass(grp);
+        godRayPassRef.current = grp;
+      } catch (e) { console.warn('[PR] God rays pass failed:', e); }
+
+      // Governance gravitational lensing — crisis nodes warp visual space
+      try {
+        const lp = new ShaderPass(GovernanceLensingShader);
+        lp.enabled = false; // enabled dynamically when crisis nodes exist
+        fg.postProcessingComposer().addPass(lp);
+        lensingPassRef.current = lp;
+      } catch (e) { console.warn('[PR] Lensing pass failed:', e); }
     }
     if (!USE_WEBGPU && !isLowEnd) {
       try {
@@ -2447,6 +2467,46 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // ─── Atmospheric perspective — fog density based on camera zoom ───
       if (atmosphereHandleOuter && isTemporalFrame) {
         atmosphereHandleOuter.updateForZoom(cam.position.length());
+      }
+
+      // ─── Governance gravitational lensing — crisis nodes warp space ───
+      if (lensingPassRef.current && isTemporalFrame) {
+        const crisisNodes = (fg.graphData().nodes as GraphNode[])
+          .filter(n => n.healthStatus === 'error' || n.healthStatus === 'contradictory')
+          .slice(0, 8); // MAX_LENSES
+        if (crisisNodes.length > 0) {
+          const sources: LensingSource[] = crisisNodes.map(n => {
+            const nn = n as GraphNode & { x?: number; y?: number; z?: number };
+            const pos = new THREE.Vector3(nn.x ?? 0, nn.y ?? 0, nn.z ?? 0);
+            pos.project(cam);
+            return {
+              screenPos: new THREE.Vector2((pos.x + 1) * 0.5, (pos.y + 1) * 0.5),
+              intensity: n.healthStatus === 'error' ? 0.8 : 0.5,
+              radius: 0.15,
+            };
+          });
+          lensingPassRef.current.enabled = true;
+          updateLensingSources(lensingPassRef.current as unknown as { uniforms: Record<string, { value: unknown }> }, sources);
+        } else {
+          lensingPassRef.current.enabled = false;
+        }
+      }
+
+      // ─── God rays — sun light scatter from screen-projected sun position ───
+      if (godRayPassRef.current) {
+        const sunMesh = fg.scene().getObjectByName('sun');
+        if (sunMesh) {
+          const sunWorldPos = new THREE.Vector3();
+          sunMesh.getWorldPosition(sunWorldPos);
+          updateGodRayUniforms(
+            godRayPassRef.current as unknown as Parameters<typeof updateGodRayUniforms>[0],
+            sunWorldPos,
+            cam,
+            true,
+          );
+        } else {
+          godRayPassRef.current.enabled = false;
+        }
       }
 
       // ─── Terminal filaments — organic sway + pulsing tips ───
