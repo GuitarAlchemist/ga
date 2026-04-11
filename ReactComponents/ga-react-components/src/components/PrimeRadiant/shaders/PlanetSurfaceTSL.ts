@@ -79,9 +79,22 @@ export function createPlanetSurfaceMaterialTSL(
   const uDispScale = uniform(displacementScale);
   const uTexelSize = uniform(new THREE.Vector2(1 / textureSize, 1 / textureSize));
 
+  // ── Bump strength (uniform, altitude-driven) ──
+  // Turned from a hardcoded float into a uniform so the scene
+  // update loop can attenuate it when the camera is close to the
+  // planet. At close zoom the Sobel-from-luminance bump normals
+  // generate exaggerated fake 3D from what is really just JPEG
+  // artifacts and vegetation variation in the daymap, producing
+  // visible "mosaic tile" shading over flat regions (e.g. the
+  // Amazon basin). The default value matches the legacy hardcoded
+  // 0.4 so existing behavior is preserved when the uniform is not
+  // driven.
+  const uBumpStrength = uniform(0.4);
+
   material.userData.sunPosUniform = uSunPosWorld;
   material.userData.monthUniform = uMonth;
   material.userData.dispScaleUniform = uDispScale;
+  material.userData.bumpStrengthUniform = uBumpStrength;
 
   const atmoCode =
     atmosphereType === 'blue' ? 1.0 : atmosphereType === 'orange' ? 2.0 : 0.0;
@@ -131,11 +144,14 @@ export function createPlanetSurfaceMaterialTSL(
     const dX = tr.add(r.mul(2.0)).add(br).sub(tl.add(l.mul(2.0)).add(bl));
     const dY = bl.add(b.mul(2.0)).add(br).sub(tl.add(t.mul(2.0)).add(tr));
 
-    const bumpStrength = float(0.4);
+    // Bump strength is now driven by uBumpStrength (was a hardcoded
+    // float(0.4)). The update loop in SolarSystem.ts attenuates it
+    // with camera altitude so close zoom does not show Sobel
+    // artifacts from the daymap's JPEG compression.
     const N = normalize(normalWorld);
     const T = normalize(cross(N, vec3(0.0, 1.0, 0.0001)));
     const B = cross(N, T);
-    return normalize(N.add(T.mul(dX).add(B.mul(dY)).mul(bumpStrength)));
+    return normalize(N.add(T.mul(dX).add(B.mul(dY)).mul(uBumpStrength)));
   });
 
   // ── Color node: full lighting pipeline ──
