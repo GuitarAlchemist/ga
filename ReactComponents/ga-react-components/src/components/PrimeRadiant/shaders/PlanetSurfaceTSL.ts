@@ -165,6 +165,15 @@ export function createPlanetSurfaceMaterialTSL(
 
     const N = getBumpNormal();
     const NdotL = dot(N, sunDir);
+    // Macro-normal version for effects that should NOT be
+    // perturbed by per-texel bump normals. Using the bumped
+    // normal everywhere drags NdotL near zero over rough terrain
+    // (e.g. the Himalayas), which makes the terminator-glow
+    // Gaussian fire at mid-day and sprays red-brown "sunrise"
+    // color onto mountain ranges. The terminator should follow
+    // the macro sphere normal, not the local bump.
+    const NMacro = normalize(normalWorld);
+    const NdotLMacro = dot(NMacro, sunDir);
     // Wider terminator for visible day/night transition from all camera angles.
     // Range ±0.15 gives ~30° twilight zone.
     const dayFactor = smoothstep(-0.15, 0.15, NdotL);
@@ -223,11 +232,15 @@ export function createPlanetSurfaceMaterialTSL(
     const surfaceColor = mix(nightColor, litDay, dayFactor).toVar();
 
     // ── Sunrise/sunset terminator glow ──
+    // Uses NdotLMacro (geometric sphere normal) NOT the bump-
+    // perturbed N — otherwise rough terrain can fake the
+    // terminator at mid-day and spray red sunrise color onto
+    // mountain ranges. See the normal-computation block above.
     const hasAtmo = smoothstep(0.49, 0.51, uAtmoColor); // 1.0 if uAtmoColor > 0.5
-    const terminatorBand = exp(NdotL.mul(NdotL).negate().div(0.03));
+    const terminatorBand = exp(NdotLMacro.mul(NdotLMacro).negate().div(0.03));
     const sunriseColorDeep = vec3(0.8, 0.2, 0.05);
     const sunriseColorWarm = vec3(1.0, 0.6, 0.2);
-    const warmBlend = smoothstep(-0.08, 0.08, NdotL);
+    const warmBlend = smoothstep(-0.08, 0.08, NdotLMacro);
     const sunriseColor = mix(sunriseColorDeep, sunriseColorWarm, warmBlend);
     // Intensity: Earth (1) = 0.35, Venus (2) = 0.2, Mars (handled separately) = 0.1
     const isEarthAtmo = float(1.0).sub(smoothstep(1.49, 1.51, uAtmoColor)).mul(hasAtmo);
@@ -244,7 +257,10 @@ export function createPlanetSurfaceMaterialTSL(
     // Earth (blue) atmosphere
     const earthDayRim = vec3(0.25, 0.45, 1.0).mul(fresnel).mul(0.35).mul(dayFactor);
     const earthNightRim = vec3(0.05, 0.1, 0.3).mul(fresnel).mul(0.2).mul(float(1.0).sub(dayFactor));
-    const earthTerminatorFresnel = fresnel.mul(exp(NdotL.mul(NdotL).negate().div(0.02)));
+    // Earth terminator Fresnel — uses NdotLMacro for the same
+    // reason as the main terminator glow: bump-perturbed normals
+    // over rough terrain would misfire this warm rim.
+    const earthTerminatorFresnel = fresnel.mul(exp(NdotLMacro.mul(NdotLMacro).negate().div(0.02)));
     const earthWarmRim = vec3(1.0, 0.5, 0.15).mul(earthTerminatorFresnel).mul(0.4);
     surfaceColor.assign(
       surfaceColor.add(earthDayRim.add(earthNightRim).add(earthWarmRim).mul(isEarthAtmo)),
@@ -252,7 +268,8 @@ export function createPlanetSurfaceMaterialTSL(
 
     // Venus (orange) atmosphere
     const venusHaze = vec3(1.0, 0.7, 0.2).mul(fresnel).mul(0.3);
-    const venusTerminatorFresnel = fresnel.mul(exp(NdotL.mul(NdotL).negate().div(0.02)));
+    // Venus terminator Fresnel — same fix as Earth.
+    const venusTerminatorFresnel = fresnel.mul(exp(NdotLMacro.mul(NdotLMacro).negate().div(0.02)));
     const venusWarmRim = vec3(1.0, 0.5, 0.1).mul(venusTerminatorFresnel).mul(0.25);
     surfaceColor.assign(surfaceColor.add(venusHaze.add(venusWarmRim).mul(isVenusAtmo)));
 
