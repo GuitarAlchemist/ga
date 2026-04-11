@@ -4,6 +4,7 @@
 // Orbit trails, Kepler speeds, realistic proportions
 
 import * as THREE from 'three';
+import { createAsteroidLOD, type AsteroidLODHandle } from './AsteroidLOD';
 import { createSunMaterialTSL } from './shaders/SunMaterialTSL';
 import { createPlanetSurfaceMaterialTSL, type AtmosphereType } from './shaders/PlanetSurfaceTSL';
 import {
@@ -1193,6 +1194,13 @@ export function createSolarSystem(scale: number): THREE.Group {
     group.add(mesh);
   }
 
+  // ── Asteroid LOD — detailed rock meshes fade in on close approach ──
+  // The Points belt above handles far views; this adds ~50 displaced icosahedron
+  // rocks that become visible when the camera is within ~100 units of the belt.
+  const asteroidLOD = createAsteroidLOD(beltInner, beltOuter, beltInner * 0.05);
+  group.add(asteroidLOD.group);
+  group.userData.asteroidLOD = asteroidLOD;
+
   // ── Moon Transit Shadows (Galilean moons → Jupiter) ──
   // Dark disc meshes placed on Jupiter's surface where moons cast shadows.
   // Updated each frame in updateSolarSystem() based on sun-moon-planet geometry.
@@ -1768,6 +1776,16 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
   // ── Asteroid belt slow orbital drift ──
   const belt = group.getObjectByName('asteroid-belt');
   if (belt) belt.rotation.y += 0.00005;
+
+  // ── Asteroid LOD fade + tumble (camera-proximity driven) ──
+  const lod = group.userData.asteroidLOD as AsteroidLODHandle | undefined;
+  if (lod && camera) {
+    const camPos = new THREE.Vector3();
+    camera.getWorldPosition(camPos);
+    const beltCenter = new THREE.Vector3();
+    group.getWorldPosition(beltCenter);
+    lod.update(camPos, beltCenter, time);
+  }
 
   // ── Moon Transit Shadows on Jupiter ──
   // Parallel-ray approximation: sun is far enough that rays are effectively parallel.
