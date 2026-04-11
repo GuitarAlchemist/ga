@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral' | 'compliance' | 'metrics' | 'knowledge-graph';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -257,6 +257,9 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'detail',     label: 'Detail',         icon: 'detail',     renderMode: 'side',    group: 'governance' },
   { id: 'backlog',    label: 'Backlog',        icon: 'backlog',    renderMode: 'side',    group: 'governance' },
   { id: 'inbox',      label: 'Inbox',          icon: 'inbox',      renderMode: 'side',    group: 'governance' },
+  { id: 'compliance', label: 'Compliance',     icon: 'activity',   renderMode: 'side',    group: 'governance' },
+  { id: 'metrics',    label: 'Metrics',        icon: 'activity',   renderMode: 'side',    group: 'governance' },
+  { id: 'knowledge-graph', label: 'Knowledge Graph', icon: 'library', renderMode: 'side', group: 'knowledge' },
   // ── Agents ──
   { id: 'agent',      label: 'Agents',         icon: 'agent',      renderMode: 'side',    group: 'agents' },
   { id: 'seldon',     label: 'Seldon',         icon: 'seldon',     renderMode: 'side',    group: 'agents' },

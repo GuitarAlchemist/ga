@@ -100,6 +100,7 @@ import { createGovernanceSkyReactor, computeHealthSummary, type SkyReactorHandle
 import { GovernanceLensingShader, updateLensingSources, type LensingSource } from './shaders/GovernanceLensingPass';
 import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
+import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -114,6 +115,9 @@ const IxqlCodeGen = React.lazy(() => import('./IxqlCodeGen').then(m => ({ defaul
 import { SceneOptions, type SceneOptionsState } from './SceneOptions';
 const QAPanel = React.lazy(() => import('./QAPanel').then(m => ({ default: m.QAPanel })));
 const AgentSpectralPanel = React.lazy(() => import('./AgentSpectralPanel').then(m => ({ default: m.AgentSpectralPanel })));
+const GovernanceCompliancePanel = React.lazy(() => import('./GovernanceCompliancePanel').then(m => ({ default: m.GovernanceCompliancePanel })));
+const GovernanceMetricsDashboard = React.lazy(() => import('./GovernanceMetricsDashboard').then(m => ({ default: m.GovernanceMetricsDashboard })));
+const KnowledgeGraphPanel = React.lazy(() => import('./KnowledgeGraphPanel').then(m => ({ default: m.KnowledgeGraphPanel })));
 import { autoRemediation } from './AutoRemediation';
 import { proofVerifier } from './ProofVerifier';
 import { mountApprovedRuntimeAssets } from '../../assets/space';
@@ -1430,6 +1434,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let skyReactorHandleOuter: SkyReactorHandle | undefined;
     let atmosphereHandleOuter: AtmosphericPerspectiveHandle | undefined;
     let bakedSkyOuter: BakeSkyboxResult | undefined;
+    let dustHandleOuter: AmbientDustHandle | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -2329,24 +2334,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
       // (temporalSkip + isTemporalFrame declared above edge undulation section)
 
-      // ─── Ambient dust drift — direct typed array (no getX/setXYZ overhead) ───
-      if (isTemporalFrame) {
-        const dArr = (ambientDust.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
-        const halfR = dustRange / 2;
-        for (let i = 0; i < dustCount; i++) {
-          const i3 = i * 3;
-          let x = dArr[i3]     + dustVelocities[i3]     * 0.004; // 4x slower dust
-          let y = dArr[i3 + 1] + dustVelocities[i3 + 1] * 0.004;
-          let z = dArr[i3 + 2] + dustVelocities[i3 + 2] * 0.004;
-          if (x > halfR || x < -halfR) x *= -0.9;
-          if (y > halfR || y < -halfR) y *= -0.9;
-          if (z > halfR || z < -halfR) z *= -0.9;
-          dArr[i3]     = x;
-          dArr[i3 + 1] = y;
-          dArr[i3 + 2] = z;
-        }
-        (ambientDust.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
-      }
+      // ─── Ambient dust (GPU-driven, TSL vertex shader) ───
+      // Single uniform write — all motion computed on GPU, zero CPU iteration.
+      dustHandleOuter?.update(t);
 
       // ─── Orbital rings track their nodes (O(1) lookup via nodeMap) ───
       for (const ring of ringMeshes) {
@@ -2625,39 +2615,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     };
     container.addEventListener('wheel', zoomInertiaHandlerOuter, { passive: true });
 
-    // ─── AMBIENT PARTICLE FIELD ───
-    // Reduced from 5000 for performance
-    const dustCount = 1500;
-    const dustPositions = new Float32Array(dustCount * 3);
-    const dustVelocities = new Float32Array(dustCount * 3);
-    const dustColors = new Float32Array(dustCount * 3);
-    const dustRange = 400;
-    for (let i = 0; i < dustCount; i++) {
-      dustPositions[i*3] = (Math.random() - 0.5) * dustRange;
-      dustPositions[i*3+1] = (Math.random() - 0.5) * dustRange;
-      dustPositions[i*3+2] = (Math.random() - 0.5) * dustRange;
-      dustVelocities[i*3] = (Math.random() - 0.5) * 0.3;
-      dustVelocities[i*3+1] = (Math.random() - 0.5) * 0.3;
-      dustVelocities[i*3+2] = (Math.random() - 0.5) * 0.3;
-      // Mix of warm and cool dust
-      const hue = Math.random();
-      if (hue < 0.3) { dustColors[i*3] = 0.4; dustColors[i*3+1] = 0.35; dustColors[i*3+2] = 0.15; }     // warm gold
-      else if (hue < 0.6) { dustColors[i*3] = 0.1; dustColors[i*3+1] = 0.3; dustColors[i*3+2] = 0.35; }  // cool cyan
-      else { dustColors[i*3] = 0.2; dustColors[i*3+1] = 0.15; dustColors[i*3+2] = 0.35; }                 // violet
-    }
-    const dustGeo = new THREE.BufferGeometry();
-    const dustPosAttr = new THREE.BufferAttribute(dustPositions, 3);
-    dustPosAttr.setUsage(THREE.DynamicDrawUsage); // hint GPU: updated every frame
-    dustGeo.setAttribute('position', dustPosAttr);
-    dustGeo.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
-    const dustMat = new THREE.PointsMaterial({
-      size: 0.3, vertexColors: true, transparent: true, opacity: 0.35,
-      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
-      fog: false, // cosmetic particles — exempt from atmospheric fog
-    });
-    const ambientDust = new THREE.Points(dustGeo, dustMat);
+    // ─── AMBIENT PARTICLE FIELD (GPU-driven via TSL) ───
+    // All motion computed in vertex shader — zero CPU per-frame allocations.
+    // Replaces the old CPU Float32Array update loop that was 1.5k entries/frame.
+    const dustHandle: AmbientDustHandle = createAmbientDust(2000, 400);
+    const ambientDust = dustHandle.points;
     ambientDust.name = 'ambient-dust';
     fg.scene().add(ambientDust);
+    dustHandleOuter = dustHandle;
 
     // ─── SKYBOX — nebula background sphere + multi-layer starfield ───
 
@@ -3440,6 +3405,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       skyReactorHandleOuter?.dispose();
       atmosphereHandleOuter?.dispose();
       bakedSkyOuter?.dispose();
+      dustHandleOuter?.dispose();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
@@ -4485,6 +4451,9 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             inbox: AdminInbox,
             qa: QAPanel,
             'agent-spectral': AgentSpectralPanel,
+            'compliance': GovernanceCompliancePanel as unknown as React.FC,
+            'metrics': GovernanceMetricsDashboard as unknown as React.FC,
+            'knowledge-graph': KnowledgeGraphPanel as unknown as React.FC,
           };
           // IxqlCodeGen needs onRunCommand prop — handle specially
           if (activePanel === 'ixql-gen') {
