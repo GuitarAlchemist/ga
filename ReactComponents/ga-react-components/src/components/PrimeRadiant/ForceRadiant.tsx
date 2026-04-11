@@ -99,6 +99,7 @@ import { createAtmosphericPerspective, type AtmosphericPerspectiveHandle } from 
 import { createGovernanceSkyReactor, computeHealthSummary, type SkyReactorHandle } from './GovernanceSkyReactor';
 import { GovernanceLensingShader, updateLensingSources, type LensingSource } from './shaders/GovernanceLensingPass';
 import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
+import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -1428,6 +1429,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let resizeObsOuter: ResizeObserver | undefined;
     let skyReactorHandleOuter: SkyReactorHandle | undefined;
     let atmosphereHandleOuter: AtmosphericPerspectiveHandle | undefined;
+    let bakedSkyOuter: BakeSkyboxResult | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -2773,6 +2775,23 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const atmosphere: AtmosphericPerspectiveHandle = createAtmosphericPerspective(fg.scene());
     atmosphereHandleOuter = atmosphere;
 
+    // ─── Skybox Cubemap Bake — deferred 3s after init to avoid startup stall ───
+    // Bakes the procedural TSL skybox to a static cubemap, replacing the
+    // per-frame shader evaluation with a cheap texture lookup.
+    // WebGL2 only (WebGPU uses async render pipeline incompatible with readRenderTargetPixels).
+    if (!USE_WEBGPU && !isLowEnd) {
+      setTimeout(() => {
+        if (disposed) return;
+        try {
+          const renderer = fg.renderer() as THREE.WebGLRenderer;
+          bakedSkyOuter = bakeSkyboxToCubemap(renderer, fg.scene(), budgetToTier(qualityBudget));
+          console.info('[PrimeRadiant] Skybox baked to cubemap — shader eval eliminated');
+        } catch (e) {
+          console.warn('[PrimeRadiant] Skybox bake failed:', e);
+        }
+      }, 3000);
+    }
+
     // Restore persisted visibility preferences
     const visPref = (k: string, dflt: boolean) => {
       try { const v = localStorage.getItem(k); return v === null ? dflt : v === 'true'; }
@@ -3420,6 +3439,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       resizeObsOuter?.disconnect();
       skyReactorHandleOuter?.dispose();
       atmosphereHandleOuter?.dispose();
+      bakedSkyOuter?.dispose();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
