@@ -213,6 +213,41 @@ public sealed class GovernanceHub(
     public static async Task BroadcastAlgedonicSignal(IHubContext<GovernanceHub> hubContext, AlgedonicSignalDto signal) =>
         await hubContext.Clients.Group("governance").SendAsync("AlgedonicSignal", signal);
 
+    // ─── Camera sync (presentation mode) ───
+
+    /// <summary>
+    ///     Client broadcasts its camera position to all other governance subscribers.
+    ///     Used in presentation mode so a "leader" tab drives the camera on all
+    ///     connected clients (e.g. a TV opened on the Prime Radiant URL).
+    /// </summary>
+    public async Task SyncCamera(double px, double py, double pz, double lx, double ly, double lz)
+    {
+        // Relay to all governance clients except the sender
+        await Clients.OthersInGroup("governance").SendAsync("CameraSync", new
+        {
+            px, py, pz, lx, ly, lz,
+            sender = Context.ConnectionId,
+        });
+    }
+
+    // ─── Scene control (remote navigation) ───
+
+    /// <summary>
+    ///     Navigate all connected Prime Radiant clients to a specific
+    ///     celestial body. The client's ForceRadiant calls its
+    ///     navigateToPlanet(target) method, which snaps the camera and
+    ///     starts tracking the body.
+    ///
+    ///     Called from the GA MCP server's SceneControl tool or from
+    ///     the ix harness via the ix_ga_bridge MCP federation path.
+    /// </summary>
+    public static async Task NavigateToPlanet(IHubContext<GovernanceHub> hubContext, string target) =>
+        await hubContext.Clients.Group("governance").SendAsync("NavigateToPlanet", new
+        {
+            target,
+            timestamp = DateTime.UtcNow,
+        });
+
     // ─── Screenshot capture ───
 
     private static string? _latestScreenshotBase64;
