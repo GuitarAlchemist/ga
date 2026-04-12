@@ -79,15 +79,15 @@ const CONFIGS: Record<QualityTier, OceanQualityConfig> = {
     waveCount: 8,
     oceanSize: 10000,
     enableBloom: true,
-    bloomStrength: 0.4,
-    bloomRadius: 0.45,
-    bloomThreshold: 0.8,
+    bloomStrength: 0.5,      // stronger bloom for sun trail glow
+    bloomRadius: 0.5,
+    bloomThreshold: 0.7,     // lower threshold catches more specular
     enableVignette: true,
     vignetteStrength: 0.4,
     fogDensity: 0.00020,
     pixelRatio: 2,
     sunSpecExponent: 1024,
-    sunSpecMultiplier: 80,  // moderate — bloom amplifies to HDR glow
+    sunSpecMultiplier: 80,
   },
 };
 
