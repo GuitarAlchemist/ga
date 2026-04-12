@@ -68,7 +68,21 @@ export interface OceanTSLResult {
   uniforms: OceanTSLUniforms;
 }
 
-export function createOceanTSLMaterial(): OceanTSLResult {
+export interface OceanTSLOptions {
+  waveCount?: 4 | 6 | 8;
+  fogDensity?: number;
+  sunSpecExponent?: number;
+  sunSpecMultiplier?: number;
+}
+
+export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLResult {
+  const {
+    waveCount = 8,
+    fogDensity = 0.00022,
+    sunSpecExponent = 1024,
+    sunSpecMultiplier = 60,
+  } = options;
+  const activeWaves = WAVES.slice(0, waveCount);
   const material = new MeshBasicNodeMaterial();
   material.side = THREE.FrontSide;
 
@@ -85,7 +99,7 @@ export function createOceanTSLMaterial(): OceanTSLResult {
     const dy = float(0.0).toVar();
     const dz = float(0.0).toVar();
 
-    for (const w of WAVES) {
+    for (const w of activeWaves) {
       const phase = dot(vec2(w.dx, w.dz), xz).mul(w.k).sub(uTime.mul(w.omega));
       const c = cos(phase);
       const s = sin(phase);
@@ -109,7 +123,7 @@ export function createOceanTSLMaterial(): OceanTSLResult {
     const ny = float(1.0).toVar();
     const nz = float(0.0).toVar();
 
-    for (const w of WAVES) {
+    for (const w of activeWaves) {
       const phase = dot(vec2(w.dx, w.dz), origXZ).mul(w.k).sub(uTime.mul(w.omega));
       const c = cos(phase);
       const s = sin(phase);
@@ -149,7 +163,7 @@ export function createOceanTSLMaterial(): OceanTSLResult {
     // Tight exponent + modest multiplier = small scattered glints.
     const H = normalize(V.add(uSunDir));
     const NdH = max(dot(N, H), 0.0);
-    const sunSpec = pow(NdH, float(1024.0)).mul(60.0);
+    const sunSpec = pow(NdH, float(sunSpecExponent)).mul(sunSpecMultiplier);
     const specContrib = sunCol.mul(sunSpec);
 
     // ── Water body color (very dark, near-black) ──
@@ -178,7 +192,7 @@ export function createOceanTSLMaterial(): OceanTSLResult {
     const distSq = dot(toCamera, toCamera);
     // Directional fog: stronger looking toward horizon, less looking down
     const viewHoriz = float(1.0).sub(clamp(V.y.mul(2.0), 0.0, 1.0));
-    const fogStrength = float(0.00022).add(float(0.00010).mul(viewHoriz));
+    const fogStrength = float(fogDensity).add(float(fogDensity * 0.45).mul(viewHoriz));
     const fogFactor = clamp(exp(fogStrength.negate().mul(fogStrength).mul(distSq)), 0.0, 1.0);
 
     // Fog color matches sky horizon for seamless blend
