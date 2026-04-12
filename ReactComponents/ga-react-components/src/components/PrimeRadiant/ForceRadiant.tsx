@@ -3649,7 +3649,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const mesh = obj as THREE.Mesh;
       mesh.geometry?.computeBoundingSphere();
       const r = mesh.geometry?.boundingSphere?.radius ?? 0.5;
-      const zoomDist = Math.max(r * 4, 0.02);
+      // Body-size-adaptive zoom: closer for small bodies (moons)
+      // so they fill a meaningful portion of the viewport.
+      // Discovered by ix harness rendering-invariant auditor.
+      const zoomMultiplier = r < 0.02 ? 2.5 : 4;
+      const zoomDist = Math.max(r * zoomMultiplier, 0.01);
       const dir = pw.clone().sub(cam.position).normalize();
       const newCamPos = pw.clone().sub(dir.multiplyScalar(zoomDist));
       cam.position.copy(newCamPos);
