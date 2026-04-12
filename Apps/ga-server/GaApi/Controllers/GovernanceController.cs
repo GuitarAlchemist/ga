@@ -127,6 +127,58 @@ public class GovernanceController(
     }
 
     /// <summary>
+    ///     Navigate all connected Prime Radiant clients to a celestial body.
+    ///     Used by the ix harness rendering-invariant auditor and the GA MCP
+    ///     SceneControl tool for remote QA.
+    /// </summary>
+    [HttpPost("navigate")]
+    public async Task<ActionResult> NavigateToPlanet([FromBody] NavigateRequest request)
+    {
+        await GovernanceHub.NavigateToPlanet(hubContext, request.Target);
+        return Ok(new { message = "Navigation requested", target = request.Target });
+    }
+
+    /// <summary>
+    ///     Navigate to a body, wait for the camera to settle, then capture
+    ///     a screenshot. Returns the screenshot as a PNG image.
+    ///     Combines NavigateToPlanet + RequestScreenshot + GetLatestScreenshot
+    ///     into a single atomic call for MCP tools.
+    /// </summary>
+    [HttpPost("navigate-and-capture")]
+    public async Task<ActionResult> NavigateAndCapture([FromBody] NavigateAndCaptureRequest request)
+    {
+        // 1. Navigate
+        await GovernanceHub.NavigateToPlanet(hubContext, request.Target);
+
+        // 2. Wait for camera animation to settle
+        await Task.Delay(request.WaitMs ?? 2000);
+
+        // 3. Request screenshot
+        await GovernanceHub.RequestScreenshotFromClients(hubContext, $"navigate-and-capture:{request.Target}");
+
+        // 4. Wait for client to capture + submit
+        await Task.Delay(500);
+
+        // 5. Return the screenshot
+        var (base64, format, capturedAt) = GovernanceHub.GetLatestScreenshot();
+        if (base64 == null || capturedAt == null)
+            return NotFound(new { error = "No screenshot available — is a Prime Radiant client connected?" });
+
+        var rawBase64 = base64.Contains(',') ? base64[(base64.IndexOf(',') + 1)..] : base64;
+        var bytes = Convert.FromBase64String(rawBase64);
+        var contentType = format switch
+        {
+            "image/jpeg" => "image/jpeg",
+            "image/webp" => "image/webp",
+            _ => "image/png",
+        };
+
+        Response.Headers.Append("X-Screenshot-Target", request.Target);
+        Response.Headers.Append("X-Screenshot-Captured-At", capturedAt.Value.ToString("O"));
+        return File(bytes, contentType);
+    }
+
+    /// <summary>
     ///     Request a screenshot from all connected Prime Radiant clients.
     /// </summary>
     [HttpPost("screenshot")]
@@ -907,6 +959,17 @@ public record HealthMetrics
 public record ScreenshotRequest
 {
     public string? Reason { get; init; }
+}
+
+public record NavigateRequest
+{
+    public string Target { get; init; } = "earth";
+}
+
+public record NavigateAndCaptureRequest
+{
+    public string Target { get; init; } = "earth";
+    public int? WaitMs { get; init; } = 2000;
 }
 
 public record BeliefUpdateRequest

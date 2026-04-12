@@ -193,6 +193,8 @@ export interface LiveDataConfig {
   onViewersChanged?: (viewers: ViewerInfo[]) => void;
   /** Called when another client broadcasts its camera position (presentation mode) */
   onCameraSync?: (data: CameraSyncData) => void;
+  /** Called when the backend commands navigation to a planet/moon */
+  onNavigateToPlanet?: (target: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -238,7 +240,7 @@ export interface LivePollingHandle {
 }
 
 export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
-  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal, onViewersChanged, onCameraSync } = config;
+  const { url, hubUrl, intervalMs = 30000, onUpdate, onError, onStatusChange, onScreenshotRequest, onBeliefUpdate, onBeliefsSnapshot, onAlgedonicSignal, onViewersChanged, onCameraSync, onNavigateToPlanet } = config;
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -284,6 +286,14 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
       connection.on('RequestScreenshot', (data: { reason?: string }) => {
         console.log('[Governance] Screenshot requested:', data.reason);
         onScreenshotRequest?.(data.reason ?? 'Backend request');
+      });
+
+      // Scene control — backend commands navigation to a planet/moon.
+      // The ix harness rendering-invariant auditor uses this to
+      // navigate + capture screenshots for belief-driven QA.
+      connection.on('NavigateToPlanet', (data: { target: string }) => {
+        console.log('[Governance] Navigate to planet:', data.target);
+        onNavigateToPlanet?.(data.target);
       });
 
       // Belief state updates — tetravalent T/F/U/C
