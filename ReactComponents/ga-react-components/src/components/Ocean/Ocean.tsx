@@ -38,7 +38,7 @@ const PresetPanel: React.FC<{
     left: 12,
     display: 'flex',
     gap: 4,
-    zIndex: 10,
+    zIndex: 100,
   }}>
     {(Object.keys(OCEAN_PRESETS) as OceanPresetName[]).map(name => {
       const isActive = name === current;
@@ -118,6 +118,11 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = OCEAN_PRESETS.stormy.exposure;
       container.appendChild(renderer.domElement);
+      // Force canvas below UI overlays — otherwise it covers the preset buttons
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.top = '0';
+      renderer.domElement.style.left = '0';
+      renderer.domElement.style.zIndex = '1';
 
       // ── Controls ──
       const controls = new OrbitControls(camera, renderer.domElement);
@@ -285,7 +290,7 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       <div ref={fpsRef} style={{
         position: 'absolute', top: 12, right: 12, color: '#a0c0d0',
         fontFamily: 'monospace', fontSize: '12px', background: 'rgba(0,0,0,0.5)',
-        padding: '6px 10px', borderRadius: 4, pointerEvents: 'none', zIndex: 10,
+        padding: '6px 10px', borderRadius: 4, pointerEvents: 'none', zIndex: 100,
       }} />
     </div>
   );
