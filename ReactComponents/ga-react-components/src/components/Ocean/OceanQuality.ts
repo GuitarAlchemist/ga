@@ -79,9 +79,9 @@ const CONFIGS: Record<QualityTier, OceanQualityConfig> = {
     waveCount: 8,
     oceanSize: 10000,
     enableBloom: true,
-    bloomStrength: 0.5,      // stronger bloom for sun trail glow
+    bloomStrength: 0.3,
     bloomRadius: 0.5,
-    bloomThreshold: 0.7,     // lower threshold catches more specular
+    bloomThreshold: 0.85,
     enableVignette: true,
     vignetteStrength: 0.4,
     fogDensity: 0.00020,
