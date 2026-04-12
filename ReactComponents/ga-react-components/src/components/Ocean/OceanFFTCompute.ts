@@ -45,7 +45,12 @@ function phillipsSpectrum(
   const kMag = Math.sqrt(k2);
   const L = windSpeed * windSpeed / G;
   const kDotW = (kx * windDirX + kz * windDirZ) / kMag;
-  const phillips = amplitude * Math.exp(-1 / (k2 * L * L)) / (k2 * k2) * (kDotW * kDotW);
+  // Broader directional distribution: |dot|^1.2 instead of dot²
+  // Reduces "all waves parallel" effect, produces more chaotic sea
+  const directional = Math.pow(Math.abs(kDotW), 1.2);
+  // Also allow some waves perpendicular to wind (0.08 base factor)
+  const dirMix = 0.08 + 0.92 * directional;
+  const phillips = amplitude * Math.exp(-1 / (k2 * L * L)) / (k2 * k2) * dirMix;
   const smallWave = 0.001 * L;
   return phillips * Math.exp(-k2 * smallWave * smallWave);
 }

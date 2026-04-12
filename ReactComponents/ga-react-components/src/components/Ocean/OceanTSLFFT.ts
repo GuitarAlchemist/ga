@@ -100,8 +100,9 @@ export function createOceanFFTMaterial(
     const N = normalize(vec3(fftNx.add(microX), fftNy, fftNz.add(microZ)));
 
     // ── Underwater detection ──
+    // Sharper transition (-0.3 to 0.3) to avoid banding artifact at y=0
     const camY = cameraPosition.y;
-    const isUnderwater = smoothstep(float(0.5), float(-0.5), camY);
+    const isUnderwater = smoothstep(float(0.3), float(-0.3), camY);
 
     // ── Fresnel (Schlick, F0 = 0.02) ──
     const NoV = clamp(dot(N, V), 0.0, 1.0);

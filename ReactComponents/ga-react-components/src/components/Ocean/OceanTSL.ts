@@ -15,7 +15,7 @@ import {
   uniform,
   positionLocal, positionWorld, cameraPosition,
   sin, cos, dot, normalize, mix, smoothstep, pow, exp,
-  max, clamp, reflect, fract, abs,
+  max, clamp, reflect, fract,
 } from 'three/tsl';
 
 // ── Procedural hash for micro-normal perturbation ────────────────────────────
