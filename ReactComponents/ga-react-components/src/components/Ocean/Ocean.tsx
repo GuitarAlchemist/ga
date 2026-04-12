@@ -1,33 +1,34 @@
 /**
- * Ocean Component — TSL + WebGPU
+ * Ocean Component — Tessendorf FFT + TSL + WebGPU
  *
- * Tessendorf-style ocean targeting WebTide visuals:
- * - 8-wave Gerstner with choppy horizontal displacement
- * - Concentrated sun specular on wave facets
- * - Schlick Fresnel: dark foreground → bright reflective horizon
- * - Heavy atmospheric fog blending ocean seamlessly into sky
- * - Physical sky background (gradient fallback for WebGPU)
- * - FPS counter overlay
+ * Full GPU compute ocean simulation:
+ * - Phillips spectrum → time evolution → GPU IFFT → displacement textures
+ * - Jacobian-based foam from wave folding
+ * - Finite-difference normals from displacement field
+ * - Schlick Fresnel, concentrated sun specular, atmospheric fog
+ * - Seamlessly tiling FFT patches
  *
- * Renderer: WebGPURenderer with async init, WebGL2 fallback.
+ * Falls back to Gerstner waves if FFT init fails.
  */
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OceanFFTCompute } from './OceanFFTCompute';
+import { createOceanFFTMaterial } from './OceanTSLFFT';
 import { createOceanTSLMaterial } from './OceanTSL';
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
 const OCEAN_SIZE = 8000;
 const OCEAN_RES  = 512;
+const FFT_N = 256;
+const FFT_PATCH_SIZE = 500;  // meters per FFT tile
 
-// Lower sun for dramatic specular trail
 const SUN_ELEVATION_DEG = 22;
 const SUN_AZIMUTH_DEG   = 200;
 
-// Camera near water surface, looking toward horizon
 const CAMERA_START = new THREE.Vector3(0, 4.5, 25);
 const CAMERA_TARGET = new THREE.Vector3(0, 0, -300);
 
@@ -41,9 +42,9 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
   const cleanupRef = useRef<(() => void) | null>(null);
   const fpsRef = useRef<HTMLDivElement>(null);
 
-  const updateFps = useCallback((fps: number) => {
+  const updateFps = useCallback((fps: number, mode: string) => {
     if (fpsRef.current) {
-      fpsRef.current.textContent = `${fps} FPS · WebGPU`;
+      fpsRef.current.textContent = `${fps} FPS · ${mode}`;
     }
   }, []);
 
@@ -62,18 +63,17 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       // ── Scene ──
       const scene = new THREE.Scene();
 
-      // Sky-colored gradient background (works with both renderers)
-      // Creates an overcast sky look matching WebTide
+      // Overcast sky gradient background
       const skyCanvas = document.createElement('canvas');
       skyCanvas.width = 1;
       skyCanvas.height = 512;
       const ctx = skyCanvas.getContext('2d')!;
       const grad = ctx.createLinearGradient(0, 0, 0, 512);
-      grad.addColorStop(0.0, '#6a7a90');   // upper sky (blue-grey)
-      grad.addColorStop(0.35, '#8a94a2');  // mid sky
-      grad.addColorStop(0.50, '#a0a6ae');  // horizon band (bright overcast)
-      grad.addColorStop(0.55, '#9aa0aa');  // just below horizon
-      grad.addColorStop(1.0, '#606870');   // lower (water reflection)
+      grad.addColorStop(0.0, '#6a7a90');
+      grad.addColorStop(0.35, '#8a94a2');
+      grad.addColorStop(0.50, '#a0a6ae');
+      grad.addColorStop(0.55, '#9aa0aa');
+      grad.addColorStop(1.0, '#606870');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1, 512);
       const bgTex = new THREE.CanvasTexture(skyCanvas);
@@ -112,12 +112,10 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       const sunPhi = THREE.MathUtils.degToRad(SUN_ELEVATION_DEG);
       const sunTheta = THREE.MathUtils.degToRad(SUN_AZIMUTH_DEG);
       const sunDir = new THREE.Vector3().setFromSphericalCoords(
-        1,
-        Math.PI / 2 - sunPhi,
-        sunTheta,
+        1, Math.PI / 2 - sunPhi, sunTheta,
       );
 
-      // ── Directional light ──
+      // ── Lights ──
       const sunLight = new THREE.DirectionalLight(0xfff8f0, 3.0);
       sunLight.position.copy(sunDir.clone().multiplyScalar(2000));
       scene.add(sunLight);
@@ -127,30 +125,66 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       const oceanGeo = new THREE.PlaneGeometry(OCEAN_SIZE, OCEAN_SIZE, OCEAN_RES, OCEAN_RES);
       oceanGeo.rotateX(-Math.PI / 2);
 
-      const { material: oceanMat, uniforms } = createOceanTSLMaterial();
-      uniforms.sunDirection.value.copy(sunDir);
+      // ── Try FFT compute, fall back to Gerstner ──
+      let fftCompute: OceanFFTCompute | null = null;
+      let uniforms: { time: { value: number }; sunDirection: { value: THREE.Vector3 } };
+      let oceanMat: THREE.Material;
+      let mode = 'WebGPU FFT';
 
+      try {
+        fftCompute = new OceanFFTCompute({
+          N: FFT_N,
+          patchSize: FFT_PATCH_SIZE,
+          windSpeed: 10,
+          windDirection: [1, 0.3],
+          amplitude: 0.0003,
+          choppiness: 1.6,
+        });
+
+        const result = createOceanFFTMaterial(
+          fftCompute.displacementTex,
+          fftCompute.normalFoamTex,
+          FFT_PATCH_SIZE,
+        );
+        oceanMat = result.material;
+        uniforms = result.uniforms;
+      } catch (err) {
+        console.warn('FFT compute failed, falling back to Gerstner:', err);
+        fftCompute = null;
+        mode = 'WebGPU Gerstner';
+        const result = createOceanTSLMaterial();
+        oceanMat = result.material;
+        uniforms = result.uniforms;
+      }
+
+      uniforms.sunDirection.value.copy(sunDir);
       const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
       scene.add(oceanMesh);
 
-      // ── Animation + FPS counter ──
+      // ── Animation + FPS ──
       const clock = new THREE.Clock();
       let frameCount = 0;
       let fpsAccum = 0;
+      let time = 0;
 
       const animate = () => {
         if (disposed) return;
         animationFrameId = requestAnimationFrame(animate);
 
         const dt = clock.getDelta();
-        uniforms.time.value += dt;
+        time += dt;
+        uniforms.time.value = time;
 
-        // FPS counter (update every 30 frames)
+        // Dispatch FFT compute pipeline
+        if (fftCompute) {
+          fftCompute.update(renderer, time);
+        }
+
+        // FPS
         frameCount++;
         fpsAccum += dt;
         if (frameCount >= 30) {
-          const fps = Math.round(frameCount / fpsAccum);
-          updateFps(fps);
+          updateFps(Math.round(frameCount / fpsAccum), mode);
           frameCount = 0;
           fpsAccum = 0;
         }
@@ -181,6 +215,7 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
         oceanGeo.dispose();
         oceanMat.dispose();
         bgTex.dispose();
+        fftCompute?.dispose();
         renderer.dispose();
         if (container.contains(renderer.domElement)) {
           container.removeChild(renderer.domElement);
@@ -200,7 +235,6 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       ref={containerRef}
       style={{ width: width || '100%', height: height || '100%', overflow: 'hidden', position: 'relative' }}
     >
-      {/* FPS overlay */}
       <div
         ref={fpsRef}
         style={{
