@@ -781,7 +781,12 @@ export function createSolarSystem(scale: number): THREE.Group {
   // Intensity bumped 1.5 → 4.0: planets were dim on their lit sides,
   // especially Mars/Mercury where texture albedo is low. Real sun is
   // overwhelmingly bright at these distances; 4.0 feels closer to that.
-  const sunLight = new THREE.PointLight(0xffffff, 4.0, 80 * scale);
+  // distance=0: infinite range so ALL moons receive sunlight.
+  // decay=1: linear falloff (not inverse-square) so distant
+  // moons still have a visible terminator. Planets are close
+  // enough that linear vs quadratic is imperceptible.
+  // Discovered by ix harness rendering-invariant auditor.
+  const sunLight = new THREE.PointLight(0xffffff, 4.0, 0, 1);
   sunLight.position.set(0, 0, 0);
   group.add(sunLight);
 
