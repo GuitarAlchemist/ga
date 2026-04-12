@@ -406,7 +406,7 @@ const PLANETS: PlanetDef[] = [
     atmosphere: { color: '0.3, 0.6, 1.0', intensity: 0.55, power: 3.0 },
     fragment: PROC_PLACEHOLDER,
     moons: [
-      { name: 'moon', radius: keplerRadius(3_474) * 2.5, distance: 1.2, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },  // 2.5x size boost for orrery visibility (real ratio 0.27 is invisible)
+      { name: 'moon', radius: keplerRadius(3_474) * 2.5, distance: 0.5, speed: 2.0, texture: '2k_moon.jpg', textureDisplacement: '2k_moon_displacement.jpg', fragment: ROCKY_GREY },  // 2.5x size boost for orrery visibility (real ratio 0.27 is invisible)
     ],
   },
   {
