@@ -7,4 +7,6 @@ export { OceanDemo } from './OceanDemo';
 export type { OceanProps } from './Ocean';
 export { createOceanTSLMaterial } from './OceanTSL';
 export type { OceanTSLUniforms, OceanTSLResult } from './OceanTSL';
+export { createOceanFFTMaterial } from './OceanTSLFFT';
+export { OceanFFTCompute } from './OceanFFTCompute';
 
