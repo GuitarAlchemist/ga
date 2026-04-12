@@ -19,7 +19,7 @@ import { createOceanFFTMaterial } from './OceanTSLFFT';
 import { OceanFFTCompute } from './OceanFFTCompute';
 import { detectQualityTier } from './OceanQuality';
 
-const SUN_ELEVATION_DEG = 22;
+const SUN_ELEVATION_DEG = 15;   // lower sun = longer specular trail on water
 const SUN_AZIMUTH_DEG   = 200;
 const CAMERA_START = new THREE.Vector3(0, 4.5, 25);
 const CAMERA_TARGET = new THREE.Vector3(0, 0, -300);
@@ -91,7 +91,7 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.target.copy(CAMERA_TARGET);
-      controls.maxPolarAngle = Math.PI / 2 - 0.01;
+      controls.maxPolarAngle = Math.PI * 0.85; // allow underwater view
       controls.minDistance = 1.5;
       controls.maxDistance = 3000;
 
