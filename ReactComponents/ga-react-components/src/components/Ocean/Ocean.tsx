@@ -23,7 +23,7 @@ const SUN_ELEVATION_DEG = 15;   // lower sun = longer specular trail on water
 const SUN_AZIMUTH_DEG   = 200;
 const CAMERA_START = new THREE.Vector3(0, 4.5, 25);
 const CAMERA_TARGET = new THREE.Vector3(0, 0, -300);
-const FFT_PATCH_SIZE = 500;
+const FFT_PATCH_SIZE = 250;  // smaller patch = finer wave detail at close range
 
 export interface OceanProps {
   width?: number;
@@ -121,10 +121,10 @@ export const Ocean: React.FC<OceanProps> = ({ width, height }) => {
           fftCompute = new OceanFFTCompute({
             N: 256,
             patchSize: FFT_PATCH_SIZE,
-            windSpeed: 10,
+            windSpeed: 11,
             windDirection: [1, 0.3],
-            amplitude: 0.0003,
-            choppiness: 1.6,
+            amplitude: 0.0004,
+            choppiness: 2.0,
           });
           const result = createOceanFFTMaterial(
             fftCompute.displacementTex, fftCompute.normalFoamTex, FFT_PATCH_SIZE,
