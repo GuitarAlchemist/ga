@@ -1233,6 +1233,20 @@ export function createSolarSystem(scale: number): THREE.Group {
   }
   group.userData.shadowDiscs = shadowDiscs;
 
+  // ── Sun DirectionalLight for Lambert-material moons ──
+  // MeshLambertMaterial computes shading from Three.js scene lights.
+  // Planets use MeshBasicNodeMaterial (self-lit, ignores scene lights)
+  // so this light only affects moons — giving them correct day/night
+  // terminator shading without touching any planet shader.
+  //
+  // Discovered autonomously by the ix harness rendering-invariant
+  // auditor (autonomous_render_audit.rs) via the belief-revision loop.
+  const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  sunLight.name = 'sun-directional';
+  sunLight.position.set(0, 0, 0); // at the sun (group origin)
+  group.add(sunLight);
+  group.userData.sunLight = sunLight;
+
   group.userData.planets = planetMeshes;
   group.userData.moonInstances = moonInstances;
   group.userData.planetLabels = planetLabels;
