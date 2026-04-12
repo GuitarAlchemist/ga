@@ -75,19 +75,19 @@ const CONFIGS: Record<QualityTier, OceanQualityConfig> = {
   },
   ultra: {
     tier: 'ultra',
-    meshRes: 1024,
+    meshRes: 768,
     waveCount: 8,
     oceanSize: 10000,
     enableBloom: true,
-    bloomStrength: 0.45,
-    bloomRadius: 0.5,
-    bloomThreshold: 0.75,
+    bloomStrength: 0.4,
+    bloomRadius: 0.45,
+    bloomThreshold: 0.8,
     enableVignette: true,
     vignetteStrength: 0.4,
-    fogDensity: 0.00018,
+    fogDensity: 0.00020,
     pixelRatio: 2,
     sunSpecExponent: 1024,
-    sunSpecMultiplier: 200,  // HDR values, bloom makes them glow
+    sunSpecMultiplier: 80,  // moderate — bloom amplifies to HDR glow
   },
 };
 

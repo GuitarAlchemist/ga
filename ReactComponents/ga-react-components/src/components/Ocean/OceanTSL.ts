@@ -15,8 +15,21 @@ import {
   uniform,
   positionLocal, positionWorld, cameraPosition,
   sin, cos, dot, normalize, mix, smoothstep, pow, exp,
-  max, clamp, reflect,
+  max, clamp, reflect, fract, abs,
 } from 'three/tsl';
+
+// ── Procedural hash for micro-normal perturbation ────────────────────────────
+// Breaks up the regular grid pattern visible at grazing angles.
+// Fast 2D→2D hash: no textures, no noise LUTs, purely arithmetic.
+
+const hash22 = Fn(([p_immutable]: [ReturnType<typeof vec2>]) => {
+  const p = vec2(p_immutable);
+  const q = vec2(
+    dot(p, vec2(127.1, 311.7)),
+    dot(p, vec2(269.5, 183.3)),
+  );
+  return fract(sin(q).mul(43758.5453)).mul(2.0).sub(1.0); // range [-1, 1]
+});
 
 // ── Precomputed wave parameters ──────────────────────────────────────────────
 
@@ -132,6 +145,18 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
       nz.subAssign(float(w.dz * w.kAmp).mul(c));
       ny.subAssign(float(w.QkAmp).mul(s));
     }
+
+    // ── Micro-normal perturbation (breaks grid regularity) ──
+    // Two octaves of hash noise at different scales, animated with time.
+    // Small amplitude (0.04-0.06) — just enough to scatter specular catches
+    // without visibly changing the wave shape.
+    const microUV1 = origXZ.mul(0.8).add(uTime.mul(vec2(0.3, 0.2)));
+    const microUV2 = origXZ.mul(2.5).add(uTime.mul(vec2(-0.5, 0.4)));
+    const noise1 = hash22(microUV1);
+    const noise2 = hash22(microUV2);
+    const microPerturb = noise1.mul(0.04).add(noise2.mul(0.025));
+    nx.addAssign(microPerturb.x);
+    nz.addAssign(microPerturb.y);
 
     const N = normalize(vec3(nx, ny, nz));
 
