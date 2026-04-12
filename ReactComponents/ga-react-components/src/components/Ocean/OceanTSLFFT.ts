@@ -83,13 +83,16 @@ export function createOceanFFTMaterial(
     const fftNz = nfSample.z;
     const foam = clamp(nfSample.w, 0.0, 1.0);
 
-    // ── Micro-normal noise (capillary-scale detail) ──
-    const microUV1 = tileUV.mul(40.0).add(uTime.mul(vec2(0.3, 0.2)));
-    const microUV2 = tileUV.mul(120.0).add(uTime.mul(vec2(-0.5, 0.4)));
+    // ── Micro-normal noise (capillary-scale, ~0.5m grain) ──
+    // Scale by world position (not tileUV) so the noise is genuinely small-scale
+    // regardless of patch size. Low amplitude — FFT already has wave detail.
+    const worldXZ = vec2(positionLocal.x, positionLocal.z);
+    const microUV1 = worldXZ.mul(2.0).add(uTime.mul(vec2(0.3, 0.2)));
+    const microUV2 = worldXZ.mul(6.0).add(uTime.mul(vec2(-0.5, 0.4)));
     const n1 = hash22(microUV1);
     const n2 = hash22(microUV2);
-    const microX = n1.x.mul(0.03).add(n2.x.mul(0.015));
-    const microZ = n1.y.mul(0.03).add(n2.y.mul(0.015));
+    const microX = n1.x.mul(0.015).add(n2.x.mul(0.008));
+    const microZ = n1.y.mul(0.015).add(n2.y.mul(0.008));
 
     const N = normalize(vec3(fftNx.add(microX), fftNy, fftNz.add(microZ)));
 
@@ -111,20 +114,20 @@ export function createOceanFFTMaterial(
     const belowFactor = smoothstep(float(0.02), float(-0.12), R.y);
     const skyBase = mix(skyAbove, skyBelow, belowFactor);
 
-    // Sun glow in reflection (wide bloom for sun trail on water)
+    // Sun glow in reflection (subtle — specular handles the brightness)
     const sunDot = max(dot(R, uSunDir), 0.0);
-    const sunGlowWide = pow(sunDot, float(24.0)).mul(0.4);   // wide sun trail
-    const sunGlowMed  = pow(sunDot, float(128.0)).mul(1.5);   // medium core
-    const sunGlowTight = pow(sunDot, float(512.0)).mul(3.0);  // tight hot center
+    const sunGlowWide = pow(sunDot, float(32.0)).mul(0.15);
+    const sunGlowTight = pow(sunDot, float(256.0)).mul(0.8);
     const sunCol = vec3(1.0, 0.96, 0.90);
-    const skyColor = skyBase.add(sunCol.mul(sunGlowWide.add(sunGlowMed).add(sunGlowTight)));
+    const skyColor = skyBase.add(sunCol.mul(sunGlowWide.add(sunGlowTight)));
 
-    // ── Sun Specular (Blinn-Phong, tuned for FFT normal variation) ──
-    // FFT normals are more varied than Gerstner → use higher multiplier
+    // ── Sun Specular (Blinn-Phong, moderate) ──
+    // Two layers: wide for sun trail visibility, tight for sharp glints.
+    // Lower multipliers — bloom amplifies anything >1 into HDR glow.
     const H = normalize(V.add(uSunDir));
     const NdH = max(dot(N, H), 0.0);
-    const specWide = pow(NdH, float(128.0)).mul(8.0);    // wide sun path
-    const specTight = pow(NdH, float(1024.0)).mul(150.0); // tight glints
+    const specWide = pow(NdH, float(256.0)).mul(2.0);
+    const specTight = pow(NdH, float(1024.0)).mul(40.0);
     const specContrib = sunCol.mul(specWide.add(specTight));
 
     // ── Water body color ──
@@ -137,9 +140,9 @@ export function createOceanFFTMaterial(
     const sssCol = vec3(0.0, 0.08, 0.06);
     const waterColor = baseWater.add(sssCol.mul(sss));
 
-    // ── Foam (Jacobian, stronger for FFT) ──
-    const foamCol = vec3(0.60, 0.65, 0.70);
-    const foamAmount = pow(foam, float(0.6)).mul(0.55);
+    // ── Foam (Jacobian) ──
+    const foamCol = vec3(0.55, 0.58, 0.62);
+    const foamAmount = pow(foam, float(0.8)).mul(0.30);
 
     // ── Compose (above water) ──
     const reflected = skyColor.add(specContrib);
