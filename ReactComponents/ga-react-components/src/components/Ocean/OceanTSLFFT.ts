@@ -83,16 +83,19 @@ export function createOceanFFTMaterial(
     const fftNz = nfSample.z;
     const foam = clamp(nfSample.w, 0.0, 1.0);
 
-    // ── Micro-normal noise (capillary-scale, ~0.5m grain) ──
-    // Scale by world position (not tileUV) so the noise is genuinely small-scale
-    // regardless of patch size. Low amplitude — FFT already has wave detail.
+    // ── Micro-normal noise (3 octaves, capillary-scale detail) ──
+    // Scale by world position for true cm-scale grain regardless of patch size.
+    // Slightly stronger than before to add visible detail at close range where
+    // the FFT resolution (~1m texel) can't resolve capillary waves.
     const worldXZ = vec2(positionLocal.x, positionLocal.z);
-    const microUV1 = worldXZ.mul(2.0).add(uTime.mul(vec2(0.3, 0.2)));
-    const microUV2 = worldXZ.mul(6.0).add(uTime.mul(vec2(-0.5, 0.4)));
+    const microUV1 = worldXZ.mul(1.5).add(uTime.mul(vec2(0.3, 0.2)));
+    const microUV2 = worldXZ.mul(4.0).add(uTime.mul(vec2(-0.5, 0.4)));
+    const microUV3 = worldXZ.mul(12.0).add(uTime.mul(vec2(0.8, -0.6)));
     const n1 = hash22(microUV1);
     const n2 = hash22(microUV2);
-    const microX = n1.x.mul(0.015).add(n2.x.mul(0.008));
-    const microZ = n1.y.mul(0.015).add(n2.y.mul(0.008));
+    const n3 = hash22(microUV3);
+    const microX = n1.x.mul(0.025).add(n2.x.mul(0.015)).add(n3.x.mul(0.008));
+    const microZ = n1.y.mul(0.025).add(n2.y.mul(0.015)).add(n3.y.mul(0.008));
 
     const N = normalize(vec3(fftNx.add(microX), fftNy, fftNz.add(microZ)));
 
