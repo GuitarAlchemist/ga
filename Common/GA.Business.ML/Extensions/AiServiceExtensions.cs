@@ -54,6 +54,7 @@ public static class AiServiceExtensions
         services.TryAddSingleton<MorphologyVectorService>();
         services.TryAddSingleton<ContextVectorService>();
         services.TryAddSingleton<SymbolicVectorService>();
+        services.TryAddSingleton<ModalVectorService>();
         services.TryAddSingleton<PhaseSphereService>();
 
         // Register the main generator

@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,6 +32,7 @@
     <ProjectReference Include="..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>
+    <ProjectReference Include="..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 
 </Project>
