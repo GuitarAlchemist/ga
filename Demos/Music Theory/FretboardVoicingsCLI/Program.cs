@@ -13,9 +13,19 @@ using Spectre.Console;
 internal class Program
 {
     /// <summary>
+    ///     Tuning presets selectable from the command line via --tuning.
+    /// </summary>
+    private enum TuningPreset
+    {
+        Guitar,
+        Bass,
+        Ukulele
+    }
+
+    /// <summary>
     ///     Export mode options parsed from command-line arguments
     /// </summary>
-    private sealed record ExportOptions(int? MaxVoicings, bool ShowHelp);
+    private sealed record ExportOptions(int? MaxVoicings, bool ShowHelp, TuningPreset Tuning);
 
     private static async Task<int> Main(string[] args)
     {
@@ -487,6 +497,7 @@ internal class Program
 
         var showHelp = args.Any(a => a.Equals("--export-help", StringComparison.OrdinalIgnoreCase));
         int? maxVoicings = null;
+        var tuning = TuningPreset.Guitar;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -494,9 +505,21 @@ internal class Program
             {
                 if (int.TryParse(args[i + 1], out var max)) maxVoicings = max;
             }
+            else if (args[i].Equals("--tuning", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                var raw = args[i + 1].Trim().ToLowerInvariant();
+                tuning = raw switch
+                {
+                    "guitar" => TuningPreset.Guitar,
+                    "bass" => TuningPreset.Bass,
+                    "ukulele" or "uke" => TuningPreset.Ukulele,
+                    _ => throw new ArgumentException(
+                        $"Unknown --tuning value '{args[i + 1]}'. Expected guitar|bass|ukulele.")
+                };
+            }
         }
 
-        options = new ExportOptions(maxVoicings, showHelp);
+        options = new ExportOptions(maxVoicings, showHelp, tuning);
         return true;
     }
 
@@ -506,7 +529,16 @@ internal class Program
     /// </summary>
     private static async Task<int> RunExportAsync(ExportOptions options)
     {
-        var fretboard = Fretboard.Default;
+        // Select tuning + fret count by preset. Fret counts are typical for each
+        // instrument: 24 for electric guitar, 21 for bass, 15 for ukulele.
+        var (tuning, fretCount) = options.Tuning switch
+        {
+            TuningPreset.Guitar => (GA.Domain.Core.Instruments.Tuning.Default, 24),
+            TuningPreset.Bass => (GA.Domain.Core.Instruments.Tuning.Bass, 21),
+            TuningPreset.Ukulele => (GA.Domain.Core.Instruments.Tuning.Ukulele, 15),
+            _ => (GA.Domain.Core.Instruments.Tuning.Default, 24)
+        };
+        var fretboard = new Fretboard(tuning, fretCount);
         const int windowSize = 4;
         const int minPlayedNotes = 2;
 
@@ -520,6 +552,8 @@ internal class Program
 
             var dto = new
             {
+                instrument = options.Tuning.ToString().ToLowerInvariant(),
+                stringCount = fretboard.StringCount,
                 diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions),
                 frets = voicing.Positions.Select(p => p switch
                 {
@@ -551,9 +585,11 @@ internal class Program
         Console.Error.WriteLine("  FretboardVoicingsCLI --export [--export-max N]");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Options:");
-        Console.Error.WriteLine("  --export          Enable export mode (JSONL to stdout)");
-        Console.Error.WriteLine("  --export-max N    Limit output to N voicings");
-        Console.Error.WriteLine("  --export-help     Show this help message");
+        Console.Error.WriteLine("  --export              Enable export mode (JSONL to stdout)");
+        Console.Error.WriteLine("  --export-max N        Limit output to N voicings");
+        Console.Error.WriteLine("  --tuning P            Tuning preset: guitar (default, 24 frets),");
+        Console.Error.WriteLine("                        bass (21 frets), ukulele (15 frets)");
+        Console.Error.WriteLine("  --export-help         Show this help message");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Output Format (one JSON object per line):");
         Console.Error.WriteLine("  {\"diagram\":\"x-3-2-0-1-0\",\"frets\":[\"x\",\"3\",\"2\",\"0\",\"1\",\"0\"],");
