@@ -1,11 +1,15 @@
 ﻿namespace FretboardVoicingsCLI;
 
+using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Analysis.Voicings;
+using GA.Business.ML.Rag;
+using GA.Domain.Core.Instruments;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Services.Fretboard.Voicings.Analysis;
 using GA.Domain.Services.Fretboard.Voicings.Filtering;
 using GA.Domain.Services.Fretboard.Voicings.Generation;
 using Spectre.Console;
@@ -27,8 +31,26 @@ internal class Program
     /// </summary>
     private sealed record ExportOptions(int? MaxVoicings, bool ShowHelp, TuningPreset Tuning);
 
+    /// <summary>
+    ///     Export-embeddings mode options parsed from command-line arguments.
+    ///     When Tuning is null, all three instruments are exported.
+    /// </summary>
+    private sealed record ExportEmbeddingsOptions(int? MaxVoicings, bool ShowHelp, string OutputPath, TuningPreset? Tuning);
+
     private static async Task<int> Main(string[] args)
     {
+        // Check for export-embeddings mode BEFORE export mode (--export-embeddings contains --export as prefix)
+        if (TryParseExportEmbeddingsOptions(args, out var embeddingsOptions))
+        {
+            if (embeddingsOptions.ShowHelp)
+            {
+                DisplayExportEmbeddingsHelp();
+                return 0;
+            }
+
+            return await RunExportEmbeddingsAsync(embeddingsOptions);
+        }
+
         // Check for export mode BEFORE any AnsiConsole output
         if (TryParseExportOptions(args, out var exportOptions))
         {
@@ -598,6 +620,182 @@ internal class Program
         Console.Error.WriteLine("Examples:");
         Console.Error.WriteLine("  FretboardVoicingsCLI --export > voicings.jsonl");
         Console.Error.WriteLine("  FretboardVoicingsCLI --export --export-max 1000 > sample.jsonl");
+    }
+
+    #endregion
+
+    #region Export Embeddings Mode (OPTIC-K v3 binary)
+
+    /// <summary>
+    ///     Attempts to parse export-embeddings mode options from command-line arguments.
+    ///     Returns true if --export-embeddings flag is present.
+    /// </summary>
+    private static bool TryParseExportEmbeddingsOptions(string[] args, out ExportEmbeddingsOptions options)
+    {
+        options = default!;
+        var hasFlag = args.Any(a => a.Equals("--export-embeddings", StringComparison.OrdinalIgnoreCase));
+        if (!hasFlag) return false;
+
+        var showHelp = args.Any(a => a.Equals("--export-embeddings-help", StringComparison.OrdinalIgnoreCase));
+        int? maxVoicings = null;
+        TuningPreset? tuning = null;
+        var outputPath = Path.Combine("state", "voicings", "optick.index");
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].Equals("--export-max", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                if (int.TryParse(args[i + 1], out var max)) maxVoicings = max;
+            }
+            else if (args[i].Equals("--tuning", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                var raw = args[i + 1].Trim().ToLowerInvariant();
+                tuning = raw switch
+                {
+                    "guitar" => TuningPreset.Guitar,
+                    "bass" => TuningPreset.Bass,
+                    "ukulele" or "uke" => TuningPreset.Ukulele,
+                    _ => throw new ArgumentException(
+                        $"Unknown --tuning value '{args[i + 1]}'. Expected guitar|bass|ukulele.")
+                };
+            }
+            else if (args[i].Equals("--output", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                outputPath = args[i + 1];
+            }
+        }
+
+        options = new ExportEmbeddingsOptions(maxVoicings, showHelp, outputPath, tuning);
+        return true;
+    }
+
+    /// <summary>
+    ///     Runs export-embeddings mode: generates OPTIC-K v3 binary index with 228-dim embeddings
+    ///     for all voicings across one or all instruments.
+    /// </summary>
+    private static async Task<int> RunExportEmbeddingsAsync(ExportEmbeddingsOptions options)
+    {
+        var sw = Stopwatch.StartNew();
+
+        // Determine which instruments to process
+        var presets = options.Tuning.HasValue
+            ? [options.Tuning.Value]
+            : new[] { TuningPreset.Guitar, TuningPreset.Bass, TuningPreset.Ukulele };
+
+        Console.Error.WriteLine($"OPTIC-K v3 embedding export — instruments: {string.Join(", ", presets.Select(p => p.ToString().ToLowerInvariant()))}");
+        if (options.MaxVoicings.HasValue)
+            Console.Error.WriteLine($"  --export-max {options.MaxVoicings.Value} (per instrument)");
+        Console.Error.WriteLine($"  output: {options.OutputPath}");
+        Console.Error.WriteLine();
+
+        // Create the embedding generator once
+        var generator = EmbeddingServiceProvider.CreateEmbeddingGenerator();
+
+        var allEntries = new List<VoicingEntry>();
+        var totalCount = 0;
+
+        foreach (var preset in presets)
+        {
+            var instrumentName = preset.ToString().ToLowerInvariant();
+            var (tuning, fretCount) = preset switch
+            {
+                TuningPreset.Guitar => (Tuning.Default, 24),
+                TuningPreset.Bass => (Tuning.Bass, 21),
+                TuningPreset.Ukulele => (Tuning.Ukulele, 15),
+                _ => (Tuning.Default, 24)
+            };
+            var fretboard = new Fretboard(tuning, fretCount);
+
+            const int windowSize = 4;
+            const int minPlayedNotes = 2;
+            var maxVoicings = options.MaxVoicings ?? int.MaxValue;
+            var instrumentCount = 0;
+            var instrumentSw = Stopwatch.StartNew();
+
+            Console.Error.Write($"  {instrumentName}: generating voicings...");
+
+            await foreach (var voicing in VoicingGenerator.GenerateAllVoicingsAsync(
+                               fretboard, windowSize, minPlayedNotes, parallel: true))
+            {
+                if (instrumentCount >= maxVoicings) break;
+
+                // Analyze the voicing
+                var analysis = VoicingAnalyzer.Analyze(voicing);
+
+                // Create RAG document for embedding generation
+                var doc = VoicingDocumentFactory.FromAnalysis(voicing, analysis, tuningId: instrumentName);
+
+                // Generate the 228-dim embedding
+                var embedding = await generator.GenerateEmbeddingAsync(doc);
+
+                // Build the entry for the binary index
+                var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+                var midiNotes = voicing.Notes.Select(n => n.Value).ToArray();
+                var chordName = analysis.ChordId.ChordName;
+
+                allEntries.Add(new VoicingEntry(embedding, diagram, instrumentName, midiNotes, chordName));
+                instrumentCount++;
+
+                // Progress indicator every 1000 voicings
+                if (instrumentCount % 1000 == 0)
+                    Console.Error.Write($"\r  {instrumentName}: {instrumentCount:N0} voicings embedded...");
+            }
+
+            instrumentSw.Stop();
+            Console.Error.WriteLine($"\r  {instrumentName}: {instrumentCount:N0} voicings in {instrumentSw.Elapsed.TotalSeconds:N1}s");
+            totalCount += instrumentCount;
+        }
+
+        // Ensure output directory exists
+        var outputDir = Path.GetDirectoryName(options.OutputPath);
+        if (!string.IsNullOrEmpty(outputDir))
+            Directory.CreateDirectory(outputDir);
+
+        // Write the binary index
+        Console.Error.Write($"  Writing OPTIC-K v3 index ({totalCount:N0} entries)...");
+        using (var writer = new OptickIndexWriter(options.OutputPath))
+        {
+            writer.WriteIndex(allEntries);
+        }
+
+        var fileInfo = new FileInfo(options.OutputPath);
+        sw.Stop();
+
+        Console.Error.WriteLine($" done.");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine($"  Total: {totalCount:N0} voicings, {fileInfo.Length / 1024.0 / 1024.0:N1} MB, {sw.Elapsed.TotalSeconds:N1}s");
+        Console.Error.WriteLine($"  Output: {Path.GetFullPath(options.OutputPath)}");
+
+        return 0;
+    }
+
+    /// <summary>
+    ///     Displays export-embeddings mode help to stderr.
+    /// </summary>
+    private static void DisplayExportEmbeddingsHelp()
+    {
+        Console.Error.WriteLine("Fretboard Voicings CLI - Export Embeddings Mode (OPTIC-K v3 binary)");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Usage:");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings [options]");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Options:");
+        Console.Error.WriteLine("  --export-embeddings         Enable embedding export mode");
+        Console.Error.WriteLine("  --output PATH               Output file path (default: state/voicings/optick.index)");
+        Console.Error.WriteLine("  --tuning P                  Single instrument: guitar, bass, or ukulele");
+        Console.Error.WriteLine("                              (default: all three instruments)");
+        Console.Error.WriteLine("  --export-max N              Limit voicings per instrument (for testing)");
+        Console.Error.WriteLine("  --export-embeddings-help    Show this help message");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Output Format:");
+        Console.Error.WriteLine("  OPTIC-K v3 binary index with 228-dim embeddings per voicing,");
+        Console.Error.WriteLine("  sqrt-weight scaled and L2-normalized, with msgpack metadata.");
+        Console.Error.WriteLine("  Instruments are sorted: guitar, bass, ukulele.");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Examples:");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings --tuning guitar --export-max 500");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings --output my-index.optk");
     }
 
     #endregion
