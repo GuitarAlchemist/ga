@@ -41,9 +41,6 @@ builder.Services.AddHttpClient("gaapi", (sp, client) =>
     client.Timeout = TimeSpan.FromSeconds(60);
 });
 
-// Register embedding services for VoicingEmbeddingTool
-GA.Business.ML.Extensions.AiServiceExtensions.AddMusicalEmbeddings(builder.Services);
-
 // Register MCP server with tools
 builder.Services
     .AddMcpServer()

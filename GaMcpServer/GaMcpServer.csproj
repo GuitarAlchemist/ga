@@ -23,6 +23,7 @@
     <Compile Remove="Tools\FeedReaderToolWrapper.cs"/>
     <Compile Remove="Tools\WebScrapingToolWrapper.cs"/>
     <Compile Remove="Tools\WebSearchToolWrapper.cs"/>
+    <Compile Remove="Tools\VoicingEmbeddingTool.cs"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -32,7 +33,6 @@
     <ProjectReference Include="..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>
-    <ProjectReference Include="..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
   </ItemGroup>
 
 </Project>
