@@ -1,12 +1,12 @@
 # Invariant coverage report
 
-Matrix: **35 invariants × 37 exemplars** (rank = **4**).
+Matrix: **35 invariants × 37 exemplars** (rank = **6**).
 
 ✘ **Suboptimal** — see details below.
 
-## Rank deficiency: 31
+## Rank deficiency: 29
 
-31 invariant(s) are linearly dependent on the others over GF(2). At least one can be removed (or derived) without losing discriminating power.
+29 invariant(s) are linearly dependent on the others over GF(2). At least one can be removed (or derived) without losing discriminating power.
 
 ## Strict duplicates
 
@@ -14,6 +14,7 @@ Invariant pairs with identical firing signatures — first candidates for remova
 
 | Keep | Remove / redefine |
 |---|---|
+| #14 | #15 |
 | #16 | #17 |
 | #16 | #20 |
 | #16 | #24 |
@@ -38,9 +39,6 @@ Invariant pairs with identical firing signatures — first candidates for remova
 | 11 | round-trip | C | `Voicing` → msgpack → `Voicing` is byte-identical |
 | 12 | round-trip | N | F# YAML record → serialize → deserialize is field-identical |
 | 13 | round-trip | T | C# `ChordName` → display string → parse produces same `ChordName` |
-| 15 | algebraic | C | PLR composites match: L∘P∘R = S, P∘L = N |
-| 21 | cardinality | T | Triad template → exactly 3 distinct PCs after octave reduction |
-| 22 | cardinality | T | Seventh template → exactly 4 distinct PCs |
 | 23 | cardinality | C | Voicing MIDI count ≤ instrument string count |
 | 25 | embedding | FAIL | Cross-instrument: voicings with identical PC-set have identical STRUCTURE parti… |
 | 26 | embedding | C | MIDI-octave invariance: transposing by 12 leaves STRUCTURE vector unchanged |
@@ -61,8 +59,6 @@ These carry status `T` (tested) but observed zero firings. Either the test is va
 - #2
 - #5
 - #13
-- #21
-- #22
 - #27
 - #29
 - #34
