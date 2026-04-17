@@ -270,6 +270,17 @@
       "empty",
       "whole-tone-hexachord"
     ],
+    "19": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "empty",
+      "minor-triad-0",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ],
     "20": [
       "augmented-triad",
       "chromatic",
