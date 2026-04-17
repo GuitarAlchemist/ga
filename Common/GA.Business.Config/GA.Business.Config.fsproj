@@ -22,9 +22,11 @@
     <ItemGroup>
         <Compile Include="InstrumentsConfig.fs"/>
         <Compile Include="ScalesConfig.fs"/>
+        <Compile Include="ExtendedScalesConfig.fs"/>
         <Compile Include="ModesConfig.fs"/>
         <Compile Include="SemanticConfig.fs"/>
         <Compile Include="TabSourcesConfig.fs"/>
+        <Compile Include="NeoRiemannianConfig.fs"/>
         <Compile Include="YamlKnowledgeLoader.fs"/>
     </ItemGroup>
 
@@ -47,6 +49,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="Scales.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="ExtendedScales.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="Tunings.toml">
@@ -122,6 +127,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="VoiceLeading.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="NeoRiemannian.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <None Include="SemanticNomenclature.yaml">

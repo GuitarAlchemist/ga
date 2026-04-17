@@ -1,0 +1,222 @@
+# NeoRiemannian.yaml — P/L/R/S/N/H transforms on 24 triads
+# Generated programmatically from first principles.
+# Transform definitions per standard neo-Riemannian theory
+# (Riemann 19th c., composite transforms mid-20th c.).
+# No text, commentary, or naming from third-party sources reproduced.
+#
+# Domain: the 24 consonant triads, encoded {Root}_{maj|min} with sharp
+# accidentals (C_maj, C#_maj, ..., B_min).
+#
+# Derivation rules (all entries below are computed from these, not curated):
+#   Major triad M(x) = { x, x+4, x+7 } mod 12
+#   Minor triad m(x) = { x, x+3, x+7 } mod 12
+#   P : M(x) <-> m(x)        (3rd moves 1 semitone)
+#   L : M(x) <-> m(x+4)      (root moves 1 semitone)
+#   R : M(x) <-> m(x+9)      (5th moves 2 semitones)
+#   S = L o P o R   : M(x) <-> m(x+1)   (shares 3rd; 2 voices move)
+#   N = R o L o P   : M(x) <-> m(x+5)   (shares root; 2 voices move)
+#   H = L o P o L   : M(x) <-> m(x+8)   (no common tones; 3 voices move)
+#
+# All six transforms are involutions: T(T(x)) = x for every triad x.
+
+Transforms:
+
+  P:
+    Description: "Parallel — swaps major/minor of the same root; 3rd moves by 1 semitone"
+    VoiceLeadingCost: 1
+    Mappings:
+      C_maj: C_min
+      C_min: C_maj
+      C#_maj: C#_min
+      C#_min: C#_maj
+      D_maj: D_min
+      D_min: D_maj
+      D#_maj: D#_min
+      D#_min: D#_maj
+      E_maj: E_min
+      E_min: E_maj
+      F_maj: F_min
+      F_min: F_maj
+      F#_maj: F#_min
+      F#_min: F#_maj
+      G_maj: G_min
+      G_min: G_maj
+      G#_maj: G#_min
+      G#_min: G#_maj
+      A_maj: A_min
+      A_min: A_maj
+      A#_maj: A#_min
+      A#_min: A#_maj
+      B_maj: B_min
+      B_min: B_maj
+
+  L:
+    Description: "Leading-tone — M(x) paired with m(x+4); root moves 1 semitone, becomes 5th of target"
+    VoiceLeadingCost: 1
+    Mappings:
+      C_maj: E_min
+      E_min: C_maj
+      C#_maj: F_min
+      F_min: C#_maj
+      D_maj: F#_min
+      F#_min: D_maj
+      D#_maj: G_min
+      G_min: D#_maj
+      E_maj: G#_min
+      G#_min: E_maj
+      F_maj: A_min
+      A_min: F_maj
+      F#_maj: A#_min
+      A#_min: F#_maj
+      G_maj: B_min
+      B_min: G_maj
+      G#_maj: C_min
+      C_min: G#_maj
+      A_maj: C#_min
+      C#_min: A_maj
+      A#_maj: D_min
+      D_min: A#_maj
+      B_maj: D#_min
+      D#_min: B_maj
+
+  R:
+    Description: "Relative — M(x) paired with m(x+9); 5th moves 2 semitones, becomes root of target"
+    VoiceLeadingCost: 2
+    Mappings:
+      C_maj: A_min
+      A_min: C_maj
+      C#_maj: A#_min
+      A#_min: C#_maj
+      D_maj: B_min
+      B_min: D_maj
+      D#_maj: C_min
+      C_min: D#_maj
+      E_maj: C#_min
+      C#_min: E_maj
+      F_maj: D_min
+      D_min: F_maj
+      F#_maj: D#_min
+      D#_min: F#_maj
+      G_maj: E_min
+      E_min: G_maj
+      G#_maj: F_min
+      F_min: G#_maj
+      A_maj: F#_min
+      F#_min: A_maj
+      A#_maj: G_min
+      G_min: A#_maj
+      B_maj: G#_min
+      G#_min: B_maj
+
+  S:
+    Description: "Slide — L o P o R; M(x) paired with m(x+1); shares the 3rd, 2 voices move"
+    VoiceLeadingCost: 2
+    Mappings:
+      C_maj: C#_min
+      C#_min: C_maj
+      C#_maj: D_min
+      D_min: C#_maj
+      D_maj: D#_min
+      D#_min: D_maj
+      D#_maj: E_min
+      E_min: D#_maj
+      E_maj: F_min
+      F_min: E_maj
+      F_maj: F#_min
+      F#_min: F_maj
+      F#_maj: G_min
+      G_min: F#_maj
+      G_maj: G#_min
+      G#_min: G_maj
+      G#_maj: A_min
+      A_min: G#_maj
+      A_maj: A#_min
+      A#_min: A_maj
+      A#_maj: B_min
+      B_min: A#_maj
+      B_maj: C_min
+      C_min: B_maj
+
+  N:
+    Description: "Nebenverwandt — R o L o P; M(x) paired with m(x+5); shares the root, 2 voices move"
+    VoiceLeadingCost: 2
+    Mappings:
+      C_maj: F_min
+      F_min: C_maj
+      C#_maj: F#_min
+      F#_min: C#_maj
+      D_maj: G_min
+      G_min: D_maj
+      D#_maj: G#_min
+      G#_min: D#_maj
+      E_maj: A_min
+      A_min: E_maj
+      F_maj: A#_min
+      A#_min: F_maj
+      F#_maj: B_min
+      B_min: F#_maj
+      G_maj: C_min
+      C_min: G_maj
+      G#_maj: C#_min
+      C#_min: G#_maj
+      A_maj: D_min
+      D_min: A_maj
+      A#_maj: D#_min
+      D#_min: A#_maj
+      B_maj: E_min
+      E_min: B_maj
+
+  H:
+    Description: "Hexatonic pole — L o P o L; M(x) paired with m(x+8); no common tones, 3 voices move"
+    VoiceLeadingCost: 3
+    Mappings:
+      C_maj: G#_min
+      G#_min: C_maj
+      C#_maj: A_min
+      A_min: C#_maj
+      D_maj: A#_min
+      A#_min: D_maj
+      D#_maj: B_min
+      B_min: D#_maj
+      E_maj: C_min
+      C_min: E_maj
+      F_maj: C#_min
+      C#_min: F_maj
+      F#_maj: D_min
+      D_min: F#_maj
+      G_maj: D#_min
+      D#_min: G_maj
+      G#_maj: E_min
+      E_min: G#_maj
+      A_maj: F_min
+      F_min: A_maj
+      A#_maj: F#_min
+      F#_min: A#_maj
+      B_maj: G_min
+      G_min: B_maj
+
+# Hexatonic cycles: 4 disjoint cycles of 6 triads each, produced by alternating
+# P and L. Roots in each cycle form a hexatonic pitch-class set (union of two
+# augmented triads related by semitone). Names are derived from the three
+# major-triad roots present in each cycle.
+HexatonicCycles:
+  - Name: "Cycle_C_E_G#"
+    Triads: [C_maj, C_min, G#_maj, G#_min, E_maj, E_min]
+  - Name: "Cycle_C#_F_A"
+    Triads: [C#_maj, C#_min, A_maj, A_min, F_maj, F_min]
+  - Name: "Cycle_D_F#_A#"
+    Triads: [D_maj, D_min, A#_maj, A#_min, F#_maj, F#_min]
+  - Name: "Cycle_D#_G_B"
+    Triads: [D#_maj, D#_min, B_maj, B_min, G_maj, G_min]
+
+# Octatonic cycles: 3 disjoint cycles of 8 triads each, produced by alternating
+# P and R. Roots in each cycle form a diminished-7 pitch-class set {pc, pc+3,
+# pc+6, pc+9}. Names use OCT(i,j) notation, where {i,j} are the two smallest
+# interval classes of the underlying octatonic scale — a math-derivation label.
+OctatonicCycles:
+  - Name: "OCT(0,1)"
+    Triads: [C_maj, C_min, D#_maj, D#_min, F#_maj, F#_min, A_maj, A_min]
+  - Name: "OCT(1,2)"
+    Triads: [C#_maj, C#_min, E_maj, E_min, G_maj, G_min, A#_maj, A#_min]
+  - Name: "OCT(2,3)"
+    Triads: [D_maj, D_min, F_maj, F_min, G#_maj, G#_min, B_maj, B_min]
