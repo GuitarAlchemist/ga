@@ -33,9 +33,70 @@ public class ChordRecognitionRoundTripTests
     // pattern name with MatchDistance==0 and Root=="C".
     // =============================================================================
 
+    // Patterns whose pitch-class sets collide with higher-priority patterns at a
+    // different root, so the round-trip resolves to a different (but musically valid)
+    // name. Excluded from AxisA to avoid asserting a false requirement. Examples:
+    //   major-6 [0,4,7,9]         ≡ minor-7 at root 9 (priority 5 beats 10)
+    //   6-9 [0,2,4,7,9]           ≡ minor-11 variants
+    //   quartal-3 [0,5,10]        ≡ sus4 at root 5 (priority 8 beats 70)
+    //   9-sus4 and dominant-11 literally share [0,2,5,7,10]
+    //   dominant-7-sharp-5 [0,4,8,10] is T4-symmetric — multiple roots, same set
+    // AxisE (below) covers these as "same-PC-set equivalence" assertions instead.
+    private static readonly HashSet<string> AmbiguousRoundTripPatterns = new()
+    {
+        "major-6", "minor-6", "6-9", "minor-6-9", "minor-add-11",
+        "major-13", "9-sus4", "13-sus4",
+        "dominant-11", "dominant-7-sharp-5", "dominant-13-b9",
+        "quartal-3", "quartal-4", "quartal-5",
+    };
+
     public static IEnumerable<TestCaseData> AllPatternsSource() =>
         CanonicalChordPatternCatalog.All
+            .Where(p => !AmbiguousRoundTripPatterns.Contains(p.Name))
             .Select(p => new TestCaseData(p).SetName($"AxisA_{p.Name}"));
+
+    public static IEnumerable<TestCaseData> AmbiguousPatternsSource() =>
+        CanonicalChordPatternCatalog.All
+            .Where(p => AmbiguousRoundTripPatterns.Contains(p.Name))
+            .Select(p => new TestCaseData(p).SetName($"AxisE_{p.Name}"));
+
+    /// <summary>
+    ///     Axis E: patterns whose PC-set collides with a higher-priority alternate.
+    ///     The round-trip must still yield an exact match (distance=0) on SOME pattern
+    ///     whose PC-set equals the input — just not necessarily the same name.
+    /// </summary>
+    [TestCaseSource(nameof(AmbiguousPatternsSource))]
+    public void AxisE_AmbiguousPattern_RoundTripsToEquivalentPcSet(ChordIntervalPattern pattern)
+    {
+        var pcs = pattern.Intervals.Select(i => ((i % 12) + 12) % 12).Distinct().OrderBy(i => i).ToArray();
+        var pcSet = new PitchClassSet(pcs.Select(PitchClass.FromValue));
+
+        var result = CanonicalChordRecognizer.Identify(pcSet);
+
+        Assert.That(result.MatchDistance, Is.EqualTo(0),
+            $"Ambiguous pattern '{pattern.Name}' must still round-trip to an exact-distance match");
+
+        var resolved = CanonicalChordPatternCatalog.All.FirstOrDefault(p => p.Name == result.PatternName);
+        Assert.That(resolved.Name, Is.Not.Null.Or.Empty,
+            $"Pattern '{pattern.Name}': recognizer returned unknown PatternName '{result.PatternName}'");
+
+        var resolvedRootName = result.Root;
+        var rootPc = resolvedRootName switch
+        {
+            "C" => 0, "C#" or "Db" => 1, "D" => 2, "D#" or "Eb" => 3, "E" => 4,
+            "F" => 5, "F#" or "Gb" => 6, "G" => 7, "G#" or "Ab" => 8, "A" => 9,
+            "A#" or "Bb" => 10, "B" or "Cb" => 11,
+            _ => -1,
+        };
+        var resolvedPcs = resolved.Intervals
+            .Select(i => (((i + rootPc) % 12) + 12) % 12)
+            .Distinct()
+            .OrderBy(i => i)
+            .ToArray();
+
+        Assert.That(resolvedPcs, Is.EqualTo(pcs),
+            $"Pattern '{pattern.Name}' input PCs [{string.Join(",", pcs)}] resolved to '{result.PatternName}' with PCs [{string.Join(",", resolvedPcs)}] — the weaker round-trip (same-PC-set) still must hold");
+    }
 
     [TestCaseSource(nameof(AllPatternsSource))]
     public void AxisA_PatternRoundTrip_RecognizesOriginal(ChordIntervalPattern pattern)
@@ -378,9 +439,12 @@ internal static class GoldenCorpus
         //   PCs: {D, A, E} = [2,4,9]. From D(2) -> [0,2,7] = sus2 at D.
         new("x-x-0-2-3-0", "guitar", "Dsus2", "suspended", "triad"),
 
-        // Dsus4: x x 0 2 3 3 -> x, x, D3, A3, D4, G4
-        //   PCs: {D, A, G} = [2,7,9]. From D(2) -> [0,5,7] = sus4 at D.
-        new("x-x-0-2-3-3", "guitar", "Dsus4", "suspended", "triad"),
+        // Dsus4 voicing x x 0 2 3 3 -> PCs {D, G, A} = [2, 7, 9].
+        // Ambiguous by design: same PCs match sus4 at D (prio 8) AND sus2 at G (prio 7).
+        // Priority-based ranking picks Gsus2 as CanonicalName; Invariant #33 forbids
+        // the recognizer from using bass as a tiebreaker. The guitarist-facing name
+        // "Dsus4" is recovered as CanonicalName + SlashSuffix = "Gsus2/D" in DisplayName.
+        new("x-x-0-2-3-3", "guitar", "Gsus2", "suspended", "triad"),
 
         // ---------- Guitar diminished / augmented ----------
 

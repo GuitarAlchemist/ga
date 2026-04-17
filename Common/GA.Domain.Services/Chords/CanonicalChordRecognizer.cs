@@ -78,7 +78,7 @@ public static class CanonicalChordRecognizer
                 CanonicalName: $"{GetNoteName(powerRoot)}5",
                 Root: GetNoteName(powerRoot),
                 Quality: "power",
-                Extension: null,
+                Extension: "dyad",
                 Alterations: [],
                 SlashSuffix: null,
                 PatternName: "power-chord",
@@ -107,7 +107,7 @@ public static class CanonicalChordRecognizer
             CanonicalName: $"{GetNoteName(root)} + {GetNoteName(other)} ({intervalName})",
             Root: GetNoteName(root),
             Quality: "dyad",
-            Extension: null,
+            Extension: "dyad",
             Alterations: [],
             SlashSuffix: null,
             PatternName: $"dyad-ic{canonicalInterval}",
@@ -141,7 +141,9 @@ public static class CanonicalChordRecognizer
         if (candidates.Count == 0)
             return FallbackFromForte(pcSet);
 
-        // Ranking:
+        // Ranking is strictly PC-set-based — the bass note must NOT influence which
+        // pattern wins, or Invariant #33 (CanonicalName is register-invariant for a
+        // fixed PC-set) breaks. Bass is applied later as the SlashSuffix only.
         //   1) smallest edit distance (missing + extra)
         //   2) exact matches preferred (prefer Missing==0 over Extra==0 when tied)
         //   3) pattern priority (simpler patterns win)
@@ -233,6 +235,10 @@ public static class CanonicalChordRecognizer
             "7-sus4" => "7sus4",
             "9-sus4" => "9sus4",
             "13-sus4" => "13sus4",
+            "major-7" => "maj7",
+            "major-9" => "maj9",
+            "major-11" => "maj11",
+            "major-13" => "maj13",
             "minor-major-7" => "m(maj7)",
             "minor-major-9" => "m(maj9)",
             "augmented-major-7" => "aug(maj7)",
