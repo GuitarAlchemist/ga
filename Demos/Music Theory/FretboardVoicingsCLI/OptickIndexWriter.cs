@@ -3,6 +3,8 @@ namespace FretboardVoicingsCLI;
 using System.Buffers.Binary;
 using System.Text;
 
+using GA.Business.ML.Embeddings;
+
 /// <summary>
 /// A single voicing entry to be written into the OPTIC-K v4 binary index.
 /// <paramref name="Embedding"/> is the 228-dim raw vector from MusicalEmbeddingGenerator.
@@ -45,31 +47,25 @@ public sealed class OptickIndexWriter : IDisposable
 
     private static readonly byte[] Magic = "OPTK"u8.ToArray();
     private const uint FormatVersion = 4;
-    private const int RawDimension = 228;           // input vector size
-    private const int Dimension = 112;              // output (compact) vector size
     private const byte InstrumentCount = 3;         // guitar, bass, ukulele
     private const ushort EndianMarker = 0xFEFF;
 
     /// <summary>
-    /// Canonical partition layout string for v4. Only search-relevant partitions.
-    /// Dense mapping — indices here are in the COMPACT space (0..111), not the raw 228-dim space.
+    /// Raw embedding size from <see cref="MusicalEmbeddingGenerator"/> (228 for v1.7).
     /// </summary>
-    private const string PartitionLayout =
-        "optk-v4:STRUCTURE:0-23,MORPHOLOGY:24-47,CONTEXT:48-59," +
-        "SYMBOLIC:60-71,MODAL:72-111";
+    private static readonly int RawDimension = EmbeddingSchema.TotalDimension;
 
     /// <summary>
-    /// Compact partition definitions: (compact_start, compact_end_inclusive, raw_start, raw_end_inclusive, raw_weight).
-    /// Maps ranges in the 228-dim raw input to dense ranges in the 112-dim compact output.
+    /// Compact v4 dimension — sum of similarity-partition sizes (112 for v1.7).
     /// </summary>
-    private static readonly (int CStart, int CEnd, int RStart, int REnd, float RawWeight)[] Partitions =
-    [
-        (0,  23,  6,   29,  0.45f), // STRUCTURE
-        (24, 47,  30,  53,  0.25f), // MORPHOLOGY
-        (48, 59,  54,  65,  0.20f), // CONTEXT
-        (60, 71,  66,  77,  0.10f), // SYMBOLIC
-        (72, 111, 109, 148, 0.10f), // MODAL
-    ];
+    private static readonly int Dimension = EmbeddingSchema.CompactDimension;
+
+    /// <summary>
+    /// Compact partition mapping: (compact_start, raw_start, dim, sqrt_weight).
+    /// Derived from <see cref="EmbeddingSchema.SimilarityPartitions"/> — single source of truth.
+    /// </summary>
+    private static readonly (int CStart, int RStart, int Dim, float SqrtWeight)[] CompactPartitions =
+        BuildCompactPartitions();
 
     /// <summary>
     /// Pre-computed sqrt-scaled weights for all 112 compact dimensions.
@@ -132,7 +128,7 @@ public sealed class OptickIndexWriter : IDisposable
         var metadataOffsetsOffset = headerSize;
         var metadataOffsetsByteLength = (ulong)entries.Count * sizeof(ulong);
         var vectorsOffset = metadataOffsetsOffset + metadataOffsetsByteLength;
-        var vectorsByteLength = (ulong)entries.Count * Dimension * sizeof(float);
+        var vectorsByteLength = (ulong)entries.Count * (ulong)Dimension * sizeof(float);
         var metadataOffset = vectorsOffset + vectorsByteLength;
         var metadataLength = (ulong)metadataBytes.Length;
 
@@ -286,12 +282,9 @@ public sealed class OptickIndexWriter : IDisposable
         var compact = new float[Dimension];
         var sumSq = 0.0f;
 
-        // Map raw partitions into compact space, applying sqrt-scaled weights as we go.
-        foreach (var (cStart, cEnd, rStart, _, rawWeight) in Partitions)
+        foreach (var (cStart, rStart, dim, sqrtWeight) in CompactPartitions)
         {
-            var sqrtWeight = rawWeight > 0f ? MathF.Sqrt(rawWeight) : 0f;
-            var span = cEnd - cStart + 1;
-            for (var j = 0; j < span; j++)
+            for (var j = 0; j < dim; j++)
             {
                 var v = raw[rStart + j] * sqrtWeight;
                 compact[cStart + j] = v;
@@ -314,14 +307,10 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Computes CRC32 of the canonical partition layout string.
-    /// Uses the standard CRC32 polynomial (0xEDB88320, reflected).
+    /// Schema hash for the OPTK v4 format — read from the authoritative
+    /// <see cref="EmbeddingSchema.SchemaHashV4"/> so writer + reader cannot drift.
     /// </summary>
-    private static uint ComputeSchemaHash()
-    {
-        var bytes = Encoding.UTF8.GetBytes(PartitionLayout);
-        return Crc32Helper.Compute(bytes);
-    }
+    private static uint ComputeSchemaHash() => EmbeddingSchema.SchemaHashV4;
 
     // ---------------------------------------------------------------
     // Instrument grouping
@@ -355,7 +344,7 @@ public sealed class OptickIndexWriter : IDisposable
             }
 
             result[i] = (runningOffset, instrCount);
-            runningOffset += instrCount * Dimension * sizeof(float);
+            runningOffset += instrCount * (ulong)Dimension * sizeof(float);
         }
 
         return result;
@@ -368,13 +357,28 @@ public sealed class OptickIndexWriter : IDisposable
     private static float[] BuildPartitionWeights()
     {
         var weights = new float[Dimension];
-        foreach (var (cStart, cEnd, _, _, rawWeight) in Partitions)
+        foreach (var (cStart, _, dim, sqrtWeight) in CompactPartitions)
         {
-            var sqrtWeight = rawWeight > 0f ? MathF.Sqrt(rawWeight) : 0f;
-            for (var i = cStart; i <= cEnd; i++)
-                weights[i] = sqrtWeight;
+            for (var j = 0; j < dim; j++)
+                weights[cStart + j] = sqrtWeight;
         }
         return weights;
+    }
+
+    /// <summary>
+    /// Builds the compact-space partition mapping from the authoritative
+    /// <see cref="EmbeddingSchema.SimilarityPartitions"/>.
+    /// </summary>
+    private static (int CStart, int RStart, int Dim, float SqrtWeight)[] BuildCompactPartitions()
+    {
+        var result = new List<(int, int, int, float)>();
+        var cStart = 0;
+        foreach (var p in EmbeddingSchema.SimilarityPartitions)
+        {
+            result.Add((cStart, p.Start, p.Dim, p.SqrtWeight));
+            cStart += p.Dim;
+        }
+        return [.. result];
     }
 
     // ---------------------------------------------------------------
@@ -398,37 +402,6 @@ public sealed class OptickIndexWriter : IDisposable
 /// fixmap, str 8/16/32, int (fixint/int8/int16/int32), array 16/32, and nil.
 /// Encodes in big-endian as per the msgpack specification.
 /// </summary>
-/// <summary>
-/// Standard CRC32 implementation (polynomial 0xEDB88320, reflected / ISO 3309).
-/// Avoids a NuGet dependency on System.IO.Hashing.
-/// </summary>
-internal static class Crc32Helper
-{
-    private static readonly uint[] Table = BuildTable();
-
-    private static uint[] BuildTable()
-    {
-        const uint poly = 0xEDB88320u;
-        var table = new uint[256];
-        for (uint i = 0; i < 256; i++)
-        {
-            var crc = i;
-            for (var j = 0; j < 8; j++)
-                crc = (crc & 1) != 0 ? (crc >> 1) ^ poly : crc >> 1;
-            table[i] = crc;
-        }
-        return table;
-    }
-
-    public static uint Compute(ReadOnlySpan<byte> data)
-    {
-        var crc = 0xFFFFFFFFu;
-        foreach (var b in data)
-            crc = Table[(byte)(crc ^ b)] ^ (crc >> 8);
-        return crc ^ 0xFFFFFFFFu;
-    }
-}
-
 internal static class MsgPack
 {
     /// <summary>Writes a fixmap header (up to 15 entries).</summary>
