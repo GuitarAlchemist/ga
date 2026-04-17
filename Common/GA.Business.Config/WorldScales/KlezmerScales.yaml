@@ -1,0 +1,107 @@
+# =============================================================================
+# KlezmerScales.yaml - world-music scales: Klezmer / Jewish liturgical steiger modes
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Ahavah Rabbah"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: ["Ahava Raba", "Freygish", "Phrygian Dominant"]
+    AlternateNames_fr: ["Ahavah Rabbah"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "12tet"
+    Description: "Steiger widely used in Ashkenazi liturgy and klezmer; characteristic augmented second in lower tetrachord."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"
+
+  - Name: "Mi Sheberach"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: ["Ukrainian Dorian", "Altered Dorian"]
+    AlternateNames_fr: ["Mi Sheberach"]
+    Intervals: [2, 1, 3, 1, 2, 1, 2]
+    PitchClasses: "0 2 3 6 7 9 10"
+    BinaryScaleId: 1741
+    Tuning: "12tet"
+    Description: "Steiger with raised fourth over a minor-like scaffold; common in klezmer and chassidic melodies."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"
+
+  - Name: "Adonai Malakh"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: ["Adoshem Malakh"]
+    AlternateNames_fr: ["Adonai Malakh"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "12tet"
+    Description: "Steiger often used for psalm-setting; major-like scaffold with a lowered seventh."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"
+
+  - Name: "Magen Avot"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: []
+    AlternateNames_fr: ["Magen Avot"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "12tet"
+    Description: "Steiger with natural-minor scaffold; used in Shabbat liturgy and folk repertoire."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"
+
+  - Name: "Misheberak"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: ["Mi Sheberach (variant spelling)"]
+    AlternateNames_fr: ["Misheberak"]
+    Intervals: [2, 1, 3, 1, 2, 1, 2]
+    PitchClasses: "0 2 3 6 7 9 10"
+    BinaryScaleId: 1741
+    Tuning: "12tet"
+    Description: "Alternate romanisation of the Mi Sheberach steiger; same pitch content."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"
+
+  - Name: "Freygish"
+    Tradition: "Klezmer / Jewish Liturgical"
+    AlternateNames: ["Phrygian Dominant", "Ahava Raba"]
+    AlternateNames_fr: ["Freygish"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "12tet"
+    Description: "Yiddish name for the Ahavah Rabbah/Phrygian Dominant scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Klezmer"
+      - "https://en.wikipedia.org/wiki/Jewish_prayer_modes"

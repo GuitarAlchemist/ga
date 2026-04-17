@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>GA.Demos.VoicingAnalysisAudit</RootNamespace>
+        <AssemblyName>VoicingAnalysisAudit</AssemblyName>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--
+            One-off audit tool: runs VoicingAnalyzer over the full voicing corpus
+            (guitar+bass+ukulele, deduplicated same as FretboardVoicingsCLI) and
+            emits a quality report covering chord-name recognition, Forte coverage,
+            cross-instrument consistency, cardinality distribution and invariant
+            failures. Read-only: does NOT modify production code and does NOT
+            generate embeddings.
+        -->
+        <ProjectReference Include="..\..\Common\GA.Core\GA.Core.csproj" />
+        <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+        <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+        <ProjectReference Include="..\..\Common\GA.Business.Core\GA.Business.Core.csproj" />
+    </ItemGroup>
+
+</Project>

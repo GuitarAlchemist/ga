@@ -1,0 +1,143 @@
+# =============================================================================
+# AncientGreek.yaml - world-music scales: Ancient Greek tonoi (seven canonical octave species)
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Dorian (Greek)"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Tonos Dorios"]
+    AlternateNames_fr: ["Dorien ancien"]
+    Intervals: [2, 1, 2, 2, 2, 1, 2]
+    PitchClasses: "0 2 3 5 7 9 10"
+    BinaryScaleId: 1709
+    Tuning: "approx-12tet"
+    Description: "Diatonic tonos of the ancient Greek tradition; the reference octave species in Aristoxenian theory."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Phrygian (Greek)"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Tonos Phrygios"]
+    AlternateNames_fr: ["Phrygien ancien"]
+    Intervals: [1, 2, 2, 2, 1, 2, 2]
+    PitchClasses: "0 1 3 5 7 8 10"
+    BinaryScaleId: 1451
+    Tuning: "approx-12tet"
+    Description: "Phrygian tonos in the diatonic genus; octave species starting one step above the Dorian reference."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Lydian (Greek)"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Tonos Lydios"]
+    AlternateNames_fr: ["Lydien ancien"]
+    Intervals: [2, 2, 2, 1, 2, 2, 1]
+    PitchClasses: "0 2 4 6 7 9 11"
+    BinaryScaleId: 2773
+    Tuning: "approx-12tet"
+    Description: "Lydian tonos in the diatonic genus; octave species a tone above Phrygian."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Mixolydian (Greek)"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Tonos Mixolydios"]
+    AlternateNames_fr: ["Mixolydien ancien"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Mixolydian tonos, traditionally attributed to Sappho; dominant-leading octave species."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Hypodorian"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Hypo-Dorian"]
+    AlternateNames_fr: ["Hypodorien"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "approx-12tet"
+    Description: "Plagal counterpart to Dorian; octave species a fourth below the Dorian reference."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Hypophrygian"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Hypo-Phrygian"]
+    AlternateNames_fr: ["Hypophrygien"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Plagal counterpart to Phrygian in the ancient Greek octave-species system."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Hypolydian"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Hypo-Lydian"]
+    AlternateNames_fr: ["Hypolydien"]
+    Intervals: [1, 2, 2, 1, 2, 2, 2]
+    PitchClasses: "0 1 3 5 6 8 10"
+    BinaryScaleId: 1387
+    Tuning: "approx-12tet"
+    Description: "Plagal counterpart to Lydian in the ancient Greek octave-species system."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"
+
+  - Name: "Hypomixolydian"
+    Tradition: "Ancient Greek Tonoi"
+    AlternateNames: ["Hypo-Mixolydian"]
+    AlternateNames_fr: ["Hypomixolydien"]
+    Intervals: [1, 2, 2, 2, 2, 1, 2]
+    PitchClasses: "0 1 3 5 7 9 10"
+    BinaryScaleId: 1707
+    Tuning: "approx-12tet"
+    Description: "Plagal counterpart to Mixolydian; one of the seven canonical Aristoxenian tonoi."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Tonoi"
+      - "https://en.wikipedia.org/wiki/Musical_system_of_ancient_Greece"
+      - "https://imslp.org/wiki/Category:Aristoxenus"

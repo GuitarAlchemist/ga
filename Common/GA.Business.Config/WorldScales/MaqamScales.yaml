@@ -1,0 +1,303 @@
+# =============================================================================
+# MaqamScales.yaml - world-music scales: Arabic maqam scales — 12-TET approximations of traditionally microtonal practice
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Rast"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Rast"]
+    AlternateNames_fr: ["Maqâm Rast"]
+    Intervals: [2, 2, 1, 2, 2, 2, 1]
+    PitchClasses: "0 2 4 5 7 9 11"
+    BinaryScaleId: 2741
+    Tuning: "approx-12tet"
+    Description: "Fundamental maqam, frequently used as a tuning reference in Arabic practice; in strict theory it uses a half-flat third and seventh."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Bayati"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Bayati"]
+    AlternateNames_fr: ["Maqâm Bayati"]
+    Intervals: [1, 3, 2, 2, 1, 2, 1]
+    PitchClasses: "0 1 4 6 8 9 11"
+    BinaryScaleId: 2899
+    Tuning: "approx-12tet"
+    Description: "Common maqam of the Bayati family; uses a half-flat second in authentic practice."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Hijaz"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Hijaz"]
+    AlternateNames_fr: ["Maqâm Hijaz"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "approx-12tet"
+    Description: "Core maqam characterized by the augmented second between the flat second and natural third."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Saba"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Saba"]
+    AlternateNames_fr: ["Maqâm Saba"]
+    Intervals: [1, 2, 1, 2, 2, 2, 2]
+    PitchClasses: "0 1 3 4 6 8 10"
+    BinaryScaleId: 1371
+    Tuning: "approx-12tet"
+    Description: "Expressive maqam of the Saba family; authentic practice uses a half-flat second and a diminished fourth."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Nahawand"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Nahawand"]
+    AlternateNames_fr: ["Maqâm Nahawand"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Close analogue of the Western natural minor scale; common cross-cultural reference point."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Kurd"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Kurd"]
+    AlternateNames_fr: ["Maqâm Kurd"]
+    Intervals: [1, 2, 2, 2, 1, 2, 2]
+    PitchClasses: "0 1 3 5 7 8 10"
+    BinaryScaleId: 1451
+    Tuning: "approx-12tet"
+    Description: "Named after the Kurdish tradition; analogous to the Western Phrygian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Ajam"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Ajam"]
+    AlternateNames_fr: ["Maqâm Ajam"]
+    Intervals: [2, 2, 1, 2, 2, 2, 1]
+    PitchClasses: "0 2 4 5 7 9 11"
+    BinaryScaleId: 2741
+    Tuning: "approx-12tet"
+    Description: "Analogue of the Western major scale; used as a neutral reference in the Ajam family."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Sikah"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Sikah"]
+    AlternateNames_fr: ["Maqâm Sikah"]
+    Intervals: [3, 1, 2, 2, 1, 2, 1]
+    PitchClasses: "0 3 4 6 8 9 11"
+    BinaryScaleId: 2905
+    Tuning: "approx-12tet"
+    Description: "Maqam built on a half-flat third; authentic practice requires microtonal tuning."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Huzam"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Huzam"]
+    AlternateNames_fr: ["Maqâm Huzam"]
+    Intervals: [3, 1, 2, 1, 2, 2, 1]
+    PitchClasses: "0 3 4 6 7 9 11"
+    BinaryScaleId: 2777
+    Tuning: "approx-12tet"
+    Description: "Variant of the Sikah family with a distinctive flat fifth region."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Iraq"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Iraq"]
+    AlternateNames_fr: ["Maqâm Iraq"]
+    Intervals: [3, 1, 2, 1, 2, 2, 1]
+    PitchClasses: "0 3 4 6 7 9 11"
+    BinaryScaleId: 2777
+    Tuning: "approx-12tet"
+    Description: "Sikah-family maqam traditionally associated with the Iraqi tonal centre."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Husseini"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Husseini"]
+    AlternateNames_fr: ["Maqâm Husseini"]
+    Intervals: [1, 3, 2, 2, 1, 2, 1]
+    PitchClasses: "0 1 4 6 8 9 11"
+    BinaryScaleId: 2899
+    Tuning: "approx-12tet"
+    Description: "Bayati-family maqam with distinctive melodic behaviour around the fifth."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Jiharkah"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Jiharkah"]
+    AlternateNames_fr: ["Maqâm Jiharkah"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "approx-12tet"
+    Description: "Ajam-family maqam; approximates a Mixolydian shape in 12-TET."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Nakriz"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Nakriz"]
+    AlternateNames_fr: ["Maqâm Nakriz"]
+    Intervals: [2, 1, 3, 1, 1, 3, 1]
+    PitchClasses: "0 2 3 6 7 8 11"
+    BinaryScaleId: 2509
+    Tuning: "approx-12tet"
+    Description: "Maqam featuring a prominent augmented second; related to the Nawa Athar family."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Hijaz Kar"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Hijazkar", "Maqam Hijaz Kar"]
+    AlternateNames_fr: ["Maqâm Hijaz Kâr"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Double-augmented-second maqam; symmetric structure with two characteristic Hijaz tetrachords."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Hijaz Kar Kurd"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Hijaz Kar Kurd"]
+    AlternateNames_fr: ["Maqâm Hijaz Kâr Kurd"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "approx-12tet"
+    Description: "Hybrid maqam combining Hijaz lower tetrachord with a Kurd upper tetrachord."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Athar Kurd"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Athar Kurd"]
+    AlternateNames_fr: ["Maqâm Athar Kurd"]
+    Intervals: [1, 3, 1, 3, 1, 2, 1]
+    PitchClasses: "0 1 4 5 8 9 11"
+    BinaryScaleId: 2867
+    Tuning: "approx-12tet"
+    Description: "Rare maqam with two augmented seconds; Kurd tetrachord below an Athar tetrachord."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Nawa Athar"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Nawa Athar", "Nawathar"]
+    AlternateNames_fr: ["Maqâm Nawa Athar"]
+    Intervals: [2, 1, 3, 1, 1, 3, 1]
+    PitchClasses: "0 2 3 6 7 8 11"
+    BinaryScaleId: 2509
+    Tuning: "approx-12tet"
+    Description: "Maqam of the Athar family with a raised fourth and a prominent augmented second in the upper tetrachord."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Suzidil"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Suzidil", "Suzidilara"]
+    AlternateNames_fr: ["Maqâm Suzidil"]
+    Intervals: [2, 1, 3, 1, 1, 3, 1]
+    PitchClasses: "0 2 3 6 7 8 11"
+    BinaryScaleId: 2509
+    Tuning: "approx-12tet"
+    Description: "Athar-family maqam closely related to Nawa Athar, differing in melodic conventions."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Shadd Araban"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Shadd Araban", "Shed Araban"]
+    AlternateNames_fr: ["Maqâm Shadd Araban"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Hijaz-family maqam with two augmented seconds; shares pitch content with Hijaz Kar."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"
+
+  - Name: "Hijaz Murassa"
+    Tradition: "Arabic Maqam"
+    AlternateNames: ["Maqam Hijaz Murassa"]
+    AlternateNames_fr: ["Maqâm Hijaz Murassa"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Embellished Hijaz-family maqam; pitch content overlaps Hijaz Kar with distinct melodic behaviour."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Arabic_maqam"
+      - "https://www.maqamworld.com/en/maqam.php"

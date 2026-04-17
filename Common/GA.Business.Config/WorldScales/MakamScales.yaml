@@ -1,0 +1,179 @@
+# =============================================================================
+# MakamScales.yaml - world-music scales: Turkish makam scales — 12-TET approximations of traditionally microtonal practice
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Ussak"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Uşşak", "Makam Ussak"]
+    AlternateNames_fr: ["Makam Uşşak"]
+    Intervals: [1, 3, 2, 2, 1, 2, 1]
+    PitchClasses: "0 1 4 6 8 9 11"
+    BinaryScaleId: 2899
+    Tuning: "approx-12tet"
+    Description: "Fundamental Turkish makam of the soft-chromatic family; uses a microtonal flat second in classical practice."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Hüseyni"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Huseyni", "Makam Hüseyni"]
+    AlternateNames_fr: ["Makam Hüseyni"]
+    Intervals: [1, 3, 2, 2, 1, 2, 1]
+    PitchClasses: "0 1 4 6 8 9 11"
+    BinaryScaleId: 2899
+    Tuning: "approx-12tet"
+    Description: "Closely related to Ussak; differs in melodic seyir (progression) rather than pitch set."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Karcığar"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Karcigar", "Makam Karcığar"]
+    AlternateNames_fr: ["Makam Karcığar"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Makam combining Hicaz tetrachord with an Uşşak-like body; emotive, widely used in Ottoman classical music."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Neva"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Neva"]
+    AlternateNames_fr: ["Makam Neva"]
+    Intervals: [2, 1, 2, 2, 2, 1, 2]
+    PitchClasses: "0 2 3 5 7 9 10"
+    BinaryScaleId: 1709
+    Tuning: "approx-12tet"
+    Description: "Classical Turkish makam built on the Neva perde; one of the oldest documented makams."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Tahir"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Tahir"]
+    AlternateNames_fr: ["Makam Tahir"]
+    Intervals: [2, 1, 2, 2, 2, 1, 2]
+    PitchClasses: "0 2 3 5 7 9 10"
+    BinaryScaleId: 1709
+    Tuning: "approx-12tet"
+    Description: "Makam closely related to Neva with different melodic seyir and cadential patterns."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Muhayyer"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Muhayyer"]
+    AlternateNames_fr: ["Makam Muhayyer"]
+    Intervals: [1, 3, 2, 2, 1, 2, 1]
+    PitchClasses: "0 1 4 6 8 9 11"
+    BinaryScaleId: 2899
+    Tuning: "approx-12tet"
+    Description: "Descending-oriented makam of the Uşşak family; the name means 'chosen' in Ottoman Turkish."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Buselik"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Buselik"]
+    AlternateNames_fr: ["Makam Buselik"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Turkish makam analogous to Western natural minor; used as a neutral harmonic reference."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Acemaşiran"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Acemasiran", "Makam Acemaşiran"]
+    AlternateNames_fr: ["Makam Acemaşiran"]
+    Intervals: [2, 2, 1, 2, 2, 2, 1]
+    PitchClasses: "0 2 4 5 7 9 11"
+    BinaryScaleId: 2741
+    Tuning: "approx-12tet"
+    Description: "Classical makam with a major-like structure; its name references the Acem perde and Aşiran register."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Sultaniyegah"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Sultaniyegah"]
+    AlternateNames_fr: ["Makam Sultaniyegah"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Makam built on the Yegâh perde; minor-like flavour with a specific cadential behaviour."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Şehnaz"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Sehnaz", "Makam Şehnaz"]
+    AlternateNames_fr: ["Makam Şehnaz"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Hicaz-family makam with a distinctive upper tetrachord; 'Şehnaz' references the regal character of its melodic line."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Uzzal"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Makam Uzzal"]
+    AlternateNames_fr: ["Makam Uzzal"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "approx-12tet"
+    Description: "Descending Hicaz-family makam; traditionally approached from above the tonic."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"
+
+  - Name: "Zirgüleli Hicaz"
+    Tradition: "Turkish Makam"
+    AlternateNames: ["Zirguleli Hicaz", "Makam Zirgüleli Hicaz"]
+    AlternateNames_fr: ["Makam Zirgüleli Hicaz"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Hicaz-family makam featuring the Zirgüle perde; characterised by two augmented seconds."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Turkish_makam"

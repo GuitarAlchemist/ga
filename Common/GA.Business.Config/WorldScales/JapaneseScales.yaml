@@ -1,0 +1,114 @@
+# =============================================================================
+# JapaneseScales.yaml - world-music scales: Japanese traditional pentatonic scales (koto tunings and related)
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Hirajoshi"
+    Tradition: "Japanese"
+    AlternateNames: ["Hirajōshi", "Hira-joshi"]
+    AlternateNames_fr: ["Hirajōshi"]
+    Intervals: [2, 1, 4, 1, 4]
+    PitchClasses: "0 2 3 7 8"
+    BinaryScaleId: 397
+    Tuning: "12tet"
+    Description: "Five-note scale historically used for koto tuning; associated with contemplative sonority."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "Iwato"
+    Tradition: "Japanese"
+    AlternateNames: []
+    AlternateNames_fr: ["Iwato"]
+    Intervals: [1, 4, 1, 4, 2]
+    PitchClasses: "0 1 5 6 10"
+    BinaryScaleId: 1123
+    Tuning: "12tet"
+    Description: "Five-note Japanese scale with two semitones; dark, locrian-like character."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "Kumoi"
+    Tradition: "Japanese"
+    AlternateNames: ["Kumoijoshi"]
+    AlternateNames_fr: ["Kumoi"]
+    Intervals: [4, 1, 4, 2, 1]
+    PitchClasses: "0 4 5 9 11"
+    BinaryScaleId: 2609
+    Tuning: "12tet"
+    Description: "Five-note scale used in traditional koto repertoire; variant tunings exist."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "In"
+    Tradition: "Japanese"
+    AlternateNames: ["In-sen"]
+    AlternateNames_fr: ["In"]
+    Intervals: [1, 4, 2, 1, 4]
+    PitchClasses: "0 1 5 7 8"
+    BinaryScaleId: 419
+    Tuning: "12tet"
+    Description: "One of the two canonical Japanese scale families (alongside Yo); characteristic semitone colouring."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "Yo"
+    Tradition: "Japanese"
+    AlternateNames: []
+    AlternateNames_fr: ["Yo"]
+    Intervals: [2, 3, 2, 2, 3]
+    PitchClasses: "0 2 5 7 9"
+    BinaryScaleId: 677
+    Tuning: "12tet"
+    Description: "Bright five-note Japanese scale without semitones; used in folk and shakuhachi melodies."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "Insen"
+    Tradition: "Japanese"
+    AlternateNames: ["In-Sen"]
+    AlternateNames_fr: ["Insen"]
+    Intervals: [1, 4, 2, 3, 2]
+    PitchClasses: "0 1 5 7 10"
+    BinaryScaleId: 1187
+    Tuning: "12tet"
+    Description: "Related to the In scale family; used in traditional Japanese shamisen music."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"
+
+  - Name: "Hon-kumoi-shiouzhi"
+    Tradition: "Japanese"
+    AlternateNames: ["Hon Kumoi Shiouzhi"]
+    AlternateNames_fr: ["Hon-kumoi-shiouzhi"]
+    Intervals: [1, 4, 2, 1, 4]
+    PitchClasses: "0 1 5 7 8"
+    BinaryScaleId: 419
+    Tuning: "12tet"
+    Description: "Variant of the Kumoi tuning family documented in koto traditions."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Japanese_musical_scales"

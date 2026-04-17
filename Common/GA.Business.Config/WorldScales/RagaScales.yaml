@@ -1,0 +1,323 @@
+# =============================================================================
+# RagaScales.yaml - world-music scales: Indian raga parent scales (Carnatic melakarta subset + common Hindustani thaats)
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Mayamalavagowla"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 15", "Mayamalavagoula"]
+    AlternateNames_fr: ["Mayamalavagowla"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "The 15th melakarta and traditional starting scale for beginner Carnatic training."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Shankarabharanam"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 29", "Dheerasankarabharanam"]
+    AlternateNames_fr: ["Shankarabharanam"]
+    Intervals: [2, 2, 1, 2, 2, 2, 1]
+    PitchClasses: "0 2 4 5 7 9 11"
+    BinaryScaleId: 2741
+    Tuning: "approx-12tet"
+    Description: "The 29th melakarta; pitch content matches the Western major scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Kalyani"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 65", "Mechakalyani"]
+    AlternateNames_fr: ["Kalyani"]
+    Intervals: [2, 2, 2, 1, 2, 2, 1]
+    PitchClasses: "0 2 4 6 7 9 11"
+    BinaryScaleId: 2773
+    Tuning: "approx-12tet"
+    Description: "The 65th melakarta; pitch content matches the Western Lydian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Kharaharapriya"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 22"]
+    AlternateNames_fr: ["Kharaharapriya"]
+    Intervals: [2, 1, 2, 2, 2, 1, 2]
+    PitchClasses: "0 2 3 5 7 9 10"
+    BinaryScaleId: 1709
+    Tuning: "approx-12tet"
+    Description: "The 22nd melakarta; pitch content matches the Western Dorian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Hanumatodi"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 8", "Todi (Carnatic)"]
+    AlternateNames_fr: ["Hanumatodi"]
+    Intervals: [1, 2, 2, 2, 1, 2, 2]
+    PitchClasses: "0 1 3 5 7 8 10"
+    BinaryScaleId: 1451
+    Tuning: "approx-12tet"
+    Description: "The 8th melakarta; pitch content matches the Western Phrygian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Kamboji"
+    Tradition: "Indian Raga (Carnatic)"
+    AlternateNames: ["Kambhoji"]
+    AlternateNames_fr: ["Kamboji"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "approx-12tet"
+    Description: "Janya raga derived from Harikambhoji; widely used in Carnatic kirtanas."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Natabhairavi"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 20"]
+    AlternateNames_fr: ["Natabhairavi"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "The 20th melakarta; pitch content matches the Western natural minor scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Harikambhoji"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 28"]
+    AlternateNames_fr: ["Harikambhoji"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "approx-12tet"
+    Description: "The 28th melakarta; parent of many popular janya ragas including Kambhoji."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Kiravani"
+    Tradition: "Indian Raga (Carnatic Melakarta)"
+    AlternateNames: ["Mela 21", "Keeravani"]
+    AlternateNames_fr: ["Kiravani"]
+    Intervals: [2, 1, 2, 2, 1, 3, 1]
+    PitchClasses: "0 2 3 5 7 8 11"
+    BinaryScaleId: 2477
+    Tuning: "approx-12tet"
+    Description: "The 21st melakarta; shares pitch content with the Western harmonic minor scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Mohanam"
+    Tradition: "Indian Raga (Carnatic)"
+    AlternateNames: ["Bhup", "Bhoopali"]
+    AlternateNames_fr: ["Mohanam"]
+    Intervals: [2, 2, 3, 2, 3]
+    PitchClasses: "0 2 4 7 9"
+    BinaryScaleId: 661
+    Tuning: "approx-12tet"
+    Description: "Five-note janya raga with major-pentatonic structure; one of the most popular audava ragas."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Hamsadhwani"
+    Tradition: "Indian Raga (Carnatic)"
+    AlternateNames: ["Hansadhwani"]
+    AlternateNames_fr: ["Hamsadhwani"]
+    Intervals: [2, 2, 3, 1, 4]
+    PitchClasses: "0 2 4 7 8"
+    BinaryScaleId: 405
+    Tuning: "approx-12tet"
+    Description: "Five-note raga with a strong major-like colouring; frequently used in invocatory pieces."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Bilawal"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: ["Bilaval"]
+    AlternateNames_fr: ["Bilawal"]
+    Intervals: [2, 2, 1, 2, 2, 2, 1]
+    PitchClasses: "0 2 4 5 7 9 11"
+    BinaryScaleId: 2741
+    Tuning: "approx-12tet"
+    Description: "Hindustani that (parent scale) analogous to the Western major scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Kafi"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: []
+    AlternateNames_fr: ["Kafi"]
+    Intervals: [2, 1, 2, 2, 2, 1, 2]
+    PitchClasses: "0 2 3 5 7 9 10"
+    BinaryScaleId: 1709
+    Tuning: "approx-12tet"
+    Description: "Hindustani that analogous to the Western Dorian mode; common basis for thumri."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Bhairav"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: []
+    AlternateNames_fr: ["Bhairav"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "approx-12tet"
+    Description: "Morning-time that with a characteristic double augmented-second contour."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Marwa"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: []
+    AlternateNames_fr: ["Marwa"]
+    Intervals: [1, 3, 2, 2, 2, 1, 1]
+    PitchClasses: "0 1 4 6 8 10 11"
+    BinaryScaleId: 3411
+    Tuning: "approx-12tet"
+    Description: "Sunset-time that known for its avoidance of the fifth in practice."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Purvi"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: ["Poorvi"]
+    AlternateNames_fr: ["Purvi"]
+    Intervals: [1, 3, 2, 1, 1, 3, 1]
+    PitchClasses: "0 1 4 6 7 8 11"
+    BinaryScaleId: 2515
+    Tuning: "approx-12tet"
+    Description: "Evening-time that with raised fourth and flat second; characteristic of dusk performances."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Yaman"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: ["Yaman Kalyan"]
+    AlternateNames_fr: ["Yaman"]
+    Intervals: [2, 2, 2, 1, 2, 2, 1]
+    PitchClasses: "0 2 4 6 7 9 11"
+    BinaryScaleId: 2773
+    Tuning: "approx-12tet"
+    Description: "Evening that with pitch content matching the Western Lydian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Asavari"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: []
+    AlternateNames_fr: ["Asavari"]
+    Intervals: [2, 1, 2, 2, 1, 2, 2]
+    PitchClasses: "0 2 3 5 7 8 10"
+    BinaryScaleId: 1453
+    Tuning: "approx-12tet"
+    Description: "Morning that analogous to the Western natural minor scale."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Khamaj"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: ["Khamaaj"]
+    AlternateNames_fr: ["Khamaj"]
+    Intervals: [2, 2, 1, 2, 2, 1, 2]
+    PitchClasses: "0 2 4 5 7 9 10"
+    BinaryScaleId: 1717
+    Tuning: "approx-12tet"
+    Description: "Light-classical that analogous to the Western Mixolydian mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"
+
+  - Name: "Todi"
+    Tradition: "Indian Raga (Hindustani)"
+    AlternateNames: ["Miyan ki Todi"]
+    AlternateNames_fr: ["Todi"]
+    Intervals: [1, 2, 3, 1, 1, 3, 1]
+    PitchClasses: "0 1 3 6 7 8 11"
+    BinaryScaleId: 2507
+    Tuning: "approx-12tet"
+    Description: "Morning that with flat second, flat third, raised fourth, flat sixth and natural seventh; distinct from Carnatic Todi (Hanumatodi)."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Melakarta"
+      - "https://en.wikipedia.org/wiki/Thaat"
+      - "https://en.wikipedia.org/wiki/Raga"

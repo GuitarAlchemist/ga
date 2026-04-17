@@ -23,10 +23,12 @@
         <Compile Include="InstrumentsConfig.fs"/>
         <Compile Include="ScalesConfig.fs"/>
         <Compile Include="ExtendedScalesConfig.fs"/>
+        <Compile Include="AtonalModalFamiliesConfig.fs"/>
         <Compile Include="ModesConfig.fs"/>
         <Compile Include="SemanticConfig.fs"/>
         <Compile Include="TabSourcesConfig.fs"/>
         <Compile Include="NeoRiemannianConfig.fs"/>
+        <Compile Include="WorldScalesConfig.fs"/>
         <Compile Include="YamlKnowledgeLoader.fs"/>
     </ItemGroup>
 
@@ -54,6 +56,9 @@
         <None Include="ExtendedScales.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <Content Include="AtonalModalFamilies.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <None Include="Tunings.toml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
@@ -135,6 +140,9 @@
         <None Include="SemanticNomenclature.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <Content Include="WorldScales\*.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>
