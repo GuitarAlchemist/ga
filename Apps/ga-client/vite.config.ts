@@ -14,6 +14,7 @@ export default defineConfig({
         }),
     ],
     server: {
+        allowedHosts: true,
         proxy: {
             '/api': {
                 target: 'https://localhost:7001',
