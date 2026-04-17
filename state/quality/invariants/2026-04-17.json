@@ -187,6 +187,32 @@
     }
   ],
   "fired": {
+    "14": [
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9"
+    ],
     "16": [
       "augmented-triad",
       "chromatic",

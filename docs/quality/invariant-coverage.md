@@ -1,12 +1,12 @@
 # Invariant coverage report
 
-Matrix: **35 invariants × 37 exemplars** (rank = **3**).
+Matrix: **35 invariants × 37 exemplars** (rank = **4**).
 
 ✘ **Suboptimal** — see details below.
 
-## Rank deficiency: 32
+## Rank deficiency: 31
 
-32 invariant(s) are linearly dependent on the others over GF(2). At least one can be removed (or derived) without losing discriminating power.
+31 invariant(s) are linearly dependent on the others over GF(2). At least one can be removed (or derived) without losing discriminating power.
 
 ## Strict duplicates
 
@@ -38,7 +38,6 @@ Invariant pairs with identical firing signatures — first candidates for remova
 | 11 | round-trip | C | `Voicing` → msgpack → `Voicing` is byte-identical |
 | 12 | round-trip | N | F# YAML record → serialize → deserialize is field-identical |
 | 13 | round-trip | T | C# `ChordName` → display string → parse produces same `ChordName` |
-| 14 | algebraic | T | Neo-Riemannian P, L, R are involutions: T∘T = id |
 | 15 | algebraic | C | PLR composites match: L∘P∘R = S, P∘L = N |
 | 21 | cardinality | T | Triad template → exactly 3 distinct PCs after octave reduction |
 | 22 | cardinality | T | Seventh template → exactly 4 distinct PCs |
@@ -62,7 +61,6 @@ These carry status `T` (tested) but observed zero firings. Either the test is va
 - #2
 - #5
 - #13
-- #14
 - #21
 - #22
 - #27
