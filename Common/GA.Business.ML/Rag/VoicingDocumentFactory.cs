@@ -30,7 +30,10 @@ public static class VoicingDocumentFactory
             Jobs = [],
             TuningId = tuningId,
             PitchClassSetId = primeFormId ?? analysis.EquivalenceInfo?.PrimeFormId ?? "Unknown",
-            ChordName = analysis.ChordId.ChordName,
+            // Phase C: prefer CanonicalName (register-invariant) over legacy ChordName
+            // (which may include a voicing-specific "/bass" suffix that leaks into SYMBOLIC
+            // embedding dims and destroys cross-instrument consistency).
+            ChordName = analysis.ChordId.CanonicalName ?? analysis.ChordId.ChordName,
             RootPitchClass = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] % 12 : 0,
             MidiBassNote = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
             VoicingType = analysis.VoicingCharacteristics.DropVoicing,
@@ -86,9 +89,11 @@ public static class VoicingDocumentFactory
     private static string BuildSearchableText(MusicalVoicingAnalysis analysis, string diagram)
     {
         var sb = new StringBuilder();
-        if (analysis.ChordId.ChordName != null)
+        // Phase C: prefer CanonicalName so the text embedding stays register-invariant.
+        var displayChordName = analysis.ChordId.CanonicalName ?? analysis.ChordId.ChordName;
+        if (displayChordName != null)
         {
-            sb.Append($"{analysis.ChordId.ChordName} ");
+            sb.Append($"{displayChordName} ");
         }
 
         if (analysis.VoicingCharacteristics.DropVoicing != null)
