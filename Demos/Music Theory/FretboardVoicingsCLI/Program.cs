@@ -1,6 +1,7 @@
 ﻿namespace FretboardVoicingsCLI;
 
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using GA.Business.Core.Analysis.Voicings;
 using GA.Business.ML.Rag;
@@ -35,7 +36,12 @@ internal class Program
     ///     Export-embeddings mode options parsed from command-line arguments.
     ///     When Tuning is null, all three instruments are exported.
     /// </summary>
-    private sealed record ExportEmbeddingsOptions(int? MaxVoicings, bool ShowHelp, string OutputPath, TuningPreset? Tuning);
+    private sealed record ExportEmbeddingsOptions(
+        int? MaxVoicings,
+        bool ShowHelp,
+        string OutputPath,
+        TuningPreset? Tuning,
+        bool NoDedup);
 
     private static async Task<int> Main(string[] args)
     {
@@ -637,6 +643,7 @@ internal class Program
         if (!hasFlag) return false;
 
         var showHelp = args.Any(a => a.Equals("--export-embeddings-help", StringComparison.OrdinalIgnoreCase));
+        var noDedup = args.Any(a => a.Equals("--no-dedup", StringComparison.OrdinalIgnoreCase));
         int? maxVoicings = null;
         TuningPreset? tuning = null;
         var outputPath = Path.Combine("state", "voicings", "optick.index");
@@ -665,7 +672,7 @@ internal class Program
             }
         }
 
-        options = new ExportEmbeddingsOptions(maxVoicings, showHelp, outputPath, tuning);
+        options = new ExportEmbeddingsOptions(maxVoicings, showHelp, outputPath, tuning, noDedup);
         return true;
     }
 
@@ -686,6 +693,7 @@ internal class Program
         if (options.MaxVoicings.HasValue)
             Console.Error.WriteLine($"  --export-max {options.MaxVoicings.Value} (per instrument)");
         Console.Error.WriteLine($"  output: {options.OutputPath}");
+        Console.Error.WriteLine($"  dedup: {(options.NoDedup ? "OFF (--no-dedup)" : "ON (structural prime forms)")}");
         Console.Error.WriteLine();
 
         // Create the embedding generator once
@@ -693,6 +701,7 @@ internal class Program
 
         var allEntries = new List<VoicingEntry>();
         var totalCount = 0;
+        var totalRaw = 0;
 
         foreach (var preset in presets)
         {
@@ -709,21 +718,98 @@ internal class Program
             const int windowSize = 4;
             const int minPlayedNotes = 2;
             var maxVoicings = options.MaxVoicings ?? int.MaxValue;
-            var instrumentCount = 0;
-            var instrumentSw = Stopwatch.StartNew();
 
+            // === Phase 1: Generate + dedup ===
+            //
+            // Collect all voicings first. If dedup is enabled we group by a structural
+            // key (relative-fret signature + pitch-class bitmask) and keep the single
+            // cheapest-to-play representative per group. The expensive embedding pass
+            // then runs only on survivors.
+            //
+            // Why not VoicingDecomposer.DecomposeVoicings? That API hard-codes string
+            // count = 6 inside the internal VariationsWithRepetitions lookup, which
+            // throws on 4-string bass/ukulele. VoicingDecomposer.GetRelativeFrets
+            // (the helper it builds on) is string-count-independent, so we use it
+            // directly here and pair it with a pitch-class bitmask for musical identity.
+
+            var phase1Sw = Stopwatch.StartNew();
             Console.Error.Write($"  {instrumentName}: generating voicings...");
+
+            var rawCount = 0;
+            var survivors = new Dictionary<(string, int), DedupCandidate>();
+            var flatList = new List<Voicing>(); // used when dedup is off
 
             await foreach (var voicing in VoicingGenerator.GenerateAllVoicingsAsync(
                                fretboard, windowSize, minPlayedNotes, parallel: true))
             {
-                if (instrumentCount >= maxVoicings) break;
+                if (rawCount >= maxVoicings) break;
+                rawCount++;
 
+                if (options.NoDedup)
+                {
+                    flatList.Add(voicing);
+                }
+                else
+                {
+                    var relFrets = VoicingDecomposer.GetRelativeFrets(voicing.Positions);
+                    if (relFrets == null) continue; // malformed voicing, skip
+
+                    // Structural key: fret shape (string-count-independent) + pitch-class bitmask.
+                    var shape = BuildRelativeFretSignature(relFrets);
+                    var pcMask = BuildPitchClassMask(voicing.Notes);
+                    var key = (shape, pcMask);
+
+                    // Cheap playability cost used only for picking a representative — we
+                    // do NOT run the full VoicingAnalyzer here (that's the point of dedup).
+                    var cost = CheapPlayabilityCost(voicing.Positions);
+
+                    if (!survivors.TryGetValue(key, out var existing) || cost < existing.Cost)
+                    {
+                        survivors[key] = new DedupCandidate(voicing, cost);
+                    }
+                }
+
+                if (rawCount % 10000 == 0)
+                    Console.Error.Write($"\r  {instrumentName}: generating voicings... {rawCount:N0}");
+            }
+
+            var selected = options.NoDedup
+                ? flatList
+                : survivors.Values.Select(c => c.Voicing).ToList();
+            phase1Sw.Stop();
+
+            if (options.NoDedup)
+            {
+                Console.Error.WriteLine($"\r  {instrumentName}: {rawCount:N0} raw voicings (dedup off) in {phase1Sw.Elapsed.TotalSeconds:N1}s");
+            }
+            else
+            {
+                var pct = rawCount > 0 ? 100.0 * selected.Count / rawCount : 0.0;
+                Console.Error.WriteLine(
+                    $"\r  {instrumentName}: {rawCount:N0} raw → {selected.Count:N0} unique ({pct:N1}%) in {phase1Sw.Elapsed.TotalSeconds:N1}s");
+            }
+
+            // === Phase 2: Expensive analysis + embedding on survivors only ===
+            var phase2Sw = Stopwatch.StartNew();
+            var instrumentCount = 0;
+            Console.Error.Write($"  {instrumentName}: embedding {selected.Count:N0} survivors...");
+
+            foreach (var voicing in selected)
+            {
                 // Analyze the voicing
                 var analysis = VoicingAnalyzer.Analyze(voicing);
 
+                // Use the pitch-class prime form as the canonical prime-form id. This is
+                // cheaper and more stable than re-deriving a RelativeFretVector prime form
+                // for non-6-string instruments, and it's what downstream consumers key on.
+                var primeFormId = analysis.PitchClassSet.PrimeForm?.Id.Value.ToString();
+
                 // Create RAG document for embedding generation
-                var doc = VoicingDocumentFactory.FromAnalysis(voicing, analysis, tuningId: instrumentName);
+                var doc = VoicingDocumentFactory.FromAnalysis(
+                    voicing,
+                    analysis,
+                    tuningId: instrumentName,
+                    primeFormId: primeFormId);
 
                 // Generate the 228-dim embedding
                 var embedding = await generator.GenerateEmbeddingAsync(doc);
@@ -738,12 +824,14 @@ internal class Program
 
                 // Progress indicator every 1000 voicings
                 if (instrumentCount % 1000 == 0)
-                    Console.Error.Write($"\r  {instrumentName}: {instrumentCount:N0} voicings embedded...");
+                    Console.Error.Write($"\r  {instrumentName}: {instrumentCount:N0}/{selected.Count:N0} embedded...");
             }
 
-            instrumentSw.Stop();
-            Console.Error.WriteLine($"\r  {instrumentName}: {instrumentCount:N0} voicings in {instrumentSw.Elapsed.TotalSeconds:N1}s");
+            phase2Sw.Stop();
+            Console.Error.WriteLine(
+                $"\r  {instrumentName}: embedded {instrumentCount:N0} in {phase2Sw.Elapsed.TotalSeconds:N1}s");
             totalCount += instrumentCount;
+            totalRaw += rawCount;
         }
 
         // Ensure output directory exists
@@ -763,10 +851,96 @@ internal class Program
 
         Console.Error.WriteLine($" done.");
         Console.Error.WriteLine();
-        Console.Error.WriteLine($"  Total: {totalCount:N0} voicings, {fileInfo.Length / 1024.0 / 1024.0:N1} MB, {sw.Elapsed.TotalSeconds:N1}s");
+        if (!options.NoDedup && totalRaw > 0)
+        {
+            var totalPct = 100.0 * totalCount / totalRaw;
+            Console.Error.WriteLine(
+                $"  Total: {totalRaw:N0} raw → {totalCount:N0} unique ({totalPct:N1}%), "
+                + $"{fileInfo.Length / 1024.0 / 1024.0:N1} MB, {sw.Elapsed.TotalSeconds:N1}s");
+        }
+        else
+        {
+            Console.Error.WriteLine(
+                $"  Total: {totalCount:N0} voicings, {fileInfo.Length / 1024.0 / 1024.0:N1} MB, {sw.Elapsed.TotalSeconds:N1}s");
+        }
         Console.Error.WriteLine($"  Output: {Path.GetFullPath(options.OutputPath)}");
 
         return 0;
+    }
+
+    /// <summary>
+    ///     Internal record used during dedup to track the cheapest-to-play representative
+    ///     of a structural voicing group.
+    /// </summary>
+    private readonly record struct DedupCandidate(Voicing Voicing, int Cost);
+
+    /// <summary>
+    ///     Builds a compact string key from a relative-fret vector (string-count-independent).
+    ///     Muted strings encode as "x"; played/open frets encode as integers. The result is
+    ///     intended purely as a dictionary key.
+    /// </summary>
+    private static string BuildRelativeFretSignature(RelativeFret[] relativeFrets)
+    {
+        var sb = new StringBuilder(relativeFrets.Length * 3);
+        for (var i = 0; i < relativeFrets.Length; i++)
+        {
+            if (i > 0) sb.Append('-');
+            var rf = relativeFrets[i];
+            // RelativeFret.Min is used by GetRelativeFrets to encode muted strings.
+            if (rf.Equals(RelativeFret.Min)) sb.Append('x');
+            else sb.Append(rf.Value);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Builds a 12-bit pitch-class bitmask (bit n set iff pitch class n is present).
+    ///     Cheap alternative to constructing a full PitchClassSet; keeps dedup CPU-light.
+    /// </summary>
+    private static int BuildPitchClassMask(MidiNote[] notes)
+    {
+        var mask = 0;
+        foreach (var n in notes)
+        {
+            mask |= 1 << (n.Value % 12);
+        }
+        return mask;
+    }
+
+    /// <summary>
+    ///     Cheap playability cost used solely as a tiebreaker when picking a representative
+    ///     voicing from a dedup group. Prefers lower fret position, then more open/played
+    ///     strings (fewer muted strings), then tighter fret span. Does NOT call the full
+    ///     VoicingPhysicalAnalyzer — that would defeat the purpose of dedup.
+    /// </summary>
+    private static int CheapPlayabilityCost(Position[] positions)
+    {
+        var minPlayedFret = int.MaxValue;
+        var maxPlayedFret = 0;
+        var mutedCount = 0;
+
+        foreach (var p in positions)
+        {
+            switch (p)
+            {
+                case Position.Muted:
+                    mutedCount++;
+                    break;
+                case Position.Played played:
+                    var fret = played.Location.Fret.Value;
+                    if (fret > 0)
+                    {
+                        if (fret < minPlayedFret) minPlayedFret = fret;
+                        if (fret > maxPlayedFret) maxPlayedFret = fret;
+                    }
+                    break;
+            }
+        }
+
+        if (minPlayedFret == int.MaxValue) minPlayedFret = 0; // all-open or all-muted
+
+        // Weighted sum: fret position dominates, then mutes, then span.
+        return minPlayedFret * 100 + mutedCount * 10 + (maxPlayedFret - minPlayedFret);
     }
 
     /// <summary>
@@ -785,6 +959,11 @@ internal class Program
         Console.Error.WriteLine("  --tuning P                  Single instrument: guitar, bass, or ukulele");
         Console.Error.WriteLine("                              (default: all three instruments)");
         Console.Error.WriteLine("  --export-max N              Limit voicings per instrument (for testing)");
+        Console.Error.WriteLine("  --no-dedup                  Disable structural dedup (default: ON).");
+        Console.Error.WriteLine("                              With dedup ON, voicings are grouped by");
+        Console.Error.WriteLine("                              (relative-fret shape, pitch-class bitmask)");
+        Console.Error.WriteLine("                              and only the cheapest-to-play survivor per");
+        Console.Error.WriteLine("                              group is embedded.");
         Console.Error.WriteLine("  --export-embeddings-help    Show this help message");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Output Format:");

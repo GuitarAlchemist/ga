@@ -56,6 +56,27 @@ public class MusicalEmbeddingGenerator(
     public int Dimension => EmbeddingSchema.TotalDimension;
 
     /// <summary>
+    ///     Looks up a partition from the authoritative <see cref="EmbeddingSchema.Partitions"/>
+    ///     registry by name. Replaces hardcoded <c>*Offset</c>/<c>*Dim</c> constants so the
+    ///     writer cannot silently drift from the registry consumed by the OPTK index and readers.
+    /// </summary>
+    /// <param name="name">Partition name (e.g. <c>"STRUCTURE"</c>).</param>
+    /// <returns>The <see cref="EmbeddingPartition"/> record for <paramref name="name"/>.</returns>
+    private static EmbeddingPartition GetPartition(string name) =>
+        EmbeddingSchema.Partitions.First(p => p.Name == name);
+
+    /// <summary>
+    ///     Copies <paramref name="source"/> into <paramref name="target"/> at the partition's
+    ///     start offset, converting <c>double</c> to <c>float</c>. Preserves the original
+    ///     <c>Array.Copy(Array.ConvertAll(...), 0, combined, offset, length)</c> semantics
+    ///     byte-for-byte while routing the offset through the typed partition registry.
+    /// </summary>
+    private static void CopyIntoPartition(float[] target, double[] source, EmbeddingPartition partition)
+    {
+        Array.Copy(Array.ConvertAll(source, x => (float)x), 0, target, partition.Start, source.Length);
+    }
+
+    /// <summary>
     /// Generates a high-dimensional embedding for a voicing document.
     /// </summary>
     /// <param name="doc">The voicing document containing pitch data and metadata.</param>
@@ -116,14 +137,16 @@ public class MusicalEmbeddingGenerator(
 
         // ═══════════════════════════════════════════════════════════════════════
         // COMBINE BASE PARTITIONS
+        // Partition offsets are resolved via the typed EmbeddingSchema.Partitions
+        // registry to avoid drift from the OPTK index writer and Rust reader.
         // ═══════════════════════════════════════════════════════════════════════
         var combined = new float[Dimension];
 
-        Array.Copy(Array.ConvertAll(identityVector, x => (float)x), 0, combined, EmbeddingSchema.IdentityOffset, identityVector.Length);
-        Array.Copy(Array.ConvertAll(structureVector, x => (float)x), 0, combined, EmbeddingSchema.StructureOffset, structureVector.Length);
-        Array.Copy(Array.ConvertAll(morphologyVector, x => (float)x), 0, combined, EmbeddingSchema.MorphologyOffset, morphologyVector.Length);
-        Array.Copy(Array.ConvertAll(contextVector, x => (float)x), 0, combined, EmbeddingSchema.ContextOffset, contextVector.Length);
-        Array.Copy(Array.ConvertAll(symbolicVector, x => (float)x), 0, combined, EmbeddingSchema.SymbolicOffset, symbolicVector.Length);
+        CopyIntoPartition(combined, identityVector,   GetPartition("IDENTITY"));
+        CopyIntoPartition(combined, structureVector,  GetPartition("STRUCTURE"));
+        CopyIntoPartition(combined, morphologyVector, GetPartition("MORPHOLOGY"));
+        CopyIntoPartition(combined, contextVector,    GetPartition("CONTEXT"));
+        CopyIntoPartition(combined, symbolicVector,   GetPartition("SYMBOLIC"));
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 6: EXTENSIONS (78-95)
@@ -139,7 +162,7 @@ public class MusicalEmbeddingGenerator(
         // PARTITION 8: MODAL (109-127) — Modal Flavors
         // ═══════════════════════════════════════════════════════════════════════
         var modalVector = modalService.ComputeEmbedding(doc);
-        Array.Copy(Array.ConvertAll(modalVector, x => (float)x), 0, combined, EmbeddingSchema.ModalOffset, modalVector.Length);
+        CopyIntoPartition(combined, modalVector, GetPartition("MODAL"));
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 9: HIERARCHY (149-163) — Complexity
@@ -151,7 +174,7 @@ public class MusicalEmbeddingGenerator(
         // PARTITION 10: ATONAL MODAL (164-180) — Universal Mapping
         // ═══════════════════════════════════════════════════════════════════════
         var atonalModalVector = modalService.ComputeAtonalModalEmbedding(doc);
-        Array.Copy(Array.ConvertAll(atonalModalVector, x => (float)x), 0, combined, EmbeddingSchema.AtonalModalOffset, atonalModalVector.Length);
+        CopyIntoPartition(combined, atonalModalVector, GetPartition("ATONAL_MODAL"));
 
         return Task.FromResult(combined);
     }
