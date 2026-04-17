@@ -624,7 +624,7 @@ internal class Program
 
     #endregion
 
-    #region Export Embeddings Mode (OPTIC-K v3 binary)
+    #region Export Embeddings Mode (OPTIC-K v4 binary)
 
     /// <summary>
     ///     Attempts to parse export-embeddings mode options from command-line arguments.
@@ -670,7 +670,7 @@ internal class Program
     }
 
     /// <summary>
-    ///     Runs export-embeddings mode: generates OPTIC-K v3 binary index with 228-dim embeddings
+    ///     Runs export-embeddings mode: generates OPTIC-K v4 binary index with 112-dim compact embeddings
     ///     for all voicings across one or all instruments.
     /// </summary>
     private static async Task<int> RunExportEmbeddingsAsync(ExportEmbeddingsOptions options)
@@ -682,7 +682,7 @@ internal class Program
             ? [options.Tuning.Value]
             : new[] { TuningPreset.Guitar, TuningPreset.Bass, TuningPreset.Ukulele };
 
-        Console.Error.WriteLine($"OPTIC-K v3 embedding export — instruments: {string.Join(", ", presets.Select(p => p.ToString().ToLowerInvariant()))}");
+        Console.Error.WriteLine($"OPTIC-K v4 embedding export — instruments: {string.Join(", ", presets.Select(p => p.ToString().ToLowerInvariant()))}");
         if (options.MaxVoicings.HasValue)
             Console.Error.WriteLine($"  --export-max {options.MaxVoicings.Value} (per instrument)");
         Console.Error.WriteLine($"  output: {options.OutputPath}");
@@ -752,7 +752,7 @@ internal class Program
             Directory.CreateDirectory(outputDir);
 
         // Write the binary index
-        Console.Error.Write($"  Writing OPTIC-K v3 index ({totalCount:N0} entries)...");
+        Console.Error.Write($"  Writing OPTIC-K v4 index ({totalCount:N0} entries)...");
         using (var writer = new OptickIndexWriter(options.OutputPath))
         {
             writer.WriteIndex(allEntries);
@@ -774,7 +774,7 @@ internal class Program
     /// </summary>
     private static void DisplayExportEmbeddingsHelp()
     {
-        Console.Error.WriteLine("Fretboard Voicings CLI - Export Embeddings Mode (OPTIC-K v3 binary)");
+        Console.Error.WriteLine("Fretboard Voicings CLI - Export Embeddings Mode (OPTIC-K v4 binary)");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Usage:");
         Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings [options]");
@@ -788,7 +788,7 @@ internal class Program
         Console.Error.WriteLine("  --export-embeddings-help    Show this help message");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Output Format:");
-        Console.Error.WriteLine("  OPTIC-K v3 binary index with 228-dim embeddings per voicing,");
+        Console.Error.WriteLine("  OPTIC-K v4 binary index with 112-dim compact embeddings per voicing,");
         Console.Error.WriteLine("  sqrt-weight scaled and L2-normalized, with msgpack metadata.");
         Console.Error.WriteLine("  Instruments are sorted: guitar, bass, ukulele.");
         Console.Error.WriteLine();

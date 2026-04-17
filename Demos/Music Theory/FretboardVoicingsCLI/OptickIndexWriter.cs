@@ -4,8 +4,10 @@ using System.Buffers.Binary;
 using System.Text;
 
 /// <summary>
-/// A single voicing entry to be written into the OPTIC-K v3 binary index.
-/// The writer applies sqrt-weight scaling and L2-normalization before writing.
+/// A single voicing entry to be written into the OPTIC-K v4 binary index.
+/// <paramref name="Embedding"/> is the 228-dim raw vector from MusicalEmbeddingGenerator.
+/// The writer extracts the 112 search-relevant dims, applies sqrt-weight scaling,
+/// and L2-normalizes before writing.
 /// </summary>
 public sealed record VoicingEntry(
     float[] Embedding,
@@ -15,15 +17,23 @@ public sealed record VoicingEntry(
     string? QualityInferred);
 
 /// <summary>
-/// Writes a memory-mappable OPTIC-K v3 binary index file containing 228-dim embeddings
-/// with per-partition sqrt-scaled weighting, instrument-level byte offsets (u64 for >4 GB),
-/// and msgpack metadata.
+/// Writes a memory-mappable OPTIC-K v4 binary index file.
 /// <para>
-/// Binary format v3 (little-endian throughout):
+/// V4 improvements over v3:
 /// <list type="bullet">
-///   <item>Header: magic, version, schema hash, endian marker, dimension, counts, instrument offsets, partition weights</item>
-///   <item>Vectors: count x 228 x float32 (weighted + L2-normalized), sorted by instrument</item>
-///   <item>Metadata: count x msgpack records</item>
+///   <item>Dimension reduced from 228 → 112 (only search-relevant partitions kept)</item>
+///   <item>Info-only partitions (IDENTITY, EXTENSIONS, SPECTRAL, HIERARCHY, ATONAL_MODAL) dropped</item>
+///   <item>Per-voicing metadata offset table for O(1) metadata fetch</item>
+///   <item>~55% smaller files, no search-quality regression</item>
+/// </list>
+/// </para>
+/// <para>
+/// Binary format v4 (little-endian throughout):
+/// <list type="bullet">
+///   <item>Header: magic, version, schema hash, endian, dim, counts, instrument offsets, metadata_offsets_offset, vectors_offset, metadata_offset, metadata_length, partition weights[112]</item>
+///   <item>metadata_offsets: count × u64 (byte offset of each msgpack record, relative to metadata_offset)</item>
+///   <item>Vectors: count × 112 × float32 (weighted + L2-normalized), sorted by instrument</item>
+///   <item>Metadata: count × msgpack records (unchanged from v3)</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -34,40 +44,35 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     private static readonly byte[] Magic = "OPTK"u8.ToArray();
-    private const uint FormatVersion = 3;
-    private const int Dimension = 228;
-    private const byte InstrumentCount = 3; // guitar, bass, ukulele
+    private const uint FormatVersion = 4;
+    private const int RawDimension = 228;           // input vector size
+    private const int Dimension = 112;              // output (compact) vector size
+    private const byte InstrumentCount = 3;         // guitar, bass, ukulele
     private const ushort EndianMarker = 0xFEFF;
 
     /// <summary>
-    /// Canonical partition layout string used to compute the schema hash (CRC32).
+    /// Canonical partition layout string for v4. Only search-relevant partitions.
+    /// Dense mapping — indices here are in the COMPACT space (0..111), not the raw 228-dim space.
     /// </summary>
     private const string PartitionLayout =
-        "IDENTITY:0-5,STRUCTURE:6-29,MORPHOLOGY:30-53,CONTEXT:54-65," +
-        "SYMBOLIC:66-77,EXTENSIONS:78-95,SPECTRAL:96-108,MODAL:109-148," +
-        "HIERARCHY:149-163,ATONAL_MODAL:164-227";
+        "optk-v4:STRUCTURE:0-23,MORPHOLOGY:24-47,CONTEXT:48-59," +
+        "SYMBOLIC:60-71,MODAL:72-111";
 
     /// <summary>
-    /// Partition weight definitions: (start, end_inclusive, raw_weight).
-    /// A raw weight of 0 means the partition is excluded from similarity.
-    /// The stored value is sqrt(raw_weight).
+    /// Compact partition definitions: (compact_start, compact_end_inclusive, raw_start, raw_end_inclusive, raw_weight).
+    /// Maps ranges in the 228-dim raw input to dense ranges in the 112-dim compact output.
     /// </summary>
-    private static readonly (int Start, int End, float RawWeight)[] Partitions =
+    private static readonly (int CStart, int CEnd, int RStart, int REnd, float RawWeight)[] Partitions =
     [
-        (0,   5,   0.00f), // IDENTITY
-        (6,   29,  0.45f), // STRUCTURE
-        (30,  53,  0.25f), // MORPHOLOGY
-        (54,  65,  0.20f), // CONTEXT
-        (66,  77,  0.10f), // SYMBOLIC
-        (78,  95,  0.00f), // EXTENSIONS
-        (96,  108, 0.00f), // SPECTRAL
-        (109, 148, 0.10f), // MODAL
-        (149, 163, 0.00f), // HIERARCHY
-        (164, 227, 0.00f), // ATONAL_MODAL
+        (0,  23,  6,   29,  0.45f), // STRUCTURE
+        (24, 47,  30,  53,  0.25f), // MORPHOLOGY
+        (48, 59,  54,  65,  0.20f), // CONTEXT
+        (60, 71,  66,  77,  0.10f), // SYMBOLIC
+        (72, 111, 109, 148, 0.10f), // MODAL
     ];
 
     /// <summary>
-    /// Pre-computed sqrt-scaled weights for all 228 dimensions.
+    /// Pre-computed sqrt-scaled weights for all 112 compact dimensions.
     /// </summary>
     private static readonly float[] PartitionWeights = BuildPartitionWeights();
 
@@ -93,7 +98,7 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Writes the complete OPTIC-K v3 index.
+    /// Writes the complete OPTIC-K v4 index.
     /// <paramref name="entries"/> must be sorted by instrument: guitar first, then bass, then ukulele.
     /// </summary>
     public void WriteIndex(List<VoicingEntry> entries)
@@ -102,35 +107,47 @@ public sealed class OptickIndexWriter : IDisposable
 
         using var writer = new BinaryWriter(_stream, Encoding.UTF8, leaveOpen: true);
 
-        // Group counts by instrument (preserving sort order)
-        var instrumentGroups = CountByInstrument(entries);
-
-        // --- Pre-compute weighted + normalized vectors ---
+        // --- Pre-compute weighted + normalized compact vectors ---
         var vectors = new float[entries.Count][];
         for (var i = 0; i < entries.Count; i++)
         {
-            vectors[i] = ApplyWeightsAndNormalize(entries[i].Embedding);
+            vectors[i] = ExtractAndNormalize(entries[i].Embedding);
         }
 
-        // --- Compute offsets ---
-        var headerSize = ComputeHeaderSize();
-        var vectorsOffset = (ulong)headerSize;
-        var vectorsByteLength = (ulong)entries.Count * Dimension * sizeof(float);
-        var metadataOffset = vectorsOffset + vectorsByteLength;
-
-        // We need to write metadata to a temporary buffer to know its length
+        // --- Write metadata to a buffer; record per-record offsets ---
+        var metadataOffsets = new ulong[entries.Count];
         byte[] metadataBytes;
         using (var ms = new MemoryStream())
         {
-            WriteMetadata(ms, entries);
+            for (var i = 0; i < entries.Count; i++)
+            {
+                metadataOffsets[i] = (ulong)ms.Position;
+                WriteMetadataRecord(ms, entries[i]);
+            }
             metadataBytes = ms.ToArray();
         }
 
+        // --- Compute section offsets ---
+        var headerSize = (ulong)ComputeHeaderSize();
+        var metadataOffsetsOffset = headerSize;
+        var metadataOffsetsByteLength = (ulong)entries.Count * sizeof(ulong);
+        var vectorsOffset = metadataOffsetsOffset + metadataOffsetsByteLength;
+        var vectorsByteLength = (ulong)entries.Count * Dimension * sizeof(float);
+        var metadataOffset = vectorsOffset + vectorsByteLength;
         var metadataLength = (ulong)metadataBytes.Length;
+
+        // Instrument byte offsets (absolute, pointing into the vectors section)
+        var instrumentGroups = CountByInstrument(entries, vectorsOffset);
 
         // --- Write header ---
         WriteHeader(writer, (uint)headerSize, (ulong)entries.Count,
-            instrumentGroups, vectorsOffset, metadataOffset, metadataLength);
+            instrumentGroups, metadataOffsetsOffset, vectorsOffset, metadataOffset, metadataLength);
+
+        // --- Write metadata offsets table ---
+        foreach (var off in metadataOffsets)
+        {
+            writer.Write(off);
+        }
 
         // --- Write vectors ---
         WriteVectors(writer, vectors);
@@ -162,10 +179,11 @@ public sealed class OptickIndexWriter : IDisposable
         size += 1;                          // instruments (byte)
         size += 7;                          // _pad (align to 8)
         size += InstrumentCount * (8 + 8);  // instrument_offsets (3 x (u64, u64))
+        size += 8;                          // metadata_offsets_offset (v4)
         size += 8;                          // vectors_offset
         size += 8;                          // metadata_offset
         size += 8;                          // metadata_length
-        size += Dimension * 4;              // partition_weights (228 x float)
+        size += Dimension * 4;              // partition_weights (112 x float)
         return size;
     }
 
@@ -174,20 +192,21 @@ public sealed class OptickIndexWriter : IDisposable
         uint headerSize,
         ulong count,
         (ulong ByteOffset, ulong Count)[] instrumentOffsets,
+        ulong metadataOffsetsOffset,
         ulong vectorsOffset,
         ulong metadataOffset,
         ulong metadataLength)
     {
         w.Write(Magic);                     // magic
         w.Write(FormatVersion);             // version
-        w.Write(headerSize);               // header_size
-        w.Write(ComputeSchemaHash());      // schema_hash
-        w.Write(EndianMarker);             // endian_marker
-        w.Write((ushort)0);                // _reserved
-        w.Write((uint)Dimension);          // dimension
-        w.Write(count);                    // count (uint64)
-        w.Write(InstrumentCount);          // instruments (byte)
-        w.Write(new byte[7]);              // _pad
+        w.Write(headerSize);                // header_size
+        w.Write(ComputeSchemaHash());       // schema_hash
+        w.Write(EndianMarker);              // endian_marker
+        w.Write((ushort)0);                 // _reserved
+        w.Write((uint)Dimension);           // dimension
+        w.Write(count);                     // count (uint64)
+        w.Write(InstrumentCount);           // instruments (byte)
+        w.Write(new byte[7]);               // _pad
 
         foreach (var (byteOffset, instrCount) in instrumentOffsets)
         {
@@ -195,6 +214,7 @@ public sealed class OptickIndexWriter : IDisposable
             w.Write(instrCount);
         }
 
+        w.Write(metadataOffsetsOffset);     // v4: points to the per-record offset table
         w.Write(vectorsOffset);
         w.Write(metadataOffset);
         w.Write(metadataLength);
@@ -225,31 +245,27 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Writes all metadata entries as msgpack records to the given stream.
-    /// Each record is a fixmap with 4 keys:
+    /// Writes a single metadata record as a msgpack fixmap with 4 keys:
     /// "diagram" (string), "instrument" (string), "midiNotes" (int[]), "quality_inferred" (string/nil).
     /// </summary>
-    private static void WriteMetadata(Stream stream, List<VoicingEntry> entries)
+    private static void WriteMetadataRecord(Stream stream, VoicingEntry entry)
     {
-        foreach (var entry in entries)
-        {
-            MsgPack.WriteFixMap(stream, 4);
+        MsgPack.WriteFixMap(stream, 4);
 
-            MsgPack.WriteString(stream, "diagram");
-            MsgPack.WriteString(stream, entry.Diagram);
+        MsgPack.WriteString(stream, "diagram");
+        MsgPack.WriteString(stream, entry.Diagram);
 
-            MsgPack.WriteString(stream, "instrument");
-            MsgPack.WriteString(stream, entry.Instrument);
+        MsgPack.WriteString(stream, "instrument");
+        MsgPack.WriteString(stream, entry.Instrument);
 
-            MsgPack.WriteString(stream, "midiNotes");
-            MsgPack.WriteIntArray(stream, entry.MidiNotes);
+        MsgPack.WriteString(stream, "midiNotes");
+        MsgPack.WriteIntArray(stream, entry.MidiNotes);
 
-            MsgPack.WriteString(stream, "quality_inferred");
-            if (entry.QualityInferred is not null)
-                MsgPack.WriteString(stream, entry.QualityInferred);
-            else
-                MsgPack.WriteNil(stream);
-        }
+        MsgPack.WriteString(stream, "quality_inferred");
+        if (entry.QualityInferred is not null)
+            MsgPack.WriteString(stream, entry.QualityInferred);
+        else
+            MsgPack.WriteNil(stream);
     }
 
     // ---------------------------------------------------------------
@@ -257,33 +273,40 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Multiplies each dimension by its sqrt-scaled partition weight,
-    /// then L2-normalizes the result. Zero vectors are returned as-is.
+    /// Extracts the 112 search-relevant dimensions from the 228-dim raw embedding,
+    /// multiplies each by its sqrt-scaled partition weight, and L2-normalizes.
+    /// Zero vectors are returned as-is (no division).
     /// </summary>
-    internal static float[] ApplyWeightsAndNormalize(float[] raw)
+    internal static float[] ExtractAndNormalize(float[] raw)
     {
-        if (raw.Length != Dimension)
-            throw new ArgumentException($"Expected {Dimension} dimensions, got {raw.Length}.", nameof(raw));
+        if (raw.Length != RawDimension)
+            throw new ArgumentException(
+                $"Expected {RawDimension} raw dimensions, got {raw.Length}.", nameof(raw));
 
-        var weighted = new float[Dimension];
-        for (var i = 0; i < Dimension; i++)
+        var compact = new float[Dimension];
+        var sumSq = 0.0f;
+
+        // Map raw partitions into compact space, applying sqrt-scaled weights as we go.
+        foreach (var (cStart, cEnd, rStart, _, rawWeight) in Partitions)
         {
-            weighted[i] = raw[i] * PartitionWeights[i];
+            var sqrtWeight = rawWeight > 0f ? MathF.Sqrt(rawWeight) : 0f;
+            var span = cEnd - cStart + 1;
+            for (var j = 0; j < span; j++)
+            {
+                var v = raw[rStart + j] * sqrtWeight;
+                compact[cStart + j] = v;
+                sumSq += v * v;
+            }
         }
 
-        // L2 norm
-        var sumSq = 0.0f;
-        foreach (var v in weighted)
-            sumSq += v * v;
-
         if (sumSq <= float.Epsilon)
-            return weighted; // zero vector -- avoid division by zero
+            return compact; // zero vector
 
         var norm = MathF.Sqrt(sumSq);
         for (var i = 0; i < Dimension; i++)
-            weighted[i] /= norm;
+            compact[i] /= norm;
 
-        return weighted;
+        return compact;
     }
 
     // ---------------------------------------------------------------
@@ -309,13 +332,14 @@ public sealed class OptickIndexWriter : IDisposable
     /// Returns exactly 3 entries (guitar, bass, ukulele) with their byte offsets and counts.
     /// Entries must be sorted by instrument in that order.
     /// </summary>
-    private (ulong ByteOffset, ulong Count)[] CountByInstrument(List<VoicingEntry> entries)
+    private static (ulong ByteOffset, ulong Count)[] CountByInstrument(
+        List<VoicingEntry> entries,
+        ulong vectorsOffset)
     {
-        var headerSize = (ulong)ComputeHeaderSize();
         var instrumentNames = new[] { "guitar", "bass", "ukulele" };
         var result = new (ulong ByteOffset, ulong Count)[InstrumentCount];
 
-        var runningOffset = headerSize;
+        var runningOffset = vectorsOffset;
         var idx = 0;
 
         for (var i = 0; i < InstrumentCount; i++)
@@ -344,10 +368,10 @@ public sealed class OptickIndexWriter : IDisposable
     private static float[] BuildPartitionWeights()
     {
         var weights = new float[Dimension];
-        foreach (var (start, end, rawWeight) in Partitions)
+        foreach (var (cStart, cEnd, _, _, rawWeight) in Partitions)
         {
             var sqrtWeight = rawWeight > 0f ? MathF.Sqrt(rawWeight) : 0f;
-            for (var i = start; i <= end; i++)
+            for (var i = cStart; i <= cEnd; i++)
                 weights[i] = sqrtWeight;
         }
         return weights;
