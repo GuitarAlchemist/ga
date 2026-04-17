@@ -551,8 +551,10 @@ internal static class DyadCorpus
         // C+Eb (0,3): canonical=3 = Minor 3rd.
         new(0, 3, "C + Eb (Minor 3rd)", "dyad"),
 
-        // C+F (0,5): canonical=5 = Perfect 4th.
-        new(0, 5, "C + F (Perfect 4th)", "dyad"),
+        // C+F (0,5): interval=5, which is the inversion of a P5. Under the consistent
+        // "P5-relationship = power chord" rule (applied symmetrically to {2,7}→G5 above),
+        // this becomes F5 with F as the root (C is the P5 above F).
+        new(0, 5, "F5", "power"),
 
         // C+F# (0,6): canonical=6 = Tritone.
         new(0, 6, "C + Gb (Tritone)", "dyad"),

@@ -66,8 +66,28 @@ public static class CanonicalChordRecognizer
     private static CanonicalChordResult IdentifyDyad(int pc1, int pc2)
     {
         var interval = (pc2 - pc1 + 12) % 12;
-        // Choose the root that yields the "smaller" interval (more idiomatic)
-        // so that a Perfect 5th (C+G) is named with C as root, not G.
+
+        // Power-chord detection (P5) must happen BEFORE the smaller-interval swap,
+        // because after swapping, canonicalInterval is always ≤ 6 and can never be 7.
+        // A P5 from pc1 to pc2 (interval == 7) → root is pc1.
+        // A P5 from pc2 to pc1 (interval == 5, i.e. P4 from pc1 to pc2) → root is pc2.
+        if (interval is 7 or 5)
+        {
+            var powerRoot = interval == 7 ? pc1 : pc2;
+            return new CanonicalChordResult(
+                CanonicalName: $"{GetNoteName(powerRoot)}5",
+                Root: GetNoteName(powerRoot),
+                Quality: "power",
+                Extension: null,
+                Alterations: [],
+                SlashSuffix: null,
+                PatternName: "power-chord",
+                MatchDistance: 0,
+                IsNaturallyOccurring: true);
+        }
+
+        // Non-power-chord dyad: pick the smaller interval for the canonical orientation
+        // so {C, E} is named "C + E (Major 3rd)" rather than "E + C (Minor 6th)".
         var (root, other) = interval <= 6 ? (pc1, pc2) : (pc2, pc1);
         var canonicalInterval = (other - root + 12) % 12;
 
@@ -80,30 +100,19 @@ public static class CanonicalChordRecognizer
             4 => "Major 3rd",
             5 => "Perfect 4th",
             6 => "Tritone",
-            7 => "Perfect 5th",
-            8 => "Minor 6th",
-            9 => "Major 6th",
-            10 => "Minor 7th",
-            11 => "Major 7th",
             _ => $"IC{canonicalInterval}"
         };
 
-        // Special case: power chord (P5) gets a dedicated name
-        var isPowerChord = canonicalInterval == 7;
-        var name = isPowerChord
-            ? $"{GetNoteName(root)}5"
-            : $"{GetNoteName(root)} + {GetNoteName(other)} ({intervalName})";
-
         return new CanonicalChordResult(
-            CanonicalName: name,
+            CanonicalName: $"{GetNoteName(root)} + {GetNoteName(other)} ({intervalName})",
             Root: GetNoteName(root),
-            Quality: isPowerChord ? "power" : "dyad",
+            Quality: "dyad",
             Extension: null,
             Alterations: [],
             SlashSuffix: null,
-            PatternName: isPowerChord ? "power-chord" : $"dyad-ic{canonicalInterval}",
+            PatternName: $"dyad-ic{canonicalInterval}",
             MatchDistance: 0,
-            IsNaturallyOccurring: isPowerChord || canonicalInterval is 3 or 4 or 5 or 7 or 8 or 9);
+            IsNaturallyOccurring: canonicalInterval is 3 or 4);
     }
 
     /// <summary>
