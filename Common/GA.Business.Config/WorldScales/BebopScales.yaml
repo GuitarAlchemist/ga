@@ -1,0 +1,88 @@
+# =============================================================================
+# BebopScales.yaml - world-music scales: Bebop eight-note scales (passing chromatic tones for swing-era improvisation)
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Bebop Dominant"
+    Tradition: "Bebop"
+    AlternateNames: ["Bebop Mixolydian"]
+    AlternateNames_fr: ["Bebop dominant"]
+    Intervals: [2, 2, 1, 2, 2, 1, 1, 1]
+    PitchClasses: "0 2 4 5 7 9 10 11"
+    BinaryScaleId: 3765
+    Tuning: "12tet"
+    Description: "Mixolydian with an added passing major seventh; designed to align chord tones on strong beats."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Bebop_scale"
+
+  - Name: "Bebop Major"
+    Tradition: "Bebop"
+    AlternateNames: ["Bebop Ionian"]
+    AlternateNames_fr: ["Bebop majeur"]
+    Intervals: [2, 2, 1, 2, 1, 1, 2, 1]
+    PitchClasses: "0 2 4 5 7 8 9 11"
+    BinaryScaleId: 2997
+    Tuning: "12tet"
+    Description: "Major scale with an added passing flat sixth; standard bebop-vocabulary construction."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Bebop_scale"
+
+  - Name: "Bebop Minor"
+    Tradition: "Bebop"
+    AlternateNames: ["Bebop Dorian"]
+    AlternateNames_fr: ["Bebop mineur"]
+    Intervals: [2, 1, 2, 2, 2, 1, 1, 1]
+    PitchClasses: "0 2 3 5 7 9 10 11"
+    BinaryScaleId: 3757
+    Tuning: "12tet"
+    Description: "Dorian scale with an added passing major third; approach to ii-chord improvisation."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Bebop_scale"
+
+  - Name: "Bebop Melodic Minor"
+    Tradition: "Bebop"
+    AlternateNames: []
+    AlternateNames_fr: ["Bebop mineur mélodique"]
+    Intervals: [2, 1, 2, 2, 1, 1, 2, 1]
+    PitchClasses: "0 2 3 5 7 8 9 11"
+    BinaryScaleId: 2989
+    Tuning: "12tet"
+    Description: "Melodic minor with an added chromatic passing tone for bebop eighth-note lines."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Bebop_scale"
+
+  - Name: "Bebop Harmonic Minor"
+    Tradition: "Bebop"
+    AlternateNames: []
+    AlternateNames_fr: ["Bebop mineur harmonique"]
+    Intervals: [2, 1, 2, 2, 1, 2, 1, 1]
+    PitchClasses: "0 2 3 5 7 8 10 11"
+    BinaryScaleId: 3501
+    Tuning: "12tet"
+    Description: "Harmonic minor with an added chromatic passing tone; used over minor ii-V progressions."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Bebop_scale"

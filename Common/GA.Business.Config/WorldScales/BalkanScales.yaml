@@ -1,0 +1,173 @@
+# =============================================================================
+# BalkanScales.yaml - world-music scales: Balkan and Eastern-European modal scales
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Hungarian Minor"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: ["Gypsy Minor", "Double Harmonic Minor"]
+    AlternateNames_fr: ["Mineur hongrois"]
+    Intervals: [2, 1, 3, 1, 1, 3, 1]
+    PitchClasses: "0 2 3 6 7 8 11"
+    BinaryScaleId: 2509
+    Tuning: "12tet"
+    Description: "Harmonic minor with raised fourth; double augmented-second contour."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Hungarian Major"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Majeur hongrois"]
+    Intervals: [3, 1, 2, 1, 2, 1, 2]
+    PitchClasses: "0 3 4 6 7 9 10"
+    BinaryScaleId: 1753
+    Tuning: "12tet"
+    Description: "Scale with raised second and flat seventh; distinctive augmented second at the start."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Romanian Minor"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Mineur roumain"]
+    Intervals: [2, 1, 3, 1, 2, 1, 2]
+    PitchClasses: "0 2 3 6 7 9 10"
+    BinaryScaleId: 1741
+    Tuning: "12tet"
+    Description: "Dorian with raised fourth; widely used across Balkan folk traditions."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Ukrainian Dorian"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: ["Mi Sheberach", "Misheberak"]
+    AlternateNames_fr: ["Dorien ukrainien"]
+    Intervals: [2, 1, 3, 1, 2, 1, 2]
+    PitchClasses: "0 2 3 6 7 9 10"
+    BinaryScaleId: 1741
+    Tuning: "12tet"
+    Description: "Dorian with raised fourth; shares pitch content with the Mi Sheberach steiger."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Neapolitan Minor"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Mineur napolitain"]
+    Intervals: [1, 2, 2, 2, 1, 3, 1]
+    PitchClasses: "0 1 3 5 7 8 11"
+    BinaryScaleId: 2475
+    Tuning: "12tet"
+    Description: "Minor scale with flat second and raised seventh; common in 19th-century European art music."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Neapolitan Major"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Majeur napolitain"]
+    Intervals: [1, 2, 2, 2, 2, 2, 1]
+    PitchClasses: "0 1 3 5 7 9 11"
+    BinaryScaleId: 2731
+    Tuning: "12tet"
+    Description: "Major scale with flat second; borrowed idiom in European art music."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Double Harmonic"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: ["Byzantine", "Arabic scale", "Gypsy Major"]
+    AlternateNames_fr: ["Double harmonique"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "12tet"
+    Description: "Major scale with flat second and flat sixth; two augmented seconds."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Enigmatic"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Énigmatique"]
+    Intervals: [1, 3, 2, 2, 2, 1, 1]
+    PitchClasses: "0 1 4 6 8 10 11"
+    BinaryScaleId: 3411
+    Tuning: "12tet"
+    Description: "Scale proposed by Verdi in an 1898 puzzle; non-diatonic, highly chromatic upper region."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Persian"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: []
+    AlternateNames_fr: ["Persan"]
+    Intervals: [1, 3, 1, 1, 2, 3, 1]
+    PitchClasses: "0 1 4 5 6 8 11"
+    BinaryScaleId: 2419
+    Tuning: "12tet"
+    Description: "Western-theory name for a scale with two augmented seconds; unrelated in practice to authentic Persian dastgāh."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"
+
+  - Name: "Byzantine"
+    Tradition: "Balkan / Eastern European"
+    AlternateNames: ["Double Harmonic", "Arabic scale"]
+    AlternateNames_fr: ["Byzantin"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "12tet"
+    Description: "Common Western-theory synonym for the Double Harmonic scale; not to be confused with Byzantine chant octoechos."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Hungarian_minor_scale"
+      - "https://en.wikipedia.org/wiki/Double_harmonic_scale"
+      - "https://en.wikipedia.org/wiki/Neapolitan_scale"

@@ -1,0 +1,93 @@
+# =============================================================================
+# ChineseScales.yaml - world-music scales: Chinese pentatonic modes (five rotations of the major-pentatonic pitch set)
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Gong"
+    Tradition: "Chinese Pentatonic"
+    AlternateNames: ["Gong mode", "宫"]
+    AlternateNames_fr: ["Gong"]
+    Intervals: [2, 2, 3, 2, 3]
+    PitchClasses: "0 2 4 7 9"
+    BinaryScaleId: 661
+    Tuning: "12tet"
+    Description: "First of the five canonical Chinese pentatonic modes; major-pentatonic structure."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Chinese_musicology"
+      - "https://en.wikipedia.org/wiki/Pentatonic_scale"
+
+  - Name: "Shang"
+    Tradition: "Chinese Pentatonic"
+    AlternateNames: ["Shang mode", "商"]
+    AlternateNames_fr: ["Shang"]
+    Intervals: [2, 3, 2, 3, 2]
+    PitchClasses: "0 2 5 7 10"
+    BinaryScaleId: 1189
+    Tuning: "12tet"
+    Description: "Second of the five Chinese pentatonic modes; shares pitch set with Gong, rotated by one step."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Chinese_musicology"
+      - "https://en.wikipedia.org/wiki/Pentatonic_scale"
+
+  - Name: "Jue"
+    Tradition: "Chinese Pentatonic"
+    AlternateNames: ["Jiao", "角"]
+    AlternateNames_fr: ["Jue"]
+    Intervals: [3, 2, 3, 2, 2]
+    PitchClasses: "0 3 5 8 10"
+    BinaryScaleId: 1321
+    Tuning: "12tet"
+    Description: "Third of the five Chinese pentatonic modes."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Chinese_musicology"
+      - "https://en.wikipedia.org/wiki/Pentatonic_scale"
+
+  - Name: "Zhi"
+    Tradition: "Chinese Pentatonic"
+    AlternateNames: ["Zhi mode", "徵"]
+    AlternateNames_fr: ["Zhi"]
+    Intervals: [2, 3, 2, 2, 3]
+    PitchClasses: "0 2 5 7 9"
+    BinaryScaleId: 677
+    Tuning: "12tet"
+    Description: "Fourth of the five Chinese pentatonic modes; dominant-like mode rotation."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Chinese_musicology"
+      - "https://en.wikipedia.org/wiki/Pentatonic_scale"
+
+  - Name: "Yu"
+    Tradition: "Chinese Pentatonic"
+    AlternateNames: ["Yu mode", "羽"]
+    AlternateNames_fr: ["Yu"]
+    Intervals: [3, 2, 2, 3, 2]
+    PitchClasses: "0 3 5 7 10"
+    BinaryScaleId: 1193
+    Tuning: "12tet"
+    Description: "Fifth of the five Chinese pentatonic modes; shares pitch content with minor pentatonic."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Chinese_musicology"
+      - "https://en.wikipedia.org/wiki/Pentatonic_scale"

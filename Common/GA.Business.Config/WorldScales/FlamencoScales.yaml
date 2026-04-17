@@ -1,0 +1,79 @@
+# =============================================================================
+# FlamencoScales.yaml - world-music scales: Flamenco and Andalusian modal scales
+# =============================================================================
+#
+# Data compiled from traditional-knowledge sources and publicly available
+# references (Wikipedia, maqamworld.com, IMSLP, and primary musicological
+# publications in the public domain). Only factual content is reproduced:
+# scale names (not copyrightable), interval sequences (mathematical facts),
+# and BinaryScaleId cross-references into ExtendedScales.yaml.
+#
+# No third-party prose is copied; all `Description` fields are original
+# short summaries written for this catalog.
+#
+# Where a tradition uses microtonal intervals in authentic practice
+# (Arabic maqam, Turkish makam, some Indian ragas, ancient Greek tonoi),
+# the `Tuning` field is set to "approx-12tet" to flag that the intervals
+# stored here are 12-equal-temperament approximations and not claims of
+# perfect equivalence.
+#
+# Schema version : 1
+# =============================================================================
+
+
+WorldScales:
+  - Name: "Flamenco Mode"
+    Tradition: "Flamenco"
+    AlternateNames: ["Andalusian Phrygian", "Phrygian Dominant"]
+    AlternateNames_fr: ["Mode flamenco"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "12tet"
+    Description: "Core flamenco sonority with the characteristic Phrygian half-cadence."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Flamenco_mode"
+      - "https://en.wikipedia.org/wiki/Andalusian_cadence"
+
+  - Name: "Andaluz"
+    Tradition: "Flamenco"
+    AlternateNames: ["Andalusian Double Harmonic"]
+    AlternateNames_fr: ["Andalou"]
+    Intervals: [1, 3, 1, 2, 1, 3, 1]
+    PitchClasses: "0 1 4 5 7 8 11"
+    BinaryScaleId: 2483
+    Tuning: "12tet"
+    Description: "Variant with a raised seventh; used for heightened cadential tension."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Flamenco_mode"
+      - "https://en.wikipedia.org/wiki/Andalusian_cadence"
+
+  - Name: "Por Medio"
+    Tradition: "Flamenco"
+    AlternateNames: []
+    AlternateNames_fr: ["Por Medio"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "12tet"
+    Description: "Guitar position/tonality centred on A Phrygian; shares pitch content with the flamenco mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Flamenco_mode"
+      - "https://en.wikipedia.org/wiki/Andalusian_cadence"
+
+  - Name: "Por Arriba"
+    Tradition: "Flamenco"
+    AlternateNames: []
+    AlternateNames_fr: ["Por Arriba"]
+    Intervals: [1, 3, 1, 2, 1, 2, 2]
+    PitchClasses: "0 1 4 5 7 8 10"
+    BinaryScaleId: 1459
+    Tuning: "12tet"
+    Description: "Guitar position/tonality centred on E Phrygian; shares pitch content with the flamenco mode."
+    Provenance: "traditional-knowledge"
+    Sources:
+      - "https://en.wikipedia.org/wiki/Flamenco_mode"
+      - "https://en.wikipedia.org/wiki/Andalusian_cadence"

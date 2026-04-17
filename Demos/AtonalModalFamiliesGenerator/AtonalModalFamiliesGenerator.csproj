@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>GA.Demos.AtonalModalFamiliesGenerator</RootNamespace>
+        <AssemblyName>AtonalModalFamiliesGenerator</AssemblyName>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--
+            One-off generator that emits AtonalModalFamilies.yaml by cross-referencing
+            GA.Domain.Core's ModalFamily.Items (atonal, ICV-keyed) with
+            GA.Business.Config's Modes.yaml (tonal, named).
+
+            GA.Business.Config is F# and publishes Modes.yaml via CopyToOutputDirectory,
+            but this generator needs the source file directly (we resolve the repo root
+            and read Modes.yaml from disk). Hence only a reference to GA.Domain.Core.
+        -->
+        <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="YamlDotNet" Version="16.2.1" />
+    </ItemGroup>
+
+</Project>
