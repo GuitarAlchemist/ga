@@ -55,3 +55,12 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 - Pre-commit hook (`pwsh Scripts/install-git-hooks.ps1`) enforces `dotnet format` and build.
 
 For detailed C#/F#/Frontend standards, consult `.agent/skills/` (auto-discovered by Claude Code). For governance, use `demerzel-*` skills.
+
+## Collaboration discipline
+
+Drawn from Karpathy's skill + sohaibt/product-mode (merged, not installed). Apply to non-trivial work — typos and one-liners skip this.
+
+- **Surface, don't guess.** If a request has multiple plausible interpretations, list them with tradeoffs — don't pick silently. Mark each assumption as *validated / assumed / unknown*.
+- **Frame problem before solution.** State who is in pain and what changes for them before proposing code. Check prior art first: `Common/GA.Business.Core/Analysis/**`, `Common/GA.Domain.Services/**`, `docs/methodology/**`.
+- **Instrument before you ship.** Metric-moving changes declare baseline + expected direction + guardrail. Baselines live in `state/quality/{embeddings,voicing-analysis,chatbot-qa}/`, aggregated by `ix-quality-trend` → `docs/quality/README.md`. Never "we'll add analytics later."
+- **Log one-way doors.** Non-trivial `docs/plans/*.md` must record reversibility (one-way / two-way door) and revisit trigger (metric / date / condition). One-way doors — OPTIC-K dims/partitions, public API shapes, schema changes, pricing — require explicit sign-off.

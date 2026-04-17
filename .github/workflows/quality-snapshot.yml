@@ -1,0 +1,145 @@
+name: Quality Snapshot
+
+# Captures per-release quality snapshots (voicing analysis, embedding
+# diagnostics) and regenerates the trend report. Commits the artifacts back
+# to main with [skip ci] so the workflow does not retrigger itself.
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/quality/**'
+      - 'state/quality/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # Serialize snapshot runs so two pushes can't race each other to commit.
+  group: quality-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: Capture + report
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout GA
+        uses: actions/checkout@v4
+        with:
+          path: ga
+          fetch-depth: 0
+          # Use a token with push rights; default GITHUB_TOKEN is sufficient
+          # when the `permissions: contents: write` declaration above is set.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout IX (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/ix
+          path: ix
+          fetch-depth: 1
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ix/target
+          key: ${{ runner.os }}-cargo-quality-${{ hashFiles('ix/Cargo.lock', 'ix/crates/ix-quality-trend/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-quality-
+            ${{ runner.os }}-cargo-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.1xx'
+
+      - name: Build ix-quality-trend (always required)
+        working-directory: ix
+        run: cargo build --release -p ix-quality-trend
+
+      - name: Build ix-embedding-diagnostics (tolerant)
+        id: build_emb
+        working-directory: ix
+        continue-on-error: true
+        run: cargo build --release -p ix-embedding-diagnostics
+
+      - name: Build VoicingAnalysisAudit (tolerant)
+        id: build_audit
+        working-directory: ga
+        continue-on-error: true
+        run: dotnet build Demos/VoicingAnalysisAudit -c Release
+
+      - name: Prepare snapshot directories
+        working-directory: ga
+        run: |
+          mkdir -p state/quality/embeddings
+          mkdir -p state/quality/voicing-analysis
+          mkdir -p state/quality/chatbot-qa
+          echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+
+      - name: Run voicing analysis audit
+        if: steps.build_audit.outcome == 'success'
+        continue-on-error: true
+        working-directory: ga
+        run: |
+          OUT="state/quality/voicing-analysis/${DATE}.json"
+          echo "Writing ${OUT}"
+          dotnet run --project Demos/VoicingAnalysisAudit -c Release --no-build -- --out "$OUT" \
+            || echo "::warning::Voicing audit failed; continuing without it"
+
+      - name: Run embedding diagnostics (only when optick.index present)
+        if: steps.build_emb.outcome == 'success'
+        continue-on-error: true
+        working-directory: ga
+        run: |
+          if [ ! -f state/voicings/optick.index ]; then
+            echo "::warning::state/voicings/optick.index absent; skipping embedding diagnostics (per-release only)"
+            exit 0
+          fi
+          OUT="state/quality/embeddings/${DATE}.json"
+          echo "Writing ${OUT}"
+          ../ix/target/release/baseline-diagnostics --out "$OUT" \
+            || echo "::warning::Embedding diagnostics failed; continuing without it"
+
+      - name: Regenerate trend report
+        working-directory: ga
+        run: |
+          mkdir -p docs/quality
+          ../ix/target/release/ix-quality-trend \
+              --snapshots-dir state/quality \
+              --out docs/quality/README.md
+
+      - name: Commit + push if changed
+        working-directory: ga
+        env:
+          DATE: ${{ env.DATE }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/quality docs/quality
+
+          if git diff --cached --quiet; then
+            echo "No snapshot changes — nothing to commit."
+            exit 0
+          fi
+
+          # Sanity guard: refuse to commit the large cluster labels artifact
+          # if it slipped through gitignore for any reason.
+          if git diff --cached --name-only | grep -q 'embedding-clusters-.*\.json'; then
+            echo "::error::Refusing to commit embedding-clusters-*.json (must stay gitignored)."
+            exit 1
+          fi
+
+          git commit -m "chore(quality): snapshot ${DATE} [skip ci]"
+          git push origin HEAD:main

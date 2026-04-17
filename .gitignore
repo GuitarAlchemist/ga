@@ -179,3 +179,8 @@ state/voicings/optick.index
 
 # Baseline diagnostic artifacts (regenerable)
 state/baseline/embedding-clusters-*.json
+state/baseline-phaseE/embedding-clusters-*.json
+
+# Quality-snapshot by-products that are too large for git (the trend tool
+# only reads the summary JSONs; cluster-label dumps stay local / regenerable)
+state/quality/**/embedding-clusters-*.json
