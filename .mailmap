@@ -1,0 +1,18 @@
+# Git mailmap — canonicalize contributor names/emails across the repo.
+# See: https://git-scm.com/docs/gitmailmap
+#
+# Format:
+#   <canonical-name> <canonical-email> <old-name> <old-email>
+#
+# GitHub honors this file for display of commit history, contributor lists,
+# and blame views. It is non-destructive — no history is rewritten; only the
+# displayed identity is canonicalized.
+
+# Normalize all historical Stephane Pareilleux identities to one canonical form.
+# - Work email (Intrado) → personal
+# - Older gmail commits with lowercase author name → proper name
+# - Legacy hotmail commits → current gmail
+Stephane Pareilleux <spareilleux@gmail.com> <stephane.pareilleux@intrado.com>
+Stephane Pareilleux <spareilleux@gmail.com> spareilleux-intrado <stephane.pareilleux@intrado.com>
+Stephane Pareilleux <spareilleux@gmail.com> spareilleux <spareilleux@gmail.com>
+Stephane Pareilleux <spareilleux@gmail.com> <spareilleux@hotmail.com>
