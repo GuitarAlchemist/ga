@@ -173,3 +173,6 @@ todos/
 .slot-target
 .slot-state.json
 .slot-lock
+
+# OPTIC-K generated index (build artifact, ~660MB)
+state/voicings/optick.index
