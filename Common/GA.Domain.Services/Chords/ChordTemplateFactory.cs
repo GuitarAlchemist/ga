@@ -62,6 +62,31 @@ public static class ChordTemplateFactory
     }
 
     /// <summary>
+    ///     Same as <see cref="GenerateAllPossibleChords" /> but filters out
+    ///     degenerate templates (where non-tertian stacking collapsed two scale
+    ///     tones onto the same pitch class, producing a "Triad" with only 2
+    ///     distinct PCs etc.). Degenerate templates are tagged with
+    ///     " (degenerate)" in their <see cref="ChordFormula.Name" /> — this
+    ///     method filters on that marker.
+    ///     <para>
+    ///     Use this for chord recognition, chord naming, and any consumer that
+    ///     expects each template's name to accurately describe its cardinality.
+    ///     <see cref="GenerateAllPossibleChords" /> without the filter is kept
+    ///     for callers that specifically want the raw enumeration.
+    ///     </para>
+    /// </summary>
+    public static IEnumerable<ChordTemplate> GenerateNonDegenerateChords() =>
+        GenerateAllPossibleChords().Where(t => !IsDegenerate(t));
+
+    /// <summary>
+    ///     Returns true when the template's name was tagged as degenerate by
+    ///     <see cref="CreateModalChordFormula" /> (non-tertian stacking collapsed
+    ///     tones below the declared cardinality).
+    /// </summary>
+    public static bool IsDegenerate(ChordTemplate template) =>
+        template.Name?.EndsWith(" (degenerate)", StringComparison.Ordinal) == true;
+
+    /// <summary>
     ///     Generates chords from all modal families systematically.
     ///     This covers ALL possible scale/mode combinations in the system.
     /// </summary>
@@ -417,7 +442,39 @@ public static class ChordTemplateFactory
             _ => ""
         };
 
-        var name = $"{parentMode.Name} Degree{degree} {extension}{stackingSuffix}";
+        // Degeneracy check: the generated intervals (plus implicit root) must
+        // produce at least (declared cardinality) distinct pitch classes.
+        // E.g. a "Triad" must have 3 distinct PCs; a "Seventh" must have 4.
+        // When non-tertian stacking collapses two tones onto the same PC,
+        // the result is a smaller-than-declared chord and the name would be
+        // misleading ("Augmented Degree2 Triad (4ths)" with only 2 distinct PCs).
+        // We append a "(degenerate)" marker so downstream filters can skip it
+        // without a breaking API change.
+        var distinctPcCount = intervals
+            .Select(i => i.Interval.Semitones.Value % 12)
+            .Append(0) // implicit root
+            .Distinct()
+            .Count();
+
+        var expectedPcCount = extension switch
+        {
+            ChordExtension.Triad => 3,
+            ChordExtension.Sus2 => 3,
+            ChordExtension.Sus4 => 3,
+            ChordExtension.Sixth => 4,
+            ChordExtension.Seventh => 4,
+            ChordExtension.Add9 => 4,
+            ChordExtension.Add11 => 4,
+            ChordExtension.Ninth => 5,
+            ChordExtension.Eleventh => 6,
+            ChordExtension.Thirteenth => 7,
+            _ => intervals.Count + 1
+        };
+
+        var isDegenerate = distinctPcCount < expectedPcCount;
+        var degeneracySuffix = isDegenerate ? " (degenerate)" : "";
+
+        var name = $"{parentMode.Name} Degree{degree} {extension}{stackingSuffix}{degeneracySuffix}";
         return new(name, intervals, stackingType);
     }
 
