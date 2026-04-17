@@ -1,5 +1,48 @@
 namespace GA.Business.ML.Embeddings;
 
+using System.IO.Hashing;
+using System.Text;
+
+/// <summary>
+///     Role a partition plays in the similarity formula.
+/// </summary>
+public enum PartitionRole
+{
+    /// <summary>Hard filter — excluded from similarity (e.g. object type).</summary>
+    Identity,
+
+    /// <summary>Contributes to weighted cosine similarity.</summary>
+    Similarity,
+
+    /// <summary>Informational/derived feature — excluded from similarity.</summary>
+    Info,
+}
+
+/// <summary>
+///     A contiguous range of dimensions in the raw 228-dim embedding vector,
+///     with its similarity weight and role. Single source of truth for the
+///     partition layout — consumed by <c>OptickIndexWriter</c>, search tooling,
+///     and cross-repo schema-hash verification.
+/// </summary>
+/// <param name="Name">Partition name (e.g. "STRUCTURE").</param>
+/// <param name="Start">Inclusive start index in the raw 228-dim space.</param>
+/// <param name="End">Inclusive end index in the raw 228-dim space.</param>
+/// <param name="SimilarityWeight">Weight used in similarity; 0 if Role != Similarity.</param>
+/// <param name="Role">Role this partition plays.</param>
+public readonly record struct EmbeddingPartition(
+    string Name,
+    int Start,
+    int End,
+    float SimilarityWeight,
+    PartitionRole Role)
+{
+    /// <summary>Number of dimensions in this partition.</summary>
+    public int Dim => End - Start + 1;
+
+    /// <summary>Pre-computed sqrt(weight) — zero if the partition is excluded from similarity.</summary>
+    public float SqrtWeight => SimilarityWeight > 0f ? MathF.Sqrt(SimilarityWeight) : 0f;
+}
+
 /// <summary>
 ///     Canonical definition of the Musical Embedding Vector Schema (v1.3.1).
 ///     Implements OPTIC-K Schema v1.3.1.
@@ -53,6 +96,69 @@ public static class EmbeddingSchema
 
     /// <summary>Total embedding vector dimension (228 for v1.7 with Atonal Modal).</summary>
     public const int TotalDimension = 228;
+
+    #endregion
+
+    #region Partition Registry
+
+    /// <summary>
+    ///     Authoritative partition registry. Every consumer that needs partition
+    ///     boundaries, weights, or roles (OptickIndexWriter, query builders,
+    ///     diagnostic tools) should read from this array rather than redefining
+    ///     the layout locally. Prevents silent drift between writer and reader.
+    /// </summary>
+    public static readonly EmbeddingPartition[] Partitions =
+    [
+        new("IDENTITY",     0,   5,   0.00f, PartitionRole.Identity),
+        new("STRUCTURE",    6,   29,  0.45f, PartitionRole.Similarity),
+        new("MORPHOLOGY",   30,  53,  0.25f, PartitionRole.Similarity),
+        new("CONTEXT",      54,  65,  0.20f, PartitionRole.Similarity),
+        new("SYMBOLIC",     66,  77,  0.10f, PartitionRole.Similarity),
+        new("EXTENSIONS",   78,  95,  0.00f, PartitionRole.Info),
+        new("SPECTRAL",     96,  108, 0.00f, PartitionRole.Info),
+        new("MODAL",        109, 148, 0.10f, PartitionRole.Similarity),
+        new("HIERARCHY",    149, 163, 0.00f, PartitionRole.Info),
+        new("ATONAL_MODAL", 164, 227, 0.00f, PartitionRole.Info),
+    ];
+
+    /// <summary>Partitions that contribute to similarity scoring (used by v4 compact index).</summary>
+    public static IEnumerable<EmbeddingPartition> SimilarityPartitions =>
+        Partitions.Where(p => p.Role == PartitionRole.Similarity);
+
+    /// <summary>
+    ///     Compact dimension — sum of similarity partition dims (112 for v1.7).
+    ///     Used by the OPTK v4 binary format to drop info-only partitions from storage.
+    /// </summary>
+    public static int CompactDimension =>
+        SimilarityPartitions.Sum(p => p.Dim);
+
+    /// <summary>
+    ///     Canonical OPTK v4 layout string. CRC32 of this string = v4 schema hash.
+    ///     Both the C# writer and Rust reader compute from this exact byte sequence.
+    /// </summary>
+    public static readonly string CompactLayoutV4 = BuildCompactLayoutV4();
+
+    /// <summary>
+    ///     Schema hash for the OPTK v4 format. Writers emit this in the header;
+    ///     readers compare against their own computation to detect format drift.
+    /// </summary>
+    public static readonly uint SchemaHashV4 =
+        Crc32.HashToUInt32(Encoding.UTF8.GetBytes(CompactLayoutV4));
+
+    private static string BuildCompactLayoutV4()
+    {
+        var sb = new StringBuilder("optk-v4:");
+        var pos = 0;
+        var first = true;
+        foreach (var p in SimilarityPartitions)
+        {
+            if (!first) sb.Append(',');
+            sb.Append(p.Name).Append(':').Append(pos).Append('-').Append(pos + p.Dim - 1);
+            pos += p.Dim;
+            first = false;
+        }
+        return sb.ToString();
+    }
 
     #endregion
 
