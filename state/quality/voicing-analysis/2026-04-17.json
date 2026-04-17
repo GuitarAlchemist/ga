@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-04-17T03:12:49.5430961Z",
+  "Timestamp": "2026-04-17T18:30:43.8917336Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -12,90 +12,90 @@
       "Pct": 0
     },
     "UnknownChordName": {
-      "Count": 98772,
-      "Pct": 31.552
+      "Count": 0,
+      "Pct": 0
     },
-    "DistinctChordNames": 1495,
+    "DistinctChordNames": 3451,
     "Top20": [
       {
-        "Name": "Unknown",
-        "Count": 98772
+        "Name": "Forte 5-32 (pentachord)",
+        "Count": 2609
       },
       {
-        "Name": "Ionian Degree3 Triad (5ths)",
-        "Count": 1242
+        "Name": "Forte 4-21 (tetrachord)",
+        "Count": 1110
       },
       {
-        "Name": "Ionian Degree7 Triad (5ths)",
-        "Count": 1209
+        "Name": "Forte 6-26 (hexachord)",
+        "Count": 751
       },
       {
-        "Name": "Ionian Degree1 Triad (4ths)",
-        "Count": 1073
+        "Name": "Forte 6-42 (hexachord)",
+        "Count": 744
       },
       {
-        "Name": "Ionian Degree4 Triad (4ths)",
-        "Count": 1063
+        "Name": "Forte 6-43 (hexachord)",
+        "Count": 744
       },
       {
-        "Name": "Melodic Minor Degree7 Triad (4ths)",
-        "Count": 1008
+        "Name": "Forte 6-44 (hexachord)",
+        "Count": 617
       },
       {
-        "Name": "Hirajoshi Degree5 Seventh",
-        "Count": 960
+        "Name": "E7",
+        "Count": 586
       },
       {
-        "Name": "Ionian Degree1 Seventh (4ths)",
-        "Count": 951
+        "Name": "G7",
+        "Count": 497
       },
       {
-        "Name": "Hirajoshi Degree5 Triad (2nds)",
-        "Count": 944
+        "Name": "Ab7",
+        "Count": 493
       },
       {
-        "Name": "Melodic Minor Degree7 Seventh (4ths)",
-        "Count": 920
+        "Name": "Gb7",
+        "Count": 476
       },
       {
-        "Name": "Harmonic Minor Degree3 Seventh",
-        "Count": 862
+        "Name": "A7",
+        "Count": 471
       },
       {
-        "Name": "Ionian Degree5 Seventh (4ths)",
-        "Count": 857
+        "Name": "D7",
+        "Count": 470
       },
       {
-        "Name": "Ionian Degree1 Seventh",
-        "Count": 839
+        "Name": "C7",
+        "Count": 468
       },
       {
-        "Name": "Ionian Degree3 Sixth",
-        "Count": 811
+        "Name": "F7",
+        "Count": 467
       },
       {
-        "Name": "Hirajoshi Degree3 Sus2",
-        "Count": 806
+        "Name": "Db7",
+        "Count": 445
       },
       {
-        "Name": "Harmonic Minor Degree3 Sixth",
-        "Count": 803
+        "Name": "Eb7",
+        "Count": 442
       },
       {
-        "Name": "Harmonic Minor Degree5 Add9",
-        "Count": 788
+        "Name": "Bb7",
+        "Count": 442
       },
       {
-        "Name": "Harmonic Minor Degree5 Sixth",
-        "Count": 770
+        "Name": "B7",
+        "Count": 442
       },
       {
-        "Name": "Ionian Degree2 Sixth",
-        "Count": 753
+        "Name": "A7/E",
+        "Count": 441
       },
       {
-        "Name": "Whole-tone Degree1 Sixth",
-        "Count": 749
+        "Name": "F7/E",
+        "Count": 438
       }
     ]
   },
@@ -103,13 +103,7 @@
     "NullCount": 0,
     "Pct": 0,
     "Distribution": {
-      "Unknown Quality": 98772,
-      "Minor": 60212,
-      "Major": 49033,
-      "Diminished": 36007,
-      "Dominant": 29377,
-      "Other": 22298,
-      "Augmented": 17348
+      "Functional Harmony": 313047
     }
   },
   "ForteCoverage": {
@@ -124,86 +118,86 @@
   },
   "CrossInstrumentConsistency": {
     "SharedSets": 793,
-    "Consistent": 233,
+    "Consistent": 123,
     "Disagreements": [
       {
-        "PitchClasses": "{0,7}",
+        "PitchClasses": "{1,6,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree2 Triad (4ths)",
-          "bass": "Augmented Degree2 Triad (4ths)",
-          "ukulele": "Augmented Degree1 Triad (4ths)"
+          "guitar": "Gbm",
+          "bass": "Gbm",
+          "ukulele": "Gbm/Db"
         }
       },
       {
-        "PitchClasses": "{2,7}",
+        "PitchClasses": "{1,7,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree1 Triad (4ths)",
-          "bass": "Augmented Degree2 Triad (4ths)",
-          "ukulele": "Augmented Degree2 Triad (4ths)"
+          "guitar": "A7(shell)",
+          "bass": "A7(shell)/G",
+          "ukulele": "A7(shell)/Db"
         }
       },
       {
-        "PitchClasses": "{1,8}",
+        "PitchClasses": "{1,8,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree2 Triad (4ths)",
-          "bass": "Augmented Degree1 Triad (4ths)",
-          "ukulele": "Augmented Degree1 Triad (4ths)"
+          "guitar": "Amaj7(shell)",
+          "bass": "Amaj7(shell)/Ab",
+          "ukulele": "Amaj7(shell)/Db"
         }
       },
       {
-        "PitchClasses": "{3,8}",
+        "PitchClasses": "{1,9,10}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree1 Triad (4ths)",
-          "bass": "Augmented Degree2 Triad (4ths)",
-          "ukulele": "Augmented Degree2 Triad (4ths)"
+          "guitar": "Bbm(maj7)/A",
+          "bass": "Bbm(maj7)/A",
+          "ukulele": "Bbm(maj7)/Db"
         }
       },
       {
-        "PitchClasses": "{2,9}",
+        "PitchClasses": "{2,6,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree2 Triad (4ths)",
-          "bass": "Augmented Degree1 Triad (4ths)",
-          "ukulele": "Augmented Degree1 Triad (4ths)"
+          "guitar": "D/Gb",
+          "bass": "D/Gb",
+          "ukulele": "D"
         }
       },
       {
-        "PitchClasses": "{4,9}",
+        "PitchClasses": "{2,7,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree1 Triad (4ths)",
-          "bass": "Augmented Degree2 Triad (4ths)",
-          "ukulele": "Augmented Degree2 Triad (4ths)"
+          "guitar": "Gsus2/A",
+          "bass": "Gsus2/A",
+          "ukulele": "Gsus2/D"
         }
       },
       {
-        "PitchClasses": "{3,10}",
+        "PitchClasses": "{2,8,9}",
         "ChordNameByInstrument": {
-          "guitar": "Augmented Degree2 Triad (4ths)",
-          "bass": "Augmented Degree2 Triad (4ths)",
-          "ukulele": "Augmented Degree1 Triad (4ths)"
+          "guitar": "D5/A",
+          "bass": "D5/A",
+          "ukulele": "D5"
         }
       },
       {
-        "PitchClasses": "{0,3,7}",
+        "PitchClasses": "{2,9,10}",
         "ChordNameByInstrument": {
-          "guitar": "C Minor/Eb",
-          "bass": "C Minor/G",
-          "ukulele": "C Minor/Eb"
+          "guitar": "Bbmaj7(shell)/A",
+          "bass": "Bbmaj7(shell)/A",
+          "ukulele": "Bbmaj7(shell)/D"
         }
       },
       {
-        "PitchClasses": "{1,3,7}",
+        "PitchClasses": "{3,6,9}",
         "ChordNameByInstrument": {
-          "guitar": "Melodic Minor Degree7 Triad (4ths)",
-          "bass": "Melodic Minor Degree7 Triad (4ths)/G",
-          "ukulele": "Melodic Minor Degree7 Triad (4ths)"
+          "guitar": "Ebdim/Gb",
+          "bass": "Ebdim/Gb",
+          "ukulele": "Ebdim"
         }
       },
       {
-        "PitchClasses": "{2,3,7}",
+        "PitchClasses": "{3,7,9}",
         "ChordNameByInstrument": {
-          "guitar": "Hirajoshi Degree3 Sus2",
-          "bass": "Hirajoshi Degree1 Triad (5ths)",
-          "ukulele": "Hirajoshi Degree2 Triad (2nds)"
+          "guitar": "Am7b5",
+          "bass": "Am7b5",
+          "ukulele": "Am7b5/Eb"
         }
       }
     ]
@@ -216,7 +210,7 @@
     "5": 119152,
     "6": 43988
   },
-  "TwoNoteWithChordName": 1655,
+  "TwoNoteWithChordName": 5715,
   "InvariantFailures": {
     "MidiNotesMismatch": 0,
     "NullPitchClassSet": 0,
@@ -225,17 +219,12 @@
     "Samples": [
       {
         "Instrument": "guitar",
-        "Diagram": "x-8-12-x-x-x",
+        "Diagram": "x-2-6-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-4-8-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-10-14-x-x-x",
+        "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -245,7 +234,17 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-2-6-x-x-x",
+        "Diagram": "x-4-8-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-5-9-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-6-10-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -260,7 +259,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-5-9-x-x-x",
+        "Diagram": "x-8-12-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-10-14-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -270,17 +274,7 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-6-10-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-12-16-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -315,7 +309,7 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-2-6-x",
+        "Diagram": "x-1-5-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -327,168 +321,28 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 12.8768858,
-    "VoicingsPerSec": 24310.76930106812,
-    "PeakWorkingSetMb": 404.3046875
+    "RuntimeSeconds": 84.5411239,
+    "VoicingsPerSec": 3702.8961239063915,
+    "PeakWorkingSetMb": 401.84375
   },
   "IssueSamples": {
     "NullChordName": [],
-    "UnknownChordName": [
-      {
-        "Instrument": "guitar",
-        "Diagram": "11-8-8-x-x-x",
-        "MidiNotes": [
-          75,
-          67,
-          63
-        ],
-        "PitchClasses": "{3,7}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 12,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "12-8-x-x-x-x",
-        "MidiNotes": [
-          76,
-          67
-        ],
-        "PitchClasses": "{4,7}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 9,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "8-9-x-x-x-8",
-        "MidiNotes": [
-          72,
-          68,
-          48
-        ],
-        "PitchClasses": "{0,8}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "4-x-1-x-x-0",
-        "MidiNotes": [
-          68,
-          56,
-          40
-        ],
-        "PitchClasses": "{4,8}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 28,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "8-10-x-x-x-8",
-        "MidiNotes": [
-          72,
-          69,
-          48
-        ],
-        "PitchClasses": "{0,9}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "9-10-x-x-x-9",
-        "MidiNotes": [
-          73,
-          69,
-          49
-        ],
-        "PitchClasses": "{1,9}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "8-11-x-8-x-8",
-        "MidiNotes": [
-          72,
-          70,
-          58,
-          48
-        ],
-        "PitchClasses": "{0,10}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "9-11-x-x-x-9",
-        "MidiNotes": [
-          73,
-          70,
-          49
-        ],
-        "PitchClasses": "{1,10}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "10-11-x-x-x-10",
-        "MidiNotes": [
-          74,
-          70,
-          50
-        ],
-        "PitchClasses": "{2,10}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "8-12-x-x-x-8",
-        "MidiNotes": [
-          72,
-          71,
-          48
-        ],
-        "PitchClasses": "{0,11}",
-        "ChordName": "Unknown",
-        "Quality": "Quality",
-        "IntervalSpread": 24,
-        "Issue": "ChordName == \u0022Unknown\u0022"
-      }
-    ],
+    "UnknownChordName": [],
     "ForteFailure": [],
     "TwoNoteWithChordName": [
       {
         "Instrument": "guitar",
-        "Diagram": "x-1-0-x-x-x",
+        "Diagram": "2-2-x-x-x-2",
         "MidiNotes": [
-          60,
-          55
+          66,
+          61,
+          42
         ],
-        "PitchClasses": "{0,7}",
-        "ChordName": "Augmented Degree2 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 5,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree2 Triad (4ths)\u0027"
+        "PitchClasses": "{1,6}",
+        "ChordName": "Gb5",
+        "Quality": "power",
+        "IntervalSpread": 24,
+        "Issue": "2-note voicing assigned ChordName=\u0027Gb5\u0027"
       },
       {
         "Instrument": "guitar",
@@ -499,37 +353,78 @@
           55
         ],
         "PitchClasses": "{1,7}",
-        "ChordName": "Whole-tone Degree1 Triad (4ths)",
-        "Quality": "Other",
+        "ChordName": "Db \u002B G (Tritone)",
+        "Quality": "dyad",
         "IntervalSpread": 12,
-        "Issue": "2-note voicing assigned ChordName=\u0027Whole-tone Degree1 Triad (4ths)\u0027"
+        "Issue": "2-note voicing assigned ChordName=\u0027Db \u002B G (Tritone)\u0027"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "10-8-x-x-x-x",
-        "MidiNotes": [
-          74,
-          67
-        ],
-        "PitchClasses": "{2,7}",
-        "ChordName": "Augmented Degree1 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 7,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree1 Triad (4ths)\u0027"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "4-x-x-x-4-4",
+        "Diagram": "4-2-x-x-x-x",
         "MidiNotes": [
           68,
-          49,
-          44
+          61
         ],
         "PitchClasses": "{1,8}",
-        "ChordName": "Augmented Degree2 Triad (4ths)",
-        "Quality": "Other",
+        "ChordName": "Db5",
+        "Quality": "power",
+        "IntervalSpread": 7,
+        "Issue": "2-note voicing assigned ChordName=\u0027Db5\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "5-2-2-x-x-x",
+        "MidiNotes": [
+          69,
+          61,
+          57
+        ],
+        "PitchClasses": "{1,9}",
+        "ChordName": "A \u002B Db (Major 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027A \u002B Db (Major 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "6-2-x-x-x-x",
+        "MidiNotes": [
+          70,
+          61
+        ],
+        "PitchClasses": "{1,10}",
+        "ChordName": "Bb \u002B Db (Minor 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 9,
+        "Issue": "2-note voicing assigned ChordName=\u0027Bb \u002B Db (Minor 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "2-3-x-0-x-2",
+        "MidiNotes": [
+          66,
+          62,
+          50,
+          42
+        ],
+        "PitchClasses": "{2,6}",
+        "ChordName": "D \u002B Gb (Major 3rd)",
+        "Quality": "dyad",
         "IntervalSpread": 24,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree2 Triad (4ths)\u0027"
+        "Issue": "2-note voicing assigned ChordName=\u0027D \u002B Gb (Major 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-x-0-0-x-x",
+        "MidiNotes": [
+          55,
+          50
+        ],
+        "PitchClasses": "{2,7}",
+        "ChordName": "G5",
+        "Quality": "power",
+        "IntervalSpread": 5,
+        "Issue": "2-note voicing assigned ChordName=\u0027G5\u0027"
       },
       {
         "Instrument": "guitar",
@@ -540,75 +435,37 @@
           50
         ],
         "PitchClasses": "{2,8}",
-        "ChordName": "Whole-tone Degree1 Triad (4ths)",
-        "Quality": "Other",
+        "ChordName": "D \u002B Ab (Tritone)",
+        "Quality": "dyad",
         "IntervalSpread": 18,
-        "Issue": "2-note voicing assigned ChordName=\u0027Whole-tone Degree1 Triad (4ths)\u0027"
+        "Issue": "2-note voicing assigned ChordName=\u0027D \u002B Ab (Tritone)\u0027"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "11-9-x-x-x-x",
-        "MidiNotes": [
-          75,
-          68
-        ],
-        "PitchClasses": "{3,8}",
-        "ChordName": "Augmented Degree1 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 7,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree1 Triad (4ths)\u0027"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-x-x-0-0-x",
-        "MidiNotes": [
-          50,
-          45
-        ],
-        "PitchClasses": "{2,9}",
-        "ChordName": "Augmented Degree2 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 5,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree2 Triad (4ths)\u0027"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "5-4-x-x-x-x",
+        "Diagram": "5-3-x-x-x-x",
         "MidiNotes": [
           69,
-          63
+          62
         ],
-        "PitchClasses": "{3,9}",
-        "ChordName": "Whole-tone Degree1 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 6,
-        "Issue": "2-note voicing assigned ChordName=\u0027Whole-tone Degree1 Triad (4ths)\u0027"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "12-10-x-x-x-x",
-        "MidiNotes": [
-          76,
-          69
-        ],
-        "PitchClasses": "{4,9}",
-        "ChordName": "Augmented Degree1 Triad (4ths)",
-        "Quality": "Other",
+        "PitchClasses": "{2,9}",
+        "ChordName": "D5",
+        "Quality": "power",
         "IntervalSpread": 7,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree1 Triad (4ths)\u0027"
+        "Issue": "2-note voicing assigned ChordName=\u0027D5\u0027"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-x-x-1-1-x",
+        "Diagram": "6-3-3-x-x-x",
         "MidiNotes": [
-          51,
-          46
+          70,
+          62,
+          58
         ],
-        "PitchClasses": "{3,10}",
-        "ChordName": "Augmented Degree2 Triad (4ths)",
-        "Quality": "Other",
-        "IntervalSpread": 5,
-        "Issue": "2-note voicing assigned ChordName=\u0027Augmented Degree2 Triad (4ths)\u0027"
+        "PitchClasses": "{2,10}",
+        "ChordName": "Bb \u002B D (Major 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027Bb \u002B D (Major 3rd)\u0027"
       }
     ]
   }
