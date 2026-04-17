@@ -57,83 +57,41 @@ public static class VoicingHarmonicAnalyzer
         return null;
     }
 
-    private static Dictionary<int, ChordTemplate>? _templateCache;
-
+    /// <summary>
+    ///     Phase D: Identifies a chord using the content-enumerated
+    ///     <see cref="CanonicalChordRecognizer" /> instead of the legacy first-match-wins
+    ///     template search. The returned <see cref="ChordIdentification" /> has both the
+    ///     legacy string fields (for backward compatibility) AND the Phase C structured
+    ///     fields (<c>CanonicalName</c>, <c>SlashSuffix</c>, <c>Alterations</c>, etc.)
+    ///     populated with register-invariant data.
+    /// </summary>
     public static ChordIdentification IdentifyChord(PitchClassSet pcSet, IEnumerable<PitchClass> notes,
         PitchClass bassNote)
     {
-        // Lazy initialization of the template cache, ensuring we pick the simplest template for each interval set
-        if (_templateCache == null)
+        var result = CanonicalChordRecognizer.Identify(pcSet, bassNote);
+
+        // Compose the legacy ChordName — this preserves display behavior for
+        // existing consumers (they still see "C Major 7/E"). New consumers read
+        // CanonicalName (invariant) + SlashSuffix (voicing-specific) separately.
+        var legacyChordName = result.DisplayName;
+
+        return new ChordIdentification(
+            ChordName: legacyChordName,
+            RootPitchClass: result.Root ?? bassNote.ToString(),
+            HarmonicFunction: AnalysisConstants.FunctionalHarmony,
+            IsNaturallyOccurring: result.IsNaturallyOccurring,
+            FunctionalDescription: AnalysisConstants.FunctionalHarmony,
+            Quality: result.Quality,
+            SlashChordInfo: null,
+            ExtensionInfo: null)
         {
-            _templateCache = ChordTemplateFactory.GenerateAllPossibleChords()
-                .GroupBy(t => t.PitchClassSet.Id.Value)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.OrderBy(GetComplexity).First()
-                );
-        }
-
-        var noteValues = notes.Select(n => n.Value).Distinct().ToList();
-        var matches = new List<(PitchClass Root, ChordTemplate Template)>();
-
-        foreach (var rootValue in noteValues)
-        {
-            var transposedId = pcSet.Id.Transpose(12 - rootValue);
-
-            // Find best matching template for this root from the cache
-            if (_templateCache.TryGetValue(transposedId.Value, out var match))
-            {
-                matches.Add((PitchClass.FromValue(rootValue), match));
-            }
-        }
-
-        if (matches.Count == 0)
-        {
-            // Fallback
-            return new(AnalysisConstants.Unknown, bassNote.ToString(), AnalysisConstants.UnknownQuality, true, "Function",
-                "Quality", null, null);
-        }
-
-        // Rank order:
-        // 1. Complexity (Triads > Sevenths > Extensions)
-        // 2. Bass Note is Root (Root Position > Inversion)
-        var ranked = matches
-            .Select(m => new { Match = m, Score = GetComplexity(m.Template) })
-            .OrderBy(x => x.Score)
-            .ThenBy(x => x.Match.Root.Value == bassNote.Value ? 0 : 1)
-            .ToList();
-
-        var bestMatch = ranked.First().Match;
-        var template = bestMatch.Template;
-
-        var chordName = template.Name;
-        // Improve naming for standard chords
-        if (template.Extension == ChordExtension.Triad && IsStandardIntervals(template))
-        {
-            chordName = $"{GetNoteName(bestMatch.Root.Value)} {template.Quality}";
-        }
-        else if (template.Extension == ChordExtension.Seventh && IsStandardIntervals(template))
-        {
-             // TODO: Add standard intervals check for sevenths if needed, for now just handle triads or check quality
-             // Use simple concatenation if it looks standard-ish?
-             // But IsStandardIntervals only checks triads currently.
-        }
-
-        // Add slash notation if bass note differs from root
-        if (bassNote.Value != bestMatch.Root.Value)
-        {
-            chordName += $"/{GetNoteName(bassNote.Value)}";
-        }
-
-        return new(
-            chordName,
-            bestMatch.Root.ToString(),
-            template.Quality.ToString(),
-            true,
-            AnalysisConstants.FunctionalHarmony,
-            template.Quality.ToString(),
-            null,
-            null);
+            CanonicalName = result.CanonicalName,
+            SlashSuffix = result.SlashSuffix,
+            Extension = result.Extension,
+            Alterations = result.Alterations,
+            PatternName = result.PatternName,
+            MatchDistance = result.MatchDistance,
+        };
     }
 
     private static string GetNoteName(int pc)
