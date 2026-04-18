@@ -1,5 +1,6 @@
 namespace GaMcpServer.Tools;
 
+using System.Net.Http.Json;
 using System.Text.Json;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Embeddings.Services;
@@ -23,6 +24,16 @@ public static class VoicingEmbeddingTool
             new SymbolicVectorService(),
             new ModalVectorService(),
             new PhaseSphereService()));
+
+    /// <summary>
+    ///     HttpClient for calling GaApi's voicing-retrieve endpoint. Base address is read from
+    ///     the <c>GA_API_URL</c> env var (default <c>http://localhost:5232</c>).
+    /// </summary>
+    private static readonly Lazy<HttpClient> GaApiClient = new(() =>
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("GA_API_URL") ?? "http://localhost:5232";
+        return new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(30) };
+    });
 
     // Open string MIDI notes per instrument (high string to low string, 1-based index)
     private static readonly Dictionary<string, int[]> OpenStringMidi = new()
@@ -82,6 +93,47 @@ public static class VoicingEmbeddingTool
                 new { name = "ATONAL_MODAL", offset = EmbeddingSchema.AtonalModalOffset, dim = EmbeddingSchema.AtonalModalDim, weight = 0.0, role = "info" }
             }
         });
+    }
+
+    [McpServerTool]
+    [Description("Search OPTIC-K voicing index by text query. Returns top-K voicings grounded in the 313k-voicing embedded corpus via Ollama text embedding. Requires GaApi running (default http://localhost:5232; override with GA_API_URL env var).")]
+    public static async Task<string> GaSearchVoicingsByQuery(
+        [Description("Free-text query, e.g. 'warm jazz Cmaj7 voicing' or 'drop 2 minor seventh'")] string query,
+        [Description("Number of voicings to return (1-50, default 10)")] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return JsonSerializer.Serialize(new { error = "query is required" });
+        }
+
+        var clamped = Math.Clamp(limit, 1, 50);
+
+        try
+        {
+            var response = await GaApiClient.Value.PostAsJsonAsync(
+                "/api/voicings/retrieve",
+                new { query, limit = clamped });
+
+            var body = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    error = $"GaApi returned {(int)response.StatusCode} {response.StatusCode}",
+                    body
+                });
+            }
+            return body;
+        }
+        catch (HttpRequestException ex)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                error = "Could not reach GaApi. Is it running?",
+                details = ex.Message,
+                gaApiUrl = GaApiClient.Value.BaseAddress?.ToString()
+            });
+        }
     }
 
     private static Voicing ParseDiagram(string diagram, string instrument)
