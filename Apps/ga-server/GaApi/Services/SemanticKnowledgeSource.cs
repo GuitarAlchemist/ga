@@ -21,24 +21,31 @@ public sealed class SemanticKnowledgeSource(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var embedMs = 0d;
+        var searchMs = 0d;
+
         try
         {
-            // Bridge: OllamaEmbeddingService returns float[], but search expects double[]
+            // Bridge: OllamaEmbeddingService returns float[], but search expects double[].
+            // Time the embedding call separately from the ANN scan for retrieval diagnostics.
             async Task<double[]> EmbedAsync(string text)
             {
+                var t0 = System.Diagnostics.Stopwatch.GetTimestamp();
                 var floatEmbedding = await embeddingService.GenerateEmbeddingAsync(text);
+                embedMs = System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
                 return [.. floatEmbedding.Select(f => (double)f)];
             }
 
-            // Use the real voicing search with embedding generation
-            var results = await voicingSearch.SearchAsync(
-                query,
-                EmbedAsync,
-                limit);
+            var searchStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            var results = await voicingSearch.SearchAsync(query, EmbedAsync, limit);
+            searchMs = System.Diagnostics.Stopwatch.GetElapsedTime(searchStart).TotalMilliseconds - embedMs;
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Convert VoicingSearchResult to SemanticSearchResult with rich content
+            logger.LogInformation(
+                "semantic-knowledge query={Query} limit={Limit} returned={Count} embed_ms={EmbedMs:F1} search_ms={SearchMs:F1}",
+                query, limit, results.Count, embedMs, Math.Max(0, searchMs));
+
             return results
                 .Select(r => new SemanticSearchResult(
                     FormatVoicingForLlm(r.Document),
@@ -51,7 +58,13 @@ public sealed class SemanticKnowledgeSource(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Voicing search failed for query: {Query}. Returning empty results.", query);
+            // Upgraded from Warning to Error — this path silently produced empty
+            // results for every chatbot query and masked root-cause failures in
+            // the embedding/search pipeline. Keep returning [] so the chatbot still
+            // serves an answer, but make the failure loud in logs.
+            logger.LogError(ex,
+                "semantic-knowledge FAILED query={Query} limit={Limit} embed_ms={EmbedMs:F1} search_ms={SearchMs:F1}. Returning empty results.",
+                query, limit, embedMs, Math.Max(0, searchMs));
             return [];
         }
     }
