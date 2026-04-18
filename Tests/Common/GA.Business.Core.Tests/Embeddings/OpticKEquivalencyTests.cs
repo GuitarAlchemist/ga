@@ -79,4 +79,58 @@ public class OpticKEquivalencyTests
         Assert.That(vVoicing[0], Is.EqualTo(1.0), "A Voicing should also be a Chord");
         Assert.That(vVoicing[5], Is.EqualTo(1.0), "A Chord should imply a PitchClassSet");
     }
+
+    [Test]
+    public void Invariant32_StructureVectorIsIdenticalForSamePcSet_IgnoringPerceptualArgs()
+    {
+        // Invariant #32: Same PC-set across octaves → cosine(STRUCTURE, STRUCTURE') == 1.0.
+        // The caller used to pass octave-dependent `consonance` and `brightness` into STRUCTURE,
+        // breaking the invariant. The service now derives dims 20-21 from the ICV and ignores
+        // those parameters. Two callers with identical PC-set + ICV but different perceptual
+        // inputs must produce identical STRUCTURE vectors.
+        var pcs = new[] { 0, 4, 7 };
+        const string icv = "001110";
+
+        var vLowRegister = _theoryService.ComputeEmbedding(pcs, rootPitchClass: 0,
+            intervalClassVector: icv, consonance: 0.9, brightness: 0.2);
+        var vHighRegister = _theoryService.ComputeEmbedding(pcs, rootPitchClass: 0,
+            intervalClassVector: icv, consonance: 0.3, brightness: 0.95);
+
+        Assert.That(vLowRegister, Is.EqualTo(vHighRegister),
+            "STRUCTURE must be octave-invariant — perceptual args must not affect the vector.");
+    }
+
+    [Test]
+    public void IcvDerivedConsonance_RangesZeroToOne_AndFavoursThirdsAndFifths()
+    {
+        // Major triad ICV 001110: all three intervals are consonant (ic3, ic4, ic5).
+        var cMajor = _theoryService.ComputeEmbedding(new[] { 0, 4, 7 },
+            intervalClassVector: "001110");
+        // Tritone pair {0,6}: single ic6, fully dissonant.
+        var tritone = _theoryService.ComputeEmbedding(new[] { 0, 6 },
+            intervalClassVector: "000001");
+
+        Assert.That(cMajor[20], Is.EqualTo(1.0).Within(1e-9),
+            "Major triad should be maximally consonant under the ICV proxy.");
+        Assert.That(tritone[20], Is.EqualTo(0.0).Within(1e-9),
+            "Tritone pair should be maximally dissonant under the ICV proxy.");
+    }
+
+    [Test]
+    public void IcvDerivedBrightness_RangesZeroToOne_AndMapsBrightToOneDarkToZero()
+    {
+        // Pure bright intervals: ic4 + ic5, no ic1/ic6 → brightness ≈ 1.0.
+        var bright = _theoryService.ComputeEmbedding(new[] { 0, 4, 7 },
+            intervalClassVector: "001110");
+        // Pure tritone {0, 6}: only ic6, no bright content → brightness = 0.0.
+        var dark = _theoryService.ComputeEmbedding(new[] { 0, 6 },
+            intervalClassVector: "000001");
+        // Empty ICV → neutral 0.5.
+        var neutral = _theoryService.ComputeEmbedding(new[] { 0 },
+            intervalClassVector: "000000");
+
+        Assert.That(bright[21], Is.GreaterThan(0.8));
+        Assert.That(dark[21], Is.LessThan(0.2));
+        Assert.That(neutral[21], Is.EqualTo(0.5).Within(1e-9));
+    }
 }
