@@ -434,6 +434,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
+        <Route path="/chatbot" element={<GAChatPanelPage />} />
+        <Route path="/ai-copilot" element={<Navigate to="/chatbot" replace />} />
 
         {/* Chrome-free panels for Streamlit iframe embedding */}
         <Route path="/panels/diatonic" element={<DiatonicPanel />} />

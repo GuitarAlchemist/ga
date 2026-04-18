@@ -59,9 +59,12 @@ public class EnhancedVoicingSearchService(
         // Process all embeddings in parallel for maximum speed
         var embeddingTasks = documents.Select(async doc =>
         {
-            // Use cached embeddings if available, otherwise generate
-            var musicalEmbedding = doc.Embedding != null
-                ? Array.ConvertAll(doc.Embedding, x => (double)x)
+            // RagDocumentBase.Embedding defaults to [] (non-null empty). Treat both null
+            // AND length-0 as "missing" so the generator fallback actually kicks in —
+            // otherwise an empty array makes CopyEmbeddingsToGpu read dim=0 from the
+            // first voicing and every subsequent query throws "Expected 0, got N".
+            var musicalEmbedding = doc.Embedding is { Length: > 0 } musicalFloats
+                ? Array.ConvertAll(musicalFloats, x => (double)x)
                 : null;
 
             if (musicalEmbedding == null && musicalEmbeddingGenerator != null)
@@ -73,6 +76,16 @@ public class EnhancedVoicingSearchService(
             if (textEmbedding == null)
             {
                 textEmbedding = await semanticEmbeddingGenerator(doc.SearchableText);
+            }
+
+            // Primary embedding slot on the GPU search structure comes from
+            // `musicalEmbedding`. If it's still empty (no generator registered, or the
+            // 78-zero fallback from a broken generator), use the real 768-dim text
+            // embedding as a substitute so semantic text search at least works. The
+            // query is text-embedded too, so cosine similarity is meaningful.
+            if ((musicalEmbedding == null || musicalEmbedding.Length == 0) && textEmbedding is { Length: > 0 })
+            {
+                musicalEmbedding = textEmbedding;
             }
 
             return new VoicingEmbedding(
