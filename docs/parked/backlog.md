@@ -21,6 +21,10 @@ Format: `- [ ] YYYY-MM-DD path:line — description — found while <task> — r
 - [ ] "AI Copilot" → "Chatbot" rename committed in ga-client (not served). Also in docs, nav descriptions, any marketing copy — grep + sweep when the canonical SPA is decided.
 - [ ] `/ai-copilot` route: currently redirects to `/chatbot` in ga-client. If ga-client is deprecated, move redirect logic to ga-react-components (or remove if not needed there).
 
+## Test infrastructure — 2026-04-17
+
+- [ ] `Tests/Apps/GaApi.Tests/GaApi.Tests.csproj` — test discovery is completely broken. `dotnet test --list-tests` returns "No test is available" for the whole assembly, not just new tests. The csproj has correct NUnit + test-sdk package refs; the `bin/Debug/net10.0/GaApi.Tests.dll` builds fine. Likely a test-adapter version / net10.0 target compat issue. Blocks unit-testing any new GaApi controller. Workaround: smoke-test live against running GaApi.
+
 ## Dead/unreachable config
 
 - [ ] Port `7001` referenced in multiple places as "GaApi HTTPS" — actual is `5232` HTTP per `launchSettings.json`. Grep + clean up.
