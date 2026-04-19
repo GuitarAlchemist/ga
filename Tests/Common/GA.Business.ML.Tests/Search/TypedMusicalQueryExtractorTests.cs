@@ -102,6 +102,52 @@ public class TypedMusicalQueryExtractorTests
         Assert.Pass("diagnostic only — see console output for matched tokens.");
     }
 
+    [TestCase("Dm bass",    "Dm",    "bass")]
+    [TestCase("C ukulele",  "C",     "ukulele")]
+    [TestCase("Cmaj7 uke",  "Cmaj7", "ukulele")]
+    [TestCase("G7 guitar",  "G7",    "guitar")]
+    [TestCase("bass Am7",   "Am7",   "bass")]   // word-order independence
+    public async Task Extract_InstrumentWord_RoutesToInstrumentField(
+        string query, string expectedChord, string expectedInstrument)
+    {
+        // Regression for 2026-04-19 telemetry finding: queries like "Dm bass" were
+        // parsing the instrument as a style tag (silently matching nothing) and
+        // returning guitar voicings, defeating the user's intent entirely. Instrument
+        // words now route to StructuredQuery.Instrument so the caller can filter.
+        var q = await _typed.ExtractAsync(query);
+        Assert.That(q.ChordSymbol,  Is.EqualTo(expectedChord));
+        Assert.That(q.Instrument,   Is.EqualTo(expectedInstrument));
+        Assert.That(q.Tags,         Is.Null.Or.Empty,
+            "Instrument word must not also appear in Tags.");
+    }
+
+    [Test]
+    public async Task Extract_InstrumentAlreadyConsumed_DoesNotReappearAsTag()
+    {
+        // Even when other tokens succeed as tags, the instrument token must
+        // disappear — not get double-counted as a tag on top.
+        var q = await _typed.ExtractAsync("Am7 bass rootless");
+        Assert.That(q.ChordSymbol, Is.EqualTo("Am7"));
+        Assert.That(q.Instrument,  Is.EqualTo("bass"));
+        Assert.That(q.Tags,        Is.EqualTo(new[] { "rootless" }));
+    }
+
+    [TestCase("Cmaj7 chord")]        // filler noun
+    [TestCase("Cmaj7 voicing")]
+    [TestCase("Dm shape")]
+    [TestCase("Am7 music")]
+    public async Task Extract_FillerWords_DoNotBecomeTags(string query)
+    {
+        // Regression for 2026-04-19 telemetry finding: "drop D power chord" produced
+        // tags = ["drop", "power", "chord"]. The word "chord" by itself would then
+        // substring-match the first tag containing "chord" (e.g. "beatles-chord"),
+        // poisoning the SYMBOLIC query vector with an arbitrary bit. Linguistic filler
+        // nouns are now skipped before the registry lookup.
+        var q = await _typed.ExtractAsync(query);
+        Assert.That(q.Tags, Is.Null.Or.Empty,
+            $"'{query}' must not produce tags from linguistic filler.");
+    }
+
     [Test]
     public async Task Extract_EmptyQuery_ReturnsEmpty()
     {

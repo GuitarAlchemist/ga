@@ -14,7 +14,15 @@ public sealed record StructuredQuery(
     int? RootPitchClass,
     int[]? PitchClasses,
     string? ModeName,
-    IReadOnlyList<string>? Tags);
+    IReadOnlyList<string>? Tags)
+{
+    /// <summary>
+    ///     Instrument filter parsed out of the query text ("bass" / "guitar" / "ukulele").
+    ///     Null when the user didn't mention one. Applied as a post-retrieval filter on the
+    ///     index; does NOT affect the encoded query vector.
+    /// </summary>
+    public string? Instrument { get; init; }
+}
 
 /// <summary>
 ///     Composes a 112-dim OPTK v4 compact query vector from a <see cref="StructuredQuery"/>.

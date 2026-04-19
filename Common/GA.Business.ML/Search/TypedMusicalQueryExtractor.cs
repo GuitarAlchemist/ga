@@ -29,6 +29,34 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
     /// <summary>Canonical mode/scale names the typed parser recognizes.</summary>
     public static IReadOnlyCollection<string> KnownModes => KnownModesSet;
 
+    /// <summary>
+    ///     Instrument words → canonical filter value. Pulled out of the token stream so
+    ///     "Dm bass" / "C ukulele" / "Cmaj7 on guitar" route to the index's instrument
+    ///     filter instead of being treated as tags.
+    /// </summary>
+    private static readonly Dictionary<string, string> InstrumentAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["guitar"]  = "guitar",
+        ["bass"]    = "bass",
+        ["ukulele"] = "ukulele",
+        ["uke"]     = "ukulele",
+    };
+
+    /// <summary>
+    ///     Linguistic filler words that describe the kind of object being asked about
+    ///     rather than a stylistic / structural property of the voicing. Dropping them
+    ///     here stops the registry's substring fallback from hitting generic matches
+    ///     ("chord" would otherwise fire on the first tag whose name contains "chord" —
+    ///     e.g. "beatles-chord" — polluting the SYMBOLIC query vector). Keep this list
+    ///     tight: only words with no standalone musical signal.
+    /// </summary>
+    private static readonly HashSet<string> TagStopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "chord", "chords", "voicing", "voicings", "shape", "shapes",
+        "music", "musical", "sound", "sounds",
+        "play", "playing", "position",
+    };
+
     private static readonly char[] TokenDelimiters =
         [' ', '\t', '\n', '\r', ',', ';', '.', '!', '?', '(', ')', '[', ']'];
 
@@ -43,6 +71,7 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
         int? root = null;
         int[]? pcs = null;
         string? modeName = null;
+        string? instrument = null;
         var tags = new List<string>();
 
         var registry = SymbolicTagRegistry.Instance;
@@ -84,7 +113,24 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
                 }
             }
 
-            // 3. Symbolic tag — matches the corpus's vocabulary (case-insensitive,
+            // 3. Instrument filter — first hit wins. Consumes the token so it never
+            //    leaks into the tag stream (where "bass" would otherwise miss the
+            //    registry and silently return no voicings from the wrong population).
+            if (instrument is null && InstrumentAliases.TryGetValue(tok, out var inst))
+            {
+                instrument = inst;
+                continue;
+            }
+
+            // 4. Linguistic filler ("chord", "voicing", "shape", …) never becomes a tag.
+            //    Without this, the registry's substring fallback maps "chord" onto the
+            //    first tag whose name contains it and poisons the SYMBOLIC vector.
+            if (TagStopWords.Contains(tok))
+            {
+                continue;
+            }
+
+            // 5. Symbolic tag — matches the corpus's vocabulary (case-insensitive,
             //    hyphen-normalized, with prefix/substring fallback). Require tokens
             //    ≥ 3 chars so the registry's substring-contains fallback doesn't fire
             //    on stop-words ("a", "me", "to") that happen to be substrings of a tag.
@@ -99,7 +145,10 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
             RootPitchClass: root,
             PitchClasses: pcs,
             ModeName: modeName,
-            Tags: tags.Count == 0 ? null : tags);
+            Tags: tags.Count == 0 ? null : tags)
+        {
+            Instrument = instrument,
+        };
 
         return Task.FromResult(result);
     }
