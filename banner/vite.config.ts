@@ -18,7 +18,15 @@ export default defineConfig({
         __dirname,
         '../ReactComponents/ga-react-components/src/components/Ocean',
       ),
+      // Ocean source files live outside banner/, so Vite walks up from
+      // them looking for node_modules and fails to find `three`/`react`
+      // (they're only installed in banner/node_modules). Force bare
+      // imports to resolve here.
+      three: path.resolve(__dirname, 'node_modules/three'),
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },
+    dedupe: ['react', 'react-dom', 'three'],
   },
   build: {
     outDir: 'dist',
