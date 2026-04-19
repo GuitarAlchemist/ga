@@ -150,10 +150,11 @@ public static class CompositionTools
             ? Enumerable.Range(0, n).Select(i => steps[i % steps.Length]).ToArray()
             : steps;
 
+        var flats = PrefersFlats(root);
         var chords = adjusted.Select(step =>
         {
-            var pcs = PitchClassSetForDegree(rootPc.Value, step);
-            var symbol = BuildSymbol(rootPc.Value, step);
+            var pcs = PitchClassSetForDegree(rootPc.Value, step, flats);
+            var symbol = BuildSymbol(rootPc.Value, step, flats);
             return new
             {
                 roman = step.RomanLabel,
@@ -337,16 +338,18 @@ public static class CompositionTools
         return sum;
     }
 
-    private static int[] PitchClassSetForDegree(int rootPc, ProgressionStep step)
+    private static int[] PitchClassSetForDegree(int rootPc, ProgressionStep step, bool preferFlats)
     {
-        var symbol = BuildSymbol(rootPc, step);
+        var symbol = BuildSymbol(rootPc, step, preferFlats);
         return ChordPitchClasses.TryParse(symbol, out _, out var pcs) ? pcs : [];
     }
 
-    private static string BuildSymbol(int rootPc, ProgressionStep step)
+    private static string BuildSymbol(int rootPc, ProgressionStep step, bool preferFlats)
     {
         var chordRootPc = (rootPc + step.SemitoneOffset) % 12;
-        var rootName = PitchClassToSharpName(chordRootPc);
+        var rootName = preferFlats
+            ? PitchClassToFlatName(chordRootPc)
+            : PitchClassToSharpName(chordRootPc);
         return rootName + step.Quality;
     }
 
@@ -357,4 +360,25 @@ public static class CompositionTools
         8  => "G#", 9  => "A",  10 => "A#", 11 => "B",
         _  => "C",
     };
+
+    private static string PitchClassToFlatName(int pc) => pc switch
+    {
+        0  => "C",  1  => "Db", 2  => "D",  3  => "Eb",
+        4  => "E",  5  => "F",  6  => "Gb", 7  => "G",
+        8  => "Ab", 9  => "A",  10 => "Bb", 11 => "B",
+        _  => "C",
+    };
+
+    /// <summary>
+    ///     True when the user's key root is on the flat side of the circle of fifths
+    ///     (F, Bb, Eb, Ab, Db, Gb — i.e. the symbol contains a 'b' OR is plain F). Used
+    ///     to pick flat vs sharp enharmonic spelling for generated chord symbols so
+    ///     "ii-V-I in Bb" yields Bbmaj7 rather than the sharp-spelled A#maj7.
+    ///     C is treated as sharp-side (the pop convention for chromatic chords in C).
+    /// </summary>
+    private static bool PrefersFlats(string root)
+    {
+        var r = root.Trim();
+        return r.Contains('b') || r.Equals("F", StringComparison.OrdinalIgnoreCase);
+    }
 }
