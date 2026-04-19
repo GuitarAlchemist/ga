@@ -149,6 +149,26 @@ public static class IconicChordsService
             string.Equals(chord.Name, name, StringComparison.OrdinalIgnoreCase) ||
             chord.AlternateNames.Any(alt => string.Equals(alt, name, StringComparison.OrdinalIgnoreCase)));
 
+    /// <summary>
+    ///     Find an iconic chord by its normalized tag form — the lowercase, hyphenated
+    ///     key the <c>SymbolicTagRegistry</c> uses (e.g. <c>hendrix-chord</c>,
+    ///     <c>beatles-chord</c>). Matches against <see cref="IconicChordDefinition.Name"/>
+    ///     and <see cref="IconicChordDefinition.AlternateNames"/>. Used by the query
+    ///     extractor to seed chord/PC anchors from tag-only queries ("Hendrix chord" →
+    ///     E7#9) so the SYMBOLIC partition isn't the only thing carrying weight.
+    /// </summary>
+    public static IconicChordDefinition? FindChordByTag(string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag)) return null;
+        var norm = Normalize(tag);
+        return GetAllChords().FirstOrDefault(c =>
+            Normalize(c.Name) == norm
+            || c.AlternateNames.Any(alt => Normalize(alt) == norm));
+
+        static string Normalize(string s) =>
+            s.Trim().ToLowerInvariant().Replace(" ", "-").Replace("_", "-");
+    }
+
     public static IEnumerable<IconicChordDefinition> FindChordsByArtist(string artist) =>
         GetAllChords().Where(chord =>
             chord.Artist.Contains(artist, StringComparison.OrdinalIgnoreCase));

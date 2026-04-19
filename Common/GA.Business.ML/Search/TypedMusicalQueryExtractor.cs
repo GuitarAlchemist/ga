@@ -140,6 +140,32 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
             }
         }
 
+        // Two-word iconic-tag support ("hendrix chord", "james bond chord", …). The
+        // single-token pass picks up "hendrix" alone when it matches the SymbolicTag
+        // registry; but "james-bond-chord" only resolves when we try adjacent-pair and
+        // triple composites. Cheap: O(n) pair scan + O(n) triple scan, both using the
+        // same normalization as IconicChordsService.FindChordByTag.
+        TryMatchIconicMultiWord(tokens, tags);
+
+        // 6. Iconic-chord fallback anchor. If we collected a tag that corresponds to
+        //    an entry in IconicChordsService *and* no chord symbol was typed, seed
+        //    chord/PCs from that iconic chord. Turns "Hendrix chord" from a bare-tag
+        //    score of ~0.06 into a real E7#9 retrieval, because now STRUCTURE +
+        //    IDENTITY partitions carry signal alongside SYMBOLIC.
+        if (chordSymbol is null && tags.Count > 0)
+        {
+            foreach (var t in tags)
+            {
+                var iconic = IconicChordsService.FindChordByTag(t);
+                if (iconic is null || iconic.PitchClasses.Count == 0) continue;
+
+                chordSymbol = iconic.TheoreticalName;
+                pcs = [.. iconic.PitchClasses];
+                root = iconic.PitchClasses.Count > 0 ? iconic.PitchClasses[0] : null;
+                break;
+            }
+        }
+
         var result = new StructuredQuery(
             ChordSymbol: chordSymbol,
             RootPitchClass: root,
@@ -151,6 +177,27 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
         };
 
         return Task.FromResult(result);
+    }
+
+    private static void TryMatchIconicMultiWord(string[] tokens, List<string> tags)
+    {
+        // Scan 2- and 3-token windows for iconic-chord tag names that don't reduce
+        // to a single token match (e.g. "james bond chord" → "james-bond-chord").
+        // Add the canonical hyphenated form to tags when the iconic service knows it.
+        for (var i = 0; i < tokens.Length; i++)
+        {
+            for (var span = 2; span <= 3 && i + span <= tokens.Length; span++)
+            {
+                var composite = string.Join("-", tokens.Skip(i).Take(span)).ToLowerInvariant();
+                if (tags.Contains(composite)) continue;
+
+                var iconic = IconicChordsService.FindChordByTag(composite);
+                if (iconic is not null)
+                {
+                    tags.Add(composite);
+                }
+            }
+        }
     }
 }
 

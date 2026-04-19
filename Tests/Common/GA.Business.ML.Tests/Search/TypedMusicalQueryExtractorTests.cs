@@ -132,6 +132,39 @@ public class TypedMusicalQueryExtractorTests
         Assert.That(q.Tags,        Is.EqualTo(new[] { "rootless" }));
     }
 
+    [Test]
+    public async Task Extract_IconicTag_SeedsChordAnchorFromRegistry()
+    {
+        // Regression for 2026-04-19 telemetry finding: "Hendrix chord" returned a bare
+        // tag with no chord/PC anchor, scoring 0.0632 — functionally useless. When a tag
+        // resolves to an entry in IconicChordsService, the extractor now seeds chord +
+        // PitchClasses from that entry so STRUCTURE/IDENTITY partitions carry real signal.
+        var q = await _typed.ExtractAsync("Hendrix chord");
+
+        Assert.That(q.ChordSymbol, Is.Not.Null.And.Contains("7#9"),
+            "Hendrix chord should anchor to E7#9 (or notation variant thereof).");
+        Assert.That(q.PitchClasses, Is.Not.Null);
+        Assert.That(q.PitchClasses!, Does.Contain(4),    // E
+            "E7#9 must include pitch class 4 (E, the root).");
+        Assert.That(q.Tags, Does.Contain("hendrix"),
+            "The tag itself stays in the tag list so the SYMBOLIC bit still fires.");
+    }
+
+    [TestCase("James Bond chord",  "Em(maj7)",          4)]  // E root
+    [TestCase("Evans chord",       "Dm9 (rootless)",    5)]  // F (3rd of Dm) — rootless voicing
+    [TestCase("Farben chord",      "Pentachord",        0)]  // set-class root pc 0
+    public async Task Extract_MultiWordIconicTag_ResolvesViaCompositeMatch(
+        string query, string expectedChordFragment, int expectedRootPc)
+    {
+        // Two-word and three-word iconic names ("James Bond chord", "Hard Day's Night
+        // chord") don't survive single-token registry lookup. The composite scan in
+        // TryMatchIconicMultiWord rejoins adjacent tokens with hyphens and hits
+        // IconicChordsService.FindChordByTag.
+        var q = await _typed.ExtractAsync(query);
+        Assert.That(q.ChordSymbol, Is.Not.Null.And.Contains(expectedChordFragment));
+        Assert.That(q.RootPitchClass, Is.EqualTo(expectedRootPc));
+    }
+
     [TestCase("Cmaj7 chord")]        // filler noun
     [TestCase("Cmaj7 voicing")]
     [TestCase("Dm shape")]

@@ -52,7 +52,7 @@ IconicChords:
     Era: "1950s"
     Genre: "Jazz"
     PitchClasses: [ 4, 9, 2, 7, 11 ]  # E, A, D, G, B
-    AlternateNames: [ "Evans Chord", "Em11", "Quartal Voicing" ]
+    AlternateNames: [ "Em11", "Quartal Voicing" ]  # "Evans Chord" retired — Evans is the artist, the chord-lore name points at his rootless LH voicing (separate entry below).
 
   - Name: "Mu Major Chord"
     TheoreticalName: "Cadd9(no3)"
@@ -127,4 +127,54 @@ IconicChords:
     PitchClasses: [ 7, 11, 2 ]  # G, B, D
     GuitarVoicing: [ 0, 0, 0, 0, 2, 0 ]  # Blackbird fingerpicking pattern
     AlternateNames: [ "Beatles Chord", "G/B" ]
+
+  - Name: "Evans Chord"
+    TheoreticalName: "Dm9 (rootless)"
+    Description: "Bill Evans' signature rootless left-hand voicing — 3rd-5th-7th-9th stack"
+    Artist: "Bill Evans"
+    Song: "Peace Piece / Kind of Blue (Various)"
+    Era: "1950s-60s"
+    Genre: "Jazz"
+    PitchClasses: [ 5, 9, 0, 4 ]  # F, A, C, E — Dm9 without the root
+    AlternateNames: [ "Evans Voicing", "Rootless Dm9", "Bill Evans Chord" ]
+
+  - Name: "A Hard Day's Night Chord"
+    TheoreticalName: "G7sus4add9"
+    Description: "The iconic jangly opening chord of the Beatles song — George Harrison's 12-string, McCartney's bass D, and Lennon's Fadd9 all layered. Academic consensus reads it as G-C-F-D-E."
+    Artist: "The Beatles"
+    Song: "A Hard Day's Night"
+    Era: "1960s"
+    Genre: "Rock/Pop"
+    PitchClasses: [ 7, 0, 5, 2, 4 ]  # G, C, F, D, E
+    AlternateNames: [ "Hard Day's Night Chord", "Beatles Intro Chord", "Fadd9/G" ]
+
+  - Name: "Foxy Lady Chord"
+    TheoreticalName: "F#m7#9"
+    Description: "Hendrix's signature Foxy Lady chord — minor 7th with a sharp 9 tension. Different quality family from the Purple Haze #9 (which is dominant)."
+    Artist: "Jimi Hendrix"
+    Song: "Foxy Lady"
+    Era: "1960s"
+    Genre: "Rock/Blues"
+    PitchClasses: [ 6, 9, 1, 4, 8 ]  # F#, A, C#, E, G# (with alteration)
+    AlternateNames: [ "Hendrix Foxy Chord", "Minor Sharp 9" ]
+
+  - Name: "Farben Chord"
+    TheoreticalName: "Pentachord Op.16 No.3"
+    Description: "Schoenberg's 'Summer Morning by a Lake' pentachord — a five-note klangfarben color-chord, analyzed by David Lewin as a foundational atonal set class."
+    Artist: "Arnold Schoenberg"
+    Song: "Five Pieces for Orchestra, Op. 16 No. 3"
+    Era: "1910s"
+    Genre: "Classical/Atonal"
+    PitchClasses: [ 0, 3, 4, 7, 8 ]  # Forte 5-21 (klangfarben pentachord)
+    AlternateNames: [ "Summer Morning Chord", "Klangfarben Chord", "Schoenberg Op.16 Chord" ]
+
+  - Name: "Debussy Chord"
+    TheoreticalName: "Cmaj9"
+    Description: "The floating, impressionist added-9th major seventh associated with Debussy's harmonic language — often voiced in quartal stacks to blur triadic function."
+    Artist: "Claude Debussy"
+    Song: "Various (La Mer, Préludes)"
+    Era: "1890s-1910s"
+    Genre: "Classical/Impressionist"
+    PitchClasses: [ 0, 4, 7, 11, 2 ]  # C, E, G, B, D
+    AlternateNames: [ "Impressionist Chord", "Cmaj9 Floating" ]
 
