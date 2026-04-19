@@ -32,6 +32,13 @@ jobs:
         with:
           node-version: '20'
 
+      # Install just the bare-module deps Ocean.tsx pulls in, into the
+      # directory Vite will walk up into from those source files. We
+      # skip the full ga-react-components install (slow, many native
+      # deps) and only grab what Ocean needs.
+      - name: Install Ocean peer deps (three, react, react-dom)
+        run: npm install --no-save --no-audit --no-fund --prefix ReactComponents/ga-react-components three@0.180.0 react@18.3.1 react-dom@18.3.1
+
       - name: Install banner deps
         working-directory: banner
         run: npm install --no-audit --no-fund
