@@ -1,0 +1,85 @@
+name: Deploy banner to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'banner/**'
+      - 'ReactComponents/ga-react-components/src/components/Ocean/**'
+      - '.github/workflows/deploy-banner.yml'
+  workflow_dispatch: {}
+
+# Only one banner deploy at a time. Cancel any in-flight run when a new
+# commit lands — the latest commit wins.
+concurrency:
+  group: deploy-banner
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install banner deps
+        working-directory: banner
+        run: npm install --no-audit --no-fund
+
+      - name: Build banner
+        working-directory: banner
+        env:
+          # Deployed path on github.io is /<repo>/. If you ever move the
+          # site to user pages (guitaralchemist.github.io) flip this to '/'.
+          VITE_BANNER_BASE: /ga/
+        run: npm run build
+
+      # Capture banner.png from the built site. WebGPU-enabled Chromium
+      # with SwiftShader gives a software fallback when runners lack a
+      # GPU. If capture fails the script exits 0 so the deploy keeps
+      # whatever banner.png was previously live.
+      - name: Install Playwright Chromium
+        working-directory: banner
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server
+        working-directory: banner
+        run: |
+          nohup npm run preview -- --port 4173 --host 127.0.0.1 > preview.log 2>&1 &
+          for i in $(seq 1 20); do
+            if curl -s -o /dev/null http://127.0.0.1:4173/ga/; then
+              echo "preview up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "preview server never responded"; cat preview.log || true; exit 1
+
+      - name: Capture banner screenshot
+        working-directory: banner
+        run: npm run capture -- http://127.0.0.1:4173/ga/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: banner/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

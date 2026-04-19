@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Guitar Alchemist — Ocean</title>
+    <meta name="description" content="WebGPU ocean demo with dynamic sky presets and a spinning warship. Part of the Guitar Alchemist project." />
+    <meta name="theme-color" content="#040611" />
+    <style>
+      html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; background: #040611; overflow: hidden; }
+      body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #a0c0d0; }
+      #webgpu-unavailable {
+        position: absolute; inset: 0; display: none; place-items: center;
+        padding: 24px; text-align: center; background: #040611; color: #a0c0d0;
+      }
+      #webgpu-unavailable.shown { display: grid; }
+      #webgpu-unavailable a { color: #00e5ff; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="webgpu-unavailable">
+      <div>
+        <h1 style="margin:0 0 12px">WebGPU required</h1>
+        <p>This scene needs a browser with WebGPU enabled — current Chrome, Edge, or a recent Firefox/Safari nightly will work.</p>
+        <p>Visit <a href="https://github.com/GuitarAlchemist">Guitar Alchemist on GitHub</a>.</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

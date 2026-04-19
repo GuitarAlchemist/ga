@@ -43,20 +43,23 @@ const G = 9.81;
 const TAU = Math.PI * 2;
 
 // Wave set tuned for realistic open-ocean look.
-// Lower steepness on short waves to prevent circular blob artifacts.
+// CRITICAL: sum of per-wave steepness must stay below 1.0 to avoid Gerstner
+// fold-back — when Σ(Q·k·A) > 1 at a point, the parameterization self-
+// intersects and produces the characteristic flat-top plateaus with pinched
+// ring rims. 8 waves × 0.12 avg ≈ 0.96 — just under the limit.
 const WAVE_DEFS = [
   // Long swells (dominant — set the overall shape)
-  { dir: [1.0, 0.15],  amp: 2.0,  len: 120, steep: 0.28 },
-  { dir: [0.8, 0.55],  amp: 1.4,  len: 75,  steep: 0.28 },
+  { dir: [1.0, 0.15],  amp: 2.0,  len: 120, steep: 0.14 },
+  { dir: [0.8, 0.55],  amp: 1.4,  len: 75,  steep: 0.14 },
   // Medium cross-sea
-  { dir: [0.15, 1.0],  amp: 0.8,  len: 40,  steep: 0.32 },
-  { dir: [-0.6, 0.8],  amp: 0.5,  len: 25,  steep: 0.32 },
-  // Short chop (wind-driven — moderate steepness)
-  { dir: [-0.85, 0.15], amp: 0.25, len: 13, steep: 0.35 },
-  { dir: [0.3, -0.95],  amp: 0.16, len: 8,  steep: 0.35 },
-  // Capillary detail (LOW steepness to avoid blobs)
-  { dir: [0.7, 0.7],    amp: 0.08, len: 4.5, steep: 0.25 },
-  { dir: [-0.5, -0.5],  amp: 0.05, len: 3.0, steep: 0.22 },
+  { dir: [0.15, 1.0],  amp: 0.8,  len: 40,  steep: 0.15 },
+  { dir: [-0.6, 0.8],  amp: 0.5,  len: 25,  steep: 0.15 },
+  // Short chop (wind-driven)
+  { dir: [-0.85, 0.15], amp: 0.25, len: 13, steep: 0.14 },
+  { dir: [0.3, -0.95],  amp: 0.16, len: 8,  steep: 0.12 },
+  // Capillary detail
+  { dir: [0.7, 0.7],    amp: 0.08, len: 4.5, steep: 0.10 },
+  { dir: [-0.5, -0.5],  amp: 0.05, len: 3.0, steep: 0.09 },
 ];
 
 const WAVES: PrecomputedWave[] = WAVE_DEFS.map(w => {
@@ -102,7 +105,13 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
   const uTime = uniform(0.0);
   const uSunDir = uniform(new THREE.Vector3(0.5, 0.85, 0.3).normalize());
 
-  // ── Vertex: 8-wave Gerstner with choppy horizontal displacement ────────
+  // Earth-curvature drop: subtract d²/(2R) per vertex, where d is horizontal
+  // distance from the camera. R smaller than Earth gives visible curvature on
+  // a 6km-mesh demo (real Earth would barely curve over that range). Default
+  // ≈2000 km — gives a clear horizon dip at ~3-5 km without absurdity.
+  const uPlanetRadius = uniform(2_000_000);
+
+  // ── Vertex: 8-wave Gerstner + earth-curvature drop ─────────────────────
 
   material.positionNode = Fn(() => {
     const pos = positionLocal;
@@ -122,7 +131,17 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
       dy.addAssign(float(w.amp).mul(s));
     }
 
-    return vec3(pos.x.add(dx), pos.y.add(dy), pos.z.add(dz));
+    // Earth-curvature drop relative to camera ground position.
+    // Horizontal distance² from camera in world XZ plane; subtract d²/(2R)
+    // from Y so distant water visibly curves below the visible horizon.
+    const wx = pos.x.add(dx);
+    const wz = pos.z.add(dz);
+    const camDx = wx.sub(cameraPosition.x);
+    const camDz = wz.sub(cameraPosition.z);
+    const distSq = camDx.mul(camDx).add(camDz.mul(camDz));
+    const drop = distSq.mul(float(0.5).div(uPlanetRadius));
+
+    return vec3(wx, pos.y.add(dy).sub(drop), wz);
   })();
 
   // ── Fragment: full custom lighting ─────────────────────────────────────
@@ -169,9 +188,9 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
     const R = reflect(V.negate(), N);
     const skyT = clamp(R.y, 0.0, 1.0);
 
-    const skyHorizon = vec3(0.62, 0.65, 0.70);     // bright overcast horizon
-    const skyZenith  = vec3(0.35, 0.42, 0.55);      // muted blue-grey
-    const skyBelow   = vec3(0.015, 0.025, 0.04);    // dark water self-reflection
+    const skyHorizon = vec3(0.62, 0.72, 0.86);     // bright blue-white horizon
+    const skyZenith  = vec3(0.24, 0.48, 0.78);      // saturated blue zenith
+    const skyBelow   = vec3(0.04, 0.08, 0.14);      // deep-water self-reflection
     const skyAbove = mix(skyHorizon, skyZenith, smoothstep(0.0, 0.4, skyT));
     const belowFactor = smoothstep(float(0.02), float(-0.12), R.y);
     const skyBase = mix(skyAbove, skyBelow, belowFactor);
@@ -191,8 +210,11 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
     const sunSpec = pow(NdH, float(sunSpecExponent)).mul(sunSpecMultiplier);
     const specContrib = sunCol.mul(sunSpec);
 
-    // ── Water body color (very dark, near-black) ──
-    const baseWater = vec3(0.003, 0.014, 0.025);
+    // ── Water body color (deep ocean blue, not pure black) ──
+    // Was (0.003, 0.014, 0.025) — too black for sunlit presets (calm/sunset).
+    // Lifting to a deep-teal base keeps foreground water visibly water-coloured
+    // even at steep view angles where Fresnel gives little sky reflection.
+    const baseWater = vec3(0.02, 0.07, 0.12);
 
     // Subtle subsurface scattering on sun-facing thin crests
     const NdL = max(dot(N, uSunDir), 0.0);
@@ -220,8 +242,9 @@ export function createOceanTSLMaterial(options: OceanTSLOptions = {}): OceanTSLR
     const fogStrength = float(fogDensity).add(float(fogDensity * 0.45).mul(viewHoriz));
     const fogFactor = clamp(exp(fogStrength.negate().mul(fogStrength).mul(distSq)), 0.0, 1.0);
 
-    // Fog color matches sky horizon for seamless blend
-    const fogCol = vec3(0.60, 0.64, 0.70);
+    // Fog colour: match the (new) bluer horizon so the seamless horizon
+    // blend stays seamless across calm/stormy/sunset.
+    const fogCol = vec3(0.62, 0.72, 0.84);
 
     return mix(fogCol, litColor, fogFactor);
   })();
