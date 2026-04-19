@@ -82,6 +82,20 @@ public sealed class SemanticKnowledgeSource(
                 structured?.Tags is { Count: > 0 } t ? string.Join(",", t) : "",
                 query, limit, results.Count, extractMs, encodeMs, embedMs, searchMs);
 
+            VoicingTelemetryLog.Append(new VoicingTelemetryRecord
+            {
+                Timestamp = DateTime.UtcNow.ToString("o"),
+                Source = "chatbot",
+                Query = query,
+                Chord = structured?.ChordSymbol,
+                Mode = structured?.ModeName,
+                Tags = structured?.Tags,
+                ResultCount = results.Count,
+                TopScore = results.Count > 0 ? Math.Round(results[0].Score, 4) : null,
+                InstrumentFilter = null,
+                LatencyMs = extractMs + encodeMs + embedMs + searchMs
+            });
+
             return results
                 .Select(r => new SemanticSearchResult(
                     FormatVoicingForLlm(r.Document),

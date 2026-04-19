@@ -65,6 +65,8 @@ public static class VoicingSearchTool
         [Description("Optional instrument filter: guitar | bass | ukulele")]
         string? instrument = null)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return JsonSerializer.Serialize(new { error = "query is required" });
@@ -80,6 +82,18 @@ public static class VoicingSearchTool
 
         if (!hasIntent)
         {
+            stopwatch.Stop();
+            VoicingTelemetryLog.Append(new VoicingTelemetryRecord
+            {
+                Timestamp = DateTime.UtcNow.ToString("o"),
+                Source = "mcp",
+                Query = query,
+                Chord = null, Mode = null, Tags = null,
+                ResultCount = 0,
+                TopScore = null,
+                InstrumentFilter = instrument,
+                LatencyMs = stopwatch.Elapsed.TotalMilliseconds
+            });
             return JsonSerializer.Serialize(new
             {
                 query,
@@ -104,6 +118,21 @@ public static class VoicingSearchTool
         {
             hits = await Strategy.Value.SemanticSearchAsync(queryVector, limit);
         }
+
+        stopwatch.Stop();
+        VoicingTelemetryLog.Append(new VoicingTelemetryRecord
+        {
+            Timestamp = DateTime.UtcNow.ToString("o"),
+            Source = "mcp",
+            Query = query,
+            Chord = structured.ChordSymbol,
+            Mode = structured.ModeName,
+            Tags = structured.Tags,
+            ResultCount = hits.Count,
+            TopScore = hits.Count > 0 ? Math.Round(hits[0].Score, 4) : null,
+            InstrumentFilter = instrument,
+            LatencyMs = stopwatch.Elapsed.TotalMilliseconds
+        });
 
         return JsonSerializer.Serialize(new
         {
