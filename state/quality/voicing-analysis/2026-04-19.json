@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-04-19T14:22:06.7781170Z",
+  "Timestamp": "2026-04-19T14:31:28.2028003Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 398
+        "Count": 394
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 370
+        "Count": 371
       },
       {
         "Name": "Adim/C",
@@ -118,13 +118,13 @@
   },
   "CrossInstrumentConsistency": {
     "SharedSets": 793,
-    "Consistent": 151,
+    "Consistent": 216,
     "Disagreements": [
       {
         "PitchClasses": "{1,7,9}",
         "ChordNameByInstrument": {
           "guitar": "A7(shell)",
-          "bass": "A7(shell)/Db",
+          "bass": "A7(shell)/G",
           "ukulele": "A7(shell)/G"
         }
       },
@@ -133,30 +133,14 @@
         "ChordNameByInstrument": {
           "guitar": "Amaj7(shell)",
           "bass": "Amaj7(shell)/Ab",
-          "ukulele": "Amaj7(shell)/Db"
-        }
-      },
-      {
-        "PitchClasses": "{1,9,10}",
-        "ChordNameByInstrument": {
-          "guitar": "Bbm(maj7)/A",
-          "bass": "Bbm(maj7)/A",
-          "ukulele": "Bbm(maj7)/Db"
-        }
-      },
-      {
-        "PitchClasses": "{2,6,9}",
-        "ChordNameByInstrument": {
-          "guitar": "D/Gb",
-          "bass": "D/Gb",
-          "ukulele": "D"
+          "ukulele": "Amaj7(shell)/Ab"
         }
       },
       {
         "PitchClasses": "{2,7,9}",
         "ChordNameByInstrument": {
           "guitar": "Gsus2/A",
-          "bass": "Gsus2/D",
+          "bass": "Gsus2/A",
           "ukulele": "Gsus2/D"
         }
       },
@@ -164,8 +148,8 @@
         "PitchClasses": "{2,8,9}",
         "ChordNameByInstrument": {
           "guitar": "D5/A",
-          "bass": "D5/Ab",
-          "ukulele": "D5/Ab"
+          "bass": "D5/A",
+          "ukulele": "D5"
         }
       },
       {
@@ -177,27 +161,43 @@
         }
       },
       {
-        "PitchClasses": "{3,6,9}",
-        "ChordNameByInstrument": {
-          "guitar": "Ebdim/Gb",
-          "bass": "Ebdim/Gb",
-          "ukulele": "Ebdim"
-        }
-      },
-      {
         "PitchClasses": "{3,7,9}",
         "ChordNameByInstrument": {
           "guitar": "Am7b5",
-          "bass": "Am7b5/G",
-          "ukulele": "Am7b5/Eb"
+          "bass": "Am7b5",
+          "ukulele": "Am7b5/G"
         }
       },
       {
         "PitchClasses": "{3,8,9}",
         "ChordNameByInstrument": {
           "guitar": "Ab5/A",
-          "bass": "Ab5",
-          "ukulele": "Ab5/Eb"
+          "bass": "Ab5/A",
+          "ukulele": "Ab5"
+        }
+      },
+      {
+        "PitchClasses": "{4,6,9}",
+        "ChordNameByInstrument": {
+          "guitar": "Gbm7(shell)",
+          "bass": "Gbm7(shell)/E",
+          "ukulele": "Gbm7(shell)/E"
+        }
+      },
+      {
+        "PitchClasses": "{5,6,9}",
+        "ChordNameByInstrument": {
+          "guitar": "Gbm(maj7)",
+          "bass": "Gbm(maj7)/F",
+          "ukulele": "Gbm(maj7)/F"
+        }
+      },
+      {
+        "PitchClasses": "{5,7,9}",
+        "ChordNameByInstrument": {
+          "guitar": "Aaug7",
+          "bass": "Aaug7/F",
+          "ukulele": "Aaug7/F"
         }
       }
     ]
@@ -224,22 +224,17 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-3-7-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-1-5-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-5-9-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-4-8-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -264,7 +259,7 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
+        "Diagram": "x-5-9-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -274,17 +269,17 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-12-16-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-1-5-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "ukulele",
-        "Diagram": "x-4-x-1",
+        "Diagram": "x-2-6-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -294,7 +289,7 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "1-x-x-3",
+        "Diagram": "x-6-x-3",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -309,21 +304,26 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-2-6-x",
+        "Diagram": "4-x-x-6",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-6-x-3",
+        "Diagram": "x-1-5-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-4-x-1",
         "Description": "IntervalSpread=0 for 2-note voicing"
       }
     ]
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 83.7146979,
-    "VoicingsPerSec": 3739.450871266896,
-    "PeakWorkingSetMb": 415.69921875
+    "RuntimeSeconds": 87.1847894,
+    "VoicingsPerSec": 3590.61485557709,
+    "PeakWorkingSetMb": 389.52734375
   },
   "IssueSamples": {
     "NullChordName": [],
