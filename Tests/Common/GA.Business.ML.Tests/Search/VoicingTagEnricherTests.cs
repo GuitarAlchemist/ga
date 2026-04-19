@@ -31,7 +31,10 @@ public class VoicingTagEnricherTests
     [Test]
     public void Tense_DominatesWhenDissonanceHigh()
     {
-        var c = MakeCharacteristics(quality: "m7b5", dissonance: 0.80, consonance: 0.30);
+        // m7b5 ≈ half-diminished 7: CanonicalChordPatternCatalog emits it as
+        // Quality="diminished", Extension="7th", Alterations=["b5"].
+        var c = MakeCharacteristics(quality: "diminished", extension: "7th",
+                                    dissonance: 0.80, consonance: 0.30);
         var tags = VoicingTagEnricher.Enrich(c, [60, 63, 66, 69]).ToList();
         Assert.That(tags, Does.Contain("tense"));
         // When tense fires, no other mood tags should be emitted
@@ -44,7 +47,8 @@ public class VoicingTagEnricherTests
     public void Dreamy_OnExtendedChordWithDropVoicing_MidRegister()
     {
         var c = MakeCharacteristics(
-            quality: "maj9", consonance: 0.65, dissonance: 0.30,
+            quality: "major", extension: "9th",
+            consonance: 0.65, dissonance: 0.30,
             isOpenVoicing: false, dropVoicing: "Drop-2");
         var tags = VoicingTagEnricher.Enrich(c, [60, 64, 67, 71, 74]).ToList();
         Assert.That(tags, Does.Contain("dreamy"));
@@ -72,7 +76,8 @@ public class VoicingTagEnricherTests
     [Test]
     public void Jazz_FiresForRootlessExtendedChord()
     {
-        var c = MakeCharacteristics(quality: "m7", consonance: 0.55, isRootless: true);
+        var c = MakeCharacteristics(quality: "minor", extension: "7th",
+                                    consonance: 0.55, isRootless: true);
         var tags = VoicingTagEnricher.Enrich(c, [62, 65, 68, 71]).ToList();
         Assert.That(tags, Does.Contain("jazz"));
         Assert.That(tags, Does.Contain("rootless"));
@@ -81,7 +86,8 @@ public class VoicingTagEnricherTests
     [Test]
     public void Jazz_FiresForDrop2OnMaj7()
     {
-        var c = MakeCharacteristics(quality: "maj7", consonance: 0.60, dropVoicing: "Drop-2");
+        var c = MakeCharacteristics(quality: "major", extension: "7th",
+                                    consonance: 0.60, dropVoicing: "Drop-2");
         var tags = VoicingTagEnricher.Enrich(c, [60, 64, 67, 71]).ToList();
         Assert.That(tags, Does.Contain("jazz"));
         Assert.That(tags, Does.Contain("drop-2-voicings"));
@@ -98,6 +104,42 @@ public class VoicingTagEnricherTests
     }
 
     [Test]
+    public void Jazz_FiresForCanonicalRecognizerOutput_Maj7()
+    {
+        // Regression for 2026-04-19 Cmaj7-jazz telemetry finding.
+        // CanonicalChordRecognizer populates ChordIdentification as
+        //   Quality="major", Extension="7th"   (NOT "maj7" as one string).
+        // The enricher's legacy `q.Contains("7")` check fails on the family name
+        // "major", so block-chord Cmaj7s never got the jazz bit and
+        // `"Cmaj7 jazz"` tied with bare `"Cmaj7"` in live MCP scoring.
+        // Fix: treat Extension ∈ {7th, 9th, 11th, 13th} as extended.
+        var canonicalMaj7 = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "major", extension: "7th", consonance: 0.65, dropVoicing: null),
+            [60, 64, 67, 71]).ToList();
+        Assert.That(canonicalMaj7, Does.Contain("jazz"),
+            "Quality='major' + Extension='7th' (real CanonicalChordRecognizer output for Cmaj7) should tag jazz.");
+
+        var canonicalDom7 = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "dominant", extension: "7th", consonance: 0.55),
+            [60, 64, 67, 70]).ToList();
+        Assert.That(canonicalDom7, Does.Contain("jazz"),
+            "Quality='dominant' + Extension='7th' (C7) should tag jazz.");
+
+        var canonicalMin9 = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "minor", extension: "9th", consonance: 0.60),
+            [60, 63, 67, 70, 74]).ToList();
+        Assert.That(canonicalMin9, Does.Contain("jazz"),
+            "Quality='minor' + Extension='9th' (Cm9) should tag jazz.");
+
+        // Plain triad must still not fire
+        var canonicalTriad = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "major", extension: "triad", consonance: 0.80),
+            [60, 64, 67]).ToList();
+        Assert.That(canonicalTriad, Does.Not.Contain("jazz"),
+            "Quality='major' + Extension='triad' (plain C major) must not tag jazz.");
+    }
+
+    [Test]
     public void Jazz_FiresForExtendedQuality_EvenWithoutDropVoicing()
     {
         // 2026-04-19 relaxation: any extended quality (7/9/11/13/maj7/m7/m7b5) gets the
@@ -105,13 +147,15 @@ public class VoicingTagEnricherTests
         // tied with bare `"Cmaj7"` because block-chord maj7s were excluded. Plain triads
         // stay untagged (see Jazz_DoesNotFireForPlainMajorTriad).
         var blockMaj7 = VoicingTagEnricher.Enrich(
-            MakeCharacteristics(quality: "maj7", consonance: 0.65, dropVoicing: null),
+            MakeCharacteristics(quality: "major", extension: "7th",
+                                consonance: 0.65, dropVoicing: null),
             [60, 64, 67, 71]).ToList();
         Assert.That(blockMaj7, Does.Contain("jazz"),
             "block-chord maj7 should tag jazz even without drop-2 treatment.");
 
         var blockM7 = VoicingTagEnricher.Enrich(
-            MakeCharacteristics(quality: "m7", consonance: 0.60, dropVoicing: null),
+            MakeCharacteristics(quality: "minor", extension: "7th",
+                                consonance: 0.60, dropVoicing: null),
             [62, 65, 69, 72]).ToList();
         Assert.That(blockM7, Does.Contain("jazz"));
     }
@@ -145,12 +189,14 @@ public class VoicingTagEnricherTests
     public void ShellVoicing_RequiresRootlessAnd3Notes()
     {
         var shell = VoicingTagEnricher.Enrich(
-            MakeCharacteristics(quality: "m7", isRootless: true, noteCount: 3),
+            MakeCharacteristics(quality: "minor", extension: "7th",
+                                isRootless: true, noteCount: 3),
             [62, 65, 68]).ToList();
         Assert.That(shell, Does.Contain("shell-voicing"));
 
         var notShell = VoicingTagEnricher.Enrich(
-            MakeCharacteristics(quality: "m7", isRootless: false, noteCount: 4),
+            MakeCharacteristics(quality: "minor", extension: "7th",
+                                isRootless: false, noteCount: 4),
             [60, 63, 67, 70]).ToList();
         Assert.That(notShell, Does.Not.Contain("shell-voicing"));
     }
@@ -161,7 +207,8 @@ public class VoicingTagEnricherTests
     public void EmptyMidi_StillEmitsStyleAndTechnique()
     {
         // Register tag is gated on midi > 0, but other classifiers must still work.
-        var c = MakeCharacteristics(quality: "maj7", dropVoicing: "Drop-2");
+        var c = MakeCharacteristics(quality: "major", extension: "7th",
+                                    dropVoicing: "Drop-2");
         var tags = VoicingTagEnricher.Enrich(c, []).ToList();
 
         Assert.That(tags, Does.Not.Contain("register:mid"));
@@ -172,6 +219,7 @@ public class VoicingTagEnricherTests
 
     private static VoicingCharacteristics MakeCharacteristics(
         string quality = "maj",
+        string? extension = null,
         double consonance = 0.5,
         double dissonance = 0.5,
         bool isRootless = false,
@@ -188,7 +236,7 @@ public class VoicingTagEnricherTests
                 FunctionalDescription: "",
                 Quality: quality,
                 SlashChordInfo: null,
-                ExtensionInfo: null),
+                ExtensionInfo: null) { Extension = extension },
             DissonanceScore: dissonance,
             Consonance: consonance,
             IntervalSpread: intervalSpread,

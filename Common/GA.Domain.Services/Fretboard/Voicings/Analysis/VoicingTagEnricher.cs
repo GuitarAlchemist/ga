@@ -96,7 +96,7 @@ public static class VoicingTagEnricher
         var q = (c.ChordId.Quality ?? "").ToLowerInvariant();
         var isMinor = q.Contains("min") || q.StartsWith("m", StringComparison.Ordinal) && !q.StartsWith("maj", StringComparison.Ordinal);
         var isMajor = q.Contains("maj") || (!isMinor && !q.Contains("dim") && !q.Contains("aug"));
-        var isExtended = q.Contains("maj7") || q.Contains("maj9") || q.Contains("9") || q.Contains("11") || q.Contains("13");
+        var isExtended = c.ChordId.HasSeventhOrBeyond;
         var hasDrop = c.DropVoicing is not null;
         var midiMean = midi.Count > 0 ? midi.Average() : 0;
 
@@ -153,12 +153,7 @@ public static class VoicingTagEnricher
     {
         var q = (c.ChordId.Quality ?? "").ToLowerInvariant();
         var drop = c.DropVoicing?.ToLowerInvariant() ?? "";
-
-        var isExtended =
-            q.Contains("maj7") || q.Contains("maj9") ||
-            q.Contains("m7")   || q.Contains("min7") || q.Contains("min9") ||
-            q.Contains("7")    || q.Contains("9")    || q.Contains("11") || q.Contains("13") ||
-            q.Contains("m7b5");
+        var isExtended = c.ChordId.HasSeventhOrBeyond;
 
         // Jazz: any extended quality qualifies. Voicing-pattern tags (drop-*, shell-*,
         // rootless) supply the finer style differentiation.

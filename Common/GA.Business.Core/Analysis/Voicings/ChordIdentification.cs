@@ -94,4 +94,33 @@ public record ChordIdentification(
     ///     identity). Existing consumers can branch on this to opt in.
     /// </summary>
     public bool HasCanonicalIdentity => CanonicalName is not null;
+
+    /// <summary>
+    ///     True when <see cref="Extension" /> is a seventh-or-beyond label
+    ///     (<c>7th</c> / <c>9th</c> / <c>11th</c> / <c>13th</c>). Used by
+    ///     tag-enrichment and style-classification code to decide whether the
+    ///     chord carries the "extended" flavor that qualifies it for jazz,
+    ///     neo-soul, dreamy-voicing, etc. bits.
+    /// </summary>
+    public bool HasSeventhOrBeyond =>
+        Extension is ChordExtensions.Seventh
+                  or ChordExtensions.Ninth
+                  or ChordExtensions.Eleventh
+                  or ChordExtensions.Thirteenth;
+}
+
+/// <summary>
+///     Canonical string values emitted into <see cref="ChordIdentification.Extension" />
+///     by <c>CanonicalChordPatternCatalog</c>. Centralised here so consumers don't
+///     recompile the valid set as literal strings at every call site.
+/// </summary>
+public static class ChordExtensions
+{
+    public const string Triad      = "triad";
+    public const string Sixth      = "6th";
+    public const string Seventh    = "7th";
+    public const string Ninth      = "9th";
+    public const string Eleventh   = "11th";
+    public const string Thirteenth = "13th";
+    public const string Add        = "add";
 }
