@@ -34,10 +34,20 @@ jobs:
 
       # Install just the bare-module deps Ocean.tsx pulls in, into the
       # directory Vite will walk up into from those source files. We
-      # skip the full ga-react-components install (slow, many native
-      # deps) and only grab what Ocean needs.
+      # use a tmp dir to avoid npm reading ga-react-components'
+      # package.json (which hard-pins @esbuild/win32-x64 and therefore
+      # refuses to install on Linux runners).
       - name: Install Ocean peer deps (three, react, react-dom)
-        run: npm install --no-save --no-audit --no-fund --prefix ReactComponents/ga-react-components three@0.180.0 react@18.3.1 react-dom@18.3.1
+        run: |
+          tmp=$(mktemp -d)
+          pushd "$tmp" >/dev/null
+          npm init -y >/dev/null
+          npm install --no-save --no-audit --no-fund \
+            three@0.180.0 react@18.3.1 react-dom@18.3.1
+          popd >/dev/null
+          mkdir -p ReactComponents/ga-react-components/node_modules
+          cp -a "$tmp/node_modules/." ReactComponents/ga-react-components/node_modules/
+          rm -rf "$tmp"
 
       - name: Install banner deps
         working-directory: banner
