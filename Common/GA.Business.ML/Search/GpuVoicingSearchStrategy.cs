@@ -102,6 +102,19 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     public string Name => "GPU";
     public bool IsAvailable { get; private set; }
+    public QueryVectorSpace QuerySpace => QueryVectorSpace.TextEmbedding;
+
+    /// <summary>
+    ///     True only when ILGPU bound to a real GPU accelerator (CUDA/OpenCL).
+    ///     False when ILGPU fell back to its CPU accelerator — in that mode
+    ///     CalculateSimilaritiesIlgpu silently routes to a sequential CPU loop.
+    /// </summary>
+    public bool IsRealGpu => _accelerator != null && _accelerator.AcceleratorType != AcceleratorType.CPU;
+
+    /// <summary>
+    ///     Human-readable accelerator type for diagnostics (e.g. "Cuda", "OpenCL", "CPU", "None").
+    /// </summary>
+    public string AcceleratorTypeName => _accelerator?.AcceleratorType.ToString() ?? "None";
 
     public VoicingSearchPerformance Performance => new(
         TimeSpan.FromMilliseconds(0.5),
@@ -146,9 +159,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     public async Task<List<VoicingSearchResult>> SemanticSearchAsync(
         double[] queryEmbedding,
-        int limit = 10) =>
+        int limit = 10,
+        CancellationToken cancellationToken = default) =>
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
 
@@ -173,9 +188,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     public async Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(
         string voicingId,
-        int limit = 10) =>
+        int limit = 10,
+        CancellationToken cancellationToken = default) =>
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureInitialized();
 
             if (!_voicings.TryGetValue(voicingId, out var queryVoicing))
@@ -208,9 +225,11 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     public async Task<List<VoicingSearchResult>> HybridSearchAsync(
         double[] queryEmbedding,
         VoicingSearchFilters filters,
-        int limit = 10) =>
+        int limit = 10,
+        CancellationToken cancellationToken = default) =>
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureInitialized();
             var stopwatch = Stopwatch.StartNew();
 

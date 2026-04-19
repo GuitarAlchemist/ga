@@ -147,7 +147,15 @@ public static class EmbeddingSchema
 
     private static string BuildCompactLayoutV4()
     {
-        var sb = new StringBuilder("optk-v4:");
+        // Suffix "pp" = per-partition normalization. Partition layout is unchanged from v4,
+        // but the semantics of how each partition slice is scaled changed:
+        // v4 (global L2):    each slice = raw · sqrt(w_p) / global_L2_norm
+        // v4-pp (per-part):  each slice = (raw / raw_slice_L2_norm) · sqrt(w_p)
+        // Per-partition isolates the STRUCTURE slice from MORPHOLOGY variations across
+        // instruments — closing the #25/#28/#32 invariant leaks. Bumping the hash is
+        // mandatory; the old on-disk index is incompatible with the new reader/encoder
+        // and must be rebuilt via FretboardVoicingsCLI before retrieval works again.
+        var sb = new StringBuilder("optk-v4-pp:");
         var pos = 0;
         var first = true;
         foreach (var p in SimilarityPartitions)

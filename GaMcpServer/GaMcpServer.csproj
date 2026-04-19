@@ -14,22 +14,23 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4"/>
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4"/>
-    <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.10"/>
+    <PackageReference Include="ModelContextProtocol" Version="1.1.0"/>
     <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.10"/>
   </ItemGroup>
 
-  <!-- GA.Business.Web was removed from the repo; exclude its dependents until restored -->
+  <!-- GA.Business.Web was removed from the repo; exclude its dependents until restored.
+       VoicingEmbeddingTool is re-enabled now that GA.Business.ML is referenced directly. -->
   <ItemGroup>
     <Compile Remove="Tools\FeedReaderToolWrapper.cs"/>
     <Compile Remove="Tools\WebScrapingToolWrapper.cs"/>
     <Compile Remove="Tools\WebSearchToolWrapper.cs"/>
-    <Compile Remove="Tools\VoicingEmbeddingTool.cs"/>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AllProjects.ServiceDefaults\AllProjects.ServiceDefaults.csproj"/>
     <ProjectReference Include="..\Common\GA.Business.Config\GA.Business.Config.fsproj"/>
     <ProjectReference Include="..\Common\GA.Business.DSL\GA.Business.DSL.fsproj"/>
+    <ProjectReference Include="..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
     <ProjectReference Include="..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\Common\GA.Core\GA.Core.csproj"/>

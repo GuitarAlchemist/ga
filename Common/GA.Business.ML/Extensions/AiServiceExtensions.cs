@@ -206,6 +206,7 @@ public static class AiServiceExtensions
         services.TryAddSingleton<Agents.TechniqueAgent>();
         services.TryAddSingleton<Agents.ComposerAgent>();
         services.TryAddSingleton<Agents.CriticAgent>();
+        services.TryAddSingleton<Agents.VoicingAgent>();
 
         services.TryAddSingleton<IEnumerable<Agents.GuitarAlchemistAgentBase>>(sp => new Agents.GuitarAlchemistAgentBase[]
         {
@@ -213,7 +214,8 @@ public static class AiServiceExtensions
             sp.GetRequiredService<Agents.TheoryAgent>(),
             sp.GetRequiredService<Agents.TechniqueAgent>(),
             sp.GetRequiredService<Agents.ComposerAgent>(),
-            sp.GetRequiredService<Agents.CriticAgent>()
+            sp.GetRequiredService<Agents.CriticAgent>(),
+            sp.GetRequiredService<Agents.VoicingAgent>()
         });
 
         services.TryAddSingleton<Agents.SemanticRouter>();

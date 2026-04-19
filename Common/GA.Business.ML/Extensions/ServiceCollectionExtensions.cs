@@ -87,6 +87,7 @@ public static class MlServiceCollectionExtensions
         services.AddTransient<TechniqueAgent>();
         services.AddTransient<ComposerAgent>();
         services.AddTransient<CriticAgent>();
+        services.AddTransient<VoicingAgent>();
 
         // Register agents as the base type for SemanticRouter injection
         services.AddTransient<GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<TabAgent>());
@@ -94,6 +95,7 @@ public static class MlServiceCollectionExtensions
         services.AddTransient<GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<TechniqueAgent>());
         services.AddTransient<GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<ComposerAgent>());
         services.AddTransient<GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<CriticAgent>());
+        services.AddTransient<GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<VoicingAgent>());
 
         // Register Semantic Router
         services.AddScoped<SemanticRouter>();

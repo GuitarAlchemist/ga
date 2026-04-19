@@ -172,11 +172,18 @@ public static class VoicingAnalyzer
             semanticTags.Add(modeInfo.ModeName.ToLowerInvariant().Replace(" ", "-"));
             semanticTags.Add(modeInfo.FamilyName.ToLowerInvariant().Replace(" ", "-"));
         }
-        
+
         if (curVoiceChars.DropVoicing != null)
         {
             semanticTags.Add(curVoiceChars.DropVoicing.ToLowerInvariant());
         }
+
+        // 5. Enrichment — mood / register / style / technique tags derived from the
+        //    metrics already computed above. Closes the SYMBOLIC-partition density gap
+        //    surfaced by the 2026-04-18 diagnostic run (style queries like "Cmaj7 jazz"
+        //    were scoring lower than bare chord queries because corpus voicings had
+        //    thin symbolic bits). Pure classification, no new analysis work.
+        semanticTags.AddRange(VoicingTagEnricher.Enrich(curVoiceChars, sortedMidi));
 
         return new(
             curVoiceChars,

@@ -163,11 +163,17 @@ public class EnhancedVoicingSearchService(
 
         if (filters != null)
         {
-            return await searchStrategy.HybridSearchAsync(queryEmbedding, filters, topK);
+            return await searchStrategy.HybridSearchAsync(queryEmbedding, filters, topK, cancellationToken);
         }
 
-        return await searchStrategy.SemanticSearchAsync(queryEmbedding, topK);
+        return await searchStrategy.SemanticSearchAsync(queryEmbedding, topK, cancellationToken);
     }
+
+    /// <summary>
+    ///     Exposes the strategy's query-vector space so callers can pick the right encoder
+    ///     (musical vs text) without inspecting <see cref="StrategyName"/>.
+    /// </summary>
+    public QueryVectorSpace QuerySpace => searchStrategy.QuerySpace;
 
     /// <summary>
     ///     Find voicings similar to a given voicing
@@ -179,7 +185,7 @@ public class EnhancedVoicingSearchService(
     {
         EnsureInitialized();
 
-        return await searchStrategy.FindSimilarVoicingsAsync(voicingId, topK);
+        return await searchStrategy.FindSimilarVoicingsAsync(voicingId, topK, cancellationToken);
     }
 
     /// <summary>

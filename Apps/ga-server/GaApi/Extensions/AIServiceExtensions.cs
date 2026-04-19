@@ -149,6 +149,18 @@ public static class AiServiceExtensions
             // Register Ollama embedding service (used by knowledge source)
             services.AddSingleton<OllamaEmbeddingService>();
 
+            // OPTIC-K bridge: NL → structured intent → 112-dim compact vector.
+            // Lives alongside the Ollama service so either path can be wired without disturbing
+            // the other. SemanticKnowledgeSource picks the OPTK path when both are available.
+            //
+            // Extractor is two-tiered: deterministic typed parser first (~1 ms, $0, handles
+            // structured chord+tag queries), LLM fallback only when typed finds nothing.
+            services.AddSingleton<GA.Business.ML.Search.MusicalQueryEncoder>();
+            services.AddSingleton<GA.Business.ML.Search.TypedMusicalQueryExtractor>();
+            services.AddSingleton<GA.Business.ML.Search.LlmMusicalQueryExtractor>();
+            services.AddSingleton<GA.Business.ML.Search.IMusicalQueryExtractor,
+                                  GA.Business.ML.Search.CompositeMusicalQueryExtractor>();
+
             // Register semantic knowledge source (bridges voicing search to chatbot)
             services.AddSingleton<SemanticKnowledgeSource>();
             services.AddSingleton<ISemanticKnowledgeSource>(sp =>

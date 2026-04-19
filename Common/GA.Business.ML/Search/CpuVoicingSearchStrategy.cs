@@ -47,6 +47,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
     public string Name => "CPU-Parallel";
     public bool IsAvailable => true;
+    public QueryVectorSpace QuerySpace => QueryVectorSpace.TextEmbedding;
 
     public VoicingSearchPerformance Performance => new(
         TimeSpan.FromMilliseconds(5.0),
@@ -64,8 +65,9 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         return Task.CompletedTask;
     }
 
-    public async Task<List<VoicingSearchResult>> SemanticSearchAsync(double[] queryEmbedding, int limit = 10)
+    public async Task<List<VoicingSearchResult>> SemanticSearchAsync(double[] queryEmbedding, int limit = 10, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var stopwatch = Stopwatch.StartNew();
 
         var results = new ConcurrentBag<VoicingSearchResult>();
@@ -85,16 +87,17 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         return [.. results.OrderByDescending(r => r.Score).Take(limit)];
     }
 
-    public async Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(string voicingId, int limit = 10)
+    public async Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(string voicingId, int limit = 10, CancellationToken cancellationToken = default)
     {
         if (!_voicings.TryGetValue(voicingId, out var target)) return [];
 
-        var results = await SemanticSearchAsync(target.Embedding, limit + 1);
+        var results = await SemanticSearchAsync(target.Embedding, limit + 1, cancellationToken);
         return [.. results.Where(r => r.Document.Id != voicingId).Take(limit)];
     }
 
-    public async Task<List<VoicingSearchResult>> HybridSearchAsync(double[] queryEmbedding, VoicingSearchFilters filters, int limit = 10)
+    public async Task<List<VoicingSearchResult>> HybridSearchAsync(double[] queryEmbedding, VoicingSearchFilters filters, int limit = 10, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var stopwatch = Stopwatch.StartNew();
 
         var results = new ConcurrentBag<VoicingSearchResult>();

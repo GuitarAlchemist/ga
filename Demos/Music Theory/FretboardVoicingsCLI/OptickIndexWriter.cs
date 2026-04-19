@@ -269,9 +269,22 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Extracts the 112 search-relevant dimensions from the 228-dim raw embedding,
-    /// multiplies each by its sqrt-scaled partition weight, and L2-normalizes.
-    /// Zero vectors are returned as-is (no division).
+    /// Extracts the 112 search-relevant dimensions from the 228-dim raw embedding.
+    /// <para>
+    /// v4-pp normalization (per-partition): each partition slice is L2-normalized
+    /// *before* applying its sqrt-weight scaling. Unlike the old global-L2 scheme
+    /// (v4), cross-partition variations (e.g., MORPHOLOGY differing across
+    /// instruments) no longer propagate into the STRUCTURE slice — two voicings with
+    /// identical PC-sets on different instruments produce byte-identical STRUCTURE
+    /// slices. This closes invariants #25, #28, #32 that failed under global norm.
+    /// </para>
+    /// <para>
+    /// Dot product of two v4-pp vectors equals the weighted partition cosine directly:
+    /// <code>dot(A, B) = Σ_p w_p · cos(A_p, B_p)</code>
+    /// </para>
+    /// <para>
+    /// Zero partition slices stay zero (no division by zero risk).
+    /// </para>
     /// </summary>
     internal static float[] ExtractAndNormalize(float[] raw)
     {
@@ -280,24 +293,26 @@ public sealed class OptickIndexWriter : IDisposable
                 $"Expected {RawDimension} raw dimensions, got {raw.Length}.", nameof(raw));
 
         var compact = new float[Dimension];
-        var sumSq = 0.0f;
 
         foreach (var (cStart, rStart, dim, sqrtWeight) in CompactPartitions)
         {
+            // Per-partition L2 norm over the raw slice.
+            var partitionSumSq = 0.0f;
             for (var j = 0; j < dim; j++)
             {
-                var v = raw[rStart + j] * sqrtWeight;
-                compact[cStart + j] = v;
-                sumSq += v * v;
+                var v = raw[rStart + j];
+                partitionSumSq += v * v;
+            }
+
+            if (partitionSumSq <= float.Epsilon)
+                continue; // zero slice stays zero
+
+            var partitionNorm = MathF.Sqrt(partitionSumSq);
+            for (var j = 0; j < dim; j++)
+            {
+                compact[cStart + j] = raw[rStart + j] / partitionNorm * sqrtWeight;
             }
         }
-
-        if (sumSq <= float.Epsilon)
-            return compact; // zero vector
-
-        var norm = MathF.Sqrt(sumSq);
-        for (var i = 0; i < Dimension; i++)
-            compact[i] /= norm;
 
         return compact;
     }
