@@ -41,10 +41,13 @@ builder.Services.AddHttpClient("gaapi", (sp, client) =>
     client.Timeout = TimeSpan.FromSeconds(60);
 });
 
-// Register MCP server with tools
+// Register MCP server with tools + resources. Resources (e.g. ga://voicings/vocabulary)
+// are read-only data the client auto-lists via resources/list — more efficient than
+// forcing a tool-call round-trip for static vocabulary lookup.
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithResourcesFromAssembly();
 
 await builder.Build().RunAsync();

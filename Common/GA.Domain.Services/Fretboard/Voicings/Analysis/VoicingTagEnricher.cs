@@ -140,11 +140,14 @@ public static class VoicingTagEnricher
     }
 
     /// <summary>
-    ///     Style tags from chord-family heuristics. These are deliberate classifications —
-    ///     not every jazz voicing gets "jazz", only the shapes that are *characteristically*
-    ///     jazz (drop-2/drop-3 of extended qualities, shell voicings, rootless extended).
-    ///     Under-tagging is preferred to over-tagging: a voicing tagged "jazz" should
-    ///     actually be a jazz voicing.
+    ///     Style tags from chord-family heuristics. Under-tagging is preferred to over-
+    ///     tagging: a voicing tagged "jazz" should at least be plausibly jazz.
+    ///     Relaxed 2026-04-19: any extended-quality chord (7/9/11/13/maj7/m7/m7b5) gets
+    ///     "jazz" — the live MCP battery showed block-chord Cmaj7 was excluded and the
+    ///     `"Cmaj7 jazz"` query tied with bare `"Cmaj7"` as a result. Plain triads still
+    ///     don't get tagged. Drop-2/drop-3/rootless structures carry the stronger jazz
+    ///     signal via their own canonical tags (drop-2-voicings, rootless, shell-voicing),
+    ///     so this relaxation doesn't lose specificity.
     /// </summary>
     private static IEnumerable<string> ClassifyStyle(VoicingCharacteristics c)
     {
@@ -157,8 +160,9 @@ public static class VoicingTagEnricher
             q.Contains("7")    || q.Contains("9")    || q.Contains("11") || q.Contains("13") ||
             q.Contains("m7b5");
 
-        // Jazz: extended qualities with characteristic voicing treatment.
-        if (isExtended && (drop.Contains("drop-2") || drop.Contains("drop-3") || c.IsRootless))
+        // Jazz: any extended quality qualifies. Voicing-pattern tags (drop-*, shell-*,
+        // rootless) supply the finer style differentiation.
+        if (isExtended)
         {
             yield return "jazz";
         }

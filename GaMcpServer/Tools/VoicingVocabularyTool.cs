@@ -29,7 +29,9 @@ public static class VoicingVocabularyTool
         "words to the returned tags (e.g. 'warm' → 'jazz' or 'mellow' if listed), then " +
         "call ga_search_voicings with canonical tokens. Example: user says 'something " +
         "jazzy in F minor' → canonical query 'Fm jazz'.")]
-    public static string GaVoicingVocabulary()
+    public static string GaVoicingVocabulary() => BuildVocabularyJson();
+
+    internal static string BuildVocabularyJson()
     {
         var tags = SymbolicTagRegistry.Instance.GetAllKnownTags().OrderBy(t => t).ToList();
 
@@ -74,4 +76,26 @@ public static class VoicingVocabularyTool
                 "when STRUCTURE and/or MODAL partitions are populated."
         }, new JsonSerializerOptions { WriteIndented = true });
     }
+}
+
+/// <summary>
+///     Exposes the same canonical vocabulary as <see cref="VoicingVocabularyTool"/>
+///     but via the MCP *resource* surface under <c>ga://voicings/vocabulary</c>.
+///     Clients that auto-list resources on session start (Claude Code does this)
+///     can pre-canonicalize queries without a tool-call round-trip — the architect
+///     persona panel on 2026-04-18 rated this the highest-ROI MCP change for fuzzy-
+///     query handling.
+/// </summary>
+[McpServerResourceType]
+public static class VoicingVocabularyResource
+{
+    [McpServerResource(
+        UriTemplate = "ga://voicings/vocabulary",
+        Name        = "ga_voicing_vocabulary",
+        MimeType    = "application/json")]
+    [Description(
+        "Canonical vocabulary accepted by ga_search_voicings — modes, chord qualities, " +
+        "roots, style/technique tags. Read at session start, use to canonicalize user " +
+        "queries client-side before calling ga_search_voicings.")]
+    public static string VoicingVocabulary() => VoicingVocabularyTool.BuildVocabularyJson();
 }

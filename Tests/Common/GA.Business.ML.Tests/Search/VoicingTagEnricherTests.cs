@@ -90,10 +90,30 @@ public class VoicingTagEnricherTests
     [Test]
     public void Jazz_DoesNotFireForPlainMajorTriad()
     {
-        // Don't over-tag: a plain C major triad is not a jazz voicing.
+        // Plain triads (maj/m/dim/aug without a 7th) are not jazz-tagged — only
+        // extended qualities get the jazz bit set.
         var c = MakeCharacteristics(quality: "maj", consonance: 0.80);
         var tags = VoicingTagEnricher.Enrich(c, [60, 64, 67]).ToList();
         Assert.That(tags, Does.Not.Contain("jazz"));
+    }
+
+    [Test]
+    public void Jazz_FiresForExtendedQuality_EvenWithoutDropVoicing()
+    {
+        // 2026-04-19 relaxation: any extended quality (7/9/11/13/maj7/m7/m7b5) gets the
+        // jazz tag, not just drop-voicings. Before this change, `"Cmaj7 jazz"` MCP queries
+        // tied with bare `"Cmaj7"` because block-chord maj7s were excluded. Plain triads
+        // stay untagged (see Jazz_DoesNotFireForPlainMajorTriad).
+        var blockMaj7 = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "maj7", consonance: 0.65, dropVoicing: null),
+            [60, 64, 67, 71]).ToList();
+        Assert.That(blockMaj7, Does.Contain("jazz"),
+            "block-chord maj7 should tag jazz even without drop-2 treatment.");
+
+        var blockM7 = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "m7", consonance: 0.60, dropVoicing: null),
+            [62, 65, 69, 72]).ToList();
+        Assert.That(blockM7, Does.Contain("jazz"));
     }
 
     [Test]
