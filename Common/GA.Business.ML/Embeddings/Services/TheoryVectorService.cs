@@ -47,12 +47,13 @@ public class TheoryVectorService
             }
         }
 
-        // Boost Root (if known) - useful for tonal recognition
-        if (rootPitchClass.HasValue)
-        {
-            var r = rootPitchClass.Value % 12;
-            v[r] += 1.0;
-        }
+        // Root-boost REMOVED 2026-04-19 (schema v1.8). Previously `v[rootPitchClass] += 1.0`
+        // privileged the root bit, which broke STRUCTURE's T-invariance claim and caused
+        // 91% of same-PC-set cross-instrument voicings to fail invariant #25. Root identity
+        // now lives in the dedicated ROOT similarity partition (EmbeddingSchema.Partitions
+        // entry "ROOT", weight 0.05). STRUCTURE is now genuinely O+P+T+I-invariant per the
+        // schema contract.
+        _ = rootPitchClass;
 
         // 12: Cardinality (C) - High weight for structural identity
         v[12] = pcs.Count / 12.0 * 2.0;

@@ -25,7 +25,8 @@ public class OptickHardPromptBatteryTests
         _encoder = new MusicalQueryEncoder(
             new TheoryVectorService(),
             new ModalVectorService(),
-            new SymbolicVectorService());
+            new SymbolicVectorService(),
+            new RootVectorService());
         _extractor = new TypedMusicalQueryExtractor();
 
         _indexPath = FindIndex();

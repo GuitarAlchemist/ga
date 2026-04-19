@@ -30,7 +30,8 @@ public class DatasetExportTests
             new ContextVectorService(),
             new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService()
+            new PhaseSphereService(),
+            new RootVectorService()
         );
 
         // 2. Build Chord Template Lookup (Reverse Index)

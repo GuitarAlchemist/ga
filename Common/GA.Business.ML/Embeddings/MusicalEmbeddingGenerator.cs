@@ -50,7 +50,8 @@ public class MusicalEmbeddingGenerator(
     ContextVectorService contextService,
     SymbolicVectorService symbolicService,
     ModalVectorService modalService,
-    PhaseSphereService phaseSphereService) : IEmbeddingGenerator
+    PhaseSphereService phaseSphereService,
+    RootVectorService rootService) : IEmbeddingGenerator
 {
     /// <summary>Returns the total embedding dimension (216 for v1.4/v1.5).</summary>
     public int Dimension => EmbeddingSchema.TotalDimension;
@@ -171,10 +172,19 @@ public class MusicalEmbeddingGenerator(
         combined[EmbeddingSchema.HierarchyComplexityScore] = (float)ComplexityCalculator.CalculateScore(pcsSet);
 
         // ═══════════════════════════════════════════════════════════════════════
-        // PARTITION 10: ATONAL MODAL (164-180) — Universal Mapping
+        // PARTITION 10: ATONAL MODAL (164-227) — Universal Mapping
         // ═══════════════════════════════════════════════════════════════════════
         var atonalModalVector = modalService.ComputeAtonalModalEmbedding(doc);
         CopyIntoPartition(combined, atonalModalVector, GetPartition("ATONAL_MODAL"));
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // PARTITION 11: ROOT (228-239) — Root pitch-class one-hot (v1.8)
+        // Root identity lives HERE, not in STRUCTURE. Schema's T-invariance claim
+        // for STRUCTURE is now honored. Low weight (0.05) so root match contributes
+        // a small discrimination signal on top of set-class match via STRUCTURE.
+        // ═══════════════════════════════════════════════════════════════════════
+        var rootVector = rootService.ComputeEmbedding(doc.RootPitchClass);
+        CopyIntoPartition(combined, rootVector, GetPartition("ROOT"));
 
         return Task.FromResult(combined);
     }

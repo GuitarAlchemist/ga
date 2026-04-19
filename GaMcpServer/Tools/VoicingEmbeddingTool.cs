@@ -23,7 +23,8 @@ public static class VoicingEmbeddingTool
             new ContextVectorService(),
             new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService()));
+            new PhaseSphereService(),
+            new RootVectorService()));
 
     /// <summary>
     ///     HttpClient for calling GaApi's voicing-retrieve endpoint. Base address is read from

@@ -20,7 +20,11 @@ using Embeddings;
 /// </summary>
 public sealed unsafe class OptickIndexReader : IDisposable
 {
-    public const int Dimension = 112;
+    /// <summary>
+    ///     Compact vector dimension. Derives from <see cref="EmbeddingSchema.CompactDimension"/>
+    ///     — sum of similarity-partition dims. v4-pp: 112. v4-pp-r (v1.8, with ROOT partition): 124.
+    /// </summary>
+    public static int Dimension => EmbeddingSchema.CompactDimension;
 
     private const uint SupportedVersion = 4;
     private const ushort ExpectedEndian = 0xFEFF;

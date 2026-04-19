@@ -19,7 +19,8 @@ public class ExtendedTextureFeatureTests
             new ContextVectorService(),
             new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService()
+            new PhaseSphereService(),
+            new RootVectorService()
         );
 
     private MusicalEmbeddingGenerator _generator;

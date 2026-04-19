@@ -28,7 +28,8 @@ public sealed record StructuredQuery(
 public sealed class MusicalQueryEncoder(
     TheoryVectorService theory,
     ModalVectorService modal,
-    SymbolicVectorService symbolic)
+    SymbolicVectorService symbolic,
+    RootVectorService rootService)
 {
     public double[] Encode(StructuredQuery q)
     {
@@ -73,6 +74,16 @@ public sealed class MusicalQueryEncoder(
         {
             var symbolicVec = symbolic.ComputeEmbedding(q.Tags);
             Array.Copy(symbolicVec, 0, raw, EmbeddingSchema.SymbolicOffset, symbolicVec.Length);
+        }
+
+        // ROOT — 12-dim one-hot (v1.8). Query carries root signal IF the chord symbol
+        // specified one; otherwise zero. Low weight (0.05) in the weighted cosine, so
+        // root match adds a small discriminating boost on top of set-class-level STRUCTURE.
+        if (root2.HasValue)
+        {
+            var rootVec = rootService.ComputeEmbedding(root2);
+            var rootPartition = EmbeddingSchema.Partitions.First(p => p.Name == "ROOT");
+            Array.Copy(rootVec, 0, raw, rootPartition.Start, rootVec.Length);
         }
 
         // MORPHOLOGY (24 dim) and CONTEXT (12 dim) remain zero — a text query carries no

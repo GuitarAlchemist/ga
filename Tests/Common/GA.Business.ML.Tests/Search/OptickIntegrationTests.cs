@@ -51,15 +51,15 @@ public class OptickIntegrationTests
         for (var i = 0; i < v.Length; i++) sumSq += v[i] * v[i];
         var norm = Math.Sqrt(sumSq);
 
-        // Under v4-pp (per-partition) normalization: each partition slice is unit-L2,
-        // then scaled by sqrt(weight). A voicing with all partitions populated has
-        // total norm² = Σ_p weight_p = STRUCTURE(0.45)+MORPHOLOGY(0.25)+CONTEXT(0.20)+
-        // SYMBOLIC(0.10)+MODAL(0.10) = 1.10, so total norm ≈ sqrt(1.10) ≈ 1.0488.
-        // Voicings with empty partitions (e.g. no tags → SYMBOLIC zero) have smaller
-        // norm. Accept the range [0.6, sqrt(1.10)+ε].
-        var maxPossibleNorm = Math.Sqrt(0.45 + 0.25 + 0.20 + 0.10 + 0.10);
+        // Under v4-pp-r (v1.8, per-partition norm + ROOT partition): each similarity
+        // partition slice is unit-L2, scaled by sqrt(weight). A voicing with all
+        // partitions populated has norm² = Σ weight_p = STRUCTURE(0.45)+MORPHOLOGY(0.25)+
+        // CONTEXT(0.20)+SYMBOLIC(0.10)+MODAL(0.10)+ROOT(0.05) = 1.15, so total norm ≈
+        // sqrt(1.15) ≈ 1.0724. Voicings with empty partitions (e.g. no tags → SYMBOLIC
+        // zero) have smaller norm. Accept range [0.3, sqrt(1.15)+ε].
+        var maxPossibleNorm = Math.Sqrt(0.45 + 0.25 + 0.20 + 0.10 + 0.10 + 0.05);
         Assert.That(norm, Is.GreaterThan(0.3).And.LessThanOrEqualTo(maxPossibleNorm + 1e-3),
-            $"on-disk v4-pp vectors should have total norm ≤ sqrt(Σw)={maxPossibleNorm:F4}, got {norm:F4}.");
+            $"on-disk v4-pp-r vectors should have total norm ≤ sqrt(Σw)={maxPossibleNorm:F4}, got {norm:F4}.");
     }
 
     [Test]
@@ -87,7 +87,8 @@ public class OptickIntegrationTests
         var encoder = new MusicalQueryEncoder(
             new TheoryVectorService(),
             new ModalVectorService(),
-            new SymbolicVectorService());
+            new SymbolicVectorService(),
+            new RootVectorService());
 
         using var strategy = new OptickSearchStrategy(_indexPath!);
         var query = encoder.Encode(new StructuredQuery(
@@ -147,7 +148,8 @@ public class OptickIntegrationTests
         var encoder = new MusicalQueryEncoder(
             new TheoryVectorService(),
             new ModalVectorService(),
-            new SymbolicVectorService());
+            new SymbolicVectorService(),
+            new RootVectorService());
 
         using var strategy = new OptickSearchStrategy(_indexPath!);
 

@@ -20,7 +20,8 @@ public class MusicalQueryEncoderTests
         _encoder = new MusicalQueryEncoder(
             new TheoryVectorService(),
             new ModalVectorService(),
-            new SymbolicVectorService());
+            new SymbolicVectorService(),
+            new RootVectorService());
     }
 
     // ─── ChordPitchClasses.TryParse ────────────────────────────────────────
@@ -92,15 +93,15 @@ public class MusicalQueryEncoderTests
 
         Assert.That(v.Length, Is.EqualTo(OptickIndexReader.Dimension));
 
-        // Under v4-pp (per-partition) normalization, the encoded query's norm² equals
-        // the sum of weights of the *active* (non-zero) partitions. A chord-only query
-        // activates STRUCTURE (w=0.45) and MODAL (w=0.10 — modal service scores PC set
-        // against every mode, so it's populated). Expected norm² = 0.55 → norm ≈ 0.7416.
-        // MORPHOLOGY, CONTEXT, SYMBOLIC stay zero for a chord-only query.
+        // Under v4-pp-r (v1.8, per-partition norm + ROOT partition): the encoded query's
+        // norm² equals the sum of weights of the *active* partitions. A chord-only query
+        // activates STRUCTURE (0.45) + MODAL (0.10, PC-set auto-scored against modes)
+        // + ROOT (0.05, chord symbol supplied a root). Expected norm² = 0.60, norm ≈
+        // 0.7746. MORPHOLOGY, CONTEXT, SYMBOLIC stay zero for a chord-only query.
         var norm = Math.Sqrt(v.Sum(x => x * x));
-        var expected = Math.Sqrt(0.45 + 0.10);
+        var expected = Math.Sqrt(0.45 + 0.10 + 0.05);
         Assert.That(norm, Is.EqualTo(expected).Within(1e-6),
-            "chord-only query should have norm = sqrt(w_STRUCTURE + w_MODAL) under per-partition norm.");
+            "chord-only query norm = sqrt(w_STRUCTURE + w_MODAL + w_ROOT) under v1.8.");
     }
 
     [Test]

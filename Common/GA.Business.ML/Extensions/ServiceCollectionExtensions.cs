@@ -76,6 +76,7 @@ public static class MlServiceCollectionExtensions
         services.AddTransient<ContextVectorService>();
         services.AddTransient<SymbolicVectorService>();
         services.AddTransient<ModalVectorService>();
+        services.AddTransient<RootVectorService>();
         services.AddSingleton<PhaseSphereService>();
         services.AddTransient<MusicalEmbeddingGenerator>();
         services.AddTransient<Abstractions.IEmbeddingGenerator, MusicalEmbeddingGenerator>();

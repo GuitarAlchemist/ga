@@ -36,7 +36,8 @@ public class SchemaContractTests
             new ContextVectorService(),
             new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService()
+            new PhaseSphereService(),
+            new RootVectorService()
         );
 
     #region ICV Computation Tests

@@ -16,7 +16,8 @@ public static class TestServices
             new ContextVectorService(),
             new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService());
+            new PhaseSphereService(),
+            new RootVectorService());
 
     public static TabAnalysisService CreateTabAnalysisService()
     {

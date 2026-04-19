@@ -171,6 +171,17 @@ Then **revert the schema-hash bump** in `EmbeddingSchema.BuildCompactLayoutV4` (
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 2026-04-18 pre | v4 global-L2, sparse SYMBOLIC | 313,047 | 0.752 | 0.596 | 0.790 | 0.522 | 0.614 | 0.498 | 92.8% | 178 | 105 |
 | 2026-04-19 post | **v4-pp per-partition**, tag enricher, +20 qualities | 313,047 | 0.867 | **0.517** | 0.903 | **0.333** ✅ | **0.526** | 0.493 | **100.0%** ✅ | **79** | **5** |
+| 2026-04-19 v1.8 | **+ ROOT partition (12 dims, w=0.05), root-boost removed** | 313,047 | 0.835 | **0.503** | 0.903 | **0.333** ✅ | 0.524 | 0.493 | **100.0%** ✅ | **36** | 20 |
+
+**v1.8 headline: invariant #25 flipped from 8.4% PASS (67/793) to 100% (793/793).** Under v4-pp + root-boost, same-PC-set voicings across instruments had bit-different STRUCTURE slices because STRUCTURE's `v[rootPitchClass] += 1.0` broke T-invariance. Removing the root-boost and moving root identity to a dedicated 12-dim ROOT similarity partition (weight 0.05) restored the schema's O+P+T+I claim.
+
+Additional diagnostic signals in v1.8:
+- **ROOT partition at acc 0.345** — correctly near-random (1/3 + 1σ); diagnostic flipped its label from `[LEAK]` to `[ok]`. Root is PC-level data, genuinely cross-instrument-invariant by construction.
+- **β₀ range halved again** (79 → 36). With STRUCTURE cleaned of root-boost, the topological geometry is even more instrument-agnostic.
+- **Full-dim acc DROPPED** (0.867 → 0.835). Counter-intuitive but correct: cleaner STRUCTURE = less instrument signal smuggled via root-boost = less predictability of instrument from the full vector.
+- **Retrieval held at 100% PC-match.** Adding the ROOT partition did not degrade retrieval quality.
+
+Residual STRUCTURE leak (0.503) comes from genuine data-level cardinality differences: a 4-string ukulele cannot represent 6-note chords, so the cardinality dim legitimately differs across instruments for large PC-sets. That's an encoding-consistent truth, not a normalization bug.
 
 Interpretation of the post-rebuild deltas:
 

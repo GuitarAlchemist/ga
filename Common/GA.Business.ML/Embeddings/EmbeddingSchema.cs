@@ -92,10 +92,17 @@ public static class EmbeddingSchema
     #region Schema Metadata
 
     /// <summary>Schema version identifier for compatibility checking.</summary>
-    public const string Version = "OPTIC-K-v1.7";
+    public const string Version = "OPTIC-K-v1.8";
 
-    /// <summary>Total embedding vector dimension (228 for v1.7 with Atonal Modal).</summary>
-    public const int TotalDimension = 228;
+    /// <summary>
+    ///     Total embedding vector dimension (240 for v1.8 with ROOT partition appended).
+    ///     v1.8 adds a 12-dim ROOT one-hot partition in raw slots 228-239 to carry
+    ///     root-pitch-class identity outside STRUCTURE — closing the T-invariance gap
+    ///     that 2026-04-19 invariant #25 testing surfaced (91% of same-PC-set cross-
+    ///     instrument voicings had different STRUCTURE slices due to STRUCTURE's
+    ///     legacy root-boost). See ix/docs/plans/2026-04-19-*-root-partition.md.
+    /// </summary>
+    public const int TotalDimension = 240;
 
     #endregion
 
@@ -119,6 +126,11 @@ public static class EmbeddingSchema
         new("MODAL",        109, 148, 0.10f, PartitionRole.Similarity),
         new("HIERARCHY",    149, 163, 0.00f, PartitionRole.Info),
         new("ATONAL_MODAL", 164, 227, 0.00f, PartitionRole.Info),
+        // v1.8 (2026-04-19): ROOT is a 12-dim one-hot over pitch classes 0-11.
+        // Lives as a separate similarity partition with low weight (0.05) so set-class
+        // retrieval (STRUCTURE) remains T-invariant while root-specific queries still
+        // get a discriminating signal. Replaces the deprecated STRUCTURE root-boost.
+        new("ROOT",         228, 239, 0.05f, PartitionRole.Similarity),
     ];
 
     /// <summary>Partitions that contribute to similarity scoring (used by v4 compact index).</summary>
@@ -147,15 +159,15 @@ public static class EmbeddingSchema
 
     private static string BuildCompactLayoutV4()
     {
-        // Suffix "pp" = per-partition normalization. Partition layout is unchanged from v4,
-        // but the semantics of how each partition slice is scaled changed:
-        // v4 (global L2):    each slice = raw · sqrt(w_p) / global_L2_norm
-        // v4-pp (per-part):  each slice = (raw / raw_slice_L2_norm) · sqrt(w_p)
-        // Per-partition isolates the STRUCTURE slice from MORPHOLOGY variations across
-        // instruments — closing the #25/#28/#32 invariant leaks. Bumping the hash is
-        // mandatory; the old on-disk index is incompatible with the new reader/encoder
-        // and must be rebuilt via FretboardVoicingsCLI before retrieval works again.
-        var sb = new StringBuilder("optk-v4-pp:");
+        // Suffix "pp-r" = per-partition normalization + ROOT partition.
+        // - v4 (original):   global L2 normalization; root-boost in STRUCTURE.
+        // - v4-pp:           per-partition L2 normalization (closed partition bleed).
+        // - v4-pp-r (NEW):   adds ROOT similarity partition (12 dims, weight 0.05);
+        //                    STRUCTURE root-boost removed so STRUCTURE is now truly
+        //                    T-invariant per the O+P+T+I schema claim.
+        // Compact dim shifts 112 → 124 with the added ROOT slot. Hash bump is mandatory;
+        // old indexes are rejected by the reader.
+        var sb = new StringBuilder("optk-v4-pp-r:");
         var pos = 0;
         var first = true;
         foreach (var p in SimilarityPartitions)
