@@ -61,29 +61,12 @@ jobs:
           VITE_BANNER_BASE: /ga/
         run: npm run build
 
-      # Capture banner.png from the built site. WebGPU-enabled Chromium
-      # with SwiftShader gives a software fallback when runners lack a
-      # GPU. If capture fails the script exits 0 so the deploy keeps
-      # whatever banner.png was previously live.
-      - name: Install Playwright Chromium
-        working-directory: banner
-        run: npx playwright install --with-deps chromium
-
-      - name: Start preview server
-        working-directory: banner
-        run: |
-          nohup npm run preview -- --port 4173 --host 127.0.0.1 > preview.log 2>&1 &
-          for i in $(seq 1 20); do
-            if curl -s -o /dev/null http://127.0.0.1:4173/ga/; then
-              echo "preview up"; exit 0
-            fi
-            sleep 1
-          done
-          echo "preview server never responded"; cat preview.log || true; exit 1
-
-      - name: Capture banner screenshot
-        working-directory: banner
-        run: npm run capture -- http://127.0.0.1:4173/ga/
+      # banner.png is committed to banner/public/banner.png — Vite
+      # copies it into dist/ during build. We used to capture it
+      # via Playwright here, but GitHub runners have no GPU and
+      # SwiftShader renders WebGPU compute as black frames. Ship
+      # a real screenshot; regenerate manually when the scene
+      # materially changes.
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
