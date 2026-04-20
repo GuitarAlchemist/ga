@@ -330,19 +330,29 @@ internal static class Program
             }
 
             // --- F. Cross-instrument consistency ---
+            // Compare CanonicalName (register-invariant) rather than ChordName
+            // (which includes voicing-specific slash suffix). Per Phase C of
+            // the chord-recognition refactor, CanonicalName is the identity
+            // that should agree across instruments for the same pitch-class
+            // set; SlashSuffix is a voicing-level property and will legitimately
+            // differ (e.g. ukulele's re-entrant GCEA tuning puts a different
+            // note at the bottom than guitar EADGBE for the same PC-set).
+            // Fall back to ChordName when CanonicalName is null — this covers
+            // Forte-class fallback matches, which are also register-invariant.
+            var canonicalName = chordId?.CanonicalName ?? chordId?.ChordName;
             var pcMask = BuildPitchClassMask(voicing.Notes);
             if (!_pcMaskToInstrumentChord.TryGetValue(pcMask, out var perInstrument))
             {
                 perInstrument = new Dictionary<string, string?>();
                 _pcMaskToInstrumentChord[pcMask] = perInstrument;
             }
-            // Record first seen ChordName per instrument for this pc-mask.
+            // Record first seen CanonicalName per instrument for this pc-mask.
             // If multiple voicings on the same instrument map to the same mask we
             // just keep the first observation (the dedup key already guarantees
             // near-uniqueness on the mask+shape tuple).
             if (!perInstrument.ContainsKey(instrument))
             {
-                perInstrument[instrument] = chordName;
+                perInstrument[instrument] = canonicalName;
             }
 
             // --- G. Cardinality distribution ---
