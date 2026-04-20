@@ -1,6 +1,6 @@
 # OPTIC-K Corpus Visualization — "Harmonic Nebula"
 
-**Status:** Proposed — awaiting sign-off before scaffolding
+**Status:** Phase 1 scaffolding in progress (2026-04-20). Metaphor and all design questions resolved.
 **Date:** 2026-04-20
 **Owner:** spareilleux
 **Reversibility:** Two-way door for the demo code itself; **one-way door** for the cluster-centroid layout algorithm and the pitch-class merge semantics (once a user mental model is established, those become public contract).
@@ -111,17 +111,21 @@ Rough total: **2-3 weeks** with existing Prime Radiant plumbing reused; 4 weeks 
 - Not a betti-visualization (banked as optional overlay).
 - No UMAP computation in the browser — always offline, always deterministic.
 
-## Open questions (pre-sign-off)
+## Resolved design questions
 
-1. Is `/demos/harmonic-nebula` the right route, or fold it into the existing Prime Radiant shell as a mode?
-2. Should instrument filter be toggle (one at a time) or multi-select?
-3. How do we handle voicings where `CanonicalName` is a Forte class (e.g., "Forte 5-32")? Hide from default view? Surface under "Uncategorized" island?
-4. WebGL2 fallback quality — accept degraded shader effects, or detect and show a "WebGPU recommended" banner?
+1. **Route**: new `/demos/harmonic-nebula` route, not folded into Prime Radiant. Prime Radiant is governance-focused; mixing a corpus viz into it would confuse the metaphor. Separate surface.
+2. **Instrument filter**: multi-select with all-on default. Musicians often want to compare guitar vs ukulele without being forced to toggle. Single-select adds friction for the common "show me both" case.
+3. **Forte-class voicings** (no `CanonicalName` match, e.g. "Forte 5-32"): visible "Uncategorized" cloud at the periphery, rendered dim. Surfaces the real catalog gap honestly rather than hiding it; dim placement keeps it from dominating the default view.
+4. **WebGL2 fallback**: silent degradation with a small info icon in the corner (not a banner). Icon tooltip: "Your browser supports WebGL2 (working). WebGPU enables better glow, volumetric density, and particle effects. Try Chrome/Edge on desktop for the full experience." Keeps the viz usable on iPad/mobile without a scolding banner; power users see the signal.
 
 ## Sign-off gate
 
 Before proceeding to Phase 1:
 
 - [x] Owner signs off on metaphor — **Harmonic Nebula** (confirmed 2026-04-20)
-- [ ] Owner resolves open questions 1-4
-- [ ] User-facing copy list approved ("nebular clouds", "grips", "similar sounds", "rare voicings")
+- [x] Open questions 1-4 resolved (see Resolved design questions above, 2026-04-20)
+- [x] User-facing copy list approved ("nebular clouds", "grips", "similar sounds", "rare voicings")
+
+## Phase 1 status
+
+Phase 1 implementation lives in `ix-voicings` as a `viz-precompute` subcommand (not a new crate — extends the existing Phase A+B pipeline as Phase C).
