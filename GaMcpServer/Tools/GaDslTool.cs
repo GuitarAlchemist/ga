@@ -39,6 +39,9 @@ public static class GaDslTool
         string closureName,
         params (string Key, object Value)[] inputs)
     {
+        var started = DateTime.UtcNow;
+        var inputDict = inputs.ToDictionary(kv => kv.Key, kv => (object?)kv.Value);
+
         try
         {
             var map = MapModule.OfSeq(
@@ -49,18 +52,46 @@ public static class GaDslTool
                 FSharpOption<TaskCreationOptions>.None,
                 FSharpOption<CancellationToken>.None);
 
-            return result.IsOk
+            var formatted = result.IsOk
                 ? FormatResult(result.ResultValue)
                 : $"Error: {result.ErrorValue}";
+
+            TraceClaim(closureName, inputDict, result.IsOk, formatted, started);
+            return formatted;
         }
         catch (Exception ex)
         {
-            return $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+            var msg = $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+            TraceClaim(closureName, inputDict, isOk: false, msg, started);
+            return msg;
         }
+    }
+
+    private static void TraceClaim(
+        string closureName,
+        IReadOnlyDictionary<string, object?> inputs,
+        bool isOk,
+        string formattedResult,
+        DateTime started)
+    {
+        ClaimTraceLog.Append(new ClaimTraceRecord
+        {
+            Timestamp = started.ToString("O"),
+            SessionId = ClaimTraceLog.ProcessSessionId,
+            Source = "ga-mcp",
+            Tool = closureName,
+            Inputs = inputs,
+            Outcome = isOk ? "ok" : "error",
+            Truth = isOk ? "T" : "U",
+            Result = isOk ? formattedResult : null,
+            Error = isOk ? null : formattedResult,
+            LatencyMs = (DateTime.UtcNow - started).TotalMilliseconds,
+        });
     }
 
     private static async Task<string> InvokeJsonAsync(string closureName, string paramsJson)
     {
+        var started = DateTime.UtcNow;
         List<Tuple<string, object>> pairs;
         try
         {
@@ -74,6 +105,8 @@ public static class GaDslTool
             return $"Error parsing params JSON: {ex.Message}";
         }
 
+        var inputDict = pairs.ToDictionary(t => t.Item1, t => (object?)t.Item2);
+
         try
         {
             var map = MapModule.OfSeq(pairs);
@@ -83,13 +116,18 @@ public static class GaDslTool
                 FSharpOption<TaskCreationOptions>.None,
                 FSharpOption<CancellationToken>.None);
 
-            return result.IsOk
+            var formatted = result.IsOk
                 ? FormatResult(result.ResultValue)
                 : $"Error: {result.ErrorValue}";
+
+            TraceClaim(closureName, inputDict, result.IsOk, formatted, started);
+            return formatted;
         }
         catch (Exception ex)
         {
-            return $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+            var msg = $"Exception in {closureName}: {ex.GetType().Name}: {ex.Message}";
+            TraceClaim(closureName, inputDict, isOk: false, msg, started);
+            return msg;
         }
     }
 

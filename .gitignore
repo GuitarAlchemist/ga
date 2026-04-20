@@ -184,3 +184,6 @@ state/baseline-phaseE/embedding-clusters-*.json
 # Quality-snapshot by-products that are too large for git (the trend tool
 # only reads the summary JSONs; cluster-label dumps stay local / regenerable)
 state/quality/**/embedding-clusters-*.json
+
+# Chatbot claim traces — per-day JSONL, regenerable from MCP tool calls
+state/claims/
