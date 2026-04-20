@@ -239,6 +239,11 @@ const App = () => {
                 <Route path="/test/inverse-kinematics" element={<InverseKinematicsTest />} />
                 <Route path="/test/ecosystem-roadmap" element={<EcosystemRoadmapTest />} />
                 <Route path="/test/prime-radiant" element={<PrimeRadiantTest />} />
+                <Route path="/test/harmonic-nebula" element={
+                  <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+                    <HarmonicNebulaDemo />
+                  </Container>
+                } />
               </Routes>
             </Suspense>
           </Layout>
