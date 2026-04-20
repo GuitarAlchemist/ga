@@ -13,11 +13,10 @@ export const OceanDemo: React.FC = () => {
     <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
       <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
         {/* Main Visualization - Full screen */}
-        <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
-          <Ocean
-            width={window.innerWidth - 320}
-            height={window.innerHeight - 48}
-          />
+        <Box sx={{ flex: 1, display: 'flex', position: 'relative', minWidth: 0 }}>
+          {/* Don't hard-code width/height — Ocean uses container size and has
+              its own ResizeObserver-style listener so the canvas tracks viewport. */}
+          <Ocean />
         </Box>
 
         {/* Controls Panel */}
