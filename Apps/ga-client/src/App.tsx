@@ -22,6 +22,10 @@ const PrimeRadiantDemo = lazy(() =>
   import('../../../ReactComponents/ga-react-components/src/components/PrimeRadiant').then(mod => ({ default: mod.ForceRadiant }))
 );
 
+const HarmonicNebulaDemo = lazy(() =>
+  import('../../../ReactComponents/ga-react-components/src/pages/HarmonicNebulaDemo')
+);
+
 const ChatInterface = lazy(() => import('./components/Chat/ChatInterface'));
 
 // ── Test pages from ga-react-components ──────────────────────────────────────
@@ -194,6 +198,11 @@ const App = () => {
                 <Route path="/demos/prime-radiant" element={
                   <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
                     <PrimeRadiantDemo />
+                  </Container>
+                } />
+                <Route path="/demos/harmonic-nebula" element={
+                  <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+                    <HarmonicNebulaDemo />
                   </Container>
                 } />
 

@@ -341,15 +341,33 @@ export const TestIndex: React.FC = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
-        <Table size="small" sx={{ '& .MuiTableCell-root': { py: 1 } }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          boxShadow: 3,
+          maxHeight: 'calc(100vh - 200px)',
+          overflow: 'auto',
+        }}
+      >
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            '& .MuiTableCell-root': {
+              py: 1,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
+          }}
+        >
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'primary.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '20%' }}>Component</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '35%' }}>Description</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '20%' }}>Technology</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '20%' }}>Features</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '5%', textAlign: 'center' }}>Status</TableCell>
+            <TableRow>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '18%', backgroundColor: 'primary.main' }}>Component</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '32%', maxWidth: 0, backgroundColor: 'primary.main' }}>Description</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '18%', backgroundColor: 'primary.main' }}>Technology</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '27%', backgroundColor: 'primary.main' }}>Features</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '5%', textAlign: 'center', backgroundColor: 'primary.main' }}>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -368,24 +386,29 @@ export const TestIndex: React.FC = () => {
                 }}
               >
                 <TableCell sx={{ fontWeight: 'medium' }}>{page.title}</TableCell>
-                <TableCell sx={{ fontSize: '0.875rem' }}>{page.description}</TableCell>
+                <TableCell
+                  sx={{ fontSize: '0.875rem', maxWidth: 0 }}
+                  title={page.description}
+                >
+                  {page.description}
+                </TableCell>
                 <TableCell sx={{ fontSize: '0.875rem', color: 'primary.main' }}>{page.technology}</TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'nowrap', gap: 0.5, overflow: 'hidden' }}>
                     {page.features.slice(0, 3).map((feature) => (
                       <Chip
                         key={feature}
                         label={feature}
                         size="small"
                         variant="outlined"
-                        sx={{ fontSize: '0.7rem', height: '20px' }}
+                        sx={{ fontSize: '0.7rem', height: '20px', flexShrink: 0 }}
                       />
                     ))}
                     {page.features.length > 3 && (
                       <Chip
                         label={`+${page.features.length - 3}`}
                         size="small"
-                        sx={{ fontSize: '0.7rem', height: '20px' }}
+                        sx={{ fontSize: '0.7rem', height: '20px', flexShrink: 0 }}
                       />
                     )}
                   </Box>
