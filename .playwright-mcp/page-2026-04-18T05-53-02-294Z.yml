@@ -1,0 +1,116 @@
+- main "sketchfab-viewer" [ref=e2]:
+  - generic:
+    - generic:
+      - generic:
+        - link "Visit waynethebrett22's Profile":
+          - /url: https://sketchfab.com/waynethebrett22
+      - generic:
+        - heading "Imperial warship based on the tv show" [level=1]:
+          - generic:
+            - link "Imperial warship based on the tv show":
+              - /url: https://sketchfab.com/3d-models/imperial-warship-based-on-the-tv-show-c9aac6b3b4df4b3ba1554bf0622bd3df
+        - heading "by waynethebrett22" [level=2]:
+          - text: by
+          - link "waynethebrett22":
+            - /url: https://sketchfab.com/waynethebrett22
+    - generic:
+      - generic:
+        - generic: 
+        - text: Share
+      - generic:
+        - generic: 
+        - text: Stop
+  - text: 
+  - generic [ref=e12]:
+    - generic "3D view of Imperial warship based on the tv show" [ref=e13]
+    - generic:
+      - generic:
+        - img "Loading 3D Model"
+        - generic:
+          - paragraph: Loading 3D model
+    - generic:
+      - generic:
+        - generic "close": 
+        - paragraph: Model is too heavy for your device and can not be rendered properly
+      - text:  
+      - generic:
+        - generic:
+          - generic:
+            - generic: 
+            - text: Model Inspector
+      - generic:
+        - link "View on Sketchfab" [ref=e15] [cursor=pointer]:
+          - /url: https://sketchfab.com/3d-models/imperial-warship-based-on-the-tv-show-c9aac6b3b4df4b3ba1554bf0622bd3df
+        - generic:
+          - generic:
+            - generic "Play Animation": 
+            - text: 
+            - generic: 00:00.00
+            - generic:
+              - paragraph
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - radio ""
+                      - generic:
+                        - generic: 
+                      - text: Repeat one
+                    - generic:
+                      - radio ""
+                      - generic:
+                        - generic: 
+                      - text: Repeat all
+                    - generic:
+                      - radio ""
+                      - generic:
+                        - generic: 
+                      - text: No repeat
+                  - generic:
+                    - generic:
+                      - radio "x0.1"
+                      - generic: x0.1
+                      - text: Speed x0.1
+                    - generic:
+                      - radio "x0.5"
+                      - generic: x0.5
+                      - text: Speed x0.5
+                    - generic:
+                      - radio "x1"
+                      - generic: x1
+                      - text: Speed x1
+                    - generic:
+                      - radio "x2"
+                      - generic: x2
+                      - text: Speed x2
+                - list
+        - text:    Show annotations  Start autopilot
+        - generic:
+          - generic:
+            - generic: 
+            - text: Help
+          - text: 
+          - generic:
+            - generic: 
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - paragraph: Navigation
+                    - paragraph: Orbit
+            - text: Settings
+          - generic:
+            - generic: 
+            - text: Model Inspector (i)
+          - generic:
+            - generic: 
+            - text: View in VR
+          - generic:
+            - generic: 
+            - text: Fullscreen (f)
+      - generic:
+        - generic:
+          - generic:
+            - text: click & hold
+            - text: to rotate
+  - text:  Fullscreen (f)

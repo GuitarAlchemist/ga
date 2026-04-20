@@ -1,0 +1,48 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "menu" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - generic [ref=e9]: Guitar Alchemist
+  - navigation "breadcrumb" [ref=e11]:
+    - list [ref=e12]:
+      - listitem [ref=e13]:
+        - link "Home" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - text: Home
+      - listitem [ref=e17]:
+        - img [ref=e18]
+      - listitem [ref=e20]:
+        - link "Test" [ref=e21] [cursor=pointer]:
+          - /url: /test
+      - listitem [ref=e22]:
+        - img [ref=e23]
+      - listitem [ref=e25]:
+        - paragraph [ref=e26]: Ocean
+  - main [ref=e27]:
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - heading "TSL OCEAN" [level=6] [ref=e35]
+        - generic [ref=e37]: WebGPU
+        - generic [ref=e39]: Phase 0 · Gerstner
+        - generic [ref=e40]:
+          - generic "Choppy horizontal displacement" [ref=e41]: 8-Wave Gerstner
+          - generic "Schlick (F0 = 0.02, IOR 1.33)" [ref=e42]: Fresnel Reflections
+          - generic "Depth absorption (turquoise → navy)" [ref=e43]: Beer-Lambert
+          - generic "Blinn-Phong pow(720) × 210" [ref=e44]: Sun Specular
+          - generic "Jacobian approximation at crests" [ref=e45]: Slope Foam
+          - generic "FogExp2 horizon blend" [ref=e46]: Distance Fog
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - button "Calm" [ref=e50] [cursor=pointer]
+            - button "Stormy" [ref=e51] [cursor=pointer]
+            - button "Sunset" [ref=e52] [cursor=pointer]
+            - button "Night" [ref=e53] [cursor=pointer]
+          - generic: 60 FPS · medium Gerstner
+        - generic [ref=e56]:
+          - generic [ref=e57]: 4000 × 4000 m · 512 × 512 vertices
+          - generic [ref=e58]: "Waves: 60m 40m 22m 15m 8m 5m 3m 2m"
+          - generic [ref=e59]: "Sun: 78° elev · Specular: pow(720) × 210"
+          - generic [ref=e60]: "Drag: orbit · Scroll: zoom · RMB: pan"

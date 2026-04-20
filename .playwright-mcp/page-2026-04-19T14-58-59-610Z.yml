@@ -1,0 +1,7 @@
+- generic [ref=e3]:
+  - generic:
+    - button "Calm" [ref=e4] [cursor=pointer]
+    - button "Stormy" [ref=e5] [cursor=pointer]
+    - button "Sunset" [ref=e6] [cursor=pointer]
+    - button "Night" [ref=e7] [cursor=pointer]
+  - generic: 60 FPS · medium Gerstner

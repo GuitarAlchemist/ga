@@ -1,0 +1,27 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "menu" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - generic [ref=e9]: Guitar Alchemist
+  - navigation "breadcrumb" [ref=e11]:
+    - list [ref=e12]:
+      - listitem [ref=e13]:
+        - link "Home" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - text: Home
+      - listitem [ref=e17]:
+        - img [ref=e18]
+      - listitem [ref=e20]:
+        - link "Test" [ref=e21] [cursor=pointer]:
+          - /url: /test
+      - listitem [ref=e22]:
+        - img [ref=e23]
+      - listitem [ref=e25]:
+        - paragraph [ref=e26]: Ocean
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - progressbar [ref=e29]:
+        - img [ref=e30]
+      - paragraph [ref=e32]: Loading...

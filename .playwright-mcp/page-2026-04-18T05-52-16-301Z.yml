@@ -1,0 +1,682 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - text: 
+      - link "Go to the mainpage" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+      - list [ref=e21]:
+        - listitem [ref=e22]:
+          - link "Explore ▼" [ref=e23] [cursor=pointer]:
+            - /url: /3d-models/popular
+        - listitem [ref=e24]:
+          - link "For business ▼" [ref=e25] [cursor=pointer]:
+            - /url: /enterprise?ref=header
+        - listitem [ref=e26]:
+          - link "Buy on Fab" [ref=e27] [cursor=pointer]:
+            - /url: https://fab.com
+      - generic [ref=e29]:
+        - generic [ref=e30] [cursor=pointer]: 
+        - textbox "Search" [ref=e31]:
+          - /placeholder: Search 3D models
+        - text: 
+        - generic: /
+      - generic [ref=e32]:
+        - text: 
+        - link "login" [ref=e33] [cursor=pointer]:
+          - /url: /login
+          - generic [ref=e34]: login
+        - link "Sign Up" [ref=e35] [cursor=pointer]:
+          - /url: /signup
+          - generic [ref=e36]: Sign Up
+        - link " Upload" [ref=e37] [cursor=pointer]:
+          - /url: /signup?next=%2Ffeed%23upload
+          - generic [ref=e38]: 
+          - generic [ref=e39]: Upload
+  - text: ▼       ▼
+  - main [ref=e40]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: 🌸Fab Spring Creator Sale on now!
+        - generic [ref=e46]: Get up to 70% off over 130,000 assets until 11:59 PM ET on April 20.
+      - link "Shop now" [ref=e48] [cursor=pointer]:
+        - /url: https://www.fab.com/search?min_discount_percentage=1
+      - button "Close promotional banner" [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: 
+    - generic [ref=e52]:
+      - generic [ref=e54]:
+        - iframe [active] [ref=e56]:
+          - main "sketchfab-viewer" [ref=f3e2]:
+            - generic:
+              - generic:
+                - heading "Imperial warship based on the tv show" [level=1]:
+                  - link "Imperial warship based on the tv show" [ref=f3e3] [cursor=pointer]:
+                    - /url: https://sketchfab.com/3d-models/imperial-warship-based-on-the-tv-show-c9aac6b3b4df4b3ba1554bf0622bd3df
+            - text: 
+            - generic [ref=f3e4]:
+              - generic "3D view of Imperial warship based on the tv show" [ref=f3e5]
+              - generic:
+                - generic:
+                  - img "Loading 3D Model"
+                  - generic:
+                    - paragraph: Loading 3D model
+              - generic:
+                - generic:
+                  - generic "close": 
+                  - paragraph: Model is too heavy for your device and can not be rendered properly
+                - text:  
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 
+                      - text: Model Inspector
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic "Play Animation": 
+                      - text: 
+                      - generic: 00:00.00
+                      - generic:
+                        - paragraph
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - radio ""
+                                - generic:
+                                  - generic: 
+                                - text: Repeat one
+                              - generic:
+                                - radio ""
+                                - generic:
+                                  - generic: 
+                                - text: Repeat all
+                              - generic:
+                                - radio ""
+                                - generic:
+                                  - generic: 
+                                - text: No repeat
+                            - generic:
+                              - generic:
+                                - radio "x0.1"
+                                - generic: x0.1
+                                - text: Speed x0.1
+                              - generic:
+                                - radio "x0.5"
+                                - generic: x0.5
+                                - text: Speed x0.5
+                              - generic:
+                                - radio "x1"
+                                - generic: x1
+                                - text: Speed x1
+                              - generic:
+                                - radio "x2"
+                                - generic: x2
+                                - text: Speed x2
+                          - list
+                  - text:  
+                  - generic:
+                    - generic [ref=f3e6] [cursor=pointer]:
+                      - generic: 
+                      - text: Help
+                    - text: 
+                    - generic [ref=f3e7] [cursor=pointer]:
+                      - generic: 
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: Navigation
+                              - paragraph: Orbit
+                      - text: Settings
+                    - generic [ref=f3e8] [cursor=pointer]:
+                      - generic: 
+                      - text: Model Inspector (i)
+                    - generic [ref=f3e9] [cursor=pointer]:
+                      - generic: 
+                      - text: View in VR
+                    - generic [ref=f3e10] [cursor=pointer]:
+                      - generic: 
+                      - text: Theatre Mode
+                    - generic [ref=f3e11] [cursor=pointer]:
+                      - generic: 
+                      - text: Fullscreen (f)
+                - generic:
+                  - generic:
+                    - generic:
+                      - text: click & hold
+                      - text: to rotate
+            - text:  Fullscreen (f)
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - heading "Imperial warship based on the tv show 3D Model" [level=1] [ref=e60]:
+              - generic [ref=e62]: Imperial warship based on the tv show
+              - generic [ref=e63]: 3D Model
+            - generic [ref=e64]:
+              - generic [ref=e65]:
+                - link "Avatar of waynethebrett22" [ref=e66] [cursor=pointer]:
+                  - /url: /waynethebrett22
+                  - img "Avatar of waynethebrett22" [ref=e70]
+                - generic [ref=e71]:
+                  - link "waynethebrett22" [ref=e74] [cursor=pointer]:
+                    - /url: /waynethebrett22
+                    - generic "waynethebrett22" [ref=e76]
+                  - button "Follow" [ref=e78] [cursor=pointer]:
+                    - generic [ref=e79]: Follow
+              - generic [ref=e80]:
+                - generic [ref=e81]:
+                  - generic [ref=e82]: 
+                  - generic [ref=e83]: "348"
+                  - generic: 348 Downloads
+                - generic [ref=e84]:
+                  - generic [ref=e85]: 
+                  - generic [ref=e86]: 1.7k
+                  - generic: 1663 Views
+                - generic [ref=e87] [cursor=pointer]:
+                  - text: 
+                  - generic [ref=e88]: "29"
+                  - generic: Like
+            - generic [ref=e90]:
+              - button " Download 3D Model" [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: 
+                - generic [ref=e93]: Download 3D Model
+              - button "+ Add to" [ref=e94] [cursor=pointer]:
+                - generic [ref=e95]: +
+                - generic [ref=e96]: Add to
+              - button " Embed" [ref=e97] [cursor=pointer]:
+                - generic [ref=e98]: 
+                - generic [ref=e99]: Embed
+              - button " Share" [ref=e100] [cursor=pointer]:
+                - generic [ref=e101]: 
+                - generic [ref=e102]: Share
+              - link " Report" [ref=e103] [cursor=pointer]:
+                - /url: https://safety.epicgames.com/policies/reporting-misconduct/submit-report?product_id=sketchfab_content_report&content_type=sketchfab_model&content_url=https://sketchfab.com/3d-models/imperial-warship-based-on-the-tv-show-c9aac6b3b4df4b3ba1554bf0622bd3df&content_id=c9aac6b3b4df4b3ba1554bf0622bd3df
+                - generic [ref=e104]: 
+                - generic [ref=e105]: Report
+          - generic [ref=e106]:
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - text: "Triangles:"
+                - generic [ref=e109]: 1.5M
+              - generic [ref=e110]: "Vertices: 757.6k"
+              - generic [ref=e111] [cursor=pointer]: More model information
+            - paragraph [ref=e114]: an awesome spaceship like the aegis from the foundation tv show, surprised nobody has made this
+            - generic [ref=e115]:
+              - generic [ref=e117]:
+                - text: "License:"
+                - generic [ref=e118]:
+                  - paragraph [ref=e119]:
+                    - text: CC Attribution
+                    - generic: Creative Commons Attribution
+                  - link " Learn more" [ref=e121] [cursor=pointer]:
+                    - /url: http://creativecommons.org/licenses/by/4.0/
+                    - generic [ref=e122]: 
+                    - text: Learn more
+              - generic [ref=e123]:
+                - generic [ref=e124]: 
+                - generic [ref=e125]:
+                  - text: Published
+                  - time [ref=e126]: 2 years ago
+                  - generic: Jan 7th 2024
+              - generic [ref=e127]:
+                - generic [ref=e128]: 
+                - list [ref=e129]:
+                  - listitem [ref=e130]:
+                    - link "Science & technology 3D Models" [ref=e131] [cursor=pointer]:
+                      - /url: /categories/science-technology
+                  - listitem [ref=e132]:
+                    - link "Weapons & military 3D Models" [ref=e133] [cursor=pointer]:
+                      - /url: /categories/weapons-military
+              - generic [ref=e134]:
+                - generic [ref=e135]: 
+                - list [ref=e136]:
+                  - listitem [ref=e137]:
+                    - link "foundation" [ref=e138] [cursor=pointer]:
+                      - /url: /tags/foundation
+                  - listitem [ref=e139]:
+                    - link "warship" [ref=e140] [cursor=pointer]:
+                      - /url: /tags/warship
+                  - listitem [ref=e141]:
+                    - link "galacticempire" [ref=e142] [cursor=pointer]:
+                      - /url: /tags/galacticempire
+                  - listitem [ref=e143]:
+                    - link "asimov" [ref=e144] [cursor=pointer]:
+                      - /url: /tags/asimov
+                  - listitem [ref=e145]:
+                    - link "sci-fi" [ref=e146] [cursor=pointer]:
+                      - /url: /tags/sci-fi
+                  - listitem [ref=e147]:
+                    - link "spaceship" [ref=e148] [cursor=pointer]:
+                      - /url: /tags/spaceship
+              - generic [ref=e149]:
+                - generic [ref=e151]:
+                  - link "Avatar of waynethebrett22" [ref=e152] [cursor=pointer]:
+                    - /url: https://sketchfab.com/waynethebrett22
+                    - img "Avatar of waynethebrett22" [ref=e158]
+                  - link "Avatar of jesonnnnni" [ref=e159] [cursor=pointer]:
+                    - /url: https://sketchfab.com/jesonnnnni
+                    - img "Avatar of jesonnnnni" [ref=e165]
+                  - link "Avatar of _Fondation_" [ref=e166] [cursor=pointer]:
+                    - /url: https://sketchfab.com/_Fondation_
+                    - img "Avatar of _Fondation_" [ref=e172]
+                - generic [ref=e173]:
+                  - link "waynethebrett22" [ref=e175] [cursor=pointer]:
+                    - /url: /waynethebrett22
+                    - generic "waynethebrett22" [ref=e177]
+                  - text: ","
+                  - link "jesonnnnni" [ref=e179] [cursor=pointer]:
+                    - /url: /jesonnnnni
+                    - generic "jesonnnnni" [ref=e181]
+                  - text: ","
+                  - link "_Fondation_" [ref=e183] [cursor=pointer]:
+                    - /url: /_Fondation_
+                    - generic "_Fondation_" [ref=e185]
+                  - text: and
+                  - button "26 others" [ref=e186] [cursor=pointer]
+                  - text: liked this model
+          - generic [ref=e189]:
+            - paragraph [ref=e190]: 4 comments
+            - generic [ref=e193]:
+              - generic [ref=e194]: You must log in to comment.
+              - button "Log in to comment" [ref=e196] [cursor=pointer]
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - img "Avatar of jan.gasparik" [ref=e204]
+                - article [ref=e205]:
+                  - generic [ref=e207]:
+                    - link "jan.gasparik" [ref=e208] [cursor=pointer]:
+                      - /url: /jan.gasparik
+                      - generic "jan.gasparik" [ref=e210]
+                    - generic [ref=e211]: (@jan.gasparik)
+                  - time [ref=e213]: a year ago
+                  - paragraph [ref=e215]:
+                    - paragraph [ref=e216]: great work. The model looks very nice. Can I ask you a question? would it be possible to create a model suitable for printing? I would like to print this model. I am a big fan of foundation tv series. and I'm waiting for the next series. One person has already made a model of the ship, but I can't find the source where he got the models from.
+                  - button "Reply" [ref=e218] [cursor=pointer]
+                  - generic [ref=e220] [cursor=pointer]: 
+              - generic [ref=e221]:
+                - img "Avatar of Ryejin" [ref=e226]
+                - article [ref=e227]:
+                  - generic [ref=e229]:
+                    - link "Ryejin" [ref=e230] [cursor=pointer]:
+                      - /url: /Ryejin
+                      - generic "Ryejin" [ref=e232]
+                    - generic [ref=e233]: (@Ryejin)
+                  - time [ref=e235]: 2 years ago
+                  - paragraph [ref=e237]:
+                    - paragraph [ref=e238]: ty for caring for this ship enough to be THE ONLY PERSON TO DO IT lol
+                  - button "Reply" [ref=e240] [cursor=pointer]
+                  - generic [ref=e242] [cursor=pointer]: 
+              - generic [ref=e243]:
+                - img "Avatar of waynethebrett22" [ref=e248]
+                - article [ref=e249]:
+                  - generic [ref=e251]:
+                    - link "waynethebrett22" [ref=e252] [cursor=pointer]:
+                      - /url: /waynethebrett22
+                      - generic "waynethebrett22" [ref=e254]
+                    - generic [ref=e255]: (@waynethebrett22)
+                  - generic [ref=e256]:
+                    - text: Model author
+                    - time [ref=e257]: 2 years ago
+                  - paragraph [ref=e259]:
+                    - paragraph [ref=e260]:
+                      - link "@jesonnnnni" [ref=e261] [cursor=pointer]:
+                        - /url: https://sketchfab.com/jesonnnnni
+                      - text: Thanks )
+                  - button "Reply" [ref=e263] [cursor=pointer]
+                  - generic [ref=e265] [cursor=pointer]: 
+              - generic [ref=e266]:
+                - img "Avatar of jesonnnnni" [ref=e271]
+                - article [ref=e272]:
+                  - generic [ref=e274]:
+                    - link "jesonnnnni" [ref=e275] [cursor=pointer]:
+                      - /url: /jesonnnnni
+                      - generic "jesonnnnni" [ref=e277]
+                    - generic [ref=e278]: (@jesonnnnni)
+                  - time [ref=e280]: 2 years ago
+                  - paragraph [ref=e282]:
+                    - paragraph [ref=e283]: nice job！
+                  - button "Reply" [ref=e285] [cursor=pointer]
+                  - generic [ref=e287] [cursor=pointer]: 
+      - generic [ref=e290]:
+        - generic [ref=e291]: In collections
+        - generic [ref=e292]:
+          - generic [ref=e293]:
+            - link "Open the collection Hardsurface" [ref=e294] [cursor=pointer]:
+              - /url: https://sketchfab.com/omassyx/collections/hardsurface-ac3dc4d7d5644de097c1883055be6b5d
+            - generic [ref=e303]:
+              - generic [ref=e304]:
+                - link "Hardsurface" [ref=e307] [cursor=pointer]:
+                  - /url: https://sketchfab.com/omassyx/collections/hardsurface-ac3dc4d7d5644de097c1883055be6b5d
+                - link "Marius Ciulei" [ref=e310] [cursor=pointer]:
+                  - /url: /omassyx
+                  - generic "Marius Ciulei" [ref=e312]
+              - generic [ref=e313]:
+                - generic [ref=e314]:
+                  - text: 
+                  - generic [ref=e315]: 2.5k
+                  - generic: Models
+                - generic [ref=e316] [cursor=pointer]:
+                  - text: 
+                  - generic [ref=e317]: "170"
+                  - generic: Subscribe
+          - generic [ref=e318]:
+            - link "Open the collection StoryPoint" [ref=e319] [cursor=pointer]:
+              - /url: https://sketchfab.com/DjSheri/collections/storypoint-4fc977629f8d434f87bcc8aca8738f9f
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - link "StoryPoint" [ref=e332] [cursor=pointer]:
+                  - /url: https://sketchfab.com/DjSheri/collections/storypoint-4fc977629f8d434f87bcc8aca8738f9f
+                - link "DjSheri" [ref=e335] [cursor=pointer]:
+                  - /url: /DjSheri
+                  - generic "DjSheri" [ref=e337]
+              - generic [ref=e338]:
+                - generic [ref=e339]:
+                  - text: 
+                  - generic [ref=e340]: 5.3k
+                  - generic: Models
+                - generic [ref=e341] [cursor=pointer]:
+                  - text: 
+                  - generic [ref=e342]: "125"
+                  - generic: Subscribe
+          - generic [ref=e343]:
+            - link "Open the collection StrangeGame" [ref=e344] [cursor=pointer]:
+              - /url: https://sketchfab.com/LuckyDarRad/collections/strangegame-b09cb6e177c74901b106ffbf78ddb39a
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - link "StrangeGame" [ref=e357] [cursor=pointer]:
+                  - /url: https://sketchfab.com/LuckyDarRad/collections/strangegame-b09cb6e177c74901b106ffbf78ddb39a
+                - link "LuckyDarRad" [ref=e360] [cursor=pointer]:
+                  - /url: /LuckyDarRad
+                  - generic "LuckyDarRad" [ref=e362]
+              - generic [ref=e363]:
+                - generic [ref=e364]:
+                  - text: 
+                  - generic [ref=e365]: 1.5k
+                  - generic: Models
+                - generic [ref=e366] [cursor=pointer]:
+                  - text: 
+                  - generic [ref=e367]: "96"
+                  - generic: Subscribe
+        - generic [ref=e368]: Suggested 3D Models
+        - generic [ref=e369]:
+          - generic [ref=e371]:
+            - generic [ref=e372]:
+              - link "Visit USS Newport News War thunder 3D model" [ref=e373] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/uss-newport-news-war-thunder-4fe198b299e34ac08147f7ed0dbcf4ed
+              - link "Download USS Newport News War thunder 3D model" [ref=e379] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/uss-newport-news-war-thunder-4fe198b299e34ac08147f7ed0dbcf4ed#download
+                - text: 
+                - generic: Download 3D model
+            - generic [ref=e380]:
+              - generic [ref=e381]:
+                - link "USS Newport News War thunder" [ref=e384] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/uss-newport-news-war-thunder-4fe198b299e34ac08147f7ed0dbcf4ed
+                - link "Jimphf" [ref=e387] [cursor=pointer]:
+                  - /url: /jimphff
+                  - generic "Jimphf" [ref=e389]
+              - generic [ref=e390]:
+                - generic [ref=e391]:
+                  - text:  2.1k
+                  - generic: Views
+                - link "Comment USS Newport News War thunder 3D model" [ref=e392] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/uss-newport-news-war-thunder-4fe198b299e34ac08147f7ed0dbcf4ed#comments
+                  - text:  0
+                  - generic: Comment
+                - generic [ref=e393] [cursor=pointer]:
+                  - text:  24
+                  - generic: Like
+          - generic [ref=e395]:
+            - generic [ref=e396]:
+              - 'link "Visit Call of Duty: Black Ops 2 - VTOL Warship 3D model" [ref=e397] [cursor=pointer]':
+                - /url: https://sketchfab.com/3d-models/call-of-duty-black-ops-2-vtol-warship-17115ae9a451400da5f62575d6545816
+              - 'link "Download Call of Duty: Black Ops 2 - VTOL Warship 3D model" [ref=e403] [cursor=pointer]':
+                - /url: https://sketchfab.com/3d-models/call-of-duty-black-ops-2-vtol-warship-17115ae9a451400da5f62575d6545816#download
+                - text: 
+                - generic: Download 3D model
+            - generic [ref=e404]:
+              - generic [ref=e405]:
+                - 'link "Call of Duty: Black Ops 2 - VTOL Warship" [ref=e408] [cursor=pointer]':
+                  - /url: https://sketchfab.com/3d-models/call-of-duty-black-ops-2-vtol-warship-17115ae9a451400da5f62575d6545816
+                - link "thientrung2004pr" [ref=e411] [cursor=pointer]:
+                  - /url: /U.SSCIFI
+                  - generic "thientrung2004pr" [ref=e413]
+              - generic [ref=e414]:
+                - generic [ref=e415]:
+                  - text:  438
+                  - generic: Views
+                - 'link "Comment Call of Duty: Black Ops 2 - VTOL Warship 3D model" [ref=e416] [cursor=pointer]':
+                  - /url: https://sketchfab.com/3d-models/call-of-duty-black-ops-2-vtol-warship-17115ae9a451400da5f62575d6545816#comments
+                  - text:  0
+                  - generic: Comment
+                - generic [ref=e417] [cursor=pointer]:
+                  - text:  29
+                  - generic: Like
+          - generic [ref=e419]:
+            - generic [ref=e420]:
+              - link "Visit Metther-class Star Destroyer 3D model" [ref=e421] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/metther-class-star-destroyer-12f5007af9ed4186aec9932a8a29b4d9
+              - link "Download Metther-class Star Destroyer 3D model" [ref=e427] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/metther-class-star-destroyer-12f5007af9ed4186aec9932a8a29b4d9#download
+                - text: 
+                - generic: Download 3D model
+            - generic [ref=e428]:
+              - generic [ref=e429]:
+                - link "Metther-class Star Destroyer" [ref=e432] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/metther-class-star-destroyer-12f5007af9ed4186aec9932a8a29b4d9
+                - link "Rebus2077" [ref=e435] [cursor=pointer]:
+                  - /url: /Rebus2077
+                  - generic "Rebus2077" [ref=e437]
+              - generic [ref=e438]:
+                - generic [ref=e439]:
+                  - text:  476
+                  - generic: Views
+                - link "Comment Metther-class Star Destroyer 3D model" [ref=e440] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/metther-class-star-destroyer-12f5007af9ed4186aec9932a8a29b4d9#comments
+                  - text:  0
+                  - generic: Comment
+                - generic [ref=e441] [cursor=pointer]:
+                  - text:  10
+                  - generic: Like
+          - generic [ref=e443]:
+            - link "Visit FREMM Aquitaine 3D model" [ref=e445] [cursor=pointer]:
+              - /url: https://sketchfab.com/3d-models/fremm-aquitaine-705ab881eb024be78feb7b1163173a6f
+            - generic [ref=e450]:
+              - generic [ref=e451]:
+                - link "FREMM Aquitaine" [ref=e454] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/fremm-aquitaine-705ab881eb024be78feb7b1163173a6f
+                - link "wtlion" [ref=e457] [cursor=pointer]:
+                  - /url: /wtlion
+                  - generic "wtlion" [ref=e459]
+              - generic [ref=e460]:
+                - generic [ref=e461]:
+                  - text:  865
+                  - generic: Views
+                - link "Comment FREMM Aquitaine 3D model" [ref=e462] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/fremm-aquitaine-705ab881eb024be78feb7b1163173a6f#comments
+                  - text:  1
+                  - generic: Comment
+                - generic [ref=e463] [cursor=pointer]:
+                  - text:  13
+                  - generic: Like
+          - generic [ref=e465]:
+            - generic [ref=e466]:
+              - link "Visit USS Des Moines War Thunder 3D model" [ref=e467] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/uss-des-moines-war-thunder-b53a548d848a4d94bf88805ffb4e6ea9
+              - link "Download USS Des Moines War Thunder 3D model" [ref=e473] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/uss-des-moines-war-thunder-b53a548d848a4d94bf88805ffb4e6ea9#download
+                - text: 
+                - generic: Download 3D model
+            - generic [ref=e474]:
+              - generic [ref=e475]:
+                - link "USS Des Moines War Thunder" [ref=e478] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/uss-des-moines-war-thunder-b53a548d848a4d94bf88805ffb4e6ea9
+                - link "Jimphf" [ref=e481] [cursor=pointer]:
+                  - /url: /jimphff
+                  - generic "Jimphf" [ref=e483]
+              - generic [ref=e484]:
+                - generic [ref=e485]:
+                  - text:  761
+                  - generic: Views
+                - link "Comment USS Des Moines War Thunder 3D model" [ref=e486] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/uss-des-moines-war-thunder-b53a548d848a4d94bf88805ffb4e6ea9#comments
+                  - text:  0
+                  - generic: Comment
+                - generic [ref=e487] [cursor=pointer]:
+                  - text:  12
+                  - generic: Like
+          - generic [ref=e489]:
+            - generic [ref=e490]:
+              - link "Visit Duchess core 3D model" [ref=e491] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/duchess-core-384b049716844d87b17ea9ba5eb272c2
+              - link "Download Duchess core 3D model" [ref=e497] [cursor=pointer]:
+                - /url: https://sketchfab.com/3d-models/duchess-core-384b049716844d87b17ea9ba5eb272c2#download
+                - text: 
+                - generic: Download 3D model
+            - generic [ref=e498]:
+              - generic [ref=e499]:
+                - link "Duchess core" [ref=e502] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/duchess-core-384b049716844d87b17ea9ba5eb272c2
+                - link "ParticleAccelerator5000" [ref=e505] [cursor=pointer]:
+                  - /url: /Tvclap
+                  - generic "ParticleAccelerator5000" [ref=e507]
+              - generic [ref=e508]:
+                - generic [ref=e509]:
+                  - text:  1.3k
+                  - generic: Views
+                - link "Comment Duchess core 3D model" [ref=e510] [cursor=pointer]:
+                  - /url: https://sketchfab.com/3d-models/duchess-core-384b049716844d87b17ea9ba5eb272c2#comments
+                  - text:  3
+                  - generic: Comment
+                - generic [ref=e511] [cursor=pointer]:
+                  - text:  55
+                  - generic: Like
+          - button "load more" [ref=e512] [cursor=pointer]:
+            - generic [ref=e513]: load more
+    - generic [ref=e515]:
+      - navigation "footer navigation" [ref=e516]:
+        - generic [ref=e517]:
+          - generic [ref=e518]: enterprise
+          - list [ref=e519]:
+            - listitem [ref=e520]:
+              - link "Enterprise Solutions" [ref=e521] [cursor=pointer]:
+                - /url: /enterprise
+            - listitem [ref=e522]:
+              - link "3D Configurators" [ref=e523] [cursor=pointer]:
+                - /url: /3d-configurators
+            - listitem [ref=e524]:
+              - link "3D eCommerce" [ref=e525] [cursor=pointer]:
+                - /url: /3d-ecommerce
+            - listitem [ref=e526]:
+              - link "3D Viewer" [ref=e527] [cursor=pointer]:
+                - /url: /3d-viewer
+            - listitem [ref=e528]:
+              - link "3D Advertising" [ref=e529] [cursor=pointer]:
+                - /url: /3d-advertising
+            - listitem [ref=e530]:
+              - link "Sketchfab for Teams" [ref=e531] [cursor=pointer]:
+                - /url: /3d-asset-management
+            - listitem [ref=e532]:
+              - link "Customer Stories" [ref=e533] [cursor=pointer]:
+                - /url: https://sketchfab.com/blogs/enterprise
+            - listitem [ref=e534]:
+              - link "Pricing" [ref=e535] [cursor=pointer]:
+                - /url: /plans
+        - generic [ref=e536]:
+          - generic [ref=e537]: ecosystem
+          - list [ref=e538]:
+            - listitem [ref=e539]:
+              - link "Exporters" [ref=e540] [cursor=pointer]:
+                - /url: /exporters
+            - listitem [ref=e541]:
+              - link "Importers" [ref=e542] [cursor=pointer]:
+                - /url: /importers
+            - listitem [ref=e543]:
+              - link "Developers & API" [ref=e544] [cursor=pointer]:
+                - /url: /developers
+            - listitem [ref=e545]:
+              - link "Augmented Reality" [ref=e546] [cursor=pointer]:
+                - /url: /augmented-reality
+            - listitem [ref=e547]:
+              - link "Virtual Reality" [ref=e548] [cursor=pointer]:
+                - /url: /virtual-reality
+        - generic [ref=e549]:
+          - generic [ref=e550]: store
+          - list [ref=e551]:
+            - listitem [ref=e552]:
+              - link "Buy 3D models" [ref=e553] [cursor=pointer]:
+                - /url: https://www.fab.com/category/3d-model
+            - listitem [ref=e554]:
+              - link "Become a Seller on Fab" [ref=e555] [cursor=pointer]:
+                - /url: https://www.fab.com/become-a-publisher
+            - listitem [ref=e556]:
+              - link "Free 3D Models" [ref=e557] [cursor=pointer]:
+                - /url: /features/free-3d-models
+        - generic [ref=e558]:
+          - generic [ref=e559]: community
+          - list [ref=e560]:
+            - listitem [ref=e561]:
+              - link "Explore" [ref=e562] [cursor=pointer]:
+                - /url: /3d-models/popular
+            - listitem [ref=e563]:
+              - link "Help Center" [ref=e564] [cursor=pointer]:
+                - /url: https://support.fab.com/s/?ProductOrigin=Sketchfab
+            - listitem [ref=e565]:
+              - link "Education" [ref=e566] [cursor=pointer]:
+                - /url: /education
+            - listitem [ref=e567]:
+              - link "Museums" [ref=e568] [cursor=pointer]:
+                - /url: /museums
+            - listitem [ref=e569]:
+              - link "Blog" [ref=e570] [cursor=pointer]:
+                - /url: https://sketchfab.com/blogs/community
+            - listitem [ref=e571]:
+              - link "Sketchfab Masters" [ref=e572] [cursor=pointer]:
+                - /url: /masters
+        - generic [ref=e573]:
+          - generic [ref=e574]: about
+          - list [ref=e575]:
+            - listitem [ref=e576]:
+              - link "Company" [ref=e577] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e578]:
+              - link "Careers" [ref=e579] [cursor=pointer]:
+                - /url: https://www.epicgames.com/site/en-US/careers
+            - listitem [ref=e580]:
+              - link "Press Kit" [ref=e581] [cursor=pointer]:
+                - /url: /press
+            - listitem [ref=e582]:
+              - link "Features" [ref=e583] [cursor=pointer]:
+                - /url: /features
+            - listitem [ref=e584]:
+              - link "Contact us" [ref=e585] [cursor=pointer]:
+                - /url: /about#contact
+      - generic [ref=e586]:
+        - generic [ref=e587]:
+          - img [ref=e588]
+          - generic [ref=e593]: © 2026, Sketchfab, Inc. All rights reserved.
+        - generic [ref=e594]:
+          - link "Terms of use" [ref=e595] [cursor=pointer]:
+            - /url: /terms
+          - link "Privacy policy" [ref=e596] [cursor=pointer]:
+            - /url: /privacy
+          - link "Sitemap" [ref=e597] [cursor=pointer]:
+            - /url: /sitemap
+        - generic [ref=e598]:
+          - link "Follow us on Twitter" [ref=e599] [cursor=pointer]:
+            - /url: https://twitter.com/Sketchfab
+            - img [ref=e600]
+          - link "Follow us on Instagram" [ref=e604] [cursor=pointer]:
+            - /url: https://www.instagram.com/sketchfab
+            - img [ref=e605]
+          - link "Follow us on Facebook" [ref=e609] [cursor=pointer]:
+            - /url: https://www.facebook.com/Sketchfab
+            - img [ref=e610]
+          - link "Join us on Discord" [ref=e614] [cursor=pointer]:
+            - /url: https://discord.gg/VzNxX6D
+            - img [ref=e615]
+          - link "Follow us on Pinterest" [ref=e619] [cursor=pointer]:
+            - /url: https://www.pinterest.com/sketchfab
+            - img [ref=e620]
+          - link "Follow us on Linkedin" [ref=e624] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/sketchfab
+            - img [ref=e625]
