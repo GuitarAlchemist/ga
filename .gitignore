@@ -175,7 +175,7 @@ todos/
 .slot-lock
 
 # OPTIC-K generated index (build artifact, ~660MB)
-state/voicings/optick.index
+**/state/voicings/optick.index
 
 # Baseline diagnostic artifacts (regenerable)
 state/baseline/embedding-clusters-*.json

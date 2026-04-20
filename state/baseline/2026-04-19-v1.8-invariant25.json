@@ -1,0 +1,4766 @@
+{
+  "exemplars": [
+    {
+      "id": "pcs-0x001-n3",
+      "description": "PC-set 0x001 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x002-n3",
+      "description": "PC-set 0x002 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x003-n3",
+      "description": "PC-set 0x003 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x004-n3",
+      "description": "PC-set 0x004 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x005-n3",
+      "description": "PC-set 0x005 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x006-n3",
+      "description": "PC-set 0x006 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x007-n3",
+      "description": "PC-set 0x007 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x008-n3",
+      "description": "PC-set 0x008 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x009-n3",
+      "description": "PC-set 0x009 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00A-n3",
+      "description": "PC-set 0x00A (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00B-n3",
+      "description": "PC-set 0x00B (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00C-n3",
+      "description": "PC-set 0x00C (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00D-n3",
+      "description": "PC-set 0x00D (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00E-n3",
+      "description": "PC-set 0x00E (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x00F-n2",
+      "description": "PC-set 0x00F (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x010-n3",
+      "description": "PC-set 0x010 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x011-n3",
+      "description": "PC-set 0x011 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x012-n3",
+      "description": "PC-set 0x012 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x013-n3",
+      "description": "PC-set 0x013 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x014-n3",
+      "description": "PC-set 0x014 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x015-n3",
+      "description": "PC-set 0x015 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x016-n3",
+      "description": "PC-set 0x016 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x017-n3",
+      "description": "PC-set 0x017 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x018-n3",
+      "description": "PC-set 0x018 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x019-n3",
+      "description": "PC-set 0x019 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x01A-n3",
+      "description": "PC-set 0x01A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x01B-n3",
+      "description": "PC-set 0x01B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x01C-n3",
+      "description": "PC-set 0x01C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x01D-n3",
+      "description": "PC-set 0x01D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x01E-n2",
+      "description": "PC-set 0x01E (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x020-n3",
+      "description": "PC-set 0x020 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x021-n3",
+      "description": "PC-set 0x021 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x022-n3",
+      "description": "PC-set 0x022 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x023-n3",
+      "description": "PC-set 0x023 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x024-n3",
+      "description": "PC-set 0x024 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x025-n3",
+      "description": "PC-set 0x025 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x026-n3",
+      "description": "PC-set 0x026 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x027-n3",
+      "description": "PC-set 0x027 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x028-n3",
+      "description": "PC-set 0x028 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x029-n3",
+      "description": "PC-set 0x029 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x02A-n3",
+      "description": "PC-set 0x02A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x02B-n3",
+      "description": "PC-set 0x02B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x02C-n3",
+      "description": "PC-set 0x02C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x02D-n3",
+      "description": "PC-set 0x02D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x02E-n3",
+      "description": "PC-set 0x02E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x030-n3",
+      "description": "PC-set 0x030 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x031-n3",
+      "description": "PC-set 0x031 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x032-n3",
+      "description": "PC-set 0x032 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x033-n3",
+      "description": "PC-set 0x033 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x034-n3",
+      "description": "PC-set 0x034 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x035-n3",
+      "description": "PC-set 0x035 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x036-n3",
+      "description": "PC-set 0x036 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x038-n3",
+      "description": "PC-set 0x038 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x039-n3",
+      "description": "PC-set 0x039 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x03A-n3",
+      "description": "PC-set 0x03A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x03C-n2",
+      "description": "PC-set 0x03C (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x040-n3",
+      "description": "PC-set 0x040 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x041-n3",
+      "description": "PC-set 0x041 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x042-n3",
+      "description": "PC-set 0x042 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x043-n3",
+      "description": "PC-set 0x043 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x044-n3",
+      "description": "PC-set 0x044 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x045-n3",
+      "description": "PC-set 0x045 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x046-n3",
+      "description": "PC-set 0x046 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x047-n3",
+      "description": "PC-set 0x047 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x048-n3",
+      "description": "PC-set 0x048 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x049-n3",
+      "description": "PC-set 0x049 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x04A-n3",
+      "description": "PC-set 0x04A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x04B-n3",
+      "description": "PC-set 0x04B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x04C-n3",
+      "description": "PC-set 0x04C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x04D-n3",
+      "description": "PC-set 0x04D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x04E-n3",
+      "description": "PC-set 0x04E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x050-n3",
+      "description": "PC-set 0x050 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x051-n3",
+      "description": "PC-set 0x051 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x052-n3",
+      "description": "PC-set 0x052 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x053-n3",
+      "description": "PC-set 0x053 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x054-n3",
+      "description": "PC-set 0x054 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x055-n3",
+      "description": "PC-set 0x055 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x056-n3",
+      "description": "PC-set 0x056 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x058-n3",
+      "description": "PC-set 0x058 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x059-n3",
+      "description": "PC-set 0x059 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x05A-n3",
+      "description": "PC-set 0x05A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x05C-n3",
+      "description": "PC-set 0x05C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x060-n3",
+      "description": "PC-set 0x060 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x061-n3",
+      "description": "PC-set 0x061 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x062-n3",
+      "description": "PC-set 0x062 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x063-n3",
+      "description": "PC-set 0x063 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x064-n3",
+      "description": "PC-set 0x064 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x065-n3",
+      "description": "PC-set 0x065 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x066-n3",
+      "description": "PC-set 0x066 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x068-n3",
+      "description": "PC-set 0x068 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x069-n3",
+      "description": "PC-set 0x069 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x06A-n3",
+      "description": "PC-set 0x06A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x06C-n3",
+      "description": "PC-set 0x06C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x070-n3",
+      "description": "PC-set 0x070 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x071-n3",
+      "description": "PC-set 0x071 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x072-n3",
+      "description": "PC-set 0x072 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x074-n3",
+      "description": "PC-set 0x074 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x078-n2",
+      "description": "PC-set 0x078 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x080-n3",
+      "description": "PC-set 0x080 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x081-n3",
+      "description": "PC-set 0x081 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x082-n3",
+      "description": "PC-set 0x082 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x083-n3",
+      "description": "PC-set 0x083 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x084-n3",
+      "description": "PC-set 0x084 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x085-n3",
+      "description": "PC-set 0x085 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x086-n3",
+      "description": "PC-set 0x086 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x087-n3",
+      "description": "PC-set 0x087 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x088-n3",
+      "description": "PC-set 0x088 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x089-n3",
+      "description": "PC-set 0x089 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x08A-n3",
+      "description": "PC-set 0x08A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x08B-n3",
+      "description": "PC-set 0x08B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x08C-n3",
+      "description": "PC-set 0x08C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x08D-n3",
+      "description": "PC-set 0x08D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x08E-n3",
+      "description": "PC-set 0x08E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x090-n3",
+      "description": "PC-set 0x090 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x091-n3",
+      "description": "PC-set 0x091 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x092-n3",
+      "description": "PC-set 0x092 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x093-n3",
+      "description": "PC-set 0x093 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x094-n3",
+      "description": "PC-set 0x094 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x095-n3",
+      "description": "PC-set 0x095 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x096-n3",
+      "description": "PC-set 0x096 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x098-n3",
+      "description": "PC-set 0x098 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x099-n3",
+      "description": "PC-set 0x099 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x09A-n3",
+      "description": "PC-set 0x09A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x09C-n3",
+      "description": "PC-set 0x09C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A0-n3",
+      "description": "PC-set 0x0A0 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A1-n3",
+      "description": "PC-set 0x0A1 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A2-n3",
+      "description": "PC-set 0x0A2 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A3-n3",
+      "description": "PC-set 0x0A3 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A4-n3",
+      "description": "PC-set 0x0A4 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A5-n3",
+      "description": "PC-set 0x0A5 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A6-n3",
+      "description": "PC-set 0x0A6 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A8-n3",
+      "description": "PC-set 0x0A8 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0A9-n3",
+      "description": "PC-set 0x0A9 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0AA-n3",
+      "description": "PC-set 0x0AA (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0AC-n3",
+      "description": "PC-set 0x0AC (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0B0-n3",
+      "description": "PC-set 0x0B0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0B1-n3",
+      "description": "PC-set 0x0B1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0B2-n3",
+      "description": "PC-set 0x0B2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0B4-n3",
+      "description": "PC-set 0x0B4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0B8-n3",
+      "description": "PC-set 0x0B8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C0-n3",
+      "description": "PC-set 0x0C0 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C1-n3",
+      "description": "PC-set 0x0C1 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C2-n3",
+      "description": "PC-set 0x0C2 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C3-n3",
+      "description": "PC-set 0x0C3 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C4-n3",
+      "description": "PC-set 0x0C4 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C5-n3",
+      "description": "PC-set 0x0C5 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C6-n3",
+      "description": "PC-set 0x0C6 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C8-n3",
+      "description": "PC-set 0x0C8 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0C9-n3",
+      "description": "PC-set 0x0C9 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0CA-n3",
+      "description": "PC-set 0x0CA (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0CC-n3",
+      "description": "PC-set 0x0CC (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0D0-n3",
+      "description": "PC-set 0x0D0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0D1-n3",
+      "description": "PC-set 0x0D1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0D2-n3",
+      "description": "PC-set 0x0D2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0D4-n3",
+      "description": "PC-set 0x0D4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0D8-n3",
+      "description": "PC-set 0x0D8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0E0-n3",
+      "description": "PC-set 0x0E0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0E1-n3",
+      "description": "PC-set 0x0E1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0E2-n3",
+      "description": "PC-set 0x0E2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0E4-n3",
+      "description": "PC-set 0x0E4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0E8-n3",
+      "description": "PC-set 0x0E8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x0F0-n2",
+      "description": "PC-set 0x0F0 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x100-n3",
+      "description": "PC-set 0x100 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x101-n3",
+      "description": "PC-set 0x101 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x102-n3",
+      "description": "PC-set 0x102 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x103-n3",
+      "description": "PC-set 0x103 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x104-n3",
+      "description": "PC-set 0x104 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x105-n3",
+      "description": "PC-set 0x105 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x106-n3",
+      "description": "PC-set 0x106 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x107-n3",
+      "description": "PC-set 0x107 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x108-n3",
+      "description": "PC-set 0x108 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x109-n3",
+      "description": "PC-set 0x109 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x10A-n3",
+      "description": "PC-set 0x10A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x10B-n3",
+      "description": "PC-set 0x10B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x10C-n3",
+      "description": "PC-set 0x10C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x10D-n3",
+      "description": "PC-set 0x10D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x10E-n3",
+      "description": "PC-set 0x10E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x110-n3",
+      "description": "PC-set 0x110 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x111-n3",
+      "description": "PC-set 0x111 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x112-n3",
+      "description": "PC-set 0x112 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x113-n3",
+      "description": "PC-set 0x113 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x114-n3",
+      "description": "PC-set 0x114 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x115-n3",
+      "description": "PC-set 0x115 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x116-n3",
+      "description": "PC-set 0x116 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x118-n3",
+      "description": "PC-set 0x118 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x119-n3",
+      "description": "PC-set 0x119 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x11A-n3",
+      "description": "PC-set 0x11A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x11C-n3",
+      "description": "PC-set 0x11C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x120-n3",
+      "description": "PC-set 0x120 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x121-n3",
+      "description": "PC-set 0x121 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x122-n3",
+      "description": "PC-set 0x122 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x123-n3",
+      "description": "PC-set 0x123 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x124-n3",
+      "description": "PC-set 0x124 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x125-n3",
+      "description": "PC-set 0x125 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x126-n3",
+      "description": "PC-set 0x126 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x128-n3",
+      "description": "PC-set 0x128 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x129-n3",
+      "description": "PC-set 0x129 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x12A-n3",
+      "description": "PC-set 0x12A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x12C-n3",
+      "description": "PC-set 0x12C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x130-n3",
+      "description": "PC-set 0x130 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x131-n3",
+      "description": "PC-set 0x131 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x132-n3",
+      "description": "PC-set 0x132 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x134-n3",
+      "description": "PC-set 0x134 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x138-n3",
+      "description": "PC-set 0x138 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x140-n3",
+      "description": "PC-set 0x140 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x141-n3",
+      "description": "PC-set 0x141 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x142-n3",
+      "description": "PC-set 0x142 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x143-n3",
+      "description": "PC-set 0x143 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x144-n3",
+      "description": "PC-set 0x144 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x145-n3",
+      "description": "PC-set 0x145 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x146-n3",
+      "description": "PC-set 0x146 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x148-n3",
+      "description": "PC-set 0x148 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x149-n3",
+      "description": "PC-set 0x149 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x14A-n3",
+      "description": "PC-set 0x14A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x14C-n3",
+      "description": "PC-set 0x14C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x150-n3",
+      "description": "PC-set 0x150 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x151-n3",
+      "description": "PC-set 0x151 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x152-n3",
+      "description": "PC-set 0x152 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x154-n3",
+      "description": "PC-set 0x154 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x158-n3",
+      "description": "PC-set 0x158 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x160-n3",
+      "description": "PC-set 0x160 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x161-n3",
+      "description": "PC-set 0x161 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x162-n3",
+      "description": "PC-set 0x162 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x164-n3",
+      "description": "PC-set 0x164 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x168-n3",
+      "description": "PC-set 0x168 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x170-n3",
+      "description": "PC-set 0x170 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x180-n3",
+      "description": "PC-set 0x180 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x181-n3",
+      "description": "PC-set 0x181 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x182-n3",
+      "description": "PC-set 0x182 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x183-n3",
+      "description": "PC-set 0x183 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x184-n3",
+      "description": "PC-set 0x184 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x185-n3",
+      "description": "PC-set 0x185 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x186-n3",
+      "description": "PC-set 0x186 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x188-n3",
+      "description": "PC-set 0x188 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x189-n3",
+      "description": "PC-set 0x189 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x18A-n3",
+      "description": "PC-set 0x18A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x18C-n3",
+      "description": "PC-set 0x18C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x190-n3",
+      "description": "PC-set 0x190 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x191-n3",
+      "description": "PC-set 0x191 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x192-n3",
+      "description": "PC-set 0x192 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x194-n3",
+      "description": "PC-set 0x194 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x198-n3",
+      "description": "PC-set 0x198 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1A0-n3",
+      "description": "PC-set 0x1A0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1A1-n3",
+      "description": "PC-set 0x1A1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1A2-n3",
+      "description": "PC-set 0x1A2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1A4-n3",
+      "description": "PC-set 0x1A4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1A8-n3",
+      "description": "PC-set 0x1A8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1B0-n3",
+      "description": "PC-set 0x1B0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1C0-n3",
+      "description": "PC-set 0x1C0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1C1-n3",
+      "description": "PC-set 0x1C1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1C2-n3",
+      "description": "PC-set 0x1C2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1C4-n3",
+      "description": "PC-set 0x1C4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1C8-n3",
+      "description": "PC-set 0x1C8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1D0-n3",
+      "description": "PC-set 0x1D0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x1E0-n2",
+      "description": "PC-set 0x1E0 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x200-n3",
+      "description": "PC-set 0x200 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x201-n3",
+      "description": "PC-set 0x201 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x202-n3",
+      "description": "PC-set 0x202 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x203-n3",
+      "description": "PC-set 0x203 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x204-n3",
+      "description": "PC-set 0x204 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x205-n3",
+      "description": "PC-set 0x205 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x206-n3",
+      "description": "PC-set 0x206 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x207-n3",
+      "description": "PC-set 0x207 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x208-n3",
+      "description": "PC-set 0x208 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x209-n3",
+      "description": "PC-set 0x209 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x20A-n3",
+      "description": "PC-set 0x20A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x20B-n3",
+      "description": "PC-set 0x20B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x20C-n3",
+      "description": "PC-set 0x20C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x20D-n3",
+      "description": "PC-set 0x20D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x20E-n3",
+      "description": "PC-set 0x20E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x210-n3",
+      "description": "PC-set 0x210 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x211-n3",
+      "description": "PC-set 0x211 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x212-n3",
+      "description": "PC-set 0x212 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x213-n3",
+      "description": "PC-set 0x213 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x214-n3",
+      "description": "PC-set 0x214 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x215-n3",
+      "description": "PC-set 0x215 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x216-n3",
+      "description": "PC-set 0x216 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x218-n3",
+      "description": "PC-set 0x218 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x219-n3",
+      "description": "PC-set 0x219 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x21A-n3",
+      "description": "PC-set 0x21A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x21C-n3",
+      "description": "PC-set 0x21C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x220-n3",
+      "description": "PC-set 0x220 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x221-n3",
+      "description": "PC-set 0x221 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x222-n3",
+      "description": "PC-set 0x222 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x223-n3",
+      "description": "PC-set 0x223 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x224-n3",
+      "description": "PC-set 0x224 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x225-n3",
+      "description": "PC-set 0x225 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x226-n3",
+      "description": "PC-set 0x226 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x228-n3",
+      "description": "PC-set 0x228 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x229-n3",
+      "description": "PC-set 0x229 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x22A-n3",
+      "description": "PC-set 0x22A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x22C-n3",
+      "description": "PC-set 0x22C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x230-n3",
+      "description": "PC-set 0x230 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x231-n3",
+      "description": "PC-set 0x231 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x232-n3",
+      "description": "PC-set 0x232 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x234-n3",
+      "description": "PC-set 0x234 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x238-n3",
+      "description": "PC-set 0x238 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x240-n3",
+      "description": "PC-set 0x240 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x241-n3",
+      "description": "PC-set 0x241 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x242-n3",
+      "description": "PC-set 0x242 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x243-n3",
+      "description": "PC-set 0x243 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x244-n3",
+      "description": "PC-set 0x244 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x245-n3",
+      "description": "PC-set 0x245 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x246-n3",
+      "description": "PC-set 0x246 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x248-n3",
+      "description": "PC-set 0x248 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x249-n3",
+      "description": "PC-set 0x249 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x24A-n3",
+      "description": "PC-set 0x24A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x24C-n3",
+      "description": "PC-set 0x24C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x250-n3",
+      "description": "PC-set 0x250 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x251-n3",
+      "description": "PC-set 0x251 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x252-n3",
+      "description": "PC-set 0x252 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x254-n3",
+      "description": "PC-set 0x254 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x258-n3",
+      "description": "PC-set 0x258 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x260-n3",
+      "description": "PC-set 0x260 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x261-n3",
+      "description": "PC-set 0x261 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x262-n3",
+      "description": "PC-set 0x262 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x264-n3",
+      "description": "PC-set 0x264 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x268-n3",
+      "description": "PC-set 0x268 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x270-n3",
+      "description": "PC-set 0x270 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x280-n3",
+      "description": "PC-set 0x280 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x281-n3",
+      "description": "PC-set 0x281 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x282-n3",
+      "description": "PC-set 0x282 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x283-n3",
+      "description": "PC-set 0x283 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x284-n3",
+      "description": "PC-set 0x284 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x285-n3",
+      "description": "PC-set 0x285 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x286-n3",
+      "description": "PC-set 0x286 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x288-n3",
+      "description": "PC-set 0x288 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x289-n3",
+      "description": "PC-set 0x289 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x28A-n3",
+      "description": "PC-set 0x28A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x28C-n3",
+      "description": "PC-set 0x28C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x290-n3",
+      "description": "PC-set 0x290 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x291-n3",
+      "description": "PC-set 0x291 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x292-n3",
+      "description": "PC-set 0x292 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x294-n3",
+      "description": "PC-set 0x294 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x298-n3",
+      "description": "PC-set 0x298 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2A0-n3",
+      "description": "PC-set 0x2A0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2A1-n3",
+      "description": "PC-set 0x2A1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2A2-n3",
+      "description": "PC-set 0x2A2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2A4-n3",
+      "description": "PC-set 0x2A4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2A8-n3",
+      "description": "PC-set 0x2A8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2B0-n3",
+      "description": "PC-set 0x2B0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2C0-n3",
+      "description": "PC-set 0x2C0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2C1-n3",
+      "description": "PC-set 0x2C1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2C2-n3",
+      "description": "PC-set 0x2C2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2C4-n3",
+      "description": "PC-set 0x2C4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2C8-n3",
+      "description": "PC-set 0x2C8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2D0-n3",
+      "description": "PC-set 0x2D0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x2E0-n3",
+      "description": "PC-set 0x2E0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x300-n3",
+      "description": "PC-set 0x300 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x301-n3",
+      "description": "PC-set 0x301 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x302-n3",
+      "description": "PC-set 0x302 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x303-n3",
+      "description": "PC-set 0x303 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x304-n3",
+      "description": "PC-set 0x304 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x305-n3",
+      "description": "PC-set 0x305 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x306-n3",
+      "description": "PC-set 0x306 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x308-n3",
+      "description": "PC-set 0x308 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x309-n3",
+      "description": "PC-set 0x309 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x30A-n3",
+      "description": "PC-set 0x30A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x30C-n3",
+      "description": "PC-set 0x30C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x310-n3",
+      "description": "PC-set 0x310 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x311-n3",
+      "description": "PC-set 0x311 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x312-n3",
+      "description": "PC-set 0x312 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x314-n3",
+      "description": "PC-set 0x314 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x318-n3",
+      "description": "PC-set 0x318 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x320-n3",
+      "description": "PC-set 0x320 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x321-n3",
+      "description": "PC-set 0x321 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x322-n3",
+      "description": "PC-set 0x322 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x324-n3",
+      "description": "PC-set 0x324 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x328-n3",
+      "description": "PC-set 0x328 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x330-n3",
+      "description": "PC-set 0x330 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x340-n3",
+      "description": "PC-set 0x340 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x341-n3",
+      "description": "PC-set 0x341 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x342-n3",
+      "description": "PC-set 0x342 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x344-n3",
+      "description": "PC-set 0x344 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x348-n3",
+      "description": "PC-set 0x348 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x350-n3",
+      "description": "PC-set 0x350 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x360-n3",
+      "description": "PC-set 0x360 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x380-n3",
+      "description": "PC-set 0x380 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x381-n3",
+      "description": "PC-set 0x381 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x382-n3",
+      "description": "PC-set 0x382 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x384-n3",
+      "description": "PC-set 0x384 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x388-n3",
+      "description": "PC-set 0x388 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x390-n3",
+      "description": "PC-set 0x390 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x3A0-n3",
+      "description": "PC-set 0x3A0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x3C0-n2",
+      "description": "PC-set 0x3C0 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x400-n3",
+      "description": "PC-set 0x400 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x401-n3",
+      "description": "PC-set 0x401 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x402-n3",
+      "description": "PC-set 0x402 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x403-n3",
+      "description": "PC-set 0x403 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x404-n3",
+      "description": "PC-set 0x404 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x405-n3",
+      "description": "PC-set 0x405 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x406-n3",
+      "description": "PC-set 0x406 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x407-n3",
+      "description": "PC-set 0x407 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x408-n3",
+      "description": "PC-set 0x408 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x409-n3",
+      "description": "PC-set 0x409 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x40A-n3",
+      "description": "PC-set 0x40A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x40B-n3",
+      "description": "PC-set 0x40B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x40C-n3",
+      "description": "PC-set 0x40C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x40D-n3",
+      "description": "PC-set 0x40D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x40E-n3",
+      "description": "PC-set 0x40E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x410-n3",
+      "description": "PC-set 0x410 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x411-n3",
+      "description": "PC-set 0x411 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x412-n3",
+      "description": "PC-set 0x412 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x413-n3",
+      "description": "PC-set 0x413 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x414-n3",
+      "description": "PC-set 0x414 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x415-n3",
+      "description": "PC-set 0x415 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x416-n3",
+      "description": "PC-set 0x416 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x418-n3",
+      "description": "PC-set 0x418 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x419-n3",
+      "description": "PC-set 0x419 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x41A-n3",
+      "description": "PC-set 0x41A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x41C-n3",
+      "description": "PC-set 0x41C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x420-n3",
+      "description": "PC-set 0x420 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x421-n3",
+      "description": "PC-set 0x421 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x422-n3",
+      "description": "PC-set 0x422 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x423-n3",
+      "description": "PC-set 0x423 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x424-n3",
+      "description": "PC-set 0x424 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x425-n3",
+      "description": "PC-set 0x425 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x426-n3",
+      "description": "PC-set 0x426 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x428-n3",
+      "description": "PC-set 0x428 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x429-n3",
+      "description": "PC-set 0x429 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x42A-n3",
+      "description": "PC-set 0x42A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x42C-n3",
+      "description": "PC-set 0x42C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x430-n3",
+      "description": "PC-set 0x430 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x431-n3",
+      "description": "PC-set 0x431 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x432-n3",
+      "description": "PC-set 0x432 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x434-n3",
+      "description": "PC-set 0x434 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x438-n3",
+      "description": "PC-set 0x438 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x440-n3",
+      "description": "PC-set 0x440 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x441-n3",
+      "description": "PC-set 0x441 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x442-n3",
+      "description": "PC-set 0x442 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x443-n3",
+      "description": "PC-set 0x443 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x444-n3",
+      "description": "PC-set 0x444 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x445-n3",
+      "description": "PC-set 0x445 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x446-n3",
+      "description": "PC-set 0x446 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x448-n3",
+      "description": "PC-set 0x448 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x449-n3",
+      "description": "PC-set 0x449 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x44A-n3",
+      "description": "PC-set 0x44A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x44C-n3",
+      "description": "PC-set 0x44C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x450-n3",
+      "description": "PC-set 0x450 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x451-n3",
+      "description": "PC-set 0x451 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x452-n3",
+      "description": "PC-set 0x452 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x454-n3",
+      "description": "PC-set 0x454 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x458-n3",
+      "description": "PC-set 0x458 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x460-n3",
+      "description": "PC-set 0x460 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x461-n3",
+      "description": "PC-set 0x461 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x462-n3",
+      "description": "PC-set 0x462 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x464-n3",
+      "description": "PC-set 0x464 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x468-n3",
+      "description": "PC-set 0x468 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x470-n3",
+      "description": "PC-set 0x470 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x480-n3",
+      "description": "PC-set 0x480 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x481-n3",
+      "description": "PC-set 0x481 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x482-n3",
+      "description": "PC-set 0x482 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x483-n3",
+      "description": "PC-set 0x483 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x484-n3",
+      "description": "PC-set 0x484 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x485-n3",
+      "description": "PC-set 0x485 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x486-n3",
+      "description": "PC-set 0x486 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x488-n3",
+      "description": "PC-set 0x488 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x489-n3",
+      "description": "PC-set 0x489 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x48A-n3",
+      "description": "PC-set 0x48A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x48C-n3",
+      "description": "PC-set 0x48C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x490-n3",
+      "description": "PC-set 0x490 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x491-n3",
+      "description": "PC-set 0x491 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x492-n3",
+      "description": "PC-set 0x492 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x494-n3",
+      "description": "PC-set 0x494 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x498-n3",
+      "description": "PC-set 0x498 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4A0-n3",
+      "description": "PC-set 0x4A0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4A1-n3",
+      "description": "PC-set 0x4A1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4A2-n3",
+      "description": "PC-set 0x4A2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4A4-n3",
+      "description": "PC-set 0x4A4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4A8-n3",
+      "description": "PC-set 0x4A8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4B0-n3",
+      "description": "PC-set 0x4B0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4C0-n3",
+      "description": "PC-set 0x4C0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4C1-n3",
+      "description": "PC-set 0x4C1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4C2-n3",
+      "description": "PC-set 0x4C2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4C4-n3",
+      "description": "PC-set 0x4C4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4C8-n3",
+      "description": "PC-set 0x4C8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4D0-n3",
+      "description": "PC-set 0x4D0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x4E0-n3",
+      "description": "PC-set 0x4E0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x500-n3",
+      "description": "PC-set 0x500 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x501-n3",
+      "description": "PC-set 0x501 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x502-n3",
+      "description": "PC-set 0x502 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x503-n3",
+      "description": "PC-set 0x503 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x504-n3",
+      "description": "PC-set 0x504 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x505-n3",
+      "description": "PC-set 0x505 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x506-n3",
+      "description": "PC-set 0x506 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x508-n3",
+      "description": "PC-set 0x508 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x509-n3",
+      "description": "PC-set 0x509 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x50A-n3",
+      "description": "PC-set 0x50A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x50C-n3",
+      "description": "PC-set 0x50C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x510-n3",
+      "description": "PC-set 0x510 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x511-n3",
+      "description": "PC-set 0x511 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x512-n3",
+      "description": "PC-set 0x512 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x514-n3",
+      "description": "PC-set 0x514 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x518-n3",
+      "description": "PC-set 0x518 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x520-n3",
+      "description": "PC-set 0x520 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x521-n3",
+      "description": "PC-set 0x521 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x522-n3",
+      "description": "PC-set 0x522 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x524-n3",
+      "description": "PC-set 0x524 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x528-n3",
+      "description": "PC-set 0x528 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x530-n3",
+      "description": "PC-set 0x530 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x540-n3",
+      "description": "PC-set 0x540 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x541-n3",
+      "description": "PC-set 0x541 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x542-n3",
+      "description": "PC-set 0x542 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x544-n3",
+      "description": "PC-set 0x544 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x548-n3",
+      "description": "PC-set 0x548 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x550-n3",
+      "description": "PC-set 0x550 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x560-n3",
+      "description": "PC-set 0x560 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x580-n3",
+      "description": "PC-set 0x580 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x581-n3",
+      "description": "PC-set 0x581 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x582-n3",
+      "description": "PC-set 0x582 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x584-n3",
+      "description": "PC-set 0x584 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x588-n3",
+      "description": "PC-set 0x588 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x590-n3",
+      "description": "PC-set 0x590 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x5A0-n3",
+      "description": "PC-set 0x5A0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x5C0-n3",
+      "description": "PC-set 0x5C0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x600-n3",
+      "description": "PC-set 0x600 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x601-n3",
+      "description": "PC-set 0x601 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x602-n3",
+      "description": "PC-set 0x602 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x603-n3",
+      "description": "PC-set 0x603 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x604-n3",
+      "description": "PC-set 0x604 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x605-n3",
+      "description": "PC-set 0x605 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x606-n3",
+      "description": "PC-set 0x606 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x608-n3",
+      "description": "PC-set 0x608 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x609-n3",
+      "description": "PC-set 0x609 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x60A-n3",
+      "description": "PC-set 0x60A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x60C-n3",
+      "description": "PC-set 0x60C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x610-n3",
+      "description": "PC-set 0x610 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x611-n3",
+      "description": "PC-set 0x611 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x612-n3",
+      "description": "PC-set 0x612 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x614-n3",
+      "description": "PC-set 0x614 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x618-n3",
+      "description": "PC-set 0x618 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x620-n3",
+      "description": "PC-set 0x620 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x621-n3",
+      "description": "PC-set 0x621 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x622-n3",
+      "description": "PC-set 0x622 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x624-n3",
+      "description": "PC-set 0x624 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x628-n3",
+      "description": "PC-set 0x628 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x630-n3",
+      "description": "PC-set 0x630 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x640-n3",
+      "description": "PC-set 0x640 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x641-n3",
+      "description": "PC-set 0x641 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x642-n3",
+      "description": "PC-set 0x642 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x644-n3",
+      "description": "PC-set 0x644 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x648-n3",
+      "description": "PC-set 0x648 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x650-n3",
+      "description": "PC-set 0x650 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x660-n3",
+      "description": "PC-set 0x660 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x680-n3",
+      "description": "PC-set 0x680 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x681-n3",
+      "description": "PC-set 0x681 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x682-n3",
+      "description": "PC-set 0x682 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x684-n3",
+      "description": "PC-set 0x684 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x688-n3",
+      "description": "PC-set 0x688 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x690-n3",
+      "description": "PC-set 0x690 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x6A0-n3",
+      "description": "PC-set 0x6A0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x6C0-n3",
+      "description": "PC-set 0x6C0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x700-n3",
+      "description": "PC-set 0x700 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x701-n3",
+      "description": "PC-set 0x701 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x702-n3",
+      "description": "PC-set 0x702 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x704-n3",
+      "description": "PC-set 0x704 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x708-n3",
+      "description": "PC-set 0x708 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x710-n3",
+      "description": "PC-set 0x710 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x720-n3",
+      "description": "PC-set 0x720 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x740-n3",
+      "description": "PC-set 0x740 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x780-n2",
+      "description": "PC-set 0x780 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x800-n3",
+      "description": "PC-set 0x800 (cardinality 1) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x801-n3",
+      "description": "PC-set 0x801 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x802-n3",
+      "description": "PC-set 0x802 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x803-n3",
+      "description": "PC-set 0x803 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x804-n3",
+      "description": "PC-set 0x804 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x805-n3",
+      "description": "PC-set 0x805 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x806-n3",
+      "description": "PC-set 0x806 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x807-n2",
+      "description": "PC-set 0x807 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x808-n3",
+      "description": "PC-set 0x808 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x809-n3",
+      "description": "PC-set 0x809 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x80A-n3",
+      "description": "PC-set 0x80A (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x80B-n3",
+      "description": "PC-set 0x80B (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x80C-n3",
+      "description": "PC-set 0x80C (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x80D-n3",
+      "description": "PC-set 0x80D (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x80E-n3",
+      "description": "PC-set 0x80E (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x810-n3",
+      "description": "PC-set 0x810 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x811-n3",
+      "description": "PC-set 0x811 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x812-n3",
+      "description": "PC-set 0x812 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x813-n3",
+      "description": "PC-set 0x813 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x814-n3",
+      "description": "PC-set 0x814 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x815-n3",
+      "description": "PC-set 0x815 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x816-n3",
+      "description": "PC-set 0x816 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x818-n3",
+      "description": "PC-set 0x818 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x819-n3",
+      "description": "PC-set 0x819 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x81A-n3",
+      "description": "PC-set 0x81A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x81C-n3",
+      "description": "PC-set 0x81C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x820-n3",
+      "description": "PC-set 0x820 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x821-n3",
+      "description": "PC-set 0x821 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x822-n3",
+      "description": "PC-set 0x822 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x823-n3",
+      "description": "PC-set 0x823 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x824-n3",
+      "description": "PC-set 0x824 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x825-n3",
+      "description": "PC-set 0x825 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x826-n3",
+      "description": "PC-set 0x826 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x828-n3",
+      "description": "PC-set 0x828 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x829-n3",
+      "description": "PC-set 0x829 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x82A-n3",
+      "description": "PC-set 0x82A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x82C-n3",
+      "description": "PC-set 0x82C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x830-n3",
+      "description": "PC-set 0x830 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x831-n3",
+      "description": "PC-set 0x831 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x832-n3",
+      "description": "PC-set 0x832 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x834-n3",
+      "description": "PC-set 0x834 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x838-n3",
+      "description": "PC-set 0x838 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x840-n3",
+      "description": "PC-set 0x840 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x841-n3",
+      "description": "PC-set 0x841 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x842-n3",
+      "description": "PC-set 0x842 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x843-n3",
+      "description": "PC-set 0x843 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x844-n3",
+      "description": "PC-set 0x844 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x845-n3",
+      "description": "PC-set 0x845 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x846-n3",
+      "description": "PC-set 0x846 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x848-n3",
+      "description": "PC-set 0x848 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x849-n3",
+      "description": "PC-set 0x849 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x84A-n3",
+      "description": "PC-set 0x84A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x84C-n3",
+      "description": "PC-set 0x84C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x850-n3",
+      "description": "PC-set 0x850 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x851-n3",
+      "description": "PC-set 0x851 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x852-n3",
+      "description": "PC-set 0x852 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x854-n3",
+      "description": "PC-set 0x854 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x858-n3",
+      "description": "PC-set 0x858 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x860-n3",
+      "description": "PC-set 0x860 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x861-n3",
+      "description": "PC-set 0x861 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x862-n3",
+      "description": "PC-set 0x862 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x864-n3",
+      "description": "PC-set 0x864 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x868-n3",
+      "description": "PC-set 0x868 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x870-n3",
+      "description": "PC-set 0x870 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x880-n3",
+      "description": "PC-set 0x880 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x881-n3",
+      "description": "PC-set 0x881 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x882-n3",
+      "description": "PC-set 0x882 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x883-n3",
+      "description": "PC-set 0x883 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x884-n3",
+      "description": "PC-set 0x884 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x885-n3",
+      "description": "PC-set 0x885 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x886-n3",
+      "description": "PC-set 0x886 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x888-n3",
+      "description": "PC-set 0x888 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x889-n3",
+      "description": "PC-set 0x889 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x88A-n3",
+      "description": "PC-set 0x88A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x88C-n3",
+      "description": "PC-set 0x88C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x890-n3",
+      "description": "PC-set 0x890 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x891-n3",
+      "description": "PC-set 0x891 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x892-n3",
+      "description": "PC-set 0x892 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x894-n3",
+      "description": "PC-set 0x894 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x898-n3",
+      "description": "PC-set 0x898 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8A0-n3",
+      "description": "PC-set 0x8A0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8A1-n3",
+      "description": "PC-set 0x8A1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8A2-n3",
+      "description": "PC-set 0x8A2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8A4-n3",
+      "description": "PC-set 0x8A4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8A8-n3",
+      "description": "PC-set 0x8A8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8B0-n3",
+      "description": "PC-set 0x8B0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8C0-n3",
+      "description": "PC-set 0x8C0 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8C1-n3",
+      "description": "PC-set 0x8C1 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8C2-n3",
+      "description": "PC-set 0x8C2 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8C4-n3",
+      "description": "PC-set 0x8C4 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8C8-n3",
+      "description": "PC-set 0x8C8 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8D0-n3",
+      "description": "PC-set 0x8D0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x8E0-n3",
+      "description": "PC-set 0x8E0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x900-n3",
+      "description": "PC-set 0x900 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x901-n3",
+      "description": "PC-set 0x901 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x902-n3",
+      "description": "PC-set 0x902 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x903-n3",
+      "description": "PC-set 0x903 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x904-n3",
+      "description": "PC-set 0x904 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x905-n3",
+      "description": "PC-set 0x905 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x906-n3",
+      "description": "PC-set 0x906 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x908-n3",
+      "description": "PC-set 0x908 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x909-n3",
+      "description": "PC-set 0x909 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x90A-n3",
+      "description": "PC-set 0x90A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x90C-n3",
+      "description": "PC-set 0x90C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x910-n3",
+      "description": "PC-set 0x910 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x911-n3",
+      "description": "PC-set 0x911 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x912-n3",
+      "description": "PC-set 0x912 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x914-n3",
+      "description": "PC-set 0x914 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x918-n3",
+      "description": "PC-set 0x918 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x920-n3",
+      "description": "PC-set 0x920 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x921-n3",
+      "description": "PC-set 0x921 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x922-n3",
+      "description": "PC-set 0x922 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x924-n3",
+      "description": "PC-set 0x924 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x928-n3",
+      "description": "PC-set 0x928 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x930-n3",
+      "description": "PC-set 0x930 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x940-n3",
+      "description": "PC-set 0x940 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x941-n3",
+      "description": "PC-set 0x941 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x942-n3",
+      "description": "PC-set 0x942 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x944-n3",
+      "description": "PC-set 0x944 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x948-n3",
+      "description": "PC-set 0x948 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x950-n3",
+      "description": "PC-set 0x950 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x960-n3",
+      "description": "PC-set 0x960 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x980-n3",
+      "description": "PC-set 0x980 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x981-n3",
+      "description": "PC-set 0x981 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x982-n3",
+      "description": "PC-set 0x982 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x984-n3",
+      "description": "PC-set 0x984 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x988-n3",
+      "description": "PC-set 0x988 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x990-n3",
+      "description": "PC-set 0x990 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x9A0-n3",
+      "description": "PC-set 0x9A0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0x9C0-n3",
+      "description": "PC-set 0x9C0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA00-n3",
+      "description": "PC-set 0xA00 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA01-n3",
+      "description": "PC-set 0xA01 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA02-n3",
+      "description": "PC-set 0xA02 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA03-n3",
+      "description": "PC-set 0xA03 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA04-n3",
+      "description": "PC-set 0xA04 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA05-n3",
+      "description": "PC-set 0xA05 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA06-n3",
+      "description": "PC-set 0xA06 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA08-n3",
+      "description": "PC-set 0xA08 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA09-n3",
+      "description": "PC-set 0xA09 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA0A-n3",
+      "description": "PC-set 0xA0A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA0C-n3",
+      "description": "PC-set 0xA0C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA10-n3",
+      "description": "PC-set 0xA10 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA11-n3",
+      "description": "PC-set 0xA11 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA12-n3",
+      "description": "PC-set 0xA12 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA14-n3",
+      "description": "PC-set 0xA14 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA18-n3",
+      "description": "PC-set 0xA18 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA20-n3",
+      "description": "PC-set 0xA20 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA21-n3",
+      "description": "PC-set 0xA21 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA22-n3",
+      "description": "PC-set 0xA22 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA24-n3",
+      "description": "PC-set 0xA24 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA28-n3",
+      "description": "PC-set 0xA28 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA30-n3",
+      "description": "PC-set 0xA30 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA40-n3",
+      "description": "PC-set 0xA40 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA41-n3",
+      "description": "PC-set 0xA41 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA42-n3",
+      "description": "PC-set 0xA42 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA44-n3",
+      "description": "PC-set 0xA44 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA48-n3",
+      "description": "PC-set 0xA48 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA50-n3",
+      "description": "PC-set 0xA50 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA60-n3",
+      "description": "PC-set 0xA60 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA80-n3",
+      "description": "PC-set 0xA80 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA81-n3",
+      "description": "PC-set 0xA81 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA82-n3",
+      "description": "PC-set 0xA82 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA84-n3",
+      "description": "PC-set 0xA84 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA88-n3",
+      "description": "PC-set 0xA88 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xA90-n3",
+      "description": "PC-set 0xA90 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xAA0-n3",
+      "description": "PC-set 0xAA0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xAC0-n3",
+      "description": "PC-set 0xAC0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB00-n3",
+      "description": "PC-set 0xB00 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB01-n3",
+      "description": "PC-set 0xB01 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB02-n3",
+      "description": "PC-set 0xB02 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB04-n3",
+      "description": "PC-set 0xB04 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB08-n3",
+      "description": "PC-set 0xB08 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB10-n3",
+      "description": "PC-set 0xB10 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB20-n3",
+      "description": "PC-set 0xB20 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB40-n3",
+      "description": "PC-set 0xB40 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xB80-n3",
+      "description": "PC-set 0xB80 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC00-n3",
+      "description": "PC-set 0xC00 (cardinality 2) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC01-n3",
+      "description": "PC-set 0xC01 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC02-n3",
+      "description": "PC-set 0xC02 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC03-n2",
+      "description": "PC-set 0xC03 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC04-n3",
+      "description": "PC-set 0xC04 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC05-n3",
+      "description": "PC-set 0xC05 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC06-n3",
+      "description": "PC-set 0xC06 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC08-n3",
+      "description": "PC-set 0xC08 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC09-n3",
+      "description": "PC-set 0xC09 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC0A-n3",
+      "description": "PC-set 0xC0A (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC0C-n3",
+      "description": "PC-set 0xC0C (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC10-n3",
+      "description": "PC-set 0xC10 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC11-n3",
+      "description": "PC-set 0xC11 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC12-n3",
+      "description": "PC-set 0xC12 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC14-n3",
+      "description": "PC-set 0xC14 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC18-n3",
+      "description": "PC-set 0xC18 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC20-n3",
+      "description": "PC-set 0xC20 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC21-n3",
+      "description": "PC-set 0xC21 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC22-n3",
+      "description": "PC-set 0xC22 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC24-n3",
+      "description": "PC-set 0xC24 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC28-n3",
+      "description": "PC-set 0xC28 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC30-n3",
+      "description": "PC-set 0xC30 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC40-n3",
+      "description": "PC-set 0xC40 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC41-n3",
+      "description": "PC-set 0xC41 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC42-n3",
+      "description": "PC-set 0xC42 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC44-n3",
+      "description": "PC-set 0xC44 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC48-n3",
+      "description": "PC-set 0xC48 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC50-n3",
+      "description": "PC-set 0xC50 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC60-n3",
+      "description": "PC-set 0xC60 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC80-n3",
+      "description": "PC-set 0xC80 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC81-n3",
+      "description": "PC-set 0xC81 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC82-n3",
+      "description": "PC-set 0xC82 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC84-n3",
+      "description": "PC-set 0xC84 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC88-n3",
+      "description": "PC-set 0xC88 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xC90-n3",
+      "description": "PC-set 0xC90 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xCA0-n3",
+      "description": "PC-set 0xCA0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xCC0-n3",
+      "description": "PC-set 0xCC0 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD00-n3",
+      "description": "PC-set 0xD00 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD01-n3",
+      "description": "PC-set 0xD01 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD02-n3",
+      "description": "PC-set 0xD02 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD04-n3",
+      "description": "PC-set 0xD04 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD08-n3",
+      "description": "PC-set 0xD08 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD10-n3",
+      "description": "PC-set 0xD10 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD20-n3",
+      "description": "PC-set 0xD20 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD40-n3",
+      "description": "PC-set 0xD40 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xD80-n3",
+      "description": "PC-set 0xD80 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE00-n3",
+      "description": "PC-set 0xE00 (cardinality 3) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE01-n2",
+      "description": "PC-set 0xE01 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE02-n3",
+      "description": "PC-set 0xE02 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE04-n3",
+      "description": "PC-set 0xE04 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE08-n3",
+      "description": "PC-set 0xE08 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE10-n3",
+      "description": "PC-set 0xE10 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE20-n3",
+      "description": "PC-set 0xE20 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE40-n3",
+      "description": "PC-set 0xE40 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xE80-n3",
+      "description": "PC-set 0xE80 (cardinality 4) across instruments: bass,guitar,ukulele",
+      "kind": "embedding-invariant"
+    },
+    {
+      "id": "pcs-0xF00-n2",
+      "description": "PC-set 0xF00 (cardinality 4) across instruments: bass,guitar",
+      "kind": "embedding-invariant"
+    }
+  ],
+  "fired": {
+    "25": [
+      "pcs-0x001-n3",
+      "pcs-0x002-n3",
+      "pcs-0x003-n3",
+      "pcs-0x004-n3",
+      "pcs-0x005-n3",
+      "pcs-0x006-n3",
+      "pcs-0x007-n3",
+      "pcs-0x008-n3",
+      "pcs-0x009-n3",
+      "pcs-0x00A-n3",
+      "pcs-0x00B-n3",
+      "pcs-0x00C-n3",
+      "pcs-0x00D-n3",
+      "pcs-0x00E-n3",
+      "pcs-0x00F-n2",
+      "pcs-0x010-n3",
+      "pcs-0x011-n3",
+      "pcs-0x012-n3",
+      "pcs-0x013-n3",
+      "pcs-0x014-n3",
+      "pcs-0x015-n3",
+      "pcs-0x016-n3",
+      "pcs-0x017-n3",
+      "pcs-0x018-n3",
+      "pcs-0x019-n3",
+      "pcs-0x01A-n3",
+      "pcs-0x01B-n3",
+      "pcs-0x01C-n3",
+      "pcs-0x01D-n3",
+      "pcs-0x01E-n2",
+      "pcs-0x020-n3",
+      "pcs-0x021-n3",
+      "pcs-0x022-n3",
+      "pcs-0x023-n3",
+      "pcs-0x024-n3",
+      "pcs-0x025-n3",
+      "pcs-0x026-n3",
+      "pcs-0x027-n3",
+      "pcs-0x028-n3",
+      "pcs-0x029-n3",
+      "pcs-0x02A-n3",
+      "pcs-0x02B-n3",
+      "pcs-0x02C-n3",
+      "pcs-0x02D-n3",
+      "pcs-0x02E-n3",
+      "pcs-0x030-n3",
+      "pcs-0x031-n3",
+      "pcs-0x032-n3",
+      "pcs-0x033-n3",
+      "pcs-0x034-n3",
+      "pcs-0x035-n3",
+      "pcs-0x036-n3",
+      "pcs-0x038-n3",
+      "pcs-0x039-n3",
+      "pcs-0x03A-n3",
+      "pcs-0x03C-n2",
+      "pcs-0x040-n3",
+      "pcs-0x041-n3",
+      "pcs-0x042-n3",
+      "pcs-0x043-n3",
+      "pcs-0x044-n3",
+      "pcs-0x045-n3",
+      "pcs-0x046-n3",
+      "pcs-0x047-n3",
+      "pcs-0x048-n3",
+      "pcs-0x049-n3",
+      "pcs-0x04A-n3",
+      "pcs-0x04B-n3",
+      "pcs-0x04C-n3",
+      "pcs-0x04D-n3",
+      "pcs-0x04E-n3",
+      "pcs-0x050-n3",
+      "pcs-0x051-n3",
+      "pcs-0x052-n3",
+      "pcs-0x053-n3",
+      "pcs-0x054-n3",
+      "pcs-0x055-n3",
+      "pcs-0x056-n3",
+      "pcs-0x058-n3",
+      "pcs-0x059-n3",
+      "pcs-0x05A-n3",
+      "pcs-0x05C-n3",
+      "pcs-0x060-n3",
+      "pcs-0x061-n3",
+      "pcs-0x062-n3",
+      "pcs-0x063-n3",
+      "pcs-0x064-n3",
+      "pcs-0x065-n3",
+      "pcs-0x066-n3",
+      "pcs-0x068-n3",
+      "pcs-0x069-n3",
+      "pcs-0x06A-n3",
+      "pcs-0x06C-n3",
+      "pcs-0x070-n3",
+      "pcs-0x071-n3",
+      "pcs-0x072-n3",
+      "pcs-0x074-n3",
+      "pcs-0x078-n2",
+      "pcs-0x080-n3",
+      "pcs-0x081-n3",
+      "pcs-0x082-n3",
+      "pcs-0x083-n3",
+      "pcs-0x084-n3",
+      "pcs-0x085-n3",
+      "pcs-0x086-n3",
+      "pcs-0x087-n3",
+      "pcs-0x088-n3",
+      "pcs-0x089-n3",
+      "pcs-0x08A-n3",
+      "pcs-0x08B-n3",
+      "pcs-0x08C-n3",
+      "pcs-0x08D-n3",
+      "pcs-0x08E-n3",
+      "pcs-0x090-n3",
+      "pcs-0x091-n3",
+      "pcs-0x092-n3",
+      "pcs-0x093-n3",
+      "pcs-0x094-n3",
+      "pcs-0x095-n3",
+      "pcs-0x096-n3",
+      "pcs-0x098-n3",
+      "pcs-0x099-n3",
+      "pcs-0x09A-n3",
+      "pcs-0x09C-n3",
+      "pcs-0x0A0-n3",
+      "pcs-0x0A1-n3",
+      "pcs-0x0A2-n3",
+      "pcs-0x0A3-n3",
+      "pcs-0x0A4-n3",
+      "pcs-0x0A5-n3",
+      "pcs-0x0A6-n3",
+      "pcs-0x0A8-n3",
+      "pcs-0x0A9-n3",
+      "pcs-0x0AA-n3",
+      "pcs-0x0AC-n3",
+      "pcs-0x0B0-n3",
+      "pcs-0x0B1-n3",
+      "pcs-0x0B2-n3",
+      "pcs-0x0B4-n3",
+      "pcs-0x0B8-n3",
+      "pcs-0x0C0-n3",
+      "pcs-0x0C1-n3",
+      "pcs-0x0C2-n3",
+      "pcs-0x0C3-n3",
+      "pcs-0x0C4-n3",
+      "pcs-0x0C5-n3",
+      "pcs-0x0C6-n3",
+      "pcs-0x0C8-n3",
+      "pcs-0x0C9-n3",
+      "pcs-0x0CA-n3",
+      "pcs-0x0CC-n3",
+      "pcs-0x0D0-n3",
+      "pcs-0x0D1-n3",
+      "pcs-0x0D2-n3",
+      "pcs-0x0D4-n3",
+      "pcs-0x0D8-n3",
+      "pcs-0x0E0-n3",
+      "pcs-0x0E1-n3",
+      "pcs-0x0E2-n3",
+      "pcs-0x0E4-n3",
+      "pcs-0x0E8-n3",
+      "pcs-0x0F0-n2",
+      "pcs-0x100-n3",
+      "pcs-0x101-n3",
+      "pcs-0x102-n3",
+      "pcs-0x103-n3",
+      "pcs-0x104-n3",
+      "pcs-0x105-n3",
+      "pcs-0x106-n3",
+      "pcs-0x107-n3",
+      "pcs-0x108-n3",
+      "pcs-0x109-n3",
+      "pcs-0x10A-n3",
+      "pcs-0x10B-n3",
+      "pcs-0x10C-n3",
+      "pcs-0x10D-n3",
+      "pcs-0x10E-n3",
+      "pcs-0x110-n3",
+      "pcs-0x111-n3",
+      "pcs-0x112-n3",
+      "pcs-0x113-n3",
+      "pcs-0x114-n3",
+      "pcs-0x115-n3",
+      "pcs-0x116-n3",
+      "pcs-0x118-n3",
+      "pcs-0x119-n3",
+      "pcs-0x11A-n3",
+      "pcs-0x11C-n3",
+      "pcs-0x120-n3",
+      "pcs-0x121-n3",
+      "pcs-0x122-n3",
+      "pcs-0x123-n3",
+      "pcs-0x124-n3",
+      "pcs-0x125-n3",
+      "pcs-0x126-n3",
+      "pcs-0x128-n3",
+      "pcs-0x129-n3",
+      "pcs-0x12A-n3",
+      "pcs-0x12C-n3",
+      "pcs-0x130-n3",
+      "pcs-0x131-n3",
+      "pcs-0x132-n3",
+      "pcs-0x134-n3",
+      "pcs-0x138-n3",
+      "pcs-0x140-n3",
+      "pcs-0x141-n3",
+      "pcs-0x142-n3",
+      "pcs-0x143-n3",
+      "pcs-0x144-n3",
+      "pcs-0x145-n3",
+      "pcs-0x146-n3",
+      "pcs-0x148-n3",
+      "pcs-0x149-n3",
+      "pcs-0x14A-n3",
+      "pcs-0x14C-n3",
+      "pcs-0x150-n3",
+      "pcs-0x151-n3",
+      "pcs-0x152-n3",
+      "pcs-0x154-n3",
+      "pcs-0x158-n3",
+      "pcs-0x160-n3",
+      "pcs-0x161-n3",
+      "pcs-0x162-n3",
+      "pcs-0x164-n3",
+      "pcs-0x168-n3",
+      "pcs-0x170-n3",
+      "pcs-0x180-n3",
+      "pcs-0x181-n3",
+      "pcs-0x182-n3",
+      "pcs-0x183-n3",
+      "pcs-0x184-n3",
+      "pcs-0x185-n3",
+      "pcs-0x186-n3",
+      "pcs-0x188-n3",
+      "pcs-0x189-n3",
+      "pcs-0x18A-n3",
+      "pcs-0x18C-n3",
+      "pcs-0x190-n3",
+      "pcs-0x191-n3",
+      "pcs-0x192-n3",
+      "pcs-0x194-n3",
+      "pcs-0x198-n3",
+      "pcs-0x1A0-n3",
+      "pcs-0x1A1-n3",
+      "pcs-0x1A2-n3",
+      "pcs-0x1A4-n3",
+      "pcs-0x1A8-n3",
+      "pcs-0x1B0-n3",
+      "pcs-0x1C0-n3",
+      "pcs-0x1C1-n3",
+      "pcs-0x1C2-n3",
+      "pcs-0x1C4-n3",
+      "pcs-0x1C8-n3",
+      "pcs-0x1D0-n3",
+      "pcs-0x1E0-n2",
+      "pcs-0x200-n3",
+      "pcs-0x201-n3",
+      "pcs-0x202-n3",
+      "pcs-0x203-n3",
+      "pcs-0x204-n3",
+      "pcs-0x205-n3",
+      "pcs-0x206-n3",
+      "pcs-0x207-n3",
+      "pcs-0x208-n3",
+      "pcs-0x209-n3",
+      "pcs-0x20A-n3",
+      "pcs-0x20B-n3",
+      "pcs-0x20C-n3",
+      "pcs-0x20D-n3",
+      "pcs-0x20E-n3",
+      "pcs-0x210-n3",
+      "pcs-0x211-n3",
+      "pcs-0x212-n3",
+      "pcs-0x213-n3",
+      "pcs-0x214-n3",
+      "pcs-0x215-n3",
+      "pcs-0x216-n3",
+      "pcs-0x218-n3",
+      "pcs-0x219-n3",
+      "pcs-0x21A-n3",
+      "pcs-0x21C-n3",
+      "pcs-0x220-n3",
+      "pcs-0x221-n3",
+      "pcs-0x222-n3",
+      "pcs-0x223-n3",
+      "pcs-0x224-n3",
+      "pcs-0x225-n3",
+      "pcs-0x226-n3",
+      "pcs-0x228-n3",
+      "pcs-0x229-n3",
+      "pcs-0x22A-n3",
+      "pcs-0x22C-n3",
+      "pcs-0x230-n3",
+      "pcs-0x231-n3",
+      "pcs-0x232-n3",
+      "pcs-0x234-n3",
+      "pcs-0x238-n3",
+      "pcs-0x240-n3",
+      "pcs-0x241-n3",
+      "pcs-0x242-n3",
+      "pcs-0x243-n3",
+      "pcs-0x244-n3",
+      "pcs-0x245-n3",
+      "pcs-0x246-n3",
+      "pcs-0x248-n3",
+      "pcs-0x249-n3",
+      "pcs-0x24A-n3",
+      "pcs-0x24C-n3",
+      "pcs-0x250-n3",
+      "pcs-0x251-n3",
+      "pcs-0x252-n3",
+      "pcs-0x254-n3",
+      "pcs-0x258-n3",
+      "pcs-0x260-n3",
+      "pcs-0x261-n3",
+      "pcs-0x262-n3",
+      "pcs-0x264-n3",
+      "pcs-0x268-n3",
+      "pcs-0x270-n3",
+      "pcs-0x280-n3",
+      "pcs-0x281-n3",
+      "pcs-0x282-n3",
+      "pcs-0x283-n3",
+      "pcs-0x284-n3",
+      "pcs-0x285-n3",
+      "pcs-0x286-n3",
+      "pcs-0x288-n3",
+      "pcs-0x289-n3",
+      "pcs-0x28A-n3",
+      "pcs-0x28C-n3",
+      "pcs-0x290-n3",
+      "pcs-0x291-n3",
+      "pcs-0x292-n3",
+      "pcs-0x294-n3",
+      "pcs-0x298-n3",
+      "pcs-0x2A0-n3",
+      "pcs-0x2A1-n3",
+      "pcs-0x2A2-n3",
+      "pcs-0x2A4-n3",
+      "pcs-0x2A8-n3",
+      "pcs-0x2B0-n3",
+      "pcs-0x2C0-n3",
+      "pcs-0x2C1-n3",
+      "pcs-0x2C2-n3",
+      "pcs-0x2C4-n3",
+      "pcs-0x2C8-n3",
+      "pcs-0x2D0-n3",
+      "pcs-0x2E0-n3",
+      "pcs-0x300-n3",
+      "pcs-0x301-n3",
+      "pcs-0x302-n3",
+      "pcs-0x303-n3",
+      "pcs-0x304-n3",
+      "pcs-0x305-n3",
+      "pcs-0x306-n3",
+      "pcs-0x308-n3",
+      "pcs-0x309-n3",
+      "pcs-0x30A-n3",
+      "pcs-0x30C-n3",
+      "pcs-0x310-n3",
+      "pcs-0x311-n3",
+      "pcs-0x312-n3",
+      "pcs-0x314-n3",
+      "pcs-0x318-n3",
+      "pcs-0x320-n3",
+      "pcs-0x321-n3",
+      "pcs-0x322-n3",
+      "pcs-0x324-n3",
+      "pcs-0x328-n3",
+      "pcs-0x330-n3",
+      "pcs-0x340-n3",
+      "pcs-0x341-n3",
+      "pcs-0x342-n3",
+      "pcs-0x344-n3",
+      "pcs-0x348-n3",
+      "pcs-0x350-n3",
+      "pcs-0x360-n3",
+      "pcs-0x380-n3",
+      "pcs-0x381-n3",
+      "pcs-0x382-n3",
+      "pcs-0x384-n3",
+      "pcs-0x388-n3",
+      "pcs-0x390-n3",
+      "pcs-0x3A0-n3",
+      "pcs-0x3C0-n2",
+      "pcs-0x400-n3",
+      "pcs-0x401-n3",
+      "pcs-0x402-n3",
+      "pcs-0x403-n3",
+      "pcs-0x404-n3",
+      "pcs-0x405-n3",
+      "pcs-0x406-n3",
+      "pcs-0x407-n3",
+      "pcs-0x408-n3",
+      "pcs-0x409-n3",
+      "pcs-0x40A-n3",
+      "pcs-0x40B-n3",
+      "pcs-0x40C-n3",
+      "pcs-0x40D-n3",
+      "pcs-0x40E-n3",
+      "pcs-0x410-n3",
+      "pcs-0x411-n3",
+      "pcs-0x412-n3",
+      "pcs-0x413-n3",
+      "pcs-0x414-n3",
+      "pcs-0x415-n3",
+      "pcs-0x416-n3",
+      "pcs-0x418-n3",
+      "pcs-0x419-n3",
+      "pcs-0x41A-n3",
+      "pcs-0x41C-n3",
+      "pcs-0x420-n3",
+      "pcs-0x421-n3",
+      "pcs-0x422-n3",
+      "pcs-0x423-n3",
+      "pcs-0x424-n3",
+      "pcs-0x425-n3",
+      "pcs-0x426-n3",
+      "pcs-0x428-n3",
+      "pcs-0x429-n3",
+      "pcs-0x42A-n3",
+      "pcs-0x42C-n3",
+      "pcs-0x430-n3",
+      "pcs-0x431-n3",
+      "pcs-0x432-n3",
+      "pcs-0x434-n3",
+      "pcs-0x438-n3",
+      "pcs-0x440-n3",
+      "pcs-0x441-n3",
+      "pcs-0x442-n3",
+      "pcs-0x443-n3",
+      "pcs-0x444-n3",
+      "pcs-0x445-n3",
+      "pcs-0x446-n3",
+      "pcs-0x448-n3",
+      "pcs-0x449-n3",
+      "pcs-0x44A-n3",
+      "pcs-0x44C-n3",
+      "pcs-0x450-n3",
+      "pcs-0x451-n3",
+      "pcs-0x452-n3",
+      "pcs-0x454-n3",
+      "pcs-0x458-n3",
+      "pcs-0x460-n3",
+      "pcs-0x461-n3",
+      "pcs-0x462-n3",
+      "pcs-0x464-n3",
+      "pcs-0x468-n3",
+      "pcs-0x470-n3",
+      "pcs-0x480-n3",
+      "pcs-0x481-n3",
+      "pcs-0x482-n3",
+      "pcs-0x483-n3",
+      "pcs-0x484-n3",
+      "pcs-0x485-n3",
+      "pcs-0x486-n3",
+      "pcs-0x488-n3",
+      "pcs-0x489-n3",
+      "pcs-0x48A-n3",
+      "pcs-0x48C-n3",
+      "pcs-0x490-n3",
+      "pcs-0x491-n3",
+      "pcs-0x492-n3",
+      "pcs-0x494-n3",
+      "pcs-0x498-n3",
+      "pcs-0x4A0-n3",
+      "pcs-0x4A1-n3",
+      "pcs-0x4A2-n3",
+      "pcs-0x4A4-n3",
+      "pcs-0x4A8-n3",
+      "pcs-0x4B0-n3",
+      "pcs-0x4C0-n3",
+      "pcs-0x4C1-n3",
+      "pcs-0x4C2-n3",
+      "pcs-0x4C4-n3",
+      "pcs-0x4C8-n3",
+      "pcs-0x4D0-n3",
+      "pcs-0x4E0-n3",
+      "pcs-0x500-n3",
+      "pcs-0x501-n3",
+      "pcs-0x502-n3",
+      "pcs-0x503-n3",
+      "pcs-0x504-n3",
+      "pcs-0x505-n3",
+      "pcs-0x506-n3",
+      "pcs-0x508-n3",
+      "pcs-0x509-n3",
+      "pcs-0x50A-n3",
+      "pcs-0x50C-n3",
+      "pcs-0x510-n3",
+      "pcs-0x511-n3",
+      "pcs-0x512-n3",
+      "pcs-0x514-n3",
+      "pcs-0x518-n3",
+      "pcs-0x520-n3",
+      "pcs-0x521-n3",
+      "pcs-0x522-n3",
+      "pcs-0x524-n3",
+      "pcs-0x528-n3",
+      "pcs-0x530-n3",
+      "pcs-0x540-n3",
+      "pcs-0x541-n3",
+      "pcs-0x542-n3",
+      "pcs-0x544-n3",
+      "pcs-0x548-n3",
+      "pcs-0x550-n3",
+      "pcs-0x560-n3",
+      "pcs-0x580-n3",
+      "pcs-0x581-n3",
+      "pcs-0x582-n3",
+      "pcs-0x584-n3",
+      "pcs-0x588-n3",
+      "pcs-0x590-n3",
+      "pcs-0x5A0-n3",
+      "pcs-0x5C0-n3",
+      "pcs-0x600-n3",
+      "pcs-0x601-n3",
+      "pcs-0x602-n3",
+      "pcs-0x603-n3",
+      "pcs-0x604-n3",
+      "pcs-0x605-n3",
+      "pcs-0x606-n3",
+      "pcs-0x608-n3",
+      "pcs-0x609-n3",
+      "pcs-0x60A-n3",
+      "pcs-0x60C-n3",
+      "pcs-0x610-n3",
+      "pcs-0x611-n3",
+      "pcs-0x612-n3",
+      "pcs-0x614-n3",
+      "pcs-0x618-n3",
+      "pcs-0x620-n3",
+      "pcs-0x621-n3",
+      "pcs-0x622-n3",
+      "pcs-0x624-n3",
+      "pcs-0x628-n3",
+      "pcs-0x630-n3",
+      "pcs-0x640-n3",
+      "pcs-0x641-n3",
+      "pcs-0x642-n3",
+      "pcs-0x644-n3",
+      "pcs-0x648-n3",
+      "pcs-0x650-n3",
+      "pcs-0x660-n3",
+      "pcs-0x680-n3",
+      "pcs-0x681-n3",
+      "pcs-0x682-n3",
+      "pcs-0x684-n3",
+      "pcs-0x688-n3",
+      "pcs-0x690-n3",
+      "pcs-0x6A0-n3",
+      "pcs-0x6C0-n3",
+      "pcs-0x700-n3",
+      "pcs-0x701-n3",
+      "pcs-0x702-n3",
+      "pcs-0x704-n3",
+      "pcs-0x708-n3",
+      "pcs-0x710-n3",
+      "pcs-0x720-n3",
+      "pcs-0x740-n3",
+      "pcs-0x780-n2",
+      "pcs-0x800-n3",
+      "pcs-0x801-n3",
+      "pcs-0x802-n3",
+      "pcs-0x803-n3",
+      "pcs-0x804-n3",
+      "pcs-0x805-n3",
+      "pcs-0x806-n3",
+      "pcs-0x807-n2",
+      "pcs-0x808-n3",
+      "pcs-0x809-n3",
+      "pcs-0x80A-n3",
+      "pcs-0x80B-n3",
+      "pcs-0x80C-n3",
+      "pcs-0x80D-n3",
+      "pcs-0x80E-n3",
+      "pcs-0x810-n3",
+      "pcs-0x811-n3",
+      "pcs-0x812-n3",
+      "pcs-0x813-n3",
+      "pcs-0x814-n3",
+      "pcs-0x815-n3",
+      "pcs-0x816-n3",
+      "pcs-0x818-n3",
+      "pcs-0x819-n3",
+      "pcs-0x81A-n3",
+      "pcs-0x81C-n3",
+      "pcs-0x820-n3",
+      "pcs-0x821-n3",
+      "pcs-0x822-n3",
+      "pcs-0x823-n3",
+      "pcs-0x824-n3",
+      "pcs-0x825-n3",
+      "pcs-0x826-n3",
+      "pcs-0x828-n3",
+      "pcs-0x829-n3",
+      "pcs-0x82A-n3",
+      "pcs-0x82C-n3",
+      "pcs-0x830-n3",
+      "pcs-0x831-n3",
+      "pcs-0x832-n3",
+      "pcs-0x834-n3",
+      "pcs-0x838-n3",
+      "pcs-0x840-n3",
+      "pcs-0x841-n3",
+      "pcs-0x842-n3",
+      "pcs-0x843-n3",
+      "pcs-0x844-n3",
+      "pcs-0x845-n3",
+      "pcs-0x846-n3",
+      "pcs-0x848-n3",
+      "pcs-0x849-n3",
+      "pcs-0x84A-n3",
+      "pcs-0x84C-n3",
+      "pcs-0x850-n3",
+      "pcs-0x851-n3",
+      "pcs-0x852-n3",
+      "pcs-0x854-n3",
+      "pcs-0x858-n3",
+      "pcs-0x860-n3",
+      "pcs-0x861-n3",
+      "pcs-0x862-n3",
+      "pcs-0x864-n3",
+      "pcs-0x868-n3",
+      "pcs-0x870-n3",
+      "pcs-0x880-n3",
+      "pcs-0x881-n3",
+      "pcs-0x882-n3",
+      "pcs-0x883-n3",
+      "pcs-0x884-n3",
+      "pcs-0x885-n3",
+      "pcs-0x886-n3",
+      "pcs-0x888-n3",
+      "pcs-0x889-n3",
+      "pcs-0x88A-n3",
+      "pcs-0x88C-n3",
+      "pcs-0x890-n3",
+      "pcs-0x891-n3",
+      "pcs-0x892-n3",
+      "pcs-0x894-n3",
+      "pcs-0x898-n3",
+      "pcs-0x8A0-n3",
+      "pcs-0x8A1-n3",
+      "pcs-0x8A2-n3",
+      "pcs-0x8A4-n3",
+      "pcs-0x8A8-n3",
+      "pcs-0x8B0-n3",
+      "pcs-0x8C0-n3",
+      "pcs-0x8C1-n3",
+      "pcs-0x8C2-n3",
+      "pcs-0x8C4-n3",
+      "pcs-0x8C8-n3",
+      "pcs-0x8D0-n3",
+      "pcs-0x8E0-n3",
+      "pcs-0x900-n3",
+      "pcs-0x901-n3",
+      "pcs-0x902-n3",
+      "pcs-0x903-n3",
+      "pcs-0x904-n3",
+      "pcs-0x905-n3",
+      "pcs-0x906-n3",
+      "pcs-0x908-n3",
+      "pcs-0x909-n3",
+      "pcs-0x90A-n3",
+      "pcs-0x90C-n3",
+      "pcs-0x910-n3",
+      "pcs-0x911-n3",
+      "pcs-0x912-n3",
+      "pcs-0x914-n3",
+      "pcs-0x918-n3",
+      "pcs-0x920-n3",
+      "pcs-0x921-n3",
+      "pcs-0x922-n3",
+      "pcs-0x924-n3",
+      "pcs-0x928-n3",
+      "pcs-0x930-n3",
+      "pcs-0x940-n3",
+      "pcs-0x941-n3",
+      "pcs-0x942-n3",
+      "pcs-0x944-n3",
+      "pcs-0x948-n3",
+      "pcs-0x950-n3",
+      "pcs-0x960-n3",
+      "pcs-0x980-n3",
+      "pcs-0x981-n3",
+      "pcs-0x982-n3",
+      "pcs-0x984-n3",
+      "pcs-0x988-n3",
+      "pcs-0x990-n3",
+      "pcs-0x9A0-n3",
+      "pcs-0x9C0-n3",
+      "pcs-0xA00-n3",
+      "pcs-0xA01-n3",
+      "pcs-0xA02-n3",
+      "pcs-0xA03-n3",
+      "pcs-0xA04-n3",
+      "pcs-0xA05-n3",
+      "pcs-0xA06-n3",
+      "pcs-0xA08-n3",
+      "pcs-0xA09-n3",
+      "pcs-0xA0A-n3",
+      "pcs-0xA0C-n3",
+      "pcs-0xA10-n3",
+      "pcs-0xA11-n3",
+      "pcs-0xA12-n3",
+      "pcs-0xA14-n3",
+      "pcs-0xA18-n3",
+      "pcs-0xA20-n3",
+      "pcs-0xA21-n3",
+      "pcs-0xA22-n3",
+      "pcs-0xA24-n3",
+      "pcs-0xA28-n3",
+      "pcs-0xA30-n3",
+      "pcs-0xA40-n3",
+      "pcs-0xA41-n3",
+      "pcs-0xA42-n3",
+      "pcs-0xA44-n3",
+      "pcs-0xA48-n3",
+      "pcs-0xA50-n3",
+      "pcs-0xA60-n3",
+      "pcs-0xA80-n3",
+      "pcs-0xA81-n3",
+      "pcs-0xA82-n3",
+      "pcs-0xA84-n3",
+      "pcs-0xA88-n3",
+      "pcs-0xA90-n3",
+      "pcs-0xAA0-n3",
+      "pcs-0xAC0-n3",
+      "pcs-0xB00-n3",
+      "pcs-0xB01-n3",
+      "pcs-0xB02-n3",
+      "pcs-0xB04-n3",
+      "pcs-0xB08-n3",
+      "pcs-0xB10-n3",
+      "pcs-0xB20-n3",
+      "pcs-0xB40-n3",
+      "pcs-0xB80-n3",
+      "pcs-0xC00-n3",
+      "pcs-0xC01-n3",
+      "pcs-0xC02-n3",
+      "pcs-0xC03-n2",
+      "pcs-0xC04-n3",
+      "pcs-0xC05-n3",
+      "pcs-0xC06-n3",
+      "pcs-0xC08-n3",
+      "pcs-0xC09-n3",
+      "pcs-0xC0A-n3",
+      "pcs-0xC0C-n3",
+      "pcs-0xC10-n3",
+      "pcs-0xC11-n3",
+      "pcs-0xC12-n3",
+      "pcs-0xC14-n3",
+      "pcs-0xC18-n3",
+      "pcs-0xC20-n3",
+      "pcs-0xC21-n3",
+      "pcs-0xC22-n3",
+      "pcs-0xC24-n3",
+      "pcs-0xC28-n3",
+      "pcs-0xC30-n3",
+      "pcs-0xC40-n3",
+      "pcs-0xC41-n3",
+      "pcs-0xC42-n3",
+      "pcs-0xC44-n3",
+      "pcs-0xC48-n3",
+      "pcs-0xC50-n3",
+      "pcs-0xC60-n3",
+      "pcs-0xC80-n3",
+      "pcs-0xC81-n3",
+      "pcs-0xC82-n3",
+      "pcs-0xC84-n3",
+      "pcs-0xC88-n3",
+      "pcs-0xC90-n3",
+      "pcs-0xCA0-n3",
+      "pcs-0xCC0-n3",
+      "pcs-0xD00-n3",
+      "pcs-0xD01-n3",
+      "pcs-0xD02-n3",
+      "pcs-0xD04-n3",
+      "pcs-0xD08-n3",
+      "pcs-0xD10-n3",
+      "pcs-0xD20-n3",
+      "pcs-0xD40-n3",
+      "pcs-0xD80-n3",
+      "pcs-0xE00-n3",
+      "pcs-0xE01-n2",
+      "pcs-0xE02-n3",
+      "pcs-0xE04-n3",
+      "pcs-0xE08-n3",
+      "pcs-0xE10-n3",
+      "pcs-0xE20-n3",
+      "pcs-0xE40-n3",
+      "pcs-0xE80-n3",
+      "pcs-0xF00-n2"
+    ]
+  }
+}

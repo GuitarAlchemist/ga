@@ -1,0 +1,209 @@
+{
+  "timestamp": "2026-04-19T00:25:50.928357+00:00",
+  "tool": "ix-embedding-diagnostics 0.1.0",
+  "seed": 42,
+  "corpus": {
+    "file": "C:/Users/spare/source/repos/ga/state/voicings/optick.index",
+    "count": 313047,
+    "dims": 112,
+    "instruments": {
+      "bass": 7795,
+      "guitar": 297910,
+      "ukulele": 7342
+    }
+  },
+  "leak_detection": {
+    "sample_size": 12000,
+    "per_class": {
+      "bass": 4000,
+      "guitar": 4000,
+      "ukulele": 4000
+    },
+    "n_folds": 5,
+    "classifier": "RandomForest(n_trees=30, max_depth=10)",
+    "full_classifier_accuracy": 0.7521666666666667,
+    "baseline_random": 0.3333333333333333,
+    "by_partition": [
+      {
+        "partition": "STRUCTURE",
+        "start": 0,
+        "end": 24,
+        "dims": 24,
+        "accuracy_mean": 0.5961666666666667,
+        "accuracy_std": 0.006999007866198691,
+        "per_fold": [
+          0.5879166666666666,
+          0.6079166666666667,
+          0.595,
+          0.5908333333333333,
+          0.5991666666666666
+        ],
+        "leak_hypothesis": "likely_leak",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "MORPHOLOGY",
+        "start": 24,
+        "end": 48,
+        "dims": 24,
+        "accuracy_mean": 0.7899166666666666,
+        "accuracy_std": 0.015941298566929853,
+        "per_fold": [
+          0.7970833333333334,
+          0.7679166666666667,
+          0.7808333333333334,
+          0.8154166666666667,
+          0.7883333333333333
+        ],
+        "leak_hypothesis": "by_design",
+        "leak_confirmed": false
+      },
+      {
+        "partition": "CONTEXT",
+        "start": 48,
+        "end": 60,
+        "dims": 12,
+        "accuracy_mean": 0.5223333333333333,
+        "accuracy_std": 0.010690078473883056,
+        "per_fold": [
+          0.5070833333333333,
+          0.5358333333333334,
+          0.5295833333333333,
+          0.5129166666666667,
+          0.52625
+        ],
+        "leak_hypothesis": "possible",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "SYMBOLIC",
+        "start": 60,
+        "end": 72,
+        "dims": 12,
+        "accuracy_mean": 0.6138333333333332,
+        "accuracy_std": 0.006848560270434771,
+        "per_fold": [
+          0.6254166666666666,
+          0.6125,
+          0.61625,
+          0.605,
+          0.61
+        ],
+        "leak_hypothesis": "likely_leak",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "MODAL",
+        "start": 72,
+        "end": 112,
+        "dims": 40,
+        "accuracy_mean": 0.4979166666666667,
+        "accuracy_std": 0.011052274778423563,
+        "per_fold": [
+          0.48125,
+          0.5075,
+          0.5025,
+          0.48875,
+          0.5095833333333334
+        ],
+        "leak_hypothesis": "possible",
+        "leak_confirmed": true
+      }
+    ]
+  },
+  "retrieval_consistency": {
+    "queries_tested": 50,
+    "top_k": 10,
+    "avg_pc_set_match_pct": 0.9280000000000002,
+    "per_query_match_pct": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.9,
+      1.0,
+      1.0,
+      1.0,
+      0.9,
+      1.0,
+      0.9,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.7,
+      1.0,
+      1.0,
+      0.5,
+      0.7,
+      1.0,
+      1.0,
+      0.8,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.3,
+      0.8,
+      0.6,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.7,
+      1.0,
+      1.0,
+      0.7,
+      1.0,
+      1.0,
+      1.0,
+      0.9,
+      1.0,
+      1.0
+    ],
+    "note": "A STRUCTURE-only query should return voicings sharing the query's pitch-class set. A low match rate indicates the STRUCTURE partition is not cleanly encoding PC-set."
+  },
+  "cluster_baseline": {
+    "k": 50,
+    "n_voicings": 313047,
+    "iterations_ran": 30,
+    "file": "C:/Users/spare/source/repos/ga/state/baseline/2026-04-18-opticK\\embedding-clusters-k50.json"
+  },
+  "topology": {
+    "guitar": {
+      "sample_size": 1000,
+      "beta_0": 737,
+      "beta_1": 40,
+      "filtration_radius": 0.3630333196425719,
+      "avg_pairwise_distance": 0.9075832991064297
+    },
+    "bass": {
+      "sample_size": 1000,
+      "beta_0": 559,
+      "beta_1": 117,
+      "filtration_radius": 0.4075171708470691,
+      "avg_pairwise_distance": 1.0187929271176728
+    },
+    "ukulele": {
+      "sample_size": 1000,
+      "beta_0": 567,
+      "beta_1": 145,
+      "filtration_radius": 0.40862272792883786,
+      "avg_pairwise_distance": 1.0215568198220946
+    },
+    "cross_instrument_match": "beta0_range=178, beta1_range=105 (larger = more instrument-specific topology)"
+  },
+  "notes": [
+    "LogisticRegression in ix-supervised is binary-only; RandomForest used instead for 3-class",
+    "ix-topo has no native Adjusted Rand Index; post-refactor comparison will add one",
+    "Rips complex is O(n²) in edges — topology sampled at 1000 points per instrument",
+    "Leak confirmed criterion: mean accuracy > 0.40 on balanced 3-class problem (baseline=0.333)"
+  ],
+  "runtime_seconds": 293.5239099
+}

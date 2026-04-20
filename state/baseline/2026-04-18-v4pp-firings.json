@@ -1,0 +1,448 @@
+{
+  "exemplars": [
+    {
+      "id": "empty",
+      "description": "empty set",
+      "kind": "EdgeCase"
+    },
+    {
+      "id": "singleton-C",
+      "description": "{C}",
+      "kind": "EdgeCase"
+    },
+    {
+      "id": "chromatic",
+      "description": "chromatic aggregate",
+      "kind": "EdgeCase"
+    },
+    {
+      "id": "major-triad-0",
+      "description": "major triad rooted at pc 0",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-1",
+      "description": "major triad rooted at pc 1",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-2",
+      "description": "major triad rooted at pc 2",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-3",
+      "description": "major triad rooted at pc 3",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-4",
+      "description": "major triad rooted at pc 4",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-5",
+      "description": "major triad rooted at pc 5",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-6",
+      "description": "major triad rooted at pc 6",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-7",
+      "description": "major triad rooted at pc 7",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-8",
+      "description": "major triad rooted at pc 8",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-9",
+      "description": "major triad rooted at pc 9",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-10",
+      "description": "major triad rooted at pc 10",
+      "kind": "Triad"
+    },
+    {
+      "id": "major-triad-11",
+      "description": "major triad rooted at pc 11",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-0",
+      "description": "minor triad rooted at pc 0",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-1",
+      "description": "minor triad rooted at pc 1",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-2",
+      "description": "minor triad rooted at pc 2",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-3",
+      "description": "minor triad rooted at pc 3",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-4",
+      "description": "minor triad rooted at pc 4",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-5",
+      "description": "minor triad rooted at pc 5",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-6",
+      "description": "minor triad rooted at pc 6",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-7",
+      "description": "minor triad rooted at pc 7",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-8",
+      "description": "minor triad rooted at pc 8",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-9",
+      "description": "minor triad rooted at pc 9",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-10",
+      "description": "minor triad rooted at pc 10",
+      "kind": "Triad"
+    },
+    {
+      "id": "minor-triad-11",
+      "description": "minor triad rooted at pc 11",
+      "kind": "Triad"
+    },
+    {
+      "id": "tritone-pair",
+      "description": "{C, F#} — T6-symmetric",
+      "kind": "Symmetric"
+    },
+    {
+      "id": "augmented-triad",
+      "description": "{C, E, G#} — T4-symmetric",
+      "kind": "Symmetric"
+    },
+    {
+      "id": "diminished-seventh",
+      "description": "{C, Eb, F#, A} — T3-symmetric",
+      "kind": "Symmetric"
+    },
+    {
+      "id": "whole-tone-hexachord",
+      "description": "{C, D, E, F#, G#, A#} — T2-symmetric",
+      "kind": "Symmetric"
+    },
+    {
+      "id": "major-scale-C",
+      "description": "C major scale",
+      "kind": "Scale"
+    },
+    {
+      "id": "minor-scale-C",
+      "description": "C natural minor scale",
+      "kind": "Scale"
+    },
+    {
+      "id": "pentatonic-C",
+      "description": "C pentatonic",
+      "kind": "Scale"
+    },
+    {
+      "id": "dom7-C",
+      "description": "C7 dominant seventh",
+      "kind": "Seventh"
+    },
+    {
+      "id": "maj7-C",
+      "description": "Cmaj7",
+      "kind": "Seventh"
+    },
+    {
+      "id": "m7-C",
+      "description": "Cm7",
+      "kind": "Seventh"
+    }
+  ],
+  "fired": {
+    "14": [
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9"
+    ],
+    "15": [
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9"
+    ],
+    "16": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "dom7-C",
+      "empty",
+      "m7-C",
+      "maj7-C",
+      "major-scale-C",
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-scale-C",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ],
+    "17": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "dom7-C",
+      "empty",
+      "m7-C",
+      "maj7-C",
+      "major-scale-C",
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-scale-C",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ],
+    "18": [
+      "chromatic",
+      "empty",
+      "whole-tone-hexachord"
+    ],
+    "19": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "empty",
+      "minor-triad-0",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ],
+    "20": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "dom7-C",
+      "empty",
+      "m7-C",
+      "maj7-C",
+      "major-scale-C",
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-scale-C",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ],
+    "21": [
+      "augmented-triad",
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9"
+    ],
+    "22": [
+      "diminished-seventh",
+      "dom7-C",
+      "m7-C",
+      "maj7-C"
+    ],
+    "24": [
+      "augmented-triad",
+      "chromatic",
+      "diminished-seventh",
+      "dom7-C",
+      "empty",
+      "m7-C",
+      "maj7-C",
+      "major-scale-C",
+      "major-triad-0",
+      "major-triad-1",
+      "major-triad-10",
+      "major-triad-11",
+      "major-triad-2",
+      "major-triad-3",
+      "major-triad-4",
+      "major-triad-5",
+      "major-triad-6",
+      "major-triad-7",
+      "major-triad-8",
+      "major-triad-9",
+      "minor-scale-C",
+      "minor-triad-0",
+      "minor-triad-1",
+      "minor-triad-10",
+      "minor-triad-11",
+      "minor-triad-2",
+      "minor-triad-3",
+      "minor-triad-4",
+      "minor-triad-5",
+      "minor-triad-6",
+      "minor-triad-7",
+      "minor-triad-8",
+      "minor-triad-9",
+      "pentatonic-C",
+      "singleton-C",
+      "tritone-pair",
+      "whole-tone-hexachord"
+    ]
+  }
+}
