@@ -1,16 +1,5 @@
 {
   "mcpServers": {
-    "ga-dsl": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "GaMcpServer/GaMcpServer.csproj",
-        "--no-build",
-        "--"
-      ]
-    },
     "ix": {
       "command": "cargo",
       "args": ["run", "--release", "-p", "ix-agent"],
@@ -19,10 +8,7 @@
     "meshy-ai": {
       "type": "stdio",
       "command": "node",
-      "args": ["mcp-servers/meshy-ai/dist/index.js"],
-      "env": {
-        "MESHY_API_KEY": "${MESHY_API_KEY}"
-      }
+      "args": ["mcp-servers/meshy-ai/dist/index.js"]
     },
     "demerzel": {
       "type": "stdio",

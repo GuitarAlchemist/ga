@@ -12,11 +12,17 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
 from acp_sdk.models import Message, Metadata, Capability
 from acp_sdk.server import RunYield, RunYieldResume, agent, create_app
+from dotenv import load_dotenv
 
 from .agents import governance_agent, pipeline_agent, epistemic_agent, whats_next_agent
+
+# Load .env from project root (Apps/demerzel-agent/.env). os.environ already-set
+# values win — running with `DEMERZEL_API_KEY=... uvicorn ...` still overrides.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # ---------------------------------------------------------------------------
 # API Key — required for all mutation/run endpoints

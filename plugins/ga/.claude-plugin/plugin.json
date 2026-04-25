@@ -20,11 +20,5 @@
         "--"
       ]
     }
-  },
-  "skills": [
-    {
-      "name": "ga-domain",
-      "source": "./skills/ga-domain/SKILL.md"
-    }
-  ]
+  }
 }
