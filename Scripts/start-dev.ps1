@@ -8,12 +8,32 @@ Write-Host "Starting GA Dev Stack..." -ForegroundColor Cyan
 
 # Kill any existing instances
 Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match "GaApi" } | Stop-Process -Force -ErrorAction SilentlyContinue
+Get-Process -Name "GaApi" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep 2
+
+# Build GaApi to the current slot target, then launch the slot exe directly.
+# `dotnet run` doesn't work here because the slot OutputPath override (in
+# Directory.Build.targets) doesn't reach TargetPath, so dotnet run looks at
+# bin\Debug\net10.0\ instead of bin\<slot>\net10.0\ and fails. We respect the
+# existing .slot-target value rather than forcing it — the deploy workflow
+# (ga-build.ps1) controls slot semantics; dev just builds to whatever's set.
+. "$repoRoot\Scripts\lib\SlotState.ps1"
+$slot = Get-SlotTarget
+if (-not $slot) { $slot = "blue" }  # fallback if .slot-target is missing
+Write-Host "  [Build] GaApi -> $slot slot..." -ForegroundColor Cyan
+dotnet build "$repoRoot\Apps\ga-server\GaApi\GaApi.csproj" -c Debug | Out-Null
+$gaApiExe = "$repoRoot\Apps\ga-server\GaApi\bin\$slot\net10.0\GaApi.exe"
+if (-not (Test-Path $gaApiExe)) {
+    Write-Host "  [Build] FAILED — $gaApiExe not found" -ForegroundColor Red
+    exit 1
+}
 
 # Start GaApi
 $gaApiJob = Start-Job -ScriptBlock {
-    Set-Location $using:repoRoot
-    dotnet run --project Apps/ga-server/GaApi/GaApi.csproj --no-build 2>&1
+    Set-Location "$using:repoRoot\Apps\ga-server\GaApi"
+    $env:ASPNETCORE_ENVIRONMENT = "Development"
+    $env:ASPNETCORE_URLS = "http://localhost:5232"
+    & "$using:gaApiExe" 2>&1
 }
 Write-Host "  GaApi starting (Job $($gaApiJob.Id))..." -ForegroundColor Green
 
@@ -56,8 +76,10 @@ try {
         if ($gaApiJob.State -ne "Running") {
             Write-Host "  [!] GaApi died, restarting..." -ForegroundColor Red
             $gaApiJob = Start-Job -ScriptBlock {
-                Set-Location $using:repoRoot
-                dotnet run --project Apps/ga-server/GaApi/GaApi.csproj --no-build 2>&1
+                Set-Location "$using:repoRoot\Apps\ga-server\GaApi"
+                $env:ASPNETCORE_ENVIRONMENT = "Development"
+                $env:ASPNETCORE_URLS = "http://localhost:5232"
+                & "$using:gaApiExe" 2>&1
             }
         }
         # Check Vite
