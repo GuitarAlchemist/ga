@@ -1,0 +1,391 @@
+{
+  "Timestamp": "2026-04-25T16:35:59.7597549Z",
+  "Corpus": {
+    "Guitar": 297910,
+    "Bass": 7795,
+    "Ukulele": 7342,
+    "Total": 313047
+  },
+  "ChordRecognition": {
+    "NullChordName": {
+      "Count": 0,
+      "Pct": 0
+    },
+    "UnknownChordName": {
+      "Count": 0,
+      "Pct": 0
+    },
+    "DistinctChordNames": 3679,
+    "Top20": [
+      {
+        "Name": "Forte 5-32 (pentachord)",
+        "Count": 2609
+      },
+      {
+        "Name": "Forte 4-21 (tetrachord)",
+        "Count": 1110
+      },
+      {
+        "Name": "Forte 6-26 (hexachord)",
+        "Count": 751
+      },
+      {
+        "Name": "Forte 6-42 (hexachord)",
+        "Count": 744
+      },
+      {
+        "Name": "Forte 6-43 (hexachord)",
+        "Count": 744
+      },
+      {
+        "Name": "Forte 6-44 (hexachord)",
+        "Count": 617
+      },
+      {
+        "Name": "Dbdim/E",
+        "Count": 408
+      },
+      {
+        "Name": "Fdim/Ab",
+        "Count": 398
+      },
+      {
+        "Name": "Emaj7",
+        "Count": 394
+      },
+      {
+        "Name": "Ebdim/Gb",
+        "Count": 392
+      },
+      {
+        "Name": "Gbdim/A",
+        "Count": 381
+      },
+      {
+        "Name": "E5",
+        "Count": 380
+      },
+      {
+        "Name": "Edim/G",
+        "Count": 373
+      },
+      {
+        "Name": "Abdim/B",
+        "Count": 372
+      },
+      {
+        "Name": "Ddim/F",
+        "Count": 371
+      },
+      {
+        "Name": "Adim/C",
+        "Count": 363
+      },
+      {
+        "Name": "Gdim/Bb",
+        "Count": 362
+      },
+      {
+        "Name": "Abmaj7",
+        "Count": 362
+      },
+      {
+        "Name": "Cdim/Eb",
+        "Count": 361
+      },
+      {
+        "Name": "Bdim/D",
+        "Count": 361
+      }
+    ]
+  },
+  "HarmonicFunction": {
+    "NullCount": 0,
+    "Pct": 0,
+    "Distribution": {
+      "Functional Harmony": 313047
+    }
+  },
+  "ForteCoverage": {
+    "Resolved": 313047,
+    "Total": 313047,
+    "Pct": 100,
+    "Failures": []
+  },
+  "DropVoicingDistribution": {
+    "None": 277665,
+    "Drop-2": 35382
+  },
+  "CrossInstrumentConsistency": {
+    "SharedSets": 793,
+    "Consistent": 793,
+    "Disagreements": []
+  },
+  "CardinalityDistribution": {
+    "1": 210,
+    "2": 5715,
+    "3": 39669,
+    "4": 104313,
+    "5": 119152,
+    "6": 43988
+  },
+  "TwoNoteWithChordName": 5715,
+  "InvariantFailures": {
+    "MidiNotesMismatch": 0,
+    "NullPitchClassSet": 0,
+    "NegativePhysicalLayout": 0,
+    "IntervalSpreadInvariant": 50,
+    "Samples": [
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-1-5-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-3-7-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-2-6-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-4-8-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-7-11-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-6-10-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-5-9-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-8-12-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-10-14-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-9-13-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-12-16-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-0-4-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-3-x-0",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-4-x-1",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "0-x-x-2",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "1-x-x-3",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "2-x-x-4",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-1-5-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-5-x-2",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      }
+    ]
+  },
+  "AnalyzerExceptions": [],
+  "Performance": {
+    "RuntimeSeconds": 64.2900372,
+    "VoicingsPerSec": 4869.292562798517,
+    "PeakWorkingSetMb": 398.6015625
+  },
+  "IssueSamples": {
+    "NullChordName": [],
+    "UnknownChordName": [],
+    "ForteFailure": [],
+    "TwoNoteWithChordName": [
+      {
+        "Instrument": "guitar",
+        "Diagram": "1-1-x-x-x-1",
+        "MidiNotes": [
+          65,
+          60,
+          41
+        ],
+        "PitchClasses": "{0,5}",
+        "ChordName": "F5",
+        "Quality": "power",
+        "IntervalSpread": 24,
+        "Issue": "2-note voicing assigned ChordName=\u0027F5\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "2-1-x-x-x-x",
+        "MidiNotes": [
+          66,
+          60
+        ],
+        "PitchClasses": "{0,6}",
+        "ChordName": "C \u002B Gb (Tritone)",
+        "Quality": "dyad",
+        "IntervalSpread": 6,
+        "Issue": "2-note voicing assigned ChordName=\u0027C \u002B Gb (Tritone)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "3-1-0-x-x-x",
+        "MidiNotes": [
+          67,
+          60,
+          55
+        ],
+        "PitchClasses": "{0,7}",
+        "ChordName": "C5",
+        "Quality": "power",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027C5\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "4-1-1-x-x-x",
+        "MidiNotes": [
+          68,
+          60,
+          56
+        ],
+        "PitchClasses": "{0,8}",
+        "ChordName": "Ab \u002B C (Major 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027Ab \u002B C (Major 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "5-1-x-x-x-x",
+        "MidiNotes": [
+          69,
+          60
+        ],
+        "PitchClasses": "{0,9}",
+        "ChordName": "A \u002B C (Minor 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 9,
+        "Issue": "2-note voicing assigned ChordName=\u0027A \u002B C (Minor 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "1-2-x-x-x-1",
+        "MidiNotes": [
+          65,
+          61,
+          41
+        ],
+        "PitchClasses": "{1,5}",
+        "ChordName": "Db \u002B F (Major 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 24,
+        "Issue": "2-note voicing assigned ChordName=\u0027Db \u002B F (Major 3rd)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "2-2-x-x-x-2",
+        "MidiNotes": [
+          66,
+          61,
+          42
+        ],
+        "PitchClasses": "{1,6}",
+        "ChordName": "Gb5",
+        "Quality": "power",
+        "IntervalSpread": 24,
+        "Issue": "2-note voicing assigned ChordName=\u0027Gb5\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "3-2-0-x-x-x",
+        "MidiNotes": [
+          67,
+          61,
+          55
+        ],
+        "PitchClasses": "{1,7}",
+        "ChordName": "Db \u002B G (Tritone)",
+        "Quality": "dyad",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027Db \u002B G (Tritone)\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "4-2-x-x-x-x",
+        "MidiNotes": [
+          68,
+          61
+        ],
+        "PitchClasses": "{1,8}",
+        "ChordName": "Db5",
+        "Quality": "power",
+        "IntervalSpread": 7,
+        "Issue": "2-note voicing assigned ChordName=\u0027Db5\u0027"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "5-2-2-x-x-x",
+        "MidiNotes": [
+          69,
+          61,
+          57
+        ],
+        "PitchClasses": "{1,9}",
+        "ChordName": "A \u002B Db (Major 3rd)",
+        "Quality": "dyad",
+        "IntervalSpread": 12,
+        "Issue": "2-note voicing assigned ChordName=\u0027A \u002B Db (Major 3rd)\u0027"
+      }
+    ]
+  }
+}
