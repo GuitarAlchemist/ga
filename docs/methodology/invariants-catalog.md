@@ -45,14 +45,14 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 | 22 | cardinality | Seventh template → exactly 4 distinct PCs | same | T |
 | 23 | cardinality | Voicing MIDI count ≤ instrument string count | Instruments.yaml + PhysicalLayout.cs | C |
 | 24 | cardinality | `IntervalClassVector` has exactly 6 entries summing to C(n,2) where n=cardinality | IntervalClassVector.cs | N |
-| 25 | embedding | Cross-instrument: voicings with identical PC-set have identical STRUCTURE partition | optick.index | **FAIL** (56% leak) |
+| 25 | embedding | Cross-instrument: voicings with identical PC-set have identical STRUCTURE partition | optick.index | T (793/793 PC-sets, ix-optick-invariants 2026-04-26) |
 | 26 | embedding | MIDI-octave invariance: transposing by 12 leaves STRUCTURE vector unchanged | optick.index | C |
 | 27 | embedding | Embedding norm ∈ [0.99, 1.01] for all partitions (partition-normalized) | embedding-diagnostics | T |
 | 28 | embedding | No partition accuracy exceeds 1/3 + 3σ in 3-class leak test | same | **FAIL** (STRUCTURE) |
 | 29 | schema | `SchemaHashV4` computed in C# == computed in Rust for same input | EmbeddingSchema.cs + ix-optick | T |
 | 30 | schema | OPTIC-K mmap header dims == `EmbeddingSchema.TotalDimensions` | optick.index header | C |
 | 31 | schema | Dim count never changes without a corpus rebuild + new schema hash | CLAUDE.md states "never change" | N (CI-gatable) |
-| 32 | text-vs-pc | Same PC-set across octaves → cosine(STRUCTURE, STRUCTURE') == 1.0 | optick.index | **FAIL** (29.4%) |
+| 32 | text-vs-pc | Same PC-set across octaves → cosine(STRUCTURE, STRUCTURE') == 1.0 | optick.index | T (2509/2509 PC-sets, ix-optick-invariants 2026-04-26) |
 | 33 | text-vs-pc | `ChordName` consistency across instruments for same PC-set | corpus | **FAIL** (29.4%) |
 | 34 | governance | Every persona YAML has `affordances`, `goal_directedness`, `estimator_pairing` | governance/demerzel/personas/ | T |
 | 35 | governance | Every belief file is tetravalent-valid (T/F/U/C only) | state/beliefs/*.json | C |
@@ -90,7 +90,7 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 
 | # | Invariant | Bug it catches | Est. pre-test failure freq |
 |---|---|---|---|
-| 1 | #25 Cross-instrument STRUCTURE equality for same PC-set | 56% leak (confirmed) — blocks ga-chatbot correctness | **CERTAIN FAIL today** |
+| 1 | #25 Cross-instrument STRUCTURE equality for same PC-set | shipped — resolved by v4-pp-r ROOT partition, verified 793/793 by `ix-optick-invariants` 2026-04-26 | n/a |
 | 2 | #33 `ChordName` cross-instrument consistency | 29.4% today; test gates the refactor | **CERTAIN FAIL today** |
 | 3 | #19 `PrimeFormId` is self-representative | Silent corruption of equivalence classes → wrong chord IDs | 1-3 violations likely |
 | 4 | #3 YAML strings parse to enum values | Typos ("Sus4" vs "sus4") silently fall through to Unknown | 5-10 violations likely |
