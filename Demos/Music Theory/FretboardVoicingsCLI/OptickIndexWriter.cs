@@ -61,32 +61,69 @@ public sealed class OptickIndexWriter : IDisposable
     private static readonly int Dimension = EmbeddingSchema.CompactDimension;
 
     /// <summary>
-    /// Compact partition mapping: (compact_start, raw_start, dim, sqrt_weight).
-    /// Derived from <see cref="EmbeddingSchema.SimilarityPartitions"/> — single source of truth.
+    /// Default compact partition mapping derived from
+    /// <see cref="EmbeddingSchema.SimilarityPartitions"/>. Per-instance
+    /// state below shadows this when the constructor is given a
+    /// <see cref="WeightsOverride"/> (used by ix-autoresearch's Target A
+    /// loop to perturb partition weights without recompiling GA).
     /// </summary>
-    private static readonly (int CStart, int RStart, int Dim, float SqrtWeight)[] CompactPartitions =
-        BuildCompactPartitions();
+    private static readonly (int CStart, int RStart, int Dim, float SqrtWeight)[] DefaultCompactPartitions =
+        BuildCompactPartitions(weightsOverride: null);
 
     /// <summary>
-    /// Pre-computed sqrt-scaled weights for all 112 compact dimensions.
+    /// Default sqrt-scaled weights for all <see cref="EmbeddingSchema.CompactDimension"/>
+    /// compact dimensions. Mirrored per-instance for override support.
     /// </summary>
-    private static readonly float[] PartitionWeights = BuildPartitionWeights();
+    private static readonly float[] DefaultPartitionWeights = BuildPartitionWeights(DefaultCompactPartitions);
 
     // ---------------------------------------------------------------
     // Instance state
     // ---------------------------------------------------------------
 
     private readonly FileStream _stream;
+    private readonly (int CStart, int RStart, int Dim, float SqrtWeight)[] _compactPartitions;
+    private readonly float[] _partitionWeights;
     private bool _disposed;
 
     /// <summary>
-    /// Creates a writer targeting the specified output path.
-    /// The file is created (or truncated) immediately.
+    /// Creates a writer targeting the specified output path. Uses the
+    /// canonical <see cref="EmbeddingSchema"/> partition weights — this
+    /// is the production path.
     /// </summary>
     public OptickIndexWriter(string outputPath)
+        : this(outputPath, weightsOverride: null)
+    {
+    }
+
+    /// <summary>
+    /// Creates a writer with optional partition-weight overrides. When
+    /// <paramref name="weightsOverride"/> is <c>null</c> this is identical to
+    /// <see cref="OptickIndexWriter(string)"/>; when supplied, the
+    /// per-instance compact-partition table replaces the
+    /// <see cref="EmbeddingSchema.SimilarityPartitions"/> weights with the
+    /// override values.
+    /// <para>
+    /// Used by ix-autoresearch Target A's <c>--weights-config &lt;path&gt;</c>
+    /// flag to perturb partition weights between corpus rebuilds without
+    /// editing <see cref="EmbeddingSchema"/>. See
+    /// <c>docs/contracts/2026-04-27-optick-weights-config.contract.md</c>
+    /// for the cross-repo contract specification.
+    /// </para>
+    /// </summary>
+    public OptickIndexWriter(string outputPath, WeightsOverride? weightsOverride)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
         _stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, 65536);
+        if (weightsOverride is null)
+        {
+            _compactPartitions = DefaultCompactPartitions;
+            _partitionWeights = DefaultPartitionWeights;
+        }
+        else
+        {
+            _compactPartitions = BuildCompactPartitions(weightsOverride);
+            _partitionWeights = BuildPartitionWeights(_compactPartitions);
+        }
     }
 
     // ---------------------------------------------------------------
@@ -215,7 +252,7 @@ public sealed class OptickIndexWriter : IDisposable
         w.Write(metadataOffset);
         w.Write(metadataLength);
 
-        foreach (var weight in PartitionWeights)
+        foreach (var weight in _partitionWeights)
         {
             w.Write(weight);
         }
@@ -286,7 +323,7 @@ public sealed class OptickIndexWriter : IDisposable
     /// Zero partition slices stay zero (no division by zero risk).
     /// </para>
     /// </summary>
-    internal static float[] ExtractAndNormalize(float[] raw)
+    internal float[] ExtractAndNormalize(float[] raw)
     {
         if (raw.Length != RawDimension)
             throw new ArgumentException(
@@ -294,7 +331,7 @@ public sealed class OptickIndexWriter : IDisposable
 
         var compact = new float[Dimension];
 
-        foreach (var (cStart, rStart, dim, sqrtWeight) in CompactPartitions)
+        foreach (var (cStart, rStart, dim, sqrtWeight) in _compactPartitions)
         {
             // Per-partition L2 norm over the raw slice.
             var partitionSumSq = 0.0f;
@@ -369,10 +406,11 @@ public sealed class OptickIndexWriter : IDisposable
     // Partition weight builder
     // ---------------------------------------------------------------
 
-    private static float[] BuildPartitionWeights()
+    private static float[] BuildPartitionWeights(
+        (int CStart, int RStart, int Dim, float SqrtWeight)[] partitions)
     {
         var weights = new float[Dimension];
-        foreach (var (cStart, _, dim, sqrtWeight) in CompactPartitions)
+        foreach (var (cStart, _, dim, sqrtWeight) in partitions)
         {
             for (var j = 0; j < dim; j++)
                 weights[cStart + j] = sqrtWeight;
@@ -382,15 +420,28 @@ public sealed class OptickIndexWriter : IDisposable
 
     /// <summary>
     /// Builds the compact-space partition mapping from the authoritative
-    /// <see cref="EmbeddingSchema.SimilarityPartitions"/>.
+    /// <see cref="EmbeddingSchema.SimilarityPartitions"/>. When
+    /// <paramref name="weightsOverride"/> is non-null, replaces each
+    /// partition's <c>SimilarityWeight</c> with the override value
+    /// (looked up by partition name, case-insensitive). Partitions not
+    /// present in the override keep their schema-default weight.
     /// </summary>
-    private static (int CStart, int RStart, int Dim, float SqrtWeight)[] BuildCompactPartitions()
+    private static (int CStart, int RStart, int Dim, float SqrtWeight)[] BuildCompactPartitions(
+        WeightsOverride? weightsOverride)
     {
         var result = new List<(int, int, int, float)>();
         var cStart = 0;
         foreach (var p in EmbeddingSchema.SimilarityPartitions)
         {
-            result.Add((cStart, p.Start, p.Dim, p.SqrtWeight));
+            var sqrtWeight = p.SqrtWeight;
+            if (weightsOverride is not null
+                && weightsOverride.TryGetWeight(p.Name, out var overridden))
+            {
+                // Mirror EmbeddingPartition.SqrtWeight semantics: zero or
+                // negative ⇒ exclude from similarity (stored weight = 0).
+                sqrtWeight = overridden > 0f ? MathF.Sqrt(overridden) : 0f;
+            }
+            result.Add((cStart, p.Start, p.Dim, sqrtWeight));
             cStart += p.Dim;
         }
         return [.. result];

@@ -41,7 +41,8 @@ internal class Program
         bool ShowHelp,
         string OutputPath,
         TuningPreset? Tuning,
-        bool NoDedup);
+        bool NoDedup,
+        WeightsOverride? WeightsOverride);
 
     private static async Task<int> Main(string[] args)
     {
@@ -647,6 +648,7 @@ internal class Program
         int? maxVoicings = null;
         TuningPreset? tuning = null;
         var outputPath = Path.Combine("state", "voicings", "optick.index");
+        WeightsOverride? weightsOverride = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -670,9 +672,18 @@ internal class Program
             {
                 outputPath = args[i + 1];
             }
+            else if (args[i].Equals("--weights-config", StringComparison.OrdinalIgnoreCase)
+                     && i + 1 < args.Length)
+            {
+                // Cross-repo contract with ix-autoresearch's Target A loop.
+                // See docs/contracts/2026-04-27-optick-weights-config.contract.md
+                // and the WeightsOverride class for the JSON schema.
+                weightsOverride = WeightsOverride.FromFile(args[i + 1]);
+            }
         }
 
-        options = new ExportEmbeddingsOptions(maxVoicings, showHelp, outputPath, tuning, noDedup);
+        options = new ExportEmbeddingsOptions(
+            maxVoicings, showHelp, outputPath, tuning, noDedup, weightsOverride);
         return true;
     }
 
@@ -694,6 +705,11 @@ internal class Program
             Console.Error.WriteLine($"  --export-max {options.MaxVoicings.Value} (per instrument)");
         Console.Error.WriteLine($"  output: {options.OutputPath}");
         Console.Error.WriteLine($"  dedup: {(options.NoDedup ? "OFF (--no-dedup)" : "ON (structural prime forms)")}");
+        if (options.WeightsOverride is not null)
+        {
+            Console.Error.WriteLine(
+                $"  weights: OVERRIDE applied — {options.WeightsOverride}");
+        }
         Console.Error.WriteLine();
 
         // Create the embedding generator once
@@ -841,7 +857,7 @@ internal class Program
 
         // Write the binary index
         Console.Error.Write($"  Writing OPTIC-K v4 index ({totalCount:N0} entries)...");
-        using (var writer = new OptickIndexWriter(options.OutputPath))
+        using (var writer = new OptickIndexWriter(options.OutputPath, options.WeightsOverride))
         {
             writer.WriteIndex(allEntries);
         }
@@ -964,6 +980,13 @@ internal class Program
         Console.Error.WriteLine("                              (relative-fret shape, pitch-class bitmask)");
         Console.Error.WriteLine("                              and only the cheapest-to-play survivor per");
         Console.Error.WriteLine("                              group is embedded.");
+        Console.Error.WriteLine("  --weights-config <PATH>     Override partition similarity weights from a JSON");
+        Console.Error.WriteLine("                              file (cross-repo contract with ix-autoresearch's");
+        Console.Error.WriteLine("                              Target A loop). JSON keys: structure_weight,");
+        Console.Error.WriteLine("                              morphology_weight, context_weight, symbolic_weight,");
+        Console.Error.WriteLine("                              modal_weight, root_weight. Missing keys keep their");
+        Console.Error.WriteLine("                              EmbeddingSchema default. See");
+        Console.Error.WriteLine("                              docs/contracts/2026-04-27-optick-weights-config.contract.md");
         Console.Error.WriteLine("  --export-embeddings-help    Show this help message");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Output Format:");
@@ -975,6 +998,7 @@ internal class Program
         Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings");
         Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings --tuning guitar --export-max 500");
         Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings --output my-index.optk");
+        Console.Error.WriteLine("  FretboardVoicingsCLI --export-embeddings --weights-config tune.json");
     }
 
     #endregion
