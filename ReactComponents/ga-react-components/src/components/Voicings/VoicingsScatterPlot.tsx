@@ -1,11 +1,15 @@
 /**
- * VoicingsScatterPlot — d3 2D scatter renderer for the OPTIC-K t-SNE
- * artifact emitted by `ix-voicings tsne_voicings`.
+ * VoicingsScatterPlot — d3 + canvas 2D scatter renderer for the
+ * OPTIC-K t-SNE artifact emitted by `ix-voicings tsne_voicings`.
  *
- * Loads `<src>` (default `/voicings-tsne.json` from the static dir),
- * renders a colored-by-instrument scatter with pan/zoom and a hover
- * tooltip. Designed to be the visible payoff for IX's `ix-manifold`
- * t-SNE work — drop-in renderer, no GA backend dependency.
+ * Loads `<src>` (default `/voicings-tsne.json` from the static dir).
+ * Renders a colored-by-instrument scatter on `<canvas>` (handles
+ * 300K+ points smoothly), with axes + grid on an overlaid SVG.
+ * Hover hit-testing via `d3-quadtree` for tooltip lookup.
+ *
+ * Designed to be the visible payoff for IX's `ix-manifold` t-SNE
+ * work — drop-in renderer, no GA backend dependency. Scales to the
+ * full 313K-voicing OPTIC-K corpus.
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -43,27 +47,37 @@ const INSTRUMENT_COLORS: Record<string, string> = {
   unknown: '#9aa0a6',
 };
 
+const MARGIN = { top: 20, right: 20, bottom: 40, left: 50 };
+
 export const VoicingsScatterPlot: React.FC<Props> = ({
   src = '/voicings-tsne.json',
-  width = 900,
-  height = 640,
+  width = 1200,
+  height = 720,
 }) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [artifact, setArtifact] = useState<TsneArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hover, setHover] = useState<TsnePoint | null>(null);
 
+  const innerW = width - MARGIN.left - MARGIN.right;
+  const innerH = height - MARGIN.top - MARGIN.bottom;
+
   // Load JSON once.
   useEffect(() => {
     let cancelled = false;
+    const t0 = performance.now();
     fetch(src)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status} loading ${src}`);
         return r.json();
       })
       .then((data: TsneArtifact) => {
-        if (!cancelled) setArtifact(data);
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.log(`[VoicingsScatterPlot] loaded ${data.n_sampled} pts in ${(performance.now() - t0).toFixed(0)}ms`);
+          setArtifact(data);
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(String(e));
@@ -80,90 +94,148 @@ export const VoicingsScatterPlot: React.FC<Props> = ({
     return m;
   }, [artifact]);
 
-  // Render scatter when data lands or size changes.
-  useEffect(() => {
-    if (!artifact || !svgRef.current) return;
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
-
-    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
-    const innerW = width - margin.left - margin.right;
-    const innerH = height - margin.top - margin.bottom;
-
+  // Memoize scales so quadtree hit-testing can use them outside the
+  // draw effect.
+  const scales = useMemo(() => {
+    if (!artifact) return null;
     const xs = artifact.points.map((p) => p.x);
     const ys = artifact.points.map((p) => p.y);
     const xExtent = d3.extent(xs) as [number, number];
     const yExtent = d3.extent(ys) as [number, number];
     const padX = (xExtent[1] - xExtent[0]) * 0.05;
     const padY = (yExtent[1] - yExtent[0]) * 0.05;
+    return {
+      xScale: d3.scaleLinear().domain([xExtent[0] - padX, xExtent[1] + padX]).range([0, innerW]),
+      yScale: d3.scaleLinear().domain([yExtent[0] - padY, yExtent[1] + padY]).range([innerH, 0]),
+    };
+  }, [artifact, innerW, innerH]);
 
-    const xScale = d3
-      .scaleLinear()
-      .domain([xExtent[0] - padX, xExtent[1] + padX])
-      .range([0, innerW]);
-    const yScale = d3
-      .scaleLinear()
-      .domain([yExtent[0] - padY, yExtent[1] + padY])
-      .range([innerH, 0]);
+  // Quadtree on screen-space coordinates (post-scale) for hit testing.
+  const quadtree = useMemo(() => {
+    if (!artifact || !scales) return null;
+    const tree = d3
+      .quadtree<TsnePoint>()
+      .x((d) => scales.xScale(d.x))
+      .y((d) => scales.yScale(d.y))
+      .addAll(artifact.points);
+    return tree;
+  }, [artifact, scales]);
 
-    const root = svg
+  // Draw + zoom + hover wiring.
+  useEffect(() => {
+    if (!artifact || !scales || !canvasRef.current || !svgRef.current) return;
+
+    const canvas = canvasRef.current;
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+
+    // High-DPI canvas
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+
+    // Build axes layer
+    const axisG = svg
       .attr('width', width)
       .attr('height', height)
       .attr('viewBox', `0 0 ${width} ${height}`)
-      .style('background', '#0e1116');
+      .append('g')
+      .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
-    const g = root.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    let currentTransform = d3.zoomIdentity;
 
-    // Subtle grid.
-    const xAxis = d3.axisBottom(xScale).tickSizeInner(-innerH).tickSizeOuter(0);
-    const yAxis = d3.axisLeft(yScale).tickSizeInner(-innerW).tickSizeOuter(0);
-    g.append('g')
-      .attr('transform', `translate(0,${innerH})`)
-      .call(xAxis as any)
-      .selectAll('line')
-      .attr('stroke', '#1f2630');
-    g.append('g')
-      .call(yAxis as any)
-      .selectAll('line')
-      .attr('stroke', '#1f2630');
-    g.selectAll('.tick text').attr('fill', '#7a8290').style('font-size', '10px');
-    g.selectAll('.domain').attr('stroke', '#2a313c');
+    const draw = () => {
+      const { xScale, yScale } = scales;
+      const tx = currentTransform.rescaleX(xScale);
+      const ty = currentTransform.rescaleY(yScale);
 
-    // Zoomable point layer.
-    const pointsG = g.append('g').attr('class', 'points');
-    const circles = pointsG
-      .selectAll('circle')
-      .data(artifact.points)
-      .join('circle')
-      .attr('cx', (d) => xScale(d.x))
-      .attr('cy', (d) => yScale(d.y))
-      .attr('r', 3.2)
-      .attr('fill', (d) => INSTRUMENT_COLORS[d.instrument] ?? INSTRUMENT_COLORS.unknown)
-      .attr('fill-opacity', 0.78)
-      .attr('stroke', 'none')
-      .style('cursor', 'pointer');
+      // Clear
+      ctx.clearRect(0, 0, width, height);
 
-    circles
-      .on('mouseenter', function (_event, d) {
-        setHover(d);
-        d3.select(this).attr('r', 6).attr('fill-opacity', 1);
-      })
-      .on('mouseleave', function () {
-        setHover(null);
-        d3.select(this).attr('r', 3.2).attr('fill-opacity', 0.78);
-      });
+      // Background
+      ctx.fillStyle = '#0e1116';
+      ctx.fillRect(0, 0, width, height);
 
-    // Pan + zoom. Point radius stays constant in screen pixels by
-    // counter-scaling within the transform.
+      // Axes
+      axisG.selectAll('*').remove();
+      const xAxis = d3.axisBottom(tx).tickSizeInner(-innerH).tickSizeOuter(0);
+      const yAxis = d3.axisLeft(ty).tickSizeInner(-innerW).tickSizeOuter(0);
+      axisG.append('g').attr('transform', `translate(0,${innerH})`).call(xAxis as any).selectAll('line').attr('stroke', '#1f2630');
+      axisG.append('g').call(yAxis as any).selectAll('line').attr('stroke', '#1f2630');
+      axisG.selectAll('.tick text').attr('fill', '#7a8290').style('font-size', '10px');
+      axisG.selectAll('.domain').attr('stroke', '#2a313c');
+
+      // Points
+      const r = Math.max(0.6, Math.min(2.4, 1.4 * Math.sqrt(currentTransform.k)));
+      ctx.translate(MARGIN.left, MARGIN.top);
+      // Group by instrument so we set fillStyle once per group
+      const byInstrument = new Map<string, TsnePoint[]>();
+      for (const p of artifact.points) {
+        const arr = byInstrument.get(p.instrument);
+        if (arr) arr.push(p);
+        else byInstrument.set(p.instrument, [p]);
+      }
+      for (const [inst, points] of byInstrument) {
+        ctx.fillStyle = INSTRUMENT_COLORS[inst] ?? INSTRUMENT_COLORS.unknown;
+        ctx.globalAlpha = artifact.points.length > 50000 ? 0.55 : 0.78;
+        ctx.beginPath();
+        for (const p of points) {
+          const cx = tx(p.x);
+          const cy = ty(p.y);
+          if (cx < -r || cx > innerW + r || cy < -r || cy > innerH + r) continue;
+          ctx.moveTo(cx + r, cy);
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.translate(-MARGIN.left, -MARGIN.top);
+
+      // Hover marker
+      if (hover) {
+        const hx = MARGIN.left + tx(hover.x);
+        const hy = MARGIN.top + ty(hover.y);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hx, hy, r + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    };
+
+    draw();
+
     const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 20])
+      .zoom<HTMLCanvasElement, unknown>()
+      .scaleExtent([0.5, 50])
       .on('zoom', (event) => {
-        pointsG.attr('transform', event.transform.toString());
-        circles.attr('r', 3.2 / event.transform.k);
+        currentTransform = event.transform;
+        draw();
       });
-    root.call(zoom as any);
-  }, [artifact, width, height]);
+    d3.select(canvas).call(zoom as any);
+
+    return () => {
+      d3.select(canvas).on('.zoom', null);
+    };
+  }, [artifact, scales, width, height, innerW, innerH, hover]);
+
+  // Hover hit-test via quadtree (screen-space).
+  const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!quadtree || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const sx = e.clientX - rect.left - MARGIN.left;
+    const sy = e.clientY - rect.top - MARGIN.top;
+    if (sx < 0 || sx > innerW || sy < 0 || sy > innerH) {
+      if (hover) setHover(null);
+      return;
+    }
+    const found = quadtree.find(sx, sy, 8);
+    setHover(found ?? null);
+  };
 
   if (error) {
     return (
@@ -212,16 +284,24 @@ export const VoicingsScatterPlot: React.FC<Props> = ({
                   verticalAlign: 'middle',
                 }}
               />
-              {inst} ({n})
+              {inst} ({n.toLocaleString()})
             </span>
           ))}
         </span>
       </div>
-      <div style={{ position: 'relative' }}>
-        <svg ref={svgRef} />
+      <div style={{ position: 'relative', width, height }}>
+        <canvas
+          ref={canvasRef}
+          onMouseMove={onMouseMove}
+          onMouseLeave={() => setHover(null)}
+          style={{ position: 'absolute', top: 0, left: 0, cursor: 'crosshair' }}
+        />
+        <svg
+          ref={svgRef}
+          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        />
         {hover && (
           <div
-            ref={tooltipRef}
             style={{
               position: 'absolute',
               top: 8,
@@ -233,6 +313,7 @@ export const VoicingsScatterPlot: React.FC<Props> = ({
               fontFamily: 'monospace',
               borderRadius: 4,
               pointerEvents: 'none',
+              color: '#e6e8eb',
             }}
           >
             <div>id: {hover.id}</div>
