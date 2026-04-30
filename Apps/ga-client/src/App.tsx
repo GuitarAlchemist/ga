@@ -17,6 +17,7 @@ import HarmonicStudio from './pages/HarmonicStudio';
 import MusicGenerationDemo from './components/dashboard/MusicGenerationDemo';
 import HandPoseDemo from './pages/demos/HandPoseDemo';
 import EcosystemRoadmapDemo from './pages/demos/EcosystemRoadmapDemo';
+import VoicingsCorpusDemo from './pages/demos/VoicingsCorpusDemo';
 
 const PrimeRadiantDemo = lazy(() =>
   import('../../../ReactComponents/ga-react-components/src/components/PrimeRadiant').then(mod => ({ default: mod.ForceRadiant }))
@@ -171,12 +172,8 @@ const App = () => {
                     <Typography color="text.secondary">Coming soon...</Typography>
                   </Container>
                 } />
-                <Route path="/demos/embedding" element={
-                  <Container maxWidth="lg" sx={{ py: 4 }}>
-                    <Typography variant="h4">Embedding Generator</Typography>
-                    <Typography color="text.secondary">Coming soon...</Typography>
-                  </Container>
-                } />
+                <Route path="/demos/embedding" element={<VoicingsCorpusDemo />} />
+                <Route path="/demos/voicings-corpus" element={<VoicingsCorpusDemo />} />
                 <Route path="/demos/vector-search" element={
                   <Container maxWidth="lg" sx={{ py: 4 }}>
                     <Typography variant="h4">Vector Search</Typography>
