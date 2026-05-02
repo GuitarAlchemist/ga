@@ -16,7 +16,7 @@ public class AnalyzerIntegrationTests
     [SetUp]
     public void Setup()
     {
-        _factory = new();
+        _factory = new TestWebApplicationFactory();
         _client = _factory.CreateClient();
     }
 

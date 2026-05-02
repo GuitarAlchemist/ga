@@ -26,7 +26,7 @@ public class TheoryVectorServiceTests
     {
         var pcs = new[] { 0, 4, 7 };
         var vector = _service.ComputeEmbedding(pcs, 0);
-        Assert.That(vector[0], Is.EqualTo(2.0)); // 1.0 (Presence) + 1.0 (Boost)
+        Assert.That(vector[0], Is.EqualTo(1.0)); // Root boost moved to the dedicated ROOT partition in v1.8.
     }
 
     [Test]

@@ -18,7 +18,7 @@ public class GrothendieckSpectralAnalysisManualTests
     [SetUp]
     public void Setup()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new TestWebApplicationFactory();
         _client = _factory.CreateClient();
     }
 

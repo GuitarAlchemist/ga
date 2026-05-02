@@ -3,9 +3,12 @@ namespace GaApi.Tests.Controllers;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Models;
 using GaApi.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 /// <summary>
 ///     Integration tests for <see cref="GaApi.Controllers.AgUiChatController" />.
@@ -38,15 +41,27 @@ public class AgUiChatControllerTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new TestWebApplicationFactory();
 
-        _saturatedFactory = new WebApplicationFactory<Program>()
+        _saturatedFactory = new TestWebApplicationFactory()
             .WithWebHostBuilder(builder =>
                 builder.ConfigureServices(services =>
                 {
+                    services.RemoveAll<IHarmonicChatOrchestrator>();
+                    services.AddSingleton<IHarmonicChatOrchestrator, TestHarmonicChatOrchestrator>();
+                    services.RemoveAll<ILlmConcurrencyGate>();
                     // Replace concurrency gate with one that always rejects
                     services.AddSingleton<ILlmConcurrencyGate, AlwaysBusyGate>();
                 }));
+
+        _factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IHarmonicChatOrchestrator>();
+                services.AddSingleton<IHarmonicChatOrchestrator, TestHarmonicChatOrchestrator>();
+                services.RemoveAll<ILlmConcurrencyGate>();
+                services.AddSingleton<ILlmConcurrencyGate, AlwaysAvailableGate>();
+            }));
 
         _client          = _factory.CreateClient();
         _saturatedClient = _saturatedFactory.CreateClient();
@@ -366,4 +381,34 @@ file sealed class AlwaysBusyGate : ILlmConcurrencyGate
         ValueTask.FromResult(false);
 
     public void Release() { /* nothing to release */ }
+}
+
+file sealed class AlwaysAvailableGate : ILlmConcurrencyGate
+{
+    public ValueTask<bool> TryEnterAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(true);
+
+    public void Release() { /* nothing to release */ }
+}
+
+file sealed class TestHarmonicChatOrchestrator : IHarmonicChatOrchestrator
+{
+    public Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default) =>
+        Task.FromResult(BuildResponse());
+
+    public async Task<ChatResponse> AnswerStreamingAsync(
+        ChatRequest req,
+        Func<string, Task> onToken,
+        CancellationToken ct = default)
+    {
+        await onToken("Deterministic test response.");
+        return BuildResponse();
+    }
+
+    private static ChatResponse BuildResponse() =>
+        new(
+            "Deterministic test response.",
+            [],
+            Routing: new AgentRoutingMetadata("test-agent", 1f, "test"),
+            QueryFilters: new QueryFilters { Key = "G major" });
 }

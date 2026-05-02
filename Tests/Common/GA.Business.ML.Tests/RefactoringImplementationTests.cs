@@ -62,37 +62,37 @@ E|---0---|
             [9, 4, 9, 0, 4], 
             9); // A bass
             
-        Assert.That(am.RootPitchClass, Is.EqualTo("9"));
-        Assert.That(am.Quality, Is.EqualTo("Minor"));
+        Assert.That(am.RootPitchClass, Is.EqualTo("A"));
+        Assert.That(am.Quality, Is.EqualTo("minor"));
         
         // Verify Parsing (Crucial for TabAnalysisService integration)
-        var parsed = PitchClass.TryParse(am.RootPitchClass, null, out var p);
-        Assert.That(parsed, Is.True, "PitchClass.TryParse failed for '9'");
-        Assert.That(p.Value, Is.EqualTo(9));
+        var parsed = Note.Chromatic.TryParse(am.RootPitchClass, null, out var note);
+        Assert.That(parsed, Is.True, "Note.Chromatic.TryParse failed for 'A'");
+        Assert.That(note.PitchClass.Value, Is.EqualTo(9));
 
         // G (320003) -> G B D G B G -> {7, 11, 2}
         var g = Identify(
             [7, 11, 2],
             7); // G bass
             
-        Assert.That(g.RootPitchClass, Is.EqualTo("7"));
-        Assert.That(g.Quality, Is.EqualTo("Major"));
+        Assert.That(g.RootPitchClass, Is.EqualTo("G"));
+        Assert.That(g.Quality, Is.EqualTo("major"));
 
         // F (133211) -> F C F A C F -> {5, 0, 9}
         var f = Identify(
             [5, 0, 9],
             5); // F bass
             
-        Assert.That(f.RootPitchClass, Is.EqualTo("5"));
-        Assert.That(f.Quality, Is.EqualTo("Major"));
+        Assert.That(f.RootPitchClass, Is.EqualTo("F"));
+        Assert.That(f.Quality, Is.EqualTo("major"));
         
         // E (022100) -> E B E G# B E -> {4, 11, 8}
         var e = Identify(
             [4, 11, 8],
             4); // E bass
             
-        Assert.That(e.RootPitchClass, Is.EqualTo("4"));
-        Assert.That(e.Quality, Is.EqualTo("Major"));
+        Assert.That(e.RootPitchClass, Is.EqualTo("E"));
+        Assert.That(e.Quality, Is.EqualTo("major"));
     }
 
     private static ChordIdentification Identify(int[] notes, int bass)

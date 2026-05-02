@@ -19,6 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryContentRootAttribute">
+      <_Parameter1>GA.MusicTheory.Service, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)\..\..\..\Apps\ga-server\GA.MusicTheory.Service</_Parameter2>
+      <_Parameter3>Program.cs</_Parameter3>
+      <_Parameter4>0</_Parameter4>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Apps\ga-server\GA.MusicTheory.Service\GA.MusicTheory.Service.csproj" />
   </ItemGroup>
 

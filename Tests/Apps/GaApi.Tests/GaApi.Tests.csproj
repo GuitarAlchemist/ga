@@ -24,6 +24,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryContentRootAttribute">
+      <_Parameter1>GaApi, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)\..\..\..\Apps\ga-server\GaApi</_Parameter2>
+      <_Parameter3>Program.cs</_Parameter3>
+      <_Parameter4>0</_Parameter4>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj"/>

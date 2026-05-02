@@ -12,7 +12,10 @@ public class MongoCollectionsGraphQLTests
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly WebApplicationFactory<Program> _factory = new();
+    private readonly WebApplicationFactory<Program> _factory = new TestWebApplicationFactory();
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown() => _factory.Dispose();
 
     private async Task<JsonDocument> PostGraphQlAsync(string query, object? variables = null)
     {

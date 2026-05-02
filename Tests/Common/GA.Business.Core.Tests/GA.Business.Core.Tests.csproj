@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\..\Common\GA.Core\GA.Core.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Testing.Semantic\GA.Testing.Semantic.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.ML\GA.Business.ML.csproj"/>
+    <ProjectReference Include="..\..\..\Common\GA.Business.Core.Orchestration\GA.Business.Core.Orchestration.csproj"/>
     <ProjectReference Include="..\..\..\Apps\ga-server\GaApi\GaApi.csproj"/>
     <ProjectReference Include="..\..\..\Common\GA.Business.Core\GA.Business.Core.csproj"/>
   </ItemGroup>
