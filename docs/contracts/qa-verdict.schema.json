@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitar-alchemist/contracts/qa-verdict-v1.json",
+  "title": "QA Verdict",
+  "description": "Cross-repo QA verdict shape v0.1.0. Source: docs/contracts/2026-05-02-qa-verdict.contract.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "verdict_id",
+    "produced_at",
+    "producer",
+    "producer_version",
+    "target",
+    "risk_tier",
+    "verdict",
+    "blast_radius",
+    "evidence",
+    "followups",
+    "reviewer_chain",
+    "narrative"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "verdict_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable, sortable. Pattern: <iso8601>-<target_kind>-<short_id>-<producer>."
+    },
+    "produced_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "type": "string",
+      "enum": [
+        "qa-architect-cycle",
+        "qa-architect-agent",
+        "ix-adversarial-runner",
+        "tars-test-designer",
+        "ce-code-review",
+        "manual"
+      ]
+    },
+    "producer_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?$"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2", "P3"]
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["block", "merge_with_followups", "pass", "informational"]
+    },
+    "blast_radius": {
+      "$ref": "#/$defs/blast_radius"
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "followups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/followup" }
+    },
+    "reviewer_chain": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/reviewer_entry" }
+    },
+    "narrative": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "properties": {
+        "pr": { "type": "string" },
+        "plan": { "type": "string" },
+        "knowledge_graph_node": { "type": "string" },
+        "supersedes": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "verdict=block requires risk_tier=P0",
+      "if": { "properties": { "verdict": { "const": "block" } } },
+      "then": { "properties": { "risk_tier": { "const": "P0" } } }
+    },
+    {
+      "$comment": "verdict=informational requires risk_tier=P3",
+      "if": { "properties": { "verdict": { "const": "informational" } } },
+      "then": { "properties": { "risk_tier": { "const": "P3" } } }
+    }
+  ],
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "repo", "ref"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "pull_request",
+            "commit",
+            "branch",
+            "release",
+            "quality_snapshot",
+            "scheduled_sweep"
+          ]
+        },
+        "repo": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "ref": { "type": "string" },
+        "sha": { "type": ["string", "null"] },
+        "base_sha": { "type": ["string", "null"] }
+      }
+    },
+    "blast_radius": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layers_touched",
+        "one_way_doors_crossed",
+        "invariants_at_risk",
+        "components_reached",
+        "estimated_blast_score"
+      ],
+      "properties": {
+        "layers_touched": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "core",
+              "domain",
+              "analysis",
+              "ai_ml",
+              "orchestration",
+              "apps",
+              "frontend",
+              "infra",
+              "docs"
+            ]
+          }
+        },
+        "one_way_doors_crossed": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "invariants_at_risk": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "components_reached": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "estimated_blast_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "test_run",
+            "semantic_basin",
+            "quality_snapshot",
+            "adversarial_replay",
+            "static_analysis",
+            "screenshot_diff",
+            "mutation_test",
+            "contract_check",
+            "manual_note"
+          ]
+        },
+        "name": { "type": "string" },
+        "outcome": {
+          "type": ["string", "null"],
+          "enum": ["pass", "fail", "flaky", "skipped", "n/a", null]
+        },
+        "score": { "type": ["number", "null"] },
+        "baseline": { "type": ["number", "null"] },
+        "guardrail_min": { "type": ["number", "null"] },
+        "guardrail_max": { "type": ["number", "null"] },
+        "delta_from_baseline": { "type": ["number", "null"] },
+        "url": { "type": ["string", "null"] },
+        "drift_summary": { "type": ["string", "null"] }
+      }
+    },
+    "followup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "title", "rationale", "blocks_merge"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "severity": {
+          "type": "string",
+          "enum": ["must_fix", "should_fix", "nice_to_have", "info"]
+        },
+        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "location": { "type": ["string", "null"] },
+        "proposed_test": { "type": ["string", "null"] },
+        "blocks_merge": { "type": "boolean" }
+      }
+    },
+    "reviewer_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "role"],
+      "properties": {
+        "agent": { "type": "string", "minLength": 1 },
+        "role": {
+          "type": "string",
+          "enum": [
+            "blast_radius",
+            "semantic_judge",
+            "regression_replay",
+            "gap_analysis",
+            "contract_audit",
+            "accessibility",
+            "performance",
+            "security",
+            "architecture",
+            "human"
+          ]
+        },
+        "score": { "type": ["number", "null"] },
+        "notes": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
