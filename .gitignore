@@ -210,3 +210,7 @@ Apps/GaChatbot.Api/.azure/
 
 # Claude Code session scratch (validation prompts/results live here)
 .claude/octopus-validation/
+
+# Playwright artifacts — regenerated on every test run
+Apps/ga-client/test-results/
+Apps/ga-client/playwright-report/
