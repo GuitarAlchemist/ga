@@ -93,6 +93,7 @@ const AdminInbox = React.lazy(() => import('./AdminInbox').then(m => ({ default:
 import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
+import { createVoicingCloud, type VoicingCloudHandle } from './VoicingCloud';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
 import { createBorgCubeGeometry, createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
 import { createAtmosphericPerspective, type AtmosphericPerspectiveHandle } from './AtmosphericPerspective';
@@ -1443,6 +1444,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let jurisdictionHoverHandler: ((e: Event) => void) | null = null;
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
+    let voicingCloudHandle: VoicingCloudHandle | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
     let voronoiShellsHandle: VoronoiShellHandle | null = null;
     let jurisdictionVolHandle: JurisdictionVolumetricsHandle | null = null;
@@ -2900,6 +2902,33 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       eiffelHandleOuter.group.position.set(0, -50, -80);
     }
 
+    // ─── VOICING CLOUD — toggle via ?voicings=1 URL param ───
+    // Phase 2 of ix:docs/plans/2026-05-02-voicings-in-prime-radiant.md.
+    // Loads ~688K OPTIC-K voicings as Three.js Points from ix's serve_viz
+    // (default http://127.0.0.1:8765, override with ?voicings_url=...).
+    // Async — voicingCloudHandle stays null until the 8 MB binary lands.
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('voicings')) {
+      const params = new URLSearchParams(window.location.search);
+      const serveUrl = params.get('voicings_url') ?? undefined;
+      const offsetParam = params.get('voicings_offset'); // "x,y,z"
+      const offset = offsetParam?.split(',').map(parseFloat);
+      const validOffset = offset && offset.length === 3 && offset.every((n) => Number.isFinite(n));
+      createVoicingCloud(fg.scene(), { serveUrl })
+        .then((handle) => {
+          voicingCloudHandle = handle;
+          // Default offset matches the plan-doc payload: clear of the
+          // governance graph at origin. Override with ?voicings_offset=x,y,z.
+          handle.group.position.set(
+            validOffset ? offset![0] : 200,
+            validOffset ? offset![1] : 0,
+            validOffset ? offset![2] : 0,
+          );
+        })
+        .catch((err) => {
+          console.warn('[VoicingCloud] failed to load:', err);
+        });
+    }
+
     // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
     // Static 2k_earth_clouds.jpg looks better until proper reprojection is implemented
     const stopCloudUpdates = () => {}; // no-op
@@ -3426,6 +3455,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       complianceRiversHandle?.dispose();
       crisisTexturesHandle?.dispose();
       eiffelHandleOuter?.dispose();
+      voicingCloudHandle?.dispose();
       reactiveEngine.dispose();
       violationMonitor.dispose();
       if (solarMouseMoveHandler) {
