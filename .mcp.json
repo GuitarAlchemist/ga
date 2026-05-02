@@ -18,6 +18,19 @@
         "DEMERZEL_API_KEY": "${DEMERZEL_API_KEY}",
         "DEMERZEL_URL": "http://localhost:8200"
       }
+    },
+    "paper-search": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "paper-search-mcp", "python", "-m", "paper_search_mcp.server"],
+      "env": {
+        "PAPER_SEARCH_MCP_UNPAYWALL_EMAIL": "spareilleux@gmail.com"
+      }
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }

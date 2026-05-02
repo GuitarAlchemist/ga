@@ -1,5 +1,10 @@
 ﻿<Project>
   <PropertyGroup>
+    <!-- Work around a .NET 10 / NuGet restore-path issue in this repo's mixed
+         C#/F# project graph. Parallel restore graph walking fails with no surfaced
+         compiler errors for referenced projects such as GA.Domain.Core. -->
+    <BuildInParallel>false</BuildInParallel>
+
     <!-- Enforce using directives inside namespace -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
