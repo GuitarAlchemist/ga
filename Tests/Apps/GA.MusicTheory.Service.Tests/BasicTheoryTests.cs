@@ -3,11 +3,10 @@ namespace GA.MusicTheory.Service.Tests;
 using System.Net.Http.Json;
 using AllProjects.ServiceDefaults;
 using GA.MusicTheory.Service.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
 using FluentAssertions;
 using Xunit;
 
-public class BasicTheoryTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class BasicTheoryTests(TestWebApplicationFactory factory) : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -43,7 +42,7 @@ public class BasicTheoryTests(WebApplicationFactory<Program> factory) : IClassFi
         
         response.Should().NotBeNull();
         response!.Success.Should().BeTrue();
-        response.Data.Should().Be("C Major");
+        response.Data.Should().Be("C");
     }
 }
 

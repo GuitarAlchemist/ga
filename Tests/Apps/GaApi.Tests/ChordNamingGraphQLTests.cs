@@ -11,7 +11,10 @@ public class ChordNamingGraphQLTests
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly WebApplicationFactory<Program> _factory = new();
+    private readonly WebApplicationFactory<Program> _factory = new TestWebApplicationFactory();
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown() => _factory.Dispose();
 
     private async Task<JsonDocument> PostGraphQlAsync(string query, object? variables = null)
     {
@@ -89,7 +92,7 @@ public class ChordNamingGraphQLTests
 }";
 
         // Use a raw client to assert that the server rejects the request (either via non-200 or GraphQL errors[])
-        var factory = new WebApplicationFactory<Program>();
+        using var factory = new TestWebApplicationFactory();
         var client = factory.CreateClient();
         var payload = new { query = q, variables = new { name = "Demo", root = 0, intervals = Array.Empty<int>() } };
         using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");

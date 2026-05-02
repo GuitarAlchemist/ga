@@ -19,7 +19,7 @@ public class SearchControllerTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new();
+        _factory = new TestWebApplicationFactory();
         _client  = _factory.CreateClient();
     }
 

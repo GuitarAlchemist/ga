@@ -26,20 +26,20 @@ public class ExtendedTextureFeatureTests
     private MusicalEmbeddingGenerator _generator;
 
     [Test]
-    public void EmbeddingSchema_Version_Is_V17()
+    public void EmbeddingSchema_Version_Is_V18()
     {
         // Arrange & Act
         var version = EmbeddingSchema.Version;
         var totalDim = EmbeddingSchema.TotalDimension;
         // Assert
         TestContext.WriteLine(
-            $"Verifying Schema Version: Expected=OPTIC-K-v1.7, Actual={version} (Ensures consistency with the latest defined specification)");
+            $"Verifying Schema Version: Expected=OPTIC-K-v1.8, Actual={version} (Ensures consistency with the latest defined specification)");
         TestContext.WriteLine(
-            $"Total Dimension: Expected=228, Actual={totalDim} (The fixed length of the OPTIC-K-v1.7 feature vector)");
+            $"Total Dimension: Expected=240, Actual={totalDim} (The fixed length of the OPTIC-K-v1.8 feature vector)");
         Assert.Multiple(() =>
         {
-            Assert.That(version, Is.EqualTo("OPTIC-K-v1.7"), "The schema version must match the expected constant.");
-            Assert.That(totalDim, Is.EqualTo(228), "The total dimension of the embedding vector must be exactly 228.");
+            Assert.That(version, Is.EqualTo("OPTIC-K-v1.8"), "The schema version must match the expected constant.");
+            Assert.That(totalDim, Is.EqualTo(240), "The total dimension of the embedding vector must be exactly 240.");
         });
     }
 

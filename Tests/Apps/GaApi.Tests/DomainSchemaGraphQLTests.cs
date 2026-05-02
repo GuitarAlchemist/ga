@@ -7,7 +7,11 @@ using NUnit.Framework;
 
 public class DomainSchemaGraphQLTests
 {
-    private readonly WebApplicationFactory<Program> _factory = new();
+    private readonly WebApplicationFactory<Program> _factory = new TestWebApplicationFactory();
+
+    [OneTimeTearDown]
+    public void OneTimeTearDown() => _factory.Dispose();
+
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
