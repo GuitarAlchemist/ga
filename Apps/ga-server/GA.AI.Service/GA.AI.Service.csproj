@@ -11,6 +11,10 @@
   <ItemGroup>
     <!-- Exclude ChatController until ProductionOrchestrator is available in this project -->
     <Compile Remove="Controllers\ChatController.cs" />
+    <!-- These controllers still depend on _Parked AI service implementations that are
+         intentionally excluded from compilation in this project. -->
+    <Compile Remove="Controllers\AdaptiveAIController.cs" />
+    <Compile Remove="Controllers\AdvancedAIController.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Services;
 using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.ML.Notation;
 
 /// <summary>
 /// Builds prompts for the LLM that are strictly grounded in retrieved data.
@@ -57,6 +58,7 @@ public class GroundedPromptBuilder
         sb.AppendLine("STRICT CONSTRAINT: Only discuss the specific chord voicings in the manifest below.");
         sb.AppendLine("STRICT CONSTRAINT: If a chord is not in the manifest, do NOT mention it.");
         sb.AppendLine("STRICT CONSTRAINT: If you cannot answer using ONLY the manifest, state that clearly.");
+        sb.AppendLine(PlayableNotationFormatter.PromptGuidance);
         sb.AppendLine();
 
         sb.AppendLine("### CHORD MANIFEST (GROUND TRUTH) ###");
@@ -84,6 +86,7 @@ public class GroundedPromptBuilder
         sb.AppendLine();
         sb.AppendLine("### NARRATOR INSTRUCTION ###");
         sb.AppendLine("Explain why these specific voicings work for the user's request.");
+        sb.AppendLine("When you mention a manifest fingering, include its matching fenced `vextab` block.");
         sb.AppendLine("Answer in a concise, helpful tone.");
 
         return sb.ToString();

@@ -72,6 +72,9 @@ builder.Services.AddSingleton<BeliefStateService>();
 // Visual critic — Claude vision analysis of Prime Radiant screenshots
 builder.Services.AddSingleton<VisualCriticService>();
 
+// Harmonic Nebula Sidekick — Claude Haiku 4.5 chat with tool-use over the voicing corpus
+builder.Services.AddSingleton<NebulaSidekickService>();
+
 // Pipeline execution — runs brainstorm/plan/build/review/compound via Claude Code CLI
 builder.Services.AddSingleton<PipelineExecutionService>();
 
@@ -140,13 +143,25 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Add CORS support with WebSocket support
+var defaultCorsOrigins = new[]
+{
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5176",
+    "http://localhost:5177",
+    "http://localhost:8501",
+};
+var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+var allowedCorsOrigins = defaultCorsOrigins
+    .Concat(configuredCorsOrigins)
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173", "http://localhost:5174", "http://localhost:5176", "http://localhost:5177", "http://localhost:8501",
-                "https://demos.guitaralchemist.com", "https://guitaralchemist.com")
+        policy.WithOrigins(allowedCorsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Required for SignalR WebSocket connections + OAuth refresh cookies
@@ -270,26 +285,24 @@ var app = builder.Build();
 
 // Add custom middleware (order matters!)
 
-// Trust X-Forwarded-* headers from the Cloudflare tunnel / reverse proxy so that
-// Request.Scheme, Request.Host, and generated OAuth redirect URIs match the public
-// origin (demos.guitaralchemist.com) instead of the upstream Kestrel host (localhost:5232).
+// Trust X-Forwarded-* headers from a reverse proxy so that Request.Scheme,
+// Request.Host, and generated OAuth redirect URIs match the configured public
+// origin instead of the upstream Kestrel host (localhost:5232).
 // Must run before UseAuthentication so OAuth middleware sees the corrected scheme/host.
 //
-// Safety: we only apply forwarded headers when X-Forwarded-Host matches the known public
+// Safety: we only apply forwarded headers when X-Forwarded-Host matches the configured public
 // origin. This prevents partial/inconsistent header sets (e.g. Vite dev proxy sending only
 // X-Forwarded-Proto=https) from producing bogus URIs like https://localhost:5232/.
-const string PublicHost = "demos.guitaralchemist.com";
+var publicHost = builder.Configuration["Proxy:PublicHost"];
 app.Use(async (ctx, next) =>
 {
-    // Cloudflare Tunnel (cloudflared) sets X-Forwarded-Proto + CF-Connecting-IP, but does
-    // NOT set X-Forwarded-Host — so we can't rely on the standard ForwardedHeaders
-    // middleware to recover the public origin. Detect CF-routed requests via CF headers
-    // and synthesise X-Forwarded-Host = demos.guitaralchemist.com so downstream code
-    // (OAuth redirect URI generation) produces the correct public URL.
+    // Some proxies/tunnels set X-Forwarded-Proto + client-IP headers but omit
+    // X-Forwarded-Host. If a public host is configured, synthesise it for requests
+    // coming through a proxy that emits CF-Connecting-IP.
     var isCloudflareRequest = !string.IsNullOrEmpty(ctx.Request.Headers["CF-Connecting-IP"].ToString());
-    if (isCloudflareRequest)
+    if (isCloudflareRequest && !string.IsNullOrWhiteSpace(publicHost))
     {
-        ctx.Request.Headers["X-Forwarded-Host"] = PublicHost;
+        ctx.Request.Headers["X-Forwarded-Host"] = publicHost;
     }
     else
     {
@@ -305,8 +318,11 @@ app.Use(async (ctx, next) =>
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
-    AllowedHosts = { PublicHost },
 };
+if (!string.IsNullOrWhiteSpace(publicHost))
+{
+    forwardedHeadersOptions.AllowedHosts.Add(publicHost);
+}
 // Cloudflare can connect from any IP — clear the default localhost-only allowlist.
 forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
@@ -354,6 +370,36 @@ if (!app.Environment.IsDevelopment())
 
 // Enable static files for Blazor
 app.UseStaticFiles();
+
+// Serve OPTIC-K Harmonic Nebula precompute artifacts from the ix repo's
+// state/viz directory. Path can be overridden by VIZ_STATE_DIR env var or
+// Viz:StateDir config key; defaults to a sibling-repo path relative to
+// AppContext.BaseDirectory so dev machines "just work" when ix and ga are
+// cloned side-by-side.
+var vizStateDir = app.Configuration["Viz:StateDir"]
+    ?? Environment.GetEnvironmentVariable("VIZ_STATE_DIR")
+    ?? Path.GetFullPath(Path.Combine(
+        AppContext.BaseDirectory,
+        "..", "..", "..", "..", "..", "..", "..",
+        "ix", "state", "viz"));
+if (Directory.Exists(vizStateDir))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(vizStateDir),
+        RequestPath = "/api/viz",
+        ServeUnknownFileTypes = true,
+        DefaultContentType = "application/json",
+    });
+    Console.WriteLine($"[Viz] Serving /api/viz/* from {vizStateDir}");
+}
+else
+{
+    Console.WriteLine($"[Viz] VIZ state dir not found: {vizStateDir} — /api/viz/* will 404. " +
+                      "Run 'cargo run -p ix-voicings -- viz-precompute' to produce it, " +
+                      "or set VIZ_STATE_DIR.");
+}
+
 app.UseAntiforgery();
 
 app.MapControllers();

@@ -26,6 +26,7 @@ public sealed class GaPlugin : IChatPlugin
 
         // ── Orchestrator skills (checked before LLM routing, first match wins) ─
         // Pure-domain skills are Singleton (stateless, no scoped dependencies).
+        services.AddSingleton<IOrchestratorSkill, ChordInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();

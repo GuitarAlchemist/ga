@@ -26,6 +26,8 @@ public class ProductionOrchestrator(
     AlternativeFingeringService altService,
     SemanticRouter router,
     QueryUnderstandingService queryUnderstandingService,
+    IAlgebraPromptClassifier algebraPromptClassifier,
+    IIxAlgebraService ixAlgebraService,
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
@@ -33,6 +35,23 @@ public class ProductionOrchestrator(
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
     private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
+    private static readonly string[] ExplicitVoicingKeywords =
+    [
+        "voicing",
+        "voicings",
+        "chord shape",
+        "chord shapes",
+        "fingering",
+        "fingerings",
+        "drop 2",
+        "drop2",
+        "drop 3",
+        "drop3",
+        "rootless",
+        "shell",
+        "grip",
+        "fretting"
+    ];
 
     /// <summary>
     /// Streams the LLM response token-by-token, calling <paramref name="onToken"/> for each token,
@@ -80,6 +99,16 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        var algebraResponse = await TryAnswerWithAlgebraAsync(message, ct);
+        if (algebraResponse is not null)
+        {
+            foreach (var word in algebraResponse.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
+            return algebraResponse;
+        }
+
         // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
         foreach (var skill in _skills)
         {
@@ -96,6 +125,25 @@ public class ProductionOrchestrator(
                 NaturalLanguageAnswer: skillResp.Result,
                 Candidates: [],
                 Routing: new AgentRoutingMetadata($"skill.{skill.Name}", skillResp.Confidence, "orchestrator-skill"));
+        }
+
+        if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
+        {
+            var agentResponse = await deterministicAgent.ProcessAsync(new AgentRequest
+            {
+                Query = message,
+                ConversationHistory = agentHistory
+            }, ct);
+
+            foreach (var word in agentResponse.Result.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            historyStore.AddTurn(sessionId, "assistant", agentResponse.Result);
+            return new ChatResponse(
+                NaturalLanguageAnswer: agentResponse.Result,
+                Candidates: [],
+                Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
+                DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
         }
 
         // Route the request and extract filters in parallel (same as AnswerAsync)
@@ -199,6 +247,16 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        var algebraResponse = await TryAnswerWithAlgebraAsync(message, ct);
+        if (algebraResponse is not null)
+        {
+            sw.Stop();
+            activity?.SetTag("orchestration.branch", "algebra");
+            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+            historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
+            return algebraResponse;
+        }
+
         // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
         foreach (var skill in _skills)
         {
@@ -263,6 +321,42 @@ public class ProductionOrchestrator(
             return chatResp;
         }
 
+        if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
+        {
+            activity?.SetTag("orchestration.branch", $"deterministic.{deterministicAgent.AgentId}");
+
+            var agentResponse = await deterministicAgent.ProcessAsync(new AgentRequest
+            {
+                Query = message,
+                ConversationHistory = req.History?
+                    .Select(t => new ChatHistoryTurn(t.Role, t.Content))
+                    .ToList()
+            }, ct);
+
+            sw.Stop();
+            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+            var deterministicResponse = new ChatResponse(
+                NaturalLanguageAnswer: agentResponse.Result,
+                Candidates: [],
+                Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
+                DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
+
+            historyStore.AddTurn(sessionId, "assistant", deterministicResponse.NaturalLanguageAnswer);
+
+            var sentCtx = new ChatHookContext
+            {
+                OriginalMessage = req.Message,
+                CurrentMessage  = message,
+                CorrelationId   = correlationId,
+                Response        = agentResponse,
+            };
+            foreach (var hook in _hooks)
+                await hook.OnResponseSent(sentCtx, ct);
+
+            return deterministicResponse;
+        }
+
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
         var routingTask = router.RouteAsync(req.Message, ct);
@@ -281,10 +375,13 @@ public class ProductionOrchestrator(
         activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, routing.Confidence);
 
         ChatResponse result;
-        if (routing.SelectedAgent.AgentId == AgentIds.Tab ||
-            (filters?.Intent is "OptimizePath" or "AnalyzeTab"))
+        var shouldOptimizePath = filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message);
+        var shouldAnalyzeTab = routing.SelectedAgent.AgentId == AgentIds.Tab ||
+                               (filters?.Intent == "AnalyzeTab" && LooksLikeTabInput(req.Message));
+
+        if (shouldAnalyzeTab || shouldOptimizePath)
         {
-            if (filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message))
+            if (shouldOptimizePath)
             {
                 activity?.SetTag("orchestration.branch", "tab.path_optimization");
                 var optimized = await HandlePathOptimizationAsync(req.Message, ct);
@@ -299,9 +396,31 @@ public class ProductionOrchestrator(
         }
         else
         {
-            activity?.SetTag("orchestration.branch", "rag");
-            var response = await tabOrchestrator.AnswerAsync(req, ct);
-            result = response with { Routing = routingMetadata, QueryFilters = filters };
+            if (routing.SelectedAgent is GuitarAlchemistAgentBase selectedAgent)
+            {
+                activity?.SetTag("orchestration.branch", $"agent.{selectedAgent.AgentId}");
+
+                var agentResponse = await selectedAgent.ProcessAsync(new AgentRequest
+                {
+                    Query = message,
+                    ConversationHistory = req.History?
+                        .Select(t => new ChatHistoryTurn(t.Role, t.Content))
+                        .ToList()
+                }, ct);
+
+                result = new ChatResponse(
+                    NaturalLanguageAnswer: agentResponse.Result,
+                    Candidates: [],
+                    Routing: routingMetadata,
+                    QueryFilters: filters,
+                    DebugParams: new { Mode = "Agent", Agent = selectedAgent.AgentId });
+            }
+            else
+            {
+                activity?.SetTag("orchestration.branch", "rag");
+                var response = await tabOrchestrator.AnswerAsync(req, ct);
+                result = response with { Routing = routingMetadata, QueryFilters = filters };
+            }
         }
 
         sw.Stop();
@@ -326,6 +445,34 @@ public class ProductionOrchestrator(
             await hook.OnResponseSent(ragSentCtx, ct);
 
         return result;
+    }
+
+    private bool TrySelectDeterministicAgent(
+        string message,
+        out GuitarAlchemistAgentBase agent,
+        out AgentRoutingMetadata routing)
+    {
+        if (IsExplicitVoicingRequest(message)
+            && router.Agents.FirstOrDefault(a => a.AgentId == AgentIds.Voicing) is { } voicingAgent)
+        {
+            agent = voicingAgent;
+            routing = new AgentRoutingMetadata(AgentIds.Voicing, 0.92f, "deterministic-voicing");
+            return true;
+        }
+
+        agent = null!;
+        routing = null!;
+        return false;
+    }
+
+    private static bool IsExplicitVoicingRequest(string message)
+    {
+        var lower = message.ToLowerInvariant();
+        return ExplicitVoicingKeywords.Any(lower.Contains)
+               || Regex.IsMatch(
+                   message,
+                   @"\b[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|dom)?\d*(?:[#b]\d+)?(?:/[A-G](?:#|b)?)?\s+(?:voicing|voicings|shape|shapes|fingering|fingerings)\b",
+                   RegexOptions.IgnoreCase);
     }
 
     private async Task<ChatResponse> HandlePathOptimizationAsync(string query, CancellationToken ct)
@@ -441,6 +588,39 @@ public class ProductionOrchestrator(
                q.Contains("ergonomic") || q.Contains("better path");
     }
 
+    private static bool LooksLikeTabInput(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return false;
+
+        if (Regex.IsMatch(query, @"([x\d]{1,2}-){5}[x\d]{1,2}"))
+            return true;
+
+        var lines = query.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return lines.Any(l => l.Contains('|') || l.Contains("--"));
+    }
+
     private static string ExtractTabLines(string query) =>
         string.Join("\n", query.Split('\n').Where(l => l.Contains('|') || l.Contains("--")));
+
+    private async Task<ChatResponse?> TryAnswerWithAlgebraAsync(string message, CancellationToken ct)
+    {
+        if (!algebraPromptClassifier.IsAlgebraPrompt(message))
+        {
+            return null;
+        }
+
+        var algebraAnswer = await ixAlgebraService.TryAnswerAsync(message, ct);
+        if (algebraAnswer is null)
+        {
+            return null;
+        }
+
+        return new ChatResponse(
+            NaturalLanguageAnswer: algebraAnswer.NaturalLanguageAnswer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata("algebra", 1f, "ix-algebra"),
+            DebugParams: new { Mode = "Algebra", QueryType = algebraAnswer.QueryType, algebraAnswer.Facts },
+            Grounding: algebraAnswer.Grounding);
+    }
 }
