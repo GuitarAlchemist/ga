@@ -31,6 +31,13 @@ public sealed record AgentRoutingMetadata(
     string RoutingMethod
 );
 
+public sealed record GroundingMetadata(
+    string Source,
+    string Revision,
+    string? QueryType = null,
+    IReadOnlyDictionary<string, string>? Facts = null
+);
+
 /// <summary>
 /// Structured search constraints extracted from the user query via LLM.
 /// </summary>
@@ -89,5 +96,6 @@ public sealed record ChatResponse(
     Progression? Progression = null,
     AgentRoutingMetadata? Routing = null,
     QueryFilters? QueryFilters = null,
-    object? DebugParams = null
+    object? DebugParams = null,
+    GroundingMetadata? Grounding = null
 );

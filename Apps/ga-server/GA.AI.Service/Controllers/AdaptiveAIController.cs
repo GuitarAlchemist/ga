@@ -12,7 +12,6 @@ using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Primitives.Extensions;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
-using AllProjects.ServiceDefaults;
 
 /// <summary>
 ///     API controller for Adaptive AI Difficulty System

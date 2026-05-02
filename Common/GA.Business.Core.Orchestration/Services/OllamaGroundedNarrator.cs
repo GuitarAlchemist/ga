@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Services;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.ML.Notation;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -46,6 +47,9 @@ public class OllamaGroundedNarrator(
         foreach (var c in candidates.Take(5))
         {
             lines.Add($"  • {c.DisplayName} ({c.Shape}) - Score: {c.Score:F2}");
+            if (PlayableNotationFormatter.TryFormatChordDiagramAsMarkdownFence(c.Shape) is { } notation)
+                lines.Add(notation);
+
             if (!string.IsNullOrWhiteSpace(c.ExplanationText))
                 lines.Add($"    {c.ExplanationText}");
         }

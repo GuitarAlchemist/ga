@@ -131,12 +131,6 @@ builder.AddProject("gaapi", @"..\Apps\ga-server\GaApi\GaApi.csproj")
     // .WithReference(analyticsService)
     .WithExternalHttpEndpoints();
 
-// Add GuitarAlchemistChatbot (Blazor chatbot)
-builder.AddProject("chatbot", @"..\Apps\GuitarAlchemistChatbot\GuitarAlchemistChatbot.csproj")
-    .WithReference(mongoDatabase)
-    .WithReference(redis)
-    .WithExternalHttpEndpoints();
-
 // Add ScenesService (GLB scene builder and server)
 builder.AddProject("scenes-service", @"..\Apps\ScenesService\ScenesService.csproj")
     .WithReference(mongoDatabase)

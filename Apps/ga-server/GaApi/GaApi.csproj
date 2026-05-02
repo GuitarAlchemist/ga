@@ -12,7 +12,7 @@
 
     <!-- Suppress duplicate TargetFrameworkAttribute error and experimental API warnings -->
     <NoWarn>$(NoWarn);CS0579;SKEXP0001</NoWarn>
-    <UseBlueGreenSlots>true</UseBlueGreenSlots>
+    <UseBlueGreenSlots Condition="'$(UseBlueGreenSlots)' == ''">false</UseBlueGreenSlots>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
@@ -72,5 +72,6 @@
     <ProjectReference Include="..\GA.Fretboard.Service\GA.Fretboard.Service.csproj" />
     <ProjectReference Include="..\..\..\Common\GA.Business.AI\GA.Business.AI.csproj" />
   </ItemGroup>
+
 </Project>
 

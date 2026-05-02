@@ -27,6 +27,7 @@ public static class ChatbotOrchestrationExtensions
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
             var endpointRaw = configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
+            var timeoutSeconds = Math.Max(30, configuration.GetValue("Ollama:GenerateTimeoutSeconds", 180));
             if (!Uri.TryCreate(endpointRaw, UriKind.Absolute, out var uri) ||
                 (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             {
@@ -35,7 +36,7 @@ public static class ChatbotOrchestrationExtensions
             }
 
             client.BaseAddress = uri;
-            client.Timeout = TimeSpan.FromSeconds(60);
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         });
 
         // Vector store — TryAdd so GaApi's FileBasedVectorIndex takes precedence if already registered
@@ -50,6 +51,8 @@ public static class ChatbotOrchestrationExtensions
         services.AddSingleton<ResponseValidator>();
         services.AddSingleton<QueryUnderstandingService>();
         services.AddSingleton<TabPresentationService>();
+        services.AddSingleton<IAlgebraPromptClassifier, KeywordAlgebraPromptClassifier>();
+        services.AddSingleton<IIxAlgebraService, IxAlgebraService>();
         // NOTE: IGroundedNarrator is intentionally NOT registered here.
         // Each consuming app must register its own narrator implementation:
         //   - GaApi: services.AddScoped<IGroundedNarrator, OllamaGroundedNarrator>();
