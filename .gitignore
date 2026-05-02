@@ -187,3 +187,26 @@ state/quality/**/embedding-clusters-*.json
 
 # Chatbot claim traces — per-day JSONL, regenerable from MCP tool calls
 state/claims/
+state/chatbot/
+
+# Thin chatbot host deployment files stay local/private
+Apps/GaChatbot.Api/appsettings.Production.json
+Apps/GaChatbot.Api/.env*
+Apps/GaChatbot.Api/railway.toml
+Apps/GaChatbot.Api/vercel.json
+Apps/GaChatbot.Api/.vercel/
+Apps/GaChatbot.Api/.azure/
+
+# Local build artifact packages (regenerable)
+.artifacts/
+
+# Codex CLI experiment scratch directories
+.codex-temp-slnx/
+.codex-temp-solution/
+.codex_tmp_probe.csx
+
+# .NET local toolchain sentinels (per-machine state)
+.dotnet/
+
+# Claude Code session scratch (validation prompts/results live here)
+.claude/octopus-validation/
