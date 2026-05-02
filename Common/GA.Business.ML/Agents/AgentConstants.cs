@@ -11,4 +11,5 @@ public static class AgentIds
     public const string Composer = "composer";
     public const string Critic = "critic";
     public const string Voicing = "voicing";
+    public const string QaArchitect = "qa-architect";
 }
