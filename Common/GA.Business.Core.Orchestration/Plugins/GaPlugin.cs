@@ -69,5 +69,6 @@ public sealed class GaPlugin : IChatPlugin
         typeof(IntervalMcpTools),
         typeof(ScaleMcpTools),
         typeof(ChordMcpTools),
+        typeof(FretSpanMcpTools),
     ];
 }
