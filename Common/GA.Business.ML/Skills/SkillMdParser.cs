@@ -24,13 +24,14 @@ public static class SkillMdParser
 
     /// <summary>
     /// Minimum trigger keyword length. Triggers shorter than this are dropped
-    /// silently — defends against over-broad triggers like <c>"a"</c> that
-    /// would fire on every English message and shadow more-specific skills.
-    /// 4 chars is the natural shortest meaningful word ("notes", "scale",
-    /// "interval"); a hostile or sloppy author can't sneak a one-letter
-    /// catch-all in.
+    /// silently — defends against over-broad triggers like <c>"a"</c> /
+    /// <c>"an"</c> that would fire on every English message and shadow
+    /// more-specific skills. 3 chars is the floor: it admits domain-meaningful
+    /// 3-letter words like <c>"key"</c>, <c>"mode"</c>, <c>"tab"</c>,
+    /// <c>"jam"</c> while still rejecting one- and two-letter catch-alls
+    /// (which would essentially always match English prose).
     /// </summary>
-    public const int MinTriggerLength = 4;
+    public const int MinTriggerLength = 3;
 
     private static readonly IDeserializer Deserializer = new DeserializerBuilder()
         .WithNamingConvention(PascalCaseNamingConvention.Instance)

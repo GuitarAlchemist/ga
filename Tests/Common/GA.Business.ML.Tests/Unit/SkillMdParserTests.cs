@@ -201,16 +201,17 @@ public class SkillMdParserTests
     [Test]
     public void TryParseContent_TriggersBelowMinLength_AreDropped()
     {
-        // "a" / "an" would match every English message, shadowing every
-        // more-specific skill. Drop these silently rather than rejecting
-        // the file — most violations are typos, not hostile.
+        // "a" / "an" (1-2 chars) would match every English message, shadowing
+        // every more-specific skill. Drop these silently rather than rejecting
+        // the file. 3-char triggers like "key", "tab", "but" survive — domain
+        // words that legitimately need to trigger.
         const string content = """
             ---
             Name: "shorty"
             Triggers:
               - "a"
               - "an"
-              - "but"
+              - "key"
               - "valid trigger"
               - "another good one"
             ---
@@ -220,8 +221,9 @@ public class SkillMdParserTests
         var result = SkillMdParser.TryParseContent(content);
 
         Assert.That(result,                Is.Not.Null);
-        Assert.That(result!.Triggers,      Has.Count.EqualTo(2),
-            "triggers shorter than MinTriggerLength must be dropped silently");
+        Assert.That(result!.Triggers,      Has.Count.EqualTo(3),
+            "triggers shorter than MinTriggerLength must be dropped; 3-char triggers survive");
+        Assert.That(result.Triggers,       Contains.Item("key"));
         Assert.That(result.Triggers,       Contains.Item("valid trigger"));
         Assert.That(result.Triggers,       Contains.Item("another good one"));
         Assert.That(result.Triggers.All(t => t.Length >= SkillMdParser.MinTriggerLength), Is.True);
