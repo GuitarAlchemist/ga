@@ -1,6 +1,8 @@
 namespace GA.Business.ML.Tests.Unit;
 
+using System.Diagnostics;
 using GA.Business.ML.Agents.Plugins;
+using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Tests for <see cref="SkillMdPlugin.ResolveSkillsPath"/> — verifies the
@@ -111,6 +113,79 @@ public class SkillMdPluginResolverTests
         {
             try { Directory.Delete(outside, recursive: true); } catch { /* best-effort */ }
         }
+    }
+
+    [Test]
+    public void ResolveSkillsPath_RejectsPrefixCollisionEnvOverride()
+    {
+        // Defends against `<repo>/skills` matching the prefix of a sibling
+        // directory like `<repo>-evil/skills`. Without the trailing separator
+        // in the prefix check, ordinal-ignore-case StartsWith would accept it.
+        var canonical = Path.Combine(_tmpRoot, "skills");
+        Directory.CreateDirectory(canonical);
+
+        // Create an "evil sibling" whose path starts with the same prefix as
+        // _tmpRoot but is outside it.
+        var siblingRoot = _tmpRoot + "-evil";
+        Directory.CreateDirectory(siblingRoot);
+        var siblingSkills = Path.Combine(siblingRoot, "skills");
+        Directory.CreateDirectory(siblingSkills);
+        try
+        {
+            Environment.SetEnvironmentVariable("SKILLMD_SKILLS_PATH", siblingSkills);
+
+            var resolved = SkillMdPlugin.ResolveSkillsPath(_tmpRoot);
+
+            Assert.That(resolved, Is.EqualTo(canonical),
+                "Prefix-collision sibling path must be rejected — the prefix check has to require a directory boundary, not just a string prefix.");
+        }
+        finally
+        {
+            try { Directory.Delete(siblingRoot, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
+    [Test]
+    public void Register_CanonicalEmptyButLegacyPopulated_WarnsAboutSilentSkillLoss()
+    {
+        // The migration footgun: someone runs `mkdir skills` while authoring
+        // the canonical home, and the resolver immediately starts returning
+        // the empty canonical path — silently shadowing the legacy directory
+        // so production registers ZERO skills. Register() must shout in that
+        // exact configuration so the migration doesn't silently brick prod.
+        var canonical = Path.Combine(_tmpRoot, "skills");
+        var legacyDir = Path.Combine(_tmpRoot, ".agent", "skills", "alpha");
+        Directory.CreateDirectory(canonical);    // empty canonical
+        Directory.CreateDirectory(legacyDir);
+        File.WriteAllText(
+            Path.Combine(legacyDir, "SKILL.md"),
+            "---\nName: \"alpha\"\nDescription: \"Test\"\nTriggers:\n  - \"alpha\"\n---\n\nBody.");
+
+        var debugListener = new TestTraceListener();
+        Trace.Listeners.Add(debugListener);
+        try
+        {
+            new SkillMdPlugin().Register(new ServiceCollection(), canonical);
+        }
+        finally
+        {
+            Trace.Listeners.Remove(debugListener);
+        }
+
+        var output = debugListener.Output;
+        Assert.That(output, Does.Contain("Canonical").And.Contain("empty"),
+            "Register() must warn when canonical is empty and legacy still has skills, otherwise the migration silently bricks production.");
+        Assert.That(output, Does.Contain("1 SKILL.md"),
+            "warning must include the legacy skill count so the operator knows what's being shadowed");
+    }
+
+    /// <summary>Captures Debug.WriteLine output for inspection.</summary>
+    private sealed class TestTraceListener : TraceListener
+    {
+        private readonly System.Text.StringBuilder _buf = new();
+        public string Output => _buf.ToString();
+        public override void Write(string? message)     => _buf.Append(message);
+        public override void WriteLine(string? message) => _buf.AppendLine(message);
     }
 
     [Test]

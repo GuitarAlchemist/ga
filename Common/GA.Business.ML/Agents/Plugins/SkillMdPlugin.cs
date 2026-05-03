@@ -49,8 +49,28 @@ public sealed class SkillMdPlugin : IChatPlugin
         var skills = SkillMdLoader.LoadFromDirectory(path);
         if (skills.Count == 0)
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"[SkillMdPlugin] No SKILL.md files with triggers found in {path}.");
+            // Migration footgun: an empty canonical `skills/` would silently
+            // shadow a populated `.agent/skills/` since the resolver returns
+            // the canonical path first. Detect that case and shout, so a fresh
+            // `mkdir skills` doesn't drop every unported skill from production.
+            var legacy = LegacyAgentSkillsPath(path);
+            var legacySkillCount = legacy is not null
+                ? SkillMdLoader.LoadFromDirectory(legacy).Count
+                : 0;
+
+            if (legacySkillCount > 0)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SkillMdPlugin] Canonical '{path}' is empty but legacy '{legacy}' " +
+                    $"still has {legacySkillCount} SKILL.md file(s). Production will register ZERO " +
+                    $"skills. Either port them into the canonical directory or remove the empty " +
+                    $"canonical directory to fall through to legacy.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SkillMdPlugin] No SKILL.md files with triggers found in {path}.");
+            }
             return;
         }
 
@@ -100,7 +120,7 @@ public sealed class SkillMdPlugin : IChatPlugin
             var resolved = Path.GetFullPath(env);
             var rootForOverride = FindRepoRoot(anchor);
             if (rootForOverride is not null &&
-                resolved.StartsWith(rootForOverride, StringComparison.OrdinalIgnoreCase))
+                IsPathInsideDirectory(resolved, rootForOverride))
                 return resolved;
 
             System.Diagnostics.Debug.WriteLine(
@@ -125,6 +145,44 @@ public sealed class SkillMdPlugin : IChatPlugin
 
         // 3. No .git anchor reachable — fall back to a CWD-relative canonical path.
         return Path.Combine(Directory.GetCurrentDirectory(), "skills");
+    }
+
+    /// <summary>
+    /// Returns the legacy <c>.agent/skills</c> directory that pairs with the
+    /// canonical <paramref name="canonicalPath"/>, or <c>null</c> if it can't
+    /// be derived. Used to detect the empty-canonical / populated-legacy footgun
+    /// during migration.
+    /// </summary>
+    private static string? LegacyAgentSkillsPath(string canonicalPath)
+    {
+        var parent = Path.GetDirectoryName(canonicalPath);
+        if (string.IsNullOrEmpty(parent)) return null;
+        var legacy = Path.Combine(parent, ".agent", "skills");
+        return Directory.Exists(legacy) ? legacy : null;
+    }
+
+    /// <summary>
+    /// Path-prefix check that defends against prefix-collision attacks on
+    /// <c>StartsWith</c> — e.g. <c>C:\repo</c> matching <c>C:\repo-evil</c>.
+    /// Both arguments are normalized via <see cref="Path.GetFullPath(string)"/>
+    /// and the directory side is suffixed with the platform separator before
+    /// the case-insensitive prefix check.
+    /// </summary>
+    /// <remarks>
+    /// Note: this is a lexical check. It does NOT dereference NTFS junctions /
+    /// reparse points / symlinks — that's a separate hardening pass tracked in
+    /// the migration recommendation's followups.
+    /// </remarks>
+    private static bool IsPathInsideDirectory(string candidatePath, string directory)
+    {
+        var candidateFull = Path.GetFullPath(candidatePath);
+        var dirFull       = Path.GetFullPath(directory);
+        if (!dirFull.EndsWith(Path.DirectorySeparatorChar) &&
+            !dirFull.EndsWith(Path.AltDirectorySeparatorChar))
+        {
+            dirFull += Path.DirectorySeparatorChar;
+        }
+        return candidateFull.StartsWith(dirFull, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? FindRepoRoot(string startDir)
