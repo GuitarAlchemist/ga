@@ -154,10 +154,12 @@ public sealed class SemanticIntentRouter(
 
         // Always log the top 3 at Information level so routing decisions are
         // auditable without flipping log levels. Cost is one log line per query.
+        // Sanitize the query first: strip control chars (defends plain-text log
+        // sinks against \n / ANSI injection) and clamp to 80 chars.
         var topK = ranking.Take(3).ToList();
         logger.LogInformation(
-            "SemanticIntentRouter: query={Query!r} top={Top}",
-            query.Length > 80 ? query[..80] + "…" : query,
+            "SemanticIntentRouter: query={Query} top={Top}",
+            SanitizeForLog(query),
             string.Join(" | ", topK.Select(r =>
                 $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
 
@@ -175,6 +177,18 @@ public sealed class SemanticIntentRouter(
 
     private static string Trim(string s, int max) =>
         s.Length <= max ? s : s[..(max - 1)] + "…";
+
+    // Defense against log injection in plain-text sinks: replace any Unicode
+    // control character (Cc / Cf / Cs / Co / Cn) with '·' before clamping to 80
+    // chars. Without this, a query containing '\n' could forge a fake log line.
+    private static string SanitizeForLog(string s)
+    {
+        var clamped = s.Length > 80 ? s[..80] + "…" : s;
+        var buf = new System.Text.StringBuilder(clamped.Length);
+        foreach (var c in clamped)
+            buf.Append(char.IsControl(c) ? '·' : c);
+        return buf.ToString();
+    }
 
     private async Task EnsureExamplesEmbeddedAsync(
         IReadOnlyList<IIntent> candidates, CancellationToken ct)
