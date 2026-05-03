@@ -1,0 +1,6 @@
+# Large binary outputs from ix-optick-sae training runs — not tracked in git.
+# Regenerate with: cargo run --bin ix-optick-sae -- train --index <path> --output <dir>
+*.parquet
+*.safetensors
+# training.log is excluded by root *.log rule; listed here for clarity
+*.log

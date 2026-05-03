@@ -78,11 +78,31 @@ public static class QaTools
     }
 
     [McpServerTool(Name = "qa_score_quality_drift")]
-    [Description("Score quality-snapshot drift over a window. Phase 0 returns null delta.")]
+    [Description("Score quality-snapshot drift over a window. Phase 0 returns null delta. Phase 1 stub: surfaces SAE artifact presence for 'optick-sae' metric; time-series drift wiring is Phase 2.")]
     public static string ScoreQualityDrift(
         [Description("Metric name as it appears in state/quality/*.json.")] string metric,
         [Description("Window length in days.")] int windowDays)
     {
+        // Phase 1 stub: detect SAE artifacts and surface them.
+        // Real time-series drift computation is Phase 2 (qa-architect-cycle.ixql wiring).
+        if (metric.Equals("optick-sae", StringComparison.OrdinalIgnoreCase))
+        {
+            var saeRoot = Path.Combine("state", "quality", "optick-sae");
+            var artifactFiles = Directory.Exists(saeRoot)
+                ? Directory.GetFiles(saeRoot, "optick-sae-artifact.json", SearchOption.AllDirectories)
+                : [];
+            var driftSummary = artifactFiles.Length > 0
+                ? $"SAE artifact found ({artifactFiles.Length} run(s) under {saeRoot}). Drift evidence wiring is Phase 2."
+                : $"No SAE artifacts found under {saeRoot}. Drift evidence wiring is Phase 2.";
+            var saeEvidence = new QaEvidence
+            {
+                Kind = "quality_snapshot",
+                Name = metric,
+                DriftSummary = driftSummary
+            };
+            return JsonSerializer.Serialize(saeEvidence, QaVerdictJson.Options);
+        }
+
         var evidence = new QaEvidence
         {
             Kind = "quality_snapshot",
