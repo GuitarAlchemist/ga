@@ -45,7 +45,7 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 
 ## OPTIC-K
 
-228-dim musical embedding (v1.7). Canonical schema: `Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs`. Never change dimension without coordinated re-index.
+240-dim musical embedding (`OPTIC-K-v1.8`). Canonical schema: `Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs` — read `TotalDimension` and `Version` constants, do not hardcode. v1.8 (2026-04-19) added a 12-dim `ROOT` partition at slots 228–239 to carry root pitch class outside `STRUCTURE`, closing the T-invariance gap that 91% of same-PC-set cross-instrument voicings exposed in invariant test #25. Never change dimension without coordinated re-index.
 
 ## Planning & Commits
 
