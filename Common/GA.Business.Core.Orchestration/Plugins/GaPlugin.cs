@@ -35,6 +35,8 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<IntervalSkill>();
         services.AddOrchestratorSkillIntent<FretSpanSkill>();
         services.AddOrchestratorSkillIntent<ChordSubstitutionSkill>();
+        services.AddOrchestratorSkillIntent<BeginnerChordsSkill>();
+        services.AddOrchestratorSkillIntent<ProgressionMoodSkill>();
 
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);

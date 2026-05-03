@@ -44,6 +44,10 @@ public sealed class SemanticIntentRouter(
     /// <summary>Cosine-similarity threshold above which an intent claims the query.</summary>
     public float MinConfidence { get; init; } = DefaultMinConfidence;
 
+    /// <summary>True iff embedding infrastructure is wired. Used by the warmup
+    /// hosted service to skip when there's no embedder to call.</summary>
+    public bool IsAvailable => textEmbeddings is not null;
+
     /// <summary>
     /// Selects the best intent for the query, or <c>null</c> if no intent
     /// scores above <see cref="MinConfidence"/>.
