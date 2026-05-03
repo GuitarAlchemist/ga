@@ -94,6 +94,43 @@ public class KeyIdentificationMcpToolsTests
         Assert.That(result.PartialMatches, Has.Length.LessThanOrEqualTo(3));
     }
 
+    [Test]
+    public void IdentifyKey_PartialMatches_AreRankedByDescendingMatchCount()
+    {
+        // The SKILL.md instructs the LLM to "optionally mention 1-2 partial
+        // matches" — that's only useful if they're ordered best-first. Pin
+        // the contract so a future refactor can't silently flip the order.
+        var result = MakeTool().IdentifyKey("C Am F G");
+
+        Assert.That(result.Error, Is.Null);
+        for (var i = 1; i < result.PartialMatches.Length; i++)
+        {
+            Assert.That(result.PartialMatches[i].MatchCount,
+                Is.LessThanOrEqualTo(result.PartialMatches[i - 1].MatchCount),
+                $"PartialMatches[{i}] must be ranked behind PartialMatches[{i-1}]");
+        }
+    }
+
+    [Test]
+    public void IdentifyKey_TopLevelTotalChordsAlignsWithCandidate()
+    {
+        // Bug surfaced by PR #88 review.
+        // ExtractChords does string-level dedup (so "C Am F G C" comes out
+        // as 4 strings). But Identify ALSO dedups at the parsed-tuple level
+        // (RootPc + Quality), so an enharmonic-equivalent input like
+        // "C Am F# Gb" returns 4 RecognizedChords from ExtractChords but
+        // candidate.TotalChords = 3 (F# and Gb collapse to the same tuple).
+        //
+        // The result-level TotalChords MUST equal candidate-level — otherwise
+        // the LLM payload contains two contradictory totals.
+        var result = MakeTool().IdentifyKey("C Am F# Gb");
+
+        Assert.That(result.Error, Is.Null);
+        Assert.That(result.TopCandidates, Is.Not.Empty);
+        Assert.That(result.TotalChords, Is.EqualTo(result.TopCandidates[0].TotalChords),
+            "Top-level TotalChords MUST equal candidate-level TotalChords (post tuple-dedup); the LLM payload must not contain two disagreeing totals");
+    }
+
     // ── Error paths ───────────────────────────────────────────────────────────
 
     [Test]

@@ -74,12 +74,18 @@ public sealed class KeyIdentificationMcpTools
             .Select(ToCandidate)
             .ToArray();
 
+        // Align top-level TotalChords with candidate-level TotalChords. The
+        // KeyIdentificationService internally calls .Distinct() before computing
+        // per-key match counts, so candidate.TotalChords reflects the de-duped
+        // count. Using `chords.Count` here would silently disagree with each
+        // candidate's `TotalChords` for inputs like "C Am F G C" (5 vs 4),
+        // confusing the LLM payload. Bug surfaced by PR #88 review.
         return new KeyIdentificationResult
         {
             RecognizedChords = [.. chords],
             TopCandidates    = topTied,
             PartialMatches   = partial,
-            TotalChords      = chords.Count,
+            TotalChords      = topTied[0].TotalChords,
         };
     }
 
