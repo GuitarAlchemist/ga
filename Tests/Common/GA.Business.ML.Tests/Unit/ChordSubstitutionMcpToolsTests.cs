@@ -40,6 +40,20 @@ public class ChordSubstitutionMcpToolsTests
             "Cmaj7 vs F#maj7 must NOT be flagged as Tritone Substitution (neither is a dominant 7th)");
     }
 
+    [Test]
+    public void CompareChords_AsymmetricDom7AndTriad_DoesNotDetectTritoneSub()
+    {
+        // G7 is a dominant 7th, Db is a major triad — roots ARE 6 semitones
+        // apart but only ONE side is a dom7. The classification requires both
+        // sides to be dom7. Asymmetric input is exactly the kind of case that
+        // would silently false-positive if the guard were loosened.
+        var result = MakeTool().CompareChords("G7", "Db");
+
+        Assert.That(result.Error, Is.Null);
+        Assert.That(result.Relationships.All(r => r.Type != "Tritone Substitution"), Is.True,
+            "G7 (dom7) vs Db (triad) must NOT be flagged as Tritone Substitution — both sides must be dom7");
+    }
+
     // ── CompareChords: secondary dominant ─────────────────────────────────────
 
     [Test]
