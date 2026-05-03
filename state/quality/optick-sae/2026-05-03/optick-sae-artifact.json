@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "artifact_id": "optick-sae-2026-05-03T20-07-36Z-019def74-topk-sae",
+  "trained_at": "2026-05-03T20:07:40Z",
+  "trainer": "ix-optick-sae",
+  "trainer_version": "0.1.0",
+  "input": {
+    "optick_index_path": "synthetic",
+    "optick_index_sha": "sha256:d79e53a5fbf44659be0dace0a73b2f6d0b8560f86147c27c611d7f947338ae8c",
+    "optick_dim": 240,
+    "schema_version": "OPTIC-K-v1.8",
+    "corpus_size": 1000,
+    "partitions_used": [
+      "IDENTITY",
+      "STRUCTURE",
+      "MORPHOLOGY",
+      "CONTEXT",
+      "SYMBOLIC",
+      "MODAL"
+    ]
+  },
+  "model": {
+    "kind": "topk_sae",
+    "dict_size": 1024,
+    "k_sparse": 32,
+    "training": {
+      "epochs": 50,
+      "batch_size": 256,
+      "lr": 0.001,
+      "seed": 42,
+      "loss_final": 0.00022053,
+      "sparsity_actual_mean": 0.03125
+    }
+  },
+  "metrics": {
+    "reconstruction_mse": 0.00057963,
+    "reconstruction_r2": 0.854636,
+    "active_features_per_voicing_p50": 32,
+    "active_features_per_voicing_p95": 32,
+    "dead_features_pct": 12.3,
+    "feature_partition_purity_mean": 0.346455,
+    "feature_partition_purity_p10": 0.278861
+  },
+  "features_summary": {
+    "total": 1024,
+    "alive": 898,
+    "high_frequency_count": 770,
+    "low_frequency_count": 130
+  },
+  "links": {
+    "feature_activations_parquet": "feature_activations.parquet",
+    "feature_manifest_jsonl": "feature_manifest.jsonl",
+    "training_log": "training.log",
+    "model_weights": "sae_weights.safetensors",
+    "supersedes": null
+  },
+  "narrative": "Phase 1 smoke run \u2014 synthetic 1 000-voicing \u00d7 118-dim corpus (optick.index absent in CI env; deviation documented)."
+}
