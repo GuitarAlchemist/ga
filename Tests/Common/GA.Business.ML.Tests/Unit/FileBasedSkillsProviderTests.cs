@@ -201,6 +201,45 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsScaleInfoSkillFromRepo()
+    {
+        // Second MCP-tool-driven canary. Confirms the tool-driven SKILL.md
+        // pattern works for more than just the original interval canary.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var allNames = string.Join(", ", provider.Skills.Select(s => s.Name));
+        var scale = provider.Skills.SingleOrDefault(s => s.Name == "scale-info");
+        Assert.That(scale, Is.Not.Null,
+            $"skills/scale-info/SKILL.md must be discovered with name 'scale-info'. Loaded skills: [{allNames}]");
+
+        Assert.That(scale!.Triggers, Is.Not.Null,
+            $"Triggers must be a populated list. Skill: {scale.Name}, FilePath: {scale.FilePath}");
+        // Direct LINQ — NUnit's Has.Some.Contain has flaky overload resolution
+        // for IReadOnlyList<string> in this fixture; the LINQ form is unambiguous.
+        Assert.That(scale.Triggers.Any(t => t.Contains("notes in")), Is.True,
+            $"Triggers should include a 'notes in' phrase but were [{string.Join(", ", scale.Triggers)}]");
+        Assert.That(scale.Triggers.Any(t => t.Contains("scale of")), Is.True);
+
+        Assert.That(scale.Body, Is.Not.Null.And.Not.Empty,
+            $"Body must not be null/empty. Body length: {scale.Body?.Length ?? -1}");
+        Assert.That(scale.Body!.Contains("ga_scale_get_notes"), Is.True,
+            $"tool-driven SKILL.md must name the MCP tool the LLM should call. Body starts with: {scale.Body[..Math.Min(scale.Body.Length, 100)]}");
+        Assert.That(scale.Body.Contains("root") && scale.Body.Contains("mode"), Is.True,
+            "body must document the tool's argument names so the LLM doesn't guess");
+
+        // Use a query phrasing that matches a trigger LITERALLY — "notes in"
+        // is a substring of "list the notes in C major" but NOT of
+        // "what notes ARE in C major" (because of the intervening "are").
+        // Substring triggers can't express AND — for the broader "any keyword
+        // matters" pattern we'd need a different routing layer.
+        var ctx = await provider.InvokingAsync(UserContext("list the notes in C major"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_scale_get_notes"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsIntervalSkillFromRepo()
     {
         // Canary for the MCP-tool-driven authoring style — different shape from

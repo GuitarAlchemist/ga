@@ -60,10 +60,13 @@ public sealed class GaPlugin : IChatPlugin
     public IReadOnlyList<Type> McpToolTypes =>
     [
         typeof(MemoryMcpTools),
-        // First domain-compute tool exposed via MCP — canary for the workstream
-        // that ports computation skills to thin SKILL.md + tool calls. See
+        // Domain-compute tools exposed via MCP for the SkillMdDrivenSkill path.
+        // Each class wraps one logical topic (interval, scale, etc.); methods
+        // within the class are individual operations exposed as MCP tools with
+        // the `ga_<topic>_<verb>` wire-name convention. See
         // docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
         // §"Porting policy: catalog vs. computation skills".
         typeof(IntervalMcpTools),
+        typeof(ScaleMcpTools),
     ];
 }
