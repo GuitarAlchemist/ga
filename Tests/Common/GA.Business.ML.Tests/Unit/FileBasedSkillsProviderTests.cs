@@ -201,6 +201,50 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsModesSkillFromRepo()
+    {
+        // Third catalog SKILL.md (after beginner-chords and progression-mood).
+        // Confirms the catalog-style template works for the modes data — the
+        // 7-row mode table is load-bearing and a missing row would silently
+        // teach wrong theory.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var modes = provider.Skills.SingleOrDefault(s => s.Name == "modes");
+        Assert.That(modes, Is.Not.Null,
+            "skills/modes/SKILL.md must be discovered with name 'modes'");
+
+        // All seven mode names must appear in the body — a dropped row is
+        // the worst-case content drift.
+        var expectedModes = new[] { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" };
+        foreach (var modeName in expectedModes)
+        {
+            Assert.That(modes!.Body, Does.Contain(modeName),
+                $"modes SKILL.md body must include '{modeName}' row");
+        }
+
+        // Each mode's signature degree formula must be present (a missing 'b3'
+        // or '#4' would silently teach wrong theory).
+        Assert.That(modes!.Body, Does.Contain("1 2 3 4 5 6 7"),    "Ionian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 2 b3 4 5 6 b7"),  "Dorian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 b2 b3 4 5 b6 b7"), "Phrygian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 2 3 #4 5 6 7"),   "Lydian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 2 3 4 5 6 b7"),   "Mixolydian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 b2 b3 4 b5 b6 b7"), "Locrian degrees");
+
+        // Trigger fires on common phrasings.
+        var ctx1 = await provider.InvokingAsync(UserContext("what are the modes of the major scale"));
+        Assert.That(ctx1.Instructions, Does.Contain("Lydian"),
+            "trigger 'modes of' / 'major scale modes' should inject the catalog body");
+
+        var ctx2 = await provider.InvokingAsync(UserContext("explain dorian"));
+        Assert.That(ctx2.Instructions, Does.Contain("Dorian"),
+            "single-mode trigger ('dorian') should also fire and surface the catalog");
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsChordInfoSkillFromRepo()
     {
         // Third MCP-tool-driven canary. Confirms the template scales to a
