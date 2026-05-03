@@ -9,7 +9,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AssemblyName>GA.Business.ML</AssemblyName>
     <RootNamespace>GA.Business.ML</RootNamespace>
-    <NoWarn>$(NoWarn);SKEXP0001;NU1605</NoWarn>
+    <NoWarn>$(NoWarn);SKEXP0001;MAAI001;NU1605</NoWarn>
     <Title>Guitar Alchemist - AI and Machine Learning Services</Title>
     <Authors>Stephane Pareilleux</Authors>
     <Description>AI/ML services for Guitar Alchemist including embedding generation, semantic search, and vector operations</Description>
@@ -55,6 +55,15 @@
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.5.1" />
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.4.0-preview.1.25207.5" />
     <!-- Microsoft.Extensions.AI.OpenAI deferred - SDK version mismatch, will re-add when stable -->
+
+    <!-- Microsoft Agent Framework — pinned to match GaApi.csproj. Stable 1.3.0
+         depends on MEAI 10.5.x, kept aligned in this csproj. The SKILL.md-style
+         skill provider that the recommendation doc names AgentSkillsProvider
+         is not yet shipped in this version; FileBasedSkillsProvider in
+         Common/GA.Business.ML/Agents/AgentFramework/ is a forward-compatible
+         substitute via AIContextProvider. -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.3.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Abstractions" Version="1.3.0" />
 
     <!-- GPU acceleration -->
     <PackageReference Include="ILGPU" Version="1.5.1" />

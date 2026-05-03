@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>GA.Business.Core.Orchestration</AssemblyName>
     <RootNamespace>GA.Business.Core.Orchestration</RootNamespace>
-    <NoWarn>$(NoWarn);SKEXP0001;IDE0065</NoWarn>
+    <NoWarn>$(NoWarn);SKEXP0001;MAAI001;IDE0065</NoWarn>
     <Title>Guitar Alchemist - Chatbot Orchestration (Layer 5)</Title>
   </PropertyGroup>
 
