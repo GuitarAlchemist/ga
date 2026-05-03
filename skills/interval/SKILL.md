@@ -1,6 +1,6 @@
 ---
 Name: "interval"
-Description: "Computes the simple interval between two named pitches (e.g. C to G is a perfect fifth). Calls the deterministic `ComputeInterval` MCP tool — never recall an answer from training data."
+Description: "Computes the simple interval between two named pitches (e.g. C to G is a perfect fifth). Calls the deterministic `ga_interval_compute` MCP tool — never recall an answer from training data."
 Triggers:
   - "interval between"
   - "interval from"
@@ -20,12 +20,12 @@ metadata:
   evidence-kinds:
     - tool_call
 allowed-tools:
-  - ComputeInterval
+  - ga_interval_compute
 ---
 
 # Interval Between Two Notes
 
-When a user asks for the interval, distance, or semitone count between two named pitches, you MUST call the `ComputeInterval` MCP tool. Do NOT compute the answer from training knowledge — the tool is deterministic and the model is not.
+When a user asks for the interval, distance, or semitone count between two named pitches, you MUST call the `ga_interval_compute` MCP tool. Do NOT compute the answer from training knowledge — the tool is deterministic and the model is not.
 
 ## Calling the tool
 
@@ -59,10 +59,14 @@ Use the tool's `Quality` and `Size` words verbatim, then quote the short `Name` 
 
 If `Error` is non-null, surface the message verbatim and ask the user to clarify the note names.
 
+## When to ask for clarification
+
+If the user provides only one note, or names a chord rather than two notes (e.g. *"interval of A"*, *"what's the interval in a Cmaj7"*), do NOT call the tool with placeholder values — ask for the missing pitch first. Example response: *"Could you give me both notes? E.g. 'interval from C to G' or 'distance between F# and A'."*
+
 ## Out of scope
 
-- Compound intervals (9th, 13th, etc.) — the tool returns the simple interval; if the user asks "interval from C to high D", treat as a 9th by adding an octave to the simple result, but flag the assumption.
-- Interval qualities for notes outside the standard 12-tone system (microtones, just-intonation cents) — not supported.
+- **Compound intervals** (9th, 13th, etc.) — the tool returns the simple interval. If the user asks *"interval from C to high D"*, call the tool with `C` and `D` (which gives a major second), then in the answer flag the octave assumption explicitly: *"I'm treating 'high D' as D one octave above C, so the compound interval is a major ninth (M2 plus an octave). If you meant a different D, let me know."* Always state which D you assumed.
+- **Microtonal / just-intonation** intervals — the tool only handles the standard 12-tone system. Decline cleanly: *"This skill computes intervals in 12-TET only; for cents-based answers I'd need different tooling."*
 
 ## Cross-reference
 

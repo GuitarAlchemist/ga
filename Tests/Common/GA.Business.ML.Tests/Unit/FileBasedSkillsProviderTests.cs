@@ -222,14 +222,14 @@ public class FileBasedSkillsProviderTests
         Assert.That(interval.Triggers,  Has.Some.Contain("how many semitones"));
 
         // Body must reference the tool by exact name so the LLM knows what to call.
-        Assert.That(interval.Body, Does.Contain("ComputeInterval"),
+        Assert.That(interval.Body, Does.Contain("ga_interval_compute"),
             "tool-driven SKILL.md must name the MCP tool the LLM should call");
         Assert.That(interval.Body, Does.Contain("lowerNote").And.Contain("upperNote"),
             "body must document the tool's argument names so the LLM doesn't guess");
 
         // Trigger match returns the body — same path as catalog skills.
         var ctx = await provider.InvokingAsync(UserContext("interval between C and G"));
-        Assert.That(ctx.Instructions, Does.Contain("ComputeInterval"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_interval_compute"));
     }
 
     [Test]

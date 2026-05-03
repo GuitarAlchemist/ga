@@ -30,18 +30,24 @@ public sealed class IntervalMcpTools
     /// long form, and the semitone count. On parse error, the result has
     /// <see cref="IntervalResult.Error"/> populated.
     /// </returns>
-    [McpServerTool, Description(
+    // Realistic note tokens are 1–3 chars (C, F#, Bbb, C##). Cap inputs at 4
+    // to defend against pathological ~MB strings — Note.{Sharp,Flat}.TryParse
+    // calls Trim().ToUpperInvariant().Replace(...), each of which allocates
+    // proportional to input length before the validation predicate runs.
+    private const int MaxNoteTokenLength = 4;
+
+    [McpServerTool(Name = "ga_interval_compute"), Description(
         "Compute the simple interval between two notes (e.g. lowerNote='C', upperNote='G' returns a perfect fifth). " +
         "Use this whenever a user asks for the interval, distance, or semitone count between two named pitches. " +
         "Accepts standard note names with optional accidentals: C, F#, Bb, etc.")]
-    public IntervalResult ComputeInterval(
+    public IntervalResult IntervalCompute(
         [Description("The lower note name (e.g. 'C', 'F#', 'Bb').")] string lowerNote,
         [Description("The upper note name (e.g. 'G', 'A#', 'Eb').")] string upperNote)
     {
         if (!TryParseNote(lowerNote, out var note1))
-            return IntervalResult.Failure($"Could not parse '{lowerNote}' as a note name. Try C, F#, Bb, etc.");
+            return IntervalResult.Failure($"Could not parse '{SanitizeEcho(lowerNote)}' as a note name. Try C, F#, Bb, etc.");
         if (!TryParseNote(upperNote, out var note2))
-            return IntervalResult.Failure($"Could not parse '{upperNote}' as a note name. Try C, F#, Bb, etc.");
+            return IntervalResult.Failure($"Could not parse '{SanitizeEcho(upperNote)}' as a note name. Try C, F#, Bb, etc.");
 
         var interval = note1.GetInterval(note2);
         return new IntervalResult
@@ -55,13 +61,37 @@ public sealed class IntervalMcpTools
         };
     }
 
-    private static bool TryParseNote(string token, out Note.Accidented note)
+    private static bool TryParseNote(string? token, out Note.Accidented note)
     {
+        // Length / null guard — bail before TryParse so a 10MB string can't
+        // allocate proportional intermediate buffers in Note.{Sharp,Flat}.TryParse.
+        if (string.IsNullOrEmpty(token) || token.Length > MaxNoteTokenLength)
+        {
+            note = default!;
+            return false;
+        }
+
         if (Note.Sharp.TryParse(token, null, out var sharp))      { note = sharp.ToAccidented();    return true; }
         if (Note.Flat.TryParse(token, null, out var flat))        { note = flat.ToAccidented();     return true; }
         if (Note.Accidented.TryParse(token, null, out var acc))   { note = acc;                    return true; }
         note = default!;
         return false;
+    }
+
+    /// <summary>
+    /// Sanitizes an echoed input string for inclusion in the <see cref="IntervalResult.Error"/>
+    /// message. Strips control characters and clamps to 16 chars so a malicious
+    /// or accidental payload (newline-laden log injection, ANSI escapes, prompt-
+    /// injection prose) cannot ride out through downstream rendering.
+    /// </summary>
+    private static string SanitizeEcho(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+        var clamped = raw.Length > 16 ? raw[..16] + "…" : raw;
+        var buf = new System.Text.StringBuilder(clamped.Length);
+        foreach (var c in clamped)
+            buf.Append(char.IsControl(c) ? '·' : c);
+        return buf.ToString();
     }
 
     private static string FormatNote(string raw)
@@ -97,10 +127,16 @@ public sealed class IntervalMcpTools
 }
 
 /// <summary>
-/// Structured result of <see cref="IntervalMcpTools.ComputeInterval"/>. The shape
+/// Structured result of <see cref="IntervalMcpTools.IntervalCompute"/>. The shape
 /// is JSON-serialised for the LLM so it can read every field directly without
-/// re-parsing prose. <see cref="Error"/> is non-null only on parse failure.
+/// re-parsing prose.
 /// </summary>
+/// <remarks>
+/// <b>Invariant:</b> when <see cref="Error"/> is non-null all other string fields
+/// are <see cref="string.Empty"/> and <see cref="Semitones"/> is <c>0</c>.
+/// LLMs reading this record should branch on <see cref="Error"/> first and
+/// surface the message verbatim before falling back to the structured fields.
+/// </remarks>
 public sealed record IntervalResult
 {
     public string LowerNote { get; init; } = string.Empty;
