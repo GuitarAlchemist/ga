@@ -45,9 +45,9 @@ public sealed class IntervalMcpTools
         [Description("The upper note name (e.g. 'G', 'A#', 'Eb').")] string upperNote)
     {
         if (!TryParseNote(lowerNote, out var note1))
-            return IntervalResult.Failure($"Could not parse '{SanitizeEcho(lowerNote)}' as a note name. Try C, F#, Bb, etc.");
+            return IntervalResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(lowerNote)}' as a note name. Try C, F#, Bb, etc.");
         if (!TryParseNote(upperNote, out var note2))
-            return IntervalResult.Failure($"Could not parse '{SanitizeEcho(upperNote)}' as a note name. Try C, F#, Bb, etc.");
+            return IntervalResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(upperNote)}' as a note name. Try C, F#, Bb, etc.");
 
         var interval = note1.GetInterval(note2);
         return new IntervalResult
@@ -78,21 +78,6 @@ public sealed class IntervalMcpTools
         return false;
     }
 
-    /// <summary>
-    /// Sanitizes an echoed input string for inclusion in the <see cref="IntervalResult.Error"/>
-    /// message. Strips control characters and clamps to 16 chars so a malicious
-    /// or accidental payload (newline-laden log injection, ANSI escapes, prompt-
-    /// injection prose) cannot ride out through downstream rendering.
-    /// </summary>
-    private static string SanitizeEcho(string? raw)
-    {
-        if (string.IsNullOrEmpty(raw)) return string.Empty;
-        var clamped = raw.Length > 16 ? raw[..16] + "…" : raw;
-        var buf = new System.Text.StringBuilder(clamped.Length);
-        foreach (var c in clamped)
-            buf.Append(char.IsControl(c) ? '·' : c);
-        return buf.ToString();
-    }
 
     private static string FormatNote(string raw)
     {

@@ -43,15 +43,15 @@ public sealed class ScaleMcpTools
         [Description("The mode — 'major' or 'minor' (also accepts 'maj' / 'min').")] string mode)
     {
         if (string.IsNullOrEmpty(root) || root.Length > MaxRootTokenLength)
-            return ScaleResult.Failure($"Could not parse '{SanitizeEcho(root)}' as a root note. Try C, F#, Bb, etc.");
+            return ScaleResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(root)}' as a root note. Try C, F#, Bb, etc.");
         if (string.IsNullOrEmpty(mode) || mode.Length > MaxModeTokenLength)
-            return ScaleResult.Failure($"Could not parse '{SanitizeEcho(mode)}' as a mode. Use 'major' or 'minor'.");
+            return ScaleResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(mode)}' as a mode. Use 'major' or 'minor'.");
 
         var modeNorm = mode.Trim().ToLowerInvariant();
         var isMinor  = modeNorm is "minor" or "min";
         var isMajor  = modeNorm is "major" or "maj";
         if (!isMinor && !isMajor)
-            return ScaleResult.Failure($"Unknown mode '{SanitizeEcho(mode)}'. Use 'major' or 'minor'.");
+            return ScaleResult.Failure($"Unknown mode '{McpEchoSanitizer.SanitizeEcho(mode)}'. Use 'major' or 'minor'.");
 
         var key = Key.Items.FirstOrDefault(k =>
             k.KeyMode == (isMinor ? KeyMode.Minor : KeyMode.Major) &&
@@ -59,7 +59,7 @@ public sealed class ScaleMcpTools
 
         if (key is null)
             return ScaleResult.Failure(
-                $"'{SanitizeEcho(root)} {SanitizeEcho(mode)}' is not a standard key. Try C major, F# minor, Bb major, etc.");
+                $"'{McpEchoSanitizer.SanitizeEcho(root)} {McpEchoSanitizer.SanitizeEcho(mode)}' is not a standard key. Try C major, F# minor, Bb major, etc.");
 
         var notes = key.Notes.Select(n => n.ToString()).ToArray();
 
@@ -71,21 +71,6 @@ public sealed class ScaleMcpTools
             KeySignature = DescribeKeySignature(key),
             RelativeKey  = GetRelativeKeyName(key),
         };
-    }
-
-    /// <summary>
-    /// Sanitizes an echoed input string for inclusion in the
-    /// <see cref="ScaleResult.Error"/> message. Strips control characters and
-    /// clamps to 16 chars — same template as <c>IntervalMcpTools.SanitizeEcho</c>.
-    /// </summary>
-    private static string SanitizeEcho(string? raw)
-    {
-        if (string.IsNullOrEmpty(raw)) return string.Empty;
-        var clamped = raw.Length > 16 ? raw[..16] + "…" : raw;
-        var buf = new System.Text.StringBuilder(clamped.Length);
-        foreach (var c in clamped)
-            buf.Append(char.IsControl(c) ? '·' : c);
-        return buf.ToString();
     }
 
     private static string DescribeKeySignature(Key key)
