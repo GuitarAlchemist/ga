@@ -201,6 +201,33 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsFretSpanSkillFromRepo()
+    {
+        // Fourth MCP-tool-driven canary. Confirms the template covers chord-
+        // diagram-shaped inputs (different from interval/scale/chord which
+        // take note-name strings).
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var fretSpan = provider.Skills.SingleOrDefault(s => s.Name == "fret-span");
+        Assert.That(fretSpan, Is.Not.Null,
+            "skills/fret-span/SKILL.md must be discovered with name 'fret-span'");
+
+        Assert.That(fretSpan!.Triggers.Any(t => t.Contains("fret span")), Is.True);
+        Assert.That(fretSpan.Triggers.Any(t => t.Contains("playability")), Is.True);
+
+        Assert.That(fretSpan.Body, Does.Contain("ga_fret_span"),
+            "tool-driven SKILL.md must name the MCP tool the LLM should call");
+        Assert.That(fretSpan.Body, Does.Contain("diagram"),
+            "body must document the tool's argument name");
+
+        var ctx = await provider.InvokingAsync(UserContext("what's the fret span on x-3-2-0-1-0"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_fret_span"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsModesSkillFromRepo()
     {
         // Third catalog SKILL.md (after beginner-chords and progression-mood).
