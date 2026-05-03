@@ -169,7 +169,11 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
 1. Pin `input.optick_index_sha` from the actual file at training time.
 2. Fail the run (do NOT emit an artifact) if `reconstruction_mse > 0.05` or `dead_features_pct > 30`.
 3. Set `links.supersedes` when re-training over a prior artifact in the same lineage.
-4. Validate against `optick-sae-artifact.schema.json` (generated from this contract in Phase 1) before persisting.
+4. Validate against `optick-sae-artifact.schema.json` before persisting.
+5. Compute `dead_features_pct` over the **full training set**, not a held-out validation slice. A feature active on 0.1% of voicings is real but a 5% val sample reports it "dead" by chance — this consistently overstates the rate by ~2× on OPTIC-K v1.8 ([2026-05-03 finding](../learnings/2026-05-03-optick-sae-vanilla-topk-dead-features.md)).
+
+**Producer (`ix-optick-sae`) SHOULD:**
+1. **Enable AuxK / ghost-grads or equivalent auxiliary loss.** Vanilla top-k without auxiliary loss has structural ~40–65% dead-feature rate on OPTIC-K v1.8 and will fail the §5 MUST #2 guardrail. `sae-lens` enables this by default; the hand-rolled trainer at `Scripts/optick_sae_train.py` supports it via `--use-ghost-grads`. Empirically `aux_alpha = 0.1` (3× the Anthropic 2024 default) and `aux_k ≈ 2 × k_sparse` satisfy the guardrail on this corpus.
 
 **Consumers SHOULD:**
 1. Treat unknown `model.kind` values as "skip" rather than "fail."
