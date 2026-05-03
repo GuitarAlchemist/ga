@@ -13,9 +13,6 @@ Triggers:
   - "brighten"
   - "uplifting"
   - "happier"
-  - "modal interchange"
-  - "borrow a chord"
-  - "borrowed chord"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"
