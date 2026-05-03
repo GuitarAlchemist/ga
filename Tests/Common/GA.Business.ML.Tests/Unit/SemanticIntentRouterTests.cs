@@ -213,6 +213,46 @@ public class SemanticIntentRouterTests
     }
 
     [Test]
+    public async Task RouteAsync_OnScoreTie_PrefersIntentWithShorterDescription()
+    {
+        // Reproduces the ChordInfo-vs-KeyIdentification ambiguity: two intents have
+        // an example that tie at score=1.0; the SHORTER description should win
+        // because it signals tighter scope.
+        var chordInfo = new StubIntent(
+            id: "skill.chordinfo",
+            description: "Returns chord intervals.",
+            examples: ["What is a C major chord?"]);
+
+        var keyId = new StubIntent(
+            id: "skill.keyidentification",
+            description: "Identifies the most likely musical key from a list of chords or notes, " +
+                         "with confidence scoring across all 24 major and minor keys.",
+            examples: ["What is a C major chord?"]);
+
+        // Both example strings tie at 1.0 against the query; descriptions diverge.
+        var queryVec = new float[] { 1f, 0f };
+        var vectors = new Dictionary<string, float[]>
+        {
+            ["What is a C major chord?"] = queryVec,                     // shared example text
+            ["Returns chord intervals."] = [0f, 1f],                     // description (orthogonal)
+            ["Identifies the most likely musical key from a list of chords or notes, " +
+             "with confidence scoring across all 24 major and minor keys."] = [0f, 1f],
+        };
+
+        var router = new SemanticIntentRouter(
+            StubEmbedder(vectors),
+            NullLogger<SemanticIntentRouter>.Instance);
+
+        var match = await router.RouteAsync(
+            "What is a C major chord?",
+            Services(chordInfo, keyId));
+
+        Assert.That(match, Is.Not.Null);
+        Assert.That(match!.Value.Intent.Id, Is.EqualTo("skill.chordinfo"),
+            "tie at score=1.0 should resolve to the intent with the shorter description");
+    }
+
+    [Test]
     public async Task IntentMatch_RecordsMatchedExample()
     {
         var modes = new StubIntent("skill.modes", "modes of major scale",
