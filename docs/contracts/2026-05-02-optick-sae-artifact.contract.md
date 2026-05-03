@@ -16,7 +16,7 @@
 
 ## 1. Why This Contract Exists
 
-OPTIC-K v1.7 partitions 228 dimensions into hand-engineered semantic subspaces (IDENTITY / STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / EXTENSIONS / SPECTRAL / MODAL / HIERARCHY / RESERVED). The partition design is a *hypothesis* about how musical concepts factor: the schema asserts that "Drop-2-ness" lives in SYMBOLIC, "fingering geometry" in MORPHOLOGY, "consonance" in STRUCTURE.
+OPTIC-K v1.8 partitions 240 dimensions into hand-engineered semantic subspaces (IDENTITY / STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / EXTENSIONS / SPECTRAL / MODAL / HIERARCHY / ATONAL_MODAL / ROOT). The partition design is a *hypothesis* about how musical concepts factor: the schema asserts that "Drop-2-ness" lives in SYMBOLIC, "fingering geometry" in MORPHOLOGY, "consonance" in STRUCTURE, and (since v1.8, 2026-04-19) "root pitch class" lives in ROOT as a 12-dim one-hot — split out of STRUCTURE to make STRUCTURE truly T-invariant.
 
 A sparse autoencoder trained over the 313k-voicing corpus tests that hypothesis. Each learned feature can be located by partition — if a feature spans STRUCTURE and SYMBOLIC, either the partition boundary is wrong or there's a real cross-partition correlation worth knowing.
 
@@ -37,11 +37,11 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
   "trainer_version": "0.1.0",
   "input": {
     "optick_index_path": "state/voicings/optick.index",
-    "optick_index_sha": "sha256:81870922abc...",
-    "optick_dim": 228,
-    "schema_version": "v1.7",
+    "optick_index_sha": "sha256:89354bcb3513efbe1523651b734743c6921186a9e807f53bfbe4a74a254bd267",
+    "optick_dim": 240,
+    "schema_version": "OPTIC-K-v1.8",
     "corpus_size": 313487,
-    "partitions_used": ["IDENTITY", "STRUCTURE", "MORPHOLOGY", "CONTEXT", "SYMBOLIC", "MODAL"]
+    "partitions_used": ["IDENTITY", "STRUCTURE", "MORPHOLOGY", "CONTEXT", "SYMBOLIC", "MODAL", "ROOT"]
   },
   "model": {
     "kind": "topk_sae",
@@ -78,7 +78,7 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
     "model_weights": "state/quality/optick-sae/2026-05-19/sae_weights.safetensors",
     "supersedes": null
   },
-  "narrative": "Phase 1 first run on OPTIC-K v1.7. Reconstruction MSE 0.0089 (under 0.05 guardrail). 4.2% dead features, partition purity 0.71 mean — schema partitions hold reasonably well; long-tail features cross boundaries (worth manual interpretation)."
+  "narrative": "Phase 1 first run on OPTIC-K v1.8. Reconstruction MSE 0.0089 (under 0.05 guardrail). 4.2% dead features, partition purity 0.71 mean — schema partitions hold reasonably well; long-tail features cross boundaries (worth manual interpretation)."
 }
 ```
 
@@ -108,10 +108,10 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
 |---|---|---|
 | `optick_index_path` | string | Repo-relative path. Usually `state/voicings/optick.index`. |
 | `optick_index_sha` | string | `sha256:...`. Lets consumers detect when the index changed since training. |
-| `optick_dim` | int | Currently 228 (v1.7). Pinned per CLAUDE.md OPTIC-K rule. |
-| `schema_version` | string | OPTIC-K schema version, e.g. `v1.7`. |
+| `optick_dim` | int | Currently 240 (v1.8 — bumped from 228 on 2026-04-19 with the 12-dim ROOT partition added). Pinned per CLAUDE.md OPTIC-K rule. Read from `EmbeddingSchema.TotalDimension`, do not hardcode. |
+| `schema_version` | string | OPTIC-K schema version, exact match of `EmbeddingSchema.Version` (e.g. `"OPTIC-K-v1.8"`). |
 | `corpus_size` | int | Number of voicings in the index. |
-| `partitions_used` | array<string> | Which OPTIC-K partitions the SAE trained over. Excluding IDENTITY / EXTENSIONS / SPECTRAL is reasonable since those aren't similarity-weighted. |
+| `partitions_used` | array<string> | Which OPTIC-K partitions the SAE trained over. Phase 1 default trains over similarity-weighted partitions plus IDENTITY: `[IDENTITY, STRUCTURE, MORPHOLOGY, CONTEXT, SYMBOLIC, MODAL, ROOT]`. Skip info-only partitions (EXTENSIONS, SPECTRAL, HIERARCHY, ATONAL_MODAL) initially since they don't carry similarity weight. |
 
 ### 3.2 `model`
 

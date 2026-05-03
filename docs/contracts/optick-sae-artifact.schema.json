@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitar-alchemist/contracts/optick-sae-artifact-v1.json",
+  "title": "OPTIC-K SAE Artifact",
+  "description": "Cross-repo SAE artifact shape v0.1.0. Source: docs/contracts/2026-05-02-optick-sae-artifact.contract.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "trained_at",
+    "trainer",
+    "trainer_version",
+    "input",
+    "model",
+    "metrics",
+    "features_summary",
+    "links",
+    "narrative"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "artifact_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable, sortable, filename-safe. Pattern: optick-sae-<iso8601-basic>-<short_id>-<trainer>. Dashes-not-colons in timestamp portion.",
+      "pattern": "^optick-sae-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}Z-[A-Za-z0-9]+-[A-Za-z0-9-]+$"
+    },
+    "trained_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trainer": {
+      "type": "string",
+      "enum": ["ix-optick-sae", "manual"]
+    },
+    "trainer_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?$"
+    },
+    "input": { "$ref": "#/$defs/input" },
+    "model": { "$ref": "#/$defs/model" },
+    "metrics": { "$ref": "#/$defs/metrics" },
+    "features_summary": { "$ref": "#/$defs/features_summary" },
+    "links": { "$ref": "#/$defs/links" },
+    "narrative": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "optick_index_path",
+        "optick_index_sha",
+        "optick_dim",
+        "schema_version",
+        "corpus_size",
+        "partitions_used"
+      ],
+      "properties": {
+        "optick_index_path": { "type": "string", "minLength": 1 },
+        "optick_index_sha": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "optick_dim": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Currently 240 for v1.8. Read from EmbeddingSchema.TotalDimension."
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^OPTIC-K-v\\d+\\.\\d+$"
+        },
+        "corpus_size": { "type": "integer", "minimum": 1 },
+        "partitions_used": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "IDENTITY",
+              "STRUCTURE",
+              "MORPHOLOGY",
+              "CONTEXT",
+              "SYMBOLIC",
+              "EXTENSIONS",
+              "SPECTRAL",
+              "MODAL",
+              "HIERARCHY",
+              "ATONAL_MODAL",
+              "ROOT"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "dict_size", "k_sparse", "training"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["topk_sae", "relu_sae", "gated_sae"]
+        },
+        "dict_size": { "type": "integer", "minimum": 1 },
+        "k_sparse": { "type": "integer", "minimum": 1 },
+        "training": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["epochs", "batch_size", "lr", "seed", "loss_final", "sparsity_actual_mean"],
+          "properties": {
+            "epochs": { "type": "integer", "minimum": 1 },
+            "batch_size": { "type": "integer", "minimum": 1 },
+            "lr": { "type": "number", "exclusiveMinimum": 0 },
+            "seed": { "type": "integer" },
+            "loss_final": { "type": "number", "minimum": 0 },
+            "sparsity_actual_mean": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reconstruction_mse",
+        "reconstruction_r2",
+        "active_features_per_voicing_p50",
+        "active_features_per_voicing_p95",
+        "dead_features_pct",
+        "feature_partition_purity_mean",
+        "feature_partition_purity_p10"
+      ],
+      "properties": {
+        "reconstruction_mse": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.05,
+          "description": "Guardrail per contract §5: > 0.05 fails the run; producer MUST NOT emit an artifact above this."
+        },
+        "reconstruction_r2": { "type": "number", "minimum": 0, "maximum": 1 },
+        "active_features_per_voicing_p50": { "type": "integer", "minimum": 0 },
+        "active_features_per_voicing_p95": { "type": "integer", "minimum": 0 },
+        "dead_features_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Guardrail per contract §5: > 30% triggers retrain with smaller dict; producer MUST NOT emit an artifact above this."
+        },
+        "feature_partition_purity_mean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "feature_partition_purity_p10": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "features_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "alive", "high_frequency_count", "low_frequency_count"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 1 },
+        "alive": { "type": "integer", "minimum": 0 },
+        "high_frequency_count": { "type": "integer", "minimum": 0 },
+        "low_frequency_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature_activations_parquet",
+        "feature_manifest_jsonl",
+        "training_log",
+        "model_weights"
+      ],
+      "properties": {
+        "feature_activations_parquet": { "type": "string", "minLength": 1 },
+        "feature_manifest_jsonl": { "type": "string", "minLength": 1 },
+        "training_log": { "type": "string", "minLength": 1 },
+        "model_weights": { "type": "string", "minLength": 1 },
+        "supersedes": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

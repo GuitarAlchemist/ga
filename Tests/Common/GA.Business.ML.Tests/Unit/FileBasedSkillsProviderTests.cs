@@ -200,6 +200,45 @@ public class FileBasedSkillsProviderTests
         Assert.That(ctx.Instructions, Does.Contain("QA Architect Skill"));
     }
 
+    [Test]
+    public async Task InvokingAsync_LoadsBeginnerChordsSkillFromRepo()
+    {
+        // Canary for SKILL.md authoring: the beginner-chords skill is the first
+        // deterministic-catalog skill to be ported from C# to a markdown spec.
+        // If this test fails, SKILL.md authoring is broken — block the migration
+        // before porting more skills.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var beginner = provider.Skills.SingleOrDefault(s => s.Name == "beginner-chords");
+        Assert.That(beginner, Is.Not.Null,
+            "skills/beginner-chords/SKILL.md must be discovered with name 'beginner-chords'");
+        Assert.That(beginner!.Description, Does.Contain("first-position open"),
+            "Description should describe the catalog scope");
+        Assert.That(beginner.Triggers, Has.Some.Contain("beginner chord"));
+        Assert.That(beginner.Triggers, Has.Some.Contain("first chord"));
+
+        // Body must contain every diagram so the LLM cannot drop one.
+        var expectedDiagrams = new[]
+        {
+            "x-3-2-0-1-0", "3-2-0-0-0-3", "x-x-0-2-3-2", "x-0-2-2-2-0",
+            "0-2-2-1-0-0", "x-0-2-2-1-0", "0-2-2-0-0-0", "x-x-0-2-3-1",
+        };
+        foreach (var diagram in expectedDiagrams)
+        {
+            Assert.That(beginner.Body, Does.Contain(diagram),
+                $"beginner-chords SKILL.md body must include diagram '{diagram}'");
+        }
+
+        // Provider hands the body back as Instructions when a trigger fires.
+        var ctx = await provider.InvokingAsync(UserContext("show me some beginner chord shapes"));
+        Assert.That(ctx.Instructions, Does.Contain("beginner-chords"));
+        Assert.That(ctx.Instructions, Does.Contain("x-3-2-0-1-0"),
+            "trigger match should inject the catalog body verbatim");
+    }
+
     private static string? ResolveRepoSkillsDir()
     {
         var dir = new DirectoryInfo(Environment.GetEnvironmentVariable("GA_REPO_ROOT")

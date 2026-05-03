@@ -14,7 +14,7 @@ companion_plan: docs/plans/2026-05-02-arch-qa-architect-tribunal-plan.md
 
 ## Overview
 
-Train a sparse autoencoder over the 313k-voicing OPTIC-K v1.7 corpus to:
+Train a sparse autoencoder over the 313k-voicing OPTIC-K v1.8 corpus (240-dim, 11 partitions including the 12-dim ROOT partition added 2026-04-19) to:
 1. **Validate the partition design.** Hand-engineered partitions (STRUCTURE / MORPHOLOGY / etc.) are a hypothesis; SAE features either respect those boundaries or expose where the hypothesis is wrong.
 2. **Discover latent musical concepts.** Features that don't map cleanly to a single partition are interpretation candidates ("voicings that resolve like dominants but aren't formally dominant," etc.).
 3. **Drift detection for the QA tribunal.** Plug feature population stats into `qa_score_quality_drift` so the tribunal sees more than just retrieval-latency p50.
@@ -25,9 +25,9 @@ Artifact contract: [2026-05-02-optick-sae-artifact.contract.md](../contracts/202
 
 OPTIC-K is hand-engineered, fixed-dimension, and reused everywhere (similarity search, RAG, voicing-by-hand, the chatbot). Today the only feedback loop is the `ix-autoresearch` weights-tuning driver — which optimizes *one number* (retrieval-vs-leak score) and never tells us *what the embedding actually captures*.
 
-A senior data engineer's instinct here is: train an interpretable decomposition, look at what the features are, and use feature stability as a drift signal. The cost is bounded (training is small for 313k × 228), the upside is a permanent interpretability layer that compounds.
+A senior data engineer's instinct here is: train an interpretable decomposition, look at what the features are, and use feature stability as a drift signal. The cost is bounded (training is small for 313k × 240), the upside is a permanent interpretability layer that compounds.
 
-This isn't a refactor of OPTIC-K. The 228-dim embedding stays untouched. The SAE is a *lens* over it.
+This isn't a refactor of OPTIC-K. The 240-dim embedding stays untouched. The SAE is a *lens* over it.
 
 ## Requirements Trace
 
@@ -53,7 +53,7 @@ This isn't a refactor of OPTIC-K. The 228-dim embedding stays untouched. The SAE
 ### Relevant precedents
 - **`ix-autoresearch` ↔ GA contract** ([optick-weights-config.contract.md](../contracts/2026-04-27-optick-weights-config.contract.md)): same JSON-on-disk handoff pattern. Same producer-in-Rust / consumer-in-C# split. Reuse the structure, don't reinvent.
 - **QA Architect Tribunal Phase 0** ([2026-05-02-arch-qa-architect-tribunal-plan.md](2026-05-02-arch-qa-architect-tribunal-plan.md)): the verdict contract and the MCP-primitive shape both inform this work. SAE drift evidence flows through the same `qa_score_quality_drift` primitive.
-- **Anthropic's *Scaling Monosemanticity*** (2024): trained SAEs over Claude 3 Sonnet activations and recovered ~16M interpretable features. Methodology directly transfers; scale is much smaller (hundreds of features over 228-dim, not millions over thousands of dims).
+- **Anthropic's *Scaling Monosemanticity*** (2024): trained SAEs over Claude 3 Sonnet activations and recovered ~16M interpretable features. Methodology directly transfers; scale is much smaller (hundreds of features over 240-dim, not millions over thousands of dims).
 - **`sae-lens` library** (Joseph Bloom et al.): the field-standard PyTorch tooling. Avoid reimplementing in Rust.
 
 ### Tooling decision
@@ -64,9 +64,9 @@ This isn't a refactor of OPTIC-K. The 228-dim embedding stays untouched. The SAE
 ## Key Technical Decisions
 
 - **Top-k SAE for Phase 1**, ReLU/Gated as Phase-3 alternatives. Top-k is the most interpretable starting point and `sae-lens` supports it directly.
-- **Dictionary size 1024** (~4.5× embedding dim). Standard SAE expansion ratio. Tunable in Phase 2 if dead-feature rate exceeds 30%.
-- **k_sparse = 32**. Each voicing activates ~14% of features. Reasonable starting point; Phase 2 sweeps this if reconstruction is poor.
-- **Train over partitions [IDENTITY, STRUCTURE, MORPHOLOGY, CONTEXT, SYMBOLIC, MODAL]**. Skip EXTENSIONS, SPECTRAL, HIERARCHY initially — they're informational, not similarity-weighted.
+- **Dictionary size 1024** (~4.3× embedding dim of 240). Standard SAE expansion ratio. Tunable in Phase 2 if dead-feature rate exceeds 30%.
+- **k_sparse = 32**. Each voicing activates ~3% of features. Reasonable starting point; Phase 2 sweeps this if reconstruction is poor.
+- **Train over partitions [IDENTITY, STRUCTURE, MORPHOLOGY, CONTEXT, SYMBOLIC, MODAL, ROOT]** — the similarity-weighted partitions plus IDENTITY. ROOT was added in v1.8 (2026-04-19) and is similarity-weighted (0.05); include from Phase 1. Skip info-only partitions (EXTENSIONS, SPECTRAL, HIERARCHY, ATONAL_MODAL) — they don't carry similarity weight and adding them inflates the input space without adding signal the SAE can decompose meaningfully.
 - **Held-out 5% slice for reconstruction MSE.** Standard practice; protects against overfitting on the dictionary.
 - **Artifact-level supersedes chain.** Each retrain references its prior. Lets the drift detector walk back N artifacts.
 
