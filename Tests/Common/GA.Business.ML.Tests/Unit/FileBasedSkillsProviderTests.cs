@@ -201,6 +201,53 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsProgressionMoodSkillFromRepo()
+    {
+        // Second-canary smoke test — once two catalog skills are wired, the
+        // SKILL.md authoring story is no longer single-point-of-failure.
+        // If this fails the most likely cause is frontmatter regression on
+        // the file itself (drift from the C# implementation it replaces).
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var mood = provider.Skills.SingleOrDefault(s => s.Name == "progression-mood");
+        Assert.That(mood, Is.Not.Null,
+            "skills/progression-mood/SKILL.md must be discovered with name 'progression-mood'");
+        Assert.That(mood!.Description, Does.Contain("modal interchange").IgnoreCase
+            .Or.Contain("darken").IgnoreCase.Or.Contain("brighten").IgnoreCase,
+            "Description should mention the two main mood-shift techniques");
+
+        // Both branch headings must be present so the LLM can pick the right one.
+        Assert.That(mood.Body, Does.Contain("Darken branch"));
+        Assert.That(mood.Body, Does.Contain("Brighten branch"));
+
+        // Five canonical darken techniques (parallel minor / Aeolian / Phrygian /
+        // Dorian / bVII-for-V) — assert at least one signature phrase per item
+        // so a careless edit can't drop a technique without the test catching it.
+        Assert.That(mood.Body, Does.Contain("parallel minor"));
+        Assert.That(mood.Body, Does.Contain("Aeolian"));
+        Assert.That(mood.Body, Does.Contain("Phrygian"));
+        Assert.That(mood.Body, Does.Contain("Dorian"));
+        Assert.That(mood.Body, Does.Contain("bVII"));
+
+        // Brighten branch — four techniques.
+        Assert.That(mood.Body, Does.Contain("parallel major"));
+        Assert.That(mood.Body, Does.Contain("Lydian"));
+        Assert.That(mood.Body, Does.Contain("Mixolydian"));
+
+        // Trigger match in either polarity should surface the body.
+        var darkenCtx = await provider.InvokingAsync(UserContext("how do I make this progression sound darker?"));
+        Assert.That(darkenCtx.Instructions, Does.Contain("Darken branch"),
+            "darken-mood query should inject body via 'darker' / 'darken' triggers");
+
+        var brightenCtx = await provider.InvokingAsync(UserContext("make my chords sound brighter please"));
+        Assert.That(brightenCtx.Instructions, Does.Contain("Brighten branch"),
+            "brighten-mood query should inject body via 'brighter' / 'brighten' triggers");
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsBeginnerChordsSkillFromRepo()
     {
         // Canary for SKILL.md authoring: the beginner-chords skill is the first

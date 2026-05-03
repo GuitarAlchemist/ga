@@ -341,6 +341,35 @@ Acceptance criteria:
   support allows it
 - tests cover malformed frontmatter, missing resource, and successful skill load
 
+#### Porting policy: catalog vs. computation skills
+
+Not every existing `IOrchestratorSkill` is a good SKILL.md candidate. Apply
+this rule when deciding whether to port a skill:
+
+- **Catalog skills** (pure data, no domain types touched) → port to SKILL.md.
+  The body becomes the system prompt; the LLM reproduces the catalog. Hot-
+  editable, shareable across providers, no rebuild required.
+  - Examples: `BeginnerChordsSkill` (8 open-position chord diagrams),
+    `ProgressionMoodSkill` (5 darken + 4 brighten technique catalog).
+  - Both ported as canaries in PRs #74 and (this PR).
+
+- **Computation skills** (call into `GA.Domain.*`, run regex parsing, do
+  pitch-class arithmetic, etc.) → keep in C#. Porting these to SKILL.md
+  would force the LLM to recompute results from training data, losing the
+  determinism that made them deterministic skills in the first place.
+  - Examples: `IntervalSkill` (`note.GetInterval()`), `ScaleInfoSkill`
+    (`Key.Items`), `ChordInfoSkill`, `KeyIdentificationSkill`,
+    `ProgressionCompletionSkill` (hybrid — keeps domain compute + LLM phrasing),
+    `FretSpanSkill`, `ModesSkill`, `ChordSubstitutionSkill`.
+  - Migration path for these: expose the domain operation as an MCP tool, then
+    a thin SKILL.md can declare `allowed-tools` and let the LLM call the
+    deterministic backend. That's a separate workstream — do not block the
+    catalog migration on it.
+
+Net effect: of GA's ten current `IOrchestratorSkill` implementations, only
+**two** (BeginnerChords, ProgressionMood) are pure catalogs. The remaining
+eight stay C# until the MCP-tool exposure workstream is scoped.
+
 ### Phase 3 - Agent Framework spike
 
 Goal: prove Agent Framework improves orchestration without regressing the fast path.
