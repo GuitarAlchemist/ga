@@ -46,7 +46,20 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     public string Name => "ChordInfo";
 
-    public string Description => "Returns notes for common chord qualities from deterministic interval formulas";
+    public string Description =>
+        "Returns the notes that make up a named chord (e.g. C major chord = C, E, G; " +
+        "Dm7 = D, F, A, C). Also identifies which chord a set of notes spells. " +
+        "Pure domain computation, zero LLM calls.";
+
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What is a C major chord?",
+        "What notes are in Dm7?",
+        "Notes in an F minor chord",
+        "What chord contains C E G?",
+        "Spell a B7 chord",
+        "What notes are in a Cmaj7?",
+    ];
 
     public bool CanHandle(string message)
     {

@@ -16,7 +16,20 @@ using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Modes";
-    public string Description => "Lists the modes of the major scale with formula and character";
+    public string Description =>
+        "Lists the seven modes of the major scale (Ionian, Dorian, Phrygian, Lydian, " +
+        "Mixolydian, Aeolian, Locrian) with degrees and character notes — pure music " +
+        "theory, no LLM call.";
+
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What are the modes of the major scale?",
+        "List the diatonic modes",
+        "Name the seven modes of the major scale",
+        "Tell me about the major scale modes",
+        "What is Lydian mode?",
+        "Explain Phrygian and Aeolian",
+    ];
 
     private static readonly Regex ModesPattern =
         new(@"\bmodes?\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);

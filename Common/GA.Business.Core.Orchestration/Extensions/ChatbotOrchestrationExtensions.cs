@@ -2,8 +2,10 @@ namespace GA.Business.Core.Orchestration.Extensions;
 
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Clients;
+using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Agents;
+using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +72,24 @@ public static class ChatbotOrchestrationExtensions
 
         // Cross-agent delegation coordinator
         services.AddScoped<IAgentCoordinator, AgentCoordinator>();
+
+        // ── Semantic intent routing (replaces ad-hoc string classifiers) ──────
+        // Per docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
+        // §"Routing classifiers": embedding-similarity dispatch for the four
+        // routing surfaces that previously used keyword regex —
+        // KeywordAlgebraPromptClassifier, IsAskingForOptimization, the per-skill
+        // CanHandle foreach, and the tab-analysis branch.
+        services.AddSingleton<SemanticIntentRouter>();
+        services.AddScoped<TabAnalysisOrchestrationService>();
+
+        services.AddSingleton<AlgebraIntent>();
+        services.AddSingleton<IIntent>(sp => sp.GetRequiredService<AlgebraIntent>());
+
+        services.AddScoped<TabOptimizeIntent>();
+        services.AddScoped<IIntent>(sp => sp.GetRequiredService<TabOptimizeIntent>());
+
+        services.AddScoped<TabAnalyzeIntent>();
+        services.AddScoped<IIntent>(sp => sp.GetRequiredService<TabAnalyzeIntent>());
 
         // Orchestrators — Scoped because they transitively depend on
         // SemanticRouter (Scoped) and SpectralRetrievalService (Scoped).

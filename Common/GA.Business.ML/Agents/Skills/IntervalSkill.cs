@@ -17,7 +17,18 @@ using GA.Domain.Core.Primitives.Notes;
 public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Interval";
-    public string Description => "Returns the interval between two notes from the domain model";
+    public string Description =>
+        "Computes the interval between two notes (e.g. C to G is a perfect fifth). " +
+        "Pure domain computation, zero LLM calls.";
+
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What is the interval between C and G?",
+        "Distance from F# to D",
+        "Interval from C to E",
+        "How many semitones from A to E?",
+        "What's the interval between D and Bb?",
+    ];
 
     // Capture two note names with optional accidentals — order matters, "from X to Y"
     // is the natural reading direction; we treat the first as the lower note.

@@ -1,5 +1,6 @@
 namespace GA.Business.Core.Orchestration.Plugins;
 
+using GA.Business.Core.Orchestration.Intents;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Memory;
@@ -24,18 +25,20 @@ public sealed class GaPlugin : IChatPlugin
         // ── Domain services required by skills ────────────────────────────────
         services.TryAddSingleton<IGrothendieckService, GrothendieckService>();
 
-        // ── Orchestrator skills (checked before LLM routing, first match wins) ─
-        // Pure-domain skills are Singleton (stateless, no scoped dependencies).
-        services.AddSingleton<IOrchestratorSkill, ChordInfoSkill>();
-        services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
-        services.AddSingleton<IOrchestratorSkill, ModesSkill>();
-        services.AddSingleton<IOrchestratorSkill, IntervalSkill>();
-        services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
-        services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
+        // ── Orchestrator skills (semantic dispatch via SemanticIntentRouter; ──
+        //     legacy CanHandle foreach kept as fallback). Each call registers
+        //     three things: the concrete skill, its IOrchestratorSkill binding,
+        //     and an OrchestratorSkillIntent adapter for the IIntent registry.
+        services.AddOrchestratorSkillIntent<ChordInfoSkill>();
+        services.AddOrchestratorSkillIntent<ScaleInfoSkill>();
+        services.AddOrchestratorSkillIntent<ModesSkill>();
+        services.AddOrchestratorSkillIntent<IntervalSkill>();
+        services.AddOrchestratorSkillIntent<FretSpanSkill>();
+        services.AddOrchestratorSkillIntent<ChordSubstitutionSkill>();
 
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
-        services.AddScoped<IOrchestratorSkill, KeyIdentificationSkill>();
-        services.AddScoped<IOrchestratorSkill, ProgressionCompletionSkill>();
+        services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
+        services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
 
         // ── Persistent memory ────────────────────────────────────────────────
         services.TryAddSingleton<MemoryStore>();

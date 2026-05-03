@@ -16,7 +16,18 @@ public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<P
     : AgentSkillBase(AgentIds.Theory, chatClient, logger), IOrchestratorSkill
 {
     public override string Name        => "ProgressionCompletion";
-    public override string Description => "Suggests diatonic chord completions for an in-progress progression";
+    public override string Description =>
+        "Suggests 2–3 diatonic chord completions for an in-progress progression — " +
+        "uses pitch-class arithmetic to detect the key, LLM only to phrase the cadence choice.";
+
+    public override IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What chord comes next after C G Am?",
+        "How do I finish this progression: Em D C",
+        "Help me end Am F G",
+        "What should follow Dm G C?",
+        "Continue this progression: F C G",
+    ];
 
     // ── Triggers ──────────────────────────────────────────────────────────────
 
