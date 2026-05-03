@@ -1,78 +1,50 @@
 namespace GA.Business.ML.Agents.Skills;
 
-using Anthropic;
 using GA.Business.ML.Agents.Plugins;
+using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
 using Microsoft.Extensions.AI;
 
 /// <summary>
 /// <see cref="IOrchestratorSkill"/> backed by a SKILL.md file.
-/// Uses the Anthropic SDK + MEAI <see cref="IChatClient"/> for LLM calls,
-/// with GA domain tools supplied by <see cref="IMcpToolsProvider"/>.
-/// <see cref="FunctionInvokingChatClientBuilderExtensions.UseFunctionInvocation"/> handles the
-/// full multi-turn agentic tool-use loop automatically — no hand-coded loop required.
+/// Uses an <see cref="IChatClient"/> resolved via <see cref="IChatClientFactory"/>
+/// for the <c>skill-md</c> purpose (provider chosen by configuration), with GA
+/// domain tools supplied by <see cref="IMcpToolsProvider"/>.
+/// <see cref="FunctionInvokingChatClientBuilderExtensions.UseFunctionInvocation"/>
+/// (applied inside the factory) handles the full multi-turn agentic tool-use loop
+/// automatically — no hand-coded loop required.
 /// </summary>
+/// <remarks>
+/// This type intentionally references no provider SDK; vendor specifics live
+/// inside <c>AnthropicProvider</c> behind the factory. Tests inject a fake
+/// <see cref="IChatClientFactory"/> (or implement <see cref="IChatClient"/> directly)
+/// instead of mutating private state.
+/// </remarks>
 public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 {
-    private const string DefaultModel = "claude-sonnet-4-6";
+    private const string SkillMdPurpose = "skill-md";
 
     private readonly SkillMd _skillMd;
     private readonly IMcpToolsProvider _toolsProvider;
     private readonly ILogger<SkillMdDrivenSkill> _logger;
 
-    // Built once (lazily) and reused for the lifetime of this singleton.
+    // Lazily resolved via the factory and reused for the lifetime of this singleton.
     // LazyThreadSafetyMode.ExecutionAndPublication ensures only one thread builds the client.
     private readonly Lazy<IChatClient> _chatClient;
 
     public SkillMdDrivenSkill(
         SkillMd skillMd,
         IMcpToolsProvider toolsProvider,
-        IConfiguration configuration,
+        IChatClientFactory chatClientFactory,
         ILogger<SkillMdDrivenSkill> logger)
     {
         _skillMd = skillMd;
         _toolsProvider = toolsProvider;
         _logger = logger;
 
-        _chatClient = new Lazy<IChatClient>(() =>
-        {
-            var model = configuration["AnthropicSkills:Model"] ?? DefaultModel;
-            var apiKey = configuration["Anthropic:ApiKey"]
-                         ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-                throw new InvalidOperationException(
-                    "ANTHROPIC_API_KEY environment variable or Anthropic:ApiKey configuration is required " +
-                    "to run SKILL.md-driven skills. Set the environment variable and restart the service.");
-
-            return new AnthropicClient { ApiKey = apiKey }
-                .AsIChatClient(model)
-                .AsBuilder()
-                .UseFunctionInvocation()
-                .Build();
-        }, LazyThreadSafetyMode.ExecutionAndPublication);
-    }
-
-    /// <summary>
-    /// Creates a <see cref="SkillMdDrivenSkill"/> with an injected <see cref="IChatClient"/>
-    /// for unit testing — bypasses <c>AnthropicClient</c> creation and API-key validation.
-    /// </summary>
-    internal static SkillMdDrivenSkill ForTesting(
-        SkillMd skillMd,
-        IMcpToolsProvider toolsProvider,
-        ILogger<SkillMdDrivenSkill> logger,
-        IChatClient chatClient)
-    {
-        var skill = new SkillMdDrivenSkill(
-            skillMd,
-            toolsProvider,
-            new ConfigurationBuilder().Build(),
-            logger);
-        // Replace the lazy with one that always returns the test client.
-        typeof(SkillMdDrivenSkill)
-            .GetField("_chatClient", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .SetValue(skill, new Lazy<IChatClient>(() => chatClient));
-        return skill;
+        _chatClient = new Lazy<IChatClient>(
+            () => chatClientFactory.Create(SkillMdPurpose),
+            LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     public string Name        => _skillMd.Name;

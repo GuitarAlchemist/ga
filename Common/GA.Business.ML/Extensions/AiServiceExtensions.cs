@@ -40,6 +40,12 @@ public static class AiServiceExtensions
         var chatProvider = configuration.GetValue<string>("AI:ChatProvider") ?? "ollama";
         services.AddGuitarAlchemistChatClient(chatProvider, configuration);
 
+        // Provider-neutral factory for purpose-specific chat clients (default,
+        // skill-md, qa-architect, fast-local). Skills/agents resolve their
+        // IChatClient through this factory so vendor SDK types stay encapsulated
+        // in the provider adapters.
+        services.TryAddSingleton<IChatClientFactory, DefaultChatClientFactory>();
+
         return services;
     }
 

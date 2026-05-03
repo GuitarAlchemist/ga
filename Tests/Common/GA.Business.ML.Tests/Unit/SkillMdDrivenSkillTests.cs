@@ -2,9 +2,9 @@ namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
+using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -33,6 +33,36 @@ public class SkillMdDrivenSkillTests
         return mock.Object;
     }
 
+    /// <summary>
+    /// Returns an <see cref="IChatClientFactory"/> that hands out the supplied client
+    /// for the <c>skill-md</c> purpose (and any purpose, for simplicity in tests).
+    /// </summary>
+    private static IChatClientFactory FactoryFor(IChatClient client)
+    {
+        var mock = new Mock<IChatClientFactory>();
+        mock.Setup(f => f.Create(It.IsAny<string>())).Returns(client);
+        return mock.Object;
+    }
+
+    /// <summary>
+    /// Returns an <see cref="IChatClientFactory"/> that throws on <c>Create</c> —
+    /// simulates a misconfigured provider (e.g. missing API key) without dragging
+    /// any vendor SDK into the test.
+    /// </summary>
+    private static IChatClientFactory ThrowingFactory(string message)
+    {
+        var mock = new Mock<IChatClientFactory>();
+        mock.Setup(f => f.Create(It.IsAny<string>()))
+            .Throws(new InvalidOperationException(message));
+        return mock.Object;
+    }
+
+    private static IChatClientFactory NoopFactory() =>
+        // CanHandle / metadata tests never resolve the client; this factory will
+        // still throw if invoked but the lazy guarantees that won't happen for
+        // tests that don't call ExecuteAsync.
+        ThrowingFactory("noop factory — should never be invoked in this test");
+
     // ── CanHandle ─────────────────────────────────────────────────────────────
 
     [Test]
@@ -41,7 +71,7 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(triggers: ["transpose"]),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.CanHandle("Can you transpose Am7 up a fifth?"), Is.True);
@@ -53,7 +83,7 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(triggers: ["PARSE CHORD"]),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.CanHandle("parse chord Am7"), Is.True);
@@ -65,7 +95,7 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(triggers: ["transpose", "diatonic"]),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.CanHandle("what is the weather today?"), Is.False);
@@ -77,7 +107,7 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(triggers: []),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.CanHandle("transpose anything"), Is.False);
@@ -91,7 +121,7 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(name: "GA Chords"),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.Name, Is.EqualTo("GA Chords"));
@@ -103,13 +133,13 @@ public class SkillMdDrivenSkillTests
         var skill = new SkillMdDrivenSkill(
             MakeSkillMd(description: "Parses chord symbols"),
             EmptyToolsProvider(),
-            new ConfigurationBuilder().Build(),
+            NoopFactory(),
             NullLogger<SkillMdDrivenSkill>.Instance);
 
         Assert.That(skill.Description, Is.EqualTo("Parses chord symbols"));
     }
 
-    // ── ExecuteAsync with injected IChatClient ────────────────────────────────
+    // ── ExecuteAsync with injected IChatClient via factory ────────────────────
 
     [Test]
     public async Task ExecuteAsync_SendsSystemPromptFromSkillMdBody()
@@ -123,10 +153,11 @@ public class SkillMdDrivenSkillTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "C major")));
 
-        var skill = SkillMdDrivenSkill.ForTesting(
-            skillMd, EmptyToolsProvider(),
-            NullLogger<SkillMdDrivenSkill>.Instance,
-            clientMock.Object);
+        var skill = new SkillMdDrivenSkill(
+            skillMd,
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
         await skill.ExecuteAsync("what is C major?");
 
@@ -151,10 +182,11 @@ public class SkillMdDrivenSkillTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Em7")));
 
-        var skill = SkillMdDrivenSkill.ForTesting(
-            MakeSkillMd(), EmptyToolsProvider(),
-            NullLogger<SkillMdDrivenSkill>.Instance,
-            clientMock.Object);
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
         await skill.ExecuteAsync(userMessage);
 
@@ -177,10 +209,11 @@ public class SkillMdDrivenSkillTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "answer")));
 
-        var skill = SkillMdDrivenSkill.ForTesting(
-            MakeSkillMd(name: "GA Chords"), EmptyToolsProvider(),
-            NullLogger<SkillMdDrivenSkill>.Instance,
-            clientMock.Object);
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(name: "GA Chords"),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
         var response = await skill.ExecuteAsync("test");
 
@@ -206,10 +239,11 @@ public class SkillMdDrivenSkillTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
 
-        var skill = SkillMdDrivenSkill.ForTesting(
-            MakeSkillMd(), toolsProviderMock.Object,
-            NullLogger<SkillMdDrivenSkill>.Instance,
-            clientMock.Object);
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(),
+            toolsProviderMock.Object,
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
         await skill.ExecuteAsync("test");
 
@@ -231,10 +265,11 @@ public class SkillMdDrivenSkillTests
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("timeout"));
 
-        var skill = SkillMdDrivenSkill.ForTesting(
-            MakeSkillMd(name: "Test"), EmptyToolsProvider(),
-            NullLogger<SkillMdDrivenSkill>.Instance,
-            clientMock.Object);
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(name: "Test"),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
         var response = await skill.ExecuteAsync("test");
 
@@ -242,34 +277,54 @@ public class SkillMdDrivenSkillTests
         Assert.That(response.Result, Contains.Substring("error"));
     }
 
-    // ── Missing API key (no test client override) ─────────────────────────────
+    // ── Provider configuration failures (factory-driven) ──────────────────────
 
     [Test]
-    public async Task ExecuteAsync_MissingApiKey_ReturnsErrorResponse()
+    public async Task ExecuteAsync_FactoryThrowsForMissingProvider_ReturnsErrorResponse()
     {
-        // ExecuteAsync never throws (except OperationCanceledException) — configuration errors
-        // are caught and returned as a zero-confidence error response so the chatbot pipeline
-        // can degrade gracefully rather than crashing mid-stream.
-        var original = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-        Environment.SetEnvironmentVariable("ANTHROPIC_API_KEY", null);
+        // ExecuteAsync never throws (except OperationCanceledException) — provider
+        // misconfiguration surfaces as a zero-confidence error so the chatbot pipeline
+        // can degrade gracefully rather than crashing mid-stream. Replaces the previous
+        // ANTHROPIC_API_KEY env-var test, which depended on process-wide state.
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(),
+            EmptyToolsProvider(),
+            ThrowingFactory("Anthropic chat client requested but no API key is configured."),
+            NullLogger<SkillMdDrivenSkill>.Instance);
 
-        try
-        {
-            var skill = new SkillMdDrivenSkill(
-                MakeSkillMd(),
-                EmptyToolsProvider(),
-                new ConfigurationBuilder().Build(),
-                NullLogger<SkillMdDrivenSkill>.Instance);
+        var response = await skill.ExecuteAsync("test");
 
-            var response = await skill.ExecuteAsync("test");
+        Assert.That(response.Confidence, Is.EqualTo(0f));
+        Assert.That(response.Result, Contains.Substring("error"));
+    }
 
-            Assert.That(response.Confidence, Is.EqualTo(0f));
-            Assert.That(response.Result, Contains.Substring("error"));
-        }
-        finally
-        {
-            if (original is not null)
-                Environment.SetEnvironmentVariable("ANTHROPIC_API_KEY", original);
-        }
+    [Test]
+    public void Constructor_RequestsSkillMdPurpose_FromFactory()
+    {
+        // Documents the contract that callers depend on: SkillMdDrivenSkill always
+        // resolves its IChatClient via the "skill-md" purpose. Future refactors that
+        // change this string should update this test deliberately.
+        var clientMock = new Mock<IChatClient>();
+        clientMock
+            .Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
+
+        var factoryMock = new Mock<IChatClientFactory>();
+        factoryMock.Setup(f => f.Create("skill-md")).Returns(clientMock.Object);
+
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(),
+            EmptyToolsProvider(),
+            factoryMock.Object,
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        // First execute triggers the lazy.
+        _ = skill.ExecuteAsync("test").Result;
+
+        factoryMock.Verify(f => f.Create("skill-md"), Times.Once);
+        factoryMock.Verify(f => f.Create(It.IsNotIn("skill-md")), Times.Never);
     }
 }
