@@ -1,0 +1,350 @@
+{
+  "schema_version": "0.1.0",
+  "captured_at": "2026-05-03T03:05:20.6973409-04:00",
+  "host": "AW-STEF",
+  "git": {
+    "sha": "dce3e699adc2868494fe8ae3a95e39dd515e3a56",
+    "branch": "main"
+  },
+  "chatbot": {
+    "url": "http://localhost:5252",
+    "status_endpoint": "/api/chatbot/status",
+    "chat_endpoint": "/api/chatbot/chat"
+  },
+  "ollama_state": "wedged",
+  "ollama_state_explanation": "Ollama API responsive (metadata + embeddings) but chat-model loading hangs. /api/ps showed 0 models for ~30 min while VRAM held 8.2-9.9 GiB. Root cause: GaApi appsettings.Development.json points at gemma4:26b-a4b-it-q4_K_M (~18 GB) which exceeds the RTX 5080's 16 GiB VRAM — partial CPU offload hangs first inference and strands VRAM. GaChatbot.Api uses llama3.2:3b which would fit but cannot because of the stranded VRAM.",
+  "vram_diagnosis": {
+    "gpu_total_mib": 16303,
+    "gpu_used_mib_at_capture": 9932,
+    "gpu_free_mib_at_capture": 6046,
+    "loaded_models": [
+      {
+        "vram_mb": 0,
+        "comment": "Running on CPU despite tiny size; OLLAMA_NUM_GPU unset, plus stranded VRAM probably forced CPU placement. ~2.2s per call vs ~50ms on GPU.",
+        "ctx": 2048,
+        "cpu_only": true,
+        "total_mb": 540,
+        "name": "nomic-embed-text:latest"
+      }
+    ],
+    "inefficiencies": [
+      "GaApi dev config selects gemma4:26b-a4b-it-q4_K_M (~18 GB) on a 16 GiB GPU — partial CPU offload hangs and strands VRAM.",
+      "OLLAMA_NUM_PARALLEL=8 over-allocates per-slot KV cache for a single-developer host; recommend 1 or 2.",
+      "OLLAMA_KEEP_ALIVE unset (defaults to 5 min); recommend 24h for dev to avoid reload churn.",
+      "OLLAMA_NUM_GPU unset; nomic-embed-text loaded entirely on CPU; recommend OLLAMA_NUM_GPU=999 to force max GPU offload.",
+      "~9.9 GiB stranded in VRAM with no models in /api/ps; only Ollama service restart will release it (denied this session)."
+    ],
+    "recommendations_priority_ordered": [
+      "Code change: edit Apps/ga-server/GaApi/appsettings.Development.json Ollama:ChatModel from 'gemma4:26b-a4b-it-q4_K_M' to 'llama3.2:3b' or 'gemma3:4b'. One-line fix that unblocks GaApi LLM path.",
+      "Env vars (user-level): OLLAMA_KEEP_ALIVE=24h, OLLAMA_NUM_PARALLEL=2, OLLAMA_NUM_GPU=999. Take effect next Ollama restart.",
+      "Manual: restart Ollama service to release stranded VRAM (Stop-Service Ollama / Start-Service Ollama)."
+    ],
+    "already_good": [
+      "OLLAMA_FLASH_ATTENTION=1 (saves attention compute + small VRAM)",
+      "OLLAMA_KV_CACHE_TYPE=q8_0 (cuts KV cache ~50% vs fp16)",
+      "OLLAMA_MAX_LOADED_MODELS=2 (sensible upper bound)"
+    ]
+  },
+  "package_versions": {
+    "Microsoft.Agents.AI|GaApi.csproj": "1.0.0-preview.251028.1",
+    "Anthropic|GaApi.csproj": "12.8.0",
+    "Anthropic|GA.Business.ML.csproj": "12.8.0",
+    "Microsoft.Extensions.AI|GA.Business.ML.csproj": "10.3.0",
+    "Microsoft.Extensions.AI.Abstractions|GA.Business.ML.csproj": "10.3.0",
+    "Microsoft.Extensions.AI.Ollama|GA.Business.ML.csproj": "9.4.0-preview.1.25207.5",
+    "ModelContextProtocol|GA.Business.ML.csproj": "1.1.0"
+  },
+  "prompts": [
+    {
+      "prompt": "Show me some easy beginner chords",
+      "success": false,
+      "client_ms": 60031,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 60 seconds elapsing."
+    },
+    {
+      "prompt": "Explain voice leading in jazz",
+      "success": false,
+      "client_ms": 60003,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 60 seconds elapsing."
+    },
+    {
+      "prompt": "What are the modes of the major scale?",
+      "success": true,
+      "client_ms": 9,
+      "server_ms": 0,
+      "agent_id": "skill.Modes",
+      "routing_method": "orchestrator-skill",
+      "confidence": 1,
+      "answer": "The major scale has 7 modes (Ionian formula: W-W-H-W-W-W-H). Each starts on a successive degree of the parent scale:\r\n\r\n1. **Ionian** — degrees `1 2 3 4 5 6 7` — Bright, the major scale itself\r\n2. **Dorian** — degrees `1 2 b3 4 5 6 b7` — Minor with raised 6th — jazz/folk staple\r\n3. **Phrygian** — degrees `1 b2 b3 4 5 b6 b7` — Dark minor with flat 2 — Spanish/flamenco\r\n4. **Lydian** — degrees `1 2 3 #4 5 6 7` — Major with raised 4th — floating, dreamy\r\n5. **Mixolydian** — degrees `1 2 3 4 5 6 b7` — Major with flat 7 — bluesy/rock\r\n6. **Aeolian** — degrees `1 2 b3 4 5 b6 b7` — Natural minor\r\n7. **Locrian** — degrees `1 b2 b3 4 b5 b6 b7` — Half-diminished — rare as a tonic\r\n\r\nMnemonic: *I Don't Particularly Like Modes A Lot* (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian).",
+      "trace": {
+        "traceId": "cf832291e80c6a7a89875e281a6f6211",
+        "protocol": "w3c-trace-context+otel-genai+ag-ui",
+        "runId": "run_0571b7f795af4389bacb2b5cfefbefab",
+        "steps": [
+          {
+            "name": "chat.request",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "gen_ai.operation.name": "chat",
+              "chat.mode": "full",
+              "history.turn_count": 0
+            }
+          },
+          {
+            "name": "orchestration.answer",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "timeout.seconds": 180,
+              "agent.id": "skill.Modes",
+              "routing.method": "orchestrator-skill",
+              "routing.confidence": 1,
+              "grounding.source": null,
+              "candidate.count": 0,
+              "response.length": 797
+            }
+          },
+          {
+            "name": "orchestration.route",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "skill.Modes",
+              "routing.method": "orchestrator-skill",
+              "routing.confidence": 1,
+              "query.intent": null,
+              "query.quality": null,
+              "query.extension": null,
+              "query.stacking_type": null,
+              "query.note_count": null,
+              "query.key": null
+            }
+          },
+          {
+            "name": "agent.semantic_result",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "skill.Modes",
+              "grounding.source": null,
+              "candidate.count": 0,
+              "voicing.diagram.count": 0,
+              "response.length": 797,
+              "debug.mode": null,
+              "debug.agent": null
+            }
+          },
+          {
+            "name": "notation.vextab",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "notation.diagram.count": 0,
+              "notation.vextab.added_count": 0,
+              "notation.format": "vextab",
+              "notation.renderer": "vexflow"
+            }
+          },
+          {
+            "name": "response.emit",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "response.length": 797,
+              "response.has_vextab": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Generate a mellow ii-V-I in C",
+      "success": false,
+      "client_ms": 60017,
+      "error": "The request was canceled due to the configured HttpClient.Timeout of 60 seconds elapsing."
+    },
+    {
+      "prompt": "How do I make this progression sound darker?",
+      "success": true,
+      "client_ms": 27353,
+      "server_ms": 27344,
+      "agent_id": "composer",
+      "routing_method": "llm",
+      "confidence": 0.97,
+      "answer": "I couldn't find a valid tab to optimize.",
+      "trace": {
+        "traceId": "d2c5aad9c00f71f421615d61bd7eb540",
+        "protocol": "w3c-trace-context+otel-genai+ag-ui",
+        "runId": "run_e0faa278c0fa43e68edbb6dd69782d2c",
+        "steps": [
+          {
+            "name": "chat.request",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "gen_ai.operation.name": "chat",
+              "chat.mode": "full",
+              "history.turn_count": 0
+            }
+          },
+          {
+            "name": "orchestration.answer",
+            "status": "completed",
+            "elapsedMs": 27344,
+            "attributes": {
+              "timeout.seconds": 180,
+              "agent.id": "composer",
+              "routing.method": "llm",
+              "routing.confidence": 0.97,
+              "grounding.source": null,
+              "candidate.count": 0,
+              "response.length": 40
+            }
+          },
+          {
+            "name": "orchestration.route",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "composer",
+              "routing.method": "llm",
+              "routing.confidence": 0.97,
+              "query.intent": "OptimizePath",
+              "query.quality": "Diminished",
+              "query.extension": "13",
+              "query.stacking_type": "Cluster",
+              "query.note_count": null,
+              "query.key": null
+            }
+          },
+          {
+            "name": "agent.semantic_result",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "composer",
+              "grounding.source": null,
+              "candidate.count": 0,
+              "voicing.diagram.count": 0,
+              "response.length": 40,
+              "debug.mode": null,
+              "debug.agent": null
+            }
+          },
+          {
+            "name": "notation.vextab",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "notation.diagram.count": 0,
+              "notation.vextab.added_count": 0,
+              "notation.format": "vextab",
+              "notation.renderer": "vexflow"
+            }
+          },
+          {
+            "name": "response.emit",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "response.length": 40,
+              "response.has_vextab": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Are 0146 and 0137 z-related?",
+      "success": true,
+      "client_ms": 5,
+      "server_ms": 0,
+      "agent_id": "algebra",
+      "routing_method": "ix-algebra",
+      "confidence": 1,
+      "answer": "[0,1,4,6] and [0,1,3,7] are Z-related: they share ICV <1 1 1 1 1 1> but have different prime forms.",
+      "trace": {
+        "traceId": "c5d273e2776b2b0d41718c463ab6db43",
+        "protocol": "w3c-trace-context+otel-genai+ag-ui",
+        "runId": "run_a0ef37a5e1bc44f892e5fdae72759705",
+        "steps": [
+          {
+            "name": "chat.request",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "gen_ai.operation.name": "chat",
+              "chat.mode": "full",
+              "history.turn_count": 0
+            }
+          },
+          {
+            "name": "orchestration.answer",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "timeout.seconds": 180,
+              "agent.id": "algebra",
+              "routing.method": "ix-algebra",
+              "routing.confidence": 1,
+              "grounding.source": "ix-compatible",
+              "candidate.count": 0,
+              "response.length": 99
+            }
+          },
+          {
+            "name": "orchestration.route",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "algebra",
+              "routing.method": "ix-algebra",
+              "routing.confidence": 1,
+              "query.intent": null,
+              "query.quality": null,
+              "query.extension": null,
+              "query.stacking_type": null,
+              "query.note_count": null,
+              "query.key": null
+            }
+          },
+          {
+            "name": "agent.semantic_result",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "agent.id": "algebra",
+              "grounding.source": "ix-compatible",
+              "candidate.count": 0,
+              "voicing.diagram.count": 0,
+              "response.length": 99,
+              "debug.mode": "Algebra",
+              "debug.agent": null
+            }
+          },
+          {
+            "name": "notation.vextab",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "notation.diagram.count": 0,
+              "notation.vextab.added_count": 0,
+              "notation.format": "vextab",
+              "notation.renderer": "vexflow"
+            }
+          },
+          {
+            "name": "response.emit",
+            "status": "completed",
+            "elapsedMs": 0,
+            "attributes": {
+              "response.length": 99,
+              "response.has_vextab": false
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

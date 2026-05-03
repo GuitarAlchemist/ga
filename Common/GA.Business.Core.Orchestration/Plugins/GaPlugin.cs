@@ -28,6 +28,7 @@ public sealed class GaPlugin : IChatPlugin
         // Pure-domain skills are Singleton (stateless, no scoped dependencies).
         services.AddSingleton<IOrchestratorSkill, ChordInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
+        services.AddSingleton<IOrchestratorSkill, ModesSkill>();
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
 
