@@ -214,3 +214,7 @@ Apps/GaChatbot.Api/.azure/
 # Playwright artifacts — regenerated on every test run
 Apps/ga-client/test-results/
 Apps/ga-client/playwright-report/
+
+# Local SAE training artifacts (per-developer-machine validation runs).
+# Real Phase 1 agent runs land at state/quality/optick-sae/<date>/ (no -local suffix).
+state/quality/optick-sae/*-local/
