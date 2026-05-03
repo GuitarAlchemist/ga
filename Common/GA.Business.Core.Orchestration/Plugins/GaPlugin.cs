@@ -68,5 +68,6 @@ public sealed class GaPlugin : IChatPlugin
         // §"Porting policy: catalog vs. computation skills".
         typeof(IntervalMcpTools),
         typeof(ScaleMcpTools),
+        typeof(ChordMcpTools),
     ];
 }

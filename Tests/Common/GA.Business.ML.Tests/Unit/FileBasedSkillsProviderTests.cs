@@ -201,6 +201,33 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsChordInfoSkillFromRepo()
+    {
+        // Third MCP-tool-driven canary. Confirms the template scales to a
+        // skill with richer parsing semantics (chord symbol regex, quality
+        // suffix normalization, enharmonic respelling).
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var chord = provider.Skills.SingleOrDefault(s => s.Name == "chord-info");
+        Assert.That(chord, Is.Not.Null,
+            "skills/chord-info/SKILL.md must be discovered with name 'chord-info'");
+
+        Assert.That(chord!.Triggers.Any(t => t.Contains("chord notes")), Is.True);
+        Assert.That(chord.Triggers.Any(t => t.Contains("notes in a")), Is.True);
+
+        Assert.That(chord.Body, Does.Contain("ga_chord_info"),
+            "tool-driven SKILL.md must name the MCP tool the LLM should call");
+        Assert.That(chord.Body, Does.Contain("chordSymbol"),
+            "body must document the tool's argument name so the LLM doesn't guess");
+
+        var ctx = await provider.InvokingAsync(UserContext("what notes are in a Cmaj7"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_chord_info"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsScaleInfoSkillFromRepo()
     {
         // Second MCP-tool-driven canary. Confirms the tool-driven SKILL.md
