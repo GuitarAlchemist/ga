@@ -23,7 +23,15 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
 
     public bool CanHandle(string message)
     {
+        if (string.IsNullOrWhiteSpace(message)) return false;
+
         var q = message.ToLowerInvariant();
+
+        // Yield to ChordInfoSkill when the prompt is clearly about a chord rather
+        // than a scale — "what notes are in a C major chord?" otherwise matches
+        // both because "C major" + "note" satisfies our pattern.
+        if (q.Contains("chord")) return false;
+
         return KeyPattern.IsMatch(message) &&
                (q.Contains("note") || q.Contains("scale") || q.Contains("what is") ||
                 q.Contains("what's in") || q.Contains("tell me") || q.Contains("show me") ||

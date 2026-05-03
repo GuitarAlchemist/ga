@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-05-03T03:04:08.7635796-04:00",
+  "host": "AW-STEF",
+  "git_sha": "dce3e699adc2868494fe8ae3a95e39dd515e3a56",
+  "ollama_loaded": [
+    {
+      "name": "nomic-embed-text:latest",
+      "model": "nomic-embed-text:latest",
+      "size": 565782528,
+      "digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "nomic-bert",
+        "families": [
+          "nomic-bert"
+        ],
+        "parameter_size": "137M",
+        "quantization_level": "F16"
+      },
+      "expires_at": "2026-05-03T03:06:48.9961822-04:00",
+      "size_vram": 0,
+      "context_length": 2048
+    }
+  ],
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 5080",
+    "total_mib": 16303,
+    "used_mib": 9932,
+    "free_mib": 6046,
+    "util_pct": 28
+  },
+  "ollama_proc": {
+    "pid": 11108,
+    "ws_mb": 28,
+    "cmd": "\"C:\\Users\\spare\\AppData\\Local\\Programs\\Ollama\\ollama.exe\" serve "
+  },
+  "ollama_env": {
+    "OLLAMA_NUM_PARALLEL": "8",
+    "OLLAMA_MAX_LOADED_MODELS": "2",
+    "OLLAMA_KEEP_ALIVE": "(unset)",
+    "OLLAMA_FLASH_ATTENTION": "1",
+    "OLLAMA_KV_CACHE_TYPE": "q8_0",
+    "OLLAMA_HOST": "(unset)",
+    "OLLAMA_GPU_OVERHEAD": "(unset)",
+    "OLLAMA_NUM_GPU": "(unset)"
+  },
+  "app_configs": {
+    "Apps\\ga-server\\GaApi\\appsettings.Development.json": {
+      "ChatModel": "gemma4:26b-a4b-it-q4_K_M",
+      "EmbeddingModel": "nomic-embed-text:latest"
+    },
+    "Apps\\GaChatbot.Api\\appsettings.json": {
+      "ChatModel": "llama3.2:3b",
+      "EmbeddingModel": "nomic-embed-text",
+      "StreamTimeoutSeconds": "180"
+    }
+  }
+}
