@@ -80,6 +80,7 @@ public static class ChatbotOrchestrationExtensions
         // KeywordAlgebraPromptClassifier, IsAskingForOptimization, the per-skill
         // CanHandle foreach, and the tab-analysis branch.
         services.AddSingleton<SemanticIntentRouter>();
+        services.AddHostedService<IntentEmbeddingWarmupService>();
         services.AddScoped<TabAnalysisOrchestrationService>();
 
         services.AddSingleton<AlgebraIntent>();
