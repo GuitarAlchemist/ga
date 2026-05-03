@@ -201,6 +201,49 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsProgressionCompletionSkillFromRepo()
+    {
+        // Seventh and final canary — completes the migration. Notable for
+        // REUSING ga_key_identify rather than introducing a new MCP tool;
+        // the deterministic detection is identical to KeyIdentification, only
+        // the SKILL.md instructions differ (cadence picking vs key naming).
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var pc = provider.Skills.SingleOrDefault(s => s.Name == "progression-completion");
+        Assert.That(pc, Is.Not.Null,
+            "skills/progression-completion/SKILL.md must be discovered with name 'progression-completion'");
+
+        Assert.That(pc!.Triggers.Any(t => t.Contains("what comes next")), Is.True);
+        Assert.That(pc.Triggers.Any(t => t.Contains("finish this")), Is.True);
+        Assert.That(pc.Triggers.Any(t => t.Contains("continue this")), Is.True);
+
+        // Body must reference the REUSED ga_key_identify tool.
+        Assert.That(pc.Body, Does.Contain("ga_key_identify"),
+            "progression-completion SKILL.md reuses ga_key_identify (no new tool needed)");
+
+        // The four-cadence catalog is load-bearing — every suggestion the LLM
+        // makes must come from this list. If a row is dropped or a Roman
+        // numeral typo'd, the LLM will silently teach wrong theory.
+        Assert.That(pc.Body, Does.Contain("Authentic").And.Contain("Half")
+                                  .And.Contain("Deceptive").And.Contain("Plagal"),
+            "all four cadence types must be named in the body");
+        Assert.That(pc.Body, Does.Contain("V → I").Or.Contain("V→I"),
+            "authentic cadence Roman numeral must be present");
+        Assert.That(pc.Body, Does.Contain("IV → I").Or.Contain("IV→I"),
+            "plagal cadence Roman numeral must be present");
+
+        // Hard constraints section guards the LLM against making up chords.
+        Assert.That(pc.Body, Does.Contain("DiatonicSet"),
+            "the 'every suggested chord must appear in DiatonicSet' constraint must survive");
+
+        var ctx = await provider.InvokingAsync(UserContext("what comes next after C G Am"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_key_identify"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsKeyIdentificationSkillFromRepo()
     {
         // Sixth MCP-tool-driven canary, and the FIRST hybrid port (the C#
