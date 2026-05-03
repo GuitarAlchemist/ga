@@ -201,6 +201,38 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsIntervalSkillFromRepo()
+    {
+        // Canary for the MCP-tool-driven authoring style — different shape from
+        // the catalog SKILL.md files (BeginnerChords, ProgressionMood). The body
+        // doesn't carry data; it instructs the LLM to call the MCP tool. If this
+        // test fails the loader broke for tool-driven skills specifically.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var interval = provider.Skills.SingleOrDefault(s => s.Name == "interval");
+        Assert.That(interval, Is.Not.Null,
+            "skills/interval/SKILL.md must be discovered with name 'interval'");
+
+        // Triggers must cover the main phrasings users employ.
+        Assert.That(interval!.Triggers, Has.Some.Contain("interval between"));
+        Assert.That(interval.Triggers,  Has.Some.Contain("distance from"));
+        Assert.That(interval.Triggers,  Has.Some.Contain("how many semitones"));
+
+        // Body must reference the tool by exact name so the LLM knows what to call.
+        Assert.That(interval.Body, Does.Contain("ComputeInterval"),
+            "tool-driven SKILL.md must name the MCP tool the LLM should call");
+        Assert.That(interval.Body, Does.Contain("lowerNote").And.Contain("upperNote"),
+            "body must document the tool's argument names so the LLM doesn't guess");
+
+        // Trigger match returns the body — same path as catalog skills.
+        var ctx = await provider.InvokingAsync(UserContext("interval between C and G"));
+        Assert.That(ctx.Instructions, Does.Contain("ComputeInterval"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsProgressionMoodSkillFromRepo()
     {
         // Second-canary smoke test — once two catalog skills are wired, the

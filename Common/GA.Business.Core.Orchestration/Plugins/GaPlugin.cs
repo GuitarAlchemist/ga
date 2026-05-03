@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Plugins;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
+using GA.Business.ML.Agents.Mcp;
 using GA.Business.ML.Agents.Memory;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
@@ -56,5 +57,13 @@ public sealed class GaPlugin : IChatPlugin
     /// MCP server assembled by <see cref="ChatPluginHost"/> (wired in Phase 3).
     /// Referenced by type name to avoid a direct project dependency on GaMcpServer.
     /// </summary>
-    public IReadOnlyList<Type> McpToolTypes => [typeof(MemoryMcpTools)];
+    public IReadOnlyList<Type> McpToolTypes =>
+    [
+        typeof(MemoryMcpTools),
+        // First domain-compute tool exposed via MCP — canary for the workstream
+        // that ports computation skills to thin SKILL.md + tool calls. See
+        // docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
+        // §"Porting policy: catalog vs. computation skills".
+        typeof(IntervalMcpTools),
+    ];
 }
