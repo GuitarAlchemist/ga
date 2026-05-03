@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Agents.Plugins;
 
 using GA.Business.ML.Agents.Skills;
+using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -49,7 +50,8 @@ public sealed class SkillMdPlugin : IChatPlugin
         }
 
         // IMcpToolsProvider is registered as a singleton by ChatPluginHost after this plugin runs.
-        // Each SkillMdDrivenSkill resolves it lazily on first ExecuteAsync call.
+        // IChatClientFactory is registered by AddGuitarAlchemistAi.
+        // Each SkillMdDrivenSkill resolves the chat client lazily on first ExecuteAsync call.
         foreach (var skill in skills)
         {
             var captured = skill;
@@ -57,7 +59,7 @@ public sealed class SkillMdPlugin : IChatPlugin
                 new SkillMdDrivenSkill(
                     captured,
                     sp.GetRequiredService<IMcpToolsProvider>(),
-                    sp.GetRequiredService<IConfiguration>(),
+                    sp.GetRequiredService<IChatClientFactory>(),
                     sp.GetRequiredService<ILogger<SkillMdDrivenSkill>>()));
         }
     }

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GA.Providers.Anthropic</AssemblyName>
+    <RootNamespace>GA.Providers.Anthropic</RootNamespace>
+    <Title>Guitar Alchemist - Anthropic Provider Adapter</Title>
+    <Description>
+      Anthropic SDK adapter producing Microsoft.Extensions.AI IChatClient instances.
+      The official Anthropic C# SDK is documented as official-but-beta — pin its
+      version here and isolate it from the rest of the codebase so a minor SDK
+      break does not ripple through GA. No Anthropic types must leave this project.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pinned: bump deliberately. The Anthropic C# SDK is official-but-beta. -->
+    <PackageReference Include="Anthropic" Version="12.8.0" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.5.1" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.5.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+</Project>
