@@ -6,7 +6,7 @@
 
 ## What landed
 
-13 PRs merged to `main` on 2026-05-03:
+12 PRs merged to `main` on 2026-05-03 (this workstream):
 
 | PR | Type | Topic |
 |---|---|---|
@@ -25,9 +25,11 @@
 
 ## Migration map (final state)
 
+> **Note**: `qa-architect/` was authored separately in PR #66 (Phase 2 of the migration recommendation, before this workstream's 12 PRs); it's listed in the layout for completeness but did not ship in any of the 12 PRs above.
+
 ```
 skills/
-├── qa-architect/              SKILL.md   (catalog — instructions for QA Architect agent)
+├── qa-architect/              SKILL.md   (catalog — pre-existing, PR #66; instructions for QA Architect agent)
 ├── beginner-chords/           SKILL.md   (catalog — 8 open-position chord diagrams)
 ├── progression-mood/          SKILL.md   (catalog — darken/brighten technique catalog)
 ├── modes/                     SKILL.md   (catalog — 7-mode major-scale catalog)
