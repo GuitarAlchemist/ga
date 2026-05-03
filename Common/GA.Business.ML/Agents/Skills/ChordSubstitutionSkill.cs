@@ -133,8 +133,14 @@ public sealed class ChordSubstitutionSkill(
 
         var (chordName, sourceSet) = parsed.Value;
 
+        // Exclude the source from its own substitution list. The previous
+        // ReferenceEquals check only worked if the catalog interned the EXACT
+        // instance built locally — it doesn't, so the source could leak into
+        // its own results. Compare by pitch-class mask instead (PR #85 fix).
+        var sourceMask = sourceSet.PitchClassMask;
         var nearby = grothendieck.FindNearby(sourceSet, maxDistance: 3)
-            .Where(r => !ReferenceEquals(r.Set, sourceSet) && r.Set.Cardinality == sourceSet.Cardinality)
+            .Where(r => r.Set.PitchClassMask != sourceMask
+                        && r.Set.Cardinality == sourceSet.Cardinality)
             .OrderBy(r => r.Cost)
             .Take(5)
             .ToList();
@@ -229,8 +235,12 @@ public sealed class ChordSubstitutionSkill(
             results.Add(new("Secondary Dominant",
                 $"{nameA} is a perfect 5th above {nameB} — {nameA} functions as V (dominant) of {nameB}."));
 
-        // Backdoor dominant: A is bVII7 of B (resolves up by whole step to B as I)
-        if (ab == 10 && intervalsA.SequenceEqual(Dom7))
+        // Backdoor dominant: A is bVII7 of B (resolves up a whole step).
+        // bVII = 10 semitones above the tonic, so going from B (tonic) UP to
+        // A (bVII) is 10 semitones — that's `ba == 10`. Was previously `ab == 10`,
+        // which actually detects "B is bVII of A", the opposite of the comment.
+        // Fixed in PR #85 alongside the MCP-tool port.
+        if (ba == 10 && intervalsA.SequenceEqual(Dom7))
             results.Add(new("Backdoor Dominant",
                 $"{nameA} is bVII7 relative to {nameB} — the backdoor dominant resolves up by a whole step to the tonic."));
 

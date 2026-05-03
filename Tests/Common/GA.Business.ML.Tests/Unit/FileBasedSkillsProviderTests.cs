@@ -201,6 +201,39 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsChordSubstitutionSkillFromRepo()
+    {
+        // Fifth MCP-tool-driven canary, and first SKILL.md to expose TWO
+        // allowed-tools (ga_chord_substitutions + ga_chord_compare). Confirms
+        // the loader doesn't drop tool-list entries past the first.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var sub = provider.Skills.SingleOrDefault(s => s.Name == "chord-substitution");
+        Assert.That(sub, Is.Not.Null,
+            "skills/chord-substitution/SKILL.md must be discovered with name 'chord-substitution'");
+
+        Assert.That(sub!.Triggers.Any(t => t.Contains("substitut")), Is.True);
+        Assert.That(sub.Triggers.Any(t => t.Contains("tritone")),    Is.True);
+
+        // Both tool names must be present in the body so the LLM knows what's
+        // available — single-tool SKILL.mds can omit one in error.
+        Assert.That(sub.Body, Does.Contain("ga_chord_substitutions"),
+            "tool-driven SKILL.md must name the substitutions tool");
+        Assert.That(sub.Body, Does.Contain("ga_chord_compare"),
+            "tool-driven SKILL.md must name the comparison tool");
+
+        // Trigger fires on common phrasings.
+        var ctx1 = await provider.InvokingAsync(UserContext("substitutions for Cmaj7"));
+        Assert.That(ctx1.Instructions, Does.Contain("ga_chord_substitutions"));
+
+        var ctx2 = await provider.InvokingAsync(UserContext("is G7 a tritone sub for Db7"));
+        Assert.That(ctx2.Instructions, Does.Contain("ga_chord_compare"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsFretSpanSkillFromRepo()
     {
         // Fourth MCP-tool-driven canary. Confirms the template covers chord-

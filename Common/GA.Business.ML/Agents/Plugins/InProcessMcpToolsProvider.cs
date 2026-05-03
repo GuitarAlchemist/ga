@@ -58,10 +58,30 @@ public sealed class InProcessMcpToolsProvider(
         var serverServices = new ServiceCollection();
         serverServices.AddLogging();
 
-        // Copy domain services the tool types require from the host container
-        // (registered via GaPlugin or other plugins that have McpToolTypes)
-        // For now we forward the full IServiceProvider — tools can scope down as needed
+        // Forward domain services the MCP tool types depend on. Registering
+        // `hostServices` itself as IServiceProvider does NOT make individual
+        // services resolvable inside the server scope — the MCP framework
+        // activates tool instances via ActivatorUtilities against the *server's*
+        // provider, which only sees what's registered in `serverServices`.
+        //
+        // Each tool type's longest constructor is inspected; every parameter
+        // type is forwarded as a singleton that defers to the host provider.
+        // This lets new tool dependencies work without touching this file —
+        // bug surfaced by PR #85 review.
         serverServices.AddSingleton(hostServices);
+        foreach (var toolType in toolTypes)
+        {
+            var ctor = toolType.GetConstructors().OrderByDescending(c => c.GetParameters().Length).FirstOrDefault();
+            if (ctor is null) continue;
+            foreach (var param in ctor.GetParameters())
+            {
+                var serviceType = param.ParameterType;
+                if (serviceType == typeof(IServiceProvider)) continue;
+                // Skip if already registered (multiple tools sharing a dep).
+                if (serverServices.Any(d => d.ServiceType == serviceType)) continue;
+                serverServices.AddSingleton(serviceType, _ => hostServices.GetRequiredService(serviceType));
+            }
+        }
 
         var mcpBuilder = serverServices
             .AddMcpServer()
