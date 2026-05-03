@@ -28,6 +28,13 @@ public abstract class AgentSkillBase(string agentId, IChatClient chatClient, ILo
     public abstract string Name { get; }
     public abstract string Description { get; }
 
+    /// <summary>
+    /// Canonical phrasings used by <c>SemanticIntentRouter</c>. Subclasses that
+    /// participate in semantic routing should override; default empty preserves
+    /// legacy <c>CanHandle</c>-only dispatch.
+    /// </summary>
+    public virtual IReadOnlyList<string> ExamplePrompts => [];
+
     // ── IOrchestratorSkill — implement in subclasses ──────────────────────────
 
     public abstract bool CanHandle(string message);

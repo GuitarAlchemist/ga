@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
+using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
@@ -31,6 +33,8 @@ public class ProductionOrchestrator(
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
+    SemanticIntentRouter intentRouter,
+    TabAnalysisOrchestrationService tabAnalysisService,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
@@ -99,32 +103,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
-        var algebraResponse = await TryAnswerWithAlgebraAsync(message, ct);
-        if (algebraResponse is not null)
+        // ── Unified semantic intent dispatch (replaces the legacy algebra check
+        //    and the per-skill CanHandle foreach). One embedding similarity pass
+        //    over IIntent registrations covers algebra, deterministic skills,
+        //    and tab-handling intents. See
+        //    docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
+        //    §"Routing classifiers".
+        var semanticResp = await TryDispatchViaIntentAsync(message, ct);
+        if (semanticResp is not null)
         {
-            foreach (var word in algebraResponse.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var word in semanticResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 await onToken(word + " ");
 
-            historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
-            return algebraResponse;
-        }
-
-        // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
-        foreach (var skill in _skills)
-        {
-            if (!skill.CanHandle(message)) continue;
-
-            var skillResp = await skill.ExecuteAsync(message, ct);
-
-            // Emit skill answer as word-level simulated tokens
-            foreach (var word in skillResp.Result.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                await onToken(word + " ");
-
-            historyStore.AddTurn(sessionId, "assistant", skillResp.Result);
-            return new ChatResponse(
-                NaturalLanguageAnswer: skillResp.Result,
-                Candidates: [],
-                Routing: new AgentRoutingMetadata($"skill.{skill.Name}", skillResp.Confidence, "orchestrator-skill"));
+            historyStore.AddTurn(sessionId, "assistant", semanticResp.NaturalLanguageAnswer);
+            return semanticResp;
         }
 
         if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
@@ -158,15 +150,16 @@ public class ProductionOrchestrator(
             routing.Confidence,
             routing.RoutingMethod);
 
-        // For tab/path-optimization intents fall back to non-streaming path
+        // For tab/path-optimization intents fall back to non-streaming path.
+        // Dispatch by the LLM-extracted filter intent (no string-match keywords).
         if (routing.SelectedAgent.AgentId == AgentIds.Tab ||
             (filters?.Intent is "OptimizePath" or "AnalyzeTab"))
         {
             ChatResponse fallback;
-            if (filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message))
-                fallback = await HandlePathOptimizationAsync(req.Message, ct);
+            if (filters?.Intent == "OptimizePath")
+                fallback = await tabAnalysisService.OptimizePathAsync(req.Message, ct);
             else
-                fallback = await HandleTabAnalysisAsync(req.Message, ct);
+                fallback = await tabAnalysisService.AnalyzeTabAsync(req.Message, ct);
 
             fallback = fallback with { Routing = routingMetadata, QueryFilters = filters };
 
@@ -247,27 +240,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
-        var algebraResponse = await TryAnswerWithAlgebraAsync(message, ct);
-        if (algebraResponse is not null)
+        // ── Unified semantic intent dispatch with the hook lifecycle ─────────
+        // One embedding similarity pass over IIntent registrations covers
+        // algebra, deterministic skills, and tab-handling intents. Replaces
+        // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
+        // CanHandle foreach. See migration recommendation §"Routing classifiers".
+        var intentMatch = await intentRouter.RouteAsync(message, services, ct);
+        if (intentMatch is { } pick)
         {
-            sw.Stop();
-            activity?.SetTag("orchestration.branch", "algebra");
-            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
-            historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
-            return algebraResponse;
-        }
-
-        // ── Fast-path: domain-grounded skills bypass routing + LLM pipeline ──
-        foreach (var skill in _skills)
-        {
-            if (!skill.CanHandle(message)) continue;
-
-            // OnBeforeSkill hooks
+            // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
             var beforeCtx = new ChatHookContext
             {
                 OriginalMessage  = req.Message,
                 CurrentMessage   = message,
-                MatchedSkillName = skill.Name,
+                MatchedSkillName = pick.Intent.Id,
                 CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
@@ -277,47 +263,61 @@ public class ProductionOrchestrator(
                 {
                     sw.Stop();
                     return new ChatResponse(
-                        NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Skill blocked.",
+                        NaturalLanguageAnswer: r.BlockedResponse?.Result ?? "Intent blocked.",
                         Candidates: [],
-                        Routing: new AgentRoutingMetadata($"hook.{skill.Name}", 1f, "hook-blocked"));
+                        Routing: new AgentRoutingMetadata($"hook.{pick.Intent.Id}", 1f, "hook-blocked"));
                 }
             }
 
-            var skillResp = await skill.ExecuteAsync(message, ct);
+            var intentResult = await pick.Intent.ExecuteAsync(message, ct);
+
+            // Map IntentResult back to AgentResponse for hook compatibility.
+            var skillRespForHooks = new AgentResponse
+            {
+                AgentId    = pick.Intent.Id,
+                Result     = intentResult.Answer,
+                Confidence = intentResult.Confidence,
+                Evidence   = intentResult.Evidence ?? [],
+                Assumptions = [],
+            };
 
             // OnAfterSkill hooks
             var afterCtx = new ChatHookContext
             {
                 OriginalMessage  = req.Message,
                 CurrentMessage   = message,
-                MatchedSkillName = skill.Name,
-                Response         = skillResp,
+                MatchedSkillName = pick.Intent.Id,
+                Response         = skillRespForHooks,
                 CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
                 await hook.OnAfterSkill(afterCtx, ct);
 
             sw.Stop();
-            activity?.SetTag("orchestration.branch", $"skill.{skill.Name}");
+            activity?.SetTag("orchestration.branch", pick.Intent.Id);
             activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
 
             var chatResp = new ChatResponse(
-                NaturalLanguageAnswer: skillResp.Result,
+                NaturalLanguageAnswer: intentResult.Answer,
                 Candidates: [],
-                Routing: new AgentRoutingMetadata($"skill.{skill.Name}", skillResp.Confidence, "orchestrator-skill"));
+                Routing: new AgentRoutingMetadata(
+                    pick.Intent.Id,
+                    Math.Min(intentResult.Confidence, pick.Confidence),
+                    intentResult.RoutingMethodOverride ?? "semantic-intent"));
 
             // OnResponseSent hooks (memory writing, analytics)
             var sentCtx = new ChatHookContext
             {
                 OriginalMessage  = req.Message,
                 CurrentMessage   = message,
-                MatchedSkillName = skill.Name,
-                Response         = skillResp,
+                MatchedSkillName = pick.Intent.Id,
+                Response         = skillRespForHooks,
                 CorrelationId    = correlationId,
             };
             foreach (var hook in _hooks)
                 await hook.OnResponseSent(sentCtx, ct);
 
+            historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
             return chatResp;
         }
 
@@ -375,22 +375,27 @@ public class ProductionOrchestrator(
         activity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, routing.Confidence);
 
         ChatResponse result;
-        var shouldOptimizePath = filters?.Intent == "OptimizePath" || IsAskingForOptimization(req.Message);
-        var shouldAnalyzeTab = routing.SelectedAgent.AgentId == AgentIds.Tab ||
-                               (filters?.Intent == "AnalyzeTab" && LooksLikeTabInput(req.Message));
+        // LLM-extracted filter intent drives tab branch — no string keyword check.
+        // (The semantic intent router upstream handles "make this smoother" /
+        // "analyse this tab" via TabOptimizeIntent / TabAnalyzeIntent before we
+        // reach this fallback, so this code only fires when the filter extractor
+        // tagged the intent OR the agent router routed to AgentIds.Tab.)
+        var shouldOptimizePath = filters?.Intent == "OptimizePath";
+        var shouldAnalyzeTab   = routing.SelectedAgent.AgentId == AgentIds.Tab ||
+                                 filters?.Intent == "AnalyzeTab";
 
         if (shouldAnalyzeTab || shouldOptimizePath)
         {
             if (shouldOptimizePath)
             {
                 activity?.SetTag("orchestration.branch", "tab.path_optimization");
-                var optimized = await HandlePathOptimizationAsync(req.Message, ct);
+                var optimized = await tabAnalysisService.OptimizePathAsync(req.Message, ct);
                 result = optimized with { Routing = routingMetadata, QueryFilters = filters };
             }
             else
             {
                 activity?.SetTag("orchestration.branch", "tab.analysis");
-                var analyzed = await HandleTabAnalysisAsync(req.Message, ct);
+                var analyzed = await tabAnalysisService.AnalyzeTabAsync(req.Message, ct);
                 result = analyzed with { Routing = routingMetadata, QueryFilters = filters };
             }
         }
@@ -475,152 +480,24 @@ public class ProductionOrchestrator(
                    RegexOptions.IgnoreCase);
     }
 
-    private async Task<ChatResponse> HandlePathOptimizationAsync(string query, CancellationToken ct)
+    /// <summary>
+    /// Streaming-path entry to the unified semantic intent dispatch — used by
+    /// <see cref="AnswerStreamingAsync"/>. Returns the intent's response or
+    /// null when no intent scored above threshold (caller falls through to
+    /// the LLM agent path).
+    /// </summary>
+    private async Task<ChatResponse?> TryDispatchViaIntentAsync(string message, CancellationToken ct)
     {
-        // Extract raw tab from query
-        var diagramMatch = Regex.Match(query, @"([x\d]{1,2}-){5}[x\d]{1,2}");
-        string tabText;
+        var match = await intentRouter.RouteAsync(message, services, ct);
+        if (match is not { } pick) return null;
 
-        if (diagramMatch.Success && !query.Contains('|'))
-        {
-            var parts = diagramMatch.Value.Split('-');
-            if (parts.Length == 6)
-            {
-                var sb = new StringBuilder();
-                for (int i = 5; i >= 0; i--)
-                    sb.AppendLine($"|--{parts[i]}--|");
-                tabText = sb.ToString();
-            }
-            else
-            {
-                tabText = ExtractTabLines(query);
-            }
-        }
-        else
-        {
-            tabText = ExtractTabLines(query);
-        }
-
-        var analysis = await tabAnalyzer.AnalyzeAsync(tabText);
-        if (analysis.Events.Count == 0)
-            return new ChatResponse("I couldn't find a valid tab to optimize.", []);
-
-        var solution = await tabSolver.SolveOptimalPathAsync(analysis.Events.Select(e => e.Document));
-        var alternatives = await altService.GetAlternativesAsync(analysis.Events.Select(e => e.Document));
-
-        var narrative = new StringBuilder();
-        narrative.AppendLine("I've re-calculated the optimal path for that progression to minimize hand movement and transitions.");
-        narrative.AppendLine();
-        narrative.AppendLine("**Optimized Tab:**");
-        narrative.AppendLine("```");
-        narrative.AppendLine(solution.TabContent);
-        narrative.AppendLine("```");
-        narrative.AppendLine($"*Optimization Score: {solution.TotalPhysicalCost:F1} physical cost units.*");
-
-        if (alternatives.Any())
-        {
-            narrative.AppendLine();
-            narrative.AppendLine("### Alternative Styles");
-            string[] stringNames = ["e", "B", "G", "D", "A", "E"];
-
-            foreach (var alt in alternatives)
-            {
-                narrative.AppendLine($"**{alt.Label}** ({alt.Description})");
-                narrative.AppendLine("```");
-                var sb = new StringBuilder();
-                for (int s = 0; s < 6; s++)
-                {
-                    sb.Append(stringNames[s] + "|");
-                    var stringIdx = s + 1;
-                    foreach (var chord in alt.Tab)
-                    {
-                        var pos = chord.FirstOrDefault(n => n.StringIndex.Value == stringIdx);
-                        if (pos != null) sb.Append($"-{pos.Fret}-");
-                        else sb.Append("-x-");
-                    }
-                    sb.AppendLine("|");
-                }
-                narrative.AppendLine(sb.ToString());
-                narrative.AppendLine("```");
-            }
-        }
-
+        var result = await pick.Intent.ExecuteAsync(message, ct);
         return new ChatResponse(
-            narrative.ToString(),
-            [],
-            DebugParams: new { Mode = "PathOptimization", Cost = solution.TotalPhysicalCost });
-    }
-
-    private async Task<ChatResponse> HandleTabAnalysisAsync(string tab, CancellationToken ct)
-    {
-        var result = await tabAnalyzer.AnalyzeAsync(tab);
-        if (result.Events.Count == 0)
-            return new ChatResponse("I detected tab but couldn't parse any chords.", [], DebugParams: new { Status = "Empty" });
-
-        var events = result.Events.ToList();
-        var embeddingTasks = events.Select(async e =>
-        {
-            try
-            {
-                var emb = await embeddingGenerator.GenerateEmbeddingAsync(e.Document);
-                return e with { Document = e.Document with { Embedding = emb } };
-            }
-            catch (Exception)
-            {
-                // Degrade gracefully — proceed without embedding for this event
-                return e;
-            }
-        }).ToList();
-
-        events = [.. await Task.WhenAll(embeddingTasks)];
-        var progression = events.Select(e => e.Document).ToList();
-
-        var targets = modulationAnalyzer.IdentifyTargets(progression);
-        var suggestions = await suggestionService.SuggestNextAsync(progression.Last(), topK: 3);
-
-        return presenter.FormatAnalysis(result, suggestions, targets);
-    }
-
-    private static bool IsAskingForOptimization(string query)
-    {
-        var q = query.ToLowerInvariant();
-        return q.Contains("smooth") || q.Contains("easy") || q.Contains("optimize") ||
-               q.Contains("ergonomic") || q.Contains("better path");
-    }
-
-    private static bool LooksLikeTabInput(string query)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-            return false;
-
-        if (Regex.IsMatch(query, @"([x\d]{1,2}-){5}[x\d]{1,2}"))
-            return true;
-
-        var lines = query.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return lines.Any(l => l.Contains('|') || l.Contains("--"));
-    }
-
-    private static string ExtractTabLines(string query) =>
-        string.Join("\n", query.Split('\n').Where(l => l.Contains('|') || l.Contains("--")));
-
-    private async Task<ChatResponse?> TryAnswerWithAlgebraAsync(string message, CancellationToken ct)
-    {
-        if (!algebraPromptClassifier.IsAlgebraPrompt(message))
-        {
-            return null;
-        }
-
-        var algebraAnswer = await ixAlgebraService.TryAnswerAsync(message, ct);
-        if (algebraAnswer is null)
-        {
-            return null;
-        }
-
-        return new ChatResponse(
-            NaturalLanguageAnswer: algebraAnswer.NaturalLanguageAnswer,
+            NaturalLanguageAnswer: result.Answer,
             Candidates: [],
-            Routing: new AgentRoutingMetadata("algebra", 1f, "ix-algebra"),
-            DebugParams: new { Mode = "Algebra", QueryType = algebraAnswer.QueryType, algebraAnswer.Facts },
-            Grounding: algebraAnswer.Grounding);
+            Routing: new AgentRoutingMetadata(
+                pick.Intent.Id,
+                Math.Min(result.Confidence, pick.Confidence),
+                result.RoutingMethodOverride ?? "semantic-intent"));
     }
 }

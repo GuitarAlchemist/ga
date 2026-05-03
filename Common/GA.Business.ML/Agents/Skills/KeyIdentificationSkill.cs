@@ -16,7 +16,17 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
     : AgentSkillBase(AgentIds.Theory, chatClient, logger), IOrchestratorSkill
 {
     public override string Name        => "KeyIdentification";
-    public override string Description => "Identifies the musical key of a chord progression using pitch-class arithmetic";
+    public override string Description =>
+        "Identifies the musical key of a chord progression using pitch-class arithmetic. " +
+        "Use when given a sequence of chords like 'C Am F G' or 'Dm G C' and asked what key it's in.";
+
+    public override IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What key is C Am F G in?",
+        "Identify the key of Dm G C",
+        "What key does Am F G E sound like?",
+        "Tell me the key of these chords: G D Em C",
+    ];
 
     public override bool CanHandle(string message) =>
         KeyIdentificationService.IsKeyIdentificationQuery(message);

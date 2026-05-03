@@ -15,7 +15,18 @@ using GA.Domain.Core.Theory.Tonal;
 public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "ScaleInfo";
-    public string Description => "Returns the notes of a major or minor key from the domain model";
+    public string Description =>
+        "Returns the notes of a major or minor key (e.g. C major has C D E F G A B). " +
+        "Pure domain computation, zero LLM calls.";
+
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What notes are in C major?",
+        "Show me the F# minor scale",
+        "List the notes in Bb major",
+        "What is D minor?",
+        "Tell me the notes of E major",
+    ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.
     private static readonly Regex KeyPattern =

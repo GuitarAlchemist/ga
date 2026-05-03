@@ -19,11 +19,24 @@ public interface IOrchestratorSkill
     /// <summary>Human-readable name used for logging and trace tags.</summary>
     string Name { get; }
 
-    /// <summary>Declares what this skill handles (surfaced in chatbot capability lists).</summary>
+    /// <summary>Declares what this skill handles (surfaced in chatbot capability lists
+    /// and embedded by <c>SemanticIntentRouter</c> for routing).</summary>
     string Description { get; }
 
     /// <summary>
-    /// Fast, side-effect-free check — returns true when this skill can fully answer the message.
+    /// Canonical phrasings that should route to this skill — used by the unified
+    /// embedding-based <c>SemanticIntentRouter</c> (per
+    /// <c>docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md</c>
+    /// §"Routing classifiers"). Empty list means the skill participates in
+    /// routing only via <see cref="CanHandle"/> (legacy / fallback path).
+    /// Three to six representative examples is the sweet spot.
+    /// </summary>
+    IReadOnlyList<string> ExamplePrompts => [];
+
+    /// <summary>
+    /// Legacy fast path — string-matching predicate retained for the foreach
+    /// fallback in <c>ProductionOrchestrator</c>. New skills should prefer
+    /// <see cref="ExamplePrompts"/> and stub this to <c>false</c>.
     /// </summary>
     bool CanHandle(string message);
 
