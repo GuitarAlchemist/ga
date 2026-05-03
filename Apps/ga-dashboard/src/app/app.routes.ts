@@ -11,6 +11,5 @@ export const routes: Routes = [
     { path: 'embeddings', component: EmbeddingViewerComponent },
     { path: 'notebook/:path', component: NotebookViewerComponent },
     { path: 'documentation/:path', component: DocumentationViewerComponent },
-    { path: 'chat', loadComponent: () => import('./chat/chat.component').then(m => m.ChatComponent) },
     { path: '**', redirectTo: '' }
 ];
