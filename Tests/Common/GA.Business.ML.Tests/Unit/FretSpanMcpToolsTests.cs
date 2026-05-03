@@ -47,6 +47,39 @@ public class FretSpanMcpToolsTests
         Assert.That(compact.PlayabilityScore, Is.EqualTo(dashed.PlayabilityScore));
     }
 
+    [TestCase("032010", new[] { 0, 3, 2, 0, 1, 0 })]   // G major (no leading x — was a regex hole)
+    [TestCase("133211", new[] { 1, 3, 3, 2, 1, 1 })]   // F major barre
+    [TestCase("577655", new[] { 5, 7, 7, 6, 5, 5 })]   // B major barre
+    public void ComputeSpan_CompactWithoutLeadingX_NowParses(string diagram, int[] expectedFrets)
+    {
+        // Regression for PR #83 review: the original C# regex required a
+        // leading 'x' for compact form, silently rejecting common voicings.
+        // The fixed regex accepts any combination of digits and x's in any
+        // of the 6 positions.
+        var result = MakeTool().ComputeSpan(diagram);
+
+        Assert.That(result.Error, Is.Null,
+            $"compact diagram '{diagram}' must parse — was a regression in the original C# regex");
+        Assert.That(result.Frets, Is.EqualTo(expectedFrets));
+    }
+
+    [TestCase("1-3-3-2-1-1", 1, 3, 2, 5, "easy")]      // F major barre
+    [TestCase("x-2-4-4-3-2", 2, 4, 2, 5, "easy")]      // Bm barre (compact xx4432-style)
+    [TestCase("x-x-0-2-3-0", 2, 3, 1, 3, "very easy")] // Dadd9 (open) — pressed-only span semantics
+    public void ComputeSpan_CommonBarreAndOpenVoicings_ReturnExpectedShape(
+        string diagram, int expectedMin, int expectedMax, int expectedSpan,
+        int expectedScore, string expectedDifficultyKeyword)
+    {
+        var result = MakeTool().ComputeSpan(diagram);
+
+        Assert.That(result.Error,            Is.Null,                  $"valid diagram must not produce an Error for {diagram}");
+        Assert.That(result.MinFret,          Is.EqualTo(expectedMin));
+        Assert.That(result.MaxFret,          Is.EqualTo(expectedMax));
+        Assert.That(result.Span,             Is.EqualTo(expectedSpan));
+        Assert.That(result.PlayabilityScore, Is.EqualTo(expectedScore));
+        Assert.That(result.Difficulty,       Does.Contain(expectedDifficultyKeyword));
+    }
+
     [Test]
     public void ComputeSpan_FourFretStretch_FlagsAsChallenging()
     {

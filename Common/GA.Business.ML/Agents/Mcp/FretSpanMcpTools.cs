@@ -109,7 +109,13 @@ public sealed partial class FretSpanMcpTools
         RegexOptions.CultureInvariant)]
     private static partial Regex DashDiagramRegex();
 
-    [GeneratedRegex(@"\b[xX]\d{5}\b", RegexOptions.CultureInvariant)]
+    // Compact form is 6 characters, each being a fret digit (0-9), 'x', or 'X'.
+    // The C# FretSpanSkill regex required a leading 'x' which silently rejected
+    // very common voicings: 032010 (G major), 355463 (Ab barre), 577655 (B
+    // major barre), 133211 (F major barre). Fixed here per PR #83 review.
+    // Two-digit frets (e.g. position 12) are not expressible in compact form —
+    // those must use the dash-separated diagram instead.
+    [GeneratedRegex(@"\b[xX0-9]{6}\b", RegexOptions.CultureInvariant)]
     private static partial Regex CompactDiagramRegex();
 }
 
