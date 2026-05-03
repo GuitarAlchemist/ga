@@ -95,19 +95,33 @@ public sealed partial class ChordMcpTools
         };
     }
 
-    private static string NormalizeQuality(string raw) =>
-        raw.Trim().ToLowerInvariant() switch
+    private static string NormalizeQuality(string raw)
+    {
+        var trimmed = raw.Trim();
+        // Case-sensitive arms FIRST — uppercase "M" and "M7" mean major and
+        // major 7 respectively in chord notation, and they cannot be folded
+        // through ToLowerInvariant because "M".ToLowerInvariant() == "m"
+        // which is the minor abbreviation. Lower-case fallbacks come AFTER.
+        // Bug fix from PR #80 review: previously `CM` and `CM7` silently
+        // resolved to C minor / C minor 7 because the lowercase arms ran first.
+        return trimmed switch
         {
-            ""                              => "major",
-            "maj" or "major" or "M"         => "major",
-            "m" or "min" or "minor"         => "minor",
-            "dim" or "diminished"           => "diminished",
-            "aug" or "augmented"            => "augmented",
-            "7" or "dominant" or "dom7"     => "dominant 7",
-            "maj7" or "major 7" or "M7"     => "major 7",
-            "m7" or "min7" or "minor 7"     => "minor 7",
-            var other                       => other,
+            "M"  => "major",
+            "M7" => "major 7",
+            _    => trimmed.ToLowerInvariant() switch
+            {
+                ""                              => "major",
+                "maj" or "major"                => "major",
+                "m" or "min" or "minor"         => "minor",
+                "dim" or "diminished"           => "diminished",
+                "aug" or "augmented"            => "augmented",
+                "7" or "dominant" or "dom7"     => "dominant 7",
+                "maj7" or "major 7"             => "major 7",
+                "m7" or "min7" or "minor 7"     => "minor 7",
+                var other                       => other,
+            },
         };
+    }
 
     private static ChordFormula GetFormula(string quality) => quality switch
     {

@@ -138,6 +138,44 @@ public class ChordMcpToolsTests
         Assert.That(result.Notes,   Is.EqualTo(new[] { "C", "E", "G" }));
     }
 
+    // Regression suite for the PR #80 review's BLOCK finding: the case-sensitive
+    // "M" / "M7" alternates were unreachable because NormalizeQuality lowercased
+    // the input first, so `CM` silently resolved to C minor and `CM7` to C minor 7.
+    // The SKILL.md advertises CM=major / CM7=major 7 — these tests pin the
+    // documented contract so the regression cannot recur.
+    [TestCase("CM",   "C", "major",   new[] { "C", "E",  "G"        })]
+    [TestCase("CM7",  "C", "major 7", new[] { "C", "E",  "G",  "B"  })]
+    [TestCase("FM7",  "F", "major 7", new[] { "F", "A",  "C",  "E"  })]
+    [TestCase("BbM7", "Bb", "major 7", new[] { "Bb", "D", "F",  "A"  })]
+    public void GetChordInfo_UppercaseMQualifier_ResolvesToMajor(
+        string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
+    {
+        var result = MakeTool().GetChordInfo(symbol);
+
+        Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
+        Assert.That(result.Root,    Is.EqualTo(expectedRoot));
+        Assert.That(result.Quality, Is.EqualTo(expectedQuality),
+            $"'{symbol}' must resolve to {expectedQuality}, NOT minor (regression from PR #80 review)");
+        Assert.That(result.Notes,   Is.EqualTo(expectedNotes), $"notes mismatch for {symbol}");
+    }
+
+    [TestCase("Csus4")]
+    [TestCase("C9")]
+    [TestCase("Am7b5")]
+    [TestCase("Cadd9")]
+    [TestCase("C/E")]
+    public void GetChordInfo_OutOfScopeSymbols_ReturnError(string symbol)
+    {
+        // SKILL.md explicitly declines extended / altered / sus / slash chords.
+        // Tool must reject cleanly rather than fabricating notes — this is the
+        // failure mode the LLM is most likely to expose.
+        var result = MakeTool().GetChordInfo(symbol);
+
+        Assert.That(result.Error, Is.Not.Null,
+            $"out-of-scope chord symbol '{symbol}' must populate Error rather than return fabricated notes");
+        Assert.That(result.Notes, Is.Empty);
+    }
+
     [Test]
     public void GetChordInfo_IntervalsSurfacedAsHumanReadable()
     {
