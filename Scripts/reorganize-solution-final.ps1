@@ -80,7 +80,7 @@ Write-Host "   └─ Remove React from Experiments" -ForegroundColor Gray
 Write-Host ""
 Write-Host "3. Applications folder will contain only:" -ForegroundColor Yellow
 Write-Host "   ├─ GaApi" -ForegroundColor Gray
-Write-Host "   ├─ GuitarAlchemistChatbot" -ForegroundColor Gray
+Write-Host "   ├─ GaChatbot" -ForegroundColor Gray
 Write-Host "   ├─ ScenesService" -ForegroundColor Gray
 Write-Host "   └─ FloorManager" -ForegroundColor Gray
 

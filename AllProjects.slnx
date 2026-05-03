@@ -115,7 +115,6 @@
         <File Path="docs/TESTING_GUIDE.md" />
     </Folder>
     <Folder Name="/Experiments/">
-        <Project Path="Experiments/ChatbotExample1/ChatbotExample1.csproj" />
         <Project Path="Experiments/MyFirstMCP/MyFirstMCP.csproj" />
         <Project Path="Experiments/React/ReactApp1.Server/ReactApp1.Server.csproj" />
         <Project Path="Experiments/UseGaNugetPackageExample/UseGaNugetPackageExample.csproj" />

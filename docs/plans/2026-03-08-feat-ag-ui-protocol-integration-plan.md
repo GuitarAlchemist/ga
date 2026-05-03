@@ -536,7 +536,7 @@ Use `Activity.Current?.TraceId.ToString()` as `runId`, falling back to `Guid.New
 
 ## Documentation Plan
 
-- Update `Common/GA.Business.ML/Documentation/Architecture/Chatbot_Technical_Roadmap.md` — add AG-UI as the standard agent-to-UI transport
+- Update `docs/chatbot/Chatbot_Technical_Roadmap.md` — add AG-UI as the standard agent-to-UI transport
 - Add `docs/solutions/architecture/ag-ui-sse-endpoint-pattern.md` to document the `AgUiEventWriter` + camelCase + `X-Accel-Buffering` pattern for future endpoints
 - Update `CLAUDE.md` — add AG-UI endpoint to the Monitoring section with the new route
 

@@ -6,7 +6,6 @@
 .DESCRIPTION
     Verifies that all services are running and healthy:
     - GaApi (main API server)
-    - GuitarAlchemistChatbot (Blazor chatbot)
     - ga-client (React frontend)
     - MongoDB (database)
     - MongoExpress (database UI)
