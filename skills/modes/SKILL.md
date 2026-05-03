@@ -58,9 +58,11 @@ When the user asks about one mode specifically, lead with: *"**\<Mode>** is mode
 
 ## What this skill does NOT do
 
-- **Compute the notes of a specific key's mode** (e.g. *"give me the notes of D Dorian"*). That's a different operation — it needs to combine this catalog (Dorian's degree formula) with a root-and-scale lookup. Defer to the `scale-info` skill or the LLM agent path with this catalog as background context.
-- **Discuss non-diatonic modes** (harmonic minor modes, melodic minor modes, modes of limited transposition). This catalog covers only the seven modes of the major (a.k.a. diatonic) scale.
-- **Recommend mode for a specific musical situation** ("what mode should I use for X feel?"). The character notes here help, but composition advice belongs in the LLM agent path, not the catalog.
+These are hard constraints. **Do NOT** answer queries in these categories from this catalog alone.
+
+- **Specific-key note enumeration** (e.g. *"give me the notes of D Dorian"*). This catalog gives Dorian's degree formula but not the resulting notes for any particular root. Defer to the `scale-info` skill or the broader LLM agent path. Do NOT output specific-key note lists from this catalog alone.
+- **Non-diatonic modes** (harmonic minor modes, melodic minor modes, modes of limited transposition). This catalog covers only the seven modes of the major (a.k.a. diatonic) scale. If asked, decline cleanly: *"This catalog only covers the diatonic modes; harmonic-minor modes and others would need different tooling."*
+- **Composition recommendation** (*"what mode should I use for an angry feel?"*). The character notes here help an LLM phrase a recommendation, but the catalog itself does not prescribe — emit the catalog data, then let the broader agent path reason about fit.
 
 ## Cross-reference
 

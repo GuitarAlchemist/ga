@@ -232,7 +232,13 @@ public class FileBasedSkillsProviderTests
         Assert.That(modes.Body,  Does.Contain("1 b2 b3 4 5 b6 b7"), "Phrygian degrees");
         Assert.That(modes.Body,  Does.Contain("1 2 3 #4 5 6 7"),   "Lydian degrees");
         Assert.That(modes.Body,  Does.Contain("1 2 3 4 5 6 b7"),   "Mixolydian degrees");
+        Assert.That(modes.Body,  Does.Contain("1 2 b3 4 5 b6 b7"), "Aeolian degrees");
         Assert.That(modes.Body,  Does.Contain("1 b2 b3 4 b5 b6 b7"), "Locrian degrees");
+
+        // The mnemonic is what makes the catalog memorable; if it gets dropped,
+        // the LLM loses the most useful single-line pedagogy in the skill.
+        Assert.That(modes.Body, Does.Contain("I Don't Particularly Like Modes A Lot"),
+            "the I-Don't-Particularly-Like-Modes-A-Lot mnemonic must survive into the catalog body");
 
         // Trigger fires on common phrasings.
         var ctx1 = await provider.InvokingAsync(UserContext("what are the modes of the major scale"));
