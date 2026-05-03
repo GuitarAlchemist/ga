@@ -126,17 +126,25 @@ The chatbot's in-process MCP tools (the 7 we just shipped) **don't talk to** `Ga
 
 The user's question: should the chatbot be able to use the broader GA DSL surface?
 
-### B1. Bridge to external GA DSL MCP server — 🥇 highest leverage / lowest code
+### B1. Bridge to external GA DSL MCP server — 🥇 highest leverage
 
-`InProcessMcpToolsProvider` adds a delegating tool that forwards calls to `GaMcpServer` (running as a sibling process or the same one). Every `Ga*` tool in `GaMcpServer` becomes available to chatbot SkillMdDrivenSkill instances.
+`InProcessMcpToolsProvider` adds a delegating tool surface that forwards calls to `GaMcpServer` (running as a sibling process). Every `Ga*` tool in `GaMcpServer` becomes available to chatbot SkillMdDrivenSkill instances.
 
 **New capability**: chatbot LLM can call `GaSearchVoicings`, `GaInvokeClosure`, `GaProgressionCompletion`, etc. without us re-implementing them.
 
-**Effort estimate**: 1 PR. S (small). The MCP framework's standard client transport already supports this — it's what Claude Code does to talk to `GaMcpServer`. We just need to start the chatbot as a parallel client.
+**Effort estimate**: 2–3 PRs. S+M (small + medium). Revised after PR #90 review — Claude + Auggie reviewers converged on the original "1 PR / S" being optimistic by ~3–4×.
 
-**Risk**: process-boundary trust model. `GaMcpServer` has tools that take side-effects (`io.*`, `agent.*`, `tab.*` closures — already gated by an allowlist per the source). Need to confirm the chatbot only sees the safe subset; ideally the chatbot opens the connection with a scoped allowlist.
+The naive "just connect a client" framing was wrong. `InProcessMcpToolsProvider` currently builds its own in-process server via `mcpBuilder.WithTools(toolType)` over a `Pipe()` pair (`Common/GA.Business.ML/Agents/Plugins/InProcessMcpToolsProvider.cs:54,86–93`). `GaMcpServer` uses `WithStdioServerTransport()` (`GaMcpServer/Program.cs:49`) — different transport. Bridging requires:
 
-**Why this is high-leverage**: every existing GA DSL operation immediately becomes a chatbot capability. No re-porting. No drift between two implementations of the same domain operation.
+- Process orchestration (start `GaMcpServer` as a child / discover via Aspire)
+- External transport wiring (stdio or named pipe vs the existing in-memory `Pipe`)
+- Lifecycle management (chatbot-vs-MCP-server outliving each other)
+- Tool-name collision handling: `GaMcpServer` uses PascalCase (`GaChordIntervals`) while in-process uses `ga_*` snake_case — close enough that the existing dedup at `InProcessMcpToolsProvider.cs:117–128` needs explicit policy
+- Scoped allowlist plumbing (see Risk below)
+
+**Risk**: process-boundary trust model. `GaMcpServer` already excludes `io.*`, `agent.*`, `tab.*`, `pipeline.*` closures via `IsPermittedForMcp` (`GaMcpServer/Tools/GaDslTool.cs:22–36`). Recommended: the chatbot should open the connection with an even tighter allowlist (e.g., only `domain.*` closures — exclude `tab.fetch` SSRF surface even though it's already restricted to authenticated MCP clients).
+
+**Why this is high-leverage despite the revised estimate**: every existing GA DSL operation immediately becomes a chatbot capability. No re-porting. No drift between two implementations of the same domain operation.
 
 ### B2. Generated wrappers for each GA DSL tool — 🥈 strong hygiene, more code
 
@@ -193,7 +201,7 @@ Today SKILL.md is markdown + frontmatter. Allow SKILL files written in **GA DSL*
 
 ### Phase 2 (after Phase 1) — search-driven capabilities
 
-**A1 (MCTS completion)** + **A3 (A* voice-leading substitutions)**. Both depend on B1 being in place so the reward / cost functions can call into the broader DSL surface.
+**A1 (MCTS completion)** + **A3 (A* voice-leading substitutions)**. Soft dependency on B1: the reward/cost functions are *nicer* when they can call the broader DSL surface, but the existing 7-tool in-process surface plus `KeyIdentificationService.DiatonicSet` is enough to author a usable first version. If B1 slips, A1/A3 can still ship — they'll just have a sparser feature surface to score against. (Revised after PR #90 review — original "depend on B1" framing was too strong.)
 
 ### Phase 3 (data-blocked) — empirical / learned scoring
 
@@ -208,9 +216,15 @@ Today SKILL.md is markdown + frontmatter. Allow SKILL files written in **GA DSL*
 ## Open questions for the user
 
 1. **Phase 1 priorities — confirm or change?** Is B1 + A2 the right "ship one impressive thing" for next session, or would you rather start with A1 (MCTS completion) for the user-facing "wow" demo?
-2. **DSL bridge trust model**: which closure subset of `GaInvokeClosure` should the chatbot have access to? The existing `GaDslTool` allowlist is a good starting point — confirm or refine.
-3. **Modulation-detection cost matrix source**: pin transition costs from Lerdahl 2001? Krumhansl 1990? A custom GA-tuned matrix? Affects "feel" of the answer.
+2. **DSL bridge trust model**: which closure subset of `GaInvokeClosure` should the chatbot have access to? The existing `GaDslTool` allowlist is a good starting point; recommend tightening to `domain.*` closures only (excluding `tab.*` SSRF surface even though already gated). Confirm or refine.
+3. **Modulation-detection cost matrix source**: recommendation from review — start with **Lerdahl 2001** tonal pitch-space distance (Euclidean over 5D chordal/regional space). Fall back to Krumhansl 1990 (empirical probe-tone profiles) only if Lerdahl feels too geometric. Custom GA-tuned matrix is a Phase 3 task. Confirm.
 4. **Demo target**: what's the canonical query that would let us know A2 works? *"Where does Eight Days a Week change key?"* would be a satisfying validator.
+5. **C# fast-path retirement criteria** (added after PR #90 review). Once B1 lands and `GaChordIntervals` etc. become reachable from the chatbot, do the existing in-process `ga_*` tools become deprecated (drift risk per the migration recommendation), thin wrappers around the bridged DSL surface, or kept indefinitely as the deterministic fast path? Needs a concrete criterion (suggested: "X consecutive verdict cycles where bridged-DSL output and in-proc tool output match for a fixed prompt set").
+6. **QA Architect Tribunal Phase 1 interaction** (added after PR #90 review). Phase 1 is scheduled `trig_01WdRGSqgxah5PD46wg8u4Qq` for 2026-05-18. If A2 (modulation detection) is meant to be a marquee demo for the tribunal, A2 should land *before* 2026-05-18; if not, sequencing is independent. Needs a yes/no.
+
+### Held-out evaluation set (recommendation, not a question)
+
+Before A1 (MCTS) starts, pin the held-out chord-progression test set in `state/quality/chatbot-qa/` — avoids post-hoc tuning of the reward function to the eval set. Same hygiene applies to A2's modulation cases.
 
 ---
 
