@@ -29,6 +29,7 @@ public sealed class GaPlugin : IChatPlugin
         services.AddSingleton<IOrchestratorSkill, ChordInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, ScaleInfoSkill>();
         services.AddSingleton<IOrchestratorSkill, ModesSkill>();
+        services.AddSingleton<IOrchestratorSkill, IntervalSkill>();
         services.AddSingleton<IOrchestratorSkill, FretSpanSkill>();
         services.AddSingleton<IOrchestratorSkill, ChordSubstitutionSkill>();
 
