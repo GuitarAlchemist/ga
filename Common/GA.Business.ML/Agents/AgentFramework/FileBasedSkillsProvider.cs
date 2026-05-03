@@ -48,7 +48,12 @@ public sealed class FileBasedSkillsProvider : AIContextProvider
         ArgumentException.ThrowIfNullOrWhiteSpace(skillsDirectory);
 
         _skills = Directory.Exists(skillsDirectory)
-            ? SkillMdLoader.LoadFromDirectory(skillsDirectory)
+            ? SkillMdLoader.LoadFromDirectory(
+                skillsDirectory,
+                // Surface dropped-trigger warnings so a SKILL.md whose triggers all
+                // got filtered (e.g. all under MinTriggerLength) doesn't silently
+                // disappear from registration.
+                msg => System.Diagnostics.Debug.WriteLine(msg))
             : [];
     }
 
