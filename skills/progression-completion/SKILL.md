@@ -45,6 +45,8 @@ The fields you'll use here:
 - `TopCandidates[0].DiatonicSet` — the seven chords you may pick from.
 - `RecognizedChords` — the chord symbols already in the progression (you typically want the NEXT chord to be different from the last one in this list).
 
+**Tied keys.** When `TopCandidates` has more than one entry (e.g. a progression that fits both C major and A minor), draw your suggestions from `TopCandidates[0].DiatonicSet`. Relative-pair ties share the same diatonic set so the choice is neutral; on the rare non-relative tie (very short progressions), defaulting to the first candidate keeps the answer concrete. Mention the alternative key in passing but only suggest chords from one set.
+
 If `Error` is non-null, surface the message verbatim and ask the user to clarify the chord names.
 
 ## Cadence catalog (the four you may name)

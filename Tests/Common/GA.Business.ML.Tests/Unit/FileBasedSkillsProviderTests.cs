@@ -239,6 +239,19 @@ public class FileBasedSkillsProviderTests
         Assert.That(pc.Body, Does.Contain("DiatonicSet"),
             "the 'every suggested chord must appear in DiatonicSet' constraint must survive");
 
+        // Suggestion-count cap is load-bearing UX — too many overwhelms, too
+        // few is unhelpful. Lock the "max 3" copy so a future edit can't
+        // silently change the contract the LLM follows.
+        Assert.That(pc.Body, Does.Contain("at most 3").Or.Contain("max 3").Or.Contain("most 3"),
+            "the 'max 3 suggestions' constraint must survive in the body");
+
+        // Cross-reference to chord-substitution is the documented escape
+        // hatch for non-diatonic reharmonization queries. If the cross-ref
+        // breaks, users asking for diminished/borrowed chords get an
+        // unhelpful refusal instead of being routed to the right skill.
+        Assert.That(pc.Body, Does.Contain("chord-substitution"),
+            "deferral cross-reference to chord-substitution skill must survive");
+
         var ctx = await provider.InvokingAsync(UserContext("what comes next after C G Am"));
         Assert.That(ctx.Instructions, Does.Contain("ga_key_identify"));
     }
