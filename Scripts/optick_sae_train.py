@@ -105,9 +105,11 @@ class TopKSAE(nn.Module):
         with torch.no_grad():
             self.decoder.weight.copy_(self.encoder.weight.T)
 
+    def encode_pre_topk(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.relu(self.encoder(x))
+
     def encode(self, x: torch.Tensor) -> torch.Tensor:
-        h = self.encoder(x)
-        h = torch.relu(h)
+        h = self.encode_pre_topk(x)
         # Top-k mask: keep only the k largest activations per row.
         topk_vals, topk_idx = torch.topk(h, k=self.k, dim=-1)
         mask = torch.zeros_like(h)
@@ -118,6 +120,23 @@ class TopKSAE(nn.Module):
         a = self.encode(x)
         x_hat = self.decoder(a)
         return x_hat, a
+
+    def auxk_reconstruct(self, x: torch.Tensor, dead_mask: torch.Tensor, k_aux: int) -> torch.Tensor | None:
+        """Reconstruct using only dead features (Anthropic ghost-grads / AuxK).
+        WHY: dead features get zero gradient through the main top-k path; AuxK threads a
+        small auxiliary loss through them so they can wake up. Returns x_hat_aux or None
+        if no dead features available."""
+        if not dead_mask.any():
+            return None
+        h = self.encode_pre_topk(x)
+        h_dead = h * dead_mask.to(h.dtype)
+        n_dead = int(dead_mask.sum().item())
+        if k_aux >= n_dead:
+            return self.decoder(h_dead)
+        topk_vals, topk_idx = torch.topk(h_dead, k=k_aux, dim=-1)
+        mask = torch.zeros_like(h_dead)
+        mask.scatter_(-1, topk_idx, 1.0)
+        return self.decoder(h_dead * mask)
 
 
 # =============================================================================
@@ -211,34 +230,57 @@ def train(args) -> dict:
     model = TopKSAE(input_dim=X_np.shape[1], dict_size=args.dict_size, k=args.k_sparse)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    print(f"[3/6] Training {args.epochs} epochs (batch={args.batch_size}, lr={args.lr})", flush=True)
+    aux_msg = f", aux_alpha={args.aux_alpha} aux_k={args.aux_k}" if args.use_ghost_grads else ""
+    print(f"[3/6] Training {args.epochs} epochs (batch={args.batch_size}, lr={args.lr}{aux_msg})", flush=True)
     n_train = len(X_train)
     losses = []
     train_t0 = time.time()
+    dead_mask = torch.zeros(args.dict_size, dtype=torch.bool)
     for epoch in range(args.epochs):
         epoch_t0 = time.time()
         model.train()
         order = torch.randperm(n_train)
         epoch_loss = 0.0
+        epoch_aux_loss = 0.0
         n_batches = 0
+        epoch_active_counts = torch.zeros(args.dict_size)
         for i in range(0, n_train, args.batch_size):
             batch_idx = order[i:i + args.batch_size]
             xb = X_train[batch_idx]
-            xh, _ = model(xb)
-            loss = ((xh - xb) ** 2).mean()
+            xh, a = model(xb)
+            main_loss = ((xh - xb) ** 2).mean()
+            with torch.no_grad():
+                epoch_active_counts += (a > 0).float().sum(dim=0)
+            total_loss = main_loss
+            aux_term = 0.0
+            if args.use_ghost_grads and dead_mask.any():
+                residual = (xb - xh).detach()
+                xh_aux = model.auxk_reconstruct(xb, dead_mask, args.aux_k)
+                if xh_aux is not None:
+                    aux_loss = ((xh_aux - residual) ** 2).mean()
+                    total_loss = main_loss + args.aux_alpha * aux_loss
+                    aux_term = float(aux_loss.item())
             optimizer.zero_grad()
-            loss.backward()
+            total_loss.backward()
             optimizer.step()
-            epoch_loss += loss.item()
+            epoch_loss += main_loss.item()
+            epoch_aux_loss += aux_term
             n_batches += 1
         avg = epoch_loss / max(1, n_batches)
+        avg_aux = epoch_aux_loss / max(1, n_batches)
         losses.append(avg)
-        print(f"    epoch {epoch + 1:3d}/{args.epochs}  loss {avg:.6f}  {time.time() - epoch_t0:.1f}s", flush=True)
+        # Update dead_mask for next epoch's ghost-grad pass.
+        dead_mask = (epoch_active_counts == 0)
+        n_dead_now = int(dead_mask.sum().item())
+        aux_str = f"  aux {avg_aux:.6f}  dead {n_dead_now}" if args.use_ghost_grads else ""
+        print(f"    epoch {epoch + 1:3d}/{args.epochs}  loss {avg:.6f}{aux_str}  {time.time() - epoch_t0:.1f}s", flush=True)
     print(f"    total train time {time.time() - train_t0:.1f}s", flush=True)
 
-    print(f"[4/6] Computing metrics on val slice", flush=True)
+    print(f"[4/6] Computing metrics on val slice + full train (for accurate dead-feature count)", flush=True)
     mse, r2 = compute_reconstruction(model, X_val)
-    act = compute_activation_stats(model, X_val)
+    # WHY full-train activation counts: a feature that activates 1-in-30K rows would look dead
+    # on a 15K val slice; the contract's dead_features_pct should reflect the full corpus.
+    act = compute_activation_stats(model, X_train)
     purity_mean, purity_p10 = compute_partition_purity(model)
     print(f"    reconstruction_mse {mse:.6f}  r2 {r2:.4f}", flush=True)
     print(f"    active_per_row p50 {act['active_per_row_p50']} p95 {act['active_per_row_p95']}", flush=True)
@@ -358,6 +400,17 @@ def parse_args() -> argparse.Namespace:
         help="Emit an artifact even when contract §5 guardrails are violated. "
              "Use ONLY for diagnostic sweeps; production runs should leave this off.",
     )
+    p.add_argument(
+        "--use-ghost-grads",
+        action="store_true",
+        help="Enable AuxK / ghost-grads auxiliary loss to revive dead features. "
+             "WHY: vanilla top-k SAE has structural ~40-65%% dead-feature rate on "
+             "this corpus per docs/learnings/2026-05-03-optick-sae-vanilla-topk-dead-features.md.",
+    )
+    p.add_argument("--aux-alpha", type=float, default=0.03,
+                   help="Weight on the AuxK auxiliary loss (default 0.03 per Anthropic 2024).")
+    p.add_argument("--aux-k", type=int, default=64,
+                   help="Top-k_aux from the dead-feature pool (default 64 = 2x main k).")
     return p.parse_args()
 
 
