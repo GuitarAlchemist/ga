@@ -34,6 +34,7 @@ public sealed class SemanticIntentRouter(
     ILogger<SemanticIntentRouter> logger)
 {
     private const float DefaultMinConfidence = 0.65f;
+    private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
     // <see cref="IIntent.Id"/>; each entry is [description, example1..exampleN].
@@ -47,6 +48,14 @@ public sealed class SemanticIntentRouter(
     /// <summary>True iff embedding infrastructure is wired. Used by the warmup
     /// hosted service to skip when there's no embedder to call.</summary>
     public bool IsAvailable => textEmbeddings is not null;
+
+    /// <summary>
+    /// Per-call hard ceiling on the embedding request. Defends against a
+    /// wedged backend (e.g. Ollama in a partial-model-load state) — without
+    /// it, routing hangs the whole user request. On timeout the router
+    /// returns <c>null</c> so the caller falls through to the LLM agent path.
+    /// </summary>
+    public TimeSpan EmbeddingTimeout { get; init; } = DefaultEmbeddingTimeout;
 
     /// <summary>
     /// Selects the best intent for the query, or <c>null</c> if no intent
@@ -75,9 +84,19 @@ public sealed class SemanticIntentRouter(
         float[] queryVec;
         try
         {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(EmbeddingTimeout);
+
             var queryEmbedding = await textEmbeddings.GenerateAsync(
-                [query], cancellationToken: cancellationToken);
+                [query], cancellationToken: timeoutCts.Token);
             queryVec = queryEmbedding[0].Vector.ToArray();
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                "SemanticIntentRouter: query embedding timed out after {Timeout}s (backend likely wedged); falling through to LLM path",
+                EmbeddingTimeout.TotalSeconds);
+            return null;
         }
         catch (Exception ex)
         {
@@ -86,40 +105,89 @@ public sealed class SemanticIntentRouter(
             return null;
         }
 
-        IIntent? bestIntent = null;
-        var bestScore = float.NegativeInfinity;
-        string? bestExample = null;
-
+        // Score every candidate intent by its single best (description-or-example)
+        // cosine similarity to the query. Keeping per-intent results lets us log
+        // the full ranking — much easier to debug than a single best-of accumulator.
+        var ranking = new List<(IIntent Intent, float Score, string MatchedSource)>(candidates.Count);
         foreach (var intent in candidates)
         {
             if (!_intentEmbeddings.TryGetValue(intent.Id, out var vectors)) continue;
 
-            // vectors[0] = description, vectors[1..n] = examples (aligned with
-            // intent.ExamplePrompts[i-1]).
+            // vectors[0] = description, vectors[1..n] = examples aligned with
+            // intent.ExamplePrompts[i-1].
+            var bestI = -1;
+            var bestS = float.NegativeInfinity;
             for (var i = 0; i < vectors.Length; i++)
             {
                 var score = Cosine(queryVec, vectors[i]);
-                if (score <= bestScore) continue;
+                if (score <= bestS) continue;
+                bestS = score;
+                bestI = i;
+            }
 
-                bestScore = score;
-                bestIntent = intent;
-                bestExample = i == 0 ? intent.Description : intent.ExamplePrompts[i - 1];
+            if (bestI >= 0)
+            {
+                var source = bestI == 0 ? "(description)" : intent.ExamplePrompts[bestI - 1];
+                ranking.Add((intent, bestS, source));
             }
         }
 
-        if (bestIntent is null || bestScore < MinConfidence)
+        if (ranking.Count == 0)
         {
-            logger.LogDebug(
-                "SemanticIntentRouter: no intent above threshold {Threshold:F2} (best={Best} @ {Score:F3})",
-                MinConfidence, bestIntent?.Id ?? "<none>", bestScore);
+            logger.LogDebug("SemanticIntentRouter: no intent had cached embeddings");
             return null;
         }
 
-        logger.LogDebug(
-            "SemanticIntentRouter: routed to {Intent} via {Example!r} (score {Score:F3})",
-            bestIntent.Id, bestExample, bestScore);
+        // Sort highest-score-first. Tie-break: prefer the intent with the SHORTER
+        // description vector — heuristic for "more specific intent wins" when
+        // scores are within float precision. (Generic descriptions like
+        // KeyIdentification's tend to be longer; specific ones like ChordInfo
+        // give the same score to a literal example match but have shorter overall
+        // text, signalling tighter scope.)
+        ranking.Sort((a, b) =>
+        {
+            var byScore = b.Score.CompareTo(a.Score);
+            return byScore != 0
+                ? byScore
+                : a.Intent.Description.Length.CompareTo(b.Intent.Description.Length);
+        });
 
-        return new IntentMatch(bestIntent, bestScore, bestExample ?? string.Empty);
+        // Always log the top 3 at Information level so routing decisions are
+        // auditable without flipping log levels. Cost is one log line per query.
+        // Sanitize the query first: strip control chars (defends plain-text log
+        // sinks against \n / ANSI injection) and clamp to 80 chars.
+        var topK = ranking.Take(3).ToList();
+        logger.LogInformation(
+            "SemanticIntentRouter: query={Query} top={Top}",
+            SanitizeForLog(query),
+            string.Join(" | ", topK.Select(r =>
+                $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
+
+        var top = ranking[0];
+        if (top.Score < MinConfidence)
+        {
+            logger.LogDebug(
+                "SemanticIntentRouter: top score {Score:F3} below threshold {Threshold:F2}; falling through",
+                top.Score, MinConfidence);
+            return null;
+        }
+
+        return new IntentMatch(top.Intent, top.Score, top.MatchedSource);
+    }
+
+    private static string Trim(string s, int max) =>
+        s.Length <= max ? s : s[..(max - 1)] + "…";
+
+    // Defense against log injection in plain-text sinks: replace any Unicode
+    // control character (Cc / Cf / Cs / Co / Cn) with '·' before clamping to 80
+    // chars. Without this, a query containing '\n' could forge a fake log line.
+    private static string SanitizeForLog(string s)
+    {
+        var clamped = s.Length > 80 ? s[..80] + "…" : s;
+        var buf = new System.Text.StringBuilder(clamped.Length);
+        foreach (var c in clamped)
+            buf.Append(char.IsControl(c) ? '·' : c);
+        return buf.ToString();
     }
 
     private async Task EnsureExamplesEmbeddedAsync(
