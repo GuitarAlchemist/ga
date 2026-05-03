@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-03T20:16:59.9654790Z",
+  "Timestamp": "2026-05-03T20:36:16.4537110Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -153,7 +153,7 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
+        "Diagram": "x-4-8-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -163,17 +163,12 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-7-11-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-6-10-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-4-8-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-8-12-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -183,12 +178,17 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
+        "Diagram": "x-10-14-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-10-14-x-x-x",
+        "Diagram": "x-8-12-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 86.591261,
-    "VoicingsPerSec": 3615.226252450579,
-    "PeakWorkingSetMb": 413.33984375
+    "RuntimeSeconds": 84.8775872,
+    "VoicingsPerSec": 3688.217470913217,
+    "PeakWorkingSetMb": 403.41796875
   },
   "IssueSamples": {
     "NullChordName": [],
