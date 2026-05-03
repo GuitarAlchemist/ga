@@ -165,4 +165,87 @@ public class SkillMdParserTests
 
         Assert.That(result!.FilePath, Is.EqualTo("<memory>"));
     }
+
+    // ── Hardening: body cap + min trigger length ──────────────────────────────
+
+    [Test]
+    public void TryParseContent_BodyOverMaxBodyCharacters_RejectsFile()
+    {
+        // A SKILL.md whose body exceeds the cap is a prompt-injection
+        // amplifier — a malicious skill author could shove a megabyte of
+        // adversarial text into every triggered LLM call. Parser must
+        // reject the file outright.
+        var bigBody = new string('A', SkillMdParser.MaxBodyCharacters + 1);
+        var content = $"---\nName: \"toobig\"\nTriggers:\n  - \"toobig\"\n---\n{bigBody}";
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Null,
+            "SKILL.md whose body exceeds MaxBodyCharacters must be rejected outright");
+    }
+
+    [Test]
+    public void TryParseContent_BodyAtCapBoundary_AcceptsFile()
+    {
+        // Off-by-one defense: body of EXACTLY MaxBodyCharacters must still
+        // parse — "exceeds the cap" means strictly greater than.
+        var atCapBody = new string('A', SkillMdParser.MaxBodyCharacters);
+        var content = $"---\nName: \"atcap\"\nTriggers:\n  - \"atcap\"\n---\n{atCapBody}";
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null,
+            "body at exactly MaxBodyCharacters must be accepted (cap is exclusive)");
+    }
+
+    [Test]
+    public void TryParseContent_TriggersBelowMinLength_AreDropped()
+    {
+        // "a" / "an" would match every English message, shadowing every
+        // more-specific skill. Drop these silently rather than rejecting
+        // the file — most violations are typos, not hostile.
+        const string content = """
+            ---
+            Name: "shorty"
+            Triggers:
+              - "a"
+              - "an"
+              - "but"
+              - "valid trigger"
+              - "another good one"
+            ---
+            body
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result,                Is.Not.Null);
+        Assert.That(result!.Triggers,      Has.Count.EqualTo(2),
+            "triggers shorter than MinTriggerLength must be dropped silently");
+        Assert.That(result.Triggers,       Contains.Item("valid trigger"));
+        Assert.That(result.Triggers,       Contains.Item("another good one"));
+        Assert.That(result.Triggers.All(t => t.Length >= SkillMdParser.MinTriggerLength), Is.True);
+    }
+
+    [Test]
+    public void TryParseContent_AllTriggersDropped_StillParsesButYieldsEmptyTriggers()
+    {
+        // SkillMdLoader filters skills with empty Triggers downstream — the
+        // parser stage just has to faithfully report what survived.
+        const string content = """
+            ---
+            Name: "all-short"
+            Triggers:
+              - "a"
+              - "x"
+            ---
+            body
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result,           Is.Not.Null);
+        Assert.That(result!.Triggers, Is.Empty,
+            "if all triggers are short, the survivor list is empty (downstream filter handles registration)");
+    }
 }

@@ -86,6 +86,27 @@ public sealed class InProcessMcpToolsProvider(
         _client = await McpClient.CreateAsync(clientTransport, cancellationToken: ct);
 
         var toolList = await _client.ListToolsAsync(cancellationToken: ct);
+
+        // Tool-name uniqueness defense: the underlying MCP server registration
+        // is iterative WithTools(toolType) calls with no dedup or namespace
+        // prefixing. A duplicate tool name (deliberate or accidental) would
+        // give "last writer wins" semantics — and an LLM holding a name from
+        // an earlier turn could call a tool whose body was silently replaced.
+        // Detect at startup and fail fast so the operator sees the collision
+        // before any user-facing call lands on it.
+        var dupes = toolList
+            .GroupBy(t => t.Name, StringComparer.Ordinal)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+        if (dupes.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"InProcessMcpToolsProvider: duplicate MCP tool name(s) registered: {string.Join(", ", dupes)}. " +
+                $"Each [McpServerTool] must have a unique wire name (e.g. via [McpServerTool(Name = \"ga_<topic>_<verb>\")]). " +
+                $"Full registered set: [{string.Join(", ", toolList.Select(t => t.Name))}].");
+        }
+
         logger.LogInformation(
             "InProcessMcpToolsProvider: started with {Count} MCP tools ({Types})",
             toolList.Count,
