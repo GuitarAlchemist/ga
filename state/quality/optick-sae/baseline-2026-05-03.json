@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "purpose": "pre-SAE baseline — fingerprint of the OPTIC-K corpus at the time the SAE Phase 0 plan and contract were finalized. The Phase 1 implementation agent (scheduled 2026-05-19) compares against this fingerprint to detect whether the index changed before its first training run.",
+  "measured_at": "2026-05-03T15:50:00Z",
+  "measured_by": "manual via certutil + EmbeddingSchema reflection",
+  "optick_index": {
+    "path": "state/voicings/optick.index",
+    "sha256": "sha256:89354bcb3513efbe1523651b734743c6921186a9e807f53bfbe4a74a254bd267",
+    "size_bytes": 183773176,
+    "magic_header": "OPTK",
+    "format_version": 4,
+    "header_bytes_inspected": "4f50544b0400000068020000cf8ecd37"
+  },
+  "schema": {
+    "version": "OPTIC-K-v1.8",
+    "version_constant_source": "Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs:Version",
+    "total_dimension": 240,
+    "total_dimension_source": "Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs:TotalDimension",
+    "compact_layout_v4": "v4-pp-r",
+    "compact_layout_note": "per-partition L2 normalization + ROOT partition appended at slots 228-239 (added 2026-04-19, closes the T-invariance gap that 91% of same-PC-set cross-instrument voicings exposed in invariant test #25)"
+  },
+  "partitions": {
+    "IDENTITY":     { "start": 0,   "end": 5,   "dim": 6,  "weight": 0.00, "role": "Identity" },
+    "STRUCTURE":    { "start": 6,   "end": 29,  "dim": 24, "weight": 0.45, "role": "Similarity" },
+    "MORPHOLOGY":   { "start": 30,  "end": 53,  "dim": 24, "weight": 0.25, "role": "Similarity" },
+    "CONTEXT":      { "start": 54,  "end": 65,  "dim": 12, "weight": 0.20, "role": "Similarity" },
+    "SYMBOLIC":     { "start": 66,  "end": 77,  "dim": 12, "weight": 0.10, "role": "Similarity" },
+    "EXTENSIONS":   { "start": 78,  "end": 95,  "dim": 18, "weight": 0.00, "role": "Info" },
+    "SPECTRAL":     { "start": 96,  "end": 108, "dim": 13, "weight": 0.00, "role": "Info" },
+    "MODAL":        { "start": 109, "end": 148, "dim": 40, "weight": 0.10, "role": "Similarity" },
+    "HIERARCHY":    { "start": 149, "end": 163, "dim": 15, "weight": 0.00, "role": "Info" },
+    "ATONAL_MODAL": { "start": 164, "end": 227, "dim": 64, "weight": 0.00, "role": "Info" },
+    "ROOT":         { "start": 228, "end": 239, "dim": 12, "weight": 0.05, "role": "Similarity" }
+  },
+  "similarity_partitions_only": ["STRUCTURE", "MORPHOLOGY", "CONTEXT", "SYMBOLIC", "MODAL", "ROOT"],
+  "phase_1_recommended_partitions_used": ["IDENTITY", "STRUCTURE", "MORPHOLOGY", "CONTEXT", "SYMBOLIC", "MODAL", "ROOT"],
+  "deferred_to_phase_1": {
+    "corpus_size": "Requires loading the index via OptickIndexReader. The Phase 1 agent will populate this in its first artifact's input.corpus_size field.",
+    "per_partition_basic_stats": "mean/std per dim — out of scope for the manual baseline. Phase 1 trainer can compute as part of normalization."
+  },
+  "links": {
+    "contract": "docs/contracts/2026-05-02-optick-sae-artifact.contract.md",
+    "plan": "docs/plans/2026-05-02-arch-optick-sae-plan.md",
+    "schema": "docs/contracts/optick-sae-artifact.schema.json",
+    "implementation_agent": "https://claude.ai/code/routines/trig_01QUrKEsYLPPW4KNLzKZRE2n"
+  }
+}
