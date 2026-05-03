@@ -201,6 +201,41 @@ public class FileBasedSkillsProviderTests
     }
 
     [Test]
+    public async Task InvokingAsync_LoadsKeyIdentificationSkillFromRepo()
+    {
+        // Sixth MCP-tool-driven canary, and the FIRST hybrid port (the C#
+        // skill combined deterministic detection with LLM phrasing). The
+        // SKILL.md body now carries the phrasing rules; the tool carries
+        // the deterministic match.
+        var repoSkills = ResolveRepoSkillsDir();
+        if (repoSkills is null) Assert.Ignore("skills/ directory not reachable from test binary");
+
+        var provider = new FileBasedSkillsProvider(repoSkills!);
+
+        var keyId = provider.Skills.SingleOrDefault(s => s.Name == "key-identification");
+        Assert.That(keyId, Is.Not.Null,
+            "skills/key-identification/SKILL.md must be discovered with name 'key-identification'");
+
+        Assert.That(keyId!.Triggers.Any(t => t.Contains("what key is")), Is.True);
+        Assert.That(keyId.Triggers.Any(t => t.Contains("identify the key")), Is.True);
+
+        Assert.That(keyId.Body, Does.Contain("ga_key_identify"),
+            "tool-driven SKILL.md must name the MCP tool the LLM should call");
+        Assert.That(keyId.Body, Does.Contain("DiatonicSet").And.Contain("TopCandidates"),
+            "body must document the structured result fields the LLM consumes");
+
+        // Both phrasing paths must be documented (single candidate vs tied
+        // relative pair) — the relative-pair ambiguity is the most common
+        // case (any I-vi-IV-V progression), and missing the tie-handling
+        // would make the LLM emit confidently-wrong single-key answers.
+        Assert.That(keyId.Body, Does.Contain("Tied").Or.Contain("relative"),
+            "body must explain how to handle relative-pair ties");
+
+        var ctx = await provider.InvokingAsync(UserContext("what key is C Am F G in"));
+        Assert.That(ctx.Instructions, Does.Contain("ga_key_identify"));
+    }
+
+    [Test]
     public async Task InvokingAsync_LoadsChordSubstitutionSkillFromRepo()
     {
         // Fifth MCP-tool-driven canary, and first SKILL.md to expose TWO
