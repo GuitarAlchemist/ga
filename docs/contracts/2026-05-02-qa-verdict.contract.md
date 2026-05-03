@@ -45,7 +45,7 @@ The contract is a **one-way door**: every consumer encodes the field names, enum
   "blast_radius": {
     "layers_touched": ["domain", "analysis", "ai_ml"],
     "one_way_doors_crossed": [],
-    "invariants_at_risk": ["optick.dim=228", "five-layer.bottom-up"],
+    "invariants_at_risk": ["optick.dim=240", "five-layer.bottom-up"],
     "components_reached": [
       "Common/GA.Business.Core/Analysis/...",
       "Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs"
@@ -161,7 +161,7 @@ A verdict's `risk_tier` is the **maximum** severity across its `followups`. A ve
 |---|---|---|
 | `layers_touched` | array<enum> | Subset of `core`, `domain`, `analysis`, `ai_ml`, `orchestration`, `apps`, `frontend`, `infra`, `docs`. |
 | `one_way_doors_crossed` | array<string> | Doors crossed *without* documented sign-off. Empty array is fine; presence forces `P0`. |
-| `invariants_at_risk` | array<string> | Stable IDs from `docs/contracts/` and CLAUDE.md. Examples: `optick.dim=228`, `five-layer.bottom-up`, `optick.weights.simplex`. |
+| `invariants_at_risk` | array<string> | Stable IDs from `docs/contracts/` and CLAUDE.md. Examples: `optick.dim=240`, `optick.schema=OPTIC-K-v1.8`, `five-layer.bottom-up`, `optick.weights.simplex`. |
 | `components_reached` | array<string> | Repo-relative paths or namespaces. |
 | `estimated_blast_score` | float [0..1] | Producer's heuristic. Score ≥ 0.7 means "wide-reach diff" — used for sampling and prioritization. Score is **advisory**, not gating. |
 
