@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-03T20:09:51.6060470Z",
+  "Timestamp": "2026-05-03T20:16:59.9654790Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 398
+        "Count": 394
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 370
+        "Count": 371
       },
       {
         "Name": "Adim/C",
@@ -158,11 +158,6 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-4-8-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-5-9-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
@@ -173,17 +168,22 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-4-8-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-8-12-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-9-13-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
         "Diagram": "x-11-15-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-8-12-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 81.9694827,
-    "VoicingsPerSec": 3819.0676540648706,
-    "PeakWorkingSetMb": 398.2578125
+    "RuntimeSeconds": 86.591261,
+    "VoicingsPerSec": 3615.226252450579,
+    "PeakWorkingSetMb": 413.33984375
   },
   "IssueSamples": {
     "NullChordName": [],
