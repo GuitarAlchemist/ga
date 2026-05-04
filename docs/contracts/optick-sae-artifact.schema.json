@@ -73,7 +73,12 @@
         "optick_dim": {
           "type": "integer",
           "minimum": 1,
-          "description": "Currently 240 for v1.8. Read from EmbeddingSchema.TotalDimension."
+          "description": "OPTIC-K embedding TOTAL dimension. Currently 240 for v1.8. Read from EmbeddingSchema.TotalDimension."
+        },
+        "compact_training_dim": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Dimension the SAE actually trained on (compact OPTK format = 124 for v1.8). Optional in v0.1.x; equal to optick_dim if the trainer used the full embedding. Surfaces the conflation that produced PR #82's bugs."
         },
         "schema_version": {
           "type": "string",
