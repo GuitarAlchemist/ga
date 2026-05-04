@@ -82,12 +82,21 @@ public static class QaTools
     public static string ScoreQualityDrift(
         [Description("Metric name as it appears in state/quality/*.json.")] string metric,
         [Description("Window length in days.")] int windowDays)
+        => ScoreQualityDriftAt(metric, windowDays, Path.Combine("state", "quality"));
+
+    /// <summary>
+    /// Testable form of <see cref="ScoreQualityDrift"/> with an injectable
+    /// state-quality root. WHY: the MCP tool resolves paths relative to CWD
+    /// (the MCP server's working dir at runtime); tests need to point at a
+    /// temp dir without mutating process-wide CWD.
+    /// </summary>
+    public static string ScoreQualityDriftAt(string metric, int windowDays, string stateQualityRoot)
     {
         // Phase 1 stub: detect SAE artifacts and surface them.
         // Real time-series drift computation is Phase 2 (qa-architect-cycle.ixql wiring).
         if (metric.Equals("optick-sae", StringComparison.OrdinalIgnoreCase))
         {
-            var saeRoot = Path.Combine("state", "quality", "optick-sae");
+            var saeRoot = Path.Combine(stateQualityRoot, "optick-sae");
             var artifactFiles = Directory.Exists(saeRoot)
                 ? Directory.GetFiles(saeRoot, "optick-sae-artifact.json", SearchOption.AllDirectories)
                 : [];
