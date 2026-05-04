@@ -36,11 +36,7 @@ public sealed partial class ChordMcpTools
             ["B"] = 11, ["B#"] = 0, ["Cb"] = 11, ["E#"] = 5, ["Fb"] = 4,
         };
 
-    private static readonly char[] NaturalLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    private static readonly IReadOnlyDictionary<char, int> NaturalPitchClasses = new Dictionary<char, int>
-    {
-        ['C'] = 0, ['D'] = 2, ['E'] = 4, ['F'] = 5, ['G'] = 7, ['A'] = 9, ['B'] = 11,
-    };
+    // NaturalLetters / NaturalPitchClasses live in ChordSpelling (PR #102).
 
     /// <summary>
     /// Parses a chord symbol (e.g. <c>"Cmaj7"</c>, <c>"F#m"</c>, <c>"Bbdim"</c>) and
@@ -71,7 +67,7 @@ public sealed partial class ChordMcpTools
 
         var formula = GetFormula(quality);
         var notes   = formula.Intervals
-            .Zip(formula.LetterSteps, (interval, letterSteps) => Spell(root, rootPc + interval, letterSteps))
+            .Zip(formula.LetterSteps, (interval, letterSteps) => ChordSpelling.Spell(root, rootPc + interval, letterSteps))
             .ToArray();
 
         return new ChordResult
@@ -134,31 +130,7 @@ public sealed partial class ChordMcpTools
         _            => new("major",      [0, 4, 7],     [0, 2, 4],    ["root", "major third", "perfect fifth"]),
     };
 
-    /// <summary>
-    /// Enharmonic-aware note spelling: given a root, target pitch class, and the
-    /// number of letter-steps from root to target, picks the right letter +
-    /// accidental so a Cmaj chord spells C-E-G (not C-E-Abb) and a Bbm chord
-    /// spells Bb-Db-F (not Bb-C#-F).
-    /// </summary>
-    private static string Spell(string root, int pitchClass, int letterSteps)
-    {
-        var rootLetter   = char.ToUpperInvariant(root[0]);
-        var rootIndex    = Array.IndexOf(NaturalLetters, rootLetter);
-        var targetLetter = NaturalLetters[(rootIndex + letterSteps) % NaturalLetters.Length];
-        var targetNatural = NaturalPitchClasses[targetLetter];
-        var normalized   = ((pitchClass % 12) + 12) % 12;
-        var accidental   = ((normalized - targetNatural) % 12 + 12) % 12;
-
-        return accidental switch
-        {
-            0  => targetLetter.ToString(),
-            1  => $"{targetLetter}#",
-            2  => $"{targetLetter}##",
-            10 => $"{targetLetter}bb",
-            11 => $"{targetLetter}b",
-            _  => $"{targetLetter}{(accidental < 6 ? new string('#', accidental) : new string('b', 12 - accidental))}",
-        };
-    }
+    // Spell() delegates to the shared helper (PR #102) — see ChordSpelling.
 
     [GeneratedRegex(@"^(?<root>[A-Ga-g][#b]?)(?<quality>maj7|min7|m7|maj|min|m|dim|aug|7|M7|M)?$",
         RegexOptions.CultureInvariant)]
