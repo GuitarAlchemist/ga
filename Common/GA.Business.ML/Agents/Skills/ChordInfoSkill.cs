@@ -32,17 +32,9 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         ["Fb"] = 4,
     };
 
-    private static readonly char[] NaturalLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    private static readonly IReadOnlyDictionary<char, int> NaturalPitchClasses = new Dictionary<char, int>
-    {
-        ['C'] = 0,
-        ['D'] = 2,
-        ['E'] = 4,
-        ['F'] = 5,
-        ['G'] = 7,
-        ['A'] = 9,
-        ['B'] = 11,
-    };
+    // NaturalLetters / NaturalPitchClasses moved to ChordSpelling (PR #102).
+    // Spell() below also delegates so this skill and ChordMcpTools share
+    // a single source of truth for enharmonic accounting.
 
     public string Name => "ChordInfo";
 
@@ -236,25 +228,10 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
                normalized.Contains("note", StringComparison.Ordinal);
     }
 
-    private static string Spell(string root, int pitchClass, int letterSteps)
-    {
-        var rootLetter = char.ToUpperInvariant(root[0]);
-        var rootIndex = Array.IndexOf(NaturalLetters, rootLetter);
-        var targetLetter = NaturalLetters[(rootIndex + letterSteps) % NaturalLetters.Length];
-        var targetNatural = NaturalPitchClasses[targetLetter];
-        var normalized = ((pitchClass % 12) + 12) % 12;
-        var accidental = ((normalized - targetNatural) % 12 + 12) % 12;
-
-        return accidental switch
-        {
-            0 => targetLetter.ToString(),
-            1 => $"{targetLetter}#",
-            2 => $"{targetLetter}##",
-            10 => $"{targetLetter}bb",
-            11 => $"{targetLetter}b",
-            _ => $"{targetLetter}{(accidental < 6 ? new string('#', accidental) : new string('b', 12 - accidental))}"
-        };
-    }
+    // Delegates to the shared helper (PR #102) so this skill and
+    // ChordMcpTools cannot drift on enharmonic accounting.
+    private static string Spell(string root, int pitchClass, int letterSteps) =>
+        GA.Business.ML.Agents.Mcp.ChordSpelling.Spell(root, pitchClass, letterSteps);
 
     private static string JoinNotes(IReadOnlyList<string> notes) =>
         notes.Count switch
