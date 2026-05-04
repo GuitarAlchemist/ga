@@ -45,6 +45,13 @@ public class SkillParityMatrixTests
     /// and the expected MCP tool wire names (empty for catalog skills, may
     /// have multiple for skills that expose more than one operation).
     /// </summary>
+    /// <remarks>
+    /// Hardcoded array is intentional at N=10 — the <c>typeof()</c> entries
+    /// give compile-time verification that's lost in a data file. Tipping
+    /// point is roughly N≈20 or whenever a non-C# author needs to add rows;
+    /// at that point extract to <c>state/quality/chatbot-qa/parity.yaml</c>
+    /// and load via reflection-by-string.
+    /// </remarks>
     public sealed record SkillContract(
         string SkillMdFolder,
         string ExpectedName,
@@ -188,10 +195,15 @@ public class SkillParityMatrixTests
 
         var source = File.ReadAllText(gaPluginPath);
         var className = contract.CSharpSkillType.Name;
-        var expectedRegistration = $"AddOrchestratorSkillIntent<{className}>";
 
-        Assert.That(source, Does.Contain(expectedRegistration),
-            $"GaPlugin.cs must register {className} via {expectedRegistration}() — " +
+        // Regex-match `AddOrchestratorSkillIntent < (ws) ClassName (ws) >` —
+        // tolerates formatter changes (a `dotnet format` run that adds spaces
+        // around the type-arg shouldn't break the test). PR #97 review tightening.
+        var registrationPattern = new System.Text.RegularExpressions.Regex(
+            $@"AddOrchestratorSkillIntent\s*<\s*{System.Text.RegularExpressions.Regex.Escape(className)}\s*>");
+
+        Assert.That(registrationPattern.IsMatch(source), Is.True,
+            $"GaPlugin.cs must register {className} via AddOrchestratorSkillIntent<{className}>() — " +
             $"otherwise the SemanticIntentRouter never sees it and queries silently fall through to LLM.");
     }
 
@@ -216,6 +228,15 @@ public class SkillParityMatrixTests
         // qa-architect predates the chatbot migration (PR #66 — a non-
         // chatbot skill for QA Architect agent collaboration). Excluded
         // from the parity matrix by design.
+        //
+        // **Follow-up** (per PR #97 review): replace this hardcoded
+        // exclusion with a SKILL.md frontmatter convention, e.g.
+        //     metadata:
+        //       chatbot-migration: false
+        // and filter on absence-or-true here. Defers the next exclusion
+        // debate to where it belongs (the SKILL.md file itself). Not
+        // doing it now — single-row exclusion isn't a maintenance burden
+        // until there's a second one.
         skillFolders.Remove("qa-architect");
 
         Assert.That(skillFolders, Is.EquivalentTo(matrixFolders),
