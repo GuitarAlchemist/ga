@@ -15,7 +15,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import numpy as np
 import torch
 
 
@@ -44,11 +43,11 @@ def main() -> int:
     # ── 1. Load original artifact + adjust ────────────────────────────────
     art = json.loads(src_artifact.read_text(encoding="utf-8"))
 
-    actual_training_dim = int(art["input"]["optick_dim"])  # 124 for compact
-    art["input"]["optick_dim"] = 240  # per contract: TotalDimension
-    # NOTE: schema's input has additionalProperties=false, so we can't add a
-    # compact_training_dim field. The narrative records the actual training
-    # dim explicitly. Future contract bump could add a dedicated slot.
+    # WHY override: the trainer records the actual training dim (124 for v1.8
+    # compact) but the contract field optick_dim wants TotalDimension (240).
+    # Schema's input object has additionalProperties=false so we can't add a
+    # parallel compact_training_dim slot; narrative records it explicitly.
+    art["input"]["optick_dim"] = 240
 
     # Update narrative for clarity
     metrics = art["metrics"]
