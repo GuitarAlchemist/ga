@@ -30,7 +30,16 @@ export default defineConfig({
         },
     },
     resolve: {
-        dedupe: ['react', 'react-dom', 'react-router-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        // `three` added: ga-client lazy-imports across packages
+        // (App.tsx → ReactComponents/ga-react-components/src/pages/...). Rollup
+        // resolves bare specifiers from the importing file's directory upward,
+        // so `import 'three'` from inside ReactComponents/ never reaches
+        // Apps/ga-client/node_modules — CI failed with "Rollup failed to
+        // resolve import 'three'". `dedupe` makes vite resolve the package
+        // from the project root, then route all importers to that instance,
+        // including sub-paths (`three/examples/...`, `three/webgpu`) via the
+        // package's exports map.
+        dedupe: ['react', 'react-dom', 'react-router-dom', '@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled', 'three'],
     },
     build: {
         chunkSizeWarningLimit: 1500,
