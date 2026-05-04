@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);SKEXP0001;IDE0065</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.DSL\GA.Business.DSL.fsproj" />
+    <ProjectReference Include="..\..\Common\GA.Infrastructure\GA.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Common\GA.Business.Core.Orchestration\GA.Business.Core.Orchestration.csproj" />
+  </ItemGroup>
+</Project>
