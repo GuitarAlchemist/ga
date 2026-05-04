@@ -20,7 +20,10 @@ using ILGPU.Runtime;
 /// </summary>
 public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 {
-    // OPTIC-K Musical Embedding Schema Constants
+    // OPTIC-K Musical Embedding Schema Constants. Add new versions HERE.
+    // Partition-aware similarity reads slots 6-77 only — layout stable across
+    // versions, newer ones only add info partitions past slot 78.
+    private const int OpticKv18Dim = 240; // v1.8 — adds ROOT one-hot in raw slots 228-239
     private const int OpticKv17Dim = 228; // v1.7
     private const int OpticKv16Dim = 216; // v1.6
     private const int MusicalEmbeddingDim = 109; // v1.3.1
@@ -404,7 +407,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
         var voicingOffset = index * embeddingDim;
 
-        if (embeddingDim == OpticKv17Dim || embeddingDim == OpticKv16Dim || embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
+        if (embeddingDim == OpticKv18Dim || embeddingDim == OpticKv17Dim || embeddingDim == OpticKv16Dim || embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
         {
             var score = 0.0;
 
@@ -464,7 +467,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         var voicingIdx = allowedIndices[index];
         var voicingOffset = voicingIdx * embeddingDim;
 
-        if (embeddingDim == OpticKv17Dim || embeddingDim == OpticKv16Dim || embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
+        if (embeddingDim == OpticKv18Dim || embeddingDim == OpticKv17Dim || embeddingDim == OpticKv16Dim || embeddingDim == MusicalEmbeddingDim || embeddingDim == LegacyMusicalEmbeddingDim)
         {
             var score = 0.0;
 

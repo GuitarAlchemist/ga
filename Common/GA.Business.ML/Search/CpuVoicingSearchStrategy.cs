@@ -23,11 +23,15 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     private TimeSpan _totalSearchTime = TimeSpan.Zero;
     private readonly object _statsLock = new();
 
-    // OPTIC-K Schema Constants
-    private const int OpticKv17Dim = 228;
-    private const int OpticKv16Dim = 216;
+    // OPTIC-K Schema Constants. Add new versions HERE when the schema changes.
+    // The partition-aware similarity below depends on slots 6-77 having a
+    // stable layout across versions (verified in EmbeddingSchema.cs); newer
+    // versions only ADD info partitions past slot 78.
+    private const int OpticKv18Dim  = 240;  // v1.8 — adds ROOT one-hot in raw slots 228-239
+    private const int OpticKv17Dim  = 228;
+    private const int OpticKv16Dim  = 216;
     private const int OpticKv131Dim = 109;
-    private const int LegacyDim = 96;
+    private const int LegacyDim     = 96;
 
     // Partition Config
     private const int StructureOffset = 6;
@@ -233,17 +237,28 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
     private static double CosineSimilarity(double[] v1, double[] v2)
     {
-        if (v1.Length != v2.Length) return 0.0;
+        var v1Musical = IsKnownOpticKDim(v1.Length);
+        var v2Musical = IsKnownOpticKDim(v2.Length);
 
-        // Use weighted partition similarity for musical embeddings (v1.7, v1.6, v1.3.1, v1.2.1)
-        if (v1.Length == OpticKv17Dim || v1.Length == OpticKv16Dim || v1.Length == OpticKv131Dim || v1.Length == LegacyDim)
-        {
+        // Both vectors are OPTIC-K (possibly different versions): use partition-aware
+        // similarity. Partitions 6-77 (STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC)
+        // are layout-identical across v1.2.1 / v1.3.1 / v1.6 / v1.7 / v1.8 — newer
+        // versions only ADD info partitions past slot 78. The previous behaviour
+        // ("return 0.0 on length mismatch") was the user-reported "voicing scores
+        // at 0.000" bug after the schema bumped to v1.8 (240) while older indexed
+        // voicings remained at v1.7 (228).
+        if (v1Musical && v2Musical)
             return CalculateMusicalSimilarity(v1, v2);
-        }
 
-        // Fallback to standard Cosine Similarity
+        // Outside OPTIC-K: standard cosine, but require equal dim (no safe
+        // cross-dimension semantics for non-musical vectors).
+        if (v1.Length != v2.Length) return 0.0;
         return System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(v1, v2);
     }
+
+    private static bool IsKnownOpticKDim(int n) =>
+        n == OpticKv18Dim || n == OpticKv17Dim || n == OpticKv16Dim
+        || n == OpticKv131Dim || n == LegacyDim;
 
     private static double CalculateMusicalSimilarity(double[] query, double[] target)
     {
