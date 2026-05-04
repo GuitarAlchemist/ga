@@ -17,7 +17,8 @@
       "SYMBOLIC",
       "MODAL",
       "ROOT"
-    ]
+    ],
+    "compact_training_dim": 124
   },
   "model": {
     "kind": "topk_sae",

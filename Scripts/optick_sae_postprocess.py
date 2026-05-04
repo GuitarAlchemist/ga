@@ -43,11 +43,13 @@ def main() -> int:
     # ── 1. Load original artifact + adjust ────────────────────────────────
     art = json.loads(src_artifact.read_text(encoding="utf-8"))
 
-    # WHY override: the trainer records the actual training dim (124 for v1.8
-    # compact) but the contract field optick_dim wants TotalDimension (240).
-    # Schema's input object has additionalProperties=false so we can't add a
-    # parallel compact_training_dim slot; narrative records it explicitly.
+    # The trainer records the actual training dim (124 for v1.8 compact) in
+    # optick_dim. Per contract v0.1.1, optick_dim is the OPTIC-K embedding's
+    # TOTAL dimension (240); the actual training dim moves to the dedicated
+    # compact_training_dim slot.
+    actual_training_dim = int(art["input"]["optick_dim"])
     art["input"]["optick_dim"] = 240
+    art["input"]["compact_training_dim"] = actual_training_dim
 
     # Update narrative for clarity
     metrics = art["metrics"]

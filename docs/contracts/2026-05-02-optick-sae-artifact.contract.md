@@ -1,6 +1,6 @@
 # OPTIC-K SAE Artifact — Cross-Repo Contract
 
-**Version:** 0.1.0 (draft, pending sign-off)
+**Version:** 0.1.1 (draft, pending sign-off — additive change from v0.1.0: optional `input.compact_training_dim` field)
 **Schema version:** 1
 **Status:** Draft (Phase 0 of `optick-sae` plan, 2026-05-02)
 **Producer:** `ix/crates/ix-optick-sae` (Rust orchestrator + Python PyTorch trainer via subprocess)
@@ -39,6 +39,7 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
     "optick_index_path": "state/voicings/optick.index",
     "optick_index_sha": "sha256:89354bcb3513efbe1523651b734743c6921186a9e807f53bfbe4a74a254bd267",
     "optick_dim": 240,
+    "compact_training_dim": 124,
     "schema_version": "OPTIC-K-v1.8",
     "corpus_size": 313487,
     "partitions_used": ["IDENTITY", "STRUCTURE", "MORPHOLOGY", "CONTEXT", "SYMBOLIC", "MODAL", "ROOT"]
@@ -108,7 +109,8 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
 |---|---|---|
 | `optick_index_path` | string | Repo-relative path. Usually `state/voicings/optick.index`. |
 | `optick_index_sha` | string | `sha256:...`. Lets consumers detect when the index changed since training. |
-| `optick_dim` | int | Currently 240 (v1.8 — bumped from 228 on 2026-04-19 with the 12-dim ROOT partition added). Pinned per CLAUDE.md OPTIC-K rule. Read from `EmbeddingSchema.TotalDimension`, do not hardcode. |
+| `optick_dim` | int | The OPTIC-K embedding's *total* dimension. Currently 240 (v1.8 — bumped from 228 on 2026-04-19 with the 12-dim ROOT partition added). Read from `EmbeddingSchema.TotalDimension`, do not hardcode. |
+| `compact_training_dim` | int (optional, v0.1.1+) | The dimension the SAE *actually trained on*. For the canonical OPTK v4 file this is `EmbeddingSchema.CompactDimension` (124 for v1.8 — sum of similarity-weighted partition dims, IDENTITY excluded since it's not in the compact format). MUST equal `optick_dim` if the trainer used the full embedding. WHY this exists: the 2026-05-03 local validation surfaced that "what was trained" and "what the embedding nominally is" diverge for the production OPTK pipeline; conflating them in `optick_dim` made narratives inconsistent (PR #82 wrote "118-dim" while `optick_dim: 240`). Optional in v0.1.x for compat with v0.1.0 artifacts; required candidate for v1.0 freeze. |
 | `schema_version` | string | OPTIC-K schema version, exact match of `EmbeddingSchema.Version` (e.g. `"OPTIC-K-v1.8"`). |
 | `corpus_size` | int | Number of voicings in the index. |
 | `partitions_used` | array<string> | Which OPTIC-K partitions the SAE trained over. Phase 1 default trains over similarity-weighted partitions plus IDENTITY: `[IDENTITY, STRUCTURE, MORPHOLOGY, CONTEXT, SYMBOLIC, MODAL, ROOT]`. Skip info-only partitions (EXTENSIONS, SPECTRAL, HIERARCHY, ATONAL_MODAL) initially since they don't carry similarity weight. |
