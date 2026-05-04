@@ -716,7 +716,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         var embeddingStartIdx = voicingIndex * _embeddingDimensions;
 
         // Use weighted partition similarity for musical embeddings (v1.7, v1.6, v1.3.1, v1.2.1)
-        if (_embeddingDimensions == OpticKv17Dim || _embeddingDimensions == OpticKv16Dim || _embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
+        if (_embeddingDimensions == OpticKv18Dim || _embeddingDimensions == OpticKv17Dim || _embeddingDimensions == OpticKv16Dim || _embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
         {
             return CalculateMusicalSimilarity(queryEmbedding, _hostEmbeddings, embeddingStartIdx);
         }

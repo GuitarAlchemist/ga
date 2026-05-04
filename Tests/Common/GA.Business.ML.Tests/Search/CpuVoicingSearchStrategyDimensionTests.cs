@@ -152,6 +152,31 @@ public class CpuVoicingSearchStrategyDimensionTests
     }
 
     [Test]
+    public async Task SemanticSearchAsync_V18QueryAgainstLegacyVoicing_ScoresNonZero()
+    {
+        // Cross-version with the OLDEST recognized dim (v1.2.1 = 96).
+        // Slots 6..77 still exist in legacy (96 ≥ 78), so partition-aware
+        // similarity is safe. Reviewer (octo-code-reviewer on PR #95)
+        // requested explicit coverage so future schema changes don't
+        // silently regress the legacy compatibility surface.
+        var strategy = new CpuVoicingSearchStrategy();
+        var query    = MakeV18Vector(1.0);
+        var legacy   = new double[96];
+        for (var i = 6;  i < 30; i++) legacy[i] = 1.0 * 0.1 + i * 0.01;
+        for (var i = 30; i < 54; i++) legacy[i] = 1.0 * 0.2 + i * 0.01;
+        for (var i = 54; i < 66; i++) legacy[i] = 1.0 * 0.3 + i * 0.01;
+        for (var i = 66; i < 78; i++) legacy[i] = 1.0 * 0.4 + i * 0.01;
+
+        await strategy.InitializeAsync([MakeVoicing("legacy-target", legacy)]);
+
+        var results = await strategy.SemanticSearchAsync(query, limit: 1);
+
+        Assert.That(results, Has.Count.EqualTo(1));
+        Assert.That(results[0].Score, Is.GreaterThan(0.0),
+            "v1.8 query against legacy (96-dim) voicing must produce a non-zero score");
+    }
+
+    [Test]
     public async Task SemanticSearchAsync_QueryWithUnknownDim_DoesNotCrashAndReturnsResults()
     {
         // Unknown query dim (e.g. some future schema). When the query is NOT
