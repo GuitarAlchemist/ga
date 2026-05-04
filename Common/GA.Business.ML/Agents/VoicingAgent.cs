@@ -77,10 +77,11 @@ public sealed class VoicingAgent(
             : 10;
 
         var queryVector = encoder.Encode(structured);
+        var filters = BuildSearchFilters(structured);
 
         Task<double[]> Generator(string _) => Task.FromResult(queryVector);
         var results = await voicingSearch.SearchAsync(
-            request.Query, Generator, limit, filters: null, cancellationToken);
+            request.Query, Generator, limit, filters, cancellationToken);
 
         if (results.Count == 0)
         {
@@ -144,5 +145,24 @@ public sealed class VoicingAgent(
         if (q.ModeName is not null) parts.Add($"mode {q.ModeName}");
         if (q.Tags is { Count: > 0 }) parts.Add($"tags [{string.Join(", ", q.Tags)}]");
         return parts.Count == 0 ? "your query" : string.Join(" + ", parts);
+    }
+
+    internal static VoicingSearchFilters? BuildSearchFilters(StructuredQuery q)
+    {
+        var hasFilter = q.ChordSymbol is not null
+                        || q.ModeName is not null
+                        || q.Instrument is not null
+                        || q.Tags is { Count: > 0 };
+
+        if (!hasFilter)
+        {
+            return null;
+        }
+
+        return new VoicingSearchFilters(
+            VoicingType: q.Instrument,
+            ModeName: q.ModeName,
+            Tags: q.Tags is { Count: > 0 } ? [.. q.Tags] : null,
+            ChordName: q.ChordSymbol);
     }
 }
