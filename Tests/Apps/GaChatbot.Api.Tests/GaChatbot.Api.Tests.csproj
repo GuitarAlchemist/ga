@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.10" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryContentRootAttribute">
+      <_Parameter1>GaChatbot.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)\..\..\..\Apps\GaChatbot.Api</_Parameter2>
+      <_Parameter3>Program.cs</_Parameter3>
+      <_Parameter4>0</_Parameter4>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Apps\GaChatbot.Api\GaChatbot.Api.csproj" />
+  </ItemGroup>
+
+</Project>
