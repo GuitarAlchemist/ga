@@ -256,6 +256,61 @@ public class ChatProviderReadinessProbeTests
         Assert.That(status.ChatModelInstalled, Is.True);
     }
 
+    [Test]
+    public async Task GetStatusAsync_OllamaChatbotModelKey_TakesPrecedenceOverOllamaChatModel()
+    {
+        // OllamaChatService (sibling GaApi service) uses
+        // `Chatbot:Model ?? Ollama:ChatModel`. The probe must mirror that
+        // precedence to avoid green-lighting a misconfiguration where
+        // Chatbot:Model points at a model that isn't installed.
+        // Pinned by PR #96 review.
+        var tagsBody = """
+        {"models":[
+            {"name":"llama3.2:3b","size":1234},
+            {"name":"nomic-embed-text:latest","size":5678}
+        ]}
+        """;
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Chatbot:Model"]          = "phi-3:14b",     // wins; NOT installed
+                ["Ollama:ChatModel"]       = "llama3.2:3b",   // would otherwise pass
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            JsonOk(tagsBody));
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.That(status.IsAvailable, Is.False,
+            "Chatbot:Model precedence: phi-3:14b is the active chat model and is NOT installed");
+        Assert.That(status.ChatModel, Is.EqualTo("phi-3:14b"));
+        Assert.That(status.ChatModelInstalled, Is.False);
+    }
+
+    [Test]
+    public async Task GetStatusAsync_OllamaEmptyBody_DoesNotCrashAndReportsMissing()
+    {
+        // /api/tags returns 200 with empty/null body — guard added in PR #96
+        // so the probe doesn't bubble ArgumentNullException out and falsely
+        // mark ProviderReachable=false despite the successful HTTP response.
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Ollama:ChatModel"]       = "llama3.2:3b",
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            JsonOk(""));   // 200 OK, empty body
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.That(status.ProviderReachable, Is.True,
+            "200 with empty body still means HTTP is up — should not flip to ProviderReachable=false");
+        Assert.That(status.IsAvailable, Is.False,
+            "but with no models parseable, the chat path can't serve");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static HttpResponseMessage JsonOk(string body) =>

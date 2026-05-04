@@ -55,7 +55,12 @@ public sealed class ChatProviderReadinessProbe(
 
     private async Task<ChatbotStatus> GetOllamaStatusAsync(CancellationToken cancellationToken)
     {
-        var chatModel      = configuration["Ollama:ChatModel"];
+        // Mirror OllamaChatService's precedence: `Chatbot:Model` wins over
+        // `Ollama:ChatModel` when set. Reading only the latter would
+        // green-light a misconfiguration where Chatbot:Model points at a
+        // non-installed model. Per PR #96 review.
+        var chatModel      = configuration["Chatbot:Model"]
+                             ?? configuration["Ollama:ChatModel"];
         var embeddingModel = configuration["Ollama:EmbeddingModel"];
         var status = new ChatbotStatus
         {
@@ -125,6 +130,11 @@ public sealed class ChatProviderReadinessProbe(
     /// </summary>
     private static List<string> ParseTagsResponse(string json)
     {
+        // Empty/null body would otherwise throw ArgumentNullException out of
+        // JsonDocument.Parse — bubble up to the outer catch and erroneously
+        // mark ProviderReachable=false despite the 200. Per PR #96 review.
+        if (string.IsNullOrWhiteSpace(json)) return [];
+
         try
         {
             using var doc = JsonDocument.Parse(json);
