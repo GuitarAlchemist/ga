@@ -24,7 +24,17 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "What notes are in C major?",
         "Show me the F# minor scale",
         "List the notes in Bb major",
+        // Bare "What is X major/minor?" pattern — common phrasing that
+        // production was dropping into the LLM fallback because no example
+        // prompt was structurally close enough to it. The 0.65 cosine
+        // threshold + "What is a C major chord?" gap on the ChordInfo side
+        // pushed both candidates below threshold for the bare query.
+        // See docs/plans/2026-05-03-skill-routing-quality-fix.md for the
+        // diagnosis trail.
+        "What is C major?",
+        "What is A minor?",
         "What is D minor?",
+        "What is F# major?",
         "Tell me the notes of E major",
     ];
 

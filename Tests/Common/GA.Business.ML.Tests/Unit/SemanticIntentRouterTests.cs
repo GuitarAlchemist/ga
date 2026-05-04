@@ -253,6 +253,65 @@ public class SemanticIntentRouterTests
     }
 
     [Test]
+    public async Task RouteAsync_BareWhatIsXMajor_RoutesToScaleInfoNotLLM()
+    {
+        // Regression for the user-reported bug: "What is C major?" was falling
+        // back to the LLM path because no example prompt was structurally
+        // close enough to score above the 0.65 threshold. Fix in PR-pending:
+        // ScaleInfoSkill.ExamplePrompts now includes the bare
+        // "What is C major?" / "What is A minor?" patterns.
+        //
+        // This test uses stub embeddings calibrated to mirror the real-world
+        // scenario: the bare query has high cosine similarity with the new
+        // ScaleInfo example (literal match → 1.0) and lower similarity with
+        // ChordInfo's "What is a C major chord?" (different vector → 0.6).
+        var scaleInfo = new StubIntent(
+            id: "skill.scaleinfo",
+            description: "Returns the notes of a major or minor key.",
+            examples: ["What is C major?", "What is A minor?", "What notes are in C major?"]);
+
+        var chordInfo = new StubIntent(
+            id: "skill.chordinfo",
+            description: "Returns chord intervals.",
+            examples: ["What is a C major chord?", "What notes are in Dm7?"]);
+
+        // Calibrated to mirror likely nomic-embed-text behaviour:
+        // - Literal-string ScaleInfo example matches at 1.0
+        // - ChordInfo's "What is a C major chord?" is a strong-but-not-literal
+        //   match at ~0.85 (realistic per PR #94 review — original 0.6 was
+        //   too pessimistic and didn't stress-test the close-competitor case).
+        // The test must still resolve to scale-info because the literal match
+        // dominates the close cousin, NOT because the cousin is far away.
+        var queryVec       = new float[] { 1f, 0f, 0f, 0f };
+        var chordExampleV  = new float[] { 0.85f, 0.5267f, 0f, 0f };  // |v|=1.0, cos vs queryVec ≈ 0.85
+        var vectors = new Dictionary<string, float[]>
+        {
+            ["What is C major?"]               = queryVec,         // literal match, score 1.0
+            ["What is A minor?"]               = [0.9f, 0.4359f, 0f, 0f],     // cos ≈ 0.9
+            ["What notes are in C major?"]     = [0.7f, 0.7141f, 0f, 0f],     // cos ≈ 0.7
+            ["What is a C major chord?"]       = chordExampleV,
+            ["What notes are in Dm7?"]         = [0f, 1f, 0f, 0f],
+            ["Returns the notes of a major or minor key."] = [0f, 0f, 1f, 0f],
+            ["Returns chord intervals."]                   = [0f, 0f, 0f, 1f],
+        };
+
+        var router = new SemanticIntentRouter(
+            StubEmbedder(vectors),
+            NullLogger<SemanticIntentRouter>.Instance);
+
+        var match = await router.RouteAsync(
+            "What is C major?",
+            Services(scaleInfo, chordInfo));
+
+        Assert.That(match, Is.Not.Null,
+            "bare 'What is C major?' must route — the regression that drove this fix was LLM fallback at 0% confidence");
+        Assert.That(match!.Value.Intent.Id, Is.EqualTo("skill.scaleinfo"),
+            "bare 'What is X major' phrasing should route to scale-info (key/scale lookup), not chord-info");
+        Assert.That(match.Value.Confidence, Is.GreaterThanOrEqualTo(0.65f),
+            "must clear the MinConfidence threshold the production router applies");
+    }
+
+    [Test]
     public async Task IntentMatch_RecordsMatchedExample()
     {
         var modes = new StubIntent("skill.modes", "modes of major scale",
