@@ -194,7 +194,17 @@ jobs:
       run: |
         cd Apps/ga-client
         npm ci
-        
+
+    # ga-client lazy-imports across packages (App.tsx → ReactComponents/
+    # ga-react-components/src/pages/...). When rollup processes those files
+    # during build it walks up node_modules from the imported file's directory,
+    # so it never reaches Apps/ga-client/node_modules. Install the sibling
+    # package's deps too so bare specifiers (`three`, `jotai`, etc.) resolve.
+    - name: Install ReactComponents dependencies
+      run: |
+        cd ReactComponents/ga-react-components
+        npm ci
+
     - name: Lint frontend
       run: |
         cd Apps/ga-client
