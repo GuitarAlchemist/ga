@@ -1,6 +1,8 @@
 namespace GaChatbot.Api.Services;
 
+using System.Diagnostics;
 using System.Text.Json;
+using GA.Business.ML.Agents.Intents;
 using GaChatbot.Api.Controllers;
 
 public interface IChatProviderReadinessProbe
@@ -17,13 +19,31 @@ public interface IChatProviderReadinessProbe
 /// </summary>
 public sealed class ChatProviderReadinessProbe(
     IConfiguration configuration,
-    IHttpClientFactory httpClientFactory) : IChatProviderReadinessProbe
+    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
+    ILogger<ChatProviderReadinessProbe> logger) : IChatProviderReadinessProbe
 {
+    /// <summary>
+    /// Synthetic query for the orchestrator round-trip probe. Routes to a
+    /// catalog skill (no LLM call, no embedding call) so a wedged Ollama
+    /// can't false-positive nor false-negative the result.
+    /// </summary>
+    private const string RoundTripQuery = "show me beginner chords";
+
+    /// <summary>
+    /// Hard ceiling on the round-trip probe. /status callers expect a fast
+    /// response; a hung orchestrator must surface as a failed probe rather
+    /// than block the response. 3s is comfortably above any healthy
+    /// catalog-skill execution (<10ms in unit tests) but well under typical
+    /// HTTP-client timeouts.
+    /// </summary>
+    private static readonly TimeSpan RoundTripTimeout = TimeSpan.FromSeconds(3);
+
     public async Task<ChatbotStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         var provider = (configuration["AI:ChatProvider"] ?? "ollama").ToLowerInvariant();
 
-        return provider switch
+        var providerStatus = provider switch
         {
             "github" => TokenBasedStatus("GITHUB_TOKEN", "GitHub Models", provider),
             "ollama" => await GetOllamaStatusAsync(cancellationToken),
@@ -36,6 +56,89 @@ public sealed class ChatProviderReadinessProbe(
                 Timestamp = DateTime.UtcNow,
             },
         };
+
+        // Round-trip probe: independent of the provider check above, so a
+        // wedged orchestrator process is caught even when the provider is
+        // healthy. Catalog-skill execution doesn't need Ollama, so this
+        // probe truly tests the chatbot pipeline without re-testing the
+        // upstream dep.
+        var roundTrip = await TryRoundTripAsync(cancellationToken);
+        providerStatus.OrchestratorRoundTripOk = roundTrip.Success;
+        if (!roundTrip.Success)
+        {
+            providerStatus.IsAvailable = false;
+            providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
+                ? roundTrip.Diagnostic
+                : $"{providerStatus.Message} | Round-trip: {roundTrip.Diagnostic}";
+        }
+
+        return providerStatus;
+    }
+
+    /// <summary>
+    /// Issues a synthetic query through a catalog <see cref="IIntent"/> and
+    /// confirms the orchestrator pipeline returns a non-empty answer within
+    /// <see cref="RoundTripTimeout"/>. Catches process-level wedges (DI
+    /// resolution stuck, hosted services deadlocked, intent registry empty)
+    /// that the provider-level probe cannot see.
+    /// </summary>
+    private async Task<(bool Success, string Diagnostic)> TryRoundTripAsync(CancellationToken outerCt)
+    {
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
+            var intents = scope.ServiceProvider.GetServices<IIntent>().ToList();
+            if (intents.Count == 0)
+            {
+                logger.LogWarning("Round-trip probe: no IIntent registrations resolved");
+                return (false, "no IIntent registrations — orchestrator registry empty");
+            }
+
+            // Prefer a catalog skill (no LLM, no embedding). Fall back to
+            // the first registration if none looks catalog-shaped.
+            var probe = intents.FirstOrDefault(IsCatalogIntent) ?? intents[0];
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
+            timeoutCts.CancelAfter(RoundTripTimeout);
+
+            var sw = Stopwatch.StartNew();
+            var result = await probe.ExecuteAsync(RoundTripQuery, timeoutCts.Token);
+            sw.Stop();
+
+            if (string.IsNullOrEmpty(result.Answer))
+            {
+                return (false, $"intent '{probe.Id}' returned empty answer in {sw.ElapsedMilliseconds}ms");
+            }
+
+            logger.LogDebug(
+                "Round-trip probe: intent={Intent} elapsed={Elapsed}ms",
+                probe.Id, sw.ElapsedMilliseconds);
+            return (true, $"ok via {probe.Id} in {sw.ElapsedMilliseconds}ms");
+        }
+        catch (OperationCanceledException) when (!outerCt.IsCancellationRequested)
+        {
+            return (false, $"timed out after {RoundTripTimeout.TotalSeconds}s — orchestrator likely wedged");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Round-trip probe threw");
+            return (false, $"threw {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Heuristic for picking a catalog skill over a hybrid one. Catalog
+    /// skills don't make LLM/embedding calls, so they round-trip without
+    /// touching the upstream provider. Identified by the
+    /// <c>OrchestratorSkillIntent</c> ID prefix and a known set of catalog
+    /// skill names.
+    /// </summary>
+    private static bool IsCatalogIntent(IIntent intent)
+    {
+        var id = intent.Id ?? string.Empty;
+        return id.Contains("beginnerchords",   StringComparison.OrdinalIgnoreCase)
+            || id.Contains("progressionmood",  StringComparison.OrdinalIgnoreCase)
+            || id.Contains("modes",            StringComparison.OrdinalIgnoreCase);
     }
 
     private static ChatbotStatus TokenBasedStatus(string envVarName, string providerName, string providerKey)
