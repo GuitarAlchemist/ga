@@ -5,6 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- IIntent / IntentResult / OrchestratorSkillIntent are tagged
+         [Experimental("SKEXP0001")] in GA.Business.ML; the production
+         GaChatbot.Api csproj suppresses the diagnostic, so the test
+         project must too. PR #103 added round-trip-probe tests that
+         construct these types directly. -->
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

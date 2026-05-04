@@ -245,5 +245,14 @@ public sealed class ChatbotStatus
     /// </summary>
     public bool ProviderReachable { get; set; }
 
+    /// <summary>
+    /// True iff a synthetic catalog-skill query round-trips through the
+    /// orchestrator within the probe's timeout. Catches process-level
+    /// wedges (DI registry empty, hosted services deadlocked, orchestrator
+    /// hung) that the provider-level probe cannot see. Independent of
+    /// <see cref="ProviderReachable"/>: catalog skills don't need Ollama.
+    /// </summary>
+    public bool? OrchestratorRoundTripOk { get; set; }
+
     public DateTime Timestamp { get; set; }
 }

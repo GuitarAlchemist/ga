@@ -2,8 +2,11 @@ namespace GaChatbot.Api.Tests.Services;
 
 using System.Net;
 using System.Text;
+using GA.Business.ML.Agents.Intents;
 using GaChatbot.Api.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 [TestFixture]
 public class ChatProviderReadinessProbeTests
@@ -21,7 +24,10 @@ public class ChatProviderReadinessProbeTests
         Assert.Multiple(() =>
         {
             Assert.That(status.IsAvailable, Is.False);
-            Assert.That(status.Message, Is.EqualTo("Unsupported chat provider 'unknown-provider'."));
+            // PR #103: round-trip diagnostic is appended to Message — use Contain
+            // rather than equality so the original "Unsupported chat provider"
+            // signal is still pinned, but the new round-trip metadata can stack.
+            Assert.That(status.Message, Does.Contain("Unsupported chat provider 'unknown-provider'"));
             Assert.That(status.Provider, Is.EqualTo("unknown-provider"));
         });
     }
@@ -90,7 +96,11 @@ public class ChatProviderReadinessProbeTests
                 ["Ollama:ChatModel"]       = "llama3.2:3b",
                 ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
             },
-            JsonOk(tagsBody));
+            JsonOk(tagsBody),
+            // PR #103: round-trip probe is part of IsAvailable. Supply a working
+            // catalog intent so the orchestrator round-trip succeeds and
+            // IsAvailable stays true on this provider-healthy path.
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")]);
 
         var status = await probe.GetStatusAsync();
 
@@ -218,7 +228,8 @@ public class ChatProviderReadinessProbeTests
                 ["AI:ChatProvider"] = "ollama",
                 // ChatModel + EmbeddingModel intentionally not set
             },
-            JsonOk("""{"models":[]}"""));
+            JsonOk("""{"models":[]}"""),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")]);
 
         var status = await probe.GetStatusAsync();
 
@@ -247,7 +258,8 @@ public class ChatProviderReadinessProbeTests
                 ["Ollama:ChatModel"]       = "llama3.2",      // base name, no tag
                 ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
             },
-            JsonOk(tagsBody));
+            JsonOk(tagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")]);
 
         var status = await probe.GetStatusAsync();
 
@@ -311,6 +323,124 @@ public class ChatProviderReadinessProbeTests
             "but with no models parseable, the chat path can't serve");
     }
 
+    // ── Round-trip probe (PR #103) ────────────────────────────────────────────
+
+    [Test]
+    public async Task GetStatusAsync_RoundTripSucceeds_PopulatesOrchestratorRoundTripOk()
+    {
+        // Healthy case: a catalog IIntent is registered, executes, returns
+        // a non-empty answer within the probe's timeout. OrchestratorRoundTripOk = true.
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Ollama:ChatModel"]       = "llama3.2:3b",
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            JsonOk("""{"models":[{"name":"llama3.2:3b"},{"name":"nomic-embed-text:latest"}]}"""),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "8 open-position chords...")]);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.That(status.OrchestratorRoundTripOk, Is.True,
+            "registered IIntent that executes successfully → round-trip ok");
+        Assert.That(status.IsAvailable, Is.True);
+    }
+
+    [Test]
+    public async Task GetStatusAsync_NoIntentsRegistered_RoundTripFailsAndIsAvailableFalse()
+    {
+        // The user-perceived bug: orchestrator process is wedged (DI registry empty,
+        // intents not loaded). Provider-level probe is fine (Ollama HTTP up + models
+        // installed) but the chatbot literally cannot serve a query. Round-trip
+        // probe must catch this and flip IsAvailable to false.
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Ollama:ChatModel"]       = "llama3.2:3b",
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            JsonOk("""{"models":[{"name":"llama3.2:3b"},{"name":"nomic-embed-text:latest"}]}"""),
+            intents: []);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.OrchestratorRoundTripOk, Is.False);
+            Assert.That(status.IsAvailable, Is.False,
+                "round-trip failure must flip IsAvailable to false even when provider is healthy — exactly the bug the user reported");
+            Assert.That(status.Message, Does.Contain("registry empty").Or.Contain("no IIntent"));
+        });
+    }
+
+    [Test]
+    public async Task GetStatusAsync_IntentExecutionThrows_RoundTripFails()
+    {
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Ollama:ChatModel"]       = "llama3.2:3b",
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            JsonOk("""{"models":[{"name":"llama3.2:3b"},{"name":"nomic-embed-text:latest"}]}"""),
+            intents: [new ThrowingIntent("skill.beginnerchords", new InvalidOperationException("simulated wedge"))]);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.That(status.OrchestratorRoundTripOk, Is.False);
+        Assert.That(status.IsAvailable, Is.False);
+        Assert.That(status.Message, Does.Contain("InvalidOperationException").Or.Contain("simulated wedge"));
+    }
+
+    [Test]
+    public async Task GetStatusAsync_RoundTripOkWhenProviderUnreachable_StillFlipsIsAvailable()
+    {
+        // Defense-in-depth: even if the round-trip probe succeeds (catalog
+        // skill works without Ollama), an unreachable provider should keep
+        // IsAvailable=false. Catalog round-trip alone isn't enough.
+        var probe = CreateProbe(
+            new Dictionary<string, string?>
+            {
+                ["AI:ChatProvider"]        = "ollama",
+                ["Ollama:ChatModel"]       = "llama3.2:3b",
+                ["Ollama:EmbeddingModel"]  = "nomic-embed-text",
+            },
+            exception: new HttpRequestException("connection refused"),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")]);
+
+        var status = await probe.GetStatusAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.OrchestratorRoundTripOk, Is.True,
+                "catalog skill executes locally — round-trip succeeds");
+            Assert.That(status.ProviderReachable, Is.False);
+            Assert.That(status.IsAvailable, Is.False,
+                "but provider unreachable still flips IsAvailable; round-trip is necessary, not sufficient");
+        });
+    }
+
+    private sealed class FakeCatalogIntent(string id, string answer) : IIntent
+    {
+        public string Id => id;
+        public string Description => "fake catalog intent for tests";
+        public IReadOnlyList<string> ExamplePrompts => [];
+        public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new IntentResult(answer));
+    }
+
+    private sealed class ThrowingIntent(string id, Exception toThrow) : IIntent
+    {
+        public string Id => id;
+        public string Description => "throwing intent for tests";
+        public IReadOnlyList<string> ExamplePrompts => [];
+        public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+            throw toThrow;
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static HttpResponseMessage JsonOk(string body) =>
@@ -322,7 +452,8 @@ public class ChatProviderReadinessProbeTests
     private static ChatProviderReadinessProbe CreateProbe(
         IReadOnlyDictionary<string, string?> values,
         HttpResponseMessage? response = null,
-        Exception? exception = null)
+        Exception? exception = null,
+        IIntent[]? intents = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(values)
@@ -333,7 +464,22 @@ public class ChatProviderReadinessProbeTests
             BaseAddress = new Uri("http://localhost:11434")
         };
 
-        return new ChatProviderReadinessProbe(configuration, new StubHttpClientFactory(httpClient));
+        // Build an IServiceProvider with the supplied intents so the probe
+        // can resolve IEnumerable<IIntent> for the round-trip check. Empty
+        // array (default) simulates a wedged orchestrator with no
+        // registrations — the user-perceived failure mode.
+        var services = new ServiceCollection();
+        foreach (var intent in intents ?? [])
+        {
+            services.AddSingleton(intent);
+        }
+        var sp = services.BuildServiceProvider();
+
+        return new ChatProviderReadinessProbe(
+            configuration,
+            new StubHttpClientFactory(httpClient),
+            sp,
+            NullLogger<ChatProviderReadinessProbe>.Instance);
     }
 
     private sealed class StubHttpClientFactory(HttpClient client) : IHttpClientFactory
