@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "artifact_id": "optick-sae-2026-05-04T22-31-36Z-2e70bead-local-trainer",
+  "trained_at": "2026-05-04T22:31:36Z",
+  "trainer": "manual",
+  "trainer_version": "0.1.0",
+  "input": {
+    "optick_index_path": "state/voicings/optick.index",
+    "optick_index_sha": "sha256:89354bcb3513efbe1523651b734743c6921186a9e807f53bfbe4a74a254bd267",
+    "optick_dim": 240,
+    "schema_version": "OPTIC-K-v1.8",
+    "corpus_size": 313047,
+    "partitions_used": [
+      "STRUCTURE",
+      "MORPHOLOGY",
+      "CONTEXT",
+      "SYMBOLIC",
+      "MODAL",
+      "ROOT"
+    ]
+  },
+  "model": {
+    "kind": "topk_sae",
+    "dict_size": 1024,
+    "k_sparse": 32,
+    "training": {
+      "epochs": 50,
+      "batch_size": 4096,
+      "lr": 0.001,
+      "seed": 42,
+      "loss_final": 1.298024196255763e-06,
+      "sparsity_actual_mean": 32.0
+    }
+  },
+  "metrics": {
+    "reconstruction_mse": 1.2658382451126532e-06,
+    "reconstruction_r2": 0.9996055067855768,
+    "active_features_per_voicing_p50": 32,
+    "active_features_per_voicing_p95": 32,
+    "dead_features_pct": 23.73046875,
+    "feature_partition_purity_mean": 0.4336545467376709,
+    "feature_partition_purity_p10": 0.29777130484580994
+  },
+  "features_summary": {
+    "total": 1024,
+    "alive": 781,
+    "high_frequency_count": 50,
+    "low_frequency_count": 567
+  },
+  "links": {
+    "feature_activations_parquet": "state/quality/optick-sae/2026-05-04/feature_activations.parquet",
+    "feature_manifest_jsonl": "state/quality/optick-sae/2026-05-04/feature_manifest.jsonl",
+    "training_log": "state/quality/optick-sae/2026-05-04/training.log",
+    "model_weights": "state/quality/optick-sae/2026-05-04/sae_weights.pt",
+    "supersedes": "optick-sae-2026-05-03T20-07-36Z-019def74-topk-sae"
+  },
+  "narrative": "Real-corpus run on OPTIC-K v1.8 (240-dim total; 124-dim compact format used for SAE input). Top-k SAE + AuxK ghost-grads (aux_alpha=0.1) achieves reconstruction_mse 0.000001, dead_features_pct 23.7%, partition_purity_mean 0.43 on the full 313047-voicing corpus. Supersedes the synthetic-data smoke from PR #82 with real-data baseline."
+}
