@@ -177,6 +177,91 @@ public class CpuVoicingSearchStrategyDimensionTests
     }
 
     [Test]
+    public async Task SemanticSearchAsync_RootPartitionDifference_AffectsScoreOnV18()
+    {
+        // PR #99 regression: ROOT (slots 228-239, weight 0.05) was silently
+        // ignored by CalculateMusicalSimilarity even though
+        // EmbeddingSchema.Partitions declared it Similarity. v1.8's whole
+        // point was to add ROOT for T-invariance discrimination — without
+        // this fix, that signal never reached scoring.
+        var strategy = new CpuVoicingSearchStrategy();
+        var query    = MakeV18Vector(1.0);
+
+        // Two voicings with IDENTICAL slots 6-77 (so STRUCTURE/MORPHOLOGY/
+        // CONTEXT/SYMBOLIC scores are equal) but DIFFERENT ROOT one-hot.
+        var matchingRoot = MakeV18Vector(1.0);
+        matchingRoot[228] = 1.0;   // root pitch class 0 (C)
+        var differentRoot = MakeV18Vector(1.0);
+        differentRoot[233] = 1.0;  // root pitch class 5 (F)
+        // Match query's root to the first voicing
+        query[228] = 1.0;
+
+        await strategy.InitializeAsync(
+        [
+            MakeVoicing("matching-root",  matchingRoot),
+            MakeVoicing("different-root", differentRoot),
+        ]);
+
+        var results = await strategy.SemanticSearchAsync(query, limit: 2);
+
+        Assert.That(results, Has.Count.EqualTo(2));
+        Assert.That(results[0].Document.Id, Is.EqualTo("matching-root"),
+            "ROOT partition must affect scoring — matching root must outrank different root");
+        Assert.That(results[0].Score, Is.GreaterThan(results[1].Score),
+            "scores must differ; if they're equal, ROOT was ignored (the pre-PR-#99 bug)");
+    }
+
+    [Test]
+    public async Task SemanticSearchAsync_ModalPartitionDifference_AffectsScoreOnV17()
+    {
+        // MODAL (slots 109-148, weight 0.10) was likewise ignored. Test on
+        // v1.7 (228-dim) to prove MODAL contribution lands without ROOT
+        // (which only exists in v1.8).
+        var strategy = new CpuVoicingSearchStrategy();
+        var query    = MakeV17Vector(1.0);
+        // Set MODAL bits in query
+        for (var i = 109; i < 149; i++) query[i] = 0.1 * (i - 109);
+
+        var matchingModal  = MakeV17Vector(1.0);
+        var differentModal = MakeV17Vector(1.0);
+        for (var i = 109; i < 149; i++) matchingModal[i]  = 0.1 * (i - 109);  // identical to query
+        for (var i = 109; i < 149; i++) differentModal[i] = 0.5;              // diverges
+
+        await strategy.InitializeAsync(
+        [
+            MakeVoicing("matching-modal",  matchingModal),
+            MakeVoicing("different-modal", differentModal),
+        ]);
+
+        var results = await strategy.SemanticSearchAsync(query, limit: 2);
+
+        Assert.That(results[0].Document.Id, Is.EqualTo("matching-modal"),
+            "MODAL partition must affect scoring on v1.7+ — matching MODAL must outrank diverging MODAL");
+        Assert.That(results[0].Score, Is.GreaterThan(results[1].Score));
+    }
+
+    [Test]
+    public async Task SemanticSearchAsync_LegacyDim_StillWorksWithoutModalOrRoot()
+    {
+        // Legacy 96-dim has no MODAL (would start at 109) and no ROOT.
+        // Must not crash trying to read past the end of the array; the
+        // min-dim guards in CalculateMusicalSimilarity handle this.
+        var strategy = new CpuVoicingSearchStrategy();
+        var query    = MakeV18Vector(1.0);
+        var legacy   = new double[96];
+        for (var i = 6;  i < 30; i++) legacy[i] = 1.0 * 0.1 + i * 0.01;
+        for (var i = 30; i < 54; i++) legacy[i] = 1.0 * 0.2 + i * 0.01;
+        for (var i = 54; i < 66; i++) legacy[i] = 1.0 * 0.3 + i * 0.01;
+        for (var i = 66; i < 78; i++) legacy[i] = 1.0 * 0.4 + i * 0.01;
+
+        await strategy.InitializeAsync([MakeVoicing("legacy", legacy)]);
+
+        Assert.That(async () => await strategy.SemanticSearchAsync(query, limit: 1),
+            Throws.Nothing,
+            "legacy 96-dim must not crash on the new MODAL/ROOT path — min-dim guards handle it");
+    }
+
+    [Test]
     public async Task SemanticSearchAsync_QueryWithUnknownDim_DoesNotCrashAndReturnsResults()
     {
         // Unknown query dim (e.g. some future schema). When the query is NOT

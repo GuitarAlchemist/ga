@@ -33,21 +33,37 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     private const int OpticKv131Dim = 109;
     private const int LegacyDim     = 96;
 
-    // Partition Config
-    private const int StructureOffset = 6;
-    private const int StructureDim = 24;
+    // Partition Config — must mirror EmbeddingSchema.Partitions exactly.
+    // SimilarityPartitions there mark which contribute to score; the
+    // similarity-role partitions are pulled in here with the same weights.
+    private const int StructureOffset  = 6;
+    private const int StructureDim     = 24;
     private const int MorphologyOffset = 30;
-    private const int MorphologyDim = 24;
-    private const int ContextOffset = 54;
-    private const int ContextDim = 12;
-    private const int SymbolicOffset = 66;
-    private const int SymbolicDim = 12;
+    private const int MorphologyDim    = 24;
+    private const int ContextOffset    = 54;
+    private const int ContextDim       = 12;
+    private const int SymbolicOffset   = 66;
+    private const int SymbolicDim      = 12;
+    // MODAL: introduced in OPTIC-K v1.6 (216-dim) — slots 109-148. Skipped on
+    // legacy / v1.3.1 vectors that don't have these slots.
+    private const int ModalOffset      = 109;
+    private const int ModalDim         = 40;
+    // ROOT: v1.8 only (240-dim) — slots 228-239. Pitch-class one-hot that
+    // closes the T-invariance gap STRUCTURE was over-loading in older
+    // schemas. Skipped on shorter vectors.
+    private const int RootOffset       = 228;
+    private const int RootDim          = 12;
 
-    // Weights
-    private const double StructureWeight = 0.45;
+    // Weights — mirror EmbeddingSchema.Partitions. Sum is 1.15 (not 1.0)
+    // when MODAL + ROOT both contribute; that's intentional. The score is
+    // monotonic for ranking and the residual mass beyond 1.0 is the v1.8
+    // discrimination signal that older schemas couldn't express.
+    private const double StructureWeight  = 0.45;
     private const double MorphologyWeight = 0.25;
-    private const double ContextWeight = 0.20;
-    private const double SymbolicWeight = 0.10;
+    private const double ContextWeight    = 0.20;
+    private const double SymbolicWeight   = 0.10;
+    private const double ModalWeight      = 0.10;
+    private const double RootWeight       = 0.05;
 
     public string Name => "CPU-Parallel";
     public bool IsAvailable => true;
@@ -264,28 +280,46 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     {
         double score = 0;
 
-        // STRUCTURE
-        score += StructureWeight * ComputePartitionCosine(query, target, StructureOffset, StructureDim);
-
-        // MORPHOLOGY
+        // Partitions present in OPTIC-K v1.2.1 and later (slots 6-77).
+        score += StructureWeight  * ComputePartitionCosine(query, target, StructureOffset,  StructureDim);
         score += MorphologyWeight * ComputePartitionCosine(query, target, MorphologyOffset, MorphologyDim);
+        score += ContextWeight    * ComputePartitionCosine(query, target, ContextOffset,    ContextDim);
+        score += SymbolicWeight   * ComputePartitionCosine(query, target, SymbolicOffset,   SymbolicDim);
 
-        // CONTEXT
-        score += ContextWeight * ComputePartitionCosine(query, target, ContextOffset, ContextDim);
+        // MODAL partition: requires v1.6 (216-dim) or higher. Conditionally
+        // included so legacy/v1.3.1 vectors don't index past their length.
+        // Pre-fix (PR #99) silently dropped this even when both vectors had
+        // the slots — a real correctness gap that affected modal-flavor
+        // discrimination.
+        var minDim = Math.Min(query.Length, target.Length);
+        if (minDim >= ModalOffset + ModalDim)
+        {
+            score += ModalWeight * ComputePartitionCosine(query, target, ModalOffset, ModalDim);
+        }
 
-        // SYMBOLIC
-        score += SymbolicWeight * ComputePartitionCosine(query, target, SymbolicOffset, SymbolicDim);
+        // ROOT partition: v1.8 only (240-dim). Closes the T-invariance gap
+        // STRUCTURE was over-loading in older schemas. Pre-fix (PR #99)
+        // silently dropped this even on v1.8×v1.8 — meaning v1.8's whole
+        // point didn't reach scoring.
+        if (minDim >= RootOffset + RootDim)
+        {
+            score += RootWeight * ComputePartitionCosine(query, target, RootOffset, RootDim);
+        }
 
         return score;
     }
 
     private static double ComputePartitionCosine(double[] v1, double[] v2, int offset, int dim)
     {
-        // Using Span for performance to avoid allocations
         var span1 = new ReadOnlySpan<double>(v1, offset, dim);
         var span2 = new ReadOnlySpan<double>(v2, offset, dim);
-        
-        return System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(span1, span2);
+        var raw = System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(span1, span2);
+        // NaN protection: TensorPrimitives.CosineSimilarity returns NaN when
+        // one or both spans are all-zero (0/0 in the normalization). Treat
+        // that as "this partition contributes no signal" → score 0. Without
+        // this guard, the addition of MODAL/ROOT in PR #99 would propagate
+        // NaN through the total whenever those partitions were unpopulated.
+        return double.IsNaN(raw) ? 0.0 : raw;
     }
 
     private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)

@@ -29,21 +29,31 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     private const int MusicalEmbeddingDim = 109; // v1.3.1
     private const int LegacyMusicalEmbeddingDim = 96; // v1.2.1
 
-    // Partition Offsets and Dimensions
-    private const int StructureOffset = 6;
-    private const int StructureDim = 24;
+    // Partition Offsets and Dimensions — must mirror EmbeddingSchema.Partitions.
+    private const int StructureOffset  = 6;
+    private const int StructureDim     = 24;
     private const int MorphologyOffset = 30;
-    private const int MorphologyDim = 24;
-    private const int ContextOffset = 54;
-    private const int ContextDim = 12;
-    private const int SymbolicOffset = 66;
-    private const int SymbolicDim = 12;
+    private const int MorphologyDim    = 24;
+    private const int ContextOffset    = 54;
+    private const int ContextDim       = 12;
+    private const int SymbolicOffset   = 66;
+    private const int SymbolicDim      = 12;
+    // MODAL (v1.6+, slots 109-148, 40 dims). Conditionally included so
+    // legacy/v1.3.1 vectors don't index past their length.
+    private const int ModalOffset      = 109;
+    private const int ModalDim         = 40;
+    // ROOT (v1.8 only, slots 228-239, 12 dims).
+    private const int RootOffset       = 228;
+    private const int RootDim          = 12;
 
-    // Similarity Weights
-    private const double StructureWeight = 0.45;
+    // Similarity Weights — sum is 1.15 (not 1.0) when MODAL+ROOT both fire.
+    // Intentional: residual mass beyond 1.0 is the v1.8 discrimination signal.
+    private const double StructureWeight  = 0.45;
     private const double MorphologyWeight = 0.25;
-    private const double ContextWeight = 0.20;
-    private const double SymbolicWeight = 0.10;
+    private const double ContextWeight    = 0.20;
+    private const double SymbolicWeight   = 0.10;
+    private const double ModalWeight      = 0.10;
+    private const double RootWeight       = 0.05;
     private readonly Lock _initLock = new();
     private readonly Dictionary<string, VoicingEmbedding> _voicings = [];
     private Accelerator? _accelerator;
@@ -411,21 +421,29 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         {
             var score = 0.0;
 
-            // STRUCTURE
-            score += StructureWeight * ComputePartitionCosineGpu(
-                queryVector, StructureOffset, voicingEmbeddings, voicingOffset + StructureOffset, StructureDim);
-
-            // MORPHOLOGY
+            // Partitions present in v1.2.1 and later (slots 6-77).
+            score += StructureWeight  * ComputePartitionCosineGpu(
+                queryVector, StructureOffset,  voicingEmbeddings, voicingOffset + StructureOffset,  StructureDim);
             score += MorphologyWeight * ComputePartitionCosineGpu(
                 queryVector, MorphologyOffset, voicingEmbeddings, voicingOffset + MorphologyOffset, MorphologyDim);
+            score += ContextWeight    * ComputePartitionCosineGpu(
+                queryVector, ContextOffset,    voicingEmbeddings, voicingOffset + ContextOffset,    ContextDim);
+            score += SymbolicWeight   * ComputePartitionCosineGpu(
+                queryVector, SymbolicOffset,   voicingEmbeddings, voicingOffset + SymbolicOffset,   SymbolicDim);
 
-            // CONTEXT
-            score += ContextWeight * ComputePartitionCosineGpu(
-                queryVector, ContextOffset, voicingEmbeddings, voicingOffset + ContextOffset, ContextDim);
-
-            // SYMBOLIC
-            score += SymbolicWeight * ComputePartitionCosineGpu(
-                queryVector, SymbolicOffset, voicingEmbeddings, voicingOffset + SymbolicOffset, SymbolicDim);
+            // MODAL (v1.6+) and ROOT (v1.8). embeddingDim is the per-voicing
+            // length; gate each partition against it. Pre-PR-#99 these were
+            // silently dropped even when both vectors had the slots.
+            if (embeddingDim >= ModalOffset + ModalDim)
+            {
+                score += ModalWeight * ComputePartitionCosineGpu(
+                    queryVector, ModalOffset, voicingEmbeddings, voicingOffset + ModalOffset, ModalDim);
+            }
+            if (embeddingDim >= RootOffset + RootDim)
+            {
+                score += RootWeight * ComputePartitionCosineGpu(
+                    queryVector, RootOffset, voicingEmbeddings, voicingOffset + RootOffset, RootDim);
+            }
 
             similarities[index] = score;
         }
@@ -471,21 +489,29 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         {
             var score = 0.0;
 
-            // STRUCTURE
-            score += StructureWeight * ComputePartitionCosineGpu(
-                queryVector, StructureOffset, voicingEmbeddings, voicingOffset + StructureOffset, StructureDim);
-
-            // MORPHOLOGY
+            // Partitions present in v1.2.1 and later (slots 6-77).
+            score += StructureWeight  * ComputePartitionCosineGpu(
+                queryVector, StructureOffset,  voicingEmbeddings, voicingOffset + StructureOffset,  StructureDim);
             score += MorphologyWeight * ComputePartitionCosineGpu(
                 queryVector, MorphologyOffset, voicingEmbeddings, voicingOffset + MorphologyOffset, MorphologyDim);
+            score += ContextWeight    * ComputePartitionCosineGpu(
+                queryVector, ContextOffset,    voicingEmbeddings, voicingOffset + ContextOffset,    ContextDim);
+            score += SymbolicWeight   * ComputePartitionCosineGpu(
+                queryVector, SymbolicOffset,   voicingEmbeddings, voicingOffset + SymbolicOffset,   SymbolicDim);
 
-            // CONTEXT
-            score += ContextWeight * ComputePartitionCosineGpu(
-                queryVector, ContextOffset, voicingEmbeddings, voicingOffset + ContextOffset, ContextDim);
-
-            // SYMBOLIC
-            score += SymbolicWeight * ComputePartitionCosineGpu(
-                queryVector, SymbolicOffset, voicingEmbeddings, voicingOffset + SymbolicOffset, SymbolicDim);
+            // MODAL (v1.6+) and ROOT (v1.8). embeddingDim is the per-voicing
+            // length; gate each partition against it. Pre-PR-#99 these were
+            // silently dropped even when both vectors had the slots.
+            if (embeddingDim >= ModalOffset + ModalDim)
+            {
+                score += ModalWeight * ComputePartitionCosineGpu(
+                    queryVector, ModalOffset, voicingEmbeddings, voicingOffset + ModalOffset, ModalDim);
+            }
+            if (embeddingDim >= RootOffset + RootDim)
+            {
+                score += RootWeight * ComputePartitionCosineGpu(
+                    queryVector, RootOffset, voicingEmbeddings, voicingOffset + RootOffset, RootDim);
+            }
 
             similarities[index] = score;
         }
