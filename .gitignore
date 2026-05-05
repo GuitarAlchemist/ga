@@ -218,3 +218,11 @@ Apps/ga-client/playwright-report/
 # Local SAE training artifacts (per-developer-machine validation runs).
 # Real Phase 1 agent runs land at state/quality/optick-sae/<date>/ (no -local suffix).
 state/quality/optick-sae/*-local/
+
+# Claude Octopus per-machine session state.
+.claude-octopus/
+
+# Subset solution experiments at repo root — Codex / agent scratch when
+# restoring a partial graph. Block everything except the canonical one.
+/*.slnx
+!/AllProjects.slnx
