@@ -200,10 +200,21 @@ jobs:
     # during build it walks up node_modules from the imported file's directory,
     # so it never reaches Apps/ga-client/node_modules. Install the sibling
     # package's deps too so bare specifiers (`three`, `jotai`, etc.) resolve.
+    #
+    # Why `npm install` and not `npm ci`: ReactComponents/ga-react-components
+    # ships a `pnpm-lock.yaml`, not a `package-lock.json`, AND the repo root
+    # `.gitignore` has unscoped `package-lock.json` so a generated lockfile
+    # can't be committed without carving an exception. `npm ci` requires a
+    # committed `package-lock.json` and fails fast otherwise (PR #105's
+    # initial CI failure). `npm install` works against the existing
+    # package.json, generates an in-memory lockfile, and `--ignore-scripts`
+    # avoids running `patch-package` (the postinstall hook that's not
+    # available on a fresh CI runner). `--no-audit --no-fund` keeps the
+    # log noise down.
     - name: Install ReactComponents dependencies
       run: |
         cd ReactComponents/ga-react-components
-        npm ci
+        npm install --ignore-scripts --no-audit --no-fund
 
     - name: Lint frontend
       run: |
