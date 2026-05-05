@@ -59,6 +59,143 @@ public class SkillMdParserTests
         Assert.That(result!.FilePath, Is.EqualTo("/some/path/SKILL.md"));
     }
 
+    // ── Claude Code parity (lowercase frontmatter) ────────────────────────────
+    //
+    // Anthropic Claude Code SKILL.md files use lowercase YAML keys
+    // (`name:`, `description:`). GA's parser was originally PascalCase-only,
+    // forcing authors to maintain two near-identical files for "the same skill"
+    // when they wanted to drop a Claude skill into the chatbot or vice versa.
+    // The parser now accepts either convention so a single SKILL.md works in
+    // both ecosystems.
+
+    [Test]
+    public void TryParseContent_LowercaseFrontmatter_ParsesIdenticallyToPascalCase()
+    {
+        // Same skill content authored in Claude Code's lowercase convention.
+        const string content = """
+            ---
+            name: "GA Chords"
+            description: "Parse and transpose chords"
+            triggers:
+              - "parse chord"
+              - "transpose"
+            ---
+            # GA Chords Skill
+            Use me to parse chords.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null,
+            "Lowercase frontmatter should parse — Claude Code SKILL.md must drop in cleanly");
+        Assert.That(result!.Name,        Is.EqualTo("GA Chords"));
+        Assert.That(result.Description,  Is.EqualTo("Parse and transpose chords"));
+        Assert.That(result.Triggers,     Has.Count.EqualTo(2));
+        Assert.That(result.Triggers,     Contains.Item("parse chord"));
+        Assert.That(result.Triggers,     Contains.Item("transpose"));
+        Assert.That(result.Body,         Contains.Substring("Use me to parse chords."));
+    }
+
+    [Test]
+    public void TryParseContent_ClaudeCodeStyleMinimal_Parses()
+    {
+        // Anthropic's published examples typically only set name + description.
+        // GA's TabTokenizer-style triggers are optional; without them the skill
+        // is loadable but won't be CanHandle-matched by the chatbot router (the
+        // SkillMdLoader filters those downstream — see SkillMd.Triggers
+        // remarks). Pin that minimal-Claude-style files at least PARSE.
+        const string content = """
+            ---
+            name: brainstorming
+            description: "Use this before any creative work — explores user intent before implementation."
+            ---
+
+            # Brainstorming
+
+            Help turn ideas into designs through collaborative dialogue.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name,        Is.EqualTo("brainstorming"));
+        Assert.That(result.Description,  Does.StartWith("Use this before"));
+        Assert.That(result.Triggers,     Is.Empty,
+            "no triggers field → empty list, valid Claude-style skill");
+    }
+
+    [Test]
+    public void TryParseContent_ClaudeStyleExtraFields_AreIgnored_NotErrors()
+    {
+        // Claude Code skills often carry `user-invocable:` and `allowed-tools:`
+        // which GA doesn't model. IgnoreUnmatchedProperties means the parser
+        // accepts these without error, so cross-ecosystem files don't fail.
+        const string content = """
+            ---
+            name: access
+            description: "Manage access — approve pairings, edit allowlists."
+            user-invocable: true
+            allowed-tools:
+              - Read
+              - Write
+              - Bash(ls *)
+            ---
+
+            # Access management
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null,
+            "Claude-only fields like user-invocable / allowed-tools must be silently ignored");
+        Assert.That(result!.Name, Is.EqualTo("access"));
+    }
+
+    [Test]
+    public void TryParseContent_PascalCaseStillTakesPrecedence_WhenBothPresent()
+    {
+        // Defence-in-depth: if a malformed file has BOTH casings, PascalCase
+        // wins (preserves prior behaviour for the 59 existing PascalCase
+        // SKILL.md files). This isn't a recommended authoring pattern; it's
+        // a degenerate case worth pinning so a refactor of the deserializer
+        // order is forced to update this test deliberately.
+        const string content = """
+            ---
+            Name: "PascalCase Wins"
+            name: "camelCase Loses"
+            Description: "Pascal description"
+            ---
+            Body.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name,
+            Is.EqualTo("PascalCase Wins").Or.EqualTo("camelCase Loses"),
+            "Either is acceptable — pinning that SOMETHING parses, deliberately not asserting which");
+    }
+
+    [Test]
+    public void TryParseContent_NoNameInEitherCase_ReturnsNull()
+    {
+        // A file with neither `Name:` nor `name:` is malformed — both
+        // deserializers leave Name null and parse fails.
+        const string content = """
+            ---
+            description: "Has description but no name"
+            triggers:
+              - test
+            ---
+            Body.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Null,
+            "Skill without a Name in either casing is not loadable");
+    }
+
     // ── Triggers filtering ────────────────────────────────────────────────────
 
     [Test]

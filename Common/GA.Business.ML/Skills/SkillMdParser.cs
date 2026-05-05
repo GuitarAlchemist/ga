@@ -33,8 +33,27 @@ public static class SkillMdParser
     /// </summary>
     public const int MinTriggerLength = 3;
 
-    private static readonly IDeserializer Deserializer = new DeserializerBuilder()
+    // Two deserializers so authors can pick either casing convention:
+    //  - PascalCase (`Name:`, `Description:`, `Triggers:`) — original GA style.
+    //  - camelCase  (`name:`, `description:`, `triggers:`) — Anthropic Claude
+    //    Code SKILL.md convention. A skill authored once in lowercase frontmatter
+    //    is now valid in both ecosystems, enabling fast iteration: drop a
+    //    Claude Code skill into `skills/` and GA picks it up; drop a GA skill
+    //    into `~/.claude/plugins/.../skills/` and Claude Code picks it up.
+    //
+    // PascalCase is tried first (preserves prior behaviour for the 59 existing
+    // SKILL.md files); camelCase is the fallback when PascalCase produces no
+    // Name (i.e. the YAML used lowercase keys). Both deserializers
+    // IgnoreUnmatchedProperties so each ecosystem's extra fields
+    // (GA: `Triggers`/`license`/`compatibility`; Claude: `user-invocable`/
+    // `allowed-tools`) coexist without parser errors.
+    private static readonly IDeserializer PascalDeserializer = new DeserializerBuilder()
         .WithNamingConvention(PascalCaseNamingConvention.Instance)
+        .IgnoreUnmatchedProperties()
+        .Build();
+
+    private static readonly IDeserializer CamelDeserializer = new DeserializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
         .Build();
 
@@ -87,18 +106,8 @@ public static class SkillMdParser
         var yamlContent = string.Join('\n', lines[1..closingIndex]);
         var body        = string.Join('\n', lines[(closingIndex + 1)..]).TrimStart();
 
-        SkillMdFrontmatter frontmatter;
-        try
-        {
-            frontmatter = Deserializer.Deserialize<SkillMdFrontmatter>(yamlContent)
-                          ?? new SkillMdFrontmatter();
-        }
-        catch
-        {
-            return null;
-        }
-
-        if (string.IsNullOrWhiteSpace(frontmatter.Name))
+        var frontmatter = TryDeserializeWithEitherConvention(yamlContent);
+        if (frontmatter is null || string.IsNullOrWhiteSpace(frontmatter.Name))
             return null;
 
         // Reject SKILL.md files whose bodies exceed MaxBodyCharacters — the
@@ -126,6 +135,38 @@ public static class SkillMdParser
             Body        = body,
             FilePath    = filePath,
         };
+    }
+
+    /// <summary>
+    /// Tries to deserialise the frontmatter as PascalCase (legacy GA convention),
+    /// falling back to camelCase (Claude Code convention). A frontmatter with no
+    /// Name field after both attempts is treated as malformed by the caller.
+    /// </summary>
+    /// <remarks>
+    /// Either convention is acceptable; mixing within a single file is not
+    /// supported (the chosen deserializer wins, the other case's keys are
+    /// silently dropped under <c>IgnoreUnmatchedProperties</c>). Authors who
+    /// want a SKILL.md valid in both ecosystems should pick one convention and
+    /// stick with it for the file — the recommended convention going forward
+    /// is camelCase to match Anthropic's published spec.
+    /// </remarks>
+    private static SkillMdFrontmatter? TryDeserializeWithEitherConvention(string yamlContent)
+    {
+        foreach (var deserializer in new[] { PascalDeserializer, CamelDeserializer })
+        {
+            try
+            {
+                var result = deserializer.Deserialize<SkillMdFrontmatter>(yamlContent);
+                if (result is not null && !string.IsNullOrWhiteSpace(result.Name))
+                    return result;
+            }
+            catch
+            {
+                // Try next convention. If both fail we return null and the caller
+                // surfaces a generic parse failure.
+            }
+        }
+        return null;
     }
 
     // ── YAML DTO ─────────────────────────────────────────────────────────────
