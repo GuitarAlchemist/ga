@@ -44,7 +44,37 @@ var app = builder.Build();
 var pathBase = builder.Configuration["Chatbot:PathBase"];
 if (!string.IsNullOrWhiteSpace(pathBase))
 {
-    app.UsePathBase(pathBase);
+    // Normalise: must start with '/'. A misconfigured value like "chatbot"
+    // (no leading slash) would silently bypass UsePathBase. Force the
+    // slash so config typos still produce correct routing. Strip any
+    // trailing slash on the configured value too — the redirect logic
+    // below adds it back deliberately.
+    if (!pathBase.StartsWith('/')) pathBase = "/" + pathBase;
+    pathBase = pathBase.TrimEnd('/');
+
+    var pathBaseNoSlash   = pathBase;
+    var pathBaseWithSlash = pathBase + "/";
+
+    // Trailing-slash redirect: must run BEFORE UsePathBase so it sees
+    // the unstripped request path. A user landing at `/chatbot` (no
+    // slash) resolves the inline HTML's relative URLs against the
+    // parent dir, so `fetch('api/chatbot/chat')` becomes
+    // `/api/chatbot/chat` at the host root — bypasses the Cloudflare
+    // path-based ingress and 404s. PR #111 review flagged this as the
+    // same regression class as shipped bug #2 (VexFlow not loaded).
+    // 308 (permanent + preserveMethod) so POSTs redirect cleanly too.
+    app.Use(async (ctx, next) =>
+    {
+        if (string.Equals(ctx.Request.Path.Value, pathBaseNoSlash, StringComparison.Ordinal))
+        {
+            var qs = ctx.Request.QueryString.HasValue ? ctx.Request.QueryString.Value : string.Empty;
+            ctx.Response.Redirect(pathBaseWithSlash + qs, permanent: true, preserveMethod: true);
+            return;
+        }
+        await next();
+    });
+
+    app.UsePathBase(pathBaseNoSlash);
 }
 
 app.UseExceptionHandler();

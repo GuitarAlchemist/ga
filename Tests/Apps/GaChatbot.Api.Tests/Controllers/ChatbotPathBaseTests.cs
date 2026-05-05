@@ -128,6 +128,70 @@ public class ChatbotPathBaseTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
+    // ── Trailing-slash redirect (PR #111 review) ──────────────────────────────
+    //
+    // When a user lands at `/chatbot` (no slash), the inline HTML's relative
+    // URLs (e.g. `fetch('api/chatbot/chat')`) resolve against the PARENT dir
+    // — `/api/chatbot/chat` at the host root — bypassing the Cloudflare
+    // ingress regex `^/chatbot(/.*)?$` and breaking the chatbot. A 308
+    // permanent redirect to `/chatbot/` makes the URL canonical so relative
+    // URLs anchor correctly.
+
+    [Test]
+    public async Task Root_NoTrailingSlash_RedirectsToTrailingSlash()
+    {
+        using var factory = CreatePathBaseFactory();
+        // Disable auto-redirect handling so we can inspect the response.
+        using var client = factory.CreateClient(new()
+        {
+            AllowAutoRedirect = false,
+        });
+
+        var response = await client.GetAsync(PathBase);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.PermanentRedirect),
+            "GET /chatbot (no slash) must 308-redirect to /chatbot/ " +
+            "so relative URLs in the served HTML resolve correctly");
+        Assert.That(response.Headers.Location?.OriginalString, Is.EqualTo(PathBase + "/"));
+    }
+
+    [Test]
+    public async Task Root_NoTrailingSlash_PreservesQueryStringInRedirect()
+    {
+        using var factory = CreatePathBaseFactory();
+        using var client = factory.CreateClient(new()
+        {
+            AllowAutoRedirect = false,
+        });
+
+        var response = await client.GetAsync(PathBase + "?source=test");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.PermanentRedirect));
+        Assert.That(response.Headers.Location?.OriginalString,
+            Is.EqualTo(PathBase + "/?source=test"),
+            "Query string must survive the trailing-slash redirect");
+    }
+
+    [Test]
+    public async Task PathBase_WithoutLeadingSlash_IsNormalised()
+    {
+        // Misconfigured value `chatbot` (no leading slash) used to silently
+        // bypass UsePathBase. After normalisation it behaves the same as
+        // `/chatbot`. This pins that the typo no longer causes a routing
+        // bug.
+        using var factory = new TestWebApplicationFactory()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting("Chatbot:PathBase", "chatbot");  // no leading /
+            });
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/chatbot/api/chatbot/status");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+            "PathBase value normalised to /chatbot — controller still routable under prefix");
+    }
+
     private static WebApplicationFactory<Program> CreatePathBaseFactory() =>
         new TestWebApplicationFactory()
             .WithWebHostBuilder(builder =>
