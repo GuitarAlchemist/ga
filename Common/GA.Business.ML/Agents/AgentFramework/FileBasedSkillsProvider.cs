@@ -47,10 +47,10 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
     /// </summary>
     private static readonly TimeSpan ReloadDebounce = TimeSpan.FromMilliseconds(200);
 
-    private readonly string _skillsDirectory;
+    private readonly IReadOnlyList<string> _skillsDirectories;
     private readonly Action<string> _logWarning;
     private readonly object _reloadLock = new();
-    private readonly FileSystemWatcher? _watcher;
+    private readonly List<FileSystemWatcher> _watchers = [];
     private readonly SystemThreadingTimer? _debounceTimer;
     private IReadOnlyList<SkillMd> _skills;
     private int _reloadCount;
@@ -64,7 +64,7 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
     /// changes without restarting the host.
     /// </summary>
     public FileBasedSkillsProvider(string skillsDirectory)
-        : this(skillsDirectory, watchForChanges: true)
+        : this(ValidateSingleAndWrap(skillsDirectory), watchForChanges: true)
     {
     }
 
@@ -75,14 +75,51 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
     /// production deployment that wants one-shot startup loading).
     /// </summary>
     public FileBasedSkillsProvider(string skillsDirectory, bool watchForChanges)
+        : this(ValidateSingleAndWrap(skillsDirectory), watchForChanges)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(skillsDirectory);
+    }
 
-        _skillsDirectory = skillsDirectory;
+    /// <summary>
+    /// Preserves the original single-directory ctor's <see cref="ArgumentNullException"/>
+    /// semantics for null/whitespace input — the multi-dir ctor would
+    /// otherwise throw <see cref="ArgumentException"/> later, which is a
+    /// breaking API change for callers that catch the specific type.
+    /// </summary>
+    private static IReadOnlyList<string> ValidateSingleAndWrap(string dir)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(dir);
+        return [dir];
+    }
+
+    /// <summary>
+    /// Multi-directory overload — closes the SKILL.md iteration loop. Lists
+    /// directories in priority order: skills loaded from LATER directories
+    /// override skills with the same Name from EARLIER ones. Typical use:
+    /// pass <c>[canonicalDir, draftsDir]</c> so drafts in
+    /// <c>skills-dev/</c> shadow their canonical counterparts in
+    /// <c>skills/</c> while iteration is in flight, and graduate by simply
+    /// moving the file from the draft dir to the canonical dir (the
+    /// override naturally lifts).
+    /// </summary>
+    /// <param name="skillsDirectories">Watch list. Empty / missing dirs are
+    /// silently skipped. At least one must be non-null/non-whitespace.</param>
+    /// <param name="watchForChanges">When true, install
+    /// <see cref="FileSystemWatcher"/> on each directory. Edits in any of
+    /// them trigger a single debounced reload that re-aggregates the merged
+    /// skill set.</param>
+    public FileBasedSkillsProvider(IReadOnlyList<string> skillsDirectories, bool watchForChanges)
+    {
+        ArgumentNullException.ThrowIfNull(skillsDirectories);
+        if (skillsDirectories.Count == 0 || skillsDirectories.All(string.IsNullOrWhiteSpace))
+            throw new ArgumentException(
+                "At least one non-empty skills directory must be provided.",
+                nameof(skillsDirectories));
+
+        _skillsDirectories = [.. skillsDirectories.Where(d => !string.IsNullOrWhiteSpace(d))];
         _logWarning = msg => System.Diagnostics.Debug.WriteLine(msg);
         _skills = LoadSkillsCore();
 
-        if (!watchForChanges || !Directory.Exists(skillsDirectory))
+        if (!watchForChanges)
             return;
 
         _debounceTimer = new SystemThreadingTimer(
@@ -91,19 +128,24 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
             dueTime: Timeout.Infinite,
             period: Timeout.Infinite);
 
-        _watcher = new FileSystemWatcher(skillsDirectory)
+        // One watcher per existing directory. Missing directories are
+        // skipped (they may be created later — re-instantiate to pick them
+        // up; live-reload doesn't track directory creation).
+        foreach (var dir in _skillsDirectories.Where(Directory.Exists))
         {
-            Filter = "SKILL.md",
-            IncludeSubdirectories = true,
-            // LastWrite covers in-place edits; FileName covers create / delete /
-            // rename (which most editors emit during save).
-            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
-            EnableRaisingEvents = true,
-        };
-        _watcher.Changed += OnSkillFileEvent;
-        _watcher.Created += OnSkillFileEvent;
-        _watcher.Deleted += OnSkillFileEvent;
-        _watcher.Renamed += OnSkillFileEvent;
+            var w = new FileSystemWatcher(dir)
+            {
+                Filter = "SKILL.md",
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+                EnableRaisingEvents = true,
+            };
+            w.Changed += OnSkillFileEvent;
+            w.Created += OnSkillFileEvent;
+            w.Deleted += OnSkillFileEvent;
+            w.Renamed += OnSkillFileEvent;
+            _watchers.Add(w);
+        }
     }
 
     /// <summary>Loaded skills, in directory enumeration order.</summary>
@@ -147,10 +189,22 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
         }
     }
 
-    private IReadOnlyList<SkillMd> LoadSkillsCore() =>
-        Directory.Exists(_skillsDirectory)
-            ? SkillMdLoader.LoadFromDirectory(_skillsDirectory, _logWarning)
-            : [];
+    private IReadOnlyList<SkillMd> LoadSkillsCore()
+    {
+        // Load from each directory in order; later directories override earlier
+        // ones on Name collision. This implements the drop-in / overlay pattern:
+        // canonical `skills/` first, drafts `skills-dev/` second, drafts win.
+        var byName = new Dictionary<string, SkillMd>(StringComparer.OrdinalIgnoreCase);
+        foreach (var dir in _skillsDirectories)
+        {
+            if (!Directory.Exists(dir)) continue;
+            foreach (var skill in SkillMdLoader.LoadFromDirectory(dir, _logWarning))
+            {
+                byName[skill.Name] = skill;  // last write wins
+            }
+        }
+        return [.. byName.Values];
+    }
 
     private void OnSkillFileEvent(object sender, FileSystemEventArgs e)
     {
@@ -165,15 +219,16 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        if (_watcher is not null)
+        foreach (var w in _watchers)
         {
-            _watcher.EnableRaisingEvents = false;
-            _watcher.Changed -= OnSkillFileEvent;
-            _watcher.Created -= OnSkillFileEvent;
-            _watcher.Deleted -= OnSkillFileEvent;
-            _watcher.Renamed -= OnSkillFileEvent;
-            _watcher.Dispose();
+            w.EnableRaisingEvents = false;
+            w.Changed -= OnSkillFileEvent;
+            w.Created -= OnSkillFileEvent;
+            w.Deleted -= OnSkillFileEvent;
+            w.Renamed -= OnSkillFileEvent;
+            w.Dispose();
         }
+        _watchers.Clear();
         _debounceTimer?.Dispose();
     }
 

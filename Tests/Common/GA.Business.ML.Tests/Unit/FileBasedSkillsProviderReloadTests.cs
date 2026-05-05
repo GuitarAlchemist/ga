@@ -198,8 +198,11 @@ public class FileBasedSkillsProviderReloadTests
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void WriteSkill(string name, string trigger)
+        => WriteSkillUnderRoot(_tempRoot, name, trigger, body: $"Body for {name}.");
+
+    private static void WriteSkillUnderRoot(string root, string name, string trigger, string body)
     {
-        var dir = Path.Combine(_tempRoot, name);
+        var dir = Path.Combine(root, name);
         Directory.CreateDirectory(dir);
         // camelCase (canonical post-PR-#113).
         var content = $$"""
@@ -211,9 +214,117 @@ public class FileBasedSkillsProviderReloadTests
             ---
             # {{name}}
 
-            Body for {{name}}.
+            {{body}}
             """;
         File.WriteAllText(Path.Combine(dir, "SKILL.md"), content);
+    }
+
+    // ── Multi-directory overlay (skill-stewards iteration loop) ───────────────
+    //
+    // The skill-stewards team uses two directories: `skills/` (canonical)
+    // and `skills-dev/` (drafts). FileBasedSkillsProvider loads from BOTH
+    // and uses last-write-wins on Name collision so a draft shadows its
+    // canonical counterpart while the author iterates. Graduating a skill
+    // is just `git mv skills-dev/<name> skills/<name>` — the override
+    // naturally lifts.
+
+    [Test]
+    public void MultiDir_DraftSkillShadowsCanonicalOnNameCollision()
+    {
+        var canonical = Path.Combine(_tempRoot, "canonical");
+        var drafts    = Path.Combine(_tempRoot, "drafts");
+        Directory.CreateDirectory(canonical);
+        Directory.CreateDirectory(drafts);
+
+        WriteSkillUnderRoot(canonical, "shared-name", "canonical-trigger", "canonical body");
+        WriteSkillUnderRoot(drafts,    "shared-name", "draft-trigger",     "DRAFT BODY");
+
+        using var provider = new FileBasedSkillsProvider(
+            new[] { canonical, drafts },
+            watchForChanges: false);
+
+        Assert.That(provider.Skills, Has.Count.EqualTo(1),
+            "Same Name in both dirs collapses to one entry — last write wins");
+        Assert.That(provider.Skills[0].Triggers, Has.Some.EqualTo("draft-trigger"),
+            "Draft (later in priority order) must shadow canonical");
+        Assert.That(provider.Skills[0].Body, Does.Contain("DRAFT BODY"));
+    }
+
+    [Test]
+    public void MultiDir_NonOverlappingSkillsFromBothDirs_BothLoaded()
+    {
+        var canonical = Path.Combine(_tempRoot, "canonical");
+        var drafts    = Path.Combine(_tempRoot, "drafts");
+        Directory.CreateDirectory(canonical);
+        Directory.CreateDirectory(drafts);
+
+        WriteSkillUnderRoot(canonical, "alpha", "alpha-trigger", "alpha body");
+        WriteSkillUnderRoot(drafts,    "beta",  "beta-trigger",  "beta body");
+
+        using var provider = new FileBasedSkillsProvider(
+            new[] { canonical, drafts },
+            watchForChanges: false);
+
+        Assert.That(provider.Skills, Has.Count.EqualTo(2));
+        Assert.That(provider.Skills.Select(s => s.Name), Is.EquivalentTo(new[] { "alpha", "beta" }));
+    }
+
+    [Test]
+    public void MultiDir_OneDirMissing_OtherStillLoads()
+    {
+        var canonical = Path.Combine(_tempRoot, "canonical");
+        var drafts    = Path.Combine(_tempRoot, "drafts-does-not-exist");
+        Directory.CreateDirectory(canonical);
+        // intentionally do NOT create drafts
+
+        WriteSkillUnderRoot(canonical, "alpha", "alpha-trigger", "alpha body");
+
+        using var provider = new FileBasedSkillsProvider(
+            new[] { canonical, drafts },
+            watchForChanges: false);
+
+        Assert.That(provider.Skills, Has.Count.EqualTo(1),
+            "A missing draft directory must not break loading from canonical");
+    }
+
+    [Test]
+    public void MultiDir_GraduationFlow_DraftRemovedAfterGitMv_CanonicalSurfaces()
+    {
+        // Simulates the graduation flow: author iterates on a draft, then
+        // `git mv` it to canonical. Draft directory loses the file; canonical
+        // gains it. After Reload, the canonical version surfaces. No
+        // duplicate skill entries; no orphan triggers.
+        var canonical = Path.Combine(_tempRoot, "canonical");
+        var drafts    = Path.Combine(_tempRoot, "drafts");
+        Directory.CreateDirectory(canonical);
+        Directory.CreateDirectory(drafts);
+
+        WriteSkillUnderRoot(drafts, "graduating", "draft-trigger", "draft body");
+
+        using var provider = new FileBasedSkillsProvider(
+            new[] { canonical, drafts },
+            watchForChanges: false);
+
+        Assert.That(provider.Skills, Has.Count.EqualTo(1));
+        Assert.That(provider.Skills[0].Body, Does.Contain("draft body"));
+
+        // Graduate: move file from drafts/ to canonical/.
+        var draftSkill = Path.Combine(drafts, "graduating");
+        var graduated  = Path.Combine(canonical, "graduating");
+        Directory.Move(draftSkill, graduated);
+        provider.Reload();
+
+        Assert.That(provider.Skills, Has.Count.EqualTo(1),
+            "Post-graduation: still exactly one skill (no duplicate)");
+        Assert.That(provider.Skills[0].Body, Does.Contain("draft body"),
+            "Same content — graduation just relocates the file");
+    }
+
+    [Test]
+    public void MultiDir_Constructor_RejectsAllNullOrWhitespace()
+    {
+        Assert.Throws<ArgumentException>(
+            () => new FileBasedSkillsProvider(new[] { "", "   ", null! }, watchForChanges: false));
     }
 
     private void WritePascalCaseSkill(string name, string trigger)
