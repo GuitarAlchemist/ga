@@ -8,12 +8,32 @@ using Models;
 /// </summary>
 public class TabTokenizer
 {
-    // Regex to identify a tab line (starts with optional string name, followed by - or |)
-    // Examples: "e|---", "E|---", "---", "|---"
-    // Regex to identify a tab line (unanchored to allow text prefixes)
-    // Matches "String|Content" or "|Content"
+    // Regex to identify a tab line (unanchored to allow text prefixes).
+    // Examples that match: "e|---3---|", "E|---3---|", "---3-----|", "|---0-2-0|"
+    // Examples that DON'T match (used to be false-positives, now rejected):
+    //   "0146"                        — bare pitch-class-set notation
+    //   "12-bar blues form"           — '12-b' has no pipe
+    //   "Released --12-04-- last week" — hyphenated date, no pipe
+    //   "Are 0146 and 0137 z-related?" — algebra query, no pipe
+    //
+    // Why the trailing `(?=[-0-9|hbp/\\svx~]*\|)` lookahead matters:
+    // tab notation always carries at least one bar-line `|` somewhere on
+    // the line — that's the inherent measure separator. Without that
+    // anchor the regex matches any digit/dash/letter run from prose
+    // (algebra set descriptors, "12-bar blues", dates) and the
+    // tokenizer dispatched theory questions to tab analysis. The
+    // lookahead requires a `|` to appear within the next run of
+    // tab-content characters, so:
+    //   - "e|---3---|" still matches (pipe in matched run)
+    //   - "---3-----0-----|" still matches (pipe at end)
+    //   - "0146" no longer matches (no pipe anywhere)
+    // Anonymous-row tab without pipes (extremely rare in the wild) IS
+    // rejected — pinned by Tokenize_BareDigitProseInputs_NoLongerProduceNoteSlices
+    // and the existing anonymous-row positive control which uses pipes.
     private static readonly Regex
-        TabLineRegex = new(@"([A-Ga-g]?[#b]?\|?|\|)[-0-9|hbp/\\svx~]+", RegexOptions.Compiled);
+        TabLineRegex = new(
+            @"([A-Ga-g]?[#b]?\|?|\|)(?=[-0-9|hbp/\\svx~]*\|)[-0-9|hbp/\\svx~]+",
+            RegexOptions.Compiled);
 
     // Regex to split inline tabs (e.g. "e|---| B|---|")
     // Loosely: patterns that look like [Space][PossibleStringName][|]
