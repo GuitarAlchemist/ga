@@ -48,17 +48,22 @@ public class SkillStewardsDraftLoadTests
                                   $"body={skill.Body.Length} chars");
         }
 
+        // skills-dev/ may legitimately be empty when all drafts have
+        // graduated to skills/ (the desired terminal state of the
+        // skill-stewards loop). The remaining assertions are
+        // conditional on having drafts to validate.
         Assert.Multiple(() =>
         {
-            Assert.That(skills, Is.Not.Empty,
-                "skills-dev/ should contain drafts after the skill-stewards batch landed");
-            Assert.That(skills.All(s => !string.IsNullOrWhiteSpace(s.Name)), Is.True,
-                "Every draft must have a non-empty Name");
-            Assert.That(skills.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True,
-                "Every draft must have a non-empty Description (intent-router input)");
-            Assert.That(skills.All(s => s.Triggers.Count >= 3), Is.True,
-                "Every draft must have at least 3 surviving triggers — fewer would " +
-                "shadow nothing and thus never dispatch");
+            if (skills.Count > 0)
+            {
+                Assert.That(skills.All(s => !string.IsNullOrWhiteSpace(s.Name)), Is.True,
+                    "Every draft must have a non-empty Name");
+                Assert.That(skills.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True,
+                    "Every draft must have a non-empty Description (intent-router input)");
+                Assert.That(skills.All(s => s.Triggers.Count >= 3), Is.True,
+                    "Every draft must have at least 3 surviving triggers — fewer would " +
+                    "shadow nothing and thus never dispatch");
+            }
             Assert.That(warnings, Is.Empty,
                 $"SkillMdLoader emitted warnings: {string.Join(" | ", warnings)}");
         });

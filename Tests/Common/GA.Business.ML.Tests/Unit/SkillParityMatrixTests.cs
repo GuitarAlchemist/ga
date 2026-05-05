@@ -225,19 +225,33 @@ public class SkillParityMatrixTests
 
         var matrixFolders = Contracts.Select(c => c.SkillMdFolder).ToHashSet();
 
-        // qa-architect predates the chatbot migration (PR #66 — a non-
-        // chatbot skill for QA Architect agent collaboration). Excluded
-        // from the parity matrix by design.
+        // Excluded from the parity matrix by design:
         //
-        // **Follow-up** (per PR #97 review): replace this hardcoded
-        // exclusion with a SKILL.md frontmatter convention, e.g.
+        // - qa-architect: predates the chatbot migration (PR #66 — a non-
+        //   chatbot skill for QA Architect agent collaboration).
+        // - circle-of-fifths, practice-routine, genre-essentials,
+        //   what-can-you-do: pure-SKILL.md catalog skills graduated
+        //   2026-05-05; no C# fast-path by design (the data lives in
+        //   the body, no IOrchestratorSkill needed).
+        //
+        // **Follow-up** (per PR #97 review): replace this hardcoded list
+        // with a SKILL.md frontmatter convention, e.g.
         //     metadata:
         //       chatbot-migration: false
         // and filter on absence-or-true here. Defers the next exclusion
-        // debate to where it belongs (the SKILL.md file itself). Not
-        // doing it now — single-row exclusion isn't a maintenance burden
-        // until there's a second one.
-        skillFolders.Remove("qa-architect");
+        // debate to where it belongs (the SKILL.md file itself).
+        // Maintenance cost is now 5 rows; revisit when it hits 8+.
+        foreach (var skillMdOnly in new[]
+        {
+            "qa-architect",
+            "circle-of-fifths",
+            "practice-routine",
+            "genre-essentials",
+            "what-can-you-do",
+        })
+        {
+            skillFolders.Remove(skillMdOnly);
+        }
 
         Assert.That(skillFolders, Is.EquivalentTo(matrixFolders),
             "Every chatbot SKILL.md folder MUST appear in the parity matrix " +

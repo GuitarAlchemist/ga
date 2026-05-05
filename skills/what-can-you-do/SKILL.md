@@ -5,11 +5,13 @@ triggers:
   - "what can you do"
   - "what can the chatbot do"
   - "what does the chatbot do"
-  - "how do i use"
-  - "help"
-  - "capabilities"
-  - "show me what"
+  - "how do i use this"
+  - "how do i use the chatbot"
+  - "your capabilities"
+  - "chatbot capabilities"
   - "what are you good for"
+  - "what features"
+  - "list features"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

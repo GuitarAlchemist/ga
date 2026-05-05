@@ -39,8 +39,6 @@ Daily 30-min routine:
 3. **Comping rhythms (10 min)** — Charleston, *bossa*, four-on-the-floor; each over the same ii-V-I.
 4. **Free comping (5 min)** — over a backing track, no charts.
 
-Skills you can chain: `voicing-search` (find voicings), `voice-leading` (smooth between them).
-
 ### 🎸 Soloing / improvisation
 
 Daily 30-min routine:
@@ -48,8 +46,6 @@ Daily 30-min routine:
 2. **Arpeggio drilling (10 min)** — arpeggios of the chords in your target tune, ascending and descending.
 3. **Target-tone practice (10 min)** — over a backing track, land on chord tones at the bar line.
 4. **Free solo (5 min)** — record yourself; listen back.
-
-Skills you can chain: `arpeggio` (find arpeggios over chords), `progression-analysis` (understand your tune's harmony).
 
 ### 👂 Ear training
 
@@ -64,7 +60,7 @@ Tools: any ear-training app (functional-ear-trainer, EarBeater, Tenuto). The cha
 
 Daily 20-min routine:
 1. **Right-hand independence (5 min)** — alternate-bass over a held chord (e.g. C: bass C–G–C–E with melody on top).
-2. **Travis picking (5 min)** — thumb on bass, fingers on top three strings, classic 3+3+2 pattern.
+2. **Travis picking (5 min)** — alternating thumb (root then 5th of the chord) on bass strings, fingers playing syncopated melody on top three strings.
 3. **Tune work (10 min)** — one section of an arrangement (e.g. Tommy Emmanuel, Chet Atkins, Don Ross).
 
 ### 📈 Repertoire building
@@ -94,6 +90,6 @@ Pick the time you can SUSTAIN, not the time you'd ideally like.
 
 ## When to call other skills
 
-- *"What chords should I practice for jazz?"* → `diatonic-chords` for the key, `chord-info` for each.
-- *"Voicings for comping"* → `voicing-search`.
-- *"Arpeggios for my solo"* → `arpeggio`.
+- *"What chords should I practice for jazz?"* → `chord-info` for individual chords; for the diatonic set, `scale-info` returns the scale notes (full diatonic-chords lookup is roadmap).
+- *"What key is this progression in?"* → `key-identification`.
+- *"What chord comes next?"* → `progression-completion`.
