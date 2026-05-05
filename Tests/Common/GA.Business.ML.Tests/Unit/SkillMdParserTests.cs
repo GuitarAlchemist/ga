@@ -196,6 +196,96 @@ public class SkillMdParserTests
             "Skill without a Name in either casing is not loadable");
     }
 
+    // ── Mixed-casing data-loss prevention (PR #113 review) ────────────────────
+    //
+    // The original parity implementation tried PascalCase first and returned
+    // on the first non-empty Name. That had a P1 silent-data-loss bug:
+    // a partial migration with `Name:` (PascalCase) but `description:` /
+    // `triggers:` (camelCase) parsed under Pascal — Name matched, lowercase
+    // keys were dropped as unmatched-properties — so the skill loaded with
+    // empty Description and zero Triggers, was filtered downstream as
+    // untriggered, and silently disappeared.
+    //
+    // Fix: deserialize under BOTH conventions, score by populated optional
+    // fields, return the more complete result. Pascal wins ties.
+
+    [Test]
+    public void TryParseContent_MixedCasing_PascalNameButCamelDescriptionAndTriggers_KeepsAllFields()
+    {
+        // Realistic mid-migration mistake: author lowercased description
+        // and triggers but forgot to lowercase Name. Without the
+        // completeness-scoring fix, Pascal wins, Description and Triggers
+        // are dropped, skill ships with zero triggers, gets filtered out.
+        const string content = """
+            ---
+            Name: "partial-migration"
+            description: "Camel description"
+            triggers:
+              - "camel-trigger"
+            ---
+            Body.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name,        Is.EqualTo("partial-migration"));
+        Assert.That(result.Description,  Is.EqualTo("Camel description"),
+            "Description must NOT be silently dropped when Name happens to be in the other casing");
+        Assert.That(result.Triggers,     Has.Count.EqualTo(1),
+            "Triggers must NOT be silently dropped — silent data loss was the P1 bug");
+        Assert.That(result.Triggers,     Contains.Item("camel-trigger"));
+    }
+
+    [Test]
+    public void TryParseContent_MixedCasing_CamelNameButPascalDescriptionAndTriggers_KeepsAllFields()
+    {
+        // Symmetric of the above: camelCase Name plus PascalCase
+        // Description/Triggers. Same fix applies — completeness wins.
+        const string content = """
+            ---
+            name: "reverse-mix"
+            Description: "Pascal description"
+            Triggers:
+              - "pascal-trigger"
+            ---
+            Body.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name,        Is.EqualTo("reverse-mix"));
+        Assert.That(result.Description,  Is.EqualTo("Pascal description"));
+        Assert.That(result.Triggers,     Has.Count.EqualTo(1));
+        Assert.That(result.Triggers,     Contains.Item("pascal-trigger"));
+    }
+
+    [Test]
+    public void TryParseContent_PureCamelOrPureCascal_StillProducesCompleteResult()
+    {
+        // Sanity: the fix doesn't regress the happy path. A pure-camelCase
+        // file still parses every field; a pure-PascalCase file still
+        // parses every field. Both deserializers see the same data; Pascal
+        // wins the tie and the result is complete either way.
+        const string camelOnly = """
+            ---
+            name: "camel-only"
+            description: "all camelCase"
+            triggers:
+              - "camel-only-trigger"
+            ---
+            body.
+            """;
+
+        var result = SkillMdParser.TryParseContent(camelOnly);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Name,        Is.EqualTo("camel-only"));
+        Assert.That(result.Description,  Is.EqualTo("all camelCase"));
+        Assert.That(result.Triggers,     Has.Count.EqualTo(1));
+    }
+
     // ── Triggers filtering ────────────────────────────────────────────────────
 
     [Test]

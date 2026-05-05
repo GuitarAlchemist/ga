@@ -138,36 +138,57 @@ public static class SkillMdParser
     }
 
     /// <summary>
-    /// Tries to deserialise the frontmatter as PascalCase (legacy GA convention),
-    /// falling back to camelCase (Claude Code convention). A frontmatter with no
-    /// Name field after both attempts is treated as malformed by the caller.
+    /// Deserialises the frontmatter under BOTH naming conventions and
+    /// merges the results, preferring PascalCase per field for back-compat.
+    /// Without this dual-pass strategy, a file that mixes casings (e.g.
+    /// <c>Name:</c> in PascalCase but <c>description:</c>/<c>triggers:</c>
+    /// in camelCase — a realistic migration mistake) would parse under
+    /// Pascal only, then silently DROP the lowercase fields as unmatched
+    /// properties. The skill would ship with no triggers, get filtered as
+    /// untriggered, and disappear with no warning.
     /// </summary>
     /// <remarks>
-    /// Either convention is acceptable; mixing within a single file is not
-    /// supported (the chosen deserializer wins, the other case's keys are
-    /// silently dropped under <c>IgnoreUnmatchedProperties</c>). Authors who
-    /// want a SKILL.md valid in both ecosystems should pick one convention and
-    /// stick with it for the file — the recommended convention going forward
-    /// is camelCase to match Anthropic's published spec.
+    /// Per-field merge rules (Pascal wins on every field; Camel fills the gaps):
+    /// <list type="bullet">
+    ///   <item><c>Name</c> — PascalCase value if present, otherwise camelCase.</item>
+    ///   <item><c>Description</c> — PascalCase value if present, otherwise camelCase.</item>
+    ///   <item><c>Triggers</c> — PascalCase list if non-empty, otherwise camelCase list.</item>
+    /// </list>
+    /// Effect: pure-PascalCase and pure-camelCase files round-trip identically;
+    /// mixed-casing files keep all data the author wrote regardless of which
+    /// convention each field used. Pinned by
+    /// <c>TryParseContent_MixedCasing_*</c> tests.
     /// </remarks>
     private static SkillMdFrontmatter? TryDeserializeWithEitherConvention(string yamlContent)
     {
-        foreach (var deserializer in new[] { PascalDeserializer, CamelDeserializer })
+        var pascal = TrySafe(PascalDeserializer, yamlContent);
+        var camel  = TrySafe(CamelDeserializer,  yamlContent);
+
+        if (pascal is null && camel is null) return null;
+
+        var name = FirstNonEmpty(pascal?.Name, camel?.Name);
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        return new SkillMdFrontmatter
         {
-            try
-            {
-                var result = deserializer.Deserialize<SkillMdFrontmatter>(yamlContent);
-                if (result is not null && !string.IsNullOrWhiteSpace(result.Name))
-                    return result;
-            }
-            catch
-            {
-                // Try next convention. If both fail we return null and the caller
-                // surfaces a generic parse failure.
-            }
-        }
-        return null;
+            Name        = name,
+            Description = FirstNonEmpty(pascal?.Description, camel?.Description),
+            Triggers    = FirstNonEmptyList(pascal?.Triggers, camel?.Triggers),
+        };
     }
+
+    private static SkillMdFrontmatter? TrySafe(IDeserializer d, string yaml)
+    {
+        try { return d.Deserialize<SkillMdFrontmatter>(yaml); }
+        catch { return null; }
+    }
+
+    private static string? FirstNonEmpty(string? a, string? b) =>
+        !string.IsNullOrWhiteSpace(a) ? a : b;
+
+    private static List<string>? FirstNonEmptyList(List<string>? a, List<string>? b) =>
+        a is { Count: > 0 } ? a : b;
 
     // ── YAML DTO ─────────────────────────────────────────────────────────────
 
