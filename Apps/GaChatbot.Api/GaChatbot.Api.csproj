@@ -7,6 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Program.cs overrides ContentRootPath = AppContext.BaseDirectory so the
+         host can run from any deploy location. The Web SDK's implicit wwwroot
+         items default to CopyToOutputDirectory=Never; that breaks
+         StaticFiles middleware lookups under <BaseDirectory>/wwwroot at
+         runtime. Use Update (not Include — would duplicate the implicit
+         items) to flip the implicit ones to PreserveNewest. -->
+    <Content Update="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
     <ProjectReference Include="..\..\Common\GA.Domain.Services\GA.Domain.Services.csproj" />
     <ProjectReference Include="..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />

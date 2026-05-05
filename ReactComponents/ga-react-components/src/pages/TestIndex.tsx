@@ -10,8 +10,11 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip
+  Chip,
+  Button,
+  Stack
 } from '@mui/material';
+import ChatIcon from '@mui/icons-material/Chat';
 import { useNavigate } from 'react-router-dom';
 
 interface TestPageInfo {
@@ -332,12 +335,78 @@ export const TestIndex: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+      {/* HERO: GA Chatbot is the headline product on this site. The component
+          test suite below is supporting / dev material. */}
+      <Paper
+        elevation={4}
+        sx={{
+          mb: 4,
+          p: { xs: 3, md: 4 },
+          background: 'linear-gradient(135deg, #1d4ed8 0%, #1f6feb 50%, #06b6d4 100%)',
+          color: 'white',
+          borderRadius: 3,
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={3}
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          justifyContent="space-between"
+        >
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+              <ChatIcon sx={{ fontSize: 36 }} />
+              <Typography variant="h3" sx={{ fontWeight: 700, m: 0 }}>
+                GA Chatbot
+              </Typography>
+            </Stack>
+            <Typography variant="h6" sx={{ fontWeight: 400, opacity: 0.95, maxWidth: 720 }}>
+              Ask grounded music theory questions — chord voicings, voice leading, scale modes,
+              set-class algebra. Powered by Guitar Alchemist's symbolic engine and a local LLM.
+            </Typography>
+          </Box>
+          <Stack direction={{ xs: 'row', md: 'column' }} spacing={1.5} sx={{ minWidth: { md: 220 } }}>
+            <Button
+              variant="contained"
+              size="large"
+              href="/chatbot/"
+              sx={{
+                bgcolor: 'white',
+                color: 'primary.main',
+                fontWeight: 700,
+                fontSize: '1.05rem',
+                px: 3,
+                py: 1.5,
+                '&:hover': { bgcolor: '#f1f5f9' },
+              }}
+              startIcon={<ChatIcon />}
+            >
+              Launch Chatbot
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              href="/chatbot/"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                borderColor: 'white',
+                color: 'white',
+                '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              Open in new tab
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h5" gutterBottom>
           🎸 Component Test Suite
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Click any row to open the test page
+          Supporting demos and component sandboxes. Click any row to open.
         </Typography>
       </Box>
 

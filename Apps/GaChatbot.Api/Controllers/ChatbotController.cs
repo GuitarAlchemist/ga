@@ -180,13 +180,31 @@ public sealed class ChatbotController(
 
 public sealed class ChatRequest
 {
+    /// <summary>
+    /// The user's current message. Capped at 2 KB so a single request
+    /// can't ship a megabyte of prompt-injection or DoS payload to the
+    /// local LLM.
+    /// </summary>
     [Required]
     [MaxLength(2000)]
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Prior conversation turns. Capped at 50 turns total per request
+    /// AND at 2 KB per turn content so the public chatbot endpoint
+    /// (demos.guitaralchemist.com/chatbot) can't be used as a free
+    /// LLM-resource-exhaustion proxy. Without these caps an unauthenticated
+    /// attacker could ship 28 MB (Kestrel default body limit) of context
+    /// to local Ollama, parking it behind LlmConcurrencyGate and starving
+    /// real users — exactly the abuse vector flagged in PR #111 review.
+    /// </summary>
+    [MaxLength(MaxConversationHistoryTurns)]
     public List<ChatMessage>? ConversationHistory { get; set; }
 
     public bool UseSemanticSearch { get; set; } = true;
+
+    public const int MaxConversationHistoryTurns = 50;
+    public const int MaxConversationTurnContentChars = 2000;
 }
 
 public sealed record ChatJsonResponse(
@@ -201,8 +219,10 @@ public sealed record ChatJsonResponse(
 
 public sealed class ChatMessage
 {
+    [MaxLength(32)]
     public string Role { get; set; } = string.Empty;
 
+    [MaxLength(ChatRequest.MaxConversationTurnContentChars)]
     public string Content { get; set; } = string.Empty;
 }
 

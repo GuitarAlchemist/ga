@@ -36,13 +36,17 @@ public class ChatbotApiSurfaceTests
             Assert.That(html, Does.Contain("id=\"messageInput\""));
             Assert.That(html, Does.Contain("id=\"sendButton\""));
             Assert.That(html, Does.Contain("Agentic trace"));
-            Assert.That(html, Does.Contain("/vendor/vexflow/vexflow.js"));
+            // URLs in the inline HTML are RELATIVE (no leading slash) so the
+            // page works when mounted under a path-base (e.g.
+            // demos.guitaralchemist.com/chatbot/) via Cloudflare Tunnel
+            // ingress. Match the path component without anchoring on /.
+            Assert.That(html, Does.Contain("vendor/vexflow/vexflow.js"));
             Assert.That(html, Does.Contain("renderTabNotation"));
             Assert.That(html, Does.Contain("parseTabPositions"));
             Assert.That(html, Does.Contain("```(?:vextab|vexflow|tab)"));
-            Assert.That(html, Does.Contain("/api/chatbot/status"));
-            Assert.That(html, Does.Contain("/api/chatbot/examples"));
-            Assert.That(html, Does.Contain("/api/chatbot/chat"));
+            Assert.That(html, Does.Contain("api/chatbot/status"));
+            Assert.That(html, Does.Contain("api/chatbot/examples"));
+            Assert.That(html, Does.Contain("api/chatbot/chat"));
         });
     }
 
@@ -502,6 +506,102 @@ public class ChatbotApiSurfaceTests
             Assert.That(body.GetProperty("title").GetString(), Does.Contain("validation"));
             Assert.That(body.GetProperty("errors").GetProperty("Message")[0].GetString(), Does.Contain("maximum length"));
         });
+    }
+
+    // ── ConversationHistory caps (PR #111 review — abuse prevention) ──────────
+    //
+    // Without these caps an unauthenticated caller could ship up to ~28 MB
+    // (Kestrel default body limit) of conversation context to local Ollama
+    // via the public /chatbot/api/chatbot/chat endpoint, parking that
+    // request behind LlmConcurrencyGate and starving real users. Caps:
+    // 50 turns max, 2 KB content per turn (matches Message cap).
+
+    [Test]
+    public async Task Chat_ConversationHistoryOverMaxTurns_ReturnsBadRequest()
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var tooManyTurns = Enumerable.Range(0, 51)
+            .Select(i => new { role = "user", content = $"turn {i}" })
+            .ToArray();
+
+        var response = await client.PostAsJsonAsync("/api/chatbot/chat", new
+        {
+            message = "test",
+            conversationHistory = tooManyTurns
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest),
+            "Conversation history over 50 turns must reject — DoS protection " +
+            "for the public chatbot endpoint");
+    }
+
+    [Test]
+    public async Task Chat_ConversationHistoryTurnContentOverMaxLength_ReturnsBadRequest()
+    {
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var oneFatTurn = new[]
+        {
+            new { role = "user", content = new string('x', 2001) },
+        };
+
+        var response = await client.PostAsJsonAsync("/api/chatbot/chat", new
+        {
+            message = "test",
+            conversationHistory = oneFatTurn
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest),
+            "Per-turn content over 2 KB must reject — without this cap, " +
+            "50 turns × 28 MB total body could ship a full payload of " +
+            "prompt-injection / DoS material to local Ollama");
+    }
+
+    [Test]
+    public async Task Chat_ConversationHistoryAtMaxTurnsAndMaxContent_IsAccepted()
+    {
+        // Off-by-one defence: exactly 50 turns at exactly 2000 chars must
+        // still validate. The cap is an upper bound, not a strict-less-than.
+        using var factory = CreateFactory(chatService: new FakeChatApplicationServiceForValidation());
+        using var client = factory.CreateClient();
+
+        var maxTurns = Enumerable.Range(0, 50)
+            .Select(i => new { role = "user", content = new string('x', 2000) })
+            .ToArray();
+
+        var response = await client.PostAsJsonAsync("/api/chatbot/chat", new
+        {
+            message = "test",
+            conversationHistory = maxTurns
+        });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+            "At-cap inputs must be accepted; only over-cap inputs reject");
+    }
+
+    private sealed class FakeChatApplicationServiceForValidation : IChatApplicationService
+    {
+        public Task<ChatExecutionResult> ChatAsync(ChatExecutionRequest request, CancellationToken ct = default) =>
+            Task.FromResult(new ChatExecutionResult(
+                "ok",
+                new AgentRoutingMetadata("fake", 1f, "fake"),
+                null,
+                null));
+
+        public async IAsyncEnumerable<ChatStreamUpdate> ChatStreamAsync(
+            ChatExecutionRequest request,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+        {
+            yield return new ChatStreamUpdate("ok");
+            await Task.Yield();
+            yield return new ChatStreamUpdate(IsCompleted: true);
+        }
+
+        public Task<ChatbotStatus> GetStatusAsync(CancellationToken ct = default) =>
+            Task.FromResult(new ChatbotStatus { IsAvailable = true, Message = "ok", Timestamp = DateTime.UtcNow });
     }
 
     [Test]

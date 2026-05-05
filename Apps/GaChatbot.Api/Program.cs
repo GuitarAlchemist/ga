@@ -36,6 +36,47 @@ if (allowedOrigins.Length > 0)
 
 var app = builder.Build();
 
+// Optional path-base for hosting under a public host's sub-path
+// (e.g. demos.guitaralchemist.com/chatbot via Cloudflare Tunnel ingress
+// `path: ^/chatbot(/.*)?$ -> localhost:5252`). Empty by default so direct
+// localhost:5252/ access continues to work; UsePathBase only strips the
+// prefix when present, so BOTH access modes coexist.
+var pathBase = builder.Configuration["Chatbot:PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    // Normalise: must start with '/'. A misconfigured value like "chatbot"
+    // (no leading slash) would silently bypass UsePathBase. Force the
+    // slash so config typos still produce correct routing. Strip any
+    // trailing slash on the configured value too — the redirect logic
+    // below adds it back deliberately.
+    if (!pathBase.StartsWith('/')) pathBase = "/" + pathBase;
+    pathBase = pathBase.TrimEnd('/');
+
+    var pathBaseNoSlash   = pathBase;
+    var pathBaseWithSlash = pathBase + "/";
+
+    // Trailing-slash redirect: must run BEFORE UsePathBase so it sees
+    // the unstripped request path. A user landing at `/chatbot` (no
+    // slash) resolves the inline HTML's relative URLs against the
+    // parent dir, so `fetch('api/chatbot/chat')` becomes
+    // `/api/chatbot/chat` at the host root — bypasses the Cloudflare
+    // path-based ingress and 404s. PR #111 review flagged this as the
+    // same regression class as shipped bug #2 (VexFlow not loaded).
+    // 308 (permanent + preserveMethod) so POSTs redirect cleanly too.
+    app.Use(async (ctx, next) =>
+    {
+        if (string.Equals(ctx.Request.Path.Value, pathBaseNoSlash, StringComparison.Ordinal))
+        {
+            var qs = ctx.Request.QueryString.HasValue ? ctx.Request.QueryString.Value : string.Empty;
+            ctx.Response.Redirect(pathBaseWithSlash + qs, permanent: true, preserveMethod: true);
+            return;
+        }
+        await next();
+    });
+
+    app.UsePathBase(pathBaseNoSlash);
+}
+
 app.UseExceptionHandler();
 app.UseStaticFiles();
 
@@ -245,13 +286,13 @@ app.MapGet("/", () => Results.Content(
           <h2>Examples</h2>
           <div id="examples" class="examples"></div>
           <div class="links">
-            <a href="/api/chatbot/status">Status JSON</a>
-            <a href="/api/chatbot/examples">Examples JSON</a>
-            <a href="/api">API metadata</a>
+            <a href="api/chatbot/status">Status JSON</a>
+            <a href="api/chatbot/examples">Examples JSON</a>
+            <a href="api">API metadata</a>
           </div>
         </aside>
       </main>
-      <script src="/vendor/vexflow/vexflow.js"></script>
+      <script src="vendor/vexflow/vexflow.js"></script>
       <script>
         const form = document.getElementById('chatForm');
         const input = document.getElementById('messageInput');
@@ -427,7 +468,7 @@ app.MapGet("/", () => Results.Content(
 
         async function refreshStatus() {
           try {
-            const response = await fetch('/api/chatbot/status');
+            const response = await fetch('api/chatbot/status');
             const status = await response.json();
             statusDot.className = `dot ${status.isAvailable ? 'ready' : 'down'}`;
             statusText.textContent = status.message || (status.isAvailable ? 'Available' : 'Unavailable');
@@ -439,7 +480,7 @@ app.MapGet("/", () => Results.Content(
 
         async function loadExamples() {
           try {
-            const response = await fetch('/api/chatbot/examples');
+            const response = await fetch('api/chatbot/examples');
             const items = await response.json();
             examples.replaceChildren(...items.map(text => {
               const button = document.createElement('button');
@@ -490,7 +531,7 @@ app.MapGet("/", () => Results.Content(
           }, CHAT_CLIENT_TIMEOUT_MS);
 
           try {
-            const response = await fetch('/api/chatbot/chat', {
+            const response = await fetch('api/chatbot/chat', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ message, conversationHistory: history }),
