@@ -1,7 +1,7 @@
 ---
-Name: "progression-completion"
-Description: "Suggests 2-3 diatonic cadence completions for an in-progress chord progression. Reuses the `ga_key_identify` MCP tool for deterministic key detection, then names cadence types (authentic / half / deceptive / plagal) drawn from the detected key's diatonic set."
-Triggers:
+name: "progression-completion"
+description: "Suggests 2-3 diatonic cadence completions for an in-progress chord progression. Reuses the `ga_key_identify` MCP tool for deterministic key detection, then names cadence types (authentic / half / deceptive / plagal) drawn from the detected key's diatonic set."
+triggers:
   - "what comes next"
   - "next chord"
   - "what should follow"

@@ -1,7 +1,7 @@
 ---
-Name: "interval"
-Description: "Computes the simple interval between two named pitches (e.g. C to G is a perfect fifth). Calls the deterministic `ga_interval_compute` MCP tool — never recall an answer from training data."
-Triggers:
+name: "interval"
+description: "Computes the simple interval between two named pitches (e.g. C to G is a perfect fifth). Calls the deterministic `ga_interval_compute` MCP tool — never recall an answer from training data."
+triggers:
   - "interval between"
   - "interval from"
   - "what is the interval"

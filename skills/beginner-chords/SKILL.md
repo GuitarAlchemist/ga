@@ -1,7 +1,7 @@
 ---
-Name: "beginner-chords"
-Description: "Returns the eight first-position open guitar chords every curriculum starts with — C, G, D, A, E, Am, Em, Dm — with diagrams and short fingering tips. Use when a learner asks 'what are the easy chords' / 'beginner chords' / 'first chords I should learn'."
-Triggers:
+name: "beginner-chords"
+description: "Returns the eight first-position open guitar chords every curriculum starts with — C, G, D, A, E, Am, Em, Dm — with diagrams and short fingering tips. Use when a learner asks 'what are the easy chords' / 'beginner chords' / 'first chords I should learn'."
+triggers:
   - "beginner chord"
   - "easy chord"
   - "first chord"

@@ -1,7 +1,7 @@
 ---
-Name: "scale-info"
-Description: "Returns the seven notes of a major or minor key plus its key signature and relative key. Calls the deterministic `ga_scale_get_notes` MCP tool — never recall an answer from training data."
-Triggers:
+name: "scale-info"
+description: "Returns the seven notes of a major or minor key plus its key signature and relative key. Calls the deterministic `ga_scale_get_notes` MCP tool — never recall an answer from training data."
+triggers:
   - "notes in"
   - "notes are in"
   - "notes of"

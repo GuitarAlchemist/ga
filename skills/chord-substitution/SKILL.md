@@ -1,7 +1,7 @@
 ---
-Name: "chord-substitution"
-Description: "Finds harmonic substitutions for a chord, or classifies the relationship between two chords (tritone sub, secondary dominant, backdoor dominant, set-class equivalent, ICV neighbor). Calls deterministic Grothendieck-ICV math via MCP tools — never recall theory rules from training data."
-Triggers:
+name: "chord-substitution"
+description: "Finds harmonic substitutions for a chord, or classifies the relationship between two chords (tritone sub, secondary dominant, backdoor dominant, set-class equivalent, ICV neighbor). Calls deterministic Grothendieck-ICV math via MCP tools — never recall theory rules from training data."
+triggers:
   - "substitute"
   - "substitution"
   - "reharmonize"

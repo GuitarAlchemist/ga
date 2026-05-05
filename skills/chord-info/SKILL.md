@@ -1,7 +1,7 @@
 ---
-Name: "chord-info"
-Description: "Returns the notes and intervals of a named chord (e.g. Cmaj7 = C E G B). Calls the deterministic `ga_chord_info` MCP tool — never recall an answer from training data, since LLMs commonly flip enharmonics (Db vs C#) based on which source they saw."
-Triggers:
+name: "chord-info"
+description: "Returns the notes and intervals of a named chord (e.g. Cmaj7 = C E G B). Calls the deterministic `ga_chord_info` MCP tool — never recall an answer from training data, since LLMs commonly flip enharmonics (Db vs C#) based on which source they saw."
+triggers:
   - "what is a"
   - "what is the"
   - "what notes are in"

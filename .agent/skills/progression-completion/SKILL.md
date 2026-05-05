@@ -1,7 +1,7 @@
 ---
-Name: "Progression Completion"
-Description: "Suggests logical next chords to complete or extend a partial chord progression"
-Triggers:
+name: "Progression Completion"
+description: "Suggests logical next chords to complete or extend a partial chord progression"
+triggers:
   - "finish this progression"
   - "complete the progression"
   - "what comes next"

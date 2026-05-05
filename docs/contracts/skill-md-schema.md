@@ -52,14 +52,19 @@ in Claude Code.
 
 ## Casing rule
 
-Pick **one** casing convention per file and stick with it. The GA parser
-tries PascalCase first, falls back to camelCase; mixing within a single
-file is unsupported (the chosen deserializer wins, the other case's keys
-are silently dropped under `IgnoreUnmatchedProperties`).
+**camelCase is canonical for the GA repo.** All in-tree SKILL.md files use
+lowercase top-level keys (`name:`, `description:`, `triggers:`) — matching
+Anthropic's published spec for Claude Code plugin skills. The 13 files
+that originally used PascalCase were migrated by
+`Scripts/normalize_skill_md_casing.py` (idempotent; runnable by any author
+who pulls in an externally-authored PascalCase file).
 
-**Recommended for new skills**: camelCase, matching Anthropic's published
-spec. Existing PascalCase files (the 59 already in `skills/` and
-`.agent/skills/`) continue to work unchanged.
+The parser still **accepts** PascalCase as a fallback so externally-sourced
+skills (e.g. an older copy of a GA skill someone pulled into another repo)
+continue to load without an explicit migration step. Pick one casing per
+file; mixing within a single file is unsupported (the chosen deserializer
+wins, the other case's keys are silently dropped under
+`IgnoreUnmatchedProperties`).
 
 ## Dual-compatibility example
 
