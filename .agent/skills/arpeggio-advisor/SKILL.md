@@ -1,7 +1,7 @@
 ---
-Name: "Arpeggio Advisor"
-Description: "Suggests arpeggios, modes, and target notes for improvisation over a chord progression"
-Triggers:
+name: "Arpeggio Advisor"
+description: "Suggests arpeggios, modes, and target notes for improvisation over a chord progression"
+triggers:
   - "what arpeggio"
   - "what mode"
   - "what scale should i play"

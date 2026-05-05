@@ -1,7 +1,7 @@
 ---
-Name: "key-identification"
-Description: "Identifies the most likely musical key of a chord progression and explains why. Calls the deterministic `ga_key_identify` MCP tool — never recall the analysis from training data, since the diatonic-set match is pitch-class arithmetic and the LLM is unreliable at it."
-Triggers:
+name: "key-identification"
+description: "Identifies the most likely musical key of a chord progression and explains why. Calls the deterministic `ga_key_identify` MCP tool — never recall the analysis from training data, since the diatonic-set match is pitch-class arithmetic and the LLM is unreliable at it."
+triggers:
   - "what key is"
   - "what key does"
   - "what key are"

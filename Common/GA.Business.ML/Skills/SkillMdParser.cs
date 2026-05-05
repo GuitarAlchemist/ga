@@ -33,8 +33,27 @@ public static class SkillMdParser
     /// </summary>
     public const int MinTriggerLength = 3;
 
-    private static readonly IDeserializer Deserializer = new DeserializerBuilder()
+    // Two deserializers so authors can pick either casing convention:
+    //  - PascalCase (`Name:`, `Description:`, `Triggers:`) — original GA style.
+    //  - camelCase  (`name:`, `description:`, `triggers:`) — Anthropic Claude
+    //    Code SKILL.md convention. A skill authored once in lowercase frontmatter
+    //    is now valid in both ecosystems, enabling fast iteration: drop a
+    //    Claude Code skill into `skills/` and GA picks it up; drop a GA skill
+    //    into `~/.claude/plugins/.../skills/` and Claude Code picks it up.
+    //
+    // PascalCase is tried first (preserves prior behaviour for the 59 existing
+    // SKILL.md files); camelCase is the fallback when PascalCase produces no
+    // Name (i.e. the YAML used lowercase keys). Both deserializers
+    // IgnoreUnmatchedProperties so each ecosystem's extra fields
+    // (GA: `Triggers`/`license`/`compatibility`; Claude: `user-invocable`/
+    // `allowed-tools`) coexist without parser errors.
+    private static readonly IDeserializer PascalDeserializer = new DeserializerBuilder()
         .WithNamingConvention(PascalCaseNamingConvention.Instance)
+        .IgnoreUnmatchedProperties()
+        .Build();
+
+    private static readonly IDeserializer CamelDeserializer = new DeserializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .IgnoreUnmatchedProperties()
         .Build();
 
@@ -87,18 +106,8 @@ public static class SkillMdParser
         var yamlContent = string.Join('\n', lines[1..closingIndex]);
         var body        = string.Join('\n', lines[(closingIndex + 1)..]).TrimStart();
 
-        SkillMdFrontmatter frontmatter;
-        try
-        {
-            frontmatter = Deserializer.Deserialize<SkillMdFrontmatter>(yamlContent)
-                          ?? new SkillMdFrontmatter();
-        }
-        catch
-        {
-            return null;
-        }
-
-        if (string.IsNullOrWhiteSpace(frontmatter.Name))
+        var frontmatter = TryDeserializeWithEitherConvention(yamlContent);
+        if (frontmatter is null || string.IsNullOrWhiteSpace(frontmatter.Name))
             return null;
 
         // Reject SKILL.md files whose bodies exceed MaxBodyCharacters — the
@@ -127,6 +136,59 @@ public static class SkillMdParser
             FilePath    = filePath,
         };
     }
+
+    /// <summary>
+    /// Deserialises the frontmatter under BOTH naming conventions and
+    /// merges the results, preferring PascalCase per field for back-compat.
+    /// Without this dual-pass strategy, a file that mixes casings (e.g.
+    /// <c>Name:</c> in PascalCase but <c>description:</c>/<c>triggers:</c>
+    /// in camelCase — a realistic migration mistake) would parse under
+    /// Pascal only, then silently DROP the lowercase fields as unmatched
+    /// properties. The skill would ship with no triggers, get filtered as
+    /// untriggered, and disappear with no warning.
+    /// </summary>
+    /// <remarks>
+    /// Per-field merge rules (Pascal wins on every field; Camel fills the gaps):
+    /// <list type="bullet">
+    ///   <item><c>Name</c> — PascalCase value if present, otherwise camelCase.</item>
+    ///   <item><c>Description</c> — PascalCase value if present, otherwise camelCase.</item>
+    ///   <item><c>Triggers</c> — PascalCase list if non-empty, otherwise camelCase list.</item>
+    /// </list>
+    /// Effect: pure-PascalCase and pure-camelCase files round-trip identically;
+    /// mixed-casing files keep all data the author wrote regardless of which
+    /// convention each field used. Pinned by
+    /// <c>TryParseContent_MixedCasing_*</c> tests.
+    /// </remarks>
+    private static SkillMdFrontmatter? TryDeserializeWithEitherConvention(string yamlContent)
+    {
+        var pascal = TrySafe(PascalDeserializer, yamlContent);
+        var camel  = TrySafe(CamelDeserializer,  yamlContent);
+
+        if (pascal is null && camel is null) return null;
+
+        var name = FirstNonEmpty(pascal?.Name, camel?.Name);
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        return new SkillMdFrontmatter
+        {
+            Name        = name,
+            Description = FirstNonEmpty(pascal?.Description, camel?.Description),
+            Triggers    = FirstNonEmptyList(pascal?.Triggers, camel?.Triggers),
+        };
+    }
+
+    private static SkillMdFrontmatter? TrySafe(IDeserializer d, string yaml)
+    {
+        try { return d.Deserialize<SkillMdFrontmatter>(yaml); }
+        catch { return null; }
+    }
+
+    private static string? FirstNonEmpty(string? a, string? b) =>
+        !string.IsNullOrWhiteSpace(a) ? a : b;
+
+    private static List<string>? FirstNonEmptyList(List<string>? a, List<string>? b) =>
+        a is { Count: > 0 } ? a : b;
 
     // ── YAML DTO ─────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 ---
-Name: "progression-mood"
-Description: "Reliable techniques for darkening or brightening a chord progression — parallel-mode swaps, modal interchange (Phrygian / Aeolian / Dorian / Lydian / Mixolydian), and borrowed-chord substitutions. Use when a learner asks how to make a progression sound darker / sadder / moodier / brighter / more uplifting."
-Triggers:
+name: "progression-mood"
+description: "Reliable techniques for darkening or brightening a chord progression — parallel-mode swaps, modal interchange (Phrygian / Aeolian / Dorian / Lydian / Mixolydian), and borrowed-chord substitutions. Use when a learner asks how to make a progression sound darker / sadder / moodier / brighter / more uplifting."
+triggers:
   - "darker"
   - "darken"
   - "moodier"

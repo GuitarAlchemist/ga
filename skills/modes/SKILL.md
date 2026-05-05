@@ -1,7 +1,7 @@
 ---
-Name: "modes"
-Description: "Lists the seven modes of the major scale (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian) with their scale-degree formulas and characteristic sound. Pure catalog — same fixed pedagogy whether the user asks for the whole list or a single mode."
-Triggers:
+name: "modes"
+description: "Lists the seven modes of the major scale (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian) with their scale-degree formulas and characteristic sound. Pure catalog — same fixed pedagogy whether the user asks for the whole list or a single mode."
+triggers:
   - "modes of"
   - "diatonic modes"
   - "major scale modes"

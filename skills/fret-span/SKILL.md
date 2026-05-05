@@ -1,7 +1,7 @@
 ---
-Name: "fret-span"
-Description: "Computes the fret span and playability of a 6-string guitar chord diagram. Calls the deterministic `ga_fret_span` MCP tool — never recall the answer from training data, since the math depends on knowing exactly which strings are open vs muted vs fretted."
-Triggers:
+name: "fret-span"
+description: "Computes the fret span and playability of a 6-string guitar chord diagram. Calls the deterministic `ga_fret_span` MCP tool — never recall the answer from training data, since the math depends on knowing exactly which strings are open vs muted vs fretted."
+triggers:
   - "fret span"
   - "fret stretch"
   - "stretch of"

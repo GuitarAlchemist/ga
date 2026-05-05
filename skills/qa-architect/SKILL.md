@@ -1,7 +1,7 @@
 ---
-Name: "qa-architect"
-Description: "How any AI collaborator (Codex, Conductor, Octopus, Compound Engineering, future-Claude) works alongside the QA Architect agent on this repo. Read before designing or shipping a non-trivial change."
-Triggers:
+name: "qa-architect"
+description: "How any AI collaborator (Codex, Conductor, Octopus, Compound Engineering, future-Claude) works alongside the QA Architect agent on this repo. Read before designing or shipping a non-trivial change."
+triggers:
   # "qa" was dropped — too short under SkillMdParser.MinTriggerLength (would
   # otherwise be silently filtered at parse time and create a confusing
   # state). The longer triggers below cover every real use case.
