@@ -39,9 +39,12 @@ public sealed class SkillMdPlugin : IChatPlugin
     {
         if (!Directory.Exists(path))
         {
-            // Warning is emitted at runtime via ILogger — here we use Trace as fallback
-            // (ILogger not available during DI registration, so use Debug.WriteLine)
-            System.Diagnostics.Debug.WriteLine(
+            // Warning is emitted via Trace (NOT Debug — Debug.WriteLine is
+            // [Conditional("DEBUG")] and compiles out of Release builds, which
+            // would silently drop this migration-critical warning in production).
+            // ILogger is not available during DI registration, so Trace is the
+            // fallback. Test fixture asserts via a Trace.Listeners hook.
+            System.Diagnostics.Trace.WriteLine(
                 $"[SkillMdPlugin] Skills directory not found: {path} — no SKILL.md skills registered.");
             return;
         }
@@ -60,7 +63,7 @@ public sealed class SkillMdPlugin : IChatPlugin
 
             if (legacySkillCount > 0)
             {
-                System.Diagnostics.Debug.WriteLine(
+                System.Diagnostics.Trace.WriteLine(
                     $"[SkillMdPlugin] Canonical '{path}' is empty but legacy '{legacy}' " +
                     $"still has {legacySkillCount} SKILL.md file(s). Production will register ZERO " +
                     $"skills. Either port them into the canonical directory or remove the empty " +
@@ -68,7 +71,7 @@ public sealed class SkillMdPlugin : IChatPlugin
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine(
+                System.Diagnostics.Trace.WriteLine(
                     $"[SkillMdPlugin] No SKILL.md files with triggers found in {path}.");
             }
             return;
@@ -123,7 +126,7 @@ public sealed class SkillMdPlugin : IChatPlugin
                 IsPathInsideDirectory(resolved, rootForOverride))
                 return resolved;
 
-            System.Diagnostics.Debug.WriteLine(
+            System.Diagnostics.Trace.WriteLine(
                 $"[SkillMdPlugin] SKILLMD_SKILLS_PATH '{env}' resolves to '{resolved}' " +
                 $"which is outside the repo root '{rootForOverride}' — ignoring.");
         }

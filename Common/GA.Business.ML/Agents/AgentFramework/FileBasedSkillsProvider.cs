@@ -116,7 +116,9 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
                 nameof(skillsDirectories));
 
         _skillsDirectories = [.. skillsDirectories.Where(d => !string.IsNullOrWhiteSpace(d))];
-        _logWarning = msg => System.Diagnostics.Debug.WriteLine(msg);
+        // Trace, not Debug — Debug.WriteLine is [Conditional("DEBUG")] and
+        // strips out of Release builds, silently dropping warnings in prod.
+        _logWarning = msg => System.Diagnostics.Trace.WriteLine(msg);
         _skills = LoadSkillsCore();
 
         if (!watchForChanges)
