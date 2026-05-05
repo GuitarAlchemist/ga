@@ -15,7 +15,8 @@ compatibility:
   microsoft-extensions-ai: ">=10.5.1"
 metadata:
   authoring-style: "tool-driven"
-  origin: "drafted in skills-dev/ as Tier 2 skill (skill-stewards 2026-05-05)"
+  origin: "drafted in skills-dev/ as Tier 2 skill (skill-stewards 2026-05-05)"
+  blocked_on: "ga_easier_voicings MCP tool — not yet implemented in Common/GA.Business.ML/Agents/Mcp/"
   evidence-kinds:
     - tool_call
 allowed-tools:

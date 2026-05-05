@@ -80,6 +80,20 @@ Each major key shares its key signature with its **relative minor** — three se
 - Db major ↔ Bb minor
 - Gb major ↔ Eb minor
 
+## Enharmonic equivalence at the bottom of the circle
+
+At the 6 o'clock position three keys collide:
+
+- **F# major (6 sharps)** ≡ **Gb major (6 flats)** — same pitches, different spelling.
+- **C# major (7 sharps)** ≡ **Db major (5 flats)** — Db is usually preferred (fewer accidentals, no double-sharps).
+- **Cb major (7 flats)** ≡ **B major (5 sharps)** — B is usually preferred (no Cb / Fb).
+
+Why one publisher writes a piece in Db and another in C# is convention,
+genre, and instrument-friendliness. Concert-band orchestrators favour
+flat keys (better for transposing brass); strings often prefer sharp
+keys; jazz lead sheets follow the composer's choice. The chatbot
+doesn't pick one over the other — both spell the same harmony.
+
 ## Why it's useful
 
 - **Modulation by fifth** is the smoothest key change: only one note changes (the new key's leading tone). C → G changes only F to F#.
@@ -88,9 +102,10 @@ Each major key shares its key signature with its **relative minor** — three se
 
 ## When to call other skills instead
 
-- *"What chords are in C major?"* → `diatonic-chords` skill.
-- *"Relative minor of C major?"* → `relative-key` skill.
-- *"Identify the key of [progression]"* → `key-identification` skill.
+- *"Notes in C major scale?"* → `scale-info` skill (canonical).
+- *"Identify the key of [progression]"* → `key-identification` skill (canonical).
+- *"What chords are in C major?"* → `diatonic-chords` once that pending tool ships; today, `scale-info` returns the seven scale notes which is a partial answer.
+- *"Relative minor of C major?"* → `relative-key` once that pending tool ships; today, the relative-minor pairings table above answers it directly.
 
 ## When to refuse
 

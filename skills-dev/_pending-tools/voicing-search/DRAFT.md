@@ -1,6 +1,6 @@
 ---
 name: "voicing-search"
-description: "Searches the OPTIC-K voicing corpus by natural-language query — e.g. 'mellow jazz Cm9' / 'bright open-position Em' / 'rootless Dm7'. Calls the deterministic `ga_search_voicings_by_query` MCP tool with embedding-based retrieval over the 240-dim corpus. Use when a learner asks for a voicing with a vibe description rather than a structural one."
+description: "Searches the OPTIC-K voicing corpus by natural-language query — e.g. 'mellow jazz Cm9' / 'bright open-position Em' / 'rootless Dm7'. Calls the deterministic `ga_search_voicings_by_query` MCP tool with embedding-based retrieval over the OPTIC-K corpus. Use when a learner asks for a voicing with a vibe description rather than a structural one."
 triggers:
   - "find me a voicing"
   - "voicing for"
@@ -18,7 +18,8 @@ compatibility:
   microsoft-extensions-ai: ">=10.5.1"
 metadata:
   authoring-style: "tool-driven"
-  origin: "drafted in skills-dev/ as Tier 2 skill (skill-stewards 2026-05-05)"
+  origin: "drafted in skills-dev/ as Tier 2 skill (skill-stewards 2026-05-05)"
+  blocked_on: "ga_search_voicings_by_query MCP tool — not yet implemented in Common/GA.Business.ML/Agents/Mcp/"
   evidence-kinds:
     - tool_call
 allowed-tools:
@@ -27,7 +28,7 @@ allowed-tools:
 
 # Voicing Search by Natural-Language Query
 
-The OPTIC-K v1.8 corpus indexes thousands of voicings with 240-dim embeddings (STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / MODAL / ROOT partitions). When a user asks for a voicing with a *style* description ("mellow", "rootless", "jazz", "bright"), call `ga_search_voicings_by_query`. The semantic search outranks LLM-recalled voicings because the corpus is curated for harmonic + ergonomic quality.
+The OPTIC-K corpus (current schema version is read at runtime from EmbeddingSchema.Version; total dimension is EmbeddingSchema.TotalDimension — never hardcode) indexes voicings with structural + perceptual embeddings (STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / MODAL / ROOT partitions). When a user asks for a voicing with a *style* description ("mellow", "rootless", "jazz", "bright"), call `ga_search_voicings_by_query`. The semantic search outranks LLM-recalled voicings because the corpus is curated for harmonic + ergonomic quality.
 
 ## Calling the tool
 
@@ -80,4 +81,4 @@ Lead with the top result's diagram, mention similarity score and context tags:
 ## Cross-reference
 
 - MCP tool: `ga_search_voicings_by_query` (Common/GA.Business.ML/Agents/Mcp/VoicingMcpTools.cs)
-- Backing corpus: OPTIC-K v1.8 (240-dim, ROOT partition added 2026-04-19).
+- Backing corpus: OPTIC-K (read EmbeddingSchema constants at runtime; the schema version + dimension change without coordinated re-index).

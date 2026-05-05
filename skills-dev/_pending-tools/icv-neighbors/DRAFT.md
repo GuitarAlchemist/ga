@@ -14,7 +14,8 @@ compatibility:
   microsoft-extensions-ai: ">=10.5.1"
 metadata:
   authoring-style: "tool-driven"
-  origin: "drafted in skills-dev/ as Tier 3 specialist skill (skill-stewards 2026-05-05)"
+  origin: "drafted in skills-dev/ as Tier 3 specialist skill (skill-stewards 2026-05-05)"
+  blocked_on: "ga_icv_neighbors MCP tool — not yet implemented in Common/GA.Business.ML/Agents/Mcp/"
   evidence-kinds:
     - tool_call
 allowed-tools:
@@ -49,10 +50,10 @@ Returns:
 
 Lead with the source ICV, then list neighbours with their distance:
 
-> **Cmaj7** has ICV **[1, 0, 1, 2, 1, 0]** (one i.c.1, zero i.c.2, one i.c.3, two i.c.4, one i.c.5, zero i.c.6 = no tritones).
+> **Cmaj7** has ICV **[1, 0, 1, 2, 2, 0]** — one i.c.1 (B-C), zero i.c.2, one i.c.3 (C-E enharmonic? no — E-G), two i.c.4 (C-E and G-B), TWO i.c.5 (C-G and E-B, both perfect fourths), zero i.c.6. Matches Forte 4-20.
 >
 > Top 3 ICV-neighbours (Euclidean distance):
-> 1. **Am7** — ICV [1,0,1,2,1,0] — distance 0.0 (same set class, transposition).
+> 1. **Am7** — ICV [1,0,1,2,2,0] — distance 0.0 (same set class, transposition by minor third).
 > 2. **Cm9 (no root)** — distance 0.6.
 > 3. **Fmaj7** — distance 0.0 (transposition by P4).
 

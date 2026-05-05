@@ -13,7 +13,8 @@ compatibility:
   microsoft-extensions-ai: ">=10.5.1"
 metadata:
   authoring-style: "tool-driven"
-  origin: "drafted in skills-dev/ as Tier 3 specialist skill (skill-stewards 2026-05-05)"
+  origin: "drafted in skills-dev/ as Tier 3 specialist skill (skill-stewards 2026-05-05)"
+  blocked_on: "ga_polychord MCP tool — not yet implemented in Common/GA.Business.ML/Agents/Mcp/"
   evidence-kinds:
     - tool_call
 allowed-tools:
@@ -41,7 +42,7 @@ Returns:
 
 ## Mapping user phrasings
 
-- *"What is C/D as a polychord?"* → `upper="C", lower="D"`. Returns notes D-F#-A-C-E-G; equivalent to D9sus.
+- *"What is C/D as a polychord?"* → `upper="C", lower="D"`. Pass `interpretMode="both"` so the tool surfaces BOTH the slash-chord and full-polychord readings; the user disambiguates.
 - *"Polychord D over Eb"* → `upper="D", lower="Eb"`. Returns Lydian-augmented colour / film-score signature.
 - *"Cmaj7 over F#"* → `upper="Cmaj7", lower="F#"`. Maximally chromatic — dual-tonic ambiguity.
 
@@ -51,11 +52,11 @@ Lead with the polychord notation, the pitch set, and the most common single-chor
 
 > **C/D** — C major triad (C–E–G) over D in the bass.
 >
-> Combined notes: **D – E – F# (no, wait, no F#) – G – A – C** → D, E, G, A, C.
+> Combined notes: depend on the reading. Slash-chord (C triad over D bass note) = {C, D, E, G}. Full polychord (C triad over D triad) = {A, C, D, E, F#, G}. Use the tool's output verbatim — do NOT compute by hand.
 >
-> This is functionally a **D9sus4** (D–G–A–C–E rearranged: root, 4th, 5th, ♭7, 9). Common dominant-prep colour in pop ballads and gospel.
+> Common single-chord interpretation comes from the tool's ExtendedEquivalents. The slash-chord reading is closest to a D9sus4 sonority; the full-polychord reading is closer to a Lydian-coloured sonority.
 
-(Actually correct the trace — let me be careful that the LLM doesn't fabricate notes; the TOOL gives the correct set, the response should mirror that.)
+(Note: never hand-compute polychord notes. The LLM is unreliable at multi-triad combinatorics; trust Notes from the tool.)
 
 ## When to refuse / clarify
 

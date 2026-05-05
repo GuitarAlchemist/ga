@@ -29,50 +29,67 @@ Reproduce this catalog verbatim when a visitor asks what the chatbot can do, wha
 
 > Guitar Alchemist's chatbot answers grounded music-theory questions — chord and scale lookup, progression analysis, voice leading, transposition, voicing search, and more. Every answer is computed from the GA symbolic engine, not recalled from training data.
 
-## What you can ask
+## What you can ask today
+
+The chatbot ships exactly the capabilities below. (See "Roadmap" for
+items being designed but not yet wired — those will return a
+"feature not yet available" response if asked today.)
 
 ### 🎸 Chord and scale lookup
 - *"What notes are in Cmaj7?"* — chord intervals and tones.
-- *"What chords are in G major?"* — diatonic chords / harmonized scale.
-- *"What are the modes of the major scale?"* — modal pedagogy.
 - *"Notes in A natural minor"* — scale degrees.
+- *"What are the modes of the major scale?"* — modal pedagogy (catalog).
+- *"Show me beginner chords"* — open-position starter catalogue.
 
 ### 🎼 Progressions
-- *"Analyze C Am F G"* — Roman numerals, key, cadences, function.
 - *"Identify the key of Em D C G"* — key inference.
-- *"Generate a sad progression in D minor"* — composition.
 - *"Suggest next chords for Cmaj7 Dm7 Em7"* — completion.
+- *"How do I make this progression sound darker?"* — modal mood-shifting (catalog).
 
-### 🎚️ Voicings (guitar-specific)
-- *"Find me a mellow Cm9 voicing"* — natural-language voicing search.
-- *"Easier voicing for Bbmaj7"* — beginner-friendly fingering.
-- *"Beginner chords"* — starter open-position catalogue.
+### 🎚️ Fingerings
+- *"Compute the fret span of [diagram]"* — playability scoring.
 
 ### 🔄 Movement & relationships
-- *"Transpose Cmaj7 up a perfect fourth"* — transposition.
-- *"Voice leading from Dm7 to G7"* — smooth connection.
-- *"What's the relative minor of C major?"* — key relationships.
-- *"Common tones between Cmaj7 and Am7"* — pivot tones.
-- *"Substitutes for V7 in C major"* — chord substitutions.
+- *"Compute the interval from C to G"* — interval pair-lookup.
+- *"Substitutes for V7 in C major"* — chord substitutions (Grothendieck-ICV).
+- *"Compare Cmaj7 with Am7"* — chord-pair classification.
 
 ### 🎼 Pedagogy
-- *"Explain the circle of fifths"* — key signature walkthrough.
-- *"How do I make this progression sound darker?"* — modal mood-shifting.
-- *"What is voice leading?"* — concept explainers.
-
-### 🧠 Advanced theory
-- *"Set class of Cmaj7"* — pitch-class-set notation, Forte numbers.
-- *"ICV neighbours of [0,3,6,9]"* — interval-class similarity.
-- *"Polychord C/D"* — stacked-chord interpretation.
+- *"Explain the circle of fifths"* — key signature walkthrough (catalog).
 
 ## How answers are produced
 
-Every chord, scale, voicing, and progression answer is computed by **deterministic MCP tools** that call into the Guitar Alchemist symbolic engine. The chatbot doesn't recall theory from training data — it asks the engine and synthesizes the answer.
+Every chord, scale, key, interval, fret-span, and substitution answer
+is computed by **deterministic MCP tools** that call into the Guitar
+Alchemist symbolic engine. The chatbot doesn't recall theory from
+training data — it asks the engine and synthesizes the answer.
 
 That means:
 - Spellings are correct (Db major vs C# major won't get flipped).
-- Voicings are from the curated OPTIC-K corpus (~1000s of indexed voicings, ranked by playability + harmonic fit).
-- Roman numeral analysis is from set-class arithmetic, not pattern-matching.
+- Roman numeral / function / cadence claims are from set-class arithmetic, not pattern-matching.
+
+## Roadmap (not yet shipped)
+
+These capabilities are **designed but not yet wired** — the chatbot
+will not answer them correctly today. Drafts exist at
+`skills-dev/_pending-tools/` awaiting their backing MCP tools:
+
+- Transpose chord by interval.
+- List diatonic chords of a key (currently routed indirectly via scale-info).
+- Voice leading between two chords.
+- Relative / parallel key lookup.
+- Full progression analysis (Roman numerals + cadences + modulations).
+- Voicing search by natural-language query (semantic over OPTIC-K).
+- Easier-voicings substitution.
+- Arpeggio suggestions for soloing.
+- Common-tone identification.
+- Progression generation by mood / style.
+- Polychord analysis.
+- Set-class substitutions and ICV-neighbour lookup.
+
+If you ask one of those today, the chatbot may attempt to answer from
+training-data fallback — flag the answer as **non-authoritative** and
+verify against a textbook.
 
 ## Things outside scope
 
@@ -83,10 +100,9 @@ That means:
 
 ## When to call other skills directly
 
-If you already know what you want, jump straight to it:
+If you already know what you want, jump straight to it. **Live skills
+today** (canonical, in `skills/`):
 - Theory: `chord-info`, `scale-info`, `interval`, `modes`, `circle-of-fifths`.
-- Progression: `progression-analysis`, `progression-completion`, `progression-mood`.
-- Voicings: `voicing-search`, `easier-voicings`, `beginner-chords`.
-- Movement: `transpose`, `voice-leading`, `relative-key`, `common-tones`.
-- Substitutions: `chord-substitution`, `set-class-subs`.
-- Composition: `progression-generator`, `arpeggio`.
+- Progression: `progression-completion`, `progression-mood`, `key-identification`.
+- Fingerings: `fret-span`, `beginner-chords`.
+- Substitutions: `chord-substitution`.

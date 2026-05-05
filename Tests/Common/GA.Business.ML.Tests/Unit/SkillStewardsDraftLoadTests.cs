@@ -3,15 +3,26 @@ namespace GA.Business.ML.Tests.Unit;
 using GA.Business.ML.Skills;
 
 /// <summary>
-/// Smoke test for the 17 drafts in <c>skills-dev/</c> seeded by the
-/// skill-stewards 2026-05-05 batch. Confirms every draft parses, carries
-/// a Name + Description, and retains at least 3 surviving triggers
-/// after <see cref="SkillMdParser.MinTriggerLength"/> filtering.
+/// Smoke test for active drafts in <c>skills-dev/</c>. Confirms every
+/// active draft parses, carries a Name + Description, and retains at
+/// least 3 surviving triggers after <see cref="SkillMdParser.MinTriggerLength"/>
+/// filtering.
 /// </summary>
 /// <remarks>
-/// This test will keep firing on the canonical skills as drafts graduate
-/// — the same assertions apply to <c>skills/</c>. Designed as cheap
-/// CI-time guard against frontmatter regressions in the corpus.
+/// <para>
+/// Drafts under <c>skills-dev/_pending-tools/</c> are intentionally
+/// excluded — they're stored as <c>DRAFT.md</c> (not
+/// <c>SKILL.md</c>) so SkillMdLoader's glob doesn't see them. They
+/// live as design specs for MCP tools that don't yet exist; loading
+/// them as live skills would crash the orchestrator on first
+/// dispatch. See <c>skills-dev/_pending-tools/README.md</c>.
+/// </para>
+/// <para>
+/// This test will keep firing on the canonical skills as drafts
+/// graduate — the same assertions apply to <c>skills/</c>. Designed
+/// as cheap CI-time guard against frontmatter regressions in the
+/// corpus.
+/// </para>
 /// </remarks>
 [TestFixture]
 public class SkillStewardsDraftLoadTests
@@ -89,6 +100,132 @@ public class SkillStewardsDraftLoadTests
         Assert.That(pascalCaseFiles, Is.Empty,
             "Drafts must use camelCase frontmatter (Anthropic spec + GA canonical convention). " +
             $"Found PascalCase keys in:\n  {string.Join("\n  ", pascalCaseFiles)}");
+    }
+
+    /// <summary>
+    /// Graduation gate: every `allowed-tools` entry across `skills/` and
+    /// active `skills-dev/` drafts MUST resolve to a real
+    /// [McpServerTool(Name=...)] registration in
+    /// Common/GA.Business.ML/Agents/Mcp/*.cs. Without this gate, drafts
+    /// referencing fictional tools (the failure mode that triggered this
+    /// gate's creation, PR #118 review) can graduate and crash the
+    /// orchestrator on first dispatch.
+    /// </summary>
+    [Test]
+    public void AllowedToolsAcrossSkills_ResolveToRegisteredMcpTools()
+    {
+        var repoRoot = LocateRepoRoot();
+        if (repoRoot is null)
+        {
+            Assert.Ignore("Repo root not found from test bin location.");
+            return;
+        }
+
+        // Discover the registry by grepping McpServerTool(Name="...")
+        // across the canonical Mcp directory. Single source of truth.
+        var mcpDir = Path.Combine(repoRoot, "Common", "GA.Business.ML", "Agents", "Mcp");
+        var registry = new HashSet<string>(StringComparer.Ordinal);
+        if (Directory.Exists(mcpDir))
+        {
+            foreach (var cs in Directory.EnumerateFiles(mcpDir, "*.cs"))
+            {
+                foreach (var line in File.ReadLines(cs))
+                {
+                    var idx = line.IndexOf("McpServerTool(Name = \"", StringComparison.Ordinal);
+                    if (idx < 0) continue;
+                    var start = idx + "McpServerTool(Name = \"".Length;
+                    var end = line.IndexOf('"', start);
+                    if (end > start) registry.Add(line[start..end]);
+                }
+            }
+        }
+        TestContext.WriteLine($"Registered MCP tools ({registry.Count}): {string.Join(", ", registry.OrderBy(x => x))}");
+
+        // Walk every SKILL.md (canonical + active drafts), parse
+        // allowed-tools, assert each is registered.
+        var dirsToScan = new[]
+        {
+            Path.Combine(repoRoot, "skills"),
+            Path.Combine(repoRoot, "skills-dev"),
+        };
+        var orphans = new List<string>();
+        foreach (var dir in dirsToScan.Where(Directory.Exists))
+        {
+            // SearchOption.AllDirectories is fine here — _pending-tools/
+            // contents are DRAFT.md, not SKILL.md, so they're skipped.
+            foreach (var skillFile in Directory.EnumerateFiles(dir, "SKILL.md", SearchOption.AllDirectories))
+            {
+                // Skip Claude-Code-only meta-skills whose allowed-tools
+                // resolve via a different MCP server (Demerzel / QA CLI),
+                // not the GA chatbot's MCP registry. Today this is just
+                // qa-architect; if more such skills land, replace this
+                // exception list with a frontmatter flag like
+                // `metadata.chatbot_dispatch: false`.
+                if (Path.GetFileName(Path.GetDirectoryName(skillFile)) == "qa-architect")
+                    continue;
+
+                var content = File.ReadAllText(skillFile);
+                var allowedTools = ExtractAllowedTools(content);
+                foreach (var tool in allowedTools)
+                {
+                    if (!registry.Contains(tool))
+                        orphans.Add($"{Path.GetRelativePath(repoRoot, skillFile)}: '{tool}'");
+                }
+            }
+        }
+
+        Assert.That(orphans, Is.Empty,
+            "Every allowed-tools entry must resolve to a [McpServerTool(Name=...)] " +
+            "registration. If a draft needs a tool that doesn't exist, move it to " +
+            "skills-dev/_pending-tools/<name>/DRAFT.md until the tool ships.\n" +
+            $"Orphans:\n  {string.Join("\n  ", orphans)}");
+    }
+
+    private static IEnumerable<string> ExtractAllowedTools(string skillContent)
+    {
+        // Find `allowed-tools:` block in YAML frontmatter, return list items.
+        var lines = skillContent.Split('\n');
+        var inFrontmatter = lines.Length > 0 && lines[0].TrimEnd() == "---";
+        if (!inFrontmatter) yield break;
+        var inAllowedTools = false;
+        for (var i = 1; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            if (line.TrimEnd() == "---") yield break;
+            if (line.StartsWith("allowed-tools:"))
+            {
+                inAllowedTools = true;
+                continue;
+            }
+            if (inAllowedTools)
+            {
+                if (line.Length > 0 && !char.IsWhiteSpace(line[0]))
+                {
+                    inAllowedTools = false;
+                    continue;
+                }
+                var trimmed = line.TrimStart();
+                if (trimmed.StartsWith("- "))
+                {
+                    var v = trimmed[2..].Trim().Trim('"');
+                    if (v.Length > 0) yield return v;
+                }
+            }
+        }
+    }
+
+    private static string? LocateRepoRoot()
+    {
+        var current = AppContext.BaseDirectory;
+        for (var i = 0; i < 10; i++)
+        {
+            if (File.Exists(Path.Combine(current, "AllProjects.slnx")))
+                return current;
+            var parent = Directory.GetParent(current)?.FullName;
+            if (parent is null || parent == current) break;
+            current = parent;
+        }
+        return null;
     }
 
     /// <summary>
