@@ -160,15 +160,28 @@ jobs:
           -RedirectStandardOutput "gaapi-stdout.log" `
           -RedirectStandardError "gaapi-stderr.log"
         $deadline = $start.AddSeconds(180)
+        # Treat ANY HTTP response (200, 401, 404, etc.) as "server up" —
+        # the goal is liveness, not auth correctness. PR #122 round 2
+        # captured logs proved GaApi was fully responsive but returning
+        # 401 on /api/chatbot/status, so the previous 200-only check
+        # timed out the full 180s on a healthy server. Only true network
+        # errors (connection refused, timeout, DNS) keep polling.
         while ((Get-Date) -lt $deadline) {
           try {
-            $r = Invoke-WebRequest -Uri "http://localhost:5232/api/chatbot/status" -UseBasicParsing -TimeoutSec 2
-            if ($r.StatusCode -eq 200) {
+            $r = Invoke-WebRequest -Uri "http://localhost:5232/api/chatbot/status" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+            $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
+            Write-Host "GaApi up after ${elapsed}s (HTTP $($r.StatusCode))"
+            exit 0
+          } catch {
+            $resp = $_.Exception.Response
+            if ($resp -ne $null) {
+              $code = [int]$resp.StatusCode
               $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
-              Write-Host "GaApi up after ${elapsed}s"
+              Write-Host "GaApi up after ${elapsed}s (HTTP $code, treating non-2xx as live)"
               exit 0
             }
-          } catch { Start-Sleep -Seconds 3 }
+            Start-Sleep -Seconds 3
+          }
         }
         Write-Host "::error::GaApi failed to start within 180s"
         Write-Host "--- gaapi-stdout.log (tail 80) ---"
