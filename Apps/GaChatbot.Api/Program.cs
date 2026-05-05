@@ -36,6 +36,17 @@ if (allowedOrigins.Length > 0)
 
 var app = builder.Build();
 
+// Optional path-base for hosting under a public host's sub-path
+// (e.g. demos.guitaralchemist.com/chatbot via Cloudflare Tunnel ingress
+// `path: ^/chatbot(/.*)?$ -> localhost:5252`). Empty by default so direct
+// localhost:5252/ access continues to work; UsePathBase only strips the
+// prefix when present, so BOTH access modes coexist.
+var pathBase = builder.Configuration["Chatbot:PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
 app.UseExceptionHandler();
 app.UseStaticFiles();
 
@@ -245,13 +256,13 @@ app.MapGet("/", () => Results.Content(
           <h2>Examples</h2>
           <div id="examples" class="examples"></div>
           <div class="links">
-            <a href="/api/chatbot/status">Status JSON</a>
-            <a href="/api/chatbot/examples">Examples JSON</a>
-            <a href="/api">API metadata</a>
+            <a href="api/chatbot/status">Status JSON</a>
+            <a href="api/chatbot/examples">Examples JSON</a>
+            <a href="api">API metadata</a>
           </div>
         </aside>
       </main>
-      <script src="/vendor/vexflow/vexflow.js"></script>
+      <script src="vendor/vexflow/vexflow.js"></script>
       <script>
         const form = document.getElementById('chatForm');
         const input = document.getElementById('messageInput');
@@ -427,7 +438,7 @@ app.MapGet("/", () => Results.Content(
 
         async function refreshStatus() {
           try {
-            const response = await fetch('/api/chatbot/status');
+            const response = await fetch('api/chatbot/status');
             const status = await response.json();
             statusDot.className = `dot ${status.isAvailable ? 'ready' : 'down'}`;
             statusText.textContent = status.message || (status.isAvailable ? 'Available' : 'Unavailable');
@@ -439,7 +450,7 @@ app.MapGet("/", () => Results.Content(
 
         async function loadExamples() {
           try {
-            const response = await fetch('/api/chatbot/examples');
+            const response = await fetch('api/chatbot/examples');
             const items = await response.json();
             examples.replaceChildren(...items.map(text => {
               const button = document.createElement('button');
@@ -490,7 +501,7 @@ app.MapGet("/", () => Results.Content(
           }, CHAT_CLIENT_TIMEOUT_MS);
 
           try {
-            const response = await fetch('/api/chatbot/chat', {
+            const response = await fetch('api/chatbot/chat', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ message, conversationHistory: history }),

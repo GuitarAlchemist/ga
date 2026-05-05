@@ -36,13 +36,17 @@ public class ChatbotApiSurfaceTests
             Assert.That(html, Does.Contain("id=\"messageInput\""));
             Assert.That(html, Does.Contain("id=\"sendButton\""));
             Assert.That(html, Does.Contain("Agentic trace"));
-            Assert.That(html, Does.Contain("/vendor/vexflow/vexflow.js"));
+            // URLs in the inline HTML are RELATIVE (no leading slash) so the
+            // page works when mounted under a path-base (e.g.
+            // demos.guitaralchemist.com/chatbot/) via Cloudflare Tunnel
+            // ingress. Match the path component without anchoring on /.
+            Assert.That(html, Does.Contain("vendor/vexflow/vexflow.js"));
             Assert.That(html, Does.Contain("renderTabNotation"));
             Assert.That(html, Does.Contain("parseTabPositions"));
             Assert.That(html, Does.Contain("```(?:vextab|vexflow|tab)"));
-            Assert.That(html, Does.Contain("/api/chatbot/status"));
-            Assert.That(html, Does.Contain("/api/chatbot/examples"));
-            Assert.That(html, Does.Contain("/api/chatbot/chat"));
+            Assert.That(html, Does.Contain("api/chatbot/status"));
+            Assert.That(html, Does.Contain("api/chatbot/examples"));
+            Assert.That(html, Does.Contain("api/chatbot/chat"));
         });
     }
 
