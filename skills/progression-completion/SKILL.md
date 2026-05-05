@@ -60,7 +60,7 @@ Every suggestion you make must be one of these four cadence types:
 | **Deceptive** | V → vi (instead of V → I) | Surprises the ear by avoiding tonic; useful when you want to extend. |
 | **Plagal** | IV → I | Soft, "amen" cadence; less assertive than authentic. |
 
-In a minor key, substitute as needed (V is often borrowed from the parallel major to get a leading tone — `V7` is fine even when only `v` appears in the natural-minor diatonic set).
+In a minor key, substitute as needed (`V` is conventionally drawn from harmonic minor — the raised 7th degree gives a leading tone — so `V7` is the standard cadential dominant even when only `v` appears in the natural-minor diatonic set).
 
 ## How to phrase suggestions
 

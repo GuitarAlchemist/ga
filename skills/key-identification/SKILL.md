@@ -79,7 +79,7 @@ These are hard constraints. Do NOT compute these from this catalog alone.
 
 - **Modal analysis** — modes (Dorian, Phrygian, etc.) are out of scope. The tool only ranks major/minor keys. If the user asks about modal context, defer.
 - **Chord-quality details beyond major/minor/7ths** — the tool's diatonic match doesn't distinguish a `Cmaj7` from a `C` for the purposes of key fitting.
-- **Recommend chords to ADD to the progression** — the tool detects a key from existing chords; it does not suggest continuations. For "what comes next?" defer to the progression-completion skill (when implemented).
+- **Recommend chords to ADD to the progression** — the tool detects a key from existing chords; it does not suggest continuations. For "what comes next?" defer to the `progression-completion` skill.
 
 ## Cross-reference
 

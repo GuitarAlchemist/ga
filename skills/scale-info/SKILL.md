@@ -2,17 +2,23 @@
 name: "scale-info"
 description: "Returns the seven notes of a major or minor key plus its key signature and relative key. Calls the deterministic `ga_scale_get_notes` MCP tool — never recall an answer from training data."
 triggers:
-  - "notes in"
-  - "notes are in"
-  - "notes of"
-  - "scale of"
+  # Tightened 2026-05-05 (skill-audit) to remove overlap with key-identification
+  # ("what key" / "key of") and chord-info ("notes in" / "notes of"). Each trigger
+  # below requires either a "scale" / "key signature" anchor OR a major/minor
+  # quality token, so user prompts that should route to chord-info or
+  # key-identification don't get pulled here.
   - "scale notes"
+  - "scale of"
+  - "notes in the key"
+  - "notes in c major"
+  - "notes in c minor"
+  - "notes in a major"
+  - "notes in a minor"
+  - "notes of the key"
   - "what is c major"
   - "what is c minor"
-  - "show me the"
-  - "list the notes"
-  - "key of"
-  - "what key"
+  - "key signature of"
+  - "list the notes of"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"
@@ -62,9 +68,9 @@ If `Error` is non-null, surface the message verbatim and ask the user to clarify
 
 ## When to ask for clarification
 
-- User names a chord rather than a key: *"what notes are in a C major chord"* → that's a chord-intervals question; defer to the chord-info skill (when implemented). Do NOT call `ga_scale_get_notes`.
-- User asks about modes (Dorian, Phrygian, etc.) other than major / minor — the tool only supports major and minor. Decline cleanly: *"This tool returns only major and minor scales; for modes I'd need different tooling."*
-- User asks for a scale other than the diatonic 7-note one (whole-tone, blues, pentatonic, harmonic minor): same — decline rather than fabricating notes.
+- User names a chord rather than a key: *"what notes are in a C major chord"* → that's a chord-intervals question; defer to the `chord-info` skill. Do NOT call `ga_scale_get_notes`.
+- User asks about modes (Dorian, Phrygian, etc.) other than major / minor — defer to the `modes` skill, which lists the seven major-scale modes with their degree formulas. `ga_scale_get_notes` itself only returns major or minor.
+- User asks for a scale other than the diatonic 7-note one (whole-tone, blues, pentatonic, harmonic minor): decline rather than fabricating notes.
 
 ## Out of scope
 
