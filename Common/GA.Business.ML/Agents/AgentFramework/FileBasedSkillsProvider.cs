@@ -4,6 +4,7 @@ using System.Text;
 using GA.Business.ML.Skills;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using SystemThreadingTimer = System.Threading.Timer;
 
 /// <summary>
 /// Microsoft Agent Framework <see cref="AIContextProvider"/> backed by a
@@ -35,30 +36,146 @@ using Microsoft.Extensions.AI;
 /// retire this type. The skill directory layout is the same, so SKILL.md files
 /// migrate without change. See Phase 2 of the migration recommendation.</para>
 /// </remarks>
-public sealed class FileBasedSkillsProvider : AIContextProvider
+public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
 {
-    private readonly IReadOnlyList<SkillMd> _skills;
+    /// <summary>
+    /// Debounce window for the FileSystemWatcher. Most editors save by writing
+    /// a temp file, deleting the original, then renaming — three events fire
+    /// in quick succession for one logical save. 200 ms collapses those into
+    /// a single reload while staying well under the human "I edited, try
+    /// again" reaction time.
+    /// </summary>
+    private static readonly TimeSpan ReloadDebounce = TimeSpan.FromMilliseconds(200);
+
+    private readonly string _skillsDirectory;
+    private readonly Action<string> _logWarning;
+    private readonly object _reloadLock = new();
+    private readonly FileSystemWatcher? _watcher;
+    private readonly SystemThreadingTimer? _debounceTimer;
+    private IReadOnlyList<SkillMd> _skills;
+    private int _reloadCount;
+    private volatile bool _disposed;
 
     /// <summary>
     /// Construct a provider over <paramref name="skillsDirectory"/>. Missing
     /// directory yields an empty provider (agent runs without skill context).
+    /// File-system watching is enabled by default — edits to SKILL.md files
+    /// under the directory trigger an automatic reload so authors see their
+    /// changes without restarting the host.
     /// </summary>
     public FileBasedSkillsProvider(string skillsDirectory)
+        : this(skillsDirectory, watchForChanges: true)
+    {
+    }
+
+    /// <summary>
+    /// Test/production-control overload. Pass <c>watchForChanges: false</c>
+    /// to disable the FileSystemWatcher (e.g. in unit tests that drive
+    /// reload deterministically via <see cref="Reload"/>, or in a
+    /// production deployment that wants one-shot startup loading).
+    /// </summary>
+    public FileBasedSkillsProvider(string skillsDirectory, bool watchForChanges)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(skillsDirectory);
 
-        _skills = Directory.Exists(skillsDirectory)
-            ? SkillMdLoader.LoadFromDirectory(
-                skillsDirectory,
-                // Surface dropped-trigger warnings so a SKILL.md whose triggers all
-                // got filtered (e.g. all under MinTriggerLength) doesn't silently
-                // disappear from registration.
-                msg => System.Diagnostics.Debug.WriteLine(msg))
-            : [];
+        _skillsDirectory = skillsDirectory;
+        _logWarning = msg => System.Diagnostics.Debug.WriteLine(msg);
+        _skills = LoadSkillsCore();
+
+        if (!watchForChanges || !Directory.Exists(skillsDirectory))
+            return;
+
+        _debounceTimer = new SystemThreadingTimer(
+            _ => Reload(),
+            state: null,
+            dueTime: Timeout.Infinite,
+            period: Timeout.Infinite);
+
+        _watcher = new FileSystemWatcher(skillsDirectory)
+        {
+            Filter = "SKILL.md",
+            IncludeSubdirectories = true,
+            // LastWrite covers in-place edits; FileName covers create / delete /
+            // rename (which most editors emit during save).
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+            EnableRaisingEvents = true,
+        };
+        _watcher.Changed += OnSkillFileEvent;
+        _watcher.Created += OnSkillFileEvent;
+        _watcher.Deleted += OnSkillFileEvent;
+        _watcher.Renamed += OnSkillFileEvent;
     }
 
     /// <summary>Loaded skills, in directory enumeration order.</summary>
     public IReadOnlyList<SkillMd> Skills => _skills;
+
+    /// <summary>
+    /// Number of times <see cref="Reload"/> has executed since construction.
+    /// Exposed so callers (and tests) can confirm a watcher event actually
+    /// triggered a reload, not just fired without effect.
+    /// </summary>
+    public int ReloadCount => _reloadCount;
+
+    /// <summary>
+    /// Re-reads SKILL.md files from disk and atomically swaps the cached
+    /// skill set. Safe to call concurrently; the latest call wins. Used by
+    /// the FileSystemWatcher in production and called directly from tests
+    /// to assert reload semantics deterministically.
+    /// </summary>
+    public void Reload()
+    {
+        if (_disposed) return;
+
+        IReadOnlyList<SkillMd> next;
+        try
+        {
+            next = LoadSkillsCore();
+        }
+        catch (Exception ex)
+        {
+            // A malformed SKILL.md mid-save shouldn't crash the host. Log,
+            // keep the previous skill set, and let the next watcher event
+            // (the editor's final write) trigger another attempt.
+            _logWarning($"[FileBasedSkillsProvider] Reload failed: {ex.GetType().Name}: {ex.Message}");
+            return;
+        }
+
+        lock (_reloadLock)
+        {
+            _skills = next;
+            Interlocked.Increment(ref _reloadCount);
+        }
+    }
+
+    private IReadOnlyList<SkillMd> LoadSkillsCore() =>
+        Directory.Exists(_skillsDirectory)
+            ? SkillMdLoader.LoadFromDirectory(_skillsDirectory, _logWarning)
+            : [];
+
+    private void OnSkillFileEvent(object sender, FileSystemEventArgs e)
+    {
+        if (_disposed) return;
+        // Debounce: editors save in 2-3 events; we only want one reload per
+        // logical save. Restart the timer; if no further events arrive in
+        // the window, the timer fires and reload runs.
+        _debounceTimer?.Change(ReloadDebounce, Timeout.InfiniteTimeSpan);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (_watcher is not null)
+        {
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Changed -= OnSkillFileEvent;
+            _watcher.Created -= OnSkillFileEvent;
+            _watcher.Deleted -= OnSkillFileEvent;
+            _watcher.Renamed -= OnSkillFileEvent;
+            _watcher.Dispose();
+        }
+        _debounceTimer?.Dispose();
+    }
 
     /// <summary>
     /// Provide additional <see cref="AIContext"/> for the current invocation.

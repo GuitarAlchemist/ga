@@ -116,9 +116,13 @@ two Claude-side fields (`user-invocable`, `allowed-tools`) GA skips.
 
 ## Limitations / known gaps
 
-- **No live-reload on the GA side**: `SkillMdLoader` reads files at chatbot
-  startup. Edits require a `GaChatbot.Api` restart to take effect. Tracking:
-  no issue filed yet — would land as a `SkillMdReloadService` watcher.
+- **Live-reload is now supported via `FileBasedSkillsProvider`**: edits to
+  any `SKILL.md` under the watched directory trigger an automatic reload
+  within ~200 ms (debounced to collapse multi-event editor saves into a
+  single reload). Disable with `new FileBasedSkillsProvider(dir,
+  watchForChanges: false)` for one-shot startup behaviour. Other code
+  paths that consume skills (e.g. `SkillMdPlugin`) still load once at
+  startup; broaden if iteration speed matters for those paths.
 - **No bidirectional discoverability**: Claude Code can invoke the GA chatbot
   via the `mcp__plugin_ga_ga-dsl__ask_chatbot` MCP tool, but each individual
   skill is **not** surfaced as its own tool/slash command. A future bridge
