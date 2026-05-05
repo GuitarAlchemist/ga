@@ -1,0 +1,337 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"name":"csharp","languageName":"C#","aliases":["c#"]},{"name":"fsharp","languageName":"F#","aliases":["f#"]},{"name":"pwsh","languageName":"pwsh","aliases":["powershell"]},{"name":"markdown","languageName":"markdown"},{"name":"value","languageName":"value"}]}}
+
+#!markdown
+
+# OPTIC-K SAE — Phase 3 feature-labeling notebook
+
+**When to use:** week of 2026-06-02, after a Phase 1 production SAE run lands at `state/quality/optick-sae/<date>/`.
+
+**Goal:** label ≥ 50% of `high_frequency_count` features with a `manual_label` so the corpus has interpretive ground truth.
+
+**Done when:**
+- ≥ 50% of high-frequency features have a non-null `manual_label` in `feature_manifest.jsonl`
+- Surprising findings logged in `docs/learnings/`
+
+**Contract:** [optick-sae-artifact.contract.md](../../docs/contracts/2026-05-02-optick-sae-artifact.contract.md). The label write-back is *out-of-band* per the contract — adding `manual_label` to manifest entries does not break consumers because they don't read it. Don't change anything else.
+
+**Plan:** [2026-05-02-arch-optick-sae-plan.md](../../docs/plans/2026-05-02-arch-optick-sae-plan.md) — Phase 3 section.
+
+> Scaffolded 2026-05-04. Run order: top to bottom. Each cell is idempotent except the labeling loop, which appends a `manual_label` field to the manifest JSONL.
+
+#!markdown
+
+## 1. Project references + dependencies
+
+`Parquet.Net` reads the column-store activation file. The project refs give us `OptickIndexReader` so we can map activation rows back to renderable voicings.
+
+#!csharp
+
+#r "nuget:Parquet.Net, 5.0.2"
+#r "project:../../Common/GA.Core/GA.Core.csproj"
+#r "project:../../Common/GA.Domain.Core/GA.Domain.Core.csproj"
+#r "project:../../Common/GA.Business.Core/GA.Business.Core.csproj"
+#r "project:../../Common/GA.Business.ML/GA.Business.ML.csproj"
+#r "project:../../Common/GA.InteractiveExtension/GA.InteractiveExtension.csproj"
+
+using System.IO;
+using System.Text.Json;
+using GA.Business.ML.Search;
+using GA.Business.ML.Embeddings;
+using GA.InteractiveExtension.ExtensionMethods;
+using GA.InteractiveExtension.KernelExtensions;
+using Parquet;
+using Parquet.Schema;
+
+await kernel.UseGaAsync();
+"refs loaded"
+
+#!markdown
+
+## 2. Locate the latest SAE artifact
+
+Walks `state/quality/optick-sae/` for canonical (non-`-local`) directories with an artifact JSON, picks the newest by `trained_at`. The `-local` directories are per-developer experiments and are excluded — same rule the drift consumer enforces in [QaTools.ScoreQualityDriftAt](../../Apps/GaQaMcp/Tools/QaTools.cs).
+
+#!csharp
+
+// Walks two levels up from the notebook to reach the repo root.
+var repoRoot = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "..", ".."));
+var saeRoot = Path.Combine(repoRoot, "state", "quality", "optick-sae");
+
+if (!Directory.Exists(saeRoot))
+    throw new DirectoryNotFoundException($"No SAE root at {saeRoot}. Run Phase 1 first.");
+
+var canonicalDirs = Directory.EnumerateDirectories(saeRoot)
+    .Where(d => !Path.GetFileName(d)!.EndsWith("-local"))
+    .Select(d => new { Dir = d, Artifact = Path.Combine(d, "optick-sae-artifact.json") })
+    .Where(x => File.Exists(x.Artifact))
+    .ToList();
+
+if (canonicalDirs.Count == 0)
+    throw new InvalidOperationException(
+        "No canonical SAE artifacts found. The Phase 1 trainer writes to <date>-local/; " +
+        "run Scripts/optick_sae_postprocess.py to promote to <date>/ before labeling.");
+
+var latest = canonicalDirs
+    .Select(x => new { x.Dir, x.Artifact, Doc = JsonDocument.Parse(File.ReadAllText(x.Artifact)) })
+    .OrderByDescending(x => x.Doc.RootElement.GetProperty("trained_at").GetString())
+    .First();
+
+var artifactJson = latest.Doc.RootElement;
+var artifactId   = artifactJson.GetProperty("artifact_id").GetString()!;
+var trainedAt    = artifactJson.GetProperty("trained_at").GetString()!;
+var dictSize     = artifactJson.GetProperty("model").GetProperty("dict_size").GetInt32();
+var highFreqGoal = artifactJson.GetProperty("features_summary").GetProperty("high_frequency_count").GetInt32();
+
+Console.WriteLine($"artifact:        {artifactId}");
+Console.WriteLine($"trained_at:      {trainedAt}");
+Console.WriteLine($"dict_size:       {dictSize}");
+Console.WriteLine($"high-freq goal:  {highFreqGoal} features (label >= 50% = {highFreqGoal / 2})");
+Console.WriteLine($"working dir:     {latest.Dir}");
+
+var workDir          = latest.Dir;
+var manifestPath     = Path.Combine(workDir, "feature_manifest.jsonl");
+var activationsPath  = Path.Combine(workDir, "feature_activations.parquet");
+
+#!markdown
+
+## 3. Load the feature manifest
+
+One JSONL line per feature: `feature_idx`, `is_alive` / `is_alive_proxy`, `decoder_norm`, plus the optional `manual_label` we'll be appending. Parsed leniently — older runs may not have all fields.
+
+#!csharp
+
+public sealed record FeatureEntry(
+    int FeatureIdx,
+    bool IsAlive,
+    double DecoderNorm,
+    int? ActivationCount,
+    string? ManualLabel,
+    Dictionary<string, JsonElement> Extra);
+
+static FeatureEntry ParseManifestLine(string line)
+{
+    using var doc = JsonDocument.Parse(line);
+    var r = doc.RootElement;
+
+    var idx        = r.GetProperty("feature_idx").GetInt32();
+    var isAliveRaw =
+        r.TryGetProperty("is_alive", out var a)        ? a.GetBoolean() :
+        r.TryGetProperty("is_alive_proxy", out var ap) && ap.GetBoolean();
+    var norm       = r.TryGetProperty("decoder_norm", out var n) ? n.GetDouble() : 0.0;
+    var actCount   = r.TryGetProperty("activation_count", out var c) ? c.GetInt32() : (int?)null;
+    var label      = r.TryGetProperty("manual_label", out var l) && l.ValueKind == JsonValueKind.String
+                       ? l.GetString() : null;
+
+    var known = new HashSet<string> { "feature_idx", "is_alive", "is_alive_proxy", "decoder_norm", "activation_count", "manual_label" };
+    var extra = new Dictionary<string, JsonElement>();
+    foreach (var p in r.EnumerateObject())
+        if (!known.Contains(p.Name)) extra[p.Name] = p.Value.Clone();
+
+    return new FeatureEntry(idx, isAliveRaw, norm, actCount, label, extra);
+}
+
+var manifest = File.ReadAllLines(manifestPath)
+    .Where(l => !string.IsNullOrWhiteSpace(l))
+    .Select(ParseManifestLine)
+    .ToDictionary(f => f.FeatureIdx);
+
+var labeled  = manifest.Values.Count(f => f.ManualLabel is not null);
+var alive    = manifest.Values.Count(f => f.IsAlive);
+
+Console.WriteLine($"manifest entries:  {manifest.Count}");
+Console.WriteLine($"alive features:    {alive}");
+Console.WriteLine($"already labeled:   {labeled} ({(double)labeled / Math.Max(highFreqGoal, 1):P1} of high-freq goal)");
+
+#!markdown
+
+## 4. Load activations
+
+`feature_activations.parquet` has one row per voicing in the training corpus, one column per dictionary feature (`f0`, `f1`, …). For labeling we only need the columns of features we're actively inspecting — load on demand, not all at once.
+
+#!csharp
+
+public static class ActivationsLoader
+{
+    public static async Task<float[]> LoadColumnAsync(string parquetPath, int featureIdx)
+    {
+        await using var stream = File.OpenRead(parquetPath);
+        using var reader = await ParquetReader.CreateAsync(stream);
+
+        var colName = $"f{featureIdx}";
+        var schema = reader.Schema;
+        var field = schema.DataFields.FirstOrDefault(f => f.Name == colName)
+            ?? throw new InvalidOperationException($"column {colName} not in parquet");
+
+        var totalRows = (int)reader.Metadata!.NumRows;
+        var values = new float[totalRows];
+        var written = 0;
+
+        for (var rg = 0; rg < reader.RowGroupCount; rg++)
+        {
+            using var rgReader = reader.OpenRowGroupReader(rg);
+            var col = await rgReader.ReadColumnAsync(field);
+            var data = (float[])col.Data;
+            data.CopyTo(values, written);
+            written += data.Length;
+        }
+
+        return values;
+    }
+}
+
+"loader ready"
+
+#!markdown
+
+## 5. Map row index → renderable voicing
+
+The activation parquet's row order matches the OPTIC-K index's voicing order. `OptickIndexReader.GetMetadata(i)` returns the voicing at row `i`.
+
+> ⚠️ The OPTIC-K index is ~175 MB and gitignored. If you don't have it locally, `OptickIndexReader` will throw — that's expected. Skip Phase 3 work until you've copied the index from a machine that does (or rebuild it via the GA RAG pipeline).
+
+#!csharp
+
+// Cached per session — opening the index allocates ~660 MB of mapped memory.
+OptickIndexReader? _indexReader = null;
+
+OptickIndexReader OpenIndex()
+{
+    if (_indexReader is not null) return _indexReader;
+
+    var indexPath = Path.Combine(repoRoot, "state", "voicings", "optick.index");
+    if (!File.Exists(indexPath))
+        throw new FileNotFoundException(
+            $"OPTIC-K index missing at {indexPath}. Phase 3 needs the local index to render voicings. " +
+            "Either copy from a machine that has it, or build via Apps/ga-server.");
+
+    _indexReader = new OptickIndexReader(indexPath);
+    Console.WriteLine($"opened index: {_indexReader.Count} voicings");
+    return _indexReader;
+}
+
+"index opener ready"
+
+#!markdown
+
+## 6. Inspect a feature
+
+Pick a feature index, load its activation column, find the top-K voicings, render. The "top" is by raw activation magnitude — features with sparse activations show their character clearly when you compare the top 20 to the bottom 20 (active vs inactive).
+
+#!csharp
+
+public sealed record TopVoicing(long RowIndex, float Activation, OptickMetadata Metadata);
+
+async Task<List<TopVoicing>> InspectFeatureAsync(int featureIdx, int topK = 20)
+{
+    var reader = OpenIndex();
+    var col = await ActivationsLoader.LoadColumnAsync(activationsPath, featureIdx);
+
+    if (col.Length != reader.Count)
+        Console.WriteLine($"WARN: parquet rows ({col.Length}) != index count ({reader.Count}). " +
+                          "Likely the SAE was trained on a corpus subset; row mapping may be off.");
+
+    var top = col
+        .Select((value, idx) => (value, idx))
+        .OrderByDescending(x => x.value)
+        .Take(topK)
+        .Select(x => new TopVoicing(x.idx, x.value, reader.GetMetadata(x.idx)))
+        .ToList();
+
+    return top;
+}
+
+"inspector ready — call: var top = await InspectFeatureAsync(featureIdx: 0)"
+
+#!csharp
+
+// Example — pick a feature to walk. Re-run this cell with different feature_idx to label.
+var feature_idx = 0;
+
+var top = await InspectFeatureAsync(feature_idx, topK: 20);
+top.DisplayTable();
+
+#!markdown
+
+## 7. Record a manual label
+
+Read 5–20 of the top-activating voicings, decide what musical concept the feature captures, write it back. Examples: `"dominant 7 voicing"`, `"open-position major triad"`, `"jazz comping shape (drop-2)"`, `"unknown — no clear pattern"`.
+
+> **Append-only**. Don't edit existing labels in this notebook — fix manually if needed. The write preserves the original line ordering and only mutates the targeted feature's line.
+
+#!csharp
+
+void SetLabel(int featureIdx, string label)
+{
+    if (!manifest.ContainsKey(featureIdx))
+        throw new InvalidOperationException($"feature {featureIdx} not in manifest");
+
+    var lines = File.ReadAllLines(manifestPath);
+    for (var i = 0; i < lines.Length; i++)
+    {
+        if (string.IsNullOrWhiteSpace(lines[i])) continue;
+        using var doc = JsonDocument.Parse(lines[i]);
+        if (doc.RootElement.GetProperty("feature_idx").GetInt32() != featureIdx) continue;
+
+        // Rebuild the line with manual_label appended (or replaced).
+        using var ms = new MemoryStream();
+        using (var w = new Utf8JsonWriter(ms))
+        {
+            w.WriteStartObject();
+            foreach (var p in doc.RootElement.EnumerateObject())
+            {
+                if (p.Name == "manual_label") continue;
+                p.WriteTo(w);
+            }
+            w.WriteString("manual_label", label);
+            w.WriteEndObject();
+        }
+        lines[i] = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+
+        File.WriteAllLines(manifestPath, lines);
+        manifest[featureIdx] = manifest[featureIdx] with { ManualLabel = label };
+        Console.WriteLine($"feature {featureIdx} ← \"{label}\"");
+        return;
+    }
+
+    throw new InvalidOperationException($"feature {featureIdx} not found in manifest file");
+}
+
+"SetLabel(featureIdx, label) ready"
+
+#!csharp
+
+// Uncomment after deciding on a label for the feature you just inspected:
+// SetLabel(feature_idx, "TODO — describe the musical concept this feature captures");
+
+#!markdown
+
+## 8. Progress tracker
+
+Re-run after a labeling burst to see how close to the 50% target you are.
+
+#!csharp
+
+manifest = File.ReadAllLines(manifestPath)
+    .Where(l => !string.IsNullOrWhiteSpace(l))
+    .Select(ParseManifestLine)
+    .ToDictionary(f => f.FeatureIdx);
+
+var newlyLabeled = manifest.Values.Count(f => f.ManualLabel is not null);
+var goal         = highFreqGoal / 2;
+var pct          = (double)newlyLabeled / Math.Max(highFreqGoal, 1);
+
+Console.WriteLine($"labeled:  {newlyLabeled} / {highFreqGoal} high-freq features ({pct:P1})");
+Console.WriteLine($"goal:     {goal} features (≥ 50%)");
+Console.WriteLine(newlyLabeled >= goal
+    ? "DONE — log surprising findings to docs/learnings/ and close out Phase 3."
+    : $"REMAINING: {goal - newlyLabeled} more features to label.");
+
+#!markdown
+
+## Notes for the labeler
+
+- **Don't force a label.** `"unknown — no clear pattern"` is a valid label and counts toward the 50% goal. Phase 3's null result (the partition design is already monosemantic; SAE finds no extra structure) is itself a valid finding.
+- **Look for cross-partition features.** If a feature's top-20 voicings all share a chord-set (STRUCTURE) AND a tag (SYMBOLIC), that's musically interesting — STRUCTURE/SYMBOLIC partition leakage means the schema may be missing a real correlation.
+- **Log surprises.** Anything you didn't expect goes to `docs/learnings/YYYY-MM-DD-optick-sae-feature-<short>.md` so the next iteration can pick it up.
