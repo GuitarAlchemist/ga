@@ -55,3 +55,13 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 - Pre-commit hook (`pwsh Scripts/install-git-hooks.ps1`) enforces `dotnet format` and build.
 
 For detailed C#/F#/Frontend standards, consult `.agent/skills/` (auto-discovered by Claude Code). For governance, use `demerzel-*` skills.
+
+## Cross-repo contracts
+
+GA collaborates with sibling repos via JSON-on-disk contracts (the canonical handoff pattern across the GuitarAlchemist ecosystem). Sibling clones are typically peers under the same parent directory:
+
+- **ix** (`../ix/`, Rust ML algorithms): produces `state/voicings/optick.index` consumed by GA's RAG layer; produces SAE artifacts at `state/quality/optick-sae/<date>/optick-sae-artifact.json` per `docs/contracts/2026-05-02-optick-sae-artifact.contract.md` (schema: `docs/contracts/optick-sae-artifact.schema.json`).
+- **Demerzel** (`../Demerzel/`, governance + IXQL): orchestrates the QA Architect tribunal per `docs/contracts/2026-05-02-qa-verdict.contract.md` (schema: `docs/contracts/qa-verdict.schema.json`); pipelines under `Demerzel/pipelines/*.ixql`.
+- **tars** (`../tars/`, F# grammar + metacognition): cross-model theory validator.
+
+Locked-field changes need cross-repo coordination. The `links.supersedes` pattern in `optick-sae-artifact` is how to introduce a non-breaking baseline shift without freezing the schema. Contracts marked v0.1.x in their headers are still drafts — only freeze at the explicitly named Phase 4 milestone of their respective plans.
