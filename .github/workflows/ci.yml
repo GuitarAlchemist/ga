@@ -55,19 +55,30 @@ jobs:
     name: Backend Tests
     runs-on: windows-latest
     needs: build
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        
+
+    # The build job uploads `**/bin/Release/**` so test jobs can run with
+    # --no-build instead of recompiling. Without this download, dotnet test
+    # fails immediately with "test source file ... was not found" for every
+    # *.Tests.dll. The artifact restores into the workspace at the same
+    # relative paths it was uploaded from, so dotnet test finds the DLLs
+    # at their expected `Tests/.../bin/Release/net10.0/` locations.
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
     - name: Restore dependencies
       run: dotnet restore AllProjects.slnx
-      
+
     - name: Run backend tests
       run: |
         dotnet test AllProjects.slnx `
@@ -101,27 +112,71 @@ jobs:
     name: Playwright Tests
     runs-on: windows-latest
     needs: build
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
     - name: Restore dependencies
       run: dotnet restore AllProjects.slnx
-      
+
     - name: Build Playwright tests
       run: dotnet build Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj --configuration Release
-      
+
     - name: Install Playwright browsers
       run: |
         cd Tests/GuitarAlchemistChatbot.Tests.Playwright
         pwsh bin/Release/net10.0/playwright.ps1 install --with-deps
-      
+
+    # Start GaApi in the background so Playwright tests have something to
+    # connect to on http://localhost:5232 (the http profile in
+    # Apps/ga-server/GaApi/Properties/launchSettings.json). Without this,
+    # tests fail with `ECONNREFUSED ::1:5232`. The 180s deadline matches
+    # observed startup: the API loads voicing/embedding binary caches,
+    # Yarp config, and the governance watcher before accepting requests
+    # (PR #122 first run reached cache-loading at ~30s, hadn't reached
+    # /api/chatbot/status by 60s).
+    - name: Start GaApi (background)
+      shell: pwsh
+      run: |
+        $apiDll = "Apps/ga-server/GaApi/bin/Release/net10.0/GaApi.dll"
+        if (-not (Test-Path $apiDll)) {
+          throw "GaApi.dll not found at $apiDll — build artifacts may not have downloaded correctly"
+        }
+        $env:ASPNETCORE_URLS = "http://localhost:5232"
+        $env:ASPNETCORE_ENVIRONMENT = "CI"
+        $start = Get-Date
+        Start-Process -NoNewWindow -FilePath "dotnet" -ArgumentList $apiDll `
+          -RedirectStandardOutput "gaapi-stdout.log" `
+          -RedirectStandardError "gaapi-stderr.log"
+        $deadline = $start.AddSeconds(180)
+        while ((Get-Date) -lt $deadline) {
+          try {
+            $r = Invoke-WebRequest -Uri "http://localhost:5232/api/chatbot/status" -UseBasicParsing -TimeoutSec 2
+            if ($r.StatusCode -eq 200) {
+              $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
+              Write-Host "GaApi up after ${elapsed}s"
+              exit 0
+            }
+          } catch { Start-Sleep -Seconds 3 }
+        }
+        Write-Host "::error::GaApi failed to start within 180s"
+        Write-Host "--- gaapi-stdout.log (tail 80) ---"
+        if (Test-Path gaapi-stdout.log) { Get-Content gaapi-stdout.log -Tail 80 }
+        Write-Host "--- gaapi-stderr.log (tail 80) ---"
+        if (Test-Path gaapi-stderr.log) { Get-Content gaapi-stderr.log -Tail 80 }
+        exit 1
+
     - name: Run Playwright tests
       run: |
         dotnet test Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj `
@@ -129,6 +184,17 @@ jobs:
           --no-build `
           --logger "trx;LogFileName=playwright-results.trx" `
           --logger "console;verbosity=normal"
+
+    - name: Upload GaApi logs (always)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: gaapi-logs
+        path: |
+          gaapi-stdout.log
+          gaapi-stderr.log
+        if-no-files-found: ignore
+        retention-days: 7
       
     - name: Upload Playwright test results
       uses: actions/upload-artifact@v4
