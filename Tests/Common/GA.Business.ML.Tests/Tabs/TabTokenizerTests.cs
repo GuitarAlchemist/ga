@@ -136,48 +136,38 @@ E|--10---|
     }
 
     [TestCase("Are 0146 and 0137 z-related?",
-        Description = "Pitch-class-set notation in algebra queries — matches via bare-digit path")]
+        Description = "Pitch-class-set notation in algebra queries")]
     [TestCase("Explain 12-bar blues form",
-        Description = "Common theory question — '12-b' matches digit+dash+b at length 4")]
+        Description = "Common theory question — '12-b' is digit+dash+b without a pipe")]
     [TestCase("Released --12-04-- last week.",
-        Description = "Dates / version strings with hyphens trip the same regex")]
-    public void Tokenize_BareDigitProseInputs_KnownLimitation(string input)
+        Description = "Hyphenated dates / version strings without pipes")]
+    public void Tokenize_BareDigitProseInputs_NoLongerProduceNoteSlices(string input)
     {
-        // KNOWN LIMITATION (documented, not a bug to silently regress):
-        // The TabLineRegex `([A-Ga-g]?[#b]?\|?|\|)[-0-9|hbp/\\svx~]+` allows
-        // every part of group 1 to be optional, so a bare digit run matches.
-        // Pitch-class-set notation like "0146", "12-bar form", and hyphenated
-        // dates therefore all tokenize as if they were single-string tab.
-        // Real fix is to require either a string-name letter OR a literal
-        // pipe in group 1; doing so without breaking real tabs that lack
-        // string-name prefixes (the
-        // Tokenize_AnonymousRowTabWithoutStringNamePrefix_ProducesNoteSlices
-        // positive control) requires care, so this is parked.
+        // FIXED: previously a "known limitation" — the original
+        // TabLineRegex `([A-Ga-g]?[#b]?\|?|\|)[-0-9|hbp/\\svx~]+` allowed
+        // every part of group 1 to be optional, so bare digit runs matched
+        // and pitch-class-set notation, "12-bar form" prose, and hyphenated
+        // dates all tokenized as if they were single-string tab. The
+        // upstream production misroute on /chatbot/ surfaced this regularly
+        // for theory questions.
         //
-        // Upstream guard: any orchestrator that gates on
-        // `Tokenize(message).Any(b => b.Slices.Any(s => s.Notes.Any()))`
-        // will treat these prompts as tab. Those orchestrators must either
-        // consult a complementary signal (algebra-intent classifier, or a
-        // refined tokenizer that requires multi-string blocks) OR reject
-        // single-block, single-slice tokenizations as ambiguous prose.
+        // Fix: a `(?=[-0-9|hbp/\\svx~]*\|)` lookahead now requires the
+        // matched run to contain at least one literal pipe — the inherent
+        // bar-line marker of tab notation. Real tabs (with or without
+        // string-name prefix) carry pipes; these prose inputs do not.
         //
-        // Test design rationale (per PR #110 review): we *document* current
-        // behaviour with TestContext.WriteLine + Assert.Pass rather than
-        // pinning Is.True. A future regex tightening can remove these cases
-        // when they start returning Is.False; but unrelated ProcessBlock
-        // refactors that incidentally drop single-slice blocks won't
-        // produce a misleading "regression" failure here.
+        // The existing anonymous-row positive control
+        // (Tokenize_AnonymousRowTabWithoutStringNamePrefix_ProducesNoteSlices)
+        // still passes because that case ends each line with `|`. If
+        // someone authors anonymous-row tab WITHOUT pipes, the tokenizer
+        // will now correctly reject it — that's a degenerate format that
+        // was producing false positives anyway.
         var blocks = _tokenizer.Tokenize(input);
         var hasNotes = blocks.Any(b => b.Slices.Any(s => s.Notes.Count > 0));
 
-        TestContext.WriteLine(
-            $"Input: {input}\n" +
-            $"  blocks={blocks.Count}, hasNotes={hasNotes} (current behaviour)");
-        Assert.Pass(
-            $"Documented limitation; current behaviour: hasNotes={hasNotes}. " +
-            "When the tokenizer is tightened to reject bare-digit prose, " +
-            "convert this to Assert.That(hasNotes, Is.False) and remove the " +
-            "inputs that no longer trigger the bug.");
+        Assert.That(hasNotes, Is.False,
+            $"Bare-digit prose must NOT tokenize as tab. Input: {input} → " +
+            $"blocks={blocks.Count}, hasNotes={hasNotes}");
     }
 
     [TestCase("Use a G chord then an A chord, then back to G.",
