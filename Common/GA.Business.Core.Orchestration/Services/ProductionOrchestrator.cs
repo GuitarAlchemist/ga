@@ -35,10 +35,36 @@ public class ProductionOrchestrator(
     ConversationHistoryStore historyStore,
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
+    TabTokenizer tabTokenizer,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
     private readonly IReadOnlyList<IChatHook>          _hooks  = chatHooks.ToList();
+
+    /// <summary>
+    /// Cheap pre-check: does the message actually contain tab notation?
+    /// The LLM-driven filter extractor (<see cref="QueryUnderstandingService"/>)
+    /// occasionally mis-classifies plain music-theory prose as
+    /// <c>Intent=AnalyzeTab</c>; without this guard we dispatch to
+    /// <see cref="TabAnalysisOrchestrationService.AnalyzeTabAsync"/>, which
+    /// then returns the useless "I detected tab but couldn't parse any
+    /// chords" fallback. Run the same tokenizer the canonical
+    /// <see cref="TabAwareOrchestrator"/> uses so the behaviour stays
+    /// consistent across both routing paths.
+    /// </summary>
+    /// <remarks>
+    /// Known limitation pinned by <c>TabTokenizerTests.Tokenize_BareDigitProseInputs_KnownLimitation</c>:
+    /// pitch-class-set notation ("0146"), "12-bar blues", and hyphenated
+    /// dates trip the bare-digit path in TabLineRegex. Those still
+    /// false-positive here. Tightening the regex without breaking
+    /// anonymous-row tab notation is a separate, larger change.
+    /// </remarks>
+    private bool HasTabContent(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return false;
+        var blocks = tabTokenizer.Tokenize(message);
+        return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
+    }
     private static readonly string[] ExplicitVoicingKeywords =
     [
         "voicing",
@@ -152,8 +178,13 @@ public class ProductionOrchestrator(
 
         // For tab/path-optimization intents fall back to non-streaming path.
         // Dispatch by the LLM-extracted filter intent (no string-match keywords).
-        if (routing.SelectedAgent.AgentId == AgentIds.Tab ||
-            (filters?.Intent is "OptimizePath" or "AnalyzeTab"))
+        // Guarded by HasTabContent: filter extractor sometimes mis-tags
+        // theory prose ("Explain voice leading in jazz") as AnalyzeTab.
+        // Never enter the tab branch when there is literally no tab
+        // notation in the message — falls through to the agent path.
+        if ((routing.SelectedAgent.AgentId == AgentIds.Tab ||
+             filters?.Intent is "OptimizePath" or "AnalyzeTab")
+            && HasTabContent(req.Message))
         {
             ChatResponse fallback;
             if (filters?.Intent == "OptimizePath")
@@ -380,9 +411,14 @@ public class ProductionOrchestrator(
         // "analyse this tab" via TabOptimizeIntent / TabAnalyzeIntent before we
         // reach this fallback, so this code only fires when the filter extractor
         // tagged the intent OR the agent router routed to AgentIds.Tab.)
-        var shouldOptimizePath = filters?.Intent == "OptimizePath";
-        var shouldAnalyzeTab   = routing.SelectedAgent.AgentId == AgentIds.Tab ||
-                                 filters?.Intent == "AnalyzeTab";
+        // Guarded by HasTabContent: prevents mis-classification dispatching
+        // pure theory prose into the empty-tab fallback path. See comment
+        // on the streaming dispatch above for rationale.
+        var hasTabContent      = HasTabContent(req.Message);
+        var shouldOptimizePath = filters?.Intent == "OptimizePath" && hasTabContent;
+        var shouldAnalyzeTab   = (routing.SelectedAgent.AgentId == AgentIds.Tab ||
+                                  filters?.Intent == "AnalyzeTab")
+                                 && hasTabContent;
 
         if (shouldAnalyzeTab || shouldOptimizePath)
         {
