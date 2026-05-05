@@ -4,7 +4,10 @@ description: "Explains what makes a genre sound like itself — the harmonic, me
 triggers:
   - "what makes blues"
   - "what makes jazz"
-  - "what defines"
+  - "what makes country"
+  - "what makes pop"
+  - "what makes rock"
+  - "what defines a genre"
   - "blues progression"
   - "jazz progression"
   - "country progression"
@@ -78,10 +81,10 @@ Catalog skill. When a user asks what defines a genre's sound, match to one of th
 
 ## When to call other skills
 
-- *"What chords are in [genre] in key X?"* → `diatonic-chords` first, then map genre constraints.
-- *"Generate a [genre] progression"* → `progression-generator` with `style=` set.
-- *"Voicing for jazz"* → `voicing-search` with `"jazz"` in the query.
-- *"Modal harmony"* deeper dive → `modes` skill.
+- *"What chords are in [key]?"* → `scale-info` returns the scale notes; the canonical diatonic-set table is in the `circle-of-fifths` and `key-identification` skills' `DiatonicSet` outputs.
+- *"What key is this progression in?"* → `key-identification`.
+- *"How do I darken / brighten this progression?"* → `progression-mood` (modal-interchange techniques).
+- *"Modal harmony"* deeper dive → `modes`.
 
 ## When to refuse / clarify
 

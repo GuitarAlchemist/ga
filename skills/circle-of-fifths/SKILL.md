@@ -67,18 +67,24 @@ Order of added flats: **B – E – A – D – G – C – F** (mnemonic: *Batt
 
 Each major key shares its key signature with its **relative minor** — three semitones down (or a minor third), same notes:
 
+**Sharp side:**
 - C major ↔ A minor
 - G major ↔ E minor
 - D major ↔ B minor
 - A major ↔ F# minor
 - E major ↔ C# minor
 - B major ↔ G# minor
+- F# major ↔ D# minor
+- C# major ↔ A# minor
+
+**Flat side:**
 - F major ↔ D minor
 - Bb major ↔ G minor
 - Eb major ↔ C minor
 - Ab major ↔ F minor
 - Db major ↔ Bb minor
 - Gb major ↔ Eb minor
+- Cb major ↔ Ab minor
 
 ## Enharmonic equivalence at the bottom of the circle
 
