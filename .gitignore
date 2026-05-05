@@ -189,6 +189,12 @@ state/quality/**/embedding-clusters-*.json
 state/claims/
 state/chatbot/
 
+# AI-surface handoff notes — working memory between Antigravity native, Claude
+# Code, and remote agents. Notes ARE ignored; the README explaining the
+# protocol is tracked.
+state/handoffs/*
+!state/handoffs/README.md
+
 # Thin chatbot host deployment files stay local/private
 Apps/GaChatbot.Api/appsettings.Production.json
 Apps/GaChatbot.Api/.env*
