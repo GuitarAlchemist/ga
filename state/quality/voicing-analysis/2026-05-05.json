@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-05T04:15:55.6126297Z",
+  "Timestamp": "2026-05-05T04:54:53.1025845Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -143,17 +143,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-2-6-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
+        "Diagram": "x-2-6-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -173,17 +168,12 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-7-11-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-10-14-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-9-13-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -193,17 +183,22 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-9-13-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-12-16-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-0-4-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "ukulele",
-        "Diagram": "x-3-x-0",
+        "Diagram": "x-1-5-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -213,7 +208,7 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "0-x-x-2",
+        "Diagram": "x-5-x-2",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -228,21 +223,26 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-1-5-x",
+        "Diagram": "3-x-x-5",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-5-x-2",
+        "Diagram": "x-0-4-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "ukulele",
+        "Diagram": "x-3-x-0",
         "Description": "IntervalSpread=0 for 2-note voicing"
       }
     ]
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 79.895599,
-    "VoicingsPerSec": 3918.2008010228446,
-    "PeakWorkingSetMb": 407.41796875
+    "RuntimeSeconds": 81.1267823,
+    "VoicingsPerSec": 3858.7380286127777,
+    "PeakWorkingSetMb": 399.90625
   },
   "IssueSamples": {
     "NullChordName": [],
