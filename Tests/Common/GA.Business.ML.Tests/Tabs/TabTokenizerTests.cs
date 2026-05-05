@@ -135,30 +135,49 @@ E|--10---|
             $"Prose prompt should not produce note-bearing slices: {prompt}");
     }
 
-    [Test]
-    public void Tokenize_AlgebraQueryWithNumericPitchClassSets_KnownLimitation()
+    [TestCase("Are 0146 and 0137 z-related?",
+        Description = "Pitch-class-set notation in algebra queries — matches via bare-digit path")]
+    [TestCase("Explain 12-bar blues form",
+        Description = "Common theory question — '12-b' matches digit+dash+b at length 4")]
+    [TestCase("Released --12-04-- last week.",
+        Description = "Dates / version strings with hyphens trip the same regex")]
+    public void Tokenize_BareDigitProseInputs_KnownLimitation(string input)
     {
         // KNOWN LIMITATION (documented, not a bug to silently regress):
         // The TabLineRegex `([A-Ga-g]?[#b]?\|?|\|)[-0-9|hbp/\\svx~]+` allows
         // every part of group 1 to be optional, so a bare digit run matches.
-        // Pitch-class-set notation like "0146" or "0137" therefore tokenizes
-        // as if it were single-string tab. Real fix is to require either a
-        // string-name letter OR a literal pipe in group 1; doing so without
-        // breaking real tabs that lack string-name prefixes (the Tokenize_
-        // SingleLineThatLooksLikeTab_StillNeedsMultipleStrings case)
-        // requires care, so this is parked.
+        // Pitch-class-set notation like "0146", "12-bar form", and hyphenated
+        // dates therefore all tokenize as if they were single-string tab.
+        // Real fix is to require either a string-name letter OR a literal
+        // pipe in group 1; doing so without breaking real tabs that lack
+        // string-name prefixes (the
+        // Tokenize_AnonymousRowTabWithoutStringNamePrefix_ProducesNoteSlices
+        // positive control) requires care, so this is parked.
         //
         // Upstream guard: any orchestrator that gates on
         // `Tokenize(message).Any(b => b.Slices.Any(s => s.Notes.Any()))`
-        // will treat algebra prompts as tab. Those orchestrators must
-        // either consult a complementary signal (algebra-intent classifier)
-        // OR reject single-block, single-slice tokenizations as
-        // ambiguous prose.
-        var blocks = _tokenizer.Tokenize("Are 0146 and 0137 z-related?");
+        // will treat these prompts as tab. Those orchestrators must either
+        // consult a complementary signal (algebra-intent classifier, or a
+        // refined tokenizer that requires multi-string blocks) OR reject
+        // single-block, single-slice tokenizations as ambiguous prose.
+        //
+        // Test design rationale (per PR #110 review): we *document* current
+        // behaviour with TestContext.WriteLine + Assert.Pass rather than
+        // pinning Is.True. A future regex tightening can remove these cases
+        // when they start returning Is.False; but unrelated ProcessBlock
+        // refactors that incidentally drop single-slice blocks won't
+        // produce a misleading "regression" failure here.
+        var blocks = _tokenizer.Tokenize(input);
         var hasNotes = blocks.Any(b => b.Slices.Any(s => s.Notes.Count > 0));
 
-        Assert.That(hasNotes, Is.True,
-            "Documenting current behaviour. Flip this assertion when the tokenizer is tightened to require a pipe or string-name letter.");
+        TestContext.WriteLine(
+            $"Input: {input}\n" +
+            $"  blocks={blocks.Count}, hasNotes={hasNotes} (current behaviour)");
+        Assert.Pass(
+            $"Documented limitation; current behaviour: hasNotes={hasNotes}. " +
+            "When the tokenizer is tightened to reject bare-digit prose, " +
+            "convert this to Assert.That(hasNotes, Is.False) and remove the " +
+            "inputs that no longer trigger the bug.");
     }
 
     [TestCase("Use a G chord then an A chord, then back to G.",
@@ -167,10 +186,19 @@ E|--10---|
         Description = "Mentions fret numbers in prose — no pipes, no tab grid")]
     [TestCase("The chord progression I-V-vi-IV is common in pop music.",
         Description = "Roman numerals + general theory talk")]
-    [TestCase("Compare voicing 0-2-2-1-0-0 to 0-2-2-2-0-0",
-        Description = "Hyphen-separated frets in prose — but no string-name pipe markers")]
     public void Tokenize_ProseWithChordOrFretReferences_HasNoNoteSlices(string prose)
     {
+        // Per PR #110 review: removed the "Compare voicing 0-2-2-1-0-0..." case
+        // from this fixture because it passed for the WRONG reason. The
+        // tokenizer regex matches at offset 8 ('v' of "voicing", which is in
+        // the tab-content character class) with length 1 — failing the
+        // `match.Length > 3` gate, so no block accumulates. The hyphen-fret
+        // run later in the string never gets evaluated. The case was meant
+        // to show "hyphen-separated frets aren't tab" but actually
+        // demonstrates "leading prose with sub-3-char regex match short-
+        // circuits". The bare-digit/hyphen failure mode is now covered
+        // explicitly and at the right layer in
+        // Tokenize_BareDigitProseInputs_KnownLimitation.
         var blocks = _tokenizer.Tokenize(prose);
 
         Assert.That(blocks.Any(b => b.Slices.Any(s => s.Notes.Count > 0)), Is.False,
@@ -223,6 +251,36 @@ E|--10---|
         // current behaviour. If someone tightens the tokenizer to require
         // multi-string blocks, they should update this test deliberately.
         Assert.Pass($"Documented behaviour: blocks={blocks.Count}, hasNotes={hasNotes}");
+    }
+
+    [Test]
+    public void Tokenize_AnonymousRowTabWithoutStringNamePrefix_ProducesNoteSlices()
+    {
+        // Positive control added per PR #110 review. Many real-world tabs
+        // published on forums omit string-name prefixes entirely:
+        //
+        //     ---3-----0-----|
+        //     -----2-----0---|
+        //     ------0-----0--|
+        //
+        // These rely on Group 1's optionality: the regex matches starting
+        // at the leading dash via empty Group 1 + Group 2 spanning the
+        // dashes/digits. ANY future tightening of Group 1 to require a
+        // string-name letter OR a literal pipe must NOT break this case
+        // — that's why the fix proposed in the bare-digit known-limitation
+        // comment is non-trivial. This test fails LOUDLY if such a fix
+        // is naively applied without preserving anonymous-row support.
+        var input = @"
+---3-----0-----|
+-----2-----0---|
+------0-----0--|
+";
+
+        var blocks = _tokenizer.Tokenize(input);
+
+        Assert.That(blocks.Any(b => b.Slices.Any(s => s.Notes.Count > 0)), Is.True,
+            "Anonymous-row tab (no string-name prefix) must still tokenize. " +
+            "If you tightened TabLineRegex Group 1, this is the case you broke.");
     }
 
     [Test]
