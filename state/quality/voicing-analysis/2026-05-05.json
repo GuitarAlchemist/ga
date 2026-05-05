@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-05T04:12:44.1211268Z",
+  "Timestamp": "2026-05-05T04:15:55.6126297Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -143,22 +143,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-3-7-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-2-6-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-4-8-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-5-9-x-x-x",
+        "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -173,12 +163,17 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-8-12-x-x-x",
+        "Diagram": "x-5-9-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-9-13-x-x-x",
+        "Diagram": "x-4-8-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-10-14-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -188,7 +183,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-10-14-x-x-x",
+        "Diagram": "x-9-13-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-8-12-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 82.4055485,
-    "VoicingsPerSec": 3798.858277121959,
-    "PeakWorkingSetMb": 398.2734375
+    "RuntimeSeconds": 79.895599,
+    "VoicingsPerSec": 3918.2008010228446,
+    "PeakWorkingSetMb": 407.41796875
   },
   "IssueSamples": {
     "NullChordName": [],
