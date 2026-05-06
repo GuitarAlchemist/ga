@@ -32,6 +32,10 @@
     <ProjectReference Include="..\GA.Business.Core\GA.Business.Core.csproj" />
     <ProjectReference Include="..\GA.Core\GA.Core.csproj" />
     <ProjectReference Include="..\GA.Business.Config\GA.Business.Config.fsproj" />
+    <!-- F# DSL closure registry — surfaced through ga_dsl_eval MCP tool.
+         See docs/contracts/2026-05-06-ga-dsl-eval-contract.md (v0.1, 2026-05-06).
+         Layer 4 → Layer 3 dependency, allowed under the bottom-up model. -->
+    <ProjectReference Include="..\GA.Business.DSL\GA.Business.DSL.fsproj" />
     <ProjectReference Include="..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
     <ProjectReference Include="..\GA.Providers.Anthropic\GA.Providers.Anthropic.csproj" />
   </ItemGroup>
