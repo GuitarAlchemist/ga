@@ -161,25 +161,32 @@ public class SkillMdPluginResolverTests
             Path.Combine(legacyDir, "SKILL.md"),
             "---\nName: \"alpha\"\nDescription: \"Test\"\nTriggers:\n  - \"alpha\"\n---\n\nBody.");
 
-        var debugListener = new TestTraceListener();
-        Trace.Listeners.Add(debugListener);
+        var traceListener = new TestTraceListener();
+        Trace.Listeners.Add(traceListener);
         try
         {
             new SkillMdPlugin().Register(new ServiceCollection(), canonical);
         }
         finally
         {
-            Trace.Listeners.Remove(debugListener);
+            Trace.Listeners.Remove(traceListener);
         }
 
-        var output = debugListener.Output;
+        var output = traceListener.Output;
         Assert.That(output, Does.Contain("Canonical").And.Contain("empty"),
             "Register() must warn when canonical is empty and legacy still has skills, otherwise the migration silently bricks production.");
         Assert.That(output, Does.Contain("1 SKILL.md"),
             "warning must include the legacy skill count so the operator knows what's being shadowed");
     }
 
-    /// <summary>Captures Debug.WriteLine output for inspection.</summary>
+    /// <summary>
+    /// Captures <see cref="System.Diagnostics.Trace.WriteLine(string?)"/> output for inspection.
+    /// Debug.Listeners and Trace.Listeners share the same underlying collection, so in practice
+    /// this listener captures both — but production code in
+    /// <c>SkillMdPlugin</c> / <c>FileBasedSkillsProvider</c> deliberately uses
+    /// <c>Trace.WriteLine</c> rather than <c>Debug.WriteLine</c>, because the latter is
+    /// <c>[Conditional("DEBUG")]</c> and silently strips out of Release builds.
+    /// </summary>
     private sealed class TestTraceListener : TraceListener
     {
         private readonly System.Text.StringBuilder _buf = new();
