@@ -57,6 +57,20 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 
 For detailed C#/F#/Frontend standards, consult `.agent/skills/` (auto-discovered by Claude Code). For governance, use `demerzel-*` skills.
 
+## AI surfaces in this workspace
+
+This repo is typically opened in **Antigravity** (a VS Code fork). That gives two AI surfaces in the same window:
+
+- **Antigravity native AI** (bottom-right panel, Claude Opus 4.6 Thinking) — fast, ad-hoc, MCP-capped at 100 tools per instance.
+- **Claude Code extension** (top-right panel, `anthropic.claude-code-2.1.126`) — multi-step, large-context, no tool cap. Reads project-level `.mcp.json`.
+
+Split the work:
+
+- **Antigravity native** → quick lookups, single-file edits, sketch-level brainstorming.
+- **Claude Code** → multi-step plans, multi-file refactors, cross-repo work, anything that needs `/feature`, agent fanout, or the 1M context window.
+
+Hand off between surfaces via [`Scripts/antigravity-bridge.ps1`](Scripts/antigravity-bridge.ps1) — drops a note in `state/handoffs/` (gitignored) that the other surface reads on next ask. Plan: [docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md](docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md).
+
 ## Cross-repo contracts
 
 GA collaborates with sibling repos via JSON-on-disk contracts (the canonical handoff pattern across the GuitarAlchemist ecosystem). Sibling clones are typically peers under the same parent directory:
