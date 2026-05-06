@@ -72,6 +72,21 @@ public class SkillParityMatrixTests
             typeof(GA.Business.ML.Agents.Skills.ModesSkill),
             [], "catalog"),
 
+        // Catalog skills graduated 2026-05-05 — body lives in SKILL.md,
+        // C# class supplies routing metadata + emits the body verbatim.
+        new("circle-of-fifths",      "circle-of-fifths",
+            typeof(GA.Business.ML.Agents.Skills.CircleOfFifthsSkill),
+            [], "catalog"),
+        new("practice-routine",      "practice-routine",
+            typeof(GA.Business.ML.Agents.Skills.PracticeRoutineSkill),
+            [], "catalog"),
+        new("genre-essentials",      "genre-essentials",
+            typeof(GA.Business.ML.Agents.Skills.GenreEssentialsSkill),
+            [], "catalog"),
+        new("what-can-you-do",       "what-can-you-do",
+            typeof(GA.Business.ML.Agents.Skills.WhatCanYouDoSkill),
+            [], "catalog"),
+
         // MCP-tool-driven skills (SKILL.md → ga_* tool → IOrchestratorSkill)
         new("interval",              "interval",
             typeof(GA.Business.ML.Agents.Skills.IntervalSkill),
@@ -225,33 +240,16 @@ public class SkillParityMatrixTests
 
         var matrixFolders = Contracts.Select(c => c.SkillMdFolder).ToHashSet();
 
-        // Excluded from the parity matrix by design:
+        // qa-architect predates the chatbot migration (PR #66 — a non-
+        // chatbot skill for QA Architect agent collaboration). Excluded
+        // from the parity matrix by design.
         //
-        // - qa-architect: predates the chatbot migration (PR #66 — a non-
-        //   chatbot skill for QA Architect agent collaboration).
-        // - circle-of-fifths, practice-routine, genre-essentials,
-        //   what-can-you-do: pure-SKILL.md catalog skills graduated
-        //   2026-05-05; no C# fast-path by design (the data lives in
-        //   the body, no IOrchestratorSkill needed).
-        //
-        // **Follow-up** (per PR #97 review): replace this hardcoded list
-        // with a SKILL.md frontmatter convention, e.g.
+        // **Follow-up** (per PR #97 review): replace this hardcoded
+        // exclusion with a SKILL.md frontmatter convention, e.g.
         //     metadata:
         //       chatbot-migration: false
-        // and filter on absence-or-true here. Defers the next exclusion
-        // debate to where it belongs (the SKILL.md file itself).
-        // Maintenance cost is now 5 rows; revisit when it hits 8+.
-        foreach (var skillMdOnly in new[]
-        {
-            "qa-architect",
-            "circle-of-fifths",
-            "practice-routine",
-            "genre-essentials",
-            "what-can-you-do",
-        })
-        {
-            skillFolders.Remove(skillMdOnly);
-        }
+        // and filter on absence-or-true here.
+        skillFolders.Remove("qa-architect");
 
         Assert.That(skillFolders, Is.EquivalentTo(matrixFolders),
             "Every chatbot SKILL.md folder MUST appear in the parity matrix " +
