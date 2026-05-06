@@ -139,18 +139,23 @@ jobs:
         pwsh bin/Release/net10.0/playwright.ps1 install --with-deps
 
     # Start GaApi + run Playwright tests in ONE step. Splitting them
-    # caused ga#128: GaApi spawned via Start-Process gets killed when
-    # the launching pwsh exits at step end (Windows attaches child
-    # processes to the parent's job object, even with -WindowStyle
-    # Hidden — confirmed by PR #129's "GaApi (PID N) exited between
-    # steps" diagnostic). By running both inside one step, the pwsh
-    # process stays alive throughout `dotnet test`, so the Start-Process
-    # child stays alive too. The trap at the end ensures GaApi is killed
-    # even if dotnet test throws, so we don't leak a runaway process.
-    # The 180s deadline matches observed startup: GaApi loads voicing/
-    # embedding binary caches, Yarp config, and the governance watcher
-    # before accepting requests.
-    - name: Start GaApi + Run Playwright tests (single step — see ga#128)
+    # caused ga#128 (re-confirmed in PR #129's diagnostic): GaApi spawned
+    # via Start-Process gets killed when the launching pwsh exits at
+    # step end (Windows attaches child processes to the parent's job
+    # object, even with -WindowStyle Hidden). Single step keeps the
+    # pwsh alive throughout `dotnet test`, so the Start-Process child
+    # stays alive too. try/finally guarantees cleanup on test failure
+    # or runner timeout.
+    #
+    # ga#134 step 1 additions inside the merged step:
+    #   - ASPNETCORE_CONTENTROOT pinned to Apps/ga-server/GaApi so
+    #     ASP.NET resolves `wwwroot` correctly (PR #122 logs showed
+    #     "WebRootPath was not found: D:\a\ga\ga\wwwroot" — workspace
+    #     root, not the project folder, hiding chatbot-demo.html).
+    #   - CHATBOT_BASE_URL env var so ChatbotTestBase.BaseUrl matches
+    #     what GaApi actually serves (was hardcoded https://localhost:7001
+    #     placeholder that never matched any binding — see ga#134 thread).
+    - name: Start GaApi + Run Playwright tests (single step — see ga#128, ga#134)
       shell: pwsh
       run: |
         $apiDll = "Apps/ga-server/GaApi/bin/Release/net10.0/GaApi.dll"
@@ -159,20 +164,18 @@ jobs:
         }
         $env:ASPNETCORE_URLS = "http://localhost:5232"
         $env:ASPNETCORE_ENVIRONMENT = "CI"
+        $env:ASPNETCORE_CONTENTROOT = (Resolve-Path "Apps/ga-server/GaApi").Path
+        $env:CHATBOT_BASE_URL = "http://localhost:5232/chatbot-demo.html"
         $start = Get-Date
         $gaapiProc = Start-Process -NoNewWindow -PassThru -FilePath "dotnet" -ArgumentList $apiDll `
           -RedirectStandardOutput "gaapi-stdout.log" `
           -RedirectStandardError "gaapi-stderr.log"
-        Write-Host "GaApi spawned with PID $($gaapiProc.Id)"
+        Write-Host "GaApi spawned with PID $($gaapiProc.Id), ContentRoot=$($env:ASPNETCORE_CONTENTROOT), BaseUrl=$($env:CHATBOT_BASE_URL)"
 
-        # Liveness probe: any HTTP response = server up; only network
-        # errors (refused / timeout / DNS) keep polling. Background:
-        # ga#128 captured logs proving the previous 200-only probe
-        # missed a healthy GaApi returning 401 in CI's no-auth context.
-        # PowerShell Invoke-WebRequest throws on 4xx/5xx but
-        # $_.Exception.Response is non-null for HTTP errors and null
-        # for connection failures — that's how we separate "alive but
-        # rejecting" from "nothing listening yet."
+        # Liveness probe (401-blind). Any HTTP response = server up;
+        # only network errors keep polling. Background: ga#128 captured
+        # logs proving the previous 200-only probe missed a healthy
+        # GaApi returning 401 in CI's no-auth context.
         $deadline = $start.AddSeconds(180)
         $apiUp = $false
         while ((Get-Date) -lt $deadline -and -not $apiUp) {
@@ -203,9 +206,22 @@ jobs:
           exit 1
         }
 
-        # GaApi is alive in this same pwsh process. Run Playwright tests
-        # synchronously here. The try/finally ensures the API process is
-        # always cleaned up, even on test failure or runner-side timeout.
+        # Sanity-check static-file serving before Playwright. If
+        # chatbot-demo.html doesn't 200, ContentRoot is wrong and tests
+        # will all fail "selector not found" downstream — this gives
+        # actionable signal upstream.
+        try {
+          $page = Invoke-WebRequest -Uri "http://localhost:5232/chatbot-demo.html" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+          Write-Host "chatbot-demo.html OK ($($page.StatusCode), $($page.Content.Length) bytes)"
+        } catch {
+          $resp = $_.Exception.Response
+          if ($resp -ne $null) {
+            Write-Host "::warning::chatbot-demo.html returned HTTP $([int]$resp.StatusCode); ContentRoot may still be wrong"
+          } else {
+            Write-Host "::warning::chatbot-demo.html network error: $($_.Exception.Message)"
+          }
+        }
+
         try {
           dotnet test Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj `
             --configuration Release `

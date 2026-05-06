@@ -8,7 +8,16 @@ using Microsoft.Playwright.NUnit;
 /// </summary>
 public class ChatbotTestBase : PageTest
 {
-    protected const string BaseUrl = "https://localhost:7001"; // Update with actual URL
+    // GaApi serves chatbot-demo.html from Apps/ga-server/GaApi/wwwroot.
+    // 5232 = the http profile in GaApi's launchSettings.json. The previous
+    // value `https://localhost:7001` was a placeholder ("Update with actual
+    // URL" comment) that never matched any real binding — see ga#134.
+    // Override via env var so CI can pin the URL to whatever the workflow
+    // actually starts; default keeps local dev pointed at the canonical
+    // http profile.
+    protected static readonly string BaseUrl =
+        Environment.GetEnvironmentVariable("CHATBOT_BASE_URL")
+        ?? "http://localhost:5232/chatbot-demo.html";
     protected const int DefaultTimeout = 30000; // 30 seconds
 
     [SetUp]
