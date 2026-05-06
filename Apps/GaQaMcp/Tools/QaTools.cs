@@ -78,7 +78,7 @@ public static class QaTools
     }
 
     [McpServerTool(Name = "qa_score_quality_drift")]
-    [Description("Score quality-snapshot drift over a window. Phase 0 returns null delta. Phase 1 stub: surfaces SAE artifact presence for 'optick-sae' metric; time-series drift wiring is Phase 2.")]
+    [Description("Score quality-snapshot drift over a window. For 'optick-sae' metric, computes reconstruction_mse / dead_features / partition_purity deltas across consecutive artifacts within the window.")]
     public static string ScoreQualityDrift(
         [Description("Metric name as it appears in state/quality/*.json.")] string metric,
         [Description("Window length in days.")] int windowDays)
@@ -92,24 +92,11 @@ public static class QaTools
     /// </summary>
     public static string ScoreQualityDriftAt(string metric, int windowDays, string stateQualityRoot)
     {
-        // Phase 1 stub: detect SAE artifacts and surface them.
-        // Real time-series drift computation is Phase 2 (qa-architect-cycle.ixql wiring).
         if (metric.Equals("optick-sae", StringComparison.OrdinalIgnoreCase))
         {
-            var saeRoot = Path.Combine(stateQualityRoot, "optick-sae");
-            var artifactFiles = Directory.Exists(saeRoot)
-                ? Directory.GetFiles(saeRoot, "optick-sae-artifact.json", SearchOption.AllDirectories)
-                : [];
-            var driftSummary = artifactFiles.Length > 0
-                ? $"SAE artifact found ({artifactFiles.Length} run(s) under {saeRoot}). Drift evidence wiring is Phase 2."
-                : $"No SAE artifacts found under {saeRoot}. Drift evidence wiring is Phase 2.";
-            var saeEvidence = new QaEvidence
-            {
-                Kind = "quality_snapshot",
-                Name = metric,
-                DriftSummary = driftSummary
-            };
-            return JsonSerializer.Serialize(saeEvidence, QaVerdictJson.Options);
+            return JsonSerializer.Serialize(
+                ComputeOptickSaeDrift(Path.Combine(stateQualityRoot, "optick-sae"), windowDays),
+                QaVerdictJson.Options);
         }
 
         var evidence = new QaEvidence
@@ -120,6 +107,164 @@ public static class QaTools
         };
         return JsonSerializer.Serialize(evidence, QaVerdictJson.Options);
     }
+
+    // ── Phase 2: optick-sae drift computation ────────────────────────────────
+
+    // Per-artifact-pair tolerances. Above any of these the evidence outcome
+    // flips from "pass" to "concern". Calibrated against the 2026-05-03 →
+    // 2026-05-04 supersede (synthetic → real-corpus): the synthetic baseline
+    // had MSE 1e-5 with 0% dead, the real run had MSE 4e-7 with 23.7% dead —
+    // a legitimate change that should surface as "concern" so a human reads it.
+    private const double DriftMseRelativeTolerance = 0.50;        // +50% relative
+    private const double DriftDeadFeaturesPctTolerance = 5.0;     // +5 pct points
+    private const double DriftPurityMeanAbsoluteTolerance = 0.05; // -0.05 absolute
+
+    private sealed record SaeArtifactSummary(
+        string Path,
+        string ArtifactId,
+        DateTimeOffset TrainedAt,
+        double ReconstructionMse,
+        double DeadFeaturesPct,
+        double PurityMean);
+
+    private static QaEvidence ComputeOptickSaeDrift(string saeRoot, int windowDays)
+    {
+        if (!Directory.Exists(saeRoot))
+        {
+            return new QaEvidence
+            {
+                Kind = "quality_snapshot",
+                Name = "optick-sae",
+                Outcome = "n/a",
+                DriftSummary = $"No SAE artifacts found under {saeRoot}."
+            };
+        }
+
+        var summaries = LoadSaeSummariesInWindow(saeRoot, windowDays);
+
+        if (summaries.Count == 0)
+        {
+            return new QaEvidence
+            {
+                Kind = "quality_snapshot",
+                Name = "optick-sae",
+                Outcome = "n/a",
+                DriftSummary = $"No SAE artifacts within {windowDays}d window under {saeRoot}."
+            };
+        }
+
+        if (summaries.Count == 1)
+        {
+            var only = summaries[0];
+            return new QaEvidence
+            {
+                Kind = "quality_snapshot",
+                Name = "optick-sae",
+                Outcome = "n/a",
+                Score = only.ReconstructionMse,
+                DriftSummary =
+                    $"Only one SAE artifact in window ({only.ArtifactId}, " +
+                    $"mse={only.ReconstructionMse:F6}, dead={only.DeadFeaturesPct:F2}%). " +
+                    "Drift requires ≥2 artifacts."
+            };
+        }
+
+        // Compare newest vs oldest in window — surfaces cumulative drift over the window.
+        var oldest = summaries[0];
+        var newest = summaries[^1];
+
+        var mseDelta = newest.ReconstructionMse - oldest.ReconstructionMse;
+        var mseRelative = oldest.ReconstructionMse > 0
+            ? mseDelta / oldest.ReconstructionMse
+            : 0.0;
+        var deadDelta = newest.DeadFeaturesPct - oldest.DeadFeaturesPct;
+        var purityDelta = newest.PurityMean - oldest.PurityMean;
+
+        var concerns = new List<string>();
+        if (mseRelative > DriftMseRelativeTolerance)
+            concerns.Add($"reconstruction_mse +{mseRelative * 100:F0}% (>+{DriftMseRelativeTolerance * 100:F0}%)");
+        if (deadDelta > DriftDeadFeaturesPctTolerance)
+            concerns.Add($"dead_features_pct +{deadDelta:F1}pp (>+{DriftDeadFeaturesPctTolerance:F1}pp)");
+        if (-purityDelta > DriftPurityMeanAbsoluteTolerance)
+            concerns.Add($"feature_partition_purity_mean {purityDelta:+0.000;-0.000} (drop >{DriftPurityMeanAbsoluteTolerance:F2})");
+
+        var outcome = concerns.Count == 0 ? "pass" : "concern";
+        var summary = concerns.Count == 0
+            ? $"{summaries.Count} artifact(s) in window. " +
+              $"mse {oldest.ReconstructionMse:F6} → {newest.ReconstructionMse:F6} ({mseRelative:+0.0%;-0.0%}), " +
+              $"dead {oldest.DeadFeaturesPct:F2}% → {newest.DeadFeaturesPct:F2}% ({deadDelta:+0.00;-0.00}pp), " +
+              $"purity {oldest.PurityMean:F3} → {newest.PurityMean:F3} ({purityDelta:+0.000;-0.000}). All within tolerance."
+            : $"{summaries.Count} artifact(s) in window. Drift concerns: {string.Join("; ", concerns)}.";
+
+        return new QaEvidence
+        {
+            Kind = "quality_snapshot",
+            Name = "optick-sae",
+            Outcome = outcome,
+            Score = newest.ReconstructionMse,
+            Baseline = oldest.ReconstructionMse,
+            DeltaFromBaseline = mseDelta,
+            GuardrailMax = 0.05,
+            DriftSummary = summary
+        };
+    }
+
+    private static List<SaeArtifactSummary> LoadSaeSummariesInWindow(string saeRoot, int windowDays)
+    {
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-Math.Max(0, windowDays));
+        var summaries = new List<SaeArtifactSummary>();
+
+        foreach (var path in Directory.EnumerateFiles(saeRoot, "optick-sae-artifact.json", SearchOption.AllDirectories))
+        {
+            // Skip per-developer-machine experiment dirs (state/quality/optick-sae/<date>-local/).
+            // Those are validation runs, not the shared timeline.
+            var parentDir = Path.GetFileName(Path.GetDirectoryName(path));
+            if (parentDir is not null && parentDir.EndsWith("-local", StringComparison.Ordinal))
+                continue;
+
+            var summary = TryParseSummary(path);
+            if (summary is null) continue;
+            if (summary.TrainedAt < cutoff) continue;
+            summaries.Add(summary);
+        }
+
+        summaries.Sort((a, b) => a.TrainedAt.CompareTo(b.TrainedAt));
+        return summaries;
+    }
+
+    private static SaeArtifactSummary? TryParseSummary(string path)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return null;
+
+            if (!root.TryGetProperty("artifact_id", out var idEl) ||
+                !root.TryGetProperty("trained_at", out var tsEl) ||
+                !root.TryGetProperty("metrics", out var metricsEl))
+            {
+                return null;
+            }
+
+            if (!DateTimeOffset.TryParse(tsEl.GetString(), out var trainedAt)) return null;
+
+            return new SaeArtifactSummary(
+                path,
+                idEl.GetString() ?? "<unknown>",
+                trainedAt,
+                ReadDouble(metricsEl, "reconstruction_mse"),
+                ReadDouble(metricsEl, "dead_features_pct"),
+                ReadDouble(metricsEl, "feature_partition_purity_mean"));
+        }
+        catch (JsonException) { return null; }
+        catch (IOException) { return null; }
+    }
+
+    private static double ReadDouble(JsonElement parent, string name) =>
+        parent.TryGetProperty(name, out var el) && el.ValueKind == JsonValueKind.Number
+            ? el.GetDouble()
+            : 0.0;
 
     [McpServerTool(Name = "qa_lookup_defect_memory")]
     [Description("Query the defect knowledge graph for past followups matching a pattern. Phase 0 returns an empty list.")]
