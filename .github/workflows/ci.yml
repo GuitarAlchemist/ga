@@ -138,15 +138,19 @@ jobs:
         cd Tests/GuitarAlchemistChatbot.Tests.Playwright
         pwsh bin/Release/net10.0/playwright.ps1 install --with-deps
 
-    # Start GaApi in the background so Playwright tests have something to
-    # connect to on http://localhost:5232 (the http profile in
-    # Apps/ga-server/GaApi/Properties/launchSettings.json). Without this,
-    # tests fail with `ECONNREFUSED ::1:5232`. The 180s deadline matches
-    # observed startup: the API loads voicing/embedding binary caches,
-    # Yarp config, and the governance watcher before accepting requests
-    # (PR #122 first run reached cache-loading at ~30s, hadn't reached
-    # /api/chatbot/status by 60s).
-    - name: Start GaApi (background)
+    # Start GaApi + run Playwright tests in ONE step. Splitting them
+    # caused ga#128: GaApi spawned via Start-Process gets killed when
+    # the launching pwsh exits at step end (Windows attaches child
+    # processes to the parent's job object, even with -WindowStyle
+    # Hidden — confirmed by PR #129's "GaApi (PID N) exited between
+    # steps" diagnostic). By running both inside one step, the pwsh
+    # process stays alive throughout `dotnet test`, so the Start-Process
+    # child stays alive too. The trap at the end ensures GaApi is killed
+    # even if dotnet test throws, so we don't leak a runaway process.
+    # The 180s deadline matches observed startup: GaApi loads voicing/
+    # embedding binary caches, Yarp config, and the governance watcher
+    # before accepting requests.
+    - name: Start GaApi + Run Playwright tests (single step — see ga#128)
       shell: pwsh
       run: |
         $apiDll = "Apps/ga-server/GaApi/bin/Release/net10.0/GaApi.dll"
@@ -156,50 +160,66 @@ jobs:
         $env:ASPNETCORE_URLS = "http://localhost:5232"
         $env:ASPNETCORE_ENVIRONMENT = "CI"
         $start = Get-Date
-        Start-Process -NoNewWindow -FilePath "dotnet" -ArgumentList $apiDll `
+        $gaapiProc = Start-Process -NoNewWindow -PassThru -FilePath "dotnet" -ArgumentList $apiDll `
           -RedirectStandardOutput "gaapi-stdout.log" `
           -RedirectStandardError "gaapi-stderr.log"
+        Write-Host "GaApi spawned with PID $($gaapiProc.Id)"
+
+        # Liveness probe: any HTTP response = server up; only network
+        # errors (refused / timeout / DNS) keep polling. Background:
+        # ga#128 captured logs proving the previous 200-only probe
+        # missed a healthy GaApi returning 401 in CI's no-auth context.
+        # PowerShell Invoke-WebRequest throws on 4xx/5xx but
+        # $_.Exception.Response is non-null for HTTP errors and null
+        # for connection failures — that's how we separate "alive but
+        # rejecting" from "nothing listening yet."
         $deadline = $start.AddSeconds(180)
-        # Treat ANY HTTP response (200, 401, 404, etc.) as "server up" —
-        # the goal is liveness, not auth correctness. PR #122's first
-        # round captured logs proving GaApi was fully up but returning
-        # 401 on /api/chatbot/status (no auth header in CI), so the old
-        # 200-only check timed out the full 180s on a healthy server.
-        # PowerShell Invoke-WebRequest throws on any 4xx/5xx, but
-        # $_.Exception.Response is non-null for HTTP errors and null for
-        # network errors — that's how we cleanly separate "alive but
-        # rejecting this request" from "nothing listening yet."
-        while ((Get-Date) -lt $deadline) {
+        $apiUp = $false
+        while ((Get-Date) -lt $deadline -and -not $apiUp) {
           try {
             $r = Invoke-WebRequest -Uri "http://localhost:5232/api/chatbot/status" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
             $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
             Write-Host "GaApi up after ${elapsed}s (HTTP $($r.StatusCode))"
-            exit 0
+            $apiUp = $true
           } catch {
             $resp = $_.Exception.Response
             if ($resp -ne $null) {
               $code = [int]$resp.StatusCode
               $elapsed = [math]::Round(((Get-Date) - $start).TotalSeconds, 1)
               Write-Host "GaApi up after ${elapsed}s (HTTP $code, treating non-2xx as live)"
-              exit 0
+              $apiUp = $true
+            } else {
+              Start-Sleep -Seconds 3
             }
-            Start-Sleep -Seconds 3
           }
         }
-        Write-Host "::error::GaApi failed to start within 180s"
-        Write-Host "--- gaapi-stdout.log (tail 80) ---"
-        if (Test-Path gaapi-stdout.log) { Get-Content gaapi-stdout.log -Tail 80 }
-        Write-Host "--- gaapi-stderr.log (tail 80) ---"
-        if (Test-Path gaapi-stderr.log) { Get-Content gaapi-stderr.log -Tail 80 }
-        exit 1
+        if (-not $apiUp) {
+          Write-Host "::error::GaApi failed to start within 180s"
+          Write-Host "--- gaapi-stdout.log (tail 80) ---"
+          if (Test-Path gaapi-stdout.log) { Get-Content gaapi-stdout.log -Tail 80 }
+          Write-Host "--- gaapi-stderr.log (tail 80) ---"
+          if (Test-Path gaapi-stderr.log) { Get-Content gaapi-stderr.log -Tail 80 }
+          if (-not $gaapiProc.HasExited) { Stop-Process -Id $gaapiProc.Id -Force -ErrorAction SilentlyContinue }
+          exit 1
+        }
 
-    - name: Run Playwright tests
-      run: |
-        dotnet test Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj `
-          --configuration Release `
-          --no-build `
-          --logger "trx;LogFileName=playwright-results.trx" `
-          --logger "console;verbosity=normal"
+        # GaApi is alive in this same pwsh process. Run Playwright tests
+        # synchronously here. The try/finally ensures the API process is
+        # always cleaned up, even on test failure or runner-side timeout.
+        try {
+          dotnet test Tests/GuitarAlchemistChatbot.Tests.Playwright/GuitarAlchemistChatbot.Tests.Playwright.csproj `
+            --configuration Release `
+            --no-build `
+            --logger "trx;LogFileName=playwright-results.trx" `
+            --logger "console;verbosity=normal"
+          $testExitCode = $LASTEXITCODE
+        } finally {
+          if (-not $gaapiProc.HasExited) {
+            Write-Host "Stopping GaApi PID $($gaapiProc.Id)"
+            Stop-Process -Id $gaapiProc.Id -Force -ErrorAction SilentlyContinue
+          }
+        }
+        exit $testExitCode
 
     - name: Upload GaApi logs (always)
       uses: actions/upload-artifact@v4
