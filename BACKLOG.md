@@ -113,6 +113,7 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **Chatbot chord diagram rendering** — when TheoryAgent mentions a chord, auto-generate a VexTab diagram inline in the chat response
 - **BSP room chord assignment** — assign a diatonic chord function (I, ii, V…) to each BSP room and visualise harmonic flow through rooms
 - **OPTIC-K similarity search UI** — let guitarists search by playing a rhythm pattern, find songs with similar harmonic structure
+- **Remote frontier-LLM provider for hard composition tasks** (parked 2026-05-05) — add a `frontier-remote` purpose to `IChatClientFactory` for tasks where local 3B genuinely fails (long-form composition, deep style imitation). Reference: Cloudflare Workers AI / Infire ([blog](https://blog.cloudflare.com/high-performance-llms/)) supports Kimi K2.5 / Llama 4 Scout via PD-disaggregation + EAGLE-3 spec decoding. **Preconditions before revisiting**: (a) Ollama is stable, (b) we have a concrete user-facing task that 3B fails at, (c) `IChatClientFactory` from migration Phase 1 is fully wired. Don't adopt to dodge an Ollama installer bug. NOT useful for OPTIC-K embeddings (custom 240-dim schema).
 
 ---
 
