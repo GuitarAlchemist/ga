@@ -10,8 +10,15 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, RowClickedEvent, GridReadyEvent, GridApi } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+// AG Grid v33+ removed `styles/ag-grid.css` and `styles/ag-theme-alpine.css`
+// in favor of the JS Theming API (themeQuartz is the default). Importing
+// those static CSS paths produces 404s in dev (Vite proxies node_modules
+// requests verbatim) and broke Prime Radiant rendering on Cloudflare-
+// tunneled origins. Default theme works without any import; if Alpine
+// styling is required, use the new API:
+//   import { themeAlpine } from 'ag-grid-community';
+//   <AgGridReact theme={themeAlpine} ... />
+// See https://www.ag-grid.com/react-data-grid/theming/
 
 import type { PanelSpec, CompiledProjectionField } from './IxqlWidgetSpec';
 import { applyProjection } from './IxqlWidgetSpec';
