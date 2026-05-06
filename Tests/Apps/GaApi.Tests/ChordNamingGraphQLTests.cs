@@ -91,9 +91,11 @@ public class ChordNamingGraphQLTests
   chordBestName(formulaName:$name, root:$root, intervals:$intervals)
 }";
 
-        // Use a raw client to assert that the server rejects the request (either via non-200 or GraphQL errors[])
-        using var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
+        // Reuse the class-level factory rather than building a second one — running multiple
+        // WebApplicationFactory<Program> instances inside a single test class crashes the
+        // test host with a Fatal error at HostingAbstractionsHostExtensions.RunAsync (likely
+        // shared static state in Program.cs / Aspire orchestration). Single-factory works fine.
+        var client = _factory.CreateClient();
         var payload = new { query = q, variables = new { name = "Demo", root = 0, intervals = Array.Empty<int>() } };
         using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
         var resp = await client.PostAsync("/graphql", content);
