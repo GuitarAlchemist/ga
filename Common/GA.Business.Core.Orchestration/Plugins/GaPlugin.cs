@@ -79,5 +79,10 @@ public sealed class GaPlugin : IChatPlugin
         typeof(FretSpanMcpTools),
         typeof(ChordSubstitutionMcpTools),
         typeof(KeyIdentificationMcpTools),
+        // ga_dsl_eval — bridges chatbot to F# closure registry. Exposes
+        // Domain-category closures only; Pipeline / Io / Agent excluded
+        // for safety. Contract: docs/contracts/2026-05-06-ga-dsl-eval-contract.md
+        // (v0.1, 2026-05-06).
+        typeof(DslEvalMcpTools),
     ];
 }
