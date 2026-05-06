@@ -2,11 +2,13 @@
 name: "chord-substitution"
 description: "Finds harmonic substitutions for a chord, or classifies the relationship between two chords (tritone sub, secondary dominant, backdoor dominant, set-class equivalent, ICV neighbor). Calls deterministic Grothendieck-ICV math via MCP tools — never recall theory rules from training data."
 triggers:
+  # Tightened 2026-05-05 (pro-guitarist audit) — removed bare
+  # "instead of" (matched "go left instead of right" etc.).
+  # Added pro-relevant vocabulary anchors.
   - "substitute"
   - "substitution"
   - "reharmonize"
   - "reharmoni"
-  - "instead of"
   - "alternative chord"
   - "swap chord"
   - "replace chord"
@@ -15,6 +17,8 @@ triggers:
   - "secondary dominant"
   - "backdoor"
   - "related chord"
+  - "upper structure"
+  - "modal interchange"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

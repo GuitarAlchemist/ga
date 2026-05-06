@@ -2,6 +2,10 @@
 name: "progression-completion"
 description: "Suggests 2-3 diatonic cadence completions for an in-progress chord progression. Reuses the `ga_key_identify` MCP tool for deterministic key detection, then names cadence types (authentic / half / deceptive / plagal) drawn from the detected key's diatonic set."
 triggers:
+  # Pro-relevant vocab added 2026-05-05 (audit). The bare
+  # "end this" / "end it" / "continue this" / "extend this"
+  # remain because the substring requires a chord-progression
+  # in the same prompt to match the dispatch criteria.
   - "what comes next"
   - "next chord"
   - "what should follow"
@@ -15,6 +19,10 @@ triggers:
   - "how do i end"
   - "continue this"
   - "extend this"
+  - "cadence"
+  - "how to resolve"
+  - "how do i resolve"
+  - "resolve to"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

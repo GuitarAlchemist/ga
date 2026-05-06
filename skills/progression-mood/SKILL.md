@@ -2,6 +2,10 @@
 name: "progression-mood"
 description: "Reliable techniques for darkening or brightening a chord progression — parallel-mode swaps, modal interchange (Phrygian / Aeolian / Dorian / Lydian / Mixolydian), and borrowed-chord substitutions. Use when a learner asks how to make a progression sound darker / sadder / moodier / brighter / more uplifting."
 triggers:
+  # Pro-relevant vocab added 2026-05-05 (audit) — borrowed-chord
+  # / modal-interchange queries land here. Note: "modal interchange"
+  # also appears in chord-substitution; the body of each skill
+  # already documents the deferral relationship.
   - "darker"
   - "darken"
   - "moodier"
@@ -13,6 +17,9 @@ triggers:
   - "brighten"
   - "uplifting"
   - "happier"
+  - "borrowed chord"
+  - "borrow from"
+  - "modal mixture"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

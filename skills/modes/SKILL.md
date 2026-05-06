@@ -2,12 +2,18 @@
 name: "modes"
 description: "Lists the seven modes of the major scale (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian) with their scale-degree formulas and characteristic sound. Pure catalog — same fixed pedagogy whether the user asks for the whole list or a single mode."
 triggers:
+  # Pro-relevant vocab added 2026-05-05 (audit) — modal harmony
+  # / cadence / characteristic-interval are pro idioms.
   - "modes of"
   - "diatonic modes"
   - "major scale modes"
   - "seven modes"
   - "what are the modes"
   - "list the modes"
+  - "modal harmony"
+  - "modal cadence"
+  - "characteristic note"
+  - "characteristic interval"
   - "ionian"
   - "dorian"
   - "phrygian"
