@@ -156,9 +156,23 @@ jobs:
         $env:ASPNETCORE_URLS = "http://localhost:5232"
         $env:ASPNETCORE_ENVIRONMENT = "CI"
         $start = Get-Date
-        Start-Process -NoNewWindow -FilePath "dotnet" -ArgumentList $apiDll `
+        # `-NoNewWindow` previously meant the dotnet child inherited the
+        # parent pwsh's console; when this Start-GaApi step exited (after
+        # the probe loop's `exit 0`), Windows tore down the console group
+        # and took the API with it. By the time the next step (Run
+        # Playwright Tests) connected to localhost:5232 a few seconds
+        # later, the listener was gone and tests failed with
+        # ECONNREFUSED. Issue ga#128 captured the smoking gun.
+        # `-WindowStyle Hidden` (without -NoNewWindow) gives the API its
+        # own detached process group that survives this step's pwsh
+        # termination. `-PassThru` exposes the PID so we can prove
+        # liveness across step boundaries.
+        $gaapiProc = Start-Process -WindowStyle Hidden -PassThru -FilePath "dotnet" -ArgumentList $apiDll `
           -RedirectStandardOutput "gaapi-stdout.log" `
           -RedirectStandardError "gaapi-stderr.log"
+        Write-Host "GaApi spawned with PID $($gaapiProc.Id)"
+        # Persist PID so the next step can verify the process is still alive.
+        $gaapiProc.Id | Out-File -FilePath "gaapi.pid" -Encoding ascii
         $deadline = $start.AddSeconds(180)
         # Treat ANY HTTP response (200, 401, 404, etc.) as "server up" —
         # the goal is liveness, not auth correctness. PR #122's first
@@ -192,6 +206,43 @@ jobs:
         Write-Host "--- gaapi-stderr.log (tail 80) ---"
         if (Test-Path gaapi-stderr.log) { Get-Content gaapi-stderr.log -Tail 80 }
         exit 1
+
+    # Verify the GaApi process is still alive across the step boundary.
+    # If it isn't, fail FAST with a clear message instead of letting
+    # Playwright's ECONNREFUSED ::1:5232 errors blame the wrong layer.
+    # Tied to ga#128 hypothesis #1: previously `-NoNewWindow` killed the
+    # API when the launching pwsh ended; the fix in the prior step
+    # (-WindowStyle Hidden + -PassThru) detaches the process group.
+    - name: Verify GaApi still alive (post-step-boundary)
+      shell: pwsh
+      run: |
+        if (-not (Test-Path gaapi.pid)) {
+          throw "gaapi.pid not found — Start-GaApi step did not record the PID"
+        }
+        $pid_value = [int](Get-Content gaapi.pid)
+        $proc = Get-Process -Id $pid_value -ErrorAction SilentlyContinue
+        if ($proc -eq $null) {
+          Write-Host "::error::GaApi (PID $pid_value) exited between steps — confirms ga#128 hypothesis #1 if probe also reported HTTP up"
+          Write-Host "--- gaapi-stdout.log (tail 120) ---"
+          if (Test-Path gaapi-stdout.log) { Get-Content gaapi-stdout.log -Tail 120 }
+          Write-Host "--- gaapi-stderr.log (tail 120) ---"
+          if (Test-Path gaapi-stderr.log) { Get-Content gaapi-stderr.log -Tail 120 }
+          exit 1
+        }
+        Write-Host "GaApi PID $pid_value still alive (process: $($proc.ProcessName))"
+        # Re-probe to confirm the listener is still bound.
+        try {
+          $r = Invoke-WebRequest -Uri "http://localhost:5232/api/chatbot/status" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+          Write-Host "GaApi still serving (HTTP $($r.StatusCode))"
+        } catch {
+          $resp = $_.Exception.Response
+          if ($resp -ne $null) {
+            Write-Host "GaApi still serving (HTTP $([int]$resp.StatusCode), non-2xx is fine)"
+          } else {
+            Write-Host "::error::GaApi PID alive but socket gone — port unbound or hung"
+            exit 1
+          }
+        }
 
     - name: Run Playwright tests
       run: |
