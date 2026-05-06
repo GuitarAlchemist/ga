@@ -443,7 +443,26 @@ export default defineConfig({
         },
     },
     optimizeDeps: {
-        include: ['prop-types'],
+        // Pre-bundle heavy deps at dev-server startup so first-request
+        // doesn't hit a multi-second esbuild transform — that pause
+        // exceeds Cloudflare Tunnel's per-request timeout for our
+        // demos.guitaralchemist.com origin and causes 504 cascades on
+        // Prime Radiant routes (3d-force-graph, three postprocessing,
+        // signalr, ag-grid all timed out + dynamic-import-fail).
+        // Adding them here makes Vite pre-bundle on `vite` boot, so
+        // the tunnel sees fast cache hits instead of cold transforms.
+        include: [
+            'prop-types',
+            '3d-force-graph',
+            'three',
+            'three/examples/jsm/postprocessing/UnrealBloomPass.js',
+            'three/examples/jsm/postprocessing/ShaderPass.js',
+            'three/examples/jsm/loaders/STLLoader.js',
+            '@microsoft/signalr',
+            'ag-grid-community',
+            'ag-grid-react',
+            'react-dom',
+        ],
     },
     resolve: {
         alias: {
