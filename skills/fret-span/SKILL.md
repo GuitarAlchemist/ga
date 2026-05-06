@@ -2,6 +2,9 @@
 name: "fret-span"
 description: "Computes the fret span and playability of a 6-string guitar chord diagram. Calls the deterministic `ga_fret_span` MCP tool — never recall the answer from training data, since the math depends on knowing exactly which strings are open vs muted vs fretted."
 triggers:
+  # Tightened 2026-05-05 (pro-guitarist audit) — removed bare
+  # "reach for" (matched "reach for the stars" etc.). The other
+  # 7 triggers all anchor on a guitar-specific token.
   - "fret span"
   - "fret stretch"
   - "stretch of"
@@ -9,7 +12,8 @@ triggers:
   - "is this difficult"
   - "playability"
   - "how playable"
-  - "reach for"
+  - "fingering reach"
+  - "left hand reach"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

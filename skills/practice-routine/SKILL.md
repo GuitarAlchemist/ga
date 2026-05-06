@@ -2,14 +2,23 @@
 name: "practice-routine"
 description: "Suggests a structured practice routine for a stated goal — jazz comping, soloing, ear training, fingerstyle technique, etc. Pure catalog skill drawing on guitar-pedagogy templates. Use when a learner asks 'give me a practice plan for X' / 'how do I practice Y'."
 triggers:
+  # Tightened 2026-05-05 (pro-guitarist audit) — bare "drill"
+  # matched non-music senses ("drill a hole", "fire drill").
+  # Music-anchored "drilling" / "drill for" / "warm-up drill"
+  # keep the music-pedagogy intent.
   - "practice routine"
   - "practice plan"
   - "practice schedule"
   - "how do i practice"
   - "what should i practice"
-  - "drill"
+  - "drilling"
+  - "drill for"
+  - "warm-up drill"
   - "exercises for"
   - "improve at"
+  - "transcription drill"
+  - "sight-reading"
+  - "ear training drill"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"

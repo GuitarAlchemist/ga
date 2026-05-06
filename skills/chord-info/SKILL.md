@@ -2,16 +2,29 @@
 name: "chord-info"
 description: "Returns the notes and intervals of a named chord (e.g. Cmaj7 = C E G B). Calls the deterministic `ga_chord_info` MCP tool — never recall an answer from training data, since LLMs commonly flip enharmonics (Db vs C#) based on which source they saw."
 triggers:
-  - "what is a"
-  - "what is the"
+  # Tightened 2026-05-05 (pro-guitarist audit) — removed bare
+  # "what is a" / "what is the" / "make up a" (matched any
+  # what-is question; routes belonged elsewhere). Each trigger
+  # now anchors on a chord-shaped or chord-vocabulary token so
+  # SKILL.md-driven dispatch (FileBasedSkillsProvider, Claude
+  # Code path) doesn't pull non-chord queries here.
+  - "what is a chord"
+  - "what is the chord"
+  - "what chord is"
   - "what notes are in"
   - "notes in a"
   - "notes of a"
-  - "spell a"
-  - "spell the"
+  - "spell a chord"
+  - "spell the chord"
   - "chord notes"
   - "chord intervals"
-  - "make up a"
+  - "spell a c"
+  - "spell a d"
+  - "spell a e"
+  - "spell a f"
+  - "spell a g"
+  - "spell an a"
+  - "spell a b"
 license: internal
 compatibility:
   agent-framework: ">=1.0.0-preview"
