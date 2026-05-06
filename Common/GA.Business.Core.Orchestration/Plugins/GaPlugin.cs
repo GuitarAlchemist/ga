@@ -39,6 +39,13 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<BeginnerChordsSkill>();
         services.AddOrchestratorSkillIntent<ProgressionMoodSkill>();
 
+        // Catalog skills graduated 2026-05-05 — body lives in SKILL.md,
+        // C# class supplies routing metadata + emits the body verbatim.
+        services.AddOrchestratorSkillIntent<CircleOfFifthsSkill>();
+        services.AddOrchestratorSkillIntent<PracticeRoutineSkill>();
+        services.AddOrchestratorSkillIntent<GenreEssentialsSkill>();
+        services.AddOrchestratorSkillIntent<WhatCanYouDoSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
