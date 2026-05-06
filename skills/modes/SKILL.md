@@ -44,15 +44,17 @@ The major scale has 7 modes. Each starts on a successive degree of the parent sc
 
 ## The catalog
 
-| # | Mode | Degrees | Character |
-|---|---|---|---|
-| 1 | **Ionian** | `1 2 3 4 5 6 7` | Bright, the major scale itself |
-| 2 | **Dorian** | `1 2 b3 4 5 6 b7` | Minor with raised 6th — jazz/folk staple |
-| 3 | **Phrygian** | `1 b2 b3 4 5 b6 b7` | Dark minor with flat 2 — Spanish/flamenco |
-| 4 | **Lydian** | `1 2 3 #4 5 6 7` | Major with raised 4th — floating, dreamy |
-| 5 | **Mixolydian** | `1 2 3 4 5 6 b7` | Major with flat 7 — bluesy/rock |
-| 6 | **Aeolian** | `1 2 b3 4 5 b6 b7` | Natural minor |
-| 7 | **Locrian** | `1 b2 b3 4 b5 b6 b7` | Half-diminished — rare as a tonic |
+| # | Mode | Degrees | Characteristic note | Modal cadence | Character |
+|---|---|---|---|---|---|
+| 1 | **Ionian** | `1 2 3 4 5 6 7` | — (parent scale) | V → I (authentic) | Bright, the major scale itself |
+| 2 | **Dorian** | `1 2 b3 4 5 6 b7` | natural 6 | i — IV — i (Dorian vamp; *So What*, *Scarborough Fair*) | Minor with raised 6th — jazz/folk staple |
+| 3 | **Phrygian** | `1 b2 b3 4 5 b6 b7` | b2 | bII → i (Spanish cadence) | Dark minor with flat 2 — Spanish/flamenco |
+| 4 | **Lydian** | `1 2 3 #4 5 6 7` | #4 | I — II — I (Lydian II vamp; the Simpsons theme) | Major with raised 4th — floating, dreamy |
+| 5 | **Mixolydian** | `1 2 3 4 5 6 b7` | b7 | I — bVII — IV — I (rock anthem) | Major with flat 7 — bluesy/rock |
+| 6 | **Aeolian** | `1 2 b3 4 5 b6 b7` | b6 | i — bVI — bVII — i | Natural minor |
+| 7 | **Locrian** | `1 b2 b3 4 b5 b6 b7` | b5 (tritone w/ root) | rare; i°7 vamps with bII colour | Half-diminished — rare as a tonic |
+
+The **characteristic note** is the one degree that makes the mode unique against its parallel major/minor — emphasise it in melodies and chord voicings to make the mode audible. The **modal cadence** column gives a vamp or progression that establishes the mode without falling back to V→I (which would imply tonal motion away from the mode).
 
 ## Mnemonic
 
@@ -68,7 +70,7 @@ These are hard constraints. **Do NOT** answer queries in these categories from t
 
 - **Specific-key note enumeration** (e.g. *"give me the notes of D Dorian"*). This catalog gives Dorian's degree formula but not the resulting notes for any particular root. Defer to the `scale-info` skill or the broader LLM agent path. Do NOT output specific-key note lists from this catalog alone.
 - **Non-diatonic modes** (harmonic minor modes, melodic minor modes, modes of limited transposition). This catalog covers only the seven modes of the major (a.k.a. diatonic) scale. If asked, decline cleanly: *"This catalog only covers the diatonic modes; harmonic-minor modes and others would need different tooling."*
-- **Composition recommendation** (*"what mode should I use for an angry feel?"*). The character notes here help an LLM phrase a recommendation, but the catalog itself does not prescribe — emit the catalog data, then let the broader agent path reason about fit.
+- **Open-ended composition recommendation** (*"what mode should I use for an angry feel?"*). The characteristic-note + modal-cadence columns give a pro player concrete scaffolding (e.g. "Phrygian b2 + bII→i for Spanish/cinematic dread"), but mood-mapping a mode to an unstated emotion is subjective — emit the catalog data and the cadence pattern, then let the broader agent path reason about fit. Do NOT claim a single "right" mode for a feeling.
 
 ## Cross-reference
 
