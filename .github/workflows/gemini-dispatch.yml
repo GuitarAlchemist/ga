@@ -125,8 +125,15 @@ jobs:
 
   review:
     needs: 'dispatch'
+    # Gate on `vars.GEMINI_REVIEW_ENABLED == 'true'`. Without an API key
+    # (no GEMINI_API_KEY secret OR no APP_ID for Vertex), the gemini-review
+    # workflow 27s-fails on every PR with `Gemini CLI not found in PATH`
+    # / `Please set an Auth method`, blocking unrelated PRs. Repo admin
+    # opts in by setting the `GEMINI_REVIEW_ENABLED` variable to `true`
+    # AFTER configuring `GEMINI_API_KEY` (or `APP_ID` + `APP_PRIVATE_KEY`
+    # for the Vertex path used by the dispatch job's identity token).
     if: |-
-      ${{ needs.dispatch.outputs.command == 'review' }}
+      ${{ needs.dispatch.outputs.command == 'review' && vars.GEMINI_REVIEW_ENABLED == 'true' }}
     uses: './.github/workflows/gemini-review.yml'
     permissions:
       contents: 'read'
