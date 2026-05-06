@@ -87,11 +87,14 @@ public class SkillParityMatrixTests
             typeof(GA.Business.ML.Agents.Skills.WhatCanYouDoSkill),
             [], "catalog"),
 
-        // Tool-driven skill graduated 2026-05-06 — first DSL-eval canary
+        // Tool-driven skills graduated 2026-05-06 — DSL-eval canaries
         // (Phase 2). Body lives in SKILL.md; routes through ga_dsl_eval
-        // to the domain.transposeChord closure.
+        // to an F# closure in GaClosureRegistry.
         new("transpose",             "transpose",
             typeof(GA.Business.ML.Agents.Skills.TransposeSkill),
+            ["ga_dsl_eval"], "dsl-eval"),
+        new("common-tones",          "common-tones",
+            typeof(GA.Business.ML.Agents.Skills.CommonTonesSkill),
             ["ga_dsl_eval"], "dsl-eval"),
 
         // MCP-tool-driven skills (SKILL.md → ga_* tool → IOrchestratorSkill)

@@ -46,12 +46,13 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<GenreEssentialsSkill>();
         services.AddOrchestratorSkillIntent<WhatCanYouDoSkill>();
 
-        // Tool-driven skill graduated 2026-05-06 — first canary for the
-        // DSL-eval pattern (Phase 2 of skills-orchestration plan). Body
-        // teaches the LLM to dispatch ga_dsl_eval against the
-        // domain.transposeChord closure. The C# wrapper is a thin
-        // markdown-emitter; the answer comes from the closure invocation.
+        // Tool-driven skills using ga_dsl_eval (DSL-eval canaries from
+        // Phase 2 of skills-orchestration plan). Each wraps a SKILL.md
+        // that teaches the LLM to dispatch ga_dsl_eval against an
+        // existing F# closure in GaClosureRegistry. The C# wrappers are
+        // thin markdown-emitters; the answers come from closure invocations.
         services.AddOrchestratorSkillIntent<TransposeSkill>();
+        services.AddOrchestratorSkillIntent<CommonTonesSkill>();
 
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
