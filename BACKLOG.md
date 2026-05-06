@@ -115,6 +115,34 @@ These are real problems guitarists hit. They're the North Star for every feature
 - **OPTIC-K similarity search UI** — let guitarists search by playing a rhythm pattern, find songs with similar harmonic structure
 - **Remote frontier-LLM provider for hard composition tasks** (parked 2026-05-05) — add a `frontier-remote` purpose to `IChatClientFactory` for tasks where local 3B genuinely fails (long-form composition, deep style imitation). Reference: Cloudflare Workers AI / Infire ([blog](https://blog.cloudflare.com/high-performance-llms/)) supports Kimi K2.5 / Llama 4 Scout via PD-disaggregation + EAGLE-3 spec decoding. **Preconditions before revisiting**: (a) Ollama is stable, (b) we have a concrete user-facing task that 3B fails at, (c) `IChatClientFactory` from migration Phase 1 is fully wired. Don't adopt to dodge an Ollama installer bug. NOT useful for OPTIC-K embeddings (custom 240-dim schema).
 
+## Pro-Guitarist Usability Gaps (audit 2026-05-05)
+
+`/octo:loop` audit of all 12 chatbot skill bodies found that the existing skill content is theoretically correct and honestly scoped, but the chatbot is **not yet usable by a working professional guitarist** because of capability gaps. The audit shipped two SKILL.md improvements (PR #137 trigger tightening, PR #138 modes catalog enrichment) and surfaced the following dealbreakers as new-tool work — each requires either a new MCP tool or an extension to an existing one.
+
+Ordered by user impact (highest first):
+
+- **Extended / altered / sus / slash chord support in `chord-info`** — pros work daily with `Cmaj9`, `Dm11`, `G13`, `C7b5`, `C7#9`, `Calt`, `Cm7b5` (half-diminished), `Csus2`, `Csus4`, `Cadd9`, `C/E`. Today the `ga_chord_info` tool returns Error for all of these, and the SKILL.md correctly defers ("for altered or extended chords I'd need different tooling"). Implementation: extend `ChordSymbolRegex` to parse extension/alteration tokens and add formula entries. Likely needs a separate `ga_chord_extended` tool to keep the basic tool's contract clean. Also enables: chord-substitution and progression-completion to operate on extended-chord progressions (currently major/minor-only diatonic-set match).
+
+- **Alternate tuning chord shapes** — DADGAD, drop-D, double-drop-D, open G/D/E, DGCGCD, all-fourths. A pro asks "give me a Cadd9 in DADGAD" or "what's the easiest A minor in drop-D?" The chatbot currently has no tuning context. New tool: `ga_chord_voicings(chord, tuning)` returning playable shapes ranked by fret-span. Composes with `ga_fret_span` for difficulty filtering.
+
+- **Capo and key-transpose** — pros routinely play "song in concert E with capo 3" (the played shape is C major). New tool: `ga_transpose_progression(progression, semitones)` and `ga_capo_render(progression, capoFret)` returning the played-shape progression. New skill: `transpose` / `capo` SKILL.md gathering both.
+
+- **Voice leading between two chords** — pros pick voicings to minimise common-tone movement (a hallmark of chord-melody and comping). New tool: `ga_voice_leading(chordA, chordB)` returning the optimal voice-leading pair from the precomputed OPTIC-K voicing index, reporting moves per voice. Complements existing `ga_chord_substitutions` (which ranks by ICV cost, not voice-leading smoothness — already documented as out of scope in the SKILL.md).
+
+- **Chord identification from a note set** — `chord-info` SKILL.md mentions this gap: *"what chord is C E G?"* should return "C major triad" and ranked alternatives (C/Em with E in bass, etc.). New tool: `ga_chord_identify(notes)`.
+
+- **Half-diminished + diminished-7 are partially in chord-substitution but missing in chord-info** — `m7b5` and `dim7` are valid suffixes in `ga_chord_substitutions`/`ga_chord_compare` (per their suffix table) but rejected by `ga_chord_info`. Inconsistency. Cheap fix: add the two formulas to `GetFormula(quality)` in `ChordMcpTools`.
+
+- **Modal analysis of a progression** — `key-identification` only ranks major/minor keys. Pros sometimes write modal vamps ("Am-G-Am-F" is A Aeolian, not A minor with borrowed F). New mode-aware classifier: `ga_key_identify_modal` returning a parent-scale candidate ranked alongside major/minor, with the relative mode named.
+
+- **Modulation detection within one progression** — `key-identification` returns one key (or a relative pair) for the whole input. A pro chord chart with *"C G | F | Db Ab Bb | C"* modulates to bII briefly. Detect modulations and report each segment's local key. Algorithm: sliding-window key-identify with a confidence delta heuristic.
+
+- **Style-specific progression generation** — `progression-completion` is style-neutral by design. Pros want jazz turnarounds (`I-vi-ii-V`, `iii-vi-ii-V`), bluegrass cadences, country I-IV-V variations. New tool: `ga_generate_progression(key, style, length)` with a curated style → cadence-pattern map.
+
+- **Lead-sheet / chord-melody arrangement** — render a melody + chord progression as a chord-melody arrangement playable on a single guitar. Bigger lift; needs a melody-input format and a fretboard-aware arranger. Likely depends on most of the above (voice leading, voicings-by-tuning, transpose).
+
+These are the dealbreakers for moving the chatbot from "novice/intermediate" to "really usable by a pro". Each is a real workstream (≥1 PR, often more) and most depend on each other (e.g. `ga_chord_voicings` is the substrate for several others). The audit produced no SKILL.md text-edit can substitute for any of them.
+
 ---
 
 ## How to Start a Feature
