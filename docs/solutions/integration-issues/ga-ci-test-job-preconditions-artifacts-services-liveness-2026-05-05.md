@@ -148,6 +148,40 @@ exit 1
 
 **Compoundable principle:** A liveness probe answers "is it listening?", not "is this endpoint healthy and authorized?" — those are downstream concerns for the tests themselves. In any HTTP-client language with exceptions on non-2xx (PowerShell `Invoke-WebRequest`, .NET `HttpClient.EnsureSuccessStatusCode`, Python `requests.raise_for_status`, Node `axios`), use the presence of a response object on the exception to reclassify HTTP errors as "alive." Reserve retry-and-wait for true network failures only. This pattern generalizes to any background-service-then-poll CI step (databases, message brokers, tunnels, sidecars).
 
+### 4. Background process gets killed at step boundary (the deepest layer)
+
+**Symptom:** The 401-blind probe correctly reports `GaApi up after 11.9s (HTTP 401, treating non-2xx as live)`, then ~11s later in the *next* step Playwright tests fail uniformly with `Microsoft.Playwright.PlaywrightException : connect ECONNREFUSED ::1:5232` — against an API that was demonstrably alive moments before. The diagnostic verify step in the failed PR #129 captured the smoking gun: `##[error]GaApi (PID N) exited between steps`.
+
+**Root cause:** Windows attaches `Start-Process`-spawned children to the parent's job object. When the launching pwsh's `exit 0` fires at the end of the Start-GaApi step, the OS tears down the job and takes the child with it. `-WindowStyle Hidden` and `-PassThru` are *not* enough — the job-object association persists regardless. By the time the next step's pwsh starts and tries to connect, the listener is gone.
+
+**Fix — collapse Start-Service + Run-Tests into ONE step.** The pwsh executing the merged step stays alive throughout `dotnet test`, so the `Start-Process` child stays alive too. Use `try/finally` to guarantee cleanup on test failure or runner timeout:
+
+```yaml
+- name: Start GaApi + Run Playwright tests (single step)
+  shell: pwsh
+  run: |
+    $env:ASPNETCORE_URLS = "http://localhost:5232"
+    $env:ASPNETCORE_ENVIRONMENT = "CI"
+    $gaapiProc = Start-Process -NoNewWindow -PassThru -FilePath "dotnet" `
+      -ArgumentList "Apps/ga-server/GaApi/bin/Release/net10.0/GaApi.dll" `
+      -RedirectStandardOutput "gaapi-stdout.log" `
+      -RedirectStandardError "gaapi-stderr.log"
+
+    # ... liveness probe (see #3) — sets $apiUp on success ...
+
+    try {
+      dotnet test Tests/.../Playwright.csproj --no-build --logger trx
+      $testExitCode = $LASTEXITCODE
+    } finally {
+      if (-not $gaapiProc.HasExited) {
+        Stop-Process -Id $gaapiProc.Id -Force -ErrorAction SilentlyContinue
+      }
+    }
+    exit $testExitCode
+```
+
+**Compoundable principle:** Workflow steps are process-lifecycle boundaries on Windows runners. If your test needs a background service alive, run them in the same step (so one pwsh holds both lifetimes) — splitting "start" and "use" into separate steps requires a stronger-than-default detach (Scheduled Task, Windows Service, `cmd /c start /b` with explicit job-object detach) that's not worth the complexity for a CI test fixture. Same caveat applies to Linux runners with `bash` and `&`-backgrounded processes — the bash exits at step end and SIGHUPs its children unless explicitly disowned. The merged-step pattern dodges the entire problem class.
+
 ## Prevention
 
 ### 1. CI jobs that consume build outputs must declare an explicit artifact dependency, and `--no-build` runs must fail loudly when the expected DLL is absent
@@ -167,6 +201,12 @@ For each `localhost:<port>` reference in a test config, the workflow must contai
 **Tied to:** Bug #3 (probe required HTTP 200, missed a healthy API returning 401/404 in CI auth context)
 
 A liveness check is asking "is the socket answering?", not "am I authorized?" — so the probe should retry only on `ECONNREFUSED` / timeout / DNS failure, and treat 2xx/3xx/4xx/5xx all as proof the server is up. Reserve status-code assertions for separate functional checks downstream of liveness.
+
+### 4. Run start-service + use-service in the same step; never split them across step boundaries on Windows runners
+
+**Tied to:** Bug #4 (`-WindowStyle Hidden -PassThru` wasn't enough — Windows job-object association killed GaApi when the launching pwsh's `exit 0` fired between steps; PR #129's diagnostic step captured `GaApi (PID 8688) exited between steps`)
+
+Workflow steps are process-lifecycle boundaries on Windows. If a test needs a background service alive, the service-start command and the test command must run inside one step (one pwsh process holds both lifetimes) with a `try/finally` for cleanup. Splitting them requires a stronger-than-default detach (Scheduled Task, Windows Service, `cmd /c start /b` with explicit job-object detach) that's not worth the complexity for a CI test fixture. Same risk on Linux runners with `&`-backgrounded processes — bash SIGHUPs its children at step end unless explicitly disowned.
 
 ## Related
 
