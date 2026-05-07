@@ -1,25 +1,59 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents;
+using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
+using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 /// <summary>
 /// Verification harness for <see cref="CommonTonesSkill"/> — the second
 /// canary for the DSL-eval pattern (Phase 2b of
 /// <c>docs/plans/2026-05-06-skills-orchestration-architecture.md</c>;
-/// transpose was the first, PR #146). Mirrors
-/// <see cref="TransposeSkillTests"/> because the wrapper pattern is the
-/// same: thin C# class emits SKILL.md body verbatim; the LLM does the
-/// actual work via <c>ga_dsl_eval</c>.
+/// transpose was the first, PR #146 / #151). Mirrors
+/// <c>TransposeSkillTests</c> after the path B refactor: the wrapper
+/// keeps routing metadata, <c>ExecuteAsync</c> goes through the
+/// LLM-in-the-loop pass via a fake <see cref="IChatClient"/>.
 /// </summary>
 [TestFixture]
 public class CommonTonesSkillTests
 {
     private const string SkillMdFolder = "common-tones";
 
-    private static CommonTonesSkill MakeSkill() => new(NullLogger<CommonTonesSkill>.Instance);
+    private static IChatClientFactory FactoryFor(IChatClient client)
+    {
+        var mock = new Mock<IChatClientFactory>();
+        mock.Setup(f => f.Create(It.IsAny<string>())).Returns(client);
+        return mock.Object;
+    }
+
+    private static IChatClient FakeClient(string responseText)
+    {
+        var mock = new Mock<IChatClient>();
+        mock.Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, responseText)));
+        return mock.Object;
+    }
+
+    private static IMcpToolsProvider EmptyTools()
+    {
+        var mock = new Mock<IMcpToolsProvider>();
+        mock.Setup(p => p.GetToolsAsync(It.IsAny<CancellationToken>()))
+            .Returns(new ValueTask<IReadOnlyList<AIFunction>>(Array.Empty<AIFunction>()));
+        return mock.Object;
+    }
+
+    private static CommonTonesSkill MakeSkill(string responseText = "C and E are shared between Cmaj7 (root, 3rd) and Am7 (3rd, 5th).")
+    {
+        var factory = FactoryFor(FakeClient(responseText));
+        return new CommonTonesSkill(EmptyTools(), factory, NullLoggerFactory.Instance);
+    }
 
     [Test]
     public void HasSubstantiveDescription()
@@ -52,47 +86,47 @@ public class CommonTonesSkillTests
     }
 
     [Test]
-    public async Task ExecuteAsync_ReturnsTheoryAgentResponse()
+    public async Task ExecuteAsync_DelegatesToSkillMdDrivenSkill_AndPassesResultThrough()
     {
-        var skill = MakeSkill();
+        // Path B: wrapper builds a SkillMdDrivenSkill backed by the injected
+        // IChatClient and forwards its Result. Verifies the LLM text
+        // round-trips and the wrapper does NOT replace it with the SKILL.md
+        // body verbatim (the previous markdown-emitter behaviour).
+        const string fakeAnswer = "C and E are shared between Cmaj7 (root, 3rd) and Am7 (3rd, 5th).";
+        var skill = MakeSkill(responseText: fakeAnswer);
 
-        var response = await skill.ExecuteAsync("common tones between G and D7");
+        var response = await skill.ExecuteAsync("common tones between Cmaj7 and Am7");
 
         Assert.Multiple(() =>
         {
-            Assert.That(response.AgentId, Is.EqualTo(AgentIds.Theory));
-            Assert.That(response.Confidence, Is.EqualTo(1.0f));
-            Assert.That(response.Result, Is.Not.Null.And.Not.Empty);
-            Assert.That(response.Result.Length, Is.GreaterThan(500),
-                "common-tones SKILL.md is multi-section — body should be >500 chars");
+            Assert.That(response.AgentId, Is.EqualTo(AgentIds.Theory),
+                "wrapper still owns AgentId so downstream UIs/tests stay stable");
+            Assert.That(response.Result, Is.EqualTo(fakeAnswer),
+                "Path B: response.Result is the LLM's text, not SKILL.md body");
             Assert.That(response.Evidence, Has.Some.Contains($"skills/{SkillMdFolder}"));
             Assert.That(response.Evidence, Has.Some.Contains("ga_dsl_eval"),
-                "evidence must cite the dispatch path so the LLM has a hint how to answer");
+                "evidence cites the dispatch path so the chatbot UI surfaces it");
         });
     }
 
     [Test]
-    public async Task ExecuteAsync_BodyMatchesSkillMdVerbatim()
+    public async Task ExecuteAsync_DoesNotEmitSkillMdBodyVerbatim()
     {
-        // Strongest test: response body equals SKILL.md body byte-for-byte.
-        // A hardcoded-string stub trivially fails (multi-KB body). Drift
-        // between SKILL.md and the C# answer is caught here.
-        var skill = MakeSkill();
+        // Regression guard against accidentally reverting to the
+        // markdown-emitter pattern. With Path B the response should NEVER
+        // equal the raw SKILL.md body — that's the exact failure mode the
+        // 2026-05-06 Phase 2 finding flagged.
+        var skill = MakeSkill(responseText: "C, E");
 
-        var skillsDir = GA.Business.ML.Agents.Plugins.SkillMdPlugin.ResolveSkillsPath();
+        var skillsDir = SkillMdPlugin.ResolveSkillsPath();
         var path = Path.Combine(skillsDir, SkillMdFolder, "SKILL.md");
-        Assert.That(File.Exists(path), Is.True,
-            $"prerequisite: skills/{SkillMdFolder}/SKILL.md must exist");
-
         var skillMd = SkillMdParser.TryParse(path);
         Assert.That(skillMd, Is.Not.Null);
 
         var response = await skill.ExecuteAsync("test");
 
-        Assert.That(response.Result, Is.EqualTo(skillMd!.Body),
-            $"CommonTonesSkill.ExecuteAsync must emit the SKILL.md body verbatim — " +
-            $"any drift means the C# class is duplicating content that should " +
-            $"live only in the .md");
+        Assert.That(response.Result, Is.Not.EqualTo(skillMd!.Body),
+            "Path B: ExecuteAsync MUST go through the LLM, not echo the body");
     }
 
     [Test]
@@ -109,7 +143,7 @@ public class CommonTonesSkillTests
         // Architectural invariant of the Phase 2b canary: SKILL.md routes
         // through ga_dsl_eval to the domain.commonTones closure, NOT a
         // fictional ga_common_tones keyhole tool.
-        var skillsDir = GA.Business.ML.Agents.Plugins.SkillMdPlugin.ResolveSkillsPath();
+        var skillsDir = SkillMdPlugin.ResolveSkillsPath();
         var path = Path.Combine(skillsDir, SkillMdFolder, "SKILL.md");
         var content = File.ReadAllText(path);
 

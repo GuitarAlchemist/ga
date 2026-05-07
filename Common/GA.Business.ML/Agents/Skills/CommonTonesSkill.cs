@@ -1,28 +1,54 @@
 namespace GA.Business.ML.Agents.Skills;
 
+using GA.Business.ML.Agents.Plugins;
+using GA.Business.ML.Extensions;
+using GA.Business.ML.Skills;
+using Microsoft.Extensions.Logging;
+
 /// <summary>
 /// Finds the notes shared between two chords and describes their interval
-/// role in each. Pure SKILL.md-driven — the body teaches the LLM to call
-/// <c>ga_dsl_eval</c> with the <c>domain.commonTones</c> closure. Second
-/// canary for the DSL-eval pattern (Phase 2b of
+/// role in each. The C# wrapper owns routing metadata (<c>Name</c>,
+/// <c>Description</c>, <c>ExamplePrompts</c>) so the
+/// <c>SemanticIntentRouter</c> can dispatch via the <c>IIntent</c>
+/// registry, then delegates <c>ExecuteAsync</c> to a lazily-constructed
+/// <see cref="SkillMdDrivenSkill"/> that runs the LLM-in-the-loop pass
+/// with <c>skills/common-tones/SKILL.md</c> as the system prompt and the
+/// MCP tool surface (including <c>ga_dsl_eval</c>) attached as
+/// function-calling tools. Second canary for the DSL-eval pattern
+/// (Phase 2b of
 /// <c>docs/plans/2026-05-06-skills-orchestration-architecture.md</c>;
-/// transpose was the first, PR #146).
+/// transpose was the first, PR #146 / #151).
 /// </summary>
 /// <remarks>
-/// The wrapper produces no answer of its own; it emits the SKILL.md body
-/// verbatim. The actual common-tones computation happens when the LLM
-/// follows the body's instructions and invokes <c>ga_dsl_eval</c>. Same
-/// thin-wrapper pattern as <see cref="TransposeSkill"/>.
+/// Mirrors path B from <see cref="TransposeSkill"/> (PR #151) so the
+/// LLM-in-the-loop path actually fires; otherwise the canary measures the
+/// markdown-emitter, which is the wrong thing per the 2026-05-06 Phase 2
+/// finding.
 /// </remarks>
-public sealed class CommonTonesSkill(ILogger<CommonTonesSkill> logger) : IOrchestratorSkill
+public sealed class CommonTonesSkill : IOrchestratorSkill
 {
     private const string SkillFolderName = "common-tones";
 
-    private static readonly Lazy<string> _bodyCache = new(
-        () => CatalogSkillMdLoader.LoadBodyOrFallback(
-            SkillFolderName,
-            "Find common tones between two chords by calling ga_dsl_eval with closureName 'domain.commonTones' and args { chord1, chord2 }. The closure returns a formatted string listing each shared note's interval role in both chords (root / 3rd / 5th / 7th / extension)."),
-        LazyThreadSafetyMode.ExecutionAndPublication);
+    private readonly Lazy<SkillMdDrivenSkill> _inner;
+    private readonly ILogger<CommonTonesSkill> _logger;
+
+    public CommonTonesSkill(
+        IMcpToolsProvider toolsProvider,
+        IChatClientFactory chatClientFactory,
+        ILoggerFactory loggerFactory)
+    {
+        _logger = loggerFactory.CreateLogger<CommonTonesSkill>();
+        var innerLogger = loggerFactory.CreateLogger<SkillMdDrivenSkill>();
+
+        _inner = new Lazy<SkillMdDrivenSkill>(() =>
+        {
+            var path = Path.Combine(SkillMdPlugin.ResolveSkillsPath(), SkillFolderName, "SKILL.md");
+            var skillMd = SkillMdParser.TryParse(path)
+                ?? throw new InvalidOperationException(
+                    $"CommonTonesSkill: skills/{SkillFolderName}/SKILL.md is missing or unparseable at {path}");
+            return new SkillMdDrivenSkill(skillMd, toolsProvider, chatClientFactory, innerLogger);
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
+    }
 
     public string Name        => "CommonTones";
     public string Description =>
@@ -44,17 +70,19 @@ public sealed class CommonTonesSkill(ILogger<CommonTonesSkill> logger) : IOrches
 
     public bool CanHandle(string message) => false; // semantic-routing only
 
-    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        var body = _bodyCache.Value;
-        logger.LogDebug("CommonTonesSkill: returned {Length} chars (LLM will dispatch ga_dsl_eval)", body.Length);
+        _logger.LogDebug("CommonTonesSkill: delegating to SkillMdDrivenSkill (LLM + ga_dsl_eval)");
+        var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
 
-        return Task.FromResult(new AgentResponse
+        // Wrapper still owns AgentId/Evidence so downstream tests + UIs see
+        // a stable shape; only the Result text comes from the LLM call.
+        return new AgentResponse
         {
             AgentId    = AgentIds.Theory,
-            Result     = body,
-            Confidence = 1.0f,
+            Result     = inner.Result,
+            Confidence = inner.Confidence,
             Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.commonTones (via ga_dsl_eval)"],
-        });
+        };
     }
 }
