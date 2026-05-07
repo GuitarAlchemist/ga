@@ -72,16 +72,35 @@ public sealed class TransposeSkill : IOrchestratorSkill
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("TransposeSkill: delegating to SkillMdDrivenSkill (LLM + ga_dsl_eval)");
-        var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
 
-        // The wrapper still owns the AgentId/Evidence shape that downstream
-        // tests + UIs depend on; only the Result text comes from the LLM call.
-        return new AgentResponse
+        // Wrap _inner.Value resolution + ExecuteAsync — Lazy<T> with
+        // ExecutionAndPublication caches the construction exception forever,
+        // so a missing/unparseable skills/transpose/SKILL.md at first
+        // invocation would otherwise propagate uncaught (500 → router) on
+        // every subsequent request. Match SkillMdDrivenSkill's swallow
+        // pattern so a deployment artefact issue degrades gracefully
+        // instead of taking the whole skill out of rotation.
+        try
         {
-            AgentId    = AgentIds.Theory,
-            Result     = inner.Result,
-            Confidence = inner.Confidence,
-            Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.transposeChord (via ga_dsl_eval)"],
-        };
+            var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = inner.Result,
+                Confidence = inner.Confidence,
+                Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.transposeChord (via ga_dsl_eval)"],
+            };
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "TransposeSkill: inner SkillMdDrivenSkill failed");
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = "I couldn't transpose that chord right now. Please try again.",
+                Confidence = 0f,
+                Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.transposeChord (via ga_dsl_eval)"],
+            };
+        }
     }
 }

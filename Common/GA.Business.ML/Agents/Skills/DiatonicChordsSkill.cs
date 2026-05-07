@@ -68,14 +68,32 @@ public sealed class DiatonicChordsSkill : IOrchestratorSkill
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("DiatonicChordsSkill: delegating to SkillMdDrivenSkill (LLM + ga_dsl_eval)");
-        var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
 
-        return new AgentResponse
+        try
         {
-            AgentId    = AgentIds.Theory,
-            Result     = inner.Result,
-            Confidence = inner.Confidence,
-            Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.diatonicChords (via ga_dsl_eval)"],
-        };
+            var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = inner.Result,
+                Confidence = inner.Confidence,
+                Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.diatonicChords (via ga_dsl_eval)"],
+            };
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Lazy<T,ExecutionAndPublication> caches construction exceptions
+            // forever; without this catch, a missing/unparseable
+            // skills/diatonic-chords/SKILL.md would 500 every subsequent
+            // request. Mirrors TransposeSkill (#151 review corr-2).
+            _logger.LogError(ex, "DiatonicChordsSkill: inner SkillMdDrivenSkill failed");
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = "I couldn't list the diatonic chords for that key right now. Please try again.",
+                Confidence = 0f,
+                Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.diatonicChords (via ga_dsl_eval)"],
+            };
+        }
     }
 }

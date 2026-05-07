@@ -44,13 +44,35 @@ public sealed class MemoryStore
         _entries = Load();
     }
 
+    // Bounded so anonymous chatbot traffic at the public demo URL can't grow
+    // ~/.ga/memory.json unbounded — see PR #151 review (reliability rel-007).
+    // When over budget, evict the oldest entries by Timestamp before adding
+    // the new one. Override via Memory:MaxEntries config in callers if needed.
+    public const int DefaultMaxEntries = 10_000;
+
     /// <summary>
-    /// Writes (upserts) a memory entry and persists to disk.
+    /// Writes (upserts) a memory entry and persists to disk. Evicts oldest
+    /// entries when the store exceeds <see cref="DefaultMaxEntries"/>.
     /// </summary>
     public void Write(string key, string type, string content, string[]? tags = null)
     {
         var entry = new MemoryEntry(key, type, content, tags ?? [], DateTimeOffset.UtcNow);
         _entries[key] = entry;
+
+        if (_entries.Count > DefaultMaxEntries)
+        {
+            // Evict the oldest 10% so this work runs amortised, not per-write.
+            // ConcurrentDictionary snapshot is consistent enough for trimming.
+            var evictTarget = _entries.Count - (DefaultMaxEntries * 9 / 10);
+            var oldest = _entries.Values
+                .OrderBy(e => e.Timestamp)
+                .Take(evictTarget)
+                .Select(e => e.Key)
+                .ToList();
+            foreach (var k in oldest)
+                _entries.TryRemove(k, out _);
+        }
+
         Save();
     }
 
