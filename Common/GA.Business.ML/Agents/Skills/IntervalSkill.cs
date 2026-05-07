@@ -18,8 +18,10 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
 {
     public string Name        => "Interval";
     public string Description =>
-        "Computes the interval between two notes (e.g. C to G is a perfect fifth). " +
-        "Pure domain computation, zero LLM calls.";
+        "Names the interval between two single pitches (C to G = perfect " +
+        "fifth, F# to D = minor sixth, A to E = perfect fifth). Returns " +
+        "interval quality, size, and semitone count. Pure domain " +
+        "computation, zero LLM calls.";
 
     public IReadOnlyList<string> ExamplePrompts =>
     [

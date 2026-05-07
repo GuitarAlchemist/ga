@@ -1,0 +1,322 @@
+{
+  "schema_version": "0.1",
+  "prompts_version": "0.1",
+  "chatbot_url": "http://localhost:5232",
+  "started_at": "2026-05-07T02:22:54.7936390Z",
+  "duration_seconds": 0.35,
+  "parallelism": 5,
+  "total_prompts": 20,
+  "passed": 1,
+  "success_rate": 0.05,
+  "p50_ms": 3.4,
+  "p95_ms": 229.3,
+  "gate": {
+    "proceed_at": 0.8,
+    "pivot_at": 0.5,
+    "rollback_at": 0.5,
+    "verdict": "rollback"
+  },
+  "by_closure": [
+    {
+      "key": "domain.analyzeProgression",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 3.3,
+      "p95_ms": 3.3
+    },
+    {
+      "key": "domain.chordIntervals",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 2.9,
+      "p95_ms": 2.9
+    },
+    {
+      "key": "domain.chordSubstitutions",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 46.7,
+      "p95_ms": 46.7
+    },
+    {
+      "key": "domain.commonTones",
+      "n": 3,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 12.8,
+      "p95_ms": 157.3
+    },
+    {
+      "key": "domain.diatonicChords",
+      "n": 3,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 2.9,
+      "p95_ms": 3.0
+    },
+    {
+      "key": "domain.parseChord",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 3.4,
+      "p95_ms": 3.4
+    },
+    {
+      "key": "domain.relativeKey",
+      "n": 2,
+      "passed": 1,
+      "pass_rate": 0.5,
+      "p50_ms": 64.8,
+      "p95_ms": 64.8
+    },
+    {
+      "key": "domain.transposeChord",
+      "n": 4,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 229.3,
+      "p95_ms": 229.3
+    }
+  ],
+  "by_skill": [
+    {
+      "key": "<none>",
+      "n": 17,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 3.3,
+      "p95_ms": 229.3
+    },
+    {
+      "key": "skill.chordinfo",
+      "n": 1,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 157.3,
+      "p95_ms": 157.3
+    },
+    {
+      "key": "skill.modes",
+      "n": 1,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 46.7,
+      "p95_ms": 46.7
+    },
+    {
+      "key": "skill.scaleinfo",
+      "n": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "p50_ms": 64.8,
+      "p95_ms": 64.8
+    }
+  ],
+  "results": [
+    {
+      "id": "transpose-01",
+      "text": "Transpose Cmaj7 up a perfect fifth",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 97.1,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "transpose-04",
+      "text": "Take Am7 down a perfect fourth",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 97.2,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "common-tones-03",
+      "text": "Pivot tones from F to Bb7",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 11.0,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "common-tones-02",
+      "text": "Common tones between G and D7",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 12.8,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "diatonic-01",
+      "text": "Give me the diatonic chords in C major",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.9,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "diatonic-02",
+      "text": "What are the seven chords in G major?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.6,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "diatonic-03",
+      "text": "Diatonic chords in A minor",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 3.0,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "parse-01",
+      "text": "What's in a C7b9 chord?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.9,
+      "expected_closure": "domain.parseChord"
+    },
+    {
+      "id": "parse-02",
+      "text": "Spell out F#m7b5",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 3.4,
+      "expected_closure": "domain.parseChord"
+    },
+    {
+      "id": "relative-01",
+      "text": "What's the relative minor of Bb major?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 3.4,
+      "expected_closure": "domain.relativeKey"
+    },
+    {
+      "id": "intervals-01",
+      "text": "What intervals make up a Dmaj7 chord?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.7,
+      "expected_closure": "domain.chordIntervals"
+    },
+    {
+      "id": "intervals-02",
+      "text": "Intervals in a half-diminished 7th chord",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.9,
+      "expected_closure": "domain.chordIntervals"
+    },
+    {
+      "id": "common-tones-01",
+      "text": "What notes are shared between Cmaj7 and Am7?",
+      "expected_skill": "skill.commontones",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.87823266,
+      "answer": "C major 7 chord contains C, E, G, and B.",
+      "expected_contains": [
+        "C",
+        "E"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": false,
+      "elapsed_ms": 157.3,
+      "elapsed_server_ms": 90,
+      "error": null,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "progression-01",
+      "text": "Analyze the progression Dm G C in C major",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 3.3,
+      "expected_closure": "domain.analyzeProgression"
+    },
+    {
+      "id": "progression-02",
+      "text": "What key is Am F C G in?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 3.3,
+      "expected_closure": "domain.analyzeProgression"
+    },
+    {
+      "id": "subs-01",
+      "text": "Tritone substitution for G7",
+      "pass": false,
+      "error": "Response status code does not indicate success: 503 (Service Unavailable).",
+      "elapsed_ms": 2.1,
+      "expected_closure": "domain.chordSubstitutions"
+    },
+    {
+      "id": "relative-02",
+      "text": "Relative major of E minor",
+      "expected_skill": null,
+      "actual_skill": "skill.scaleinfo",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.8414784,
+      "answer": "The E minor scale has 7 notes: **E – F# – G – A – B – C – D**. Relative major: G major.",
+      "expected_contains": [
+        "G major"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 64.8,
+      "elapsed_server_ms": 61,
+      "error": null,
+      "expected_closure": "domain.relativeKey"
+    },
+    {
+      "id": "transpose-03",
+      "text": "What's Bb7 up a half step?",
+      "pass": false,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error).",
+      "elapsed_ms": 229.3,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "transpose-02",
+      "text": "Move F#m down a major third",
+      "pass": false,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error).",
+      "elapsed_ms": 229.3,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "subs-02",
+      "text": "What can I substitute for Cmaj7 in a ii-V-I?",
+      "expected_skill": "skill.chordsubstitution",
+      "actual_skill": "skill.modes",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.690353,
+      "answer": "The major scale has 7 modes (Ionian formula: W-W-H-W-W-W-H). Each starts on a successive degree of the parent scale:\r\n\r\n1. **Ionian** — degrees `1 2 3 4 5 6 7` — Bright, the major scale itself\r\n2. **Dorian** — degrees `1 2 b3 4 5 6 b7` — Minor with raised 6th — jazz/folk staple\r\n3. **Phrygian** — degrees `1 b2 b3 4 5 b6 b7` — Dark minor with flat 2 — Spanish/flamenco\r\n4. **Lydian** — degrees `1 2 3 #4 5 6 7` — Major with raised 4th — floating, dreamy\r\n5. **Mixolydian** — degrees `1 2 3 4 5 6 b7` — Major with flat 7 — bluesy/rock\r\n6. **Aeolian** — degrees `1 2 b3 4 5 b6 b7` — Natural minor\r\n7. **Locrian** — degrees `1 b2 b3 4 b5 b6 b7` — Half-diminished — rare as a tonic\r\n\r\nMnemonic: *I Don't Particularly Like Modes A Lot* (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian).",
+      "expected_contains": [
+        "Em7",
+        "Am7"
+      ],
+      "missing": [
+        "Em7",
+        "Am7"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 46.7,
+      "elapsed_server_ms": 43,
+      "error": null,
+      "expected_closure": "domain.chordSubstitutions"
+    }
+  ]
+}
