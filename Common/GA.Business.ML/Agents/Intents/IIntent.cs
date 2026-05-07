@@ -48,8 +48,24 @@ public interface IIntent
 /// <c>routing.method</c> trace tag. Defaults to <c>"semantic-intent"</c> at the
 /// router level; intents that want their own brand (e.g. <c>"ix-algebra"</c>)
 /// can override here.</param>
+/// <param name="GroundingSource">Origin of the deterministic computation that
+/// produced this answer (e.g. <c>"ix"</c>, <c>"ix-compatible"</c>). The
+/// orchestrator reconstructs <c>GroundingMetadata</c> at its layer boundary
+/// from this and the three sibling fields — kept primitive here so the
+/// ML-layer <c>IIntent</c> contract doesn't reach across into the
+/// Orchestration layer's typed grounding model.</param>
+/// <param name="GroundingRevision">Source revision (commit / version /
+/// fingerprint) so the response is reproducible.</param>
+/// <param name="GroundingQueryType">Optional query-shape tag, e.g.
+/// <c>"z-relation"</c>, <c>"prime-form"</c>.</param>
+/// <param name="GroundingFacts">Optional key/value facts the deterministic
+/// service exposes for downstream display or audit.</param>
 public sealed record IntentResult(
     string Answer,
     float Confidence = 1.0f,
     IReadOnlyList<string>? Evidence = null,
-    string? RoutingMethodOverride = null);
+    string? RoutingMethodOverride = null,
+    string? GroundingSource = null,
+    string? GroundingRevision = null,
+    string? GroundingQueryType = null,
+    IReadOnlyDictionary<string, string>? GroundingFacts = null);

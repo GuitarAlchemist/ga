@@ -334,7 +334,8 @@ public class ProductionOrchestrator(
                 Routing: new AgentRoutingMetadata(
                     pick.Intent.Id,
                     Math.Min(intentResult.Confidence, pick.Confidence),
-                    intentResult.RoutingMethodOverride ?? "semantic-intent"));
+                    intentResult.RoutingMethodOverride ?? "semantic-intent"),
+                Grounding: BuildGrounding(intentResult));
 
             // OnResponseSent hooks (memory writing, analytics)
             var sentCtx = new ChatHookContext
@@ -534,6 +535,28 @@ public class ProductionOrchestrator(
             Routing: new AgentRoutingMetadata(
                 pick.Intent.Id,
                 Math.Min(result.Confidence, pick.Confidence),
-                result.RoutingMethodOverride ?? "semantic-intent"));
+                result.RoutingMethodOverride ?? "semantic-intent"),
+            Grounding: BuildGrounding(result));
     }
+
+    /// <summary>
+    /// Lifts the four primitive grounding fields off <see cref="IntentResult"/>
+    /// into the typed <see cref="GroundingMetadata"/> the public chat surface
+    /// expects. Returns null when the intent didn't carry grounding data —
+    /// only deterministic-compute intents (e.g. <c>algebra</c>) populate it.
+    /// </summary>
+    /// <remarks>
+    /// The split exists to keep the ML-layer <see cref="IIntent"/> contract
+    /// from depending on <see cref="GroundingMetadata"/>, which lives in the
+    /// Orchestration layer. The orchestrator is the natural place to bridge
+    /// the two representations.
+    /// </remarks>
+    private static GroundingMetadata? BuildGrounding(IntentResult result) =>
+        result.GroundingSource is null
+            ? null
+            : new GroundingMetadata(
+                result.GroundingSource,
+                result.GroundingRevision ?? "unknown",
+                result.GroundingQueryType,
+                result.GroundingFacts);
 }

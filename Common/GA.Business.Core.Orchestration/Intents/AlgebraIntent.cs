@@ -49,6 +49,10 @@ public sealed class AlgebraIntent(IIxAlgebraService algebraService) : IIntent
             Answer: answer.NaturalLanguageAnswer,
             Confidence: 1.0f,
             Evidence: answer.Facts.Select(kv => $"{kv.Key}: {kv.Value}").ToList(),
-            RoutingMethodOverride: "ix-algebra");
+            RoutingMethodOverride: "ix-algebra",
+            GroundingSource: answer.Grounding.Source,
+            GroundingRevision: answer.Grounding.Revision,
+            GroundingQueryType: answer.Grounding.QueryType,
+            GroundingFacts: answer.Grounding.Facts);
     }
 }
