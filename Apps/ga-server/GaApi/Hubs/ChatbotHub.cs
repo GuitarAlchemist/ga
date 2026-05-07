@@ -10,8 +10,11 @@ using Services;
 
 /// <summary>
 ///     SignalR hub for real-time chatbot interactions with shared orchestration pipeline.
+///     Anonymous: this hub backs the public demo at demos.guitaralchemist.com/chatbot/,
+///     so it accepts unauthenticated WebSocket negotiations. Per-conversation state
+///     is keyed by Context.ConnectionId, not by an authenticated user identity.
 /// </summary>
-[Authorize]
+[AllowAnonymous]
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
     ProductionOrchestrator orchestrator,
