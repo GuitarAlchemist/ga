@@ -21,7 +21,13 @@ Start-Sleep 2
 $slot = Get-SlotTarget
 if (-not $slot) { $slot = "blue" }  # fallback if .slot-target is missing
 Write-Host "  [Build] GaApi -> $slot slot..." -ForegroundColor Cyan
-dotnet build "$repoRoot\Apps\ga-server\GaApi\GaApi.csproj" -c Debug | Out-Null
+# UseBlueGreenSlots=true activates the OutputPath redirect in
+# Directory.Build.targets that writes outputs (including
+# .staticwebassets.runtime.json) into bin/$slot/. Without this flag
+# the build lands in bin/Debug/ and bin/$slot/ stays stale, which
+# silently launches an old binary or crashes on a stale
+# static-web-asset manifest pointing at packages that no longer exist.
+dotnet build "$repoRoot\Apps\ga-server\GaApi\GaApi.csproj" -c Debug -p:UseBlueGreenSlots=true | Out-Null
 $gaApiExe = "$repoRoot\Apps\ga-server\GaApi\bin\$slot\net10.0\GaApi.exe"
 if (-not (Test-Path $gaApiExe)) {
     Write-Host "  [Build] FAILED — $gaApiExe not found" -ForegroundColor Red
