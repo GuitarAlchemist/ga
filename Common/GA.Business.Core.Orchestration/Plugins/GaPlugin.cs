@@ -46,12 +46,14 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<GenreEssentialsSkill>();
         services.AddOrchestratorSkillIntent<WhatCanYouDoSkill>();
 
-        // Tool-driven skill graduated 2026-05-06 — first canary for the
-        // DSL-eval pattern (Phase 2 of skills-orchestration plan). Body
-        // teaches the LLM to dispatch ga_dsl_eval against the
-        // domain.transposeChord closure. The C# wrapper is a thin
-        // markdown-emitter; the answer comes from the closure invocation.
+        // Tool-driven skills graduated 2026-05-06 — Path B (LLM-in-the-loop)
+        // canaries for the DSL-eval pattern. Each wrapper owns routing
+        // metadata; ExecuteAsync delegates to a SkillMdDrivenSkill that
+        // dispatches ga_dsl_eval against the named closure. Adding new
+        // skills follows the TransposeSkill/DiatonicChordsSkill template:
+        // 1) skills/<name>/SKILL.md, 2) <Name>Skill.cs, 3) register here.
         services.AddOrchestratorSkillIntent<TransposeSkill>();
+        services.AddOrchestratorSkillIntent<DiatonicChordsSkill>();
 
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
@@ -91,5 +93,12 @@ public sealed class GaPlugin : IChatPlugin
         // for safety. Contract: docs/contracts/2026-05-06-ga-dsl-eval-contract.md
         // (v0.1, 2026-05-06).
         typeof(DslEvalMcpTools),
+
+        // ga_sampling_demo — spike (#79) proving the MCP sampling
+        // pattern works from a GA tool: the tool asks the connected
+        // client (Claude Code, chatbot orchestrator, …) to do the LLM
+        // call instead of opening its own IChatClient. First step
+        // toward replacing IChatClientFactory in SkillMdDrivenSkill.
+        typeof(SamplingDemoMcpTool),
     ];
 }

@@ -277,6 +277,42 @@ public class SkillMdDrivenSkillTests
         Assert.That(response.Result, Contains.Substring("error"));
     }
 
+    [Test]
+    public async Task ExecuteAsync_EmptyResponseText_ReturnsZeroConfidenceFailure()
+    {
+        // PR #151 review (rel-005 / corr-1): an empty/whitespace LLM response
+        // — model hit the tool-loop iteration cap, returned only tool_use
+        // blocks, or refused — must NOT be forwarded as a successful answer
+        // with Confidence=0.9. The chatbot UI would surface a blank bubble
+        // and MemoryHook (Confidence>=0.7 + length>=100 check, but the 0.9
+        // gate alone is the smell). Guard: empty text → Confidence=0 +
+        // explicit "model returned an empty response" message.
+        var clientMock = new Mock<IChatClient>();
+        clientMock
+            .Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "")));
+
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(name: "Test"),
+            EmptyToolsProvider(),
+            FactoryFor(clientMock.Object),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        var response = await skill.ExecuteAsync("test");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Confidence, Is.EqualTo(0f),
+                "empty LLM response must NOT pass through with Confidence=0.9");
+            Assert.That(response.Result, Is.Not.Empty,
+                "fallback message must be present so the UI doesn't render a blank bubble");
+            Assert.That(response.Result.ToLowerInvariant(), Does.Contain("empty"));
+        });
+    }
+
     // ── Provider configuration failures (factory-driven) ──────────────────────
 
     [Test]

@@ -1,6 +1,8 @@
 namespace GA.Business.ML.Agents.Plugins;
 
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -81,8 +83,68 @@ public static class ChatPluginHost
                     capturedToolTypes,
                     sp,
                     sp.GetRequiredService<ILogger<InProcessMcpToolsProvider>>()));
+
+            // Build the AIFunction list eagerly at startup — duplicate
+            // [McpServerTool] names, missing tool dependencies, and reflection
+            // failures otherwise surface only on first chat request, where
+            // SkillMdDrivenSkill's catch turns them into a generic "I
+            // encountered an error" reply on every subsequent call (the cached
+            // failure poisons the chatbot until restart, with no operator
+            // alarm). See PR #151 review (reliability rel-004).
+            services.AddHostedService<McpToolsProviderStartupCheck>();
         }
+
+        // Make the same tool types available to the host so it can also expose
+        // them via MCP over HTTP (parity surface for Claude Code + remote
+        // clients). Hosts that don't add the AspNetCore MCP package can
+        // ignore this — the marker singleton has no effect on its own.
+        services.AddSingleton(new ChatPluginMcpToolTypes(capturedToolTypes));
 
         return services;
     }
 }
+
+/// <summary>
+/// Eagerly resolves <see cref="IMcpToolsProvider"/> at host startup so MCP
+/// tool registration failures (duplicate <c>[McpServerTool]</c> names,
+/// missing constructor dependencies, reflection issues) surface as a
+/// boot failure rather than a silently-broken chatbot. The hosted
+/// service is registered by <see cref="ChatPluginHost.AddChatPluginHost"/>
+/// only when at least one plugin contributed tool types.
+/// </summary>
+internal sealed class McpToolsProviderStartupCheck(
+    IMcpToolsProvider provider,
+    ILogger<McpToolsProviderStartupCheck> logger) : IHostedService
+{
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tools = await provider.GetToolsAsync(cancellationToken);
+            logger.LogInformation(
+                "McpToolsProviderStartupCheck: {Count} AIFunction(s) ready ({Names})",
+                tools.Count,
+                string.Join(", ", tools.Select(t => t.Name)));
+        }
+        catch (Exception ex)
+        {
+            // Re-throw so host startup fails loudly. The alternative — log and
+            // continue — produces an app that boots green but fails every
+            // chat call, which is the failure mode rel-004 flagged.
+            logger.LogCritical(ex,
+                "McpToolsProviderStartupCheck: tool registration failed at startup — refusing to start");
+            throw;
+        }
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+/// <summary>
+/// Marker singleton that surfaces the union of <c>McpToolTypes</c> contributed
+/// by every loaded <see cref="IChatPlugin"/>. Consumed by
+/// <c>AddChatPluginMcpHttpServer</c> in <c>GaApi</c> to wire the same tool
+/// surface into MCP-over-HTTP so Claude Code and the chatbot share one
+/// canonical tool definition.
+/// </summary>
+public sealed record ChatPluginMcpToolTypes(IReadOnlyList<Type> Types);

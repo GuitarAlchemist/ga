@@ -98,8 +98,32 @@ public static class AiServiceExtensions
             else
                 services.AddSingleton<IChatService, OllamaChatService>();
 
-            // Register Adapter for IChatClient (used by Agents)
-            services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
+            // Register Adapter for IChatClient (used by Agents). Provider-aware
+            // so AI:ChatProvider=claude routes the chatbot's main loop through
+            // Anthropic (model from Anthropic:Model — defaults to Haiku 4.5 in
+            // appsettings.Development.json). Anthropic costs ~$0.10–0.20 per
+            // soak run vs Ollama's hosting requirements; for the public demo
+            // and Phase 3 measurement Haiku 4.5 wins on tool-use reliability.
+            // Falls back to Ollama for offline / cost-sensitive setups.
+            //
+            // EAGER: build the client now, not via a Singleton lambda. The
+            // lambda variant deferred CreateChatClient until first request,
+            // which meant a missing ANTHROPIC_API_KEY booted cleanly,
+            // /api/health passed, and the failure only surfaced as an opaque
+            // 500 on the first user prompt — invisible to operators. See PR
+            // #151 review (correctness corr-1, reliability rel-001). Eager
+            // construction surfaces the error at startup.
+            if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
+            {
+                var anthropicClient = GA.Providers.Anthropic.AnthropicProvider.CreateChatClient(
+                    configuration,
+                    configuration["Anthropic:Model"]);
+                services.AddSingleton<IChatClient>(anthropicClient);
+            }
+            else
+            {
+                services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
+            }
         }
         /// <summary>
         ///     Add vector search application services

@@ -1,18 +1,30 @@
 namespace GA.Business.ML.Agents.Plugins;
 
-using System.IO.Pipelines;
+using System.ComponentModel;
+using System.Reflection;
 using Microsoft.Extensions.AI;
-using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Server;
 
 /// <summary>
-/// Assembles an in-process MCP server from registered <see cref="IChatPlugin.McpToolTypes"/>
-/// and exposes the resulting tools as <see cref="AIFunction"/> instances via a <see cref="Pipe"/> pair.
-///
-/// The server is started once on first call to <see cref="GetToolsAsync"/> and the result cached.
-/// All <see cref="SkillMdDrivenSkill"/> instances share a single MCP client connection.
+/// Surfaces MCP tools from registered <see cref="IChatPlugin.McpToolTypes"/>
+/// as <see cref="AIFunction"/> instances suitable for
+/// <see cref="ChatOptions.Tools"/>. The previous implementation booted an
+/// in-process MCP server and round-tripped tools/list through a Pipe pair;
+/// that path tripped over the
+/// <c>WithTools(Type)</c> / <c>WithTools(IEnumerable&lt;Type&gt;)</c>
+/// overload-resolution gotcha and left the server with no
+/// <c>tools/list</c> handler — every <see cref="SkillMdDrivenSkill"/> call
+/// 500'd with <c>Method 'tools/list' is not available</c>.
 /// </summary>
+/// <remarks>
+/// Direct reflection-based <see cref="AIFunctionFactory.Create(MethodInfo, object?, AIFunctionFactoryOptions?)"/>
+/// is faster (no JSON-RPC, no pipe IO), simpler (no MCP capability
+/// negotiation), and bypasses the registration bug entirely. Wire-name,
+/// description, and parameter binding still come from
+/// <see cref="McpServerToolAttribute"/> + <see cref="DescriptionAttribute"/>
+/// so the contract LLMs see is unchanged.
+/// </remarks>
 public sealed class InProcessMcpToolsProvider(
     IReadOnlyList<Type> toolTypes,
     IServiceProvider hostServices,
@@ -20,7 +32,6 @@ public sealed class InProcessMcpToolsProvider(
 {
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private IReadOnlyList<AIFunction>? _tools;
-    private McpClient? _client;
 
     public async ValueTask<IReadOnlyList<AIFunction>> GetToolsAsync(CancellationToken ct = default)
     {
@@ -33,7 +44,7 @@ public sealed class InProcessMcpToolsProvider(
             if (_tools is not null)
                 return _tools;
 
-            _tools = await StartInProcessServerAsync(ct);
+            _tools = BuildTools();
             return _tools;
         }
         finally
@@ -42,7 +53,7 @@ public sealed class InProcessMcpToolsProvider(
         }
     }
 
-    private async Task<IReadOnlyList<AIFunction>> StartInProcessServerAsync(CancellationToken ct)
+    private IReadOnlyList<AIFunction> BuildTools()
     {
         if (toolTypes.Count == 0)
         {
@@ -50,95 +61,56 @@ public sealed class InProcessMcpToolsProvider(
             return [];
         }
 
-        // Pipe pair — no subprocess, no HTTP, no network
-        var clientToServer = new Pipe();
-        var serverToClient = new Pipe();
+        var functions = new List<AIFunction>();
+        var seenNames = new HashSet<string>(StringComparer.Ordinal);
 
-        // ── Build in-process MCP server ──────────────────────────────────────
-        var serverServices = new ServiceCollection();
-        serverServices.AddLogging();
-
-        // Forward domain services the MCP tool types depend on. Registering
-        // `hostServices` itself as IServiceProvider does NOT make individual
-        // services resolvable inside the server scope — the MCP framework
-        // activates tool instances via ActivatorUtilities against the *server's*
-        // provider, which only sees what's registered in `serverServices`.
-        //
-        // Each tool type's longest constructor is inspected; every parameter
-        // type is forwarded as a singleton that defers to the host provider.
-        // This lets new tool dependencies work without touching this file —
-        // bug surfaced by PR #85 review.
-        serverServices.AddSingleton(hostServices);
         foreach (var toolType in toolTypes)
         {
-            var ctor = toolType.GetConstructors().OrderByDescending(c => c.GetParameters().Length).FirstOrDefault();
-            if (ctor is null) continue;
-            foreach (var param in ctor.GetParameters())
+            // Some tools are static helpers, others have ctors taking domain
+            // services from hostServices. Activate lazily — only spend the
+            // ActivatorUtilities call if at least one method is an instance
+            // method, and only activate once per type.
+            object? lazyTarget = null;
+            object GetTarget() => lazyTarget ??= ActivatorUtilities.CreateInstance(hostServices, toolType);
+
+            var methods = toolType.GetMethods(
+                BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Instance | BindingFlags.Static);
+
+            foreach (var method in methods)
             {
-                var serviceType = param.ParameterType;
-                if (serviceType == typeof(IServiceProvider)) continue;
-                // Skip if already registered (multiple tools sharing a dep).
-                if (serverServices.Any(d => d.ServiceType == serviceType)) continue;
-                serverServices.AddSingleton(serviceType, _ => hostServices.GetRequiredService(serviceType));
+                var toolAttr = method.GetCustomAttribute<McpServerToolAttribute>();
+                if (toolAttr is null) continue;
+
+                var descAttr = method.GetCustomAttribute<DescriptionAttribute>();
+                var name = !string.IsNullOrEmpty(toolAttr.Name) ? toolAttr.Name : method.Name;
+                var description = descAttr?.Description ?? string.Empty;
+
+                if (!seenNames.Add(name))
+                {
+                    throw new InvalidOperationException(
+                        $"InProcessMcpToolsProvider: duplicate MCP tool name '{name}'. " +
+                        $"Each [McpServerTool] must have a unique wire name " +
+                        $"(e.g. via [McpServerTool(Name = \"ga_<topic>_<verb>\")]).");
+                }
+
+                var target = method.IsStatic ? null : GetTarget();
+                var fn = AIFunctionFactory.Create(method, target, name, description);
+                functions.Add(fn);
             }
         }
 
-        var mcpBuilder = serverServices
-            .AddMcpServer()
-            .WithStreamServerTransport(
-                clientToServer.Reader.AsStream(),
-                serverToClient.Writer.AsStream());
-
-        foreach (var toolType in toolTypes)
-            mcpBuilder.WithTools(toolType);
-
-        var serverProvider = serverServices.BuildServiceProvider();
-        var server = serverProvider.GetRequiredService<ModelContextProtocol.Server.McpServer>();
-
-        // Fire-and-forget: runs until the host shuts down or the pipe closes
-        _ = server.RunAsync(ct);
-
-        // ── Connect MCP client ───────────────────────────────────────────────
-        var clientTransport = new StreamClientTransport(
-            serverInput:  clientToServer.Writer.AsStream(),
-            serverOutput: serverToClient.Reader.AsStream());
-
-        _client = await McpClient.CreateAsync(clientTransport, cancellationToken: ct);
-
-        var toolList = await _client.ListToolsAsync(cancellationToken: ct);
-
-        // Tool-name uniqueness defense: the underlying MCP server registration
-        // is iterative WithTools(toolType) calls with no dedup or namespace
-        // prefixing. A duplicate tool name (deliberate or accidental) would
-        // give "last writer wins" semantics — and an LLM holding a name from
-        // an earlier turn could call a tool whose body was silently replaced.
-        // Detect at startup and fail fast so the operator sees the collision
-        // before any user-facing call lands on it.
-        var dupes = toolList
-            .GroupBy(t => t.Name, StringComparer.Ordinal)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToList();
-        if (dupes.Count > 0)
-        {
-            throw new InvalidOperationException(
-                $"InProcessMcpToolsProvider: duplicate MCP tool name(s) registered: {string.Join(", ", dupes)}. " +
-                $"Each [McpServerTool] must have a unique wire name (e.g. via [McpServerTool(Name = \"ga_<topic>_<verb>\")]). " +
-                $"Full registered set: [{string.Join(", ", toolList.Select(t => t.Name))}].");
-        }
-
         logger.LogInformation(
-            "InProcessMcpToolsProvider: started with {Count} MCP tools ({Types})",
-            toolList.Count,
-            string.Join(", ", toolList.Select(t => t.Name)));
+            "InProcessMcpToolsProvider: built {Count} AIFunctions ({Names})",
+            functions.Count,
+            string.Join(", ", functions.Select(f => f.Name)));
 
-        return toolList.Cast<AIFunction>().ToList().AsReadOnly();
+        return functions.AsReadOnly();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_client is IAsyncDisposable asyncDisposable)
-            await asyncDisposable.DisposeAsync();
         _initLock.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

@@ -17,9 +17,10 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Modes";
     public string Description =>
-        "Lists the seven modes of the major scale (Ionian, Dorian, Phrygian, Lydian, " +
-        "Mixolydian, Aeolian, Locrian) with degrees and character notes — pure music " +
-        "theory, no LLM call.";
+        "Pedagogy of the seven diatonic modes named individually: Ionian, " +
+        "Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian. Returns " +
+        "degree formula, W/H step pattern, and character description for " +
+        "each mode. Pure music theory, no LLM call.";
 
     public IReadOnlyList<string> ExamplePrompts =>
     [
@@ -29,6 +30,7 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "Tell me about the major scale modes",
         "What is Lydian mode?",
         "Explain Phrygian and Aeolian",
+        "How does Mixolydian differ from Ionian?",
     ];
 
     private static readonly Regex ModesPattern =

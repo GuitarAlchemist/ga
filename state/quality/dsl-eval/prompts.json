@@ -1,0 +1,146 @@
+{
+  "version": "0.1",
+  "purpose": "Phase 3 soak set for ga_dsl_eval canary measurement (docs/plans/2026-05-06-skills-orchestration-architecture.md). 20 prompts spanning the 11 domain closures registered in GaClosureRegistry — most prompts target one closure, a few are deliberately ambiguous to test routing. expected_contains is a black-box quality check; all matches are case-insensitive substrings unless suffix is `:regex`.",
+  "prompts": [
+    {
+      "id": "transpose-01",
+      "text": "Transpose Cmaj7 up a perfect fifth",
+      "expected_closure": "domain.transposeChord",
+      "expected_skill": "skill.transpose",
+      "expected_contains": ["Gmaj7"]
+    },
+    {
+      "id": "transpose-02",
+      "text": "Move F#m down a major third",
+      "expected_closure": "domain.transposeChord",
+      "expected_skill": "skill.transpose",
+      "expected_contains": ["Dm"]
+    },
+    {
+      "id": "transpose-03",
+      "text": "What's Bb7 up a half step?",
+      "expected_closure": "domain.transposeChord",
+      "expected_skill": "skill.transpose",
+      "expected_contains": ["B7"]
+    },
+    {
+      "id": "transpose-04",
+      "text": "Take Am7 down a perfect fourth",
+      "expected_closure": "domain.transposeChord",
+      "expected_skill": "skill.transpose",
+      "expected_contains": ["Em7"]
+    },
+    {
+      "id": "common-tones-01",
+      "text": "What notes are shared between Cmaj7 and Am7?",
+      "expected_closure": "domain.commonTones",
+      "expected_skill": "skill.commontones",
+      "expected_contains": ["C", "E"]
+    },
+    {
+      "id": "common-tones-02",
+      "text": "Common tones between G and D7",
+      "expected_closure": "domain.commonTones",
+      "expected_skill": "skill.commontones",
+      "expected_contains": ["D"]
+    },
+    {
+      "id": "common-tones-03",
+      "text": "Pivot tones from F to Bb7",
+      "expected_closure": "domain.commonTones",
+      "expected_skill": "skill.commontones",
+      "expected_contains": ["F"]
+    },
+    {
+      "id": "diatonic-01",
+      "text": "Give me the diatonic chords in C major",
+      "expected_closure": "domain.diatonicChords",
+      "expected_skill": null,
+      "expected_contains": ["Dm", "Em", "F", "G", "Am"]
+    },
+    {
+      "id": "diatonic-02",
+      "text": "What are the seven chords in G major?",
+      "expected_closure": "domain.diatonicChords",
+      "expected_skill": null,
+      "expected_contains": ["Am", "Bm", "C", "D", "Em"]
+    },
+    {
+      "id": "diatonic-03",
+      "text": "Diatonic chords in A minor",
+      "expected_closure": "domain.diatonicChords",
+      "expected_skill": null,
+      "expected_contains": ["Dm", "Em", "F", "G"]
+    },
+    {
+      "id": "parse-01",
+      "text": "What's in a C7b9 chord?",
+      "expected_closure": "domain.parseChord",
+      "expected_skill": "skill.chordinfo",
+      "expected_contains": ["C", "E", "G", "Bb"]
+    },
+    {
+      "id": "parse-02",
+      "text": "Spell out F#m7b5",
+      "expected_closure": "domain.parseChord",
+      "expected_skill": "skill.chordinfo",
+      "expected_contains": ["F#", "A", "C", "E"]
+    },
+    {
+      "id": "relative-01",
+      "text": "What's the relative minor of Bb major?",
+      "expected_closure": "domain.relativeKey",
+      "expected_skill": null,
+      "expected_contains": ["G minor"]
+    },
+    {
+      "id": "relative-02",
+      "text": "Relative major of E minor",
+      "expected_closure": "domain.relativeKey",
+      "expected_skill": null,
+      "expected_contains": ["G major"]
+    },
+    {
+      "id": "intervals-01",
+      "text": "What intervals make up a Dmaj7 chord?",
+      "expected_closure": "domain.chordIntervals",
+      "expected_skill": "skill.chordinfo",
+      "expected_contains": ["3rd", "5th", "7th"]
+    },
+    {
+      "id": "intervals-02",
+      "text": "Intervals in a half-diminished 7th chord",
+      "expected_closure": "domain.chordIntervals",
+      "expected_skill": "skill.chordinfo",
+      "expected_contains": ["minor 3rd", "diminished 5th", "minor 7th"]
+    },
+    {
+      "id": "progression-01",
+      "text": "Analyze the progression Dm G C in C major",
+      "expected_closure": "domain.analyzeProgression",
+      "expected_skill": null,
+      "expected_contains": ["ii", "V", "I"]
+    },
+    {
+      "id": "progression-02",
+      "text": "What key is Am F C G in?",
+      "expected_closure": "domain.analyzeProgression",
+      "expected_skill": "skill.keyidentification",
+      "expected_contains": ["C major"]
+    },
+    {
+      "id": "subs-01",
+      "text": "Tritone substitution for G7",
+      "expected_closure": "domain.chordSubstitutions",
+      "expected_skill": "skill.chordsubstitution",
+      "expected_contains": ["Db7"]
+    },
+    {
+      "id": "subs-02",
+      "text": "What can I substitute for Cmaj7 in a ii-V-I?",
+      "expected_closure": "domain.chordSubstitutions",
+      "expected_skill": "skill.chordsubstitution",
+      "expected_contains": ["Em7", "Am7"]
+    }
+  ]
+}

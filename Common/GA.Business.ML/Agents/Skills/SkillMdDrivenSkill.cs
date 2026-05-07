@@ -68,6 +68,9 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
             new(ChatRole.User, message),
         ];
 
+        var agentId = $"skill.md.{_skillMd.Name.ToLowerInvariant().Replace(' ', '-')}";
+        var messageHead = message.Length > 200 ? message[..200] + "…" : message;
+
         try
         {
             _logger.LogDebug(
@@ -79,9 +82,26 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 
             _logger.LogDebug("SkillMdDrivenSkill [{Skill}] response length={Len}", _skillMd.Name, text.Length);
 
+            // Empty / whitespace text means the LLM either hit the tool-loop
+            // iteration cap without converging, returned only tool_use blocks
+            // with no text turn, or refused. Surface as a low-confidence
+            // failure instead of a blank chatbot bubble (rel-005 / corr-1).
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _logger.LogWarning(
+                    "SkillMdDrivenSkill [{Skill}] returned empty text — tools={ToolCount}, message head=\"{MessageHead}\"",
+                    _skillMd.Name, tools.Count, messageHead);
+                return new AgentResponse
+                {
+                    AgentId    = agentId,
+                    Result     = "The model returned an empty response. Please rephrase or try again.",
+                    Confidence = 0f,
+                };
+            }
+
             return new AgentResponse
             {
-                AgentId    = $"skill.md.{_skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
+                AgentId    = agentId,
                 Result     = text,
                 // Placeholder confidence: SKILL.md-driven skills do not emit a structured
                 // confidence value — the LLM response is free-form text. 0.9f is used as a
@@ -91,12 +111,15 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "SkillMdDrivenSkill [{Skill}] failed", _skillMd.Name);
+            // Operator-visible context: skill, tool count, message head — without
+            // leaking ex.Message to the caller (may contain API keys, endpoint
+            // URLs, or internal service details).
+            _logger.LogError(ex,
+                "SkillMdDrivenSkill [{Skill}] failed — tools={ToolCount}, message head=\"{MessageHead}\"",
+                _skillMd.Name, tools.Count, messageHead);
             return new AgentResponse
             {
-                AgentId    = $"skill.md.{_skillMd.Name.ToLowerInvariant().Replace(' ', '-')}",
-                // Return a generic message — never surface ex.Message to the caller
-                // (may contain API keys, endpoint URLs, or internal service details).
+                AgentId    = agentId,
                 Result     = "I encountered an error processing your request. Please try again.",
                 Confidence = 0f,
             };

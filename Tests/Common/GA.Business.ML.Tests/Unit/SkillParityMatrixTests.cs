@@ -94,6 +94,13 @@ public class SkillParityMatrixTests
             typeof(GA.Business.ML.Agents.Skills.TransposeSkill),
             ["ga_dsl_eval"], "dsl-eval"),
 
+        // Tool-driven skill graduated 2026-05-06 — Path B (LLM-in-the-loop)
+        // canary. Same template as transpose; routes through ga_dsl_eval
+        // to the domain.diatonicChords closure.
+        new("diatonic-chords",       "diatonic-chords",
+            typeof(GA.Business.ML.Agents.Skills.DiatonicChordsSkill),
+            ["ga_dsl_eval"], "dsl-eval"),
+
         // MCP-tool-driven skills (SKILL.md → ga_* tool → IOrchestratorSkill)
         new("interval",              "interval",
             typeof(GA.Business.ML.Agents.Skills.IntervalSkill),

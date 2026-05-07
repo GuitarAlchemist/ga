@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Agents.Hooks;
 
 using Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -8,13 +9,32 @@ using Microsoft.Extensions.Logging;
 /// Hook that enriches requests with relevant memory context and persists
 /// high-confidence responses as new memories.
 /// </summary>
-public sealed class MemoryHook(MemoryStore memoryStore, ILogger<MemoryHook> logger) : IChatHook
+/// <remarks>
+/// Retrieval (request-time injection) defaults to OFF — opt in via
+/// <c>Memory:EnrichOnRetrieve=true</c>. The store is process-wide and not
+/// session-scoped, so injecting accumulated history into every anonymous
+/// request leaks chord references between unrelated conversations and
+/// breaks any skill that does regex-based parsing on the full message
+/// (ChordSubstitutionSkill saw "A" from a prior cached answer when the
+/// user asked about "G7"). Persistence still runs so the data is
+/// available once the feature is properly session-scoped.
+/// </remarks>
+public sealed class MemoryHook(
+    MemoryStore memoryStore,
+    IConfiguration configuration,
+    ILogger<MemoryHook> logger) : IChatHook
 {
+    private readonly bool _enrichOnRetrieve =
+        configuration.GetValue<bool?>("Memory:EnrichOnRetrieve") ?? false;
+
     /// <summary>
     /// Searches memory for context relevant to the incoming message and prepends it.
+    /// Off by default; enable with <c>Memory:EnrichOnRetrieve=true</c>.
     /// </summary>
     public Task<HookResult> OnRequestReceived(ChatHookContext ctx, CancellationToken ct = default)
     {
+        if (!_enrichOnRetrieve) return Task.FromResult(HookResult.Continue);
+
         var matches = memoryStore.Search(ctx.CurrentMessage);
         if (matches.Count == 0) return Task.FromResult(HookResult.Continue);
 

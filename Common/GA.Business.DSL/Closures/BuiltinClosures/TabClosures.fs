@@ -169,7 +169,12 @@ let tabSources : GaClosure =
 /// GitHub: rate-limited but no auth required for basic search.
 let tabFetch : GaClosure =
     { Name        = "tab.fetch"
-      Category    = GaClosureCategory.Domain
+      // SECURITY: Io category — closure makes outbound HTTP. Must NOT be Domain
+      // because DslEvalMcpTools.EvalClosure exposes Domain-category closures
+      // through ga_dsl_eval to anonymous chatbot users; if reachable, an
+      // attacker can prompt-inject SSRF (cloud metadata, internal services).
+      // See PR #151 review (security finding sec-1, 2026-05-06).
+      Category    = GaClosureCategory.Io
       Description = "Search free tab sources (Archive.org, GitHub) for a song or artist."
       Tags        = [ "tab"; "fetch"; "search"; "internet"; "free" ]
       InputSchema = Map.ofList [ "query", "string — search terms (artist, song title, or both)" ]
@@ -238,7 +243,13 @@ let tabFetch : GaClosure =
 /// Fetch the raw text content of a tab from a direct URL (ASCII, VexTab, or text).
 let tabFetchUrl : GaClosure =
     { Name        = "tab.fetchUrl"
-      Category    = GaClosureCategory.Domain
+      // SECURITY: Io category — closure makes outbound HTTP to caller-supplied
+      // URL. Must NOT be Domain. Domain-category closures are exposed through
+      // ga_dsl_eval to anonymous chatbot users at the public demo URL; if this
+      // were reachable, an attacker could prompt-inject SSRF against cloud
+      // metadata endpoints, localhost services, or any internal URL the
+      // server can reach. See PR #151 review (security finding sec-1).
+      Category    = GaClosureCategory.Io
       Description = "Fetch raw tab content from a direct URL (must be text/plain)."
       Tags        = [ "tab"; "fetch"; "url"; "internet" ]
       InputSchema = Map.ofList [ "url", "string — direct URL to a tab text file" ]

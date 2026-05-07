@@ -24,7 +24,22 @@ public sealed class ChordSubstitutionSkill(
     ILogger<ChordSubstitutionSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "ChordSubstitution";
-    public string Description => "Classifies two-chord relationships or finds nearby substitutions via Grothendieck ICV distance";
+    public string Description =>
+        "Suggests chord substitutions and reharmonizations: tritone subs " +
+        "(G7 → Db7), backdoor dominants, secondary dominants, ICV-neighbor " +
+        "swaps, set-class equivalents, alternative replacement chords for " +
+        "any given chord, and classification of the relationship between " +
+        "two named chords.";
+
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "Tritone substitution for G7",
+        "What can I substitute for Cmaj7 in a ii-V-I?",
+        "Reharmonize Dm7 in a jazz context",
+        "Alternative chord for F major in C",
+        "What's the secondary dominant of Am?",
+        "Show me a backdoor dominant for C major",
+    ];
 
     // ── Triggers ──────────────────────────────────────────────────────────────
 

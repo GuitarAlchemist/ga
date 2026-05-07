@@ -135,6 +135,13 @@ public static class MlServiceCollectionExtensions
         services.AddTransient<BenchmarkRunner>();
         // services.AddTransient<GA.Domain.Services.AI.Benchmarks.IBenchmark, AI.Benchmarks.VoicingQualityBenchmark>();
 
+        // Provider-neutral chat client factory — required by SkillMdDrivenSkill.
+        // The matching registration in AiServiceExtensions.AddGuitarAlchemistAi
+        // (lowercase) only fires when callers use that helper; GaApi calls this
+        // uppercase variant, so the singleton needs to be registered here too or
+        // SkillMdPlugin lookups crash at first chatbot request.
+        services.TryAddSingleton<IChatClientFactory, DefaultChatClientFactory>();
+
         return services;
     }
 

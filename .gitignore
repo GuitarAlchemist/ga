@@ -185,6 +185,13 @@ state/baseline-phaseE/embedding-clusters-*.json
 # only reads the summary JSONs; cluster-label dumps stay local / regenerable)
 state/quality/**/embedding-clusters-*.json
 
+# Phase 3 DSL-eval soak: dated raw results are local artefacts — only
+# state/quality/dsl-eval/prompts.json and state/quality/dsl-eval/latest-*
+# (when the runner produces them) belong in git. PR #151 review arch-F8
+# flagged committing the dated files as repo bloat that hides movement
+# when weekly soaks start.
+state/quality/dsl-eval/[0-9]*-soak-results.json
+
 # Chatbot claim traces — per-day JSONL, regenerable from MCP tool calls
 state/claims/
 state/chatbot/

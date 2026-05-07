@@ -159,6 +159,37 @@ Tasks:
 
 **Why this is partial one-way**: once a skill consumes `ga_dsl_eval`, downgrading the contract (renaming closures, restructuring args) becomes a coordinated change. Adding closures stays additive.
 
+### Phase 2 finding (2026-05-06): canary emits docs, not answers
+
+Live retest of the transpose canary surfaced a precondition Phase 3 was
+silently assuming. The C# wrapper `TransposeSkill` is registered as
+`IIntent` (via `AddOrchestratorSkillIntent<T>`), so the
+`SemanticIntentRouter` considers it for routing. The matching
+`SkillMdDrivenSkill` instance built from `skills/transpose/SKILL.md` is
+registered only as `IOrchestratorSkill` — the router never sees it. So
+"transpose Cmaj7 up a perfect fifth" routes to the markdown-emitter
+wrapper at confidence 0.83 and the response is the SKILL.md *manual*,
+not `Gmaj7`. Anthropic + `ga_dsl_eval` is fully wired but never
+invoked.
+
+Phase 3's invocation-success metric needs the LLM-in-the-loop path
+actually live before it can measure anything. Two ways to land that:
+
+A. Make `SkillMdDrivenSkill` an `IIntent` too (register it via the
+   same adapter as the C# wrappers). Then drop the C# wrapper, since
+   it duplicates name/description/examples that already live in the
+   SKILL.md frontmatter. Same id collision risk — pick one or the
+   other per skill.
+
+B. Have the C# wrapper's `ExecuteAsync` delegate to a
+   `SkillMdDrivenSkill` built from the same `SKILL.md`, instead of
+   emitting the body verbatim. The wrapper keeps owning routing
+   metadata (so `IIntent` registration stays) and the SKILL.md
+   becomes the runtime system prompt for the LLM call.
+
+Pick before starting Phase 3 — measuring the markdown-emitter against
+the keyhole baseline measures the wrong thing.
+
 ### Phase 3 — Measure (one week soak)
 
 Goal: empirically decide whether the DSL pattern beats keyhole tools.
