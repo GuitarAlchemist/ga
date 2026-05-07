@@ -83,6 +83,21 @@ public static class ChatPluginHost
                     sp.GetRequiredService<ILogger<InProcessMcpToolsProvider>>()));
         }
 
+        // Make the same tool types available to the host so it can also expose
+        // them via MCP over HTTP (parity surface for Claude Code + remote
+        // clients). Hosts that don't add the AspNetCore MCP package can
+        // ignore this — the marker singleton has no effect on its own.
+        services.AddSingleton(new ChatPluginMcpToolTypes(capturedToolTypes));
+
         return services;
     }
 }
+
+/// <summary>
+/// Marker singleton that surfaces the union of <c>McpToolTypes</c> contributed
+/// by every loaded <see cref="IChatPlugin"/>. Consumed by
+/// <c>AddChatPluginMcpHttpServer</c> in <c>GaApi</c> to wire the same tool
+/// surface into MCP-over-HTTP so Claude Code and the chatbot share one
+/// canonical tool definition.
+/// </summary>
+public sealed record ChatPluginMcpToolTypes(IReadOnlyList<Type> Types);

@@ -278,6 +278,24 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
+// ─── MCP-over-HTTP for parity surface ────────────────────────────────
+// Expose the same [McpServerTool]-decorated types that the in-process
+// IMcpToolsProvider registers, but over Streamable HTTP at /mcp. This
+// lets Claude Code (and any other MCP client) connect to GaApi and call
+// the chatbot's exact tool surface — no separate MCP server, no drift.
+//
+// Implementation note: the MCP package's WithTools(IEnumerable<Type>)
+// overload registers Type instances as tool *objects* instead of walking
+// each type's [McpServerTool] methods (same overload-resolution bug
+// fixed in InProcessMcpToolsProvider via direct AIFunctionFactory.Create).
+// WithToolsFromAssembly walks every [McpServerToolType]-marked class in
+// the assembly correctly, so we use that and rely on
+// IChatPlugin.McpToolTypes for the in-process surface authority.
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly(typeof(GA.Business.ML.Agents.Plugins.InProcessMcpToolsProvider).Assembly);
+
 var app = builder.Build();
 
 
@@ -416,6 +434,11 @@ app.MapGet("/stats", async (VectorSearchService vs) => Results.Ok(await vs.GetSt
 
 // Map YARP Reverse Proxy routes (API Gateway)
 app.MapReverseProxy();
+
+// Map MCP-over-HTTP at /mcp (Streamable HTTP transport per
+// modelcontextprotocol.io 2025-11-25 spec). Companion to the in-process
+// IMcpToolsProvider — same tool surface, different transport.
+app.MapMcp("/mcp");
 
 // Map SignalR hubs
 app.MapHub<ChatbotHub>("/hubs/chatbot");
