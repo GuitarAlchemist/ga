@@ -1,0 +1,594 @@
+{
+  "schema_version": "0.1",
+  "prompts_version": "0.1",
+  "chatbot_url": "http://localhost:5232",
+  "started_at": "2026-05-07T03:37:15.1035561Z",
+  "duration_seconds": 36.48,
+  "parallelism": 2,
+  "total_prompts": 20,
+  "passed": 10,
+  "success_rate": 0.5,
+  "p50_ms": 4779.4,
+  "p95_ms": 8961.8,
+  "gate": {
+    "proceed_at": 0.8,
+    "pivot_at": 0.5,
+    "rollback_at": 0.5,
+    "verdict": "pivot"
+  },
+  "by_closure": [
+    {
+      "key": "domain.analyzeProgression",
+      "n": 2,
+      "passed": 2,
+      "pass_rate": 1.0,
+      "p50_ms": 5961.5,
+      "p95_ms": 5961.5
+    },
+    {
+      "key": "domain.chordIntervals",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 8961.8,
+      "p95_ms": 8961.8
+    },
+    {
+      "key": "domain.chordSubstitutions",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 297.5,
+      "p95_ms": 297.5
+    },
+    {
+      "key": "domain.commonTones",
+      "n": 3,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 49.6,
+      "p95_ms": 50.6
+    },
+    {
+      "key": "domain.diatonicChords",
+      "n": 3,
+      "passed": 3,
+      "pass_rate": 1.0,
+      "p50_ms": 7466.1,
+      "p95_ms": 8350.5
+    },
+    {
+      "key": "domain.parseChord",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 49.3,
+      "p95_ms": 49.3
+    },
+    {
+      "key": "domain.relativeKey",
+      "n": 2,
+      "passed": 2,
+      "pass_rate": 1.0,
+      "p50_ms": 4039.1,
+      "p95_ms": 4039.1
+    },
+    {
+      "key": "domain.transposeChord",
+      "n": 4,
+      "passed": 3,
+      "pass_rate": 0.75,
+      "p50_ms": 6398.2,
+      "p95_ms": 6537.5
+    }
+  ],
+  "by_skill": [
+    {
+      "key": "skill.chordinfo",
+      "n": 5,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 46.9,
+      "p95_ms": 50.6
+    },
+    {
+      "key": "skill.chordsubstitution",
+      "n": 2,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 297.5,
+      "p95_ms": 297.5
+    },
+    {
+      "key": "skill.diatonicchords",
+      "n": 5,
+      "passed": 4,
+      "pass_rate": 0.8,
+      "p50_ms": 7466.1,
+      "p95_ms": 8961.8
+    },
+    {
+      "key": "skill.keyidentification",
+      "n": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "p50_ms": 5454.0,
+      "p95_ms": 5454.0
+    },
+    {
+      "key": "skill.modes",
+      "n": 1,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "p50_ms": 49.6,
+      "p95_ms": 49.6
+    },
+    {
+      "key": "skill.progressioncompletion",
+      "n": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "p50_ms": 5961.5,
+      "p95_ms": 5961.5
+    },
+    {
+      "key": "skill.scaleinfo",
+      "n": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "p50_ms": 54.2,
+      "p95_ms": 54.2
+    },
+    {
+      "key": "skill.transpose",
+      "n": 4,
+      "passed": 3,
+      "pass_rate": 0.75,
+      "p50_ms": 6398.2,
+      "p95_ms": 6537.5
+    }
+  ],
+  "results": [
+    {
+      "id": "transpose-02",
+      "text": "Move F#m down a major third",
+      "expected_skill": "skill.transpose",
+      "actual_skill": "skill.transpose",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.7947525,
+      "answer": "Let me check what closures are available:\r\nI apologize—the transposition closure isn't currently available in the system. Let me compute this for you manually:\n\n**F#m down a major third = D#m** (interval = −4 semitones)\n\nHere's how:\n- F# down 4 semitones = D#\n- The chord quality (minor) remains the same\n- Result: **D#m**\n\nA major third down from F# lands on D#, so F#m becomes D#m.",
+      "expected_contains": [
+        "Dm"
+      ],
+      "missing": [
+        "Dm"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 6398.2,
+      "elapsed_server_ms": 6259,
+      "error": null,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "transpose-01",
+      "text": "Transpose Cmaj7 up a perfect fifth",
+      "expected_skill": "skill.transpose",
+      "actual_skill": "skill.transpose",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me check which closures are available:\r\nI apologize—the domain closures are not currently exposed in this environment. However, I can solve this for you directly:\n\n**Cmaj7 up a perfect fifth = Gmaj7**\n\nHere's the reasoning:\n- A perfect fifth = +7 semitones\n- C → G is 7 semitones up (C → C# → D → D# → E → F → F# → G)\n- The chord quality (maj7) stays the same\n- So **Cmaj7** becomes **Gmaj7**\n\nThe notes in Gmaj7 are: **G B D F#** (root, major third, perfect fifth, major seventh).",
+      "expected_contains": [
+        "Gmaj7"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 6537.5,
+      "elapsed_server_ms": 6408,
+      "error": null,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "transpose-04",
+      "text": "Take Am7 down a perfect fourth",
+      "expected_skill": "skill.transpose",
+      "actual_skill": "skill.transpose",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me check which closures are available:\r\nI apologize—the transposition closure isn't currently available. Let me compute this for you manually:\n\n**Am7 down a perfect fourth = Em7**\n\nHere's the reasoning:\n- A perfect fourth down from A is E (A → G# → G → F# → E = 5 semitones down).\n- The chord quality stays the same, so Am7 becomes Em7.\n- E minor 7 contains: E, G, B, D (same intervals relative to the new root).\n\nSo your answer is **Em7** (interval = −5 semitones).",
+      "expected_contains": [
+        "Em7"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 4779.4,
+      "elapsed_server_ms": 4775,
+      "error": null,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "common-tones-01",
+      "text": "What notes are shared between Cmaj7 and Am7?",
+      "expected_skill": "skill.commontones",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.87823266,
+      "answer": "C major 7 chord contains C, E, G, and B.",
+      "expected_contains": [
+        "C",
+        "E"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": false,
+      "elapsed_ms": 50.6,
+      "elapsed_server_ms": 47,
+      "error": null,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "transpose-03",
+      "text": "What's Bb7 up a half step?",
+      "expected_skill": "skill.transpose",
+      "actual_skill": "skill.transpose",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me check what closures are available:\r\nI apologize—it looks like the DSL closure for transposition isn't currently available. Let me calculate this for you directly:\n\n**Bb7 up a half step = B7** (interval = +1 semitone)\n\nHere's the breakdown:\n- **Bb** (B♭) up a half step → **B** (the next semitone)\n- The chord quality (**7**, a dominant seventh) stays the same\n- **Result: B7**",
+      "expected_contains": [
+        "B7"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 5019.7,
+      "elapsed_server_ms": 5001,
+      "error": null,
+      "expected_closure": "domain.transposeChord"
+    },
+    {
+      "id": "common-tones-02",
+      "text": "Common tones between G and D7",
+      "expected_skill": "skill.commontones",
+      "actual_skill": "skill.modes",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.7936682,
+      "answer": "The major scale has 7 modes (Ionian formula: W-W-H-W-W-W-H). Each starts on a successive degree of the parent scale:\r\n\r\n1. **Ionian** — degrees `1 2 3 4 5 6 7` — Bright, the major scale itself\r\n2. **Dorian** — degrees `1 2 b3 4 5 6 b7` — Minor with raised 6th — jazz/folk staple\r\n3. **Phrygian** — degrees `1 b2 b3 4 5 b6 b7` — Dark minor with flat 2 — Spanish/flamenco\r\n4. **Lydian** — degrees `1 2 3 #4 5 6 7` — Major with raised 4th — floating, dreamy\r\n5. **Mixolydian** — degrees `1 2 3 4 5 6 b7` — Major with flat 7 — bluesy/rock\r\n6. **Aeolian** — degrees `1 2 b3 4 5 b6 b7` — Natural minor\r\n7. **Locrian** — degrees `1 b2 b3 4 b5 b6 b7` — Half-diminished — rare as a tonic\r\n\r\nMnemonic: *I Don't Particularly Like Modes A Lot* (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian).",
+      "expected_contains": [
+        "D"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": false,
+      "elapsed_ms": 49.6,
+      "elapsed_server_ms": 45,
+      "error": null,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "common-tones-03",
+      "text": "Pivot tones from F to Bb7",
+      "expected_skill": "skill.commontones",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.83375907,
+      "answer": "Bb dominant 7 chord contains Bb, D, F, and Ab.",
+      "expected_contains": [
+        "F"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": false,
+      "elapsed_ms": 30.9,
+      "elapsed_server_ms": 27,
+      "error": null,
+      "expected_closure": "domain.commonTones"
+    },
+    {
+      "id": "diatonic-01",
+      "text": "Give me the diatonic chords in C major",
+      "expected_skill": null,
+      "actual_skill": "skill.diatonicchords",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me discover the available closures first:\r\nI apologize — it appears the diatonic chords closure is not currently available. However, I can provide you with the diatonic chords of **C major** directly:\n\n**The seven diatonic chords of C major are:**\n- **I** = **C** (major)\n- **ii** = **Dm** (minor)\n- **iii** = **Em** (minor)\n- **IV** = **F** (major)\n- **V** = **G** (major)\n- **vi** = **Am** (minor)\n- **vii°** = **B°** (diminished)\n\nThese chords are built by stacking thirds on each scale degree of C major (C–D–E–F–G–A–B). They form the harmonic foundation for music in C major and are commonly used in progressions like C–Am–F–G or C–F–G–C.",
+      "expected_contains": [
+        "Dm",
+        "Em",
+        "F",
+        "G",
+        "Am"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 6053.8,
+      "elapsed_server_ms": 6050,
+      "error": null,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "diatonic-02",
+      "text": "What are the seven chords in G major?",
+      "expected_skill": null,
+      "actual_skill": "skill.diatonicchords",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me check what closures are available:\r\nI apologize for the difficulty. Let me construct the diatonic chords of G major for you manually using the available tools:\n\nFirst, let me get the scale of G major:\r\nNow let me get the chord quality for each scale degree:\r\n**The seven diatonic chords of G major are:**\n\n| Scale Degree | Roman Numeral | Chord |\n|---|---|---|\n| 1 | I | **G** |\n| 2 | ii | **Am** |\n| 3 | iii | **Bm** |\n| 4 | IV | **C** |\n| 5 | V | **D** |\n| 6 | vi | **Em** |\n| 7 | vii° | **F#°** |\n\nThese are built by stacking thirds on each note of the G major scale (G–A–B–C–D–E–F#).",
+      "expected_contains": [
+        "Am",
+        "Bm",
+        "C",
+        "D",
+        "Em"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 8350.5,
+      "elapsed_server_ms": 8347,
+      "error": null,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "parse-01",
+      "text": "What's in a C7b9 chord?",
+      "expected_skill": "skill.chordinfo",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.0,
+      "answer": "Could not parse a chord name from your question.",
+      "expected_contains": [
+        "C",
+        "E",
+        "G",
+        "Bb"
+      ],
+      "missing": [
+        "G",
+        "Bb"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 46.9,
+      "elapsed_server_ms": 43,
+      "error": null,
+      "expected_closure": "domain.parseChord"
+    },
+    {
+      "id": "parse-02",
+      "text": "Spell out F#m7b5",
+      "expected_skill": "skill.chordinfo",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.0,
+      "answer": "Could not parse a chord name from your question.",
+      "expected_contains": [
+        "F#",
+        "A",
+        "C",
+        "E"
+      ],
+      "missing": [
+        "F#"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 49.3,
+      "elapsed_server_ms": 46,
+      "error": null,
+      "expected_closure": "domain.parseChord"
+    },
+    {
+      "id": "relative-01",
+      "text": "What's the relative minor of Bb major?",
+      "expected_skill": null,
+      "actual_skill": "skill.scaleinfo",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.8750947,
+      "answer": "The Bb major scale has 7 notes: **Bb – C – D – Eb – F – G – A**. Relative minor: G minor.",
+      "expected_contains": [
+        "G minor"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 54.2,
+      "elapsed_server_ms": 50,
+      "error": null,
+      "expected_closure": "domain.relativeKey"
+    },
+    {
+      "id": "relative-02",
+      "text": "Relative major of E minor",
+      "expected_skill": null,
+      "actual_skill": "skill.diatonicchords",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.889544,
+      "answer": "The **relative major of E minor is G major.**\n\nE minor and G major share the same notes (E, F#, G, A, B, C, D) and key signature (one sharp: F#), but they resolve to different tonic pitches:\n- **E minor** is the relative minor (vi of G major)\n- **G major** is the relative major (III of E minor)\n\nBoth keys are enharmonically equivalent in terms of available pitches, so any melody, chord progression, or scale from E minor can be heard as coming from G major depending on the harmonic center.",
+      "expected_contains": [
+        "G major"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 4039.1,
+      "elapsed_server_ms": 4036,
+      "error": null,
+      "expected_closure": "domain.relativeKey"
+    },
+    {
+      "id": "intervals-01",
+      "text": "What intervals make up a Dmaj7 chord?",
+      "expected_skill": "skill.chordinfo",
+      "actual_skill": "skill.chordinfo",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.80424577,
+      "answer": "D major 7 chord contains D, F#, A, and C#.",
+      "expected_contains": [
+        "3rd",
+        "5th",
+        "7th"
+      ],
+      "missing": [
+        "3rd",
+        "5th",
+        "7th"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 23.3,
+      "elapsed_server_ms": 20,
+      "error": null,
+      "expected_closure": "domain.chordIntervals"
+    },
+    {
+      "id": "diatonic-03",
+      "text": "Diatonic chords in A minor",
+      "expected_skill": null,
+      "actual_skill": "skill.diatonicchords",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.9,
+      "answer": "Let me check what closures are available:\r\nI apologize — the domain closure for diatonic chords isn't currently available. However, I can derive them manually for you:\n\n**The seven diatonic chords of A minor (natural) are:**\n\n| Degree | Roman | Chord |\n|--------|-------|-------|\n| i | i | **Am** |\n| ii | ii° | **B°** |\n| III | III | **C** |\n| iv | iv | **Dm** |\n| v | v | **Em** |\n| VI | VI | **F** |\n| VII | VII | **G** |\n\nThese are built on each scale degree of the **A natural minor** scale (A B C D E F G), using only the notes within that scale. The lowercase Roman numerals follow the convention for minor keys, where the relative major is three semitones higher (C major in this case).",
+      "expected_contains": [
+        "Dm",
+        "Em",
+        "F",
+        "G"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 7466.1,
+      "elapsed_server_ms": 7462,
+      "error": null,
+      "expected_closure": "domain.diatonicChords"
+    },
+    {
+      "id": "progression-01",
+      "text": "Analyze the progression Dm G C in C major",
+      "expected_skill": null,
+      "actual_skill": "skill.progressioncompletion",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.85867536,
+      "answer": "# Dm - G - C Progression Analysis\n\n## Progression Breakdown\n**Input:** Dm, G, C  \n**Detected Key:** C Major (all 3 chords diatonic)  \n**Roman Numerals:** ii - V - I\n\n---\n\n## 2-3 Chord Completions\n\n### Suggestion 1: **Em**\n- **Cadence Type:** Deceptive (Interrupted)\n- **Roman Numerals:** V - vi\n- **Explanation:** After the strong V-I cadence, substituting Em (vi) creates gentle surprise and loops back for another verse.\n\n### Suggestion 2: **F**\n- **Cadence Type:** Plagal (Subdominant Return)\n- **Roman Numerals:** I - IV\n- **Explanation:** The \"Amen cadence\" feel—adds warmth and creates a reflective moment before returning to Dm.\n\n### Suggestion 3: **Am**\n- **Cadence Type:** Deceptive\n- **Roman Numerals:** I - vi (relative minor)\n- **Explanation:** Shifts toward the relative minor (A minor), darkening the texture while staying diatonic; perfect for a bridge or second verse.\n\n---\n\n## Why This Progression Works\nDm-G-C is a **ii-V-I** progression—a classic pop/folk turnaround that establishes C major definitively. The G (V) strongly pulls to C (I), making it a natural resting point.",
+      "expected_contains": [
+        "ii",
+        "V",
+        "I"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 5961.5,
+      "elapsed_server_ms": 5958,
+      "error": null,
+      "expected_closure": "domain.analyzeProgression"
+    },
+    {
+      "id": "intervals-02",
+      "text": "Intervals in a half-diminished 7th chord",
+      "expected_skill": "skill.chordinfo",
+      "actual_skill": "skill.diatonicchords",
+      "skill_match": false,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.7657619,
+      "answer": "I'll get the chord information for a half-diminished 7th chord. I'll use C as the root note as an example.\r\nLet me try the correct notation:\r\nLet me try the m7b5 notation:\r\nLet me check the available closure schemas to find the correct notation:\r\nBased on the chord_info function's suggestions and music theory, here's what a **half-diminished 7th chord** contains:\n\n## Half-Diminished 7th Chord (m7b5)\n\nA half-diminished 7th chord has the following structure:\n\n**Intervals from the root:**\n- **Root** (unison)\n- **Minor 3rd** (3 semitones)\n- **Diminished 5th / Flat 5** (6 semitones)\n- **Minor 7th** (10 semitones)\n\n**Example: Am7b5 (A half-diminished 7th)**\n- **A** (root)\n- **C** (minor 3rd)\n- **Eb** (diminished 5th)\n- **G** (minor 7th)\n\n**Chord construction:**\n- Minor triad (root + minor 3rd + diminished 5th) + minor 7th\n- Often written as: **m7b5**, **ø7**, or **-7♭5**\n\nThe half-diminished 7th is commonly found on the ii chord in major keys (e.g., Dm7b5 in C major) and the vii chord in minor keys (e.g., B°7 in A natural minor becomes Bm7b5 in A harmonic minor contexts).",
+      "expected_contains": [
+        "minor 3rd",
+        "diminished 5th",
+        "minor 7th"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": false,
+      "elapsed_ms": 8961.8,
+      "elapsed_server_ms": 8958,
+      "error": null,
+      "expected_closure": "domain.chordIntervals"
+    },
+    {
+      "id": "subs-01",
+      "text": "Tritone substitution for G7",
+      "expected_skill": "skill.chordsubstitution",
+      "actual_skill": "skill.chordsubstitution",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 1.0,
+      "answer": "Harmonic substitutions for **G7** (ranked by ICV distance):\r\n\r\n- **Dm7b5** — harmonic cost 0.60 (Δ L1=1)\r\n- **Ab7** — harmonic cost 0.60 (Δ L1=1)\r\n- **F7** — harmonic cost 0.60 (Δ L1=1)\r\n- **D7** — harmonic cost 0.60 (Δ L1=1)\r\n- **Ebm7b5** — harmonic cost 0.60 (Δ L1=1)",
+      "expected_contains": [
+        "Db7"
+      ],
+      "missing": [
+        "Db7"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 297.5,
+      "elapsed_server_ms": 294,
+      "error": null,
+      "expected_closure": "domain.chordSubstitutions"
+    },
+    {
+      "id": "subs-02",
+      "text": "What can I substitute for Cmaj7 in a ii-V-I?",
+      "expected_skill": "skill.chordsubstitution",
+      "actual_skill": "skill.chordsubstitution",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 1.0,
+      "answer": "Harmonic substitutions for **Cmaj7** (ranked by ICV distance):\r\n\r\n- **Dbmaj7** — harmonic cost 0.60 (Δ L1=1)\r\n- **Abmaj7** — harmonic cost 0.60 (Δ L1=1)\r\n- **Fmaj7** — harmonic cost 0.60 (Δ L1=1)\r\n- **Dmaj7** — harmonic cost 0.60 (Δ L1=1)\r\n- **Amaj7** — harmonic cost 0.60 (Δ L1=1)",
+      "expected_contains": [
+        "Em7",
+        "Am7"
+      ],
+      "missing": [
+        "Em7",
+        "Am7"
+      ],
+      "content_match": false,
+      "pass": false,
+      "elapsed_ms": 218.0,
+      "elapsed_server_ms": 215,
+      "error": null,
+      "expected_closure": "domain.chordSubstitutions"
+    },
+    {
+      "id": "progression-02",
+      "text": "What key is Am F C G in?",
+      "expected_skill": "skill.keyidentification",
+      "actual_skill": "skill.keyidentification",
+      "skill_match": true,
+      "routing_method": "orchestrator-skill-semantic",
+      "confidence": 0.95,
+      "answer": "This progression is equally at home in **A minor** or **C major** — they're relative keys sharing the same notes. All four chords (Am, F, C, G) are native to both keys.\n\n**To distinguish between them:**\n- If the progression *resolves to* or *emphasizes* **Am** (especially as a final resting chord), you're in **A minor**\n- If it *resolves to* or *emphasizes* **C** (especially as a final resting chord), you're in **C major**\n\n**In A minor**, the chords function as:\n- Am = i (tonic)\n- F = VI (flattened sixth)\n- C = III (mediant)\n- G = VII (subtonic, leading back home)\n\n**In C major**, the chords function as:\n- Am = vi (relative minor)\n- F = IV (subdominant)\n- C = I (tonic)\n- G = V (dominant)\n\n**The natural scale:** A minor scale (A B C D E F G) = C major scale (C D E F G A B) — same notes, different starting point.\n\n**Guitar tip:** Play the progression and listen where it *wants* to rest. Does Am feel like home? You're in A minor. Does C feel like home? You're in C major.",
+      "expected_contains": [
+        "C major"
+      ],
+      "missing": [],
+      "content_match": true,
+      "pass": true,
+      "elapsed_ms": 5454.0,
+      "elapsed_server_ms": 5451,
+      "error": null,
+      "expected_closure": "domain.analyzeProgression"
+    }
+  ]
+}
