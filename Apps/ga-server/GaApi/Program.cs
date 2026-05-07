@@ -368,7 +368,11 @@ if (!app.Environment.IsDevelopment())
     });
 }
 
-// Enable static files for Blazor
+// Enable static files for Blazor.
+// UseDefaultFiles MUST come before UseStaticFiles so a request to /chatbot/
+// rewrites to /chatbot/index.html before the static-files middleware looks
+// it up. Without this, /chatbot/ returns 404 even though index.html exists.
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // Serve OPTIC-K Harmonic Nebula precompute artifacts from the ix repo's
