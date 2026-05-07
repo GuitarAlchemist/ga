@@ -27,6 +27,47 @@ public sealed class ChatbotHub(
     private static readonly TimeSpan _pipelineBudget = TimeSpan.FromSeconds(25);
     private const int MaxStoredMessages = 50;
 
+    // Per-connection rate limit. The HTTP PartitionedRateLimiter only fires
+    // on the WebSocket upgrade — once a connection is established, every
+    // SendMessage invocation is in-band and bypasses the limiter. Without
+    // this gate, a single anonymous client can call SendMessage in a tight
+    // loop and burn the deployment's ANTHROPIC_API_KEY (each call hits
+    // Anthropic Haiku 4.5). See PR #151 review (security sec-2,
+    // reliability rel-002). Token bucket: 1 message/sec sustained, 5 burst.
+    private const int    RateLimitMaxBurst    = 5;
+    private static readonly TimeSpan RateLimitRefillInterval = TimeSpan.FromSeconds(1);
+    private const int    MaxMessageLength     = 4_000;
+    private static readonly ConcurrentDictionary<string, RateLimitBucket> _rateLimits = new();
+
+    private sealed class RateLimitBucket
+    {
+        public int Tokens;
+        public DateTime LastRefill;
+    }
+
+    private static bool TryConsumeRateLimitToken(string connectionId)
+    {
+        var bucket = _rateLimits.GetOrAdd(connectionId, _ => new RateLimitBucket
+        {
+            Tokens     = RateLimitMaxBurst,
+            LastRefill = DateTime.UtcNow,
+        });
+        lock (bucket)
+        {
+            var now     = DateTime.UtcNow;
+            var elapsed = now - bucket.LastRefill;
+            var refill  = (int)(elapsed.TotalSeconds / RateLimitRefillInterval.TotalSeconds);
+            if (refill > 0)
+            {
+                bucket.Tokens     = Math.Min(RateLimitMaxBurst, bucket.Tokens + refill);
+                bucket.LastRefill = now;
+            }
+            if (bucket.Tokens <= 0) return false;
+            bucket.Tokens--;
+            return true;
+        }
+    }
+
     public async Task SendMessage(string message, bool useSemanticSearch = true)
     {
         var connectionId = Context.ConnectionId;
@@ -35,6 +76,23 @@ public sealed class ChatbotHub(
         if (string.IsNullOrWhiteSpace(trimmedMessage))
         {
             await Clients.Caller.SendAsync("Error", "Message cannot be empty.");
+            return;
+        }
+
+        if (trimmedMessage.Length > MaxMessageLength)
+        {
+            await Clients.Caller.SendAsync("Error",
+                $"Message exceeds {MaxMessageLength} characters. Please shorten and retry.");
+            return;
+        }
+
+        if (!TryConsumeRateLimitToken(connectionId))
+        {
+            logger.LogInformation(
+                "ChatbotHub: rate limit hit for connection {ConnectionId} — anonymous flooding suspected",
+                connectionId);
+            await Clients.Caller.SendAsync("Error",
+                "You're sending messages too quickly. Please wait a moment.");
             return;
         }
 
@@ -159,6 +217,7 @@ public sealed class ChatbotHub(
         var connectionId = Context.ConnectionId;
         logger.LogInformation("Client {ConnectionId} disconnected from chatbot hub", connectionId);
         _conversations.TryRemove(connectionId, out _);
+        _rateLimits.TryRemove(connectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
 

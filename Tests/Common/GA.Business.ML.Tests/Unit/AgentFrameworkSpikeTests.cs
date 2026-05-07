@@ -193,7 +193,12 @@ public class AgentFrameworkSpikeTests
         var fn = modes.AsAIFunction();
 
         Assert.That(fn.Name, Is.EqualTo("ga_skill_modes"));
-        Assert.That(fn.Description, Does.Contain("modes of the major scale"));
+        // Description was tightened in PR #151 to remove cross-skill keyword
+        // bleed (was matching chord-substitution prompts via embedding). The
+        // assertion now anchors on "Ionian" — present before and after the
+        // rewrite — so future description tweaks don't invalidate this test
+        // unless the skill stops being about diatonic modes.
+        Assert.That(fn.Description, Does.Contain("Ionian"));
 
         var args = new Dictionary<string, object?> { ["message"] = "list the modes" };
         var result = await fn.InvokeAsync(new AIFunctionArguments(args));

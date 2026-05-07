@@ -105,12 +105,20 @@ public static class AiServiceExtensions
             // soak run vs Ollama's hosting requirements; for the public demo
             // and Phase 3 measurement Haiku 4.5 wins on tool-use reliability.
             // Falls back to Ollama for offline / cost-sensitive setups.
+            //
+            // EAGER: build the client now, not via a Singleton lambda. The
+            // lambda variant deferred CreateChatClient until first request,
+            // which meant a missing ANTHROPIC_API_KEY booted cleanly,
+            // /api/health passed, and the failure only surfaced as an opaque
+            // 500 on the first user prompt — invisible to operators. See PR
+            // #151 review (correctness corr-1, reliability rel-001). Eager
+            // construction surfaces the error at startup.
             if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))
             {
-                services.AddSingleton<IChatClient>(_ =>
-                    GA.Providers.Anthropic.AnthropicProvider.CreateChatClient(
-                        configuration,
-                        configuration["Anthropic:Model"]));
+                var anthropicClient = GA.Providers.Anthropic.AnthropicProvider.CreateChatClient(
+                    configuration,
+                    configuration["Anthropic:Model"]);
+                services.AddSingleton<IChatClient>(anthropicClient);
             }
             else
             {

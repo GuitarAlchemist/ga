@@ -63,6 +63,55 @@ public class DslEvalMcpToolsTests
             "Agent / Pipeline / Io closures must not appear in the visible set");
     }
 
+    /// <summary>
+    /// Pinning regression for PR #151 review (security finding sec-1):
+    /// tab.fetch and tab.fetchUrl make outbound HTTP and were previously
+    /// mis-categorized as Domain. With ChatbotHub anonymous, that opened
+    /// SSRF via prompt injection (cloud metadata, internal services,
+    /// localhost ports). Re-categorizing to Io makes them invisible to
+    /// ga_dsl_eval. This test fails loudly if anyone reverts the category
+    /// or registers a new outbound-HTTP closure under Domain.
+    /// </summary>
+    [Test]
+    public void ListClosures_NetworkClosuresAreNotVisible()
+    {
+        // Force the Tab closures module to register so any of its outbound
+        // closures leaking into Domain would surface here.
+        GA.Business.DSL.Closures.BuiltinClosures.TabClosures.register();
+
+        var tool = MakeTool();
+        var visible = tool.ListClosures().Closures.Select(c => c.Name).ToHashSet();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(visible, Does.Not.Contain("tab.fetch"),
+                "tab.fetch makes outbound HTTP and must not be reachable via ga_dsl_eval");
+            Assert.That(visible, Does.Not.Contain("tab.fetchUrl"),
+                "tab.fetchUrl is the SSRF primitive — keeping it out of Domain is the only thing between an anonymous chatbot prompt and arbitrary internal-network reads");
+        });
+    }
+
+    [Test]
+    public void EvalClosure_NetworkClosure_ReturnsClosureNotExposed()
+    {
+        // Even if someone bypasses the visibility filter (e.g. typed the
+        // closure name directly), EvalClosure must refuse non-Domain
+        // closures with the closure-not-exposed error code per the contract.
+        GA.Business.DSL.Closures.BuiltinClosures.TabClosures.register();
+
+        var tool = MakeTool();
+        var result = tool.EvalClosure("tab.fetchUrl", new Dictionary<string, string>
+        {
+            ["url"] = "http://169.254.169.254/latest/meta-data/"
+        });
+
+        Assert.That(result.Error, Is.Not.Null,
+            "tab.fetchUrl must produce an error envelope, never execute");
+        Assert.That(result.Error!.Code,
+            Is.AnyOf("closure-not-found", "closure-not-exposed"),
+            $"expected gating error; got '{result.Error.Code}': {result.Error.Message}");
+    }
+
     // ── GetClosureSchema ─────────────────────────────────────────────────────
 
     [Test]

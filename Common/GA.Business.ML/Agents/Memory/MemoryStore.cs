@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Memory;
 
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// A single persistent memory entry.
@@ -29,6 +30,14 @@ public sealed class MemoryStore
     };
 
     private readonly ConcurrentDictionary<string, MemoryEntry> _entries;
+
+    // Serializes Save() so concurrent Write() calls don't corrupt the JSON
+    // file. The previous File.WriteAllText racing pattern produced
+    // FileShare violations under modest concurrency and silently lost the
+    // entire store when Load() then hit a JsonException — see PR #151
+    // review (reliability finding rel-006). Cap is 1; the lock is held only
+    // for the serialize+write window so it's not a hot path.
+    private readonly SemaphoreSlim _saveLock = new(1, 1);
 
     public MemoryStore()
     {
@@ -82,8 +91,23 @@ public sealed class MemoryStore
     {
         var dir = Path.GetDirectoryName(StorePath)!;
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-        var json = JsonSerializer.Serialize(_entries.Values.ToList(), JsonOpts);
-        File.WriteAllText(StorePath, json);
+
+        // Snapshot under the lock so concurrent Writes that mutate _entries
+        // mid-serialise don't produce truncated JSON, AND atomic-rename so a
+        // crash mid-write can't leave a half-flushed file that Load()
+        // silently swallows on next boot.
+        _saveLock.Wait();
+        try
+        {
+            var json    = JsonSerializer.Serialize(_entries.Values.ToList(), JsonOpts);
+            var tmpPath = StorePath + ".tmp";
+            File.WriteAllText(tmpPath, json);
+            File.Move(tmpPath, StorePath, overwrite: true);
+        }
+        finally
+        {
+            _saveLock.Release();
+        }
     }
 
     private static ConcurrentDictionary<string, MemoryEntry> Load()
@@ -101,9 +125,24 @@ public sealed class MemoryStore
                     dict[e.Key] = e;
             }
         }
+        catch (JsonException)
+        {
+            // Corrupt file — rename it so operators see the loss instead of
+            // silently starting fresh; preserves the bytes for postmortem.
+            try
+            {
+                var corruptPath = StorePath + $".corrupt-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
+                File.Move(StorePath, corruptPath, overwrite: false);
+            }
+            catch
+            {
+                // Best-effort rename; don't block boot if it fails.
+            }
+        }
         catch
         {
-            // Corrupt file — start fresh
+            // Other IO errors (file locked, permission denied) — start fresh
+            // rather than crash boot.
         }
 
         return dict;
