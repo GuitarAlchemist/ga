@@ -91,5 +91,12 @@ public sealed class GaPlugin : IChatPlugin
         // for safety. Contract: docs/contracts/2026-05-06-ga-dsl-eval-contract.md
         // (v0.1, 2026-05-06).
         typeof(DslEvalMcpTools),
+
+        // ga_sampling_demo — spike (#79) proving the MCP sampling
+        // pattern works from a GA tool: the tool asks the connected
+        // client (Claude Code, chatbot orchestrator, …) to do the LLM
+        // call instead of opening its own IChatClient. First step
+        // toward replacing IChatClientFactory in SkillMdDrivenSkill.
+        typeof(SamplingDemoMcpTool),
     ];
 }
