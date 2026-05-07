@@ -387,9 +387,22 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Enable static files for Blazor.
-// UseDefaultFiles MUST come before UseStaticFiles so a request to /chatbot/
-// rewrites to /chatbot/index.html before the static-files middleware looks
-// it up. Without this, /chatbot/ returns 404 even though index.html exists.
+// UseDefaultFiles needs to run before UseStaticFiles so a request to /chatbot/
+// is rewritten to /chatbot/index.html before the static-files middleware
+// resolves it. ASP.NET's manifest-based file provider doesn't always expose
+// nested static-web-asset directories as enumerable, so we also rewrite the
+// known SPA shells explicitly — belt-and-braces against the same 404 the
+// chatbot demo hit when the slot-build runtime manifest stripped the
+// `chatbot/` directory listing.
+app.Use(async (ctx, next) =>
+{
+    var path = ctx.Request.Path.Value;
+    if (path is "/chatbot" or "/chatbot/")
+    {
+        ctx.Request.Path = "/chatbot/index.html";
+    }
+    await next();
+});
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
