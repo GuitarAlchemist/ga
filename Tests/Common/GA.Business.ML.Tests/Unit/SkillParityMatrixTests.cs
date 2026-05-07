@@ -101,6 +101,12 @@ public class SkillParityMatrixTests
             typeof(GA.Business.ML.Agents.Skills.DiatonicChordsSkill),
             ["ga_dsl_eval"], "dsl-eval"),
 
+        // Tool-driven skill graduated 2026-05-07 — second Path B canary.
+        // Routes through ga_dsl_eval to the domain.commonTones closure.
+        new("common-tones",          "common-tones",
+            typeof(GA.Business.ML.Agents.Skills.CommonTonesSkill),
+            ["ga_dsl_eval"], "dsl-eval"),
+
         // MCP-tool-driven skills (SKILL.md → ga_* tool → IOrchestratorSkill)
         new("interval",              "interval",
             typeof(GA.Business.ML.Agents.Skills.IntervalSkill),

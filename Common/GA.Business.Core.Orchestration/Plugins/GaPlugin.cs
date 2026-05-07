@@ -53,6 +53,7 @@ public sealed class GaPlugin : IChatPlugin
         // skills follows the TransposeSkill/DiatonicChordsSkill template:
         // 1) skills/<name>/SKILL.md, 2) <Name>Skill.cs, 3) register here.
         services.AddOrchestratorSkillIntent<TransposeSkill>();
+        services.AddOrchestratorSkillIntent<CommonTonesSkill>();
         services.AddOrchestratorSkillIntent<DiatonicChordsSkill>();
 
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
