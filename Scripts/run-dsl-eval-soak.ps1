@@ -159,6 +159,11 @@ $bySkill   = Group-Metrics -Items $enriched -KeyName 'actual_skill'
 
 $outDate = (Get-Date).ToString('yyyy-MM-dd-HHmmss')
 $outPath = Join-Path $OutDir "$outDate-soak-results.json"
+# `latest-soak-results.json` is the only result file checked into git
+# (gitignore excludes the dated form). Per PR #151 review arch-F8: weekly
+# soaks shouldn't add a fresh committed JSON — operators want one stable
+# file showing current state, plus dated artefacts for local diffing.
+$latestPath = Join-Path $OutDir "latest-soak-results.json"
 $payload = [ordered]@{
     schema_version    = '0.1'
     prompts_version   = $promptSet.version
@@ -181,12 +186,14 @@ $payload = [ordered]@{
     by_skill          = @($bySkill)
     results           = @($enriched)
 }
-$payload | ConvertTo-Json -Depth 8 | Set-Content -Path $outPath -Encoding utf8
+$json = $payload | ConvertTo-Json -Depth 8
+$json | Set-Content -Path $outPath    -Encoding utf8
+$json | Set-Content -Path $latestPath -Encoding utf8
 
 Write-Host ''
 Write-Host "Soak complete in $([math]::Round($totalElapsed,1))s. Passed $passed/$total ($([math]::Round($rate*100,1))%). p50=${p50}ms, p95=${p95}ms."
 Write-Host "Gate verdict: $gateVerdict"
-Write-Host "Wrote: $outPath"
+Write-Host "Wrote: $outPath (dated, local) + $latestPath (committed)"
 
 Write-Host ''
 Write-Host '=== by closure (expected DSL-eval target) ==='
