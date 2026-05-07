@@ -142,6 +142,7 @@ public class ChatbotController(
                 routing.AgentId,
                 routing.Confidence,
                 routing.RoutingMethod,
+                Grounding: response.Grounding,
                 ElapsedMs: sw.ElapsedMilliseconds,
                 TraceId: traceId));
         }

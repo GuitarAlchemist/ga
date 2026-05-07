@@ -2,7 +2,7 @@
 title: Chat & Agent Surfaces
 scope: All HTTP/SignalR/GraphQL chat endpoints and the orchestrator/agent stack behind them
 status: authoritative
-last_verified: 2026-04-25
+last_verified: 2026-05-07
 parent: docs/architecture/README.md
 ---
 
@@ -12,7 +12,31 @@ Authoritative map of every chat / agent entry point in the Guitar Alchemist solu
 
 Conventions used throughout:
 - Status tags: ✅ canonical, 🟡 parallel-to-canonical, 🪦 deprecated-candidate, ❓ unknown / unverified.
-- Verified canonical path (used by the production Harmonic Nebula UI): `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (or Ollama).
+
+## 0. Status update — 2026-05-07
+
+The 2026-04-25 revision named `/api/nebula/chat` (in GaApi) the canonical chat path. That was correct **for the Harmonic Nebula UI**. It is no longer the only canonical chat entry point because the public demo introduced a second one. Two distinct canonicals coexist today:
+
+1. **Harmonic Nebula UI canonical** — `POST /api/nebula/chat` → `NebulaChatController` → `NebulaSidekickService` (Claude Haiku 4.5 / Ollama). Unchanged. Section 1 below.
+2. **Public demo chatbot canonical (de-facto)** — `https://demos.guitaralchemist.com/chatbot/` is served by **GaApi** (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`) and the SPA's only network call is `withUrl("/hubs/chatbot")` — i.e. GaApi's `ChatbotHub` (SignalR). The doc's earlier "ChatbotHub may be dead — no frontend consumer" claim was true on 2026-04-25 and is **false today**. Section 2 below.
+
+The product-surface confusion flagged by the 2026-05-07 multi-LLM review is real: a *third* host now exists, **`Apps/GaChatbot.Api`**, with its own `ChatbotController` at `api/chatbot/{chat, chat/stream, agui/*, status}`. Its routes look identical to GaApi's `ChatbotController`, but the implementation is meaningfully different (thin `IChatApplicationService` + readiness gating + `Grounding` propagated to the JSON wire). See Section 5b for the deployment / decision question.
+
+### Canonical surfaces matrix (post-2026-05-07)
+
+| Functional cluster | Canonical today | What's missing |
+|---|---|---|
+| Harmonic Nebula UI | `POST /api/nebula/chat` (GaApi) | nothing |
+| Public chatbot demo at `demos.guitaralchemist.com/chatbot/` | `SignalR /hubs/chatbot` on **GaApi** | the SPA does not call `GaChatbot.Api` at all — that host is currently unused in the deployed flow |
+| AG-UI streaming for Prime Radiant / ga-client | `POST /api/chatbot/agui/stream` on **GaApi** | duplicated route in `GaChatbot.Api` is not yet on a deployed origin |
+| In-process chat (CLI / console) | `IHarmonicChatOrchestrator` (`= ProductionOrchestrator`) via DI | nothing |
+
+### Decision pending
+
+Before declaring `GaChatbot.Api` the canonical deployable, one of three paths needs to be chosen — each has different blast radius (Section 5b enumerates).
+
+- Verified canonical Nebula path (used by `NebulaChat.tsx`): `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (or Ollama).
+- Verified canonical demo path (used by `wwwroot/chatbot/index.html`): SPA → SignalR `/hubs/chatbot` → GaApi `ChatbotHub` → `ProductionOrchestrator`.
 
 ---
 
@@ -143,6 +167,53 @@ Important: `IChatService` is **not** the same channel as the `IChatClient` (Micr
 | `Apps/GA.AI.Service/Controllers/ChatController` | _(no caller found)_ | The microservice itself isn't started by the Aspire AppHost (commented at `AllProjects.AppHost/Program.cs:87`), so no live consumer is reachable through the standard dev flow. |
 
 `Apps/GaChatbot` Blazor pages: **none found** under `Apps/GaChatbot/**/*.razor`. The `GaChatbot` project is a console host, not a Blazor app — earlier MEMORY notes about "Blazor in-process chat" are stale.
+
+---
+
+## 5b. GaChatbot.Api — the parallel host (added 2026-05-07)
+
+`Apps/GaChatbot.Api` is a thin ASP.NET Web API host whose stated purpose is "the public chatbot, separately deployable, talks to the same orchestrator". It compiles, has 90 passing tests (post-2026-05-07-fix), exposes a controller surface that **collides path-for-path with GaApi's `ChatbotController`**, but is not started by Aspire AppHost and is not on `demos.guitaralchemist.com`'s ingress.
+
+### Routes (GaChatbot.Api)
+
+| Route | Verb | Controller | Notes vs the GaApi sibling |
+|---|---|---|---|
+| `/api/chatbot/chat` | POST | `GaChatbot.Api.Controllers.ChatbotController.Chat` | Returns `ChatJsonResponse { …, Grounding, ElapsedMs, TraceId, Trace }` — the GaApi sibling drops `Grounding` and `Trace`. |
+| `/api/chatbot/chat/stream` | POST | `ChatbotController.ChatStream` | SSE; first frame includes `grounding` if present, the GaApi `/chat/stream` does not. |
+| `/api/chatbot/status` | GET | `ChatbotController.GetStatus` | Returns a richer `ChatbotStatus` (`ProviderReachable`, `ChatModel`, `EmbeddingModel`, `OrchestratorRoundTripOk`) — beyond GaApi's `IsAvailable`/`Message`/`Timestamp`. |
+| `/api/chatbot/examples` | GET | `ChatbotController.GetExamples` | Identical canned-list shape. |
+| `/api/chatbot/agui/json` | POST | `AgUiChatController.AgUiJson` | AG-UI non-streaming. |
+| `/api/chatbot/agui/stream` | POST | `AgUiChatController.AgUiStream` | AG-UI SSE. |
+| `/api/a2a/*` | various | `A2AController` | A2A / agent-to-agent surface. Not present in GaApi. |
+
+### Service composition
+
+`GaChatbot.Api` is layered on `IChatApplicationService` (interface) → `OrchestratedChatApplicationService` (production binding) → `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`). `OrchestratedChatApplicationService` adds:
+- Deterministic readiness probe (`ChatProviderReadinessProbe`) gating low-confidence requests.
+- Fallback path with bounded `_fallbackTimeoutSeconds`, distinct routing-method tag.
+- `AgenticTrace` accumulator emitted in `ChatJsonResponse.Trace` (GaApi's sibling has no equivalent).
+
+GaApi's `ChatbotController` skips all that and calls `ProductionOrchestrator` directly.
+
+### Why this is not just "duplicate code"
+
+The two controllers are **not feature-equivalent**:
+
+1. **Grounding wire shape** — `GaChatbot.Api.ChatJsonResponse` carries `Grounding`; the GaApi sibling does not. The 2026-05-07 fix that made algebra-route grounding propagate through `IntentResult → ChatResponse` is fully observable on `GaChatbot.Api` callers and only partially observable on GaApi callers (because GaApi's `ChatJsonResponse` doesn't even define a `Grounding` field).
+2. **Readiness gating** — `OrchestratedChatApplicationService` has a probe + fallback path that protects against the "chat returns garbage when Ollama isn't ready" symptom. GaApi has no equivalent.
+3. **Trace contract** — `Trace` (`AgenticTrace`) is only emitted by `GaChatbot.Api`. Multi-LLM observability work assumes this contract.
+
+### Canonical-deployable decision (open)
+
+The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hubs/chatbot` (SignalR on GaApi). To make `GaChatbot.Api` the canonical deployable for the public chatbot, one of these three paths has to be chosen:
+
+| Option | Description | Blast radius | Notes |
+|---|---|---|---|
+| **A. Promote `GaChatbot.Api` and switch the SPA to its REST/SSE surface** | Rebuild `wwwroot/chatbot/index.html` to call `/api/chatbot/chat/stream` (SSE) instead of SignalR. Add `GaChatbot.Api` to Aspire AppHost. Rewrite cloudflared ingress: `^/chatbot(/.*)?$` and `^/api/chatbot/.*$` → `GaChatbot.Api`'s port; `/hubs/chatbot` either retired or kept on GaApi for non-SPA callers. | High — touches three components (frontend, AppHost, tunnel config); SignalR consumers (none currently in JS, but possibly future ones) lose the hub. | Recommended if the goal is "thin public host for the demo, full app gateway for everything else." |
+| **B. Move `ChatbotHub` into `GaChatbot.Api`** | Keep the SignalR contract, just relocate the hub. SPA changes from `/hubs/chatbot → GaApi` to `/hubs/chatbot → GaChatbot.Api`. AppHost adds the new project; tunnel routes `^/hubs/chatbot$` and `^/chatbot(/.*)?$` to `GaChatbot.Api`. | Medium — the hub's deps (`ProductionOrchestrator`, `LlmConcurrencyGate`, `ConversationHistoryStore`, etc.) all live in `GA.Business.Core.Orchestration`, so they cross the host boundary cleanly via DI. | Recommended if you want minimum frontend change. |
+| **C. Cut `GaChatbot.Api`** | Treat `GaChatbot.Api` as exploratory; keep its `Grounding`/`Trace`/readiness improvements but port them into `GaApi.ChatbotController` and `GaApi.ChatbotHub`. Delete `Apps/GaChatbot.Api`. | Lowest external — no deployable changes. Highest internal — refactor of GaApi controllers. | Recommended only if the multi-host story has no near-term need (independent scaling, public-vs-internal separation, etc.). |
+
+**Until a path is picked**, treat both `GaChatbot.Api` AND `GaApi.ChatbotController` as 🟡 parallel-to-canonical for the public chatbot REST surface, and treat `GaApi.ChatbotHub` as the de-facto canonical for the deployed demo. Don't add features to one without the other.
 
 ---
 

@@ -1,6 +1,7 @@
 namespace GaApi.Controllers;
 
 using System.ComponentModel.DataAnnotations;
+using GA.Business.Core.Orchestration.Models;
 using Services;
 
 public class ChatRequest
@@ -17,5 +18,6 @@ public record ChatJsonResponse(
     string AgentId,
     float Confidence,
     string RoutingMethod,
+    GroundingMetadata? Grounding = null,
     long ElapsedMs = 0,
     string? TraceId = null);
