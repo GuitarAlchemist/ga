@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-07T23:43:43.4516130Z",
+  "Timestamp": "2026-05-07T23:55:25.0241195Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 394
+        "Count": 398
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 371
+        "Count": 370
       },
       {
         "Name": "Adim/C",
@@ -143,12 +143,17 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-3-7-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-1-5-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-3-7-x-x-x",
+        "Diagram": "x-7-11-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -168,7 +173,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
+        "Diagram": "x-9-13-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -178,17 +188,7 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-9-13-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-10-14-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -228,21 +228,21 @@
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-2-6-x",
+        "Diagram": "x-0-4-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "ukulele",
-        "Diagram": "x-6-x-3",
+        "Diagram": "x-3-x-0",
         "Description": "IntervalSpread=0 for 2-note voicing"
       }
     ]
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 87.0160842,
-    "VoicingsPerSec": 3597.5762742952757,
-    "PeakWorkingSetMb": 407.98046875
+    "RuntimeSeconds": 83.7171044,
+    "VoicingsPerSec": 3739.343378436295,
+    "PeakWorkingSetMb": 401.96484375
   },
   "IssueSamples": {
     "NullChordName": [],
