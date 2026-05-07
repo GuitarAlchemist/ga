@@ -1,28 +1,54 @@
 namespace GA.Business.ML.Agents.Skills;
 
+using GA.Business.ML.Agents.Plugins;
+using GA.Business.ML.Extensions;
+using GA.Business.ML.Skills;
+using Microsoft.Extensions.Logging;
+
 /// <summary>
-/// Transposes a chord by a named musical interval. Pure SKILL.md-driven —
-/// the body teaches the LLM to call <c>ga_dsl_eval</c> with the
-/// <c>domain.transposeChord</c> closure. First canary for the DSL-eval
-/// pattern (Phase 2 of <c>docs/plans/2026-05-06-skills-orchestration-architecture.md</c>).
+/// Transposes a chord by a named musical interval. The C# wrapper owns the
+/// routing metadata (<c>Name</c>, <c>Description</c>, <c>ExamplePrompts</c>)
+/// so the <c>SemanticIntentRouter</c> can dispatch via the
+/// <c>IIntent</c> registry, then delegates <c>ExecuteAsync</c> to a lazily-
+/// constructed <see cref="SkillMdDrivenSkill"/> that runs the LLM-in-the-loop
+/// pass with <c>skills/transpose/SKILL.md</c> as the system prompt and the
+/// MCP tool surface (including <c>ga_dsl_eval</c>) attached as
+/// function-calling tools.
 /// </summary>
 /// <remarks>
-/// This wrapper produces no answer of its own; it emits the SKILL.md body
-/// verbatim. The actual transposition happens when the LLM follows the body's
-/// instructions and invokes <c>ga_dsl_eval</c>. This is the "thin wrapper"
-/// pattern from PR #126 (catalog skills) applied to a tool-driven skill —
-/// proves the C# orchestrator can register a SKILL.md whose substance lives
-/// entirely in the markdown + DSL closure.
+/// This is path "B" from the 2026-05-06 Phase 2 finding: keep
+/// <c>IIntent</c> registration on the C# wrapper (so routing metadata is
+/// curated by hand), but route the actual answer generation through
+/// Anthropic + <c>ga_dsl_eval</c> instead of emitting the SKILL.md body
+/// verbatim. Without this, the LLM-in-the-loop path is wired but never
+/// invoked — see
+/// <c>docs/plans/2026-05-06-skills-orchestration-architecture.md</c>
+/// §"Phase 2 finding" for the rationale.
 /// </remarks>
-public sealed class TransposeSkill(ILogger<TransposeSkill> logger) : IOrchestratorSkill
+public sealed class TransposeSkill : IOrchestratorSkill
 {
     private const string SkillFolderName = "transpose";
 
-    private static readonly Lazy<string> _bodyCache = new(
-        () => CatalogSkillMdLoader.LoadBodyOrFallback(
-            SkillFolderName,
-            "Transpose a chord by calling ga_dsl_eval with closure name 'domain.transposeChord' and args { symbol, semitones }. Use the interval-to-semitones table to convert phrasings like 'up a perfect fourth' (5 semitones) or 'down a minor third' (-3 semitones)."),
-        LazyThreadSafetyMode.ExecutionAndPublication);
+    private readonly Lazy<SkillMdDrivenSkill> _inner;
+    private readonly ILogger<TransposeSkill> _logger;
+
+    public TransposeSkill(
+        IMcpToolsProvider toolsProvider,
+        IChatClientFactory chatClientFactory,
+        ILoggerFactory loggerFactory)
+    {
+        _logger = loggerFactory.CreateLogger<TransposeSkill>();
+        var innerLogger = loggerFactory.CreateLogger<SkillMdDrivenSkill>();
+
+        _inner = new Lazy<SkillMdDrivenSkill>(() =>
+        {
+            var path = Path.Combine(SkillMdPlugin.ResolveSkillsPath(), SkillFolderName, "SKILL.md");
+            var skillMd = SkillMdParser.TryParse(path)
+                ?? throw new InvalidOperationException(
+                    $"TransposeSkill: skills/{SkillFolderName}/SKILL.md is missing or unparseable at {path}");
+            return new SkillMdDrivenSkill(skillMd, toolsProvider, chatClientFactory, innerLogger);
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
+    }
 
     public string Name        => "Transpose";
     public string Description =>
@@ -43,17 +69,19 @@ public sealed class TransposeSkill(ILogger<TransposeSkill> logger) : IOrchestrat
 
     public bool CanHandle(string message) => false; // semantic-routing only
 
-    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
+    public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        var body = _bodyCache.Value;
-        logger.LogDebug("TransposeSkill: returned {Length} chars (LLM will dispatch ga_dsl_eval)", body.Length);
+        _logger.LogDebug("TransposeSkill: delegating to SkillMdDrivenSkill (LLM + ga_dsl_eval)");
+        var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
 
-        return Task.FromResult(new AgentResponse
+        // The wrapper still owns the AgentId/Evidence shape that downstream
+        // tests + UIs depend on; only the Result text comes from the LLM call.
+        return new AgentResponse
         {
             AgentId    = AgentIds.Theory,
-            Result     = body,
-            Confidence = 1.0f,
+            Result     = inner.Result,
+            Confidence = inner.Confidence,
             Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md", "Closure: domain.transposeChord (via ga_dsl_eval)"],
-        });
+        };
     }
 }
