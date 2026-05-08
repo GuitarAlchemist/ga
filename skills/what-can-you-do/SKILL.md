@@ -47,17 +47,31 @@ items being designed but not yet wired — those will return a
 - *"Identify the key of Em D C G"* — key inference.
 - *"Suggest next chords for Cmaj7 Dm7 Em7"* — completion.
 - *"How do I make this progression sound darker?"* — modal mood-shifting (catalog).
+- *"What are the diatonic chords in G major?"* — full I-vii table from `domain.diatonicChords`.
 
-### 🎚️ Fingerings
+### 🎚️ Fingerings & voicings
 - *"Compute the fret span of [diagram]"* — playability scoring.
+- *"Drop 2 voicings of Cmaj7"* — OPTIC-K voicing search (667k indexed shapes).
+- *"How do I finger Cmaj9?"* — semantic voicing search via natural-language query.
+- *"Show me beginner chords"* — open-position starter catalogue.
 
 ### 🔄 Movement & relationships
 - *"Compute the interval from C to G"* — interval pair-lookup.
+- *"Transpose Cmaj7 up a perfect fifth"* — deterministic chord transposition via `domain.transposeChord`.
+- *"What notes do Cmaj7 and Am7 share?"* — common-tone identification with role mapping (root/3rd/5th/7th).
 - *"Substitutes for V7 in C major"* — chord substitutions (Grothendieck-ICV).
 - *"Compare Cmaj7 with Am7"* — chord-pair classification.
 
+### 🧮 Atonal-set algebra (deterministic, ix-grounded)
+- *"Are 0146 and 0137 z-related?"* — Z-relation testing.
+- *"What is the prime form of [0,1,4,6]?"* — prime-form computation.
+- *"Compute the ICV of {0,2,4,7}"* — interval-class vector.
+- *"Forte number for 0146"* — Forte-label lookup.
+
 ### 🎼 Pedagogy
 - *"Explain the circle of fifths"* — key signature walkthrough (catalog).
+- *"Give me a practice routine for jazz guitar"* — structured practice plan.
+- *"Essentials for blues guitar"* — genre primer.
 
 ## How answers are produced
 
@@ -76,18 +90,14 @@ These capabilities are **designed but not yet wired** — the chatbot
 will not answer them correctly today. Drafts exist at
 `skills-dev/_pending-tools/` awaiting their backing MCP tools:
 
-- Transpose chord by interval.
-- List diatonic chords of a key (currently routed indirectly via scale-info).
 - Voice leading between two chords.
 - Relative / parallel key lookup.
 - Full progression analysis (Roman numerals + cadences + modulations).
-- Voicing search by natural-language query (semantic over OPTIC-K).
-- Easier-voicings substitution.
-- Arpeggio suggestions for soloing.
-- Common-tone identification.
-- Progression generation by mood / style.
+- Easier-voicings substitution (return a less-stretchy alternative for a given voicing).
+- Arpeggio suggestions for soloing over a chord / progression.
+- Progression generation from scratch by mood / style (today's `progression-mood` shifts an *existing* progression; generating from a blank slate is roadmap).
 - Polychord analysis.
-- Set-class substitutions and ICV-neighbour lookup.
+- Set-class substitutions and ICV-neighbour lookup beyond what's already in `algebra` (e.g. "find all set classes within ICV-distance 1 of 0146").
 
 If you ask one of those today, the chatbot may attempt to answer from
 training-data fallback — flag the answer as **non-authoritative** and
@@ -105,6 +115,8 @@ verify against a textbook.
 If you already know what you want, jump straight to it. **Live skills
 today** (canonical, in `skills/`):
 - Theory: `chord-info`, `scale-info`, `interval`, `modes`, `circle-of-fifths`.
-- Progression: `progression-completion`, `progression-mood`, `key-identification`.
-- Fingerings: `fret-span`, `beginner-chords`.
-- Substitutions: `chord-substitution`.
+- Progression: `progression-completion`, `progression-mood`, `key-identification`, `diatonic-chords`.
+- Fingerings & voicings: `fret-span`, `beginner-chords`, voicing search (regex-guard fast path + `VoicingIntent` semantic path).
+- Movement: `transpose`, `common-tones`, `chord-substitution`.
+- Atonal-set algebra: `algebra` intent (Z-relation, prime form, ICV, Forte label).
+- Discovery / pedagogy: `what-can-you-do`, `practice-routine`, `genre-essentials`.
