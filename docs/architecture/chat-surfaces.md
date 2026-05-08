@@ -230,7 +230,7 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 | **`IChatService` (GaApi-local)** | ✅ used by `ChatbotSessionOrchestrator.NormalizeHistory` and `ChatbotController.GetStatus` only. Provider chosen via `AI:ChatProvider`. | 🟡 `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` exist but are not called from any controller or hub today. |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |
 | **Voicing-grounded retrieval inside chat** | ✅ `SpectralRagOrchestrator` reached via `TabAwareOrchestrator`. | 🟡 `VoicingAgent` performs an independent OPTIC-K retrieval path through `EnhancedVoicingSearchService` whenever the router selects it — produces a structured-list response rather than a narrated one. Two independent retrieval surfaces over the same corpus. |
-| **GA.AI.Service / `POST /api/Chat`** | _N/A_ | 🪦 deprecated-candidate — service not in the AppHost composition; `ChatController` still resolves `ProductionOrchestrator` so it would work standalone, but no client is wired to it. |
+| **GA.AI.Service / `POST /api/Chat`** | _N/A_ | 🪦 **frozen 2026-05-07** — see [`Apps/ga-server/GA.AI.Service/DEPRECATED.md`](../../Apps/ga-server/GA.AI.Service/DEPRECATED.md). Read-only until a concrete deploy reason emerges or the next architecture review decides to delete. |
 | **`POST /api/chatbot/ask`** | _N/A_ | 🪦 dangling frontend call (TriageDropZone) with no server implementation. |
 
 ---

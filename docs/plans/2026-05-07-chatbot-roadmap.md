@@ -102,9 +102,9 @@ Already tracked. Re-enables retrieval safely.
 
 `ProductionOrchestrator.AnswerStreamingAsync` only true-streams when the selected agent is a `GuitarAlchemistAgentBase`. Tab / path / skill paths simulate streaming by word-splitting after the answer arrives. Frontends parse this as token streaming. Either fix it or own it explicitly in the AG-UI contract.
 
-### 10. Cut or revive `GA.AI.Service`
+### 10. ✅ Cut or revive `GA.AI.Service` — *frozen 2026-05-07 (`<this commit>`)*
 
-The third controller (`GA.AI.Service.Controllers.ChatController`) resolves `ProductionOrchestrator` standalone but nobody calls it; AppHost registration commented out. Don't leave a third option dangling: delete it or wire it for a real consumer.
+Codex's "don't leave a third option dangling" called for either delete or wire-for-a-real-consumer. The full project is bigger than just `ChatController` (8+ controllers covering AI, search, benchmarks, notebooks, tab analysis), so wholesale delete carries reference-value cost. Decision: **firm freeze** with a `DEPRECATED.md` that lists every controller, points at the canonical replacement, and pins hard rules ("do not add new code", "do not re-enable AppHost registration", "do not add ProjectReferences"). `chat-surfaces.md` updated to reflect the freeze. Two named decision triggers tell the next reviewer when to revisit: (a) concrete deploy reason for an AI-workload split, (b) next architecture review concludes reference value has decayed below maintenance cost.
 
 ## What this session shipped (8 commits, 2026-05-07)
 
