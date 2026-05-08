@@ -1,6 +1,12 @@
 namespace GaChatbot.Api.Services;
 
 using GA.Business.Core.Orchestration.Models;
+// AgenticTrace + AgenticTraceStep moved to GA.Business.Core.Orchestration.Trace
+// in roadmap P1 #7 commit 1 so GaApi controllers and any future host can produce
+// the same wire shape. GaChatbot.Api consumes the moved types here — kept as a
+// re-export-via-using rather than aliasing so no GaChatbot.Api caller has to
+// change. Codex CLI 2026-05-08 risk-list item 1 (duplicate-type silent miswire).
+using GA.Business.Core.Orchestration.Trace;
 using GaChatbot.Api.Controllers;
 
 public interface IChatApplicationService
@@ -28,15 +34,3 @@ public sealed record ChatStreamUpdate(
     GroundingMetadata? Grounding = null,
     AgenticTrace? Trace = null,
     bool IsCompleted = false);
-
-public sealed record AgenticTrace(
-    string TraceId,
-    string Protocol,
-    string RunId,
-    IReadOnlyList<AgenticTraceStep> Steps);
-
-public sealed record AgenticTraceStep(
-    string Name,
-    string Status,
-    long ElapsedMs,
-    IReadOnlyDictionary<string, object?> Attributes);

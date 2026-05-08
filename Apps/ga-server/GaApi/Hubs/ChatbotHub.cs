@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Services;
@@ -21,6 +22,7 @@ using Services;
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
     IChatApplicationService chatService,
+    IAgenticTraceCapture traceCapture,
     ChatbotSessionOrchestrator sessionOrchestrator,
     ISemanticKnowledgeSource semanticKnowledge,
     ILlmConcurrencyGate concurrencyGate)
@@ -137,7 +139,8 @@ public sealed class ChatbotHub(
                         source = response.Grounding.Source,
                         revision = response.Grounding.Revision,
                         queryType = response.Grounding.QueryType
-                    }
+                    },
+                trace = traceCapture.Build()
             });
 
             // Stream answer in chunks

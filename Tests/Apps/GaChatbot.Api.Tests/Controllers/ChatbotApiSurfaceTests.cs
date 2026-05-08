@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using GaChatbot.Api.Controllers;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Hosting;

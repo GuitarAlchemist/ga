@@ -4,6 +4,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Clients;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Services;
+using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
@@ -129,9 +130,29 @@ public static class ChatbotOrchestrationExtensions
         // host) take a dependency on. Codex CLI second-opinion
         // recommendation 2026-05-07 (roadmap P0 #2). Distinct from
         // GaChatbot.Api's heavier IChatApplicationService which adds
-        // readiness probing, fallback, and AgenticTrace assembly —
-        // future work moves those upstream into a decorator on this.
-        services.AddScoped<IChatApplicationService, HarmonicChatApplicationService>();
+        // readiness probing, fallback, and AgenticTrace assembly.
+
+        // Inner: the bare HarmonicChatApplicationService is registered as a
+        // concrete type only (not the IChatApplicationService binding) so the
+        // decorator stack below is the canonical IChatApplicationService.
+        services.AddScoped<HarmonicChatApplicationService>();
+
+        // Per-request trace capture. Scoped lifetime — every chat request
+        // gets its own AgenticTrace; concurrent requests don't interleave.
+        // The decorator stack writes steps; hosts read the captured trace
+        // at the wire boundary (GaApi ChatJsonResponse.Trace, SignalR
+        // routing payload, AG-UI custom events). Roadmap P1 #7 commit 1.
+        services.AddScoped<IAgenticTraceCapture, AgenticTraceCapture>();
+
+        // Decorator stack (innermost → outermost):
+        //   Harmonic  →  Traceable  →  ... (Fallback, ReadinessGated land in commits 2 + 3)
+        // Trace is innermost-of-the-decorators so its coverage extends to
+        // every behaviour layer added on top later. Codex CLI 2026-05-08
+        // design review (roadmap P1 #7).
+        services.AddScoped<IChatApplicationService>(sp =>
+            new TraceableChatApplicationService(
+                sp.GetRequiredService<HarmonicChatApplicationService>(),
+                sp.GetRequiredService<IAgenticTraceCapture>()));
 
         return services;
     }

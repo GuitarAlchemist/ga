@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
+using GA.Business.Core.Orchestration.Trace;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 

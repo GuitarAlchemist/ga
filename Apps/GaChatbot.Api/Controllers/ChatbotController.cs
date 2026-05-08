@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using GaChatbot.Api.Helpers;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc;

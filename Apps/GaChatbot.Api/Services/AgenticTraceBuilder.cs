@@ -1,6 +1,7 @@
 namespace GaChatbot.Api.Services;
 
 using System.Diagnostics;
+using GA.Business.Core.Orchestration.Trace;
 
 internal sealed class AgenticTraceBuilder(string runId)
 {

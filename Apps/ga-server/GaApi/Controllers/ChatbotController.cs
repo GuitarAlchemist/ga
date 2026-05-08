@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using Services;
 
 /// <summary>
@@ -17,12 +18,15 @@ using Services;
 ///     all GaApi chat surfaces go through the same host-neutral application
 ///     service so future readiness / trace decorators apply uniformly.
 ///     Codex CLI second-opinion 2026-05-07 — roadmap P0 #2 first cut.
+///     Trace surfaced via <see cref="IAgenticTraceCapture"/> at the wire boundary
+///     (roadmap P1 #7 commit 1 — codex CLI 2026-05-08 design review).
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatApplicationService chatService,
+    IAgenticTraceCapture traceCapture,
     IChatService statusService,
     ILlmConcurrencyGate concurrencyGate)
     : ControllerBase
@@ -78,14 +82,19 @@ public class ChatbotController(
             var response = await chatService.ChatAsync(
                 new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
 
-            // 1. Emit routing metadata event (first, before text)
+            // 1. Emit routing metadata event (first, before text). Trace and
+            // grounding are included on this frame to match the JSON wire's
+            // contract — codex CLI 2026-05-08 risk-list item 3 ("SSE parity
+            // is easy to miss").
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
             var routingPayload = JsonSerializer.Serialize(new
             {
                 type = "routing",
                 agentId = routing.AgentId,
                 confidence = routing.Confidence,
-                routingMethod = routing.RoutingMethod
+                routingMethod = routing.RoutingMethod,
+                grounding = response.Grounding,
+                trace = traceCapture.Build(),
             }, _jsonOptions);
             await WriteSseLineAsync(routingPayload, cancellationToken);
 
@@ -151,7 +160,8 @@ public class ChatbotController(
                 routing.RoutingMethod,
                 Grounding: response.Grounding,
                 ElapsedMs: sw.ElapsedMilliseconds,
-                TraceId: traceId));
+                TraceId: traceId,
+                Trace: traceCapture.Build()));
         }
         finally
         {
