@@ -31,6 +31,7 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 public sealed class SemanticIntentRouter(
     IEmbeddingGenerator<string, Embedding<float>>? textEmbeddings,
+    IRoutingHintProvider hintProvider,
     ILogger<SemanticIntentRouter> logger)
 {
     private const float DefaultMinConfidence = 0.65f;
@@ -138,13 +139,29 @@ public sealed class SemanticIntentRouter(
             return null;
         }
 
+        // Apply deterministic routing-hint boosts BEFORE sorting so high-precision
+        // surface patterns ("fret span", "what key is", chord-tone phrasings) can
+        // break ties between adjacent semantic centroids. The 2026-05-08
+        // capability-matrix smoke surfaced six such ties across ChordInfo /
+        // ScaleInfo / Modes / FretSpan / Interval / KeyIdentification /
+        // ChordSubstitution — adjacent centroids cosine-tied at the third decimal.
+        // Codex CLI 2026-05-08 design call: pure regex rules in
+        // DefaultRoutingHintProvider, +0.06 boost capped once per intent.
+        var hintDeltas = hintProvider.GetDeltas(query);
+        var withHints = new List<(IIntent Intent, float Score, float Boost, string MatchedSource)>(ranking.Count);
+        foreach (var (intent, score, source) in ranking)
+        {
+            var boost = hintDeltas.TryGetValue(intent.Id, out var delta) ? delta : 0f;
+            withHints.Add((intent, score + boost, boost, source));
+        }
+
         // Sort highest-score-first. Tie-break: prefer the intent with the SHORTER
         // description vector — heuristic for "more specific intent wins" when
         // scores are within float precision. (Generic descriptions like
         // KeyIdentification's tend to be longer; specific ones like ChordInfo
         // give the same score to a literal example match but have shorter overall
         // text, signalling tighter scope.)
-        ranking.Sort((a, b) =>
+        withHints.Sort((a, b) =>
         {
             var byScore = b.Score.CompareTo(a.Score);
             return byScore != 0
@@ -155,15 +172,18 @@ public sealed class SemanticIntentRouter(
         // Always log the top 3 at Information level so routing decisions are
         // auditable without flipping log levels. Cost is one log line per query.
         // Sanitize the query first: strip control chars (defends plain-text log
-        // sinks against \n / ANSI injection) and clamp to 80 chars.
-        var topK = ranking.Take(3).ToList();
+        // sinks against \n / ANSI injection) and clamp to 80 chars. Boosted lines
+        // show "<base>+<boost>=<final>" so codex's "log both base and hinted scores"
+        // requirement is satisfied.
+        var topK = withHints.Take(3).ToList();
         logger.LogInformation(
             "SemanticIntentRouter: query={Query} top={Top}",
             SanitizeForLog(query),
-            string.Join(" | ", topK.Select(r =>
-                $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
+            string.Join(" | ", topK.Select(r => r.Boost > 0f
+                ? $"{r.Intent.Id}={r.Score - r.Boost:F3}+{r.Boost:F3}={r.Score:F3} via {Trim(r.MatchedSource, 40)}"
+                : $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
 
-        var top = ranking[0];
+        var top = withHints[0];
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(

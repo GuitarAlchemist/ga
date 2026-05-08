@@ -93,6 +93,14 @@ public static class ChatbotOrchestrationExtensions
         // routing surfaces that previously used keyword regex —
         // KeywordAlgebraPromptClassifier, IsAskingForOptimization, the per-skill
         // CanHandle foreach, and the tab-analysis branch.
+        // Default routing-hint provider — deterministic regex rules that
+        // boost specific intents on high-precision surface patterns (chord
+        // tones, fret span, "what key is", interval names, etc.). Hosts can
+        // override with TryAdd-style replacement; the default covers the
+        // six misroutes that the 2026-05-08 capability-matrix surfaced.
+        // Codex CLI 2026-05-08 design call.
+        services.TryAddSingleton<IRoutingHintProvider, DefaultRoutingHintProvider>();
+
         services.AddSingleton<SemanticIntentRouter>();
         services.AddHostedService<IntentEmbeddingWarmupService>();
         services.AddHostedService<ClosureRegistryStartupCheck>();
