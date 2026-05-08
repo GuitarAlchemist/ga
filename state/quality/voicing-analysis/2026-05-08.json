@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-08T01:57:55.7912157Z",
+  "Timestamp": "2026-05-08T02:03:41.8296704Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 394
+        "Count": 398
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 371
+        "Count": 370
       },
       {
         "Name": "Adim/C",
@@ -153,16 +153,6 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-6-10-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-4-8-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
@@ -173,12 +163,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-8-12-x-x-x",
+        "Diagram": "x-6-10-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
+        "Diagram": "x-7-11-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -188,7 +178,17 @@
       },
       {
         "Instrument": "guitar",
+        "Diagram": "x-8-12-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
         "Diagram": "x-10-14-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 83.0255695,
-    "VoicingsPerSec": 3770.4890419330395,
-    "PeakWorkingSetMb": 401.89453125
+    "RuntimeSeconds": 83.9938539,
+    "VoicingsPerSec": 3727.0226982643544,
+    "PeakWorkingSetMb": 407.36328125
   },
   "IssueSamples": {
     "NullChordName": [],
