@@ -146,6 +146,18 @@ public static class ChatbotActivitySource
 
         /// <summary>SKILL.md was matched and executed but the LLM never invoked <c>ga_dsl_eval</c>.</summary>
         public const string GaDslEvalNotInvoked = "ga-dsl-eval-not-invoked";
+
+        /// <summary>
+        /// Orchestrator returned an answer below the configured fallback
+        /// confidence threshold AND no deterministic tool indicated a hard
+        /// failure, so the fallback decorator routed the user-visible answer
+        /// through a direct chat handler. Confidence is clamped to 0 — codex
+        /// CLI 2026-05-08: fallback that hides orchestrator failures behind
+        /// a plausible LLM guess is exactly the silent-degradation antipattern
+        /// P1 #5 closed; the fallback path must surface this reason in trace
+        /// + activity tags so the failure isn't laundered.
+        /// </summary>
+        public const string OrchestratorLowConfidenceFallback = "orchestrator-low-confidence-fallback";
     }
 
     // ── Convenience factories ────────────────────────────────────────────────

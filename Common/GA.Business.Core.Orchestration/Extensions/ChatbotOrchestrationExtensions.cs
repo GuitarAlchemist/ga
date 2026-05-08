@@ -11,6 +11,7 @@ using GA.Business.ML.Agents.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 /// <summary>
 /// DI registration for the chatbot orchestration stack.
@@ -149,19 +150,36 @@ public static class ChatbotOrchestrationExtensions
         // Roadmap P1 #7 commit 2.
         services.TryAddSingleton<IChatReadinessProbe, PermissiveChatReadinessProbe>();
 
+        // Default no-op fallback handler; hosts that want real fallback
+        // (e.g. direct chat to Ollama) override the binding. Behavior is
+        // additionally gated by FallbackOptions.Enabled, default false —
+        // codex CLI 2026-05-08 explicit call: "Fallback should be config-
+        // gated off by default … until tests prove deterministic-skill
+        // failures cannot be papered over." Roadmap P1 #7 commit 3.
+        services.TryAddSingleton<IFallbackChatHandler, NoOpFallbackChatHandler>();
+        services.AddOptions<FallbackOptions>().BindConfiguration(FallbackOptions.SectionName);
+
         // Decorator stack (innermost → outermost):
-        //   Harmonic  →  Traceable  →  ReadinessGated  →  ... (Fallback lands in commit 3)
-        // Trace is innermost-of-the-decorators so its coverage extends to
-        // every behaviour layer added on top later. Readiness wraps trace so
-        // the readiness.check step lands inside the request's AgenticTrace.
+        //   Harmonic  →  Traceable  →  Fallback  →  ReadinessGated
+        //
+        // - Trace innermost so its coverage extends to every outer layer.
+        // - Fallback inside ReadinessGated so a readiness-blocked request
+        //   short-circuits without invoking fallback (no point).
+        // - Fallback outside Traceable so the trace step records the
+        //   orchestrator's actual result before the fallback decision.
         // Codex CLI 2026-05-08 design review (roadmap P1 #7).
         services.AddScoped<IChatApplicationService>(sp =>
         {
             var capture   = sp.GetRequiredService<IAgenticTraceCapture>();
             var harmonic  = sp.GetRequiredService<HarmonicChatApplicationService>();
             var traceable = new TraceableChatApplicationService(harmonic, capture);
+            var fallback  = new FallbackChatApplicationService(
+                traceable,
+                sp.GetRequiredService<IFallbackChatHandler>(),
+                sp.GetRequiredService<IOptions<FallbackOptions>>(),
+                capture);
             var probe     = sp.GetRequiredService<IChatReadinessProbe>();
-            return new ReadinessGatedChatApplicationService(traceable, probe, capture);
+            return new ReadinessGatedChatApplicationService(fallback, probe, capture);
         });
 
         return services;
