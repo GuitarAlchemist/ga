@@ -34,16 +34,41 @@ public sealed class VoicingIntent(VoicingAgent voicingAgent) : IIntent
         "musical embedding (NOT text similarity) so it matches musical structure regardless of " +
         "phrasing.";
 
+    // ExamplePrompts intentionally avoid "easy / beginner / first / basic /
+    // simple / common" tokens that BeginnerChordsSkill owns — the embedding
+    // router doesn't have semantic-exclusion rules so prompt overlap turns
+    // into a routing tiebreak.
+    //
+    // Two example classes by design:
+    //   1. Technical-voicing terms (drop-N, rootless, shell, quartal,
+    //      closed/open position) — these strengthen the embedding centroid
+    //      for VoicingIntent even though most also match the regex guard's
+    //      keyword set, which fires first for them.
+    //   2. NO-keyword phrasings that the regex guard cannot catch ("finger
+    //      Cmaj9", "chord diagram for F#m7", "play F#m7 on guitar") — these
+    //      are the semantic-intent-voicing path's reason to exist. Without
+    //      at least a few of these the router falls through to TabOptimize
+    //      or BeginnerChords for fingering-style prose.
+    //
+    // Codex CLI QA 2026-05-07 surfaced the BeginnerChords overlap; the
+    // post-QA smoke set surfaced that "finger Cmaj9" was falling to
+    // tab.optimize once the conflicting example was removed.
     public IReadOnlyList<string> ExamplePrompts =>
     [
+        // Technical-voicing terms (regex guard fires first for most of these
+        // but they shape the embedding centroid for cosine matching)
         "Show me Drop 2 voicings of Cmaj7",
-        "What fingerings exist for Am7?",
-        "Give me chord shapes for F#m7",
-        "Rootless Dm7 voicings",
         "Drop 3 voicings of G7",
+        "Rootless Dm7 voicings",
         "Shell voicings for Bm7b5",
         "Quartal voicings in A minor",
-        "Easy beginner chord shapes for D major",
+        "Alternate voicings of F#m7 up the neck",
+        "Closed-position voicings of Cmaj9",
+        // No-keyword phrasings — these are what semantic-intent-voicing exists for
+        "How do I finger Cmaj9?",
+        "Show me a chord diagram for F#m7",
+        "What's the best way to play Bm7 on guitar?",
+        "I need an alternative for the standard Am7",
     ];
 
     public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)
