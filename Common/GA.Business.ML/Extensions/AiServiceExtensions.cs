@@ -208,24 +208,36 @@ public static class AiServiceExtensions
     /// </summary>
     public static IServiceCollection AddGuitarAlchemistAgents(this IServiceCollection services)
     {
-        services.TryAddSingleton<Agents.TabAgent>();
-        services.TryAddSingleton<Agents.TheoryAgent>();
-        services.TryAddSingleton<Agents.TechniqueAgent>();
-        services.TryAddSingleton<Agents.ComposerAgent>();
-        services.TryAddSingleton<Agents.CriticAgent>();
-        services.TryAddSingleton<Agents.VoicingAgent>();
+        // Lifetimes deliberately match the uppercase helper in
+        // Common/GA.Business.ML/Extensions/ServiceCollectionExtensions.cs
+        // (the canonical agent-registration path). Agents are Transient because
+        // they transitively depend on IChatClient — if a host registers
+        // IChatClient as Scoped, Singleton agents would capture that scoped
+        // dependency forever, which is the classic lifetime-capture bug. None
+        // of the live hosts (GaApi / GaChatbot.Api / GaChatbotCli) currently
+        // register IChatClient as Scoped, but the lowercase helper above used
+        // to make singleton agents the path of least resistance for new
+        // hosts; Codex CLI 2026-05-07 review flagged this as a footgun.
+        // Transient is safe under any IChatClient lifetime.
+        services.AddTransient<Agents.TabAgent>();
+        services.AddTransient<Agents.TheoryAgent>();
+        services.AddTransient<Agents.TechniqueAgent>();
+        services.AddTransient<Agents.ComposerAgent>();
+        services.AddTransient<Agents.CriticAgent>();
+        services.AddTransient<Agents.VoicingAgent>();
 
-        services.TryAddSingleton<IEnumerable<Agents.GuitarAlchemistAgentBase>>(sp => new Agents.GuitarAlchemistAgentBase[]
-        {
-            sp.GetRequiredService<Agents.TabAgent>(),
-            sp.GetRequiredService<Agents.TheoryAgent>(),
-            sp.GetRequiredService<Agents.TechniqueAgent>(),
-            sp.GetRequiredService<Agents.ComposerAgent>(),
-            sp.GetRequiredService<Agents.CriticAgent>(),
-            sp.GetRequiredService<Agents.VoicingAgent>()
-        });
+        // Base-type registrations for SemanticRouter constructor injection.
+        // The earlier IEnumerable<GuitarAlchemistAgentBase> singleton was
+        // both wrong (would cache one agent instance per process) and
+        // inconsistent with how the uppercase helper does it.
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.TabAgent>());
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.TheoryAgent>());
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.TechniqueAgent>());
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.ComposerAgent>());
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.CriticAgent>());
+        services.AddTransient<Agents.GuitarAlchemistAgentBase>(sp => sp.GetRequiredService<Agents.VoicingAgent>());
 
-        services.TryAddSingleton<Agents.SemanticRouter>();
+        services.AddScoped<Agents.SemanticRouter>();
         services.TryAddSingleton<Agents.IRoutingFeedback, Agents.MongoRoutingFeedback>();
 
         return services;

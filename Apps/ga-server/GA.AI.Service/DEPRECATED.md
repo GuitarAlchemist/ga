@@ -7,23 +7,27 @@ This project is **deprecated and not deployed**. It has been parked since at lea
 - **Aspire AppHost registration**: commented out at [`AllProjects.AppHost/Program.cs:87`](../../../AllProjects.AppHost/Program.cs). The service is not started by `pwsh Scripts/start-all.ps1`.
 - **No live consumers**: no frontend, no other backend, no scripts call any controller in this project.
 - **Compiles**: yes — kept building so the project graph stays clean while the deprecation decision was pending.
-- **Wired to `ProductionOrchestrator`**: `ChatController` still resolves the orchestrator standalone. If anyone launched the service manually it would route chat the same way GaApi does (but no one does).
+- **DI state**: `ChatController` references `ProductionOrchestrator` but the project's own `Program.cs` does not register it (the relevant lines under `// builder.Services.AddScoped<…>` are all commented out). A manual `dotnet run` against this project would compile and start the host, but `POST /api/Chat` would 500 on a missing-DI exception. The route is dead in two senses: no caller wired, and the service couldn't honour a request even if one arrived.
 
 ## What to do instead
 
 For each capability this project nominally exposed, the canonical replacement is:
 
-| GA.AI.Service controller | Use instead |
-|---|---|
-| `ChatController` (`/api/Chat`) | `GaApi.Controllers.ChatbotController` (`/api/chatbot/chat`) — host-neutral via `IChatApplicationService` (commit `947941c1`) |
-| `AdaptiveAIController` | unimplemented; bring back into GaApi if needed |
-| `AdvancedAIController` | unimplemented; bring back into GaApi if needed |
-| `AIAnalysisController` | overlapping with GaApi's `MonadicHealthController` / `AlgedonicController` |
-| `BenchmarkController` | covered by `Scripts/run-dsl-eval-soak.ps1` and `state/quality/` snapshots |
-| `DocumentationController` | covered by Swagger on GaApi (`/swagger`) |
-| `NotebookController` | mcp-servers/notebooklm (the live MCP server has the canonical surface) |
-| `SearchController` | covered by GaApi's `SearchController` and the OPTIC-K / voicing search services |
-| `TabAnalysisController` | `GaApi.Controllers.YouTubeTabController` + `TabAnalysisOrchestrationService` |
+| GA.AI.Service controller | Live? | Use instead |
+|---|---|---|
+| `ChatController` (`/api/Chat`) | DI broken (orchestrator un-registered) | `GaApi.Controllers.ChatbotController` (`/api/chatbot/chat`) — host-neutral via `IChatApplicationService` (commit `947941c1`) |
+| `AdaptiveAIController` | partial endpoints implemented + several commented out | parked experimental surface; revive in GaApi only with explicit product scope |
+| `AdvancedAIController` | style/pattern endpoints implemented | parked experimental surface; revive in GaApi only with explicit product scope |
+| `AIAnalysisController` | implemented but un-routed | overlapping with GaApi's `MonadicHealthController` / `AlgedonicController` |
+| `BenchmarkController` | implemented | covered by `Scripts/run-dsl-eval-soak.ps1` and `state/quality/` snapshots |
+| `DocumentationController` | implemented | covered by Swagger on GaApi (`/swagger`) |
+| `NotebookController` | implemented | mcp-servers/notebooklm (the live MCP server has the canonical surface) |
+| `SearchController` | implemented | covered by GaApi's `SearchController` and the OPTIC-K / voicing search services |
+| `TabAnalysisController` | implemented | `GaApi.Controllers.YouTubeTabController` + `TabAnalysisOrchestrationService` |
+| `_Parked/EnhancedPersonalizationController` | parked, never wired | revive in GaApi only with explicit product scope |
+| `_Parked/SemanticSearchController` | parked, never wired | covered by `EnhancedVoicingSearchService` |
+| `_Parked/VectorSearchController` | parked, never wired | covered by `EnhancedVoicingSearchService` |
+| `_Parked/VectorSearchStrategyController` | parked, never wired | covered by GaApi's `OptickSearchStrategy` and friends |
 
 ## Why not delete the project
 
@@ -37,10 +41,11 @@ When the GaChatbot.Api freeze decision flips (the secondary host is either reviv
 
 ## Hard rules from now on
 
-1. **Do not add new code** to `Controllers/`, `Services/`, or `Models/`. New endpoints belong in GaApi.
+1. **Do not add new code** to `Controllers/` (including `_Parked/`), `Services/`, or `Models/`. New endpoints belong in GaApi.
 2. **Do not add ProjectReferences** to this project from other projects.
 3. **Do not uncomment** the `AddProject("ai-service", …)` line in `AllProjects.AppHost/Program.cs:87`. Uncommenting it implies revival, which requires a fresh canonical-surface decision.
-4. **PR comments touching this project** should reference this file and explain whether the change is preserving compilability or actively reviving the project.
+4. **Only compilability fixes are allowed.** Touch-ups for build breaks, namespace renames forced by a moved dependency, and analyzer-mandated tweaks are fine. **Public route behavior must not change** — no new endpoints, no new fields on existing endpoint responses, no logic changes inside controller actions.
+5. **PR comments touching this project** should reference this file and explain whether the change is preserving compilability or actively reviving the project.
 
 ## Decision trigger for the next state change
 
