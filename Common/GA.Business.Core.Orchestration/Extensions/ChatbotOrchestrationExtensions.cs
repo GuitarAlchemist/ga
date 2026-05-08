@@ -105,6 +105,15 @@ public static class ChatbotOrchestrationExtensions
         services.AddScoped<TabAnalyzeIntent>();
         services.AddScoped<IIntent>(sp => sp.GetRequiredService<TabAnalyzeIntent>());
 
+        // Voicing as a first-class IIntent so the embedding router can
+        // dispatch semantic variants ("chord shapes for Am7") alongside the
+        // explicit regex guard's keyword path ("Drop 2 voicings of Cmaj7").
+        // Codex CLI 2026-05-07 follow-up to the dispatch-order fix
+        // (a9220957) — roadmap P1 #6 follow-up. Lifetime is Scoped to match
+        // VoicingAgent's transitive dependencies (IChatClient is Scoped).
+        services.AddScoped<VoicingIntent>();
+        services.AddScoped<IIntent>(sp => sp.GetRequiredService<VoicingIntent>());
+
         // Orchestrators — Scoped because they transitively depend on
         // SemanticRouter (Scoped) and SpectralRetrievalService (Scoped).
         services.AddScoped<SpectralRagOrchestrator>();
