@@ -82,8 +82,14 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
     /// </remarks>
     public bool CanHandle(string message) => false;
 
-    /// <summary>Evidence array stamped on every response, including failures.</summary>
-    private string[] EvidenceTags =>
+    /// <summary>
+    /// Static evidence tags stamped on every response. The dynamic
+    /// <c>tools.invoked:*</c> entries from <see cref="SkillMdDrivenSkill"/>
+    /// are appended at execution time so callers can audit whether the
+    /// LLM actually called <c>ga_dsl_eval</c> against <see cref="ClosureName"/>
+    /// or just produced a plausible-looking answer from training data.
+    /// </summary>
+    private string[] StaticEvidenceTags =>
         [$"Source: skills/{SkillFolderName}/SKILL.md", $"Closure: {ClosureName} (via ga_dsl_eval)"];
 
     /// <inheritdoc />
@@ -94,12 +100,47 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
         try
         {
             var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
+
+            // The inner skill records every tool call as a "tools.invoked: <name>"
+            // entry in Evidence. Path B should always go through ga_dsl_eval —
+            // if it didn't, the answer is LLM-only and we want both the trace
+            // and the confidence to reflect that. Roadmap P0 #1.
+            var innerEvidence = inner.Evidence ?? [];
+            var calledDslEval = innerEvidence.Any(e => e.Contains("ga_dsl_eval", StringComparison.Ordinal));
+
+            var combinedEvidence = StaticEvidenceTags.Concat(innerEvidence).ToList();
+            if (calledDslEval)
+            {
+                // Sentinel tag picked up by OrchestratorSkillIntent so Path B
+                // responses surface a real grounding block on the chat wire,
+                // matching the algebra intent's contract. The closure name is
+                // the strongest queryType signal available — it identifies
+                // which deterministic computation produced the answer.
+                combinedEvidence.Add($"grounding.source: ga.dsl@{ClosureName}");
+            }
+            else
+            {
+                combinedEvidence.Add("warning: ga_dsl_eval was NOT invoked — answer is LLM-only, not deterministic");
+                _logger.LogWarning(
+                    "{Skill}: LLM produced an answer without invoking ga_dsl_eval. " +
+                    "Closure {Closure} should have been called. Evidence: {Evidence}",
+                    GetType().Name, ClosureName, string.Join(" | ", innerEvidence));
+            }
+
+            // Confidence floor when ga_dsl_eval skipped: the answer text may
+            // still be correct (LLMs can transpose Cmaj7 in their head) but
+            // by Path B's design contract it isn't deterministic, so callers
+            // arbitrating confidence shouldn't treat it as if it were.
+            var effectiveConfidence = calledDslEval
+                ? inner.Confidence
+                : Math.Min(inner.Confidence, 0.5f);
+
             return new AgentResponse
             {
                 AgentId    = ResponseAgentId,
                 Result     = inner.Result,
-                Confidence = inner.Confidence,
-                Evidence   = EvidenceTags,
+                Confidence = effectiveConfidence,
+                Evidence   = combinedEvidence,
             };
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -115,7 +156,7 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
                 AgentId    = ResponseAgentId,
                 Result     = DegradedResponseText,
                 Confidence = 0f,
-                Evidence   = EvidenceTags,
+                Evidence   = StaticEvidenceTags,
             };
         }
     }

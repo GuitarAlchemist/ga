@@ -80,7 +80,24 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
             var response = await _chatClient.Value.GetResponseAsync(messages, options, ct);
             var text = response.Text ?? string.Empty;
 
-            _logger.LogDebug("SkillMdDrivenSkill [{Skill}] response length={Len}", _skillMd.Name, text.Length);
+            // Walk response.Messages to collect every tool call the LLM
+            // actually made during the function-invocation loop. Without this
+            // the chatbot can't tell apart "Path B closure executed against
+            // the F# registry" from "LLM looked at the closure list and made
+            // up an answer" — both produce the same final text. Surfaces as
+            // AgentResponse.Evidence so OrchestratorSkillIntent can propagate
+            // it into IntentResult.Evidence and downstream traces. Roadmap
+            // P0 #1 (docs/plans/2026-05-07-chatbot-roadmap.md).
+            var toolCalls = response.Messages
+                .SelectMany(m => m.Contents)
+                .OfType<FunctionCallContent>()
+                .Select(c => c.Name)
+                .ToList();
+
+            _logger.LogDebug(
+                "SkillMdDrivenSkill [{Skill}] response length={Len}, tool calls={ToolCalls}",
+                _skillMd.Name, text.Length,
+                toolCalls.Count == 0 ? "<none>" : string.Join(", ", toolCalls));
 
             // Empty / whitespace text means the LLM either hit the tool-loop
             // iteration cap without converging, returned only tool_use blocks
@@ -99,6 +116,13 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
                 };
             }
 
+            // Build evidence entries from the actual tool-call sequence so
+            // callers can audit deterministic-compute provenance instead of
+            // trusting static "via ga_dsl_eval" string tags.
+            var evidence = toolCalls.Count == 0
+                ? new List<string> { "tools.invoked: <none>" }
+                : toolCalls.Select(name => $"tools.invoked: {name}").ToList();
+
             return new AgentResponse
             {
                 AgentId    = agentId,
@@ -107,6 +131,7 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
                 // confidence value — the LLM response is free-form text. 0.9f is used as a
                 // reasonable default. Revisit if routing decisions start consuming this value.
                 Confidence = 0.9f,
+                Evidence   = evidence,
             };
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
