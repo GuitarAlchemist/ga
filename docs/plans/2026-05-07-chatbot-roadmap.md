@@ -45,14 +45,19 @@ diatonic-chords      → grounding=ga.dsl@domain.diatonicChords
 
 GaApi log line `SkillMdDrivenSkill [transpose] response length=63, tool calls=ga_dsl_eval` confirms the actual function call.
 
-### 2. Pick canonical surface (Option A / B / C / C-prime)
+### 2. ✅ Pick canonical surface — *first cut closed 2026-05-07 (`947941c1`)*
 
-Three controllers nominally route the same paths with different contracts. Decide before adding more features.
+Codex CLI second-opinion picked **C-prime**: extract `IChatApplicationService` into a host-neutral library, consume from GaApi first, freeze `GaChatbot.Api` until a concrete deploy reason emerges.
 
-- **C-prime** (codex pick) — extract `IChatApplicationService` into a host-neutral library, consume from GaApi first, freeze `GaChatbot.Api` until a concrete deploy reason emerges.
-- A / B / C documented in [chat-surfaces.md §5b](../architecture/chat-surfaces.md).
+Shipped as the smallest viable cut:
 
-**Done when:** the decision is recorded in `chat-surfaces.md`, `GaChatbot.Api` is either the canonical deployable or marked frozen, and the wire contract for `Grounding` / `Trace` is single-sourced.
+- New `Common/GA.Business.Core.Orchestration/Abstractions/IChatApplicationService.cs` (narrowest possible — `Task<ChatResponse> ChatAsync(ChatRequest, CancellationToken)`).
+- New `Common/GA.Business.Core.Orchestration/Services/HarmonicChatApplicationService.cs` — pass-through to `IHarmonicChatOrchestrator`.
+- Registered in `AddChatbotOrchestration`.
+- `GaApi.ChatbotController` and `GaApi.ChatbotHub` both depend on the new interface instead of `ProductionOrchestrator` directly. The deployed `/chatbot/` SignalR path goes through this surface.
+- `GaChatbot.Api` keeps its richer `IChatApplicationService` (Trace, readiness, ChatExecutionResult) — codex's call is to keep it frozen rather than promote a non-ingressed host. Disambiguated via fully qualified type in `GaChatbot.Api/Extensions/ServiceCollectionExtensions.cs`.
+
+P1 #7 (one canonical wire contract) is now unblocked: a future readiness probing / trace-assembly decorator wraps `HarmonicChatApplicationService` once and every GaApi surface inherits it.
 
 ### 3. ✅ Real integration test for `SkillMdDrivenSkill` — *closed 2026-05-07 (`e44f998d`)*
 
@@ -64,13 +69,24 @@ Three controllers nominally route the same paths with different contracts. Decid
 
 `IntentResult` now carries a single `IntentGroundingEvidence?` (record with `Source`, `Revision`, `QueryType`, `Facts`) instead of four optional primitives. `AlgebraIntent` and `OrchestratorSkillIntent` construct the record directly; `ProductionOrchestrator.BuildGrounding` is a one-line null-or-map. The next intent that needs grounding takes one parameter instead of four. Wire shape unchanged end-to-end.
 
-### 5. Stop silent graceful degradation for deterministic skills — *partially landed in P0 #1*
+### 5. ✅ Stop silent graceful degradation for deterministic skills — *closed 2026-05-07 (`c8a5750b`)*
 
-P0 #1 already implements the loud-failure half: when `ga_dsl_eval` is *not* invoked by a Path B skill, `SkillMdDrivenWrapperBase` clamps confidence to ≤0.5, logs a warning, and adds a `"warning: ga_dsl_eval was NOT invoked"` evidence tag. Remaining work to fully close: surface `tool.failure_reason` as a trace tag, and define what "fail" looks like for closure-side errors (today: empty response → 0 confidence; closure-throws → swallowed in `SkillMdDrivenSkill` catch).
+P0 #1 already added the loud-failure half (confidence clamp + warning + evidence tag when `ga_dsl_eval` was not invoked). This closes the rest:
 
-### 6. Improve embedding router quality (#81)
+- New `ChatbotActivitySource.FailureReasons` closed taxonomy with 10 string-enum values mirroring `DslEvalResult.Error` wire codes (`closure-not-found`, `closure-not-exposed`, `missing-required-arg`, `arg-coerce-failed`, `closure-runtime-error`, `closure-timeout`, `closure-exception`, `skill-md-exception`, `empty-model-response`, `ga-dsl-eval-not-invoked`).
+- New tags: `tool.name`, `tool.failure_reason`, `skill.name`, `closure.name`, `exception.type` (no `ex.Message` — codex's PII guidance).
+- Tagged in `SkillMdDrivenSkill` empty-response + catch paths and `SkillMdDrivenWrapperBase` ga-dsl-eval-skipped + catch paths.
+- Closure-side codes are enumerated but not tagged here — `DslEvalMcpTools` intentionally returns them as `DslEvalResult.Error` inside successful tool responses so the LLM can react. Future work: surface them at the orchestrator boundary if a Path B response carries the LLM's caught error payload.
 
-Voicing-search → modes at 0.71 confidence is a real misroute. LLM arbitration on close calls is the proposed fix. Already tracked.
+### 6. ✅ Improve embedding router quality (#81) — *first cut closed 2026-05-07 (`a9220957`)*
+
+The misroute (`Show me Drop 2 voicings of Cmaj7` → `skill.modes` at 0.71) was structural, not embeddings-quality. Codex's diagnosis: `ProductionOrchestrator.AnswerAsync` ran `SemanticIntentRouter` BEFORE `TrySelectDeterministicAgent`, so explicit voicing prompts could be stolen by close-call intent matches.
+
+Reordered: `TrySelectDeterministicAgent` (the voicing guard with chord-literal + voicing-keyword regex) now runs first; `SemanticIntentRouter` falls through. Extracted the deterministic-agent dispatch body into `DispatchDeterministicAgentAsync` so both pre- and post-intent positions share one branch-tag / hook lifecycle / `ChatResponse` shape.
+
+Verified live: `Show me Drop 2 voicings of Cmaj7` → `agent=voicing route=deterministic-voicing conf=0.92`. Modes / transpose / common-tones / algebra all unchanged.
+
+Follow-up: formalize a `VoicingIntent` so voicing participates in the embedding router as a first-class `IIntent` — that lets the LLM-arbitration close-call path (issue #81 original framing) cover voicing alongside everything else. Still tracked.
 
 ### 7. One canonical chat-wire contract
 
@@ -104,11 +120,14 @@ The third controller (`GA.AI.Service.Controllers.ChatController`) resolves `Prod
 | `d41ee4df` | P0 #1 — Path B `ga_dsl_eval` tool-invocation tracking + grounding sentinel + confidence clamp |
 | `e44f998d` | P0 #3 — `ChatbotOrchestrationBootstrapTests` regression fixture (3 tests, codex's "done when" verified) |
 | `367c85bf` | P1 #4 — `IntentGroundingEvidence` record collapses the four primitive grounding fields |
+| `a9220957` | P1 #6 first cut — deterministic voicing guard precedes `SemanticIntentRouter` |
+| `c8a5750b` | P1 #5 — `tool.failure_reason` trace tags + closed `FailureReasons` taxonomy |
+| `947941c1` | P0 #2 first cut — host-neutral `IChatApplicationService` consumed by GaApi controller + hub |
 
 ## Decision log
 
 - **2026-05-07** — chose to keep `IntentResult` in `GA.Business.ML` (layer 4) and reconstruct `GroundingMetadata` at the orchestrator boundary rather than move `IntentResult` upward. Two-way door — revisit if more intents need typed grounding.
-- **2026-05-07** — canonical surface decision *deferred*; recorded options A/B/C/C-prime in `chat-surfaces.md §5b`. One-way door — re-decision is expensive once feature work resumes.
+- **2026-05-07** — canonical surface decision: **C-prime** (codex pick, executed `947941c1`). Host-neutral `IChatApplicationService` lives in `Common/GA.Business.Core.Orchestration`; GaApi delegates; `GaChatbot.Api` frozen. Re-evaluate if a concrete deploy reason emerges for the second host. One-way door — moving away from the host-neutral surface is expensive once decorators stack on it.
 - **2026-05-07** — closure-registry bootstrap added to `AddChatbotOrchestration` rather than `DslEvalMcpTools` static constructor. Two-way door — moveable if multi-host wiring demands it.
 
 ## Out of scope here
