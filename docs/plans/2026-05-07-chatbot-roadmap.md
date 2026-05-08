@@ -123,12 +123,18 @@ Codex's "don't leave a third option dangling" called for either delete or wire-f
 | `a9220957` | P1 #6 first cut — deterministic voicing guard precedes `SemanticIntentRouter` |
 | `c8a5750b` | P1 #5 — `tool.failure_reason` trace tags + closed `FailureReasons` taxonomy |
 | `947941c1` | P0 #2 first cut — host-neutral `IChatApplicationService` consumed by GaApi controller + hub |
+| `9573a4a8` | P1 #6 follow-up — `VoicingIntent` as first-class `IIntent` |
+| `0de47ee1` | P1 #6 QA fix — VoicingIntent example-prompt overlap with BeginnerChordsSkill |
+| `e8561984` | P2 #10 — freeze `GA.AI.Service` with `DEPRECATED.md` |
+| `44ceb101` | P1 #6 / P2 #10 QA round — DEPRECATED.md accuracy + `AddGuitarAlchemistAgents` lifetime alignment |
 
 ## Decision log
 
 - **2026-05-07** — chose to keep `IntentResult` in `GA.Business.ML` (layer 4) and reconstruct `GroundingMetadata` at the orchestrator boundary rather than move `IntentResult` upward. Two-way door — revisit if more intents need typed grounding.
 - **2026-05-07** — canonical surface decision: **C-prime** (codex pick, executed `947941c1`). Host-neutral `IChatApplicationService` lives in `Common/GA.Business.Core.Orchestration`; GaApi delegates; `GaChatbot.Api` frozen. Re-evaluate if a concrete deploy reason emerges for the second host. One-way door — moving away from the host-neutral surface is expensive once decorators stack on it.
 - **2026-05-07** — closure-registry bootstrap added to `AddChatbotOrchestration` rather than `DslEvalMcpTools` static constructor. Two-way door — moveable if multi-host wiring demands it.
+- **2026-05-07** — `AddGuitarAlchemistAgents` lifetimes aligned with the canonical uppercase helper: agents Transient, base-type registrations one-per-agent via factories, `SemanticRouter` Scoped. Two-way door but unlikely revert: matches the better helper, removes the captured-scope footgun. Codex CLI QA round.
+- **2026-05-07** — `GA.AI.Service` frozen rather than deleted. Two-way door: revisit on the named decision triggers in the project's `DEPRECATED.md`.
 
 ## Out of scope here
 
