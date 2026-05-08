@@ -97,15 +97,51 @@ Both run cosine over the same corpus, but:
 
 Empirically: `/retrieve` returns 1.9s, chat-path-no-filters > 180s. **Same corpus, different cost profile.**
 
-## Three viable fixes (none shipped)
+## Three viable fixes — Path 1 ruled out by 2026-05-08 corpus probe
 
 | # | Approach | Cost | Risk |
 |---|---|---|---|
-| 1 | **Map extractor tags → corpus tag vocabulary** at the filter boundary. E.g. `"drop2" → ["voicing-shape:drop2", "technique:drop2"]` if any of those exist in the corpus. Inspect 10 corpus rows, find the actual tag schema, write a mapper. | Hours | Tags need to genuinely exist in the corpus, otherwise mapping accomplishes nothing. |
+| ~~1~~ | ~~Map extractor tags → corpus tag vocabulary at the filter boundary.~~ | ~~Hours~~ | **Ruled out** — see corpus-probe data below. The corpus has no technique-name vocabulary to map into. |
 | 2 | **Switch `VoicingAgent` to use `ISemanticKnowledgeSource`** (the `/retrieve` path's service) and pass the structured-query-derived prompt as text. Drops the encoder's structured pipeline; relies on text embedding. Loses partition-weighted cosine semantics. | Day or two | Loses the whole reason `MusicalQueryEncoder` exists. |
 | 3 | **Make chat-path `SemanticSearchAsync` performant.** Investigate why `GpuVoicingSearchStrategy.SemanticSearchAsync` is >100× slower than `ISemanticKnowledgeSource`. Likely either an unbatched loop, a missing GPU pruning step, or a bad query-vector format. | Day, probably | Real diagnostic work. Closes the dual-code-path drift permanently. |
 
-Path 3 is correct architecturally — the duality is the bug — but it's the most expensive. Path 1 is the smallest valuable cut if a corpus tag schema can be discovered.
+Path 3 is correct architecturally — the duality is the bug — and now the only remaining cheap option since Path 1 doesn't exist.
+
+## Corpus-probe data (2026-05-08)
+
+Probe via `/api/voicings/retrieve` across 18 varied queries (chord literals + technique-name keywords); 50 distinct snippets sampled. Findings:
+
+```
+ChordName values:           1 unique  →  "Unknown" (50/50, 100%)
+Tags vocabulary:            6 unique  →  consonant (50/50)
+                                         quality (50/50)
+                                         intermediate (35/50)
+                                         advanced (10/50)
+                                         close-voicing (10/50)
+                                         beginner (5/50)
+Texture values:             1 unique  →  "Neutral" (50/50)
+Function values:            1 unique  →  "Unknown Quality" (50/50)
+Difficulty values:          3 unique  →  Intermediate / Advanced / Beginner
+```
+
+What this proves:
+
+- **`ChordName` is uniformly `"Unknown"`** across the entire OPTIC-K corpus. Any filter that requires `ChordName.Contains("Cmaj7")` rejects every row by definition. Even codex's "match by quality fragment" approach (commit `fddff936`) fails: `"Unknown".Contains("maj7")` is also false.
+- **The corpus's 6-tag vocabulary** describes *playing characteristics* (consonant, advanced, close-voicing) and *difficulty bands* (beginner / intermediate / advanced). It does NOT contain technique names (`drop2`, `rootless`, `shell`, `quartal`, `barre`). The extractor's tag output is inherently in a different vocabulary; mapping is infeasible because the target vocabulary doesn't include the source terms.
+- **Performance signal during the probe**: the first 5 queries returned in ~1.9s; the next 13 timed out at the 60s urllib default. This corroborates the slow-`SemanticSearchAsync` finding and suggests GPU memory pressure / lack of pre-pruning on the chat-path's strategy.
+
+The OPTIC-K corpus is a **vector index, not a tagged database**. Its richness is in the 240-dim embedding partitions (STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / MODAL / ROOT). Document fields (`ChordName`, `SemanticTags`, `Function`) were never populated with anything denser than placeholders.
+
+That makes the architecture's intent legible: **filters were a mistake**. The encoder is supposed to do all the discrimination via the embedding vector. The chat path's `BuildSearchFilters` builds rejection logic over fields that don't carry the relevant signal.
+
+## Recommended next-iteration plan
+
+1. **Don't try to populate corpus tags** — the corpus is a deliberate vector-only index. Re-tagging 667k voicings is a separate corpus-engineering project.
+2. **Path 3 is the load-bearing fix.** Specifically: investigate why `EnhancedVoicingSearchService.SearchAsync` with `filters=null` routes to a `SemanticSearchAsync` that's >100× slower than `ISemanticKnowledgeSource.SearchAsync` on the same data. Likely candidates:
+   - Pruning: `ISemanticKnowledgeSource` may pre-prune by partition norm before the cosine pass.
+   - Batching: check whether `GpuVoicingSearchStrategy.SemanticSearchAsync` batches the cosine over the GPU, or loops 667k times.
+   - Vector dim: confirm the query vector emerging from `MusicalQueryEncoder.Encode(structured)` matches the corpus's expected dim. Codex flagged 124-dim (compact OPTIC-K) is correct; verify `OptickIndexReader.Dimension` agrees.
+3. **Smallest user-visible win first** (separate from architectural fix): when `BuildSearchFilters` would produce hard filters that reject everything, surface a more useful error than `"OPTIC-K index returned no matches for this query."` — e.g., "Voicing search couldn't filter by `drop2` (corpus uses different tags); falling back to chord-only search…" — but this requires Path 3 to make the fallback search return in reasonable time.
 
 ## How to pick up
 
