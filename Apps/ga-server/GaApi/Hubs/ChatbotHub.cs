@@ -114,13 +114,27 @@ public sealed class ChatbotHub(
             var response = await orchestrator.AnswerAsync(
                 new ChatRequest(trimmedMessage), cancellationToken);
 
-            // Emit routing metadata to client
+            // Emit routing metadata to client. Grounding is included when the
+            // intent that handled the request was deterministic-compute-backed
+            // (e.g. ix-algebra) so the SPA can surface "this came from a
+            // verifiable source vs an LLM guess" — the same field
+            // GaChatbot.Api's ChatJsonResponse and ChatbotController return.
+            // Without this, the deployed /chatbot/ UI silently strips grounding
+            // even though ProductionOrchestrator produces it.
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
             await Clients.Caller.SendAsync("MessageRoutingMetadata", new
             {
                 agentId = routing.AgentId,
                 confidence = routing.Confidence,
-                routingMethod = routing.RoutingMethod
+                routingMethod = routing.RoutingMethod,
+                grounding = response.Grounding is null
+                    ? null
+                    : new
+                    {
+                        source = response.Grounding.Source,
+                        revision = response.Grounding.Revision,
+                        queryType = response.Grounding.QueryType
+                    }
             });
 
             // Stream answer in chunks
