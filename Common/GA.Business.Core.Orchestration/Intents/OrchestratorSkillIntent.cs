@@ -31,22 +31,23 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
         // SkillMdDrivenWrapperBase emits a sentinel evidence tag of the form
         // "grounding.source: ga.dsl@<closureName>" when the LLM successfully
         // invoked ga_dsl_eval against the canonical closure. Lift it into a
-        // real GroundingSource/QueryType pair so the chat wire payload
-        // matches the algebra intent's contract — closing the visibility
-        // gap that the 2026-05-07 smoke set surfaced. Roadmap P0 #1.
+        // real IntentGroundingEvidence so the chat wire payload matches the
+        // algebra intent's contract — closing the visibility gap that the
+        // 2026-05-07 smoke set surfaced. Roadmap P0 #1 + P1 #4.
         const string Prefix = "grounding.source: ga.dsl@";
         var groundingTag = response.Evidence?.FirstOrDefault(e => e.StartsWith(Prefix, StringComparison.Ordinal));
-        var (groundingSource, groundingQueryType) = groundingTag is null
-            ? (null, null)
-            : ((string?)"ga.dsl", (string?)groundingTag[Prefix.Length..]);
+        var grounding = groundingTag is null
+            ? null
+            : new IntentGroundingEvidence(
+                Source:    "ga.dsl",
+                Revision:  "registered",
+                QueryType: groundingTag[Prefix.Length..]);
 
         return new IntentResult(
             Answer: response.Result,
             Confidence: response.Confidence,
             Evidence: response.Evidence?.ToList(),
             RoutingMethodOverride: "orchestrator-skill-semantic",
-            GroundingSource: groundingSource,
-            GroundingRevision: groundingSource is null ? null : "registered",
-            GroundingQueryType: groundingQueryType);
+            Grounding: grounding);
     }
 }

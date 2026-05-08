@@ -38,6 +38,31 @@ public interface IIntent
     Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Neutral, ML-layer-owned grounding record carried by
+/// <see cref="IntentResult"/>. The Orchestration layer reconstructs its
+/// typed <c>GroundingMetadata</c> from this — the split exists so the
+/// ML-layer <see cref="IIntent"/> contract doesn't reach across into
+/// <c>GA.Business.Core.Orchestration</c> for a record type.
+/// </summary>
+/// <param name="Source">Origin of the deterministic computation that
+/// produced this answer, e.g. <c>"ix"</c>, <c>"ix-compatible"</c>,
+/// <c>"ga.dsl"</c>.</param>
+/// <param name="Revision">Source revision (commit / version /
+/// fingerprint) so the response is reproducible. Use the literal
+/// <c>"registered"</c> when the closure registry doesn't expose a
+/// version of its own.</param>
+/// <param name="QueryType">Optional query-shape tag, e.g.
+/// <c>"z-relation"</c>, <c>"prime-form"</c>, or the closure name for
+/// Path B intents.</param>
+/// <param name="Facts">Optional key/value facts the deterministic
+/// service exposes for downstream display or audit.</param>
+public sealed record IntentGroundingEvidence(
+    string Source,
+    string Revision,
+    string? QueryType = null,
+    IReadOnlyDictionary<string, string>? Facts = null);
+
 /// <summary>Result returned from <see cref="IIntent.ExecuteAsync"/>.</summary>
 /// <param name="Answer">Natural-language answer.</param>
 /// <param name="Confidence">0.0 to 1.0. The router's match score is combined
@@ -48,24 +73,12 @@ public interface IIntent
 /// <c>routing.method</c> trace tag. Defaults to <c>"semantic-intent"</c> at the
 /// router level; intents that want their own brand (e.g. <c>"ix-algebra"</c>)
 /// can override here.</param>
-/// <param name="GroundingSource">Origin of the deterministic computation that
-/// produced this answer (e.g. <c>"ix"</c>, <c>"ix-compatible"</c>). The
-/// orchestrator reconstructs <c>GroundingMetadata</c> at its layer boundary
-/// from this and the three sibling fields — kept primitive here so the
-/// ML-layer <c>IIntent</c> contract doesn't reach across into the
-/// Orchestration layer's typed grounding model.</param>
-/// <param name="GroundingRevision">Source revision (commit / version /
-/// fingerprint) so the response is reproducible.</param>
-/// <param name="GroundingQueryType">Optional query-shape tag, e.g.
-/// <c>"z-relation"</c>, <c>"prime-form"</c>.</param>
-/// <param name="GroundingFacts">Optional key/value facts the deterministic
-/// service exposes for downstream display or audit.</param>
+/// <param name="Grounding">Optional grounding evidence. <c>null</c> when the
+/// intent didn't produce a deterministic-compute result; the orchestrator
+/// maps this to <c>GroundingMetadata</c> at its layer boundary.</param>
 public sealed record IntentResult(
     string Answer,
     float Confidence = 1.0f,
     IReadOnlyList<string>? Evidence = null,
     string? RoutingMethodOverride = null,
-    string? GroundingSource = null,
-    string? GroundingRevision = null,
-    string? GroundingQueryType = null,
-    IReadOnlyDictionary<string, string>? GroundingFacts = null);
+    IntentGroundingEvidence? Grounding = null);

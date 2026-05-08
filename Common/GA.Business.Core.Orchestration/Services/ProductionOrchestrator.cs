@@ -540,10 +540,11 @@ public class ProductionOrchestrator(
     }
 
     /// <summary>
-    /// Lifts the four primitive grounding fields off <see cref="IntentResult"/>
-    /// into the typed <see cref="GroundingMetadata"/> the public chat surface
-    /// expects. Returns null when the intent didn't carry grounding data —
-    /// only deterministic-compute intents (e.g. <c>algebra</c>) populate it.
+    /// Maps the ML-layer <see cref="IntentGroundingEvidence"/> to the
+    /// Orchestration-layer <see cref="GroundingMetadata"/> the public chat
+    /// surface expects. Returns null when the intent didn't carry grounding
+    /// data — only deterministic-compute intents (e.g. <c>algebra</c>,
+    /// Path B SKILL.md skills) populate it.
     /// </summary>
     /// <remarks>
     /// The split exists to keep the ML-layer <see cref="IIntent"/> contract
@@ -552,11 +553,11 @@ public class ProductionOrchestrator(
     /// the two representations.
     /// </remarks>
     private static GroundingMetadata? BuildGrounding(IntentResult result) =>
-        result.GroundingSource is null
+        result.Grounding is null
             ? null
             : new GroundingMetadata(
-                result.GroundingSource,
-                result.GroundingRevision ?? "unknown",
-                result.GroundingQueryType,
-                result.GroundingFacts);
+                result.Grounding.Source,
+                result.Grounding.Revision,
+                result.Grounding.QueryType,
+                result.Grounding.Facts);
 }
