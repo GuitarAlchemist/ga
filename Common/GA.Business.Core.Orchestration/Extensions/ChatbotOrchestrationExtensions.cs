@@ -144,15 +144,25 @@ public static class ChatbotOrchestrationExtensions
         // routing payload, AG-UI custom events). Roadmap P1 #7 commit 1.
         services.AddScoped<IAgenticTraceCapture, AgenticTraceCapture>();
 
+        // Default permissive readiness probe; hosts can override to gain
+        // real gating. TryAdd so a host-supplied IChatReadinessProbe wins.
+        // Roadmap P1 #7 commit 2.
+        services.TryAddSingleton<IChatReadinessProbe, PermissiveChatReadinessProbe>();
+
         // Decorator stack (innermost → outermost):
-        //   Harmonic  →  Traceable  →  ... (Fallback, ReadinessGated land in commits 2 + 3)
+        //   Harmonic  →  Traceable  →  ReadinessGated  →  ... (Fallback lands in commit 3)
         // Trace is innermost-of-the-decorators so its coverage extends to
-        // every behaviour layer added on top later. Codex CLI 2026-05-08
-        // design review (roadmap P1 #7).
+        // every behaviour layer added on top later. Readiness wraps trace so
+        // the readiness.check step lands inside the request's AgenticTrace.
+        // Codex CLI 2026-05-08 design review (roadmap P1 #7).
         services.AddScoped<IChatApplicationService>(sp =>
-            new TraceableChatApplicationService(
-                sp.GetRequiredService<HarmonicChatApplicationService>(),
-                sp.GetRequiredService<IAgenticTraceCapture>()));
+        {
+            var capture   = sp.GetRequiredService<IAgenticTraceCapture>();
+            var harmonic  = sp.GetRequiredService<HarmonicChatApplicationService>();
+            var traceable = new TraceableChatApplicationService(harmonic, capture);
+            var probe     = sp.GetRequiredService<IChatReadinessProbe>();
+            return new ReadinessGatedChatApplicationService(traceable, probe, capture);
+        });
 
         return services;
     }
