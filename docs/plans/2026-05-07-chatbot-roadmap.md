@@ -88,9 +88,28 @@ Verified live: `Show me Drop 2 voicings of Cmaj7` → `agent=voicing route=deter
 
 Follow-up: formalize a `VoicingIntent` so voicing participates in the embedding router as a first-class `IIntent` — that lets the LLM-arbitration close-call path (issue #81 original framing) cover voicing alongside everything else. Still tracked.
 
-### 7. One canonical chat-wire contract
+### 7. ✅ One canonical chat-wire contract — *closed 2026-05-08 (`d40503bd` → `6a0f6679` → `d63b3843` → `a0c7d5f3`)*
 
-After P0 #2 picks a host, port `Grounding` and `Trace` to the canonical surface so all consumers see the same shape. Today the SignalR hub strips `Trace`, the GaApi REST omits `Trace` entirely, and `GaChatbot.Api` has both — three contracts for one concept.
+GaApi now reaches wire-equivalent parity with GaChatbot.Api via the decorator stack `Harmonic → Traceable → Fallback → ReadinessGated` over the host-neutral `IChatApplicationService`. Three commits + one QA round, codex CLI 2026-05-08 design + QA review pairing throughout.
+
+What's on the wire:
+- `Grounding` (existing) — full record on JSON / SSE / SignalR.
+- `Trace` (new) — `AgenticTrace` with ordered steps (`readiness.check` → `chat.request` → `orchestration.answer` → `fallback.skipped|fired`); per-request scope isolation verified concurrent and sequential.
+- `tool.failure_reason` (existing) — closed taxonomy in `ChatbotActivitySource.FailureReasons`; commit 3 added `OrchestratorLowConfidenceFallback`.
+
+Behaviour additions, all gated:
+- **Readiness probing** — `IChatReadinessProbe` with `PermissiveChatReadinessProbe` default. Hosts override to gain real gating; permissive default just adds the trace step. Probe failures fail CLOSED via try/catch — a wedged probe can't take chat down.
+- **Fallback** — config-gated `Chatbot:Fallback:Enabled` (default false). When enabled, fires only when ALL three gates pass: master switch, confidence below threshold, AND no deterministic-skill routing-method match. Final confidence clamped to 0; original routing metadata preserved in trace; `tool.failure_reason = orchestrator-low-confidence-fallback` tagged. **Codex P0 fix**: deterministic-skill check uses explicit `routing.method` (which survives the orchestrator's Activity scope) instead of the unreliable `Activity.Current.TagObjects` ambient readback.
+
+Tests:
+- `Tests/Common/GA.Business.Core.Tests/AI/FallbackChatApplicationServiceTests.cs` — 5 NUnit tests pin the safety guarantees codex called for: confidence-0 clamp, routing.method=fallback, deterministic-skill protection (the regression test for the codex P0).
+- `Tests/Apps/GaChatbot.Api.Tests/Services/OrchestratedChatApplicationServiceTests.cs.AssertFallback` updated in lockstep — old test pinned the buggy `0.35f` confidence which violated P1 #5; now pins 0f.
+
+GaChatbot.Api `0.35f` violation (codex Q4) fixed in lockstep at `Apps/GaChatbot.Api/Services/OrchestratedChatApplicationService.cs:210`.
+
+Type-unification (codex risk-list item 1) closed in commit 1: `AgenticTrace` and `AgenticTraceStep` records moved out of `Apps/GaChatbot.Api/Services/IChatApplicationService.cs` into `Common/GA.Business.Core.Orchestration/Trace/`; both hosts share one type now.
+
+Streaming (`AnswerStreamingAsync`) still calls `IHarmonicChatOrchestrator` directly because `IChatApplicationService` doesn't yet expose a streaming surface — that's the P2 #9 streaming-truth follow-up.
 
 ## Later / P2
 
@@ -127,6 +146,10 @@ Codex's "don't leave a third option dangling" called for either delete or wire-f
 | `0de47ee1` | P1 #6 QA fix — VoicingIntent example-prompt overlap with BeginnerChordsSkill |
 | `e8561984` | P2 #10 — freeze `GA.AI.Service` with `DEPRECATED.md` |
 | `44ceb101` | P1 #6 / P2 #10 QA round — DEPRECATED.md accuracy + `AddGuitarAlchemistAgents` lifetime alignment |
+| `d40503bd` | P1 #7 commit 1 — `AgenticTrace` types + `IAgenticTraceCapture` + `TraceableChatApplicationService` decorator |
+| `6a0f6679` | P1 #7 commit 2 — `IChatReadinessProbe` + `PermissiveChatReadinessProbe` + `ReadinessGatedChatApplicationService` |
+| `d63b3843` | P1 #7 commit 3 — `IFallbackChatHandler` + `FallbackChatApplicationService` (default off, hard safety guarantees) |
+| `a0c7d5f3` | P1 #7 QA round — explicit deterministic-skill check (codex P0), AG-UI uses IChatApplicationService, options validation, trace error tagging, GaChatbot.Api 0.35f→0 |
 
 ## Decision log
 
