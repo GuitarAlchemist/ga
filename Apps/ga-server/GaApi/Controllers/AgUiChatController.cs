@@ -15,10 +15,20 @@ using Services;
 /// so that React components (DiatonicChordTable, VexTabViewer) receive structured
 /// domain data alongside the streaming text answer.
 /// </summary>
+/// <remarks>
+/// The non-streaming JSON endpoint (<see cref="AgUiJson"/>) goes through
+/// <see cref="IChatApplicationService"/> so the readiness / trace / fallback
+/// decorator stack applies — codex CLI 2026-05-08 P1 #7 QA flagged that
+/// AG-UI was bypassing the stack. The streaming endpoint
+/// (<see cref="AgUiStream"/>) still calls <see cref="IHarmonicChatOrchestrator"/>
+/// directly because <see cref="IChatApplicationService"/> doesn't yet expose
+/// a streaming surface; tracking as a P1 #7 follow-up.
+/// </remarks>
 [ApiController]
 [Route("api/chatbot")]
 public class AgUiChatController(
     ILogger<AgUiChatController> logger,
+    IChatApplicationService chatService,
     IHarmonicChatOrchestrator orchestrator,
     ContextualChordService contextualChordService,
     ILlmConcurrencyGate concurrencyGate) : ControllerBase
@@ -61,7 +71,7 @@ public class AgUiChatController(
                     m.Role, m.Content!, DateTimeOffset.UtcNow))
                 .ToList();
 
-            var response = await orchestrator.AnswerAsync(
+            var response = await chatService.ChatAsync(
                 new OrchestratorChatRequest(userMessage, input.ThreadId, History: history),
                 cancellationToken);
 

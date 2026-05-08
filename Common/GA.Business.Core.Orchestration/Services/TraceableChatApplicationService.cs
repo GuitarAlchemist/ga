@@ -36,27 +36,45 @@ public sealed class TraceableChatApplicationService(
                 ["history.turn_count"] = request.History?.Count ?? 0,
             });
 
-        using var step = capture.StartStep(
+        // ITimedStep auto-completes on dispose with status="completed",
+        // which is wrong on the exception path. Use try/catch to mark the
+        // step explicitly with status="error" before re-throwing — codex
+        // CLI 2026-05-08 QA risk #5: "TraceableChatApplicationService
+        // records orchestration.answer as completed on exception".
+        var step = capture.StartStep(
             "orchestration.answer",
             new Dictionary<string, object?>
             {
                 ["chat.mode"] = "full",
             });
 
-        var response = await inner.ChatAsync(request, cancellationToken);
+        try
+        {
+            var response = await inner.ChatAsync(request, cancellationToken);
 
-        step.Complete(
-            finalAttributes: new Dictionary<string, object?>
-            {
-                ["agent.id"] = response.Routing?.AgentId,
-                ["routing.method"] = response.Routing?.RoutingMethod,
-                ["routing.confidence"] = response.Routing?.Confidence,
-                ["grounding.source"] = response.Grounding?.Source,
-                ["grounding.queryType"] = response.Grounding?.QueryType,
-                ["candidate.count"] = response.Candidates.Count,
-                ["response.length"] = response.NaturalLanguageAnswer?.Length ?? 0,
-            });
+            step.Complete(
+                finalAttributes: new Dictionary<string, object?>
+                {
+                    ["agent.id"] = response.Routing?.AgentId,
+                    ["routing.method"] = response.Routing?.RoutingMethod,
+                    ["routing.confidence"] = response.Routing?.Confidence,
+                    ["grounding.source"] = response.Grounding?.Source,
+                    ["grounding.queryType"] = response.Grounding?.QueryType,
+                    ["candidate.count"] = response.Candidates.Count,
+                    ["response.length"] = response.NaturalLanguageAnswer?.Length ?? 0,
+                });
 
-        return response;
+            return response;
+        }
+        catch (Exception ex)
+        {
+            step.Complete(
+                status: "error",
+                finalAttributes: new Dictionary<string, object?>
+                {
+                    ["exception.type"] = ex.GetType().Name,
+                });
+            throw;
+        }
     }
 }

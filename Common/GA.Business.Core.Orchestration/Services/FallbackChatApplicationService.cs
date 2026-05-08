@@ -50,12 +50,46 @@ using Microsoft.Extensions.Options;
 ///   crashing.</item>
 /// </list>
 /// </remarks>
-public sealed class FallbackChatApplicationService(
-    IChatApplicationService inner,
-    IFallbackChatHandler fallback,
-    IOptions<FallbackOptions> options,
-    IAgenticTraceCapture capture) : IChatApplicationService
+public sealed class FallbackChatApplicationService : IChatApplicationService
 {
+    private readonly IChatApplicationService _inner;
+    private readonly IFallbackChatHandler _fallback;
+    private readonly IOptions<FallbackOptions> _options;
+    private readonly IAgenticTraceCapture _capture;
+
+    public FallbackChatApplicationService(
+        IChatApplicationService inner,
+        IFallbackChatHandler fallback,
+        IOptions<FallbackOptions> options,
+        IAgenticTraceCapture capture)
+    {
+        // Validate options eagerly — codex CLI 2026-05-08 P1 QA: bad config
+        // (negative timeout, out-of-range confidence) used to silently turn
+        // every low-confidence request into a CancelAfter exception. Throw
+        // at construction so misconfiguration fails loud at composition
+        // time rather than at first failed request.
+        var opts = options.Value;
+        if (opts.MinConfidence is < 0f or > 1f)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: $"{FallbackOptions.SectionName}:{nameof(FallbackOptions.MinConfidence)}",
+                actualValue: opts.MinConfidence,
+                message: "FallbackOptions.MinConfidence must be in [0.0, 1.0]");
+        }
+        if (opts.TimeoutSeconds < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                paramName: $"{FallbackOptions.SectionName}:{nameof(FallbackOptions.TimeoutSeconds)}",
+                actualValue: opts.TimeoutSeconds,
+                message: "FallbackOptions.TimeoutSeconds must be >= 1");
+        }
+
+        _inner = inner;
+        _fallback = fallback;
+        _options = options;
+        _capture = capture;
+    }
+
     /// <summary>
     /// Trace-attribute keys on which the fallback decorator REFUSES to fire.
     /// Mirror the deterministic-failure values in
@@ -75,16 +109,40 @@ public sealed class FallbackChatApplicationService(
         ChatbotActivitySource.FailureReasons.ArgCoerceFailed,
     ];
 
+    /// <summary>
+    /// Routing-method prefixes that always indicate a deterministic-skill
+    /// dispatch. When one fires AND confidence is below the fallback
+    /// threshold, the orchestrator picked a deterministic skill and that
+    /// skill returned a low-confidence answer — by P1 #5 contract, this is
+    /// a deterministic failure that must NOT be papered over.
+    /// </summary>
+    /// <remarks>
+    /// This is the explicit signal that replaced the ambient
+    /// <c>Activity.Current</c> readback flagged in the codex CLI 2026-05-08
+    /// QA. <c>ProductionOrchestrator.AnswerAsync</c> creates and disposes
+    /// its own Activity, so any tags written inside that scope are gone by
+    /// the time the fallback decorator inspects <c>Activity.Current</c>.
+    /// Routing method, by contrast, lands on <see cref="ChatResponse.Routing"/>
+    /// and survives the call boundary.
+    /// </remarks>
+    private static readonly string[] DeterministicRoutingMethods =
+    [
+        "ix-algebra",                       // AlgebraIntent
+        "orchestrator-skill-semantic",      // SKILL.md skills (transpose / common-tones / diatonic-chords / etc.)
+        "semantic-intent-voicing",          // VoicingIntent (semantic dispatch)
+        "deterministic-voicing",            // VoicingAgent (regex-guard fast path)
+    ];
+
     public async Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default)
     {
-        var opts = options.Value;
-        var response = await inner.ChatAsync(request, cancellationToken);
+        var opts = _options.Value;
+        var response = await _inner.ChatAsync(request, cancellationToken);
 
         // Gate 1: master switch. Always emit a step so observability shows
         // the fallback decision even when nothing fires.
         if (!opts.Enabled)
         {
-            capture.AddStep(
+            _capture.AddStep(
                 "fallback.skipped",
                 "completed",
                 0,
@@ -99,7 +157,7 @@ public sealed class FallbackChatApplicationService(
         var confidence = response.Routing?.Confidence ?? 0f;
         if (confidence >= opts.MinConfidence)
         {
-            capture.AddStep(
+            _capture.AddStep(
                 "fallback.skipped",
                 "completed",
                 0,
@@ -112,15 +170,25 @@ public sealed class FallbackChatApplicationService(
             return response;
         }
 
-        // Gate 3: deterministic-failure exemption. If anything inside the
-        // orchestrator already declared a deterministic-tool failure, the
-        // P1 #5 contract says we surface that failure with confidence 0
-        // intact — not paper over it with an LLM guess. Inspect the
-        // already-captured trace for any deterministic failure reason.
-        var deterministicFailure = FindDeterministicFailure(capture.Build());
+        // Gate 3: deterministic-failure exemption. If the orchestrator
+        // routed to a deterministic skill (algebra / Path B SKILL.md /
+        // voicing) AND confidence came back below threshold, that's a
+        // deterministic failure that the P1 #5 contract says we surface
+        // with confidence 0 intact — not paper over it with an LLM guess.
+        // Two detection sources, both checked:
+        //
+        //   1. response.Routing.RoutingMethod — survives the call boundary
+        //      and is the most reliable signal. Codex CLI 2026-05-08 QA
+        //      flagged that the previous Activity.Current readback didn't
+        //      work because ProductionOrchestrator disposes its Activity
+        //      before the fallback decorator runs.
+        //   2. AgenticTrace step attributes — written via the
+        //      IAgenticTraceCapture seam by orchestration-layer code. Kept
+        //      as belt-and-suspenders for any future direct trace tagging.
+        var deterministicFailure = FindDeterministicFailure(response, _capture.Build());
         if (deterministicFailure is not null)
         {
-            capture.AddStep(
+            _capture.AddStep(
                 "fallback.skipped",
                 "completed",
                 0,
@@ -152,10 +220,10 @@ public sealed class FallbackChatApplicationService(
 
         try
         {
-            var fallbackText = await fallback.AnswerAsync(request.Message, fallbackCts.Token);
+            var fallbackText = await _fallback.AnswerAsync(request.Message, fallbackCts.Token);
             sw.Stop();
 
-            capture.AddStep(
+            _capture.AddStep(
                 "orchestration.fallback",
                 "completed",
                 sw.ElapsedMilliseconds,
@@ -184,7 +252,7 @@ public sealed class FallbackChatApplicationService(
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             sw.Stop();
-            capture.AddStep(
+            _capture.AddStep(
                 "orchestration.fallback",
                 "error",
                 sw.ElapsedMilliseconds,
@@ -205,10 +273,23 @@ public sealed class FallbackChatApplicationService(
         }
     }
 
-    private static string? FindDeterministicFailure(AgenticTrace trace)
+    private static string? FindDeterministicFailure(ChatResponse response, AgenticTrace trace)
     {
-        // Source 1: AgenticTrace step attributes — written via the
-        // IAgenticTraceCapture seam by orchestration-layer code.
+        // Source 1: routing method on the response — the canonical signal.
+        // Survives the orchestrator's Activity scope (which is what made
+        // the original Activity.Current readback unreliable per the codex
+        // CLI 2026-05-08 QA). When a deterministic skill ran and returned
+        // a result, response.Routing.RoutingMethod tells us which one.
+        var method = response.Routing?.RoutingMethod;
+        if (!string.IsNullOrEmpty(method)
+            && DeterministicRoutingMethods.Contains(method, StringComparer.Ordinal))
+        {
+            return $"deterministic-route:{method}";
+        }
+
+        // Source 2: AgenticTrace step attributes — written via the
+        // IAgenticTraceCapture seam by orchestration-layer code. Kept for
+        // any future direct trace tagging from inside Orchestration.
         foreach (var step in trace.Steps)
         {
             if (step.Attributes.TryGetValue(ChatbotActivitySource.TagToolFailureReason, out var reasonObj)
@@ -216,28 +297,6 @@ public sealed class FallbackChatApplicationService(
                 && DeterministicFailureReasons.Contains(reason, StringComparer.Ordinal))
             {
                 return reason;
-            }
-        }
-
-        // Source 2: Activity.Current tag — written by ML-layer code that
-        // can't reach the orchestration-scoped capture (the layer rule
-        // forbids GA.Business.ML referencing GA.Business.Core.Orchestration).
-        // SkillMdDrivenSkill and SkillMdDrivenWrapperBase tag here when
-        // ga_dsl_eval is skipped or a SKILL.md path throws. Belt-and-
-        // suspenders so the deterministic-failure protection covers both
-        // surfaces — codex CLI 2026-05-08 risk-list item 2 ("fallback
-        // hiding deterministic failures").
-        var current = Activity.Current;
-        if (current is not null)
-        {
-            foreach (var tag in current.TagObjects)
-            {
-                if (tag.Key == ChatbotActivitySource.TagToolFailureReason
-                    && tag.Value is string activityReason
-                    && DeterministicFailureReasons.Contains(activityReason, StringComparer.Ordinal))
-                {
-                    return activityReason;
-                }
             }
         }
 

@@ -112,6 +112,50 @@ public class FallbackChatApplicationServiceTests
     }
 
     [Test]
+    public async Task ChatAsync_FallbackEnabled_LowConfidenceFromDeterministicSkill_RefusesFallback()
+    {
+        // The canonical regression test for codex CLI 2026-05-08 P0:
+        // FallbackChatApplicationService used to read Activity.Current.TagObjects
+        // looking for tool.failure_reason set by SkillMdDrivenWrapperBase. But
+        // ProductionOrchestrator.AnswerAsync creates and disposes its own
+        // Activity around the orchestration call, so by the time the fallback
+        // decorator inspects Activity.Current the tagged child Activity is
+        // gone — Activity.Current is the parent and the tag is missing.
+        //
+        // The fix replaces the Activity readback with an explicit
+        // routing-method check on the response. This test simulates the
+        // realistic case: orchestrator routes to skill.transpose at
+        // confidence 0.5 (Path B clamp on ga_dsl_eval skip) — fallback
+        // must REFUSE to fire.
+        var inner = new ChatResponse(
+            NaturalLanguageAnswer: "I apologize, the closure was not exposed",
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                AgentId: "skill.transpose",
+                Confidence: 0.1f,
+                RoutingMethod: "orchestrator-skill-semantic"));
+
+        var fallback = new Mock<IFallbackChatHandler>();
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("PAPERED-OVER ANSWER");
+
+        var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
+        var response = await decorator.ChatAsync(new ChatRequest("Transpose Cmaj7 up a fifth"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.NaturalLanguageAnswer, Is.EqualTo("I apologize, the closure was not exposed"),
+                "deterministic-failure protection: original orchestrator response is preserved");
+            Assert.That(response.Routing!.Confidence, Is.EqualTo(0f),
+                "deterministic-failure protection: confidence clamped to 0");
+            Assert.That(response.Routing!.AgentId, Is.EqualTo("skill.transpose"),
+                "deterministic-failure protection: original agent id preserved");
+        });
+        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never,
+            "fallback handler MUST NOT be invoked when routing.method indicates a deterministic skill");
+    }
+
+    [Test]
     public async Task ChatAsync_FallbackEnabled_DeterministicFailureInTrace_RefusesFallback()
     {
         // Capture has a step with tool.failure_reason = ga-dsl-eval-not-invoked

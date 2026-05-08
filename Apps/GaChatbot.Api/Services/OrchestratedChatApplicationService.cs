@@ -207,7 +207,13 @@ public sealed class OrchestratedChatApplicationService(
 
                 return fallback with
                 {
-                    Routing = new AgentRoutingMetadata("fallback-direct", 0.35f, routingMethod),
+                    // Confidence clamped to 0 — direct chat is not grounded;
+                    // calling code arbitrating routing must not treat a
+                    // fallback answer as if it were a deterministic /
+                    // grounded result. P1 #5 silent-degradation rule;
+                    // codex CLI 2026-05-08 P1 #7 QA Q4. Mirrors the new
+                    // FallbackChatApplicationService decorator's invariant.
+                    Routing = new AgentRoutingMetadata("fallback-direct", 0f, routingMethod),
                     Grounding = null,
                     Trace = trace.Build()
                 };

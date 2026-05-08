@@ -157,7 +157,8 @@ public static class ChatbotOrchestrationExtensions
         // gated off by default … until tests prove deterministic-skill
         // failures cannot be papered over." Roadmap P1 #7 commit 3.
         services.TryAddSingleton<IFallbackChatHandler, NoOpFallbackChatHandler>();
-        services.AddOptions<FallbackOptions>().BindConfiguration(FallbackOptions.SectionName);
+        services.AddOptions<FallbackOptions>()
+            .BindConfiguration(FallbackOptions.SectionName);
 
         // Decorator stack (innermost → outermost):
         //   Harmonic  →  Traceable  →  Fallback  →  ReadinessGated

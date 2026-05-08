@@ -220,7 +220,10 @@ public sealed class OrchestratedChatApplicationServiceTests
         {
             Assert.That(result.NaturalLanguageAnswer, Is.EqualTo("direct fallback answer"));
             Assert.That(result.Routing.AgentId, Is.EqualTo("fallback-direct"));
-            Assert.That(result.Routing.Confidence, Is.EqualTo(0.35f));
+            Assert.That(result.Routing.Confidence, Is.EqualTo(0f),
+                "fallback confidence must be 0 — direct chat is not grounded; " +
+                "calling code arbitrating routing must not treat a fallback answer " +
+                "as if it were deterministic. P1 #5 silent-degradation rule.");
             Assert.That(result.Routing.RoutingMethod, Is.EqualTo(expectedRoutingMethod));
             Assert.That(result.Grounding, Is.Null);
         });

@@ -43,10 +43,20 @@ public sealed class NoOpFallbackChatHandler : IFallbackChatHandler
 /// Configuration shape bound to the <c>Chatbot:Fallback</c> section.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Default: <see cref="Enabled"/>=false. Codex CLI 2026-05-08 design
 /// review explicit call: "Fallback should be config-gated off by default
 /// in GaApi until tests prove deterministic-skill failures cannot be
 /// papered over."
+/// </para>
+/// <para>
+/// Validated at startup via the data-annotation attributes below
+/// (<see cref="System.ComponentModel.DataAnnotations.RangeAttribute"/>) so
+/// a malformed config (negative timeout, out-of-range confidence) fails
+/// loud at composition time rather than silently turning low-confidence
+/// requests into <c>CancelAfter</c> exceptions. Codex CLI 2026-05-08 QA
+/// flagged the unchecked binding.
+/// </para>
 /// </remarks>
 public sealed class FallbackOptions
 {
@@ -58,9 +68,16 @@ public sealed class FallbackOptions
     /// <summary>
     /// Confidence threshold below which the orchestrator's response is
     /// considered low-confidence garbage and fallback fires. Default 0.25.
+    /// Must be in <c>[0.0, 1.0]</c>.
     /// </summary>
+    [System.ComponentModel.DataAnnotations.Range(0.0, 1.0)]
     public float MinConfidence { get; set; } = 0.25f;
 
-    /// <summary>Hard ceiling on the fallback handler call. Default 15s.</summary>
+    /// <summary>
+    /// Hard ceiling on the fallback handler call. Default 15s. Must be
+    /// at least 1s — <see cref="System.Threading.CancellationTokenSource.CancelAfter(System.TimeSpan)"/>
+    /// rejects non-positive durations.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Range(1, 600)]
     public int TimeoutSeconds { get; set; } = 15;
 }
