@@ -32,15 +32,18 @@ Direction is right. What's missing is enforcement (tests + observability that pr
 
 ## Now / P0 — close the gaps the smoke set exposed
 
-### 1. Prove Path B actually invokes `ga_dsl_eval` (don't just trust the answer)
+### 1. ✅ Prove Path B actually invokes `ga_dsl_eval` — *closed 2026-05-07 (`d41ee4df`)*
 
-After the 2026-05-07 registry-bootstrap fix, transpose / common-tones / diatonic-chords return correct answers, but `grounding=none`. We don't know whether the LLM is calling the closure or just inspecting the closure list and computing the answer from its training data.
+After the 2026-05-07 registry-bootstrap fix, transpose / common-tones / diatonic-chords returned correct answers but `grounding=none`. The 2026-05-07 follow-up wired tool-invocation tracking into `SkillMdDrivenSkill` (`response.Messages` walk for `FunctionCallContent`), made `SkillMdDrivenWrapperBase` emit a `grounding.source: ga.dsl@<closureName>` sentinel in evidence and clamp confidence ≤0.5 with a warning when `ga_dsl_eval` was *not* invoked, and taught `OrchestratorSkillIntent` to lift the sentinel into `IntentGroundingEvidence` so the closure name surfaces on the chat wire as `grounding.queryType`. Confirmed live:
 
-- Wire `Evidence: ["ga_dsl_eval(domain.transposeChord, …)"]` into `IntentResult.Evidence` by recording each `[McpServerTool]` invocation per request.
-- If `ga_dsl_eval` was *not* called, drop confidence to 0 and fail loud in the trace — don't degrade silently.
-- Add `IntentGroundingEvidence.Source = "ga.dsl@<closure>"` for Path B intents (see P1 #4 for the typed shape).
+```
+algebra-z-relation   → grounding=ix-compatible@z-relation
+transpose            → grounding=ga.dsl@domain.transposeChord
+common-tones         → grounding=ga.dsl@domain.commonTones
+diatonic-chords      → grounding=ga.dsl@domain.diatonicChords
+```
 
-**Done when:** the four Path B prompts in the smoke set surface a non-null `grounding` block on the wire, sourced from the actual tool call.
+GaApi log line `SkillMdDrivenSkill [transpose] response length=63, tool calls=ga_dsl_eval` confirms the actual function call.
 
 ### 2. Pick canonical surface (Option A / B / C / C-prime)
 
@@ -51,46 +54,19 @@ Three controllers nominally route the same paths with different contracts. Decid
 
 **Done when:** the decision is recorded in `chat-surfaces.md`, `GaChatbot.Api` is either the canonical deployable or marked frozen, and the wire contract for `Grounding` / `Trace` is single-sourced.
 
-### 3. Real integration test for `SkillMdDrivenSkill`
+### 3. ✅ Real integration test for `SkillMdDrivenSkill` — *closed 2026-05-07 (`e44f998d`)*
 
-`TransposeSkillTests` fakes `IChatClient` and `IMcpToolsProvider` — that's structurally why nobody noticed `GaClosureBootstrap.init()` was never called. The same shape of test will not catch the next regression of this kind.
-
-- One NUnit fixture wiring the actual DI container + real `GaClosureRegistry.Global` (post-bootstrap) and asserting `ga_dsl_eval(domain.transposeChord, {...})` returns a known result string.
-- Cover the same closures the `ClosureRegistryStartupCheck` canaries: transpose / commonTones / diatonicChords.
-
-**Done when:** killing `GaClosureBootstrap.init()` from `AddChatbotOrchestration` makes the new fixture fail, not just `ClosureRegistryStartupCheck` log a warning.
+`Tests/Common/GA.Business.Core.Tests/AI/ChatbotOrchestrationBootstrapTests.cs` adds three NUnit tests that wire `AddChatbotOrchestration` against a real `IServiceCollection` and assert the canary closures resolve via `GaClosureRegistry.Global.TryGet` and `DslEvalMcpTools.ListClosures()`. Idempotency test covers multi-host wiring. Codex's "Done when" criterion verified: temporarily killing `GaClosureBootstrap.init()` makes all 3 tests fail; restoring returns them to passing.
 
 ## Soon / P1
 
-### 4. Refactor 4 primitive `Grounding*` fields → `IntentGroundingEvidence` record
+### 4. ✅ Refactor 4 primitive `Grounding*` fields → `IntentGroundingEvidence` record — *closed 2026-05-07 (`367c85bf`)*
 
-Codex flagged the four-field shape on `IntentResult` as a regression-fix smell. Move to a neutral ML-owned record before another intent adds the same fields.
+`IntentResult` now carries a single `IntentGroundingEvidence?` (record with `Source`, `Revision`, `QueryType`, `Facts`) instead of four optional primitives. `AlgebraIntent` and `OrchestratorSkillIntent` construct the record directly; `ProductionOrchestrator.BuildGrounding` is a one-line null-or-map. The next intent that needs grounding takes one parameter instead of four. Wire shape unchanged end-to-end.
 
-```csharp
-// Common/GA.Business.ML/Agents/Intents/IIntent.cs
-public sealed record IntentGroundingEvidence(
-    string Source,                                     // "ix" | "ix-compatible" | "ga.dsl@<closure>"
-    string Revision,
-    string? QueryType = null,
-    IReadOnlyDictionary<string, string>? Facts = null);
+### 5. Stop silent graceful degradation for deterministic skills — *partially landed in P0 #1*
 
-public sealed record IntentResult(
-    string Answer,
-    float Confidence = 1.0f,
-    IReadOnlyList<string>? Evidence = null,
-    string? RoutingMethodOverride = null,
-    IntentGroundingEvidence? Grounding = null);
-```
-
-`AlgebraIntent` constructs the record; `ProductionOrchestrator.BuildGrounding` becomes a one-line mapper.
-
-### 5. Stop silent graceful degradation for deterministic skills
-
-If `ga_dsl_eval` fails or wasn't invoked when a Path B intent was selected:
-- `IntentResult.Confidence = 0`
-- `Evidence` includes `"ga_dsl_eval: failed | not-invoked"`
-- Trace tags include `tool.failure_reason`
-- The user-facing answer can still come from the LLM, but it should not pretend to be deterministic.
+P0 #1 already implements the loud-failure half: when `ga_dsl_eval` is *not* invoked by a Path B skill, `SkillMdDrivenWrapperBase` clamps confidence to ≤0.5, logs a warning, and adds a `"warning: ga_dsl_eval was NOT invoked"` evidence tag. Remaining work to fully close: surface `tool.failure_reason` as a trace tag, and define what "fail" looks like for closure-side errors (today: empty response → 0 confidence; closure-throws → swallowed in `SkillMdDrivenSkill` catch).
 
 ### 6. Improve embedding router quality (#81)
 
@@ -125,6 +101,9 @@ The third controller (`GA.AI.Service.Controllers.ChatController`) resolves `Prod
 | `d36704eb` | `chat-surfaces.md §0/§5b` + GaApi `ChatJsonResponse.Grounding` |
 | `fd0cbe26` | `ChatbotHub` emits `grounding` in routing payload (deployed-demo wire parity) |
 | `802498e3` | `GaClosureBootstrap.init()` at startup + `ClosureRegistryStartupCheck` canary |
+| `d41ee4df` | P0 #1 — Path B `ga_dsl_eval` tool-invocation tracking + grounding sentinel + confidence clamp |
+| `e44f998d` | P0 #3 — `ChatbotOrchestrationBootstrapTests` regression fixture (3 tests, codex's "done when" verified) |
+| `367c85bf` | P1 #4 — `IntentGroundingEvidence` record collapses the four primitive grounding fields |
 
 ## Decision log
 
