@@ -24,6 +24,18 @@ public static class ChatbotOrchestrationExtensions
     /// </summary>
     public static IServiceCollection AddChatbotOrchestration(this IServiceCollection services)
     {
+        // ── F# closure registry bootstrap ────────────────────────────────────
+        // F# module do-bindings are lazy: GA.Business.DSL.Closures.BuiltinClosures.*
+        // do NOT register themselves until something inside that module is
+        // touched. ga_dsl_eval queries GaClosureRegistry.Global at request time,
+        // so without an explicit init() call here the registry is empty in the
+        // running app, and Path B SKILL.md skills (transpose / common-tones /
+        // diatonic-chords) get "closure not exposed" responses from the LLM.
+        // The init is idempotent (RegisterAll is no-op on re-entry) so calling
+        // it from every host that wires up the orchestration stack is safe.
+        // Diagnosed 2026-05-07 via codex CLI second-opinion review.
+        GA.Business.DSL.GaClosureBootstrap.init();
+
         // HTTP client for Ollama — config resolved lazily at first use
         services.AddHttpClient("ollama", (sp, client) =>
         {
@@ -81,6 +93,7 @@ public static class ChatbotOrchestrationExtensions
         // CanHandle foreach, and the tab-analysis branch.
         services.AddSingleton<SemanticIntentRouter>();
         services.AddHostedService<IntentEmbeddingWarmupService>();
+        services.AddHostedService<ClosureRegistryStartupCheck>();
         services.AddScoped<TabAnalysisOrchestrationService>();
 
         services.AddSingleton<AlgebraIntent>();
