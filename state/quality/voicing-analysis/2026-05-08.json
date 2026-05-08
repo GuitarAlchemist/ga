@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-08T04:51:09.5240009Z",
+  "Timestamp": "2026-05-08T04:58:53.8549777Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -143,17 +143,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-3-7-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-1-5-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-6-10-x-x-x",
+        "Diagram": "x-3-7-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -169,6 +164,11 @@
       {
         "Instrument": "guitar",
         "Diagram": "x-7-11-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-6-10-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 63.2454713,
-    "VoicingsPerSec": 4949.714083322832,
-    "PeakWorkingSetMb": 399.1796875
+    "RuntimeSeconds": 82.2972093,
+    "VoicingsPerSec": 3803.859239732446,
+    "PeakWorkingSetMb": 403.16015625
   },
   "IssueSamples": {
     "NullChordName": [],
