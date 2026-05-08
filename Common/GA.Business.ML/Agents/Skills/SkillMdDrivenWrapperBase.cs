@@ -1,5 +1,7 @@
 namespace GA.Business.ML.Agents.Skills;
 
+using System.Diagnostics;
+using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
@@ -121,6 +123,12 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
             else
             {
                 combinedEvidence.Add("warning: ga_dsl_eval was NOT invoked — answer is LLM-only, not deterministic");
+                Activity.Current?.SetTag(ChatbotActivitySource.TagToolName, "skill-md");
+                Activity.Current?.SetTag(ChatbotActivitySource.TagSkillName, GetType().Name);
+                Activity.Current?.SetTag(ChatbotActivitySource.TagClosureName, ClosureName);
+                Activity.Current?.SetTag(
+                    ChatbotActivitySource.TagToolFailureReason,
+                    ChatbotActivitySource.FailureReasons.GaDslEvalNotInvoked);
                 _logger.LogWarning(
                     "{Skill}: LLM produced an answer without invoking ga_dsl_eval. " +
                     "Closure {Closure} should have been called. Evidence: {Evidence}",
@@ -150,6 +158,13 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
             // unparseable SKILL.md would 500 every subsequent request.
             // Match SkillMdDrivenSkill's swallow pattern so a deployment
             // artefact issue degrades gracefully.
+            Activity.Current?.SetTag(ChatbotActivitySource.TagToolName, "skill-md");
+            Activity.Current?.SetTag(ChatbotActivitySource.TagSkillName, GetType().Name);
+            Activity.Current?.SetTag(ChatbotActivitySource.TagClosureName, ClosureName);
+            Activity.Current?.SetTag(ChatbotActivitySource.TagExceptionType, ex.GetType().Name);
+            Activity.Current?.SetTag(
+                ChatbotActivitySource.TagToolFailureReason,
+                ChatbotActivitySource.FailureReasons.SkillMdException);
             _logger.LogError(ex, "{Skill}: inner SkillMdDrivenSkill failed", GetType().Name);
             return new AgentResponse
             {

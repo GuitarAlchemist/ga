@@ -88,6 +88,66 @@ public static class ChatbotActivitySource
     /// <summary>Elapsed milliseconds for embedding generation.</summary>
     public const string TagEmbeddingMs = "embedding.ms";
 
+    // ── Tool-invocation failure taxonomy ─────────────────────────────────────
+    // Codex CLI second-opinion (2026-05-07) recommended a single structured
+    // tool.failure_reason tag over many booleans — easier to query once we
+    // have multiple failure modes. Values mirror the wire codes ga_dsl_eval
+    // already returns in DslEvalResult.Error so dashboards can correlate
+    // chatbot failures with closure-side failures by code.
+
+    /// <summary>Tool name that produced this trace point, e.g. <c>"ga_dsl_eval"</c>, <c>"skill-md"</c>.</summary>
+    public const string TagToolName = "tool.name";
+
+    /// <summary>Structured failure code from <see cref="FailureReasons"/> — single string enum, NOT free-form.</summary>
+    public const string TagToolFailureReason = "tool.failure_reason";
+
+    /// <summary>SKILL.md skill name when failure originates inside a Path B skill.</summary>
+    public const string TagSkillName = "skill.name";
+
+    /// <summary>Closure target the LLM tried to invoke via ga_dsl_eval.</summary>
+    public const string TagClosureName = "closure.name";
+
+    /// <summary>Exception type name (no .Message — that may leak endpoint/model details).</summary>
+    public const string TagExceptionType = "exception.type";
+
+    /// <summary>
+    /// Canonical failure-reason values for <see cref="TagToolFailureReason"/>.
+    /// Keep this list closed; if a new failure mode appears, add a constant
+    /// here rather than scattering string literals across call sites.
+    /// </summary>
+    public static class FailureReasons
+    {
+        /// <summary><c>ga_dsl_eval</c> looked up a closure name that isn't in <c>GaClosureRegistry.Global</c>.</summary>
+        public const string ClosureNotFound = "closure-not-found";
+
+        /// <summary>Closure exists but isn't <c>Domain</c>-category (Pipeline/Io/Agent are excluded).</summary>
+        public const string ClosureNotExposed = "closure-not-exposed";
+
+        /// <summary>Closure schema declares a required arg the caller didn't provide.</summary>
+        public const string MissingRequiredArg = "missing-required-arg";
+
+        /// <summary>Caller-supplied JSON couldn't be coerced into the closure's expected arg type.</summary>
+        public const string ArgCoerceFailed = "arg-coerce-failed";
+
+        /// <summary>Closure body returned <c>Result.Error</c> at runtime (domain-level failure).</summary>
+        public const string ClosureRuntimeError = "closure-runtime-error";
+
+        /// <summary>Closure exceeded its evaluation timeout.</summary>
+        public const string ClosureTimeout = "closure-timeout";
+
+        /// <summary>Closure body threw — distinct from <see cref="ClosureRuntimeError"/> which is a typed Error.</summary>
+        public const string ClosureException = "closure-exception";
+
+        /// <summary>SkillMdDrivenSkill catch path — anything thrown inside the LLM tool-loop.</summary>
+        public const string SkillMdException = "skill-md-exception";
+
+        /// <summary>Model returned only tool_use blocks (no text turn) or empty whitespace.</summary>
+        public const string EmptyModelResponse = "empty-model-response";
+
+        /// <summary>SKILL.md was matched and executed but the LLM never invoked <c>ga_dsl_eval</c>.</summary>
+        public const string GaDslEvalNotInvoked = "ga-dsl-eval-not-invoked";
+    }
+
     // ── Convenience factories ────────────────────────────────────────────────
 
     /// <summary>

@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Agents.Skills;
 
+using System.Diagnostics;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Skills;
@@ -105,6 +106,11 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
             // failure instead of a blank chatbot bubble (rel-005 / corr-1).
             if (string.IsNullOrWhiteSpace(text))
             {
+                Activity.Current?.SetTag(ChatbotActivitySource.TagToolName, "skill-md");
+                Activity.Current?.SetTag(ChatbotActivitySource.TagSkillName, _skillMd.Name);
+                Activity.Current?.SetTag(
+                    ChatbotActivitySource.TagToolFailureReason,
+                    ChatbotActivitySource.FailureReasons.EmptyModelResponse);
                 _logger.LogWarning(
                     "SkillMdDrivenSkill [{Skill}] returned empty text — tools={ToolCount}, message head=\"{MessageHead}\"",
                     _skillMd.Name, tools.Count, messageHead);
@@ -138,7 +144,15 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
         {
             // Operator-visible context: skill, tool count, message head — without
             // leaking ex.Message to the caller (may contain API keys, endpoint
-            // URLs, or internal service details).
+            // URLs, or internal service details). Trace tag uses the structured
+            // failure-reason taxonomy in ChatbotActivitySource.FailureReasons so
+            // dashboards can aggregate by reason rather than parsing log strings.
+            Activity.Current?.SetTag(ChatbotActivitySource.TagToolName, "skill-md");
+            Activity.Current?.SetTag(ChatbotActivitySource.TagSkillName, _skillMd.Name);
+            Activity.Current?.SetTag(ChatbotActivitySource.TagExceptionType, ex.GetType().Name);
+            Activity.Current?.SetTag(
+                ChatbotActivitySource.TagToolFailureReason,
+                ChatbotActivitySource.FailureReasons.SkillMdException);
             _logger.LogError(ex,
                 "SkillMdDrivenSkill [{Skill}] failed — tools={ToolCount}, message head=\"{MessageHead}\"",
                 _skillMd.Name, tools.Count, messageHead);
