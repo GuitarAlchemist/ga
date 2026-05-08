@@ -271,6 +271,22 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Deterministic voicing guard runs BEFORE semantic intent routing ──
+        // The semantic embedding router can mis-rank an explicit voicing query
+        // (e.g. "Show me Drop 2 voicings of Cmaj7") against the modes intent at
+        // ~0.71 cosine similarity, stealing it from VoicingAgent. The guard
+        // matches on high-precision surface tokens (chord literal + voicing
+        // keyword), so when it fires there is no ambiguity worth routing
+        // semantically. Diagnosed 2026-05-07 by codex CLI second-opinion;
+        // roadmap P1 #6 (#81). The "formalize VoicingIntent" follow-up is
+        // separate — this just stops the misroute.
+        if (TrySelectDeterministicAgent(message, out var preIntentAgent, out var preIntentRouting))
+        {
+            return await DispatchDeterministicAgentAsync(
+                req, message, sessionId, correlationId, preIntentAgent, preIntentRouting,
+                activity, sw, ct);
+        }
+
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
         // algebra, deterministic skills, and tab-handling intents. Replaces
@@ -355,38 +371,9 @@ public class ProductionOrchestrator(
 
         if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
         {
-            activity?.SetTag("orchestration.branch", $"deterministic.{deterministicAgent.AgentId}");
-
-            var agentResponse = await deterministicAgent.ProcessAsync(new AgentRequest
-            {
-                Query = message,
-                ConversationHistory = req.History?
-                    .Select(t => new ChatHistoryTurn(t.Role, t.Content))
-                    .ToList()
-            }, ct);
-
-            sw.Stop();
-            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
-
-            var deterministicResponse = new ChatResponse(
-                NaturalLanguageAnswer: agentResponse.Result,
-                Candidates: [],
-                Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
-                DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
-
-            historyStore.AddTurn(sessionId, "assistant", deterministicResponse.NaturalLanguageAnswer);
-
-            var sentCtx = new ChatHookContext
-            {
-                OriginalMessage = req.Message,
-                CurrentMessage  = message,
-                CorrelationId   = correlationId,
-                Response        = agentResponse,
-            };
-            foreach (var hook in _hooks)
-                await hook.OnResponseSent(sentCtx, ct);
-
-            return deterministicResponse;
+            return await DispatchDeterministicAgentAsync(
+                req, message, sessionId, correlationId, deterministicAgent, deterministicRouting,
+                activity, sw, ct);
         }
 
         // Parallelise — both calls consume req.Message with no mutual dependency
@@ -487,6 +474,59 @@ public class ProductionOrchestrator(
             await hook.OnResponseSent(ragSentCtx, ct);
 
         return result;
+    }
+
+    /// <summary>
+    /// Shared dispatch path for deterministic agents (e.g. VoicingAgent for
+    /// explicit voicing requests). Called from two positions in
+    /// <see cref="AnswerAsync"/>: a pre-semantic-routing guard that catches
+    /// high-precision voicing prompts before SemanticIntentRouter can mis-rank
+    /// them, and a post-semantic-routing fallback that catches any
+    /// deterministic case the intent router didn't.
+    /// </summary>
+    private async Task<ChatResponse> DispatchDeterministicAgentAsync(
+        ChatRequest req,
+        string message,
+        string sessionId,
+        Guid correlationId,
+        GuitarAlchemistAgentBase agent,
+        AgentRoutingMetadata routing,
+        Activity? activity,
+        Stopwatch sw,
+        CancellationToken ct)
+    {
+        activity?.SetTag("orchestration.branch", $"deterministic.{agent.AgentId}");
+
+        var agentResponse = await agent.ProcessAsync(new AgentRequest
+        {
+            Query = message,
+            ConversationHistory = req.History?
+                .Select(t => new ChatHistoryTurn(t.Role, t.Content))
+                .ToList()
+        }, ct);
+
+        sw.Stop();
+        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+        var deterministicResponse = new ChatResponse(
+            NaturalLanguageAnswer: agentResponse.Result,
+            Candidates: [],
+            Routing: routing with { Confidence = Math.Max(routing.Confidence, agentResponse.Confidence) },
+            DebugParams: new { Mode = "DeterministicAgent", Agent = agent.AgentId });
+
+        historyStore.AddTurn(sessionId, "assistant", deterministicResponse.NaturalLanguageAnswer);
+
+        var sentCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = message,
+            CorrelationId   = correlationId,
+            Response        = agentResponse,
+        };
+        foreach (var hook in _hooks)
+            await hook.OnResponseSent(sentCtx, ct);
+
+        return deterministicResponse;
     }
 
     private bool TrySelectDeterministicAgent(
