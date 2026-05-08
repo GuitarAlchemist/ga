@@ -229,14 +229,70 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
         IEnumerable<VoicingSearchResult> pool,
         VoicingSearchFilters filters)
     {
+        // Extract the chord-quality fragment from filters.ChordName once
+        // so the per-row check below stays cheap. Codex CLI 2026-05-08
+        // pinpointed the bug: callers pass full symbols ("Cmaj7", "Dm7"),
+        // but MapToSearchResult sets d.ChordName = meta.QualityInferred
+        // ("maj7", "m7") so a strict Contains check rejected every row.
+        // Match against quality + verify root pitch class — keeps the
+        // filter selective enough that "Cmaj7" doesn't match every maj7
+        // in the corpus.
+        var (filterRootPitchClass, filterQuality) = filters.ChordName is { Length: > 0 } cn
+            ? ParseChordSymbol(cn)
+            : ((int?)null, (string?)null);
+
         foreach (var r in pool)
         {
             var d = r.Document;
-            if (filters.ChordName != null &&
-                !(d.ChordName ?? "").Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase)) continue;
+            if (filterQuality is not null)
+            {
+                var docQuality = d.ChordName ?? string.Empty;
+                if (!docQuality.Contains(filterQuality, StringComparison.OrdinalIgnoreCase)) continue;
+                if (filterRootPitchClass is int rpc && d.MidiNotes.Length > 0)
+                {
+                    var docRootPc = ((d.MidiNotes.Min() % 12) + 12) % 12;
+                    if (docRootPc != rpc) continue;
+                }
+            }
             if (filters.MinMidiPitch is int lo && d.MidiNotes.Length > 0 && d.MidiNotes.Min() < lo) continue;
             if (filters.MaxMidiPitch is int hi && d.MidiNotes.Length > 0 && d.MidiNotes.Max() > hi) continue;
             yield return r;
         }
+    }
+
+    /// <summary>
+    /// Splits a chord symbol like <c>"Cmaj7"</c> / <c>"F#m7"</c> /
+    /// <c>"Bbmaj9"</c> into (root pitch class, quality fragment).
+    /// Returns nulls when the input doesn't start with a note letter.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately permissive on quality — anything after the optional
+    /// accidental is the quality fragment, and the per-row filter does a
+    /// case-insensitive <c>Contains</c> against the document's
+    /// <c>QualityInferred</c> field. Codex CLI 2026-05-08 fix.
+    /// </remarks>
+    private static (int? RootPitchClass, string? Quality) ParseChordSymbol(string symbol)
+    {
+        if (string.IsNullOrEmpty(symbol)) return (null, null);
+
+        var noteIndex = char.ToUpperInvariant(symbol[0]) switch
+        {
+            'C' => 0, 'D' => 2, 'E' => 4, 'F' => 5, 'G' => 7, 'A' => 9, 'B' => 11,
+            _   => -1,
+        };
+        if (noteIndex < 0) return (null, null);
+
+        var i = 1;
+        if (i < symbol.Length)
+        {
+            switch (symbol[i])
+            {
+                case '#': noteIndex = (noteIndex + 1) % 12; i++; break;
+                case 'b': noteIndex = (noteIndex + 11) % 12; i++; break;
+            }
+        }
+
+        var quality = i < symbol.Length ? symbol[i..] : string.Empty;
+        return (noteIndex, quality);
     }
 }
