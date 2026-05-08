@@ -2,8 +2,8 @@ namespace GaApi.Controllers;
 
 using System.Diagnostics;
 using System.Text.Json;
+using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
-using GA.Business.Core.Orchestration.Services;
 using Services;
 
 /// <summary>
@@ -11,12 +11,19 @@ using Services;
 ///     Provides a streaming SSE endpoint backed by the full agentic pipeline
 ///     (SemanticRouter → specialized agents → SpectralRagOrchestrator → grounded narrator).
 /// </summary>
+/// <remarks>
+///     Depends on <see cref="IChatApplicationService"/> rather than the
+///     concrete <see cref="GA.Business.Core.Orchestration.Services.ProductionOrchestrator"/>:
+///     all GaApi chat surfaces go through the same host-neutral application
+///     service so future readiness / trace decorators apply uniformly.
+///     Codex CLI second-opinion 2026-05-07 — roadmap P0 #2 first cut.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class ChatbotController(
     ILogger<ChatbotController> logger,
-    ProductionOrchestrator orchestrator,
-    IChatService chatService,
+    IChatApplicationService chatService,
+    IChatService statusService,
     ILlmConcurrencyGate concurrencyGate)
     : ControllerBase
 {
@@ -68,7 +75,7 @@ public class ChatbotController(
 
         try
         {
-            var response = await orchestrator.AnswerAsync(
+            var response = await chatService.ChatAsync(
                 new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
 
             // 1. Emit routing metadata event (first, before text)
@@ -131,7 +138,7 @@ public class ChatbotController(
         try
         {
             var sw = Stopwatch.StartNew();
-            var response = await orchestrator.AnswerAsync(
+            var response = await chatService.ChatAsync(
                 new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
             sw.Stop();
 
@@ -159,7 +166,7 @@ public class ChatbotController(
     [ProducesResponseType(typeof(ChatbotStatus), StatusCodes.Status200OK)]
     public async Task<ActionResult<ChatbotStatus>> GetStatus(CancellationToken cancellationToken)
     {
-        var isAvailable = await chatService.IsAvailableAsync(cancellationToken);
+        var isAvailable = await statusService.IsAvailableAsync(cancellationToken);
         return Ok(new ChatbotStatus
         {
             IsAvailable = isAvailable,

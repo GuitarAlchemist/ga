@@ -2,8 +2,8 @@ namespace GaApi.Hubs;
 
 using System.Collections.Concurrent;
 using System.Text;
+using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
-using GA.Business.Core.Orchestration.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Services;
@@ -13,11 +13,14 @@ using Services;
 ///     Anonymous: this hub backs the public demo at demos.guitaralchemist.com/chatbot/,
 ///     so it accepts unauthenticated WebSocket negotiations. Per-conversation state
 ///     is keyed by Context.ConnectionId, not by an authenticated user identity.
+///     Depends on the host-neutral <see cref="IChatApplicationService"/> rather
+///     than ProductionOrchestrator directly so all GaApi chat surfaces share
+///     one composition root for orchestration features (codex CLI 2026-05-07).
 /// </summary>
 [AllowAnonymous]
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
-    ProductionOrchestrator orchestrator,
+    IChatApplicationService chatService,
     ChatbotSessionOrchestrator sessionOrchestrator,
     ISemanticKnowledgeSource semanticKnowledge,
     ILlmConcurrencyGate concurrencyGate)
@@ -111,7 +114,7 @@ public sealed class ChatbotHub(
 
         try
         {
-            var response = await orchestrator.AnswerAsync(
+            var response = await chatService.ChatAsync(
                 new ChatRequest(trimmedMessage), cancellationToken);
 
             // Emit routing metadata to client. Grounding is included when the

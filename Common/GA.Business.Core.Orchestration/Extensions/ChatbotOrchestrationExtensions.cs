@@ -115,6 +115,15 @@ public static class ChatbotOrchestrationExtensions
         services.AddScoped<IHarmonicChatOrchestrator>(sp =>
             sp.GetRequiredService<ProductionOrchestrator>());
 
+        // Host-neutral chat application service — the single canonical
+        // chat entry point that GaApi controllers / hubs (and any future
+        // host) take a dependency on. Codex CLI second-opinion
+        // recommendation 2026-05-07 (roadmap P0 #2). Distinct from
+        // GaChatbot.Api's heavier IChatApplicationService which adds
+        // readiness probing, fallback, and AgenticTrace assembly —
+        // future work moves those upstream into a decorator on this.
+        services.AddScoped<IChatApplicationService, HarmonicChatApplicationService>();
+
         return services;
     }
 }

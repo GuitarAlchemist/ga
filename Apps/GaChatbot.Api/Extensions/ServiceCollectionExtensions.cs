@@ -30,7 +30,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<RoutedChatApplicationService>();
         services.AddSingleton<LightweightChatRouter>();
         services.AddSingleton<LightweightTheorySanityChecker>();
-        services.AddScoped<IChatApplicationService>(sp =>
+        // Fully qualified to disambiguate from
+        // GA.Business.Core.Orchestration.Abstractions.IChatApplicationService
+        // (the host-neutral surface added 2026-05-07 for GaApi controllers).
+        // GaChatbot.Api keeps its own richer interface (Trace, readiness,
+        // ChatExecutionResult) — codex C-prime guidance is to keep this host
+        // frozen until a concrete deploy reason emerges, not to merge contracts.
+        services.AddScoped<GaChatbot.Api.Services.IChatApplicationService>(sp =>
             usesOrchestration
                 ? sp.GetRequiredService<OrchestratedChatApplicationService>()
                 : chatbotMode == "routed"
