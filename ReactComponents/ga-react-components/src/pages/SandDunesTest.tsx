@@ -10,14 +10,11 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Stack,
   Slider,
   Switch,
   FormControlLabel,
   Divider,
-  IconButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import SandDunes from '../components/SandDunes/SandDunes';
 import ResponsiveDemoShell, { useIsMobile } from '../components/Common/ResponsiveDemoShell';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
@@ -62,20 +59,9 @@ const SandDunesTest: React.FC = () => {
 
   const controls = (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="h5" sx={{ color: '#ffd58a', fontFamily: 'monospace' }}>
-          🏜️ SAND DUNES
-        </Typography>
-        {isMobile && (
-          <IconButton aria-label="Close settings" sx={{ color: '#ffd58a' }} onClick={() => {
-            // Drawer close is handled by tap-outside / swipe; this is a tap-target.
-            const evt = new KeyboardEvent('keydown', { key: 'Escape' });
-            document.dispatchEvent(evt);
-          }}>
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Stack>
+      <Typography variant="h5" sx={{ color: '#ffd58a', fontFamily: 'monospace', mb: 1 }}>
+        🏜️ SAND DUNES
+      </Typography>
       <Typography variant="caption" sx={{ color: '#c8a47a', fontFamily: 'monospace', display: 'block', mb: 2 }}>
         cinematic v2 — ridged dunes · day/night · mirage · sand drift
       </Typography>

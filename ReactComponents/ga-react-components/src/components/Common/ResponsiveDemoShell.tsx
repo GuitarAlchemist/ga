@@ -26,6 +26,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CloseIcon from '@mui/icons-material/Close';
 import CastButton from './CastButton';
 
 export interface ResponsiveDemoShellProps {
@@ -74,14 +75,20 @@ const ResponsiveDemoShell: React.FC<ResponsiveDemoShellProps> = ({
           onClick={() => setDrawerOpen(true)}
           sx={{
             position: 'absolute',
-            bottom: 24,
+            // Pull above iOS Safari bottom toolbar / home indicator —
+            // the env() respects the notch, the +56 clears the toolbar.
+            bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
             right: 16,
-            zIndex: 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            zIndex: 20,
+            width: 56,        // Apple HIG / Material both want ≥48; 56 is comfortable.
+            height: 56,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(6px)',
             color: cogColor,
             border: `1px solid ${cogColor}`,
-            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.85)' },
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+            '&:hover':  { backgroundColor: 'rgba(0, 0, 0, 0.85)' },
+            '&:active': { backgroundColor: 'rgba(0, 0, 0, 0.95)' },
           }}
         >
           <SettingsIcon />
@@ -98,13 +105,30 @@ const ResponsiveDemoShell: React.FC<ResponsiveDemoShellProps> = ({
               padding: 2,
               backgroundColor: panelBackgroundColor,
               borderLeft: `1px solid ${panelBorderColor}`,
+              // Respect iOS safe areas top + bottom so close button + last
+              // slider don't sit under system chrome.
+              paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
+              paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
             },
           }}
         >
-          {/* Drawer-specific consumer responsibility: the controls JSX
-              should render its own close button (we forward state via
-              context-free pattern: pass `setDrawerOpen` if you need it).
-              By default the user can swipe or tap-outside the drawer. */}
+          {/* Always-visible close button at the top of every drawer. The
+              consumer's controls JSX doesn't need to wire its own close —
+              tap-outside / swipe still work, but this gives a guaranteed
+              affordance even when the drawer covers the full screen. */}
+          <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+            <IconButton
+              aria-label="Close settings"
+              onClick={() => setDrawerOpen(false)}
+              sx={{
+                color: cogColor,
+                width: 44,
+                height: 44,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Stack>
           {controls}
         </Drawer>
       </Box>

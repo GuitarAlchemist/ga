@@ -6,14 +6,11 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Stack,
   Slider,
   Switch,
   FormControlLabel,
   Divider,
-  IconButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { CheeseAvalanche } from '../components/CheeseAvalanche';
 import ResponsiveDemoShell, { useIsMobile } from '../components/Common/ResponsiveDemoShell';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
@@ -56,19 +53,9 @@ const CheeseAvalancheTest: React.FC = () => {
 
   const controls = (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="h5" sx={{ color: '#ffd25b', fontFamily: 'monospace' }}>
-          🧀 CHEESE AVALANCHE
-        </Typography>
-        {isMobile && (
-          <IconButton aria-label="Close settings" sx={{ color: '#ffd25b' }} onClick={() => {
-            const evt = new KeyboardEvent('keydown', { key: 'Escape' });
-            document.dispatchEvent(evt);
-          }}>
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Stack>
+      <Typography variant="h5" sx={{ color: '#ffd25b', fontFamily: 'monospace', mb: 1 }}>
+        🧀 CHEESE AVALANCHE
+      </Typography>
       <Typography variant="caption" sx={{ color: '#c8a47a', fontFamily: 'monospace', display: 'block', mb: 2 }}>
         apéricubes + babybels · heightfield physics
       </Typography>
