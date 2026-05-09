@@ -95,13 +95,15 @@ const STONE_VERTEX = /* glsl */ `
 
   void main() {
     vec3 p = position;
-    // Subtle vertex-noise displacement so stone faces aren't perfectly
-    // flat. Effect is largest on big faces (long axes), smallest near
-    // edges. Computed in local space so weathering doesn't swim with the
-    // camera.
-    float n = fbm(position.xy * 0.6 + uOffset.xy)
-            + fbm(position.yz * 0.7 + uOffset.yz);
-    p += normal * (n * uRoughness * 0.10);
+    // Two-scale displacement — a coarse macro-bump that makes the silhouette
+    // genuinely irregular (no perfect cuboid edges) plus a finer micro-bump
+    // for surface texture. Computed in local space so weathering doesn't
+    // swim with the camera.
+    float macro = fbm(position.xy * 0.35 + uOffset.xy);
+    float meso  = fbm(position.yz * 0.85 + uOffset.yz);
+    float micro = vnoise(position.xz * 3.4 + uOffset.zx) * 0.5;
+    float displ = (macro + meso) * 0.55 + micro * 0.20;
+    p += normal * (displ * uRoughness * 0.32);
 
     vec4 wp = modelMatrix * vec4(p, 1.0);
     vWorld = wp.xyz;
@@ -209,7 +211,10 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     scene.fog = new THREE.FogExp2(0xb8c8e0, 0.0042);
 
     const camera = new THREE.PerspectiveCamera(47, W0 / H0, 0.1, 4000);
-    camera.position.set(34, 13, 35);
+    // Default camera: low and intimate, looking at the trilithon horseshoe
+    // from outside the sarsen ring at roughly head height. Auto-rotate
+    // pulls back to a wider arc — this just sets the first impression.
+    camera.position.set(28, 5, 30);
     camera.lookAt(0, 5, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -228,7 +233,7 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     controls.minDistance = 10;
     controls.maxDistance = 150;
     controls.maxPolarAngle = Math.PI * 0.485;
-    controls.target.set(0, 3.5, 0);
+    controls.target.set(0, 3.0, 0);
     controls.autoRotate = autoRotate;
     controls.autoRotateSpeed = 0.13;
 
@@ -236,6 +241,7 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     const skyUniforms = {
       uSunDir: { value: new THREE.Vector3(0, 1, 0) },
       uTimeOfDay: { value: fixedTimeOfDay },
+      uTime: { value: 0 },
     };
 
     const skyMaterial = new THREE.ShaderMaterial({
@@ -251,12 +257,17 @@ const Stonehenge: React.FC<StonehengeProps> = ({
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uSunDir;
+        uniform vec3  uSunDir;
+        uniform float uTime;
         varying vec3 vDir;
+
+        ${NOISE_GLSL}
+
         // English-summer palette — paler day, lavender dusk, deep blue night.
         vec3 skyDay(float h)   { return mix(vec3(0.78, 0.85, 0.95), vec3(0.30, 0.50, 0.84), pow(clamp(h,0.0,1.0), 0.6)); }
         vec3 skyDusk(float h)  { return mix(vec3(1.00, 0.55, 0.32), vec3(0.30, 0.18, 0.40), pow(clamp(h,0.0,1.0), 0.55)); }
         vec3 skyNight(float h) { return mix(vec3(0.05, 0.06, 0.13), vec3(0.005, 0.01, 0.04), pow(clamp(h,0.0,1.0), 0.7)); }
+
         void main() {
           vec3 d = normalize(vDir);
           float h = clamp(d.y, 0.0, 1.0);
@@ -264,6 +275,29 @@ const Stonehenge: React.FC<StonehengeProps> = ({
           float duskW  = exp(-pow(uSunDir.y * 4.0, 2.0));
           float nightW = smoothstep(0.05, -0.10, uSunDir.y);
           vec3 col = skyDay(h)*dayW + skyDusk(h)*duskW + skyNight(h)*nightW;
+
+          // Procedural cumulus — project view ray onto a horizontal plane
+          // at "cloud altitude" so clouds parallax across the sky as the
+          // camera turns. Two octaves shape the puffy outline; another
+          // octave gives soft inner detail.
+          if (h > 0.04) {
+            vec2 cuv = d.xz / max(d.y, 0.04);
+            cuv = cuv * 0.30 + vec2(uTime * 0.015, uTime * 0.005);
+            float cl  = fbm(cuv);
+            float cl2 = fbm(cuv * 2.6 + vec2(7.0, 3.0));
+            float cl3 = fbm(cuv * 5.5 + vec2(2.0, 11.0)) * 0.4;
+            // Lower the threshold + sharpen the upper edge → bigger, denser
+            // cumulus that occupy more of the sky.
+            float cloudDensity = cl + cl2 * 0.45 + cl3 * 0.20;
+            float clouds = smoothstep(0.32, 0.62, cloudDensity);
+            float horizonFade = smoothstep(0.04, 0.18, h);
+            // Lit side bias — the sun-facing edge of clouds reads brighter.
+            float sunBias = clamp(dot(d, normalize(uSunDir)) * 0.5 + 0.5, 0.0, 1.0);
+            vec3 cloudLit = mix(vec3(0.55, 0.55, 0.62), vec3(1.0, 0.98, 0.93), sunBias);
+            cloudLit = mix(cloudLit * 0.45, cloudLit, dayW);
+            cloudLit = mix(cloudLit, vec3(1.0, 0.55, 0.28) * 0.95, duskW * 0.7);
+            col = mix(col, cloudLit, clouds * horizonFade * 0.95);
+          }
 
           float sunDot = clamp(dot(d, normalize(uSunDir)), 0.0, 1.0);
           float disc = smoothstep(0.9985, 0.9999, sunDot);
@@ -285,17 +319,18 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     const ambient = new THREE.HemisphereLight(0xc0d4ff, 0x4a3920, 0.6);
     scene.add(ambient);
 
-    const sun = new THREE.DirectionalLight(0xfff1d8, 1.5);
+    const sun = new THREE.DirectionalLight(0xfff1d8, 1.6);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -50;
-    sun.shadow.camera.right = 50;
-    sun.shadow.camera.top = 50;
-    sun.shadow.camera.bottom = -50;
+    sun.shadow.mapSize.set(2048, 2048);  // sharper shadow edges
+    sun.shadow.camera.left = -45;
+    sun.shadow.camera.right = 45;
+    sun.shadow.camera.top = 45;
+    sun.shadow.camera.bottom = -45;
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 300;
-    sun.shadow.bias = -0.0006;
-    sun.shadow.radius = 4;
+    sun.shadow.camera.far = 250;
+    sun.shadow.bias = -0.0005;
+    sun.shadow.normalBias = 0.04;
+    sun.shadow.radius = 2;  // less blur — stone shadows should read as crisp
     scene.add(sun);
     scene.add(sun.target);
 
@@ -460,22 +495,40 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     // this is fine for desktop and mobile alike.
 
     const buildStone = (opt: StoneOptions): THREE.Mesh => {
-      const seg = opt.segments ?? 6;
+      // Default segment count bumped from 6 → 12 so the stronger vertex
+      // displacement actually deforms the surface instead of slumping
+      // sparse vertices into flat trapezoids.
+      const seg = opt.segments ?? 12;
       const geo = new THREE.BoxGeometry(opt.w, opt.h, opt.d, seg, seg, seg);
-      // Pre-displace verts a little so each stone has unique outline.
+      // Pre-displace verts so each stone has a unique outline. Two
+      // frequency bands: macro warps the silhouette (the stone is no
+      // longer a perfect cuboid), micro adds chunky surface texture.
+      // Top and bottom 12% are barely deformed so lintels actually rest
+      // on a flat face.
       const pos = geo.attributes.position as THREE.BufferAttribute;
       const off = new THREE.Vector3(Math.random() * 17, Math.random() * 13, Math.random() * 11);
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-        const r = (Math.sin(x * 0.7 + off.x) + Math.cos(y * 0.5 + off.y) + Math.sin(z * 0.6 + off.z));
-        const amp = 0.05 * Math.min(opt.w, opt.h, opt.d);
-        // Don't displace the very top or bottom — we want flat-ish caps so
-        // lintels actually rest on a face.
+
+        const macro =
+          Math.sin(x * 0.45 + off.x) * 0.6 +
+          Math.cos(y * 0.32 + off.y) * 0.5 +
+          Math.sin(z * 0.40 + off.z) * 0.6 +
+          Math.sin((x + z) * 0.20 + off.x * 0.3) * 0.4;
+        const micro =
+          Math.sin(x * 1.7 + off.y) * 0.3 +
+          Math.cos(z * 1.9 + off.z) * 0.3;
+
+        const minDim = Math.min(opt.w, opt.h, opt.d);
+        const macroAmp = 0.18 * minDim;
+        const microAmp = 0.045 * minDim;
+
         const yt = Math.abs(y) / (opt.h / 2);
-        const fade = 1 - Math.pow(yt, 6);
-        pos.setX(i, x + r * amp * 0.35 * fade);
-        pos.setY(i, y + r * amp * 0.15 * fade);
-        pos.setZ(i, z + r * amp * 0.35 * fade);
+        const fade = 1 - Math.pow(yt, 5);
+
+        pos.setX(i, x + macro * macroAmp * fade + micro * microAmp);
+        pos.setY(i, y + macro * macroAmp * 0.30 * fade);
+        pos.setZ(i, z + macro * macroAmp * fade + micro * microAmp);
       }
       pos.needsUpdate = true;
       geo.computeVertexNormals();
@@ -837,13 +890,16 @@ const Stonehenge: React.FC<StonehengeProps> = ({
       `,
     });
 
-    const bladeBase = new THREE.PlaneGeometry(0.07, 0.55, 1, 6);
-    bladeBase.translate(0, 0.275, 0);
+    // Larger blade footprint — 0.10×0.85 instead of 0.07×0.55 — so each
+    // blade reads at distance instead of pixelating into a green dot.
+    const bladeBase = new THREE.PlaneGeometry(0.10, 0.85, 1, 6);
+    bladeBase.translate(0, 0.425, 0);
 
     const phoneGrass = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-    const grassChunkSize  = 8;
-    const grassChunkCount = phoneGrass ? 8 : 14;
-    const grassDensity    = phoneGrass ? 110 : 240;
+    // Smaller chunks + more chunks = same coverage area but tighter blades.
+    const grassChunkSize  = 6;
+    const grassChunkCount = phoneGrass ? 10 : 18;
+    const grassDensity    = phoneGrass ? 130 : 280;
     const planeAngles     = [0, Math.PI / 3, (2 * Math.PI) / 3];
     const grassHalfCount  = grassChunkCount / 2;
     const grassMeshes: THREE.InstancedMesh[] = [];
@@ -1054,6 +1110,7 @@ const Stonehenge: React.FC<StonehengeProps> = ({
       updateTimeOfDay(tod);
 
       grassUniforms.uTime.value = elapsed;
+      skyUniforms.uTime.value = elapsed;
 
       if (ravenPoints) {
         const rmat = ravenPoints.material as THREE.ShaderMaterial;
