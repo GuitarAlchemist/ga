@@ -1,34 +1,22 @@
 /**
- * FluffyGrassDemo — phone-friendly responsive shell.
+ * FluffyGrassDemo — uses the shared ResponsiveDemoShell.
  *
- * Desktop (≥900px wide): viewport on the left, fixed 320px controls panel
- * on the right (the previous layout).
- *
- * Mobile / narrow (<900px or no hover): full-bleed canvas + a settings FAB
- * that opens a Drawer with the same controls. Defaults are dialled down
- * so the simulation actually runs at 60fps on a phone GPU — fewer chunks,
- * lower density, and the FluffyGrass component caps its pixel ratio at
- * 1.5 instead of 2.
+ * Desktop: viewport + 320px controls panel. Mobile: full-bleed canvas
+ * + cog FAB → Drawer. Cast pill anchored top-right on both.
  */
 
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Stack,
   Slider,
   Switch,
   FormControlLabel,
   Divider,
-  Drawer,
-  IconButton,
-  useMediaQuery,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CloseIcon from '@mui/icons-material/Close';
 import { FluffyGrass } from './FluffyGrass';
-import CastButton from '../Common/CastButton';
+import ResponsiveDemoShell, { useIsMobile } from '../Common/ResponsiveDemoShell';
 
 const labelForTod = (t: number): string => {
   if (t < 0.05 || t > 0.95) return 'Sunrise';
@@ -42,16 +30,9 @@ const labelForTod = (t: number): string => {
 };
 
 export const FluffyGrassDemo: React.FC = () => {
-  // Coarse-pointer / narrow viewport → mobile layout. The first matches
-  // phones in any orientation; the second covers tablets in portrait too.
-  const coarsePointer = useMediaQuery('(pointer: coarse)');
-  const narrowVp      = useMediaQuery('(max-width: 900px)');
-  const isMobile      = coarsePointer || narrowVp;
+  const isMobile = useIsMobile();
 
-  // Mobile-aware defaults — the FluffyGrass scene is GPU-heavy at the
-  // desktop defaults; phones need lower density / fewer chunks to stay at
-  // 60fps. The user can still crank these up via the controls panel if
-  // they want.
+  // Mobile-aware defaults — phone GPUs need lower density / fewer chunks.
   const [grassDensity, setGrassDensity] = useState<number>(isMobile ? 320 : 800);
   const [chunkSize, setChunkSize] = useState<number>(10);
   const [chunkCount, setChunkCount] = useState<number>(isMobile ? 6 : 8);
@@ -67,9 +48,6 @@ export const FluffyGrassDemo: React.FC = () => {
   const [fireflies, setFireflies] = useState<boolean>(true);
   const [flowers, setFlowers] = useState<boolean>(true);
 
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-
-  // Re-mount on big topology changes; live-update wind/colors via uniforms.
   const sceneKey = `${grassDensity}-${chunkSize}-${chunkCount}-${grassHeight}-${grassWidth}-${autoCycle ? 'cycle' : 'fixed'}-${dayLengthSeconds}-${fixedTimeOfDay.toFixed(2)}-${autoRotate}-${fireflies}-${flowers}`;
 
   const sliderSx = {
@@ -81,20 +59,11 @@ export const FluffyGrassDemo: React.FC = () => {
   const labelSx = { color: '#cdeac0', fontFamily: 'monospace', mb: 1 };
   const headSx = { color: '#9be38a', fontFamily: 'monospace', mb: 1, mt: 2 };
 
-  // Controls panel content — used by both desktop sidebar and mobile drawer
-  // so they stay in lockstep.
-  const controlsContent = (
+  const controls = (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="h5" sx={{ color: '#9be38a', fontFamily: 'monospace' }}>
-          🌾 FLUFFY GRASS
-        </Typography>
-        {isMobile && (
-          <IconButton aria-label="Close settings" onClick={() => setDrawerOpen(false)} sx={{ color: '#9be38a' }}>
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Stack>
+      <Typography variant="h5" sx={{ color: '#9be38a', fontFamily: 'monospace', mb: 1 }}>
+        🌾 FLUFFY GRASS
+      </Typography>
       <Typography variant="caption" sx={{ color: '#7da876', fontFamily: 'monospace', display: 'block', mb: 2 }}>
         cinematic v2 — bezier blades · day/night · gusts · fireflies
       </Typography>
@@ -171,11 +140,7 @@ export const FluffyGrassDemo: React.FC = () => {
     </>
   );
 
-  // The FluffyGrass component is wrapped in a flex Box with no explicit
-  // pixel size — the component reads its container's clientWidth/Height
-  // via ResizeObserver. This way we never recompute window-based sizes on
-  // the JSX side and the canvas tracks the layout cleanly.
-  const grass = (
+  const viewport = (
     <FluffyGrass
       key={sceneKey}
       grassDensity={grassDensity}
@@ -193,77 +158,19 @@ export const FluffyGrassDemo: React.FC = () => {
     />
   );
 
-  if (isMobile) {
-    return (
-      <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden', position: 'relative' }}>
-        <Box sx={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
-          {grass}
-        </Box>
-
-        {/* Top-right Cast pill */}
-        <CastButton />
-
-        {/* Bottom-right Settings FAB — opens the drawer with the controls. */}
-        <IconButton
-          aria-label="Open settings"
-          onClick={() => setDrawerOpen(true)}
-          sx={{
-            position: 'absolute',
-            bottom: 24,
-            right: 16,
-            zIndex: 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(6px)',
-            color: '#9be38a',
-            border: '1px solid #9be38a',
-            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.85)' },
-          }}
-        >
-          <SettingsIcon />
-        </IconButton>
-
-        <Drawer
-          anchor="right"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          PaperProps={{
-            sx: {
-              width: '85vw',
-              maxWidth: 360,
-              padding: 2,
-              backgroundColor: 'rgba(8, 14, 8, 0.96)',
-              borderLeft: '1px solid #2d5a2d',
-            },
-          }}
-        >
-          {controlsContent}
-        </Drawer>
-      </Box>
-    );
-  }
-
-  // Desktop: side-by-side viewport + 320px panel.
   return (
-    <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
-      <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
-        <Box sx={{ flex: 1, display: 'flex', position: 'relative', minWidth: 0 }}>
-          {grass}
-          <CastButton />
+    <ResponsiveDemoShell
+      viewport={viewport}
+      controls={
+        <Box>
+          {/* Wrapper Box keeps the same vertical-stack flow. */}
+          <Stack>{controls}</Stack>
         </Box>
-
-        <Paper
-          sx={{
-            width: 320,
-            padding: 3,
-            backgroundColor: 'rgba(8, 14, 8, 0.92)',
-            border: '1px solid #2d5a2d',
-            overflowY: 'auto',
-          }}
-        >
-          {controlsContent}
-        </Paper>
-      </Stack>
-    </Box>
+      }
+      panelBackgroundColor="rgba(8, 14, 8, 0.92)"
+      panelBorderColor="#2d5a2d"
+      cogColor="#9be38a"
+    />
   );
 };
 

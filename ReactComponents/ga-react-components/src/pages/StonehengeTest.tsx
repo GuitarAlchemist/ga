@@ -1,28 +1,17 @@
 /**
- * Stonehenge test page — restored monument scene.
- *
- * Phone-friendly from the start: full-bleed canvas, settings cog FAB on
- * mobile opening a Drawer with the controls, side-by-side viewport +
- * 320px panel on desktop. Cast pill anchored top-right on both layouts.
+ * Stonehenge test page — uses ResponsiveDemoShell.
  */
 
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Stack,
   Slider,
   Switch,
   FormControlLabel,
-  Drawer,
-  IconButton,
-  useMediaQuery,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CloseIcon from '@mui/icons-material/Close';
 import { Stonehenge } from '../components/Stonehenge';
-import CastButton from '../components/Common/CastButton';
+import ResponsiveDemoShell, { useIsMobile } from '../components/Common/ResponsiveDemoShell';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const labelForTod = (t: number): string => {
@@ -37,17 +26,13 @@ const labelForTod = (t: number): string => {
 };
 
 const StonehengeTest: React.FC = () => {
-  const coarsePointer = useMediaQuery('(pointer: coarse)');
-  const narrowVp      = useMediaQuery('(max-width: 900px)');
-  const isMobile      = coarsePointer || narrowVp;
+  const isMobile = useIsMobile();
 
   const [autoCycle, setAutoCycle] = useState<boolean>(true);
   const [dayLengthSeconds, setDayLengthSeconds] = useState<number>(120);
-  const [fixedTimeOfDay, setFixedTimeOfDay] = useState<number>(0.05); // solstice sunrise
+  const [fixedTimeOfDay, setFixedTimeOfDay] = useState<number>(0.05);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [ravens, setRavens] = useState<boolean>(true);
-
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
   const sceneKey = `${autoCycle ? 'cycle' : 'fixed'}-${dayLengthSeconds}-${fixedTimeOfDay.toFixed(2)}-${autoRotate}-${ravens}`;
 
@@ -60,18 +45,11 @@ const StonehengeTest: React.FC = () => {
   const labelSx = { color: '#e8dfc8', fontFamily: 'monospace', mb: 1 };
   const headSx  = { color: '#d4c5a0', fontFamily: 'monospace', mb: 1, mt: 2 };
 
-  const controlsContent = (
+  const controls = (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="h5" sx={{ color: '#d4c5a0', fontFamily: 'monospace' }}>
-          🪨 STONEHENGE
-        </Typography>
-        {isMobile && (
-          <IconButton aria-label="Close settings" onClick={() => setDrawerOpen(false)} sx={{ color: '#d4c5a0' }}>
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Stack>
+      <Typography variant="h5" sx={{ color: '#d4c5a0', fontFamily: 'monospace', mb: 1 }}>
+        🪨 STONEHENGE
+      </Typography>
       <Typography variant="caption" sx={{ color: '#a89878', fontFamily: 'monospace', display: 'block', mb: 2 }}>
         restored to its original form, c. 2500 BCE
       </Typography>
@@ -111,7 +89,7 @@ const StonehengeTest: React.FC = () => {
     </>
   );
 
-  const henge = (
+  const viewport = (
     <Stonehenge
       key={sceneKey}
       dayLengthSeconds={autoCycle ? dayLengthSeconds : 0}
@@ -121,75 +99,15 @@ const StonehengeTest: React.FC = () => {
     />
   );
 
-  if (isMobile) {
-    return (
-      <DemoErrorBoundary demoName="Stonehenge">
-        <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden', position: 'relative' }}>
-          <Box sx={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
-            {henge}
-          </Box>
-          <CastButton />
-
-          <IconButton
-            aria-label="Open settings"
-            onClick={() => setDrawerOpen(true)}
-            sx={{
-              position: 'absolute',
-              bottom: 24,
-              right: 16,
-              zIndex: 10,
-              backgroundColor: 'rgba(0, 0, 0, 0.65)',
-              backdropFilter: 'blur(6px)',
-              color: '#d4c5a0',
-              border: '1px solid #d4c5a0',
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.85)' },
-            }}
-          >
-            <SettingsIcon />
-          </IconButton>
-
-          <Drawer
-            anchor="right"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            PaperProps={{
-              sx: {
-                width: '85vw',
-                maxWidth: 360,
-                padding: 2,
-                backgroundColor: 'rgba(20, 16, 8, 0.96)',
-                borderLeft: '1px solid #6e5a3a',
-              },
-            }}
-          >
-            {controlsContent}
-          </Drawer>
-        </Box>
-      </DemoErrorBoundary>
-    );
-  }
-
   return (
     <DemoErrorBoundary demoName="Stonehenge">
-      <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
-        <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
-          <Box sx={{ flex: 1, display: 'flex', position: 'relative', minWidth: 0 }}>
-            {henge}
-            <CastButton />
-          </Box>
-          <Paper
-            sx={{
-              width: 320,
-              padding: 3,
-              backgroundColor: 'rgba(20, 16, 8, 0.94)',
-              border: '1px solid #6e5a3a',
-              overflowY: 'auto',
-            }}
-          >
-            {controlsContent}
-          </Paper>
-        </Stack>
-      </Box>
+      <ResponsiveDemoShell
+        viewport={viewport}
+        controls={controls}
+        panelBackgroundColor="rgba(20, 16, 8, 0.94)"
+        panelBorderColor="#6e5a3a"
+        cogColor="#d4c5a0"
+      />
     </DemoErrorBoundary>
   );
 };

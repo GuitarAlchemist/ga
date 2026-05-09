@@ -8,6 +8,7 @@
 import React from 'react';
 import { Box, Typography, Paper, Chip } from '@mui/material';
 import { Ocean } from '../components/Ocean';
+import CastButton from '../components/Common/CastButton';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const FEATURES = [
@@ -21,7 +22,8 @@ const FEATURES = [
 
 const OceanTest: React.FC = () => (
   <DemoErrorBoundary demoName="TSL Ocean">
-    <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#0a0a0a' }}>
+    <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#0a0a0a', position: 'relative' }}>
+      <CastButton />
       {/* Compact header */}
       <Paper
         elevation={0}

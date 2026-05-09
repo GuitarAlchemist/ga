@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
-import { Container } from '@mui/material';
+import { Box, Container } from '@mui/material';
+import CastButton from '../components/Common/CastButton';
 
 // Use the new force-directed Prime Radiant
 const ForceRadiant = React.lazy(() =>
@@ -21,7 +22,8 @@ const PrimeRadiantTest: React.FC = () => {
   }, []);
 
   return (
-    <Container maxWidth={false} disableGutters sx={{ height: '100%', overflow: 'hidden' }}>
+    <Container maxWidth={false} disableGutters sx={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
+      <CastButton />
       <Suspense fallback={
         <div style={{
           width: '100%',

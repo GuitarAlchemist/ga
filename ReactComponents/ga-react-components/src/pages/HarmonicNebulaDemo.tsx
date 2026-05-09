@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Typography, Paper, Chip, Stack } from '@mui/material';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import CastButton from '../components/Common/CastButton';
 
 /**
  * Harmonic Nebula — Phase 2 scaffold.
@@ -313,6 +314,7 @@ const HarmonicNebulaDemo: React.FC = () => {
         ref={containerRef}
         style={{ position: 'absolute', inset: 0, background: '#05060a' }}
       />
+      <CastButton />
       <Paper
         elevation={4}
         sx={{
