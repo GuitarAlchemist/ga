@@ -155,8 +155,8 @@ const NOISE_GLSL = /* glsl */ `
 `;
 
 export const FluffyGrass: React.FC<FluffyGrassProps> = ({
-  width = 1600,
-  height = 900,
+  width,
+  height,
   grassDensity = 800,
   chunkSize = 10,
   chunkCount = 8,
@@ -178,16 +178,26 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
+    // Auto-size to container when width/height props aren't given. Lets the
+    // demo wrap us in a flex/grid cell that resizes responsively without us
+    // re-mounting on every layout tick.
+    const W0 = width ?? container.clientWidth ?? 1280;
+    const H0 = height ?? container.clientHeight ?? 720;
+
     // ─── Scene + Camera + Renderer ─────────────────────────────────────────
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(55, W0 / H0, 0.1, 1000);
     camera.position.set(34, 18, 34);
     camera.lookAt(0, 1, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W0, H0);
+    // Cap pixel ratio to 1.5 — the visual cost of higher DPR (common on
+    // phones at 3.0) doesn't pay off in this scene. The bloom + AA already
+    // hide aliasing, and 3× DPR triples fragment-shader cost on the GPUs
+    // that need help most.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -1048,11 +1058,11 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     // High threshold (~0.92) so only genuinely bright pixels bloom — keeps
     // the meadow itself crisp.
     const composer = new EffectComposer(renderer);
-    composer.setSize(width, height);
-    composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    composer.setSize(W0, H0);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(width, height),
+      new THREE.Vector2(W0, H0),
       /* strength */ 0.55,
       /* radius   */ 0.45,
       /* threshold*/ 0.92,
@@ -1186,9 +1196,29 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     updateTimeOfDay(fixedTimeOfDay);
     animate();
 
+    // ─── Resize observer ───────────────────────────────────────────────────
+    // Keeps the renderer + camera + composer + bloom-pass in sync when the
+    // container changes size (drawer open/close on mobile, window resize,
+    // orientation rotation, devtools panel toggle). Throttled by RAF
+    // implicitly: setSize is a one-line GPU op and runs only on observed
+    // changes, not every frame.
+    const onResize = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+      bloomPass.setSize(w, h);
+    };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(container);
+
     // ─── Cleanup ───────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(raf);
+      ro.disconnect();
       controls.dispose();
       grassMeshes.forEach((m) => {
         m.geometry.dispose();
@@ -1242,7 +1272,12 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     flowers,
   ]);
 
-  return <Box ref={containerRef} sx={{ width, height, overflow: 'hidden' }} />;
+  // When width/height props are omitted we fill the parent — gives the
+  // demo a clean way to wrap us in a flex/grid cell that resizes naturally.
+  const sx = (width !== undefined && height !== undefined)
+    ? { width, height, overflow: 'hidden' }
+    : { width: '100%', height: '100%', overflow: 'hidden' };
+  return <Box ref={containerRef} sx={sx} />;
 };
 
 export default FluffyGrass;
