@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-09T04:01:13.2692126Z",
+  "Timestamp": "2026-05-09T04:16:26.9791776Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 394
+        "Count": 398
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 371
+        "Count": 370
       },
       {
         "Name": "Adim/C",
@@ -143,12 +143,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-1-5-x-x-x",
+        "Diagram": "x-2-6-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-2-6-x-x-x",
+        "Diagram": "x-1-5-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -163,12 +163,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
+        "Diagram": "x-6-10-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-6-10-x-x-x",
+        "Diagram": "x-7-11-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -178,12 +178,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-10-14-x-x-x",
+        "Diagram": "x-9-13-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-9-13-x-x-x",
+        "Diagram": "x-10-14-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 85.0798438,
-    "VoicingsPerSec": 3679.4496324639467,
-    "PeakWorkingSetMb": 402.2265625
+    "RuntimeSeconds": 85.2942989,
+    "VoicingsPerSec": 3670.198407598377,
+    "PeakWorkingSetMb": 414.4921875
   },
   "IssueSamples": {
     "NullChordName": [],
