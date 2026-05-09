@@ -32,6 +32,7 @@ import FluffyGrassTest from './pages/FluffyGrassTest';
 import OceanTest from './pages/OceanTest';
 import SandDunesTest from './pages/SandDunesTest';
 import CheeseAvalancheTest from './pages/CheeseAvalancheTest';
+import StonehengeTest from './pages/StonehengeTest';
 import { GraphitiDemo } from './components/GraphitiDemo/GraphitiDemo';
 import Guitar3DTest from './pages/Guitar3DTest';
 import HandAnimationTest from './pages/HandAnimationTest';
@@ -425,6 +426,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/ocean" element={<App><OceanTest /></App>} />
         <Route path="/test/sand-dunes" element={<App><SandDunesTest /></App>} />
         <Route path="/test/cheese-avalanche" element={<App><CheeseAvalancheTest /></App>} />
+        <Route path="/test/stonehenge" element={<App><StonehengeTest /></App>} />
         <Route path="/test/guitar-3d" element={<App><Guitar3DTest /></App>} />
         <Route path="/test/hand-animation" element={<App><HandAnimationTest /></App>} />
         <Route path="/test/models-3d" element={<App><Models3DTest /></App>} />

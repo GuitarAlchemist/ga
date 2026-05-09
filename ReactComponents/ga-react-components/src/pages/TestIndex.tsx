@@ -209,6 +209,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'stonehenge',
+    title: 'Stonehenge (Restored)',
+    description: 'The monument as it stood c. 2500 BCE — outer sarsen circle with continuous lintel ring, trilithon horseshoe, bluestones, heel stone',
+    technology: 'Three.js + GLSL Shaders',
+    path: '/test/stonehenge',
+    features: ['Sarsen Circle', 'Trilithon Horseshoe', 'Bluestones', 'Lichen Weathering', 'Solstice Alignment', 'Day/Night', 'Ravens'],
+    status: 'complete',
+  },
+  {
     id: 'guitar-3d',
     title: 'Guitar 3D Viewer',
     description: 'Interactive 3D guitar model viewer with GLTF/GLB support, PBR materials, and IBL',
