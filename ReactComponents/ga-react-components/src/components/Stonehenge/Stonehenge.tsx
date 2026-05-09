@@ -137,6 +137,15 @@ const STONE_FRAGMENT = /* glsl */ `
 
     vec3 col = mix(uColorBase, uColorBright, wear * 0.85 + 0.15);
 
+    // Sedimentary bands, hairline cracks, and granular flecks. These stay
+    // procedural so the scene has material detail without external textures.
+    float strata = smoothstep(0.82, 0.97, abs(sin(vLocal.y * 6.5 + fbm(vWorld.xz * 0.42 + uOffset.xy) * 2.8)));
+    float crackField = fbm(vWorld.xy * 1.55 + uOffset.yx);
+    float cracks = smoothstep(0.60, 0.82, crackField) * smoothstep(0.18, 1.0, abs(vNormal.y - 0.25));
+    float fleck = smoothstep(0.52, 0.74, fbm(vWorld.xy * 4.5 + uOffset.xy * 2.0));
+    col *= 1.0 - strata * 0.08 - cracks * 0.18;
+    col = mix(col, uColorBright * 1.08, fleck * 0.10);
+
     // Lichen patches — clustered on north-ish faces (vNormal.z signed)
     // and concentrated near the bottom (where moisture pools). Lichens
     // get a tighter noise so the patches read as discrete blooms, not a
@@ -151,6 +160,7 @@ const STONE_FRAGMENT = /* glsl */ `
     // Edge AO — ambient occlusion approximation: faces that point steeply
     // sideways get darkened slightly so corners look dirtier than flats.
     float ao = 0.85 + 0.15 * clamp(vNormal.y, 0.0, 1.0);
+    ao *= 0.92 + 0.08 * smoothstep(-0.2, 0.7, vNormal.y);
     col *= ao;
 
     // Lighting (Lambert + ambient with wrap).
@@ -196,10 +206,10 @@ const Stonehenge: React.FC<StonehengeProps> = ({
 
     // ─── Scene + Camera + Renderer ─────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xb8c8e0, 0.0050);
+    scene.fog = new THREE.FogExp2(0xb8c8e0, 0.0042);
 
-    const camera = new THREE.PerspectiveCamera(50, W0 / H0, 0.1, 4000);
-    camera.position.set(46, 18, 46);
+    const camera = new THREE.PerspectiveCamera(47, W0 / H0, 0.1, 4000);
+    camera.position.set(34, 13, 35);
     camera.lookAt(0, 5, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -215,12 +225,12 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.minDistance = 14;
-    controls.maxDistance = 240;
-    controls.maxPolarAngle = Math.PI * 0.49;
-    controls.target.set(0, 4, 0);
+    controls.minDistance = 10;
+    controls.maxDistance = 150;
+    controls.maxPolarAngle = Math.PI * 0.485;
+    controls.target.set(0, 3.5, 0);
     controls.autoRotate = autoRotate;
-    controls.autoRotateSpeed = 0.20;
+    controls.autoRotateSpeed = 0.13;
 
     // ─── Sky dome ──────────────────────────────────────────────────────────
     const skyUniforms = {
@@ -293,20 +303,22 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     const groundSize = 1200;
     const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 160, 160);
     groundGeo.rotateX(-Math.PI / 2);
+    const terrainHeight = (x: number, z: number) => {
+      const r = Math.sqrt(x * x + z * z);
+      const flat = THREE.MathUtils.smoothstep(r, 30, 80);
+      return (
+        Math.sin(x * 0.012) +
+        Math.cos(z * 0.009) * 0.7 +
+        Math.sin(x * 0.04 + z * 0.03) * 0.4
+      ) * 1.6 * flat;
+    };
     {
       // Gentle rolling rise/fall — Salisbury Plain isn't dead-flat.
       const pos = groundGeo.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const z = pos.getZ(i);
-        const r = Math.sqrt(x * x + z * z);
-        // Flatten near the monument so the stones sit on level ground.
-        const flat = THREE.MathUtils.smoothstep(r, 30, 80);
-        const h =
-          (Math.sin(x * 0.012) + Math.cos(z * 0.009) * 0.7 + Math.sin(x * 0.04 + z * 0.03) * 0.4)
-          * 1.6
-          * flat;
-        pos.setY(i, h);
+        pos.setY(i, terrainHeight(x, z));
       }
       pos.needsUpdate = true;
       groundGeo.computeVertexNormals();
@@ -314,9 +326,11 @@ const Stonehenge: React.FC<StonehengeProps> = ({
 
     const groundMaterial = new THREE.ShaderMaterial({
       uniforms: {
-        uGrassA: { value: new THREE.Color(0x5a7a3a) },
-        uGrassB: { value: new THREE.Color(0x3a5a26) },
-        uChalk:  { value: new THREE.Color(0xe6dcc4) }, // chalky pale soil patches
+        uGrassA: { value: new THREE.Color(0x6f9140) },
+        uGrassB: { value: new THREE.Color(0x314f24) },
+        uGrassC: { value: new THREE.Color(0xa1b75e) },
+        uChalk:  { value: new THREE.Color(0xd8cfad) }, // chalky pale soil patches
+        uSoil:   { value: new THREE.Color(0x594833) },
         uSunDir: skyUniforms.uSunDir,
         uSunColor: { value: new THREE.Color(0xfff1d8) },
         uAmbient:  { value: new THREE.Color(0x506890) },
@@ -332,19 +346,49 @@ const Stonehenge: React.FC<StonehengeProps> = ({
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uGrassA, uGrassB, uChalk;
+        uniform vec3 uGrassA, uGrassB, uGrassC, uChalk, uSoil;
         uniform vec3 uSunDir, uSunColor, uAmbient;
         varying vec3 vWorld;
         varying vec3 vNormal;
         ${NOISE_GLSL}
         void main() {
-          float patchy = fbm(vWorld.xz * 0.06);
-          vec3 col = mix(uGrassA, uGrassB, patchy * 0.85 + 0.1);
-          // Pale chalk patches where the grass is thin.
-          float chalkN = fbm(vWorld.xz * 0.18);
-          col = mix(col, uChalk, smoothstep(0.62, 0.78, chalkN) * 0.35);
+          vec2 xz = vWorld.xz;
+          float r = length(xz);
+          float patchy = fbm(xz * 0.055);
+          float broad = fbm(xz * 0.012 + vec2(7.0, 3.0));
+          vec3 col = mix(uGrassA, uGrassB, patchy * 0.82 + 0.08);
+          col = mix(col, uGrassC, smoothstep(0.18, 0.72, broad) * 0.28);
+
+          // Fine anisotropic grass streaks so the field reads as turf instead
+          // of a smooth green plane.
+          float bladeA = sin(xz.x * 8.0 + fbm(xz * 0.18) * 5.0);
+          float bladeB = sin((xz.x * 0.45 + xz.y) * 11.0 + broad * 4.0);
+          float blade = smoothstep(0.45, 1.0, bladeA * 0.5 + bladeB * 0.5);
+          col = mix(col, col * vec3(0.78, 0.90, 0.68), blade * 0.20);
+
+          // Trampled chalk and soil around the restored monument, plus the
+          // solstice avenue toward the Heel Stone. These marks give the scale
+          // and layout something visible to sit in.
+          vec2 sunrise = normalize(vec2(1.0, 1.0));
+          float along = dot(xz, sunrise);
+          float side = abs(xz.x * sunrise.y - xz.y * sunrise.x);
+          float avenue = smoothstep(3.3, 0.6, side) * smoothstep(5.0, 15.0, along) * smoothstep(42.0, 31.0, along);
+          float outerRing = 1.0 - smoothstep(0.35, 2.4, abs(r - 18.6));
+          float innerRing = 1.0 - smoothstep(0.25, 1.6, abs(r - 11.6));
+          float centerWear = smoothstep(15.5, 4.0, r);
+          float chalkN = fbm(xz * 0.16 + vec2(2.0, 9.0));
+          float chalk = max(max(outerRing * 0.55, innerRing * 0.36), avenue * 0.62);
+          chalk += smoothstep(0.62, 0.80, chalkN) * 0.18;
+          col = mix(col, uSoil, centerWear * 0.22);
+          col = mix(col, uChalk, clamp(chalk, 0.0, 0.72));
+
+          // Subtle contact darkening under the main stones.
+          float contact = max(outerRing * 0.18, innerRing * 0.14) + centerWear * 0.08;
+          col *= 1.0 - contact;
+
           float lit = max(dot(vNormal, normalize(uSunDir)), 0.0);
-          col = col * (uAmbient * 0.45 + uSunColor * (lit * 0.7 + 0.4));
+          float hemi = 0.52 + 0.48 * clamp(vNormal.y, 0.0, 1.0);
+          col = col * (uAmbient * 0.50 + uSunColor * (lit * 0.72 + 0.34) * hemi);
           gl_FragColor = vec4(col, 1.0);
         }
       `,
@@ -352,6 +396,10 @@ const Stonehenge: React.FC<StonehengeProps> = ({
     const ground = new THREE.Mesh(groundGeo, groundMaterial);
     ground.receiveShadow = true;
     scene.add(ground);
+
+    // Foreground grass is built AFTER the stones — see "Foreground grass —
+    // FluffyGrass-style bezier blades" further down. Ground material runs
+    // first because grass uniform colors don't depend on it.
 
     // ─── Distant rolling hills ─────────────────────────────────────────────
     const hillSegs = 256;
@@ -627,6 +675,224 @@ const Stonehenge: React.FC<StonehengeProps> = ({
       stoneMats.push(heel.material as THREE.ShaderMaterial);
     }
 
+    // ─── Foreground grass — FluffyGrass-style bezier blades ────────────────
+    // Real instanced bezier blades with bend / wind / per-instance variation,
+    // placed densely around the monument and rejection-sampled against
+    // stone footprints so blades don't grow up through sarsens.
+    //
+    // Stone exclusions are computed analytically from the same parametric
+    // formulas that placed the stones above. Each entry is (x, z, radius).
+    const stoneExclusions: Array<{ x: number; z: number; r: number }> = [];
+
+    for (let i = 0; i < SARSEN_COUNT; i++) {
+      const theta = (i / SARSEN_COUNT) * Math.PI * 2;
+      stoneExclusions.push({
+        x: Math.cos(theta) * SARSEN_RING_R,
+        z: Math.sin(theta) * SARSEN_RING_R,
+        r: 1.6,
+      });
+    }
+    for (const t of TRILITHON_DATA) {
+      const cx = Math.cos(t.angle) * t.radius;
+      const cz = Math.sin(t.angle) * t.radius;
+      const tx = -Math.sin(t.angle);
+      const tz =  Math.cos(t.angle);
+      const halfSep = (t.width + t.gap) / 2;
+      for (const sign of [-1, 1]) {
+        stoneExclusions.push({
+          x: cx + tx * halfSep * sign,
+          z: cz + tz * halfSep * sign,
+          r: 1.8,
+        });
+      }
+    }
+    for (let i = 0; i < BLUESTONE_COUNT; i++) {
+      const theta = (i / BLUESTONE_COUNT) * Math.PI * 2;
+      stoneExclusions.push({
+        x: Math.cos(theta) * BLUESTONE_RING_R,
+        z: Math.sin(theta) * BLUESTONE_RING_R,
+        r: 0.7,
+      });
+    }
+    for (let i = 0; i < INNER_BLUE_COUNT; i++) {
+      const tt = i / (INNER_BLUE_COUNT - 1);
+      const angle = -Math.PI * 0.78 + tt * (Math.PI * 1.56);
+      const r = 4.5 + Math.sin(tt * Math.PI) * 0.6;
+      stoneExclusions.push({ x: Math.cos(angle) * r, z: Math.sin(angle) * r, r: 0.7 });
+    }
+    stoneExclusions.push({
+      x: Math.cos(Math.PI * 0.25) * 30,
+      z: Math.sin(Math.PI * 0.25) * 30,
+      r: 1.8,
+    });
+
+    const insideStone = (x: number, z: number): boolean => {
+      for (const ex of stoneExclusions) {
+        const dx = x - ex.x;
+        const dz = z - ex.z;
+        if (dx * dx + dz * dz < ex.r * ex.r) return true;
+      }
+      return false;
+    };
+
+    const grassUniforms = {
+      uTime:         { value: 0 },
+      uSunDir:       skyUniforms.uSunDir,
+      uSunColor:     { value: new THREE.Color(0xfff1d8) },
+      uAmbient:      { value: new THREE.Color(0x506890) },
+      uBaseColor:    { value: new THREE.Color(0x223818) },
+      uTipColor:     { value: new THREE.Color(0x9bb95a) },
+      uTipColor2:    { value: new THREE.Color(0xc2cf7a) },
+      uWindStrength: { value: 0.30 },
+    };
+
+    const grassMaterial = new THREE.ShaderMaterial({
+      uniforms: grassUniforms,
+      side: THREE.DoubleSide,
+      vertexShader: /* glsl */ `
+        ${NOISE_GLSL}
+
+        uniform float uTime;
+        uniform float uWindStrength;
+
+        attribute float aRandom;
+        attribute float aBend;
+        attribute float aTwist;
+
+        varying vec2 vUv;
+        varying float vGust;
+        varying vec3 vNormalW;
+        varying float vRandom;
+
+        void main() {
+          vUv = uv;
+          vRandom = aRandom;
+
+          vec4 ip = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+          vec3 anchor = (modelMatrix * ip).xyz;
+
+          // Large-scale gust band sweeping diagonally across the field.
+          vec2 gustUV = anchor.xz * 0.05 + vec2(uTime * 0.18, uTime * 0.10);
+          float gustRaw = vnoise(gustUV) * 0.5 + 0.5;
+          float gust = pow(gustRaw, 1.6);
+          vGust = gust;
+
+          float flutter = vnoise(anchor.xz * 0.6 + vec2(uTime * 1.0, aRandom * 13.0));
+
+          vec3 p = position;
+          float t = clamp(uv.y, 0.0, 1.0);
+          float curve = t * t;
+          float windAmp = (gust * 1.0 + 0.2) * uWindStrength + flutter * 0.07;
+          float bendAmt = aBend + windAmp;
+
+          p.x += curve * bendAmt;
+          p.y -= curve * bendAmt * 0.25;
+
+          float c = cos(aTwist);
+          float s = sin(aTwist);
+          vec3 rotated = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+
+          vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
+
+          vec3 nLocal = normalize(vec3(-bendAmt * (1.0 - t) * 2.0, 0.5, 1.0));
+          vec3 nRot   = vec3(c * nLocal.x - s * nLocal.z, nLocal.y, s * nLocal.x + c * nLocal.z);
+          vNormalW    = normalize((modelMatrix * vec4(nRot, 0.0)).xyz);
+
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uBaseColor;
+        uniform vec3 uTipColor;
+        uniform vec3 uTipColor2;
+        uniform vec3 uSunDir;
+        uniform vec3 uSunColor;
+        uniform vec3 uAmbient;
+
+        varying vec2 vUv;
+        varying float vGust;
+        varying vec3 vNormalW;
+        varying float vRandom;
+
+        void main() {
+          float halfW = abs(vUv.x - 0.5);
+          float taper = 1.0 - vUv.y * 0.85;
+          if (halfW > taper * 0.5) discard;
+
+          float ao = pow(vUv.y, 1.4);
+          vec3 tipMix = mix(uTipColor, uTipColor2, vRandom);
+          vec3 col = mix(uBaseColor, tipMix, ao);
+
+          col += (vGust - 0.45) * 0.28 * vec3(0.9, 1.05, 0.7);
+
+          float sunDot = max(dot(vNormalW, normalize(uSunDir)), 0.0);
+          float backLit = pow(1.0 - sunDot, 2.0) * smoothstep(0.0, 0.3, uSunDir.y);
+          col += backLit * vec3(0.30, 0.40, 0.20) * ao;
+
+          float wrap = sunDot * 0.5 + 0.5;
+          col = col * (uAmbient * 0.4 + uSunColor * wrap);
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    const bladeBase = new THREE.PlaneGeometry(0.07, 0.55, 1, 6);
+    bladeBase.translate(0, 0.275, 0);
+
+    const phoneGrass = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+    const grassChunkSize  = 8;
+    const grassChunkCount = phoneGrass ? 8 : 14;
+    const grassDensity    = phoneGrass ? 110 : 240;
+    const planeAngles     = [0, Math.PI / 3, (2 * Math.PI) / 3];
+    const grassHalfCount  = grassChunkCount / 2;
+    const grassMeshes: THREE.InstancedMesh[] = [];
+
+    const dummyG = new THREE.Object3D();
+    for (let cx = 0; cx < grassChunkCount; cx++) {
+      for (let cz = 0; cz < grassChunkCount; cz++) {
+        const baseX = (cx - grassHalfCount) * grassChunkSize;
+        const baseZ = (cz - grassHalfCount) * grassChunkSize;
+
+        for (const baseAngle of planeAngles) {
+          const geo = bladeBase.clone();
+          const aRandomArr = new Float32Array(grassDensity);
+          const aBendArr   = new Float32Array(grassDensity);
+          const aTwistArr  = new Float32Array(grassDensity);
+          const inst = new THREE.InstancedMesh(geo, grassMaterial, grassDensity);
+          inst.castShadow = false;
+          inst.receiveShadow = false;
+          inst.frustumCulled = false;
+
+          for (let i = 0; i < grassDensity; i++) {
+            let x = 0, z = 0, ok = false;
+            for (let tries = 0; tries < 6; tries++) {
+              const tx = baseX + Math.random() * grassChunkSize;
+              const tz = baseZ + Math.random() * grassChunkSize;
+              if (!insideStone(tx, tz)) { x = tx; z = tz; ok = true; break; }
+            }
+            const sH = ok ? 0.55 + Math.random() * 0.85 : 0;
+            const sW = ok ? 0.85 + Math.random() * 0.5  : 0;
+            const y = ok ? terrainHeight(x, z) : 0;
+            dummyG.position.set(x, y, z);
+            dummyG.rotation.set(0, 0, 0);
+            dummyG.scale.set(sW, sH, 1);
+            dummyG.updateMatrix();
+            inst.setMatrixAt(i, dummyG.matrix);
+            aRandomArr[i] = Math.random();
+            aBendArr[i]   = (Math.random() - 0.5) * 0.10;
+            aTwistArr[i]  = baseAngle + (Math.random() - 0.5) * 0.5;
+          }
+          inst.instanceMatrix.needsUpdate = true;
+          geo.setAttribute('aRandom', new THREE.InstancedBufferAttribute(aRandomArr, 1));
+          geo.setAttribute('aBend',   new THREE.InstancedBufferAttribute(aBendArr, 1));
+          geo.setAttribute('aTwist',  new THREE.InstancedBufferAttribute(aTwistArr, 1));
+          scene.add(inst);
+          grassMeshes.push(inst);
+        }
+      }
+    }
+
     // ─── Ravens (tiny additive points wheeling at altitude) ────────────────
     let ravenPoints: THREE.Points | null = null;
     if (ravens) {
@@ -747,6 +1013,14 @@ const Stonehenge: React.FC<StonehengeProps> = ({
         0.30 + 0.18 * dayW,
       );
 
+      // Grass blades follow the same lighting as the ground.
+      grassUniforms.uSunColor.value.copy(sun.color).multiplyScalar(0.7 + dayW * 0.6);
+      grassUniforms.uAmbient.value.set(
+        0.15 + 0.10 * dayW,
+        0.20 + 0.18 * dayW,
+        0.30 + 0.18 * dayW,
+      );
+
       // Stones share lighting with the ground.
       for (const m of stoneMats) {
         m.uniforms.uSunColor.value.copy(sun.color).multiplyScalar(0.7 + dayW * 0.6);
@@ -778,6 +1052,8 @@ const Stonehenge: React.FC<StonehengeProps> = ({
         ? (elapsed / dayLengthSeconds) % 1
         : fixedTimeOfDay;
       updateTimeOfDay(tod);
+
+      grassUniforms.uTime.value = elapsed;
 
       if (ravenPoints) {
         const rmat = ravenPoints.material as THREE.ShaderMaterial;
@@ -823,6 +1099,9 @@ const Stonehenge: React.FC<StonehengeProps> = ({
       hillMaterial.dispose();
       sky.geometry.dispose();
       skyMaterial.dispose();
+      bladeBase.dispose();
+      grassMaterial.dispose();
+      for (const m of grassMeshes) m.geometry.dispose();
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh) {
           obj.geometry.dispose();
