@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import GAChatPanel from './components/GAChatPanel';
@@ -31,6 +31,7 @@ import ImmersiveMusicalWorldTest from './pages/ImmersiveMusicalWorldTest';
 import FluffyGrassTest from './pages/FluffyGrassTest';
 import OceanTest from './pages/OceanTest';
 import SandDunesTest from './pages/SandDunesTest';
+import CheeseAvalancheTest from './pages/CheeseAvalancheTest';
 import { GraphitiDemo } from './components/GraphitiDemo/GraphitiDemo';
 import Guitar3DTest from './pages/Guitar3DTest';
 import HandAnimationTest from './pages/HandAnimationTest';
@@ -45,6 +46,8 @@ import MusicHierarchyDemo from './pages/MusicHierarchyDemo';
 import EcosystemRoadmapTest from './pages/EcosystemRoadmapTest';
 import PrimeRadiantTest from './pages/PrimeRadiantTest';
 import HarmonicNebulaDemo from './pages/HarmonicNebulaDemo';
+import HandPoseVoicingWasmTest from './pages/HandPoseVoicingWasmTest';
+import IxHandVoicingTest from './pages/IxHandVoicingTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -421,6 +424,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/fluffy-grass" element={<App><FluffyGrassTest /></App>} />
         <Route path="/test/ocean" element={<App><OceanTest /></App>} />
         <Route path="/test/sand-dunes" element={<App><SandDunesTest /></App>} />
+        <Route path="/test/cheese-avalanche" element={<App><CheeseAvalancheTest /></App>} />
         <Route path="/test/guitar-3d" element={<App><Guitar3DTest /></App>} />
         <Route path="/test/hand-animation" element={<App><HandAnimationTest /></App>} />
         <Route path="/test/models-3d" element={<App><Models3DTest /></App>} />
@@ -433,6 +437,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/ecosystem-roadmap" element={<App><EcosystemRoadmapTest /></App>} />
         <Route path="/test/prime-radiant" element={<App><PrimeRadiantTest /></App>} />
         <Route path="/test/harmonic-nebula" element={<App><HarmonicNebulaDemo /></App>} />
+        <Route path="/test/hand-pose-voicing-wasm" element={<App><HandPoseVoicingWasmTest /></App>} />
+        <Route path="/test/ix-hand-voicing" element={<App><IxHandVoicingTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
@@ -451,3 +457,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+

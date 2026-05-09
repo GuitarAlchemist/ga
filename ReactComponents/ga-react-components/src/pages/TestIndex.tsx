@@ -200,6 +200,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'cheese-avalanche',
+    title: 'Cheese Avalanche',
+    description: 'Apéricubes and Babybels tumble down a procedural mountain — heightfield physics with rolling friction',
+    technology: 'Three.js + custom physics',
+    path: '/test/cheese-avalanche',
+    features: ['Heightfield Collision', 'Rolling Friction', 'InstancedMesh', 'Day/Night Cycle', 'Bloom', 'Chromecast'],
+    status: 'complete',
+  },
+  {
     id: 'guitar-3d',
     title: 'Guitar 3D Viewer',
     description: 'Interactive 3D guitar model viewer with GLTF/GLB support, PBR materials, and IBL',
@@ -315,6 +324,15 @@ const testPages: TestPageInfo[] = [
     path: '/test/prime-radiant',
     features: ['Force-Directed Graph', '3D Node Types', 'Particle Streams', 'Health Overlay', 'Search', 'Detail Panel'],
     status: 'complete',
+  },
+  {
+    id: 'ix-hand-voicing',
+    title: 'IX Hand Voicing Lab',
+    description: 'Webcam hand-pose landmarks become fretboard contacts, then IX-style ranking estimates playable chord voicings',
+    technology: 'MediaPipe + Rust WASM + IX scoring',
+    path: '/test/ix-hand-voicing',
+    features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
+    status: 'partial',
   },
 ];
 
@@ -500,3 +518,4 @@ export const TestIndex: React.FC = () => {
 };
 
 export default TestIndex;
+

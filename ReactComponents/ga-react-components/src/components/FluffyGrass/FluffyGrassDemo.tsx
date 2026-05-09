@@ -18,6 +18,7 @@ import {
   Divider,
 } from '@mui/material';
 import { FluffyGrass } from './FluffyGrass';
+import CastButton from '../Common/CastButton';
 
 export const FluffyGrassDemo: React.FC = () => {
   const [grassDensity, setGrassDensity] = useState<number>(800);
@@ -52,6 +53,7 @@ export const FluffyGrassDemo: React.FC = () => {
       <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
         {/* Main Visualization */}
         <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
+          <CastButton />
           <FluffyGrass
             key={sceneKey}
             width={window.innerWidth - 320}

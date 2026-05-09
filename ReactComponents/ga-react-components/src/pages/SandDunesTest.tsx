@@ -18,6 +18,7 @@ import {
   Divider,
 } from '@mui/material';
 import SandDunes from '../components/SandDunes/SandDunes';
+import CastButton from '../components/Common/CastButton';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 const labelForTod = (t: number): string => {
@@ -60,6 +61,7 @@ const SandDunesTest: React.FC = () => {
       <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
         <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
           <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
+            <CastButton />
             <SandDunes
               key={sceneKey}
               fieldSize={fieldSize}
