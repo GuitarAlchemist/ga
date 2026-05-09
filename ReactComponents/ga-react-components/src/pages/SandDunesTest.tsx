@@ -61,7 +61,6 @@ const SandDunesTest: React.FC = () => {
       <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
         <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
           <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
-            <CastButton />
             <SandDunes
               key={sceneKey}
               fieldSize={fieldSize}
@@ -73,6 +72,8 @@ const SandDunesTest: React.FC = () => {
               sandParticles={sandParticles}
               mirage={mirage}
             />
+            {/* Render after the canvas so paint order keeps the button on top. */}
+            <CastButton />
           </Box>
 
           <Paper

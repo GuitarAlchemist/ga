@@ -338,12 +338,100 @@ const CheeseAvalanche: React.FC<CheeseAvalancheProps> = ({
     cubeMesh.instanceColor = new THREE.InstancedBufferAttribute(cubeColors, 3);
     scene.add(cubeMesh);
 
-    // Wheel material — red wax with a slightly darker rim via shader tweak.
-    const wheelGeo = new THREE.CylinderGeometry(wheelRadius, wheelRadius, wheelHeight, 28);
-    const wheelMat = new THREE.MeshStandardMaterial({
-      color: 0xc62828,
-      metalness: 0.10,
-      roughness: 0.55,
+    // Babybel: real ones are a bulged wax wheel — flat top/bottom faces but
+    // a curved equator that bulges outward by ~15% past the cap radius.
+    // Built with LatheGeometry from a small profile curve so the silhouette
+    // reads as cheese-wax-wheel rather than industrial cylinder.
+    const wheelProfile: THREE.Vector2[] = [];
+    const halfH = wheelHeight / 2;
+    const capR  = wheelRadius * 0.78;          // smaller flat cap radius
+    const eqR   = wheelRadius;                 // bulged equator radius
+    // 11 points: bottom-center, bottom-cap-edge, gentle outward arc up to
+    // equator, mirrored arc back to top-cap-edge, top-center.
+    wheelProfile.push(new THREE.Vector2(0,    -halfH));
+    wheelProfile.push(new THREE.Vector2(capR, -halfH));
+    for (let s = 1; s <= 4; s++) {
+      const t = s / 5;             // 0.2 .. 0.8
+      const y = -halfH + t * wheelHeight;
+      // Quadratic bulge: r = capR + (eqR-capR)*(1 - (1-2t)²)
+      const u = 1 - Math.pow(1 - 2 * t, 2);
+      const r = capR + (eqR - capR) * u;
+      wheelProfile.push(new THREE.Vector2(r, y));
+    }
+    wheelProfile.push(new THREE.Vector2(capR, +halfH));
+    wheelProfile.push(new THREE.Vector2(0,    +halfH));
+    const wheelGeo = new THREE.LatheGeometry(wheelProfile, 36);
+
+    // Custom shader: glossy red wax with a thin lighter pull-tab band at
+    // the equator (where the wax separates when you peel it open) and a
+    // subtly darker top-cap with embossed-mark hint.
+    const wheelMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uSunDir:   skyUniforms.uSunDir,
+        uSunColor: { value: new THREE.Color(0xfff1d8) },
+        uAmbient:  { value: new THREE.Color(0x506890) },
+        uEqY:      { value: 0.0 }, // equator y (local)
+        uHalfH:    { value: halfH },
+      },
+      vertexShader: /* glsl */ `
+        varying vec3 vWorld;
+        varying vec3 vNormal;
+        varying vec3 vLocal;
+        void main() {
+          vec4 wp = modelMatrix * instanceMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
+          vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
+          vLocal = position;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3  uSunDir;
+        uniform vec3  uSunColor;
+        uniform vec3  uAmbient;
+        uniform float uEqY;
+        uniform float uHalfH;
+        varying vec3 vWorld;
+        varying vec3 vNormal;
+        varying vec3 vLocal;
+        void main() {
+          // Distinguish the three Babybel zones from local position:
+          //   - equator pull-tab band (thin, lighter red, nearly white edge)
+          //   - top + bottom flat caps (slightly darker red w/ embossed mark)
+          //   - main wax body (rich Babybel red)
+          float yAbs = abs(vLocal.y - uEqY);
+          float tabBand = smoothstep(0.05, 0.0, yAbs - 0.0);   // thin equator slice
+          float capness = smoothstep(uHalfH * 0.9, uHalfH, abs(vLocal.y));
+
+          vec3 wax  = vec3(0.78, 0.10, 0.10);
+          vec3 tab  = vec3(0.95, 0.84, 0.78);                  // off-white pull tab
+          vec3 cap  = vec3(0.62, 0.07, 0.07);                  // darker top/bottom
+
+          vec3 col = mix(wax, cap, capness);
+          col = mix(col, tab, tabBand);
+
+          // Subtle "BABYBEL" mark on the top cap — embossed concentric ring.
+          // Only on the upward-facing cap.
+          if (vLocal.y > uHalfH * 0.92) {
+            float r = length(vLocal.xz);
+            float mark = smoothstep(0.18, 0.22, r) * smoothstep(0.30, 0.26, r);
+            col = mix(col, cap * 0.7, mark * 0.6);
+          }
+
+          // Lighting: Lambert + tight specular for the wax sheen.
+          vec3 N = normalize(vNormal);
+          vec3 L = normalize(uSunDir);
+          float lit = max(dot(N, L), 0.0);
+          vec3 viewV = normalize(cameraPosition - vWorld);
+          vec3 reflV = reflect(-L, N);
+          float spec = pow(max(dot(reflV, viewV), 0.0), 48.0);
+
+          col = col * (uAmbient * 0.5 + uSunColor * (lit * 0.75 + 0.25));
+          col += uSunColor * spec * 0.45;
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
     });
     const wheelMesh = new THREE.InstancedMesh(wheelGeo, wheelMat, wheelCount);
     wheelMesh.castShadow = true;
@@ -450,6 +538,16 @@ const CheeseAvalanche: React.FC<CheeseAvalancheProps> = ({
         0.20 + 0.18 * dayW,
         0.30 + 0.18 * dayW,
       );
+
+      // Babybel wax tracks the same lighting so it doesn't look pasted in
+      // from a different scene at sunset / night.
+      wheelMat.uniforms.uSunColor.value.copy(sun.color).multiplyScalar(0.7 + dayW * 0.6);
+      wheelMat.uniforms.uAmbient.value.set(
+        0.18 + 0.12 * dayW,
+        0.22 + 0.18 * dayW,
+        0.32 + 0.18 * dayW,
+      );
+
       skyUniforms.uTimeOfDay.value = tod;
     };
 

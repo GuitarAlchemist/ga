@@ -53,7 +53,6 @@ export const FluffyGrassDemo: React.FC = () => {
       <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
         {/* Main Visualization */}
         <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
-          <CastButton />
           <FluffyGrass
             key={sceneKey}
             width={window.innerWidth - 320}
@@ -71,6 +70,10 @@ export const FluffyGrassDemo: React.FC = () => {
             fireflies={fireflies}
             flowers={flowers}
           />
+          {/* Cast button rendered AFTER the FluffyGrass component so its
+              DOM order (and therefore paint order) puts it on top of the
+              WebGL canvas. */}
+          <CastButton />
         </Box>
 
         {/* Controls Panel */}
