@@ -1,234 +1,154 @@
-import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
-import { SandDunes } from '../components/SandDunes';
+/**
+ * Sand Dunes test page — cinematic re-implementation.
+ *
+ * Mirrors FluffyGrassDemo's layout: viewport on the left, vertical controls
+ * panel on the right. Surfaces the day-cycle / wind / particle / mirage
+ * uniforms exposed by the new SandDunes component.
+ */
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Stack,
+  Slider,
+  Switch,
+  FormControlLabel,
+  Divider,
+} from '@mui/material';
+import SandDunes from '../components/SandDunes/SandDunes';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
-/**
- * Sand Dunes Test Page
- * 
- * Demonstrates advanced procedural sand dune terrain generation with:
- * - Ridged multifractal noise for realistic dune shapes
- * - Micro ripples perpendicular to wind direction
- * - Parallax Occlusion Mapping (POM) for depth
- * - Slope-based shading and color variation
- * - Physical sky (Hosek-Wilkie atmospheric model)
- * - Self-shadowing in ripple troughs
- * - Interactive camera controls
- */
+const labelForTod = (t: number): string => {
+  if (t < 0.05 || t > 0.95) return 'Sunrise';
+  if (t < 0.20) return 'Morning';
+  if (t < 0.30) return 'Noon';
+  if (t < 0.45) return 'Afternoon';
+  if (t < 0.55) return 'Sunset';
+  if (t < 0.70) return 'Dusk';
+  if (t < 0.85) return 'Night';
+  return 'Pre-dawn';
+};
+
 const SandDunesTest: React.FC = () => {
+  const [autoCycle, setAutoCycle] = useState<boolean>(true);
+  const [dayLengthSeconds, setDayLengthSeconds] = useState<number>(90);
+  const [fixedTimeOfDay, setFixedTimeOfDay] = useState<number>(0.20);
+
+  const [windDeg, setWindDeg] = useState<number>(23);
+  const [fieldSize, setFieldSize] = useState<number>(600);
+  const [fieldSegments, setFieldSegments] = useState<number>(320);
+
+  const [autoRotate, setAutoRotate] = useState<boolean>(true);
+  const [sandParticles, setSandParticles] = useState<boolean>(true);
+  const [mirage, setMirage] = useState<boolean>(true);
+
+  const sceneKey = `${fieldSize}-${fieldSegments}-${windDeg}-${autoCycle ? 'cycle' : 'fixed'}-${dayLengthSeconds}-${fixedTimeOfDay.toFixed(2)}-${autoRotate}-${sandParticles}-${mirage}`;
+
+  const sliderSx = {
+    color: '#ffd58a',
+    '& .MuiSlider-thumb': { backgroundColor: '#ffd58a' },
+    '& .MuiSlider-track': { backgroundColor: '#ffd58a' },
+    '& .MuiSlider-rail':  { backgroundColor: '#ffd58a', opacity: 0.3 },
+  };
+  const labelSx = { color: '#f4ddc0', fontFamily: 'monospace', mb: 1 };
+  const headSx  = { color: '#ffd58a', fontFamily: 'monospace', mb: 1, mt: 2 };
+
   return (
     <DemoErrorBoundary demoName="Sand Dunes">
-    <Box sx={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#1a1a1a' }}>
-      {/* Header */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 2,
-          bgcolor: 'rgba(0, 0, 0, 0.8)',
-          color: '#00ffff',
-          borderRadius: 0,
-          borderBottom: '2px solid #00ffff',
-        }}
-      >
-        <Typography variant="h4" gutterBottom sx={{ fontFamily: 'monospace', textShadow: '0 0 10px #00ffff' }}>
-          🏜️ PROCEDURAL SAND DUNES TERRAIN
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#ffffff', mb: 1 }}>
-          Advanced desert landscape with procedural noise, POM, and physical sky
-        </Typography>
-        
-        {/* Features */}
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 2 }}>
-          <Box>
-            <Typography variant="caption" sx={{ color: '#00ff00', fontWeight: 'bold' }}>
-              🌊 RIDGED MULTIFRACTAL
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ color: '#cccccc' }}>
-              Sharp dune crests with realistic slip faces
-            </Typography>
+      <Box sx={{ width: '100%', height: 'calc(100vh - 48px)', backgroundColor: '#000', overflow: 'hidden' }}>
+        <Stack direction="row" sx={{ height: '100%', width: '100%' }}>
+          <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
+            <SandDunes
+              key={sceneKey}
+              fieldSize={fieldSize}
+              fieldSegments={fieldSegments}
+              windDirRad={(windDeg * Math.PI) / 180}
+              dayLengthSeconds={autoCycle ? dayLengthSeconds : 0}
+              fixedTimeOfDay={fixedTimeOfDay}
+              autoRotate={autoRotate}
+              sandParticles={sandParticles}
+              mirage={mirage}
+            />
           </Box>
-          
-          <Box>
-            <Typography variant="caption" sx={{ color: '#ffaa00', fontWeight: 'bold' }}>
-              〰️ MICRO RIPPLES + POM
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ color: '#cccccc' }}>
-              Parallax occlusion mapping for depth at close range
-            </Typography>
-          </Box>
-          
-          <Box>
-            <Typography variant="caption" sx={{ color: '#ff00ff', fontWeight: 'bold' }}>
-              🎨 ADVANCED SHADING
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ color: '#cccccc' }}>
-              Self-shadowing, sparkle, sheen effects
-            </Typography>
-          </Box>
-          
-          <Box>
-            <Typography variant="caption" sx={{ color: '#00aaff', fontWeight: 'bold' }}>
-              ☀️ PHYSICAL SKY
-            </Typography>
-            <Typography variant="caption" display="block" sx={{ color: '#cccccc' }}>
-              Hosek-Wilkie atmospheric scattering model
-            </Typography>
-          </Box>
-        </Box>
 
-        {/* Technical Details */}
-        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(0, 255, 255, 0.1)', borderRadius: 1, border: '1px solid #00ffff' }}>
-          <Typography variant="caption" sx={{ color: '#00ffff', fontWeight: 'bold', display: 'block', mb: 1 }}>
-            📐 TECHNICAL SPECIFICATIONS
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 1 }}>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Resolution:</strong> 512×512 vertices
+          <Paper
+            sx={{
+              width: 320,
+              padding: 3,
+              backgroundColor: 'rgba(20, 12, 6, 0.94)',
+              border: '1px solid #6e4c1f',
+              overflowY: 'auto',
+            }}
+          >
+            <Typography variant="h5" sx={{ color: '#ffd58a', fontFamily: 'monospace', mb: 1 }}>
+              🏜️ SAND DUNES
             </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Terrain Size:</strong> 3000×3000 meters
+            <Typography variant="caption" sx={{ color: '#c8a47a', fontFamily: 'monospace', display: 'block', mb: 2 }}>
+              cinematic v2 — ridged dunes · day/night · mirage · sand drift
             </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Height Range:</strong> 0-38 meters
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Noise Octaves:</strong> 5 (ridged) + 4 (soft)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>POM Steps:</strong> 18 (near camera)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>POM Range:</strong> 0-180 meters
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Ripple Scale:</strong> 0.22 (spatial frequency)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Wind Direction:</strong> (1.0, 0.25) normalized
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Sky Model:</strong> Hosek-Wilkie (Three.js Sky)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Tone Mapping:</strong> ACES Filmic
-            </Typography>
-          </Box>
-        </Box>
 
-        {/* Controls */}
-        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: 1 }}>
-          <Typography variant="caption" sx={{ color: '#ffff00', fontWeight: 'bold', display: 'block', mb: 1 }}>
-            🎮 CONTROLS
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              <strong>Left Mouse:</strong> Rotate camera
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              <strong>Right Mouse:</strong> Pan view
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              <strong>Scroll:</strong> Zoom in/out (10-2000m)
-            </Typography>
-          </Box>
-        </Box>
+            <Typography variant="subtitle2" sx={headSx}>ATMOSPHERE</Typography>
 
-        {/* Algorithm Description */}
-        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(0, 255, 0, 0.05)', borderRadius: 1, border: '1px solid #00ff00' }}>
-          <Typography variant="caption" sx={{ color: '#00ff00', fontWeight: 'bold', display: 'block', mb: 1 }}>
-            🧮 ADVANCED PROCEDURAL GENERATION
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>1. Macro Dunes:</strong> Ridged multifractal (5 octaves) + soft fBm (4 octaves) → sharp crests
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>2. Slip Faces:</strong> Sharpening function biases crests upward → realistic dune profiles
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>3. Micro Ripples:</strong> Saw wave + noise perpendicular to wind → ripple patterns
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>4. Parallax Occlusion:</strong> 18-step raymarch for depth when near camera (0-180m)
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>5. Self-Shadowing:</strong> Darken ripple troughs based on view angle → depth perception
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>6. Slope Masking:</strong> Fade ripples on steep slopes (&gt;0.7) → natural appearance
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block', mb: 0.5 }}>
-            <strong>7. Shading:</strong> Height-based tint + slope darkening + sparkle/sheen
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#cccccc', display: 'block' }}>
-            <strong>8. Physical Sky:</strong> Hosek-Wilkie model with turbidity, Rayleigh, Mie scattering
-          </Typography>
-        </Box>
+            <FormControlLabel
+              control={<Switch checked={autoCycle} onChange={(_, v) => setAutoCycle(v)} />}
+              label={<span style={{ color: '#f4ddc0', fontFamily: 'monospace', fontSize: 13 }}>Day/Night Cycle</span>}
+            />
 
-        {/* Sky Parameters */}
-        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(135, 206, 235, 0.1)', borderRadius: 1, border: '1px solid #87ceeb' }}>
-          <Typography variant="caption" sx={{ color: '#87ceeb', fontWeight: 'bold', display: 'block', mb: 1 }}>
-            ☀️ PHYSICAL SKY PARAMETERS
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 1 }}>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Turbidity:</strong> 2.2 (dust/haze)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Rayleigh:</strong> 2.8 (molecular scattering)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Mie Coefficient:</strong> 0.006 (aerosol density)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Mie Directional G:</strong> 0.8 (forward scatter)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Sun Elevation:</strong> 85° (near zenith)
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#ffffff' }}>
-              • <strong>Sun Azimuth:</strong> 25° (east-northeast)
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
+            {autoCycle ? (
+              <Box sx={{ mb: 2, mt: 1 }}>
+                <Typography variant="body2" sx={labelSx}>Day Length: {dayLengthSeconds}s</Typography>
+                <Slider value={dayLengthSeconds} onChange={(_, v) => setDayLengthSeconds(v as number)} min={20} max={240} step={10} sx={sliderSx} />
+              </Box>
+            ) : (
+              <Box sx={{ mb: 2, mt: 1 }}>
+                <Typography variant="body2" sx={labelSx}>Time of Day: {labelForTod(fixedTimeOfDay)}</Typography>
+                <Slider value={fixedTimeOfDay} onChange={(_, v) => setFixedTimeOfDay(v as number)} min={0} max={0.999} step={0.01} sx={sliderSx} />
+              </Box>
+            )}
 
-      {/* 3D Viewport */}
-      <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <SandDunes />
-        
-        {/* Overlay Info */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            left: 16,
-            bgcolor: 'rgba(0, 0, 0, 0.7)',
-            color: '#00ffff',
-            p: 1.5,
-            borderRadius: 1,
-            border: '1px solid #00ffff',
-            fontFamily: 'monospace',
-            fontSize: '0.75rem',
-          }}
-        >
-          <Typography variant="caption" sx={{ color: '#00ffff', display: 'block' }}>
-            🌍 CAMERA: Interactive (Orbit Controls)
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#ffffff', display: 'block' }}>
-            ☀️ SUN: 85° elevation, 25° azimuth
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#ffffff', display: 'block' }}>
-            🌫️ FOG: Exponential (density 0.00032)
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#ffffff', display: 'block' }}>
-            🎨 TONE MAPPING: ACES Filmic (exposure 1.35)
-          </Typography>
-        </Box>
+            <FormControlLabel
+              control={<Switch checked={autoRotate} onChange={(_, v) => setAutoRotate(v)} />}
+              label={<span style={{ color: '#f4ddc0', fontFamily: 'monospace', fontSize: 13 }}>Auto-rotate camera</span>}
+            />
+            <FormControlLabel
+              control={<Switch checked={sandParticles} onChange={(_, v) => setSandParticles(v)} />}
+              label={<span style={{ color: '#f4ddc0', fontFamily: 'monospace', fontSize: 13 }}>Airborne sand</span>}
+            />
+            <FormControlLabel
+              control={<Switch checked={mirage} onChange={(_, v) => setMirage(v)} />}
+              label={<span style={{ color: '#f4ddc0', fontFamily: 'monospace', fontSize: 13 }}>Heat shimmer (mirage)</span>}
+            />
+
+            <Divider sx={{ my: 2, borderColor: '#6e4c1f' }} />
+
+            <Typography variant="subtitle2" sx={headSx}>WIND</Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={labelSx}>Direction: {windDeg}°</Typography>
+              <Slider value={windDeg} onChange={(_, v) => setWindDeg(v as number)} min={0} max={359} step={1} sx={sliderSx} />
+            </Box>
+
+            <Divider sx={{ my: 2, borderColor: '#6e4c1f' }} />
+
+            <Typography variant="subtitle2" sx={headSx}>FIELD</Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={labelSx}>Field Size: {fieldSize}m</Typography>
+              <Slider value={fieldSize} onChange={(_, v) => setFieldSize(v as number)} min={300} max={1200} step={50} sx={sliderSx} />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={labelSx}>Heightmap Resolution: {fieldSegments}²</Typography>
+              <Slider value={fieldSegments} onChange={(_, v) => setFieldSegments(v as number)} min={128} max={512} step={32} sx={sliderSx} />
+            </Box>
+
+            <Typography variant="caption" sx={{ color: '#c8a47a', fontFamily: 'monospace', display: 'block', mt: 3 }}>
+              Drag to look · scroll to zoom
+            </Typography>
+          </Paper>
+        </Stack>
       </Box>
-    </Box>
     </DemoErrorBoundary>
   );
 };
 
 export default SandDunesTest;
-
