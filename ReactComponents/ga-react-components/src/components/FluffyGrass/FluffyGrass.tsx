@@ -435,8 +435,14 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
         }
       `,
     });
+    // Push the water clearly below the shoreline AND enable polygonOffset so
+    // any near-coplanar terrain triangles at the beach can't z-fight against
+    // the water surface during camera rotation.
+    waterMaterial.polygonOffset = true;
+    waterMaterial.polygonOffsetFactor = 1;
+    waterMaterial.polygonOffsetUnits  = 1;
     const water = new THREE.Mesh(waterGeo, waterMaterial);
-    water.position.y = -0.05;
+    water.position.y = -0.55;
     scene.add(water);
 
     // ─── Distant mountain silhouette ───────────────────────────────────────
@@ -528,17 +534,28 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       uSunDir: skyUniforms.uSunDir,
       uSunColor: { value: new THREE.Color(0xfff1d8) },
       uAmbient: { value: new THREE.Color(0x4f6a8c) },
+      // Golf-ball cursor: uBallPos.y is parked at 1000 when there's no
+      // pointer in the canvas, so blades far below stay unaffected.
+      uBallPos:    { value: new THREE.Vector3(0, 1000, 0) },
+      uBallRadius: { value: 4.0 },
     };
 
     const grassMaterial = new THREE.ShaderMaterial({
       uniforms: grassUniforms,
       side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
+      // transparent: true with depthWrite: false caused blade-blade z-sort
+      // flicker as the camera rotated — three doesn't depth-sort instances
+      // within an InstancedMesh. Since the fragment uses `discard` for the
+      // silhouette and outputs alpha=1, alpha-test rendering is the right
+      // mode here.
+      transparent: false,
+      depthWrite: true,
       vertexShader: /* glsl */ `
         uniform float uTime;
         uniform float uWindSpeed;
         uniform float uWindStrength;
+        uniform vec3  uBallPos;
+        uniform float uBallRadius;
 
         attribute float aRandom;   // per-instance [0,1)
         attribute float aBend;     // per-instance bend amount
@@ -595,6 +612,25 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
 
           // Apply instance transform (translation + scale).
           vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
+
+          // Golf-ball deflection: push the blade radially away from the ball
+          // and crush its tip downward, scaled by the blade-along factor t
+          // (base barely moves, tip moves a lot). Anchor is the blade's base
+          // in world space — distance is computed in xz so the ball doesn't
+          // need to be perfectly grounded.
+          vec3 anchorWorld = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+          vec2 toBall = anchorWorld.xz - uBallPos.xz;
+          float distXZ = length(toBall);
+          if (distXZ < uBallRadius) {
+            float push = 1.0 - distXZ / uBallRadius;
+            push = pow(push, 1.5);
+            vec2 awayDir = toBall / max(distXZ, 0.0001);
+            float bladeT = clamp(t, 0.0, 1.0);
+            // Radial outward push, strongest at tip.
+            worldPos.xz += awayDir * push * 1.6 * bladeT;
+            // Tip drops as the ball squashes the blade.
+            worldPos.y -= push * 0.7 * bladeT;
+          }
 
           // Normal — quick approximation of the bent blade's facing direction.
           vec3 nLocal = normalize(vec3(-bendAmt * (1.0 - t) * 2.0, 0.5, 1.0));
@@ -903,6 +939,110 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       scene.add(fireflyPoints);
     }
 
+    // ─── Golf-ball cursor ──────────────────────────────────────────────────
+    // The OS cursor is hidden over the canvas; a 3D golf ball follows the
+    // pointer along the terrain surface and pushes grass aside via the
+    // grass shader's uBallPos uniform. Re-engaging the OS cursor when the
+    // pointer leaves the canvas avoids a "lost cursor" UX trap.
+    const ballRadius = 1.25;
+    const ballGeo = new THREE.SphereGeometry(ballRadius, 48, 32);
+    const ballMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uSunDir:   skyUniforms.uSunDir,
+        uSunColor: grassUniforms.uSunColor,
+        uAmbient:  grassUniforms.uAmbient,
+      },
+      vertexShader: /* glsl */ `
+        varying vec3 vNormal;
+        varying vec3 vWorld;
+        void main() {
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uSunDir;
+        uniform vec3 uSunColor;
+        uniform vec3 uAmbient;
+        varying vec3 vNormal;
+        varying vec3 vWorld;
+        void main() {
+          // Procedural dimples — repeating circular wells in lat/lon space.
+          // Looks plausibly golf-ball-like without a texture.
+          vec3 n = normalize(vNormal);
+          float lat = asin(clamp(n.y, -1.0, 1.0));
+          float lon = atan(n.z, n.x);
+          vec2 grid = vec2(lon * 8.0, lat * 12.0);
+          vec2 cell = fract(grid) - 0.5;
+          float dimpleR = length(cell);
+          float dimple = smoothstep(0.34, 0.18, dimpleR);
+          // Bend the normal slightly into the dimples so light pools in them.
+          vec3 nBent = normalize(n - 0.35 * dimple * n);
+
+          float lit = max(dot(nBent, normalize(uSunDir)), 0.0);
+          vec3 base = mix(vec3(0.97, 0.97, 0.96), vec3(0.78, 0.80, 0.86), dimple * 0.6);
+          vec3 col = base * (uAmbient * 0.5 + uSunColor * (lit * 0.8 + 0.25));
+
+          // Tight specular highlight.
+          vec3 viewV = normalize(cameraPosition - vWorld);
+          vec3 reflV = reflect(-normalize(uSunDir), nBent);
+          float spec = pow(max(dot(reflV, viewV), 0.0), 64.0);
+          col += vec3(1.0, 0.97, 0.92) * spec * 0.5;
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+    const ball = new THREE.Mesh(ballGeo, ballMaterial);
+    ball.castShadow = true;
+    ball.position.set(0, 1000, 0); // parked off-screen until first pointer
+    scene.add(ball);
+
+    // Soft contact shadow — a faint dark disk pinned to the ball's xz under
+    // it. Helps anchor the ball visually even where the directional sun's
+    // shadow falls oddly relative to the camera angle.
+    const ballShadowMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    });
+    const ballShadow = new THREE.Mesh(
+      new THREE.CircleGeometry(ballRadius * 1.6, 32),
+      ballShadowMat,
+    );
+    ballShadow.rotation.x = -Math.PI / 2;
+    ballShadow.position.set(0, 1000, 0);
+    ballShadow.renderOrder = 1;
+    scene.add(ballShadow);
+
+    // Pointer → world-space hit on the terrain.
+    const mouseNDC   = new THREE.Vector2();
+    const raycaster  = new THREE.Raycaster();
+    const ballTarget = new THREE.Vector3(0, 1000, 0);
+    let pointerInside = false;
+
+    const onPointerMove = (e: PointerEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouseNDC, camera);
+      const hits = raycaster.intersectObject(terrain, false);
+      if (hits.length > 0) {
+        ballTarget.copy(hits[0].point);
+        pointerInside = true;
+      }
+    };
+    const onPointerLeave = () => {
+      pointerInside = false;
+      ballTarget.set(0, 1000, 0); // park ball off-screen
+    };
+    renderer.domElement.style.cursor = 'none';
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerleave', onPointerLeave);
+
     // ─── Post-processing (bloom) ───────────────────────────────────────────
     // Bloom amplifies the sun disc and fireflies into glowing highlights.
     // High threshold (~0.92) so only genuinely bright pixels bloom — keeps
@@ -997,6 +1137,33 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       grassUniforms.uTime.value = elapsed;
       waterMaterial.uniforms.uTime.value = elapsed;
 
+      // Smooth ball follow — exponential approach so quick mouse moves don't
+      // teleport the ball, but it never lags more than a frame or two behind.
+      // Lift slightly above the surface so the ball sits on the grass tips
+      // rather than half-buried.
+      const lift = ballRadius * 0.85;
+      const tx = pointerInside ? ballTarget.x : 0;
+      const ty = pointerInside ? ballTarget.y + lift : 1000;
+      const tz = pointerInside ? ballTarget.z : 0;
+      ball.position.x += (tx - ball.position.x) * 0.30;
+      ball.position.y += (ty - ball.position.y) * 0.30;
+      ball.position.z += (tz - ball.position.z) * 0.30;
+      // Roll the ball as it moves (visual flourish — looks alive).
+      const dx = tx - ball.position.x;
+      const dz = tz - ball.position.z;
+      ball.rotation.x += dz * 0.05;
+      ball.rotation.z -= dx * 0.05;
+
+      grassUniforms.uBallPos.value.copy(ball.position);
+      ballShadow.position.set(
+        ball.position.x,
+        // pin to surface — slight offset above terrain at ball xz.
+        Math.max(ball.position.y - lift, 0.05),
+        ball.position.z,
+      );
+      // Shadow fades as ball lifts away from ground (dragging mouse fast).
+      ballShadow.visible = pointerInside && ball.position.y < 30;
+
       const tod = dayLengthSeconds > 0
         ? (elapsed / dayLengthSeconds) % 1
         : fixedTimeOfDay;
@@ -1036,6 +1203,12 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       mtnMaterial.dispose();
       waterGeo.dispose();
       waterMaterial.dispose();
+      ballGeo.dispose();
+      ballMaterial.dispose();
+      ballShadow.geometry.dispose();
+      ballShadowMat.dispose();
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
+      renderer.domElement.removeEventListener('pointerleave', onPointerLeave);
       composer.dispose();
       if (flowersMesh) {
         flowersMesh.geometry.dispose();
