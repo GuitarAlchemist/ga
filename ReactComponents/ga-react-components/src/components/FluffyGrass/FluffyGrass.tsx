@@ -18,6 +18,10 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { Box } from '@mui/material';
 
 export interface FluffyGrassProps {
@@ -88,8 +92,8 @@ const valueNoise = (x: number, y: number): number => {
   );
 };
 
-// Multi-octave terrain height. Output is roughly in [-3, 3].
-const terrainHeight = (x: number, z: number): number => {
+// Multi-octave terrain height (raw noise, roughly [-3, 3]).
+const baseTerrain = (x: number, z: number): number => {
   let h = 0;
   let amp = 1.6;
   let freq = 0.025;
@@ -100,6 +104,22 @@ const terrainHeight = (x: number, z: number): number => {
   }
   return h;
 };
+
+// Round-island heightmap: a soft dome rises in the middle, dives under water
+// at the rim, with the noise riding on top so the surface still looks
+// organic. islandRadius / waterLevel are picked so a square heightmap of
+// edge `terrainSize` produces a circular island that fills it comfortably.
+const buildTerrainHeight =
+  (terrainSize: number) =>
+  (x: number, z: number): number => {
+    const r = Math.sqrt(x * x + z * z);
+    const islandR = terrainSize * 0.42;     // ~33 with size=80
+    const beachR  = terrainSize * 0.50;     // ~40 — past this is open water
+    // Dome: +rise inside, drops to -waterDepth past beachR.
+    const t = THREE.MathUtils.smoothstep(r, islandR * 0.55, beachR);
+    const dome = THREE.MathUtils.lerp(3.5, -3.0, t);
+    return baseTerrain(x, z) * (1.0 - t * 0.6) + dome;
+  };
 
 // GLSL implementations of the same noise + terrain functions, embedded in shaders
 // so the GPU sees identical output. Used by both terrain + grass + fireflies.
@@ -145,7 +165,7 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
   baseColor = new THREE.Color(0x16321f),
   tipColor = new THREE.Color(0x8fc97a),
   windSpeed = 1.0,
-  windStrength = 0.35,
+  windStrength = 0.5,
   dayLengthSeconds = 90,
   fixedTimeOfDay = 0.18,
   autoRotate = true,
@@ -162,7 +182,7 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.set(22, 6, 22);
+    camera.position.set(34, 18, 34);
     camera.lookAt(0, 1, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -180,7 +200,7 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
     controls.minDistance = 6;
-    controls.maxDistance = 80;
+    controls.maxDistance = 120;
     controls.maxPolarAngle = Math.PI * 0.49; // don't dip below ground
     controls.target.set(0, 1, 0);
     controls.autoRotate = autoRotate;
@@ -272,11 +292,14 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     scene.add(sun.target);
 
     // ─── Terrain ───────────────────────────────────────────────────────────
-    // Real geometry — the same noise the grass placement uses, displaced GPU-side
-    // so it matches exactly. Wireframe is off; we want the surface to look like
-    // a meadow under the grass.
+    // Round island heightmap: a square plane displaced into a circular dome.
+    // The same height function is used for grass/flower/firefly placement so
+    // every prop sits exactly on the visible surface.
     const terrainSize = chunkSize * chunkCount;
-    const terrainGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, 128, 128);
+    const terrainHeight = buildTerrainHeight(terrainSize);
+    const islandRadius  = terrainSize * 0.46; // grass placement clamp
+
+    const terrainGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, 192, 192);
     terrainGeo.rotateX(-Math.PI / 2);
 
     // Pre-compute terrain height per vertex on CPU so we get correct normals.
@@ -295,6 +318,8 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       uniforms: {
         uBase: { value: new THREE.Color(0x223a18) },
         uDirt: { value: new THREE.Color(0x4a3a22) },
+        uSand: { value: new THREE.Color(0xd9c79a) },
+        uUnderwater: { value: new THREE.Color(0x1a2c3a) },
         uSunDir: skyUniforms.uSunDir,
         uSunColor: { value: new THREE.Color(0xfff1d8) },
         uAmbient: { value: new THREE.Color(0x1f2a3a) },
@@ -312,6 +337,8 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       fragmentShader: /* glsl */ `
         uniform vec3 uBase;
         uniform vec3 uDirt;
+        uniform vec3 uSand;
+        uniform vec3 uUnderwater;
         uniform vec3 uSunDir;
         uniform vec3 uSunColor;
         uniform vec3 uAmbient;
@@ -324,8 +351,15 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
           // low-frequency variation so it doesn't look uniform.
           float slope = 1.0 - clamp(vNormal.y, 0.0, 1.0);
           float patchy = vnoise(vWorld.xz * 0.08) * 0.5 + 0.5;
-          vec3 col = mix(uBase, uDirt, smoothstep(0.25, 0.6, slope) + patchy * 0.15);
-          col *= 0.85 + patchy * 0.3;
+          vec3 grass = mix(uBase, uDirt, smoothstep(0.25, 0.6, slope) + patchy * 0.15);
+          grass *= 0.85 + patchy * 0.3;
+
+          // Beach band: vertices near y≈0 fade to sand. Below water = darker.
+          float h = vWorld.y;
+          float sandW  = smoothstep(1.5, 0.05, h) * smoothstep(-0.6, 0.0, h);
+          float underW = smoothstep(0.0, -0.6, h);
+          vec3 col = mix(grass, uSand, sandW);
+          col = mix(col, uUnderwater, underW);
 
           // Lambert with sky ambient.
           float d = max(dot(vNormal, normalize(uSunDir)), 0.0);
@@ -339,6 +373,146 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     const terrain = new THREE.Mesh(terrainGeo, terrainMaterial);
     terrain.receiveShadow = true;
     scene.add(terrain);
+
+    // ─── Water ─────────────────────────────────────────────────────────────
+    // Large horizontal plane at y≈0 surrounding the island. Animated normal
+    // perturbation reads as gentle ripples; sky-tinted base color so the
+    // water reflects the time-of-day like the fog and mountains.
+    const waterGeo = new THREE.PlaneGeometry(800, 800, 1, 1);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uSunDir: skyUniforms.uSunDir,
+        uHorizonDay:   { value: new THREE.Color(0.55, 0.78, 0.95) },
+        uHorizonDusk:  { value: new THREE.Color(0.96, 0.55, 0.30) },
+        uHorizonNight: { value: new THREE.Color(0.04, 0.05, 0.13) },
+        uDayW:   { value: 0.0 },
+        uDuskW:  { value: 0.0 },
+        uNightW: { value: 0.0 },
+      },
+      transparent: true,
+      vertexShader: /* glsl */ `
+        varying vec3 vWorld;
+        void main() {
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        uniform vec3  uSunDir;
+        uniform vec3  uHorizonDay, uHorizonDusk, uHorizonNight;
+        uniform float uDayW, uDuskW, uNightW;
+        varying vec3  vWorld;
+        ${NOISE_GLSL}
+
+        void main() {
+          vec3 horiz = uHorizonDay  * uDayW
+                     + uHorizonDusk * uDuskW
+                     + uHorizonNight* uNightW;
+
+          // Two-octave ripples in normal-space. Cheap; reads as choppy water.
+          vec2 q = vWorld.xz;
+          float n1 = vnoise(q * 0.20 + vec2(uTime * 0.10, uTime * 0.06));
+          float n2 = vnoise(q * 0.60 + vec2(-uTime * 0.13, uTime * 0.08));
+          float ripple = n1 * 0.7 + n2 * 0.3;
+          vec3 nrm = normalize(vec3(ripple * 0.6, 1.0, ripple * 0.6));
+
+          // Fresnel-ish mix between deep and sky colors.
+          vec3 viewV = normalize(cameraPosition - vWorld);
+          float fres = pow(1.0 - clamp(dot(nrm, viewV), 0.0, 1.0), 3.0);
+          vec3 deep = horiz * 0.18;
+          vec3 col  = mix(deep, horiz, fres * 0.85 + 0.10);
+
+          // Sun glint when the sun is up.
+          vec3 reflV = reflect(-normalize(uSunDir), nrm);
+          float glint = pow(max(dot(reflV, viewV), 0.0), 80.0) * smoothstep(0.0, 0.2, uSunDir.y);
+          col += vec3(1.0, 0.95, 0.85) * glint;
+
+          gl_FragColor = vec4(col, 0.92);
+        }
+      `,
+    });
+    const water = new THREE.Mesh(waterGeo, waterMaterial);
+    water.position.y = -0.05;
+    scene.add(water);
+
+    // ─── Distant mountain silhouette ───────────────────────────────────────
+    // A ring of saw-tooth peaks beyond the water — frames the island and
+    // gives the horizon depth instead of a flat-disc-with-fog.
+    const mountainRingR = 220;
+    const mtnSegs = 256;
+    const mtnPos: number[] = [];
+
+    const peakHeight = (a: number) => {
+      const h =
+        9 +
+        Math.sin(a * 3.7) * 5 +
+        Math.sin(a * 7.3 + 1.1) * 3 +
+        Math.sin(a * 13.1 + 2.7) * 1.6 +
+        Math.sin(a * 23.0) * 0.8;
+      return Math.max(2.5, h);
+    };
+
+    for (let i = 0; i < mtnSegs; i++) {
+      const a0 = (i / mtnSegs) * Math.PI * 2;
+      const a1 = ((i + 1) / mtnSegs) * Math.PI * 2;
+      const h0 = peakHeight(a0);
+      const h1 = peakHeight(a1);
+      const x0 = Math.cos(a0) * mountainRingR;
+      const z0 = Math.sin(a0) * mountainRingR;
+      const x1 = Math.cos(a1) * mountainRingR;
+      const z1 = Math.sin(a1) * mountainRingR;
+      const yBase = -3;
+
+      // Two triangles per segment forming a quad with varying top height.
+      mtnPos.push(x0, yBase, z0,  x1, yBase, z1,  x1, h1, z1);
+      mtnPos.push(x0, yBase, z0,  x1, h1, z1,    x0, h0, z0);
+    }
+
+    const mtnGeo = new THREE.BufferGeometry();
+    mtnGeo.setAttribute('position', new THREE.Float32BufferAttribute(mtnPos, 3));
+
+    const mtnMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uHorizonDay:   { value: new THREE.Color(0.55, 0.78, 0.95) },
+        uHorizonDusk:  { value: new THREE.Color(0.96, 0.55, 0.30) },
+        uHorizonNight: { value: new THREE.Color(0.04, 0.05, 0.13) },
+        uDayW:   { value: 0.0 },
+        uDuskW:  { value: 0.0 },
+        uNightW: { value: 0.0 },
+      },
+      side: THREE.FrontSide,
+      vertexShader: /* glsl */ `
+        varying float vH;
+        void main() {
+          vH = position.y;
+          gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uHorizonDay, uHorizonDusk, uHorizonNight;
+        uniform float uDayW, uDuskW, uNightW;
+        varying float vH;
+        void main() {
+          // Reconstruct the same horizon color the sky uses, then darken
+          // toward the base so peaks read as silhouettes against the sky.
+          vec3 horiz = uHorizonDay  * uDayW
+                     + uHorizonDusk * uDuskW
+                     + uHorizonNight* uNightW;
+          float alt = clamp(vH / 14.0, 0.0, 1.0);
+          // Base of mountains darker, ridges nearly horizon-color.
+          vec3 col = mix(horiz * 0.20, horiz * 0.75, alt);
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    const mountains = new THREE.Mesh(mtnGeo, mtnMaterial);
+    mountains.frustumCulled = false;
+    scene.add(mountains);
 
     // ─── Grass ─────────────────────────────────────────────────────────────
     // Single InstancedMesh per chunk × per crossed-plane angle. The vertex
@@ -388,8 +562,11 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
 
           // Large-scale gust band: a slow noise field sweeping diagonally.
           // Same field is used to brighten the fragment — visible gust waves.
-          vec2 gustUV = anchor.xz * 0.04 + vec2(uTime * 0.15, uTime * 0.08);
-          float gust = vnoise(gustUV) * 0.5 + 0.5;
+          // pow(.., 1.6) sharpens the band edges so gusts read as moving waves
+          // rather than a continuous breeze.
+          vec2 gustUV = anchor.xz * 0.045 + vec2(uTime * 0.18, uTime * 0.10);
+          float gustRaw = vnoise(gustUV) * 0.5 + 0.5;
+          float gust = pow(gustRaw, 1.6);
           vGust = gust;
 
           // Per-blade flutter: a fast small-amplitude noise so blades don't
@@ -403,7 +580,9 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
           vec3 p = position;
           float t = clamp(uv.y, 0.0, 1.0);
           float curve = t * t;          // bezier-ish (0 at base, 1 at tip)
-          float windAmp = (gust * 0.6 + 0.4) * uWindStrength + flutter * 0.08;
+          // Wider amplitude swing so the gust bands are visibly stronger than
+          // the resting wind state — gust=0 ≈ 0.2·strength, gust=1 ≈ 1.2·strength.
+          float windAmp = (gust * 1.0 + 0.2) * uWindStrength + flutter * 0.08;
           float bendAmt = aBend + windAmp;
 
           p.x += curve * bendAmt;
@@ -455,8 +634,9 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
           vec3 tipMix = mix(uTip, uTip2, vRandom);
           vec3 col    = mix(uBase, tipMix, ao);
 
-          // Wind-gust sheen: blades inside a bright gust band lighten slightly.
-          col += (vGust - 0.5) * 0.18 * vec3(0.9, 1.0, 0.7);
+          // Wind-gust sheen: blades inside a bright gust band brighten enough
+          // to read as a moving wave of color across the meadow.
+          col += (vGust - 0.45) * 0.32 * vec3(0.9, 1.05, 0.7);
 
           // Fake SSS — sun back-lighting at low angles brightens the tip.
           float sunDot = max(dot(vNormalW, normalize(uSunDir)), 0.0);
@@ -498,22 +678,35 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
           inst.receiveShadow = false;
           inst.frustumCulled = false; // chunk-level culling deferred — they're cheap
 
+          // Rejection-sample to the island circle so grass never floats above
+          // water or pokes out of the underwater shelf. Hide rejected blades
+          // by zeroing their scale rather than skipping the slot — keeps the
+          // instance count uniform.
           for (let i = 0; i < grassDensity; i++) {
-            const x = chunkX + Math.random() * chunkSize;
-            const z = chunkZ + Math.random() * chunkSize;
-            const y = terrainHeight(x, z);
+            let x = 0, z = 0, y = 0, accepted = false;
+            for (let tries = 0; tries < 6; tries++) {
+              const tx = chunkX + Math.random() * chunkSize;
+              const tz = chunkZ + Math.random() * chunkSize;
+              const ty = terrainHeight(tx, tz);
+              const r  = Math.sqrt(tx * tx + tz * tz);
+              if (ty > 0.35 && r < islandRadius) {
+                x = tx; z = tz; y = ty;
+                accepted = true;
+                break;
+              }
+            }
 
+            const scaleH = accepted ? 0.7 + Math.random() * 0.7 : 0;
+            const scaleW = accepted ? 0.8 + Math.random() * 0.5 : 0;
             dummy.position.set(x, y, z);
             dummy.rotation.set(0, 0, 0);
-            const scaleH = 0.7 + Math.random() * 0.7;
-            const scaleW = 0.8 + Math.random() * 0.5;
             dummy.scale.set(scaleW, scaleH, 1);
             dummy.updateMatrix();
             inst.setMatrixAt(i, dummy.matrix);
 
             aRandom[i] = Math.random();
-            aBend[i] = (Math.random() - 0.5) * 0.15;             // resting bend
-            aTwist[i] = baseAngle + (Math.random() - 0.5) * 0.6; // crossed planes + jitter
+            aBend[i] = (Math.random() - 0.5) * 0.15;
+            aTwist[i] = baseAngle + (Math.random() - 0.5) * 0.6;
           }
 
           inst.instanceMatrix.needsUpdate = true;
@@ -599,12 +792,21 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       const fColors = new Float32Array(flowerCount * 3);
       const fSeeds = new Float32Array(flowerCount);
       for (let i = 0; i < flowerCount; i++) {
-        const x = (Math.random() - 0.5) * terrainSize;
-        const z = (Math.random() - 0.5) * terrainSize;
-        const y = terrainHeight(x, z);
+        let x = 0, z = 0, y = 0, accepted = false;
+        for (let tries = 0; tries < 8; tries++) {
+          const tx = (Math.random() - 0.5) * terrainSize;
+          const tz = (Math.random() - 0.5) * terrainSize;
+          const ty = terrainHeight(tx, tz);
+          const r  = Math.sqrt(tx * tx + tz * tz);
+          if (ty > 0.5 && r < islandRadius * 0.95) {
+            x = tx; z = tz; y = ty;
+            accepted = true;
+            break;
+          }
+        }
+        const s = accepted ? 0.7 + Math.random() * 0.6 : 0;
         dummy.position.set(x, y, z);
         dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
-        const s = 0.7 + Math.random() * 0.6;
         dummy.scale.set(s, s, s);
         dummy.updateMatrix();
         flowersMesh.setMatrixAt(i, dummy.matrix);
@@ -623,13 +825,25 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     // ─── Fireflies ─────────────────────────────────────────────────────────
     let fireflyPoints: THREE.Points | null = null;
     if (fireflies) {
-      const fireflyCount = 400;
+      const fireflyCount = 220;
       const positions = new Float32Array(fireflyCount * 3);
       const seeds = new Float32Array(fireflyCount);
       for (let i = 0; i < fireflyCount; i++) {
-        const x = (Math.random() - 0.5) * terrainSize * 0.9;
-        const z = (Math.random() - 0.5) * terrainSize * 0.9;
-        const y = terrainHeight(x, z) + 0.4 + Math.random() * 1.8;
+        let x = 0, z = 0, y = 0;
+        // Sample a polar coordinate inside the island radius so fireflies
+        // hover above the meadow, not over the water.
+        for (let tries = 0; tries < 8; tries++) {
+          const r = Math.sqrt(Math.random()) * islandRadius * 0.92;
+          const a = Math.random() * Math.PI * 2;
+          const tx = Math.cos(a) * r;
+          const tz = Math.sin(a) * r;
+          const ty = terrainHeight(tx, tz);
+          if (ty > 0.3) {
+            x = tx; z = tz;
+            y = ty + 0.4 + Math.random() * 1.8;
+            break;
+          }
+        }
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
         positions[i * 3 + 2] = z;
@@ -662,8 +876,9 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
             p.z += cos(t * 0.5 + aSeed * 7.7)  * 0.7;
             vec4 mvp = modelViewMatrix * vec4(p, 1.0);
             gl_Position = projectionMatrix * mvp;
-            gl_PointSize = (8.0 + sin(t * 3.0) * 4.0) * uPixel * (24.0 / -mvp.z);
-            vBlink = 0.5 + 0.5 * sin(t * 2.0 + aSeed * 6.28);
+            // Bigger sprites — they read as glowing insects, not stars.
+            gl_PointSize = (14.0 + sin(t * 3.0) * 6.0) * uPixel * (28.0 / -mvp.z);
+            vBlink = 0.55 + 0.45 * sin(t * 2.0 + aSeed * 6.28);
           }
         `,
         fragmentShader: /* glsl */ `
@@ -672,12 +887,14 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
           void main() {
             vec2 c = gl_PointCoord - 0.5;
             float r = length(c);
-            float core = smoothstep(0.5, 0.0, r);
-            float halo = smoothstep(0.5, 0.2, r) * 0.5;
-            float a = (core + halo) * vBlink * uIntensity;
+            // Sharper core + wider warm halo so each firefly glows distinctly
+            // even before bloom kicks in. Bloom pass amplifies the core.
+            float core = smoothstep(0.30, 0.0, r);
+            float halo = smoothstep(0.5, 0.05, r) * 0.55;
+            float a = (core * 1.6 + halo) * vBlink * uIntensity;
             if (a < 0.01) discard;
-            vec3 col = vec3(1.0, 0.95, 0.55);
-            gl_FragColor = vec4(col, a);
+            vec3 col = vec3(1.0, 0.92, 0.55);
+            gl_FragColor = vec4(col * 1.4, a);
           }
         `,
       });
@@ -686,9 +903,33 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       scene.add(fireflyPoints);
     }
 
+    // ─── Post-processing (bloom) ───────────────────────────────────────────
+    // Bloom amplifies the sun disc and fireflies into glowing highlights.
+    // High threshold (~0.92) so only genuinely bright pixels bloom — keeps
+    // the meadow itself crisp.
+    const composer = new EffectComposer(renderer);
+    composer.setSize(width, height);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      /* strength */ 0.55,
+      /* radius   */ 0.45,
+      /* threshold*/ 0.92,
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+
     // ─── Animation loop ────────────────────────────────────────────────────
     const clock = new THREE.Clock();
     let raf = 0;
+    let bobApplied = 0;
+
+    // Horizon palettes — must match the sky shader's three palettes at h=0
+    // so fog and mountain silhouette dissolve cleanly into the sky.
+    const horizonDay   = new THREE.Color(0.55, 0.78, 0.95);
+    const horizonDusk  = new THREE.Color(0.96, 0.55, 0.30);
+    const horizonNight = new THREE.Color(0.04, 0.05, 0.13);
 
     const updateTimeOfDay = (tod: number) => {
       // Sun travels in a great circle: t=0 sunrise (east horizon), 0.25 noon,
@@ -704,6 +945,7 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       // Sun color + intensity sweep.
       const dayW = THREE.MathUtils.smoothstep(dir.y, -0.05, 0.30);
       const nightW = THREE.MathUtils.smoothstep(-dir.y, -0.05, 0.10);
+      const duskW = Math.exp(-Math.pow(dir.y * 4.0, 2.0));
       const sunWarm = new THREE.Color(0xff8a3c);
       const sunCool = new THREE.Color(0xfff1d8);
       sun.color.copy(sunWarm).lerp(sunCool, dayW);
@@ -713,18 +955,28 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       ambient.color.setHSL(0.6, 0.5, 0.4 + 0.25 * dayW);
       ambient.groundColor.setHSL(0.08, 0.4, 0.05 + 0.10 * dayW);
 
-      // Fog tint follows sky low band.
-      const fogCol = new THREE.Color().setRGB(
-        0.04 + 0.6 * dayW + 0.2 * nightW * 0.0,
-        0.07 + 0.65 * dayW,
-        0.13 + 0.7 * dayW,
+      // Fog tint = sky horizon color (same three-palette blend the shader uses).
+      // This guarantees the field's haze fades into the sky seamlessly.
+      // (THREE.Color has no addScaledVector — we mix component-wise.)
+      const fogCol = new THREE.Color(
+        horizonDay.r * dayW + horizonDusk.r * duskW + horizonNight.r * nightW,
+        horizonDay.g * dayW + horizonDusk.g * duskW + horizonNight.g * nightW,
+        horizonDay.b * dayW + horizonDusk.b * duskW + horizonNight.b * nightW,
       );
-      // Add a dusk warm pull when sun is near horizon.
-      const duskW = Math.exp(-Math.pow(dir.y * 4.0, 2.0));
-      fogCol.lerp(new THREE.Color(0xff8c5a), duskW * 0.5);
       (scene.fog as THREE.FogExp2).color.copy(fogCol);
       (scene.fog as THREE.FogExp2).density = 0.010 + 0.006 * (1 - dayW);
       renderer.setClearColor(fogCol, 1);
+
+      // Mountains share the same horizon weights so their silhouettes match
+      // exactly the sky color directly behind them.
+      mtnMaterial.uniforms.uDayW.value   = dayW;
+      mtnMaterial.uniforms.uDuskW.value  = duskW;
+      mtnMaterial.uniforms.uNightW.value = nightW;
+
+      // Water tracks the same horizon palette so it looks like sky reflection.
+      waterMaterial.uniforms.uDayW.value   = dayW;
+      waterMaterial.uniforms.uDuskW.value  = duskW;
+      waterMaterial.uniforms.uNightW.value = nightW;
 
       // Grass uniforms follow.
       grassUniforms.uSunColor.value.copy(sun.color).multiplyScalar(0.7 + dayW * 0.6);
@@ -743,14 +995,24 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     const animate = () => {
       const elapsed = clock.getElapsedTime();
       grassUniforms.uTime.value = elapsed;
+      waterMaterial.uniforms.uTime.value = elapsed;
 
       const tod = dayLengthSeconds > 0
         ? (elapsed / dayLengthSeconds) % 1
         : fixedTimeOfDay;
       updateTimeOfDay(tod);
 
+      // Camera bob — applied AFTER controls.update so OrbitControls' spherical
+      // state stays clean (we undo last frame's bob first). Reads as a slow
+      // drone-style float when auto-rotating; off when the user is driving.
+      camera.position.y -= bobApplied;
       controls.update();
-      renderer.render(scene, camera);
+      bobApplied = autoRotate
+        ? Math.sin(elapsed * 0.55) * 0.30 + Math.sin(elapsed * 0.27 + 1.0) * 0.18
+        : 0;
+      camera.position.y += bobApplied;
+
+      composer.render();
       raf = requestAnimationFrame(animate);
     };
 
@@ -770,6 +1032,11 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
       terrainMaterial.dispose();
       skyMaterial.dispose();
       sky.geometry.dispose();
+      mtnGeo.dispose();
+      mtnMaterial.dispose();
+      waterGeo.dispose();
+      waterMaterial.dispose();
+      composer.dispose();
       if (flowersMesh) {
         flowersMesh.geometry.dispose();
         (flowersMesh.material as THREE.Material).dispose();
