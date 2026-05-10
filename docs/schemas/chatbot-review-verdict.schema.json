@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chatbot Review Verdict",
+  "description": "Aggregated multi-LLM review verdict for a single chatbot PR. Written by /chatbot-iterate Step 4 after the Agent-tool subagents (or /octo:review) return. Read by Scripts/octo-auto-merge-decision.ps1 as one of the auto-merge gates.\n\nFile path: state/chatbot-reviews/<pr>.json (one file per PR).",
+  "type": "object",
+  "required": ["pr", "branch", "reviewedAt", "mechanism", "reviewers", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "pr": {
+      "type": "integer",
+      "description": "GitHub PR number."
+    },
+    "branch": {
+      "type": "string",
+      "description": "Source branch ref the review ran against."
+    },
+    "headSha": {
+      "type": "string",
+      "description": "Commit SHA the review evaluated. If a new commit lands, this file should be regenerated.",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp."
+    },
+    "mechanism": {
+      "type": "string",
+      "enum": ["agent-tool-subagents", "octo-review-clean", "octo-review-raw"],
+      "description": "Which review path produced this verdict. 'agent-tool-subagents' is the proven mechanism per feedback_multi_llm_review_pays_off. 'octo-review-clean' uses Scripts/octo-review-clean.ps1 (PATH-scrubbed). 'octo-review-raw' is the raw /octo:review slash command (only valid if liveness check passed)."
+    },
+    "reviewers": {
+      "type": "array",
+      "description": "Per-reviewer entries. At minimum: one code-reviewer + one security-auditor for the gate to count.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "verdict"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Reviewer identifier (e.g., 'octo:droids:octo-code-reviewer', 'codex', 'gemini-security')."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["approve", "approve-with-nits", "request-changes", "abstain", "error"]
+          },
+          "findingsCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "blockingCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Findings with severity 'normal' (red) that must be resolved before merge."
+          },
+          "uniqueFindings": {
+            "type": "array",
+            "description": "Optional: findings this reviewer caught that no other reviewer did. Drives the gate-ledger ROI metric.",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "nits-only", "blocking", "abstain"],
+      "description": "Aggregated verdict. 'pass' = all reviewers approve, no findings. 'nits-only' = approve-with-nits across the board, no blocking. 'blocking' = at least one request-changes or unresolved blocking finding. 'abstain' = reviewers errored / didn't return — gate is dark; do NOT trust as green."
+    },
+    "blockingFindings": {
+      "type": "array",
+      "description": "Aggregated blocking findings across reviewers. Empty unless verdict is 'blocking'.",
+      "items": {
+        "type": "object",
+        "required": ["reviewer", "summary"],
+        "additionalProperties": true,
+        "properties": {
+          "reviewer": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes about the review (e.g., 'PATH-scrubbed due to Windows orchestrator bug')."
+    }
+  }
+}

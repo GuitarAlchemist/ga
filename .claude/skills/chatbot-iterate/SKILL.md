@@ -50,6 +50,33 @@ have been satisfied.
 
 ## Process
 
+### Step 0: Killswitch check
+
+Before doing ANYTHING, check the loop killswitch:
+
+```powershell
+if (Test-Path state/.loop-halted) {
+    Write-Host "Loop halted — sentinel present. Aborting." -ForegroundColor Red
+    Get-Content state/.loop-halted
+    exit 0
+}
+```
+
+If `state/.loop-halted` exists, exit cleanly with the sentinel's
+reason. Do NOT pick a new item. Do NOT touch the working tree.
+This is the L4 kill switch — when set, every fresh iteration
+refuses to start. To resume:
+
+```powershell
+pwsh Scripts/loop-killswitch.ps1 -Reset
+```
+
+Status check (read-only):
+
+```powershell
+pwsh Scripts/loop-killswitch.ps1 -Status
+```
+
 ### Step 1: Identify the next chatbot item
 
 Read `BACKLOG.md` → **Chatbot Track (curated YYYY-MM-DD)** section.
@@ -177,10 +204,30 @@ Once gates are agreed, hand off to existing skills:
                                                 # PATH entries (Windows bug)
    ```
 
-   Either way, record in the PR body which mechanism produced the
-   verdict (`Agent-tool subagents` vs `/octo:review clean` vs
-   `/octo:review raw`) so future audits can correlate gate ROI with
-   mechanism.
+   **After the reviewers return, persist the verdict** so Step 7
+   (auto-merge) and the gate ledger can read it:
+
+   ```powershell
+   pwsh Scripts/chatbot-review-write.ps1 `
+       -Pr <N> `
+       -Branch <branch> `
+       -HeadSha <sha> `
+       -Mechanism agent-tool-subagents `
+       -Verdict <pass | nits-only | blocking | abstain> `
+       -Reviewers @(
+           @{ name='octo:droids:octo-code-reviewer'; verdict='approve-with-nits'; findingsCount=3; blockingCount=0 },
+           @{ name='octo:droids:octo-security-auditor'; verdict='approve'; findingsCount=0; blockingCount=0 }
+       )
+   ```
+
+   Schema: `docs/schemas/chatbot-review-verdict.schema.json`. Writes
+   to `state/chatbot-reviews/<pr>.json`. The auto-merge decision
+   (Step 7) refuses if this file is missing or has verdict !=
+   `pass | nits-only`.
+
+   Record the mechanism in the PR body too (`Agent-tool subagents`
+   vs `/octo:review clean` vs `/octo:review raw`) so future audits
+   can correlate gate ROI with mechanism.
 
    Background: `docs/solutions/tooling/2026-05-10-octo-plugin-install-corruption-silent-gate-failure.md`.
 5. **Tribunal verdict**: invoke
@@ -206,7 +253,7 @@ including:
 - A short demo paragraph if the change is observable (chatbot
   question + new response example)
 
-### Step 5: Post-merge — capture learnings
+### Step 5: Post-merge — capture learnings + write ledger row
 
 After the PR merges:
 
@@ -216,6 +263,47 @@ After the PR merges:
    should be promoted into the F# DSL or a new MCP tool.
 3. Update `BACKLOG.md` to mark the item shipped and surface any
    follow-ups.
+4. **Tally cost** (L3 promotion criterion — cost-per-auto-merge budget):
+
+   ```powershell
+   pwsh Scripts/octo-cost-tally.ps1 `
+       -Pr <N> `
+       -RunId <orchestrator-timestamp-or-iso> `
+       -AgentToolEstimateUsd <approximate-agent-cost> `
+       -BudgetUsd 5.00
+   ```
+
+   Writes to `state/quality/cost-ledger.jsonl`. Exits 2 if cumulative
+   ledger cost exceeds the budget — caller should refuse further
+   `/chatbot-iterate` runs until the budget resets.
+
+   Summary view: `pwsh Scripts/octo-cost-tally.ps1 -Summary`.
+
+5. **Append a gate-ledger row** so future cohort analysis can prove
+   the gate is pulling its weight (L3 promotion criterion):
+
+   ```powershell
+   pwsh Scripts/gate-ledger-write.ps1 `
+       -Pr <N> `
+       -Branch <branch> `
+       -MergedAt (Get-Date -Format o) `
+       -Decision <merged-clean | merged-with-followup | merged-with-revert> `
+       -Tests @{ ran=$true; passed=<n>; failed=<n>; allowlistedFailures=@() } `
+       -AgentToolReview @{
+           verdict='nits-only'
+           mechanism='agent-tool-subagents'
+           findingsCount=<n>
+           blockingCount=0
+           uniqueFindingsCount=<n>  # findings this gate caught that
+                                    # no other gate did — drives ROI
+       }
+   ```
+
+   Schema: `docs/schemas/gate-ledger.schema.json`. Writes to
+   `state/quality/gate-ledger.jsonl`. After 10 chatbot PRs this
+   ledger answers "is the multi-LLM gate worth its cost?" — if
+   `uniqueFindingsCount` is consistently 0, the gate is duplicate
+   coverage and we can downgrade it.
 
 ### Step 6: Loop
 

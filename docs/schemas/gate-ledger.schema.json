@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chatbot Gate Ledger Row",
+  "description": "One row per chatbot PR, captured after Step 6 of /chatbot-iterate (post-merge). Tracks which gate caught what — the empirical foundation for L3 promotion (proves Agent-tool review is pulling its weight) and L4 (lets the loop learn which gates skip vs invoke per PR shape).\n\nStorage: state/quality/gate-ledger.jsonl (one JSON object per line, append-only).",
+  "type": "object",
+  "required": ["pr", "branch", "mergedAt", "gates", "decision"],
+  "additionalProperties": false,
+  "properties": {
+    "pr": { "type": "integer" },
+    "branch": { "type": "string" },
+    "mergedAt": {
+      "anyOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ]
+    },
+    "diffStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filesChanged": { "type": "integer", "minimum": 0 },
+        "additions": { "type": "integer", "minimum": 0 },
+        "deletions": { "type": "integer", "minimum": 0 },
+        "topPath": { "type": "string", "description": "Most-changed path prefix (e.g., Common/GA.Business.ML/Agents/Mcp/)" }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tests": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ran": { "type": "boolean" },
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "allowlistedFailures": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "agentToolReview": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "verdict": { "type": "string", "enum": ["pass", "nits-only", "blocking", "abstain"] },
+                "mechanism": { "type": "string" },
+                "findingsCount": { "type": "integer", "minimum": 0 },
+                "blockingCount": { "type": "integer", "minimum": 0 },
+                "uniqueFindingsCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Findings caught by Agent-tool review that no other gate caught. Drives ROI."
+                }
+              }
+            }
+          ]
+        },
+        "octoReview": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mechanism": { "type": "string", "enum": ["raw", "clean"] },
+                "livenessState": { "type": "string", "enum": ["live", "mixed", "dark", "no-run"] },
+                "findingsCount": { "type": "integer", "minimum": 0 }
+              }
+            }
+          ]
+        },
+        "tribunal": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "verdict": { "type": "string" },
+                "verdictId": { "type": "string" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["merged-clean", "merged-with-followup", "merged-with-revert", "open", "abandoned"],
+      "description": "Final outcome. 'merged-with-revert' marks PRs where the gate failed empirically (regression made it past the gate to merge, then got reverted). Tracking these is the L3 promotion criterion."
+    },
+    "rollbackOf": {
+      "type": "integer",
+      "description": "If decision = 'merged-with-revert', the PR this one rolls back."
+    },
+    "iterateRun": {
+      "type": "string",
+      "description": "If shipped via /chatbot-iterate, the timestamp or run-id of that iteration. Optional but useful for cohort analysis."
+    },
+    "notes": { "type": "string" }
+  }
+}

@@ -160,13 +160,11 @@ below is concrete and testable.
       "auto-ship a regression". Acceptance: one end-to-end rollback
       drill captured in `docs/solutions/`.
       **Status:** ❌ not started — no canary infra exists yet.
-- [ ] **Gate-comparison ledger** — track per-PR which gate caught what
-      (Agent-tool review vs `/octo:review` vs tribunal vs CI tests).
-      After 10 chatbot PRs, expect Agent-tool path to catch ≥1 issue
-      none of the other gates caught — proves it's pulling its weight.
-      Acceptance: `state/quality/gate-ledger.jsonl` with entries.
-      **Status:** ❌ not started — pattern only verified anecdotally
-      (the 6 bugs documented in `feedback_multi_llm_review_pays_off`).
+- [x] **Gate-comparison ledger mechanism** — `state/quality/gate-ledger.jsonl`
+      with `Scripts/gate-ledger-write.ps1` writer + `docs/schemas/gate-ledger.schema.json`
+      shipped 2026-05-10. `/chatbot-iterate` Step 5 now appends a row
+      per merge. **Status:** mechanism ✅ shipped; **0/10 entries** yet —
+      evidence accumulates as PRs flow.
 - [ ] **CI env flakiness resolved** — `Backend Tests` / `build` /
       `Playwright Tests` no longer fail on missing Anthropic API key
       on CI runners. Either set the secret, or skip tests when env is
@@ -174,11 +172,13 @@ below is concrete and testable.
       `octo-auto-merge-decision.ps1` (`-AllowlistedCiFailures`) is a
       bandage.
       **Status:** ❌ allowlist active; tests fail on every PR.
-- [ ] **Cost-per-auto-merge budget** — measure $ cost of one full
-      `/chatbot-iterate` run (Agent-tool review × 2 + tribunal + tests
-      via CI). Set a monthly cap. Refuse auto-merge if month-to-date
-      cost approaches the cap.
-      **Status:** ❌ no measurement infra.
+- [x] **Cost-per-auto-merge measurement** — `Scripts/octo-cost-tally.ps1`
+      shipped 2026-05-10. Reads `~/.claude-octopus/metrics-session.json`,
+      lets the caller pass an Agent-tool cost estimate, writes
+      `state/quality/cost-ledger.jsonl`. Exits 2 if cumulative cost
+      exceeds the budget. Wired into `/chatbot-iterate` Step 5 post-merge.
+      **Status:** measurement ✅ shipped; setting the actual monthly
+      cap is a policy decision the operator makes.
 
 Until ALL six are checked, L2-with-explicit-label is the ceiling.
 
@@ -211,13 +211,12 @@ up, with no human in the loop except for the kill-switch.
       OUTSIDE the loop. Acceptance: a synthetic "loop is broken" alert
       that fires within 1h.
       **Status:** ❌ no watcher.
-- [ ] **Always-on kill switch** — a single command halts all loop
-      activity, regardless of state. Currently
-      `/chatbot-iterate` is interactive so the human terminal IS the
-      kill switch — at L4 it isn't anymore. Acceptance: a documented
-      `pwsh Scripts/loop-killswitch.ps1` that terminates the scheduler
-      process and refuses subsequent kicks until reset.
-      **Status:** ❌ not designed.
+- [x] **Always-on kill switch** — `Scripts/loop-killswitch.ps1`
+      shipped 2026-05-10. Writes `state/.loop-halted` sentinel that
+      `/chatbot-iterate` Step 0 checks before every iteration; refuses
+      to start when present. `-Force -Yes` flag terminates running
+      loop processes. `-Reset` removes the sentinel.
+      **Status:** ✅ shipped + smoke-tested.
 
 Until ALL of L3 AND L4 are checked, L4 is aspirational, not operational.
 
@@ -229,11 +228,16 @@ After the 2026-05-10 session that authored this document:
 |---|---|
 | `/learnings` skill | ✅ shipped |
 | `/chatbot-iterate` skill | ✅ shipped + canary PR #155 + drive-by SemanticIntentRouter fix |
+| Step 0 killswitch check + sentinel | ✅ shipped |
 | Gate liveness check | ✅ shipped (`octo-gate-liveness.ps1`) |
 | PATH-scrubbed `/octo:review` | ✅ shipped (`octo-review-clean.ps1`) |
 | Auto-merge decision (opt-in mechanism) | ✅ shipped (`octo-auto-merge-decision.ps1`) |
-| L3 default-on enablement | ❌ blocked on 6-item checklist above |
-| L4 dark factory | ❌ blocked on 5-item checklist above (plus all of L3) |
+| Review verdict writer | ✅ shipped (`chatbot-review-write.ps1` + schema) |
+| Gate ledger writer | ✅ shipped (`gate-ledger-write.ps1` + schema) |
+| Cost tally | ✅ shipped (`octo-cost-tally.ps1`) |
+| Loop killswitch | ✅ shipped (`loop-killswitch.ps1`) |
+| L3 default-on enablement | ❌ blocked on remaining checklist items (5 clean auto-merges, production canary, CI env fix) |
+| L4 dark factory | ❌ blocked on remaining checklist items (telemetry pipeline, triage skill, scheduler, anomaly detection) |
 
 Net: the autonomy *mechanism* is more complete than the autonomy *
 authorization*. Every level above L2-opt-in needs evidence + infra
