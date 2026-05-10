@@ -9,6 +9,17 @@ using Moq;
 [TestFixture]
 public class SemanticIntentRouterTests
 {
+    // No-op hint provider so tests exercise pure cosine routing without
+    // boost interference. The DefaultRoutingHintProvider has surface-pattern
+    // boosts that the embedding-similarity tests below specifically don't want
+    // to entangle with — those are covered separately in DefaultRoutingHintProviderTests.
+    private sealed class EmptyHintProvider : IRoutingHintProvider
+    {
+        public static readonly EmptyHintProvider Instance = new();
+        public IReadOnlyDictionary<string, float> GetDeltas(string query) =>
+            new Dictionary<string, float>();
+    }
+
     private sealed class StubIntent(
         string id,
         string description,
@@ -77,6 +88,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync("are 0146 and 0137 z-related?", Services(algebraIntent));
@@ -106,6 +118,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync("what are the modes", Services(algebra, modes));
@@ -130,6 +143,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance) { MinConfidence = 0.5f };
 
         var match = await router.RouteAsync("what is for breakfast", Services(algebra));
@@ -144,6 +158,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             textEmbeddings: null,
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync("anything", Services(algebra));
@@ -158,6 +173,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder([]),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync("anything", Services(bareIntent));
@@ -171,6 +187,7 @@ public class SemanticIntentRouterTests
         var algebra = new StubIntent("algebra", "set theory", ["z-related"]);
         var router = new SemanticIntentRouter(
             StubEmbedder([]),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         Assert.That(await router.RouteAsync("",      Services(algebra)), Is.Null);
@@ -200,6 +217,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             mock.Object,
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var sp = Services(algebra);
@@ -241,6 +259,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync(
@@ -297,6 +316,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync(
@@ -330,6 +350,7 @@ public class SemanticIntentRouterTests
 
         var router = new SemanticIntentRouter(
             StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
             NullLogger<SemanticIntentRouter>.Instance);
 
         var match = await router.RouteAsync("List the diatonic modes please", Services(modes));

@@ -44,12 +44,13 @@ public sealed partial class ChordMcpTools
     /// </summary>
     [McpServerTool(Name = "ga_chord_info"), Description(
         "Parse a chord symbol and return its notes, intervals, and quality. " +
-        "Examples: 'Cmaj7' returns C E G B; 'F#m' returns F# A C#; 'Bbdim' returns Bb Db Fb. " +
+        "Examples: 'Cmaj7' returns C E G B; 'F#m' returns F# A C#; 'Bbdim' returns Bb Db Fb; " +
+        "'Cdim7' returns C Eb Gb Bbb; 'Bm7b5' returns B D F A. " +
         "Use this whenever a user asks for the notes / intervals / construction of a named chord. " +
         "Supports major, minor (m/min), diminished (dim), augmented (aug), dominant 7 (just '7'), " +
-        "major 7 (maj7/M7), and minor 7 (m7/min7).")]
+        "major 7 (maj7/M7), minor 7 (m7/min7), diminished 7 (dim7), and half-diminished (m7b5).")]
     public ChordResult GetChordInfo(
-        [Description("The chord symbol — root note plus optional quality suffix. Examples: 'C', 'Cm', 'Cmaj7', 'F#dim', 'Bbm7', 'Aaug'.")]
+        [Description("The chord symbol — root note plus optional quality suffix. Examples: 'C', 'Cm', 'Cmaj7', 'F#dim', 'Bbm7', 'Aaug', 'Cdim7', 'Bm7b5'.")]
         string chordSymbol)
     {
         if (string.IsNullOrEmpty(chordSymbol) || chordSymbol.Length > MaxChordSymbolLength)
@@ -106,33 +107,47 @@ public sealed partial class ChordMcpTools
             "M7" => "major 7",
             _    => trimmed.ToLowerInvariant() switch
             {
-                ""                              => "major",
-                "maj" or "major"                => "major",
-                "m" or "min" or "minor"         => "minor",
-                "dim" or "diminished"           => "diminished",
-                "aug" or "augmented"            => "augmented",
-                "7" or "dominant" or "dom7"     => "dominant 7",
-                "maj7" or "major 7"             => "major 7",
-                "m7" or "min7" or "minor 7"     => "minor 7",
-                var other                       => other,
+                ""                                          => "major",
+                "maj" or "major"                            => "major",
+                "m" or "min" or "minor"                     => "minor",
+                "dim" or "diminished"                       => "diminished",
+                "aug" or "augmented"                        => "augmented",
+                "7" or "dominant" or "dom7"                 => "dominant 7",
+                "maj7" or "major 7"                         => "major 7",
+                "m7" or "min7" or "minor 7"                 => "minor 7",
+                "dim7" or "diminished 7" or "diminished7"   => "diminished 7",
+                "m7b5" or "min7b5" or "half-diminished"     => "half-diminished",
+                var other                                   => other,
             },
         };
     }
 
     private static ChordFormula GetFormula(string quality) => quality switch
     {
-        "minor"      => new("minor",      [0, 3, 7],     [0, 2, 4],    ["root", "minor third", "perfect fifth"]),
-        "diminished" => new("diminished", [0, 3, 6],     [0, 2, 4],    ["root", "minor third", "diminished fifth"]),
-        "augmented"  => new("augmented",  [0, 4, 8],     [0, 2, 4],    ["root", "major third", "augmented fifth"]),
-        "dominant 7" => new("dominant 7", [0, 4, 7, 10], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "minor seventh"]),
-        "major 7"    => new("major 7",    [0, 4, 7, 11], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "major seventh"]),
-        "minor 7"    => new("minor 7",    [0, 3, 7, 10], [0, 2, 4, 6], ["root", "minor third", "perfect fifth", "minor seventh"]),
-        _            => new("major",      [0, 4, 7],     [0, 2, 4],    ["root", "major third", "perfect fifth"]),
+        "minor"            => new("minor",            [0, 3, 7],     [0, 2, 4],    ["root", "minor third", "perfect fifth"]),
+        "diminished"       => new("diminished",       [0, 3, 6],     [0, 2, 4],    ["root", "minor third", "diminished fifth"]),
+        "augmented"        => new("augmented",        [0, 4, 8],     [0, 2, 4],    ["root", "major third", "augmented fifth"]),
+        "dominant 7"       => new("dominant 7",       [0, 4, 7, 10], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "minor seventh"]),
+        "major 7"          => new("major 7",          [0, 4, 7, 11], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "major seventh"]),
+        "minor 7"          => new("minor 7",          [0, 3, 7, 10], [0, 2, 4, 6], ["root", "minor third", "perfect fifth", "minor seventh"]),
+        // Diminished seventh: stacked minor thirds. Cdim7 = C Eb Gb Bbb (the
+        // seventh is enharmonically a major sixth, but the letter-step math
+        // forces the double-flat spelling). Letter steps 0,2,4,6 keep all four
+        // notes on consecutive odd letters from the root.
+        "diminished 7"     => new("diminished 7",     [0, 3, 6, 9],  [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "diminished seventh"]),
+        // Half-diminished (m7b5): minor seventh with a flat fifth. Bm7b5 = B D F A.
+        // The classic ii° in a minor key (e.g. Bm7b5 in A minor).
+        "half-diminished"  => new("half-diminished",  [0, 3, 6, 10], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "minor seventh"]),
+        _                  => new("major",            [0, 4, 7],     [0, 2, 4],    ["root", "major third", "perfect fifth"]),
     };
 
     // Spell() delegates to the shared helper (PR #102) — see ChordSpelling.
 
-    [GeneratedRegex(@"^(?<root>[A-Ga-g][#b]?)(?<quality>maj7|min7|m7|maj|min|m|dim|aug|7|M7|M)?$",
+    // Order matters in the alternation: longer prefixes first so `dim7` is
+    // tried before `dim` and `m7b5` before `m7`. Without this ordering, input
+    // "Cdim7" matches `dim` and leaves "7" unconsumed, failing the ^...$ anchor
+    // and the whole regex. Same for "Cm7b5" → matches `m` and fails on "7b5".
+    [GeneratedRegex(@"^(?<root>[A-Ga-g][#b]?)(?<quality>maj7|min7b5|min7|m7b5|m7|maj|min|m|dim7|dim|aug|7|M7|M)?$",
         RegexOptions.CultureInvariant)]
     private static partial Regex ChordSymbolRegex();
 

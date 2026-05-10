@@ -52,7 +52,7 @@ It returns a structured result:
 
 - `Symbol` — chord symbol echoed back.
 - `Root` — root note in canonical case (e.g. `"F#"`).
-- `Quality` — long form: `"major"`, `"minor"`, `"diminished"`, `"augmented"`, `"dominant 7"`, `"major 7"`, `"minor 7"`.
+- `Quality` — long form: `"major"`, `"minor"`, `"diminished"`, `"augmented"`, `"dominant 7"`, `"major 7"`, `"minor 7"`, `"diminished 7"`, `"half-diminished"`.
 - `Notes` — array of chord tones in ascending order.
 - `Intervals` — interval names for each note (e.g. `["root", "major third", "perfect fifth"]`).
 - `Error` — non-null only when the input could not be parsed.
@@ -68,6 +68,8 @@ It returns a structured result:
 | `C7`, `Cdom7` | `"dominant 7"` |
 | `Cmaj7`, `CM7` | `"major 7"` |
 | `Cm7`, `Cmin7` | `"minor 7"` |
+| `Cdim7` | `"diminished 7"` |
+| `Cm7b5`, `Cmin7b5` | `"half-diminished"` |
 
 ## Mapping user phrasings to arguments
 
@@ -76,6 +78,8 @@ It returns a structured result:
 - *"Spell a B7 chord"* → `chordSymbol="B7"`.
 - *"Notes in an F minor chord"* → `chordSymbol="Fm"`.
 - *"What's in a Cmaj7?"* → `chordSymbol="Cmaj7"`.
+- *"Spell a B half-diminished"* → `chordSymbol="Bm7b5"`.
+- *"What's a C diminished 7th?"* → `chordSymbol="Cdim7"`.
 
 ## Phrasing the answer
 
@@ -88,12 +92,12 @@ If `Error` is non-null, surface the message verbatim and ask the user to clarify
 ## When to ask for clarification
 
 - User names a key rather than a chord (e.g. *"what notes are in C major key"* — vs *"C major chord"*) → that's a scale-info question; defer to the scale-info skill, do NOT call `ga_chord_info`.
-- User asks for a chord quality this tool doesn't support (sus2, sus4, 9th, 11th, 13th, slash chords, altered dominants like 7b5 or 7#9) — the tool will return an Error. Decline cleanly: *"I can spell major / minor / diminished / augmented triads and major/minor/dominant sevenths. For altered or extended chords I'd need different tooling."*
+- User asks for a chord quality this tool doesn't support (sus2, sus4, 9th, 11th, 13th, slash chords, altered dominants like 7b5 or 7#9) — the tool will return an Error. Decline cleanly: *"I can spell major / minor / diminished / augmented triads, major/minor/dominant sevenths, diminished sevenths (dim7) and half-diminished (m7b5). For altered or extended chords beyond those I'd need different tooling."*
 
 ## Out of scope
 
 - **Extended chords** (9, 11, 13) — not yet supported.
-- **Altered / suspended / add chords** (sus2, sus4, add9, 7b5, 7#9, m7b5, etc.) — not supported.
+- **Altered / suspended / add chords** (sus2, sus4, add9, 7b5, 7#9, etc.) — not supported. *(m7b5 and dim7 ARE supported as of 2026-05-10.)*
 - **Slash chords** (C/E, Am/G) — not supported; pass just the upper chord and explain the bass note in prose.
 - **Chord identification from a note set** (*"what chord is C E G?"*) — not yet exposed; that would be a separate `ga_chord_identify(notes)` tool.
 
