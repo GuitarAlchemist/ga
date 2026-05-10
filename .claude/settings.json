@@ -34,6 +34,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File Scripts/session-pr-check.ps1"
+          }
+        ]
+      }
     ]
   }
 }
