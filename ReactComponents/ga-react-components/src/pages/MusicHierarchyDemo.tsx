@@ -62,7 +62,26 @@ interface TableColumn {
   render?: (item: MusicHierarchyItem) => React.ReactNode;
 }
 
-const tableColumns: Record<MusicHierarchyLevel, TableColumn[]> = {
+// Build a parent-id for a child item by reading the right metadata key
+// and reconstructing the parent's full ID format. Discovered by probing
+// the GraphQL API — the metadata stores a raw integer (e.g.
+// ParentSetClassId: 0) while the parent item's `id` is `setclass:0`.
+//
+// PrimeForm / Chord / ChordVoicing don't expose explicit parent IDs in
+// their current metadata, so they return undefined and the table shows
+// "—" for child counts at those levels (the detail panel will still
+// drill in via `loadLevelItems(parentId)` if needed).
+function findParentId(item: MusicHierarchyItem): string | undefined {
+  const meta = item.metadata;
+  if (!meta) return undefined;
+  if (item.level === 'ForteNumber') {
+    const v = meta['ParentSetClassId'] ?? meta['SetClassId'];
+    return v != null && v !== '' ? `setclass:${v}` : undefined;
+  }
+  return undefined;
+}
+
+const baseTableColumns: Record<MusicHierarchyLevel, TableColumn[]> = {
   SetClass: [
     { key: 'name', label: 'Set Class' },
     { key: 'category', label: 'Category' },
@@ -97,6 +116,16 @@ const tableColumns: Record<MusicHierarchyLevel, TableColumn[]> = {
     { key: 'metadata.Root', label: 'Root', render: item => item.metadata?.['Root'] ?? '—' },
     { key: 'metadata.NoteCount', label: '# Notes', render: item => item.metadata?.['NoteCount'] ?? '—' },
   ],
+};
+
+// Friendly label for the next-level column header on a parent's table.
+const NEXT_LEVEL_LABEL: Record<MusicHierarchyLevel, string | undefined> = {
+  SetClass: 'Forte numbers',
+  ForteNumber: 'Prime forms',
+  PrimeForm: 'Chords',
+  Chord: 'Voicings',
+  ChordVoicing: undefined,
+  Scale: undefined,
 };
 
 const getNextLevel = (current: MusicHierarchyLevel): MusicHierarchyLevel | undefined => {
@@ -139,16 +168,12 @@ const MusicHierarchyDemo: React.FC = () => {
 
       setSelectedItems(prev => {
         const updated = { ...prev, [level]: item };
+        // Clear downstream selections so drilling re-anchors at the new
+        // parent. Item caches stay populated (eager-loaded at bootstrap)
+        // so child counts remain available; tableRows filters by parent
+        // selection client-side via findParentId.
         downstreamLevels.forEach(l => {
           updated[l] = null;
-        });
-        return updated;
-      });
-
-      setItemsByLevel(prev => {
-        const updated = { ...prev };
-        downstreamLevels.forEach(l => {
-          updated[l] = [];
         });
         return updated;
       });
@@ -156,12 +181,21 @@ const MusicHierarchyDemo: React.FC = () => {
       const nextLevel = getNextLevel(level);
       if (!nextLevel || !item) return;
 
-      const nextItems = await loadLevelItems(nextLevel, item.id);
-      if (autoAdvance && nextItems.length) {
-        setActiveLevel(nextLevel);
+      // ChordVoicing isn't eager-loaded (too many rows); fetch on demand
+      // when its parent (Chord) gets selected. Other levels already have
+      // full data from bootstrap.
+      if (nextLevel === 'ChordVoicing' && (itemsByLevel.ChordVoicing?.length ?? 0) === 0) {
+        await loadLevelItems(nextLevel, item.id);
+      }
+
+      if (autoAdvance) {
+        const haveChildren = (itemsByLevel[nextLevel]?.length ?? 0) > 0;
+        if (haveChildren || nextLevel === 'ChordVoicing') {
+          setActiveLevel(nextLevel);
+        }
       }
     },
-    [loadLevelItems]
+    [itemsByLevel, loadLevelItems]
   );
 
   useEffect(() => {
@@ -171,7 +205,17 @@ const MusicHierarchyDemo: React.FC = () => {
         setError(null);
         const meta = await fetchHierarchyLevels();
         setLevelsInfo(meta);
+        // Block on the first level (so the table has something to show)
+        // and fire-and-forget the rest in the background. As they land,
+        // child indexes rebuild via `useMemo` and the # Forte numbers
+        // column populates progressively. Chord can be very large; not
+        // blocking on it keeps the page interactive.
         await loadLevelItems('SetClass');
+        // Background fills.
+        const backgroundLevels: MusicHierarchyLevel[] = ['ForteNumber', 'PrimeForm', 'Chord', 'Scale'];
+        backgroundLevels.forEach(level => {
+          void loadLevelItems(level);
+        });
       } catch (err: unknown) {
         setError((err instanceof Error ? err.message : null) ?? 'Music hierarchy API is unavailable.');
       } finally {
@@ -182,8 +226,88 @@ const MusicHierarchyDemo: React.FC = () => {
     bootstrap();
   }, [loadLevelItems]);
 
+  // Build a child index per level: for each level L > 0, group its items
+  // by parent-id. So `childIndex.ForteNumber.get(setClassId)` gives all
+  // ForteNumbers that belong to that SetClass. Used to render the
+  // "Children" + "Example" columns and the detail-panel children list.
+  const childIndex = useMemo(() => {
+    const result: Partial<Record<MusicHierarchyLevel, Map<string, MusicHierarchyItem[]>>> = {};
+    for (const level of levelOrder) {
+      const map = new Map<string, MusicHierarchyItem[]>();
+      const items = itemsByLevel[level] ?? [];
+      for (const item of items) {
+        const pid = findParentId(item);
+        if (!pid) continue;
+        const arr = map.get(pid) ?? [];
+        arr.push(item);
+        map.set(pid, arr);
+      }
+      result[level] = map;
+    }
+    return result;
+  }, [itemsByLevel]);
+
+  // Pick a "representative" child — favour the alphabetically/numerically
+  // earliest sibling, which is usually the canonical / simplest member of
+  // the family (e.g. 4-1 for tetrachord set class 4-Z15-ish).
+  const pickRepresentative = useCallback((children: MusicHierarchyItem[]): MusicHierarchyItem | undefined => {
+    if (!children.length) return undefined;
+    return [...children].sort((a, b) => a.name.localeCompare(b.name))[0];
+  }, []);
+
+  // tableColumns extended with Children count + Example columns when the
+  // active level has a downstream level that we have child data for.
+  const tableColumns = useMemo<Record<MusicHierarchyLevel, TableColumn[]>>(() => {
+    const result = { ...baseTableColumns };
+    for (const level of levelOrder) {
+      const next = getNextLevel(level);
+      if (!next) continue;
+      const childMap = childIndex[next];
+      if (!childMap || childMap.size === 0) continue;
+      const label = NEXT_LEVEL_LABEL[level] ?? next;
+      result[level] = [
+        ...baseTableColumns[level],
+        {
+          key: '__childCount',
+          label: `# ${label}`,
+          render: (item) => {
+            const kids = childMap.get(item.id);
+            return kids?.length ?? '—';
+          },
+        },
+        {
+          key: '__childExample',
+          label: 'e.g.',
+          render: (item) => {
+            const kids = childMap.get(item.id);
+            const rep = kids ? pickRepresentative(kids) : undefined;
+            return rep?.name ?? '—';
+          },
+        },
+      ];
+    }
+    return result;
+  }, [childIndex, pickRepresentative]);
+
   const tableRows = useMemo(() => {
-    const rows = itemsByLevel[activeLevel] ?? [];
+    let rows = itemsByLevel[activeLevel] ?? [];
+
+    // Drill-down filter: when an upstream level has a selection, restrict
+    // the active table to children of that selection (client-side filter
+    // via the parent-id metadata key). Lets the user keep navigation
+    // context without losing eager-loaded data.
+    const idx = levelOrder.indexOf(activeLevel);
+    if (idx > 0) {
+      const parentLevel = levelOrder[idx - 1];
+      const parent = selectedItems[parentLevel];
+      if (parent) {
+        const filtered = rows.filter(r => findParentId(r) === parent.id);
+        // Only narrow if the filter actually matches something — avoids
+        // showing an empty table when the parent-id key isn't exposed.
+        if (filtered.length > 0) rows = filtered;
+      }
+    }
+
     if (!tableFilter.trim()) return rows;
     const needle = tableFilter.toLowerCase();
     return rows.filter(item =>
@@ -192,7 +316,7 @@ const MusicHierarchyDemo: React.FC = () => {
       (item.description ?? '').toLowerCase().includes(needle) ||
       item.tags.some(tag => tag.toLowerCase().includes(needle))
     );
-  }, [itemsByLevel, activeLevel, tableFilter]);
+  }, [itemsByLevel, selectedItems, activeLevel, tableFilter]);
 
   const selectedForActive = selectedItems[activeLevel];
 
@@ -424,6 +548,45 @@ const MusicHierarchyDemo: React.FC = () => {
                     </Grid>
                   ))}
                 </Grid>
+
+                {(() => {
+                  const next = getNextLevel(activeLevel);
+                  if (!next) return null;
+                  const nextLabel = NEXT_LEVEL_LABEL[activeLevel] ?? next;
+                  const kids = childIndex[next]?.get(selectedForActive.id) ?? [];
+                  if (kids.length === 0) return null;
+                  // Show up to 8 representative children, sorted alphabetically.
+                  const sample = [...kids].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 8);
+                  return (
+                    <>
+                      <Divider sx={{ my: 2 }} />
+                      <Box display="flex" alignItems="baseline" justifyContent="space-between" mb={1}>
+                        <Typography variant="subtitle2">
+                          {kids.length} {nextLabel} · {kids.length > sample.length ? `top ${sample.length}` : 'all'}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="primary"
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => setActiveLevel(next)}
+                        >
+                          View all →
+                        </Typography>
+                      </Box>
+                      <Box display="flex" flexWrap="wrap" gap={0.75}>
+                        {sample.map(child => (
+                          <Chip
+                            key={child.id}
+                            size="small"
+                            label={child.name}
+                            onClick={() => handleSelectionChange(next, child, false).catch(() => undefined)}
+                            sx={{ cursor: 'pointer' }}
+                          />
+                        ))}
+                      </Box>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Paper>
           )}
