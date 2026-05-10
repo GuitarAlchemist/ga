@@ -3,12 +3,10 @@ import {
   Alert,
   Autocomplete,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
-  Container,
   Divider,
   Grid,
   Paper,
@@ -22,7 +20,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { fetchHierarchyItems, fetchHierarchyLevels } from '../api/musicHierarchyApi';
+import { fetchAllHierarchyItems, fetchHierarchyLevels } from '../api/musicHierarchyApi';
 import { MusicHierarchyItem, MusicHierarchyLevel, MusicHierarchyLevelInfo } from '../types/musicHierarchy';
 
 const levelOrder: MusicHierarchyLevel[] = [
@@ -107,24 +105,6 @@ const getNextLevel = (current: MusicHierarchyLevel): MusicHierarchyLevel | undef
   return levelOrder[index + 1];
 };
 
-// Static fallback data for preview mode
-const PREVIEW_SET_CLASSES: MusicHierarchyItem[] = [
-  { id: 'sc-3-11', name: '[0,3,7]', level: 'SetClass', category: 'Trichord', description: 'Major/Minor triad', tags: ['triad'], metadata: { Cardinality: '3', IntervalVector: '001110' } },
-  { id: 'sc-4-26', name: '[0,3,5,8]', level: 'SetClass', category: 'Tetrachord', description: 'Minor seventh chord', tags: ['seventh'], metadata: { Cardinality: '4', IntervalVector: '012120' } },
-  { id: 'sc-4-20', name: '[0,1,5,8]', level: 'SetClass', category: 'Tetrachord', description: 'Major seventh chord', tags: ['seventh'], metadata: { Cardinality: '4', IntervalVector: '101220' } },
-  { id: 'sc-3-9', name: '[0,2,7]', level: 'SetClass', category: 'Trichord', description: 'Sus4 / Power chord', tags: ['sus'], metadata: { Cardinality: '3', IntervalVector: '010020' } },
-  { id: 'sc-5-35', name: '[0,2,4,7,9]', level: 'SetClass', category: 'Pentachord', description: 'Pentatonic scale', tags: ['pentatonic'], metadata: { Cardinality: '5', IntervalVector: '032140' } },
-];
-
-const PREVIEW_LEVELS_INFO: MusicHierarchyLevelInfo[] = [
-  { level: 'SetClass', displayName: 'Set Classes', description: 'Pitch class sets', totalItems: 224, primaryMetric: 'Cardinality', highlights: ['Trichords', 'Tetrachords', 'Pentachords'] },
-  { level: 'ForteNumber', displayName: 'Forte Numbers', description: 'Allen Forte classification', totalItems: 224, primaryMetric: 'Cardinality', highlights: [] },
-  { level: 'PrimeForm', displayName: 'Prime Forms', description: 'Normal form representatives', totalItems: 224, primaryMetric: 'Cardinality', highlights: [] },
-  { level: 'Chord', displayName: 'Chords', description: 'Named chord types', totalItems: 500, primaryMetric: 'NoteCount', highlights: ['Major', 'Minor', 'Seventh'] },
-  { level: 'ChordVoicing', displayName: 'Voicings', description: 'Guitar voicings', totalItems: 5000, primaryMetric: 'Frets', highlights: [] },
-  { level: 'Scale', displayName: 'Scales', description: 'Scales and modes', totalItems: 400, primaryMetric: 'NoteCount', highlights: ['Major', 'Minor', 'Pentatonic'] },
-] as MusicHierarchyLevelInfo[];
-
 const MusicHierarchyDemo: React.FC = () => {
   const [levelsInfo, setLevelsInfo] = useState<MusicHierarchyLevelInfo[]>([]);
   const [itemsByLevel, setItemsByLevel] = useState(initialItemsState);
@@ -134,12 +114,11 @@ const MusicHierarchyDemo: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [tableFilter, setTableFilter] = useState('');
   const [initializing, setInitializing] = useState(true);
-  const [previewMode, setPreviewMode] = useState(false);
 
   const loadLevelItems = useCallback(async (level: MusicHierarchyLevel, parentId?: string) => {
     setLoadingByLevel(prev => ({ ...prev, [level]: true }));
     try {
-      const data = await fetchHierarchyItems({ level, parentId, take: level === 'SetClass' ? 120 : 80 });
+      const data = await fetchAllHierarchyItems({ level, parentId });
       setItemsByLevel(prev => ({ ...prev, [level]: data }));
       return data;
     } catch (err: unknown) {
@@ -179,7 +158,7 @@ const MusicHierarchyDemo: React.FC = () => {
 
       const nextItems = await loadLevelItems(nextLevel, item.id);
       if (autoAdvance && nextItems.length) {
-        await handleSelectionChange(nextLevel, nextItems[0], true);
+        setActiveLevel(nextLevel);
       }
     },
     [loadLevelItems]
@@ -189,26 +168,19 @@ const MusicHierarchyDemo: React.FC = () => {
     const bootstrap = async () => {
       try {
         setInitializing(true);
-        const [meta] = await Promise.all([fetchHierarchyLevels()]);
-        setLevelsInfo(meta);
-        const rootItems = await loadLevelItems('SetClass');
-        if (rootItems.length) {
-          await handleSelectionChange('SetClass', rootItems[0], true);
-        }
-      } catch {
-        // Fall back to preview mode with static data
-        console.debug('MusicHierarchy: Backend unavailable, using preview mode');
-        setPreviewMode(true);
-        setLevelsInfo(PREVIEW_LEVELS_INFO);
-        setItemsByLevel(prev => ({ ...prev, SetClass: PREVIEW_SET_CLASSES }));
         setError(null);
+        const meta = await fetchHierarchyLevels();
+        setLevelsInfo(meta);
+        await loadLevelItems('SetClass');
+      } catch (err: unknown) {
+        setError((err instanceof Error ? err.message : null) ?? 'Music hierarchy API is unavailable.');
       } finally {
         setInitializing(false);
       }
     };
 
     bootstrap();
-  }, [handleSelectionChange, loadLevelItems]);
+  }, [loadLevelItems]);
 
   const tableRows = useMemo(() => {
     const rows = itemsByLevel[activeLevel] ?? [];
@@ -225,36 +197,52 @@ const MusicHierarchyDemo: React.FC = () => {
   const selectedForActive = selectedItems[activeLevel];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box display="flex" flexDirection="column" gap={3}>
-        <Box>
-          <Typography variant="h3" fontWeight={700} gutterBottom>
-            Music Hierarchy Navigator
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Explore the entire atonal/tonal hierarchy from Set Classes to guitar voicings and compatible scales.
-          </Typography>
-        </Box>
-
-        {previewMode && (
-          <Alert severity="info">
-            Backend unavailable — showing preview mode with sample set classes. Start the Guitar Alchemist backend for the full hierarchy with 200+ set classes, chords, voicings, and scales.
-          </Alert>
-        )}
-        {error && <Alert severity="error">{error}</Alert>}
-
+    // Full-bleed shell: page itself doesn't scroll; the level-card column
+    // and the table panel scroll independently. Header is fixed at top.
+    <Box
+      sx={{
+        width: '100%',
+        height: 'calc(100vh - 48px)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        bgcolor: 'background.default',
+      }}
+    >
+      {/* Header (non-scrolling) */}
+      <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
+        <Typography variant="h4" fontWeight={700}>
+          Music Hierarchy Navigator
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Explore the entire atonal/tonal hierarchy from Set Classes to guitar voicings and compatible scales.
+        </Typography>
+        {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
         {initializing && (
-          <Box display="flex" alignItems="center" gap={2}>
-            <CircularProgress size={20} />
-            <Typography variant="body2" color="text.secondary">
+          <Box display="flex" alignItems="center" gap={2} sx={{ mt: 1 }}>
+            <CircularProgress size={16} />
+            <Typography variant="caption" color="text.secondary">
               Initializing hierarchy data...
             </Typography>
           </Box>
         )}
+      </Box>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Box display="flex" flexDirection="column" gap={2}>
+      {/* Body — two columns sharing remaining vertical space. */}
+      <Box sx={{ flex: 1, display: 'flex', minHeight: 0, gap: 2, p: 2 }}>
+        {/* Left column — level cards scroll vertically inside the column. */}
+        <Box
+          sx={{
+            width: { xs: '100%', md: 360 },
+            flexShrink: 0,
+            display: { xs: 'none', md: 'flex' },
+            flexDirection: 'column',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            pr: 1,
+          }}
+        >
+          <Box display="flex" flexDirection="column" gap={2}>
               {levelOrder.map(level => {
                 const info = levelsInfo.find(l => l.level === level);
                 const options = itemsByLevel[level] ?? [];
@@ -308,37 +296,65 @@ const MusicHierarchyDemo: React.FC = () => {
                   </Card>
                 );
               })}
+          </Box>
+        </Box>
+
+        {/* Right column — toolbar fixed at top of column, table scrolls
+            inside its own panel, selected-item detail (when present)
+            takes a bottom slice with its own scroll. */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Paper variant="outlined" sx={{ p: 2, flexShrink: 0 }}>
+            <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" justifyContent="space-between">
+              <ToggleButtonGroup
+                size="small"
+                value={activeLevel}
+                exclusive
+                onChange={(_, value) => value && setActiveLevel(value)}
+              >
+                {levelOrder.map(level => (
+                  <ToggleButton key={level} value={level}>
+                    {levelLabels[level]}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              <TextField
+                size="small"
+                label="Filter table"
+                value={tableFilter}
+                onChange={event => setTableFilter(event.target.value)}
+              />
             </Box>
-          </Grid>
+          </Paper>
 
-          <Grid item xs={12} md={8}>
-            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-              <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" justifyContent="space-between">
-                <ToggleButtonGroup
-                  size="small"
-                  value={activeLevel}
-                  exclusive
-                  onChange={(_, value) => value && setActiveLevel(value)}
-                >
-                  {levelOrder.map(level => (
-                    <ToggleButton key={level} value={level}>
-                      {levelLabels[level]}
-                    </ToggleButton>
-                  ))}
-                </ToggleButtonGroup>
-                <TextField
-                  size="small"
-                  label="Filter table"
-                  value={tableFilter}
-                  onChange={event => setTableFilter(event.target.value)}
-                />
-              </Box>
-            </Paper>
-
-            <Paper variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
+          <Paper
+            variant="outlined"
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'auto',  // scrollbar lives on the table panel
+              // Sticky header so the table can scroll while the column
+              // labels stay visible.
+              '& thead th': {
+                position: 'sticky',
+                top: 0,
+                bgcolor: 'background.paper',
+                zIndex: 1,
+                borderBottom: 1,
+                borderColor: 'divider',
+              },
+            }}
+          >
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
                     {tableColumns[activeLevel].map(column => (
                       <TableCell key={column.key}>{column.label}</TableCell>
                     ))}
@@ -350,7 +366,7 @@ const MusicHierarchyDemo: React.FC = () => {
                       key={row.id}
                       hover
                       selected={selectedForActive?.id === row.id}
-                      onClick={() => handleSelectionChange(activeLevel, row).catch(() => undefined)}
+                      onClick={() => handleSelectionChange(activeLevel, row, true).catch(() => undefined)}
                       sx={{ cursor: 'pointer' }}
                     >
                       {tableColumns[activeLevel].map(column => (
@@ -373,50 +389,47 @@ const MusicHierarchyDemo: React.FC = () => {
               </Table>
             </Paper>
 
-            {selectedForActive && (
-              <Paper variant="outlined" sx={{ mt: 2 }}>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">{selectedForActive.name}</Typography>
-                    <Chip label={selectedForActive.category} size="small" />
-                  </Box>
-                  {selectedForActive.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {selectedForActive.description}
-                    </Typography>
-                  )}
-                  <Divider sx={{ my: 2 }} />
-                  <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-                    {selectedForActive.tags?.map(tag => (
-                      <Chip key={tag} size="small" label={tag} />
-                    ))}
-                  </Box>
-                  <Grid container spacing={2}>
-                    {Object.entries(selectedForActive.metadata ?? {}).map(([key, value]) => (
-                      <Grid item xs={6} sm={4} key={key}>
-                        <Typography variant="caption" color="text.secondary">
-                          {key}
-                        </Typography>
-                        <Typography variant="body2">{value}</Typography>
-                      </Grid>
-                    ))}
-                  </Grid>
-                  <Box mt={2} display="flex" justifyContent="flex-end" gap={1}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleSelectionChange(activeLevel, selectedForActive, true).catch(() => undefined)}
-                    >
-                      Drill Down
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Paper>
-            )}
-          </Grid>
-        </Grid>
+          {selectedForActive && (
+            <Paper
+              variant="outlined"
+              sx={{
+                flexShrink: 0,
+                maxHeight: '40%',
+                overflow: 'auto',
+              }}
+            >
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="h6">{selectedForActive.name}</Typography>
+                  <Chip label={selectedForActive.category} size="small" />
+                </Box>
+                {selectedForActive.description && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {selectedForActive.description}
+                  </Typography>
+                )}
+                <Divider sx={{ my: 2 }} />
+                <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
+                  {selectedForActive.tags?.map(tag => (
+                    <Chip key={tag} size="small" label={tag} />
+                  ))}
+                </Box>
+                <Grid container spacing={2}>
+                  {Object.entries(selectedForActive.metadata ?? {}).map(([key, value]) => (
+                    <Grid item xs={6} sm={4} key={key}>
+                      <Typography variant="caption" color="text.secondary">
+                        {key}
+                      </Typography>
+                      <Typography variant="body2">{value}</Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+              </CardContent>
+            </Paper>
+          )}
+        </Box>
       </Box>
-    </Container>
+    </Box>
   );
 };
 
