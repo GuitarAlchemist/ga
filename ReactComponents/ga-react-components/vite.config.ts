@@ -462,6 +462,15 @@ export default defineConfig({
             'ag-grid-community',
             'ag-grid-react',
             'react-dom',
+            // @mui/x-tree-view ships many small ESM hook modules. On the
+            // tunneled origin (demos.guitaralchemist.com → Cloudflare →
+            // local Vite), each cold on-demand transform exceeds the
+            // per-request timeout and the browser sees net::ERR_FAILED
+            // on hooks like useApplyPropagationToSelectedItemsOnMount,
+            // useTreeViewApiRef, useRichTreeViewApiRef. Pre-bundling at
+            // boot avoids the cascade. NavigationPanel in
+            // EcosystemRoadmap is the current consumer.
+            '@mui/x-tree-view',
         ],
     },
     resolve: {
