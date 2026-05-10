@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GA Loop Status (Demerzel integration — Tier 1, read-only)",
+  "description": "Snapshot of /chatbot-iterate's current state, emitted by Scripts/project-sync.ps1 so Demerzel governance can poll it without coupling to internal GA mechanics. One-way: GA writes, Demerzel reads. Tier 2 adds the reverse direction via docs/schemas/governance-directives.schema.json.\n\nStorage: state/governance/ga-loop-status.json (single file, atomically overwritten).",
+  "type": "object",
+  "required": ["schemaVersion", "emittedAt", "repo", "loop", "backlog", "openPRs", "ledger", "verdicts"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Bumped on breaking schema changes. v0.1 = first Demerzel-readable emission (2026-05-10)."
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of this snapshot."
+    },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name", "branch", "headSha"],
+      "properties": {
+        "owner": { "type": "string" },
+        "name": { "type": "string" },
+        "branch": { "type": "string", "description": "Current branch when the snapshot was emitted." },
+        "headSha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }
+      }
+    },
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["halted", "killswitchReason"],
+      "properties": {
+        "halted": {
+          "type": "boolean",
+          "description": "True if state/.loop-halted sentinel is present (kill switch engaged)."
+        },
+        "killswitchReason": {
+          "anyOf": [ { "type": "string" }, { "type": "null" } ],
+          "description": "Contents of state/.loop-halted's REASON line, or null if not halted."
+        }
+      }
+    },
+    "backlog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chatbotTrack"],
+      "properties": {
+        "chatbotTrack": {
+          "type": "array",
+          "description": "Items parsed from the 'Chatbot Track' section of BACKLOG.md. Order reflects priority ordering in the source.",
+          "items": {
+            "type": "object",
+            "required": ["slug", "priority", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "slug": { "type": "string", "description": "kebab-case identifier (e.g. memory-session-scope)" },
+              "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+              "status": {
+                "type": "string",
+                "enum": ["ready", "blocked", "scheduled", "parked", "shipped"]
+              },
+              "summary": { "type": "string", "description": "One-line description from the BACKLOG entry." },
+              "tribunalRequired": {
+                "type": "boolean",
+                "description": "Whether the path-hints classifier flags this as needing the QA Architect Tribunal."
+              }
+            }
+          }
+        }
+      }
+    },
+    "openPRs": {
+      "type": "array",
+      "description": "Currently-open PRs that came out of /chatbot-iterate (heuristic: branch starts with 'chatbot/' or PR has 'auto-merge-eligible' label).",
+      "items": {
+        "type": "object",
+        "required": ["number", "title", "branch", "createdAt"],
+        "additionalProperties": false,
+        "properties": {
+          "number": { "type": "integer" },
+          "title": { "type": "string" },
+          "branch": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "labels": { "type": "array", "items": { "type": "string" } },
+          "mergeable": {
+            "type": "string",
+            "enum": ["MERGEABLE", "CONFLICTING", "UNKNOWN"]
+          },
+          "ci": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "passed": { "type": "integer", "minimum": 0 },
+              "failed": { "type": "integer", "minimum": 0 },
+              "pending": { "type": "integer", "minimum": 0 },
+              "failedNames": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "reviewVerdict": {
+            "anyOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "verdict": { "type": "string", "enum": ["pass", "nits-only", "blocking", "abstain"] },
+                  "mechanism": { "type": "string" },
+                  "reviewedAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalRows", "lastNRows", "decisionCounts"],
+      "properties": {
+        "totalRows": { "type": "integer", "minimum": 0 },
+        "lastNRows": {
+          "type": "array",
+          "description": "Most recent N rows from state/quality/gate-ledger.jsonl (N=10 by default). Demerzel uses these to assess gate ROI over time.",
+          "items": { "type": "object" }
+        },
+        "decisionCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "merged-clean":         { "type": "integer", "minimum": 0 },
+            "merged-with-followup": { "type": "integer", "minimum": 0 },
+            "merged-with-revert":   { "type": "integer", "minimum": 0 },
+            "open":                 { "type": "integer", "minimum": 0 },
+            "abandoned":            { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "verdicts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pendingTribunal", "completedTribunal"],
+      "properties": {
+        "pendingTribunal": {
+          "type": "array",
+          "description": "PRs that touched tribunal-required paths (per check-chatbot-tribunal-gate.ps1) but have not yet produced a Demerzel verdict at state/quality/verdicts/.",
+          "items": {
+            "type": "object",
+            "required": ["pr"],
+            "additionalProperties": false,
+            "properties": {
+              "pr": { "type": "integer" },
+              "branch": { "type": "string" },
+              "ageDays": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "completedTribunal": {
+          "type": "array",
+          "description": "PRs with a tribunal verdict file present.",
+          "items": {
+            "type": "object",
+            "required": ["pr", "verdict"],
+            "additionalProperties": false,
+            "properties": {
+              "pr": { "type": "integer" },
+              "verdict": { "type": "string" },
+              "verdictId": { "type": "string" },
+              "completedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

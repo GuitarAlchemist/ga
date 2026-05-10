@@ -50,9 +50,11 @@ have been satisfied.
 
 ## Process
 
-### Step 0: Killswitch check
+### Step 0: Killswitch + governance-directives check
 
-Before doing ANYTHING, check the loop killswitch:
+Before doing ANYTHING, check the two halt signals.
+
+**A. Local killswitch** (operator-owned):
 
 ```powershell
 if (Test-Path state/.loop-halted) {
@@ -62,10 +64,7 @@ if (Test-Path state/.loop-halted) {
 }
 ```
 
-If `state/.loop-halted` exists, exit cleanly with the sentinel's
-reason. Do NOT pick a new item. Do NOT touch the working tree.
-This is the L4 kill switch — when set, every fresh iteration
-refuses to start. To resume:
+To resume:
 
 ```powershell
 pwsh Scripts/loop-killswitch.ps1 -Reset
@@ -76,6 +75,34 @@ Status check (read-only):
 ```powershell
 pwsh Scripts/loop-killswitch.ps1 -Status
 ```
+
+**B. Demerzel governance directives** (Tier 2 integration —
+governance-owned). Demerzel writes
+`state/governance/directives.json` per
+`docs/schemas/governance-directives.schema.json` to pause the whole
+Chatbot Track, pause a specific slug, or order a rollback of a
+specific PR. Check before picking the next item:
+
+```powershell
+pwsh Scripts/check-governance-directives.ps1 -Slug <selected-slug>
+```
+
+Exit codes:
+- `0` clear — proceed
+- `2` blocked — directive targets this scope; do NOT iterate. Surface
+  the reason to the user and STOP.
+- `3` invalid — directives file malformed. Treat as conservatively
+  blocked; flag for Demerzel-side fix.
+
+Composition: the local killswitch AND the governance directive both
+must clear. EITHER can block. The local sentinel is faster to set
+(operator on this host); governance directives travel from Demerzel's
+clock — both are valid stop signals.
+
+Source-of-truth contract: `docs/schemas/governance-directives.schema.json`
++ the loop-status emitter at `Scripts/project-sync.ps1` (Tier 1, GA →
+Demerzel) that lets Demerzel see what GA's been doing before issuing
+directives back.
 
 ### Step 1: Identify the next chatbot item
 
