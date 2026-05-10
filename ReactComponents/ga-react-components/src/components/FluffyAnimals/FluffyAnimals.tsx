@@ -159,111 +159,332 @@ const FUR_FRAGMENT = /* glsl */ `
 
 const yAxis = new THREE.Vector3(0, 1, 0);
 
+// ─── Fur pattern motifs ─────────────────────────────────────────────────
+// Each pattern is evaluated at a fur instance's *local* position (relative
+// to the part centre, normalised by the radii) and returns a 0..1 mix
+// factor between the part's primary colours (body/tip) and the pattern's
+// secondary colours (bodyB/tipB). Result is baked into the per-instance
+// aBaseColor / aTipColor attributes so no per-fragment sampling is
+// needed at render time.
+
+type Pattern =
+  | { kind: 'solid' }
+  | { kind: 'belly';   threshold: number; bodyB: number; tipB: number }                          // white-belly fox
+  | { kind: 'stripes'; freq: number;     axis: 'x' | 'y' | 'z'; jitter?: number; sharp?: number; bodyB: number; tipB: number }  // tiger / zebra
+  | { kind: 'patches'; scale: number;    threshold: number;     bodyB: number; tipB: number }    // cow / dalmatian
+  | { kind: 'sock';    threshold: number; axis: 'y';            bodyB: number; tipB: number };  // dark feet/socks
+
 interface Part {
-  /** Center in animal-local space. */
   c: [number, number, number];
-  /** Radii along x/y/z. */
   r: [number, number, number];
-  /** Visible body color. */
   body: number;
-  /** Fur tip color. */
   tip?: number;
-  /** Whether to grow fur on this part. */
   fur?: boolean;
-  /** Fur length multiplier on this part. */
   furLen?: number;
-  /** Fur density multiplier on this part. */
   furDen?: number;
+  pattern?: Pattern;
 }
 
 interface AnimalDef {
   name: string;
   parts: Part[];
-  /** Where this animal sits relative to the scene root. */
   pos: [number, number, number];
-  /** Y rotation so the animal faces the camera. */
   yaw?: number;
 }
 
+// CPU 3D hash for the patches pattern.
+const hash3D = (x: number, y: number, z: number): number => {
+  const v = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+// Smoothed 3D noise so patches blob rather than hard-grid.
+const blob3D = (x: number, y: number, z: number): number => {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = x - ix, fy = y - iy, fz = z - iz;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const uz = fz * fz * (3 - 2 * fz);
+  let s = 0;
+  s += hash3D(ix,     iy,     iz)     * (1 - ux) * (1 - uy) * (1 - uz);
+  s += hash3D(ix + 1, iy,     iz)     * ux       * (1 - uy) * (1 - uz);
+  s += hash3D(ix,     iy + 1, iz)     * (1 - ux) * uy       * (1 - uz);
+  s += hash3D(ix + 1, iy + 1, iz)     * ux       * uy       * (1 - uz);
+  s += hash3D(ix,     iy,     iz + 1) * (1 - ux) * (1 - uy) * uz;
+  s += hash3D(ix + 1, iy,     iz + 1) * ux       * (1 - uy) * uz;
+  s += hash3D(ix,     iy + 1, iz + 1) * (1 - ux) * uy       * uz;
+  s += hash3D(ix + 1, iy + 1, iz + 1) * ux       * uy       * uz;
+  return s;
+};
+
+// Evaluate a pattern at a local point on the part's surface. lx/ly/lz are
+// in local space (unrotated) relative to the part centre, in WORLD units
+// (not normalised), so jitter and freq are in metres.
+function evalPattern(p: Pattern | undefined, lx: number, ly: number, lz: number, ry: number): number {
+  if (!p || p.kind === 'solid') return 0;
+  if (p.kind === 'belly') {
+    // Below the part's lower threshold (in normalised Y) gets the
+    // secondary colour. Smoothstep across a small band so the seam
+    // isn't a hard line.
+    const yNorm = ly / ry;
+    const t = (p.threshold - yNorm) * 4 + 0.5;
+    return Math.max(0, Math.min(1, t));
+  }
+  if (p.kind === 'sock') {
+    // Like belly but reversed sense — secondary colour appears below
+    // threshold (feet) AND blends quickly. Used on legs.
+    const yNorm = ly / ry;
+    return yNorm < p.threshold ? 1 : 0;
+  }
+  if (p.kind === 'stripes') {
+    // Sin-wave along the chosen axis, jittered by a perpendicular noise
+    // so stripes wobble like real tiger fur instead of perfect bars.
+    const v = p.axis === 'x' ? lx : p.axis === 'y' ? ly : lz;
+    const jitter = p.jitter ?? 0;
+    const wobble = jitter * Math.sin(ly * 3.5 + lx * 2.5);
+    const wave = Math.sin(v * p.freq + wobble);
+    const sharp = p.sharp ?? 4.0;
+    // Push toward 0 / 1 using sharp scale.
+    return Math.max(0, Math.min(1, (wave + 1) * 0.5 * sharp - (sharp - 1) * 0.5));
+  }
+  if (p.kind === 'patches') {
+    const n = blob3D(lx * p.scale, ly * p.scale, lz * p.scale);
+    return n > p.threshold ? 1 : 0;
+  }
+  return 0;
+}
+
+// Helper for the leg quad (4 ellipsoids at corners of a body).
+const legQuad = (
+  bodyHalfX: number,
+  bodyZFront: number,
+  bodyZBack: number,
+  legY: number,
+  legR: [number, number, number],
+  body: number,
+  pattern?: Pattern,
+  furProps?: Partial<Pick<Part, 'fur' | 'furLen' | 'furDen' | 'tip'>>,
+): Part[] => {
+  const base: Omit<Part, 'c'> = {
+    r: legR,
+    body,
+    pattern,
+    ...(furProps ?? {}),
+  };
+  return [
+    { ...base, c: [-bodyHalfX, legY, bodyZFront] },
+    { ...base, c: [ bodyHalfX, legY, bodyZFront] },
+    { ...base, c: [-bodyHalfX, legY, bodyZBack] },
+    { ...base, c: [ bodyHalfX, legY, bodyZBack] },
+  ];
+};
+
 const ANIMALS: AnimalDef[] = [
-  // ─── Bear — big, brown, shaggy. ─────────────────────────────────────
+  // ─── Bear — solid brown, lighter underbelly, four stocky legs. ─────────
   {
     name: 'bear',
-    pos: [-9, 0, 0],
+    pos: [-12.5, 0, 0],
     yaw: 0.2,
     parts: [
-      { c: [0, 1.05, 0], r: [1.05, 0.95, 1.40], body: 0x6b4423, tip: 0xa67849, fur: true, furLen: 1.1, furDen: 1.0 },
-      { c: [0, 1.65, 1.10], r: [0.65, 0.65, 0.70], body: 0x6b4423, tip: 0xa67849, fur: true, furLen: 0.8 },
-      { c: [-0.32, 2.20, 1.05], r: [0.18, 0.18, 0.18], body: 0x4a2f17, tip: 0x6b4423, fur: true, furLen: 0.4 },
-      { c: [0.32, 2.20, 1.05], r: [0.18, 0.18, 0.18], body: 0x4a2f17, tip: 0x6b4423, fur: true, furLen: 0.4 },
-      { c: [0, 1.50, 1.65], r: [0.28, 0.20, 0.20], body: 0x2a1810 }, // snout, no fur
-      { c: [0, 1.55, 1.85], r: [0.08, 0.06, 0.06], body: 0x111111 }, // nose
-      { c: [-0.20, 1.78, 1.55], r: [0.07, 0.07, 0.07], body: 0x111111 }, // eye L
-      { c: [ 0.20, 1.78, 1.55], r: [0.07, 0.07, 0.07], body: 0x111111 }, // eye R
+      // Body with a lighter belly via 'belly' pattern.
+      {
+        c: [0, 1.45, 0], r: [1.05, 0.85, 1.40],
+        body: 0x6b4423, tip: 0xa67849, fur: true, furLen: 1.1, furDen: 1.0,
+        pattern: { kind: 'belly', threshold: -0.10, bodyB: 0xa07a52, tipB: 0xc99770 },
+      },
+      // Head.
+      {
+        c: [0, 1.95, 1.10], r: [0.65, 0.60, 0.70],
+        body: 0x6b4423, tip: 0xa67849, fur: true, furLen: 0.7,
+      },
+      // Ears.
+      { c: [-0.34, 2.50, 1.05], r: [0.18, 0.18, 0.18], body: 0x4a2f17, tip: 0x6b4423, fur: true, furLen: 0.35 },
+      { c: [ 0.34, 2.50, 1.05], r: [0.18, 0.18, 0.18], body: 0x4a2f17, tip: 0x6b4423, fur: true, furLen: 0.35 },
+      // Snout, nose, eyes (no fur).
+      { c: [0, 1.80, 1.65], r: [0.30, 0.22, 0.25], body: 0x4a2f17 },
+      { c: [0, 1.85, 1.92], r: [0.10, 0.08, 0.07], body: 0x111111 },
+      { c: [-0.22, 2.07, 1.55], r: [0.07, 0.07, 0.06], body: 0x111111 },
+      { c: [ 0.22, 2.07, 1.55], r: [0.07, 0.07, 0.06], body: 0x111111 },
+      // Legs — thicker than other animals, slightly darker than body.
+      ...legQuad(0.65, 1.05, -1.05, 0.55, [0.30, 0.55, 0.30], 0x4a2f17,
+        undefined, { fur: true, furLen: 0.45, tip: 0x6b4423 }),
     ],
   },
-  // ─── Sheep — round, woolly, dark face. ──────────────────────────────
+
+  // ─── Sheep — solid white wool, dark face/legs, fluffy as ever. ─────────
   {
     name: 'sheep',
-    pos: [-4, 0, 0],
+    pos: [-7.5, 0, 0],
     yaw: 0.0,
     parts: [
-      { c: [0, 1.0, 0], r: [0.95, 0.95, 1.20], body: 0xf4ecdc, tip: 0xffffff, fur: true, furLen: 1.4, furDen: 1.5 },
-      { c: [0, 1.30, 1.00], r: [0.40, 0.45, 0.50], body: 0x2a2018 }, // dark head
-      { c: [-0.30, 1.65, 0.85], r: [0.15, 0.18, 0.10], body: 0x2a2018, tip: 0xf4ecdc, fur: true, furLen: 0.35 }, // ear L
-      { c: [ 0.30, 1.65, 0.85], r: [0.15, 0.18, 0.10], body: 0x2a2018, tip: 0xf4ecdc, fur: true, furLen: 0.35 }, // ear R
-      { c: [-0.16, 1.40, 1.45], r: [0.05, 0.05, 0.05], body: 0xffffff }, // eye
-      { c: [ 0.16, 1.40, 1.45], r: [0.05, 0.05, 0.05], body: 0xffffff },
-      { c: [ 0.0,  1.20, 1.50], r: [0.10, 0.08, 0.08], body: 0x111111 }, // nose
+      {
+        c: [0, 1.40, 0], r: [0.95, 0.95, 1.20],
+        body: 0xf0e8d4, tip: 0xffffff, fur: true, furLen: 1.5, furDen: 1.6,
+      },
+      // Dark head + ears.
+      { c: [0, 1.65, 1.05], r: [0.40, 0.45, 0.50], body: 0x2a2018 },
+      { c: [-0.32, 2.00, 0.90], r: [0.16, 0.18, 0.10], body: 0x2a2018, tip: 0xf0e8d4, fur: true, furLen: 0.30 },
+      { c: [ 0.32, 2.00, 0.90], r: [0.16, 0.18, 0.10], body: 0x2a2018, tip: 0xf0e8d4, fur: true, furLen: 0.30 },
+      { c: [-0.16, 1.75, 1.45], r: [0.05, 0.05, 0.04], body: 0xffffff },
+      { c: [ 0.16, 1.75, 1.45], r: [0.05, 0.05, 0.04], body: 0xffffff },
+      { c: [0, 1.55, 1.50], r: [0.10, 0.08, 0.08], body: 0x111111 },
+      // Thin dark legs (no fur, just body).
+      ...legQuad(0.50, 0.85, -0.85, 0.45, [0.10, 0.45, 0.10], 0x2a2018),
     ],
   },
-  // ─── Fox — sleek body, long tail, pointed ears. ─────────────────────
+
+  // ─── Fox — orange with white belly + black socks + white-tipped tail. ──
   {
     name: 'fox',
-    pos: [1, 0, 0],
+    pos: [-2.5, 0, 0],
     yaw: -0.1,
     parts: [
-      { c: [0, 0.85, 0], r: [0.55, 0.55, 1.10], body: 0xc25c2c, tip: 0xea8054, fur: true, furLen: 0.55, furDen: 0.9 },
-      { c: [0, 1.10, 0.95], r: [0.45, 0.40, 0.55], body: 0xc25c2c, tip: 0xf2a36a, fur: true, furLen: 0.40 },
-      { c: [0, 1.05, 1.30], r: [0.18, 0.16, 0.20], body: 0xffffff, tip: 0xffffff, fur: true, furLen: 0.18 }, // white muzzle
-      { c: [-0.27, 1.55, 0.90], r: [0.10, 0.30, 0.10], body: 0xc25c2c, tip: 0x222222, fur: true, furLen: 0.20 }, // ear L
-      { c: [ 0.27, 1.55, 0.90], r: [0.10, 0.30, 0.10], body: 0xc25c2c, tip: 0x222222, fur: true, furLen: 0.20 }, // ear R
-      { c: [0, 0.95, -1.20], r: [0.30, 0.30, 0.85], body: 0xc25c2c, tip: 0xffffff, fur: true, furLen: 0.95, furDen: 1.4 }, // tail
-      { c: [-0.18, 1.20, 1.30], r: [0.05, 0.05, 0.05], body: 0x111111 },
-      { c: [ 0.18, 1.20, 1.30], r: [0.05, 0.05, 0.05], body: 0x111111 },
-      { c: [0, 1.05, 1.50], r: [0.05, 0.04, 0.05], body: 0x111111 }, // nose
+      // Body — orange with white belly.
+      {
+        c: [0, 1.05, 0], r: [0.55, 0.50, 1.10],
+        body: 0xc25c2c, tip: 0xea8054, fur: true, furLen: 0.55, furDen: 1.0,
+        pattern: { kind: 'belly', threshold: -0.10, bodyB: 0xfaf0e2, tipB: 0xffffff },
+      },
+      // Head with white muzzle (achieved via a dedicated muzzle part).
+      {
+        c: [0, 1.30, 0.95], r: [0.45, 0.40, 0.50],
+        body: 0xc25c2c, tip: 0xf2a36a, fur: true, furLen: 0.35,
+      },
+      { c: [0, 1.20, 1.32], r: [0.20, 0.18, 0.22], body: 0xfaf0e2, tip: 0xffffff, fur: true, furLen: 0.18 },
+      { c: [-0.27, 1.75, 0.90], r: [0.10, 0.30, 0.08], body: 0xc25c2c, tip: 0x222222, fur: true, furLen: 0.18 },
+      { c: [ 0.27, 1.75, 0.90], r: [0.10, 0.30, 0.08], body: 0xc25c2c, tip: 0x222222, fur: true, furLen: 0.18 },
+      // Tail — fox tails are bushy; white tip via belly pattern flipped along Z.
+      {
+        c: [0, 1.10, -1.20], r: [0.30, 0.30, 0.85],
+        body: 0xc25c2c, tip: 0xea8054, fur: true, furLen: 0.95, furDen: 1.4,
+        pattern: { kind: 'belly', threshold: -0.55, bodyB: 0xffffff, tipB: 0xffffff },
+      },
+      // Eyes + nose.
+      { c: [-0.18, 1.40, 1.30], r: [0.05, 0.05, 0.04], body: 0x111111 },
+      { c: [ 0.18, 1.40, 1.30], r: [0.05, 0.05, 0.04], body: 0x111111 },
+      { c: [0, 1.20, 1.55], r: [0.05, 0.04, 0.04], body: 0x111111 },
+      // Legs with black sock pattern.
+      ...legQuad(0.40, 0.85, -0.85, 0.40, [0.10, 0.40, 0.10], 0xc25c2c,
+        { kind: 'sock', axis: 'y', threshold: -0.20, bodyB: 0x1a1a1a, tipB: 0x2a2a2a },
+        { fur: true, furLen: 0.18, tip: 0xea8054 }),
     ],
   },
-  // ─── Bunny — round body, long upright ears. ─────────────────────────
+
+  // ─── Bunny — long upright ears, pom tail, hopper hindlegs. ─────────────
   {
     name: 'bunny',
-    pos: [6, 0, 0],
+    pos: [2.5, 0, 0],
     yaw: 0.1,
     parts: [
-      { c: [0, 0.70, 0], r: [0.55, 0.60, 0.80], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.65, furDen: 1.2 },
-      { c: [0, 1.10, 0.55], r: [0.40, 0.40, 0.45], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.50 },
-      { c: [-0.20, 1.95, 0.40], r: [0.10, 0.55, 0.10], body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20 }, // ear L
-      { c: [ 0.20, 1.95, 0.40], r: [0.10, 0.55, 0.10], body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20 }, // ear R
-      { c: [0, 0.65, -0.85], r: [0.22, 0.22, 0.22], body: 0xffffff, tip: 0xffffff, fur: true, furLen: 0.70, furDen: 2.0 }, // pom tail
-      { c: [-0.14, 1.10, 0.95], r: [0.05, 0.05, 0.05], body: 0x111111 },
-      { c: [ 0.14, 1.10, 0.95], r: [0.05, 0.05, 0.05], body: 0x111111 },
-      { c: [0, 0.95, 1.00], r: [0.05, 0.04, 0.05], body: 0xff8a8a }, // pink nose
+      {
+        c: [0, 0.95, 0], r: [0.55, 0.60, 0.80],
+        body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.65, furDen: 1.2,
+      },
+      { c: [0, 1.35, 0.55], r: [0.40, 0.40, 0.45], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.50 },
+      // Long upright ears with pink interiors via belly pattern.
+      {
+        c: [-0.20, 2.20, 0.40], r: [0.10, 0.55, 0.10],
+        body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20,
+      },
+      {
+        c: [ 0.20, 2.20, 0.40], r: [0.10, 0.55, 0.10],
+        body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20,
+      },
+      { c: [0, 0.90, -0.85], r: [0.22, 0.22, 0.22], body: 0xffffff, tip: 0xffffff, fur: true, furLen: 0.75, furDen: 2.0 },
+      { c: [-0.14, 1.35, 0.95], r: [0.05, 0.05, 0.05], body: 0x111111 },
+      { c: [ 0.14, 1.35, 0.95], r: [0.05, 0.05, 0.05], body: 0x111111 },
+      { c: [0, 1.20, 1.00], r: [0.05, 0.04, 0.04], body: 0xff8a8a },
+      // Front legs (small) + hindlegs (larger, hopper-style).
+      { c: [-0.30, 0.30, 0.55], r: [0.10, 0.30, 0.10], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.30 },
+      { c: [ 0.30, 0.30, 0.55], r: [0.10, 0.30, 0.10], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.30 },
+      { c: [-0.40, 0.40, -0.35], r: [0.18, 0.40, 0.30], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.45, furDen: 1.2 },
+      { c: [ 0.40, 0.40, -0.35], r: [0.18, 0.40, 0.30], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.45, furDen: 1.2 },
     ],
   },
-  // ─── Cat — sleek body, triangle ears, long tail. ────────────────────
+
+  // ─── Tiger — orange + bold black stripes + white belly. ────────────────
   {
-    name: 'cat',
-    pos: [11, 0, 0],
-    yaw: -0.2,
+    name: 'tiger',
+    pos: [7.5, 0, 0],
+    yaw: -0.15,
     parts: [
-      { c: [0, 0.80, 0], r: [0.45, 0.45, 0.95], body: 0x4a4036, tip: 0x77685a, fur: true, furLen: 0.40, furDen: 1.0 },
-      { c: [0, 1.10, 0.85], r: [0.40, 0.38, 0.45], body: 0x4a4036, tip: 0x77685a, fur: true, furLen: 0.30 },
-      { c: [-0.22, 1.55, 0.75], r: [0.15, 0.20, 0.05], body: 0x4a4036, tip: 0xfdd6cf, fur: true, furLen: 0.15 }, // ear L
-      { c: [ 0.22, 1.55, 0.75], r: [0.15, 0.20, 0.05], body: 0x4a4036, tip: 0xfdd6cf, fur: true, furLen: 0.15 }, // ear R
-      { c: [0.7, 0.85, -1.20], r: [0.13, 0.13, 0.95], body: 0x4a4036, tip: 0x77685a, fur: true, furLen: 0.30, furDen: 0.8 }, // tail
-      { c: [-0.16, 1.20, 1.15], r: [0.06, 0.06, 0.06], body: 0xb6db5e }, // green eye L
-      { c: [ 0.16, 1.20, 1.15], r: [0.06, 0.06, 0.06], body: 0xb6db5e }, // green eye R
-      { c: [0, 1.05, 1.25], r: [0.05, 0.04, 0.05], body: 0xff7a7a }, // pink nose
+      {
+        c: [0, 1.10, 0], r: [0.60, 0.60, 1.30],
+        body: 0xe2701a, tip: 0xf2933e, fur: true, furLen: 0.55, furDen: 1.1,
+        pattern: { kind: 'stripes', freq: 4.0, axis: 'z', jitter: 1.4, sharp: 6.0,
+                   bodyB: 0x141008, tipB: 0x2a1d10 },
+      },
+      // Head — also striped (lighter freq).
+      {
+        c: [0, 1.40, 1.10], r: [0.50, 0.45, 0.55],
+        body: 0xe2701a, tip: 0xf2933e, fur: true, furLen: 0.40,
+        pattern: { kind: 'stripes', freq: 8.0, axis: 'x', jitter: 0.8, sharp: 5.0,
+                   bodyB: 0x141008, tipB: 0x2a1d10 },
+      },
+      // White muzzle.
+      { c: [0, 1.25, 1.50], r: [0.22, 0.18, 0.22], body: 0xfaf0e2, tip: 0xffffff, fur: true, furLen: 0.20 },
+      // Ears — rounded with dark backs.
+      { c: [-0.32, 1.85, 0.95], r: [0.13, 0.16, 0.07], body: 0xe2701a, tip: 0x141008, fur: true, furLen: 0.18 },
+      { c: [ 0.32, 1.85, 0.95], r: [0.13, 0.16, 0.07], body: 0xe2701a, tip: 0x141008, fur: true, furLen: 0.18 },
+      // Tail — striped.
+      {
+        c: [0, 1.10, -1.40], r: [0.16, 0.16, 0.85],
+        body: 0xe2701a, tip: 0xf2933e, fur: true, furLen: 0.45, furDen: 1.0,
+        pattern: { kind: 'stripes', freq: 6.0, axis: 'z', jitter: 0.4, sharp: 6.0,
+                   bodyB: 0x141008, tipB: 0x2a1d10 },
+      },
+      // Eyes + nose.
+      { c: [-0.20, 1.55, 1.45], r: [0.06, 0.05, 0.05], body: 0xc6b06a }, // amber eyes
+      { c: [ 0.20, 1.55, 1.45], r: [0.06, 0.05, 0.05], body: 0xc6b06a },
+      { c: [0, 1.30, 1.70], r: [0.06, 0.05, 0.05], body: 0x4a1a14 }, // dark nose
+      // Striped legs.
+      ...legQuad(0.45, 1.00, -1.00, 0.50, [0.13, 0.50, 0.13], 0xe2701a,
+        { kind: 'stripes', freq: 10.0, axis: 'y', jitter: 0.5, sharp: 5.0,
+          bodyB: 0x141008, tipB: 0x2a1d10 },
+        { fur: true, furLen: 0.22, tip: 0xf2933e }),
+    ],
+  },
+
+  // ─── Cow — white with black blobby patches. ────────────────────────────
+  {
+    name: 'cow',
+    pos: [12.5, 0, 0],
+    yaw: 0.05,
+    parts: [
+      {
+        c: [0, 1.30, 0], r: [0.75, 0.75, 1.55],
+        body: 0xfafafa, tip: 0xffffff, fur: true, furLen: 0.50, furDen: 0.9,
+        pattern: { kind: 'patches', scale: 1.7, threshold: 0.5, bodyB: 0x141414, tipB: 0x2a2a2a },
+      },
+      // Head — white with patches.
+      {
+        c: [0, 1.55, 1.30], r: [0.45, 0.45, 0.55],
+        body: 0xfafafa, tip: 0xffffff, fur: true, furLen: 0.30,
+        pattern: { kind: 'patches', scale: 2.6, threshold: 0.55, bodyB: 0x141414, tipB: 0x2a2a2a },
+      },
+      // Pink muzzle.
+      { c: [0, 1.40, 1.70], r: [0.25, 0.18, 0.22], body: 0xf0a8a0 },
+      // Black nostrils.
+      { c: [-0.10, 1.40, 1.86], r: [0.05, 0.04, 0.04], body: 0x141414 },
+      { c: [ 0.10, 1.40, 1.86], r: [0.05, 0.04, 0.04], body: 0x141414 },
+      // Eyes.
+      { c: [-0.22, 1.70, 1.55], r: [0.06, 0.05, 0.05], body: 0x141414 },
+      { c: [ 0.22, 1.70, 1.55], r: [0.06, 0.05, 0.05], body: 0x141414 },
+      // Two short curved horns (no fur).
+      { c: [-0.30, 2.00, 1.05], r: [0.07, 0.18, 0.07], body: 0xece2c4 },
+      { c: [ 0.30, 2.00, 1.05], r: [0.07, 0.18, 0.07], body: 0xece2c4 },
+      // Pink ears.
+      { c: [-0.50, 1.70, 1.15], r: [0.18, 0.10, 0.10], body: 0xfafafa, tip: 0xfdd6cf, fur: true, furLen: 0.20 },
+      { c: [ 0.50, 1.70, 1.15], r: [0.18, 0.10, 0.10], body: 0xfafafa, tip: 0xfdd6cf, fur: true, furLen: 0.20 },
+      // Tail with tuft.
+      { c: [0, 1.20, -1.55], r: [0.09, 0.09, 0.50], body: 0xfafafa, tip: 0xffffff, fur: true, furLen: 0.18 },
+      { c: [0, 0.80, -1.95], r: [0.18, 0.18, 0.18], body: 0x141414, tip: 0x2a2a2a, fur: true, furLen: 0.40, furDen: 1.5 },
+      // Small udder (pink, no fur).
+      { c: [0, 0.75, -0.30], r: [0.18, 0.18, 0.20], body: 0xf0a8a0 },
+      // Legs (white with black hooves via sock pattern).
+      ...legQuad(0.55, 1.20, -1.20, 0.55, [0.13, 0.55, 0.13], 0xfafafa,
+        { kind: 'sock', axis: 'y', threshold: -0.55, bodyB: 0x141414, tipB: 0x2a2a2a },
+        { fur: true, furLen: 0.22, tip: 0xffffff }),
     ],
   },
 ];
@@ -456,20 +677,34 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       const baseColor = new THREE.Color();
       const tipColor  = new THREE.Color();
 
+      const baseA = new THREE.Color();
+      const tipA  = new THREE.Color();
+      const baseB = new THREE.Color();
+      const tipB  = new THREE.Color();
+      const baseMixed = new THREE.Color();
+      const tipMixed  = new THREE.Color();
+
       let idx = 0;
       for (let pi = 0; pi < furParts.length; pi++) {
         const part = furParts[pi];
         const n = partInstanceCounts[pi];
-        baseColor.set(part.body);
-        tipColor.set(part.tip ?? part.body);
+        baseA.set(part.body);
+        tipA.set(part.tip ?? part.body);
+        // Pattern's secondary colours (if any).
+        const pattern = part.pattern;
+        if (pattern && pattern.kind !== 'solid') {
+          baseB.set(pattern.bodyB);
+          tipB.set(pattern.tipB);
+        } else {
+          baseB.copy(baseA);
+          tipB.copy(tipA);
+        }
         const partLen = (part.furLen ?? 1.0) * lengthScale;
         const [cx, cy, cz] = part.c;
         const [rx, ry, rz] = part.r;
 
         for (let i = 0; i < n; i++) {
           // Uniform random direction on unit sphere → ellipsoid surface.
-          // Bias the distribution slightly toward upper-hemisphere normals
-          // because that's what the camera sees most.
           const u = Math.random();
           const v = Math.random();
           const phi   = Math.acos(2 * u - 1);
@@ -479,12 +714,17 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           const dy = Math.cos(phi);
           const dz = sinPhi * Math.sin(theta);
 
-          // Position on ellipsoid surface.
+          // Position on ellipsoid surface (world units).
           const px = cx + dx * rx;
           const py = cy + dy * ry;
           const pz = cz + dz * rz;
+          // Local position relative to the part centre — used by the
+          // pattern evaluator. lx/ly/lz are in world units.
+          const lx = px - cx;
+          const ly = py - cy;
+          const lz = pz - cz;
 
-          // Normal at that point: gradient of ellipsoid equation =
+          // Normal at that point: gradient of ellipsoid equation
           // (x/rx², y/ry², z/rz²), normalized.
           const nxRaw = dx / rx;
           const nyRaw = dy / ry;
@@ -495,22 +735,26 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           const nz = nzRaw / nLen;
 
           dummy.position.set(px, py, pz);
-          // Rotate blade so its local +Y aligns with the surface normal.
           dummy.quaternion.setFromUnitVectors(yAxis, new THREE.Vector3(nx, ny, nz));
-          // Random scale variation on width, length per-instance via aLength.
           dummy.scale.set(0.85 + Math.random() * 0.4, 1, 1);
           dummy.updateMatrix();
           inst.setMatrixAt(idx, dummy.matrix);
 
+          // Evaluate the pattern at this surface point and mix per-blade
+          // colours between primary and secondary based on the result.
+          const mix = evalPattern(pattern, lx, ly, lz, ry);
+          baseMixed.copy(baseA).lerp(baseB, mix);
+          tipMixed.copy(tipA).lerp(tipB, mix);
+
           aRandomArr[idx] = Math.random();
           aTwistArr[idx]  = Math.random() * Math.PI * 2;
           aLengthArr[idx] = (0.7 + Math.random() * 0.6) * partLen;
-          aBaseArr[idx * 3 + 0] = baseColor.r;
-          aBaseArr[idx * 3 + 1] = baseColor.g;
-          aBaseArr[idx * 3 + 2] = baseColor.b;
-          aTipArr[idx * 3 + 0] = tipColor.r;
-          aTipArr[idx * 3 + 1] = tipColor.g;
-          aTipArr[idx * 3 + 2] = tipColor.b;
+          aBaseArr[idx * 3 + 0] = baseMixed.r;
+          aBaseArr[idx * 3 + 1] = baseMixed.g;
+          aBaseArr[idx * 3 + 2] = baseMixed.b;
+          aTipArr[idx * 3 + 0] = tipMixed.r;
+          aTipArr[idx * 3 + 1] = tipMixed.g;
+          aTipArr[idx * 3 + 2] = tipMixed.b;
           idx++;
         }
       }
