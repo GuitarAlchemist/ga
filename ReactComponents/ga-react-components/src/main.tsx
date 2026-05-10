@@ -33,6 +33,7 @@ import OceanTest from './pages/OceanTest';
 import SandDunesTest from './pages/SandDunesTest';
 import CheeseAvalancheTest from './pages/CheeseAvalancheTest';
 import StonehengeTest from './pages/StonehengeTest';
+import FluffyAnimalsTest from './pages/FluffyAnimalsTest';
 import { GraphitiDemo } from './components/GraphitiDemo/GraphitiDemo';
 import Guitar3DTest from './pages/Guitar3DTest';
 import HandAnimationTest from './pages/HandAnimationTest';
@@ -49,6 +50,10 @@ import PrimeRadiantTest from './pages/PrimeRadiantTest';
 import HarmonicNebulaDemo from './pages/HarmonicNebulaDemo';
 import HandPoseVoicingWasmTest from './pages/HandPoseVoicingWasmTest';
 import IxHandVoicingTest from './pages/IxHandVoicingTest';
+import FractalSplatTest from './pages/FractalSplatTest';
+import SunflowerFieldTest from './pages/SunflowerFieldTest';
+import MandelbulbTest from './pages/MandelbulbTest';
+import MapleTreeTest from './pages/MapleTreeTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -427,6 +432,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/sand-dunes" element={<App><SandDunesTest /></App>} />
         <Route path="/test/cheese-avalanche" element={<App><CheeseAvalancheTest /></App>} />
         <Route path="/test/stonehenge" element={<App><StonehengeTest /></App>} />
+        <Route path="/test/fluffy-animals" element={<App><FluffyAnimalsTest /></App>} />
         <Route path="/test/guitar-3d" element={<App><Guitar3DTest /></App>} />
         <Route path="/test/hand-animation" element={<App><HandAnimationTest /></App>} />
         <Route path="/test/models-3d" element={<App><Models3DTest /></App>} />
@@ -441,6 +447,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/harmonic-nebula" element={<App><HarmonicNebulaDemo /></App>} />
         <Route path="/test/hand-pose-voicing-wasm" element={<App><HandPoseVoicingWasmTest /></App>} />
         <Route path="/test/ix-hand-voicing" element={<App><IxHandVoicingTest /></App>} />
+        <Route path="/test/fractal-splat" element={<App><FractalSplatTest /></App>} />
+        <Route path="/test/sunflower-field" element={<App><SunflowerFieldTest /></App>} />
+        <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
+        <Route path="/test/maple-tree" element={<App><MapleTreeTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
