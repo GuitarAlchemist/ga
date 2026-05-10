@@ -160,17 +160,27 @@ const FUR_FRAGMENT = /* glsl */ `
   varying float vRandom;
 
   void main() {
-    // Blade taper — narrower silhouette so strands read as hair, not grass.
+    // Soft edge falloff instead of a hard silhouette — strands have
+    // a feathered alpha so the rim of each blade fades into the
+    // neighbours' tips. Reads as fluff rather than stamped sticks.
     float halfW = abs(vUv.x - 0.5);
     float taper = 1.0 - vUv.y * 0.92;
-    if (halfW > taper * 0.5) discard;
+    float edgeT = (taper * 0.5 - halfW) / max(taper * 0.5, 1e-4);
+    if (edgeT < 0.02) discard;
+    float edgeAlpha = smoothstep(0.0, 0.45, edgeT);
 
     // Color from base to tip with stronger per-blade jitter — real fur
     // shows lots of micro variation so strands don't look stamped.
     float ao = pow(vUv.y, 1.3);
-    float jitter = (vRandom - 0.5) * 0.18;
+    float jitter = (vRandom - 0.5) * 0.22;
     vec3 col = mix(vBaseColor, vTipColor, clamp(ao + jitter, 0.0, 1.0));
-    col *= 0.88 + vRandom * 0.24;   // overall brightness jitter
+    col *= 0.82 + vRandom * 0.36;   // wider overall brightness jitter
+
+    // Per-fragment fuzz noise anchored to the blade's UV so neighbouring
+    // blades show uncorrelated speckle — adds the granular soft-fur look
+    // and prevents the gradient from reading as a glossy plastic strip.
+    float fuzz = fract(sin(vUv.x * 234.0 + vUv.y * 567.0 + vRandom * 13.0) * 43758.55);
+    col *= 0.92 + fuzz * 0.16;
 
     // Lambert wrap shading on the surface normal.
     vec3 N = normalize(vNormalW);
@@ -178,30 +188,32 @@ const FUR_FRAGMENT = /* glsl */ `
     float lit = max(dot(N, L), 0.0);
     float wrap = lit * 0.55 + 0.45;
 
-    // Kajiya-Kay anisotropic sheen — the bright glint that runs along
-    // the strand when light + view align with the perpendicular of the
-    // hair tangent. Two terms: primary highlight (white-ish) and a
-    // secondary highlight tinted by the tip color (real fur shows two
-    // banded highlights from the cuticle layers).
+    // Softer Kajiya-Kay — broader, dimmer highlights so fur reads as
+    // diffuse fluff rather than waxed plastic. Primary specular halved
+    // and broadened (pow 90 → 35); secondary kept low and warmed by
+    // ambient instead of tip-bright.
     vec3 V = normalize(uCameraPos - vWorldPos);
     vec3 H = normalize(V + L);
     vec3 T = normalize(vTangentW);
     float TdotH = dot(T, H);
     float aniso = sqrt(max(1.0 - TdotH * TdotH, 0.0));
-    float primary   = pow(aniso, 90.0);
-    float secondary = pow(aniso, 24.0) * 0.30;
-    vec3 sheen = vec3(1.0, 0.97, 0.92) * primary + vTipColor * secondary;
+    float primary   = pow(aniso, 35.0) * 0.18;
+    float secondary = pow(aniso, 12.0) * 0.10;
+    vec3 sheen = vec3(1.0, 0.97, 0.92) * primary + uAmbient * secondary;
 
-    // Silhouette boost — Fresnel-style brightening on grazing angles
-    // gives the rim of the animal that fluffy halo / sub-surface look.
-    float fres = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+    // Silhouette boost — softer Fresnel for that fluffy-halo look.
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 2.0);
     float silhouette = fres * ao;
 
     // Backlit translucency at low sun angles for that fluffy halo.
     float backLit = pow(1.0 - lit, 2.0) * smoothstep(0.0, 0.4, uSunDir.y);
-    col += backLit * vTipColor * 0.30 * ao;
-    col += silhouette * vTipColor * 0.45;
+    col += backLit * vTipColor * 0.40 * ao;
+    col += silhouette * vTipColor * 0.55;
     col += sheen * smoothstep(0.0, 0.3, uSunDir.y);
+
+    // Apply the soft edge alpha as a fade — keeps depth-write working
+    // while rim pixels darken and blend with what's behind them.
+    col *= 0.45 + 0.55 * edgeAlpha;
 
     col = col * (uAmbient * 0.55 + uSunColor * wrap);
     gl_FragColor = vec4(col, 1.0);
@@ -1066,7 +1078,12 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
 
           dummy.position.set(px, py, pz);
           dummy.quaternion.setFromUnitVectors(yAxis, new THREE.Vector3(nx, ny, nz));
-          dummy.scale.set(0.85 + Math.random() * 0.4, 1, 1);
+          // Wider width jitter — most strands thin, a few thicker. Real
+          // fur has a heavy mix of guard hairs (thicker, sparse) and
+          // undercoat (fine, dense). Approximated with a quartic taper:
+          // mostly 0.5–0.9 width, occasional 1.0–1.5.
+          const w = 0.5 + Math.pow(Math.random(), 2) * 1.0;
+          dummy.scale.set(w, 1, 1);
           dummy.updateMatrix();
           inst.setMatrixAt(idx, dummy.matrix);
 
@@ -1078,7 +1095,9 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
 
           aRandomArr[idx] = Math.random();
           aTwistArr[idx]  = Math.random() * Math.PI * 2;
-          aLengthArr[idx] = (0.7 + Math.random() * 0.6) * partLen;
+          // Wider length variation — 0.55× to 1.5× of the part's nominal
+          // fur length. Mixes short undercoat with longer guard hairs.
+          aLengthArr[idx] = (0.55 + Math.random() * 0.95) * partLen;
           aBaseArr[idx * 3 + 0] = baseMixed.r;
           aBaseArr[idx * 3 + 1] = baseMixed.g;
           aBaseArr[idx * 3 + 2] = baseMixed.b;
