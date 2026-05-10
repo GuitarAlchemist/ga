@@ -193,39 +193,6 @@ function VisualizationCanvasInner({
     rendererRef.current = renderer;
     setRendererType('webgl');
 
-    // Attempt WebGPU upgrade (non-blocking)
-    (async () => {
-      try {
-        if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-          // Dynamic import — may fail if three/webgpu is unavailable
-          const mod = await import('three/webgpu' as string);
-          if (mod && mod.WebGPURenderer) {
-            const gpuRenderer = new mod.WebGPURenderer({ canvas, antialias: true });
-            await gpuRenderer.init();
-            gpuRenderer.setClearColor('#0d1117');
-            gpuRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            gpuRenderer.setSize(width, height);
-            // Swap renderers
-            renderer.dispose();
-            rendererRef.current = gpuRenderer as unknown as THREE.WebGLRenderer;
-            setRendererType('webgpu');
-            // Rebuild current view with new renderer
-            if (sceneRef.current) {
-              createView(
-                viewModeRef.current,
-                sceneRef.current,
-                rendererRef.current!,
-                container.clientWidth,
-                container.clientHeight,
-              );
-            }
-          }
-        }
-      } catch {
-        // WebGPU not available; stay on WebGL — no action needed
-      }
-    })();
-
     // Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
@@ -233,22 +200,77 @@ function VisualizationCanvasInner({
     // Create initial view
     createView(viewModeRef.current, scene, renderer, width, height);
 
-    // Animation loop
-    renderer.setAnimationLoop(() => {
+    // Animation tick — declared as a stable closure that reads refs each
+    // frame, so the function survives a renderer swap. setAnimationLoop is
+    // bound per-renderer instance, so after a swap we MUST call it again
+    // on the new renderer.
+    const animTick = () => {
       const currentRenderer = rendererRef.current;
       const currentView = viewRef.current;
       const camera = cameraRef.current;
       if (!currentRenderer || !currentView || !camera) return;
 
-      // Update raycaster from mouse
       raycasterRef.current.setFromCamera(mouseRef.current, camera);
-
-      // Update view
       currentView.update(selectedRef.current, zoomRef.current);
-
-      // Render
       currentRenderer.render(scene, camera);
-    });
+    };
+    renderer.setAnimationLoop(animTick);
+
+    // Attempt WebGPU upgrade (non-blocking). Pre-flight via requestAdapter()
+    // so we only swap when there's a REAL WebGPU adapter — not when Three.js
+    // would silently fall back to WebGL2 (which trips the swap dance for no
+    // benefit and historically broke the animation loop on the new renderer).
+    let cancelled = false;
+    (async () => {
+      try {
+        // Three's WebGPURenderer falls back to WebGL2 when no adapter exists;
+        // gating on requestAdapter avoids the costly dispose-and-swap when
+        // the upgrade would only get us a WebGL2 fallback we already have.
+        const nav = typeof navigator !== 'undefined' ? navigator : null;
+        if (!nav || !('gpu' in nav)) return;
+        const adapter = await (nav as Navigator & { gpu: { requestAdapter: () => Promise<unknown> } })
+          .gpu.requestAdapter();
+        if (cancelled || !adapter) return;
+
+        // Dynamic import — may fail if three/webgpu is unavailable
+        const mod = await import('three/webgpu' as string);
+        if (cancelled || !mod || !mod.WebGPURenderer) return;
+
+        const gpuRenderer = new mod.WebGPURenderer({ canvas, antialias: true });
+        await gpuRenderer.init();
+        if (cancelled) {
+          gpuRenderer.dispose?.();
+          return;
+        }
+        gpuRenderer.setClearColor('#0d1117');
+        gpuRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        gpuRenderer.setSize(container.clientWidth, container.clientHeight);
+
+        // Stop the WebGL loop BEFORE disposing — setAnimationLoop is bound
+        // to the renderer instance, and dispose tears down its rAF handle.
+        renderer.setAnimationLoop(null);
+        renderer.dispose();
+        rendererRef.current = gpuRenderer as unknown as THREE.WebGLRenderer;
+        setRendererType('webgpu');
+
+        // Rebuild current view with new renderer
+        if (sceneRef.current) {
+          createView(
+            viewModeRef.current,
+            sceneRef.current,
+            rendererRef.current!,
+            container.clientWidth,
+            container.clientHeight,
+          );
+        }
+
+        // Re-establish the animation loop on the NEW renderer — without
+        // this, the canvas stays black after the swap (the previous bug).
+        gpuRenderer.setAnimationLoop(animTick);
+      } catch {
+        // WebGPU not available; stay on WebGL — no action needed
+      }
+    })();
 
     // ---- Event handlers ----
     const onPointerMove = (e: PointerEvent) => {
@@ -314,12 +336,18 @@ function VisualizationCanvasInner({
 
     // ---- Cleanup ----
     return () => {
+      cancelled = true;
+
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('wheel', onWheel);
       resizeObserver.disconnect();
 
-      renderer.setAnimationLoop(null);
+      // Stop the loop on whichever renderer is currently active. The WebGPU
+      // swap may have replaced rendererRef.current; the original WebGL
+      // `renderer` may already be disposed. Prefer current, fall back.
+      const activeRenderer = rendererRef.current ?? renderer;
+      activeRenderer.setAnimationLoop(null);
 
       if (viewRef.current) {
         viewRef.current.dispose();
@@ -330,9 +358,8 @@ function VisualizationCanvasInner({
         controlsRef.current = null;
       }
 
-      const currentRenderer = rendererRef.current;
-      if (currentRenderer) {
-        currentRenderer.dispose();
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
         rendererRef.current = null;
       }
 
