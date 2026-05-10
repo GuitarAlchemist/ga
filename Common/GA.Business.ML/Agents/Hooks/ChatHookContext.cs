@@ -38,6 +38,28 @@ public sealed class ChatHookContext
     /// <summary>Optional session or user identifier for per-user policies.</summary>
     public string? UserId { get; init; }
 
+    /// <summary>
+    /// Optional per-conversation identifier. Set by the transport layer
+    /// (e.g. SignalR <c>Context.ConnectionId</c> in ChatbotHub, HTTP
+    /// session cookie in controllers) so downstream hooks can scope state
+    /// to one conversation rather than the whole process.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When null, hooks that depend on session scope (e.g.
+    /// <see cref="MemoryHook"/>) MUST default to a conservative global
+    /// behaviour rather than treating "no session" as a single shared
+    /// session — that's the leak documented in PR #151 review
+    /// (<c>Memory:EnrichOnRetrieve=false</c> default).
+    /// </para>
+    /// <para>
+    /// Distinct from <see cref="CorrelationId"/>: CorrelationId is one
+    /// Guid per request and changes between turns; SessionId is stable
+    /// across the turns of one conversation.
+    /// </para>
+    /// </remarks>
+    public string? SessionId { get; init; }
+
     /// <summary>DI service locator — available to stateful hooks that need services.</summary>
     public IServiceProvider? Services { get; init; }
 }
