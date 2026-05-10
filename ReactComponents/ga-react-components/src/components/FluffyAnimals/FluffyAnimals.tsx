@@ -31,6 +31,10 @@ export interface FluffyAnimalsProps {
   furLength?: number;
   /** Wind sway strength on fur tips. */
   windStrength?: number;
+  /** Enables body, head, tail, ear, and gait animation. */
+  motionEnabled?: boolean;
+  /** Multiplier for idle and walking animation speed. */
+  motionSpeed?: number;
   autoRotate?: boolean;
 }
 
@@ -69,7 +73,7 @@ const FUR_VERTEX = /* glsl */ `
   attribute float aLength;     // 0..1 multiplier on blade length
   attribute vec3  aBaseColor;
   attribute vec3  aTipColor;
-  attribute vec3  aFlow;       // world-space lay direction (already projected per part)
+  attribute vec3  aFlow;       // part-local lay direction
 
   varying vec2 vUv;
   varying vec3 vBaseColor;
@@ -110,7 +114,8 @@ const FUR_VERTEX = /* glsl */ `
     // bend the tip in that direction. This is the "groomed in one
     // direction" effect that makes fur read as fur instead of grass.
     // Curve is t² so base barely moves.
-    vec3 flow = aFlow - normalW * dot(aFlow, normalW);
+    vec3 flowW = normalize((modelMatrix * vec4(aFlow, 0.0)).xyz);
+    vec3 flow = flowW - normalW * dot(flowW, normalW);
     float flowMag = length(flow) + 1e-6;
     vec3 flowDir = flow / flowMag;
     float t = clamp(uv.y, 0.0, 1.0);
@@ -246,6 +251,26 @@ interface AnimalDef {
   yaw?: number;
 }
 
+type PartRole = 'body' | 'head' | 'ear' | 'tail' | 'leg' | 'face' | 'other';
+
+interface AnimatedPart {
+  group: THREE.Group;
+  basePosition: THREE.Vector3;
+  role: PartRole;
+  side: number;
+  front: number;
+}
+
+interface AnimatedAnimal {
+  name: string;
+  group: THREE.Group;
+  basePosition: THREE.Vector3;
+  baseYaw: number;
+  phase: number;
+  speed: number;
+  parts: AnimatedPart[];
+}
+
 // CPU 3D hash for the patches pattern.
 const hash3D = (x: number, y: number, z: number): number => {
   const v = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
@@ -336,11 +361,31 @@ const legQuad = (
   ];
 };
 
+const classifyPart = (part: Part, partIndex: number): PartRole => {
+  if (partIndex === 0) return 'body';
+
+  const [, cy, cz] = part.c;
+  const [rx, ry, rz] = part.r;
+
+  if (cy < 0.9 && ry >= 0.25) return 'leg';
+  if (cz < -0.7 && (rz > 0.35 || rx < 0.25)) return 'tail';
+  if (cy > 1.65 && rx <= 0.35 && rz <= 0.2 && ry >= 0.1) return 'ear';
+  if (cz > 0.65 && rx > 0.25 && ry > 0.2) return 'head';
+  if (rx <= 0.12 && ry <= 0.12 && rz <= 0.12) return 'face';
+  return 'other';
+};
+
+const animalPhase = (name: string): number => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 997;
+  return (hash / 997) * Math.PI * 2;
+};
+
 const ANIMALS: AnimalDef[] = [
   // ─── Bear — solid brown, lighter underbelly, four stocky legs. ─────────
   {
     name: 'bear',
-    pos: [-12.5, 0, 0],
+    pos: [-4.5, 0, 0.2],
     yaw: 0.2,
     parts: [
       // Body with a lighter belly via 'belly' pattern.
@@ -371,7 +416,7 @@ const ANIMALS: AnimalDef[] = [
   // ─── Sheep — solid white wool, dark face/legs, fluffy as ever. ─────────
   {
     name: 'sheep',
-    pos: [-7.5, 0, 0],
+    pos: [-2.7, 0, -0.35],
     yaw: 0.0,
     parts: [
       {
@@ -393,7 +438,7 @@ const ANIMALS: AnimalDef[] = [
   // ─── Fox — orange with white belly + black socks + white-tipped tail. ──
   {
     name: 'fox',
-    pos: [-2.5, 0, 0],
+    pos: [-0.9, 0, 0.45],
     yaw: -0.1,
     parts: [
       // Body — orange with white belly.
@@ -430,7 +475,7 @@ const ANIMALS: AnimalDef[] = [
   // ─── Bunny — long upright ears, pom tail, hopper hindlegs. ─────────────
   {
     name: 'bunny',
-    pos: [2.5, 0, 0],
+    pos: [0.9, 0, -0.15],
     yaw: 0.1,
     parts: [
       {
@@ -466,7 +511,7 @@ const ANIMALS: AnimalDef[] = [
   // ─── Tiger — orange + bold black stripes + white belly. ────────────────
   {
     name: 'tiger',
-    pos: [7.5, 0, 0],
+    pos: [2.8, 0, 0.35],
     yaw: -0.15,
     parts: [
       {
@@ -509,7 +554,7 @@ const ANIMALS: AnimalDef[] = [
   // ─── Cow — white with black blobby patches. ────────────────────────────
   {
     name: 'cow',
-    pos: [12.5, 0, 0],
+    pos: [4.7, 0, -0.25],
     yaw: 0.05,
     parts: [
       {
@@ -556,6 +601,8 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
   furDensity = 1,
   furLength = 1,
   windStrength = 0.5,
+  motionEnabled = true,
+  motionSpeed = 0.8,
   autoRotate = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -570,9 +617,9 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xc8d8e8, 0.008);
 
-    const camera = new THREE.PerspectiveCamera(45, W0 / H0, 0.1, 200);
-    camera.position.set(0, 4, 14);
-    camera.lookAt(0, 1.2, 0);
+    const camera = new THREE.PerspectiveCamera(44, W0 / H0, 0.1, 200);
+    camera.position.set(0, 3.35, 13);
+    camera.lookAt(0, 1.1, 0.1);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(W0, H0);
@@ -587,10 +634,10 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.minDistance = 5;
-    controls.maxDistance = 40;
+    controls.minDistance = 4;
+    controls.maxDistance = 28;
     controls.maxPolarAngle = Math.PI * 0.49;
-    controls.target.set(0, 1.2, 0);
+    controls.target.set(0, 1.1, 0.1);
     controls.autoRotate = autoRotate;
     controls.autoRotateSpeed = 0.4;
 
@@ -672,6 +719,187 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
     ground.receiveShadow = true;
     scene.add(ground);
 
+    // ─── Meadow grass — fluffy-grass-style bezier blades ─────────────────
+    // Same idiom as /test/fluffy-grass: instanced curved planes with a
+    // vertex bend + wind gust, alpha-test silhouette via discard. Placed
+    // in a chunked grid around the animals; rejection-sampled against
+    // each animal's footprint so blades don't poke through bodies.
+
+    // Animal exclusion footprints in world space (centre + radius).
+    const animalExclusions: Array<{ x: number; z: number; r: number }> = ANIMALS.map((a) => ({
+      x: a.pos[0],
+      z: a.pos[2],
+      // Use the body part's xz radii plus a small turf gap.
+      r: Math.max(a.parts[0].r[0], a.parts[0].r[2]) + 0.6,
+    }));
+    const insideAnimal = (x: number, z: number): boolean => {
+      for (const ex of animalExclusions) {
+        const dx = x - ex.x;
+        const dz = z - ex.z;
+        if (dx * dx + dz * dz < ex.r * ex.r) return true;
+      }
+      return false;
+    };
+
+    const grassUniforms = {
+      uTime:      { value: 0 },
+      uSunDir:    { value: sunDir.clone() },
+      uSunColor:  { value: new THREE.Color(0xfff1d8) },
+      uAmbient:   { value: new THREE.Color(0x4f6a8c) },
+      uBaseColor: { value: new THREE.Color(0x223818) },
+      uTipColor:  { value: new THREE.Color(0x9bb95a) },
+      uTipColor2: { value: new THREE.Color(0xc2cf7a) },
+      uWindStrength: { value: 0.30 },
+    };
+
+    const grassMaterial = new THREE.ShaderMaterial({
+      uniforms: grassUniforms,
+      side: THREE.DoubleSide,
+      vertexShader: /* glsl */ `
+        ${NOISE_GLSL}
+
+        uniform float uTime;
+        uniform float uWindStrength;
+
+        attribute float gRandom;
+        attribute float gBend;
+        attribute float gTwist;
+
+        varying vec2 vUv;
+        varying float vGust;
+        varying vec3 vNormalW;
+        varying float vRandom;
+
+        void main() {
+          vUv = uv;
+          vRandom = gRandom;
+
+          vec4 ip = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+          vec3 anchor = (modelMatrix * ip).xyz;
+
+          // Large-scale gust band sweeping diagonally.
+          vec2 gustUV = anchor.xz * 0.05 + vec2(uTime * 0.18, uTime * 0.10);
+          float gustRaw = vnoise(gustUV) * 0.5 + 0.5;
+          float gust = pow(gustRaw, 1.6);
+          vGust = gust;
+
+          float flutter = vnoise(anchor.xz * 0.6 + vec2(uTime * 1.0, gRandom * 13.0));
+
+          vec3 p = position;
+          float t = clamp(uv.y, 0.0, 1.0);
+          float curve = t * t;
+          float windAmp = (gust * 1.0 + 0.2) * uWindStrength + flutter * 0.07;
+          float bendAmt = gBend + windAmp;
+
+          p.x += curve * bendAmt;
+          p.y -= curve * bendAmt * 0.25;
+
+          float c = cos(gTwist);
+          float s = sin(gTwist);
+          vec3 rotated = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+
+          vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
+
+          vec3 nLocal = normalize(vec3(-bendAmt * (1.0 - t) * 2.0, 0.5, 1.0));
+          vec3 nRot   = vec3(c * nLocal.x - s * nLocal.z, nLocal.y, s * nLocal.x + c * nLocal.z);
+          vNormalW    = normalize((modelMatrix * vec4(nRot, 0.0)).xyz);
+
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 uBaseColor;
+        uniform vec3 uTipColor;
+        uniform vec3 uTipColor2;
+        uniform vec3 uSunDir;
+        uniform vec3 uSunColor;
+        uniform vec3 uAmbient;
+
+        varying vec2 vUv;
+        varying float vGust;
+        varying vec3 vNormalW;
+        varying float vRandom;
+
+        void main() {
+          float halfW = abs(vUv.x - 0.5);
+          float taper = 1.0 - vUv.y * 0.85;
+          if (halfW > taper * 0.5) discard;
+
+          float ao = pow(vUv.y, 1.4);
+          vec3 tipMix = mix(uTipColor, uTipColor2, vRandom);
+          vec3 col = mix(uBaseColor, tipMix, ao);
+
+          col += (vGust - 0.45) * 0.28 * vec3(0.9, 1.05, 0.7);
+
+          float sunDot = max(dot(vNormalW, normalize(uSunDir)), 0.0);
+          float backLit = pow(1.0 - sunDot, 2.0) * smoothstep(0.0, 0.3, uSunDir.y);
+          col += backLit * vec3(0.30, 0.40, 0.20) * ao;
+
+          float wrap = sunDot * 0.5 + 0.5;
+          col = col * (uAmbient * 0.4 + uSunColor * wrap);
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    });
+
+    const grassBladeBase = new THREE.PlaneGeometry(0.07, 0.55, 1, 6);
+    grassBladeBase.translate(0, 0.275, 0);
+
+    const phoneGrass = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+    const grassChunkSize  = 2;
+    const grassChunkCount = phoneGrass ? 11 : 16;            // 22m or 32m square
+    const grassDensity    = phoneGrass ? 60 : 130;
+    const grassPlaneAngles = [0, Math.PI / 3, (2 * Math.PI) / 3];
+    const grassHalfCount  = grassChunkCount / 2;
+    const grassMeshes: THREE.InstancedMesh[] = [];
+    const grassGeoms: THREE.BufferGeometry[] = [];
+
+    const grassDummy = new THREE.Object3D();
+    for (let cx = 0; cx < grassChunkCount; cx++) {
+      for (let cz = 0; cz < grassChunkCount; cz++) {
+        const baseX = (cx - grassHalfCount) * grassChunkSize;
+        const baseZ = (cz - grassHalfCount) * grassChunkSize;
+
+        for (const baseAngle of grassPlaneAngles) {
+          const geo = grassBladeBase.clone();
+          const gRandomArr = new Float32Array(grassDensity);
+          const gBendArr   = new Float32Array(grassDensity);
+          const gTwistArr  = new Float32Array(grassDensity);
+          const inst = new THREE.InstancedMesh(geo, grassMaterial, grassDensity);
+          inst.castShadow = false;
+          inst.receiveShadow = false;
+          inst.frustumCulled = false;
+
+          for (let i = 0; i < grassDensity; i++) {
+            let x = 0, z = 0, ok = false;
+            for (let tries = 0; tries < 6; tries++) {
+              const tx = baseX + Math.random() * grassChunkSize;
+              const tz = baseZ + Math.random() * grassChunkSize;
+              if (!insideAnimal(tx, tz)) { x = tx; z = tz; ok = true; break; }
+            }
+            const sH = ok ? 0.55 + Math.random() * 0.85 : 0;
+            const sW = ok ? 0.85 + Math.random() * 0.5  : 0;
+            grassDummy.position.set(x, 0, z);
+            grassDummy.rotation.set(0, 0, 0);
+            grassDummy.scale.set(sW, sH, 1);
+            grassDummy.updateMatrix();
+            inst.setMatrixAt(i, grassDummy.matrix);
+            gRandomArr[i] = Math.random();
+            gBendArr[i]   = (Math.random() - 0.5) * 0.10;
+            gTwistArr[i]  = baseAngle + (Math.random() - 0.5) * 0.5;
+          }
+          inst.instanceMatrix.needsUpdate = true;
+          geo.setAttribute('gRandom', new THREE.InstancedBufferAttribute(gRandomArr, 1));
+          geo.setAttribute('gBend',   new THREE.InstancedBufferAttribute(gBendArr, 1));
+          geo.setAttribute('gTwist',  new THREE.InstancedBufferAttribute(gTwistArr, 1));
+          scene.add(inst);
+          grassMeshes.push(inst);
+          grassGeoms.push(geo);
+        }
+      }
+    }
+
     // ─── Build animals ───────────────────────────────────────────────────
     const phoneish = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
     const densityScale = (phoneish ? 0.45 : 1.0) * furDensity;
@@ -699,6 +927,15 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
     const furGeoms: THREE.BufferGeometry[] = [];
     const bodyMeshes: THREE.Mesh[] = [];
     const bodyMats: THREE.Material[] = [];
+    const animatedAnimals: AnimatedAnimal[] = [];
+    const shadowGeo = new THREE.CircleGeometry(1, 40);
+    shadowGeo.rotateX(-Math.PI / 2);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      color: 0x1b2414,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+    });
 
     const dummy = new THREE.Object3D();
 
@@ -708,56 +945,78 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       if (animal.yaw) group.rotation.y = animal.yaw;
       scene.add(group);
 
-      // Animal yaw rotation matrix — used to convert local-space part flow
-      // direction into world-space (the animal Group rotates the parts but
-      // we sample positions in animal-local space, so flow needs the
-      // matching rotation).
-      const yaw = animal.yaw ?? 0;
-      const cYaw = Math.cos(yaw);
-      const sYaw = Math.sin(yaw);
+      const body = animal.parts[0];
+      const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+      shadow.position.set(0, 0.015, 0);
+      shadow.scale.set(Math.max(body.r[0] * 1.7, 0.9), Math.max(body.r[2] * 1.55, 1.0), 1);
+      shadow.renderOrder = -1;
+      group.add(shadow);
 
-      // Total fur instance count for this animal — sum across furred parts.
-      // Higher base density (3200 vs 2200) because thinner blades need
-      // more strands per area to feel solid.
-      const furParts = animal.parts.filter((p) => p.fur);
-      const partInstanceCounts: number[] = furParts.map((p) => {
-        const [rx, ry, rz] = p.r;
+      const animatedParts: AnimatedPart[] = [];
+
+      for (let partIndex = 0; partIndex < animal.parts.length; partIndex++) {
+        const part = animal.parts[partIndex];
+        const partGroup = new THREE.Group();
+        partGroup.position.set(...part.c);
+        group.add(partGroup);
+
+        const role = classifyPart(part, partIndex);
+        animatedParts.push({
+          group: partGroup,
+          basePosition: partGroup.position.clone(),
+          role,
+          side: part.c[0] < 0 ? -1 : 1,
+          front: part.c[2] >= 0 ? 1 : -1,
+        });
+
+        // Body part (visible underneath the fur — gives the animal weight).
+        const geom = new THREE.SphereGeometry(1, 24, 16);
+        const mat = new THREE.MeshStandardMaterial({
+          color: part.body,
+          roughness: 0.86,
+          metalness: 0.0,
+        });
+        const m = new THREE.Mesh(geom, mat);
+        m.scale.set(...part.r);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        partGroup.add(m);
+        bodyMeshes.push(m);
+        bodyMats.push(mat);
+
+        if (!part.fur) continue;
+
+        const [rx, ry, rz] = part.r;
         const area = 4 * Math.PI * Math.max(rx * ry + ry * rz + rx * rz, 0.05) / 3;
-        const baseN = Math.round(area * 3200 * (p.furDen ?? 1.0) * densityScale);
-        return Math.max(20, baseN);
-      });
-      const totalCount = partInstanceCounts.reduce((s, n) => s + n, 0);
+        const totalCount = Math.max(20, Math.round(area * 3200 * (part.furDen ?? 1.0) * densityScale));
 
-      // Thinner blade — 0.030 wide vs 0.05 — strands read as hair, not
-      // grass, especially at silhouette.
-      const blade = new THREE.PlaneGeometry(0.030, 0.40, 1, 6);
-      blade.translate(0, 0.20, 0);
+        // Thinner blade — 0.030 wide vs 0.05 — strands read as hair, not
+        // grass, especially at silhouette. One instanced mesh per part lets
+        // articulated motion carry fur with the body part it belongs to.
+        const blade = new THREE.PlaneGeometry(0.030, 0.40, 1, 6);
+        blade.translate(0, 0.20, 0);
 
-      const aRandomArr = new Float32Array(totalCount);
-      const aTwistArr  = new Float32Array(totalCount);
-      const aLengthArr = new Float32Array(totalCount);
-      const aBaseArr   = new Float32Array(totalCount * 3);
-      const aTipArr    = new Float32Array(totalCount * 3);
-      const aFlowArr   = new Float32Array(totalCount * 3);
+        const aRandomArr = new Float32Array(totalCount);
+        const aTwistArr  = new Float32Array(totalCount);
+        const aLengthArr = new Float32Array(totalCount);
+        const aBaseArr   = new Float32Array(totalCount * 3);
+        const aTipArr    = new Float32Array(totalCount * 3);
+        const aFlowArr   = new Float32Array(totalCount * 3);
 
-      const inst = new THREE.InstancedMesh(blade, furMaterial, totalCount);
-      inst.castShadow = false;
-      inst.receiveShadow = false;
-      inst.frustumCulled = false;
+        const inst = new THREE.InstancedMesh(blade, furMaterial, totalCount);
+        inst.castShadow = false;
+        inst.receiveShadow = false;
+        inst.frustumCulled = false;
 
-      const baseA = new THREE.Color();
-      const tipA  = new THREE.Color();
-      const baseB = new THREE.Color();
-      const tipB  = new THREE.Color();
-      const baseMixed = new THREE.Color();
-      const tipMixed  = new THREE.Color();
-
-      let idx = 0;
-      for (let pi = 0; pi < furParts.length; pi++) {
-        const part = furParts[pi];
-        const n = partInstanceCounts[pi];
+        const baseA = new THREE.Color();
+        const tipA  = new THREE.Color();
+        const baseB = new THREE.Color();
+        const tipB  = new THREE.Color();
+        const baseMixed = new THREE.Color();
+        const tipMixed  = new THREE.Color();
         baseA.set(part.body);
         tipA.set(part.tip ?? part.body);
+
         // Pattern's secondary colours (if any).
         const pattern = part.pattern;
         if (pattern && pattern.kind !== 'solid') {
@@ -768,16 +1027,12 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           tipB.copy(tipA);
         }
         const partLen = (part.furLen ?? 1.0) * lengthScale;
-        const [cx, cy, cz] = part.c;
-        const [rx, ry, rz] = part.r;
 
-        // Part flow vector (animal-local) → world-space (rotated by yaw).
+        // Part-local lay direction; the shader transforms it with modelMatrix
+        // so animated ears, tails, heads, and legs keep coherent grooming.
         const [flx, fly, flz] = part.flow ?? [0, 0, -1];
-        const fwx = cYaw * flx + sYaw * flz;
-        const fwy = fly;
-        const fwz = -sYaw * flx + cYaw * flz;
 
-        for (let i = 0; i < n; i++) {
+        for (let idx = 0; idx < totalCount; idx++) {
           // Uniform random direction on unit sphere → ellipsoid surface.
           const u = Math.random();
           const v = Math.random();
@@ -788,15 +1043,10 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           const dy = Math.cos(phi);
           const dz = sinPhi * Math.sin(theta);
 
-          // Position on ellipsoid surface (world units).
-          const px = cx + dx * rx;
-          const py = cy + dy * ry;
-          const pz = cz + dz * rz;
-          // Local position relative to the part centre — used by the
-          // pattern evaluator. lx/ly/lz are in world units.
-          const lx = px - cx;
-          const ly = py - cy;
-          const lz = pz - cz;
+          // Position on this part's ellipsoid surface, in part-local units.
+          const px = dx * rx;
+          const py = dy * ry;
+          const pz = dz * rz;
 
           // Normal at that point: gradient of ellipsoid equation
           // (x/rx², y/ry², z/rz²), normalized.
@@ -814,9 +1064,9 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           dummy.updateMatrix();
           inst.setMatrixAt(idx, dummy.matrix);
 
-          // Evaluate the pattern at this surface point and mix per-blade
+          // Evaluate the pattern at this local surface point and mix per-blade
           // colours between primary and secondary based on the result.
-          const mix = evalPattern(pattern, lx, ly, lz, ry);
+          const mix = evalPattern(pattern, px, py, pz, ry);
           baseMixed.copy(baseA).lerp(baseB, mix);
           tipMixed.copy(tipA).lerp(tipB, mix);
 
@@ -829,41 +1079,34 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           aTipArr[idx * 3 + 0] = tipMixed.r;
           aTipArr[idx * 3 + 1] = tipMixed.g;
           aTipArr[idx * 3 + 2] = tipMixed.b;
-          aFlowArr[idx * 3 + 0] = fwx;
-          aFlowArr[idx * 3 + 1] = fwy;
-          aFlowArr[idx * 3 + 2] = fwz;
-          idx++;
+          aFlowArr[idx * 3 + 0] = flx;
+          aFlowArr[idx * 3 + 1] = fly;
+          aFlowArr[idx * 3 + 2] = flz;
         }
-      }
-      inst.instanceMatrix.needsUpdate = true;
-      blade.setAttribute('aRandom', new THREE.InstancedBufferAttribute(aRandomArr, 1));
-      blade.setAttribute('aTwist',  new THREE.InstancedBufferAttribute(aTwistArr, 1));
-      blade.setAttribute('aLength', new THREE.InstancedBufferAttribute(aLengthArr, 1));
-      blade.setAttribute('aBaseColor', new THREE.InstancedBufferAttribute(aBaseArr, 3));
-      blade.setAttribute('aTipColor',  new THREE.InstancedBufferAttribute(aTipArr, 3));
-      blade.setAttribute('aFlow',      new THREE.InstancedBufferAttribute(aFlowArr, 3));
 
-      group.add(inst);
-      furMeshes.push(inst);
-      furGeoms.push(blade);
+        inst.instanceMatrix.needsUpdate = true;
+        blade.setAttribute('aRandom', new THREE.InstancedBufferAttribute(aRandomArr, 1));
+        blade.setAttribute('aTwist',  new THREE.InstancedBufferAttribute(aTwistArr, 1));
+        blade.setAttribute('aLength', new THREE.InstancedBufferAttribute(aLengthArr, 1));
+        blade.setAttribute('aBaseColor', new THREE.InstancedBufferAttribute(aBaseArr, 3));
+        blade.setAttribute('aTipColor',  new THREE.InstancedBufferAttribute(aTipArr, 3));
+        blade.setAttribute('aFlow',      new THREE.InstancedBufferAttribute(aFlowArr, 3));
 
-      // Body parts (visible underneath the fur — gives the animal weight).
-      for (const part of animal.parts) {
-        const geom = new THREE.SphereGeometry(1, 24, 16);
-        const mat = new THREE.MeshStandardMaterial({
-          color: part.body,
-          roughness: 0.9,
-          metalness: 0.0,
-        });
-        const m = new THREE.Mesh(geom, mat);
-        m.position.set(...part.c);
-        m.scale.set(...part.r);
-        m.castShadow = true;
-        m.receiveShadow = true;
-        group.add(m);
-        bodyMeshes.push(m);
-        bodyMats.push(mat);
+        partGroup.add(inst);
+        furMeshes.push(inst);
+        furGeoms.push(blade);
       }
+
+      const phase = animalPhase(animal.name);
+      animatedAnimals.push({
+        name: animal.name,
+        group,
+        basePosition: group.position.clone(),
+        baseYaw: animal.yaw ?? 0,
+        phase,
+        speed: 0.75 + ((phase / (Math.PI * 2)) % 1.0) * 0.45,
+        parts: animatedParts,
+      });
     }
 
     // ─── Bloom post-pass ─────────────────────────────────────────────────
@@ -878,11 +1121,84 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
     // ─── Animate ─────────────────────────────────────────────────────────
     const clock = new THREE.Clock();
     let raf = 0;
+    const updateAnimalMotion = (elapsed: number) => {
+      const speedScale = Math.max(0, Math.min(1.8, motionSpeed));
+
+      for (const animal of animatedAnimals) {
+        animal.group.position.copy(animal.basePosition);
+        animal.group.rotation.set(0, animal.baseYaw, 0);
+
+        if (!motionEnabled || speedScale <= 0) {
+          for (const part of animal.parts) {
+            part.group.position.copy(part.basePosition);
+            part.group.rotation.set(0, 0, 0);
+            part.group.scale.set(1, 1, 1);
+          }
+          continue;
+        }
+
+        const idleT = elapsed * animal.speed * speedScale + animal.phase;
+        const gaitT = elapsed * (2.1 + animal.speed * 0.55) * speedScale + animal.phase;
+        const wanderX = Math.sin(idleT * 0.24) * 0.18;
+        const wanderZ = Math.cos(idleT * 0.19) * 0.12;
+        animal.group.position.x += wanderX;
+        animal.group.position.z += wanderZ;
+        animal.group.rotation.y += Math.sin(idleT * 0.18) * 0.075;
+
+        const breathe = Math.sin(elapsed * 1.35 * speedScale + animal.phase) * 0.026;
+        const gaitBob = Math.abs(Math.sin(gaitT * 2.0)) * 0.025;
+        const grazingRaw = animal.name === 'sheep' || animal.name === 'cow'
+          ? Math.sin(elapsed * 0.36 * speedScale + animal.phase)
+          : -1;
+        const graze = Math.max(0, Math.min(1, (grazingRaw - 0.15) / 0.85));
+
+        for (const part of animal.parts) {
+          part.group.position.copy(part.basePosition);
+          part.group.rotation.set(0, 0, 0);
+          part.group.scale.set(1, 1, 1);
+
+          if (part.role === 'body') {
+            part.group.position.y += breathe + gaitBob;
+            part.group.rotation.z = Math.sin(gaitT) * 0.018;
+            part.group.scale.set(1 + breathe * 0.45, 1 - breathe * 0.35, 1 + breathe * 0.25);
+          } else if (part.role === 'head') {
+            const look = Math.sin(idleT * 0.62);
+            part.group.position.y += breathe * 0.45 - graze * 0.28;
+            part.group.position.z += graze * 0.22;
+            part.group.rotation.x = Math.sin(idleT * 0.78) * 0.06 - graze * 0.62;
+            part.group.rotation.y = look * 0.16;
+          } else if (part.role === 'ear') {
+            const twitch = Math.max(0, Math.sin(elapsed * 2.7 * speedScale + animal.phase + part.side * 1.4));
+            part.group.rotation.x = Math.sin(idleT * 1.1 + part.side) * 0.08 + twitch * 0.16;
+            part.group.rotation.z = part.side * (0.12 + Math.sin(idleT * 0.9) * 0.08);
+          } else if (part.role === 'tail') {
+            const wag = Math.sin(elapsed * 2.8 * speedScale + animal.phase);
+            part.group.rotation.x = -0.08 + Math.sin(idleT * 0.8) * 0.06;
+            part.group.rotation.y = wag * 0.28;
+            part.group.rotation.z = Math.sin(elapsed * 1.7 * speedScale + animal.phase) * 0.12;
+          } else if (part.role === 'leg') {
+            const diagonalOffset = part.side * part.front > 0 ? 0 : Math.PI;
+            const step = Math.sin(gaitT + diagonalOffset);
+            const lift = Math.max(0, step) * 0.075;
+            part.group.position.y += lift;
+            part.group.position.z += Math.cos(gaitT + diagonalOffset) * 0.025 * part.front;
+            part.group.rotation.x = step * 0.18 * part.front;
+            part.group.rotation.z = Math.sin(gaitT + diagonalOffset) * 0.025 * part.side;
+          } else if (part.role === 'face') {
+            part.group.position.y += breathe * 0.35 - graze * 0.28;
+          }
+        }
+      }
+    };
+
     const animate = () => {
       const elapsed = clock.getElapsedTime();
       furUniforms.uTime.value = elapsed;
+      grassUniforms.uTime.value = elapsed;
+      grassUniforms.uWindStrength.value = 0.30 + windStrength * 0.20;
       furUniforms.uWindStrength.value = windStrength;
       furUniforms.uCameraPos.value.copy(camera.position);
+      updateAnimalMotion(elapsed);
       controls.autoRotate = autoRotate;
       controls.update();
       composer.render();
@@ -914,8 +1230,13 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       furMeshes.forEach((m) => { /* geom already in furGeoms */ void m; });
       bodyMeshes.forEach((m) => m.geometry.dispose());
       bodyMats.forEach((m) => m.dispose());
+      shadowGeo.dispose();
+      shadowMat.dispose();
       groundGeo.dispose();
       groundMat.dispose();
+      grassMaterial.dispose();
+      grassBladeBase.dispose();
+      grassGeoms.forEach((g) => g.dispose());
       sky.geometry.dispose();
       skyMat.dispose();
       renderer.dispose();
@@ -923,7 +1244,7 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [width, height, furDensity, furLength, windStrength, autoRotate]);
+  }, [width, height, furDensity, furLength, windStrength, motionEnabled, motionSpeed, autoRotate]);
 
   const sx = (width !== undefined && height !== undefined)
     ? { width, height, overflow: 'hidden' }
