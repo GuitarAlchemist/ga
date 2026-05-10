@@ -71,27 +71,27 @@ const NOISE_GLSL = /* glsl */ `
       mix(dot(c, f - vec2(0.0, 1.0)), dot(d, f - vec2(1.0, 1.0)), u.x),
       u.y);
   }
-  // Ridged multifractal — produces sharp ridges instead of smooth blobs.
+  // Soft ridges — clamped abs noise without the secondary square gives a
+  // gentler crest profile than the canonical ridged-multifractal. The
+  // dunes still read as transverse waves but their tops are rounded
+  // instead of pinched.
   float ridged(vec2 p) {
     return 1.0 - abs(vnoise(p));
   }
-  // Five-octave ridged stack with wind-aligned dominant direction.
-  // dominantDir parameter unused inside the shader — caller pre-rotates p
-  // before calling so dunes' long axis runs perpendicular to the wind.
+  // Four-octave stack (was 5) with faster amplitude rolloff and a
+  // pow(1.4) instead of square — the field still has direction, but
+  // crests no longer come to knife-edges.
   float duneHeight(vec2 p) {
     float h = 0.0;
     float amp = 1.0;
     float freq = 0.012;
-    for (int i = 0; i < 5; i++) {
-      // Ridged^2 sharpens the crests further; squared in [0,1] keeps the
-      // cumulative scale bounded.
+    for (int i = 0; i < 4; i++) {
       float r = ridged(p * freq);
-      h += r * r * amp;
-      amp *= 0.5;
+      h += pow(r, 1.4) * amp;
+      amp *= 0.42;
       freq *= 2.0;
     }
-    // Bias up so the field sits above y=0; scale to a useful dune height.
-    return h * 22.0;
+    return h * 17.0;   // overall scale dialled back to keep dune heights modest
   }
 `;
 
@@ -284,13 +284,15 @@ const SandDunes: React.FC<SandDunesProps> = ({
       let h = 0;
       let amp = 1;
       let freq = 0.012;
-      for (let i = 0; i < 5; i++) {
+      // Match the GLSL profile: 4 octaves, pow(r, 1.4), faster amp rolloff,
+      // dialled-back final scale → softer crests, gentler outline.
+      for (let i = 0; i < 4; i++) {
         const r = cpuRidged(x * freq, z * freq);
-        h += r * r * amp;
-        amp *= 0.5;
+        h += Math.pow(r, 1.4) * amp;
+        amp *= 0.42;
         freq *= 2;
       }
-      return h * 22;
+      return h * 17;
     };
 
     const fieldGeo = new THREE.PlaneGeometry(fieldSize, fieldSize, fieldSegments, fieldSegments);
@@ -353,9 +355,10 @@ const SandDunes: React.FC<SandDunesProps> = ({
           vec2 cAxis = vec2(-wAxis.y, wAxis.x);
           float along = dot(vWorld.xz, wAxis);
           float across = dot(vWorld.xz, cAxis);
-          float ripple = vnoise(vec2(along * 0.18 + uTime * 0.45, across * 0.04));
-          // Synthetic normal perturbation in tangent space.
-          vec3 rippleN = vec3(ripple * 0.45, 0.0, 0.0);
+          float ripple = vnoise(vec2(along * 0.14 + uTime * 0.40, across * 0.04));
+          // Synthetic normal perturbation in tangent space — softer amplitude
+          // so ripples read as a texture, not crispy razor lines.
+          vec3 rippleN = vec3(ripple * 0.22, 0.0, 0.0);
           vec3 N = normalize(vNormal + rippleN);
 
           // Slope cues: faces leaning into the sun get warm-lit, away get
@@ -366,7 +369,10 @@ const SandDunes: React.FC<SandDunesProps> = ({
           float crestT = smoothstep(8.0, 22.0, vWorld.y);
 
           vec3 col = mix(uSandShaded, uSandLit, lit * 0.85 + 0.15);
-          col = mix(col, uSandDeep, smoothstep(0.4, 0.9, slope));   // dark slip face
+          // Slip face — broader smoothstep band so the transition from lit
+          // crest to shadowed lee fades over a visible slope range instead
+          // of switching abruptly.
+          col = mix(col, uSandDeep, smoothstep(0.55, 0.95, slope) * 0.7);
           col = mix(col, uSandLit * 1.05, crestT * 0.4);            // bright crest
 
           // Glints — tiny specular hits from grains catching the sun.
