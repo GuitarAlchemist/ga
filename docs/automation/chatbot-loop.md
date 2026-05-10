@@ -92,7 +92,7 @@ Cross-referenced against the 13 from "Inside Claude Code" (Ewan Mak,
 | 8 | **/permissions whitelist over `--dangerously-skip-permissions`** | We use `.claude/settings.local.json` allow-lists. Already there. |
 | 9 | **Tool integration: Slack, BigQuery, Sentry** | Slack research via `compound-engineering:ce-slack-research`, lots of MCP tools. No Sentry/BigQuery yet. |
 | 10 | **ralph-wiggum loop plugin** | We have the canonical `loop` skill from Anthropic plus `octo:loop`. Enough. |
-| 11 | **Feedback loops (2-3× quality)** | Tests + multi-LLM review + Demerzel tribunal = three feedback signals. Empirically load-bearing per PR #151. |
+| 11 | **Feedback loops (2-3× quality)** | Tests + multi-LLM review + Demerzel tribunal (`Demerzel/pipelines/qa-architect-cycle.ixql`, **not** `qa-tribunal.ixql`) = three feedback signals. Empirically load-bearing per PR #151. |
 | 12 | **Stop hook surfaces session state** | **NEW**: `Scripts/session-pr-check.ps1` runs on `Stop` to surface PR + CI status. Closes the "shipped on local green, red on CI" gap. |
 | 13 | **`@.claude` tag in code review for auto-update** | Not implemented. Possibly a `/claude-md-correction` skill in the future — for now corrections go into `docs/solutions/` via `/learnings`. |
 

@@ -145,6 +145,46 @@ These are the dealbreakers for moving the chatbot from "novice/intermediate" to 
 
 ---
 
+## Chatbot Track (curated 2026-05-10)
+
+Read by `/chatbot-iterate` (Step 1 — pick next item). Priority is user impact first; dependencies break ties (a P0 with an unmet dep is effectively P1). Path hints feed the tribunal-gate classifier in `Scripts/check-chatbot-tribunal-gate.ps1`. **Don't add items here without a path hint** — the gate plan needs it.
+
+Status legend: **ready** = unblocked, can pick today. **blocked** = waiting on listed prerequisite. **scheduled** = work has a fire-trigger from another initiative; don't start manually.
+
+### P0 — load-bearing for chatbot trust
+
+- [ ] **`memory-session-scope`** [ready] — Make `MemoryStore` session-scoped so retrieval can be re-enabled without cross-conversation leak. Memory hook already gated by `Memory:EnrichOnRetrieve` flag (PR #151), but the underlying isolation gap remains. Paths: `Common/GA.Business.ML/Agents/Memory/MemoryStore.cs`, `Common/GA.Business.ML/Agents/Hooks/MemoryHook.cs`, `Common/GA.Business.ML/Agents/Memory/MemoryMcpTools.cs`. **Tribunal: REQUIRED** (Agents path). Was task #82.
+- [ ] **`router-quality`** [ready] — Improve embedding router quality (Phase 3 next bottleneck per memory). Today's keyword-fallback fires too often; semantic similarity threshold needs tuning + an evaluation harness. Paths: `Common/GA.Business.ML/Agents/SemanticRouter.cs`, `Common/GA.Business.ML/Agents/Intents/SemanticIntentRouter.cs`, `Common/GA.Business.ML/Agents/RoutingFeedback.cs`. **Tribunal: REQUIRED**. Was task #81.
+- [ ] **`m7b5-dim7-chord-info`** [ready] — Add `m7b5` and `dim7` to `GetFormula(quality)` in `ChordMcpTools`. They're valid in `ga_chord_substitutions`/`ga_chord_compare` but rejected by `ga_chord_info`. Trivial; smallest possible chatbot PR. Paths: `Common/GA.Business.ML/Mcp/Tools/ChordMcpTools.cs`. **Tribunal: REQUIRED** (Mcp path) — small change still goes through the gate, that's the iron law.
+
+### P1 — capability completeness
+
+- [ ] **`extended-chord-support`** [ready] — Extend `ChordSymbolRegex` for `Cmaj9`, `Dm11`, `G13`, `C7b5`, `C7#9`, `Calt`, `Csus2`, `Cadd9`, `C/E`. May warrant separate `ga_chord_extended` tool to preserve `ga_chord_info` contract. Substrate for chord-substitution + progression-completion on extended chords. Paths: `Common/GA.Business.Core/Notes/Chord*.cs` (parser), `Common/GA.Business.ML/Mcp/Tools/ChordMcpTools.cs` (formula table + tool). **Tribunal: REQUIRED** (Mcp path).
+- [ ] **`chord-identify`** [ready] — `ga_chord_identify(notes)` → "C major triad" + ranked alternatives (C/Em with E in bass). Already mentioned in chord-info SKILL.md as a known gap. Paths: `Common/GA.Business.ML/Mcp/Tools/`. **Tribunal: REQUIRED**.
+- [ ] **`alternate-tuning-voicings`** [blocked: voicing-index expansion] — `ga_chord_voicings(chord, tuning)` for DADGAD, drop-D, double-drop-D, open G/D/E, DGCGCD, all-fourths. Returns shapes ranked by fret-span. Composes with `ga_fret_span`. Substrate for several P2 items. Paths: `Common/GA.Business.ML/Mcp/Tools/`, `Common/GA.Business.Core/Fretboard/Voicings/`. **Tribunal: REQUIRED**. Prereq: voicing index needs alternate-tuning entries (status unknown — verify before unblocking).
+- [ ] **`transpose-capo`** [ready] — `ga_transpose_progression(progression, semitones)` + `ga_capo_render(progression, capoFret)` returning played-shape progression. New `transpose`/`capo` SKILL.md gathers both. Paths: `Common/GA.Business.ML/Mcp/Tools/`, `.claude/skills/transpose/SKILL.md`. **Tribunal: REQUIRED**.
+- [ ] **`voice-leading-pair`** [ready] — `ga_voice_leading(chordA, chordB)` from precomputed OPTIC-K voicing index, reports moves per voice. Complements `ga_chord_substitutions` (which ranks by ICV cost — already documented out-of-scope in SKILL.md). Paths: `Common/GA.Business.ML/Mcp/Tools/`. **Tribunal: REQUIRED**.
+
+### P2 — advanced / dependent
+
+- [ ] **`modal-key-identify`** [ready] — `ga_key_identify_modal` returning parent-scale candidate ranked alongside major/minor with relative mode named. Pros write modal vamps (Am-G-Am-F is A Aeolian, not A minor with borrowed F). Paths: `Common/GA.Business.ML/Mcp/Tools/`, `Common/GA.Business.Core/Harmony/Modal/`. **Tribunal: REQUIRED**.
+- [ ] **`modulation-detection`** [ready] — Sliding-window key-identify with confidence-delta heuristic. Detect bII/bVI etc. modulations within a single progression. Paths: `Common/GA.Business.ML/Mcp/Tools/`. **Tribunal: REQUIRED**.
+- [ ] **`style-progression-gen`** [ready] — `ga_generate_progression(key, style, length)` with style → cadence-pattern map (jazz turnarounds, bluegrass, country I-IV-V variations). Paths: `Common/GA.Business.ML/Mcp/Tools/`. **Tribunal: REQUIRED**.
+- [ ] **`fretboard-overlay-live`** [ready] — Show scale degrees on the React 3D fretboard in real time as the chatbot explains. Frontend-heavy; only the SignalR push from the agent touches chatbot core. Paths: `ReactComponents/ga-react-components/**`, `Apps/ga-server/GaApi/Hubs/ChatbotHub*`. **Tribunal: NOT required** (no Agents/MCP/DSL paths). octo:review still recommended.
+- [ ] **`chord-diagram-inline`** [ready] — When TheoryAgent mentions a chord, auto-generate a VexTab diagram inline in the chat response. Paths: `Common/GA.Business.ML/Agents/TheoryAgent*` + `ReactComponents/ga-react-components/**`. **Tribunal: REQUIRED** (Agents path).
+- [ ] **`lead-sheet-arranger`** [blocked: extended-chord-support, alternate-tuning-voicings, voice-leading-pair, transpose-capo] — Render melody + progression as chord-melody arrangement. Bigger lift; needs melody-input format + fretboard-aware arranger. Don't start until the four prereqs ship.
+
+### Scheduled / orchestrated elsewhere — don't pick manually
+
+- [ ] **`qa-tribunal-phase-1`** [scheduled: trig_01WdRGSqgxah5PD46wg8u4Qq fires 2026-05-18] — Phase 1 of the QA Architect Tribunal. Schema is v0.1 draft; chatbot-iterate consumes the verdict shape but does NOT implement it. See memory `project_qa_architect_tribunal`.
+- [ ] **`optick-sae-phase-1`** [scheduled: trig_01QUrKEsYLPPW4KNLzKZRE2n fires 2026-05-19] — Phase 1 of OPTIC-K Sparse Autoencoder. Cross-repo (ix crate + GA consumer + Demerzel orchestration). After Phase 1 lands, a follow-up "consume SAE features in TheoryAgent reasoning" item will be promoted into this track. See memory `project_optick_sae`.
+
+### Parked
+
+- **`frontier-llm-provider`** — `frontier-remote` purpose for `IChatClientFactory`. Reference Cloudflare Workers AI. **Preconditions** (per Infrastructure Ideas): (a) Ollama stable, (b) concrete user-facing task that local 3B fails at, (c) IChatClientFactory fully wired. NOT useful for OPTIC-K embeddings.
+
+---
+
 ## How to Start a Feature
 
 ```bash

@@ -52,33 +52,50 @@ have been satisfied.
 
 ### Step 1: Identify the next chatbot item
 
-Sources, in priority order:
+Read `BACKLOG.md` → **Chatbot Track (curated YYYY-MM-DD)** section.
+Items there are slug-tagged (e.g. `memory-session-scope`,
+`router-quality`) and labelled with **priority** (P0/P1/P2) and
+**status** (ready / blocked / scheduled / parked).
 
-1. `BACKLOG.md` (root) — chatbot-flagged items. Filter to entries
-   mentioning chatbot / TheoryAgent / TabAgent / VoicingAgent /
-   intent routing / MCP tools / DSL eval / capability matrix.
-2. Active `docs/plans/*-chatbot-*.md` — any plan in flight that
-   has a "Next" section.
-3. Open issues tagged `chatbot` (if any) on GitHub. Use
-   `gh issue list --label chatbot --state open`.
-4. Recent `docs/solutions/*chatbot*` entries — sometimes a learning
-   surfaces a concrete fix that's worth spinning into a backlog item.
+Selection rule:
 
-If no candidate is unblocked, **stop**. Don't manufacture work. Tell
-the user and ask whether to surface a stale item.
+1. Filter to **status: ready**.
+2. Pick the highest-priority item (P0 before P1 before P2).
+3. Within a priority tier, prefer the smallest scope.
+4. If the user named a slug (e.g. `/chatbot-iterate router-quality`),
+   honour that and skip the pick step — but still verify status is
+   ready and warn if not.
+
+Secondary sources only when the Chatbot Track is exhausted:
+
+- Active `docs/plans/*-chatbot-*.md` — any plan in flight with a
+  "Next" section.
+- Open GitHub issues tagged `chatbot`:
+  `gh issue list --label chatbot --state open`.
+- Recent `docs/solutions/*chatbot*` learnings that surfaced a
+  concrete fix worth promoting into the track.
+
+If no candidate is unblocked, **stop**. Don't manufacture work and
+don't pick from the Parked or Scheduled subsections — both exist
+specifically because they aren't ready. Tell the user and ask whether
+to promote a parked item or surface a stale one.
 
 ### Step 2: Classify the gate requirements
 
 For the chosen item, walk the implementation areas and decide which
-gates are required. Output a short upfront plan, e.g.:
+gates are required. Cross-reference the path hints in the BACKLOG
+entry against `Scripts/check-chatbot-tribunal-gate.ps1` — that
+script is the authoritative classifier. Output a short upfront
+plan, e.g.:
 
 ```
-Item: "Add ga_chord_voicings(chord, tuning) MCP tool"
+Item: alternate-tuning-voicings  (P1, ready)
+Goal: Add ga_chord_voicings(chord, tuning) MCP tool
 
-Touches:
-  - Common/GA.Business.ML/Mcp/Tools/         → tribunal: REQUIRED
-  - Common/GA.Business.Core.DSL/Voicings/    → tribunal: REQUIRED
-  - GaApi/Program.cs (registration)          → tribunal: review only
+Touches (per BACKLOG entry):
+  - Common/GA.Business.ML/Mcp/Tools/             → tribunal: REQUIRED
+  - Common/GA.Business.Core/Fretboard/Voicings/  → tribunal: review only
+  - Apps/ga-server/GaApi/Program.cs (DI wiring)  → tribunal: review only
 
 Gates before merge:
   - octo:review (correctness + security)
@@ -86,6 +103,12 @@ Gates before merge:
   - dotnet test AllProjects.slnx green
   - ga-react-components build + lint green
   - Manual smoke against /api/chatbot endpoint
+
+Pre-flight (verify BEFORE starting work):
+  - git status clean
+  - On a fresh branch off main (not stacked)
+  - dotnet build AllProjects.slnx -c Debug currently green
+  - Vite (5176) + GaApi (5232) up — see SessionStart hook output
 
 Estimated PR size: medium (3-6 files, +200/-50 LOC)
 ```
@@ -114,8 +137,12 @@ Once gates are agreed, hand off to existing skills:
 5. **Tribunal verdict**: invoke
    `compound-engineering:ce-doc-review` against the change list, or
    for chatbot paths specifically use the Demerzel governance
-   pipeline (`Demerzel/pipelines/qa-tribunal.ixql` per the
-   project memory).
+   pipeline `Demerzel/pipelines/qa-architect-cycle.ixql` (the
+   actual filename — verified 2026-05-10; emits verdicts to
+   `state/quality/verdicts/<repo>/<ref>/<verdict_id>.json` per the
+   `project_qa_architect_tribunal` memory). Phase 1 of the tribunal
+   contract fires `trig_01WdRGSqgxah5PD46wg8u4Qq` 2026-05-18 — the
+   schema is still v0.1 draft; do not assume frozen fields.
 
 ### Step 4: Open the PR
 
