@@ -746,9 +746,12 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       uSunDir:    { value: sunDir.clone() },
       uSunColor:  { value: new THREE.Color(0xfff1d8) },
       uAmbient:   { value: new THREE.Color(0x4f6a8c) },
-      uBaseColor: { value: new THREE.Color(0x223818) },
-      uTipColor:  { value: new THREE.Color(0x9bb95a) },
-      uTipColor2: { value: new THREE.Color(0xc2cf7a) },
+      // Brighter, more saturated green so the strands stand out against
+      // the painterly ground plane underneath them. Same gradient idea
+      // as fluffy-grass but pushed for visibility at this camera scale.
+      uBaseColor: { value: new THREE.Color(0x274d20) },
+      uTipColor:  { value: new THREE.Color(0xb8d666) },
+      uTipColor2: { value: new THREE.Color(0xd6e08a) },
       uWindStrength: { value: 0.30 },
     };
 
@@ -843,13 +846,16 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       `,
     });
 
-    const grassBladeBase = new THREE.PlaneGeometry(0.07, 0.55, 1, 6);
-    grassBladeBase.translate(0, 0.275, 0);
+    // Wider + taller blades than fluffy-grass uses, because the animals
+    // sit further from the camera here and thin blades pixelate to
+    // invisible green dots at this distance.
+    const grassBladeBase = new THREE.PlaneGeometry(0.12, 0.50, 1, 6);
+    grassBladeBase.translate(0, 0.25, 0);
 
     const phoneGrass = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-    const grassChunkSize  = 2;
-    const grassChunkCount = phoneGrass ? 11 : 16;            // 22m or 32m square
-    const grassDensity    = phoneGrass ? 60 : 130;
+    const grassChunkSize  = 1.5;
+    const grassChunkCount = phoneGrass ? 12 : 18;            // 18m or 27m square
+    const grassDensity    = phoneGrass ? 80 : 160;
     const grassPlaneAngles = [0, Math.PI / 3, (2 * Math.PI) / 3];
     const grassHalfCount  = grassChunkCount / 2;
     const grassMeshes: THREE.InstancedMesh[] = [];
