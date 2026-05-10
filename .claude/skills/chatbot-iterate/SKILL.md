@@ -131,9 +131,58 @@ Once gates are agreed, hand off to existing skills:
    `npm run build && npm run lint` in
    `ReactComponents/ga-react-components`. Don't claim success until
    all three are green.
-4. **Multi-LLM review**: run `/octo:review` (or `codex review` if
-   octopus is unavailable). Resolve every finding marked validity ≥
-   medium before requesting tribunal.
+4. **Multi-LLM review**: spawn the two reviewer subagents in parallel
+   via the Agent tool. This is the **proven-effective mechanism** —
+   per `feedback_multi_llm_review_pays_off`, this path caught 9 real
+   bugs across the 2026-05-03 chatbot migration that local tests
+   missed. **Do not substitute `/octo:review`** without first running
+   the liveness check below; the orchestrator has been silently dark
+   on Windows since ≥2026-04-29 per
+   `reference_octo_plugin_corruption_2026_05_10`.
+
+   ```
+   Agent({
+     description: "Code review PR #N",
+     subagent_type: "octo:droids:octo-code-reviewer",
+     prompt: "Review the diff at branch <branch>. Concerns: <specific
+              concerns from the gate plan in Step 2 — what could break,
+              not generic 'review for issues'>"
+   })
+   Agent({
+     description: "Security review PR #N",
+     subagent_type: "octo:droids:octo-security-auditor",
+     prompt: "Security audit <branch>. Focus: <trust boundaries the
+              diff touches — auth, DI surface, public input>"
+   })
+   ```
+
+   Send both in a single message so they run in parallel. Resolve
+   every BLOCKING and high-confidence Medium finding before
+   requesting tribunal. APPROVE-WITH-NITS is the typical verdict;
+   defer Lows.
+
+   **If using `/octo:review` instead (slash command, orchestrated path):**
+   it requires a liveness check after the run, because empty findings
+   are indistinguishable from a broken gate:
+
+   ```
+   pwsh Scripts/octo-gate-liveness.ps1
+   ```
+
+   Exit 2 (`state: dark`) = every specialist failed; the verdict is
+   meaningless. Recover via:
+
+   ```
+   pwsh Scripts/octo-review-clean.ps1 -Pr <N>   # strips space-bearing
+                                                # PATH entries (Windows bug)
+   ```
+
+   Either way, record in the PR body which mechanism produced the
+   verdict (`Agent-tool subagents` vs `/octo:review clean` vs
+   `/octo:review raw`) so future audits can correlate gate ROI with
+   mechanism.
+
+   Background: `docs/solutions/tooling/2026-05-10-octo-plugin-install-corruption-silent-gate-failure.md`.
 5. **Tribunal verdict**: invoke
    `compound-engineering:ce-doc-review` against the change list, or
    for chatbot paths specifically use the Demerzel governance
@@ -172,6 +221,63 @@ After the PR merges:
 
 If the user said "keep going" or this is part of a `/loop`, return to
 Step 1 with the next item. Otherwise stop.
+
+### Step 7: Auto-merge (opt-in, gated, L3 mechanism)
+
+Default OFF. Only fires when the PR was explicitly opted into auto-merge
+AND every gate from Steps 3–5 has produced an affirmative verdict.
+
+**Preconditions** (all must hold — script enforces them):
+
+1. PR has the `auto-merge-eligible` label.
+2. PR lacks `do-not-merge` / `wip` labels and is not a draft.
+3. PR diff is path-restricted to chatbot-safe paths only (see
+   `SafePathPatterns` in `Scripts/octo-auto-merge-decision.ps1`).
+   Excludes public API surface, DI registration, GraphQL schema,
+   `.env`, migrations. Anything outside that list requires human eyes.
+4. All CI checks finished AND none failed (except allowlisted
+   pre-existing env failures like the Anthropic key gap).
+5. Agent-tool multi-LLM review verdict at
+   `state/chatbot-reviews/<pr>.json` is `pass` or `nits-only`.
+6. If `/octo:review` was used as a secondary check, its liveness was
+   `live` or `mixed` — not `dark`.
+7. Tribunal verdict, if present, is PASS / APPROVE / approve-with-nits.
+
+**How to invoke:**
+
+```
+pwsh Scripts/octo-auto-merge-decision.ps1 -Pr <N> -Json
+```
+
+Exit codes:
+- `0` + `decision: merge` — all gates pass; caller should run
+  `gh pr merge <N> --squash --delete-branch`
+- `1` + `decision: wait` — checks still pending; sleep + retry
+- `1` + `decision: refuse` — at least one gate failed; surface the
+  reason and STOP. Do not retry without human triage.
+
+**Hard rules:**
+
+- This script never merges. It only decides. The skill is responsible
+  for acting on the decision.
+- Refusal is the default. If any condition is ambiguous, refuse.
+- Adding a path to `SafePathPatterns` is a one-way door for safety —
+  the path-restriction list should grow slowly and only after a path
+  has demonstrated it's safe to auto-merge (e.g., 5 successful
+  human-merged PRs on the same path with no rollbacks).
+
+**Why this is L3-mechanism but L2-default:**
+
+The mechanism is here so the loop CAN auto-merge — but the
+`auto-merge-eligible` label is the deliberate human-in-the-loop step
+that L3 hasn't reached yet. L3 promotion ships when:
+
+- 5+ chatbot PRs have merged via this mechanism cleanly (no rollbacks,
+  no post-merge bug reports).
+- A production canary auto-rolls back a bad merge.
+- The label gate is replaced with a default-on policy.
+
+See `docs/automation/chatbot-loop.md` for the full L2/L3/L4 ladder.
 
 ## Anti-Patterns
 

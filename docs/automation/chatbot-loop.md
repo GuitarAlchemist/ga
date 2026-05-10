@@ -138,18 +138,106 @@ Stop conditions for the loop (in priority order):
 
 ## Promoting to L3
 
-When ready to consider auto-merge (L3), the prerequisites are:
+### L3 promotion checklist — `auto-merge-eligible` label becomes default
 
-- [ ] At least 5 chatbot PRs shipped via `/chatbot-iterate` with
-      tribunal verdicts agreeing with octo:review (no false-positive
-      drift).
-- [ ] Production canary deployment for the chatbot path so a regression
-      rolls back automatically.
-- [ ] Telemetry pipeline that feeds chatbot failure traces into the
-      backlog for the next loop iteration (this is the L4 prerequisite
-      anyway).
+The mechanism is in place (`Scripts/octo-auto-merge-decision.ps1`,
+SKILL.md Step 7, opt-in label `auto-merge-eligible`). What's missing
+is the *evidence* that auto-merge is safe to make default. Each item
+below is concrete and testable.
 
-Until those are checked, L2 is the ceiling.
+- [ ] **Mechanism shipped** — `octo-auto-merge-decision.ps1` exists,
+      refuses by default, exits 0 only when all gates pass.
+      **Status:** ✅ shipped 2026-05-10 (this session).
+- [ ] **5 clean auto-merges** — at least 5 chatbot PRs shipped via the
+      mechanism with zero post-merge rollbacks or hotfixes in the
+      following 7 days. Measured by querying `gh pr list --search
+      "is:merged label:auto-merge-eligible"` and cross-referencing
+      against the same period's `git log --grep="(revert|hotfix)"`.
+      **Status:** 0 / 5.
+- [ ] **Production canary auto-rollback verified** — deploy intentional
+      bad change to canary, confirm rollback fires within 5 min via
+      whatever monitoring you wire up. Without this, "auto-merge" means
+      "auto-ship a regression". Acceptance: one end-to-end rollback
+      drill captured in `docs/solutions/`.
+      **Status:** ❌ not started — no canary infra exists yet.
+- [ ] **Gate-comparison ledger** — track per-PR which gate caught what
+      (Agent-tool review vs `/octo:review` vs tribunal vs CI tests).
+      After 10 chatbot PRs, expect Agent-tool path to catch ≥1 issue
+      none of the other gates caught — proves it's pulling its weight.
+      Acceptance: `state/quality/gate-ledger.jsonl` with entries.
+      **Status:** ❌ not started — pattern only verified anecdotally
+      (the 6 bugs documented in `feedback_multi_llm_review_pays_off`).
+- [ ] **CI env flakiness resolved** — `Backend Tests` / `build` /
+      `Playwright Tests` no longer fail on missing Anthropic API key
+      on CI runners. Either set the secret, or skip tests when env is
+      missing, or split into "needs-llm" lane. Current allowlist in
+      `octo-auto-merge-decision.ps1` (`-AllowlistedCiFailures`) is a
+      bandage.
+      **Status:** ❌ allowlist active; tests fail on every PR.
+- [ ] **Cost-per-auto-merge budget** — measure $ cost of one full
+      `/chatbot-iterate` run (Agent-tool review × 2 + tribunal + tests
+      via CI). Set a monthly cap. Refuse auto-merge if month-to-date
+      cost approaches the cap.
+      **Status:** ❌ no measurement infra.
+
+Until ALL six are checked, L2-with-explicit-label is the ceiling.
+
+### L4 promotion checklist — failure-fed dark factory
+
+L4 means production failures auto-create BACKLOG items the loop picks
+up, with no human in the loop except for the kill-switch.
+**All L3 items above are L4 prerequisites.** Additional L4-only items:
+
+- [ ] **Production telemetry pipeline** — chatbot user errors / 4xx /
+      5xx / hallucinations get logged to a structured destination the
+      loop can read. Acceptance: a single `state/telemetry/failures.jsonl`
+      file (or equivalent) with at least 100 real failure records.
+      **Status:** ❌ chatbot has no production telemetry destination
+      beyond Vercel/Cloudflare access logs.
+- [ ] **Failure → BACKLOG triage skill** — new skill that reads
+      `failures.jsonl`, clusters similar failures, deduplicates against
+      existing BACKLOG items, files new ones with reproduction steps.
+      Acceptance: ≥10 BACKLOG items filed automatically with no human
+      edits required to be actionable.
+      **Status:** ❌ not designed.
+- [ ] **Continuous loop scheduler** — `/loop 1h "/chatbot-iterate"` runs
+      reliably for 24h without blowing budget or getting stuck. Need a
+      stop-condition that doesn't depend on a human terminal.
+      Acceptance: 24h soak test logged in `docs/solutions/`.
+      **Status:** ❌ skill exists, scheduler does not.
+- [ ] **Anomaly detection on the loop's own output** — if the loop
+      starts producing reverted PRs / failed merges / runaway costs,
+      a separate watcher pages a human. Loop must be observable from
+      OUTSIDE the loop. Acceptance: a synthetic "loop is broken" alert
+      that fires within 1h.
+      **Status:** ❌ no watcher.
+- [ ] **Always-on kill switch** — a single command halts all loop
+      activity, regardless of state. Currently
+      `/chatbot-iterate` is interactive so the human terminal IS the
+      kill switch — at L4 it isn't anymore. Acceptance: a documented
+      `pwsh Scripts/loop-killswitch.ps1` that terminates the scheduler
+      process and refuses subsequent kicks until reset.
+      **Status:** ❌ not designed.
+
+Until ALL of L3 AND L4 are checked, L4 is aspirational, not operational.
+
+## Where this session left things
+
+After the 2026-05-10 session that authored this document:
+
+| Item | Status |
+|---|---|
+| `/learnings` skill | ✅ shipped |
+| `/chatbot-iterate` skill | ✅ shipped + canary PR #155 + drive-by SemanticIntentRouter fix |
+| Gate liveness check | ✅ shipped (`octo-gate-liveness.ps1`) |
+| PATH-scrubbed `/octo:review` | ✅ shipped (`octo-review-clean.ps1`) |
+| Auto-merge decision (opt-in mechanism) | ✅ shipped (`octo-auto-merge-decision.ps1`) |
+| L3 default-on enablement | ❌ blocked on 6-item checklist above |
+| L4 dark factory | ❌ blocked on 5-item checklist above (plus all of L3) |
+
+Net: the autonomy *mechanism* is more complete than the autonomy *
+authorization*. Every level above L2-opt-in needs evidence + infra
+that can only be built incrementally as real PRs flow through.
 
 ## Related
 
@@ -157,8 +245,28 @@ Until those are checked, L2 is the ceiling.
 - `.claude/skills/learnings/SKILL.md` — post-merge learning capture
 - `Scripts/session-pr-check.ps1` — Stop-hook PR/CI summary
 - `Scripts/check-chatbot-tribunal-gate.ps1` — path-based gate classifier
-- `BACKLOG.md` — chatbot items live here under "chatbot" / "TheoryAgent"
-  / "MCP" / "intent routing" headings
+- `Scripts/octo-gate-liveness.ps1` — **gate liveness check** (exits 2 if
+  all multi-LLM specialists failed silently — prevents false-green
+  `{"findings": []}` from passing as "no issues"). Run as Step 4.5 of
+  `/chatbot-iterate` per its SKILL.md.
+- `Scripts/octo-review-clean.ps1` — **PATH-scrubbed `/octo:review`** for
+  Windows. Strips space-bearing PATH entries before invoking the
+  orchestrator, working around the v9.13.0 env-spawn bug that fails
+  with `env: 'Files/NVIDIA': No such file or directory`. Use until the
+  orchestrator is patched upstream.
+- `BACKLOG.md` — chatbot items live in the curated **Chatbot Track**
+  section, plus generic infra under "chatbot" / "TheoryAgent" / "MCP"
+  / "intent routing" headings.
 - `docs/solutions/` — accumulated learnings from past iterations
+- `docs/solutions/tooling/2026-05-10-octo-plugin-install-corruption-silent-gate-failure.md`
+  — the full diagnosis behind the two scripts above.
 - `feedback_multi_llm_review_pays_off` (project memory) — the empirical
-  argument for the gate
+  argument for the gate. **Clarified 2026-05-10:** the "9 bugs caught"
+  claim is real, but the proven mechanism is **direct subagent dispatch
+  via the Agent tool** (`Agent(subagent_type: "octo:droids:octo-code-reviewer", ...)`),
+  NOT the `/octo:review` slash command. The Agent-tool path goes
+  through Claude Code's own subagent runtime; it's independent of the
+  broken orchestrator and continues to work today. `/chatbot-iterate`
+  Step 4 has been updated to use the Agent-tool path as primary,
+  with `/octo:review` as an optional secondary path gated by the
+  liveness check.
