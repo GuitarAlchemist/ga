@@ -69,11 +69,14 @@ const FUR_VERTEX = /* glsl */ `
   attribute float aLength;     // 0..1 multiplier on blade length
   attribute vec3  aBaseColor;
   attribute vec3  aTipColor;
+  attribute vec3  aFlow;       // world-space lay direction (already projected per part)
 
   varying vec2 vUv;
   varying vec3 vBaseColor;
   varying vec3 vTipColor;
   varying vec3 vNormalW;
+  varying vec3 vTangentW;      // world-space hair-strand direction (Kajiya-Kay)
+  varying vec3 vWorldPos;
   varying float vRandom;
 
   void main() {
@@ -82,8 +85,7 @@ const FUR_VERTEX = /* glsl */ `
     vBaseColor = aBaseColor;
     vTipColor = aTipColor;
 
-    // Base anchor in world space (instanceMatrix already places + orients
-    // the blade so local +Y matches the surface normal).
+    // Base anchor in world space.
     vec4 anchor4 = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     vec3 anchor = anchor4.xyz;
 
@@ -91,30 +93,49 @@ const FUR_VERTEX = /* glsl */ `
     vec3 p = position;
     p.y *= aLength;
 
-    // Per-blade twist around local Y (the surface normal axis).
+    // Per-blade twist around local Y (random rotation around the strand
+    // axis so faces don't all align — kept small here because the lay
+    // direction is now driven coherently in world-space below).
     float c = cos(aTwist);
     float s = sin(aTwist);
     vec3 rotated = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
 
-    // Local-frame curl: the blade arcs forward in local +X for natural
-    // "lay" — like fur that's been lightly groomed.
-    float t = clamp(uv.y, 0.0, 1.0);
-    float curve = t * t;
-    rotated.x += curve * 0.18 * (0.5 + aRandom * 0.5);
-    rotated.y -= curve * 0.05;
-
+    // Push to world space.
     vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
 
-    // World-space wind sway on the tip — small breeze that varies
-    // spatially via vnoise so neighbouring blades sway coherently.
+    // Surface normal in world space.
+    vec3 normalW = normalize((modelMatrix * instanceMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+
+    // World-space lay curl — project aFlow onto the tangent plane and
+    // bend the tip in that direction. This is the "groomed in one
+    // direction" effect that makes fur read as fur instead of grass.
+    // Curve is t² so base barely moves.
+    vec3 flow = aFlow - normalW * dot(aFlow, normalW);
+    float flowMag = length(flow) + 1e-6;
+    vec3 flowDir = flow / flowMag;
+    float t = clamp(uv.y, 0.0, 1.0);
+    float curve = t * t;
+    float curlMag = 0.50 * (0.7 + aRandom * 0.5);  // strong lay
+    worldPos.xyz += flowDir * curlMag * curve;
+    // Subtle gravity sag — pull the tip down slightly.
+    worldPos.y -= curve * 0.06 * aLength;
+
+    // Wind ripple on the tip, in the flow direction (so wind ruffles fur
+    // along its lay rather than buffeting it sideways).
     float gust = vnoise(anchor.xz * 0.6 + vec2(uTime * 0.4, uTime * 0.25));
-    worldPos.x += (gust * 0.6 + 0.4) * uWindStrength * curve * 0.16;
-    worldPos.z += sin(uTime * 0.7 + anchor.y * 1.4 + aRandom * 6.28) * uWindStrength * curve * 0.10;
+    float windT = curve * uWindStrength;
+    worldPos.xyz += flowDir * (gust * 0.6 - 0.3) * windT * 0.12;
+    worldPos.y += sin(uTime * 1.5 + aRandom * 6.28) * windT * 0.04;
 
-    // Normal: blade plane normal rotated by twist + transformed to world.
-    vec3 nLocal = normalize(vec3(s, 0.4, c));
-    vNormalW = normalize((modelMatrix * instanceMatrix * vec4(nLocal, 0.0)).xyz);
+    // Hair tangent in world space — direction along the strand from base
+    // to tip. Used by the fragment shader for Kajiya-Kay anisotropic
+    // sheen. Effective strand direction blends the surface normal (root
+    // points outward) with the flow direction (tip lays back).
+    vec3 strandTip = normalW * 0.5 + flowDir * 0.6;
+    vTangentW = normalize(strandTip);
 
+    vNormalW = normalW;
+    vWorldPos = worldPos.xyz;
     gl_Position = projectionMatrix * viewMatrix * worldPos;
   }
 `;
@@ -123,32 +144,59 @@ const FUR_FRAGMENT = /* glsl */ `
   uniform vec3 uSunDir;
   uniform vec3 uSunColor;
   uniform vec3 uAmbient;
+  uniform vec3 uCameraPos;
 
   varying vec2 vUv;
   varying vec3 vBaseColor;
   varying vec3 vTipColor;
   varying vec3 vNormalW;
+  varying vec3 vTangentW;
+  varying vec3 vWorldPos;
   varying float vRandom;
 
   void main() {
-    // Blade taper — silhouette via discard so depth-write stays correct.
+    // Blade taper — narrower silhouette so strands read as hair, not grass.
     float halfW = abs(vUv.x - 0.5);
-    float taper = 1.0 - vUv.y * 0.85;
+    float taper = 1.0 - vUv.y * 0.92;
     if (halfW > taper * 0.5) discard;
 
-    // Color from base to tip with slight per-blade variation.
+    // Color from base to tip with stronger per-blade jitter — real fur
+    // shows lots of micro variation so strands don't look stamped.
     float ao = pow(vUv.y, 1.3);
-    vec3 col = mix(vBaseColor, vTipColor, ao + (vRandom - 0.5) * 0.10);
+    float jitter = (vRandom - 0.5) * 0.18;
+    vec3 col = mix(vBaseColor, vTipColor, clamp(ao + jitter, 0.0, 1.0));
+    col *= 0.88 + vRandom * 0.24;   // overall brightness jitter
 
-    // Lambert shading using a wrap term so backsides aren't black.
+    // Lambert wrap shading on the surface normal.
     vec3 N = normalize(vNormalW);
     vec3 L = normalize(uSunDir);
     float lit = max(dot(N, L), 0.0);
     float wrap = lit * 0.55 + 0.45;
 
+    // Kajiya-Kay anisotropic sheen — the bright glint that runs along
+    // the strand when light + view align with the perpendicular of the
+    // hair tangent. Two terms: primary highlight (white-ish) and a
+    // secondary highlight tinted by the tip color (real fur shows two
+    // banded highlights from the cuticle layers).
+    vec3 V = normalize(uCameraPos - vWorldPos);
+    vec3 H = normalize(V + L);
+    vec3 T = normalize(vTangentW);
+    float TdotH = dot(T, H);
+    float aniso = sqrt(max(1.0 - TdotH * TdotH, 0.0));
+    float primary   = pow(aniso, 90.0);
+    float secondary = pow(aniso, 24.0) * 0.30;
+    vec3 sheen = vec3(1.0, 0.97, 0.92) * primary + vTipColor * secondary;
+
+    // Silhouette boost — Fresnel-style brightening on grazing angles
+    // gives the rim of the animal that fluffy halo / sub-surface look.
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+    float silhouette = fres * ao;
+
     // Backlit translucency at low sun angles for that fluffy halo.
     float backLit = pow(1.0 - lit, 2.0) * smoothstep(0.0, 0.4, uSunDir.y);
     col += backLit * vTipColor * 0.30 * ao;
+    col += silhouette * vTipColor * 0.45;
+    col += sheen * smoothstep(0.0, 0.3, uSunDir.y);
 
     col = col * (uAmbient * 0.55 + uSunColor * wrap);
     gl_FragColor = vec4(col, 1.0);
@@ -183,6 +231,12 @@ interface Part {
   furLen?: number;
   furDen?: number;
   pattern?: Pattern;
+  /**
+   * Hair-lay direction in animal-local space. Defaults to [0, 0, -1]
+   * (back-swept toward the tail). Override per part — legs flow [0,-1,0]
+   * (downward), upright ears [0, 1, 0], tails along their long axis.
+   */
+  flow?: [number, number, number];
 }
 
 interface AnimalDef {
@@ -269,6 +323,9 @@ const legQuad = (
     r: legR,
     body,
     pattern,
+    // Legs grow fur downward — like real fur on a leg laying toward the
+    // hoof / paw.
+    flow: [0, -1, 0],
     ...(furProps ?? {}),
   };
   return [
@@ -382,13 +439,17 @@ const ANIMALS: AnimalDef[] = [
       },
       { c: [0, 1.35, 0.55], r: [0.40, 0.40, 0.45], body: 0xf2efe8, tip: 0xffffff, fur: true, furLen: 0.50 },
       // Long upright ears with pink interiors via belly pattern.
+      // Fur flows UPWARD toward the ear tip — ears should look groomed,
+      // not exploded radially.
       {
         c: [-0.20, 2.20, 0.40], r: [0.10, 0.55, 0.10],
         body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20,
+        flow: [0, 1, 0],
       },
       {
         c: [ 0.20, 2.20, 0.40], r: [0.10, 0.55, 0.10],
         body: 0xf2efe8, tip: 0xfdd6cf, fur: true, furLen: 0.20,
+        flow: [0, 1, 0],
       },
       { c: [0, 0.90, -0.85], r: [0.22, 0.22, 0.22], body: 0xffffff, tip: 0xffffff, fur: true, furLen: 0.75, furDen: 2.0 },
       { c: [-0.14, 1.35, 0.95], r: [0.05, 0.05, 0.05], body: 0x111111 },
@@ -622,6 +683,7 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       uSunDir: { value: sunDir.clone() },
       uSunColor: { value: new THREE.Color(0xfff1d8) },
       uAmbient: { value: new THREE.Color(0x4f6a8c) },
+      uCameraPos: { value: camera.position.clone() },
     };
 
     const furMaterial = new THREE.ShaderMaterial({
@@ -646,36 +708,42 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       if (animal.yaw) group.rotation.y = animal.yaw;
       scene.add(group);
 
+      // Animal yaw rotation matrix — used to convert local-space part flow
+      // direction into world-space (the animal Group rotates the parts but
+      // we sample positions in animal-local space, so flow needs the
+      // matching rotation).
+      const yaw = animal.yaw ?? 0;
+      const cYaw = Math.cos(yaw);
+      const sYaw = Math.sin(yaw);
+
       // Total fur instance count for this animal — sum across furred parts.
+      // Higher base density (3200 vs 2200) because thinner blades need
+      // more strands per area to feel solid.
       const furParts = animal.parts.filter((p) => p.fur);
       const partInstanceCounts: number[] = furParts.map((p) => {
-        // Surface area ≈ 4π * mean(r1*r2). Density scaled by part's density.
         const [rx, ry, rz] = p.r;
         const area = 4 * Math.PI * Math.max(rx * ry + ry * rz + rx * rz, 0.05) / 3;
-        const baseN = Math.round(area * 2200 * (p.furDen ?? 1.0) * densityScale);
+        const baseN = Math.round(area * 3200 * (p.furDen ?? 1.0) * densityScale);
         return Math.max(20, baseN);
       });
       const totalCount = partInstanceCounts.reduce((s, n) => s + n, 0);
 
-      // One InstancedMesh per animal (cheaper than per-part). A short
-      // base blade geometry — 0.35m at full length — is the canvas;
-      // per-instance aLength scales it.
-      const blade = new THREE.PlaneGeometry(0.05, 0.35, 1, 6);
-      blade.translate(0, 0.175, 0);
+      // Thinner blade — 0.030 wide vs 0.05 — strands read as hair, not
+      // grass, especially at silhouette.
+      const blade = new THREE.PlaneGeometry(0.030, 0.40, 1, 6);
+      blade.translate(0, 0.20, 0);
 
       const aRandomArr = new Float32Array(totalCount);
       const aTwistArr  = new Float32Array(totalCount);
       const aLengthArr = new Float32Array(totalCount);
       const aBaseArr   = new Float32Array(totalCount * 3);
       const aTipArr    = new Float32Array(totalCount * 3);
+      const aFlowArr   = new Float32Array(totalCount * 3);
 
       const inst = new THREE.InstancedMesh(blade, furMaterial, totalCount);
       inst.castShadow = false;
       inst.receiveShadow = false;
       inst.frustumCulled = false;
-
-      const baseColor = new THREE.Color();
-      const tipColor  = new THREE.Color();
 
       const baseA = new THREE.Color();
       const tipA  = new THREE.Color();
@@ -702,6 +770,12 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
         const partLen = (part.furLen ?? 1.0) * lengthScale;
         const [cx, cy, cz] = part.c;
         const [rx, ry, rz] = part.r;
+
+        // Part flow vector (animal-local) → world-space (rotated by yaw).
+        const [flx, fly, flz] = part.flow ?? [0, 0, -1];
+        const fwx = cYaw * flx + sYaw * flz;
+        const fwy = fly;
+        const fwz = -sYaw * flx + cYaw * flz;
 
         for (let i = 0; i < n; i++) {
           // Uniform random direction on unit sphere → ellipsoid surface.
@@ -755,6 +829,9 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
           aTipArr[idx * 3 + 0] = tipMixed.r;
           aTipArr[idx * 3 + 1] = tipMixed.g;
           aTipArr[idx * 3 + 2] = tipMixed.b;
+          aFlowArr[idx * 3 + 0] = fwx;
+          aFlowArr[idx * 3 + 1] = fwy;
+          aFlowArr[idx * 3 + 2] = fwz;
           idx++;
         }
       }
@@ -764,6 +841,7 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       blade.setAttribute('aLength', new THREE.InstancedBufferAttribute(aLengthArr, 1));
       blade.setAttribute('aBaseColor', new THREE.InstancedBufferAttribute(aBaseArr, 3));
       blade.setAttribute('aTipColor',  new THREE.InstancedBufferAttribute(aTipArr, 3));
+      blade.setAttribute('aFlow',      new THREE.InstancedBufferAttribute(aFlowArr, 3));
 
       group.add(inst);
       furMeshes.push(inst);
@@ -804,6 +882,7 @@ const FluffyAnimals: React.FC<FluffyAnimalsProps> = ({
       const elapsed = clock.getElapsedTime();
       furUniforms.uTime.value = elapsed;
       furUniforms.uWindStrength.value = windStrength;
+      furUniforms.uCameraPos.value.copy(camera.position);
       controls.autoRotate = autoRotate;
       controls.update();
       composer.render();
