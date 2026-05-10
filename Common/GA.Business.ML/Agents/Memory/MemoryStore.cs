@@ -99,17 +99,36 @@ public sealed class MemoryStore
     /// location (<see cref="DefaultStorePath"/> = <c>~/.ga/memory.json</c>).
     /// Used by DI registration in <c>GaPlugin</c>.
     /// </summary>
-    public MemoryStore() : this(DefaultStorePath) { }
+    public MemoryStore() : this(DefaultStorePath, logger: null) { }
 
     /// <summary>
     /// Testable constructor — accepts an explicit store path so tests can
     /// isolate from the user's real <c>~/.ga/memory.json</c>. Production
-    /// callers should use the parameterless constructor.
+    /// callers should use the parameterless constructor (or the DI-friendly
+    /// <see cref="MemoryStore(ILogger{MemoryStore})"/> overload when a
+    /// logger is available).
     /// </summary>
-    public MemoryStore(string storePath)
+    public MemoryStore(string storePath) : this(storePath, logger: null) { }
+
+    /// <summary>
+    /// DI-friendly constructor — uses the default store path but accepts
+    /// an ILogger so non-JSON Load() failures (permission denied, disk
+    /// full, etc.) surface in the operator's logs instead of silently
+    /// starting fresh. Without this, a permissions regression on
+    /// <c>~/.ga/memory.json</c> looks identical to "memory forgot
+    /// everything between restarts."
+    /// </summary>
+    public MemoryStore(ILogger<MemoryStore> logger) : this(DefaultStorePath, logger) { }
+
+    /// <summary>
+    /// Full constructor — explicit store path plus optional logger.
+    /// Tests use this with a temp path; production uses one of the
+    /// overloads above.
+    /// </summary>
+    public MemoryStore(string storePath, ILogger<MemoryStore>? logger)
     {
         _storePath = storePath ?? throw new ArgumentNullException(nameof(storePath));
-        _entries   = Load(_storePath);
+        _entries   = Load(_storePath, logger);
     }
 
     // Bounded so anonymous chatbot traffic at the public demo URL can't grow
@@ -256,7 +275,7 @@ public sealed class MemoryStore
         }
     }
 
-    private static ConcurrentDictionary<string, MemoryEntry> Load(string storePath)
+    private static ConcurrentDictionary<string, MemoryEntry> Load(string storePath, ILogger<MemoryStore>? logger = null)
     {
         var dict = new ConcurrentDictionary<string, MemoryEntry>();
         if (!File.Exists(storePath)) return dict;
@@ -276,24 +295,37 @@ public sealed class MemoryStore
                 }
             }
         }
-        catch (JsonException)
+        catch (JsonException jex)
         {
             // Corrupt file — rename it so operators see the loss instead of
             // silently starting fresh; preserves the bytes for postmortem.
+            string? corruptPath = null;
             try
             {
-                var corruptPath = storePath + $".corrupt-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
+                corruptPath = storePath + $".corrupt-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
                 File.Move(storePath, corruptPath, overwrite: false);
             }
             catch
             {
                 // Best-effort rename; don't block boot if it fails.
             }
+            // Surface the loss to the operator (PR #157 review rel-001):
+            // without this, "memory forgot everything between restarts"
+            // looks identical to a permissions regression.
+            logger?.LogWarning(jex,
+                "MemoryStore: {Path} contained invalid JSON — quarantined as {Corrupt} and starting fresh.",
+                storePath, corruptPath ?? "(rename failed)");
         }
-        catch
+        catch (Exception ex)
         {
             // Other IO errors (file locked, permission denied) — start fresh
-            // rather than crash boot.
+            // rather than crash boot, but DO log. The previous swallow-all
+            // behaviour hid permissions regressions for days (PR #157
+            // review rel-001).
+            logger?.LogWarning(ex,
+                "MemoryStore: failed to read {Path}; starting with empty store. " +
+                "Common causes: file permissions, locked-by-other-process, disk full.",
+                storePath);
         }
 
         return dict;

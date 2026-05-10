@@ -40,6 +40,10 @@ public sealed class MemoryHook(
     private readonly bool _enrichOnRetrieve =
         configuration.GetValue<bool?>("Memory:EnrichOnRetrieve") ?? false;
 
+    // Rate-limit the "SessionId not plumbed" message — log once per
+    // process, not per request. 0 = not yet logged; 1 = already logged.
+    private int _loggedNullSessionId;
+
     /// <summary>
     /// Searches memory for context relevant to the incoming message and prepends it.
     /// Off by default; enable with <c>Memory:EnrichOnRetrieve=true</c>.
@@ -54,11 +58,25 @@ public sealed class MemoryHook(
         // enabling EnrichOnRetrieve=true and observing "no memory injected"
         // — that's the signal to wire SessionId into ChatHookContext from
         // their transport layer.
+        //
+        // LogInformation (not Debug) on purpose: this branch represents a
+        // config-vs-plumbing mismatch (EnrichOnRetrieve=true but transport
+        // layer hasn't shipped SessionId yet — Phase B of PR #157). At
+        // default log levels Debug is filtered out, hiding the only
+        // breadcrumb explaining why retrieval is silently disabled. Rate-
+        // limited via the once-per-process flag below so we don't flood
+        // logs on a hot path.
         if (ctx.SessionId is null)
         {
-            logger.LogDebug(
-                "MemoryHook: skip retrieval — ChatHookContext.SessionId not set " +
-                "(transport layer hasn't plumbed it yet; see ChatHookContext.SessionId remarks).");
+            if (Interlocked.CompareExchange(ref _loggedNullSessionId, 1, 0) == 0)
+            {
+                logger.LogInformation(
+                    "MemoryHook: Memory:EnrichOnRetrieve=true but ChatHookContext.SessionId " +
+                    "is null. Retrieval is being skipped for safety until the transport layer " +
+                    "(ChatbotHub for SignalR, controllers for HTTP) plumbs a session identifier " +
+                    "into ChatHookContext.SessionId. See PR #157 Phase B. This message logs once " +
+                    "per process; subsequent skips are silent.");
+            }
             return Task.FromResult(HookResult.Continue);
         }
 
