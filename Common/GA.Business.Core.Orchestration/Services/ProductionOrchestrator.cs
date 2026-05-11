@@ -109,6 +109,7 @@ public class ProductionOrchestrator(
         var hookCtx = new ChatHookContext
         {
             CorrelationId   = correlationId,
+            SessionId       = sessionId,   // PR #157 Phase B — plumb session
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             Services        = services,
@@ -253,6 +254,7 @@ public class ProductionOrchestrator(
             OriginalMessage = req.Message,
             CurrentMessage  = req.Message,
             CorrelationId   = correlationId,
+            SessionId       = sessionId,   // PR #157 Phase B — plumb session
         };
 
         foreach (var hook in _hooks)
@@ -302,6 +304,7 @@ public class ProductionOrchestrator(
                 CurrentMessage   = message,
                 MatchedSkillName = pick.Intent.Id,
                 CorrelationId    = correlationId,
+                SessionId        = sessionId,   // PR #157 Phase B
             };
             foreach (var hook in _hooks)
             {
@@ -336,6 +339,7 @@ public class ProductionOrchestrator(
                 MatchedSkillName = pick.Intent.Id,
                 Response         = skillRespForHooks,
                 CorrelationId    = correlationId,
+                SessionId        = sessionId,   // PR #157 Phase B
             };
             foreach (var hook in _hooks)
                 await hook.OnAfterSkill(afterCtx, ct);
@@ -361,6 +365,7 @@ public class ProductionOrchestrator(
                 MatchedSkillName = pick.Intent.Id,
                 Response         = skillRespForHooks,
                 CorrelationId    = correlationId,
+                SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
             };
             foreach (var hook in _hooks)
                 await hook.OnResponseSent(sentCtx, ct);
@@ -463,6 +468,7 @@ public class ProductionOrchestrator(
             OriginalMessage = req.Message,
             CurrentMessage  = message,
             CorrelationId   = correlationId,
+            SessionId       = sessionId,   // PR #157 Phase B
             Response        = new AgentResponse
             {
                 AgentId    = routing.SelectedAgent.AgentId,
@@ -521,6 +527,7 @@ public class ProductionOrchestrator(
             OriginalMessage = req.Message,
             CurrentMessage  = message,
             CorrelationId   = correlationId,
+            SessionId       = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook
             Response        = agentResponse,
         };
         foreach (var hook in _hooks)

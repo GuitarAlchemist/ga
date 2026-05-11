@@ -57,6 +57,28 @@ public sealed class ChatHookContext
     /// Guid per request and changes between turns; SessionId is stable
     /// across the turns of one conversation.
     /// </para>
+    /// <para>
+    /// <b>SignalR rotation caveat (PR #159 review ux-001):</b> when the
+    /// transport is SignalR (<c>ChatbotHub</c>), SessionId =
+    /// <c>Context.ConnectionId</c>, which is a *per-physical-connection*
+    /// identifier. With <c>withAutomaticReconnect()</c> on the client,
+    /// a transient WebSocket drop opens a fresh negotiation and a fresh
+    /// ConnectionId. Treat SessionId as <i>connection-scoped, not
+    /// user-scoped</i>: a coffee-shop wifi blip rotates the session and
+    /// the user's prior turns become unreachable from MemoryHook.
+    /// Acceptable for the anonymous demo (where the alternative — a
+    /// stable client-supplied ID — would expand the trust boundary).
+    /// </para>
+    /// <para>
+    /// <b>HTTP controllers (PR #159 review plumb-001):</b> the HTTP chat
+    /// surfaces at <c>ChatbotController</c> (both GaApi and
+    /// GaChatbot.Api) do NOT plumb SessionId today — Phase B is
+    /// SignalR-only. The orchestrator falls back to a fresh Guid per
+    /// request so HTTP callers get throwaway per-request sessions whose
+    /// writes are unreachable from future retrieval. Tracked as Phase C
+    /// (task #103); do NOT flip <c>Memory:EnrichOnRetrieve=true</c>
+    /// expecting transport-uniform behaviour until Phase C ships.
+    /// </para>
     /// </remarks>
     public string? SessionId { get; init; }
 
