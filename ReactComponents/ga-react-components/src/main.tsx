@@ -54,6 +54,7 @@ import FractalSplatTest from './pages/FractalSplatTest';
 import SunflowerFieldTest from './pages/SunflowerFieldTest';
 import MandelbulbTest from './pages/MandelbulbTest';
 import MapleTreeTest from './pages/MapleTreeTest';
+import GaussianSplatTest from './pages/GaussianSplatTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -450,6 +451,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/fractal-splat" element={<App><FractalSplatTest /></App>} />
         <Route path="/test/sunflower-field" element={<App><SunflowerFieldTest /></App>} />
         <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
+        <Route path="/test/gaussian-splat" element={<App><GaussianSplatTest /></App>} />
         <Route path="/test/maple-tree" element={<App><MapleTreeTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
