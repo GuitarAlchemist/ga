@@ -38,14 +38,41 @@ using Microsoft.Extensions.Logging.Abstractions;
 [Explicit("Requires live Ollama embedding endpoint. Run manually for baselines.")]
 public class RoutingEvalHarness
 {
-    private const string EmbeddingEndpoint = "http://localhost:11434";
-    private const string EmbeddingModel    = "nomic-embed-text";
+    // Env-var overrides per PR #162 review F-7 — operators can point at
+    // a different embedder (e.g. Docker Model Runner, hosted Ollama)
+    // without recompiling the harness.
+    private static readonly string EmbeddingEndpoint =
+        Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
+    private static readonly string EmbeddingModel =
+        Environment.GetEnvironmentVariable("GA_EMBED_MODEL") ?? "nomic-embed-text";
     private const float  RouterMinConfidence = 0.65f;
 
-    private static readonly string DataPath  =
+    private static readonly string DataPath =
         Path.Combine(AppContext.BaseDirectory, "Data", "routing-eval-prompts.json");
-    private static readonly string OutputDir =
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "state", "quality"));
+
+    /// <summary>
+    /// Resolves &lt;repo&gt;/state/quality by walking up from the test bin dir
+    /// until we find a .git directory or AllProjects.slnx — robust to
+    /// changes in test-project depth or build-config nesting.
+    /// </summary>
+    private static string ResolveQualityDir()
+    {
+        var d = new DirectoryInfo(AppContext.BaseDirectory);
+        while (d is not null)
+        {
+            if (Directory.Exists(Path.Combine(d.FullName, ".git")) ||
+                File.Exists(Path.Combine(d.FullName, "AllProjects.slnx")))
+            {
+                return Path.Combine(d.FullName, "state", "quality");
+            }
+            d = d.Parent;
+        }
+        // Fallback: 6-up legacy behaviour, but warn loudly.
+        TestContext.WriteLine("WARN: repo root marker not found via walk; falling back to 6-level relative path.");
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "state", "quality"));
+    }
+
+    private static readonly string OutputDir = ResolveQualityDir();
 
     [Test]
     public async Task RunBaseline_EmitReport()
@@ -122,6 +149,11 @@ public class RoutingEvalHarness
         TestContext.WriteLine($"Overall: correct={overall.Correct}/{overall.Total} accuracy={overall.Accuracy:P1}");
         foreach (var (intentId, m) in perIntent.OrderBy(kv => kv.Key))
         {
+            if (m.Status == "no-prompts")
+            {
+                TestContext.WriteLine($"  {intentId,-32} (no labeled prompts)");
+                continue;
+            }
             TestContext.WriteLine(
                 $"  {intentId,-32} prec={m.Precision:F2} recall={m.Recall:F2} f1={m.F1:F2} (n={m.Support})");
         }
@@ -153,7 +185,15 @@ public class RoutingEvalHarness
         bool Correct,
         string[]? Tags);
 
-    private sealed record IntentMetrics(int Support, int TruePositives, int FalsePositives, int FalseNegatives, double Precision, double Recall, double F1);
+    private sealed record IntentMetrics(
+        int Support,
+        int TruePositives,
+        int FalsePositives,
+        int FalseNegatives,
+        double? Precision,
+        double? Recall,
+        double? F1,
+        string Status);   // "measured" | "no-prompts" — disambiguates zero-support from real router failures (PR #162 review F-5)
 
     private sealed record OverallMetrics(int Total, int Correct, int UnmatchedFallthrough, double Accuracy);
 
@@ -172,10 +212,30 @@ public class RoutingEvalHarness
 
     /// <summary>
     /// Builds a stub IIntent registry mirroring the production intent IDs
-    /// and example prompts. Decouples the harness from the actual skill
-    /// classes so future skill refactors don't silently invalidate the
-    /// baseline.
+    /// and example prompts.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>v0.1 LIMITATION (PR #162 review F-3):</b> this stub is the
+    /// harness author's reconstruction of production examples — NOT the
+    /// real <c>IOrchestratorSkill.ExamplePrompts</c> values registered by
+    /// <c>GaPlugin</c>. For 8 of 17 intents the stub examples diverge
+    /// from production, so F1 emitted by this harness measures the stub's
+    /// discrimination, not the deployed router's.
+    /// </para>
+    /// <para>
+    /// <b>Until v0.2 lands</b> (reflect-load from production DI), treat
+    /// any baseline this harness produces as HARNESS-VALIDATION ONLY,
+    /// not a production regression gate.
+    /// </para>
+    /// <para>
+    /// Excluded intents (production routes them via regex, not semantic):
+    /// <list type="bullet">
+    ///   <item><c>skill.fretspan</c> — FretSpanSkill has no ExamplePrompts;
+    ///         dispatched by ProductionOrchestrator's CanHandle regex.</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     private static IServiceProvider BuildIntentRegistry()
     {
         var sc = new ServiceCollection();
@@ -184,17 +244,22 @@ public class RoutingEvalHarness
         AddStubIntent(sc, "skill.scaleinfo", "Scale info — notes of a named scale.",
             new[] { "notes of a scale", "notes in the major scale", "what notes are in A minor" });
         AddStubIntent(sc, "skill.modes", "Modes of the major scale — list and discuss.",
-            new[] { "modes of the major scale", "list the modes", "what are the seven modes" });
+            new[] { "modes of the major scale", "list the modes", "what are the seven modes",
+                    "what is Lydian mode", "what notes are in G mixolydian" });
         AddStubIntent(sc, "skill.interval", "Interval between two notes / interval naming.",
             new[] { "interval between two notes", "what is a perfect fifth", "interval from C to G" });
-        AddStubIntent(sc, "skill.fretspan", "Fret span between two frets.",
-            new[] { "fret span", "how many frets between", "fret distance" });
+        // skill.fretspan EXCLUDED — see remarks above (regex-routed in production).
         AddStubIntent(sc, "skill.chordsubstitution", "Chord substitution suggestions for a given chord.",
             new[] { "chord substitution", "substitute for a chord", "tritone sub", "what can substitute for" });
         AddStubIntent(sc, "skill.beginnerchords", "Beginner chord suggestions.",
             new[] { "easy chords for beginners", "first chords to learn", "beginner guitar chords" });
-        AddStubIntent(sc, "skill.progressionmood", "Mood / feel of a chord progression.",
-            new[] { "mood of a progression", "what does this progression sound like", "is this happy or sad" });
+        // Per PR #162 review F-2 — production's ProgressionMoodSkill is a
+        // TRANSFORM skill ("make this progression sound darker/brighter"),
+        // not a DESCRIPTIVE skill. Stub now reflects that semantics.
+        AddStubIntent(sc, "skill.progressionmood",
+            "Darken or brighten a chord progression via parallel-minor swaps, modal interchange, or borrowed chords.",
+            new[] { "make this progression sound darker", "how do I make my song brighter",
+                    "darken a major progression", "brighten this minor progression" });
         AddStubIntent(sc, "skill.circleoffifths", "Circle of fifths — positions, relationships.",
             new[] { "circle of fifths", "circle of fourths", "fifths circle" });
         AddStubIntent(sc, "skill.practiceroutine", "Practice routine suggestions.",
@@ -253,10 +318,22 @@ public class RoutingEvalHarness
             var fp = results.Count(r => r.Expected != intentId && r.Chosen  == intentId);
             var fn = results.Count(r => r.Expected == intentId && r.Chosen  != intentId);
             var support = results.Count(r => r.Expected == intentId);
+
+            // Per PR #162 review F-5: distinguish "this intent has no
+            // labeled prompts" from "router can't route to it." Without
+            // this, a future reader sees F1=0 and assumes regression.
+            if (support == 0)
+            {
+                report[intentId] = new IntentMetrics(
+                    Support: 0, TruePositives: 0, FalsePositives: fp, FalseNegatives: 0,
+                    Precision: null, Recall: null, F1: null, Status: "no-prompts");
+                continue;
+            }
+
             var precision = (tp + fp) == 0 ? 0.0 : (double)tp / (tp + fp);
             var recall    = (tp + fn) == 0 ? 0.0 : (double)tp / (tp + fn);
             var f1        = (precision + recall) == 0.0 ? 0.0 : 2.0 * precision * recall / (precision + recall);
-            report[intentId] = new IntentMetrics(support, tp, fp, fn, precision, recall, f1);
+            report[intentId] = new IntentMetrics(support, tp, fp, fn, precision, recall, f1, "measured");
         }
         return report;
     }
