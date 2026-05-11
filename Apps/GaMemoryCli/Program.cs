@@ -26,9 +26,10 @@ if (args.Length == 0)
 var command = args[0];
 return command switch
 {
-    "curate"  => await RunCurateAsync(args[1..]),
-    "diff"    => RunDiff(args[1..]),
-    "promote" => RunPromote(args[1..]),
+    "curate"               => await RunCurateAsync(args[1..]),
+    "diff"                 => RunDiff(args[1..]),
+    "promote"              => RunPromote(args[1..]),
+    "migrate-transcripts"  => RunMigrateTranscripts(args[1..]),
     "--help" or "-h" or "help" => PrintUsage(),
     _ => UnknownCommand(command),
 };
@@ -179,6 +180,126 @@ static int RunDiff(string[] args)
     return 0;
 }
 
+/// <summary>
+/// One-shot migration: drains legacy type=response entries from
+/// ~/.ga/memory.json into ~/.ga/transcripts.json. Default is dry-run;
+/// pass --apply to commit. Idempotent — re-running after --apply finds
+/// nothing to do. Backs up both files to <c>.bak-{stamp}</c> before
+/// writing. See <see cref="LegacyResponseMigration"/> for design notes.
+/// </summary>
+static int RunMigrateTranscripts(string[] args)
+{
+    var apply       = false;
+    var memoryPath  = MemoryStore.DefaultStorePath;
+    var transcriptPath = ChatTranscriptStore.DefaultStorePath;
+
+    for (var i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "--apply") apply = true;
+        else if (args[i] == "--memory-path" && i + 1 < args.Length) memoryPath = args[++i];
+        else if (args[i] == "--transcripts-path" && i + 1 < args.Length) transcriptPath = args[++i];
+        else if (args[i] == "--dry-run") apply = false;   // explicit no-op alias for readability
+    }
+
+    if (!File.Exists(memoryPath))
+    {
+        Console.Error.WriteLine($"No memory store at {memoryPath} — nothing to migrate.");
+        return 2;
+    }
+
+    var memoryEntries = LoadEntries(memoryPath);
+    var existingTurns = LoadTranscriptTurns(transcriptPath);
+
+    var plan = LegacyResponseMigration.Plan(memoryEntries, existingTurns);
+
+    Console.WriteLine($"memory store : {memoryPath}  ({memoryEntries.Count} entries)");
+    Console.WriteLine($"transcripts  : {transcriptPath}  ({existingTurns.Count} turns)");
+    Console.WriteLine();
+    Console.WriteLine("Plan:");
+    Console.WriteLine($"  type=response → migrate    : {plan.EntriesToMigrate.Count}");
+    Console.WriteLine($"  type=response → already-migrated, will be dropped : {plan.EntriesAlreadyMigrated.Count}");
+    Console.WriteLine($"  non-response → keep        : {plan.EntriesToKeep.Count}");
+    Console.WriteLine($"  new transcript turns       : {plan.NewTranscriptTurns.Count} (SessionId='{LegacyResponseMigration.LegacySessionId}', Role='assistant')");
+
+    if (plan.IsNoOp)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Nothing to do — memory.json contains no type=response entries.");
+        return 0;
+    }
+
+    if (!apply)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Dry-run (no files written). Pass --apply to commit.");
+        return 0;
+    }
+
+    // ── --apply path ─────────────────────────────────────────────────────
+    // PR #176 review (correctness MED-2): include milliseconds so a same-
+    // second re-run after an aborted apply doesn't hit a backup-name
+    // collision against File.Copy's overwrite:false guard.
+    var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
+    var memoryBackup = memoryPath + ".bak-" + stamp;
+    var transcriptBackup = File.Exists(transcriptPath) ? transcriptPath + ".bak-" + stamp : null;
+
+    Console.WriteLine();
+    Console.WriteLine("Backing up:");
+    File.Copy(memoryPath, memoryBackup, overwrite: false);
+    Console.WriteLine($"  {memoryPath} -> {memoryBackup}");
+    if (transcriptBackup is not null)
+    {
+        File.Copy(transcriptPath, transcriptBackup, overwrite: false);
+        Console.WriteLine($"  {transcriptPath} -> {transcriptBackup}");
+    }
+
+    // Merge existing + new transcript turns, write atomically.
+    var mergedTurns = existingTurns.Concat(plan.NewTranscriptTurns).ToList();
+    AtomicWrite(transcriptPath, JsonSerializer.Serialize(mergedTurns, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine($"Wrote {mergedTurns.Count} turns to {transcriptPath} (was {existingTurns.Count}).");
+
+    // Rewrite memory.json with the kept entries only.
+    AtomicWrite(memoryPath, JsonSerializer.Serialize(plan.EntriesToKeep, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine($"Wrote {plan.EntriesToKeep.Count} entries to {memoryPath} (was {memoryEntries.Count}; removed {memoryEntries.Count - plan.EntriesToKeep.Count}).");
+
+    Console.WriteLine();
+    Console.WriteLine("Done. Re-run `ga-memory migrate-transcripts` to verify it's a no-op.");
+    Console.WriteLine($"Backups retained at {memoryBackup}" + (transcriptBackup is not null ? $" and {transcriptBackup}" : "") + " — delete after you've verified the chatbot still boots.");
+    // PR #176 review (correctness MED-3): document the recovery path. The
+    // two-file write isn't atomic — if the process is killed between the
+    // transcripts.json write and the memory.json write, transcripts have
+    // the legacy turns but memory.json still has the source response
+    // entries. Re-running --apply uses the deterministic-id check in
+    // LegacyResponseMigration.Plan to route them to EntriesAlreadyMigrated
+    // and drop them from memory.json. Don't restore from .bak — that
+    // discards correct work.
+    Console.WriteLine();
+    Console.WriteLine("If a crash interrupted this run (you see entries in both files), simply re-run");
+    Console.WriteLine("`ga-memory migrate-transcripts --apply` — the migration is idempotent and the");
+    Console.WriteLine("re-run will detect already-migrated entries and finish the drain from memory.json.");
+    Console.WriteLine("DO NOT restore from .bak in that case — that discards correct work.");
+    return 0;
+}
+
+static IReadOnlyList<TranscriptTurnEntry> LoadTranscriptTurns(string path)
+{
+    if (!File.Exists(path)) return [];
+    var json = File.ReadAllText(path);
+    var turns = JsonSerializer.Deserialize<List<TranscriptTurnEntry>>(json,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    return turns ?? [];
+}
+
+static void AtomicWrite(string path, string content)
+{
+    var dir = Path.GetDirectoryName(path);
+    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        Directory.CreateDirectory(dir);
+    var tmp = path + ".tmp";
+    File.WriteAllText(tmp, content);
+    File.Move(tmp, path, overwrite: true);
+}
+
 static int RunPromote(string[] args)
 {
     if (args.Length == 0)
@@ -231,6 +352,10 @@ static int PrintUsage()
     Console.WriteLine("                                  --include-responses to curate them.");
     Console.WriteLine("  diff <candidate-path>           Show the diff summary for a candidate");
     Console.WriteLine("  promote <candidate-path>        Atomic swap (with .bak backup)");
+    Console.WriteLine("  migrate-transcripts [--apply]   Drain legacy type=response entries from");
+    Console.WriteLine("                                  memory.json into transcripts.json. Default");
+    Console.WriteLine("                                  is dry-run; --apply commits with .bak backups.");
+    Console.WriteLine("                                  Idempotent; safe to re-run.");
     Console.WriteLine();
     Console.WriteLine("Env:");
     Console.WriteLine("  ANTHROPIC_API_KEY              required for `curate` (Sonnet 4.6 by default)");
