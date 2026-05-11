@@ -45,6 +45,20 @@ public sealed class MemoryHook(
     // process, not per request. 0 = not yet logged; 1 = already logged.
     private int _loggedNullSessionId;
 
+    // ── Audit counters (PR #174 follow-up: dropped-response visibility) ──
+    // OnResponseSent silently skips writes when Confidence < 0.7 OR
+    // Result.Length < 100. Without an audit channel operators can't
+    // distinguish "MemoryHook is working but the chatbot rarely meets
+    // threshold" from "MemoryHook is broken." These counters surface the
+    // distribution via Information logs (once per reason on first hit, then
+    // every <see cref="AuditSummaryInterval"/> drops) and Debug logs on
+    // every drop. No behavior change — observability only.
+    private long _droppedLowConfidence;
+    private long _droppedShortContent;
+    private int  _loggedFirstLowConfidence;
+    private int  _loggedFirstShortContent;
+    private const int AuditSummaryInterval = 100;
+
     /// <summary>
     /// Searches memory for context relevant to the incoming message and prepends it.
     /// Off by default; enable with <c>Memory:EnrichOnRetrieve=true</c>.
@@ -125,8 +139,24 @@ public sealed class MemoryHook(
     /// </summary>
     public Task<HookResult> OnResponseSent(ChatHookContext ctx, CancellationToken ct = default)
     {
-        if (ctx.Response is not { Confidence: >= 0.7f } response) return Task.FromResult(HookResult.Continue);
-        if (response.Result.Length < 100) return Task.FromResult(HookResult.Continue);
+        // PR #174 follow-up: each threshold drop records an audit entry so
+        // operators can see why responses aren't reaching the transcript
+        // store. The structure of the guard chain is preserved (still two
+        // sequential early-returns) — only the side-effect is new.
+        if (ctx.Response is not { Confidence: >= 0.7f } response)
+        {
+            // Distinguish "no response at all" (genuinely nothing to write)
+            // from "response present but below confidence threshold" (a
+            // real drop). Only the latter is audit-worthy.
+            if (ctx.Response is not null)
+                RecordDrop("low-confidence", $"confidence={ctx.Response.Confidence:F2}");
+            return Task.FromResult(HookResult.Continue);
+        }
+        if (response.Result.Length < 100)
+        {
+            RecordDrop("short-content", $"length={response.Result.Length}");
+            return Task.FromResult(HookResult.Continue);
+        }
 
         // Per PR #161 review F-4 (preventative): refuse to write when
         // SessionId is null. ProductionOrchestrator currently always sets
@@ -205,4 +235,58 @@ public sealed class MemoryHook(
     /// assistant turns to bound storage cost — PR #174 review HIGH-2.
     /// </summary>
     private const int TurnContentCap = 2000;
+
+    /// <summary>
+    /// Records that <see cref="OnResponseSent"/> dropped a response without
+    /// writing it. Drives the audit-log channel: Information on first
+    /// occurrence per reason (rate-limited via
+    /// <see cref="Interlocked.CompareExchange(ref int, int, int)"/>), an
+    /// Information summary every <see cref="AuditSummaryInterval"/> drops,
+    /// and Debug on every individual drop.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Counters are per-process (instance-scoped). They reset on restart
+    /// — sufficient for "is this hook silently swallowing everything?"
+    /// triage but not for long-running quality trend analysis. Exporting
+    /// the counters to OpenTelemetry / Prometheus is a future iteration;
+    /// for now the log channel is the operator-facing surface.
+    /// </para>
+    /// </remarks>
+    private void RecordDrop(string reason, string detail)
+    {
+        long count;
+        bool firstForReason;
+
+        if (reason == "low-confidence")
+        {
+            count          = Interlocked.Increment(ref _droppedLowConfidence);
+            firstForReason = Interlocked.CompareExchange(ref _loggedFirstLowConfidence, 1, 0) == 0;
+        }
+        else  // "short-content"
+        {
+            count          = Interlocked.Increment(ref _droppedShortContent);
+            firstForReason = Interlocked.CompareExchange(ref _loggedFirstShortContent, 1, 0) == 0;
+        }
+
+        if (firstForReason)
+        {
+            logger.LogInformation(
+                "MemoryHook audit: first response dropped for reason '{Reason}' ({Detail}). " +
+                "Future drops for this reason will be summarized every {Interval} occurrences. " +
+                "Per-drop detail is at Debug level. This first-hit message logs once per " +
+                "reason per process — restart the process to see it again.",
+                reason, detail, AuditSummaryInterval);
+        }
+        else if (count % AuditSummaryInterval == 0)
+        {
+            logger.LogInformation(
+                "MemoryHook audit: {Reason} drops = {Count} since process start.",
+                reason, count);
+        }
+
+        logger.LogDebug(
+            "MemoryHook drop: reason={Reason} detail={Detail} count={Count}",
+            reason, detail, count);
+    }
 }
