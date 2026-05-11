@@ -1,0 +1,7 @@
+# Runtime artifacts emitted by Scripts/project-sync.ps1 and similar.
+# Schema lives in docs/schemas/; check-in not useful since timestamps
+# change every run.
+ga-loop-status.json
+ga-loop-status.json.tmp
+directives.json
+directives.json.tmp

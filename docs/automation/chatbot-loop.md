@@ -236,6 +236,9 @@ After the 2026-05-10 session that authored this document:
 | Gate ledger writer | ✅ shipped (`gate-ledger-write.ps1` + schema) |
 | Cost tally | ✅ shipped (`octo-cost-tally.ps1`) |
 | Loop killswitch | ✅ shipped (`loop-killswitch.ps1`) |
+| **Tier 1 Demerzel integration** (GA → Demerzel status emission) | ✅ shipped (`project-sync.ps1` + `ga-loop-status.schema.json`) |
+| **Tier 2 Demerzel integration** (Demerzel → GA directives) | ✅ shipped (`check-governance-directives.ps1` + `governance-directives.schema.json` + SKILL.md Step 0) |
+| **Tier 3 Demerzel integration** (Demerzel orchestrates the loop) | 🟡 contract drafted (`docs/contracts/2026-05-10-ga-loop-driver.contract.md`); Demerzel-side `ga-loop-driver.ixql` pipeline not yet written |
 | L3 default-on enablement | ❌ blocked on remaining checklist items (5 clean auto-merges, production canary, CI env fix) |
 | L4 dark factory | ❌ blocked on remaining checklist items (telemetry pipeline, triage skill, scheduler, anomaly detection) |
 

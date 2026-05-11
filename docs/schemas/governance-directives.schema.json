@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Governance Directives (Demerzel → GA, Tier 2)",
+  "description": "Demerzel governance writes this file to direct GA's /chatbot-iterate loop. Read by Step 0 of the skill alongside state/.loop-halted. Both signals compose: ANY non-empty directive that targets the current iteration is sufficient to block.\n\nThis is the reverse direction of state/governance/ga-loop-status.json. One-way reverse: Demerzel writes here, GA reads. No GA ack — Demerzel infers ack by polling ga-loop-status.json's emittedAt + halted state.\n\nStorage: state/governance/directives.json (single file). Demerzel atomically overwrites.",
+  "type": "object",
+  "required": ["schemaVersion", "issuedAt", "directives"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Bumped on breaking changes. v0.1 = 2026-05-10."
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC. /chatbot-iterate ignores directives older than 7 days (sanity check against stale files)."
+    },
+    "issuedBy": {
+      "type": "string",
+      "description": "Identifier for the issuing Demerzel pipeline / verdict ID. For audit trail."
+    },
+    "directives": {
+      "type": "array",
+      "description": "Active directives. Empty array means no governance blocks — equivalent to no file present.",
+      "items": {
+        "type": "object",
+        "required": ["type", "scope", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["track-pause", "item-pause", "rollback-ordered", "advisory"],
+            "description": "track-pause = halt ALL iterations until lifted. item-pause = skip the named slug only. rollback-ordered = revert the named PR via gh + flip ledger row. advisory = log a warning but don't block."
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "What the directive applies to. Exactly one of {chatbotTrack, slug, pr} must be set.",
+            "properties": {
+              "chatbotTrack": {
+                "type": "boolean",
+                "description": "True = applies to the whole Chatbot Track (use with track-pause)."
+              },
+              "slug": {
+                "type": "string",
+                "description": "BACKLOG.md Chatbot Track slug (e.g. memory-session-scope)."
+              },
+              "pr": {
+                "type": "integer",
+                "description": "PR number (use with rollback-ordered)."
+              }
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Human-readable reason that surfaces in /chatbot-iterate's refusal message and Slack/log."
+          },
+          "verdictId": {
+            "type": "string",
+            "description": "Demerzel verdict that produced this directive — links to state/quality/verdicts/.../<verdictId>.json."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional ISO 8601 UTC. If present, directive auto-lifts after this time. If absent, directive holds until file is rewritten."
+          }
+        }
+      }
+    }
+  }
+}
