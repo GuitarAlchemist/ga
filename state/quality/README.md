@@ -12,9 +12,29 @@ state/quality/
 │   └── YYYY-MM-DD.json
 ├── voicing-analysis/        # Demos/VoicingAnalysisAudit output
 │   └── YYYY-MM-DD.json
-└── chatbot-qa/              # ga-chatbot qa --benchmark summary
-    └── YYYY-MM-DD.json
+├── chatbot-qa/              # ga-chatbot qa --benchmark summary
+│   └── YYYY-MM-DD.json
+└── routing-eval-YYYY-MM-DD.json   # SemanticIntentRouter F1 by intent
 ```
+
+## Routing eval
+
+Top-level `routing-eval-YYYY-MM-DD.json` files are produced by
+`Tests/Common/GA.Business.ML.Tests/Eval/RoutingEvalHarness.RunBaseline_EmitReport`
+(NUnit `[Explicit]` — requires a live Ollama at `localhost:11434` with
+`nomic-embed-text`). Each file records overall accuracy plus per-intent
+precision / recall / F1 against `Tests/.../Data/routing-eval-prompts.json`.
+
+Run a new baseline:
+
+```powershell
+dotnet test Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj `
+    --filter "FullyQualifiedName~RoutingEvalHarness.RunBaseline_EmitReport"
+```
+
+The baseline file gets overwritten if the date matches; rename the prior
+file (`routing-eval-2026-05-11.json` → `routing-eval-2026-05-11-pre-fix.json`)
+before a re-run if you want to compare two same-day runs.
 
 ## How new snapshots get added
 
