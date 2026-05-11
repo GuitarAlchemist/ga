@@ -34,6 +34,7 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 public sealed class MemoryHook(
     MemoryStore memoryStore,
+    ChatTranscriptStore transcriptStore,
     IConfiguration configuration,
     ILogger<MemoryHook> logger) : IChatHook
 {
@@ -149,27 +150,31 @@ public sealed class MemoryHook(
         // close over because the orchestrator may reuse / mutate the context
         // after this method returns.
         var sessionId       = ctx.SessionId;
-        var correlationId   = ctx.CorrelationId;
         var originalMessage = ctx.OriginalMessage;
-        var agentId         = response.AgentId;
         var resultSnippet   = response.Result[..Math.Min(500, response.Result.Length)];
 
-        // Fire-and-forget write — don't block the response pipeline
+        // PR #173 Phase 2 (audit doc 2026-05-11): transient chat content
+        // goes to ChatTranscriptStore, NOT MemoryStore. MemoryStore stays
+        // for durable knowledge (preferences, facts, focus) so the curator
+        // has a useful target to consolidate. Writing two turns (user +
+        // assistant) gives the curator's transcript input the right shape
+        // — separate roles let it mine recurring user query patterns from
+        // assistant responses.
+        //
+        // The Q+A pair is logically atomic but the store has no transaction
+        // semantics; we accept the rare partial-write outcome (a user turn
+        // without its matching assistant turn) as a tolerable failure mode.
+        // Curator authors must NOT assume turn-pairing within a session.
         _ = Task.Run(() =>
         {
             try
             {
-                var key = $"response_{correlationId:N}";
-                memoryStore.Write(
-                    sessionId: sessionId,
-                    key: key,
-                    type: "response",
-                    content: $"Q: {originalMessage}\nA: {resultSnippet}",
-                    tags: [agentId]);
+                transcriptStore.AppendTurn(sessionId, "user",      originalMessage);
+                transcriptStore.AppendTurn(sessionId, "assistant", resultSnippet);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "MemoryHook: failed to persist response memory");
+                logger.LogWarning(ex, "MemoryHook: failed to persist transcript turns");
             }
         }, ct);
 
