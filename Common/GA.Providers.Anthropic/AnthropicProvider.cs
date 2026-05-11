@@ -46,7 +46,18 @@ public static class AnthropicProvider
     /// (Anthropic SDK default). Long-output tasks (curator, summarizer with
     /// high <c>MaxOutputTokens</c>, etc.) should pass a longer value — 32k
     /// tokens of Sonnet output is typically 60–150 s wall-clock.
-    /// Discovered necessary by the memory-curator end-to-end smoke 2026-05-11.</param>
+    /// Discovered necessary by the memory-curator end-to-end smoke 2026-05-11.
+    /// <para>
+    /// <b>Lifetime caveat (one-way door if violated):</b> when this parameter
+    /// is set, the method allocates a fresh <see cref="HttpClient"/> per call
+    /// and the caller-supplied SDK reuses it. The current intended use is
+    /// CLI / app-lifetime singleton consumers (e.g. <c>GaMemoryCli</c>).
+    /// Calling this with <paramref name="timeout"/> on every request from a
+    /// request-scoped DI container would leak sockets and pin DNS — see
+    /// PR #170 review (H1) for the rationale. If you need request-scoped
+    /// long-timeout clients, refactor this method to accept
+    /// <c>IHttpClientFactory</c> first.
+    /// </para></param>
     /// <exception cref="InvalidOperationException">Thrown when no API key is
     /// reachable. The message is safe to surface to operators (no secrets).</exception>
     public static IChatClient CreateChatClient(
@@ -69,6 +80,13 @@ public static class AnthropicProvider
         // alone is not enough — that's the SDK-level timeout, but the
         // underlying HttpClient.Timeout fires first. Supply a custom client
         // with the longer timeout baked in.
+        //
+        // PR #170 review H2: AnthropicClient.Timeout is NOT set explicitly —
+        // it was dead code in the original fix (the comment above admits the
+        // SDK-level Timeout doesn't bind), and a future SDK rev that DOES
+        // honor it could cancel requests before the longer HttpClient.Timeout,
+        // masking the bug this PR fixes. HttpClient.Timeout is the single
+        // source of truth.
         AnthropicSdk.AnthropicClient anthropicClient;
         if (timeout is { } t)
         {
@@ -77,7 +95,6 @@ public static class AnthropicProvider
             {
                 ApiKey = apiKey,
                 HttpClient = http,
-                Timeout = t,
             };
         }
         else

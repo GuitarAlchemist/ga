@@ -78,15 +78,20 @@ public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>
 
         // Detect output-cap truncation early so the error message points at
         // the right fix (raise MaxOutputTokens, not "rewrite the prompt").
-        // FinishReason values are provider-specific strings; "length" is the
-        // OpenAI convention surfaced by Microsoft.Extensions.AI for both
-        // OpenAI and Anthropic backends.
+        // ChatFinishReason is a value type (readonly struct) with value-based
+        // equality; this is a direct equality compare, not a string compare.
+        // PR #170 review M2: include the numbers an operator needs to decide
+        // whether to raise the cap or split the batch — output tokens used,
+        // input entry count, and the configured cap.
         if (response.FinishReason == ChatFinishReason.Length)
         {
+            var outputTokens = response.Usage?.OutputTokenCount;
             throw new MemoryCurationException(
                 $"Curator response was truncated by the model's output cap " +
-                $"(MaxOutputTokens={MaxOutputTokens}). Raise the cap or curate " +
-                $"a smaller batch of entries.");
+                $"(MaxOutputTokens={MaxOutputTokens}, outputTokensUsed=" +
+                $"{(outputTokens.HasValue ? outputTokens.Value.ToString() : "unknown")}, " +
+                $"inputEntryCount={request.ExistingEntries.Count}). " +
+                $"Raise the cap or curate a smaller batch of entries.");
         }
 
         // Strip optional ```json``` fences (some providers wrap JSON even when

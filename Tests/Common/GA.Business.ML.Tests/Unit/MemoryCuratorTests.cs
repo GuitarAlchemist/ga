@@ -291,6 +291,33 @@ public class MemoryCuratorTests
             Throws.TypeOf<MemoryCurationException>().With.Message.Contains("empty"));
     }
 
+    [Test]
+    public void CurateAsync_OutputCapHit_ThrowsWithOperatorContext()
+    {
+        // PR #170 review N1 — the truncation-detection branch (FinishReason ==
+        // Length) was added when an end-to-end smoke ran into a 4k-token output
+        // cap. The unit tests couldn't reproduce this with a string-only stub
+        // — we needed a stub that surfaces FinishReason. This test locks in
+        // the M2 contract: the exception names the cap, the tokens used, and
+        // the input entry count so an operator can decide raise-cap vs.
+        // split-batch without re-running the curator in a debugger.
+        var inputs = new List<MemoryEntry>
+        {
+            new("e1", "fact", "input one", [], T(0), SessionId: null),
+            new("e2", "fact", "input two", [], T(1), SessionId: null),
+        };
+        var stub = new TruncatingStubChatClient(
+            partialJson: "{\"entries\":[{\"Key\":\"e1\",\"Type\":\"fact\",",
+            outputTokens: 4096);
+
+        Assert.That(async () => await new MemoryCurator(stub).CurateAsync(
+                new MemoryCurationRequest(inputs, [], null)),
+            Throws.TypeOf<MemoryCurationException>()
+                  .With.Message.Contains("truncated")
+                  .And.Message.Contains("outputTokensUsed=4096")
+                  .And.Message.Contains("inputEntryCount=2"));
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────
 
     private static DateTimeOffset T(int seconds) =>
@@ -311,6 +338,38 @@ file sealed class StubChatClient(string responseJson) : IChatClient
         var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, responseJson))
         {
             ModelId = "stub-model",
+        };
+        return Task.FromResult(response);
+    }
+
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default) =>
+        throw new NotImplementedException();
+
+    public object? GetService(Type serviceType, object? serviceKey = null) => null;
+    public void Dispose() { }
+}
+
+/// <summary>
+/// Stub IChatClient that returns a response with
+/// <see cref="ChatFinishReason.Length"/> (output-cap-hit signal) plus a
+/// recorded usage count. Used by the truncation-path test to verify the
+/// curator's M2 exception message includes the operator-actionable fields.
+/// </summary>
+file sealed class TruncatingStubChatClient(string partialJson, int outputTokens) : IChatClient
+{
+    public Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, partialJson))
+        {
+            ModelId = "stub-truncating-model",
+            FinishReason = ChatFinishReason.Length,
+            Usage = new UsageDetails { OutputTokenCount = outputTokens },
         };
         return Task.FromResult(response);
     }
