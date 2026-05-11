@@ -152,7 +152,13 @@ public sealed class SemanticIntentRouter(
         foreach (var (intent, score, source) in ranking)
         {
             var boost = hintDeltas.TryGetValue(intent.Id, out var delta) ? delta : 0f;
-            withHints.Add((intent, score + boost, boost, source));
+            // PR #178 review (LOW): clamp to [0, 1] so the reported
+            // confidence stays interpretable as a cosine-like number.
+            // Without the clamp, transpose-rule hits could exceed 1.0
+            // (cosine 0.95 + boost 0.06 = 1.01), breaking any downstream
+            // consumer that asserts `0 ≤ confidence ≤ 1`.
+            var boosted = Math.Clamp(score + boost, 0f, 1f);
+            withHints.Add((intent, boosted, boost, source));
         }
 
         // Sort highest-score-first. Tie-break: prefer the intent with the SHORTER

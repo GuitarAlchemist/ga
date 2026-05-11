@@ -38,6 +38,10 @@ public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) :
         "what's a good practice plan for improvisation",
         "give me a practice routine for jazz comping",
         "weekly practice plan for fingerstyle",
+        // PR #178 review (LOW): keep one example for the "what should I
+        // practice [today|first|now]" temporal-instruction shape. Without
+        // it, beginnerchords' "first chords to learn" centroid wins.
+        "what should I practice today",
         "drill for barre chords",
         "exercises for soloing over changes",
     ];

@@ -87,28 +87,34 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             "skill.chordinfo"),
 
         // Transpose — added post-baseline-2026-05-11 to close a 4/5 F1
-        // hole. Failing prompts in the eval corpus included "transpose this
-        // progression down a half step" (was routing to
-        // progressioncompletion), "transpose C-Am-F-G to G major" (was
-        // diatonicchords), "shift this progression up a whole step" (was
-        // progressioncompletion), and "bring D minor down to A minor"
-        // (was scaleinfo). The collisions are real because "transpose" +
-        // "progression" overlaps lexically with the completion intent.
-        // The hint provides a deterministic +0.06 boost; the prior
-        // semantic dominance was within 0.1 cosine, so this is enough
-        // to flip the result without over-promoting.
+        // hole. Failing prompts in the eval corpus included "transpose
+        // this progression down a half step", "transpose C-Am-F-G to G
+        // major", "shift this progression up a whole step", and "bring D
+        // minor down to A minor".
         //
-        // Pattern: bare "transpose" (single-token, music-unambiguous), or
-        // shift/bring/move + a music-context noun (progression/chord/key/
-        // tune/piece/song/tab or a [A-G] key-letter pattern). The noun
-        // anchor prevents false positives on "shift focus to X" /
-        // "bring back the bridge" / "move on to the next song".
+        // Pattern: bare "transpose<suffix>" (single-token,
+        // music-unambiguous), OR shift/bring/move + 0-5 intervening
+        // tokens + a MUSIC-DIRECTION suffix (up | down | to <key-letter>).
+        // PR #178 review (correctness MED-1) tightened from the prior
+        // music-noun-anchored version, which fired on idiomatic "bring
+        // this song to a close" / "move this song higher in the playlist"
+        // / "shift this tune to the front". The direction-suffix anchor
+        // is stricter: "to a close" / "to the front" / "higher" don't
+        // qualify, but legitimate transpose phrasings ("bring D minor
+        // down to A minor" has "down"; "shift this progression up a
+        // whole step" has "up") stay matched.
+        //
         // English drops the trailing 'e' before -ing: "transposing" not
         // "transposeing". So we anchor on the 'transpos' prefix + at least
         // one trailing word char, which covers transpose / transposed /
-        // transposes / transposing / transposition. The minimum-one-char
-        // requirement (\w+ not \w*) prevents matching the bare prefix.
-        (new Regex(@"\btranspos\w+\b|\b(shift|bring|move)\b\s+(?:this|the|that|my)?\s*(?:progression|chord|key|tune|piece|song|tab|[A-G](?:#|b)?(?:\s+(?:major|minor))?)\b",
+        // transposes / transposing / transposition.
+        // `(?-i:[A-G])` locally disables IgnoreCase for the key-letter group.
+        // Without this, `to a close` and `to a conclusion` match because
+        // lowercase `a` is treated as `[A-Ga-g]`. Music writers use uppercase
+        // for key names (D minor, A major), so case-sensitivity here is a
+        // legitimate signal. Lowercase-key prompts ("transpose to g major")
+        // still hit via the `\btranspos\w+\b` prefix branch.
+        (new Regex(@"\btranspos\w+\b|\b(shift|bring|move)\b\s+\S+(?:\s+\S+){0,5}?\s+(?:up|down|to\s+(?-i:[A-G]))\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.transpose"),
     ];

@@ -39,6 +39,15 @@ public class DefaultRoutingHintProviderTests
     [TestCase("bring back the bridge section")]
     [TestCase("move on to the next song")]
     [TestCase("what does that chord bring to the song")]
+    // PR #178 review (correctness MED-1) regression pin: the prior
+    // music-noun-anchored regex fired on idiomatic non-transpose phrases
+    // because `song`/`piece`/`tune` ARE music-context nouns but appear in
+    // everyday English with no music-direction marker. The tightened
+    // regex requires `up|down|to+[A-G]` as a suffix; these must NOT fire.
+    [TestCase("bring this song to a close")]
+    [TestCase("move this song higher in the playlist")]
+    [TestCase("shift this tune to the front")]
+    [TestCase("bring this piece to a conclusion")]
     public void Transpose_AdjacentNonMusicShift_DoesNotBoost(string query)
     {
         var deltas = _hints.GetDeltas(query);
