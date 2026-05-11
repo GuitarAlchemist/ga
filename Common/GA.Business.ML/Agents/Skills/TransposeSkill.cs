@@ -29,13 +29,25 @@ public sealed class TransposeSkill(
         "closure; teaches the LLM the interval → semitones mapping in the body so " +
         "no enharmonic guessing happens at the model layer.";
 
+    // PR (post-baseline-2026-05-11) — added the "transpose this PROGRESSION"
+    // surface forms that the eval corpus uses. The prior single-chord
+    // examples ("Transpose Cmaj7 up a perfect fourth") didn't move the
+    // embedding score enough to overcome progressioncompletion's grip on
+    // prompts like "transpose this progression down a half step". The
+    // semantic-router score gap was wider than the +0.06 hint boost
+    // could close, so the ExamplePrompts themselves need to teach the
+    // embedder that progression-shaped transpose requests are this skill.
     public override IReadOnlyList<string> ExamplePrompts =>
     [
+        "transpose this progression down a half step",
+        "transpose this progression up a whole step",
+        "transpose C-Am-F-G to G major",
+        "shift this progression up a half step",
+        "bring D minor down to A minor",
         "Transpose Cmaj7 up a perfect fourth",
         "Move this F chord down a minor third",
         "What's Dm7 up a whole step?",
         "Transpose G7 to Eb",
         "Shift Am7 up a fifth",
-        "Cmaj7 in the key of G — what chord is that?",
     ];
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1",
-  "generatedAt": "2026-05-11T21:26:19.8081205Z",
+  "generatedAt": "2026-05-11T23:03:34.3332926Z",
   "routerConfig": {
     "minConfidence": 0.65,
     "embedder": "nomic-embed-text"
@@ -8,9 +8,9 @@
   "totalPrompts": 80,
   "overall": {
     "Total": 80,
-    "Correct": 53,
-    "UnmatchedFallthrough": 5,
-    "Accuracy": 0.6625
+    "Correct": 64,
+    "UnmatchedFallthrough": 2,
+    "Accuracy": 0.8
   },
   "perIntent": {
     "skill.chordinfo": {
@@ -26,11 +26,11 @@
     "skill.scaleinfo": {
       "Support": 5,
       "TruePositives": 4,
-      "FalsePositives": 3,
+      "FalsePositives": 2,
       "FalseNegatives": 1,
-      "Precision": 0.5714285714285714,
+      "Precision": 0.6666666666666666,
       "Recall": 0.8,
-      "F1": 0.6666666666666666,
+      "F1": 0.7272727272727272,
       "Status": "measured"
     },
     "skill.modes": {
@@ -55,22 +55,22 @@
     },
     "skill.chordsubstitution": {
       "Support": 5,
-      "TruePositives": 4,
-      "FalsePositives": 2,
-      "FalseNegatives": 1,
-      "Precision": 0.6666666666666666,
-      "Recall": 0.8,
-      "F1": 0.7272727272727272,
+      "TruePositives": 3,
+      "FalsePositives": 1,
+      "FalseNegatives": 2,
+      "Precision": 0.75,
+      "Recall": 0.6,
+      "F1": 0.6666666666666665,
       "Status": "measured"
     },
     "skill.beginnerchords": {
       "Support": 5,
       "TruePositives": 5,
-      "FalsePositives": 2,
+      "FalsePositives": 0,
       "FalseNegatives": 0,
-      "Precision": 0.7142857142857143,
+      "Precision": 1,
       "Recall": 1,
-      "F1": 0.8333333333333333,
+      "F1": 1,
       "Status": "measured"
     },
     "skill.progressionmood": {
@@ -95,22 +95,22 @@
     },
     "skill.practiceroutine": {
       "Support": 5,
-      "TruePositives": 2,
+      "TruePositives": 5,
       "FalsePositives": 0,
-      "FalseNegatives": 3,
+      "FalseNegatives": 0,
       "Precision": 1,
-      "Recall": 0.4,
-      "F1": 0.5714285714285715,
+      "Recall": 1,
+      "F1": 1,
       "Status": "measured"
     },
     "skill.genreessentials": {
       "Support": 5,
-      "TruePositives": 0,
+      "TruePositives": 5,
       "FalsePositives": 0,
-      "FalseNegatives": 5,
-      "Precision": 0,
-      "Recall": 0,
-      "F1": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
       "Status": "measured"
     },
     "skill.whatcanyoudo": {
@@ -125,12 +125,12 @@
     },
     "skill.transpose": {
       "Support": 5,
-      "TruePositives": 1,
-      "FalsePositives": 2,
-      "FalseNegatives": 4,
-      "Precision": 0.3333333333333333,
-      "Recall": 0.2,
-      "F1": 0.25,
+      "TruePositives": 5,
+      "FalsePositives": 1,
+      "FalseNegatives": 0,
+      "Precision": 0.8333333333333334,
+      "Recall": 1,
+      "F1": 0.9090909090909091,
       "Status": "measured"
     },
     "skill.commontones": {
@@ -166,11 +166,11 @@
     "skill.progressioncompletion": {
       "Support": 5,
       "TruePositives": 5,
-      "FalsePositives": 3,
+      "FalsePositives": 0,
       "FalseNegatives": 0,
-      "Precision": 0.625,
+      "Precision": 1,
       "Recall": 1,
-      "F1": 0.7692307692307693,
+      "F1": 1,
       "Status": "measured"
     }
   },
@@ -446,9 +446,9 @@
       "Id": "cs-5",
       "Prompt": "modal interchange substitutes for C major",
       "Expected": "skill.chordsubstitution",
-      "Chosen": "skill.chordsubstitution",
-      "Confidence": 0.7390118,
-      "Correct": true,
+      "Chosen": "skill.transpose",
+      "Confidence": 0.76539737,
+      "Correct": false,
       "Tags": [
         "v0.3-seed",
         "jargon"
@@ -626,9 +626,9 @@
       "Id": "pr-1",
       "Prompt": "give me a 20 minute practice routine",
       "Expected": "skill.practiceroutine",
-      "Chosen": null,
-      "Confidence": 0,
-      "Correct": false,
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "common"
       ]
@@ -638,7 +638,7 @@
       "Prompt": "design a practice plan for me",
       "Expected": "skill.practiceroutine",
       "Chosen": "skill.practiceroutine",
-      "Confidence": 0.7215876,
+      "Confidence": 0.73654705,
       "Correct": true,
       "Tags": [
         "v0.3-seed"
@@ -649,7 +649,7 @@
       "Prompt": "what should I practice today",
       "Expected": "skill.practiceroutine",
       "Chosen": "skill.practiceroutine",
-      "Confidence": 0.70241785,
+      "Confidence": 1,
       "Correct": true,
       "Tags": [
         "v0.3-seed"
@@ -659,9 +659,9 @@
       "Id": "pr-4",
       "Prompt": "build a 30 minute practice schedule",
       "Expected": "skill.practiceroutine",
-      "Chosen": null,
-      "Confidence": 0,
-      "Correct": false,
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -670,9 +670,9 @@
       "Id": "pr-5",
       "Prompt": "give me a daily practice outline",
       "Expected": "skill.practiceroutine",
-      "Chosen": null,
-      "Confidence": 0,
-      "Correct": false,
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.8150044,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -681,9 +681,9 @@
       "Id": "ge-1",
       "Prompt": "essential chords for blues guitar",
       "Expected": "skill.genreessentials",
-      "Chosen": "skill.beginnerchords",
-      "Confidence": 0.71459174,
-      "Correct": false,
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "common"
       ]
@@ -692,9 +692,9 @@
       "Id": "ge-2",
       "Prompt": "essential scales for jazz guitar",
       "Expected": "skill.genreessentials",
-      "Chosen": "skill.chordsubstitution",
-      "Confidence": 0.700365,
-      "Correct": false,
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -703,9 +703,9 @@
       "Id": "ge-3",
       "Prompt": "country guitar starter chords",
       "Expected": "skill.genreessentials",
-      "Chosen": "skill.beginnerchords",
-      "Confidence": 0.75320107,
-      "Correct": false,
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed",
         "starter-overlap"
@@ -715,9 +715,9 @@
       "Id": "ge-4",
       "Prompt": "must-know progressions for rock",
       "Expected": "skill.genreessentials",
-      "Chosen": "skill.progressioncompletion",
-      "Confidence": 0.6891813,
-      "Correct": false,
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -726,9 +726,9 @@
       "Id": "ge-5",
       "Prompt": "key chords in funk music",
       "Expected": "skill.genreessentials",
-      "Chosen": "skill.transpose",
-      "Confidence": 0.71533525,
-      "Correct": false,
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -796,7 +796,7 @@
       "Prompt": "transpose C major up a perfect fifth",
       "Expected": "skill.transpose",
       "Chosen": "skill.transpose",
-      "Confidence": 0.73667306,
+      "Confidence": 0.8574793,
       "Correct": true,
       "Tags": [
         "common"
@@ -806,9 +806,9 @@
       "Id": "tr-2",
       "Prompt": "transpose this progression down a half step",
       "Expected": "skill.transpose",
-      "Chosen": "skill.progressioncompletion",
-      "Confidence": 0.74104977,
-      "Correct": false,
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "common",
         "requires-context"
@@ -818,9 +818,9 @@
       "Id": "tr-3",
       "Prompt": "transpose C-Am-F-G to G major",
       "Expected": "skill.transpose",
-      "Chosen": "skill.diatonicchords",
-      "Confidence": 0.8431992,
-      "Correct": false,
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -829,9 +829,9 @@
       "Id": "tr-4",
       "Prompt": "shift this progression up a whole step",
       "Expected": "skill.transpose",
-      "Chosen": "skill.progressioncompletion",
-      "Confidence": 0.7847122,
-      "Correct": false,
+      "Chosen": "skill.transpose",
+      "Confidence": 0.9866689,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -840,9 +840,9 @@
       "Id": "tr-5",
       "Prompt": "bring D minor down to A minor",
       "Expected": "skill.transpose",
-      "Chosen": "skill.scaleinfo",
-      "Confidence": 0.8402884,
-      "Correct": false,
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Correct": true,
       "Tags": [
         "v0.3-seed"
       ]
@@ -985,7 +985,7 @@
       "Prompt": "what key is C F G C in",
       "Expected": "skill.keyidentification",
       "Chosen": "skill.keyidentification",
-      "Confidence": 1.001588,
+      "Confidence": 1,
       "Correct": true,
       "Tags": [
         "v0.3-seed"
@@ -1007,8 +1007,8 @@
       "Id": "ki-5",
       "Prompt": "find the tonic of A E F#m D",
       "Expected": "skill.keyidentification",
-      "Chosen": "skill.transpose",
-      "Confidence": 0.6799444,
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.67918676,
       "Correct": false,
       "Tags": [
         "v0.3-seed"

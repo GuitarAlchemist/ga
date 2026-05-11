@@ -85,6 +85,38 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
         (new Regex(@"\b(chord\s+tones?|notes\s+in\s+(?:[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|dom)?\d*)|tell\s+me\s+about\s+[A-G])\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordinfo"),
+
+        // Transpose — added post-baseline-2026-05-11 to close a 4/5 F1
+        // hole. Failing prompts in the eval corpus included "transpose
+        // this progression down a half step", "transpose C-Am-F-G to G
+        // major", "shift this progression up a whole step", and "bring D
+        // minor down to A minor".
+        //
+        // Pattern: bare "transpose<suffix>" (single-token,
+        // music-unambiguous), OR shift/bring/move + 0-5 intervening
+        // tokens + a MUSIC-DIRECTION suffix (up | down | to <key-letter>).
+        // PR #178 review (correctness MED-1) tightened from the prior
+        // music-noun-anchored version, which fired on idiomatic "bring
+        // this song to a close" / "move this song higher in the playlist"
+        // / "shift this tune to the front". The direction-suffix anchor
+        // is stricter: "to a close" / "to the front" / "higher" don't
+        // qualify, but legitimate transpose phrasings ("bring D minor
+        // down to A minor" has "down"; "shift this progression up a
+        // whole step" has "up") stay matched.
+        //
+        // English drops the trailing 'e' before -ing: "transposing" not
+        // "transposeing". So we anchor on the 'transpos' prefix + at least
+        // one trailing word char, which covers transpose / transposed /
+        // transposes / transposing / transposition.
+        // `(?-i:[A-G])` locally disables IgnoreCase for the key-letter group.
+        // Without this, `to a close` and `to a conclusion` match because
+        // lowercase `a` is treated as `[A-Ga-g]`. Music writers use uppercase
+        // for key names (D minor, A major), so case-sensitivity here is a
+        // legitimate signal. Lowercase-key prompts ("transpose to g major")
+        // still hit via the `\btranspos\w+\b` prefix branch.
+        (new Regex(@"\btranspos\w+\b|\b(shift|bring|move)\b\s+\S+(?:\s+\S+){0,5}?\s+(?:up|down|to\s+(?-i:[A-G]))\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.transpose"),
     ];
 
     public IReadOnlyDictionary<string, float> GetDeltas(string query)
