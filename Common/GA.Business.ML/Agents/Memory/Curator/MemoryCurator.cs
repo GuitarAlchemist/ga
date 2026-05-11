@@ -29,6 +29,12 @@ public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>
 {
     public const string DefaultModelId = "claude-sonnet-4-6";
 
+    /// <summary>
+    /// Output-token budget for the curator's single LLM call. See the
+    /// CurateAsync XML doc for why this needs to be generous.
+    /// </summary>
+    public const int MaxOutputTokens = 32_768;
+
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -55,11 +61,33 @@ public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>
             new(ChatRole.User,   CurationPromptBuilder.BuildUserMessage(request)),
         };
 
-        var response = await chatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        // Generous output budget — discovered necessary by the first
+        // smoke run (86 entries → truncated mid-Timestamp at byte ~2940
+        // under the provider default cap of ~4096 tokens). The curator
+        // produces ONE entry per kept/merged/new output × ~150 tokens for
+        // the JSON shape, plus per-input rationales in the diff. 32k is
+        // safely over Sonnet 4.6's typical sufficiency for ≤300 input
+        // entries; bump if you see truncation again.
+        var options = new ChatOptions { MaxOutputTokens = MaxOutputTokens };
+
+        var response = await chatClient.GetResponseAsync(messages, options, cancellationToken);
         var responseText = response.Messages.LastOrDefault()?.Text ?? "";
 
         if (string.IsNullOrWhiteSpace(responseText))
             throw new MemoryCurationException("Curator response was empty.");
+
+        // Detect output-cap truncation early so the error message points at
+        // the right fix (raise MaxOutputTokens, not "rewrite the prompt").
+        // FinishReason values are provider-specific strings; "length" is the
+        // OpenAI convention surfaced by Microsoft.Extensions.AI for both
+        // OpenAI and Anthropic backends.
+        if (response.FinishReason == ChatFinishReason.Length)
+        {
+            throw new MemoryCurationException(
+                $"Curator response was truncated by the model's output cap " +
+                $"(MaxOutputTokens={MaxOutputTokens}). Raise the cap or curate " +
+                $"a smaller batch of entries.");
+        }
 
         // Strip optional ```json``` fences (some providers wrap JSON even when
         // told not to — defensive parsing, not contract relaxation).
