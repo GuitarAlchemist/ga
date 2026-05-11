@@ -161,7 +161,6 @@ public class ChordMcpToolsTests
 
     [TestCase("Csus4")]
     [TestCase("C9")]
-    [TestCase("Am7b5")]
     [TestCase("Cadd9")]
     [TestCase("C/E")]
     public void GetChordInfo_OutOfScopeSymbols_ReturnError(string symbol)
@@ -184,5 +183,56 @@ public class ChordMcpToolsTests
         var result = MakeTool().GetChordInfo("C");
 
         Assert.That(result.Intervals, Is.EqualTo(new[] { "root", "major third", "perfect fifth" }));
+    }
+
+    // Diminished seventh (dim7) — stacked minor thirds. Cdim7's seventh is a
+    // double-flat B because letter-step math forces the consecutive-odd-letters
+    // spelling: C-E-G-B with each lowered (Eb-Gb-Bbb). Adim7 / Bbdim7 also
+    // pinned because they exercise different enharmonic paths.
+    [TestCase("Cdim7",  "C",  "diminished 7", new[] { "C",  "Eb", "Gb", "Bbb" })]
+    [TestCase("Adim7",  "A",  "diminished 7", new[] { "A",  "C",  "Eb", "Gb"  })]
+    [TestCase("Bbdim7", "Bb", "diminished 7", new[] { "Bb", "Db", "Fb", "Abb" })]
+    [TestCase("F#dim7", "F#", "diminished 7", new[] { "F#", "A",  "C",  "Eb"  })]
+    public void GetChordInfo_DiminishedSeventh_ReturnsCorrectNotes(
+        string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
+    {
+        var result = MakeTool().GetChordInfo(symbol);
+
+        Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
+        Assert.That(result.Root,    Is.EqualTo(expectedRoot));
+        Assert.That(result.Quality, Is.EqualTo(expectedQuality));
+        Assert.That(result.Notes,   Is.EqualTo(expectedNotes), $"notes mismatch for {symbol}");
+    }
+
+    // Half-diminished (m7b5) — minor seventh with a flat fifth. Classic ii° in
+    // a minor key: Bm7b5 = B D F A is the ii° of A minor. Am7b5 was previously
+    // in the OutOfScope regression list (now removed alongside this addition).
+    [TestCase("Cm7b5",  "C",  "half-diminished", new[] { "C",  "Eb", "Gb", "Bb" })]
+    [TestCase("Bm7b5",  "B",  "half-diminished", new[] { "B",  "D",  "F",  "A"  })]
+    [TestCase("F#m7b5", "F#", "half-diminished", new[] { "F#", "A",  "C",  "E"  })]
+    [TestCase("Am7b5",  "A",  "half-diminished", new[] { "A",  "C",  "Eb", "G"  })]
+    public void GetChordInfo_HalfDiminished_ReturnsCorrectNotes(
+        string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
+    {
+        var result = MakeTool().GetChordInfo(symbol);
+
+        Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
+        Assert.That(result.Root,    Is.EqualTo(expectedRoot));
+        Assert.That(result.Quality, Is.EqualTo(expectedQuality));
+        Assert.That(result.Notes,   Is.EqualTo(expectedNotes), $"notes mismatch for {symbol}");
+    }
+
+    [TestCase("min7b5", "half-diminished")]
+    public void GetChordInfo_AlternateQualityForms_NormalizeToCanonical(string suffix, string expectedCanonical)
+    {
+        // The verbose form `min7b5` is uncommon but legal — pin it so a future
+        // refactor of NormalizeQuality doesn't silently drop it. The full word
+        // `diminished7` is NOT in the regex on purpose — `dim7` is the only
+        // canonical short form for the regex; the NormalizeQuality switch
+        // accepts the full word as defensive code if the regex ever expands.
+        var result = MakeTool().GetChordInfo("C" + suffix);
+
+        Assert.That(result.Error,   Is.Null);
+        Assert.That(result.Quality, Is.EqualTo(expectedCanonical));
     }
 }
