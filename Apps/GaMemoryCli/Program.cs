@@ -38,11 +38,24 @@ return command switch
 static async Task<int> RunCurateAsync(string[] args)
 {
     string? instructions = null;
+    // Type-filter default: skip "response" entries. The chatbot's MemoryHook
+    // writes one per chat turn — these are transient logs, not durable
+    // knowledge. The curator is designed for fact / preference / focus
+    // entries (the kind that benefit from merging duplicates + replacing
+    // stale values). Operator can opt back in with --include-responses.
+    // Discovered 2026-05-11: 100% of a real ~/.ga/memory.json was type=
+    // response, dominating the curator input with content it has no useful
+    // curation to do on.
+    var includeResponses = false;
+    var excludeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "response" };
     for (var i = 0; i < args.Length; i++)
     {
         if (args[i] == "--instructions" && i + 1 < args.Length)
             instructions = args[++i];
+        else if (args[i] == "--include-responses")
+            includeResponses = true;
     }
+    if (includeResponses) excludeTypes.Remove("response");
 
     var storePath = MemoryStore.DefaultStorePath;
     if (!File.Exists(storePath))
@@ -51,8 +64,26 @@ static async Task<int> RunCurateAsync(string[] args)
         return 2;
     }
 
-    var entries = LoadEntries(storePath);
-    Console.WriteLine($"Loaded {entries.Count} entries from {storePath}.");
+    var allEntries = LoadEntries(storePath);
+    var entries = allEntries.Where(e => !excludeTypes.Contains(e.Type)).ToList();
+    var skipped = allEntries.Count - entries.Count;
+    Console.WriteLine(
+        $"Loaded {allEntries.Count} entries from {storePath}" +
+        (skipped > 0
+            ? $" (filtered {skipped} entries with excluded types: {string.Join(", ", excludeTypes)}; " +
+              "pass --include-responses to keep them)"
+            : ""));
+
+    if (entries.Count == 0)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Nothing left to curate after type filtering. This usually means the");
+        Console.WriteLine("store is dominated by transient 'response' entries — the curator is");
+        Console.WriteLine("designed for durable memory (fact / preference / focus). Either:");
+        Console.WriteLine("  • Wait for the chatbot to accumulate non-response memory entries, or");
+        Console.WriteLine("  • Pass --include-responses to curate them anyway (not recommended).");
+        return 0;
+    }
 
     var config = new ConfigurationBuilder().AddEnvironmentVariables().Build();
     if (!AnthropicProvider.IsAvailable(config))
@@ -193,7 +224,11 @@ static int PrintUsage()
     Console.WriteLine("ga-memory — Dreams-lite curator over the chatbot MemoryStore");
     Console.WriteLine();
     Console.WriteLine("Commands:");
-    Console.WriteLine("  curate [--instructions \"...\"]   Run the curator, write a candidate");
+    Console.WriteLine("  curate [--instructions \"...\"] [--include-responses]");
+    Console.WriteLine("                                  Run the curator, write a candidate.");
+    Console.WriteLine("                                  By default skips type=response entries");
+    Console.WriteLine("                                  (transient chat logs). Pass");
+    Console.WriteLine("                                  --include-responses to curate them.");
     Console.WriteLine("  diff <candidate-path>           Show the diff summary for a candidate");
     Console.WriteLine("  promote <candidate-path>        Atomic swap (with .bak backup)");
     Console.WriteLine();
