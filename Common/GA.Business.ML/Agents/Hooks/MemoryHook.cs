@@ -81,15 +81,38 @@ public sealed class MemoryHook(
         }
 
         var matches = memoryStore.Search(ctx.SessionId, ctx.CurrentMessage);
-        if (matches.Count == 0) return Task.FromResult(HookResult.Continue);
 
-        var contextBlock = string.Join("\n", matches.Take(3)
+        // SC-001 defense in depth: filter out entries that originated from
+        // MemoryMcpTools.MemoryWrite (LLM-callable). Even if the
+        // Memory:AllowLlmGlobalWrite flag is enabled (intentionally or by
+        // mistake), and even if a prompt-injected write landed before this
+        // filter shipped, retrieval injection refuses to surface those
+        // entries into a future session's prompt. The McpOriginTag is
+        // applied automatically on every MemoryMcpTools.MemoryWrite that
+        // gets through the flag gate. See
+        // docs/solutions/security/2026-05-11-sc-001-mcp-write-injection.md.
+        const string McpOriginTag = "origin:mcp-tool";
+        var filtered = matches
+            .Where(m => !m.Tags.Contains(McpOriginTag, StringComparer.Ordinal))
+            .ToList();
+        var filteredOutCount = matches.Count - filtered.Count;
+        if (filteredOutCount > 0)
+        {
+            logger.LogInformation(
+                "MemoryHook: filtered {Count} '{Tag}' entries from retrieval (SC-001 defense). " +
+                "If this fires frequently, audit MemoryMcpTools.MemoryWrite usage and consider " +
+                "setting Memory:AllowLlmGlobalWrite=false.",
+                filteredOutCount, McpOriginTag);
+        }
+        if (filtered.Count == 0) return Task.FromResult(HookResult.Continue);
+
+        var contextBlock = string.Join("\n", filtered.Take(3)
             .Select(m => $"[memory:{m.Key}] {m.Content}"));
 
         var enriched = $"[Relevant context from memory]\n{contextBlock}\n\n{ctx.CurrentMessage}";
         logger.LogDebug(
             "MemoryHook: injecting {Count} memory entries for session {SessionId}",
-            matches.Count, ctx.SessionId);
+            filtered.Count, ctx.SessionId);
         return Task.FromResult(HookResult.Mutate(enriched));
     }
 
