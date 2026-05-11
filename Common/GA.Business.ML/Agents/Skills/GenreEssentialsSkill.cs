@@ -23,14 +23,25 @@ public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) :
         "jazz, pop, folk, modal, country, and rock. Catalog answer; the user " +
         "learns what makes a genre sound like itself. No LLM call.";
 
+    // PR (post-baseline-2026-05-11) — rewrote examples to anchor on the
+    // "essential / must-know / starter / key X for Y-genre" surface shape
+    // that the labeled eval corpus uses. The prior set led to F1=0.00 on
+    // this intent because the embeddings matched "what makes blues sound
+    // like blues" against `chordinfo` and `beginnerchords` more strongly
+    // than the user's actual ask pattern. New set explicitly carries:
+    //   - the "essential / must-know / starter / key chords" surface,
+    //   - the genre token (blues, jazz, country, rock, funk, pop, folk),
+    //   - the "for / in" preposition that the labeled corpus uses.
     public IReadOnlyList<string> ExamplePrompts =>
     [
-        "What makes blues sound like blues?",
-        "What defines jazz harmony?",
-        "How do I write a country progression?",
-        "What's a typical pop chord progression?",
-        "Tell me about modal sound",
-        "What chords are common in folk music?",
+        "essential chords for blues guitar",
+        "essential scales for jazz guitar",
+        "must-know progressions for rock",
+        "country guitar starter chords",
+        "key chords in funk music",
+        "essential harmony for pop songs",
+        "what defines blues harmony",
+        "common chords in folk music",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only

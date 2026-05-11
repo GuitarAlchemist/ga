@@ -1,5 +1,19 @@
 # Routing eval baseline 2026-05-11 — failure analysis
 
+> **Update 2026-05-11 PM:** routing fixes from this analysis landed in the
+> same session. New baseline: **63/80 = 78.7%** (+12.5 pp, +10 correct).
+> Wins: `genreessentials` 0.00 → 1.00, `practiceroutine` 0.57 → 0.89,
+> `transpose` 0.25 → 0.91. Collateral lift: `progressioncompletion`
+> 0.77 → 1.00, `beginnerchords` 0.83 → 0.91. Three changes:
+> (1) `GenreEssentialsSkill.ExamplePrompts` rewritten around "essential
+> X for Y" surface, (2) `PracticeRoutineSkill.ExamplePrompts` expanded
+> with "schedule"/"outline"/"daily" synonyms, (3)
+> `DefaultRoutingHintProvider` got a `transpose` regex hint AND
+> `TransposeSkill.ExamplePrompts` expanded to teach the embedder the
+> progression-shape ("transpose this progression down a half step").
+> Remaining 17 failures cluster around chord/scale/mode boundary fuzz —
+> see "Out of scope" section. Original analysis below for context.
+
 **Overall: 53/80 correct = 66.2% accuracy** (router threshold 0.65, embedder
 `nomic-embed-text`, 17 production skills loaded via reflection).
 

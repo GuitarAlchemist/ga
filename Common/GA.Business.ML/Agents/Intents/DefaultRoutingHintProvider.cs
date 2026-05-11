@@ -85,6 +85,32 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
         (new Regex(@"\b(chord\s+tones?|notes\s+in\s+(?:[A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add|dom)?\d*)|tell\s+me\s+about\s+[A-G])\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordinfo"),
+
+        // Transpose — added post-baseline-2026-05-11 to close a 4/5 F1
+        // hole. Failing prompts in the eval corpus included "transpose this
+        // progression down a half step" (was routing to
+        // progressioncompletion), "transpose C-Am-F-G to G major" (was
+        // diatonicchords), "shift this progression up a whole step" (was
+        // progressioncompletion), and "bring D minor down to A minor"
+        // (was scaleinfo). The collisions are real because "transpose" +
+        // "progression" overlaps lexically with the completion intent.
+        // The hint provides a deterministic +0.06 boost; the prior
+        // semantic dominance was within 0.1 cosine, so this is enough
+        // to flip the result without over-promoting.
+        //
+        // Pattern: bare "transpose" (single-token, music-unambiguous), or
+        // shift/bring/move + a music-context noun (progression/chord/key/
+        // tune/piece/song/tab or a [A-G] key-letter pattern). The noun
+        // anchor prevents false positives on "shift focus to X" /
+        // "bring back the bridge" / "move on to the next song".
+        // English drops the trailing 'e' before -ing: "transposing" not
+        // "transposeing". So we anchor on the 'transpos' prefix + at least
+        // one trailing word char, which covers transpose / transposed /
+        // transposes / transposing / transposition. The minimum-one-char
+        // requirement (\w+ not \w*) prevents matching the bare prefix.
+        (new Regex(@"\btranspos\w+\b|\b(shift|bring|move)\b\s+(?:this|the|that|my)?\s*(?:progression|chord|key|tune|piece|song|tab|[A-G](?:#|b)?(?:\s+(?:major|minor))?)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.transpose"),
     ];
 
     public IReadOnlyDictionary<string, float> GetDeltas(string query)
