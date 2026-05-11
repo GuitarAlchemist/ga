@@ -10,6 +10,8 @@ using GA.Business.ML.Agents.Skills;
 using GA.Domain.Services.Atonal.Grothendieck;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 /// The core GA chatbot plugin — bundles all built-in orchestrator skills and hooks.
@@ -61,7 +63,13 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
 
         // ── Persistent memory ────────────────────────────────────────────────
-        services.TryAddSingleton<MemoryStore>();
+        // Construct via factory so we can wire ILogger<MemoryStore> for the
+        // Load() IO-error surfacing introduced in PR #157 review rel-001.
+        // Without the logger the legacy parameterless ctor swallows
+        // permission-denied / disk-full silently — which historically looked
+        // identical to "memory forgot everything between restarts."
+        services.TryAddSingleton<MemoryStore>(sp =>
+            new MemoryStore(sp.GetService<ILogger<MemoryStore>>() ?? NullLogger<MemoryStore>.Instance));
 
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
