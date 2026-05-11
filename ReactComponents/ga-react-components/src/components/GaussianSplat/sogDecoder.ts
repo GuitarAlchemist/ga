@@ -96,14 +96,21 @@ function unlog(n: number): number {
 
 // Reconstruct a unit quaternion from the SOG-packed RGBA byte tuple.
 // Three channels carry the three "smallest" components in (-1/√2 … 1/√2);
-// the alpha byte encodes which axis was dropped (largest-magnitude one).
-// The dropped axis is reconstructed from √(1 - others²).
+// the alpha byte encodes which axis was dropped (largest-magnitude one),
+// with the valid range 252..255 representing modes 0..3.
+//
+// WebP is lossy and can perturb the alpha by ±1–2 around the encoded value.
+// If an `a` drifts out of 252..255 and we fall into a "default" branch,
+// the splat collapses to an identity orientation — combined with an
+// authored anisotropic scale, that renders as a long world-axis-aligned
+// needle. Clamping the alpha to the valid range eliminates those artifacts.
 function reconstructQuaternion(r: number, g: number, b: number, a: number): [number, number, number, number] {
   const comp = (c: number) => ((c / 255 - 0.5) * 2.0) / Math.SQRT2;
   const A = comp(r);
   const B = comp(g);
   const C = comp(b);
-  const mode = a - 252;
+  const clampedA = a < 252 ? 252 : (a > 255 ? 255 : a);
+  const mode = clampedA - 252;
   const t = A * A + B * B + C * C;
   const D = Math.sqrt(Math.max(0, 1 - t));
   let qx: number, qy: number, qz: number, qw: number;
@@ -111,8 +118,7 @@ function reconstructQuaternion(r: number, g: number, b: number, a: number): [num
     case 0:  qx = D; qy = A; qz = B; qw = C; break;
     case 1:  qx = A; qy = D; qz = B; qw = C; break;
     case 2:  qx = A; qy = B; qz = D; qw = C; break;
-    case 3:  qx = A; qy = B; qz = C; qw = D; break;
-    default: qx = 0; qy = 0; qz = 0; qw = 1; break;
+    default: qx = A; qy = B; qz = C; qw = D; break; // mode 3
   }
   // Hemisphere flip + normalize.
   if (qw < 0) { qx = -qx; qy = -qy; qz = -qz; qw = -qw; }
