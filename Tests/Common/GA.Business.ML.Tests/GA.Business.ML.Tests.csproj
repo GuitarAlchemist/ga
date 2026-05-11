@@ -36,5 +36,8 @@
     <None Include="..\..\..\Common\GA.Business.Config\Modes.yaml" Link="Modes.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\routing-eval-prompts.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
