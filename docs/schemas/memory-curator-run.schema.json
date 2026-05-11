@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitaralchemist.com/schemas/memory-curator-run.schema.json",
+  "title": "Memory curator run ledger entry",
+  "description": "One record per MemoryCurator.CurateAsync invocation. Written to state/quality/memory-curator/<date>/run-<id>.json. Audit trail for what the curator proposed and (if applicable) what the operator did with it.",
+  "type": "object",
+  "required": ["runId", "startedAt", "status", "inputs", "result"],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "description": "Stable identifier for this run. ULID or UUID."
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "completed", "failed", "canceled"],
+      "description": "Mirrors Dreams' lifecycle states."
+    },
+    "modelId": { "type": "string", "description": "e.g. claude-sonnet-4-6" },
+    "inputs": {
+      "type": "object",
+      "required": ["storePath", "entryCount", "transcriptCount"],
+      "properties": {
+        "storePath": { "type": "string", "description": "Absolute path to the input MemoryStore JSON file." },
+        "entryCount": { "type": "integer", "minimum": 0 },
+        "transcriptCount": { "type": "integer", "minimum": 0 },
+        "instructionsLength": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": ["candidatePath", "diffSummary"],
+      "properties": {
+        "candidatePath": {
+          "type": "string",
+          "description": "Absolute path to the candidate store JSON (NOT yet promoted)."
+        },
+        "diffSummary": {
+          "type": "object",
+          "required": ["kept", "merged", "replaced", "newItems", "dropped"],
+          "properties": {
+            "kept": { "type": "integer", "minimum": 0 },
+            "merged": { "type": "integer", "minimum": 0 },
+            "replaced": { "type": "integer", "minimum": 0 },
+            "newItems": { "type": "integer", "minimum": 0 },
+            "dropped": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "tokens": {
+          "type": "object",
+          "properties": {
+            "input": { "type": "integer", "minimum": 0 },
+            "output": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "promote": {
+      "type": "object",
+      "description": "Populated when the operator runs `ga-memory promote` against this run's candidate.",
+      "properties": {
+        "promotedAt": { "type": "string", "format": "date-time" },
+        "backupPath": { "type": "string", "description": "Path to the .bak of the prior live store." }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "description": "e.g. validation_failed, json_parse_failed, llm_error" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}
