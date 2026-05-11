@@ -63,6 +63,14 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
 
+        // Durable-memory writer (2026-05-11) — first explicit "remember this"
+        // skill. Emits a MemoryWriteRequest on AgentResponse.Data; the new
+        // MemoryWriteHook below picks it up on OnResponseSent and writes via
+        // the caller's SessionId. Closes the loop on EnrichOnRetrieve — until
+        // this skill, MemoryStore had no fact/preference/focus writer at all
+        // (transcript turns post-PR #174 go to ChatTranscriptStore).
+        services.AddOrchestratorSkillIntent<RememberThisSkill>();
+
         // ── Persistent memory ────────────────────────────────────────────────
         // Construct via factory so we can wire ILogger<MemoryStore> for the
         // Load() IO-error surfacing introduced in PR #157 review rel-001.
@@ -86,6 +94,13 @@ public sealed class GaPlugin : IChatPlugin
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
         services.AddSingleton<IChatHook, MemoryHook>();
+        // MemoryWriteHook (2026-05-11) — picks up MemoryWriteRequest emitted
+        // by RememberThisSkill on AgentResponse.Data and persists with the
+        // caller's SessionId. Registered AFTER MemoryHook so MemoryHook's
+        // transcript-write fires first (transcript = ground truth of what
+        // was said), then MemoryWriteHook persists the structured durable
+        // claim. Both are idempotent; order is for log ordering, not safety.
+        services.AddSingleton<IChatHook, MemoryWriteHook>();
         services.AddSingleton<IChatHook, ObservabilityHook>();
     }
 
