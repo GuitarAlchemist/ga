@@ -9,8 +9,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
-import { Box, Button, Chip, LinearProgress, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Box, Chip, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
+import { decodeSogToSplatBlob } from '../components/GaussianSplat/sogDecoder';
 
 interface ScenePreset {
   id: string;
@@ -35,13 +36,6 @@ interface ResolvedScene {
   url: string; // populated for ply only
 }
 
-function extractSceneId(input: string): string {
-  const trimmed = input.trim();
-  if (!trimmed) return DEFAULT_SCENE_ID;
-  const match = trimmed.match(/scene\/([a-zA-Z0-9-]+)/);
-  return match ? match[1] : trimmed;
-}
-
 async function probe(url: string): Promise<boolean> {
   try {
     const resp = await fetch(url, { method: 'HEAD' });
@@ -54,10 +48,10 @@ async function probe(url: string): Promise<boolean> {
 async function resolveScene(sceneId: string): Promise<ResolvedScene | null> {
   for (const v of VERSION_PATHS) {
     const plyUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/scene.compressed.ply`;
-    const sogUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/meta.json`;
-    const [hasPly, hasSog] = await Promise.all([probe(plyUrl), probe(sogUrl)]);
+    const metaUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/meta.json`;
+    const [hasPly, hasSog] = await Promise.all([probe(plyUrl), probe(metaUrl)]);
     if (hasPly) return { format: 'ply', version: v, url: plyUrl };
-    if (hasSog) return { format: 'sog', version: v, url: '' };
+    if (hasSog) return { format: 'sog', version: v, url: metaUrl };
   }
   return null;
 }
@@ -66,21 +60,26 @@ const GaussianSplatTest: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<GaussianSplats3D.Viewer | null>(null);
 
-  const [draftInput, setDraftInput] = useState(`https://superspl.at/scene/${DEFAULT_SCENE_ID}`);
   const [sceneId, setSceneId] = useState(DEFAULT_SCENE_ID);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [statusLine, setStatusLine] = useState<string | null>(null);
 
-  const handleLoad = useCallback(() => {
-    const next = extractSceneId(draftInput);
-    if (next !== sceneId) setSceneId(next);
-  }, [draftInput, sceneId]);
+  // Blob URL of the most recent SOG decode so we can revoke it on scene change
+  // or unmount. PLY scenes load straight from the CDN — nothing to revoke.
+  const lastBlobUrlRef = useRef<string | null>(null);
 
   const handlePreset = useCallback((preset: ScenePreset) => {
-    setDraftInput(`https://superspl.at/scene/${preset.id}`);
     if (preset.id !== sceneId) setSceneId(preset.id);
   }, [sceneId]);
+
+  useEffect(() => () => {
+    if (lastBlobUrlRef.current) {
+      try { URL.revokeObjectURL(lastBlobUrlRef.current); } catch { /* already revoked */ }
+      lastBlobUrlRef.current = null;
+    }
+  }, []);
 
   // Gotchas this hook exists to work around — keep this comment, the wins
   // here cost a session of experimentation:
@@ -156,24 +155,49 @@ const GaussianSplatTest: React.FC = () => {
           }
           return;
         }
-        if (resolved.format === 'sog') {
-          await clearLoadedSplat();
-          if (!cancelled) {
-            setError(
-              `Scene ${sceneId} (${resolved.version}) uses SuperSplat's newer SOG format (WebP textures + meta.json). ` +
-              `The Three.js renderer here (@mkkellogg/gaussian-splats-3d 0.4.7) only supports the older compressed PLY. ` +
-              `SOG support is in flight upstream — see github.com/mkkellogg/GaussianSplats3D/pull/478.`
-            );
-            setLoading(false);
+
+        // Pick a load URL + lib format key per scene format. SOG is decoded
+        // in-browser into the older .splat layout (sogDecoder.ts) because
+        // @mkkellogg/gaussian-splats-3d 0.4.7 doesn't natively decode SOG.
+        let url: string;
+        let formatKey: 'Ply' | 'Splat';
+        let bbox: { center: [number, number, number]; radius: number } | null = null;
+
+        if (resolved.format === 'ply') {
+          url = resolved.url;
+          formatKey = 'Ply';
+          setStatusLine(`PLY · ${resolved.version}`);
+        } else {
+          if (!cancelled) setStatusLine(`Decoding SOG (${resolved.version})…`);
+          try {
+            const decoded = await decodeSogToSplatBlob(resolved.url);
+            if (cancelled) { URL.revokeObjectURL(decoded.url); return; }
+            if (lastBlobUrlRef.current) {
+              try { URL.revokeObjectURL(lastBlobUrlRef.current); } catch { /* ignore */ }
+            }
+            lastBlobUrlRef.current = decoded.url;
+            url = decoded.url;
+            formatKey = 'Splat';
+            bbox = { center: decoded.bbox.center, radius: decoded.bbox.radius };
+            const shNote = decoded.shDropped ? ' (DC color only)' : '';
+            setStatusLine(`SOG · ${resolved.version} · ${decoded.count.toLocaleString()} splats${shNote}`);
+          } catch (decodeErr) {
+            await clearLoadedSplat();
+            if (!cancelled) {
+              const msg = decodeErr instanceof Error ? decodeErr.message : String(decodeErr);
+              setError(`SOG decode failed: ${msg}`);
+              setLoading(false);
+            }
+            return;
           }
-          return;
         }
+
         const v = ensureViewer();
         try {
           if (lastLoadedRef.current !== null && v.getSceneCount?.() > 0) {
             await v.removeSplatScene(0);
           }
-          await v.addSplatScene(resolved.url, {
+          const sceneOptions: Record<string, unknown> = {
             progressiveLoad: false,
             showLoadingUI: false,
             // SuperSplat / COLMAP captures author +Y as gravity (down). Rotate
@@ -184,7 +208,33 @@ const GaussianSplatTest: React.FC = () => {
             onProgress: (percent: number) => {
               if (!cancelled) setProgress(percent);
             },
-          });
+          };
+          // Center SOG scenes at the origin using their bbox so the camera
+          // (parked near 0,0,0) isn't buried inside the splat cloud.
+          if (bbox) {
+            sceneOptions.position = [-bbox.center[0], -bbox.center[1], -bbox.center[2]];
+          }
+          const fmtEnum = (GaussianSplats3D as unknown as { SceneFormat?: Record<string, unknown> }).SceneFormat;
+          if (fmtEnum && fmtEnum[formatKey] !== undefined) {
+            sceneOptions.format = fmtEnum[formatKey];
+          }
+          await v.addSplatScene(url, sceneOptions);
+
+          // Pull the camera back to fit the bbox. The lib doesn't expose an
+          // auto-frame helper, so we tweak camera.position directly. Bbox is
+          // post-rotation 180° around X, so flip Y when picking a camera
+          // height. radius * 2.4 is a comfortable default for SuperSplat
+          // captures (covers the subject without clipping into it).
+          if (bbox && v.camera) {
+            const dist = Math.max(bbox.radius * 2.4, 1.5);
+            v.camera.position.set(0, dist * 0.25, dist);
+            v.camera.lookAt(0, 0, 0);
+            if (v.controls?.target) {
+              v.controls.target.set(0, 0, 0);
+              v.controls.update?.();
+            }
+          }
+
           lastLoadedRef.current = sceneId;
           if (!cancelled) setLoading(false);
         } catch (err) {
@@ -247,34 +297,20 @@ const GaussianSplatTest: React.FC = () => {
               />
             ))}
           </Stack>
-          <TextField
-            size="small"
-            value={draftInput}
-            onChange={(e) => setDraftInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleLoad(); }}
-            placeholder="superspl.at scene URL or id"
+          <Box sx={{ flex: 1 }} />
+          <Typography
+            variant="caption"
             sx={{
-              flex: 1,
-              minWidth: 240,
-              '& .MuiOutlinedInput-root': {
-                bgcolor: '#0d1117',
-                color: 'rgba(255,255,255,0.87)',
-                '& fieldset': { borderColor: '#30363d' },
-                '&:hover fieldset': { borderColor: '#58a6ff' },
-              },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+              color: '#8b949e',
+              fontFamily: 'monospace',
+              maxWidth: { xs: '100%', md: 380 },
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
-          />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleLoad}
-            sx={{ color: '#bda4ff', borderColor: 'rgba(189,164,255,0.4)' }}
+            title={statusLine ?? `scene: ${sceneId}`}
           >
-            Load
-          </Button>
-          <Typography variant="caption" sx={{ color: '#8b949e', fontFamily: 'monospace' }}>
-            scene: {sceneId}
+            {statusLine ?? `scene: ${sceneId}`}
           </Typography>
         </Paper>
 
@@ -308,7 +344,7 @@ const GaussianSplatTest: React.FC = () => {
                 <LinearProgress variant="determinate" value={progress} />
               </Box>
               <Typography variant="caption" sx={{ color: '#8b949e' }}>
-                Streaming compressed PLY from SuperSplat CDN.
+                {statusLine ?? 'Streaming splat data.'}
               </Typography>
             </Box>
           )}
