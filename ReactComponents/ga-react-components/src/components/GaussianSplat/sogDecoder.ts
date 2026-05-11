@@ -215,7 +215,7 @@ export async function decodeSogToSplatBlob(metaUrl: string): Promise<SogDecodeRe
     // SOG stores alpha through SH0's alpha byte (already 0..255).
     const a = sh0Img.data[idx + 3];
 
-    // Write .splat record (little-endian floats; bytes are byte-order-neutral).
+    // Write .splat record.
     view.setFloat32(base + 0,  px, true);
     view.setFloat32(base + 4,  py, true);
     view.setFloat32(base + 8,  pz, true);
@@ -226,10 +226,10 @@ export async function decodeSogToSplatBlob(metaUrl: string): Promise<SogDecodeRe
     out[base + 25] = g;
     out[base + 26] = b;
     out[base + 27] = a;
-    out[base + 28] = clampByte(qX * 128 + 128);
-    out[base + 29] = clampByte(qY * 128 + 128);
-    out[base + 30] = clampByte(qZ * 128 + 128);
-    out[base + 31] = clampByte(qW * 128 + 128);
+    out[base + 28] = clampByte(Math.round((qX + 1) * 127.5));
+    out[base + 29] = clampByte(Math.round((qY + 1) * 127.5));
+    out[base + 30] = clampByte(Math.round((qZ + 1) * 127.5));
+    out[base + 31] = clampByte(Math.round((qW + 1) * 127.5));
   }
 
   const blob = new Blob([out], { type: 'application/octet-stream' });

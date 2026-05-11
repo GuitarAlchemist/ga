@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
+import { decodeSogToSplatBlob } from '../components/GaussianSplat/sogDecoder';
 
 interface ScenePreset {
   id: string;
@@ -118,10 +119,10 @@ async function probe(url: string): Promise<boolean> {
 async function resolveSuperSplatScene(sceneId: string): Promise<SuperSplatResolution | null> {
   for (const v of VERSION_PATHS) {
     const plyUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/scene.compressed.ply`;
-    const sogUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/meta.json`;
-    const [hasPly, hasSog] = await Promise.all([probe(plyUrl), probe(sogUrl)]);
+    const sogMetaUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/meta.json`;
+    const [hasPly, hasSog] = await Promise.all([probe(plyUrl), probe(sogMetaUrl)]);
     if (hasPly) return { format: 'ply', version: v, url: plyUrl };
-    if (hasSog) return { format: 'sog', version: v, url: '' };
+    if (hasSog) return { format: 'sog', version: v, url: sogMetaUrl };
   }
   return null;
 }
@@ -136,6 +137,8 @@ const GaussianSplatTest: React.FC = () => {
   // revoke it when a new source replaces it. URLs from earlier files would
   // otherwise leak the file's memory until the page is closed.
   const lastObjectUrlRef = useRef<string | null>(null);
+  // Same idea but for SOG-decoded blob URLs: revoke on scene change / unmount.
+  const lastBlobUrlRef = useRef<string | null>(null);
 
   const [draftInput, setDraftInput] = useState(`https://superspl.at/scene/${DEFAULT_SCENE_ID}`);
   const [source, setSource] = useState<SplatSource>({ kind: 'superspl-id', sceneId: DEFAULT_SCENE_ID });
@@ -179,11 +182,16 @@ const GaussianSplatTest: React.FC = () => {
     e.target.value = '';
   }, [handleFile]);
 
-  // Revoke any outstanding blob URL when the page unmounts.
+  // Revoke any outstanding blob URLs when the page unmounts — both the
+  // user-picked-file URL and any SOG-decoded transcode blob.
   useEffect(() => () => {
     if (lastObjectUrlRef.current) {
       try { URL.revokeObjectURL(lastObjectUrlRef.current); } catch { /* already revoked */ }
       lastObjectUrlRef.current = null;
+    }
+    if (lastBlobUrlRef.current) {
+      try { URL.revokeObjectURL(lastBlobUrlRef.current); } catch { /* already revoked */ }
+      lastBlobUrlRef.current = null;
     }
   }, []);
 
@@ -257,6 +265,8 @@ const GaussianSplatTest: React.FC = () => {
         // Resolve to a concrete URL + format hint per source kind.
         let url: string;
         let formatKey: LibFormatKey | undefined;
+        // Populated only for SOG scenes; used to center the splat at origin.
+        let sogDecodedBbox: { center: [number, number, number]; radius: number } | null = null;
 
         if (source.kind === 'superspl-id') {
           const resolved = await resolveSuperSplatScene(source.sceneId);
@@ -269,19 +279,33 @@ const GaussianSplatTest: React.FC = () => {
             return;
           }
           if (resolved.format === 'sog') {
-            await clearLoadedSplat();
-            if (!cancelled) {
-              setError(
-                `Scene ${source.sceneId} (${resolved.version}) uses SuperSplat's newer SOG format (WebP textures + meta.json). ` +
-                `The Three.js renderer here (@mkkellogg/gaussian-splats-3d 0.4.7) only supports the older compressed PLY. ` +
-                `SOG support is in flight upstream — see github.com/mkkellogg/GaussianSplats3D/pull/478.`
-              );
-              setLoading(false);
+            // Decode SOG in-browser into the older Antimatter15 .splat layout
+            // and hand the lib a blob URL. Higher-order SH is dropped (the
+            // .splat format can't carry it) but positions, scales, rotations,
+            // and DC color are exact. See components/GaussianSplat/sogDecoder.
+            try {
+              const decoded = await decodeSogToSplatBlob(resolved.url);
+              if (cancelled) { URL.revokeObjectURL(decoded.url); return; }
+              if (lastBlobUrlRef.current) {
+                try { URL.revokeObjectURL(lastBlobUrlRef.current); } catch { /* ignore */ }
+              }
+              lastBlobUrlRef.current = decoded.url;
+              url = decoded.url;
+              formatKey = 'Splat';
+              sogDecodedBbox = decoded.bbox;
+            } catch (sogErr) {
+              await clearLoadedSplat();
+              if (!cancelled) {
+                const msg = sogErr instanceof Error ? sogErr.message : String(sogErr);
+                setError(`SOG decode failed for ${source.sceneId} (${resolved.version}): ${msg}`);
+                setLoading(false);
+              }
+              return;
             }
-            return;
+          } else {
+            url = resolved.url;
+            formatKey = 'Ply';
           }
-          url = resolved.url;
-          formatKey = 'Ply';
         } else if (source.kind === 'direct-url') {
           url = source.url;
           formatKey = detectFormatFromName(source.label) ?? detectFormatFromName(source.url);
@@ -316,6 +340,19 @@ const GaussianSplatTest: React.FC = () => {
               if (!cancelled) setProgress(percent);
             },
           };
+          // Size-aware centering: small studio-scale SOG scenes (Vegetables
+          // HQ, table-top captures) need translation to origin so the default
+          // camera at (0, 0.3, 1.4) doesn't sit inside the cloud. Large
+          // outdoor captures (Queen's Hamlet) already have a sensible scene
+          // origin from SuperSplat — centering them puts the default camera
+          // 1.4 units from a 30-unit-radius bbox center, i.e. deep inside.
+          if (sogDecodedBbox && sogDecodedBbox.radius < 5) {
+            sceneOptions.position = [
+              -sogDecodedBbox.center[0],
+              -sogDecodedBbox.center[1],
+              -sogDecodedBbox.center[2],
+            ];
+          }
           if (formatKey) {
             const fmtEnum = (GaussianSplats3D as unknown as { SceneFormat?: Record<string, unknown> }).SceneFormat;
             if (fmtEnum && fmtEnum[formatKey] !== undefined) {
@@ -323,6 +360,11 @@ const GaussianSplatTest: React.FC = () => {
             }
           }
           await v.addSplatScene(url, sceneOptions);
+          // No camera repositioning: Vegetables HQ frames well with the
+          // bbox-centered scene at default camera, and Queen's Hamlet is
+          // a large outdoor scene where "inside the bbox looking at content"
+          // is the natural framing. Auto-frame from outside the bbox put
+          // the camera over empty sky/ground for Queen's.
           lastLoadedRef.current = key;
           if (!cancelled) setLoading(false);
         } catch (err) {
