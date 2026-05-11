@@ -385,10 +385,12 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
     scene.add(terrain);
 
     // ─── Water ─────────────────────────────────────────────────────────────
-    // Large horizontal plane at y≈0 surrounding the island. Animated normal
-    // perturbation reads as gentle ripples; sky-tinted base color so the
-    // water reflects the time-of-day like the fog and mountains.
-    const waterGeo = new THREE.PlaneGeometry(800, 800, 1, 1);
+    // Tessellated plane (256x256) so the vertex shader can actually displace
+    // the surface. Four-component Gerstner sum gives directional swell + chop;
+    // analytic normals from the wave gradient drive Schlick Fresnel, sharper
+    // sun specular, and a horizon-tinted base color that tracks time-of-day.
+    // A foam term lights up where waves crest and along the shoreline.
+    const waterGeo = new THREE.PlaneGeometry(800, 800, 256, 256);
     waterGeo.rotateX(-Math.PI / 2);
     const waterMaterial = new THREE.ShaderMaterial({
       uniforms: {
@@ -397,16 +399,73 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
         uHorizonDay:   { value: new THREE.Color(0.55, 0.78, 0.95) },
         uHorizonDusk:  { value: new THREE.Color(0.96, 0.55, 0.30) },
         uHorizonNight: { value: new THREE.Color(0.04, 0.05, 0.13) },
+        uDeepColor:    { value: new THREE.Color(0.02, 0.10, 0.18) },
+        uShallowTint:  { value: new THREE.Color(0.20, 0.55, 0.65) },
         uDayW:   { value: 0.0 },
         uDuskW:  { value: 0.0 },
         uNightW: { value: 0.0 },
+        uShoreR: { value: terrainSize * 0.50 + 1.0 },
       },
       transparent: true,
       vertexShader: /* glsl */ `
+        uniform float uTime;
         varying vec3 vWorld;
+        varying vec3 vNormal;
+        varying float vCrest;
+
+        // Single Gerstner wave: returns horizontal displacement xz and vertical y.
+        // dx/dz, dy contribute analytic tangents we sum into a normal.
+        vec3 gerstner(vec2 pos, vec2 dir, float steepness, float wavelength, float speed, float t,
+                      inout vec3 tangent, inout vec3 binormal) {
+          float k  = 6.28318530718 / wavelength;
+          float c  = sqrt(9.81 / k);                  // phase speed (g·k)
+          vec2  d  = normalize(dir);
+          float f  = k * (dot(d, pos) - c * speed * t);
+          float a  = steepness / k;
+          // Displacement: x,z are pulled toward crest, y rises in cosine.
+          vec3 disp = vec3(
+            d.x * (a * cos(f)),
+            a * sin(f),
+            d.y * (a * cos(f))
+          );
+          // Accumulate partial derivatives onto running tangent/binormal.
+          tangent  += vec3(
+            -d.x * d.x * (steepness * sin(f)),
+            d.x * (steepness * cos(f)),
+            -d.x * d.y * (steepness * sin(f))
+          );
+          binormal += vec3(
+            -d.x * d.y * (steepness * sin(f)),
+            d.y * (steepness * cos(f)),
+            -d.y * d.y * (steepness * sin(f))
+          );
+          return disp;
+        }
+
         void main() {
-          vec4 wp = modelMatrix * vec4(position, 1.0);
-          vWorld = wp.xyz;
+          vec3 p = position;
+          vec3 tan = vec3(1.0, 0.0, 0.0);
+          vec3 bin = vec3(0.0, 0.0, 1.0);
+
+          // Four overlapping wave trains, mixed scales/directions so the
+          // surface has long swell + short chop without obvious tiling.
+          vec3 d0 = gerstner(p.xz, vec2( 1.0,  0.6), 0.20, 24.0, 0.8, uTime, tan, bin);
+          vec3 d1 = gerstner(p.xz, vec2(-0.7,  1.0), 0.18, 18.0, 0.9, uTime, tan, bin);
+          vec3 d2 = gerstner(p.xz, vec2( 0.3, -1.0), 0.14, 11.0, 1.1, uTime, tan, bin);
+          vec3 d3 = gerstner(p.xz, vec2(-1.0, -0.3), 0.10,  6.5, 1.4, uTime, tan, bin);
+          vec3 disp = d0 + d1 + d2 + d3;
+
+          // Crest term = how steep the wave is here. Used by fragment for foam.
+          vCrest = clamp(disp.y * 0.7 + 0.1, 0.0, 1.0);
+
+          vec3 displaced = p + disp;
+          vec3 nrm = normalize(cross(bin, tan));
+          // Sometimes the cross product flips relative to world-up; reseat it.
+          if (nrm.y < 0.0) nrm = -nrm;
+
+          vec4 wp = modelMatrix * vec4(displaced, 1.0);
+          vWorld  = wp.xyz;
+          vNormal = (modelMatrix * vec4(nrm, 0.0)).xyz;
           gl_Position = projectionMatrix * viewMatrix * wp;
         }
       `,
@@ -414,34 +473,69 @@ export const FluffyGrass: React.FC<FluffyGrassProps> = ({
         uniform float uTime;
         uniform vec3  uSunDir;
         uniform vec3  uHorizonDay, uHorizonDusk, uHorizonNight;
+        uniform vec3  uDeepColor, uShallowTint;
         uniform float uDayW, uDuskW, uNightW;
+        uniform float uShoreR;
         varying vec3  vWorld;
+        varying vec3  vNormal;
+        varying float vCrest;
         ${NOISE_GLSL}
+
+        // Schlick Fresnel for water (n1=1.0, n2=1.33 → F0≈0.02).
+        float fresnelSchlick(float cosTheta) {
+          float F0 = 0.02;
+          return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+        }
 
         void main() {
           vec3 horiz = uHorizonDay  * uDayW
                      + uHorizonDusk * uDuskW
                      + uHorizonNight* uNightW;
 
-          // Two-octave ripples in normal-space. Cheap; reads as choppy water.
+          // Per-pixel detail: ride two value-noise octaves on top of the
+          // Gerstner normal so micro-ripples break specular highlights.
           vec2 q = vWorld.xz;
-          float n1 = vnoise(q * 0.20 + vec2(uTime * 0.10, uTime * 0.06));
-          float n2 = vnoise(q * 0.60 + vec2(-uTime * 0.13, uTime * 0.08));
-          float ripple = n1 * 0.7 + n2 * 0.3;
-          vec3 nrm = normalize(vec3(ripple * 0.6, 1.0, ripple * 0.6));
+          float n1 = vnoise(q * 0.45 + vec2( uTime * 0.18, uTime * 0.11)) - 0.5;
+          float n2 = vnoise(q * 1.40 + vec2(-uTime * 0.22, uTime * 0.16)) - 0.5;
+          vec3 micro = vec3(n1 * 0.4, 0.0, n2 * 0.4);
+          vec3 nrm = normalize(vNormal + micro);
 
-          // Fresnel-ish mix between deep and sky colors.
           vec3 viewV = normalize(cameraPosition - vWorld);
-          float fres = pow(1.0 - clamp(dot(nrm, viewV), 0.0, 1.0), 3.0);
-          vec3 deep = horiz * 0.18;
-          vec3 col  = mix(deep, horiz, fres * 0.85 + 0.10);
+          float NoV = clamp(dot(nrm, viewV), 0.0, 1.0);
+          float F = fresnelSchlick(NoV);
 
-          // Sun glint when the sun is up.
-          vec3 reflV = reflect(-normalize(uSunDir), nrm);
-          float glint = pow(max(dot(reflV, viewV), 0.0), 80.0) * smoothstep(0.0, 0.2, uSunDir.y);
-          col += vec3(1.0, 0.95, 0.85) * glint;
+          // Base color: deep where Fresnel low (looking down), tinted toward
+          // horizon at grazing angles (looking out). Multiply by horizon so
+          // night turns it indigo and dusk turns it copper.
+          vec3 deep    = mix(uDeepColor, uShallowTint, 0.35) * mix(0.6, 1.2, uDayW + 0.4 * uDuskW);
+          vec3 surface = horiz;
+          vec3 col = mix(deep, surface, F * 0.95 + 0.05);
 
-          gl_FragColor = vec4(col, 0.92);
+          // Primary sun glint: tight specular lobe.
+          vec3 sun = normalize(uSunDir);
+          vec3 H = normalize(sun + viewV);
+          float NoH = max(dot(nrm, H), 0.0);
+          float sunUp = smoothstep(-0.05, 0.25, sun.y);
+          float spec = pow(NoH, 220.0) * sunUp * 1.6;
+          // Secondary wider lobe for "sparkle" off micro-ripples.
+          float specBroad = pow(NoH, 32.0) * sunUp * 0.18;
+          col += (vec3(1.0, 0.95, 0.85) * spec) + (vec3(1.0, 0.92, 0.75) * specBroad);
+
+          // Foam on wave crests + a thin foam ring along the shoreline.
+          float distR  = length(vWorld.xz);
+          float shore  = smoothstep(uShoreR + 1.0, uShoreR - 2.5, distR);
+          float crest  = smoothstep(0.55, 0.95, vCrest);
+          float foam   = clamp(shore * 0.7 + crest * 0.6, 0.0, 1.0);
+          // Foam noise so it isn't a uniform band.
+          foam *= vnoise(q * 1.1 + vec2(uTime * 0.3, 0.0)) * 0.6 + 0.5;
+          col = mix(col, vec3(0.95, 0.97, 1.0), foam * 0.75);
+
+          // Slight darkening with depth (distance from center) for a sense of
+          // a real water mass rather than a flat colored plane.
+          float depthFade = smoothstep(0.0, 220.0, distR);
+          col *= mix(1.0, 0.78, depthFade * 0.55);
+
+          gl_FragColor = vec4(col, 0.95);
         }
       `,
     });

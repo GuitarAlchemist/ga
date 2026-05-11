@@ -75,3 +75,5 @@ export async function fetchHierarchyItems(variables: HierarchyItemsVariables): P
   const data = await postGraphQL<{ musicHierarchyItems: MusicHierarchyItem[] }>(query, variables);
   return data.musicHierarchyItems;
 }
+
+export const fetchAllHierarchyItems = fetchHierarchyItems;

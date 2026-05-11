@@ -62,7 +62,11 @@ static async Task<int> RunCurateAsync(string[] args)
         return 3;
     }
 
-    var chatClient = AnthropicProvider.CreateChatClient(config, AnthropicProvider.DefaultModel);
+    // 5-minute HTTP timeout — Sonnet 4.6 at MaxOutputTokens=32k can take
+    // 60–150 s wall-clock to generate. The SDK default of 100 s was hit
+    // during the first end-to-end smoke (2026-05-11).
+    var chatClient = AnthropicProvider.CreateChatClient(
+        config, AnthropicProvider.DefaultModel, timeout: TimeSpan.FromMinutes(5));
     var curator = new MemoryCurator(chatClient,
         LoggerFactory.Create(b => b.AddSimpleConsole()).CreateLogger<MemoryCurator>());
 

@@ -245,6 +245,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'gaussian-splat',
+    title: 'Gaussian Splat Viewer',
+    description: 'Native Three.js renderer for 3D Gaussian Splat captures, streaming compressed PLY directly from SuperSplat CDN. Includes Bumblebee macro preset (PLY) and SOG-format scenes (Vegetables HQ, Queen\'s Hamlet) that show a friendly format-not-supported message until upstream PR #478 lands.',
+    technology: 'Three.js + @mkkellogg/gaussian-splats-3d',
+    path: '/test/gaussian-splat',
+    features: ['3D Gaussian Splatting', 'Compressed PLY Streaming', 'Multi-Version CDN Resolver', 'CPU Worker Sort', 'SOG Format Detection', 'Custom Scene URL'],
+    status: 'complete',
+  },
+  {
     id: 'sunflower-field',
     title: 'Sunflower Field',
     description: 'Hyper-real procedural sunflower rows with instanced flowers, canvas-textured heads, golden-hour light, and Gaussian pollen haze',
