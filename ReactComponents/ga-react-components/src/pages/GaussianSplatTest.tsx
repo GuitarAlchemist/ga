@@ -1,15 +1,32 @@
 /**
  * Gaussian Splat viewer — native Three.js renderer (no iframe, no PlayCanvas).
  *
- * Loads a .compressed.ply from SuperSplat's CDN by scene id and renders it via
- * @mkkellogg/gaussian-splats-3d on top of our own Three.js canvas. SuperSplat's
- * newer SOG format (WebP textures + meta.json) isn't decodable by the lib yet,
- * so SOG scenes display a friendly fallback message — see PR #478 upstream.
+ * Three source kinds:
+ *   - superspl-id: probes SuperSplat CDN /v1../v9 for compressed PLY / SOG.
+ *   - direct-url:  any http(s) URL pointing at .ply / .compressed.ply /
+ *                  .splat / .ksplat; format detected from extension.
+ *   - local-file:  user-picked file (any of the above) loaded via blob URL.
+ *
+ * Renders via @mkkellogg/gaussian-splats-3d. SuperSplat's newer SOG format
+ * (WebP textures + meta.json) isn't decodable by the lib yet, so SOG scenes
+ * surface a friendly fallback — see PR #478 upstream.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
-import { Box, Button, Chip, LinearProgress, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  LinearProgress,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
 interface ScenePreset {
@@ -24,22 +41,69 @@ const PRESETS: ScenePreset[] = [
 ];
 const DEFAULT_SCENE_ID = PRESETS[0].id;
 const SUPERSPLAT_CDN = 'https://d28zzqy0iyovbz.cloudfront.net';
-
-// SuperSplat re-encodes scenes under per-scene version paths (v1..v9). v1 and
-// v7 cover the bulk of scenes I've sampled; the rest are tried as fallbacks.
 const VERSION_PATHS = ['v1', 'v7', 'v2', 'v3', 'v4', 'v5', 'v6', 'v8', 'v9'];
 
-interface ResolvedScene {
-  format: 'ply' | 'sog';
-  version: string;
-  url: string; // populated for ply only
+// ───────────────────────────── source types ─────────────────────────────
+
+type SplatSource =
+  | { kind: 'superspl-id'; sceneId: string }
+  | { kind: 'direct-url';  url: string; label: string }
+  | { kind: 'local-file';  file: File; objectUrl: string; label: string };
+
+function sourceKey(s: SplatSource): string {
+  switch (s.kind) {
+    case 'superspl-id': return `superspl:${s.sceneId}`;
+    case 'direct-url':  return `url:${s.url}`;
+    case 'local-file':  return `file:${s.objectUrl}`;
+  }
 }
 
-function extractSceneId(input: string): string {
+function sourceLabel(s: SplatSource): string {
+  switch (s.kind) {
+    case 'superspl-id': return s.sceneId;
+    case 'direct-url':  return s.label;
+    case 'local-file':  return s.label;
+  }
+}
+
+function parseInputToSource(input: string): SplatSource {
   const trimmed = input.trim();
-  if (!trimmed) return DEFAULT_SCENE_ID;
-  const match = trimmed.match(/scene\/([a-zA-Z0-9-]+)/);
-  return match ? match[1] : trimmed;
+  if (!trimmed) return { kind: 'superspl-id', sceneId: DEFAULT_SCENE_ID };
+
+  // SuperSplat scene URL: https://superspl.at/scene/<id>
+  const m = trimmed.match(/superspl\.at\/scene\/([a-zA-Z0-9-]+)/i);
+  if (m) return { kind: 'superspl-id', sceneId: m[1] };
+
+  // Direct URL — let the lib fetch it.
+  if (/^https?:\/\//i.test(trimmed)) {
+    const filename = trimmed.split('/').pop()?.split('?')[0] || trimmed;
+    return { kind: 'direct-url', url: trimmed, label: filename };
+  }
+
+  // Bare alphanumeric: treat as a SuperSplat scene id.
+  if (/^[a-zA-Z0-9-]+$/.test(trimmed)) {
+    return { kind: 'superspl-id', sceneId: trimmed };
+  }
+
+  // Anything else: assume it's a URL fragment / unusual scheme.
+  return { kind: 'direct-url', url: trimmed, label: trimmed };
+}
+
+// Format hint for the lib; for non-SuperSplat blob/data URLs we have to be
+// explicit because the lib can't sniff format without an extension.
+type LibFormatKey = 'Ply' | 'KSplat' | 'Splat';
+function detectFormatFromName(name: string): LibFormatKey | undefined {
+  const n = name.toLowerCase();
+  if (n.endsWith('.compressed.ply') || n.endsWith('.ply')) return 'Ply';
+  if (n.endsWith('.ksplat')) return 'KSplat';
+  if (n.endsWith('.splat'))  return 'Splat';
+  return undefined;
+}
+
+interface SuperSplatResolution {
+  format: 'ply' | 'sog';
+  version: string;
+  url: string; // for ply only
 }
 
 async function probe(url: string): Promise<boolean> {
@@ -51,7 +115,7 @@ async function probe(url: string): Promise<boolean> {
   }
 }
 
-async function resolveScene(sceneId: string): Promise<ResolvedScene | null> {
+async function resolveSuperSplatScene(sceneId: string): Promise<SuperSplatResolution | null> {
   for (const v of VERSION_PATHS) {
     const plyUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/scene.compressed.ply`;
     const sogUrl = `${SUPERSPLAT_CDN}/${sceneId}/${v}/meta.json`;
@@ -62,25 +126,66 @@ async function resolveScene(sceneId: string): Promise<ResolvedScene | null> {
   return null;
 }
 
+// ───────────────────────────── component ─────────────────────────────
+
 const GaussianSplatTest: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<GaussianSplats3D.Viewer | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks the object URL of the currently displayed local file so we can
+  // revoke it when a new source replaces it. URLs from earlier files would
+  // otherwise leak the file's memory until the page is closed.
+  const lastObjectUrlRef = useRef<string | null>(null);
 
   const [draftInput, setDraftInput] = useState(`https://superspl.at/scene/${DEFAULT_SCENE_ID}`);
-  const [sceneId, setSceneId] = useState(DEFAULT_SCENE_ID);
+  const [source, setSource] = useState<SplatSource>({ kind: 'superspl-id', sceneId: DEFAULT_SCENE_ID });
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const replaceSource = useCallback((next: SplatSource) => {
+    setSource((prev) => {
+      // Revoke any previous blob URL we created; ignore URLs we didn't make.
+      if (lastObjectUrlRef.current && lastObjectUrlRef.current !== (next.kind === 'local-file' ? next.objectUrl : null)) {
+        try { URL.revokeObjectURL(lastObjectUrlRef.current); } catch { /* already revoked */ }
+        lastObjectUrlRef.current = null;
+      }
+      if (next.kind === 'local-file') lastObjectUrlRef.current = next.objectUrl;
+      // Avoid no-op state updates that would refire effects unnecessarily.
+      if (sourceKey(prev) === sourceKey(next)) return prev;
+      return next;
+    });
+  }, []);
+
   const handleLoad = useCallback(() => {
-    const next = extractSceneId(draftInput);
-    if (next !== sceneId) setSceneId(next);
-  }, [draftInput, sceneId]);
+    replaceSource(parseInputToSource(draftInput));
+  }, [draftInput, replaceSource]);
 
   const handlePreset = useCallback((preset: ScenePreset) => {
     setDraftInput(`https://superspl.at/scene/${preset.id}`);
-    if (preset.id !== sceneId) setSceneId(preset.id);
-  }, [sceneId]);
+    replaceSource({ kind: 'superspl-id', sceneId: preset.id });
+  }, [replaceSource]);
+
+  const handleFile = useCallback((file: File) => {
+    const objectUrl = URL.createObjectURL(file);
+    setDraftInput(file.name);
+    replaceSource({ kind: 'local-file', file, objectUrl, label: file.name });
+  }, [replaceSource]);
+
+  const onFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    // Allow re-picking the same file later.
+    e.target.value = '';
+  }, [handleFile]);
+
+  // Revoke any outstanding blob URL when the page unmounts.
+  useEffect(() => () => {
+    if (lastObjectUrlRef.current) {
+      try { URL.revokeObjectURL(lastObjectUrlRef.current); } catch { /* already revoked */ }
+      lastObjectUrlRef.current = null;
+    }
+  }, []);
 
   // Gotchas this hook exists to work around — keep this comment, the wins
   // here cost a session of experimentation:
@@ -128,6 +233,7 @@ const GaussianSplatTest: React.FC = () => {
     };
 
     let cancelled = false;
+    const key = sourceKey(source);
     setLoading(true);
     setProgress(0);
     setError(null);
@@ -135,10 +241,11 @@ const GaussianSplatTest: React.FC = () => {
     loadChainRef.current = loadChainRef.current
       .catch(() => undefined)
       .then(async () => {
-        if (lastLoadedRef.current === sceneId) {
+        if (lastLoadedRef.current === key) {
           if (!cancelled) setLoading(false);
           return;
         }
+
         const clearLoadedSplat = async () => {
           const existing = viewerRef.current;
           if (!existing || lastLoadedRef.current === null) return;
@@ -147,45 +254,76 @@ const GaussianSplatTest: React.FC = () => {
           lastLoadedRef.current = null;
         };
 
-        const resolved = await resolveScene(sceneId);
-        if (!resolved) {
-          await clearLoadedSplat();
-          if (!cancelled) {
-            setError(`Scene ${sceneId} not found on the SuperSplat CDN under any known version path (v1–v9).`);
-            setLoading(false);
+        // Resolve to a concrete URL + format hint per source kind.
+        let url: string;
+        let formatKey: LibFormatKey | undefined;
+
+        if (source.kind === 'superspl-id') {
+          const resolved = await resolveSuperSplatScene(source.sceneId);
+          if (!resolved) {
+            await clearLoadedSplat();
+            if (!cancelled) {
+              setError(`Scene ${source.sceneId} not found on the SuperSplat CDN under any known version path (v1–v9).`);
+              setLoading(false);
+            }
+            return;
           }
-          return;
-        }
-        if (resolved.format === 'sog') {
-          await clearLoadedSplat();
-          if (!cancelled) {
-            setError(
-              `Scene ${sceneId} (${resolved.version}) uses SuperSplat's newer SOG format (WebP textures + meta.json). ` +
-              `The Three.js renderer here (@mkkellogg/gaussian-splats-3d 0.4.7) only supports the older compressed PLY. ` +
-              `SOG support is in flight upstream — see github.com/mkkellogg/GaussianSplats3D/pull/478.`
-            );
-            setLoading(false);
+          if (resolved.format === 'sog') {
+            await clearLoadedSplat();
+            if (!cancelled) {
+              setError(
+                `Scene ${source.sceneId} (${resolved.version}) uses SuperSplat's newer SOG format (WebP textures + meta.json). ` +
+                `The Three.js renderer here (@mkkellogg/gaussian-splats-3d 0.4.7) only supports the older compressed PLY. ` +
+                `SOG support is in flight upstream — see github.com/mkkellogg/GaussianSplats3D/pull/478.`
+              );
+              setLoading(false);
+            }
+            return;
           }
-          return;
+          url = resolved.url;
+          formatKey = 'Ply';
+        } else if (source.kind === 'direct-url') {
+          url = source.url;
+          formatKey = detectFormatFromName(source.label) ?? detectFormatFromName(source.url);
+        } else {
+          url = source.objectUrl;
+          formatKey = detectFormatFromName(source.label);
+          if (!formatKey) {
+            await clearLoadedSplat();
+            if (!cancelled) {
+              setError(
+                `Couldn't detect splat format from "${source.label}". Supported extensions: .ply, .compressed.ply, .splat, .ksplat.`
+              );
+              setLoading(false);
+            }
+            return;
+          }
         }
+
         const v = ensureViewer();
         try {
           if (lastLoadedRef.current !== null && v.getSceneCount?.() > 0) {
             await v.removeSplatScene(0);
           }
-          await v.addSplatScene(resolved.url, {
+          const sceneOptions: Record<string, unknown> = {
             progressiveLoad: false,
             showLoadingUI: false,
             // SuperSplat / COLMAP captures author +Y as gravity (down). Rotate
             // 180° around the X axis (quaternion x,y,z,w = 1,0,0,0) so subjects
-            // render right-side-up under Three.js's Y-up convention. Applies to
-            // the splat geometry itself so cached viewers also pick it up.
+            // render right-side-up under Three.js's Y-up convention.
             rotation: [1, 0, 0, 0],
             onProgress: (percent: number) => {
               if (!cancelled) setProgress(percent);
             },
-          });
-          lastLoadedRef.current = sceneId;
+          };
+          if (formatKey) {
+            const fmtEnum = (GaussianSplats3D as unknown as { SceneFormat?: Record<string, unknown> }).SceneFormat;
+            if (fmtEnum && fmtEnum[formatKey] !== undefined) {
+              sceneOptions.format = fmtEnum[formatKey];
+            }
+          }
+          await v.addSplatScene(url, sceneOptions);
+          lastLoadedRef.current = key;
           if (!cancelled) setLoading(false);
         } catch (err) {
           if (!cancelled) {
@@ -199,14 +337,17 @@ const GaussianSplatTest: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [sceneId]);
+  }, [source]);
+
+  const currentLabel = sourceLabel(source);
+  const isPresetSelected = (preset: ScenePreset) =>
+    source.kind === 'superspl-id' && source.sceneId === preset.id;
 
   return (
     <DemoErrorBoundary demoName="Gaussian Splat">
       <Box
         sx={{
           width: '100%',
-          // 100dvh respects mobile address-bar collapse; 100vh fallback for browsers without dvh.
           height: ['100vh', '100dvh'],
           bgcolor: '#05050d',
           display: 'flex',
@@ -225,8 +366,6 @@ const GaussianSplatTest: React.FC = () => {
             borderRadius: 0,
             borderBottom: '1px solid rgba(189,164,255,0.24)',
             display: 'flex',
-            // Stack rows on phones, single row on tablets+: header rows are
-            // title/badge, then presets, then URL+Load on narrow viewports.
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: { xs: 'stretch', md: 'center' },
             gap: { xs: 0.75, md: 1.5 },
@@ -247,27 +386,29 @@ const GaussianSplatTest: React.FC = () => {
             spacing={0.75}
             sx={{ flexWrap: 'wrap', rowGap: 0.75, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
           >
-            {PRESETS.map((preset) => (
-              <Chip
-                key={preset.id}
-                label={preset.label}
-                clickable
-                onClick={() => handlePreset(preset)}
-                variant={preset.id === sceneId ? 'filled' : 'outlined'}
-                sx={{
-                  // Bigger touch target on phones (32px) vs desktop "small" (24px).
-                  height: { xs: 32, sm: 26 },
-                  fontSize: { xs: '0.8rem', sm: '0.75rem' },
-                  color: preset.id === sceneId ? '#0d0d18' : '#bda4ff',
-                  bgcolor: preset.id === sceneId ? '#bda4ff' : 'transparent',
-                  borderColor: 'rgba(189,164,255,0.4)',
-                  fontWeight: preset.id === sceneId ? 600 : 400,
-                  '&:hover': {
-                    bgcolor: preset.id === sceneId ? '#bda4ff' : 'rgba(189,164,255,0.12)',
-                  },
-                }}
-              />
-            ))}
+            {PRESETS.map((preset) => {
+              const selected = isPresetSelected(preset);
+              return (
+                <Chip
+                  key={preset.id}
+                  label={preset.label}
+                  clickable
+                  onClick={() => handlePreset(preset)}
+                  variant={selected ? 'filled' : 'outlined'}
+                  sx={{
+                    height: { xs: 32, sm: 26 },
+                    fontSize: { xs: '0.8rem', sm: '0.75rem' },
+                    color: selected ? '#0d0d18' : '#bda4ff',
+                    bgcolor: selected ? '#bda4ff' : 'transparent',
+                    borderColor: 'rgba(189,164,255,0.4)',
+                    fontWeight: selected ? 600 : 400,
+                    '&:hover': {
+                      bgcolor: selected ? '#bda4ff' : 'rgba(189,164,255,0.12)',
+                    },
+                  }}
+                />
+              );
+            })}
           </Stack>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: 1, minWidth: 0 }}>
             <TextField
@@ -275,7 +416,7 @@ const GaussianSplatTest: React.FC = () => {
               value={draftInput}
               onChange={(e) => setDraftInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleLoad(); }}
-              placeholder="superspl.at scene URL or id"
+              placeholder="superspl.at URL, scene id, or direct .ply/.splat/.ksplat URL"
               sx={{
                 flex: 1,
                 minWidth: 0,
@@ -301,6 +442,29 @@ const GaussianSplatTest: React.FC = () => {
             >
               Load
             </Button>
+            <Tooltip title="Open a local .ply, .compressed.ply, .splat, or .ksplat file">
+              <IconButton
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+                sx={{
+                  color: '#bda4ff',
+                  border: '1px solid rgba(189,164,255,0.4)',
+                  borderRadius: 1,
+                  width: 36,
+                  height: 36,
+                }}
+                aria-label="Open local splat file"
+              >
+                <UploadFileIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".ply,.splat,.ksplat"
+              onChange={onFileInputChange}
+              style={{ display: 'none' }}
+            />
           </Box>
           <Typography
             variant="caption"
@@ -308,9 +472,16 @@ const GaussianSplatTest: React.FC = () => {
               color: '#8b949e',
               fontFamily: 'monospace',
               display: { xs: 'none', md: 'inline' },
+              maxWidth: 220,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
+            title={currentLabel}
           >
-            scene: {sceneId}
+            {source.kind === 'superspl-id' && `scene: ${source.sceneId}`}
+            {source.kind === 'direct-url'  && `url: ${currentLabel}`}
+            {source.kind === 'local-file'  && `file: ${currentLabel}`}
           </Typography>
         </Paper>
 
@@ -320,8 +491,6 @@ const GaussianSplatTest: React.FC = () => {
             sx={{
               position: 'absolute',
               inset: 0,
-              // touch-action: none lets the lib's OrbitControls own the gesture
-              // instead of the browser stealing it for scroll/zoom.
               touchAction: 'none',
               overscrollBehavior: 'contain',
               '& canvas': {
@@ -353,7 +522,7 @@ const GaussianSplatTest: React.FC = () => {
                 <LinearProgress variant="determinate" value={progress} />
               </Box>
               <Typography variant="caption" sx={{ color: '#8b949e' }}>
-                Streaming compressed PLY from SuperSplat CDN.
+                {source.kind === 'local-file' ? 'Decoding local splat file.' : 'Streaming splat data.'}
               </Typography>
             </Box>
           )}
