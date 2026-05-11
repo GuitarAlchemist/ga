@@ -98,7 +98,7 @@ public class LegacyResponseMigrationTests
         var entry = new MemoryEntry("response_x", "response", "answer", Tags: [], Timestamp: t0, SessionId: null);
 
         var priorTurn = new TranscriptTurnEntry(
-            Id:        LegacyResponseMigration.DeriveId(entry.Key, entry.Timestamp),
+            Id:        LegacyResponseMigration.DeriveId(entry.SessionId, entry.Key, entry.Timestamp),
             SessionId: LegacyResponseMigration.LegacySessionId,
             Role:      "assistant",
             Content:   "answer",
@@ -122,8 +122,8 @@ public class LegacyResponseMigrationTests
     {
         var ts = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
 
-        var id1 = LegacyResponseMigration.DeriveId("response_x", ts);
-        var id2 = LegacyResponseMigration.DeriveId("response_x", ts);
+        var id1 = LegacyResponseMigration.DeriveId(sessionId: null, "response_x", ts);
+        var id2 = LegacyResponseMigration.DeriveId(sessionId: null, "response_x", ts);
 
         Assert.That(id1, Is.EqualTo(id2));
         Assert.That(id1, Does.StartWith("legacy-"));
@@ -134,8 +134,8 @@ public class LegacyResponseMigrationTests
     public void DeriveId_DiffersForDifferentKeys()
     {
         var ts = DateTimeOffset.UtcNow;
-        var a = LegacyResponseMigration.DeriveId("response_a", ts);
-        var b = LegacyResponseMigration.DeriveId("response_b", ts);
+        var a = LegacyResponseMigration.DeriveId(sessionId: null, "response_a", ts);
+        var b = LegacyResponseMigration.DeriveId(sessionId: null, "response_b", ts);
         Assert.That(a, Is.Not.EqualTo(b));
     }
 
@@ -144,9 +144,26 @@ public class LegacyResponseMigrationTests
     {
         var t1 = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
         var t2 = t1.AddSeconds(1);
-        var a = LegacyResponseMigration.DeriveId("response_x", t1);
-        var b = LegacyResponseMigration.DeriveId("response_x", t2);
+        var a = LegacyResponseMigration.DeriveId(sessionId: null, "response_x", t1);
+        var b = LegacyResponseMigration.DeriveId(sessionId: null, "response_x", t2);
         Assert.That(a, Is.Not.EqualTo(b));
+    }
+
+    [Test]
+    public void DeriveId_DiffersForDifferentSessionIds()
+    {
+        // PR #176 review (LOW-DeriveId-Session) regression pin: even with
+        // identical (Key, Timestamp), two different SessionIds must produce
+        // distinct ids. Without this, per-session entries sharing a
+        // sub-second timestamp would collide and lose content on
+        // ChatTranscriptStore.Load()'s dictionary dedupe.
+        var ts = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
+        var globalId  = LegacyResponseMigration.DeriveId(sessionId: null,         "k", ts);
+        var sessionA  = LegacyResponseMigration.DeriveId(sessionId: "session-A",  "k", ts);
+        var sessionB  = LegacyResponseMigration.DeriveId(sessionId: "session-B",  "k", ts);
+        Assert.That(globalId, Is.Not.EqualTo(sessionA));
+        Assert.That(sessionA, Is.Not.EqualTo(sessionB));
+        Assert.That(globalId, Is.Not.EqualTo(sessionB));
     }
 
     [Test]

@@ -101,7 +101,14 @@ public static class LegacyResponseMigration
                 continue;
             }
 
-            var id = DeriveId(entry.Key, entry.Timestamp);
+            // PR #176 review (correctness LOW-DeriveId-Session): include
+            // the source SessionId. The historic store was empirically
+            // global (SessionId=null), but if a legacy file ever contains
+            // per-session entries sharing (Key, Timestamp) across different
+            // sessions, a (Key+Timestamp)-only hash would collide and
+            // silently drop content on ChatTranscriptStore.Load()'s dedupe.
+            // Costs nothing — closes a future-drift foot-gun.
+            var id = DeriveId(entry.SessionId, entry.Key, entry.Timestamp);
             if (existingIds.Contains(id))
             {
                 // Already migrated in a prior run — drop it from the source
@@ -134,15 +141,24 @@ public static class LegacyResponseMigration
 
     /// <summary>
     /// Deterministic transcript-turn id for a legacy memory entry. The
-    /// <c>(Key, Timestamp)</c> pair uniquely identifies a legacy entry —
-    /// the historic <see cref="MemoryStore"/> rejected duplicate keys with
-    /// the same SessionId, so collisions within the legacy partition are
-    /// impossible by construction.
+    /// <c>(SessionId, Key, Timestamp)</c> triple uniquely identifies a
+    /// legacy entry — MemoryStore's primary key is <c>(SessionId, Key)</c>,
+    /// so any two entries in the same source file are distinguishable
+    /// by that key plus their timestamp. Null SessionId (the global
+    /// partition) is normalized to the empty string in the hash payload
+    /// so global vs. session-scoped entries with the same Key/Timestamp
+    /// don't collide.
     /// </summary>
-    public static string DeriveId(string key, DateTimeOffset timestamp)
+    /// <remarks>
+    /// PR #176 review (correctness LOW-DeriveId-Session) added the
+    /// SessionId dimension. The historic store was empirically global,
+    /// but the hash now defends against any future legacy file with
+    /// per-session response entries.
+    /// </remarks>
+    public static string DeriveId(string? sessionId, string key, DateTimeOffset timestamp)
     {
         ArgumentException.ThrowIfNullOrEmpty(key);
-        var payload = $"legacy|{key}|{timestamp:O}";
+        var payload = $"legacy|{sessionId ?? string.Empty}|{key}|{timestamp:O}";
         var bytes   = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
         return "legacy-" + Convert.ToHexString(bytes)[..24].ToLowerInvariant();
     }

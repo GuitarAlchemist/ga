@@ -236,7 +236,10 @@ static int RunMigrateTranscripts(string[] args)
     }
 
     // ── --apply path ─────────────────────────────────────────────────────
-    var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
+    // PR #176 review (correctness MED-2): include milliseconds so a same-
+    // second re-run after an aborted apply doesn't hit a backup-name
+    // collision against File.Copy's overwrite:false guard.
+    var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
     var memoryBackup = memoryPath + ".bak-" + stamp;
     var transcriptBackup = File.Exists(transcriptPath) ? transcriptPath + ".bak-" + stamp : null;
 
@@ -262,6 +265,19 @@ static int RunMigrateTranscripts(string[] args)
     Console.WriteLine();
     Console.WriteLine("Done. Re-run `ga-memory migrate-transcripts` to verify it's a no-op.");
     Console.WriteLine($"Backups retained at {memoryBackup}" + (transcriptBackup is not null ? $" and {transcriptBackup}" : "") + " — delete after you've verified the chatbot still boots.");
+    // PR #176 review (correctness MED-3): document the recovery path. The
+    // two-file write isn't atomic — if the process is killed between the
+    // transcripts.json write and the memory.json write, transcripts have
+    // the legacy turns but memory.json still has the source response
+    // entries. Re-running --apply uses the deterministic-id check in
+    // LegacyResponseMigration.Plan to route them to EntriesAlreadyMigrated
+    // and drop them from memory.json. Don't restore from .bak — that
+    // discards correct work.
+    Console.WriteLine();
+    Console.WriteLine("If a crash interrupted this run (you see entries in both files), simply re-run");
+    Console.WriteLine("`ga-memory migrate-transcripts --apply` — the migration is idempotent and the");
+    Console.WriteLine("re-run will detect already-migrated entries and finish the drain from memory.json.");
+    Console.WriteLine("DO NOT restore from .bak in that case — that discards correct work.");
     return 0;
 }
 
