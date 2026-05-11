@@ -203,39 +203,61 @@ const GaussianSplatTest: React.FC = () => {
 
   return (
     <DemoErrorBoundary demoName="Gaussian Splat">
-      <Box sx={{ width: '100%', height: '100vh', bgcolor: '#05050d', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <Box
+        sx={{
+          width: '100%',
+          // 100dvh respects mobile address-bar collapse; 100vh fallback for browsers without dvh.
+          height: ['100vh', '100dvh'],
+          bgcolor: '#05050d',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
         <Paper
           elevation={0}
           sx={{
-            px: 2,
-            py: 1.25,
+            px: { xs: 1, sm: 2 },
+            py: { xs: 0.75, sm: 1.25 },
             bgcolor: 'rgba(5,5,13,0.92)',
             color: '#f5f0ff',
             borderRadius: 0,
             borderBottom: '1px solid rgba(189,164,255,0.24)',
             display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
+            // Stack rows on phones, single row on tablets+: header rows are
+            // title/badge, then presets, then URL+Load on narrow viewports.
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'stretch', md: 'center' },
+            gap: { xs: 0.75, md: 1.5 },
             flexWrap: 'wrap',
             zIndex: 2,
           }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            Gaussian Splat Viewer
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#bda4ff' }}>
-            Three.js · @mkkellogg/gaussian-splats-3d
-          </Typography>
-          <Stack direction="row" spacing={0.75}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Gaussian Splat Viewer
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#bda4ff', display: { xs: 'none', sm: 'inline' } }}>
+              Three.js · @mkkellogg/gaussian-splats-3d
+            </Typography>
+          </Box>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            sx={{ flexWrap: 'wrap', rowGap: 0.75, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
+          >
             {PRESETS.map((preset) => (
               <Chip
                 key={preset.id}
                 label={preset.label}
-                size="small"
                 clickable
                 onClick={() => handlePreset(preset)}
                 variant={preset.id === sceneId ? 'filled' : 'outlined'}
                 sx={{
+                  // Bigger touch target on phones (32px) vs desktop "small" (24px).
+                  height: { xs: 32, sm: 26 },
+                  fontSize: { xs: '0.8rem', sm: '0.75rem' },
                   color: preset.id === sceneId ? '#0d0d18' : '#bda4ff',
                   bgcolor: preset.id === sceneId ? '#bda4ff' : 'transparent',
                   borderColor: 'rgba(189,164,255,0.4)',
@@ -247,33 +269,47 @@ const GaussianSplatTest: React.FC = () => {
               />
             ))}
           </Stack>
-          <TextField
-            size="small"
-            value={draftInput}
-            onChange={(e) => setDraftInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleLoad(); }}
-            placeholder="superspl.at scene URL or id"
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flex: 1, minWidth: 0 }}>
+            <TextField
+              size="small"
+              value={draftInput}
+              onChange={(e) => setDraftInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleLoad(); }}
+              placeholder="superspl.at scene URL or id"
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: '#0d1117',
+                  color: 'rgba(255,255,255,0.87)',
+                  '& fieldset': { borderColor: '#30363d' },
+                  '&:hover fieldset': { borderColor: '#58a6ff' },
+                },
+                '& input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+              }}
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleLoad}
+              sx={{
+                color: '#bda4ff',
+                borderColor: 'rgba(189,164,255,0.4)',
+                minWidth: 64,
+                px: 1.5,
+              }}
+            >
+              Load
+            </Button>
+          </Box>
+          <Typography
+            variant="caption"
             sx={{
-              flex: 1,
-              minWidth: 240,
-              '& .MuiOutlinedInput-root': {
-                bgcolor: '#0d1117',
-                color: 'rgba(255,255,255,0.87)',
-                '& fieldset': { borderColor: '#30363d' },
-                '&:hover fieldset': { borderColor: '#58a6ff' },
-              },
-              '& input::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
+              color: '#8b949e',
+              fontFamily: 'monospace',
+              display: { xs: 'none', md: 'inline' },
             }}
-          />
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleLoad}
-            sx={{ color: '#bda4ff', borderColor: 'rgba(189,164,255,0.4)' }}
           >
-            Load
-          </Button>
-          <Typography variant="caption" sx={{ color: '#8b949e', fontFamily: 'monospace' }}>
             scene: {sceneId}
           </Typography>
         </Paper>
@@ -284,7 +320,16 @@ const GaussianSplatTest: React.FC = () => {
             sx={{
               position: 'absolute',
               inset: 0,
-              '& canvas': { display: 'block', width: '100%', height: '100%' },
+              // touch-action: none lets the lib's OrbitControls own the gesture
+              // instead of the browser stealing it for scroll/zoom.
+              touchAction: 'none',
+              overscrollBehavior: 'contain',
+              '& canvas': {
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                touchAction: 'none',
+              },
             }}
           />
           {loading && !error && (
@@ -304,7 +349,7 @@ const GaussianSplatTest: React.FC = () => {
               <Typography variant="body2" sx={{ color: '#f5f0ff' }}>
                 Loading splat… {Math.round(progress)}%
               </Typography>
-              <Box sx={{ width: 280 }}>
+              <Box sx={{ width: { xs: '70vw', sm: 280 }, maxWidth: 320 }}>
                 <LinearProgress variant="determinate" value={progress} />
               </Box>
               <Typography variant="caption" sx={{ color: '#8b949e' }}>
