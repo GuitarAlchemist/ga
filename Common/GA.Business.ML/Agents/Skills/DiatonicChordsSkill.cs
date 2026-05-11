@@ -30,13 +30,24 @@ public sealed class DiatonicChordsSkill(
         "ga_dsl_eval to the domain.diatonicChords closure so enharmonic " +
         "spelling is correct in less-common keys (Gb major, F# minor).";
 
+    // PR (post-baseline-2026-05-11 corpus v0.4) — added the "list chords
+    // in <key>" and "<degree> chord in <key>" surfaces that were
+    // misrouting. Eval failures: "list the chords in G major" → was
+    // routing to chordsubstitution; "what is the IV chord in A major" →
+    // was routing to chordinfo. Both shapes are diatonic-chord queries —
+    // the user wants the chords belonging to the key, identified by
+    // degree or as a list.
     public override IReadOnlyList<string> ExamplePrompts =>
     [
         "Give me the diatonic chords in C major",
         "What are the seven chords in G major?",
         "Diatonic chords in A minor",
         "Chords of Bb major",
-        "Harmonic series of F# minor",
         "All chords in the key of D",
+        "list the chords in G major",
+        "what is the IV chord in A major",
+        "what's the V chord in F",
+        "ii chord of E minor",
+        "what chord is the I in D major",
     ];
 }

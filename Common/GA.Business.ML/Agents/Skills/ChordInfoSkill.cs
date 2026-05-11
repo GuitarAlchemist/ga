@@ -43,6 +43,11 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "lookup: Cmaj7 returns C E G B, Dm7 returns D F A C, F#m7b5 " +
         "returns F# A C E. Pure domain computation, zero LLM calls.";
 
+    // PR (post-baseline-2026-05-11 corpus v0.4) — added the "tell me
+    // about <chord>" and "what makes a chord X" surfaces. Failing eval
+    // prompts: "tell me about Dm7" → was routing to modes; "what makes
+    // a chord a major seventh" → was routing to diatonicchords. Both
+    // are spell-the-chord asks dressed in different phrasing.
     public IReadOnlyList<string> ExamplePrompts =>
     [
         "What is a C major chord?",
@@ -52,6 +57,11 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "Spell a B7 chord",
         "What notes are in a Cmaj7?",
         "Tell me the tones in F#m7b5",
+        "tell me about Dm7",
+        "tell me about a Cmaj7 chord",
+        "what makes a chord a major seventh",
+        "what makes a chord diminished",
+        "what makes a chord a dominant seventh",
     ];
 
     public bool CanHandle(string message)

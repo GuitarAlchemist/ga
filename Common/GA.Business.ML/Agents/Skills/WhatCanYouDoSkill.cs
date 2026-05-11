@@ -24,14 +24,25 @@ public sealed class WhatCanYouDoSkill(ILogger<WhatCanYouDoSkill> logger) : IOrch
         "interval computation, fret-span analysis. Discoverability skill for " +
         "first-time visitors. No LLM call.";
 
+    // PR (post-baseline-2026-05-11 corpus v0.4) — expanded to cover the
+    // help-discovery / capability-exploration surface that the labeled
+    // corpus uses. Prior set led to 2/5 prompts ("help me figure out what
+    // to ask", "show me what you know") returning conf=0.00 — no embedding
+    // match at all, not even close. Lowering the router threshold didn't
+    // help (verified at 0.60 — same failures). These prompts need to BE
+    // examples to lift them above threshold.
     public IReadOnlyList<string> ExamplePrompts =>
     [
-        "What can you do?",
-        "What can the chatbot do?",
-        "How do I use the chatbot?",
-        "What are your capabilities?",
-        "What features do you have?",
-        "List the chatbot's features",
+        "what can you do",
+        "what can the chatbot do",
+        "what are your capabilities",
+        "what features do you have",
+        "list the chatbot's features",
+        "show me what you know",
+        "help me figure out what to ask",
+        "what do you know about music",
+        "what can I ask",
+        "how do I use the chatbot",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only
