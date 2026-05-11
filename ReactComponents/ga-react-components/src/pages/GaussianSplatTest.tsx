@@ -39,6 +39,7 @@ const PRESETS: ScenePreset[] = [
   { id: 'cf6ac78e', label: 'Bumblebee (PLY)' },
   { id: 'f592397a', label: 'Vegetables HQ (SOG)' },
   { id: 'ff1d0393', label: 'Queen’s Hamlet (SOG)' },
+  { id: 'a8926fc4', label: 'Reflective Surfaces (SOG)' },
 ];
 const DEFAULT_SCENE_ID = PRESETS[0].id;
 const SUPERSPLAT_CDN = 'https://d28zzqy0iyovbz.cloudfront.net';
