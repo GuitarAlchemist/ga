@@ -5,6 +5,7 @@ using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Mcp;
 using GA.Business.ML.Agents.Memory;
+using GA.Business.ML.Agents.Memory.Curator;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Domain.Services.Atonal.Grothendieck;
@@ -70,6 +71,18 @@ public sealed class GaPlugin : IChatPlugin
         // identical to "memory forgot everything between restarts."
         services.TryAddSingleton<MemoryStore>(sp =>
             new MemoryStore(sp.GetService<ILogger<MemoryStore>>() ?? NullLogger<MemoryStore>.Instance));
+
+        // ── Transcript log (PR #172 Phase 1) ─────────────────────────────────
+        // Sibling to MemoryStore: holds per-turn chat content, not durable
+        // memory. Today nothing writes here (MemoryHook still writes
+        // type=response to MemoryStore); Phase 2 will rewire that. Registered
+        // now so the DI graph is complete and Phase 2 is a pure code change.
+        // Also exposes IChatTranscriptStore so the memory curator's existing
+        // (header-only since v0.1) transcript slot has a real backing.
+        services.TryAddSingleton<ChatTranscriptStore>(sp =>
+            new ChatTranscriptStore(sp.GetService<ILogger<ChatTranscriptStore>>() ?? NullLogger<ChatTranscriptStore>.Instance));
+        services.TryAddSingleton<IChatTranscriptStore>(sp =>
+            sp.GetRequiredService<ChatTranscriptStore>());
 
         // ── Hooks (execute in registration order at each lifecycle point) ─────
         services.AddSingleton<IChatHook, PromptSanitizationHook>();
