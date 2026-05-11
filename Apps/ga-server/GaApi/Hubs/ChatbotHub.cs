@@ -116,8 +116,20 @@ public sealed class ChatbotHub(
 
         try
         {
+            // SessionId = Context.ConnectionId — the anonymous demo doesn't
+            // have an authenticated user identity, but SignalR's server-issued
+            // ConnectionId IS a 128-bit cryptographically-random per-tab handle
+            // (per Microsoft.AspNetCore.SignalR's default IConnectionIdGenerator).
+            // That's exactly what MemoryHook needs to scope retrieval per
+            // conversation rather than across every anonymous tab — see PR
+            // #157 Phase A (storage layer) for the leak this closes.
+            //
+            // After this Phase B change ships AND Memory:EnrichOnRetrieve=true
+            // is flipped in config, MemoryHook will scope reads/writes to
+            // (sessionId=connectionId) instead of skipping retrieval entirely.
             var response = await chatService.ChatAsync(
-                new ChatRequest(trimmedMessage), cancellationToken);
+                new ChatRequest(trimmedMessage, SessionId: connectionId),
+                cancellationToken);
 
             // Emit routing metadata to client. Grounding is included when the
             // intent that handled the request was deterministic-compute-backed
