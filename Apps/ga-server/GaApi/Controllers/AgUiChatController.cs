@@ -71,8 +71,18 @@ public class AgUiChatController(
                     m.Role, m.Content!, DateTimeOffset.UtcNow))
                 .ToList();
 
+            // Phase C P1 (task #107 INFO-003) — server-issued cookie is the
+            // SessionId source. Previously this site passed input.ThreadId
+            // directly as SessionId, which is client-controlled and would
+            // have allowed session fixation once Memory:EnrichOnRetrieve=true
+            // ships (same threat shape as VULN-001 closed for /api/chatbot/chat).
+            // ThreadId remains a client-side state-management primitive for
+            // the AG-UI protocol; it is NOT a server-side memory partition key.
+            // Issued AFTER the concurrency-gate check so 503 paths don't mint
+            // orphan cookies (VULN-004).
+            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
             var response = await chatService.ChatAsync(
-                new OrchestratorChatRequest(userMessage, input.ThreadId, History: history),
+                new OrchestratorChatRequest(userMessage, sessionId, History: history),
                 cancellationToken);
 
             return Ok(new
@@ -110,6 +120,16 @@ public class AgUiChatController(
             return;
         }
 
+        // Phase C P1 (task #107 INFO-003) — issue the session cookie BEFORE
+        // StartAsync because Response.Cookies.Append modifies response headers,
+        // which become read-only once StartAsync commits the wire. We pay the
+        // small cost of minting a cookie before the concurrency gate check
+        // because SSE never returns 503 (it emits a RUN_ERROR frame on a 200
+        // response), so there's no "503-orphan" trade-off to optimise for.
+        // Validation already ran (userMessage check above), so we don't mint
+        // cookies for shape-invalid requests.
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type",       "text/event-stream");
         Response.Headers.Append("Cache-Control",      "no-cache");
@@ -118,7 +138,7 @@ public class AgUiChatController(
         await Response.StartAsync(cancellationToken);
 
         var writer   = new AgUiEventWriter(Response);
-        var threadId = input.ThreadId;
+        var threadId = input.ThreadId;     // AG-UI client-side state primitive
         var runId    = AgUiEventWriter.NewRunId();
         var msgId    = $"msg_{runId[..8]}";
 
@@ -146,7 +166,15 @@ public class AgUiChatController(
             }, cancellationToken);
 
             // ── 3. Invoke orchestrator with true token streaming ────────────────
-            var chatRequest = new OrchestratorChatRequest(userMessage, threadId);
+            // INFO-003: use the server-issued cookie session ID for memory
+            // partitioning, NOT the client-controlled threadId. ThreadId is
+            // the AG-UI protocol's notion of "which conversation thread" for
+            // event correlation; it MUST NOT be used as a server-side memory
+            // partition key — that would be a session-fixation vulnerability
+            // identical in shape to VULN-001 (PR #163 audit, closed for the
+            // /api/chatbot surface). Phase C P1 (task #107) extends that fix
+            // to AG-UI.
+            var chatRequest = new OrchestratorChatRequest(userMessage, sessionId);
 
             // ── 4. Stream text tokens, emit STEP_STARTED after streaming completes
             await writer.WriteTextStartAsync(msgId, cancellationToken);

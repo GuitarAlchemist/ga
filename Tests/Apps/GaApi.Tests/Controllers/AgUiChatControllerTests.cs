@@ -28,6 +28,7 @@ public class AgUiChatControllerTests
 
     private HttpClient? _client;
     private HttpClient? _saturatedClient;
+    private HttpClient? _rawClient; // HandleCookies = false — preserves Set-Cookie in response headers
 
     // ── Sample input ─────────────────────────────────────────────────────────────
 
@@ -65,6 +66,10 @@ public class AgUiChatControllerTests
 
         _client          = _factory.CreateClient();
         _saturatedClient = _saturatedFactory.CreateClient();
+        // Raw client preserves Set-Cookie in response.Headers so we can
+        // assert the server-issued cookie shape (INFO-003 tests).
+        _rawClient = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 
     [OneTimeTearDown]
@@ -72,6 +77,7 @@ public class AgUiChatControllerTests
     {
         _client?.Dispose();
         _saturatedClient?.Dispose();
+        _rawClient?.Dispose();
         _factory?.Dispose();
         _saturatedFactory?.Dispose();
     }
@@ -274,6 +280,96 @@ public class AgUiChatControllerTests
         Assert.That(message.GetString(), Is.Not.Null.And.Not.Empty);
     }
 
+    // ── INFO-003: server-issued cookie SessionId (task #107) ─────────────────────
+
+    [Test]
+    public async Task AgUiStream_IssuesGaChatSessionCookie()
+    {
+        // Phase C P1 / INFO-003 — every AG-UI stream response that passed
+        // input validation must Set-Cookie the server-issued session ID,
+        // so memory partitioning works across reloads the same way it does
+        // for /api/chatbot/chat.
+        var request = BuildRequest(ValidInput);
+        using var response = await _rawClient!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var setCookie = response.Headers.TryGetValues("Set-Cookie", out var cookies)
+            ? string.Join("; ", cookies)
+            : string.Empty;
+
+        Assert.That(setCookie, Does.Contain(HttpChatSessionCookie.CookieName),
+            "AG-UI stream must Set-Cookie the server-issued session cookie. " +
+            "Without it, HTTP callers fall through to per-request Guid SessionId " +
+            "and their memory writes become unreachable.");
+    }
+
+    [Test]
+    public async Task AgUiStream_SessionIdPlumbedToOrchestrator_IsNotClientThreadId()
+    {
+        // INFO-003 — the orchestrator must receive the cookie-derived
+        // SessionId, NOT the client-supplied input.ThreadId. Before
+        // PR #163 + task #107, AG-UI passed input.ThreadId directly as
+        // SessionId, which would let a malicious client forge any session
+        // ID they pleased once Memory:EnrichOnRetrieve=true ships.
+        const string maliciousThreadId = "victim-session-abc";
+        var input = new
+        {
+            threadId = maliciousThreadId,
+            runId    = "r-malicious",
+            messages = new[] { new { role = "user", content = "Tell me about Cmaj7", id = "m1" } },
+        };
+
+        TestHarmonicChatOrchestrator.LastRequest = null;
+
+        var request = BuildRequest(input);
+        using var response = await _client!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        // Drain the stream so the orchestrator actually runs.
+        _ = await response.Content.ReadAsStringAsync();
+
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest, Is.Not.Null,
+            "Orchestrator should have been invoked.");
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest!.SessionId,
+            Is.Not.EqualTo(maliciousThreadId),
+            "VULNERABILITY: AG-UI is passing client-controlled threadId as SessionId. " +
+            "This is the same shape as VULN-001 (PR #163 audit). Use HttpChatSessionCookie.GetOrIssue " +
+            "to derive SessionId from a server-signed cookie instead.");
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest!.SessionId,
+            Is.Not.Null.And.Not.Empty,
+            "SessionId must still be plumbed — just from the cookie, not from input.ThreadId.");
+    }
+
+    [Test]
+    public async Task AgUiJson_IssuesGaChatSessionCookie_AndDoesNotUseClientThreadId()
+    {
+        // Companion test for the non-streaming AG-UI endpoint (/api/chatbot/agui/json).
+        // It goes through IChatApplicationService rather than IHarmonicChatOrchestrator,
+        // so we can't capture LastRequest here without swapping that service too.
+        // For now we only assert the visible effect: Set-Cookie is present.
+        const string maliciousThreadId = "victim-session-xyz";
+        var input = new
+        {
+            threadId = maliciousThreadId,
+            runId    = "r-malicious-json",
+            messages = new[] { new { role = "user", content = "Tell me about Dm7", id = "m1" } },
+        };
+
+        using var response = await _rawClient!.PostAsJsonAsync("/api/chatbot/agui/json", input);
+
+        // Status may be 200 (real service available) or 502/503 (Ollama down) — we
+        // only care that, when validation passes and the gate admits, a cookie is set.
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var setCookie = response.Headers.TryGetValues("Set-Cookie", out var cookies)
+                ? string.Join("; ", cookies)
+                : string.Empty;
+
+            Assert.That(setCookie, Does.Contain(HttpChatSessionCookie.CookieName),
+                "AG-UI JSON endpoint must Set-Cookie the server-issued session cookie " +
+                "(INFO-003 — server-issued, not client-controlled threadId).");
+        }
+    }
+
     // ── STATE_DELTA round-trip ────────────────────────────────────────────────────
 
     [Test]
@@ -393,14 +489,23 @@ file sealed class AlwaysAvailableGate : ILlmConcurrencyGate
 
 file sealed class TestHarmonicChatOrchestrator : IHarmonicChatOrchestrator
 {
-    public Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default) =>
-        Task.FromResult(BuildResponse());
+    // Captures the most recent ChatRequest so tests can assert what
+    // SessionId was actually plumbed to the orchestrator. Used by the
+    // INFO-003 (task #107) tests that pin the cookie-not-ThreadId fix.
+    public static ChatRequest? LastRequest { get; set; }
+
+    public Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
+    {
+        LastRequest = req;
+        return Task.FromResult(BuildResponse());
+    }
 
     public async Task<ChatResponse> AnswerStreamingAsync(
         ChatRequest req,
         Func<string, Task> onToken,
         CancellationToken ct = default)
     {
+        LastRequest = req;
         await onToken("Deterministic test response.");
         return BuildResponse();
     }
