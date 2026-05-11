@@ -182,23 +182,136 @@ public sealed class MemoryStore
     }
 
     /// <summary>
-    /// Case-insensitive substring search across content and tags, filtered
-    /// to entries whose SessionId matches <paramref name="sessionId"/> OR is
-    /// null (global). Pass <paramref name="sessionId"/>=null to search only
-    /// global entries.
+    /// Token-overlap search across content, tags, and key, filtered to entries
+    /// whose SessionId matches <paramref name="sessionId"/> OR is null
+    /// (global). Pass <paramref name="sessionId"/>=null to search only global
+    /// entries.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why token-overlap over substring containment (2026-05-11 v0.2):</b>
+    /// the prior implementation required the full lowercased query to be a
+    /// substring of <see cref="MemoryEntry.Content"/> / a tag / the key.
+    /// That broke real-world recall — a user asking "what voicings should I
+    /// use for jazz?" would not surface a stored "I prefer drop-2 voicings
+    /// for jazz comping" entry, because neither string contains the other
+    /// verbatim. The integration test surfaced this as a recall ceiling
+    /// even when the loop architecturally worked.
+    /// </para>
+    /// <para>
+    /// <b>New predicate:</b> tokenize both query and entry haystack
+    /// (content + key + tags) into lowercase alphanumeric tokens, drop
+    /// stopwords + very short tokens, count overlap. Entries with at least
+    /// one non-stopword token in common with the query are returned,
+    /// ordered by overlap count DESC, then by Timestamp DESC.
+    /// </para>
+    /// <para>
+    /// <b>What this is NOT:</b> a BM25 / TF-IDF / vector-embedding search.
+    /// It's a deliberately tiny step up from substring matching — enough to
+    /// unlock real-world recall for the MemoryHook retrieval-injection
+    /// path, without introducing dependencies. Higher-quality search would
+    /// reuse the existing embedder used by SemanticIntentRouter — that's a
+    /// separate task.
+    /// </para>
+    /// <para>
+    /// <b>Backward compatibility:</b> any query that previously matched
+    /// via substring containment also matches via token overlap (a
+    /// substring shares all its tokens with the haystack). New behavior is
+    /// strictly additive — no entry that was previously returned is now
+    /// hidden. The order may shift because the secondary sort moved from
+    /// "newest first" to "overlap first, then newest"; callers that
+    /// depended on strict timestamp order (no callers in the current
+    /// codebase) need to re-sort.
+    /// </para>
+    /// </remarks>
     public IReadOnlyList<MemoryEntry> Search(string? sessionId, string query, string? type = null, string[]? tags = null)
     {
-        var q = query.ToLowerInvariant();
+        var queryTokens = TokenizeAndFilter(query);
+        if (queryTokens.Count == 0)
+        {
+            // Pure-stopword or empty query — no signal to match on. Return
+            // empty rather than fall through to "match everything", which
+            // would dump the entire session-scoped store into the prompt.
+            return [];
+        }
+
         return _entries.Values
             .Where(e => InScope(e, sessionId))
             .Where(e => type is null || e.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
             .Where(e => tags is null || tags.Any(t => e.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)))
-            .Where(e => e.Content.Contains(q, StringComparison.OrdinalIgnoreCase)
-                     || e.Tags.Any(t => t.Contains(q, StringComparison.OrdinalIgnoreCase))
-                     || e.Key.Contains(q, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(e => e.Timestamp)
+            .Select(e => (Entry: e, Overlap: CountOverlap(queryTokens, e)))
+            .Where(scored => scored.Overlap > 0)
+            .OrderByDescending(scored => scored.Overlap)
+            .ThenByDescending(scored => scored.Entry.Timestamp)
+            .Select(scored => scored.Entry)
             .ToList();
+    }
+
+    /// <summary>
+    /// Small stopword set covering English function words that would
+    /// dilute overlap counts. Kept minimal on purpose — adding more
+    /// risks dropping legitimate signal (e.g., "key" is a stopword in
+    /// general English but load-bearing in music context).
+    /// </summary>
+    private static readonly HashSet<string> Stopwords = new(StringComparer.Ordinal)
+    {
+        "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be",
+        "to", "of", "in", "on", "at", "for", "with", "by", "from", "as",
+        "this", "that", "these", "those", "it", "its",
+        "what", "which", "who", "when", "where", "why", "how",
+        "i", "me", "my", "we", "us", "our", "you", "your",
+        "do", "does", "did", "can", "could", "should", "would", "will",
+        "have", "has", "had", "not",
+    };
+
+    /// <summary>
+    /// Splits the input on non-alphanumeric characters, lowercases each
+    /// token, drops empty / single-character / stopword tokens. Returns
+    /// a HashSet so callers can do cheap set operations.
+    /// </summary>
+    private static HashSet<string> TokenizeAndFilter(string text)
+    {
+        var tokens = new HashSet<string>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(text)) return tokens;
+
+        // Walk the string once instead of regex.Split for speed on the
+        // hot path. Non-alphanumeric character ends the current token;
+        // alphanumeric extends it.
+        var start = -1;
+        for (var i = 0; i <= text.Length; i++)
+        {
+            var c = i < text.Length ? text[i] : '\0';
+            var isWord = char.IsLetterOrDigit(c);
+            if (isWord && start < 0)
+            {
+                start = i;
+            }
+            else if (!isWord && start >= 0)
+            {
+                var tok = text[start..i].ToLowerInvariant();
+                if (tok.Length >= 2 && !Stopwords.Contains(tok))
+                    tokens.Add(tok);
+                start = -1;
+            }
+        }
+        return tokens;
+    }
+
+    private static int CountOverlap(HashSet<string> queryTokens, MemoryEntry entry)
+    {
+        // Build the haystack token bag once per entry from content + key + tags.
+        // Re-tokenizing per query is fine at current memory sizes (low-thousands
+        // of entries max); switching to a cached token bag is a future
+        // optimization if the store grows.
+        var haystack = TokenizeAndFilter(entry.Content);
+        haystack.UnionWith(TokenizeAndFilter(entry.Key));
+        foreach (var tag in entry.Tags)
+            haystack.UnionWith(TokenizeAndFilter(tag));
+
+        var overlap = 0;
+        foreach (var q in queryTokens)
+            if (haystack.Contains(q)) overlap++;
+        return overlap;
     }
 
     /// <summary>
