@@ -61,6 +61,26 @@ public class ChatbotController(
             return;
         }
 
+        // Phase C (task #103) — HTTP transport plumbs SessionId from a
+        // server-issued cookie so HTTP callers get session-scoped memory
+        // the same way SignalR callers do (PR #160). Without this, HTTP
+        // requests fall through to the orchestrator's per-request Guid
+        // fallback and their MemoryHook writes are unreachable from any
+        // future request.
+        //
+        // Phase C P1 (task #107) — fix ordering bug: GetOrIssue MUST run
+        // BEFORE StartAsync because Response.Cookies.Append modifies
+        // response headers, and headers become read-only once StartAsync
+        // commits the wire. The previous placement after StartAsync would
+        // have thrown InvalidOperationException, surfacing as an SSE
+        // RUN_ERROR frame instead of issuing a cookie.
+        //
+        // Trade-off vs. VULN-004 (defer past gate): SSE never returns 503;
+        // a busy gate produces a 200-OK + SSE error frame, so we don't
+        // mint cookies "wasted on 503s." Validation (message-empty)
+        // already ran, so shape-invalid requests still don't get cookies.
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
         Response.Headers.Append("Cache-Control", "no-cache");
@@ -79,13 +99,6 @@ public class ChatbotController(
 
         try
         {
-            // Phase C (task #103) — HTTP transport plumbs SessionId from a
-            // server-issued cookie so HTTP callers get session-scoped memory
-            // the same way SignalR callers do (PR #160). Without this, HTTP
-            // requests fall through to the orchestrator's per-request Guid
-            // fallback and their MemoryHook writes are unreachable from any
-            // future request.
-            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
             var response = await chatService.ChatAsync(
                 new GA.Business.Core.Orchestration.Models.ChatRequest(message, SessionId: sessionId),
                 cancellationToken);

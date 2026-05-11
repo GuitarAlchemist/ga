@@ -168,6 +168,49 @@ builder.Services.AddCors(options =>
     });
 });
 
+// VULN-003 (PR #163 audit, task #107) — runtime assertion that catches a
+// misconfiguration class: turning on cross-session memory enrichment with
+// a permissive cross-origin allow-list. If both
+//   Cors:AllowedOrigins contains a wildcard ("*") or a "*"-bearing entry
+//   Memory:EnrichOnRetrieve = true
+// were ever simultaneously true in production, a malicious off-domain
+// page could ride a victim's cookie, write to memory under their session,
+// and observe enrichment from another caller — a cross-origin memory
+// exfiltration vector. We refuse to start in that case rather than
+// shipping a silent compromise.
+{
+    var enrichOnRetrieve = builder.Configuration.GetValue<bool?>("Memory:EnrichOnRetrieve") ?? false;
+    if (enrichOnRetrieve)
+    {
+        var hasWildcard = configuredCorsOrigins.Any(o =>
+            string.IsNullOrWhiteSpace(o) ||
+            o == "*" ||
+            o.Contains('*', StringComparison.Ordinal));
+        if (hasWildcard)
+        {
+            throw new InvalidOperationException(
+                "Refusing to start: Memory:EnrichOnRetrieve=true with a wildcard " +
+                "Cors:AllowedOrigins entry is a cross-origin memory exfiltration risk. " +
+                "Either pin Cors:AllowedOrigins to specific HTTPS origins, or disable " +
+                "Memory:EnrichOnRetrieve. See task #107 / VULN-003.");
+        }
+        // Soft-warn on plain-HTTP non-loopback entries — these allow MITM
+        // session pinning, defeating the cookie's Secure flag.
+        var insecureExternal = configuredCorsOrigins
+            .Where(o => o.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            .Where(o => !o.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+                     && !o.Contains("127.0.0.1", StringComparison.Ordinal))
+            .ToArray();
+        if (insecureExternal.Length > 0)
+        {
+            Console.WriteLine(
+                "[startup-warn] Memory:EnrichOnRetrieve=true with plain-http non-loopback " +
+                $"Cors origin(s): {string.Join(", ", insecureExternal)}. " +
+                "Cookie Secure flag will not be set for these origins; MITM can hijack sessions.");
+        }
+    }
+}
+
 // ─── OAuth2 + JWT authentication ─────────────────────────────────────────
 // Configuration path: Authentication:* (user-secrets in dev, env vars in prod)
 // See C:/Users/spare/source/repos/ga/Apps/ga-server/GaApi/Properties/launchSettings.json
