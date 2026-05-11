@@ -45,6 +45,31 @@ public sealed class MemoryHook(
     // process, not per request. 0 = not yet logged; 1 = already logged.
     private int _loggedNullSessionId;
 
+    // ── Audit counters (PR #174 follow-up: dropped-response visibility) ──
+    // OnResponseSent silently skips writes when Confidence < 0.7 OR
+    // Result.Length < 100. Without an audit channel operators can't
+    // distinguish "MemoryHook is working but the chatbot rarely meets
+    // threshold" from "MemoryHook is broken." These counters surface the
+    // distribution via Information logs (once per reason on first hit, then
+    // every <see cref="AuditSummaryInterval"/> drops) and Debug logs on
+    // every drop. No behavior change — observability only.
+    //
+    // PR #177 review (correctness MED-1): first-hit and 100th-drop summary
+    // gate on the post-increment count value directly (count == 1 / count %
+    // 100 == 0). The Interlocked.Increment returns a unique value per
+    // caller, so exactly one thread observes count == 1 and exactly one
+    // thread per 100-band observes count % 100 == 0. This eliminates the
+    // CAS-vs-Increment race that the previous CompareExchange-gated design
+    // could hit under singleton-shared concurrent OnResponseSent calls.
+    //
+    // NOTE: this hook is registered AddSingleton (see GaPlugin.cs). If that
+    // lifetime ever changes to Scoped/Transient, the counters reset per
+    // request and the first-hit log fires on every dropped response. The
+    // singleton invariant is load-bearing for the audit channel.
+    private long _droppedLowConfidence;
+    private long _droppedShortContent;
+    private const int AuditSummaryInterval = 100;
+
     /// <summary>
     /// Searches memory for context relevant to the incoming message and prepends it.
     /// Off by default; enable with <c>Memory:EnrichOnRetrieve=true</c>.
@@ -125,8 +150,29 @@ public sealed class MemoryHook(
     /// </summary>
     public Task<HookResult> OnResponseSent(ChatHookContext ctx, CancellationToken ct = default)
     {
-        if (ctx.Response is not { Confidence: >= 0.7f } response) return Task.FromResult(HookResult.Continue);
-        if (response.Result.Length < 100) return Task.FromResult(HookResult.Continue);
+        // PR #174 follow-up: each threshold drop records an audit entry so
+        // operators can see why responses aren't reaching the transcript
+        // store. The structure of the guard chain is preserved (still two
+        // sequential early-returns) — only the side-effect is new.
+        if (ctx.Response is not { Confidence: >= 0.7f } response)
+        {
+            // Distinguish "no response at all" (genuinely nothing to write)
+            // from "response present but below confidence threshold" (a
+            // real drop). Only the latter is audit-worthy.
+            //
+            // PR #177 review (reliability MED-1/MED-2): pass the raw float
+            // through so the detail string is materialized ONLY when the
+            // first-hit or summary log actually fires — saves an allocation
+            // per dropped response on the hot path.
+            if (ctx.Response is not null)
+                RecordLowConfidenceDrop(ctx.Response.Confidence);
+            return Task.FromResult(HookResult.Continue);
+        }
+        if (response.Result.Length < 100)
+        {
+            RecordShortContentDrop(response.Result.Length);
+            return Task.FromResult(HookResult.Continue);
+        }
 
         // Per PR #161 review F-4 (preventative): refuse to write when
         // SessionId is null. ProductionOrchestrator currently always sets
@@ -205,4 +251,86 @@ public sealed class MemoryHook(
     /// assistant turns to bound storage cost — PR #174 review HIGH-2.
     /// </summary>
     private const int TurnContentCap = 2000;
+
+    /// <summary>
+    /// Records that <see cref="OnResponseSent"/> dropped a response without
+    /// writing it. Drives the audit-log channel: Information on first
+    /// occurrence per reason (rate-limited via
+    /// <see cref="Interlocked.CompareExchange(ref int, int, int)"/>), an
+    /// Information summary every <see cref="AuditSummaryInterval"/> drops,
+    /// and Debug on every individual drop.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Counters are per-process (instance-scoped). They reset on restart
+    /// — sufficient for "is this hook silently swallowing everything?"
+    /// triage but not for long-running quality trend analysis. Exporting
+    /// the counters to OpenTelemetry / Prometheus is a future iteration;
+    /// for now the log channel is the operator-facing surface.
+    /// </para>
+    /// </remarks>
+    private void RecordLowConfidenceDrop(float confidence)
+    {
+        var count = Interlocked.Increment(ref _droppedLowConfidence);
+        EmitAuditLogs("low-confidence", count, "confidence", confidence);
+    }
+
+    private void RecordShortContentDrop(int length)
+    {
+        var count = Interlocked.Increment(ref _droppedShortContent);
+        EmitAuditLogs("short-content", count, "length", length);
+    }
+
+    /// <summary>
+    /// Shared log-emission tail for both drop reasons. Split out from
+    /// <see cref="RecordLowConfidenceDrop"/> and
+    /// <see cref="RecordShortContentDrop"/> to keep them branchless on the
+    /// hot path (PR #177 review reliability MED-1/MED-2: avoid per-call
+    /// string allocation for the detail; let ILogger's structured args
+    /// defer formatting until a sink actually consumes the message).
+    /// </summary>
+    /// <remarks>
+    /// Two reasons today (<c>low-confidence</c> and <c>short-content</c>)
+    /// get explicit named methods rather than a string-tagged dispatch.
+    /// That makes adding a third reason a deliberate change to this file
+    /// (PR #177 review reliability MED-Reason-Drift) rather than a silent
+    /// bucketing into one of the existing counters.
+    /// </remarks>
+    private void EmitAuditLogs(string reason, long count, string detailKey, object detailValue)
+    {
+        // PR #177 review (correctness MED-1): gate first-hit and summary on
+        // the post-increment count value itself. Interlocked.Increment
+        // returns a unique value per caller, so exactly one thread observes
+        // count == 1 (the winner of the first race) and exactly one thread
+        // per 100-band observes count % 100 == 0. No CompareExchange needed
+        // — and no race window where another thread can win the first-hit
+        // CAS with a higher count than 1.
+        if (count == 1)
+        {
+            logger.LogInformation(
+                "MemoryHook audit: first response dropped for reason '{Reason}' ({DetailKey}={DetailValue}). " +
+                "Future drops for this reason will be summarized every {Interval} occurrences. " +
+                "Per-drop detail is at Debug level. This first-hit message logs once per " +
+                "reason per process — restart the process to see it again.",
+                reason, detailKey, detailValue, AuditSummaryInterval);
+        }
+        else if (count % AuditSummaryInterval == 0)
+        {
+            logger.LogInformation(
+                "MemoryHook audit: {Reason} drops = {Count} since process start.",
+                reason, count);
+        }
+
+        // PR #177 review reliability MED-2: gate behind IsEnabled so the
+        // per-drop debug call doesn't allocate the args array under
+        // production logging filters. The IsEnabled call is a single
+        // virtual dispatch; the args array allocation otherwise lives on
+        // the hot path.
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            logger.LogDebug(
+                "MemoryHook drop: reason={Reason} {DetailKey}={DetailValue} count={Count}",
+                reason, detailKey, detailValue, count);
+        }
+    }
 }
