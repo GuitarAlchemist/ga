@@ -55,8 +55,13 @@ public class MemoryMcpToolsSC001Tests
             type: "fact",
             content: "Users prefer drop-2 voicings for jazz comping.");
 
-        Assert.That(result, Does.Contain("refused"),
-            "Refusal message must be returned to the LLM so it doesn't think the write succeeded.");
+        // Per F-6 (PR #161 review): refusal is terse — does not name the
+        // config key or hint at MemoryHook architecture.
+        Assert.That(result, Does.Contain("not enabled"));
+        Assert.That(result, Does.Not.Contain("AllowLlmGlobalWrite"),
+            "Refusal must not name the config key — that's hint leakage to the LLM/attacker.");
+        Assert.That(result, Does.Not.Contain("MemoryHook"),
+            "Refusal must not name the hook — that's architecture leakage.");
         Assert.That(_store.TotalEntriesAllSessions(), Is.EqualTo(0),
             "Nothing should have been persisted when the flag is default-off.");
     }
@@ -68,8 +73,25 @@ public class MemoryMcpToolsSC001Tests
 
         var result = tools.MemoryWrite("k1", "fact", "content");
 
-        Assert.That(result, Does.Contain("refused"));
+        Assert.That(result, Does.Contain("not enabled"));
         Assert.That(_store.TotalEntriesAllSessions(), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void MemoryWrite_OperatorOptIn_CallerSuppliedOriginTag_NotDuplicated()
+    {
+        // Per F-1/M1 (PR #161 review): the auto-tag is system-controlled.
+        // A caller who supplies origin:mcp-tool themselves (innocent or
+        // malicious) must not cause a duplicate in the stored Tags array.
+        var tools = NewToolsWith(allowLlmGlobalWrite: true);
+        tools.MemoryWrite("k1", "fact", "content with enough length for the persistence threshold and beyond",
+            tags: [MemoryMcpTools.McpOriginTag, "user-tag", MemoryMcpTools.McpOriginTag]);
+
+        var stored = _store.Read(sessionId: null, key: "k1");
+        Assert.That(stored, Is.Not.Null);
+        Assert.That(stored!.Tags.Count(t => t == MemoryMcpTools.McpOriginTag), Is.EqualTo(1),
+            "Auto-tag must be applied exactly once even if the caller already provided it.");
+        Assert.That(stored.Tags, Does.Contain("user-tag"));
     }
 
     [Test]
@@ -164,6 +186,40 @@ public class MemoryMcpToolsSC001Tests
 
         Assert.That(result.MutatedMessage, Is.Null,
             "When every match is filtered out, hook should produce no injection.");
+    }
+
+    [Test]
+    public async Task MemoryHook_OnResponseSent_RefusesWriteWhenSessionIdIsNull()
+    {
+        // Per F-4 (PR #161 review, preventative): if a future orchestrator
+        // refactor passes a null SessionId through to OnResponseSent, the
+        // hook must refuse to write rather than land an entry in the
+        // global partition WITHOUT the origin:mcp-tool tag (which would
+        // defeat SC-001's two-layer defense).
+        var hook = NewHookWith(enrichOnRetrieve: false);  // EnrichOnRetrieve doesn't gate OnResponseSent
+        var ctx = new ChatHookContext
+        {
+            OriginalMessage = "what's a Cmaj7?",
+            CurrentMessage  = "what's a Cmaj7?",
+            CorrelationId   = Guid.NewGuid(),
+            SessionId       = null,
+            Response = new AgentResponse
+            {
+                AgentId    = "chord-info",
+                Result     = new string('x', 200),   // > 100 char threshold
+                Confidence = 0.95f,                  // > 0.7 threshold
+            },
+        };
+
+        await hook.OnResponseSent(ctx);
+
+        // Give the fire-and-forget Task.Run a chance to land if it were
+        // going to.
+        await Task.Delay(200);
+
+        Assert.That(_store.TotalEntriesAllSessions(), Is.EqualTo(0),
+            "OnResponseSent must REFUSE to write when SessionId is null — otherwise the entry " +
+            "lands in the global partition without origin:mcp-tool, defeating both SC-001 layers.");
     }
 
     [Test]

@@ -89,11 +89,13 @@ public sealed class MemoryHook(
         // filter shipped, retrieval injection refuses to surface those
         // entries into a future session's prompt. The McpOriginTag is
         // applied automatically on every MemoryMcpTools.MemoryWrite that
-        // gets through the flag gate. See
-        // docs/solutions/security/2026-05-11-sc-001-mcp-write-injection.md.
-        const string McpOriginTag = "origin:mcp-tool";
+        // gets through the flag gate.
+        //
+        // Per PR #161 review F-1: reference Memory.MemoryMcpTools.McpOriginTag
+        // (the source of truth) rather than a local literal — a rename
+        // there must not silently regress this filter.
         var filtered = matches
-            .Where(m => !m.Tags.Contains(McpOriginTag, StringComparer.Ordinal))
+            .Where(m => !m.Tags.Contains(Memory.MemoryMcpTools.McpOriginTag, StringComparer.Ordinal))
             .ToList();
         var filteredOutCount = matches.Count - filtered.Count;
         if (filteredOutCount > 0)
@@ -102,7 +104,7 @@ public sealed class MemoryHook(
                 "MemoryHook: filtered {Count} '{Tag}' entries from retrieval (SC-001 defense). " +
                 "If this fires frequently, audit MemoryMcpTools.MemoryWrite usage and consider " +
                 "setting Memory:AllowLlmGlobalWrite=false.",
-                filteredOutCount, McpOriginTag);
+                filteredOutCount, Memory.MemoryMcpTools.McpOriginTag);
         }
         if (filtered.Count == 0) return Task.FromResult(HookResult.Continue);
 
@@ -124,6 +126,24 @@ public sealed class MemoryHook(
     {
         if (ctx.Response is not { Confidence: >= 0.7f } response) return Task.FromResult(HookResult.Continue);
         if (response.Result.Length < 100) return Task.FromResult(HookResult.Continue);
+
+        // Per PR #161 review F-4 (preventative): refuse to write when
+        // SessionId is null. ProductionOrchestrator currently always sets
+        // it (req.SessionId ?? Guid.NewGuid().ToString("N")), so this
+        // branch is dormant today — but a future orchestrator refactor
+        // could pass null through. Without this guard, a null SessionId
+        // would land an entry in the global partition WITHOUT the
+        // origin:mcp-tool tag, defeating both layers of SC-001's defense.
+        // Mirror of the OnRequestReceived safety belt at line 65.
+        if (ctx.SessionId is null)
+        {
+            logger.LogWarning(
+                "MemoryHook: refused to persist response — SessionId is null. " +
+                "Writing here would land an entry in the global partition without the " +
+                "origin:mcp-tool tag, defeating SC-001's two-layer defense. Check the " +
+                "orchestrator's SessionId plumbing (PR #157 Phase B regression?).");
+            return Task.FromResult(HookResult.Continue);
+        }
 
         // Capture by value before fire-and-forget — ctx fields are not safe to
         // close over because the orchestrator may reuse / mutate the context

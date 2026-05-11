@@ -61,19 +61,30 @@ public sealed class MemoryMcpTools(
     {
         if (!_allowLlmGlobalWrite)
         {
+            // Truncate attacker-controllable fields before logging — per PR
+            // #161 review F-11, an unbounded key from a prompt-injected
+            // tool call could flood the log file.
+            var safeKey  = (key  ?? string.Empty)[..Math.Min(256, (key  ?? string.Empty).Length)];
+            var safeType = (type ?? string.Empty)[..Math.Min(64,  (type ?? string.Empty).Length)];
             logger.LogInformation(
-                "MemoryMcpTools.MemoryWrite refused: Memory:AllowLlmGlobalWrite=false (default). " +
+                "MemoryMcpTools.MemoryWrite refused: AllowLlmGlobalWrite=false. " +
                 "Key='{Key}', Type='{Type}', ContentLength={Length}",
-                key, type, content?.Length ?? 0);
-            return
-                "Memory write refused: LLM-driven writes to the global memory pool are " +
-                "disabled by default (Memory:AllowLlmGlobalWrite=false). Per-conversation " +
-                "context is captured automatically by the MemoryHook and does not need this tool.";
+                safeKey, safeType, content?.Length ?? 0);
+            // Per PR #161 review F-6: terse refusal — no hints about the
+            // MemoryHook architecture or the exact config-key name.
+            // Operators see the full reason in the LogInformation above.
+            return "Memory write is not enabled.";
         }
 
         // Auto-tag with origin so MemoryHook can filter on retrieval —
         // defense in depth in case the flag is accidentally enabled.
-        var withOrigin = (tags ?? []).Concat([McpOriginTag]).ToArray();
+        // Per PR #161 review M1: dedup if the caller already supplied
+        // the origin tag (system-controlled tag, never trust caller's
+        // copy of it).
+        var withOrigin = (tags ?? [])
+            .Where(t => !string.Equals(t, McpOriginTag, StringComparison.Ordinal))
+            .Append(McpOriginTag)
+            .ToArray();
         store.Write(sessionId: MemoryStore.GlobalSessionId, key: key, type: type, content: content, tags: withOrigin);
         logger.LogInformation(
             "MemoryMcpTools.MemoryWrite accepted (AllowLlmGlobalWrite=true): key='{Key}' type='{Type}'",
