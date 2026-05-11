@@ -79,8 +79,16 @@ public class ChatbotController(
 
         try
         {
+            // Phase C (task #103) — HTTP transport plumbs SessionId from a
+            // server-issued cookie so HTTP callers get session-scoped memory
+            // the same way SignalR callers do (PR #160). Without this, HTTP
+            // requests fall through to the orchestrator's per-request Guid
+            // fallback and their MemoryHook writes are unreachable from any
+            // future request.
+            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
             var response = await chatService.ChatAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+                new GA.Business.Core.Orchestration.Models.ChatRequest(message, SessionId: sessionId),
+                cancellationToken);
 
             // 1. Emit routing metadata event (first, before text). Trace and
             // grounding are included on this frame to match the JSON wire's
@@ -147,8 +155,11 @@ public class ChatbotController(
         try
         {
             var sw = Stopwatch.StartNew();
+            // Phase C plumbing — see ChatStream above.
+            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
             var response = await chatService.ChatAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(message), cancellationToken);
+                new GA.Business.Core.Orchestration.Models.ChatRequest(message, SessionId: sessionId),
+                cancellationToken);
             sw.Stop();
 
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
