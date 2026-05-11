@@ -56,6 +56,13 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
     private readonly ConcurrentDictionary<string, TranscriptTurnEntry> _turns;
     private readonly SemaphoreSlim _saveLock = new(1, 1);
 
+    // Monotonic per-instance counter for deterministic ordering when two
+    // turns share a timestamp (PR #174 review CR-H2). Initialized from the
+    // max sequence seen at Load() time so process restarts continue
+    // monotonically rather than resetting to 0 and creating ordering ties
+    // with persisted turns.
+    private long _sequenceCounter;
+
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         WriteIndented = true,
@@ -78,6 +85,11 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
         _maxTurns  = maxTurns > 0 ? maxTurns : throw new ArgumentOutOfRangeException(nameof(maxTurns));
         _logger    = logger;
         _turns     = Load(_storePath, logger);
+
+        // Continue the sequence monotonically across process restarts —
+        // initialise above the largest persisted sequence so newly-appended
+        // turns are unambiguously ordered after the loaded ones.
+        _sequenceCounter = _turns.Count == 0 ? 0 : _turns.Values.Max(t => t.Sequence);
     }
 
     /// <summary>Whitelisted role values per the chat-message convention.</summary>
@@ -97,7 +109,18 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
     /// — rejecting unknown values closes a prompt-injection vector flagged
     /// by the PR #173 security review (Sec-M1).
     /// </summary>
-    public void AppendTurn(string sessionId, string role, string content)
+    /// <param name="correlationId">Optional request-correlation id. PR #174
+    /// review (Sec-M) restored the forensic linkage to the chat request
+    /// log; nullable for callers that don't have one.</param>
+    /// <param name="agentId">Optional id of the agent that produced this
+    /// turn (for assistant turns) — provenance signal also restored by the
+    /// PR #174 review.</param>
+    public void AppendTurn(
+        string sessionId,
+        string role,
+        string content,
+        Guid? correlationId = null,
+        string? agentId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
         ArgumentException.ThrowIfNullOrWhiteSpace(role);
@@ -111,11 +134,14 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
                 nameof(role));
 
         var entry = new TranscriptTurnEntry(
-            Id:        Guid.NewGuid().ToString("N"),
-            SessionId: sessionId,
-            Role:      role,
-            Content:   content,
-            Timestamp: DateTimeOffset.UtcNow);
+            Id:            Guid.NewGuid().ToString("N"),
+            SessionId:     sessionId,
+            Role:          role,
+            Content:       content,
+            Timestamp:     DateTimeOffset.UtcNow,
+            Sequence:      Interlocked.Increment(ref _sequenceCounter),
+            CorrelationId: correlationId,
+            AgentId:       agentId);
 
         _turns[entry.Id] = entry;
         EnforceCap();
@@ -150,12 +176,20 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
         // timestamp (newest first, ties broken by SessionId for
         // determinism — PR #173 review CR-M2), take N, then convert each
         // group into a ChatTranscript with turns in chronological order.
+        //
+        // PR #174 review CR-H2: turns WITHIN a session order by
+        // (Timestamp ASC, Sequence ASC). Sequence breaks ties when two
+        // turns share a sub-millisecond timestamp — guarantees that a Q+A
+        // pair written by the same Task.Run body has user < assistant
+        // regardless of clock resolution or thread scheduling. Without
+        // this tiebreaker, two parallel responses on the same session
+        // could interleave such that assistant_N appears before user_N.
         var sessions = _turns.Values
             .GroupBy(t => t.SessionId, StringComparer.Ordinal)
             .Select(g => new
             {
                 SessionId = g.Key,
-                Turns     = g.OrderBy(t => t.Timestamp).ToList(),
+                Turns     = g.OrderBy(t => t.Timestamp).ThenBy(t => t.Sequence).ToList(),
                 Newest    = g.Max(t => t.Timestamp),
             })
             .OrderByDescending(s => s.Newest)
@@ -296,9 +330,25 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
 /// out as "noise" — it's a structural placeholder (PR #173 review CR-L1).</param>
 /// <param name="Timestamp">UTC write time. Used for newest-first session
 /// ordering in <see cref="ChatTranscriptStore.GetRecentAsync"/>.</param>
+/// <param name="Sequence">Monotonic per-instance counter, assigned at write
+/// time via <c>Interlocked.Increment</c>. Used as the tiebreaker after
+/// <see cref="Timestamp"/> so that two turns sharing a sub-millisecond
+/// timestamp still have a deterministic order — guarantees user &lt;
+/// assistant within the same Q+A pair under concurrent responses
+/// (PR #174 review CR-H2).</param>
+/// <param name="CorrelationId">Request-correlation id from the chatbot
+/// pipeline, when available. Lets operators join transcript turns back to
+/// their originating request log + observability span (PR #174 review
+/// Sec-M-Forensic). Optional — older entries deserialise with null.</param>
+/// <param name="AgentId">Identifier of the agent that produced the turn,
+/// for assistant turns. Provenance signal also restored by the PR #174
+/// review. Optional — null for user/system turns and legacy entries.</param>
 public sealed record TranscriptTurnEntry(
     string Id,
     string SessionId,
     string Role,
     string Content,
-    DateTimeOffset Timestamp);
+    DateTimeOffset Timestamp,
+    long Sequence = 0,
+    Guid? CorrelationId = null,
+    string? AgentId = null);

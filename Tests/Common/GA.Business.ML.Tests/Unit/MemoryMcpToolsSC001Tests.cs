@@ -266,6 +266,13 @@ public class MemoryMcpToolsSC001Tests
             ["Memory:EnrichOnRetrieve"] = enrichOnRetrieve ? "true" : "false",
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
-        return new MemoryHook(_store, config, NullLogger<MemoryHook>.Instance);
+        // SC-001 tests exercise the retrieval-side filter (OnRequestReceived);
+        // OnResponseSent's transcript write isn't exercised here, but the
+        // ctor signature requires a ChatTranscriptStore. Inject a sibling
+        // temp-path store so we don't touch the user's real
+        // ~/.ga/transcripts.json. Phase 2 ctor change (PR #174).
+        var transcriptPath = Path.Combine(Path.GetDirectoryName(_tempStorePath)!, "transcripts.json");
+        var transcriptStore = new ChatTranscriptStore(transcriptPath);
+        return new MemoryHook(_store, transcriptStore, config, NullLogger<MemoryHook>.Instance);
     }
 }

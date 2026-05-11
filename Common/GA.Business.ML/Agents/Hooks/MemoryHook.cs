@@ -34,6 +34,7 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 public sealed class MemoryHook(
     MemoryStore memoryStore,
+    ChatTranscriptStore transcriptStore,
     IConfiguration configuration,
     ILogger<MemoryHook> logger) : IChatHook
 {
@@ -148,31 +149,60 @@ public sealed class MemoryHook(
         // Capture by value before fire-and-forget — ctx fields are not safe to
         // close over because the orchestrator may reuse / mutate the context
         // after this method returns.
-        var sessionId       = ctx.SessionId;
-        var correlationId   = ctx.CorrelationId;
-        var originalMessage = ctx.OriginalMessage;
-        var agentId         = response.AgentId;
-        var resultSnippet   = response.Result[..Math.Min(500, response.Result.Length)];
+        //
+        // PR #174 review HIGH-1: use ctx.CurrentMessage (post-sanitization
+        // via PromptSanitizationHook.HookResult.Mutate), NOT
+        // ctx.OriginalMessage which is the raw user input. The role-
+        // whitelist defense (Sec-M1 in PR #173) only blocks injection in
+        // the Role field — content reaches the curator's prompt verbatim,
+        // so writing raw user input was a second-order prompt-injection
+        // vector. ctx.CurrentMessage falls back to OriginalMessage when no
+        // sanitizing hook fired (e.g., in tests without the hook stack).
+        var sessionId     = ctx.SessionId;
+        var userMessage   = ctx.CurrentMessage ?? ctx.OriginalMessage ?? "";
+        var correlationId = ctx.CorrelationId;
+        var agentId       = response.AgentId;
 
-        // Fire-and-forget write — don't block the response pipeline
+        // PR #174 review HIGH-2 (Sec): symmetric truncation. The old code
+        // capped the assistant snippet at 500 chars but let the user
+        // message grow unbounded — a 1 MB pasted prompt × N turns would
+        // produce a multi-GB transcripts.json that ChatTranscriptStore
+        // re-serializes on every Save (O(n) per write). Cap both sides
+        // at the same TurnContentCap so storage cost is bounded.
+        var userSnippet      = userMessage[..Math.Min(TurnContentCap, userMessage.Length)];
+        var assistantSnippet = response.Result[..Math.Min(TurnContentCap, response.Result.Length)];
+
+        // PR #173 Phase 2 + PR #174 review: transient chat content goes to
+        // ChatTranscriptStore, NOT MemoryStore. Two turns per response
+        // (user, then assistant) give the curator's transcript input the
+        // right shape. Sequence is assigned inside AppendTurn (PR #174
+        // CR-H2) so user < assistant per Q+A is guaranteed regardless of
+        // clock resolution.
+        //
+        // PR #174 review M-Cancellation: use CancellationToken.None so the
+        // request pipeline's RequestAborted (fired when ASP.NET disposes
+        // the scope after the response returns) cannot silently lose the
+        // write. The work is detached anyway; tying it to the request CT
+        // was a regression vector under high load / thread-pool starvation.
         _ = Task.Run(() =>
         {
             try
             {
-                var key = $"response_{correlationId:N}";
-                memoryStore.Write(
-                    sessionId: sessionId,
-                    key: key,
-                    type: "response",
-                    content: $"Q: {originalMessage}\nA: {resultSnippet}",
-                    tags: [agentId]);
+                transcriptStore.AppendTurn(sessionId, "user",      userSnippet,      correlationId, agentId: null);
+                transcriptStore.AppendTurn(sessionId, "assistant", assistantSnippet, correlationId, agentId);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "MemoryHook: failed to persist response memory");
+                logger.LogWarning(ex, "MemoryHook: failed to persist transcript turns");
             }
-        }, ct);
+        }, CancellationToken.None);
 
         return Task.FromResult(HookResult.Continue);
     }
+
+    /// <summary>
+    /// Per-turn content cap (bytes-as-chars). Symmetric on both user and
+    /// assistant turns to bound storage cost — PR #174 review HIGH-2.
+    /// </summary>
+    private const int TurnContentCap = 2000;
 }

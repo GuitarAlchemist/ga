@@ -72,13 +72,12 @@ public sealed class GaPlugin : IChatPlugin
         services.TryAddSingleton<MemoryStore>(sp =>
             new MemoryStore(sp.GetService<ILogger<MemoryStore>>() ?? NullLogger<MemoryStore>.Instance));
 
-        // ── Transcript log (PR #172 Phase 1) ─────────────────────────────────
+        // ── Transcript log (PR #173 Phase 1 + PR #174 Phase 2) ───────────────
         // Sibling to MemoryStore: holds per-turn chat content, not durable
-        // memory. Today nothing writes here (MemoryHook still writes
-        // type=response to MemoryStore); Phase 2 will rewire that. Registered
-        // now so the DI graph is complete and Phase 2 is a pure code change.
-        // Also exposes IChatTranscriptStore so the memory curator's existing
-        // (header-only since v0.1) transcript slot has a real backing.
+        // memory. MemoryHook.OnResponseSent (post-#174) writes user +
+        // assistant turns here so MemoryStore stays clean for durable
+        // knowledge. Also exposes IChatTranscriptStore so the memory
+        // curator's existing transcript slot has a real backing.
         services.TryAddSingleton<ChatTranscriptStore>(sp =>
             new ChatTranscriptStore(sp.GetService<ILogger<ChatTranscriptStore>>() ?? NullLogger<ChatTranscriptStore>.Instance));
         services.TryAddSingleton<IChatTranscriptStore>(sp =>
