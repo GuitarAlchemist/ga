@@ -164,6 +164,33 @@ public class MemoryHookAuditChannelTests
     }
 
     [Test]
+    public async Task ConcurrentDrops_ExactlyOneFirstHit_AndCorrectSummaryCount()
+    {
+        // PR #177 review (correctness MED-1) regression pin: under
+        // concurrent OnResponseSent, the previous CompareExchange-gated
+        // design could let one thread win the first-hit CAS with count=100
+        // while another thread saw count=1 with firstForReason=false, both
+        // suppressing the count=100 summary AND attributing wrong detail
+        // to the first-hit log. The fixed design gates on count == 1
+        // directly so exactly one thread observes the first hit. Run 500
+        // parallel drops — expect exactly 1 first-hit + 5 summaries.
+        const int total = 500;
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, total),
+            new ParallelOptions { MaxDegreeOfParallelism = 16 },
+            async (_, _) => await _hook.OnResponseSent(MakeCtx(confidence: 0.5f, contentLength: 200)));
+
+        var infos = _logger.Entries.Where(e => e.Level == LogLevel.Information).ToList();
+        var firstHits = infos.Count(e => e.Message.Contains("first response dropped"));
+        var summaries = infos.Count(e => e.Message.Contains("low-confidence drops ="));
+
+        Assert.That(firstHits, Is.EqualTo(1),
+            "Exactly one thread must observe count == 1 (no CAS race) — got first-hits = " + firstHits);
+        Assert.That(summaries, Is.EqualTo(total / 100),
+            $"Summary log must fire at every 100-multiple (5 times for total={total}).");
+    }
+
+    [Test]
     public async Task EveryDrop_EmitsDebugLog()
     {
         // Three drops, all at Debug level (regardless of summary cadence).
