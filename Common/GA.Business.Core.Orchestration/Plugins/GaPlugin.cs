@@ -77,8 +77,19 @@ public sealed class GaPlugin : IChatPlugin
         // Without the logger the legacy parameterless ctor swallows
         // permission-denied / disk-full silently — which historically looked
         // identical to "memory forgot everything between restarts."
+        //
+        // Embedder (PR after #195): if the host registered an
+        // IEmbeddingGenerator<string, Embedding<float>> (e.g. via
+        // AddTextEmbeddings / OllamaEmbeddingGenerator), pass it through so
+        // SearchHybridAsync's cosine layer actually runs. When the host
+        // didn't register one, MemoryStore silently degrades to BM25-only
+        // and emits a one-shot warning the first time SearchHybridAsync
+        // is called — that's the operator's signal that the embedder
+        // binding is missing.
         services.TryAddSingleton<MemoryStore>(sp =>
-            new MemoryStore(sp.GetService<ILogger<MemoryStore>>() ?? NullLogger<MemoryStore>.Instance));
+            new MemoryStore(
+                sp.GetService<ILogger<MemoryStore>>() ?? NullLogger<MemoryStore>.Instance,
+                sp.GetService<Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>>()));
 
         // ── Transcript log (PR #173 Phase 1 + PR #174 Phase 2) ───────────────
         // Sibling to MemoryStore: holds per-turn chat content, not durable
