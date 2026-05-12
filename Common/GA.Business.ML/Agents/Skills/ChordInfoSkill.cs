@@ -62,6 +62,15 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "what makes a chord a major seventh",
         "what makes a chord diminished",
         "what makes a chord a dominant seventh",
+        // v0.5 corpus expansion (2026-05-12): "anatomy of" / "break down"
+        // / "add 9" / "sus" / "maj13" patterns weren't covered. These
+        // were misrouting to diatonicchords because "chord" + extension
+        // numerals pulled toward that intent.
+        "anatomy of a D7sus4 chord",
+        "break down Gmaj13 for me",
+        "what is a C add 9 chord",
+        "give me the notes of an F#m7b5",
+        "tones in a Bb diminished seventh",
     ];
 
     public bool CanHandle(string message)

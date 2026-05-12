@@ -49,5 +49,12 @@ public sealed class TransposeSkill(
         "What's Dm7 up a whole step?",
         "Transpose G7 to Eb",
         "Shift Am7 up a fifth",
+        // v0.5 corpus expansion (2026-05-12): "raise the key by N semitones"
+        // pattern — was misrouting to skill.interval because the embedder
+        // matched on "semitones". The key+raise/lower combo is the
+        // transpose discriminator.
+        "raise the key by two semitones",
+        "lower the key by a half step",
+        "transposing the chorus down a tone",
     ];
 }

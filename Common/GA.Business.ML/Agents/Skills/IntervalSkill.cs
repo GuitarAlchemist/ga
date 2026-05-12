@@ -41,6 +41,13 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
         "Minor third up from D",
         "Perfect fourth above C",
         "Major sixth above G",
+        // v0.5 corpus expansion (2026-05-12): semitone-count paraphrases.
+        // Bare "What is a tritone" was REMOVED here after it pulled the
+        // cosine for "tritone substitution for D7" away from
+        // chordsubstitution. The "augmented fourth definition" form
+        // covers the same concept without the chord-substitution overlap.
+        "augmented fourth definition",
+        "semitones in a major sixth",
     ];
 
     // Capture two note names with optional accidentals — order matters, "from X to Y"

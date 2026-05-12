@@ -43,6 +43,12 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "What's in the G major scale?",
         "What's in the D minor scale?",
         "What's in the F major scale?",
+        // v0.5 corpus expansion (2026-05-12): "formula for [scale]"
+        // pattern — was misrouting to chordinfo on the abstract
+        // "formula" word. Scale formulas are scale knowledge.
+        "What's the formula for harmonic minor",
+        "Formula for melodic minor scale",
+        "Degrees of the A major scale",
     ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.

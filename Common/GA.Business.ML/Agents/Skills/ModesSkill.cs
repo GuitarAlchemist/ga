@@ -39,6 +39,11 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "Notes of D Dorian",
         "Notes in A Phrygian",
         "Spell out E Lydian",
+        // v0.5 corpus expansion (2026-05-12): conversational paraphrases.
+        "Tell me about D Dorian",
+        "What makes Lydian unique",
+        "Characteristics of Locrian",
+        "Mixolydian versus Ionian differences",
     ];
 
     private static readonly Regex ModesPattern =
