@@ -13,6 +13,19 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseContentRoot(TestPaths.RepositoryPath("Apps", "ga-server", "GaApi"));
+
+        // Force the Ollama IChatClient path during tests. appsettings.Development.json
+        // pins AI:ChatProvider=claude, which makes AddLlmServices eagerly construct
+        // an AnthropicProvider IChatClient at boot (intentional per PR #151 — fail
+        // fast on misconfig). CI has no ANTHROPIC_API_KEY, so every WebApplicationFactory
+        // test in this assembly blew up at host build with InvalidOperationException
+        // out of AnthropicProvider.CreateChatClient. None of the GaApi.Tests fixtures
+        // actually exercise the chat endpoint — they cover GraphQL, REST, and DI
+        // shape. The Ollama branch registers a lazy adapter that never probes the
+        // network unless something resolves IChatService, so this is safe even
+        // without an Ollama instance running.
+        builder.UseSetting("AI:ChatProvider", "ollama");
+
         base.ConfigureWebHost(builder);
     }
 
