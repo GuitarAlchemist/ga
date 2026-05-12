@@ -48,6 +48,13 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
             Confidence: response.Confidence,
             Evidence: response.Evidence?.ToList(),
             RoutingMethodOverride: "orchestrator-skill-semantic",
-            Grounding: grounding);
+            Grounding: grounding,
+            // PR #185 (2026-05-12): forward AgentResponse.Data so structured
+            // payloads (e.g. RememberThisSkill's MemoryWriteRequest) survive
+            // the intent-adapter map and reach OnResponseSent hooks.
+            // Production bug surfaced by the live-orchestrator e2e: without
+            // this line, MemoryWriteHook never saw the write request and
+            // RememberThis silently failed through the semantic dispatch.
+            Data: response.Data);
     }
 }

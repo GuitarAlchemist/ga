@@ -322,6 +322,13 @@ public class ProductionOrchestrator(
             var intentResult = await pick.Intent.ExecuteAsync(message, ct);
 
             // Map IntentResult back to AgentResponse for hook compatibility.
+            // PR #185 (2026-05-12): forward Data so structured payloads
+            // (e.g. RememberThisSkill's MemoryWriteRequest) reach
+            // OnResponseSent hooks. Without this line — and the matching
+            // Data field on IntentResult + the forward in
+            // OrchestratorSkillIntent — durable-memory writes from the
+            // semantic-routing path silently fail because MemoryWriteHook
+            // pattern-matches on ctx.Response?.Data.
             var skillRespForHooks = new AgentResponse
             {
                 AgentId    = pick.Intent.Id,
@@ -329,6 +336,7 @@ public class ProductionOrchestrator(
                 Confidence = intentResult.Confidence,
                 Evidence   = intentResult.Evidence ?? [],
                 Assumptions = [],
+                Data       = intentResult.Data,
             };
 
             // OnAfterSkill hooks

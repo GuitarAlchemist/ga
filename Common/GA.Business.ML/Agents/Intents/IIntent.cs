@@ -81,4 +81,13 @@ public sealed record IntentResult(
     float Confidence = 1.0f,
     IReadOnlyList<string>? Evidence = null,
     string? RoutingMethodOverride = null,
-    IntentGroundingEvidence? Grounding = null);
+    IntentGroundingEvidence? Grounding = null,
+    // PR #185 (2026-05-12): structured payload propagated from the wrapped
+    // skill's AgentResponse.Data so OnResponseSent hooks can pattern-match.
+    // Discovered as a production bug: RememberThisSkill emits a
+    // MemoryWriteRequest on AgentResponse.Data, but OrchestratorSkillIntent
+    // previously dropped it during the AgentResponse → IntentResult map,
+    // and ProductionOrchestrator's skillRespForHooks reconstruction had
+    // Data=null. MemoryWriteHook's `is MemoryWriteRequest` guard then
+    // never matched and durable-memory writes silently failed.
+    object? Data = null);
