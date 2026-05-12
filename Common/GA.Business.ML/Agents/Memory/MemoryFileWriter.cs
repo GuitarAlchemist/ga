@@ -139,6 +139,15 @@ public static class MemoryFileWriter
             // user — so it succeeds where Move fails.
             if (!OperatingSystem.IsWindows()) throw;
 
+            // File.Replace REQUIRES the destination to exist (Win32 ReplaceFile
+            // throws FileNotFoundException otherwise). UAE without a pre-existing
+            // destination indicates a different problem — e.g. parent-dir
+            // permission denial — and falling through to File.Replace would
+            // mask the real cause with a confusing FileNotFoundException.
+            // Re-throw the original UAE so the operator sees the actual
+            // permission failure. Found by PR #187 correctness review.
+            if (!File.Exists(path)) throw;
+
             logger?.LogWarning(ex,
                 "MemoryFileWriter: File.Move(overwrite) into {Path} failed with " +
                 "UnauthorizedAccessException — destination DACL may exclude the " +
