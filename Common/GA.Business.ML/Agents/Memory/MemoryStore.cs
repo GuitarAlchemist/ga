@@ -28,7 +28,61 @@ public sealed record MemoryEntry(
     string Content,
     string[] Tags,
     DateTimeOffset Timestamp,
-    string? SessionId = null);
+    string? SessionId = null,
+    // PR after #194: per-entry embedding vector for hybrid BM25 + cosine
+    // retrieval. Lazily populated on first SearchHybridAsync() call if
+    // the store was constructed with an IEmbeddingGenerator. Backward
+    // compat: pre-v0.4 entries on disk have no embedding field and
+    // deserialize with Embedding=null; SearchHybridAsync skips the
+    // cosine contribution for those entries and falls back to pure BM25.
+    float[]? Embedding = null)
+{
+    /// <summary>
+    /// Override structural equality to use semantic comparison rather
+    /// than the record-synthesized reference equality for array-typed
+    /// fields (<see cref="Tags"/> and <see cref="Embedding"/>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this matters (PR #195 review finding corr-004):</b> the
+    /// compiler-synthesized <c>Equals</c> for a record compares each
+    /// field via <c>EqualityComparer&lt;T&gt;.Default</c>. For
+    /// <c>string[]</c> and <c>float[]</c> that's REFERENCE equality —
+    /// two entries with semantically identical Tags/Embedding arrays
+    /// but different array references would compare unequal. That
+    /// breaks <c>HashSet&lt;MemoryEntry&gt;</c>, <c>Distinct()</c>,
+    /// and <see cref="object.Equals(object?)"/>-based change detection.
+    /// Specifically: a re-loaded-from-disk entry's Tags array is a
+    /// fresh allocation that doesn't share a reference with any
+    /// in-memory copy, so the two compare unequal under the synthesized
+    /// equality even though they represent the same record.
+    /// </para>
+    /// <para>
+    /// <b>Embedding excluded from equality entirely:</b> embeddings are
+    /// a cached derived value (BM25 + cosine retrieval lookup). Two
+    /// entries with identical Content but different Embedding values
+    /// (e.g. one freshly computed, one not yet computed) should be
+    /// considered the same entry. Including the embedding in equality
+    /// would mean a backfilled entry is "different" from its
+    /// pre-backfill self.
+    /// </para>
+    /// </remarks>
+    public bool Equals(MemoryEntry? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Key == other.Key
+            && Type == other.Type
+            && Content == other.Content
+            && Tags.SequenceEqual(other.Tags)
+            && Timestamp == other.Timestamp
+            && SessionId == other.SessionId;
+        // Embedding intentionally NOT compared — it's a derived cache.
+    }
+
+    public override int GetHashCode() =>
+        HashCode.Combine(Key, Type, Content, Timestamp, SessionId);
+}
 
 /// <summary>
 /// In-process agent memory backed by a JSON file at <c>~/.ga/memory.json</c>.
@@ -66,6 +120,14 @@ public sealed class MemoryStore
 
     private readonly string _storePath;
     private readonly ILogger<MemoryStore>? _logger;
+
+    /// <summary>
+    /// Optional embedder for hybrid BM25 + cosine retrieval. When null,
+    /// <see cref="SearchHybridAsync"/> degrades to pure BM25 and emits
+    /// a one-shot warning so operators notice the misconfiguration
+    /// rather than silently losing the embedding-ranking lift.
+    /// </summary>
+    private readonly Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? _embedder;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -127,11 +189,32 @@ public sealed class MemoryStore
     /// overloads above.
     /// </summary>
     public MemoryStore(string storePath, ILogger<MemoryStore>? logger)
+        : this(storePath, logger, embedder: null) { }
+
+    /// <summary>
+    /// Hybrid-retrieval constructor — adds an optional embedder for
+    /// <see cref="SearchHybridAsync"/>. When the embedder is null the
+    /// store falls back to pure BM25; when provided it lazy-populates
+    /// per-entry embeddings on first hybrid-search of each entry.
+    /// </summary>
+    public MemoryStore(
+        string storePath,
+        ILogger<MemoryStore>? logger,
+        Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? embedder)
     {
         _storePath = storePath ?? throw new ArgumentNullException(nameof(storePath));
         _logger    = logger;
+        _embedder  = embedder;
         _entries   = Load(_storePath, logger);
     }
+
+    /// <summary>
+    /// DI-friendly hybrid constructor — default path, logger, embedder.
+    /// </summary>
+    public MemoryStore(
+        ILogger<MemoryStore> logger,
+        Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? embedder)
+        : this(DefaultStorePath, logger, embedder) { }
 
     // Bounded so anonymous chatbot traffic at the public demo URL can't grow
     // ~/.ga/memory.json unbounded — see PR #151 review (reliability rel-007).
@@ -279,6 +362,263 @@ public sealed class MemoryStore
             .ThenByDescending(scored => scored.Entry.Timestamp)
             .Select(scored => scored.Entry)
             .ToList();
+    }
+
+    /// <summary>
+    /// Hybrid BM25 + cosine-similarity search. Each entry's final score is
+    /// <c>HybridBm25Weight * normalizedBm25 + HybridCosineWeight * cosine</c>
+    /// where normalizedBm25 is the entry's BM25 score divided by the
+    /// best BM25 score in the in-scope corpus (so the two terms are
+    /// comparable). Entries with no precomputed embedding are
+    /// lazy-embedded during this call and the result is cached back to
+    /// disk via <see cref="Save"/> on the next write.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why hybrid:</b> BM25 alone misses paraphrases that share
+    /// concept-space but no surface tokens ("drop-2 voicings I like"
+    /// vs "two-note-skip jazz chord shapes"). Pure cosine alone over-
+    /// matches semantically-related-but-not-asked entries (a query for
+    /// "jazz" pulls every entry that ever mentioned music). The hybrid
+    /// gets both signals.
+    /// </para>
+    /// <para>
+    /// <b>When no embedder is configured</b> the method emits a one-
+    /// shot warning and delegates to <see cref="Search"/> for pure
+    /// BM25. The caller's contract is unchanged — they still get an
+    /// ordered list — only the ranking quality differs.
+    /// </para>
+    /// <para>
+    /// <b>Lazy backfill:</b> any in-scope entry without an embedding is
+    /// embedded once during this call. The updated <see cref="MemoryEntry"/>
+    /// replaces the existing one in <see cref="_entries"/>; the next
+    /// <see cref="Write"/> serializes the embeddings to disk. This
+    /// avoids paying the embedding cost on Write while still
+    /// accumulating the cache over time.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<MemoryEntry>> SearchHybridAsync(
+        string? sessionId,
+        string query,
+        string? type = null,
+        string[]? tags = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_embedder is null)
+        {
+            WarnNoEmbedderOnce();
+            return Search(sessionId, query, type, tags);
+        }
+
+        var queryTokens = TokenizeAndFilter(query);
+        if (queryTokens.Count == 0) return [];
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var corpus = _entries.Values
+            .Where(e => InScope(e, sessionId))
+            .Where(e => type is null || e.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+            .Where(e => tags is null || tags.Any(t => e.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)))
+            .Select(TokenizeEntry)
+            .ToList();
+        if (corpus.Count == 0) return [];
+
+        // BM25 layer — same math as Search() so the score is comparable.
+        var avgDocLength = corpus.Average(d => d.TokenCount);
+        if (avgDocLength <= 0) avgDocLength = 1;
+
+        var idf = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var q in queryTokens)
+        {
+            var df = corpus.Count(d => d.TermFreq.ContainsKey(q));
+            idf[q] = Math.Log(1.0 + (corpus.Count - df + 0.5) / (df + 0.5));
+        }
+
+        var bm25Scores = corpus
+            .Select(d => (d.Entry, Bm25: ComputeBm25(d, queryTokens, idf, avgDocLength)))
+            .ToList();
+        var maxBm25 = bm25Scores.Max(s => s.Bm25);
+
+        // PR #195 review corr-002: when maxBm25 == 0 (every entry's BM25
+        // is zero — no token overlap at all), the normalized BM25 term
+        // collapses to 0 and the hybrid score collapses to
+        // HybridCosineWeight * cosine, capping at 0.5. That makes
+        // no-BM25-signal queries return scores incomparable with
+        // BM25-signal queries from other calls. Switch to cosine-only
+        // weighting in that branch so cosine carries the full score.
+        var noBm25Signal = maxBm25 <= 0;
+        if (noBm25Signal) maxBm25 = 1;  // guard divide-by-zero; bm25/maxBm25 stays 0
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Cosine layer — embed the query once, embed any uncached entries.
+        float[] queryEmbedding;
+        bool embedAvailable = true;
+        try
+        {
+            queryEmbedding = await EmbedAsync(query, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // PR #195 review corr-005: embed failure should not throw past
+            // the caller. Fall back to BM25-only ranking. Log so the
+            // operator sees the degraded ranking quality in production.
+            _logger?.LogWarning(ex,
+                "MemoryStore.SearchHybridAsync: query embed failed; falling back " +
+                "to BM25-only ranking. Embedder may be unreachable.");
+            embedAvailable = false;
+            queryEmbedding = [];
+        }
+
+        if (embedAvailable)
+        {
+            // Lazy backfill: gather entries needing embedding, batch into a
+            // single embedder call (the IEmbeddingGenerator surface is
+            // designed for batches; per-entry calls would multiply latency).
+            var needEmbedding = corpus
+                .Where(d => d.Entry.Embedding is null || d.Entry.Embedding.Length == 0)
+                .ToList();
+            if (needEmbedding.Count > 0)
+            {
+                try
+                {
+                    var texts = needEmbedding.Select(d => EmbeddingText(d.Entry)).ToList();
+                    var newEmbeddings = await _embedder.GenerateAsync(texts, cancellationToken: cancellationToken);
+                    for (var i = 0; i < needEmbedding.Count; i++)
+                    {
+                        var captured = needEmbedding[i].Entry;
+                        var vec      = newEmbeddings[i].Vector.ToArray();
+                        var key      = CompositeKey(captured.SessionId, captured.Key);
+
+                        // PR #195 review corr-001: AddOrUpdate with a
+                        // capture-vs-current guard. If a concurrent Write
+                        // replaced the entry between the corpus snapshot
+                        // and this assignment, we must NOT overwrite the
+                        // newer entry with our stale (captured) copy
+                        // wearing a fresh embedding. The embedding was
+                        // computed from captured.Content; attaching it to
+                        // a newer entry with different content would also
+                        // be wrong. So: only attach if the current entry
+                        // is byte-identical (modulo embedding) to the
+                        // captured one.
+                        _entries.AddOrUpdate(
+                            key,
+                            addValueFactory: _ => captured with { Embedding = vec },
+                            updateValueFactory: (_, current) =>
+                                current.Timestamp == captured.Timestamp
+                                    && current.Content == captured.Content
+                                    && current.Type == captured.Type
+                                    ? current with { Embedding = vec }
+                                    : current);  // newer entry; drop the stale embedding
+                    }
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger?.LogWarning(ex,
+                        "MemoryStore.SearchHybridAsync: corpus embed batch failed; " +
+                        "continuing with whatever embeddings are already cached.");
+                    // Fall through — entries that already have embeddings still
+                    // contribute cosine; entries without get cosine = 0.
+                }
+            }
+        }
+
+        // Re-read entries from _entries to pick up the lazy-backfilled
+        // embeddings (corpus has the stale snapshot).
+        var ranked = new List<(MemoryEntry Entry, double Hybrid)>(bm25Scores.Count);
+        foreach (var (entry, bm25) in bm25Scores)
+        {
+            var current = _entries.TryGetValue(CompositeKey(entry.SessionId, entry.Key), out var fresh)
+                ? fresh
+                : entry;
+            var cosine = embedAvailable && current.Embedding is { Length: > 0 }
+                ? CosineSimilarity(queryEmbedding, current.Embedding)
+                : 0.0;
+            var hybrid = noBm25Signal
+                ? cosine  // cosine-only weighting when BM25 has no signal
+                : HybridBm25Weight * (bm25 / maxBm25) + HybridCosineWeight * cosine;
+            ranked.Add((current, hybrid));
+        }
+
+        return ranked
+            .Where(r => r.Hybrid > 0)
+            .OrderByDescending(r => r.Hybrid)
+            .ThenByDescending(r => r.Entry.Timestamp)
+            .Select(r => r.Entry)
+            .ToList();
+    }
+
+    /// <summary>BM25 weight in the hybrid score. <c>0.5</c> balances
+    /// exact-token recall against semantic-similarity recall.</summary>
+    public const double HybridBm25Weight = 0.5;
+
+    /// <summary>Cosine weight in the hybrid score. <c>0.5</c> balances
+    /// semantic-similarity against exact-token recall.</summary>
+    public const double HybridCosineWeight = 0.5;
+
+    private int _warnNoEmbedderFired;
+
+    private void WarnNoEmbedderOnce()
+    {
+        if (Interlocked.Exchange(ref _warnNoEmbedderFired, 1) != 0) return;
+        _logger?.LogWarning(
+            "MemoryStore.SearchHybridAsync called without an IEmbeddingGenerator " +
+            "configured — falling back to pure BM25. Hybrid ranking lift is " +
+            "lost. To enable, register an IEmbeddingGenerator<string, " +
+            "Embedding<float>> in DI before constructing MemoryStore.");
+    }
+
+    private async Task<float[]> EmbedAsync(string text, CancellationToken ct)
+    {
+        var batch = await _embedder!.GenerateAsync([text], cancellationToken: ct);
+        return batch[0].Vector.ToArray();
+    }
+
+    /// <summary>
+    /// Builds the text to embed for an entry — content + tags only.
+    /// Key is deliberately excluded.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why Key is excluded (PR #195 review corr-003):</b> keys in
+    /// this codebase include hash-suffixed identifiers like
+    /// <c>response_a3f9b2</c> / <c>preference_drop2-voicings-jazz_8e1f4ab2</c>
+    /// (see <c>LegacyResponseMigration.DeriveId</c>,
+    /// <c>RememberThisParser.GenerateKey</c>). Modern sentence-transformer
+    /// embedders (nomic-embed-text et al.) tokenize prose; injecting a
+    /// hash-suffix adds non-semantic tokens that distort the vector and
+    /// degrade cosine quality across entries sharing key-prefix patterns
+    /// (every <c>response_*</c> entry would cluster purely because of
+    /// the shared prefix). The BM25 side is a token bag with length
+    /// normalization and TF saturation, so adding Key there does no
+    /// harm — but the embedder doesn't get those defenses.
+    /// </para>
+    /// <para>
+    /// Tags ARE included because they're user-meaningful prose
+    /// (<c>"jazz"</c>, <c>"audience:intermediate"</c>, <c>"user-stated"</c>)
+    /// that genuinely contribute to the semantic surface.
+    /// </para>
+    /// </remarks>
+    private static string EmbeddingText(MemoryEntry entry)
+    {
+        if (entry.Tags.Length == 0) return entry.Content;
+        return $"{entry.Content} {string.Join(' ', entry.Tags)}";
+    }
+
+    private static double CosineSimilarity(float[] a, float[] b)
+    {
+        if (a.Length == 0 || b.Length == 0) return 0;
+        if (a.Length != b.Length) return 0;
+
+        double dot = 0, magA = 0, magB = 0;
+        for (var i = 0; i < a.Length; i++)
+        {
+            dot  += a[i] * b[i];
+            magA += a[i] * a[i];
+            magB += b[i] * b[i];
+        }
+        var denom = Math.Sqrt(magA) * Math.Sqrt(magB);
+        return denom > 0 ? dot / denom : 0;
     }
 
     /// <summary>BM25 default <c>k1</c> (term-frequency saturation).</summary>
