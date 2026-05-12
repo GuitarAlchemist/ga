@@ -32,6 +32,13 @@ public sealed class ProgressionMoodSkill(ILogger<ProgressionMoodSkill> logger) :
         "Techniques to make a major progression minor-sounding",
         "Make my song sound brighter",
         "How to make a progression more uplifting",
+        // "Brighten up [thing] tune" idiom — was losing to ChordInfoSkill
+        // because "minor key" pulled the embedding toward chord territory.
+        // The verb "brighten up" + "tune" anchors mood. Added 2026-05-12
+        // to close pm-4 misroute.
+        "Brighten up a minor key tune",
+        "Brighten this minor song",
+        "How do I lift the mood of a minor progression?",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only

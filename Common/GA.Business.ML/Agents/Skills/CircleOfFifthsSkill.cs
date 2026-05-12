@@ -31,6 +31,15 @@ public sealed class CircleOfFifthsSkill(ILogger<CircleOfFifthsSkill> logger) : I
         "Why do some keys have flats and others sharps?",
         "How many sharps does D major have?",
         "Walk me through the circle of fourths",
+        // "Across the circle from [key]" / "[direction] around the circle"
+        // pattern — was losing to KeyIdentificationSkill because the
+        // tail "from D" read as identifying a key. Added 2026-05-12 to
+        // close co-4 misroute. The "circle" word is the discriminator —
+        // these examples make sure it dominates the embedding.
+        "What key is across the circle from D?",
+        "Across the circle from G major",
+        "What's opposite C on the circle of fifths?",
+        "Move three positions clockwise on the circle",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only

@@ -75,6 +75,40 @@ public class DefaultRoutingHintProviderTests
             $"Expected {expectedIntentId} boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
     }
 
+    // Mode-name hint — explicit pitch-class names of the seven diatonic
+    // modes should boost skill.modes. Added 2026-05-12 to close mo-3 in
+    // the 2026-05-11 routing-eval corpus. The trick was that the embedder
+    // scored skill.scaleinfo slightly higher on "what notes are in G
+    // Mixolydian" — the mode name IS the discriminator and only a
+    // deterministic hint can guarantee it dominates.
+    [TestCase("what notes are in G Mixolydian")]
+    [TestCase("notes of D Dorian")]
+    [TestCase("explain the Lydian mode")]
+    [TestCase("what is Phrygian")]
+    [TestCase("compare Ionian and Aeolian")]
+    [TestCase("Locrian half-diminished")]
+    public void ModeName_PositiveExamples_BoostModesIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.modes"), Is.True,
+            $"Expected skill.modes boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.modes"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // False-positive guards — these prompts should NOT boost skill.modes
+    // because the mode-name substring appears inside a non-musical context
+    // (a name, a place, a brand) or is just absent.
+    [TestCase("what's a perfect fifth")]
+    [TestCase("transpose this progression")]
+    [TestCase("alternative chord for Cmaj7")]
+    [TestCase("brighten up a minor key tune")]
+    public void ModeName_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.modes"), Is.False,
+            $"Did NOT expect skill.modes boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
     [Test]
     public void EmptyQuery_ReturnsNoDeltas()
     {

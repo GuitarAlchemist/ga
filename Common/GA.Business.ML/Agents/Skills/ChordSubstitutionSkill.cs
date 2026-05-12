@@ -39,6 +39,18 @@ public sealed class ChordSubstitutionSkill(
         "Alternative chord for F major in C",
         "What's the secondary dominant of Am?",
         "Show me a backdoor dominant for C major",
+        // Bare "alternative chord for [chord]" without "in [key]" suffix —
+        // was losing to DiatonicChordsSkill because the in-key version
+        // pulled examples toward diatonic territory. Added 2026-05-12.
+        "Alternative chord for Cmaj7",
+        "What can replace Dm7?",
+        "Swap chord for G7",
+        // "Modal interchange" pattern — was losing to TransposeSkill
+        // (modal-interchange semantically near "modal" + the "for C major"
+        // tail was reading as a target key). Added 2026-05-12.
+        "Modal interchange substitutes for C major",
+        "Borrow a chord from parallel minor",
+        "Modal interchange options in F major",
     ];
 
     // ── Triggers ──────────────────────────────────────────────────────────────

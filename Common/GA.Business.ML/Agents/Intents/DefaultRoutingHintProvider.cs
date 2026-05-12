@@ -78,6 +78,17 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.scaleinfo"),
 
+        // Modes — explicit mode-name mention. Added 2026-05-12 to close
+        // mo-3 ("what notes are in G mixolydian" → was misrouting to
+        // skill.scaleinfo because "notes in <key>" overlapped both
+        // skills' example sets). The mode name IS the discriminator;
+        // boosting skill.modes by +0.06 tips the tie reliably.
+        // Pattern is anchored on word boundaries so embedded substrings
+        // (e.g. "Lydiansville") don't fire.
+        (new Regex(@"\b(ionian|dorian|phrygian|lydian|mixolydian|aeolian|locrian)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.modes"),
+
         // Chord info — chord-tone questions and quality-symbol mentions.
         // The "tell me about <chord>" / "what notes are in <chord>" shapes
         // were misrouting to modes / scale-info because of overlap on

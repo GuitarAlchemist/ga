@@ -36,6 +36,13 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "What is D minor?",
         "What is F# major?",
         "Tell me the notes of E major",
+        // "What's in the [X] major/minor scale" pattern — was losing to
+        // ModesSkill because "scale" appeared adjacent to a key letter
+        // and the modes embedding was a slightly better cosine match.
+        // Added 2026-05-12 to close si-4 misroute in the 2026-05-11 corpus.
+        "What's in the G major scale?",
+        "What's in the D minor scale?",
+        "What's in the F major scale?",
     ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.

@@ -39,5 +39,12 @@ public sealed class CommonTonesSkill(
         "Pivot tones from F to Bb7",
         "Notes in common between Dm7 and G7",
         "What do C major and A minor share?",
+        // "Overlapping notes" / "overlap" pattern — was losing to ChordInfoSkill
+        // because two chord names dominated the embedding without an anchor on
+        // the shared-notes concept. The verb "overlap" is the discriminator.
+        // Added 2026-05-12 to close ct-5 misroute.
+        "Overlapping notes in Cmaj7 and Em7",
+        "Which notes overlap between Dm7 and G7?",
+        "Find the overlap of F major and Am7",
     ];
 }

@@ -31,6 +31,14 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "What is Lydian mode?",
         "Explain Phrygian and Aeolian",
         "How does Mixolydian differ from Ionian?",
+        // "Notes in [key] [mode-name]" pattern — was losing to ScaleInfoSkill
+        // because the mode name was matching less strongly than the [key]+"scale"
+        // overlap on the ScaleInfo side. The mode name IS the discriminator;
+        // these examples anchor it. Added 2026-05-12 to close mo-3 misroute.
+        "What notes are in G Mixolydian?",
+        "Notes of D Dorian",
+        "Notes in A Phrygian",
+        "Spell out E Lydian",
     ];
 
     private static readonly Regex ModesPattern =

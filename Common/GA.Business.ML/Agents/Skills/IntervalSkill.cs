@@ -30,6 +30,17 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
         "Interval from C to E",
         "How many semitones from A to E?",
         "What's the interval between D and Bb?",
+        // Definitional pattern — "what is/what's a [interval name]". Was
+        // losing to CircleOfFifthsSkill (perfect-fifth keyword overlap) and
+        // ScaleInfoSkill ("up from [note]" → scale-y). Added 2026-05-12 to
+        // close in-2 and in-4 misroutes.
+        "What's a perfect fifth?",
+        "What is a major sixth?",
+        "Define a minor third",
+        // "[interval name] up/above/below [note]" pattern.
+        "Minor third up from D",
+        "Perfect fourth above C",
+        "Major sixth above G",
     ];
 
     // Capture two note names with optional accidentals — order matters, "from X to Y"
