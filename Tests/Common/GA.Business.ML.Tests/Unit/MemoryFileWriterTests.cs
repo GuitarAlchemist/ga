@@ -1,12 +1,17 @@
 namespace GA.Business.ML.Tests.Unit;
 
+using System.Runtime.Versioning;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using GA.Business.ML.Agents.Memory;
 
 /// <summary>
-/// Pins the atomic-write + owner-only-mode contract shipped by
+/// Pins the atomic-write + owner-only-permission contract shipped by
 /// <see cref="MemoryFileWriter"/>. Atomic-rename behavior tested on every
-/// platform; the mode-setting branch is asserted only on Unix-likes
-/// (Windows uses inherited user-profile ACL, no explicit DACL set).
+/// platform; the mode-setting branch is asserted on Unix-likes; the
+/// explicit-DACL branch is asserted on Windows. Each platform-gated test
+/// is decorated with <c>[Platform(...)]</c> so the other platform's CI
+/// silently skips rather than failing.
 /// </summary>
 [TestFixture]
 public class MemoryFileWriterTests
@@ -94,7 +99,7 @@ public class MemoryFileWriterTests
         // On Linux / macOS / FreeBSD the file must land at mode 0600
         // (owner read + write). On Windows this test is skipped — the
         // mode-setting branch is gated by OperatingSystem.IsLinux() and
-        // friends; Windows relies on user-profile ACL inheritance.
+        // friends; Windows is covered by the DACL test below.
         var path = Path.Combine(_tempDir, "memory.json");
         MemoryFileWriter.WriteAtomic(path, "x");
 
@@ -102,5 +107,80 @@ public class MemoryFileWriterTests
         Assert.That(mode, Is.EqualTo(UnixFileMode.UserRead | UnixFileMode.UserWrite),
             $"Expected 0600 (UserRead | UserWrite); got {mode}. Group / other " +
             "permissions are a defense-in-depth gap on shared hosts.");
+    }
+
+    [Test]
+    [Platform("Win")]
+    [SupportedOSPlatform("windows")]
+    public void WriteAtomic_OnWindows_AppliesExplicitOwnerOnlyDacl()
+    {
+        // On Windows the file must land with:
+        //   • inheritance disabled (AreAccessRulesProtected == true)
+        //   • the current user with FullControl
+        //   • NT AUTHORITY\SYSTEM with FullControl
+        //   • BUILTIN\Administrators with FullControl
+        //   • no Authenticated Users / Everyone Allow ACEs (those are
+        //     what the inherited ACL on shared CI agents typically
+        //     leaks through)
+        var path = Path.Combine(_tempDir, "memory.json");
+        MemoryFileWriter.WriteAtomic(path, "x");
+
+        var info     = new FileInfo(path);
+        var security = info.GetAccessControl();
+
+        Assert.That(security.AreAccessRulesProtected, Is.True,
+            "DACL must be marked Protected (inheritance disabled). " +
+            "Without this, the parent dir's ACL leaks back in.");
+
+        var rules = security
+            .GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
+            .Cast<FileSystemAccessRule>()
+            .ToList();
+
+        // Sanity: every Allow rule we set is FullControl. We don't assert
+        // negative ACEs because the absence of an Allow already implies
+        // the principal has no access — that's the Windows ACL model.
+        using var identity = WindowsIdentity.GetCurrent();
+        var userSid  = identity.User!;
+        var systemSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+        var adminSid  = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+
+        Assert.That(rules.Any(r =>
+                r.IdentityReference.Equals(userSid) &&
+                r.FileSystemRights == FileSystemRights.FullControl &&
+                r.AccessControlType == AccessControlType.Allow),
+            "Current user must have an explicit Allow FullControl ACE.");
+
+        Assert.That(rules.Any(r =>
+                r.IdentityReference.Equals(systemSid) &&
+                r.FileSystemRights == FileSystemRights.FullControl &&
+                r.AccessControlType == AccessControlType.Allow),
+            "NT AUTHORITY\\SYSTEM must have an explicit Allow FullControl ACE " +
+            "(backup/AV/service workers running as SYSTEM need read access).");
+
+        Assert.That(rules.Any(r =>
+                r.IdentityReference.Equals(adminSid) &&
+                r.FileSystemRights == FileSystemRights.FullControl &&
+                r.AccessControlType == AccessControlType.Allow),
+            "BUILTIN\\Administrators must have an explicit Allow FullControl ACE " +
+            "(admin tooling must not require take-ownership).");
+
+        // Explicitly assert that Authenticated Users and Everyone are NOT
+        // listed. These are the two principals shared CI agents most
+        // commonly inherit from the parent dir.
+        var authenticatedUsersSid = new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null);
+        var everyoneSid           = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+
+        Assert.That(rules.Any(r =>
+                r.IdentityReference.Equals(authenticatedUsersSid) &&
+                r.AccessControlType == AccessControlType.Allow),
+            Is.False,
+            "Authenticated Users must NOT have an Allow ACE — that's the " +
+            "leak vector this DACL is closing.");
+        Assert.That(rules.Any(r =>
+                r.IdentityReference.Equals(everyoneSid) &&
+                r.AccessControlType == AccessControlType.Allow),
+            Is.False,
+            "Everyone must NOT have an Allow ACE.");
     }
 }
