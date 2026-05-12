@@ -39,6 +39,17 @@ public sealed class ProgressionMoodSkill(ILogger<ProgressionMoodSkill> logger) :
         "Brighten up a minor key tune",
         "Brighten this minor song",
         "How do I lift the mood of a minor progression?",
+        // "[mode] flavor brighten/darken [thing]" pattern — was losing to
+        // GenreEssentialsSkill because "rock progressions" pulled the
+        // embedding toward genre territory and outscored mood. The
+        // discriminator is the "flavor/color/feel" + brighten/darken
+        // verb combo: those words signal mood transformation, not
+        // genre vocabulary. Added 2026-05-12 to close adv-4 misroute
+        // (PR #188 follow-up).
+        "How does Mixolydian flavor brighten rock progressions?",
+        "Use Lydian color to brighten a major progression",
+        "Phrygian flavor to darken a progression",
+        "What mode adds the most brightness to a major key tune?",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only
