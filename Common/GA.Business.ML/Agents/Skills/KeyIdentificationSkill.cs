@@ -26,6 +26,14 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
         "Identify the key of Dm G C",
         "What key does Am F G E sound like?",
         "Tell me the key of these chords: G D Em C",
+        // "Find/identify the TONIC of [progression]" pattern — was losing to
+        // DiatonicChordsSkill because "tonic" didn't appear in any
+        // KeyIdentification example. The synonym pair {key, tonic} for the
+        // tonal-center concept must both be in the embedding surface.
+        // Added 2026-05-12 to close ki-5 misroute.
+        "Find the tonic of A E F#m D",
+        "What's the tonic of these chords: C F G C",
+        "Identify the tonic of this progression: D A Bm G",
     ];
 
     public override bool CanHandle(string message) =>

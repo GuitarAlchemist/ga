@@ -115,6 +115,13 @@
     { "id": "pc-2",  "prompt": "suggest a chord to finish this progression",            "expectedIntentId": "skill.progressioncompletion", "tags": ["common"] },
     { "id": "pc-3",  "prompt": "complete this: C Am F",                                 "expectedIntentId": "skill.progressioncompletion", "tags": ["v0.3-seed"] },
     { "id": "pc-4",  "prompt": "what should come after G C in this song",               "expectedIntentId": "skill.progressioncompletion", "tags": ["v0.3-seed"] },
-    { "id": "pc-5",  "prompt": "predict the next chord in I V vi",                      "expectedIntentId": "skill.progressioncompletion", "tags": ["v0.3-seed", "roman-numeral"] }
+    { "id": "pc-5",  "prompt": "predict the next chord in I V vi",                      "expectedIntentId": "skill.progressioncompletion", "tags": ["v0.3-seed", "roman-numeral"] },
+
+    { "id": "adv-1", "prompt": "borrow from Phrygian to darken C G F",                   "expectedIntentId": "skill.progressionmood",       "tags": ["v0.4-adversarial", "mode-name-non-modes-context"] },
+    { "id": "adv-2", "prompt": "add a Lydian feel to this major progression",            "expectedIntentId": "skill.progressionmood",       "tags": ["v0.4-adversarial", "mode-name-non-modes-context"] },
+    { "id": "adv-3", "prompt": "use Aeolian modal interchange to make it sound sadder",  "expectedIntentId": "skill.progressionmood",       "tags": ["v0.4-adversarial", "mode-name-non-modes-context"] },
+    { "id": "adv-4", "prompt": "how does Mixolydian flavor brighten rock progressions",  "expectedIntentId": "skill.progressionmood",       "tags": ["v0.4-adversarial", "mode-name-non-modes-context"] },
+    { "id": "adv-5", "prompt": "what is the tonic chord in G major",                     "expectedIntentId": "skill.diatonicchords",        "tags": ["v0.4-adversarial", "tonic-overlap"] },
+    { "id": "adv-6", "prompt": "name the I chord in A major",                            "expectedIntentId": "skill.diatonicchords",        "tags": ["v0.4-adversarial", "tonic-overlap"] }
   ]
 }

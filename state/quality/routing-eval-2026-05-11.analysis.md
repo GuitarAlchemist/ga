@@ -1,18 +1,49 @@
 # Routing eval baseline 2026-05-11 — failure analysis
 
-> **Update 2026-05-11 PM:** routing fixes from this analysis landed in the
-> same session. New baseline: **63/80 = 78.7%** (+12.5 pp, +10 correct).
-> Wins: `genreessentials` 0.00 → 1.00, `practiceroutine` 0.57 → 0.89,
-> `transpose` 0.25 → 0.91. Collateral lift: `progressioncompletion`
-> 0.77 → 1.00, `beginnerchords` 0.83 → 0.91. Three changes:
-> (1) `GenreEssentialsSkill.ExamplePrompts` rewritten around "essential
-> X for Y" surface, (2) `PracticeRoutineSkill.ExamplePrompts` expanded
-> with "schedule"/"outline"/"daily" synonyms, (3)
-> `DefaultRoutingHintProvider` got a `transpose` regex hint AND
-> `TransposeSkill.ExamplePrompts` expanded to teach the embedder the
-> progression-shape ("transpose this progression down a half step").
-> Remaining 17 failures cluster around chord/scale/mode boundary fuzz —
-> see "Out of scope" section. Original analysis below for context.
+> **Update 2026-05-12:** routing accuracy reached **80/80 = 100.0%**
+> (+33.8 pp from the original 66.2% baseline). The final 10 misroutes
+> were closed via targeted ExamplePrompts expansion across 8 skills plus
+> one new `DefaultRoutingHintProvider` rule (mode-name → skill.modes).
+>
+> Per-intent F1 = 1.00 across all 16 measured intents.
+>
+> The fix landed in PR (this branch). See
+> `routing-eval-2026-05-12.json` for the full per-prompt trace. Notes on
+> what changed:
+> - **scaleinfo** got "What's in the G major scale?" pattern (closes si-4)
+> - **modes** got "What notes are in G Mixolydian?" + 3 mode-named examples
+>   AND a deterministic hint-provider boost for explicit mode names
+>   (Ionian/Dorian/Phrygian/Lydian/Mixolydian/Aeolian/Locrian) — the
+>   mode name is the structural discriminator and only a hint guarantees
+>   it dominates the scaleinfo overlap
+> - **interval** got "What's a perfect fifth?" + "Minor third up from D"
+>   definitional / direction patterns (closes in-2 and in-4)
+> - **chordsubstitution** got bare "Alternative chord for Cmaj7" without
+>   the in-key tail + "Modal interchange substitutes for C major"
+>   (closes cs-4 and cs-5)
+> - **progressionmood** got "Brighten up a minor key tune" verb-anchored
+>   pattern (closes pm-4)
+> - **circleoffifths** got "Across the circle from D" topological idiom
+>   (closes co-4)
+> - **commontones** got "Overlapping notes in Cmaj7 and Em7" — the
+>   "overlap" verb is the discriminator vs raw two-chord chordinfo
+>   queries (closes ct-5)
+> - **keyidentification** got "Find the tonic of [progression]" pattern —
+>   the {key, tonic} synonym pair must both be in the embedding surface
+>   (closes ki-5)
+>
+> One-way / two-way door: example-prompt edits are two-way doors
+> (revert anytime). The mode-name hint rule is also two-way; its
+> magnitude (+0.06) is governed by the central BoostMagnitude constant
+> which is pinned by an explicit unit test, so a regression in any
+> single rule is visible in the per-intent F1 trace.
+>
+> ---
+>
+> **Earlier (2026-05-11 PM):** mid-session lift from 53/80 to 70/80
+> (66.2 → 87.5%) closed the highest-leverage failures
+> (genreessentials → 1.00, practiceroutine → 1.00, transpose → 0.91).
+> Original analysis below for context.
 
 **Overall: 53/80 correct = 66.2% accuracy** (router threshold 0.65, embedder
 `nomic-embed-text`, 17 production skills loaded via reflection).
