@@ -182,5 +182,42 @@ public class MemoryFileWriterTests
                 r.AccessControlType == AccessControlType.Allow),
             Is.False,
             "Everyone must NOT have an Allow ACE.");
+
+        // Strict-equality contract: exactly three explicit Allow rules.
+        // Catches drift where a future change adds a domain-group Allow
+        // (e.g. "CI-Agents") without auditing the security implication.
+        Assert.That(rules.Count, Is.EqualTo(3),
+            "DACL must contain exactly 3 explicit Allow rules: current user, " +
+            "SYSTEM, Administrators. Any other rule is unaudited drift.");
+    }
+
+    [Test]
+    [Platform("Win")]
+    [SupportedOSPlatform("windows")]
+    public void WriteAtomic_OnWindows_OverwritePreservesExplicitDacl()
+    {
+        // Reliability concern flagged by the review: File.Move(overwrite:true)
+        // must not silently leak the destination's prior ACL back in. The
+        // second write at the same path must land with the same explicit
+        // DACL (inheritance still disabled, same three SIDs) as the first.
+        var path = Path.Combine(_tempDir, "memory.json");
+        MemoryFileWriter.WriteAtomic(path, "first");
+        MemoryFileWriter.WriteAtomic(path, "second");
+
+        Assert.That(File.ReadAllText(path), Is.EqualTo("second"));
+
+        var security = new FileInfo(path).GetAccessControl();
+        Assert.That(security.AreAccessRulesProtected, Is.True,
+            "After overwrite, the DACL must still be Protected. Without this, " +
+            "a regression in the create-with-DACL primitive would silently fall " +
+            "back to the inherited ACL on the second write.");
+
+        var explicitRules = security
+            .GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
+            .Cast<FileSystemAccessRule>()
+            .ToList();
+        Assert.That(explicitRules.Count, Is.EqualTo(3),
+            "Second write must land with the same 3-ACE DACL, not the prior " +
+            "destination's ACL leaked through File.Move/Replace.");
     }
 }
