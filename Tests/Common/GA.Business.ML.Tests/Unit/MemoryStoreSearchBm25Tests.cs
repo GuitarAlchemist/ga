@@ -66,6 +66,52 @@ public class MemoryStoreSearchBm25Tests
             "('voicings' = DF 4 of 4). Token-overlap gave both score = 1.");
     }
 
+    [Test]
+    public void EqualOverlap_RareTerm_RanksAhead_OfCommonTerm()
+    {
+        // Discriminator test that isolates IDF from overlap count.
+        // Both target entries match EXACTLY ONE query term (overlap = 1 each)
+        // but one matches a rare term and the other matches a common term.
+        // Under v0.2 token-overlap, both score = 1 → timestamp DESC breaks
+        // the tie. Under v0.3 BM25, IDF dominates: the rare-term match
+        // ranks ahead.
+        //
+        // Seed the corpus so "voicings" appears in 4 docs (low IDF) and
+        // "kontakt" appears in only 1 doc (high IDF).
+        _store.Write("sess-A", "filler-1", "preference",
+            content: "voicings for ballads", tags: []);
+        _store.Write("sess-A", "filler-2", "preference",
+            content: "voicings for jazz", tags: []);
+        _store.Write("sess-A", "filler-3", "preference",
+            content: "voicings for blues", tags: []);
+        Thread.Sleep(20);
+        // Now write the rare-term matcher BEFORE the common-term matcher
+        // so that under v0.2 timestamp DESC would favor the common matcher.
+        _store.Write("sess-A", "matches-rare", "preference",
+            content: "kontakt sample libraries are amazing", tags: []);
+        Thread.Sleep(20);
+        _store.Write("sess-A", "matches-common", "preference",
+            content: "voicings for funk", tags: []);
+
+        // Query has both terms. Each target entry overlaps EXACTLY ONE
+        // query term, so v0.2 would call it a tie and use timestamp.
+        var results = _store.Search("sess-A", "voicings kontakt");
+
+        // Both matchers in the results, plus the 3 filler entries that
+        // match "voicings" with the same low IDF — collateral but expected.
+        var rareIndex   = results.ToList().FindIndex(e => e.Key == "matches-rare");
+        var commonIndex = results.ToList().FindIndex(e => e.Key == "matches-common");
+
+        Assert.That(rareIndex, Is.GreaterThanOrEqualTo(0));
+        Assert.That(commonIndex, Is.GreaterThanOrEqualTo(0));
+        Assert.That(rareIndex, Is.LessThan(commonIndex),
+            "Entry matching the rare term (kontakt, df=1) must rank ahead of " +
+            "entry matching the common term (voicings, df=4). Same overlap " +
+            "count (1 each). Under v0.2 token-overlap, the common-term match " +
+            "would win on timestamp DESC. Under v0.3 BM25, IDF makes the " +
+            "rare-term match win on score.");
+    }
+
     // ─── Length normalization — short entries outscore long entries
     //     when both have the same TF for the query term ──────────────────
 
@@ -104,19 +150,32 @@ public class MemoryStoreSearchBm25Tests
         // other mentions "jazz" three times. TF saturation (k1=1.5) gives
         // the multi-mention entry a higher score, but with diminishing
         // returns — a 3x mention doesn't get a 3x score.
-        _store.Write("sess-A", "once", "preference",
-            content: "I like jazz harmony in general", tags: []);
+        //
+        // **Test discriminator (PR #189 review fix):** write `thrice`
+        // FIRST and `once` LAST so the timestamp DESC tie-break would
+        // favor `once`. Under v0.2 token-overlap, both entries had
+        // overlap = 1 and the secondary sort (timestamp DESC) would put
+        // `once` on top. Under v0.3 BM25, TF=3 beats TF=1 regardless of
+        // timestamp. If this test ever ranks `once` first, BM25 has
+        // regressed to overlap-counting behavior.
         _store.Write("sess-A", "thrice", "preference",
             content: "jazz voicings jazz comping jazz standards practice",
             tags: []);
+        // Force a measurable timestamp gap so the secondary sort would
+        // actually flip under token-overlap (Write uses DateTimeOffset.UtcNow,
+        // which on modern Windows has ~15ms resolution).
+        Thread.Sleep(20);
+        _store.Write("sess-A", "once", "preference",
+            content: "I like jazz harmony in general", tags: []);
 
         var results = _store.Search("sess-A", "jazz");
 
         Assert.That(results, Has.Count.EqualTo(2));
         Assert.That(results[0].Key, Is.EqualTo("thrice"),
-            "Entry with TF=3 must outrank entry with TF=1 for the same query " +
-            "term. BM25 k1 saturation keeps the boost sublinear so spam-stuffing " +
-            "doesn't pathologically dominate.");
+            "Entry with TF=3 must outrank entry with TF=1 even when `once` " +
+            "was written later (newer timestamp). BM25's TF contribution must " +
+            "dominate the timestamp tie-break — otherwise we'd be back to v0.2 " +
+            "token-overlap counting.");
     }
 
     // ─── Backward compat — strictly-additive matching contract ────────
