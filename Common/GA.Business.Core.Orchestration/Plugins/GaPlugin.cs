@@ -84,11 +84,14 @@ public sealed class GaPlugin : IChatPlugin
         // Sibling to MemoryStore: holds per-turn chat content, not durable
         // memory. MemoryHook.OnResponseSent (post-#174) writes user +
         // assistant turns here so MemoryStore stays clean for durable
-        // knowledge. Also exposes IChatTranscriptStore so the memory
-        // curator's existing transcript slot has a real backing.
+        // knowledge. Also exposes IOperatorTranscriptReader (renamed from
+        // IChatTranscriptStore on 2026-05-12) so the memory curator and
+        // similar offline tooling have a cross-session view — that
+        // interface name explicitly carries the operator-only contract,
+        // discouraging any chat-runtime caller from accidentally wiring it.
         services.TryAddSingleton<ChatTranscriptStore>(sp =>
             new ChatTranscriptStore(sp.GetService<ILogger<ChatTranscriptStore>>() ?? NullLogger<ChatTranscriptStore>.Instance));
-        services.TryAddSingleton<IChatTranscriptStore>(sp =>
+        services.TryAddSingleton<IOperatorTranscriptReader>(sp =>
             sp.GetRequiredService<ChatTranscriptStore>());
 
         // ── Hooks (execute in registration order at each lifecycle point) ─────

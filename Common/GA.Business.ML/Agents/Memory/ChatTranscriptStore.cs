@@ -9,8 +9,10 @@ using Microsoft.Extensions.Logging;
 /// File-backed store for chat transcript turns. Sibling to
 /// <see cref="MemoryStore"/> — same atomic-write + session-scoping pattern,
 /// but for *transient* per-turn chat content rather than *durable* memory.
-/// Implements <see cref="IChatTranscriptStore"/> so the memory curator can
-/// consume real transcripts in Phase 2 of the curator architecture.
+/// Implements <see cref="IOperatorTranscriptReader"/> so the memory
+/// curator can consume real transcripts in Phase 2 of the curator
+/// architecture. The interface name carries an explicit "operator-only,
+/// cross-session" contract — see its remarks for the boundary rule.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -37,7 +39,7 @@ using Microsoft.Extensions.Logging;
 /// one row.
 /// </para>
 /// </remarks>
-public sealed class ChatTranscriptStore : IChatTranscriptStore
+public sealed class ChatTranscriptStore : IOperatorTranscriptReader
 {
     /// <summary>Default on-disk location: <c>~/.ga/transcripts.json</c>.</summary>
     public static readonly string DefaultStorePath =
@@ -306,8 +308,9 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
 
 /// <summary>
 /// One persisted transcript turn. Internal storage shape — the curator-
-/// facing <see cref="TranscriptTurn"/> record (defined in
-/// <c>IChatTranscriptStore.cs</c>) is what callers see.
+/// facing <see cref="TranscriptTurn"/> record (defined alongside
+/// <see cref="FixtureChatTranscriptStore"/> in the Curator namespace)
+/// is what callers see.
 /// </summary>
 /// <param name="Id">Unique per-turn key, generated at write time. Used to
 /// dedupe across concurrent Saves.</param>
