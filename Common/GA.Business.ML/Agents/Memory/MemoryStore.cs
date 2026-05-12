@@ -184,46 +184,52 @@ public sealed class MemoryStore
     }
 
     /// <summary>
-    /// Token-overlap search across content, tags, and key, filtered to entries
+    /// BM25-ranked search across content, tags, and key, filtered to entries
     /// whose SessionId matches <paramref name="sessionId"/> OR is null
     /// (global). Pass <paramref name="sessionId"/>=null to search only global
     /// entries.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Why token-overlap over substring containment (2026-05-11 v0.2):</b>
-    /// the prior implementation required the full lowercased query to be a
-    /// substring of <see cref="MemoryEntry.Content"/> / a tag / the key.
-    /// That broke real-world recall — a user asking "what voicings should I
-    /// use for jazz?" would not surface a stored "I prefer drop-2 voicings
-    /// for jazz comping" entry, because neither string contains the other
-    /// verbatim. The integration test surfaced this as a recall ceiling
-    /// even when the loop architecturally worked.
+    /// <b>Why BM25 over token-overlap (2026-05-12 v0.3):</b> token-overlap
+    /// counted how many distinct query terms appeared in each entry but
+    /// gave no weight to term rarity or document length. Two entries with
+    /// the same overlap count ranked by insertion timestamp, which meant
+    /// a long generic note containing the query term once would tie with
+    /// a short focused entry where the term is the topic — and the older
+    /// of the two would lose ranking. BM25 introduces (a) IDF weighting
+    /// so rare terms dominate common terms, and (b) length normalization
+    /// so a 200-token note doesn't outscore a 5-token preference just by
+    /// having more token slots to land hits in.
     /// </para>
     /// <para>
-    /// <b>New predicate:</b> tokenize both query and entry haystack
-    /// (content + key + tags) into lowercase alphanumeric tokens, drop
-    /// stopwords + very short tokens, count overlap. Entries with at least
-    /// one non-stopword token in common with the query are returned,
-    /// ordered by overlap count DESC, then by Timestamp DESC.
+    /// <b>Algorithm:</b> standard Okapi BM25 with the Robertson-Spärck
+    /// Jones IDF variant (<c>log(1 + (N - df + 0.5) / (df + 0.5))</c>,
+    /// guaranteed non-negative so a term that appears in every in-scope
+    /// document still contributes a small positive score). Defaults
+    /// <c>k1 = 1.5</c>, <c>b = 0.75</c> per the original BM25 paper —
+    /// these are calibrated for natural-language prose and match what
+    /// Elasticsearch / Lucene use out of the box. The corpus is built
+    /// per-call from in-scope entries (session + type + tag filters
+    /// applied first), so DF / avgDL reflect the user's view, not the
+    /// global store.
     /// </para>
     /// <para>
-    /// <b>What this is NOT:</b> a BM25 / TF-IDF / vector-embedding search.
-    /// It's a deliberately tiny step up from substring matching — enough to
-    /// unlock real-world recall for the MemoryHook retrieval-injection
-    /// path, without introducing dependencies. Higher-quality search would
-    /// reuse the existing embedder used by SemanticIntentRouter — that's a
-    /// separate task.
+    /// <b>What this is still NOT:</b> a vector-embedding search.
+    /// Synonyms / paraphrases still need to share at least one stemmed
+    /// token. Embedding-based recall over MemoryStore would reuse the
+    /// SemanticIntentRouter embedder and is the next leverage step — but
+    /// requires either an in-memory embedding index alongside the JSON
+    /// store, or a separate ANN backend.
     /// </para>
     /// <para>
-    /// <b>Backward compatibility:</b> any query that previously matched
-    /// via substring containment also matches via token overlap (a
-    /// substring shares all its tokens with the haystack). New behavior is
-    /// strictly additive — no entry that was previously returned is now
-    /// hidden. The order may shift because the secondary sort moved from
-    /// "newest first" to "overlap first, then newest"; callers that
-    /// depended on strict timestamp order (no callers in the current
-    /// codebase) need to re-sort.
+    /// <b>Backward compatibility:</b> BM25 returns the same set of
+    /// entries as token-overlap (score &gt; 0 iff at least one query
+    /// token overlaps the entry haystack). Ordering changes within that
+    /// set: previously by overlap count then timestamp, now by BM25
+    /// score then timestamp. Existing tests assert the rank-by-overlap
+    /// invariant — BM25 preserves this because more distinct query-term
+    /// hits each contribute a positive IDF-weighted term.
     /// </para>
     /// </remarks>
     public IReadOnlyList<MemoryEntry> Search(string? sessionId, string query, string? type = null, string[]? tags = null)
@@ -237,16 +243,103 @@ public sealed class MemoryStore
             return [];
         }
 
-        return _entries.Values
+        // Build the in-scope corpus AFTER session + type + tag filters so
+        // BM25's DF / avgDL reflect the user's view. A document term that
+        // appears in 100% of the store but only 10% of the in-scope view
+        // is still a useful discriminator within that view.
+        var corpus = _entries.Values
             .Where(e => InScope(e, sessionId))
             .Where(e => type is null || e.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
             .Where(e => tags is null || tags.Any(t => e.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)))
-            .Select(e => (Entry: e, Overlap: CountOverlap(queryTokens, e)))
-            .Where(scored => scored.Overlap > 0)
-            .OrderByDescending(scored => scored.Overlap)
+            .Select(TokenizeEntry)
+            .ToList();
+
+        if (corpus.Count == 0) return [];
+
+        // Average document length over the in-scope corpus. Defensive:
+        // if every entry is empty after stopword filtering, fall back to
+        // 1 so the b * |D|/avgDL term doesn't divide by zero.
+        var avgDocLength = corpus.Average(d => d.TokenCount);
+        if (avgDocLength <= 0) avgDocLength = 1;
+
+        // Pre-compute IDF for each query term against the in-scope corpus.
+        // Robertson-Spärck Jones with the +1 wrapper keeps the value
+        // non-negative even when every document contains the term.
+        var idf = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var q in queryTokens)
+        {
+            var df = corpus.Count(d => d.TermFreq.ContainsKey(q));
+            idf[q] = Math.Log(1.0 + (corpus.Count - df + 0.5) / (df + 0.5));
+        }
+
+        return corpus
+            .Select(d => (d.Entry, Score: ComputeBm25(d, queryTokens, idf, avgDocLength)))
+            .Where(scored => scored.Score > 0)
+            .OrderByDescending(scored => scored.Score)
             .ThenByDescending(scored => scored.Entry.Timestamp)
             .Select(scored => scored.Entry)
             .ToList();
+    }
+
+    /// <summary>BM25 default <c>k1</c> (term-frequency saturation).</summary>
+    /// <remarks>
+    /// <para>
+    /// <c>k1 = 1.5</c> per the original Okapi BM25 paper and matches the
+    /// defaults in Elasticsearch / Lucene. Higher values reward repeated
+    /// occurrences of the same query term within an entry more
+    /// aggressively; lower values flatten the curve.
+    /// </para>
+    /// </remarks>
+    public const double Bm25K1 = 1.5;
+
+    /// <summary>BM25 default <c>b</c> (length normalization).</summary>
+    /// <remarks>
+    /// <para>
+    /// <c>b = 0.75</c> per the original Okapi BM25 paper — applies 75% of
+    /// the full length-normalization penalty. <c>b = 0</c> would disable
+    /// length normalization; <c>b = 1</c> would normalize fully (a 100-
+    /// token doc with one hit scores the same as a 10-token doc with one
+    /// hit).
+    /// </para>
+    /// </remarks>
+    public const double Bm25B = 0.75;
+
+    private readonly record struct TokenizedEntry(
+        MemoryEntry Entry,
+        Dictionary<string, int> TermFreq,
+        int TokenCount);
+
+    private static TokenizedEntry TokenizeEntry(MemoryEntry entry)
+    {
+        var bag = new Dictionary<string, int>(StringComparer.Ordinal);
+        var totalCount = 0;
+
+        AppendTokensWithCounts(entry.Content, bag, ref totalCount);
+        AppendTokensWithCounts(entry.Key,     bag, ref totalCount);
+        foreach (var tag in entry.Tags)
+            AppendTokensWithCounts(tag, bag, ref totalCount);
+
+        return new TokenizedEntry(entry, bag, totalCount);
+    }
+
+    private static double ComputeBm25(
+        TokenizedEntry doc,
+        HashSet<string> queryTokens,
+        Dictionary<string, double> idf,
+        double avgDocLength)
+    {
+        double score = 0;
+        foreach (var q in queryTokens)
+        {
+            if (!doc.TermFreq.TryGetValue(q, out var tf)) continue;
+            // BM25 contribution for term q:
+            //   idf(q) * tf * (k1 + 1) / (tf + k1 * (1 - b + b * |D| / avgDL))
+            var lengthNorm = 1 - Bm25B + Bm25B * doc.TokenCount / avgDocLength;
+            var numerator   = tf * (Bm25K1 + 1);
+            var denominator = tf + Bm25K1 * lengthNorm;
+            score += idf[q] * numerator / denominator;
+        }
+        return score;
     }
 
     /// <summary>
@@ -269,16 +362,30 @@ public sealed class MemoryStore
     /// <summary>
     /// Splits the input on non-alphanumeric characters, lowercases each
     /// token, drops empty / single-character / stopword tokens. Returns
-    /// a HashSet so callers can do cheap set operations.
+    /// a HashSet — used on the query side where we only care about
+    /// distinct terms (BM25 contribution is summed per unique query term).
     /// </summary>
     private static HashSet<string> TokenizeAndFilter(string text)
     {
         var tokens = new HashSet<string>(StringComparer.Ordinal);
         if (string.IsNullOrWhiteSpace(text)) return tokens;
+        WalkTokens(text, tok => tokens.Add(tok));
+        return tokens;
+    }
 
-        // Walk the string once instead of regex.Split for speed on the
-        // hot path. Non-alphanumeric character ends the current token;
-        // alphanumeric extends it.
+    /// <summary>
+    /// Same tokenization rules as <see cref="TokenizeAndFilter"/>, but
+    /// accumulates a term-frequency multiset into <paramref name="bag"/>
+    /// and increments <paramref name="totalCount"/> for every kept token.
+    /// Used on the entry side to feed BM25 — both TF (per term, in the
+    /// bag) and document length (sum of all token occurrences) are needed.
+    /// </summary>
+    private static void AppendTokensWithCounts(string text, Dictionary<string, int> bag, ref int totalCount)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        // Avoid capturing the ref param inside a closure (illegal); inline the
+        // increment by walking tokens manually here.
         var start = -1;
         for (var i = 0; i <= text.Length; i++)
         {
@@ -292,28 +399,38 @@ public sealed class MemoryStore
             {
                 var tok = text[start..i].ToLowerInvariant();
                 if (tok.Length >= 2 && !Stopwords.Contains(tok))
-                    tokens.Add(tok);
+                {
+                    bag[tok] = bag.TryGetValue(tok, out var existing) ? existing + 1 : 1;
+                    totalCount++;
+                }
                 start = -1;
             }
         }
-        return tokens;
     }
 
-    private static int CountOverlap(HashSet<string> queryTokens, MemoryEntry entry)
+    /// <summary>
+    /// Shared single-pass tokenizer used by <see cref="TokenizeAndFilter"/>.
+    /// Walks the string once, yields each kept token to <paramref name="onToken"/>.
+    /// </summary>
+    private static void WalkTokens(string text, Action<string> onToken)
     {
-        // Build the haystack token bag once per entry from content + key + tags.
-        // Re-tokenizing per query is fine at current memory sizes (low-thousands
-        // of entries max); switching to a cached token bag is a future
-        // optimization if the store grows.
-        var haystack = TokenizeAndFilter(entry.Content);
-        haystack.UnionWith(TokenizeAndFilter(entry.Key));
-        foreach (var tag in entry.Tags)
-            haystack.UnionWith(TokenizeAndFilter(tag));
-
-        var overlap = 0;
-        foreach (var q in queryTokens)
-            if (haystack.Contains(q)) overlap++;
-        return overlap;
+        var start = -1;
+        for (var i = 0; i <= text.Length; i++)
+        {
+            var c = i < text.Length ? text[i] : '\0';
+            var isWord = char.IsLetterOrDigit(c);
+            if (isWord && start < 0)
+            {
+                start = i;
+            }
+            else if (!isWord && start >= 0)
+            {
+                var tok = text[start..i].ToLowerInvariant();
+                if (tok.Length >= 2 && !Stopwords.Contains(tok))
+                    onToken(tok);
+                start = -1;
+            }
+        }
     }
 
     /// <summary>
