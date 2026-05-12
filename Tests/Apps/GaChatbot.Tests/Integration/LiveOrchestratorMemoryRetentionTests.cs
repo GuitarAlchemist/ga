@@ -57,21 +57,20 @@ using NUnit.Framework;
 /// </para>
 /// </remarks>
 [TestFixture]
-[Explicit("Requires live Ollama embedding endpoint at localhost:11434. Run manually for chatbot retention verification.")]
-[Ignore(
-    "Pending shared OrchestratorTestHarness. Production-shaped DI for " +
-    "ProductionOrchestrator currently requires ~10 host-provided services " +
-    "(IChatClient, IEmbeddingGenerator, IGroundedNarrator, " +
-    "SchemaDiscoveryService, EnhancedVoicingSearchService stack, " +
-    "IMusicalQueryExtractor, CompositeMusicalQueryExtractor, …) that no " +
-    "test framework wires by default. The next PR in this series should " +
-    "extract a shared OrchestratorTestHarness — mirroring " +
-    "GaChatbotCli's setup — that the test below can call to get a " +
-    "fully-wired ServiceProvider. Until then this scaffold documents the " +
-    "exact e2e contract that would have caught the PR #185 bug; " +
+[Explicit(
+    "Requires (a) live Ollama embedding endpoint at localhost:11434 AND " +
+    "(b) the shared OrchestratorTestHarness — pending follow-up PR. The " +
+    "current SetUp wires the minimum surface (IChatClient, " +
+    "IEmbeddingGenerator, IGroundedNarrator, SchemaDiscoveryService, " +
+    "EnhancedVoicingSearchService + IVoicingSearchStrategy + " +
+    "VoicingIndexingService) but the production DI graph requires more " +
+    "services (IMusicalQueryExtractor, CompositeMusicalQueryExtractor, " +
+    "and their transitive deps) that no test framework wires by default. " +
+    "Run produces a DI-resolution exception listing the next missing " +
+    "type — that's the checklist for the harness PR. Until that lands, " +
     "OrchestratorSkillIntentDataPropagationTests at " +
-    "GA.Business.Core.Tests covers the unit-level regression-pin and " +
-    "ships the structural guarantee today.")]
+    "Tests/Common/GA.Business.Core.Tests/Orchestration/ pins the " +
+    "PR #185 regression at unit level.")]
 public class LiveOrchestratorMemoryRetentionTests
 {
     private const string EmbedEndpoint = "http://localhost:11434";
