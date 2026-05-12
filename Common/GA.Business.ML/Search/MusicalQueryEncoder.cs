@@ -240,6 +240,25 @@ public static class ChordPitchClasses
 
         if (!Qualities.TryGetValue(qualityStr, out var offsets))
         {
+            // Paren-stripped retry: the user-facing notation `E7(#9)`, `C7(b9)`,
+            // `C(add9)`, `Cm(maj9)` carries parens around the alteration suffix. The
+            // dictionary keys store the canonical paren-less forms ("7#9", "7b9",
+            // "add9"). Without this retry, removing parens from the tokenizer
+            // (companion fix in TypedMusicalQueryExtractor) would regress those
+            // forms — they'd reach TryParse as a single token, fail the lookup,
+            // and be dropped entirely. The only key that genuinely needs parens
+            // is "m(maj7)" which already matches on the first attempt.
+            if (qualityStr.Contains('(') || qualityStr.Contains(')'))
+            {
+                var stripped = qualityStr.Replace("(", "").Replace(")", "");
+                if (Qualities.TryGetValue(stripped, out offsets))
+                {
+                    root = r;
+                    pitchClasses = offsets.Select(o => (r + o) % 12).Distinct().OrderBy(x => x).ToArray();
+                    return true;
+                }
+            }
+
             // Reject unknown qualities — otherwise every english word starting with a letter
             // A-G (e.g. "and", "fade", "be") parses as a chord and every query carries false
             // musical structure into retrieval.

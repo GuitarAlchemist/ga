@@ -177,10 +177,12 @@ public class SymbolicTagRegistry
         // because GetBitIndex's substring fallback never inserts hyphens at the
         // letter↔digit boundary. Register a dehyphenated alias so user-typed
         // "drop2" substring-matches "drop2voicings". Gated on the tag containing
-        // a digit — this restricts aliasing to the letter/digit-boundary case and
-        // avoids false positives where the dehyphenated form of an English-phrase
-        // tag (e.g. "tension-and-release" → "tensionandrelease") would otherwise
-        // make short query tokens like "and" silently fire.
+        // a digit, which keeps English-phrase tags out of the aliased pool —
+        // "tension-and-release" dehyphenates to "tensionandrelease" and would
+        // make short query tokens like "and" silently fire. The gate does NOT
+        // prevent intentional aliasing across digit-containing structural tags
+        // (e.g. a hypothetical "6-9-voicings" alias "69voicings" lets "69" hit
+        // the bit), which is the desired behavior for the drop2 case.
         if (normalized.Any(char.IsDigit))
         {
             var dehyphenated = normalized.Replace("-", "");
