@@ -1,16 +1,16 @@
 {
   "schemaVersion": "0.1",
-  "generatedAt": "2026-05-12T01:15:44.6526348Z",
+  "generatedAt": "2026-05-12T01:57:34.0520138Z",
   "routerConfig": {
     "minConfidence": 0.65,
     "embedder": "nomic-embed-text"
   },
-  "totalPrompts": 80,
+  "totalPrompts": 86,
   "overall": {
-    "Total": 80,
-    "Correct": 80,
+    "Total": 86,
+    "Correct": 85,
     "UnmatchedFallthrough": 0,
-    "Accuracy": 1
+    "Accuracy": 0.9883720930232558
   },
   "perIntent": {
     "skill.chordinfo": {
@@ -74,13 +74,13 @@
       "Status": "measured"
     },
     "skill.progressionmood": {
-      "Support": 5,
-      "TruePositives": 5,
+      "Support": 9,
+      "TruePositives": 8,
       "FalsePositives": 0,
-      "FalseNegatives": 0,
+      "FalseNegatives": 1,
       "Precision": 1,
-      "Recall": 1,
-      "F1": 1,
+      "Recall": 0.8888888888888888,
+      "F1": 0.9411764705882353,
       "Status": "measured"
     },
     "skill.circleoffifths": {
@@ -106,11 +106,11 @@
     "skill.genreessentials": {
       "Support": 5,
       "TruePositives": 5,
-      "FalsePositives": 0,
+      "FalsePositives": 1,
       "FalseNegatives": 0,
-      "Precision": 1,
+      "Precision": 0.8333333333333334,
       "Recall": 1,
-      "F1": 1,
+      "F1": 0.9090909090909091,
       "Status": "measured"
     },
     "skill.whatcanyoudo": {
@@ -144,8 +144,8 @@
       "Status": "measured"
     },
     "skill.diatonicchords": {
-      "Support": 5,
-      "TruePositives": 5,
+      "Support": 7,
+      "TruePositives": 7,
       "FalsePositives": 0,
       "FalseNegatives": 0,
       "Precision": 1,
@@ -1068,6 +1068,78 @@
       "Tags": [
         "v0.3-seed",
         "roman-numeral"
+      ]
+    },
+    {
+      "Id": "adv-1",
+      "Prompt": "borrow from Phrygian to darken C G F",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.7070019,
+      "Correct": true,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-2",
+      "Prompt": "add a Lydian feel to this major progression",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.808755,
+      "Correct": true,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-3",
+      "Prompt": "use Aeolian modal interchange to make it sound sadder",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.6817395,
+      "Correct": true,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-4",
+      "Prompt": "how does Mixolydian flavor brighten rock progressions",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 0.7377271,
+      "Correct": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-5",
+      "Prompt": "what is the tonic chord in G major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.9003681,
+      "Correct": true,
+      "Tags": [
+        "v0.4-adversarial",
+        "tonic-overlap"
+      ]
+    },
+    {
+      "Id": "adv-6",
+      "Prompt": "name the I chord in A major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.9569604,
+      "Correct": true,
+      "Tags": [
+        "v0.4-adversarial",
+        "tonic-overlap"
       ]
     }
   ]
