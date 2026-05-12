@@ -43,6 +43,11 @@ public sealed class WhatCanYouDoSkill(ILogger<WhatCanYouDoSkill> logger) : IOrch
         "what do you know about music",
         "what can I ask",
         "how do I use the chatbot",
+        // v0.5 corpus expansion (2026-05-12): conversational meta paraphrases.
+        "I'm new here — what can you help with",
+        "menu of available actions",
+        "give me a tour of your features",
+        "list your skills",
     ];
 
     public bool CanHandle(string message) => false; // semantic-routing only
