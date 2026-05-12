@@ -44,8 +44,27 @@ public static class RememberThisParser
     /// regex is anchored on word boundaries and case-insensitive; only
     /// matches at the start of the trimmed message.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Tightening (PR #192 review):</b> the verbs <c>save</c>,
+    /// <c>note</c>, <c>store</c> have semantic overlap with non-memory
+    /// operations (save file, note pitch, store data). Bare forms like
+    /// "save these drop-2 voicings" — where the user wants to save
+    /// voicings to a library, not to durable memory — used to match
+    /// because <c>\s+this</c> was optional. Now those three verbs
+    /// require either <c>\s+this</c> / <c>\s+that</c> (explicit
+    /// memorable referent) or an immediate <c>:</c> / <c>,</c> separator
+    /// (canonical "note: X" / "save: X" format). <c>remember</c> and
+    /// <c>don't forget</c> stay flexible because they're high-precision
+    /// memory verbs with little non-memory overlap.
+    /// </para>
+    /// </remarks>
     private static readonly Regex LeadPhrase = new(
-        @"^\s*(?:please\s+)?(?:can\s+you\s+)?(?:remember(?:\s+that)?|save(?:\s+this)?|note(?:\s+this)?|store(?:\s+that)?|don'?t\s+forget(?:\s+that)?)[:,]?\s*",
+        @"^\s*(?:please\s+)?(?:can\s+you\s+)?(?:" +
+            @"remember(?:\s+that)?" +
+            @"|(?:save|note|store)(?:\s+(?:this|that)\b|(?=\s*[:,]))" +
+            @"|don'?t\s+forget(?:\s+that)?" +
+        @")[:,]?\s*",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex PreferenceCue = new(

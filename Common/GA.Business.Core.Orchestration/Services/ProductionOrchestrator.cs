@@ -549,6 +549,24 @@ public class ProductionOrchestrator(
         out GuitarAlchemistAgentBase agent,
         out AgentRoutingMetadata routing)
     {
+        // Remember-this requests take precedence over the voicing fast-path.
+        // Otherwise a prompt like "remember that I prefer drop-2 voicings for
+        // jazz comping" matches IsExplicitVoicingRequest (because "drop-2
+        // voicings" is in the keyword list) and short-circuits to VoicingAgent,
+        // returning voicings instead of writing to MemoryStore. Surfaced by
+        // the live-orchestrator e2e test (PR after #190 harness).
+        //
+        // The remember-phrasing is high-precision — RememberThisParser
+        // requires an explicit "remember"/"save"/"note"/"don't forget" lead
+        // phrase. Any prompt that passes that gate is unambiguously a
+        // memory-write request whose voicing-keyword content is incidental.
+        if (GA.Business.ML.Agents.Skills.RememberThisParser.LooksLikeRememberRequest(message))
+        {
+            agent = null!;
+            routing = null!;
+            return false;
+        }
+
         if (IsExplicitVoicingRequest(message)
             && router.Agents.FirstOrDefault(a => a.AgentId == AgentIds.Voicing) is { } voicingAgent)
         {

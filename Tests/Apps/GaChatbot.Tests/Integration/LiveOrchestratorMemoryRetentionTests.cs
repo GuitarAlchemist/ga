@@ -1,18 +1,9 @@
 namespace GaChatbot.Tests.Integration;
 
-using GA.Business.Core.Orchestration.Abstractions;
-using GA.Business.Core.Orchestration.Extensions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Services;
 using GA.Business.ML.Agents.Memory;
-using GA.Business.ML.Extensions;
-using GA.Business.ML.Search;
-using GA.Infrastructure.Documentation;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 /// <summary>
@@ -31,7 +22,7 @@ using NUnit.Framework;
 /// <c>ChatHookContext</c>. ALL of them passed for the entirety of the
 /// 2026-05-11 chatbot-improvement session, and the chatbot's
 /// remember-flow was silently broken in production the whole time —
-/// <see cref="OrchestratorSkillIntent.ExecuteAsync"/> was dropping
+/// <c>OrchestratorSkillIntent.ExecuteAsync</c> was dropping
 /// <c>AgentResponse.Data</c> during the adapter map, so
 /// <c>MemoryWriteHook</c>'s
 /// <c>ctx.Response?.Data is MemoryWriteRequest</c> guard never matched.
@@ -58,23 +49,13 @@ using NUnit.Framework;
 /// </remarks>
 [TestFixture]
 [Explicit(
-    "Requires (a) live Ollama embedding endpoint at localhost:11434 AND " +
-    "(b) the shared OrchestratorTestHarness — pending follow-up PR. The " +
-    "current SetUp wires the minimum surface (IChatClient, " +
-    "IEmbeddingGenerator, IGroundedNarrator, SchemaDiscoveryService, " +
-    "EnhancedVoicingSearchService + IVoicingSearchStrategy + " +
-    "VoicingIndexingService) but the production DI graph requires more " +
-    "services (IMusicalQueryExtractor, CompositeMusicalQueryExtractor, " +
-    "and their transitive deps) that no test framework wires by default. " +
-    "Run produces a DI-resolution exception listing the next missing " +
-    "type — that's the checklist for the harness PR. Until that lands, " +
-    "OrchestratorSkillIntentDataPropagationTests at " +
-    "Tests/Common/GA.Business.Core.Tests/Orchestration/ pins the " +
-    "PR #185 regression at unit level.")]
+    "Requires a live Ollama embedding endpoint at localhost:11434 for the " +
+    "SemanticIntentRouter to actually pick an intent. CI agents don't have " +
+    "Ollama wired, so the fixture is excluded from default runs. Trigger " +
+    "manually with `dotnet test --filter " +
+    "\"FullyQualifiedName~LiveOrchestratorMemoryRetentionTests\"`.")]
 public class LiveOrchestratorMemoryRetentionTests
 {
-    private const string EmbedEndpoint = "http://localhost:11434";
-
     private string _tempDir = string.Empty;
     private string _tempMemoryPath = string.Empty;
     private ServiceProvider _provider = null!;
@@ -88,74 +69,21 @@ public class LiveOrchestratorMemoryRetentionTests
         Directory.CreateDirectory(_tempDir);
         _tempMemoryPath = Path.Combine(_tempDir, "memory.json");
 
-        var configValues = new Dictionary<string, string?>
-        {
-            // Don't exercise retrieval — this test only proves writes.
-            ["Memory:EnrichOnRetrieve"]    = "false",
-            ["Memory:AllowLlmGlobalWrite"] = "false",
-            ["Ollama:Endpoint"]            = EmbedEndpoint,
-        };
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(configValues)
-            .Build();
-
-        var services = new ServiceCollection();
-        services.AddSingleton<IConfiguration>(config);
-        services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
-        services.AddGuitarAlchemistAI();
-        services.AddChatbotOrchestration();
-
-        // ── Host-provided wiring not done by AddChatbotOrchestration ──────
-        // The orchestration extension intentionally leaves a few interfaces
-        // unregistered so each host (GaApi, GaChatbot, GaChatbotCli) can
-        // wire its own implementation. The test mirrors GaChatbotCli's
-        // setup since that's the closest to a minimal-dep harness.
-
-        // DomainMetadataPrompter dependency.
-        services.TryAddSingleton<SchemaDiscoveryService>();
-
-        // SemanticRouter agent fallback — uses IChatClient. Tests don't
-        // hit that path (RememberThis lands via the embedding intent
-        // router) but DI requires the binding to construct SemanticRouter.
-        services.TryAddSingleton<IChatClient>(_ =>
-            new OllamaChatClient(new Uri(EmbedEndpoint), "llama3.2"));
-
-        // Embedder for SemanticIntentRouter — this is the load-bearing
-        // path: the router embeds the prompt and every intent's
-        // description+examples to pick the best match. Without this the
-        // test can't route to RememberThisSkill.
-        services.TryAddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
-            new OllamaEmbeddingGenerator(new Uri(EmbedEndpoint), "nomic-embed-text"));
-
-        // Voicing-search stack — VoicingAgent (transitively required by
-        // SemanticRouter, which constructs eagerly with ALL agents) needs
-        // these even though this test never exercises voicing. CPU strategy
-        // is parameterless and doesn't need a GPU or OPTK index file.
-        services.TryAddSingleton<VoicingIndexingService>();
-        services.TryAddSingleton<IVoicingSearchStrategy>(new CpuVoicingSearchStrategy());
-        services.TryAddSingleton<EnhancedVoicingSearchService>();
-
-        // Test-scoped MemoryStore at a temp path so the test doesn't pollute
-        // the developer's real ~/.ga/memory.json. The plugin host registers
-        // a default; we replace it.
-        services.RemoveAll<MemoryStore>();
-        services.AddSingleton(_ => new MemoryStore(_tempMemoryPath));
-
-        // Stub IGroundedNarrator — orchestration intentionally doesn't
-        // register one, hosts must provide it. RememberThisSkill is
-        // deterministic; the narrator is on the fallback path which this
-        // test doesn't take.
-        services.AddSingleton<IGroundedNarrator>(new StubGroundedNarrator());
-
-        _provider = services.BuildServiceProvider();
+        _provider = OrchestratorTestHarness.Build(
+            memoryPathProvider: () => _tempMemoryPath);
         _memoryStore = _provider.GetRequiredService<MemoryStore>();
         _orchestrator = _provider.GetRequiredService<ProductionOrchestrator>();
     }
 
     [TearDown]
-    public void TearDown()
+    public async Task TearDown()
     {
-        _provider?.Dispose();
+        // ServiceProvider must be disposed asynchronously when any
+        // service implements IAsyncDisposable only (e.g.
+        // InProcessMcpToolsProvider registered by AddChatPluginHost).
+        // Calling Dispose() on the sync surface throws.
+        if (_provider is not null)
+            await _provider.DisposeAsync();
         if (Directory.Exists(_tempDir))
         {
             try { Directory.Delete(_tempDir, recursive: true); }
@@ -270,11 +198,5 @@ public class LiveOrchestratorMemoryRetentionTests
             "MemoryWriteHook.AllowedTypes still excludes everything except " +
             "{fact, preference, focus} AND that no other skill is " +
             "accidentally emitting a MemoryWriteRequest on AgentResponse.Data.");
-    }
-
-    private sealed class StubGroundedNarrator : IGroundedNarrator
-    {
-        public Task<string> NarrateAsync(string query, IReadOnlyList<CandidateVoicing> candidates) =>
-            Task.FromResult($"[stub narrator] {candidates.Count} candidates for: {query}");
     }
 }
