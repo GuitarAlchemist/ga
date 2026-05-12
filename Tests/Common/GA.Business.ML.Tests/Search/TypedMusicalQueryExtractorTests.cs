@@ -189,6 +189,42 @@ public class TypedMusicalQueryExtractorTests
         Assert.That(q.Tags, Is.Null);
     }
 
+    [TestCase("Em(maj7)",   "Em(maj7)",  4, new[] { 4, 7, 11, 3 })]    // E, G, B, D# — minor-major 7
+    [TestCase("Cm(maj7)",   "Cm(maj7)",  0, new[] { 0, 3, 7, 11 })]
+    [TestCase("F#m(maj7)",  "F#m(maj7)", 6, new[] { 6, 9, 1, 5 })]     // F#, A, C#, F — m(maj7)
+    public async Task Extract_ParenWrappedQuality_StaysOneTokenAndParses(
+        string query, string expectedSymbol, int expectedRoot, int[] expectedPcs)
+    {
+        // 2026-05-12 telemetry regression: queries like "Em(maj7)" previously split
+        // on parens and parsed as chord=Em (minor triad) + tag=["maj7"], silently
+        // dropping the maj7 extension. ChordPitchClasses key "m(maj7)" exists;
+        // removing '(' and ')' from the tokenizer lets the symbol reach TryParse
+        // intact. (Other paren-wrapped qualities like "m(maj9)" aren't in the
+        // dictionary yet — those would need a separate Qualities entry.)
+        var q = await _typed.ExtractAsync(query);
+        Assert.That(q.ChordSymbol, Is.EqualTo(expectedSymbol));
+        Assert.That(q.RootPitchClass, Is.EqualTo(expectedRoot));
+        Assert.That(q.PitchClasses, Is.EquivalentTo(expectedPcs));
+        Assert.That(q.Tags, Is.Null.Or.Empty,
+            "Paren-wrapped quality suffix must not leak into Tags.");
+    }
+
+    [TestCase("Cmaj7 drop2",  "drop")]    // dehyphenated alias makes "drop2" hit "drop-2-voicings"
+    [TestCase("Dm7 drop3",    "drop")]
+    public async Task Extract_DigitSuffixedTag_ResolvesViaDehyphenatedAlias(
+        string query, string expectedTagFragment)
+    {
+        // 2026-05-12 telemetry regression: "drop2" missed "drop-2-voicings" because
+        // GetBitIndex's substring fallback never inserts hyphens at letter/digit
+        // boundaries. RegisterTag now also stores a dehyphenated alias so the
+        // user-typed "drop2" substring-matches "drop2voicings".
+        var q = await _typed.ExtractAsync(query);
+        Assert.That(q.Tags, Is.Not.Null.And.Not.Empty,
+            $"'{query}' should pick up the drop-{expectedTagFragment} tag via dehyphenated alias.");
+        Assert.That(q.Tags!.Any(t => t.Contains(expectedTagFragment, StringComparison.OrdinalIgnoreCase)),
+            Is.True);
+    }
+
     // ─── composite ─────────────────────────────────────────────────────────
 
     [Test]

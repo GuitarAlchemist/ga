@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Search;
 
+using System.Text;
 using Embeddings;
 using Embeddings.Services;
 using Rag.Models;
@@ -48,7 +49,20 @@ public sealed class MusicalQueryEncoder(
         var root2 = q.RootPitchClass ?? (q.ChordSymbol is { } cs2 && ChordPitchClasses.TryParse(cs2, out var r2, out _) ? r2 : null);
         if (pcs is { Length: > 0 })
         {
-            var structure = theory.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
+            // 2026-05-12: pass the query's ICV (computed from its own PCs) so STRUCTURE
+            // dims 13-18 (ICV) plus the ICV-derived consonance (20) and brightness (21)
+            // carry signal. Without this, the query slice was zero across those 8 dims
+            // while the corpus slice was non-zero — per-partition L2 normalization then
+            // shrank the chroma contribution on Dm7 queries below that of subset Dm/F
+            // voicings, because the corpus Dm7 vector's L2 norm is larger (more nonzero
+            // dims) so each shared bit weighs less. Net effect: "Dm7" returned top-5 Dm
+            // triads with identical 0.5066 score. Computing ICV query-side restores
+            // proper discrimination between a chord and its proper subsets.
+            var icvString = ComputeIcvString(pcs);
+            var structure = theory.ComputeEmbedding(
+                pitchClasses: pcs,
+                rootPitchClass: root2,
+                intervalClassVector: icvString);
             Array.Copy(structure, 0, raw, EmbeddingSchema.StructureOffset, structure.Length);
         }
 
@@ -99,6 +113,29 @@ public sealed class MusicalQueryEncoder(
         // is therefore zero, which is the correct behavior.
 
         return ExtractCompactAndNormalize(raw);
+    }
+
+    /// <summary>
+    ///     Computes the 6-digit interval-class vector string for a pitch-class set, in the
+    ///     same digit-per-position format <see cref="TheoryVectorService.ComputeEmbedding"/>
+    ///     parses. Counts cap at 9 since the parser is char-by-char; this only bites for
+    ///     extremely dense (10+ PC) sets, which the index doesn't carry.
+    /// </summary>
+    internal static string ComputeIcvString(int[] pcs)
+    {
+        var counts = new int[6];
+        for (var i = 0; i < pcs.Length; i++)
+        {
+            for (var j = i + 1; j < pcs.Length; j++)
+            {
+                var diff = Math.Abs(pcs[i] - pcs[j]);
+                var ic = Math.Min(diff, 12 - diff);
+                if (ic is >= 1 and <= 6) counts[ic - 1]++;
+            }
+        }
+        var sb = new StringBuilder(6);
+        for (var i = 0; i < 6; i++) sb.Append((char)('0' + Math.Min(counts[i], 9)));
+        return sb.ToString();
     }
 
     /// <summary>
