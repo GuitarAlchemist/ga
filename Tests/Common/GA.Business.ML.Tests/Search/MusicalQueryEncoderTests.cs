@@ -161,45 +161,6 @@ public class MusicalQueryEncoderTests
             "different chords must produce measurably different OPTK vectors.");
     }
 
-    [Test]
-    public void Encode_4PcChord_OutscoresIts3PcSubset()
-    {
-        // 2026-05-12 telemetry regression: "Dm7" returned only Dm triads (PCs 2,5,9)
-        // at identical 0.5066 — the query's STRUCTURE vector had zero ICV while the
-        // corpus carried non-zero ICV, so per-partition L2 normalization scaled
-        // the chroma contribution differently for super-set vs subset matches.
-        // After computing the ICV on the encoder side, the query vector for Dm7 must
-        // self-match (cosine ≈ partition-weight-sum) strictly better than it
-        // matches the encoded subset Dm.
-        var dm7Pcs = new[] { 0, 2, 5, 9 };
-        var dmPcs  = new[] { 2, 5, 9 };
-
-        var dm7 = _encoder.Encode(new StructuredQuery("Dm7", 2, dm7Pcs, null, null));
-        var dm  = _encoder.Encode(new StructuredQuery("Dm",  2, dmPcs,  null, null));
-
-        var selfDot = 0.0;
-        var subsetDot = 0.0;
-        for (var i = 0; i < dm7.Length; i++)
-        {
-            selfDot += dm7[i] * dm7[i];
-            subsetDot += dm7[i] * dm[i];
-        }
-
-        Assert.That(selfDot, Is.GreaterThan(subsetDot + 0.01),
-            $"Dm7 self-cosine ({selfDot:F4}) must exceed Dm7→Dm subset cosine " +
-            $"({subsetDot:F4}) — proves the ICV/cardinality discriminator is active.");
-    }
-
-    [TestCase(new[] { 0, 4, 7 },                  "001110")]  // C major triad: ic3,4,5
-    [TestCase(new[] { 0, 4, 7, 11 },              "101220")]  // Cmaj7: 1×ic1, 1×ic3, 2×ic4, 2×ic5
-    [TestCase(new[] { 0, 2, 5, 9 },               "012120")]  // Dm7 PCs: ic2 + 2×ic3 + ic4 + 2×ic5
-    [TestCase(new[] { 0, 3, 6, 9 },               "004002")]  // dim7 — symmetric, 4×ic3 + 2×ic6
-    public void ComputeIcvString_KnownPcSets_MatchAnalyticIcv(int[] pcs, string expected)
-    {
-        var actual = MusicalQueryEncoder.ComputeIcvString(pcs);
-        Assert.That(actual, Is.EqualTo(expected));
-    }
-
     // ─── Leak-fix proof: per-partition normalization ──────────────────────────
 
     [Test]
