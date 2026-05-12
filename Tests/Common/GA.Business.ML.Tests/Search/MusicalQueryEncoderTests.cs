@@ -66,6 +66,26 @@ public class MusicalQueryEncoderTests
         Assert.That(ok, Is.False);
     }
 
+    [TestCase("E7(#9)",  4, new[] { 4, 8, 11, 2, 7 })]    // Hendrix chord: E G# B D + #9=F##(=G)
+    [TestCase("C7(b9)",  0, new[] { 0, 4, 7, 10, 1 })]    // C7b9: C E G Bb + b9=Db
+    [TestCase("G7(b5)",  7, new[] { 7, 11, 1, 5 })]       // G7b5: G B Db F
+    [TestCase("G7(#5)",  7, new[] { 7, 11, 3, 5 })]       // G7#5: G B D# F
+    [TestCase("C(add9)", 0, new[] { 0, 4, 7, 2 })]        // Cadd9: C E G + 9=D
+    public void TryParse_ParenWrappedAlterations_FallBackToDeparenthesizedQuality(
+        string symbol, int expectedRoot, int[] expectedPcs)
+    {
+        // 2026-05-12 review: removing '(' and ')' from TypedMusicalQueryExtractor's
+        // tokenizer (companion fix) makes these queries arrive as single tokens
+        // like "E7(#9)" instead of split into ["E7", "#9"]. Without the
+        // paren-strip retry in TryParse, the quality string "7(#9)" wouldn't
+        // match the dictionary key "7#9" and the chord would be dropped entirely
+        // — a worse outcome than the pre-fix partial parse.
+        var ok = ChordPitchClasses.TryParse(symbol, out var root, out var pcs);
+        Assert.That(ok, Is.True, $"paren-stripped retry should accept {symbol}");
+        Assert.That(root, Is.EqualTo(expectedRoot));
+        Assert.That(pcs, Is.EquivalentTo(expectedPcs));
+    }
+
     [Test]
     public void TryParse_SlashBass_IgnoresSlashPortion()
     {

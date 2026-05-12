@@ -57,8 +57,15 @@ public sealed class TypedMusicalQueryExtractor : IMusicalQueryExtractor
         "play", "playing", "position",
     };
 
+    // 2026-05-12: '(' and ')' removed from delimiters so chord-symbol shorthand
+    // like "Em(maj7)" reaches ChordPitchClasses.TryParse as a single token. The
+    // dictionary key "m(maj7)" already resolves to [0,3,7,11]; with the previous
+    // tokenizer the symbol was split into ["Em", "maj7"] and the maj7 was lost as
+    // a tag. Space-separated forms like "Cmaj7 (jazz)" still resolve correctly —
+    // the second token "(jazz)" hits SymbolicTagRegistry's substring fallback on
+    // "jazz".
     private static readonly char[] TokenDelimiters =
-        [' ', '\t', '\n', '\r', ',', ';', '.', '!', '?', '(', ')', '[', ']'];
+        [' ', '\t', '\n', '\r', ',', ';', '.', '!', '?', '[', ']'];
 
     public Task<StructuredQuery> ExtractAsync(string query, CancellationToken cancellationToken = default)
     {

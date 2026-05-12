@@ -172,6 +172,25 @@ public class SymbolicTagRegistry
 
         var normalized = tag.ToLowerInvariant().Trim().Replace(" ", "-").Replace("_", "-");
         _tagToBitMap[normalized] = bitIndex;
+
+        // 2026-05-12 telemetry sweep: queries like "drop2" miss "drop-2-voicings"
+        // because GetBitIndex's substring fallback never inserts hyphens at the
+        // letter↔digit boundary. Register a dehyphenated alias so user-typed
+        // "drop2" substring-matches "drop2voicings". Gated on the tag containing
+        // a digit, which keeps English-phrase tags out of the aliased pool —
+        // "tension-and-release" dehyphenates to "tensionandrelease" and would
+        // make short query tokens like "and" silently fire. The gate does NOT
+        // prevent intentional aliasing across digit-containing structural tags
+        // (e.g. a hypothetical "6-9-voicings" alias "69voicings" lets "69" hit
+        // the bit), which is the desired behavior for the drop2 case.
+        if (normalized.Any(char.IsDigit))
+        {
+            var dehyphenated = normalized.Replace("-", "");
+            if (dehyphenated.Length > 0 && dehyphenated != normalized)
+            {
+                _tagToBitMap.TryAdd(dehyphenated, bitIndex);
+            }
+        }
     }
 
     public int? GetBitIndex(string tag)
