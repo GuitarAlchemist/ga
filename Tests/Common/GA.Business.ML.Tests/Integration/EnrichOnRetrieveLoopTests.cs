@@ -283,4 +283,76 @@ public class EnrichOnRetrieveLoopTests
             "Layered remember-calls must accumulate; the voicings preference is one entry " +
             "and must surface for a query that overlaps its content.");
     }
+
+    // ─── Hybrid retrieval — PR after #195 wire-up regression pin ──────
+
+    [Test]
+    public async Task RetrieveHook_UsesHybridSearch_WhenEmbedderIsRegistered()
+    {
+        // The MemoryHook switched from sync .Search to async
+        // .SearchHybridAsync in the PR-after-#195 wire-up. This test
+        // pins that wiring by routing the call through a recording
+        // embedder — if MemoryHook were still calling .Search, the
+        // embedder's CallCount would be 0 after a retrieve.
+        var recordingEmbedder = new RecordingEmbedder();
+        var storeWithEmbedder = new MemoryStore(
+            Path.Combine(_tempDir, "hybrid-pin.json"),
+            logger: null,
+            embedder: recordingEmbedder);
+        // Seed a preference for the same session.
+        storeWithEmbedder.Write("sess-pin", "k1", "preference",
+            content: "I prefer drop-2 voicings for jazz", tags: []);
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Memory:EnrichOnRetrieve"] = "true",
+            })
+            .Build();
+        var retrieveHook = new MemoryHook(
+            storeWithEmbedder, _transcripts, config,
+            NullLogger<MemoryHook>.Instance);
+
+        // Trigger retrieval.
+        await retrieveHook.OnRequestReceived(new ChatHookContext
+        {
+            OriginalMessage = "what voicings should I use for jazz",
+            CurrentMessage  = "what voicings should I use for jazz",
+            CorrelationId   = Guid.NewGuid(),
+            SessionId       = "sess-pin",
+        });
+
+        Assert.That(recordingEmbedder.CallCount, Is.GreaterThan(0),
+            "MemoryHook must invoke SearchHybridAsync — which goes through " +
+            "the IEmbeddingGenerator — when an embedder is registered. " +
+            "If this fails, MemoryHook regressed to sync .Search and the " +
+            "hybrid ranking path is dead code in production again.");
+    }
+
+    /// <summary>
+    /// Minimal stub that just counts how many times it's called and
+    /// returns a zero-vector embedding. Used to verify the production
+    /// call path actually reaches the embedder.
+    /// </summary>
+    private sealed class RecordingEmbedder
+        : Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>
+    {
+        public int CallCount { get; private set; }
+
+        public Task<Microsoft.Extensions.AI.GeneratedEmbeddings<Microsoft.Extensions.AI.Embedding<float>>> GenerateAsync(
+            IEnumerable<string> values,
+            Microsoft.Extensions.AI.EmbeddingGenerationOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            var embeddings = values
+                .Select(_ => new Microsoft.Extensions.AI.Embedding<float>(new float[4]))
+                .ToArray();
+            return Task.FromResult(
+                new Microsoft.Extensions.AI.GeneratedEmbeddings<Microsoft.Extensions.AI.Embedding<float>>(embeddings));
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+        public void Dispose() { }
+    }
 }

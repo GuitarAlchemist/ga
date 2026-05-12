@@ -74,9 +74,9 @@ public sealed class MemoryHook(
     /// Searches memory for context relevant to the incoming message and prepends it.
     /// Off by default; enable with <c>Memory:EnrichOnRetrieve=true</c>.
     /// </summary>
-    public Task<HookResult> OnRequestReceived(ChatHookContext ctx, CancellationToken ct = default)
+    public async Task<HookResult> OnRequestReceived(ChatHookContext ctx, CancellationToken ct = default)
     {
-        if (!_enrichOnRetrieve) return Task.FromResult(HookResult.Continue);
+        if (!_enrichOnRetrieve) return HookResult.Continue;
 
         // Safety belt: when SessionId isn't plumbed, refuse to retrieve. The
         // alternative (treat null as a global session) replays the leak that
@@ -103,10 +103,16 @@ public sealed class MemoryHook(
                     "into ChatHookContext.SessionId. See PR #157 Phase B. This message logs once " +
                     "per process; subsequent skips are silent.");
             }
-            return Task.FromResult(HookResult.Continue);
+            return HookResult.Continue;
         }
 
-        var matches = memoryStore.Search(ctx.SessionId, ctx.CurrentMessage);
+        // PR after #195: SearchHybridAsync runs BM25 + cosine when an
+        // IEmbeddingGenerator is registered in DI; degrades cleanly to
+        // BM25-only when not. The async cost is paid only when retrieval
+        // is gated on (Memory:EnrichOnRetrieve=true), so this isn't on
+        // the hot path for the default-off configuration.
+        var matches = await memoryStore.SearchHybridAsync(
+            ctx.SessionId, ctx.CurrentMessage, cancellationToken: ct);
 
         // SC-001 defense in depth: filter out entries that originated from
         // MemoryMcpTools.MemoryWrite (LLM-callable). Even if the
@@ -132,7 +138,7 @@ public sealed class MemoryHook(
                 "setting Memory:AllowLlmGlobalWrite=false.",
                 filteredOutCount, Memory.MemoryMcpTools.McpOriginTag);
         }
-        if (filtered.Count == 0) return Task.FromResult(HookResult.Continue);
+        if (filtered.Count == 0) return HookResult.Continue;
 
         var contextBlock = string.Join("\n", filtered.Take(3)
             .Select(m => $"[memory:{m.Key}] {m.Content}"));
@@ -141,7 +147,7 @@ public sealed class MemoryHook(
         logger.LogDebug(
             "MemoryHook: injecting {Count} memory entries for session {SessionId}",
             filtered.Count, ctx.SessionId);
-        return Task.FromResult(HookResult.Mutate(enriched));
+        return HookResult.Mutate(enriched);
     }
 
     /// <summary>
