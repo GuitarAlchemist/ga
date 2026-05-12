@@ -28,7 +28,14 @@ public sealed record MemoryEntry(
     string Content,
     string[] Tags,
     DateTimeOffset Timestamp,
-    string? SessionId = null);
+    string? SessionId = null,
+    // PR after #194: per-entry embedding vector for hybrid BM25 + cosine
+    // retrieval. Lazily populated on first SearchHybridAsync() call if
+    // the store was constructed with an IEmbeddingGenerator. Backward
+    // compat: pre-v0.4 entries on disk have no embedding field and
+    // deserialize with Embedding=null; SearchHybridAsync skips the
+    // cosine contribution for those entries and falls back to pure BM25.
+    float[]? Embedding = null);
 
 /// <summary>
 /// In-process agent memory backed by a JSON file at <c>~/.ga/memory.json</c>.
@@ -66,6 +73,14 @@ public sealed class MemoryStore
 
     private readonly string _storePath;
     private readonly ILogger<MemoryStore>? _logger;
+
+    /// <summary>
+    /// Optional embedder for hybrid BM25 + cosine retrieval. When null,
+    /// <see cref="SearchHybridAsync"/> degrades to pure BM25 and emits
+    /// a one-shot warning so operators notice the misconfiguration
+    /// rather than silently losing the embedding-ranking lift.
+    /// </summary>
+    private readonly Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? _embedder;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -127,11 +142,32 @@ public sealed class MemoryStore
     /// overloads above.
     /// </summary>
     public MemoryStore(string storePath, ILogger<MemoryStore>? logger)
+        : this(storePath, logger, embedder: null) { }
+
+    /// <summary>
+    /// Hybrid-retrieval constructor — adds an optional embedder for
+    /// <see cref="SearchHybridAsync"/>. When the embedder is null the
+    /// store falls back to pure BM25; when provided it lazy-populates
+    /// per-entry embeddings on first hybrid-search of each entry.
+    /// </summary>
+    public MemoryStore(
+        string storePath,
+        ILogger<MemoryStore>? logger,
+        Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? embedder)
     {
         _storePath = storePath ?? throw new ArgumentNullException(nameof(storePath));
         _logger    = logger;
+        _embedder  = embedder;
         _entries   = Load(_storePath, logger);
     }
+
+    /// <summary>
+    /// DI-friendly hybrid constructor — default path, logger, embedder.
+    /// </summary>
+    public MemoryStore(
+        ILogger<MemoryStore> logger,
+        Microsoft.Extensions.AI.IEmbeddingGenerator<string, Microsoft.Extensions.AI.Embedding<float>>? embedder)
+        : this(DefaultStorePath, logger, embedder) { }
 
     // Bounded so anonymous chatbot traffic at the public demo URL can't grow
     // ~/.ga/memory.json unbounded — see PR #151 review (reliability rel-007).
@@ -279,6 +315,179 @@ public sealed class MemoryStore
             .ThenByDescending(scored => scored.Entry.Timestamp)
             .Select(scored => scored.Entry)
             .ToList();
+    }
+
+    /// <summary>
+    /// Hybrid BM25 + cosine-similarity search. Each entry's final score is
+    /// <c>HybridBm25Weight * normalizedBm25 + HybridCosineWeight * cosine</c>
+    /// where normalizedBm25 is the entry's BM25 score divided by the
+    /// best BM25 score in the in-scope corpus (so the two terms are
+    /// comparable). Entries with no precomputed embedding are
+    /// lazy-embedded during this call and the result is cached back to
+    /// disk via <see cref="Save"/> on the next write.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why hybrid:</b> BM25 alone misses paraphrases that share
+    /// concept-space but no surface tokens ("drop-2 voicings I like"
+    /// vs "two-note-skip jazz chord shapes"). Pure cosine alone over-
+    /// matches semantically-related-but-not-asked entries (a query for
+    /// "jazz" pulls every entry that ever mentioned music). The hybrid
+    /// gets both signals.
+    /// </para>
+    /// <para>
+    /// <b>When no embedder is configured</b> the method emits a one-
+    /// shot warning and delegates to <see cref="Search"/> for pure
+    /// BM25. The caller's contract is unchanged — they still get an
+    /// ordered list — only the ranking quality differs.
+    /// </para>
+    /// <para>
+    /// <b>Lazy backfill:</b> any in-scope entry without an embedding is
+    /// embedded once during this call. The updated <see cref="MemoryEntry"/>
+    /// replaces the existing one in <see cref="_entries"/>; the next
+    /// <see cref="Write"/> serializes the embeddings to disk. This
+    /// avoids paying the embedding cost on Write while still
+    /// accumulating the cache over time.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<MemoryEntry>> SearchHybridAsync(
+        string? sessionId,
+        string query,
+        string? type = null,
+        string[]? tags = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_embedder is null)
+        {
+            WarnNoEmbedderOnce();
+            return Search(sessionId, query, type, tags);
+        }
+
+        var queryTokens = TokenizeAndFilter(query);
+        if (queryTokens.Count == 0) return [];
+
+        var corpus = _entries.Values
+            .Where(e => InScope(e, sessionId))
+            .Where(e => type is null || e.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+            .Where(e => tags is null || tags.Any(t => e.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)))
+            .Select(TokenizeEntry)
+            .ToList();
+        if (corpus.Count == 0) return [];
+
+        // BM25 layer — same math as Search() so the score is comparable.
+        var avgDocLength = corpus.Average(d => d.TokenCount);
+        if (avgDocLength <= 0) avgDocLength = 1;
+
+        var idf = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var q in queryTokens)
+        {
+            var df = corpus.Count(d => d.TermFreq.ContainsKey(q));
+            idf[q] = Math.Log(1.0 + (corpus.Count - df + 0.5) / (df + 0.5));
+        }
+
+        var bm25Scores = corpus
+            .Select(d => (d.Entry, Bm25: ComputeBm25(d, queryTokens, idf, avgDocLength)))
+            .ToList();
+        var maxBm25 = bm25Scores.Max(s => s.Bm25);
+        if (maxBm25 <= 0) maxBm25 = 1;  // defensive — every entry has BM25 = 0; cosine carries the ranking
+
+        // Cosine layer — embed the query once, embed any uncached entries.
+        var queryEmbedding = await EmbedAsync(query, cancellationToken);
+
+        // Lazy backfill: gather entries needing embedding, batch into a
+        // single embedder call (the IEmbeddingGenerator surface is
+        // designed for batches; per-entry calls would multiply latency).
+        var needEmbedding = corpus
+            .Where(d => d.Entry.Embedding is null || d.Entry.Embedding.Length == 0)
+            .ToList();
+        if (needEmbedding.Count > 0)
+        {
+            var texts = needEmbedding.Select(d => EmbeddingText(d.Entry)).ToList();
+            var newEmbeddings = await _embedder.GenerateAsync(texts, cancellationToken: cancellationToken);
+            for (var i = 0; i < needEmbedding.Count; i++)
+            {
+                var entry = needEmbedding[i].Entry;
+                var vec   = newEmbeddings[i].Vector.ToArray();
+                var updated = entry with { Embedding = vec };
+                _entries[CompositeKey(updated.SessionId, updated.Key)] = updated;
+            }
+        }
+
+        // Re-read entries from _entries to pick up the lazy-backfilled
+        // embeddings (corpus has the stale snapshot).
+        var ranked = new List<(MemoryEntry Entry, double Hybrid)>(bm25Scores.Count);
+        foreach (var (entry, bm25) in bm25Scores)
+        {
+            var current = _entries.TryGetValue(CompositeKey(entry.SessionId, entry.Key), out var fresh)
+                ? fresh
+                : entry;
+            var cosine = current.Embedding is { Length: > 0 }
+                ? CosineSimilarity(queryEmbedding, current.Embedding)
+                : 0.0;
+            var hybrid = HybridBm25Weight * (bm25 / maxBm25)
+                       + HybridCosineWeight * cosine;
+            ranked.Add((current, hybrid));
+        }
+
+        return ranked
+            .Where(r => r.Hybrid > 0)
+            .OrderByDescending(r => r.Hybrid)
+            .ThenByDescending(r => r.Entry.Timestamp)
+            .Select(r => r.Entry)
+            .ToList();
+    }
+
+    /// <summary>BM25 weight in the hybrid score. <c>0.5</c> balances
+    /// exact-token recall against semantic-similarity recall.</summary>
+    public const double HybridBm25Weight = 0.5;
+
+    /// <summary>Cosine weight in the hybrid score. <c>0.5</c> balances
+    /// semantic-similarity against exact-token recall.</summary>
+    public const double HybridCosineWeight = 0.5;
+
+    private int _warnNoEmbedderFired;
+
+    private void WarnNoEmbedderOnce()
+    {
+        if (Interlocked.Exchange(ref _warnNoEmbedderFired, 1) != 0) return;
+        _logger?.LogWarning(
+            "MemoryStore.SearchHybridAsync called without an IEmbeddingGenerator " +
+            "configured — falling back to pure BM25. Hybrid ranking lift is " +
+            "lost. To enable, register an IEmbeddingGenerator<string, " +
+            "Embedding<float>> in DI before constructing MemoryStore.");
+    }
+
+    private async Task<float[]> EmbedAsync(string text, CancellationToken ct)
+    {
+        var batch = await _embedder!.GenerateAsync([text], cancellationToken: ct);
+        return batch[0].Vector.ToArray();
+    }
+
+    /// <summary>
+    /// Builds the text to embed for an entry — content + key + tags
+    /// concatenated. Mirrors the BM25 token-haystack so cosine and
+    /// BM25 score the same surface.
+    /// </summary>
+    private static string EmbeddingText(MemoryEntry entry)
+    {
+        if (entry.Tags.Length == 0) return $"{entry.Content} {entry.Key}";
+        return $"{entry.Content} {entry.Key} {string.Join(' ', entry.Tags)}";
+    }
+
+    private static double CosineSimilarity(float[] a, float[] b)
+    {
+        if (a.Length == 0 || b.Length == 0) return 0;
+        if (a.Length != b.Length) return 0;
+
+        double dot = 0, magA = 0, magB = 0;
+        for (var i = 0; i < a.Length; i++)
+        {
+            dot  += a[i] * b[i];
+            magA += a[i] * a[i];
+            magB += b[i] * b[i];
+        }
+        var denom = Math.Sqrt(magA) * Math.Sqrt(magB);
+        return denom > 0 ? dot / denom : 0;
     }
 
     /// <summary>BM25 default <c>k1</c> (term-frequency saturation).</summary>
