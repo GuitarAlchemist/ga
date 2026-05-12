@@ -236,21 +236,15 @@ public sealed class ChatTranscriptStore : IChatTranscriptStore
 
     private void Save()
     {
-        var dir = Path.GetDirectoryName(_storePath);
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
-
         // Snapshot under the lock so concurrent AppendTurns can't tear the
-        // serialise; atomic-rename so a crash mid-write can't leave a
-        // half-flushed file that Load() silently swallows on next boot.
-        // Same pattern as MemoryStore.Save (PR #151 rel-006 fix).
+        // serialise. MemoryFileWriter then handles the atomic-rename + the
+        // owner-only mode (PR #174 review follow-up: 0600 on Unix, default
+        // ACL inheritance on Windows). Same Save() pattern as MemoryStore.
         _saveLock.Wait();
         try
         {
-            var json    = JsonSerializer.Serialize(_turns.Values.ToList(), JsonOpts);
-            var tmpPath = _storePath + ".tmp";
-            File.WriteAllText(tmpPath, json);
-            File.Move(tmpPath, _storePath, overwrite: true);
+            var json = JsonSerializer.Serialize(_turns.Values.ToList(), JsonOpts);
+            MemoryFileWriter.WriteAtomic(_storePath, json, _logger);
         }
         finally
         {
