@@ -28,8 +28,23 @@ public sealed class LlmMusicalQueryExtractor(
     IMemoryCache cache,
     ILogger<LlmMusicalQueryExtractor> logger) : IMusicalQueryExtractor
 {
+    // Tuned prompt, validated 2026-05-13 against Mercury 2 on a 25-query sweep.
+    // Adds (vs the previous baseline):
+    //   1. Root-keeps-priority rule for mode queries — `F# Lydian` → chord:"F#",
+    //      mode:"Lydian" rather than chord:null. Fixed 4/4 mode-only-query misses.
+    //   2. Mode field carries scale name only, never the root prefix.
+    //   3. Iconic-chord-name rule — `Bill Evans` → tag "bill-evans-chord" (one
+    //      token, not split). Mostly cosmetic since the typed extractor catches
+    //      iconic names before the LLM fallback fires.
+    //   4. Three few-shot examples covering the mode-with-root, iconic-tag, and
+    //      chord-with-tags cases.
+    // Cost: ~80 prompt tokens longer; per-call cost rose from $0.000155 to
+    // $0.000307 on Mercury, still 10x cheaper than Haiku. Median latency
+    // dropped 95 ms (464 → 369) — token count doesn't dominate latency.
+    // See docs/plans/2026-05-13-mercury-subagent-evaluation-plan.md.
     private const string SystemPrompt = """
-        You extract musical intent from user queries about guitar chord voicings. Respond with JSON only.
+        You extract musical intent from user queries about guitar chord voicings.
+        Respond with JSON only.
 
         Schema:
         {
@@ -39,12 +54,31 @@ public sealed class LlmMusicalQueryExtractor(
         }
 
         Rules:
-        - "chord": prefer the root-quality form (e.g. "Cmaj7" not "Cmajor seventh"). Null if none mentioned.
-        - "mode": null if the user didn't mention a mode/scale.
-        - "tags": up to 6 lowercase keywords. Prefer style words (jazz, blues, rock, classical, folk, metal)
-          and technique words (drop2, drop3, shell, quartal, barre, open, closed, rootless).
-          Drop vague descriptors unless they match this vocabulary.
+        - "chord": prefer the root-quality form (e.g. "Cmaj7" not "Cmajor seventh").
+          If a root note is named alongside a mode (e.g. "F# Lydian"), still
+          populate "chord" with the bare root letter (chord: "F#"). Null only when
+          no root is mentioned at all.
+        - "mode": the mode/scale name without the root prefix (e.g. "Lydian", not
+          "F# Lydian"). Null if the user didn't mention a mode/scale.
+        - "tags": up to 6 lowercase keywords. Prefer style words (jazz, blues,
+          rock, classical, folk, metal) and technique words (drop2, drop3, shell,
+          quartal, barre, open, closed, rootless).
+        - Iconic chord names map to ONE hyphenated tag, never split into separate
+          tokens. "Bill Evans" -> "bill-evans-chord". "Hendrix chord" -> "hendrix-chord".
+          "Steely Dan" -> "steely-dan-chord". "Bond chord" -> "james-bond-chord".
+        - Drop vague descriptors (warm, dreamy, dark, sparkly) unless they map to
+          a vocabulary tag.
         - Return only the JSON object, no prose, no code fences.
+
+        Examples:
+        User: "F# Lydian dominant"
+        Assistant: {"chord":"F#","mode":"Lydian dominant","tags":[]}
+
+        User: "rootless Dm9 bill evans style"
+        Assistant: {"chord":"Dm9","mode":null,"tags":["rootless","bill-evans-chord"]}
+
+        User: "Cmaj7 drop2 jazz"
+        Assistant: {"chord":"Cmaj7","mode":null,"tags":["jazz","drop2"]}
         """;
 
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
