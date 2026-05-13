@@ -1,6 +1,6 @@
 ---
 date: 2026-05-06
-status: plan (not yet operationalized)
+status: partially executed; see 2026-05-07-chatbot-roadmap.md for current runtime state
 reversibility: phased; Phase 1 is two-way, Phase 2 introduces a one-way door (closure-registry exposure as MCP)
 owners: needs assignment
 audience: GA chatbot maintainers / Claude Code authors
@@ -10,6 +10,17 @@ predecessor: 2026-05-03-chatbot-agent-framework-migration-recommendation.md
 # GA Skills Orchestration Architecture
 
 How the GA chatbot's **C# orchestrator** should consume **both Claude-Code-flavoured `.agent/skills/`** and **chatbot-flavoured `skills/` markdown** to produce grounded answers via the **F# DSL closure registry** and **OPTIC-K hybrid search** — without writing 10 keyhole MCP tools per BACKLOG #139.
+
+## Status Update — 2026-05-12
+
+This document remains the design rationale for the skills / `ga_dsl_eval` /
+F# closure-registry architecture, but parts of it are no longer future tense.
+The implementation work recorded in
+[`2026-05-07-chatbot-roadmap.md`](2026-05-07-chatbot-roadmap.md) shipped the
+closure-registry bootstrap, `ga_dsl_eval` invocation tracking, grounding
+sentinels, deterministic-skill failure taxonomy, and the canonical
+`IChatApplicationService` decorator stack. Treat this plan as background and
+use the roadmap as the current operational state.
 
 ## TL;DR
 
@@ -272,7 +283,9 @@ Each gap becomes a 1-2 day iteration: identify the closure, graduate the SKILL.m
 
 ---
 
-**Status**: this plan is intentionally not yet operationalized — Phase 0 (contract design) needs explicit sign-off before Phase 1 starts. Open questions for the maintainer:
+**Status**: partially executed. The original Phase 0/1 framing is superseded by
+the shipped work tracked in `docs/plans/2026-05-07-chatbot-roadmap.md`. Open
+questions that still matter for future skill graduations:
 1. Closure-arg format: flat key-value, JSON string, or per-closure typed contracts?
 2. Visible-to-chatbot closure set: Domain only, or Domain + curated Pipeline?
 3. Phase 3 success threshold: is 80% invocation success the right bar, or should it be higher?

@@ -76,39 +76,55 @@ function truncate(s: string, n: number): string {
 async function fetchSummary(url: string): Promise<string | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
+  const prompt = `Summarize this URL in one sentence for governance triage: ${url}`;
 
   try {
-    // Try the chatbot API first
-    const res = await fetch('/api/chatbot/ask', {
+    const res = await fetch('/api/chatbot/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: `Summarize this URL in one sentence for governance triage: ${url}` }),
+      body: JSON.stringify({ message: prompt }),
       signal: controller.signal,
     });
     if (res.ok) {
       const data = await res.json();
-      const text = data?.answer ?? data?.response ?? data?.message;
+      const text = extractChatText(data);
       if (typeof text === 'string' && text.trim()) return text.trim();
     }
   } catch { /* fall through */ }
 
   try {
-    // Fallback to chat endpoint
-    const res = await fetch('/api/chat', {
+    // Fallback to the Harmonic Nebula chat surface when the generic chatbot
+    // route is unavailable in a given deployment slot.
+    const res = await fetch('/api/nebula/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: `Summarize: ${url}` }),
+      body: JSON.stringify({ message: prompt }),
       signal: controller.signal,
     });
     if (res.ok) {
       const data = await res.json();
-      const text = data?.answer ?? data?.response ?? data?.message;
+      const text = extractChatText(data);
       if (typeof text === 'string' && text.trim()) return text.trim();
     }
   } catch { /* fall through */ }
 
   clearTimeout(timeout);
   return null;
+}
+
+function extractChatText(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null;
+
+  const record = data as Record<string, unknown>;
+  const text =
+    record.naturalLanguageAnswer ??
+    record.NaturalLanguageAnswer ??
+    record.answer ??
+    record.response ??
+    record.message ??
+    record.reply;
+
+  return typeof text === 'string' ? text : null;
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 title: Chat & Agent Surfaces
 scope: All HTTP/SignalR/GraphQL chat endpoints and the orchestrator/agent stack behind them
 status: authoritative
-last_verified: 2026-05-07
+last_verified: 2026-05-12
 parent: docs/architecture/README.md
 ---
 
@@ -31,12 +31,38 @@ The product-surface confusion flagged by the 2026-05-07 multi-LLM review is real
 | AG-UI streaming for Prime Radiant / ga-client | `POST /api/chatbot/agui/stream` on **GaApi** | duplicated route in `GaChatbot.Api` is not yet on a deployed origin |
 | In-process chat (CLI / console) | `IHarmonicChatOrchestrator` (`= ProductionOrchestrator`) via DI | nothing |
 
+### Current-state shortcut
+
+Read this section as current state; later sections preserve detailed inventory
+and historical context.
+
+| Keep current | Parallel / sync carefully | Frozen / cleanup candidate |
+|---|---|---|
+| `POST /api/nebula/chat` for Harmonic Nebula | `/api/chatbot/chat` and `/api/chatbot/chat/stream` REST/SSE siblings | `GA.AI.Service` |
+| `/hubs/chatbot` for deployed public `/chatbot/` demo | `GaChatbot.Api` reference host | stale startup / Docker references to historical chatbot names |
+| `/api/chatbot/agui/stream` for AG-UI surfaces | `ChatbotSessionOrchestrator.NormalizeHistory` helper | `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` |
+| `IChatApplicationService` + `ProductionOrchestrator` substrate | legacy startup scripts mentioning deleted/frozen chatbot names | stale Docker Compose chatbot references |
+
 ### Decision pending
 
 Before declaring `GaChatbot.Api` the canonical deployable, one of three paths needs to be chosen — each has different blast radius (Section 5b enumerates).
 
 - Verified canonical Nebula path (used by `NebulaChat.tsx`): `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (or Ollama).
 - Verified canonical demo path (used by `wwwroot/chatbot/index.html`): SPA → SignalR `/hubs/chatbot` → GaApi `ChatbotHub` → `ProductionOrchestrator`.
+
+### Verification notes — 2026-05-12
+
+- `Apps/ga-server/GaApi/wwwroot/chatbot/index.html` loads SignalR and calls
+  `withUrl("/hubs/chatbot")`.
+- `Apps/ga-server/GaApi/Program.cs` maps
+  `app.MapHub<ChatbotHub>("/hubs/chatbot")`.
+- `ReactComponents/ga-react-components/src/components/PrimeRadiant/TriageDropZone.tsx`
+  no longer calls `/api/chatbot/ask`; it now uses existing chatbot surfaces for
+  summary fallback.
+- `AllProjects.AppHost/Program.cs` starts `GaApi`, does not register
+  `GaChatbot.Api`, and keeps `GA.AI.Service` commented out as `ai-service`.
+- `Scripts/start-chatbot-api.ps1` can start `GaChatbot.Api` manually; that is
+  not the same as making it the public deployed chatbot host.
 
 ---
 
@@ -52,7 +78,6 @@ Before declaring `GaChatbot.Api` the canonical deployable, one of three paths ne
 | `/api/chatbot/chat` | POST | `ChatbotController.Chat` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:119`) | GaApi | `ChatRequest` (same as above) | `ChatJsonResponse { NaturalLanguageAnswer; AgentId; Confidence; RoutingMethod; ElapsedMs; TraceId? }` (`ChatRequest.cs:15`) | 🟡 parallel-to-canonical | Non-streaming JSON for MCP tool callers. |
 | `/api/chatbot/status` | GET | `ChatbotController.GetStatus` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:159`) | GaApi | _(none)_ | `ChatbotStatus { IsAvailable; Message; Timestamp }` (`Apps/ga-server/GaApi/Controllers/ChatbotStatus.cs:3`) | 🟡 health helper | Probes `IChatService.IsAvailableAsync` (Ollama by default). |
 | `/api/chatbot/examples` | GET | `ChatbotController.GetExamples` (`Apps/ga-server/GaApi/Controllers/ChatbotController.cs:177`) | GaApi | _(none)_ | `string[]` of canned prompts | 🟡 helper | Hard-coded list, no orchestrator hop. |
-| `/api/chatbot/ask` | POST | _(no controller)_ | GaApi (?) | unknown — frontend sends `{question?, query?}` (`ReactComponents/.../PrimeRadiant/TriageDropZone.tsx:82`) | _N/A_ | 🪦 deprecated-candidate / dangling | No matching server-side action found via grep across `Apps/ga-server/`. Frontend caller likely fails with 404 today. |
 | `/api/Chat` | POST | `GA.AI.Service.Controllers.ChatController.Chat` (`Apps/ga-server/GA.AI.Service/Controllers/ChatController.cs:14`) | **GA.AI.Service** (separate microservice) | `GA.Business.Core.Orchestration.Models.ChatRequest { Message; SessionId?; KeyContext?; History? }` (`Common/GA.Business.Core.Orchestration/Models/ChatModels.cs:11`) | `ChatResponse { NaturalLanguageAnswer; Candidates; Progression?; Routing?; QueryFilters?; DebugParams? }` (`ChatModels.cs:86`) | 🪦 deprecated-candidate | Service is **not started** by Aspire AppHost — `AddProject("ai-service", …)` is commented out at `AllProjects.AppHost/Program.cs:87`. Reachable only if launched manually. |
 | GraphQL `/graphql` chat mutations | _N/A_ | _N/A_ | GaApi | _(none)_ | _(none)_ | ❌ none exist | The HotChocolate schema is built from `Query` + four `TypeExtension`s only (`Apps/ga-server/GaApi/Program.cs:113-121`). Grep for `[Mutation]`, `MutationType`, `Subscription` in `Apps/ga-server/GaApi/GraphQL/**` returns no matches. |
 
@@ -93,7 +118,7 @@ Tool catalogue exposed to the model: `search_voicings`, `describe_selected_voici
 
 | Hub | Path | App | Methods | Status |
 |---|---|---|---|---|
-| `ChatbotHub` (`Apps/ga-server/GaApi/Hubs/ChatbotHub.cs:15`) | `/hubs/chatbot` (mapped at `Apps/ga-server/GaApi/Program.cs:404`) | GaApi | `SendMessage(string, bool useSemanticSearch = true)`, `ClearHistory()`, `GetHistory() : List<ChatMessage>`, `SearchKnowledge(string, int = 10) : List<SemanticSearchResult>`, `OnConnectedAsync`, `OnDisconnectedAsync`. Server pushes: `Connected`, `Error`, `MessageRoutingMetadata { agentId, confidence, routingMethod }`, `ReceiveMessageChunk(string)`, `MessageComplete(string)`. | 🟡 parallel-to-canonical (no frontend grep hit) |
+| `ChatbotHub` (`Apps/ga-server/GaApi/Hubs/ChatbotHub.cs:15`) | `/hubs/chatbot` (mapped at `Apps/ga-server/GaApi/Program.cs:404`) | GaApi | `SendMessage(string, bool useSemanticSearch = true)`, `ClearHistory()`, `GetHistory() : List<ChatMessage>`, `SearchKnowledge(string, int = 10) : List<SemanticSearchResult>`, `OnConnectedAsync`, `OnDisconnectedAsync`. Server pushes: `Connected`, `Error`, `MessageRoutingMetadata { agentId, confidence, routingMethod }`, `ReceiveMessageChunk(string)`, `MessageComplete(string)`. | ✅ de-facto canonical for the deployed public `/chatbot/` demo |
 
 Per-connection conversation history kept in a static `ConcurrentDictionary<string, List<ChatMessage>>` capped at 50 messages; pipeline budget is `25s` (`ChatbotHub.cs:24`). Uses `[Authorize]` and `ILlmConcurrencyGate`. Backed by `ProductionOrchestrator` + `ChatbotSessionOrchestrator` for history normalisation.
 
@@ -159,7 +184,7 @@ Important: `IChatService` is **not** the same channel as the `IChatClient` (Micr
 | `Apps/ga-client/src/services/chatApi.ts` (`ChatApiService.streamChat`, `sendMessage`, `checkStatus`, `getExamples`) | `POST /api/chatbot/chat/stream`, `POST /api/chatbot/chat`, `GET /api/chatbot/status`, `GET /api/chatbot/examples` | Pre-AG-UI SSE protocol still imported by some ga-client surfaces. Singleton exported as `chatApi`. |
 | `Apps/ga-client/src/services/chatService.ts:94` (`sendChatMessageStream`) | `POST /api/chatbot/chat/stream` | Same protocol, alternate functional API. |
 | `<ChatWidget>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ChatWidget.tsx:917`) | `POST /api/chatbot/chat` | Non-streaming. Used inside the Prime Radiant operator console. |
-| `<TriageDropZone>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/TriageDropZone.tsx:82`) | `POST /api/chatbot/ask` | **No matching server endpoint exists.** Likely 404 today — see Open Questions. |
+| `<TriageDropZone>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/TriageDropZone.tsx:82`) | `POST /api/chatbot/chat`, fallback `POST /api/nebula/chat` | Uses existing chatbot endpoints for best-effort URL summaries. |
 | `<ForceRadiant>` (`…/PrimeRadiant/ForceRadiant.tsx:3502`), `HealthBindingEngine.ts:198` | `GET/HEAD /api/chatbot/status` | Health probe only. |
 | Apps/GaChatbot Console (`Apps/GaChatbot/Program.cs:25`) | _(no HTTP)_ | In-process: instantiates `ProductionOrchestrator` directly via DI and calls `AnswerAsync`. Console REPL. |
 | Apps/GaChatbotCli (`Apps/GaChatbotCli/Program.cs:55,91`) | _(no HTTP)_ | In-process: resolves `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`) via DI. Single-shot or `--interactive` REPL. JSON output mode for tooling. |
@@ -225,13 +250,12 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 | **HTTP endpoint serving the legacy ga-client / Prime Radiant chat UIs** | ✅ AG-UI: `POST /api/chatbot/agui/stream` → `AgUiChatController.AgUiStream` → `IHarmonicChatOrchestrator.AnswerStreamingAsync` (= `ProductionOrchestrator`). | 🟡 `POST /api/chatbot/chat/stream` (`ChatbotController`) — same orchestrator backend, different SSE shape; still consumed by `chatApi.ts` + `chatService.ts`. 🟡 `POST /api/chatbot/agui/json` — non-streaming sibling, same orchestrator, used by MCP / agent callers. 🟡 `POST /api/chatbot/chat` — non-streaming sibling, same orchestrator, used by `<ChatWidget>`. |
 | **In-process chat for console / CLI** | ✅ `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`) resolved via DI in `GaChatbotCli` and `GaChatbot`. | None notable — both apps share the same `AddChatbotOrchestration` registrations. |
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
-| **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` — same `ProductionOrchestrator` backend, but no JS/TS frontend hits the hub today (`signalR`/`hubConnection` greps return zero matches under `Apps/`). | 🪦 deprecated-candidate unless a consumer is reintroduced. |
+| **SignalR streaming chat** | ✅ `ChatbotHub` at `/hubs/chatbot` — same orchestrator substrate as the REST surfaces and the de-facto canonical path for the deployed public `/chatbot/` demo. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
 | **GraphQL chat mutation** | ❌ none defined; `GaApi/Program.cs:113-121` registers Query types only. | _N/A_ |
 | **`IChatService` (GaApi-local)** | ✅ used by `ChatbotSessionOrchestrator.NormalizeHistory` and `ChatbotController.GetStatus` only. Provider chosen via `AI:ChatProvider`. | 🟡 `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` exist but are not called from any controller or hub today. |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |
 | **Voicing-grounded retrieval inside chat** | ✅ `SpectralRagOrchestrator` reached via `TabAwareOrchestrator`. | 🟡 `VoicingAgent` performs an independent OPTIC-K retrieval path through `EnhancedVoicingSearchService` whenever the router selects it — produces a structured-list response rather than a narrated one. Two independent retrieval surfaces over the same corpus. |
 | **GA.AI.Service / `POST /api/Chat`** | _N/A_ | 🪦 **frozen 2026-05-07** — see [`Apps/ga-server/GA.AI.Service/DEPRECATED.md`](../../Apps/ga-server/GA.AI.Service/DEPRECATED.md). Read-only until a concrete deploy reason emerges or the next architecture review decides to delete. |
-| **`POST /api/chatbot/ask`** | _N/A_ | 🪦 dangling frontend call (TriageDropZone) with no server implementation. |
 
 ---
 
@@ -257,7 +281,6 @@ flowchart LR
         AGJ["POST /api/chatbot/agui/json 🟡"]
         CCS["POST /api/chatbot/chat/stream 🟡"]
         CC["POST /api/chatbot/chat 🟡"]
-        ASK["POST /api/chatbot/ask 🪦"]
         STAT["GET /api/chatbot/status 🟡"]
         HUB["SignalR /hubs/chatbot 🟡"]
     end
@@ -308,7 +331,8 @@ flowchart LR
     CHATAPI --> CC
     CHATAPI --> STAT
     CW --> CC
-    TDZ -.dangling.-> ASK
+    TDZ --> CC
+    TDZ -.fallback.-> NEB
 
     CCS --> PROD
     CC --> PROD
@@ -350,8 +374,7 @@ flowchart LR
 
 - Is `Apps/GaChatbot` (console REPL) still reachable in the Aspire `start-all` flow? `AllProjects.AppHost/Program.cs:135` adds a different project (`GuitarAlchemistChatbot.csproj`); the `Apps/GaChatbot` project appears to be a separate console host that is never started by Aspire.
 - Does `AgUiChatController` have any active frontend consumer beyond `<GAChatPanel>` and the ga-client `chatAtoms`? Confirm whether the legacy SSE endpoints (`/chat/stream`, `/chat`) can be retired.
-- Does any client connect to `ChatbotHub` (`/hubs/chatbot`)? Grep for `signalR`/`hubConnection` under `Apps/` returns zero matches; the hub may be dead today.
-- `POST /api/chatbot/ask` is called by `TriageDropZone` but no controller action implements it — does this fail silently or is it served by a route fallback elsewhere?
+- Are there any `ChatbotHub` consumers besides the deployed public `/chatbot/` static SPA (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`)? Confirm before relocating or retiring the hub.
 - Is `GA.AI.Service` (whose `ChatController` shadows `ProductionOrchestrator` directly) ever launched in CI/dev? AppHost registration is commented out (`AllProjects.AppHost/Program.cs:87`); confirm no other entry point spins it up.
 - `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` are registered but not invoked from any controller. Should they be removed, or are they intended for an upcoming SignalR/REST surface?
 - `SemanticRouter.AggregateAsync` and `DebateAsync` (multi-agent fan-out / Critic adjudication) are implemented but no HTTP endpoint exposes them. Plan to surface, or dead code?
