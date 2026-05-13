@@ -6,6 +6,7 @@
 .DESCRIPTION
     Verifies that all services are running and healthy:
     - GaApi (main API server)
+    - Public chatbot demo served by GaApi
     - ga-client (React frontend)
     - MongoDB (database)
     - MongoExpress (database UI)
@@ -66,7 +67,7 @@ function Write-Step
 # Health check results
 $script:HealthResults = @{
     GaApi = @{ Healthy = $false; ResponseTime = 0; Message = "" }
-    Chatbot = @{ Healthy = $false; ResponseTime = 0; Message = "" }
+    ChatbotDemo = @{ Healthy = $false; ResponseTime = 0; Message = "" }
     ReactFrontend = @{ Healthy = $false; ResponseTime = 0; Message = "" }
     MongoDB = @{ Healthy = $false; ResponseTime = 0; Message = "" }
     MongoExpress = @{ Healthy = $false; ResponseTime = 0; Message = "" }
@@ -77,7 +78,7 @@ $script:HealthResults = @{
 $ServiceUrls = @{
     GaApi = "https://localhost:7001/health"
     GaApiSwagger = "https://localhost:7001/swagger"
-    Chatbot = "https://localhost:7002"
+    ChatbotDemo = "https://localhost:7001/chatbot/"
     ReactFrontend = "http://localhost:5173"
     MongoDB = "mongodb://localhost:27017"
     MongoExpress = "http://localhost:8081"
@@ -125,34 +126,34 @@ catch
 }
 
 # ============================================
-# CHECK CHATBOT
+# CHECK CHATBOT DEMO
 # ============================================
-Write-Step "Checking Chatbot..."
+Write-Step "Checking Chatbot demo..."
 
 try
 {
     $startTime = Get-Date
-    $response = Invoke-WebRequest -Uri $ServiceUrls.Chatbot -Method Get -TimeoutSec $Timeout -SkipCertificateCheck -ErrorAction Stop
+    $response = Invoke-WebRequest -Uri $ServiceUrls.ChatbotDemo -Method Get -TimeoutSec $Timeout -SkipCertificateCheck -ErrorAction Stop
     $responseTime = ((Get-Date) - $startTime).TotalMilliseconds
 
     if ($response.StatusCode -eq 200)
     {
-        $script:HealthResults.Chatbot.Healthy = $true
-        $script:HealthResults.Chatbot.ResponseTime = $responseTime
-        $script:HealthResults.Chatbot.Message = "Healthy"
-        Write-Success "Chatbot is healthy (${responseTime}ms)"
+        $script:HealthResults.ChatbotDemo.Healthy = $true
+        $script:HealthResults.ChatbotDemo.ResponseTime = $responseTime
+        $script:HealthResults.ChatbotDemo.Message = "Healthy"
+        Write-Success "Chatbot demo is healthy (${responseTime}ms)"
     }
     else
     {
-        $script:HealthResults.Chatbot.Message = "Unexpected status code: $( $response.StatusCode )"
-        Write-Failure "Chatbot returned status code $( $response.StatusCode )"
+        $script:HealthResults.ChatbotDemo.Message = "Unexpected status code: $( $response.StatusCode )"
+        Write-Failure "Chatbot demo returned status code $( $response.StatusCode )"
     }
 }
 catch
 {
-    $script:HealthResults.Chatbot.Message = $_.Exception.Message
-    Write-Failure "Chatbot is not accessible: $( $_.Exception.Message )"
-    Write-Info "Make sure Chatbot is running at $( $ServiceUrls.Chatbot )"
+    $script:HealthResults.ChatbotDemo.Message = $_.Exception.Message
+    Write-Failure "Chatbot demo is not accessible: $( $_.Exception.Message )"
+    Write-Info "Make sure GaApi is running at $( $ServiceUrls.ChatbotDemo )"
 }
 
 # ============================================
@@ -360,9 +361,9 @@ if ($healthyCount -gt 0)
     {
         Write-Host "  GaApi (Swagger): $( $ServiceUrls.GaApiSwagger )" -ForegroundColor Cyan
     }
-    if ($script:HealthResults.Chatbot.Healthy)
+    if ($script:HealthResults.ChatbotDemo.Healthy)
     {
-        Write-Host "  Chatbot: $( $ServiceUrls.Chatbot )" -ForegroundColor Cyan
+        Write-Host "  Chatbot demo: $( $ServiceUrls.ChatbotDemo )" -ForegroundColor Cyan
     }
     if ($script:HealthResults.ReactFrontend.Healthy)
     {

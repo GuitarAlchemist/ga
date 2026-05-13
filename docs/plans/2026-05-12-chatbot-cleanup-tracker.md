@@ -83,9 +83,16 @@ demo is served through GaApi SignalR.
 **Done when:** the decision is recorded in `chat-surfaces.md` and the codebase
 matches it.
 
-## 5. Reconcile Startup / Script References To Removed Chatbot Names
+## 5. Reconcile Startup / Script References To Removed Chatbot Names — resolved 2026-05-12
 
 **GitHub:** https://github.com/GuitarAlchemist/ga/issues/206
+
+**Resolution:** `docker-compose.yml` now builds `gaapi` from
+`Apps/ga-server/GaApi/Dockerfile` and no longer defines the removed
+`GuitarAlchemistChatbot` service. `Scripts/start-all.ps1` now builds
+`AllProjects.slnx` and describes the public chatbot demo as served by GaApi.
+`Scripts/health-check.ps1` now checks the GaApi-hosted `/chatbot/` demo instead
+of a deleted standalone Blazor service on port 7002.
 
 **Problem:** scripts and Docker Compose still reference historical
 `GuitarAlchemistChatbot` / `GA.AI.Service` names.

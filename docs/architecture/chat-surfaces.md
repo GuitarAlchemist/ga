@@ -40,7 +40,7 @@ and historical context.
 |---|---|---|
 | `POST /api/nebula/chat` for Harmonic Nebula | `/api/chatbot/chat` and `/api/chatbot/chat/stream` REST/SSE siblings | `GA.AI.Service` |
 | `/hubs/chatbot` for deployed public `/chatbot/` demo | `GaChatbot.Api` reference host | stale startup / Docker references to historical chatbot names |
-| `/api/chatbot/agui/stream` for AG-UI surfaces | `ChatbotSessionOrchestrator.NormalizeHistory` helper | `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` |
+| `/api/chatbot/agui/stream` for AG-UI surfaces | `ChatbotSessionOrchestrator.NormalizeHistory` helper | stale startup / Docker references to historical chatbot names |
 | `IChatApplicationService` + `ProductionOrchestrator` substrate | legacy startup scripts mentioning deleted/frozen chatbot names | stale Docker Compose chatbot references |
 
 ### Decision pending
@@ -252,7 +252,7 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
 | **SignalR streaming chat** | ✅ `ChatbotHub` at `/hubs/chatbot` — same orchestrator substrate as the REST surfaces and the de-facto canonical path for the deployed public `/chatbot/` demo. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
 | **GraphQL chat mutation** | ❌ none defined; `GaApi/Program.cs:113-121` registers Query types only. | _N/A_ |
-| **`IChatService` (GaApi-local)** | ✅ used by `ChatbotSessionOrchestrator.NormalizeHistory` and `ChatbotController.GetStatus` only. Provider chosen via `AI:ChatProvider`. | 🟡 `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` exist but are not called from any controller or hub today. |
+| **`IChatService` (GaApi-local)** | ✅ used by `ChatbotController.GetStatus` and the `IChatClient` adapter. Provider chosen via `AI:ChatProvider`. | The old `ChatbotSessionOrchestrator` response path was removed on 2026-05-12, so this no longer owns a parallel prompt-construction flow. |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |
 | **Voicing-grounded retrieval inside chat** | ✅ `SpectralRagOrchestrator` reached via `TabAwareOrchestrator`. | 🟡 `VoicingAgent` performs an independent OPTIC-K retrieval path through `EnhancedVoicingSearchService` whenever the router selects it — produces a structured-list response rather than a narrated one. Two independent retrieval surfaces over the same corpus. |
 | **GA.AI.Service / `POST /api/Chat`** | _N/A_ | 🪦 **frozen 2026-05-07** — see [`Apps/ga-server/GA.AI.Service/DEPRECATED.md`](../../Apps/ga-server/GA.AI.Service/DEPRECATED.md). Read-only until a concrete deploy reason emerges or the next architecture review decides to delete. |
@@ -372,11 +372,10 @@ flowchart LR
 
 ## 9. Open questions (unverified claims)
 
-- Is `Apps/GaChatbot` (console REPL) still reachable in the Aspire `start-all` flow? `AllProjects.AppHost/Program.cs:135` adds a different project (`GuitarAlchemistChatbot.csproj`); the `Apps/GaChatbot` project appears to be a separate console host that is never started by Aspire.
+- Is `Apps/GaChatbot` (console REPL) still reachable in any maintained startup flow? Aspire starts GaApi and ga-client, not the console REPL.
 - Does `AgUiChatController` have any active frontend consumer beyond `<GAChatPanel>` and the ga-client `chatAtoms`? Confirm whether the legacy SSE endpoints (`/chat/stream`, `/chat`) can be retired.
 - Are there any `ChatbotHub` consumers besides the deployed public `/chatbot/` static SPA (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`)? Confirm before relocating or retiring the hub.
 - Is `GA.AI.Service` (whose `ChatController` shadows `ProductionOrchestrator` directly) ever launched in CI/dev? AppHost registration is commented out (`AllProjects.AppHost/Program.cs:87`); confirm no other entry point spins it up.
-- `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` are registered but not invoked from any controller. Should they be removed, or are they intended for an upcoming SignalR/REST surface?
 - `SemanticRouter.AggregateAsync` and `DebateAsync` (multi-agent fan-out / Critic adjudication) are implemented but no HTTP endpoint exposes them. Plan to surface, or dead code?
 - The Nebula tool `get_corpus_stats` falls back to a hard-coded `{guitar=667125, bass=12614, ukulele=8612}` distribution when `InstrumentCounts` is missing from context (`NebulaSidekickService.cs:545`). Does the React frontend ever populate `instrumentCounts`, or is the fallback the only value the LLM ever sees?
 - `ProductionOrchestrator.AnswerStreamingAsync` only true-streams when the selected agent is a `GuitarAlchemistAgentBase`; tab/path branches and skill fast-paths emit word-level simulated tokens. Is this intentional given the AG-UI contract that frontends interpret as token streaming?
