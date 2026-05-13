@@ -149,7 +149,7 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         // parenthesised alt.
         var aliasedModes = families
             .SelectMany(f => f.Modes
-                .SelectMany(m => ExtractNameAliases(m.Name).Select(a => (Alias: a, Family: f, Mode: m))))
+                .SelectMany(m => GetAllAliasesForMode(m).Select(a => (Alias: a, Family: f, Mode: m))))
             .OrderByDescending(t => t.Alias.Length)
             .ToList();
 
@@ -160,6 +160,29 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
                 return (family, mode);
         }
         return (null, null);
+    }
+
+    /// <summary>
+    /// Union of every searchable label for a mode: canonical name, the
+    /// inside of any parenthesised "Foo (Bar)" alt, plus every entry in
+    /// the YAML <c>AlternateNames</c> list. The last bucket covers cross-
+    /// tradition names that Western theory doesn't surface — Phrygian
+    /// Dominant → ["Spanish Phrygian", "Jewish Scale"], Dorian #4 →
+    /// ["Romanian", "Ukrainian Dorian"], etc. — and was previously hidden
+    /// behind a different domain type that GetModalFamilies didn't expose.
+    /// </summary>
+    private static IEnumerable<string> GetAllAliasesForMode(ModesConfig.ModeData mode)
+    {
+        foreach (var alias in ExtractNameAliases(mode.Name))
+            yield return alias;
+
+        if (mode.AlternateNames is null) yield break;
+        foreach (var alt in mode.AlternateNames)
+        {
+            if (string.IsNullOrWhiteSpace(alt)) continue;
+            foreach (var inner in ExtractNameAliases(alt))
+                yield return inner;
+        }
     }
 
     /// <summary>
