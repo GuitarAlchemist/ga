@@ -139,42 +139,107 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         IReadOnlyList<ModesConfig.ModalFamilyInfo> families,
         string lowerQuery)
     {
-        // Longest-name-wins: "Phrygian Dominant" must beat "Phrygian" when both
-        // appear as substrings of the query. Without ordering by descending
-        // length the diatonic mode shadows the harmonic-minor-derived one.
-        // Surfaced 2026-05-13 pilot smoke test.
-        var allModes = families
-            .SelectMany(f => f.Modes.Select(m => (Family: f, Mode: m)))
-            .OrderByDescending(pair => pair.Mode.Name.Length)
+        // Build a flat (alias, family, mode) list so we can search across both
+        // the canonical name and any alt-names extracted from parens. Then
+        // longest-alias-wins so "Phrygian Dominant" beats "Phrygian" and
+        // "Double Harmonic (Byzantine)" can match a bare "byzantine" query.
+        // Surfaced 2026-05-13 pilot smoke test: queries for "Byzantine" hit
+        // the default branch because the canonical mode name is "Double
+        // Harmonic (Byzantine)" and substring lookup couldn't see the
+        // parenthesised alt.
+        var aliasedModes = families
+            .SelectMany(f => f.Modes
+                .SelectMany(m => ExtractNameAliases(m.Name).Select(a => (Alias: a, Family: f, Mode: m))))
+            .OrderByDescending(t => t.Alias.Length)
             .ToList();
 
-        foreach (var (family, mode) in allModes)
+        foreach (var (alias, family, mode) in aliasedModes)
         {
-            var name = mode.Name.ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(name)) continue;
-            if (lowerQuery.Contains(name))
+            if (string.IsNullOrWhiteSpace(alias)) continue;
+            if (lowerQuery.Contains(alias))
                 return (family, mode);
         }
         return (null, null);
+    }
+
+    /// <summary>
+    /// Extract searchable aliases from a mode name. The YAML uses
+    /// "Canonical (Alt)" to record an alternate label — e.g.
+    /// "Double Harmonic (Byzantine)" or "Major Pentatonic (Yo)". We want
+    /// both the full name AND the inside of the parens to be matchable, so
+    /// a query for "byzantine" hits the right mode.
+    /// </summary>
+    private static IEnumerable<string> ExtractNameAliases(string modeName)
+    {
+        if (string.IsNullOrWhiteSpace(modeName)) yield break;
+        var trimmed = modeName.Trim();
+        yield return trimmed.ToLowerInvariant();
+
+        var open = trimmed.IndexOf('(');
+        var close = trimmed.IndexOf(')');
+        if (open >= 0 && close > open)
+        {
+            var canonical = trimmed[..open].Trim();
+            var alt       = trimmed[(open + 1)..close].Trim();
+            if (canonical.Length > 0)
+                yield return canonical.ToLowerInvariant();
+            if (alt.Length > 0)
+                yield return alt.ToLowerInvariant();
+        }
     }
 
     private static ModesConfig.ModalFamilyInfo? TryFindFamilyByName(
         IReadOnlyList<ModesConfig.ModalFamilyInfo> families,
         string lowerQuery)
     {
-        // Aliases: the human asks "modes of melodic minor" or "the harmonic minor
-        // modes"; the YAML family is "Melodic Minor Family". Strip "Family" and
-        // match on the prefix.
+        // Two-pass lookup so we can tolerate (a) parenthesised aliases in the
+        // family name and (b) word-order variations between query and YAML
+        // ("Bebop dominant" vs "Dominant Bebop"). Pass 1: longest exact-
+        // substring match. Pass 2: all-tokens-present (fallback). Pass 1
+        // never returns a shorter match than a longer-name alternative.
+        ModesConfig.ModalFamilyInfo? bestSubstringMatch = null;
+        var bestSubstringLen = 0;
+        ModesConfig.ModalFamilyInfo? tokenMatch = null;
+        var bestTokenLen = 0;
+
         foreach (var family in families)
         {
-            var stripped = family.Name
-                .Replace(" Family", "", StringComparison.OrdinalIgnoreCase)
-                .ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(stripped)) continue;
-            if (lowerQuery.Contains(stripped))
-                return family;
+            foreach (var alias in ExtractNameAliases(StripFamilySuffix(family.Name)))
+            {
+                if (string.IsNullOrWhiteSpace(alias)) continue;
+
+                if (lowerQuery.Contains(alias) && alias.Length > bestSubstringLen)
+                {
+                    bestSubstringMatch = family;
+                    bestSubstringLen   = alias.Length;
+                }
+                else if (AllTokensPresent(lowerQuery, alias) && alias.Length > bestTokenLen)
+                {
+                    tokenMatch     = family;
+                    bestTokenLen   = alias.Length;
+                }
+            }
         }
-        return null;
+
+        return bestSubstringMatch ?? tokenMatch;
+    }
+
+    /// <summary>
+    /// True iff every space-separated token of <paramref name="phrase"/> of
+    /// length &gt; 2 appears somewhere in <paramref name="query"/>. Lets
+    /// "Bebop dominant" match "Dominant Bebop". Tokens of length &le; 2
+    /// ("of", "in") are skipped to avoid over-matching English filler.
+    /// </summary>
+    private static bool AllTokensPresent(string query, string phrase)
+    {
+        var tokens = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length < 2) return false; // Single-word phrases already covered by substring.
+        foreach (var token in tokens)
+        {
+            if (token.Length <= 2) continue;
+            if (!query.Contains(token)) return false;
+        }
+        return true;
     }
 
     private static readonly string[] BroadOverviewMarkers =
