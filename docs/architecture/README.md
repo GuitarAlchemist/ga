@@ -2,7 +2,7 @@
 title: Guitar Alchemist — Architecture
 scope: Master index for the GA solution architecture. Links to subsystem detail docs and the latest audit.
 status: authoritative
-last_verified: 2026-04-25
+last_verified: 2026-05-12
 ---
 
 # Guitar Alchemist — Architecture
@@ -34,7 +34,9 @@ Apps live in `Apps/`; AI code in layer 4; orchestration in layer 5; never in low
 | Doc | Scope | One-line state |
 |---|---|---|
 | [apps-and-processes.md](apps-and-processes.md) | Every runnable .NET app, frontend, microservice, external dep | 19 .NET apps, 4 frontends, 13 external services; many half-built or referenced-but-deleted |
-| [chat-surfaces.md](chat-surfaces.md) | All chat/agent entry points (REST, SignalR, GraphQL, agents, IChatService) | 11 HTTP entry points + 1 dead SignalR hub; one canonical path (`/api/nebula/chat`) plus parallel implementations |
+| [chatbot-overview.md](chatbot-overview.md) | Short onboarding map for the chatbot runtime, roadmap, and skill/DSL architecture | Current first read for engineers touching chatbot work |
+| [chatbot-claude-handoff.md](chatbot-claude-handoff.md) | Prompt-ready context for Claude Code / coding agents before chatbot changes | Use for agent handoffs and long-running chatbot tasks |
+| [chat-surfaces.md](chat-surfaces.md) | All chat/agent entry points (REST, SignalR, GraphQL, agents, IChatService) | Multiple live chat surfaces: Nebula canonical, public demo via GaApi SignalR, AG-UI/REST parallel surfaces |
 | [data-storage.md](data-storage.md) | OPTIC-K mmap, MongoDB collections, FalkorDB, Qdrant, config YAMLs | OPTK + 20 Mongo collections; 4 RAG collections registered but never populated; Qdrant orphaned |
 | [rag-pipeline.md](rag-pipeline.md) | Voicing-grounded chat, knowledge-grounded chat, partitioned RAG, agent grounding | One live RAG path (voicings via OPTK); knowledge-grounded path scaffolded but not wired |
 | [frontends.md](frontends.md) | React, Angular, Blazor (none, actually), CLIs, MCP servers | ga-client React is the only verified-live UI; "GaChatbot" is a console REPL, the Blazor app's source is gone |
@@ -83,14 +85,14 @@ flowchart LR
   api --> falkor
 ```
 
-## Status snapshot (verified 2026-04-25)
+## Status Snapshot (verified 2026-05-12)
 
 What's actually running and answering requests today:
 
-- **LIVE and serving traffic**: `GaApi /api/nebula/chat` (verified end-to-end with Ollama tool-loop), `ga-client` (React on :5176), MongoDB (:27017), Ollama (:11434), OPTIC-K mmap loaded by GaApi (667,125 voicings).
-- **HALF-BUILT but compiles**: `GaChatbot` console REPL (DI gaps with Mongo and RAG; not currently running), `KnowledgeSyncHostedService` work on Track A worktree (not merged).
-- **DEAD or stranded**: `GuitarAlchemistChatbot` (source deleted, still referenced from `AllProjects.AppHost/Program.cs:135` + `docker-compose.yml:104` + `Scripts/start-all.ps1`), `ChatbotHub` SignalR (zero frontend consumers), Qdrant container (no code references), 4 RAG MongoDB collections registered with no caller invoking SyncAsync.
-- **DRIFTING**: OPTIC-K schema (CLAUDE.md says 228-dim v1.7; actual is 112-dim compact / 240-dim full v1.8 per `data-storage.md`), database name (`guitar-alchemist` in Aspire vs `guitaralchemist` in Docker Compose env vars).
+- **LIVE and serving traffic**: `GaApi /api/nebula/chat` for Harmonic Nebula, `GaApi /hubs/chatbot` for the public `/chatbot/` demo, AG-UI `/api/chatbot/agui/stream` for ga-client / Prime Radiant surfaces, `ga-client`, MongoDB, Ollama, and OPTIC-K mmap loaded by GaApi.
+- **CANONICAL SUBSTRATE**: `IChatApplicationService` in `GA.Business.Core.Orchestration`, wrapped by trace/readiness/fallback decorators and backed by `ProductionOrchestrator`.
+- **PARALLEL / FROZEN**: `GaChatbot.Api` is compiled but not the deployed public chatbot host; `GA.AI.Service` is frozen and should not receive new code without a concrete deploy reason.
+- **DRIFT / CLEANUP CANDIDATES**: `POST /api/chatbot/ask` is still a dangling Prime Radiant caller with no server route; `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` remain registered but not on the canonical request path.
 
 A more granular Keep / Consolidate / Delete decision table lives in [audit-2026-04-25.md](audit-2026-04-25.md).
 
@@ -116,6 +118,12 @@ parent: docs/architecture/README.md     # optional, for child docs
 **Cross-doc references:** relative markdown links (`[chat-surfaces.md](chat-surfaces.md)`).
 
 **No recommendations in subsystem docs.** Recommendations and decisions live in audit docs (dated `audit-YYYY-MM-DD.md`).
+
+**Freshness check:** run `pwsh Scripts/check-architecture-docs.ps1` from the
+repo root to verify required frontmatter on canonical kebab-case architecture
+docs and flag docs older than 60 days unless marked stale. Legacy
+SCREAMING_SNAKE files are skipped until the architecture sweep retires or
+renames them.
 
 ## Out of scope for this index
 
