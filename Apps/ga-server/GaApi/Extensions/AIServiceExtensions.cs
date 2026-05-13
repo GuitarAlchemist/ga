@@ -124,6 +124,22 @@ public static class AiServiceExtensions
             {
                 services.AddSingleton<IChatClient, OllamaChatClientAdapter>();
             }
+
+            // Subagent IChatClient (keyed: "subagent") — Inception Labs Mercury 2.
+            // Wired only when an API key is configured (either Inception:ApiKey or
+            // INCEPTION_API_KEY env var). When unwired, LlmMusicalQueryExtractor falls
+            // back to the default IChatClient registered above. Scope is intentionally
+            // narrow: query extraction and other utility-tier tasks where Mercury's
+            // ~5× latency advantage matters; the main chat loop keeps Claude/Anthropic
+            // where tool-use reliability matters more than per-call latency.
+            // See Common/GA.Business.ML/Providers/InceptionProvider.cs for the rationale.
+            if (GA.Business.ML.Providers.InceptionProvider.IsConfigured(configuration))
+            {
+                var subagentClient = GA.Business.ML.Providers.InceptionProvider.CreateChatClientFromConfig(configuration);
+                services.AddKeyedSingleton<IChatClient>(
+                    GA.Business.ML.Providers.InceptionProvider.SubagentServiceKey,
+                    subagentClient);
+            }
         }
         /// <summary>
         ///     Add vector search application services
@@ -181,7 +197,30 @@ public static class AiServiceExtensions
             // structured chord+tag queries), LLM fallback only when typed finds nothing.
             services.AddSingleton<GA.Business.ML.Search.MusicalQueryEncoder>();
             services.AddSingleton<GA.Business.ML.Search.TypedMusicalQueryExtractor>();
-            services.AddSingleton<GA.Business.ML.Search.LlmMusicalQueryExtractor>();
+            // LlmMusicalQueryExtractor: gated subagent routing.
+            // - When `Inception:EnableForQueryExtraction = true` AND an Inception API key
+            //   is configured, the extractor uses the keyed "subagent" IChatClient
+            //   (Mercury 2 — ~5× faster than Sonnet on the 2026-05-13 benchmark).
+            // - Otherwise (default) it uses the same IChatClient as before (Anthropic
+            //   Haiku 4.5 / Ollama). No silent behavior change on existing installs.
+            // The two-flag gate prevents a stray INCEPTION_API_KEY env var from
+            // re-routing production traffic without a deliberate config change.
+            var subagentEnabled = GA.Business.ML.Providers.InceptionProvider.IsEnabledForQueryExtraction(configuration);
+            if (subagentEnabled)
+            {
+                services.AddSingleton(sp =>
+                {
+                    var chatClient = sp.GetRequiredKeyedService<IChatClient>(
+                        GA.Business.ML.Providers.InceptionProvider.SubagentServiceKey);
+                    var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    var logger = sp.GetRequiredService<ILogger<GA.Business.ML.Search.LlmMusicalQueryExtractor>>();
+                    return new GA.Business.ML.Search.LlmMusicalQueryExtractor(chatClient, cache, logger);
+                });
+            }
+            else
+            {
+                services.AddSingleton<GA.Business.ML.Search.LlmMusicalQueryExtractor>();
+            }
             services.AddSingleton<GA.Business.ML.Search.IMusicalQueryExtractor,
                                   GA.Business.ML.Search.CompositeMusicalQueryExtractor>();
 

@@ -63,7 +63,7 @@ services:
   gaapi:
     build:
       context: .
-      dockerfile: Apps/ga-server/GA.AI.Service/Dockerfile
+      dockerfile: Apps/ga-server/GaApi/Dockerfile
     container_name: ga-api
     restart: unless-stopped
     ports:
@@ -97,40 +97,6 @@ services:
       start_period: 20s
     mem_limit: 2g
     cpus: "2"
-
-  # ============================================
-  # CHATBOT (Blazor Application)
-  # ============================================
-  chatbot:
-    build:
-      context: .
-      dockerfile: Apps/GuitarAlchemistChatbot/Dockerfile
-    container_name: ga-chatbot
-    restart: unless-stopped
-    ports:
-      - "7002:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080
-      - MongoDB__ConnectionString=mongodb://admin:${MONGO_ROOT_PASSWORD:-changeme}@mongodb:27017
-      - MongoDB__DatabaseName=guitaralchemist
-      - GaApi__BaseUrl=http://gaapi:8080
-      - Graphiti__BaseUrl=http://graphiti-service:8000
-    depends_on:
-      gaapi:
-        condition: service_healthy
-      graphiti-service:
-        condition: service_healthy
-    networks:
-      - ga-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    mem_limit: 1.5g
-    cpus: "1.5"
 
   # ============================================
   # REACT FRONTEND

@@ -7,7 +7,7 @@
     Starts the Aspire AppHost which orchestrates all services:
     - MongoDB (with MongoExpress UI)
     - GaApi (main API server)
-    - GuitarAlchemistChatbot (Blazor chatbot)
+    - Public chatbot demo served by GaApi at /chatbot/
     - ga-client (React frontend)
 
 .PARAMETER NoBuild
@@ -135,7 +135,7 @@ if (-not $NoBuild)
     Write-Step "Building solution..."
 
     $buildStart = Get-Date
-    $buildOutput = dotnet build AllProjects.sln -c Debug --nologo 2>&1
+    $buildOutput = dotnet build AllProjects.slnx -c Debug --nologo 2>&1
     $buildExitCode = $LASTEXITCODE
     $buildDuration = (Get-Date) - $buildStart
 
@@ -163,7 +163,7 @@ Write-Header "Starting Aspire AppHost"
 Write-Info "The AppHost will start all services:"
 Write-Info "  • MongoDB (with MongoExpress UI)"
 Write-Info "  • GaApi (main API server)"
-Write-Info "  • GuitarAlchemistChatbot (Blazor chatbot)"
+Write-Info "  • Public chatbot demo served by GaApi at /chatbot/"
 Write-Info "  • ga-client (React frontend)"
 
 Write-Step "Launching Aspire AppHost..."
@@ -183,7 +183,7 @@ try
     Write-Url "Aspire Dashboard" "https://localhost:15001"
     Write-Url "GaApi (Swagger)" "https://localhost:7001/swagger"
     Write-Url "GaApi (Health)" "https://localhost:7001/health"
-    Write-Url "Chatbot" "https://localhost:7002"
+    Write-Url "Public Chatbot Demo" "https://localhost:7001/chatbot/"
     Write-Url "React Frontend" "http://localhost:5173"
     Write-Url "MongoExpress" "http://localhost:8081"
     Write-Host ""
