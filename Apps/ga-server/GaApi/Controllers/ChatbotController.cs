@@ -231,6 +231,75 @@ public class ChatbotController(
             "What are some common chord progressions?"
         ]);
 
+    /// <summary>
+    ///     Return a categorized showcase script highlighting the chatbot's breadth:
+    ///     theory, voicings, progressions, DSL evaluation, and analysis surfaces.
+    ///     Consumed by the Showcase Panel in the React UI.
+    /// </summary>
+    [HttpGet("demo")]
+    [ProducesResponseType(typeof(ChatbotDemoScript), StatusCodes.Status200OK)]
+    public ActionResult<ChatbotDemoScript> GetDemo() =>
+        Ok(new ChatbotDemoScript(
+            Version: "1.0",
+            Categories:
+            [
+                new ChatbotDemoCategory(
+                    Id: "theory",
+                    Name: "Music Theory",
+                    Icon: "music_note",
+                    Description: "Core questions about scales, intervals, modes, and key relationships.",
+                    Prompts:
+                    [
+                        new("Explain the circle of fifths", "Foundational key-relationship diagram."),
+                        new("What are the modes of the major scale?", "Ionian through Locrian, with character notes."),
+                        new("What's the difference between major and minor?", "Quality contrast with examples.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "voicings",
+                    Name: "Chord Voicings",
+                    Icon: "queue_music",
+                    Description: "OPTIC-K vector search over the chord-voicing corpus.",
+                    Prompts:
+                    [
+                        new("Show me chord voicings for Cmaj7", "Triggers ga_search_voicings against the index."),
+                        new("Give me easier voicings of F#m7b5", "Surfaces fewer-finger alternatives."),
+                        new("Find voicings with a similar interval profile to Em9", "ICV-neighbor search.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "progressions",
+                    Name: "Progressions & Substitution",
+                    Icon: "timeline",
+                    Description: "Analyze, complete, and reharmonize chord progressions.",
+                    Prompts:
+                    [
+                        new("Analyze the progression Cmaj7 Am7 Dm7 G7", "Roman-numeral analysis + key detection."),
+                        new("Suggest substitutions for the G7 in a ii-V-I", "Tritone, secondary dominant, and modal options."),
+                        new("Complete the progression Cmaj7 Am7 ...", "Likely continuations grounded in voice-leading.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "dsl",
+                    Name: "DSL & Evaluation",
+                    Icon: "code",
+                    Description: "Live evaluation of the GA F# DSL — scripts, transposition, voice-leading.",
+                    Prompts:
+                    [
+                        new("Transpose C E G to D", "Calls ga_transpose_chord under the hood."),
+                        new("What are the common tones between Cmaj7 and Am7?", "Set-theory common-tone analysis."),
+                        new("Compute voice-leading from Cmaj7 to Fmaj7", "Pairwise voice-leading minimization.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "fretboard",
+                    Name: "Fretboard & Technique",
+                    Icon: "guitar",
+                    Description: "Practical guitar questions — fingerings, barre chords, fingerpicking.",
+                    Prompts:
+                    [
+                        new("Show me some easy beginner chords", "Open-position triads with tab."),
+                        new("How do I play a barre chord?", "Technique breakdown with fingering."),
+                        new("How do I improve my fingerpicking?", "Practice routine guidance.")
+                    ])
+            ]));
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private async Task WriteSseLineAsync(string data, CancellationToken ct)

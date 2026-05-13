@@ -136,6 +136,56 @@ public class ChatbotControllerTests
         TestContext.WriteLine($"Examples ({body.GetArrayLength()}): {string.Join(", ", body.EnumerateArray().Select(e => $"\"{e.GetString()}\""))}");
     }
 
+    // ── GET /api/chatbot/demo ────────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetDemo_ShouldReturn200()
+    {
+        var response = await _client!.GetAsync("/api/chatbot/demo");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task GetDemo_ShouldReturnVersionAndCategories()
+    {
+        var response = await _client!.GetAsync("/api/chatbot/demo");
+        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.That(body.TryGetProperty("version", out var version), Is.True, "missing version");
+        Assert.That(version.GetString(), Is.Not.Null.And.Not.Empty);
+
+        Assert.That(body.TryGetProperty("categories", out var categories), Is.True, "missing categories");
+        Assert.That(categories.ValueKind, Is.EqualTo(JsonValueKind.Array));
+        Assert.That(categories.GetArrayLength(), Is.GreaterThan(0), "categories must not be empty");
+    }
+
+    [Test]
+    public async Task GetDemo_EveryCategoryHasRequiredFieldsAndAtLeastOnePrompt()
+    {
+        var response = await _client!.GetAsync("/api/chatbot/demo");
+        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        foreach (var category in body.GetProperty("categories").EnumerateArray())
+        {
+            Assert.That(category.GetProperty("id").GetString(),          Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("name").GetString(),        Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("icon").GetString(),        Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("description").GetString(), Is.Not.Null.And.Not.Empty);
+
+            var prompts = category.GetProperty("prompts");
+            Assert.That(prompts.ValueKind,       Is.EqualTo(JsonValueKind.Array));
+            Assert.That(prompts.GetArrayLength(), Is.GreaterThan(0),
+                $"category '{category.GetProperty("id").GetString()}' must have at least one prompt");
+
+            foreach (var prompt in prompts.EnumerateArray())
+            {
+                Assert.That(prompt.GetProperty("prompt").GetString(),      Is.Not.Null.And.Not.Empty);
+                Assert.That(prompt.GetProperty("description").GetString(), Is.Not.Null.And.Not.Empty);
+            }
+        }
+    }
+
     // ── POST /api/chatbot/chat/stream ────────────────────────────────────────────
 
     [Test]
