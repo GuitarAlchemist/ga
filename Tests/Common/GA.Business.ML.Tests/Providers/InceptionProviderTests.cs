@@ -1,4 +1,12 @@
-namespace GA.Business.ML.Tests.Providers;
+// Namespace deliberately NOT `GA.Business.ML.Tests.Providers` — that name shadows
+// the production `GA.Business.ML.Providers` namespace for sibling test files that
+// use `using Providers;` (OllamaProviderIntegrationTests.cs and
+// HybridEmbeddingServiceIntegrationTests.cs). C# resolves the shorter name first,
+// hiding OllamaProvider / HybridEmbeddingService from those tests and breaking
+// `dotnet test` on the whole project with CS0103 / CS0246. Using a
+// `Tests.Unit.ProviderTests` suffix keeps the file grouped under Providers/ on
+// disk without colliding in the namespace tree.
+namespace GA.Business.ML.Tests.Unit.ProviderTests;
 
 using GA.Business.ML.Providers;
 using Microsoft.Extensions.Configuration;
