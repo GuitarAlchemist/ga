@@ -108,6 +108,98 @@
             padding: 0 10px;
         }
 
+        .trace-badge {
+            max-width: 70%;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f3f1fa;
+            border: 1px solid #d8d3ee;
+            border-radius: 8px;
+            font-size: 11.5px;
+            color: #555;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .trace-badge .trace-chip {
+            background: white;
+            border: 1px solid #d8d3ee;
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-family: 'SF Mono', Consolas, Menlo, monospace;
+            font-size: 11px;
+            color: #4a4a6a;
+        }
+
+        .trace-badge .trace-chip.agent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .trace-badge .trace-chip.confidence-high   { color: #1f7a4d; border-color: #b4dbc4; }
+        .trace-badge .trace-chip.confidence-medium { color: #b27a00; border-color: #e8d398; }
+        .trace-badge .trace-chip.confidence-low    { color: #a83232; border-color: #e6b6b6; }
+
+        .trace-badge .trace-toggle {
+            margin-left: auto;
+            background: transparent;
+            border: 0;
+            color: #667eea;
+            cursor: pointer;
+            font: inherit;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .trace-details {
+            max-width: 70%;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            background: #fafaff;
+            border: 1px solid #e3dff5;
+            border-radius: 8px;
+            font-size: 11.5px;
+            color: #444;
+            display: none;
+        }
+
+        .trace-details.open { display: block; }
+        .trace-details pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'SF Mono', Consolas, Menlo, monospace;
+            font-size: 11px;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2.5px solid #d4d0ee;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spinner-rotate 0.9s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spinner-rotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        .thinking-text {
+            font-style: italic;
+            color: #667eea;
+            font-weight: 500;
+        }
+
         .chat-input-container {
             padding: 20px;
             background: white;
@@ -391,6 +483,7 @@
     let connection;
     let currentMessage = '';
     let isReceiving = false;
+    let pendingRouting = null;  // last MessageRoutingMetadata received, attached to the next assistant message
 
     // Initialize SignalR connection
     async function initializeConnection() {
@@ -404,10 +497,22 @@
             updateStatus("Connected", true);
         });
 
+        connection.on("MessageRoutingMetadata", (meta) => {
+            // Capture and render the trace badge immediately — the server emits
+            // this BEFORE the first text chunk, so the user sees which agent
+            // handled the request while the answer is still being streamed.
+            // Remove the "thinking" indicator: we now know which skill is
+            // running and can show real progress.
+            removeThinkingIndicator();
+            pendingRouting = meta;
+            renderTraceBadge(meta);
+        });
+
         connection.on("ReceiveMessageChunk", (chunk) => {
             if (!isReceiving) {
                 isReceiving = true;
                 currentMessage = '';
+                removeThinkingIndicator();
                 addTypingIndicator();
             }
             currentMessage += chunk;
@@ -418,6 +523,7 @@
             isReceiving = false;
             removeTypingIndicator();
             updateLastMessage(fullMessage);
+            pendingRouting = null;
             enableInput();
         });
 
@@ -466,6 +572,46 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    function renderTraceBadge(meta) {
+        if (!meta) return;
+        const messagesDiv = document.getElementById('messages');
+
+        const conf = typeof meta.confidence === 'number' ? meta.confidence : 0;
+        const confLabel =
+            conf >= 0.8 ? 'confidence-high'   :
+            conf >= 0.5 ? 'confidence-medium' :
+                          'confidence-low';
+        const confPct = `${Math.round(conf * 100)}%`;
+
+        const grounding = meta.grounding
+            ? `<span class="trace-chip" title="Grounding source">📚 ${escapeHtml(meta.grounding.source || '')}${meta.grounding.revision ? ' @' + escapeHtml(meta.grounding.revision) : ''}</span>`
+            : '';
+
+        const badge = document.createElement('div');
+        badge.className = 'trace-badge';
+        badge.innerHTML = `
+            <span class="trace-chip agent">${escapeHtml(meta.agentId || 'direct')}</span>
+            <span class="trace-chip ${confLabel}" title="Routing confidence">${confPct}</span>
+            <span class="trace-chip" title="Routing method">via ${escapeHtml(meta.routingMethod || 'unknown')}</span>
+            ${grounding}
+            <button class="trace-toggle" type="button">Show trace ▾</button>
+        `;
+
+        const details = document.createElement('div');
+        details.className = 'trace-details';
+        details.innerHTML = `<pre>${escapeHtml(JSON.stringify(meta, null, 2))}</pre>`;
+
+        const toggle = badge.querySelector('.trace-toggle');
+        toggle.addEventListener('click', () => {
+            const open = details.classList.toggle('open');
+            toggle.textContent = open ? 'Hide trace ▴' : 'Show trace ▾';
+        });
+
+        messagesDiv.appendChild(badge);
+        messagesDiv.appendChild(details);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
     function addTypingIndicator() {
         const messagesDiv = document.getElementById('messages');
         const indicator = document.createElement('div');
@@ -509,14 +655,41 @@
         addMessage('user', message);
         input.value = '';
         disableInput();
+        // Show a "thinking" indicator immediately — the agentic pipeline can
+        // take 20-60s on French / long-form prompts before the first SSE
+        // chunk arrives. Without this the UI looks frozen and users assume
+        // it hung. The indicator is removed by addTypingIndicator() (which
+        // replaces it with the per-chunk indicator) when the first chunk
+        // actually lands.
+        addThinkingIndicator();
 
         try {
             await connection.invoke("SendMessage", message, true);
         } catch (err) {
             console.error("Send failed:", err);
+            removeThinkingIndicator();
             addMessage('assistant', `Failed to send message: ${err.message}`);
             enableInput();
         }
+    }
+
+    function addThinkingIndicator() {
+        removeThinkingIndicator();
+        const messagesDiv = document.getElementById('messages');
+        const indicator = document.createElement('div');
+        indicator.className = 'message assistant';
+        indicator.id = 'thinking-indicator';
+        indicator.innerHTML = `
+            <div class="message-label">Assistant</div>
+            <div class="message-content"><span class="spinner"></span><span class="thinking-text">Thinking…</span></div>
+        `;
+        messagesDiv.appendChild(indicator);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function removeThinkingIndicator() {
+        const el = document.getElementById('thinking-indicator');
+        if (el) el.remove();
     }
 
     async function clearHistory() {
