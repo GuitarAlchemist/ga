@@ -1,0 +1,88 @@
+name: Inception Mercury Smoke
+
+# Validates the LlmMusicalQueryExtractor → InceptionProvider → Mercury 2 path
+# end-to-end. Runs the [Category("RequiresInception")] tests in
+# GA.Business.ML.Tests, which Assert.Ignore themselves when the env var is
+# missing — so this workflow's contract is "if the secret is wired, the
+# smoke must pass."
+#
+# Triggered on:
+#   - pull_request to main, but ONLY when the diff touches Mercury-relevant
+#     paths (provider, extractor, DI wiring, this workflow itself).
+#   - manual workflow_dispatch (for ad-hoc runs after rotating the API key).
+#   - weekly schedule (Monday 6 AM UTC) to catch silent Mercury API regressions
+#     even when nobody's pushing — same idea as a dependency-health probe.
+#
+# Cost ceiling: 2 calls × $0.000307/call = ~$0.0006 per run. Trivial.
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Common/GA.Business.ML/Providers/InceptionProvider.cs'
+      - 'Common/GA.Business.ML/Search/MusicalQueryExtractor.cs'
+      - 'Apps/ga-server/GaApi/Extensions/AIServiceExtensions.cs'
+      - 'Tests/Common/GA.Business.ML.Tests/Providers/InceptionLiveSmokeTests.cs'
+      - 'Tests/Common/GA.Business.ML.Tests/Providers/InceptionProviderTests.cs'
+      - '.github/workflows/inception-smoke.yml'
+  workflow_dispatch:
+  schedule:
+    # Mondays at 06:00 UTC — early-week canary for vendor-side API drift.
+    - cron: '0 6 * * 1'
+
+env:
+  DOTNET_VERSION: '10.0.1xx'
+
+jobs:
+  smoke:
+    name: Mercury Live Smoke
+    runs-on: ubuntu-latest
+
+    # Skip the schedule trigger on forks (they don't have the secret anyway).
+    if: github.event_name != 'schedule' || github.repository == 'GuitarAlchemist/ga'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj
+
+      - name: Build test project
+        run: |
+          dotnet build Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj \
+            --no-restore \
+            --configuration Release
+
+      - name: Run Mercury live smoke
+        env:
+          # The secret was stored via:
+          #   gh secret set INCEPTION_API_KEY --repo GuitarAlchemist/ga
+          # See docs/plans/2026-05-13-mercury-subagent-evaluation-plan.md.
+          INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
+        run: |
+          if [ -z "$INCEPTION_API_KEY" ]; then
+            echo "::error::INCEPTION_API_KEY secret is not set on this repo. Set it via 'gh secret set INCEPTION_API_KEY --repo $GITHUB_REPOSITORY' before running this workflow."
+            exit 1
+          fi
+          # --filter narrows to just the two live-smoke tests. The rest of the
+          # test project still has to BUILD (no compile errors) but doesn't run.
+          dotnet test Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --filter "FullyQualifiedName~InceptionLiveSmokeTests" \
+            --logger "console;verbosity=normal" \
+            --logger "trx;LogFileName=inception-smoke.trx"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: inception-smoke-results
+          path: '**/TestResults/**/inception-smoke.trx'
+          retention-days: 30
