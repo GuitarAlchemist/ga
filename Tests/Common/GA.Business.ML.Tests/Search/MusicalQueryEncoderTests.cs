@@ -231,6 +231,79 @@ public class MusicalQueryEncoderTests
             "MORPHOLOGY slice should retain the input variation.");
     }
 
+    // ─── ICV reconciliation (writer/reader symmetry, 2026-05-12 plan) ──────
+
+    [TestCase(new[] { 0, 4, 7 },               "001110", TestName = "MajorTriad_ICV_001110")]
+    [TestCase(new[] { 0, 3, 7 },               "001110", TestName = "MinorTriad_ICV_001110")]
+    [TestCase(new[] { 0, 4, 7, 11 },           "101220", TestName = "Maj7_ICV_101220")]   // Cmaj7
+    [TestCase(new[] { 0, 2, 5, 9 },            "012120", TestName = "Min7_ICV_012120")]   // Dm7 = D F A C → IC5 hits twice ((0,5) + (2,9))
+    [TestCase(new[] { 0, 3, 6, 9 },            "004002", TestName = "Dim7_ICV_004002")]   // fully diminished
+    [TestCase(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }, "999996", TestName = "Chromatic12_ICV_capped_at_9_except_IC6")]   // raw [12,12,12,12,12,6] clamped at 9 → "999996"
+    public void ComputeIcvString_KnownPcSets_ProducesExpectedIcv(int[] pcs, string expectedIcv)
+    {
+        var icv = MusicalQueryEncoder.ComputeIcvString(pcs);
+
+        Assert.That(icv, Has.Length.EqualTo(6),
+            "ICV string must be exactly 6 digits — one per IC bin.");
+        Assert.That(icv, Is.EqualTo(expectedIcv),
+            $"PC-set {{{string.Join(",", pcs)}}} → expected ICV {expectedIcv}, got {icv}.");
+    }
+
+    [Test]
+    public void ComputeIcvString_EmptyAndSinglePc_ReturnsAllZeros()
+    {
+        Assert.That(MusicalQueryEncoder.ComputeIcvString([]),  Is.EqualTo("000000"));
+        Assert.That(MusicalQueryEncoder.ComputeIcvString([5]), Is.EqualTo("000000"));
+    }
+
+    [Test]
+    public void ComputeIcvString_DuplicatePcs_AreDeduplicatedBeforeCounting()
+    {
+        // Duplicates would otherwise double-count intervals — Cmaj written twice as
+        // [0, 0, 4, 4, 7, 7] must still produce the major-triad ICV "001110".
+        var icv = MusicalQueryEncoder.ComputeIcvString([0, 0, 4, 4, 7, 7]);
+        Assert.That(icv, Is.EqualTo("001110"));
+    }
+
+    [TestCase("001110",      new[] { 0, 0, 1, 1, 1, 0 }, TestName = "ParseIcv_DigitPerPosition_MajorTriad")]
+    [TestCase("101220",      new[] { 1, 0, 1, 2, 2, 0 }, TestName = "ParseIcv_DigitPerPosition_Maj7")]
+    [TestCase("<0 0 1 1 1 0>", new[] { 0, 0, 1, 1, 1, 0 }, TestName = "ParseIcv_BracketSpace_MajorTriad")]
+    [TestCase("<2 5 4 3 6 1>", new[] { 2, 5, 4, 3, 6, 1 }, TestName = "ParseIcv_BracketSpace_MajorScale")]
+    [TestCase("<10 5 4 3 6 1>", new[] { 9, 5, 4, 3, 6, 1 }, TestName = "ParseIcv_BracketSpace_ClampsTo9")]
+    public void ParseIcv_AcceptsBothFormats(string input, int[] expected)
+    {
+        var actual = TheoryVectorService.ParseIcv(input);
+        Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ParseIcv_NullOrEmpty_ReturnsAllZeros()
+    {
+        Assert.That(TheoryVectorService.ParseIcv(null),       Is.EqualTo(new[] { 0, 0, 0, 0, 0, 0 }));
+        Assert.That(TheoryVectorService.ParseIcv(string.Empty), Is.EqualTo(new[] { 0, 0, 0, 0, 0, 0 }));
+    }
+
+    [TestCase(new[] { 0, 4, 7 },     "<0 0 1 1 1 0>", TestName = "RoundTrip_MajorTriad")]
+    [TestCase(new[] { 0, 4, 7, 11 }, "<1 0 1 2 2 0>", TestName = "RoundTrip_Maj7")]
+    [TestCase(new[] { 0, 2, 5, 9 },  "<0 1 2 1 2 0>", TestName = "RoundTrip_Min7")]
+    public void RoundTrip_QueryAndCorpusFormat_ProduceSameCounts(int[] pcs, string corpusBracketForm)
+    {
+        // Symmetry guarantee: query-side ComputeIcvString → ParseIcv must produce
+        // the same int[6] as corpus-side IntervalClassVectorId.ToString() → ParseIcv.
+        // This is the contract the encoder docstring claims and what the corpus rebuild
+        // unlocks. Pre-fix the corpus side parsed the bracket form character-by-character
+        // and silently produced positionally-shifted garbage; pre-fix the query side
+        // wrote zeros. Post-fix both paths land on the same int[6].
+        var queryString  = MusicalQueryEncoder.ComputeIcvString(pcs);
+        var queryCounts  = TheoryVectorService.ParseIcv(queryString);
+        var corpusCounts = TheoryVectorService.ParseIcv(corpusBracketForm);
+
+        Assert.That(queryCounts, Is.EqualTo(corpusCounts),
+            $"Query ICV string {queryString} and corpus bracket form {corpusBracketForm} " +
+            "must parse to identical IC counts. If this drifts, the writer/reader symmetry " +
+            "regresses and 4+PC chord queries will misrank against indexed subsets.");
+    }
+
     // ─── helpers ───────────────────────────────────────────────────────────
 
     private static void AssertPartitionNonZero(double[] v, int start, int dim, string name)

@@ -86,13 +86,47 @@ public class TheoryVectorService
     }
 
     /// <summary>
-    ///     Parses an ICV string (e.g. "001110") into six interval-class counts.
+    ///     Parses an ICV string into six interval-class counts. Accepts two formats:
+    ///     <list type="bullet">
+    ///       <item><description>Digit-per-position: <c>"001110"</c> — one decimal digit
+    ///         per IC bin, in order [IC1, IC2, IC3, IC4, IC5, IC6]. Used by query-side
+    ///         <c>MusicalQueryEncoder.ComputeIcvString</c> and the schema fixture tests.</description></item>
+    ///       <item><description>Bracket-space: <c>"&lt;2 5 4 3 6 1&gt;"</c> — angle-bracketed,
+    ///         space-separated decimal integers. Emitted by
+    ///         <see cref="GA.Domain.Core.Theory.Atonal.IntervalClassVectorId.ToString"/> and what
+    ///         the corpus-side <c>VoicingDocumentFactory</c> stores in
+    ///         <c>ChordVoicingRagDocument.IntervalClassVector</c>.</description></item>
+    ///     </list>
+    ///     Per-bin values are capped at 9 so the digit-per-position form remains lossless
+    ///     for the realistic IC-count range (voicings ≤ 7 PCs cap at 6 pairs per IC).
     ///     Returns zeros on null/empty/malformed input.
+    ///     <para>
+    ///     <b>Why dual format:</b> the corpus has been writing bracket-space verbatim into
+    ///     the embedding pipeline (PR #186 telemetry surfaced this) while the query side
+    ///     wrote nothing. Pre-fix, the corpus's STRUCTURE dims 13-18 carried positionally
+    ///     shifted garbage (e.g. <c>"&lt;2 5 4"</c> parsed as <c>[0,2,0,5,0,4]</c>) and the
+    ///     query side wrote zeros, so the ICV cosine was zero everywhere — neutral but
+    ///     non-discriminating. Accepting both formats here lets the writer keep its
+    ///     canonical display string while the query side (with a known PC array)
+    ///     contributes a real signal. The corpus must be rebuilt for the corrected counts
+    ///     to take effect on indexed vectors (see <c>docs/plans/2026-05-12-icv-format-reconciliation-plan.md</c>).
+    ///     </para>
     /// </summary>
-    private static int[] ParseIcv(string? icv)
+    internal static int[] ParseIcv(string? icv)
     {
         var counts = new int[6];
         if (string.IsNullOrEmpty(icv)) return counts;
+
+        if (icv.IndexOf('<') >= 0 || icv.IndexOf(' ') >= 0)
+        {
+            var parts = icv.Trim('<', '>').Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            for (var i = 0; i < Math.Min(6, parts.Length); i++)
+            {
+                if (int.TryParse(parts[i], out var v)) counts[i] = Math.Clamp(v, 0, 9);
+            }
+            return counts;
+        }
+
         for (var i = 0; i < Math.Min(6, icv.Length); i++)
         {
             if (char.IsDigit(icv[i])) counts[i] = icv[i] - '0';

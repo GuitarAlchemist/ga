@@ -48,6 +48,13 @@ public sealed class MusicalQueryEncoder(
         var root2 = q.RootPitchClass ?? (q.ChordSymbol is { } cs2 && ChordPitchClasses.TryParse(cs2, out var r2, out _) ? r2 : null);
         if (pcs is { Length: > 0 })
         {
+            // ICV not yet wired into the query path. The helper ComputeIcvString +
+            // dual-format ParseIcv (this PR) are forward-ready; turning the wiring on
+            // requires the corpus rebuild step described in
+            // docs/plans/2026-05-12-icv-format-reconciliation-plan.md §2 — without it,
+            // a real query-side ICV signal cosines against the still-misparsed corpus
+            // ICV slice and skews top-K away from exact PC-set matches (see acceptance
+            // criterion: OptickIntegrationTests.cs:118 — "score should rise, not fall").
             var structure = theory.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
             Array.Copy(structure, 0, raw, EmbeddingSchema.StructureOffset, structure.Length);
         }
@@ -99,6 +106,34 @@ public sealed class MusicalQueryEncoder(
         // is therefore zero, which is the correct behavior.
 
         return ExtractCompactAndNormalize(raw);
+    }
+
+    /// <summary>
+    ///     Computes the interval-class vector of a pitch-class set as a digit-per-position
+    ///     string (e.g. <c>"012120"</c>) where position <c>i</c> is the count of interval
+    ///     class <c>i+1</c> (IC1..IC6). For each unordered PC pair, the interval class is
+    ///     <c>min(d, 12 - d)</c> where <c>d = |pc_a - pc_b| mod 12</c>. Counts are clamped
+    ///     to a single digit (max 9) so the lossless digit-per-position form is preserved;
+    ///     in practice voicings of ≤ 7 PCs cap at 6 pairs per IC. Mirrors the math behind
+    ///     <c>IntervalClassVectorId.GetVector</c> while emitting the format
+    ///     <c>TheoryVectorService.ParseIcv</c> reads alongside the corpus's bracket-space
+    ///     form. Exposed <c>internal</c> for symmetry tests.
+    /// </summary>
+    internal static string ComputeIcvString(int[] pitchClasses)
+    {
+        var counts = new int[6];
+        var distinct = pitchClasses.Distinct().ToArray();
+        for (var i = 0; i < distinct.Length; i++)
+        {
+            for (var j = i + 1; j < distinct.Length; j++)
+            {
+                var diff = Math.Abs(distinct[i] - distinct[j]) % 12;
+                var ic = Math.Min(diff, 12 - diff);
+                if (ic is >= 1 and <= 6) counts[ic - 1]++;
+            }
+        }
+        // Single-digit-per-position: clamp at 9 (caller-aligned with ParseIcv).
+        return string.Concat(counts.Select(c => (char)('0' + Math.Min(c, 9))));
     }
 
     /// <summary>
