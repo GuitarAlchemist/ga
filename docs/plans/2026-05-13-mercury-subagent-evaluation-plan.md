@@ -93,6 +93,60 @@ In rough order:
    - Mode-only queries (`F# Lydian`) should keep the root in `chord` even when the user emphasizes mode.
    - Iconic chord names (`bill evans chord`) should resolve via the multi-word composite scan, not split into separate tag tokens. The typed extractor already handles this — Mercury's prompt should mirror that behavior.
 
+## Proposed tuned prompt (unvalidated — for fresh-session benchmark)
+
+The baseline 8-query run surfaced two quality misses on the current `LlmMusicalQueryExtractor.SystemPrompt`. Both are addressable with three small additions: an explicit root-keeps-priority rule, an explicit iconic-chord rule, and two few-shot examples. The proposed prompt:
+
+```
+You extract musical intent from user queries about guitar chord voicings.
+Respond with JSON only.
+
+Schema:
+{
+  "chord": "<canonical chord symbol like Cmaj7, F#m7b5, or null>",
+  "mode":  "<mode/scale name like Lydian, Dorian, or null>",
+  "tags":  ["<style or technique lowercase tokens>"]
+}
+
+Rules:
+- "chord": prefer the root-quality form (e.g. "Cmaj7" not "Cmajor seventh").
+  If a root note is named alongside a mode (e.g. "F# Lydian"), still
+  populate "chord" with the bare root letter (chord: "F#"). Null only when
+  no root is mentioned at all.
+- "mode": null if the user didn't mention a mode/scale.
+- "tags": up to 6 lowercase keywords. Prefer style words (jazz, blues,
+  rock, classical, folk, metal) and technique words (drop2, drop3, shell,
+  quartal, barre, open, closed, rootless).
+- Iconic chord names map to ONE hyphenated tag, never split into separate
+  tokens. "Bill Evans" → "bill-evans-chord". "Hendrix chord" → "hendrix-chord".
+  "Steely Dan" → "steely-dan-chord". "Bond chord" → "james-bond-chord".
+- Drop vague descriptors (warm, dreamy, dark, sparkly) unless they map to
+  a vocabulary tag.
+- Return only the JSON object, no prose, no code fences.
+
+Examples:
+User: "F# Lydian dominant"
+Assistant: {"chord":"F#","mode":"Lydian dominant","tags":[]}
+
+User: "rootless Dm9 bill evans style"
+Assistant: {"chord":"Dm9","mode":null,"tags":["rootless","bill-evans-chord"]}
+
+User: "Cmaj7 drop2 jazz"
+Assistant: {"chord":"Cmaj7","mode":null,"tags":["jazz","drop2"]}
+```
+
+Expected impact based on baseline data:
+- `F# Lydian dominant` now returns `chord: "F#"` instead of null (fixes 1/8 miss).
+- `rootless Dm9 bill evans style` now returns `bill-evans-chord` as one tag instead of `[bill, evans]` split (fixes 1/8 miss).
+- The added rules cost ~80 tokens per call — at Mercury's $0.00000025/prompt-token, that's an extra $0.00002 per call. Negligible.
+
+Validation procedure (next session):
+1. Run the full 25-query telemetry sweep with the baseline prompt; record latency + JSON validity.
+2. Replace `LlmMusicalQueryExtractor.SystemPrompt` with the tuned version.
+3. Re-run the same 25 queries.
+4. Compare: the two known misses should resolve; no new misses should appear.
+5. If `chord` field validation passes `ChordPitchClasses.TryParse` for all 25 outputs (with the relaxed-mode rule, some will be bare-root "F#" which parses to major triad — acceptable), the prompt change can land.
+
 ## Out of scope (for this evaluation)
 
 - **Replacing the chatbot's main `IChatClient`.** Mercury is a subagent-tier model per its own marketing. The agent loop needs tool-use reliability that Claude/Sonnet provides; Mercury hasn't been tested there.
