@@ -2,7 +2,7 @@
 title: Chat & Agent Surfaces
 scope: All HTTP/SignalR/GraphQL chat endpoints and the orchestrator/agent stack behind them
 status: authoritative
-last_verified: 2026-05-07
+last_verified: 2026-05-12
 parent: docs/architecture/README.md
 ---
 
@@ -31,12 +31,38 @@ The product-surface confusion flagged by the 2026-05-07 multi-LLM review is real
 | AG-UI streaming for Prime Radiant / ga-client | `POST /api/chatbot/agui/stream` on **GaApi** | duplicated route in `GaChatbot.Api` is not yet on a deployed origin |
 | In-process chat (CLI / console) | `IHarmonicChatOrchestrator` (`= ProductionOrchestrator`) via DI | nothing |
 
+### Current-state shortcut
+
+Read this section as current state; later sections preserve detailed inventory
+and historical context.
+
+| Keep current | Parallel / sync carefully | Frozen / cleanup candidate |
+|---|---|---|
+| `POST /api/nebula/chat` for Harmonic Nebula | `/api/chatbot/chat` and `/api/chatbot/chat/stream` REST/SSE siblings | `GA.AI.Service` |
+| `/hubs/chatbot` for deployed public `/chatbot/` demo | `GaChatbot.Api` reference host | `POST /api/chatbot/ask` dangling caller |
+| `/api/chatbot/agui/stream` for AG-UI surfaces | `ChatbotSessionOrchestrator.NormalizeHistory` helper | `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` |
+| `IChatApplicationService` + `ProductionOrchestrator` substrate | legacy startup scripts mentioning deleted/frozen chatbot names | stale Docker Compose chatbot references |
+
 ### Decision pending
 
 Before declaring `GaChatbot.Api` the canonical deployable, one of three paths needs to be chosen — each has different blast radius (Section 5b enumerates).
 
 - Verified canonical Nebula path (used by `NebulaChat.tsx`): `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (or Ollama).
 - Verified canonical demo path (used by `wwwroot/chatbot/index.html`): SPA → SignalR `/hubs/chatbot` → GaApi `ChatbotHub` → `ProductionOrchestrator`.
+
+### Verification notes — 2026-05-12
+
+- `Apps/ga-server/GaApi/wwwroot/chatbot/index.html` loads SignalR and calls
+  `withUrl("/hubs/chatbot")`.
+- `Apps/ga-server/GaApi/Program.cs` maps
+  `app.MapHub<ChatbotHub>("/hubs/chatbot")`.
+- `ReactComponents/ga-react-components/src/components/PrimeRadiant/TriageDropZone.tsx`
+  calls `/api/chatbot/ask`; no matching controller or route was found under
+  `Apps/`.
+- `AllProjects.AppHost/Program.cs` starts `GaApi`, does not register
+  `GaChatbot.Api`, and keeps `GA.AI.Service` commented out as `ai-service`.
+- `Scripts/start-chatbot-api.ps1` can start `GaChatbot.Api` manually; that is
+  not the same as making it the public deployed chatbot host.
 
 ---
 
@@ -93,7 +119,7 @@ Tool catalogue exposed to the model: `search_voicings`, `describe_selected_voici
 
 | Hub | Path | App | Methods | Status |
 |---|---|---|---|---|
-| `ChatbotHub` (`Apps/ga-server/GaApi/Hubs/ChatbotHub.cs:15`) | `/hubs/chatbot` (mapped at `Apps/ga-server/GaApi/Program.cs:404`) | GaApi | `SendMessage(string, bool useSemanticSearch = true)`, `ClearHistory()`, `GetHistory() : List<ChatMessage>`, `SearchKnowledge(string, int = 10) : List<SemanticSearchResult>`, `OnConnectedAsync`, `OnDisconnectedAsync`. Server pushes: `Connected`, `Error`, `MessageRoutingMetadata { agentId, confidence, routingMethod }`, `ReceiveMessageChunk(string)`, `MessageComplete(string)`. | 🟡 parallel-to-canonical (no frontend grep hit) |
+| `ChatbotHub` (`Apps/ga-server/GaApi/Hubs/ChatbotHub.cs:15`) | `/hubs/chatbot` (mapped at `Apps/ga-server/GaApi/Program.cs:404`) | GaApi | `SendMessage(string, bool useSemanticSearch = true)`, `ClearHistory()`, `GetHistory() : List<ChatMessage>`, `SearchKnowledge(string, int = 10) : List<SemanticSearchResult>`, `OnConnectedAsync`, `OnDisconnectedAsync`. Server pushes: `Connected`, `Error`, `MessageRoutingMetadata { agentId, confidence, routingMethod }`, `ReceiveMessageChunk(string)`, `MessageComplete(string)`. | ✅ de-facto canonical for the deployed public `/chatbot/` demo |
 
 Per-connection conversation history kept in a static `ConcurrentDictionary<string, List<ChatMessage>>` capped at 50 messages; pipeline budget is `25s` (`ChatbotHub.cs:24`). Uses `[Authorize]` and `ILlmConcurrencyGate`. Backed by `ProductionOrchestrator` + `ChatbotSessionOrchestrator` for history normalisation.
 
@@ -225,7 +251,7 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 | **HTTP endpoint serving the legacy ga-client / Prime Radiant chat UIs** | ✅ AG-UI: `POST /api/chatbot/agui/stream` → `AgUiChatController.AgUiStream` → `IHarmonicChatOrchestrator.AnswerStreamingAsync` (= `ProductionOrchestrator`). | 🟡 `POST /api/chatbot/chat/stream` (`ChatbotController`) — same orchestrator backend, different SSE shape; still consumed by `chatApi.ts` + `chatService.ts`. 🟡 `POST /api/chatbot/agui/json` — non-streaming sibling, same orchestrator, used by MCP / agent callers. 🟡 `POST /api/chatbot/chat` — non-streaming sibling, same orchestrator, used by `<ChatWidget>`. |
 | **In-process chat for console / CLI** | ✅ `IHarmonicChatOrchestrator` (= `ProductionOrchestrator`) resolved via DI in `GaChatbotCli` and `GaChatbot`. | None notable — both apps share the same `AddChatbotOrchestration` registrations. |
 | **AG-UI protocol bridge** | ✅ `AgUiChatController` (`/agui/stream` for SSE, `/agui/json` for non-streaming). | None (single implementation). |
-| **SignalR streaming chat** | 🟡 `ChatbotHub` at `/hubs/chatbot` — same `ProductionOrchestrator` backend, but no JS/TS frontend hits the hub today (`signalR`/`hubConnection` greps return zero matches under `Apps/`). | 🪦 deprecated-candidate unless a consumer is reintroduced. |
+| **SignalR streaming chat** | ✅ `ChatbotHub` at `/hubs/chatbot` — same orchestrator substrate as the REST surfaces and the de-facto canonical path for the deployed public `/chatbot/` demo. | 🟡 Parallel REST/SSE surfaces exist (`/api/chatbot/chat`, `/api/chatbot/chat/stream`) and must stay wire-equivalent where the public demo depends on shared metadata (`Grounding`, `Trace`, routing). |
 | **GraphQL chat mutation** | ❌ none defined; `GaApi/Program.cs:113-121` registers Query types only. | _N/A_ |
 | **`IChatService` (GaApi-local)** | ✅ used by `ChatbotSessionOrchestrator.NormalizeHistory` and `ChatbotController.GetStatus` only. Provider chosen via `AI:ChatProvider`. | 🟡 `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` exist but are not called from any controller or hub today. |
 | **Specialized agent invocation** | ✅ via `SemanticRouter.RouteAsync` (called by `ProductionOrchestrator`). | 🟡 `SemanticRouter.AggregateAsync` and `DebateAsync` exist but are not currently exposed through any HTTP/SignalR surface. |
@@ -350,7 +376,7 @@ flowchart LR
 
 - Is `Apps/GaChatbot` (console REPL) still reachable in the Aspire `start-all` flow? `AllProjects.AppHost/Program.cs:135` adds a different project (`GuitarAlchemistChatbot.csproj`); the `Apps/GaChatbot` project appears to be a separate console host that is never started by Aspire.
 - Does `AgUiChatController` have any active frontend consumer beyond `<GAChatPanel>` and the ga-client `chatAtoms`? Confirm whether the legacy SSE endpoints (`/chat/stream`, `/chat`) can be retired.
-- Does any client connect to `ChatbotHub` (`/hubs/chatbot`)? Grep for `signalR`/`hubConnection` under `Apps/` returns zero matches; the hub may be dead today.
+- Are there any `ChatbotHub` consumers besides the deployed public `/chatbot/` static SPA (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`)? Confirm before relocating or retiring the hub.
 - `POST /api/chatbot/ask` is called by `TriageDropZone` but no controller action implements it — does this fail silently or is it served by a route fallback elsewhere?
 - Is `GA.AI.Service` (whose `ChatController` shadows `ProductionOrchestrator` directly) ever launched in CI/dev? AppHost registration is commented out (`AllProjects.AppHost/Program.cs:87`); confirm no other entry point spins it up.
 - `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` are registered but not invoked from any controller. Should they be removed, or are they intended for an upcoming SignalR/REST surface?
