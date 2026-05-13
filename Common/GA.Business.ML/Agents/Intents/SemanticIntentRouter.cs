@@ -198,7 +198,25 @@ public sealed class SemanticIntentRouter(
             return null;
         }
 
-        return new IntentMatch(top.Intent, top.Score, top.MatchedSource);
+        // Capture the same top-3 we just logged so the orchestrator can
+        // emit a "routing.candidates" trace step. Without this the agentic
+        // trace shows only the winner and the user has no idea what came
+        // in second — surfaced 2026-05-13 when the user shipped a query
+        // that should have hit a different skill but the trace was a
+        // single black box.
+        var routingCandidates = topK
+            .Select(r => new RoutingCandidate(
+                IntentId:     r.Intent.Id,
+                BaseScore:    r.Score - r.Boost,
+                Boost:        r.Boost,
+                FinalScore:   r.Score,
+                MatchedSource: r.MatchedSource))
+            .ToList();
+
+        return new IntentMatch(top.Intent, top.Score, top.MatchedSource)
+        {
+            Ranking = routingCandidates,
+        };
     }
 
     private static string Trim(string s, int max) =>
@@ -282,4 +300,28 @@ public sealed class SemanticIntentRouter(
 public readonly record struct IntentMatch(
     IIntent Intent,
     float Confidence,
-    string MatchedExample);
+    string MatchedExample)
+{
+    /// <summary>
+    /// Top-K (default 3) candidates considered during routing, ordered by
+    /// final score (highest first). Includes the selected winner at index 0.
+    /// Populated by <see cref="SemanticIntentRouter"/> so the orchestrator
+    /// can emit a "routing.candidates" trace step showing what competed and
+    /// what didn't fire — surfacing the routing decision instead of hiding
+    /// it inside the orchestrator's "orchestration.answer" black-box step.
+    /// </summary>
+    public IReadOnlyList<RoutingCandidate> Ranking { get; init; } = [];
+}
+
+/// <summary>
+/// One candidate in a routing trace. The fields let downstream consumers
+/// reconstruct exactly what happened: base cosine score, the boost that
+/// hint-rules added (if any), the final score that determined ranking, and
+/// the example string the candidate centroid matched against.
+/// </summary>
+public readonly record struct RoutingCandidate(
+    string IntentId,
+    float BaseScore,
+    float Boost,
+    float FinalScore,
+    string MatchedSource);

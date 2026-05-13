@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Intents;
@@ -36,6 +37,7 @@ public class ProductionOrchestrator(
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
     TabTokenizer tabTokenizer,
+    IAgenticTraceCapture traceCapture,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
@@ -64,6 +66,56 @@ public class ProductionOrchestrator(
         if (string.IsNullOrWhiteSpace(message)) return false;
         var blocks = tabTokenizer.Tokenize(message);
         return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
+    }
+
+    /// <summary>
+    /// Emit a routing.candidates trace step with the top-3 intents the
+    /// router considered, so the agentic trace shows the routing decision
+    /// instead of hiding it inside the "orchestration.answer" black-box
+    /// step. Surfaces base cosine score, boost (if any), and final score
+    /// for each candidate — enough to debug routing misses without
+    /// re-running the request.
+    /// </summary>
+    /// <remarks>
+    /// Added 2026-05-13 in response to user critique on demos.guitaralchemist.com/chatbot/:
+    /// "Agentic trace is not detailed at all, we seem to see only the end
+    /// result not each intermediate steps". When intentMatch is null (no
+    /// intent crossed threshold) we still emit the step so the trace shows
+    /// WHY we fell through to the LLM agent path.
+    /// </remarks>
+    private void EmitRoutingTrace(IntentMatch? match)
+    {
+        if (match is { Ranking: { Count: > 0 } ranking })
+        {
+            var attrs = new Dictionary<string, object?>
+            {
+                ["routing.outcome"]      = "matched",
+                ["routing.selected_id"]  = match.Value.Intent.Id,
+                ["routing.confidence"]   = match.Value.Confidence,
+                ["routing.matched_with"] = match.Value.MatchedExample,
+                ["routing.top_count"]    = ranking.Count,
+            };
+            for (var i = 0; i < ranking.Count; i++)
+            {
+                var c = ranking[i];
+                attrs[$"routing.top{i + 1}.id"]       = c.IntentId;
+                attrs[$"routing.top{i + 1}.base"]     = c.BaseScore;
+                attrs[$"routing.top{i + 1}.boost"]    = c.Boost;
+                attrs[$"routing.top{i + 1}.final"]    = c.FinalScore;
+                attrs[$"routing.top{i + 1}.matched"]  = c.MatchedSource;
+            }
+            traceCapture.AddStep("routing.candidates", "completed", 0, attrs);
+            return;
+        }
+
+        // No match — fall-through to LLM path. Still emit the step so the
+        // trace shows we DID try semantic routing and chose to give up.
+        traceCapture.AddStep("routing.candidates", "completed", 0,
+            new Dictionary<string, object?>
+            {
+                ["routing.outcome"] = "below_threshold_or_unavailable",
+                ["routing.note"]    = "no intent crossed MinConfidence; falling through to LLM agent path",
+            });
     }
     private static readonly string[] ExplicitVoicingKeywords =
     [
@@ -295,6 +347,7 @@ public class ProductionOrchestrator(
         // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
         // CanHandle foreach. See migration recommendation §"Routing classifiers".
         var intentMatch = await intentRouter.RouteAsync(message, services, ct);
+        EmitRoutingTrace(intentMatch);
         if (intentMatch is { } pick)
         {
             // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
@@ -599,6 +652,7 @@ public class ProductionOrchestrator(
     private async Task<ChatResponse?> TryDispatchViaIntentAsync(string message, CancellationToken ct)
     {
         var match = await intentRouter.RouteAsync(message, services, ct);
+        EmitRoutingTrace(match);
         if (match is not { } pick) return null;
 
         var result = await pick.Intent.ExecuteAsync(message, ct);
