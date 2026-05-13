@@ -232,71 +232,77 @@ public class ChatbotController(
         ]);
 
     /// <summary>
-    ///     Return a categorized showcase script highlighting the chatbot's breadth:
-    ///     theory, voicings, progressions, DSL evaluation, and analysis surfaces.
-    ///     Consumed by the Showcase Panel in the React UI.
+    ///     Return a categorized showcase script highlighting the chatbot's breadth.
+    ///     Every prompt has been hand-verified against /api/chatbot/chat to produce
+    ///     a real answer — no broken backend paths (e.g. unloaded OPTIC-K index),
+    ///     no SKILL.md preambles, no misroutes. See ChatbotShowcaseSmokeTests
+    ///     for the gate.
     /// </summary>
+    /// <remarks>
+    ///     Version 1.1 (2026-05-12) — trimmed from 15 to 12 prompts after a live
+    ///     QA pass found 8 of 15 originals were broken (voicing prompts blocked
+    ///     by missing index, progression prompts blocked by chord-symbol parser
+    ///     scope, "barre chord" misrouted to practice-routine, etc.). Voicing
+    ///     category removed entirely; restore when the OPTIC-K index ships.
+    /// </remarks>
     [HttpGet("demo")]
     [ProducesResponseType(typeof(ChatbotDemoScript), StatusCodes.Status200OK)]
     public ActionResult<ChatbotDemoScript> GetDemo() =>
         Ok(new ChatbotDemoScript(
-            Version: "1.0",
+            Version: "1.1",
             Categories:
             [
                 new ChatbotDemoCategory(
                     Id: "theory",
                     Name: "Music Theory",
                     Icon: "music_note",
-                    Description: "Core questions about scales, intervals, modes, and key relationships.",
+                    Description: "Foundational questions about modes, keys, and the circle of fifths.",
                     Prompts:
                     [
-                        new("Explain the circle of fifths", "Foundational key-relationship diagram."),
-                        new("What are the modes of the major scale?", "Ionian through Locrian, with character notes."),
-                        new("What's the difference between major and minor?", "Quality contrast with examples.")
+                        new("Explain the circle of fifths", "Key signatures, perfect-fifth relationships, and enharmonics."),
+                        new("What are the modes of the major scale", "Ionian through Locrian with formulas and character."),
+                        new("What is the difference between major and minor", "Quality contrast with audible examples.")
                     ]),
                 new ChatbotDemoCategory(
-                    Id: "voicings",
-                    Name: "Chord Voicings",
+                    Id: "scales-keys",
+                    Name: "Scales & Keys",
                     Icon: "queue_music",
-                    Description: "OPTIC-K vector search over the chord-voicing corpus.",
+                    Description: "Notes, relative keys, and the diatonic chords of any major key.",
                     Prompts:
                     [
-                        new("Show me chord voicings for Cmaj7", "Triggers ga_search_voicings against the index."),
-                        new("Give me easier voicings of F#m7b5", "Surfaces fewer-finger alternatives."),
-                        new("Find voicings with a similar interval profile to Em9", "ICV-neighbor search.")
+                        new("Show me the notes in C major", "Seven scale notes plus the relative minor."),
+                        new("What is the relative minor of G major", "Relative-key pairing with shared key signature."),
+                        new("What are the diatonic chords in G major", "Seven diatonic chords with Roman-numeral quality.")
                     ]),
                 new ChatbotDemoCategory(
                     Id: "progressions",
                     Name: "Progressions & Substitution",
                     Icon: "timeline",
-                    Description: "Analyze, complete, and reharmonize chord progressions.",
+                    Description: "Identify the key of a progression and reharmonize with substitutions.",
                     Prompts:
                     [
-                        new("Analyze the progression Cmaj7 Am7 Dm7 G7", "Roman-numeral analysis + key detection."),
-                        new("Suggest substitutions for the G7 in a ii-V-I", "Tritone, secondary dominant, and modal options."),
-                        new("Complete the progression Cmaj7 Am7 ...", "Likely continuations grounded in voice-leading.")
+                        new("Identify the key of Am F C G", "Key detection from a four-chord progression."),
+                        new("Suggest substitutions for G7 in a ii-V-I", "Harmonic substitutions ranked by ICV distance."),
+                        new("Substitutions for C major", "Relative-minor and parallel options with voice-leading cost.")
                     ]),
                 new ChatbotDemoCategory(
-                    Id: "dsl",
-                    Name: "DSL & Evaluation",
+                    Id: "operations",
+                    Name: "Chord Operations",
                     Icon: "code",
-                    Description: "Live evaluation of the GA F# DSL — scripts, transposition, voice-leading.",
+                    Description: "Transposition and set-theory analysis on chords.",
                     Prompts:
                     [
-                        new("Transpose C E G to D", "Calls ga_transpose_chord under the hood."),
-                        new("What are the common tones between Cmaj7 and Am7?", "Set-theory common-tone analysis."),
-                        new("Compute voice-leading from Cmaj7 to Fmaj7", "Pairwise voice-leading minimization.")
+                        new("Transpose C E G to D", "Interval calculation plus resulting chord."),
+                        new("What are the common tones between Cmaj7 and Am7", "Pitch-class intersection with role-per-chord.")
                     ]),
                 new ChatbotDemoCategory(
-                    Id: "fretboard",
-                    Name: "Fretboard & Technique",
+                    Id: "getting-started",
+                    Name: "Getting Started",
                     Icon: "guitar",
-                    Description: "Practical guitar questions — fingerings, barre chords, fingerpicking.",
+                    Description: "Practical guitar starting points for new players.",
                     Prompts:
                     [
-                        new("Show me some easy beginner chords", "Open-position triads with tab."),
-                        new("How do I play a barre chord?", "Technique breakdown with fingering."),
-                        new("How do I improve my fingerpicking?", "Practice routine guidance.")
+                        new("Show me some easy beginner chords", "Open-position chords with frettings in low-to-high notation.")
                     ])
             ]));
 
