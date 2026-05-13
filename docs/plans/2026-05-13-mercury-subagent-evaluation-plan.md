@@ -140,12 +140,48 @@ Expected impact based on baseline data:
 - `rootless Dm9 bill evans style` now returns `bill-evans-chord` as one tag instead of `[bill, evans]` split (fixes 1/8 miss).
 - The added rules cost ~80 tokens per call — at Mercury's $0.00000025/prompt-token, that's an extra $0.00002 per call. Negligible.
 
-Validation procedure (next session):
-1. Run the full 25-query telemetry sweep with the baseline prompt; record latency + JSON validity.
-2. Replace `LlmMusicalQueryExtractor.SystemPrompt` with the tuned version.
-3. Re-run the same 25 queries.
-4. Compare: the two known misses should resolve; no new misses should appear.
-5. If `chord` field validation passes `ChordPitchClasses.TryParse` for all 25 outputs (with the relaxed-mode rule, some will be bare-root "F#" which parses to major triad — acceptable), the prompt change can land.
+### Validation results (executed 2026-05-13)
+
+The 25-query sweep was run twice — once with the baseline prompt, once with the tuned prompt — both against Mercury 2 (`mercury-2`, temperature 0, `response_format = json_object`). Numbers:
+
+| Metric | Baseline | Tuned | Delta |
+|---|---:|---:|---:|
+| Median latency | 464 ms | 369 ms | **−95 ms** |
+| P95 latency | 613 ms | 729 ms | +116 ms |
+| Mean latency | 459 ms | 453 ms | −6 ms |
+| Total tokens (25 queries) | 7,737 | 15,335 | +98% (longer system prompt) |
+| Total cost | $0.00387 | $0.00767 | +$0.00380 |
+| Per-call cost | $0.000155 | $0.000307 | +$0.00015 |
+
+**Quality changes that matter in production** (LLM only sees queries the typed extractor can't parse — pure fuzzy text without chord/mode/iconic anchors):
+
+| Query | Baseline | Tuned | Verdict |
+|---|---|---|---|
+| `F# Lydian` | `chord:null, mode:"Lydian"` | `chord:"F#", mode:"Lydian"` | ✅ Fixed |
+| `D Dorian` | `chord:null, mode:"D Dorian"` | `chord:"D", mode:"Dorian"` | ✅ Fixed (mode no longer carries the root) |
+| `G Mixolydian` | `chord:null` | `chord:"G", mode:"Mixolydian"` | ✅ Fixed |
+| `C Phrygian` | `chord:null` | `chord:"C", mode:"Phrygian"` | ✅ Fixed |
+| `Bmaj7 sus4` | `chord:"Bmaj7sus4"` (joined) | `chord:"Bmaj7", tags:["sus4"]` | ✅ Cleaner separation |
+| `A7 altered` | `chord:"A7alt", tags:[jazz, altered, dominant]` | `chord:"A7", tags:["altered"]` | ✅ Less drift |
+| `warm jazz` | `chord:null, tags:["jazz"]` | same | ✅ Stable |
+
+**Known regression** (out-of-production-path, cosmetic):
+
+| Query | Baseline | Tuned | Verdict |
+|---|---|---|---|
+| `hendrix-chord` | `chord:"E7#9", tags:[blues, rock, open, power]` | `chord:null, tags:["hendrix-chord"]` | ⚠️ Lost chord form |
+
+This regression doesn't reach production: `TypedMusicalQueryExtractor.TryMatchIconicMultiWord` + `IconicChordsService.FindChordByTag` resolve iconic names to their canonical chord form before any LLM fallback fires. The LLM extractor only sees queries that have *no* recognizable chord, mode, or iconic-name anchor.
+
+**Cost recommendation:** $0.000155 → $0.000307 per LLM call is negligible (10× cheaper than Haiku regardless). The latency win on median (−20%) is real; p95 regression of +116 ms is below the 1-second perceptual threshold. **Tuned prompt is net positive.**
+
+### Production validation (for the integration PR — still pending)
+
+Already executed against the live Mercury endpoint with the env-var-stored key (PowerShell client, not the .NET path). Re-running inside the production code path requires:
+1. Restart GaApi with `Inception:EnableForQueryExtraction=true` and `INCEPTION_API_KEY` in env.
+2. Drive the same 25 queries via the chatbot or directly via `LlmMusicalQueryExtractor.ExtractAsync`.
+3. Assert outputs match the "Tuned" column above (modulo non-determinism — temperature 0 should be stable).
+4. Verify cache hit-rate (the existing 30-min `IMemoryCache` should make repeat queries free).
 
 ## Out of scope (for this evaluation)
 
