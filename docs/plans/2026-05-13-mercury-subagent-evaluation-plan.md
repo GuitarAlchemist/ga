@@ -35,7 +35,22 @@ Drove 8 representative voicing queries through Mercury 2 via direct HTTP calls (
 
 **Quality:** 5/8 perfect, 2/8 minor issues (mode-only-query loses root; iconic chord names split), 1/8 acceptable degradation. The two real misses are likely fixable via few-shot examples in the `SystemPrompt`.
 
-Compared to baseline (Anthropic Haiku 4.5 on the same prompt): no formal benchmark this session, but anecdotally Haiku runs 1.5–2 s for the same task. **Mercury wins by ~3× on latency at acceptable quality.**
+### Head-to-head: Mercury 2 vs Anthropic Haiku 4.5 (2026-05-13, same 25 queries)
+
+Empirical apples-to-apples — same prompt, same queries, temperature 0, same Windows host, calls interleaved:
+
+| Metric | Mercury 2 | Haiku 4.5 | Mercury speedup |
+|---|---:|---:|---:|
+| Median latency | **424 ms** | 860 ms | **2.0×** |
+| P95 latency | 666 ms | 1,121 ms | 1.7× |
+| Mean latency | 479 ms | 960 ms | 2.0× |
+| Min | 247 ms | 636 ms | 2.6× |
+| Max | 1,397 ms | 3,213 ms | 2.3× |
+| **Per-query latency wins** | **24 / 25** | 1 / 25 | — |
+
+The only Haiku win was `so-what-chord` (1,397 ms Mercury vs 975 ms Haiku) — a single outlier; Mercury's median is faster than Haiku's *minimum*. Mercury's p95 is below Haiku's p25.
+
+Marketing claim ("~5× faster than Sonnet 4.6") was against Sonnet; against Haiku 4.5 (the actual production target), it's **~2× — still a clean win**, and the cost differential remains 10× in Mercury's favor.
 
 ## Design — two-flag opt-in gate
 
