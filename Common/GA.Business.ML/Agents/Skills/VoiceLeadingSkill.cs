@@ -212,47 +212,45 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
         return BuildChord(root, quality);
     }
 
-    private static int[] BuildChord(int root, string quality)
+    /// <summary>
+    /// Build the pitch-class set for a chord given a root PC and a quality
+    /// suffix string. Returns <c>null</c> for unknown qualities so callers
+    /// surface a parse error instead of silently producing wrong PCs — the
+    /// 2026-05-14 correctness review flagged that the old fall-through-to-
+    /// major-triad behaviour silently mis-voice-led <c>'C13'</c> /
+    /// <c>'7sus4'</c> / <c>'add11'</c> / <c>'m11'</c> as triads.
+    /// </summary>
+    private static int[]? BuildChord(int root, string quality)
     {
         var q = quality.ToLowerInvariant().Trim();
 
         // Tone choices: 1, b3, 3, 4, b5, 5, #5, 6, b7, 7, b9, 9, #9, 11, #11, 13
-        int[] intervals;
+        int[]? intervals = q switch
+        {
+            "" or "maj" or "major"           => [0, 4, 7],                     // major triad
+            "m" or "min" or "minor" or "-"   => [0, 3, 7],                     // minor triad
+            "dim" or "°" or "o"              => [0, 3, 6],                     // dim triad
+            "aug" or "+"                     => [0, 4, 8],                     // aug triad
+            "7"                              => [0, 4, 7, 10],                 // dom 7
+            "m7" or "min7" or "-7"           => [0, 3, 7, 10],                 // min 7
+            "maj7" or "major7" or "M7" or "Δ7" or "Δ"
+                                             => [0, 4, 7, 11],                 // maj 7
+            "m7b5" or "ø" or "ø7" or "half-dim" or "min7b5"
+                                             => [0, 3, 6, 10],                 // half-dim
+            "dim7" or "°7" or "o7"           => [0, 3, 6, 9],                  // dim 7
+            "sus2"                           => [0, 2, 7],
+            "sus4" or "sus"                  => [0, 5, 7],
+            "6"                              => [0, 4, 7, 9],                  // maj 6
+            "m6" or "min6"                   => [0, 3, 7, 9],                  // min 6
+            "9"                              => [0, 4, 7, 10, 2],              // dom 9
+            "maj9"                           => [0, 4, 7, 11, 2],
+            "m9" or "min9"                   => [0, 3, 7, 10, 2],
+            // Unknown quality — return null so the caller emits CannotParse
+            // instead of pretending the chord is a major triad.
+            _                                => null,
+        };
 
-        if (q == string.Empty || q == "maj" || q == "major")
-            intervals = [0, 4, 7];                          // major triad
-        else if (q is "m" or "min" or "minor" or "-")
-            intervals = [0, 3, 7];                          // minor triad
-        else if (q is "dim" or "°" or "o")
-            intervals = [0, 3, 6];                          // dim triad
-        else if (q is "aug" or "+")
-            intervals = [0, 4, 8];                          // aug triad
-        else if (q is "7")
-            intervals = [0, 4, 7, 10];                      // dom 7
-        else if (q is "m7" or "min7" or "-7")
-            intervals = [0, 3, 7, 10];                      // min 7
-        else if (q is "maj7" or "major7" or "M7" or "Δ7" or "Δ")
-            intervals = [0, 4, 7, 11];                      // maj 7
-        else if (q is "m7b5" or "ø" or "ø7" or "half-dim" or "min7b5")
-            intervals = [0, 3, 6, 10];                      // half-dim
-        else if (q is "dim7" or "°7" or "o7")
-            intervals = [0, 3, 6, 9];                       // dim 7
-        else if (q is "sus2")
-            intervals = [0, 2, 7];
-        else if (q is "sus4" or "sus")
-            intervals = [0, 5, 7];
-        else if (q is "6")
-            intervals = [0, 4, 7, 9];                       // maj 6
-        else if (q is "m6" or "min6")
-            intervals = [0, 3, 7, 9];                       // min 6
-        else if (q is "9")
-            intervals = [0, 4, 7, 10, 2];                   // dom 9
-        else if (q is "maj9")
-            intervals = [0, 4, 7, 11, 2];
-        else if (q is "m9" or "min9")
-            intervals = [0, 3, 7, 10, 2];
-        else
-            intervals = [0, 4, 7];                          // unknown → major triad fallback
+        if (intervals is null) return null;
 
         var pcs = new int[intervals.Length];
         for (var i = 0; i < intervals.Length; i++) pcs[i] = (root + intervals[i]) % 12;

@@ -55,9 +55,14 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
     // Routing anchor: explicit "parse" / "what does X mean" with a
     // Grothendieck-flavored payload (category symbol, functor verb, limit
     // keyword) so we don't catch all "parse X" prompts.
+    // Tightened 2026-05-14 (correctness review). Dropped bare `power`
+    // (matches "power chord" prose) and bare `hom` (matches some prose).
+    // Replaced with `power\s+object` and capitalised `Hom\s*\(` to anchor
+    // on category-theory shapes.
     private static readonly Regex GrothendieckSurface =
         new(@"(⊗|⊕|×\s*[A-Z]|∘|η\(|\^[A-Z]|" +
-            @"\b(?:functor|pullback|pushout|equalizer|coequalizer|coproduct|tensor[\s-]+product|direct[\s-]+sum|natural[\s-]+transformation|truth[_\s-]*value|subobject|power|hom)\b)",
+            @"\b(?:functor|pullback|pushout|equalizer|coequalizer|coproduct|tensor[\s-]+product|direct[\s-]+sum|natural[\s-]+transformation|subobject|power[\s-]+object|sheaf)\b|" +
+            @"Hom\s*\()",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex AnchorPattern =
@@ -91,8 +96,37 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
         return stripped.Trim().Trim('?', '.');
     }
 
+    /// <summary>
+    /// Maximum expression length sent to the F# parser. The endpoint is
+    /// unauthenticated; FParsec is a recursive-descent combinator parser, so
+    /// arbitrarily deep expressions consume thread stack, not heap, and a
+    /// <c>StackOverflowException</c> in .NET is not catchable — it tears
+    /// down the entire process. Capping length + bracket depth at the C#
+    /// boundary keeps the FParsec call within safe bounds.
+    /// </summary>
+    private const int MaxExpressionLength = 512;
+    private const int MaxBracketDepth = 32;
+
     private AgentResponse ParseAndAnswer(string expression)
     {
+        // Pre-validate at the C# boundary — see MaxExpressionLength remarks.
+        if (expression.Length > MaxExpressionLength)
+        {
+            return RejectExpression(
+                $"Expression is too long ({expression.Length} chars). The Grothendieck DSL " +
+                $"parser accepts up to {MaxExpressionLength} characters.",
+                expression);
+        }
+        if (CountChar(expression, '(') > MaxBracketDepth
+            || CountChar(expression, '{') > MaxBracketDepth
+            || CountChar(expression, '[') > MaxBracketDepth)
+        {
+            return RejectExpression(
+                $"Expression has too many brackets (cap: {MaxBracketDepth} of each type). " +
+                $"Try a flatter form.",
+                expression);
+        }
+
         try
         {
             var result = GrothendieckOperationsParser.parse(expression);
@@ -127,15 +161,38 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Grothendieck parse threw: {Expression}", expression);
+            // Log the full exception server-side; return a static message to
+            // the client. Echoing ex.Message would leak F# / FParsec internal
+            // types and parser state to an unauthenticated caller (security
+            // audit 2026-05-14, finding 🟢 LOW info-disclosure).
+            logger.LogWarning(ex, "Grothendieck parse threw on input: {Expression}", expression);
             return new AgentResponse
             {
                 AgentId    = AgentIds.Theory,
-                Result     = $"Parser raised an exception on `{expression}`: {ex.Message}",
+                Result     = $"The parser couldn't handle `{expression}`. Try a simpler expression like `C ⊗ G` or `Transpose(Cmaj7)`.",
                 Confidence = 0.2f,
-                Evidence   = [$"Source: GrothendieckParseSkill (parser exception)", $"input: {expression}"],
+                Evidence   = ["Source: GrothendieckParseSkill (parser exception — see server logs)"],
             };
         }
+    }
+
+    private AgentResponse RejectExpression(string userMessage, string expression)
+    {
+        logger.LogInformation("GrothendieckParseSkill: rejected oversized/over-nested input ({Length} chars)", expression.Length);
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = userMessage,
+            Confidence = 0.3f,
+            Evidence   = ["Source: GrothendieckParseSkill (input rejected at C# boundary)"],
+        };
+    }
+
+    private static int CountChar(string s, char c)
+    {
+        var n = 0;
+        foreach (var ch in s) if (ch == c) n++;
+        return n;
     }
 
     /// <summary>
@@ -150,27 +207,46 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
         return op.GetType().Name.Replace("GrothendieckOperation+", "");
     }
 
+    /// <summary>
+    /// Gloss per actual F# DU case name from
+    /// <see cref="GrammarTypes.GrothendieckOperation"/> — verified against
+    /// <c>Common/GA.Business.DSL/Types/GrammarTypes.fs:327-356</c> on
+    /// 2026-05-14. Earlier draft used aspirational names (NaturalTransformation,
+    /// TruthValue, HomFunctor, Restriction) that don't exist in the F# DU
+    /// and would never be matched — flagged by the correctness review.
+    /// </summary>
     private static string GlossFromCategory(string category, string expression) => category switch
     {
+        // Category operations
         "TensorProduct" => "Tensor product (⊗) — combines two musical objects into a joint structure where every relation in one is paired with every relation in the other. In category theory, the universal bilinear map.",
         "DirectSum"     => "Direct sum (⊕) — disjoint union with both projection and inclusion maps. Lets you treat two chords as components of a larger system that you can decompose back into either piece.",
         "Product"       => "Categorical product (×) — the universal object with projection maps to each component. Stronger than direct sum: morphisms into the product correspond to tuples of morphisms into each factor.",
         "Coproduct"     => "Coproduct (+) — dual of product, with inclusion maps from each component. Morphisms out of the coproduct correspond to tuples of morphisms out of each factor.",
         "Exponential"   => "Exponential (^) — the internal hom object Y^X representing morphisms X → Y as an object in the category itself. Curry/uncurry lives here.",
-        "DefineFunctor" => "Functor definition — declares a structure-preserving map between two categories (the source-category objects/morphisms get mapped to target-category objects/morphisms).",
-        "ApplyFunctor"  => "Functor application — invokes a declared functor on a specific object. Same surface as calling a function but the functor preserves composition and identities.",
+        // Functor operations
+        "DefineFunctor"   => "Functor definition — declares a structure-preserving map between two categories (the source-category objects/morphisms get mapped to target-category objects/morphisms).",
+        "ApplyFunctor"    => "Functor application — invokes a declared functor on a specific object. Same surface as calling a function but the functor preserves composition and identities.",
         "ComposeFunctors" => "Functor composition (∘) — chains two functors left-to-right (or right-to-left, depending on convention). Composition of functors is itself a functor.",
-        "NaturalTransformation" => "Natural transformation (η) — a family of morphisms between two functors that commutes with their action on morphisms. The 'second-order' morphism of category theory.",
-        "Pullback"      => "Pullback — the universal cone over a cospan. Roughly: the part of A and B that agrees under a shared map. In music: shared common structure between two chords via a transformation.",
-        "Pushout"       => "Pushout — dual of pullback: the universal cocone under a span. The 'gluing' of A and B along their shared piece.",
-        "Equalizer"     => "Equalizer — the universal subobject where two parallel morphisms agree. The pieces of an object where two transformations produce the same result.",
-        "Coequalizer"   => "Coequalizer — dual of equalizer: the universal quotient where two parallel morphisms become equal. Identifies elements until two maps coincide.",
-        "PowerObject"   => "Power object (P) — the object of all 'subobjects' of X, the topos analog of the power set. In musical context, all subsets of a chord/scale's pitch-class collection.",
+        // Natural transformations
+        "DefineNatTrans" => "Natural transformation definition — declares a family of morphisms between two functors that commutes with their action on morphisms. The 'second-order' morphism of category theory.",
+        "ApplyNatTrans"  => "Natural transformation application — invokes a declared η on a specific object. The result is the η-component morphism for that object.",
+        // Limit operations
+        "Limit"     => "Limit — the universal cone over a diagram. The 'best approximation from above' object that maps consistently to every node in the diagram.",
+        "Pullback"  => "Pullback — the universal cone over a cospan. Roughly: the part of A and B that agrees under a shared map. In music: shared common structure between two chords via a transformation.",
+        "Equalizer" => "Equalizer — the universal subobject where two parallel morphisms agree. The pieces of an object where two transformations produce the same result.",
+        // Colimit operations
+        "Colimit"     => "Colimit — the universal cocone under a diagram. The 'best approximation from below' object that all nodes in the diagram map into consistently.",
+        "Pushout"     => "Pushout — dual of pullback: the universal cocone under a span. The 'gluing' of A and B along their shared piece.",
+        "Coequalizer" => "Coequalizer — dual of equalizer: the universal quotient where two parallel morphisms become equal. Identifies elements until two maps coincide.",
+        // Topos operations
         "SubobjectClassifier" => "Subobject classifier (Ω) — the universal object that classifies all subobjects via characteristic morphisms. The topos analog of {0,1}.",
-        "TruthValue"    => "Truth value — the membership characteristic of an element with respect to a subobject. Boolean in classical logic; in a topos it ranges over Ω.",
-        "HomFunctor"    => "Hom functor — Hom(A, B) is the set of morphisms from A to B (made into an object/sheaf when the category is closed). Tells you 'all the ways A can become B'.",
-        "Restriction"   => "Restriction (|) — restricts a sheaf or presheaf to a smaller open set. In music: viewing a chord/progression through a narrower lens (a sub-scale, a single key center).",
-        _               => $"Operation of category `{category}` parsed successfully. Hit the demo at /test/grothendieck-dsl for the full AST view of `{expression}`.",
+        "PowerObject"         => "Power object (P) — the object of all 'subobjects' of X, the topos analog of the power set. In musical context, all subsets of a chord/scale's pitch-class collection.",
+        "InternalHom"         => "Internal hom (Hom(A,B)) — the set of morphisms from A to B promoted to an object in the category. Tells you 'all the ways A can become B', viewable as a single object.",
+        // Sheaf operations
+        "DefineSheaf"      => "Sheaf definition — a presheaf satisfying the gluing axiom. Captures locally-defined data with a coherent global structure (e.g., a musical idea that has consistent local interpretations in every key area).",
+        "SheafRestriction" => "Sheaf restriction (|) — restricts a sheaf to a smaller open set. In music: viewing a chord/progression through a narrower lens (a sub-scale, a single key center).",
+        "SheafGluing"      => "Sheaf gluing — combines locally-defined sections that agree on overlaps into a single global section. The 'how does the modulation across keys actually compose into one piece' operation.",
+        _                  => $"Operation of category `{category}` parsed successfully. Open the demo at /test/grothendieck-dsl for the full AST view of `{expression}`.",
     };
 
     private AgentResponse Result(string text, string evidence)

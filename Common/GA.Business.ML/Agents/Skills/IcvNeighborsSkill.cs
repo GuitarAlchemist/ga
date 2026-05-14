@@ -109,9 +109,23 @@ public sealed class IcvNeighborsSkill(
 
     private AgentResponse AnswerNeighbors(string chordLabel, PitchClassSet source)
     {
-        var neighbors = grothendieck.FindNearby(source, DefaultMaxDistance)
-            .Where(n => !n.Delta.IsZero)               // skip the source itself
-            .OrderBy(n => n.Cost)
+        // We bypass the (n.Delta, n.Cost) values FindNearby returns because
+        // GrothendieckDelta.FromIcVs injects a synthetic Ic1=+1 when the
+        // true delta would be zero — see correctness-review 2026-05-14. That
+        // heuristic helps differentiate same-ICV transpositions in OTHER
+        // call sites, but it makes the neighbor table mis-label set-class
+        // equivalents as "L1=1". For this skill the user expects honest
+        // distances, so we recompute the per-component delta directly and
+        // derive L1 from that.
+        var sourceIcv = source.IntervalClassVector;
+        var rawNeighbors = grothendieck.FindNearby(source, DefaultMaxDistance + 1).ToList();
+
+        var neighbors = rawNeighbors
+            .Select(n => (n.Set, Delta: ComputeTrueDelta(sourceIcv, n.Set.IntervalClassVector)))
+            .Where(t => !ReferenceEquals(t.Set, source))           // skip the source itself
+            .Where(t => t.Delta.l1 > 0)                            // skip exact ICV-identical (same set class)
+            .Where(t => t.Delta.l1 <= DefaultMaxDistance)
+            .OrderBy(t => t.Delta.l1)
             .Take(MaxNeighborsToShow)
             .ToList();
 
@@ -130,10 +144,14 @@ public sealed class IcvNeighborsSkill(
 
         sb.AppendLine("| Neighbor (PC set) | ICV | L1 | Harmonic cost |");
         sb.AppendLine("|-------------------|-----|----|----|");
-        foreach (var (set, delta, cost) in neighbors)
+        foreach (var (set, delta) in neighbors)
         {
             var pcsString = "{" + string.Join(",", set.Select(pc => (int)pc.Value)) + "}";
-            sb.AppendLine($"| `{pcsString}` | `{set.IntervalClassVector}` | {delta.L1Norm} | {cost:F2} |");
+            // Harmonic cost mirrors GrothendieckService.ComputeHarmonicCost
+            // (L1 × 0.6 scaling factor). Apply the same scalar so the table
+            // is comparable to the upstream service contract.
+            var cost = delta.l1 * 0.6;
+            sb.AppendLine($"| `{pcsString}` | `{set.IntervalClassVector}` | {delta.l1} | {cost:F2} |");
         }
 
         sb.AppendLine();
@@ -144,6 +162,25 @@ public sealed class IcvNeighborsSkill(
             $"pitches (mod 12); the ICV is the unordered count of intervals it contains.");
 
         return Result(sb.ToString(), $"icv-neighbors({chordLabel}, {neighbors.Count} of L1≤{DefaultMaxDistance})");
+    }
+
+    /// <summary>
+    /// Per-component honest delta: target − source, with L1 derived directly.
+    /// Returns (Δic1..Δic6, L1Norm) as a tuple to avoid carrying the upstream
+    /// GrothendieckDelta record (which would re-inject the +1 heuristic on
+    /// equal ICVs).
+    /// </summary>
+    private static (int ic1, int ic2, int ic3, int ic4, int ic5, int ic6, int l1)
+        ComputeTrueDelta(IntervalClassVector src, IntervalClassVector tgt)
+    {
+        var d1 = tgt[IntervalClass.Hemitone] - src[IntervalClass.Hemitone];
+        var d2 = tgt[IntervalClass.Tone] - src[IntervalClass.Tone];
+        var d3 = tgt[IntervalClass.FromValue(3)] - src[IntervalClass.FromValue(3)];
+        var d4 = tgt[IntervalClass.FromValue(4)] - src[IntervalClass.FromValue(4)];
+        var d5 = tgt[IntervalClass.FromValue(5)] - src[IntervalClass.FromValue(5)];
+        var d6 = tgt[IntervalClass.Tritone] - src[IntervalClass.Tritone];
+        var l1 = Math.Abs(d1) + Math.Abs(d2) + Math.Abs(d3) + Math.Abs(d4) + Math.Abs(d5) + Math.Abs(d6);
+        return (d1, d2, d3, d4, d5, d6, l1);
     }
 
     private static PitchClassSet? TryBuildPcSet(string token)

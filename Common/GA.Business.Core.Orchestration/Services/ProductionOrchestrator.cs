@@ -79,13 +79,24 @@ public class ProductionOrchestrator(
     private const int FollowUpMaxLength = 80;
 
     /// <summary>
-    /// Surface tokens that signal a follow-up turn — short imperatives,
-    /// continuation markers, or pronouns that have no antecedent in the
-    /// message itself. Matched case-insensitively at the start of the
-    /// trimmed message.
+    /// Surface tokens that signal a follow-up turn — these are deictic
+    /// phrases that REQUIRE a prior turn to make sense (they don't take a
+    /// noun-phrase complement on their own). Matched case-insensitively at
+    /// the start of the trimmed message.
     /// </summary>
+    /// <remarks>
+    /// Tightened 2026-05-14 (correctness review). The earlier list included
+    /// "show me", "and", "expand", "elaborate" which routinely take their
+    /// own object noun — "show me the C major scale", "and the diatonic
+    /// chords of G?", "expand C7 into voicings" are STANDALONE questions
+    /// that an UNRELATED prior turn should not contaminate. The remaining
+    /// prefixes are genuinely context-bound: "what about" / "how about"
+    /// always reference something prior; "do that" / "same for" / "more
+    /// like that" / "tell me more" / "continue" / "in the same key" /
+    /// "for that" can only resolve against a prior turn.
+    /// </remarks>
     private static readonly System.Text.RegularExpressions.Regex FollowUpPrefix =
-        new(@"^(?:show me|give me an example|give an example|what about|how about|and|do (?:that|the same)|same for|more (?:like )?(?:that|this)|tell me more|continue|expand|elaborate|in (?:the )?(?:same|that) key|for (?:that|this))\b",
+        new(@"^(?:what about|how about|do (?:that|the same)|same for|more (?:like )?(?:that|this)|tell me more|continue|in (?:the )?(?:same|that) key|for (?:that|this)|show me a practical example|give (?:me )?an? example|show me an? example)\b",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
 
     /// <summary>
@@ -136,11 +147,29 @@ public class ProductionOrchestrator(
         // Cap the prior turn so we don't blow embedder context (some models
         // truncate silently past ~512 tokens). 240 chars ≈ ~60 tokens — fits
         // alongside a short follow-up.
-        var priorContent = priorUser.Content.Length > 240
-            ? priorUser.Content[..240] + "…"
-            : priorUser.Content;
+        //
+        // Surrogate-pair safety: C# string indexing is by UTF-16 code unit.
+        // If position 239 holds a high surrogate (e.g. an emoji or astral-
+        // plane character), `Content[..240]` would produce an unpaired
+        // surrogate that downstream JSON serialisation rejects — a known
+        // HTTP-500 trigger flagged by the 2026-05-14 security audit.
+        var priorContent = TruncatePreservingSurrogates(priorUser.Content, 240);
 
         return $"{priorContent} {message}";
+    }
+
+    /// <summary>
+    /// UTF-16-safe string truncation. If the cut would land between a
+    /// high surrogate and its low surrogate, back the cut up by one so the
+    /// resulting string contains only well-formed code points. Appends an
+    /// ellipsis when truncation actually happens.
+    /// </summary>
+    private static string TruncatePreservingSurrogates(string s, int maxUtf16Units)
+    {
+        if (s.Length <= maxUtf16Units) return s;
+        var cut = maxUtf16Units;
+        if (cut > 0 && char.IsHighSurrogate(s[cut - 1])) cut--;
+        return s[..cut] + "…";
     }
 
     private static ConversationTurn? FindMostRecentPriorUserTurn(
@@ -270,13 +299,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // Same enrichment as the non-streaming AnswerAsync path (see task #168).
+        // The streaming path is the one the React demo uses, so without this
+        // line the headline "Show me a practical example" follow-up fix would
+        // not actually fire on the live surface — caught by code-review 2026-05-14.
+        var routingMessage = EnrichRoutingMessageIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch (replaces the legacy algebra check
         //    and the per-skill CanHandle foreach). One embedding similarity pass
         //    over IIntent registrations covers algebra, deterministic skills,
         //    and tab-handling intents. See
         //    docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
         //    §"Routing classifiers".
-        var semanticResp = await TryDispatchViaIntentAsync(message, ct);
+        var semanticResp = await TryDispatchViaIntentAsync(routingMessage, message, ct);
         if (semanticResp is not null)
         {
             foreach (var word in semanticResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -760,13 +796,21 @@ public class ProductionOrchestrator(
     /// null when no intent scored above threshold (caller falls through to
     /// the LLM agent path).
     /// </summary>
-    private async Task<ChatResponse?> TryDispatchViaIntentAsync(string message, CancellationToken ct)
+    /// <param name="routingMessage">Message used ONLY for the embedding-router
+    /// score. May be enriched with prior conversation context.</param>
+    /// <param name="executeMessage">Original user message — the intent's
+    /// <c>ExecuteAsync</c> receives this so its internal regex parsers see
+    /// the raw text without the enrichment prefix.</param>
+    private async Task<ChatResponse?> TryDispatchViaIntentAsync(
+        string routingMessage,
+        string executeMessage,
+        CancellationToken ct)
     {
-        var match = await intentRouter.RouteAsync(message, services, ct);
+        var match = await intentRouter.RouteAsync(routingMessage, services, ct);
         EmitRoutingTrace(match);
         if (match is not { } pick) return null;
 
-        var result = await pick.Intent.ExecuteAsync(message, ct);
+        var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
         return new ChatResponse(
             NaturalLanguageAnswer: result.Answer,
             Candidates: [],

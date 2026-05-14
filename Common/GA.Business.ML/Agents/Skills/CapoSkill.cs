@@ -49,9 +49,9 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
     // The "shape" keyword (or sounding-key + capo without a shape token) implies
     // the user wants the played-side answer.
     private static readonly Regex SoundingToShape =
-        new(@"(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key>[A-Ga-g][b#♭♯]?)(?:\s+(?:major|minor|maj|min))?\b[^.?!]*?\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n>\d{1,2})\b" +
+        new(@"(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual>major|minor|maj|min))?\b[^.?!]*?\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n>\d{1,2})\b" +
             @"|" +
-            @"\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n2>\d{1,2})\b[^.?!]*?(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key2>[A-Ga-g][b#♭♯]?)(?:\s+(?:major|minor|maj|min))?\b",
+            @"\bcapo\s+(?:on\s+|fret\s+|at\s+)?(?<n2>\d{1,2})\b[^.?!]*?(?:song\s+(?:is\s+)?in\s+|key\s+(?:is\s+|of\s+)?|in\s+)(?<key2>[A-Ga-g][b#♭♯]?)(?:\s+(?<qual2>major|minor|maj|min))?\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Pattern B: "<shape> shape with capo <N>" → SOUNDING
@@ -95,13 +95,17 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         {
             var keyRaw = (mSound.Groups["key"].Success ? mSound.Groups["key"].Value : mSound.Groups["key2"].Value).Trim();
             var nRaw = mSound.Groups["n"].Success ? mSound.Groups["n"].Value : mSound.Groups["n2"].Value;
-            return Task.FromResult(AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), preferFlats: KeyIsFlat(keyRaw)));
+            var qualRaw = mSound.Groups["qual"].Success ? mSound.Groups["qual"].Value
+                        : mSound.Groups["qual2"].Success ? mSound.Groups["qual2"].Value
+                        : string.Empty;
+            var isMinor = qualRaw.StartsWith("min", StringComparison.OrdinalIgnoreCase);
+            return Task.FromResult(AnswerSoundingToShape(NormalizeKey(keyRaw), ParseFret(nRaw), isMinor, preferFlats: KeyIsFlat(keyRaw)));
         }
 
         return Task.FromResult(CannotHandle());
     }
 
-    private AgentResponse AnswerSoundingToShape(string soundingKey, int capoFret, bool preferFlats)
+    private AgentResponse AnswerSoundingToShape(string soundingKey, int capoFret, bool isMinor, bool preferFlats)
     {
         if (!TryParseRoot(soundingKey, out var soundingPc, out _))
             return CannotParse(soundingKey);
@@ -110,13 +114,19 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
 
         var shapePc = ((soundingPc - capoFret) % 12 + 12) % 12;
         var shape = SpellPc(shapePc, preferFlats);
+        // Match the shape's quality to the sounding-key's quality: if the
+        // user said "B minor", the shape that produces B-minor at capo N is
+        // the (B−N)-minor shape — e.g. capo 4 in B minor = G-minor shape, not
+        // G-major shape. Caught by the 2026-05-14 correctness review.
+        var qualityWord = isMinor ? "minor" : "major";
+        var shapeLabel = isMinor ? shape + "m" : shape;
         var sb = new StringBuilder();
-        sb.AppendLine($"With a capo on fret **{capoFret}**, play a **{shape} shape** to sound in **{soundingKey} major**.");
+        sb.AppendLine($"With a capo on fret **{capoFret}**, play a **{shapeLabel} shape** to sound in **{soundingKey} {qualityWord}**.");
         sb.AppendLine();
         // Educational example: how does an Am shape (PC=9) sound at this capo?
         var amSoundingPc = (9 + capoFret) % 12;
-        sb.AppendLine($"The capo raises every string by {capoFret} semitone{(capoFret == 1 ? "" : "s")}, so the shape you finger ({shape}) sounds {capoFret} fret{(capoFret == 1 ? "" : "s")} higher (= {soundingKey}). All chord shapes shift the same way: an Am shape at capo {capoFret} would sound as {SpellPc(amSoundingPc, preferFlats)}m.");
-        return Result(sb.ToString(), $"capo({soundingKey} sounding, fret {capoFret} → {shape} shape)");
+        sb.AppendLine($"The capo raises every string by {capoFret} semitone{(capoFret == 1 ? "" : "s")}, so the shape you finger ({shapeLabel}) sounds {capoFret} fret{(capoFret == 1 ? "" : "s")} higher (= {soundingKey} {qualityWord}). All chord shapes shift the same way: an Am shape at capo {capoFret} would sound as {SpellPc(amSoundingPc, preferFlats)}m.");
+        return Result(sb.ToString(), $"capo({soundingKey} {qualityWord} sounding, fret {capoFret} → {shapeLabel} shape)");
     }
 
     private AgentResponse AnswerShapeToSounding(string shapeRaw, int capoFret, bool preferFlats)

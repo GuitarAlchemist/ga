@@ -118,7 +118,10 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             "skill.intervalclassvector"),
 
         // 2. Grothendieck delta / harmonic distance between two chords.
-        (new Regex(@"\bgrothendieck[\s-]*(?:delta|distance)\b|\bharmonic(?:ally)?\s+(?:distance|far|distant)\b|\bdelta\s+(?:from|between|to)\b",
+        // Tightened 2026-05-14: removed bare `\bdelta\s+(?:from|between|to)\b`
+        // which matched non-music phrasings ("delta from Tuesday to Friday").
+        // Require the music-domain qualifier (ICV / harmonic / Grothendieck).
+        (new Regex(@"\bgrothendieck[\s-]*(?:delta|distance)\b|\bharmonic(?:ally)?\s+(?:distance|far|distant)\b|\b(?:harmonic|icv)\s+delta\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.grothendieckdelta"),
 
@@ -133,7 +136,11 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             "skill.icvshortestpath"),
 
         // 5. Grothendieck parse — DSL expression interpretation.
-        (new Regex(@"\bgrothendieck\b|\b(?:tensor[\s-]*product|direct[\s-]*sum|pullback|pushout|coequalizer)\b|⊗|⊕|∘",
+        // Tightened 2026-05-14: dropped bare `\bgrothendieck\b` (also fires
+        // for the delta hint, double-boosting). Dropped bare `\bpower\b` —
+        // covered nowhere in the alternation but "power chord" prose would
+        // accidentally route here. Kept domain-specific tokens and symbols.
+        (new Regex(@"\b(?:tensor[\s-]*product|direct[\s-]*sum|pullback|pushout|coequalizer|natural[\s-]+transformation|subobject|power[\s-]+object|sheaf|functor[\s-]+composition)\b|⊗|⊕|∘|Hom\s*\(",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.grothendieckparse"),
 

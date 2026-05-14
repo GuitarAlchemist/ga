@@ -137,15 +137,23 @@ internal static class CatalogSkillMdLoader
     /// body until the next H2). All comparisons are case-insensitive and
     /// match the heading text after the <c>##</c> marker.
     /// </summary>
+    /// <remarks>
+    /// Bare "routing" was deliberately omitted on 2026-05-14 (code-review
+    /// finding) — it collides with legitimate music vocabulary like
+    /// "voice routing", "signal routing", or "routing the 7th to the 3rd"
+    /// in voice-leading content. Use the more-specific "routing notes" or
+    /// "routing rules" when authoring meta-sections about routing logic.
+    /// </remarks>
     private static readonly string[] MetaSectionHeadings =
     [
         "how to dispatch",
         "dispatch",
-        "routing",
+        "dispatch notes",
+        "routing notes",
+        "routing rules",
         "when to use",
         "authoring notes",
         "implementation notes",
-        "dispatch notes",
     ];
 
     private static bool IsMetaSectionHeading(string trimmedLine)
