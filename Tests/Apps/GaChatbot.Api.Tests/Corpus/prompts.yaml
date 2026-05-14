@@ -179,3 +179,223 @@ prompts:
     contains_any: ["ICV", "interval class vector", "<"]
     min_length: 60
     max_elapsed_ms: 30000
+
+  # ── adversarial / typo tolerance ────────────────────────────────────────
+  # Real users misspell. The router should still get them home.
+
+  - prompt: "modes of melodi minor"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains_any: ["Melodic Minor", "Lydian Dominant", "Altered"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  - prompt: "diatnic chords in G major"
+    category: typo-tolerance
+    contains_any: ["G", "Am", "Bm"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is dorian"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains: ["Dorian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "tell me about phrygian"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains: ["Phrygian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  # ── case sensitivity / pitch-class spelling variants ────────────────────
+
+  - prompt: "notes in c major"
+    category: case-variants
+    contains: ["C", "D", "E", "F", "G", "A", "B"]
+    min_length: 20
+    max_elapsed_ms: 20000
+
+  - prompt: "DIATONIC CHORDS IN G MAJOR"
+    category: case-variants
+    routes_to: skill.diatonicchords
+    contains_any: ["G", "Am", "Bm"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  # ── more domain-backed coverage (Tier 1 candidates) ─────────────────────
+  # These exercise skills slated for the domain-backed refactor sweep
+  # (docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md).
+
+  - prompt: "What is the relative major of A minor"
+    category: scales-keys
+    contains: ["C"]
+    contains_any: ["C major", "relative major"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What is the parallel minor of C major"
+    category: scales-keys
+    contains: ["C minor"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Diatonic chords in F major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["F", "Gm", "Am", "Bb", "C", "Dm"]
+    expected_grounding: ga.dsl
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  - prompt: "Diatonic chords in A minor"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["Am", "Dm", "Em"]
+    contains_any: ["E", "C", "F", "G"]
+    expected_grounding: ga.dsl
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  # ── more mode variants ──────────────────────────────────────────────────
+
+  - prompt: "What is the altered scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Altered", "Super Locrian"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  - prompt: "What is Hungarian minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Hungarian Minor"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is the whole tone scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Whole Tone", "whole tone"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is the diminished scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Diminished", "Octatonic"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is Locrian"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Locrian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is Mixolydian"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Mixolydian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  # ── atonal deeper coverage ──────────────────────────────────────────────
+
+  - prompt: "What is Forte number 4-Z29"
+    category: atonal
+    contains_any: ["4-Z29", "Z-related", "Z pair"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "List symmetric atonal families"
+    category: atonal
+    contains_any: ["symmetric", "whole tone", "diminished", "augmented"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  # ── progression / chord operations (more coverage) ──────────────────────
+
+  - prompt: "Transpose C major to E"
+    category: operations
+    contains: ["E"]
+    contains_any: ["G#", "B"]
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Common tones between G7 and Dm7"
+    category: operations
+    contains_any: ["D", "F"]
+    expected_grounding: ga.dsl
+    min_length: 40
+    max_elapsed_ms: 20000
+
+  - prompt: "What key is Cm Ab Eb Bb in"
+    category: progressions
+    contains_any: ["E♭", "Eb", "C minor"]
+    min_length: 50
+    max_elapsed_ms: 45000
+
+  # ── BACKLOG dealbreakers (currently broken — skip with reason) ──────────
+  # These prompts document the pro-grade capability gaps from
+  # BACKLOG.md lines 124-144. Each is skip:true with a pointer to the
+  # workstream that unblocks it. When the underlying tool ships, flip
+  # skip:false and the gate immediately covers the new capability.
+
+  - prompt: "Show me a Cmaj9 chord"
+    category: extended-chords
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #1 — ga_chord_info parser doesn't handle extended/altered chords yet. Pending ga_chord_extended tool."
+
+  - prompt: "What is C7b9"
+    category: extended-chords
+    skip: true
+    skip_reason: "Same as above — altered-dominant parsing not implemented in ChordSymbolRegex."
+
+  - prompt: "Give me a Cadd9 in DADGAD"
+    category: alternate-tunings
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #2 — no tuning context in chord lookup. Pending ga_chord_voicings(chord, tuning) tool."
+
+  - prompt: "What's the easiest A minor in drop-D"
+    category: alternate-tunings
+    skip: true
+    skip_reason: "Same as above — needs alternate-tuning chord-voicing tool."
+
+  - prompt: "Transpose this progression to capo 3"
+    category: capo
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #3 — no capo math. Pending ga_capo_render(progression, capoFret) tool."
+
+  - prompt: "What's the smoothest voice leading from Cmaj7 to Fmaj7"
+    category: voice-leading
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #4 — current ga_chord_substitutions ranks by ICV cost, not voice-leading. Pending ga_voice_leading(chordA, chordB) tool."
+
+  - prompt: "What chord is C E G"
+    category: chord-from-notes
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #5 — chord-from-notes identification gap. Pending ga_chord_identify(notes) tool."
+
+  - prompt: "What chord is F A C E"
+    category: chord-from-notes
+    skip: true
+    skip_reason: "Same as above — should return Fmaj7 plus inversion alternatives."
+
+  # ── grounding-strict (assert ga.dsl evidence on every closure-backed answer)
+
+  - prompt: "Transpose A minor to C minor"
+    category: operations
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Are pitch classes 0,1,4 and 0,1,6 equivalent under inversion"
+    category: operations
+    contains_any: ["yes", "no", "Z", "equivalent", "inversion"]
+    min_length: 50
+    max_elapsed_ms: 30000
