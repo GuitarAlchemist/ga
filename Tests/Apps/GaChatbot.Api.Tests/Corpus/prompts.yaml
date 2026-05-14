@@ -36,6 +36,7 @@ prompts:
     not_contains: ["I don't know"]
     min_length: 200
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What are the modes of melodic minor"
     category: modes
@@ -43,6 +44,7 @@ prompts:
     contains: ["Melodic Minor", "Lydian Dominant", "Altered"]
     min_length: 150
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What are the modes of harmonic minor"
     category: modes
@@ -50,6 +52,7 @@ prompts:
     contains: ["Harmonic Minor", "Phrygian"]
     min_length: 150
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is Lydian dominant"
     category: modes
@@ -58,6 +61,7 @@ prompts:
     contains: ["#4", "b7"]
     min_length: 100
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "Phrygian dominant"
     category: modes
@@ -65,6 +69,7 @@ prompts:
     contains: ["Phrygian Dominant"]
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "Tell me about Hijaz"
     category: modes
@@ -72,6 +77,7 @@ prompts:
     contains_any: ["Hijaz", "Phrygian Dominant"]
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What are the byzantine modes"
     category: modes
@@ -79,6 +85,7 @@ prompts:
     contains_any: ["Byzantine", "Double Harmonic"]
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   # ── scales / keys ───────────────────────────────────────────────────────
   - prompt: "Show me the notes in C major"
@@ -175,6 +182,7 @@ prompts:
     contains_any: ["Major Scale", "Melodic Minor", "Whole Tone", "named"]
     min_length: 150
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is the interval class vector of C E G"
     category: atonal
@@ -191,6 +199,7 @@ prompts:
     contains_any: ["Melodic Minor", "Lydian Dominant", "Altered"]
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "diatnic chords in G major"
     category: typo-tolerance
@@ -204,6 +213,7 @@ prompts:
     contains: ["Dorian"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "tell me about phrygian"
     category: typo-tolerance
@@ -211,6 +221,7 @@ prompts:
     contains: ["Phrygian"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   # ── case sensitivity / pitch-class spelling variants ────────────────────
 
@@ -226,6 +237,7 @@ prompts:
     contains_any: ["G", "Am", "Bm"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   # ── more domain-backed coverage (Tier 1 candidates) ─────────────────────
   # These exercise skills slated for the domain-backed refactor sweep
@@ -251,6 +263,7 @@ prompts:
     expected_grounding: ga.dsl
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "Diatonic chords in A minor"
     category: scales-keys
@@ -260,6 +273,7 @@ prompts:
     expected_grounding: ga.dsl
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   # ── more mode variants ──────────────────────────────────────────────────
 
@@ -269,6 +283,7 @@ prompts:
     contains_any: ["Altered", "Super Locrian"]
     min_length: 80
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is Hungarian minor"
     category: modes
@@ -276,6 +291,7 @@ prompts:
     contains: ["Hungarian Minor"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is the whole tone scale"
     category: modes
@@ -283,6 +299,7 @@ prompts:
     contains_any: ["Whole Tone", "whole tone"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is the diminished scale"
     category: modes
@@ -290,6 +307,7 @@ prompts:
     contains_any: ["Diminished", "Octatonic"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is Locrian"
     category: modes
@@ -297,6 +315,7 @@ prompts:
     contains: ["Locrian"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   - prompt: "What is Mixolydian"
     category: modes
@@ -304,6 +323,7 @@ prompts:
     contains: ["Mixolydian"]
     min_length: 60
     max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
 
   # ── atonal deeper coverage ──────────────────────────────────────────────
 

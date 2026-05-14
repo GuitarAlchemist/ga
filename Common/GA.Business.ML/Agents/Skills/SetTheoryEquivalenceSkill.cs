@@ -89,14 +89,21 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
         var primeA = classA.PrimeForm;
         var primeB = classB.PrimeForm;
 
-        // T-equivalence: same transpositional prime form. Without exposed
-        // T-only prime-form API, we approximate by checking ICV equality
-        // AND prime-form equality together — two distinct ICVs is sufficient
-        // to disprove T-equivalence; equal ICVs with equal prime forms means
-        // TI-equivalent at minimum. For pure T-equivalence we need the same
-        // (non-inverted) cyclic transposition class, which the SetClass
-        // model conflates with inversion. Document this in the answer.
+        // TI-equivalence: same Forte prime form (TI is the equivalence class
+        // SetClass canonicalizes to).
         var tiEquivalent = primeA.Equals(primeB);
+
+        // T-equivalence (transposition only) is a STRICTER relation than TI.
+        // Compute directly: A and B are T-equivalent iff there exists t in
+        // 0..11 such that {a + t mod 12 : a in A} == B. Sets that share a
+        // Forte prime form may still differ in T-only equivalence when they
+        // are related by inversion alone (the Forte prime form picks the
+        // most-compact of the two inversion-related transposition classes).
+        // Caught 2026-05-13 by the multi-LLM correctness review on PR #210
+        // — the previous code conflated TI with T and produced wrong
+        // "transposition" answers for inversion-only pairs like {0,1,4} vs
+        // {0,3,4}.
+        var tEquivalent = AreTEquivalent(setA, setB);
 
         var sb = new StringBuilder();
         sb.AppendLine($"## Set comparison");
@@ -107,35 +114,45 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
 
         if (relation is "transposition")
         {
-            // Under T only: same set class AND same orientation. With the
-            // current domain API we can detect "definitely not T-equiv"
-            // (ICVs differ) and "TI-equiv at minimum" (same prime form).
-            if (!icvA.Equals(icvB))
+            if (tEquivalent)
             {
-                sb.AppendLine("**No — they are not transpositionally equivalent.** Their interval class vectors differ, which rules out any T or T/I equivalence.");
+                sb.AppendLine("**Yes — equivalent under transposition.** There exists a single transposition that maps one set onto the other (no inversion needed).");
             }
             else if (tiEquivalent)
             {
-                sb.AppendLine("**They share the same set class** (same prime form), so they are equivalent under transposition or inversion. For pure transposition only, this is also Yes when one set is a rotation of the other; in this case both reduce to the same prime form, so the answer is **Yes — equivalent under transposition**.");
+                sb.AppendLine("**No — not equivalent under transposition alone.** They share the same set class (Forte prime form), but the relationship requires INVERSION, not pure transposition. They are TI-equivalent, not T-equivalent.");
+            }
+            else if (icvA.Equals(icvB))
+            {
+                sb.AppendLine("**No — not transpositionally equivalent.** ICVs match but the sets belong to distinct set classes (Z-relation), so neither T nor TI equivalence applies.");
             }
             else
             {
-                sb.AppendLine("**Not equivalent under transposition.** ICVs match but prime forms differ — extraordinary, double-check input.");
+                sb.AppendLine("**No — not transpositionally equivalent.** Interval class vectors differ, which rules out any T or TI equivalence.");
             }
         }
         else if (relation is "inversion")
         {
-            if (!icvA.Equals(icvB))
+            // "Under inversion" in atonal-theory practice means TI-equivalence
+            // — testing whether one set is reachable from the other by
+            // transposition AND/OR inversion (TnI). A strict "inversion only"
+            // reading is unusual; we follow the conventional TI interpretation
+            // and surface the T-only relationship separately when relevant.
+            if (tiEquivalent && tEquivalent)
             {
-                sb.AppendLine("**No — they are not equivalent under inversion.** Their interval class vectors differ. Inversion preserves the ICV, so distinct ICVs rule out any TI relationship.");
+                sb.AppendLine("**Yes — equivalent under inversion** (and also under transposition alone; they reduce to the same prime form via either operation).");
             }
             else if (tiEquivalent)
             {
-                sb.AppendLine("**Yes — they are equivalent under inversion** (and/or transposition). Both sets reduce to the same prime form, which is the canonical representative of a TI-equivalence class.");
+                sb.AppendLine("**Yes — equivalent under inversion.** The two sets share a Forte prime form via TnI (transposition combined with inversion). They are NOT T-equivalent on their own — inversion is required.");
+            }
+            else if (icvA.Equals(icvB))
+            {
+                sb.AppendLine("**No — not equivalent under inversion.** ICVs match but prime forms differ — this is the Z-relation hallmark: distinct set classes that share an interval class vector.");
             }
             else
             {
-                sb.AppendLine("**Not equivalent under inversion.** ICVs match but prime forms differ — this is the Z-relation hallmark: distinct set classes that share an interval class vector.");
+                sb.AppendLine("**No — not equivalent under inversion.** Interval class vectors differ. Inversion preserves the ICV, so distinct ICVs rule out any TI relationship.");
             }
         }
         else
@@ -143,7 +160,8 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
             // "same set class" / default — TI-equivalent answer
             if (tiEquivalent)
             {
-                sb.AppendLine("**Yes — they belong to the same set class** (same prime form, equivalent under transposition or inversion).");
+                var operation = tEquivalent ? "pure transposition" : "transposition combined with inversion";
+                sb.AppendLine($"**Yes — they belong to the same set class** (same Forte prime form). The relationship is {operation}.");
             }
             else if (icvA.Equals(icvB))
             {
@@ -168,6 +186,23 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
                 $"Equivalent (same set class): {tiEquivalent}",
             ],
         };
+    }
+
+    // T-equivalence: A and B are transpositionally equivalent iff there
+    // exists t in 0..11 such that {(a + t) mod 12 : a in A} == B as sets.
+    // This is the STRICT subset of TI-equivalence — sets related by
+    // inversion alone share a SetClass but are NOT T-equivalent.
+    private static bool AreTEquivalent(PitchClassSet setA, PitchClassSet setB)
+    {
+        var pcsA = setA.Select(pc => (int)pc).ToHashSet();
+        var pcsB = setB.Select(pc => (int)pc).ToHashSet();
+        if (pcsA.Count != pcsB.Count) return false;
+        for (var t = 0; t < 12; t++)
+        {
+            var transposed = pcsA.Select(pc => (pc + t) % 12).ToHashSet();
+            if (transposed.SetEquals(pcsB)) return true;
+        }
+        return false;
     }
 
     private static string NormalizeRelation(string raw)

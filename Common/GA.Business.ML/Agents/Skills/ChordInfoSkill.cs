@@ -336,7 +336,7 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     // "a" in "Show me a Cmaj9 chord" matched as root="a" quality="" → "A
     // major" before the regex ever reached the real "Cmaj9". Caught
     // 2026-05-13 during the extended-chord-parser probe.
-    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)(?<quality>maj13|min13|m13|maj11|min11|m11|maj9|min9|m9|maj7|min7|m7b5|m7|dim7|7b5|7#5|7b9|7#9|7alt|alt|13|11|9|7|6|m6|maj|min|dim|aug|sus2|sus4|sus|add9|m|\+)\b(?![A-Za-z])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)(?<quality>maj13|min13|m13|maj11|min11|m11|maj9|min9|m9|maj7|min7|maj6|min6|m6|m7b5|m7|dim7|7b5|7#5|7b9|7#9|7alt|alt|13|11|9|7|6|maj|min|dim|aug|sus2|sus4|sus|add9|m|\+)\b(?![A-Za-z])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CompactChordRegex();
 
     [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

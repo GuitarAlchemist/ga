@@ -115,11 +115,18 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerRelativeMinor(string majorKey)
     {
-        if (!RootPc.TryGetValue(majorKey, out var pc))
+        // Index-by-fifths lookup picks the enharmonic that matches the user's
+        // input spelling. The previous LabelByFifth(pc, isMinor) approach
+        // always returned flat-side spellings because the parallel arrays
+        // place flats at low indices — F# major incorrectly returned "Ebm"
+        // instead of "D#m". Caught by the 2026-05-13 multi-LLM correctness
+        // review (PR #210). Now: relative minor shares the key signature, so
+        // its index in MinorByFifth equals the major's index in MajorByFifth.
+        var fifthsIndex = TryMajorIndex(majorKey);
+        if (fifthsIndex is null)
             return CannotParse(majorKey);
-        var relMinPc = (pc + 9) % 12;  // down a minor 3rd = up a major 6th
-        var relMinor = LabelByFifth(relMinPc, isMinor: true);
-        var sharps = MajorSharpsFlats(majorKey);
+        var relMinor = MinorByFifth[fifthsIndex.Value];
+        var sharps = fifthsIndex.Value - 7;
         var sb = new StringBuilder();
         sb.AppendLine($"The relative minor of **{majorKey} major** is **{relMinor}**.");
         sb.AppendLine();
@@ -129,11 +136,15 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerRelativeMajor(string minorKey)
     {
-        if (!RootPc.TryGetValue(minorKey, out var pc))
+        // Same correction as AnswerRelativeMinor — pick enharmonic from the
+        // user's input spelling rather than a fixed flat-preference. G# minor
+        // now correctly returns "B major" (5 sharps) instead of "Cb major"
+        // (7 flats).
+        var fifthsIndex = TryMinorIndex(minorKey);
+        if (fifthsIndex is null)
             return CannotParse(minorKey);
-        var relMajPc = (pc + 3) % 12;  // up a minor 3rd
-        var relMajor = LabelByFifth(relMajPc, isMinor: false);
-        var sharps = MajorSharpsFlats(relMajor);
+        var relMajor = MajorByFifth[fifthsIndex.Value];
+        var sharps = fifthsIndex.Value - 7;
         var sb = new StringBuilder();
         sb.AppendLine($"The relative major of **{minorKey} minor** is **{relMajor} major**.");
         sb.AppendLine();
@@ -176,37 +187,28 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
             $"key-signature({key} {qualityWord}={sharps})");
     }
 
-    private static int MajorSharpsFlats(string majorKey)
+    private static int? TryMajorIndex(string majorKey)
     {
         for (var i = 0; i < MajorByFifth.Length; i++)
             if (string.Equals(MajorByFifth[i], majorKey, StringComparison.OrdinalIgnoreCase))
-                return i - 7;
-        return 0;
+                return i;
+        return null;
     }
 
-    private static int MinorSharpsFlats(string minorKey)
+    private static int? TryMinorIndex(string minorKey)
     {
         var withM = minorKey.EndsWith("m", StringComparison.OrdinalIgnoreCase) ? minorKey : minorKey + "m";
         for (var i = 0; i < MinorByFifth.Length; i++)
             if (string.Equals(MinorByFifth[i], withM, StringComparison.OrdinalIgnoreCase))
-                return i - 7;
-        return 0;
+                return i;
+        return null;
     }
 
-    private static string LabelByFifth(int pc, bool isMinor)
-    {
-        // Pick the spelling whose pitch class matches; preference matches the
-        // standard circle-of-fifths layout (flats for Bb/Eb/Ab/Db/Gb/Cb side,
-        // sharps for D/A/E/B/F#/C#).
-        for (var i = 0; i < MajorByFifth.Length; i++)
-        {
-            var label = isMinor ? MinorByFifth[i] : MajorByFifth[i];
-            var letter = isMinor ? label.TrimEnd('m', 'M') : label;
-            if (RootPc.TryGetValue(letter, out var labelPc) && labelPc == pc)
-                return label;
-        }
-        return isMinor ? "?m" : "?";
-    }
+    private static int MajorSharpsFlats(string majorKey) =>
+        TryMajorIndex(majorKey) is { } i ? i - 7 : 0;
+
+    private static int MinorSharpsFlats(string minorKey) =>
+        TryMinorIndex(minorKey) is { } i ? i - 7 : 0;
 
     private static string KeySignatureBlurb(int sharpsFlats) =>
         sharpsFlats switch
