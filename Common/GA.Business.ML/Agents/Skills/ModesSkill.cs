@@ -57,6 +57,16 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "What modes are non-diatonic",
         "Show me all the mode families",
         "What is Hirajoshi",
+        // Regional alt-names (Modes.yaml AlternateNames). Without these the
+        // semantic router misroutes queries like "Tell me about Hijaz" to
+        // fallback even though the alias is plumbed through to ModesSkill.
+        "Tell me about Hijaz",
+        "What is Maqam Hijaz",
+        "What is Freygish",
+        "What is Bhairavi",
+        "What is the Byzantine scale",
+        "What is the Spanish Gypsy scale",
+        "What is Ahava Rabbah",
         "What modes have a major 7th",
         "Mixolydian versus Ionian differences",
         "Characteristics of Locrian",
