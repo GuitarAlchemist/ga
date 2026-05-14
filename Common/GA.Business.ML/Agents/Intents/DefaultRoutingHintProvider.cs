@@ -108,6 +108,35 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordinfo"),
 
+        // Grothendieck bundle (stolen-from-demo 2026-05-14). Five anchors:
+        //
+        // 1. ICV (interval-class vector) — "ICV of <chord>" / "interval-class
+        //    vector of {pcs}". Token "ICV" or the bigram is rare and music-
+        //    specific enough to hard-anchor.
+        (new Regex(@"\b(?:icv|interval[\s-]*class[\s-]*vector|interval[\s-]*vector)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.intervalclassvector"),
+
+        // 2. Grothendieck delta / harmonic distance between two chords.
+        (new Regex(@"\bgrothendieck[\s-]*(?:delta|distance)\b|\bharmonic(?:ally)?\s+(?:distance|far|distant)\b|\bdelta\s+(?:from|between|to)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.grothendieckdelta"),
+
+        // 3. ICV neighbors — "neighbors of <chord>" / "harmonically close to".
+        (new Regex(@"\b(?:icv\s+neighbors?|harmonic(?:ally)?\s+(?:close|near|adjacent)|harmonic(?:al)?\s+neighbors?)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.icvneighbors"),
+
+        // 4. ICV shortest path — "shortest harmonic path", "PC-set path".
+        (new Regex(@"\bshortest(?:[\s-]*harmonic)?[\s-]*(?:path|route)\b|\bharmonic[\s-]*(?:path|route)\b|\bPC[\s-]*set\s+path\b|\bICV\s+path\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.icvshortestpath"),
+
+        // 5. Grothendieck parse — DSL expression interpretation.
+        (new Regex(@"\bgrothendieck\b|\b(?:tensor[\s-]*product|direct[\s-]*sum|pullback|pushout|coequalizer)\b|⊗|⊕|∘",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.grothendieckparse"),
+
         // Alternate tunings — added 2026-05-14 to close BACKLOG dealbreaker #2.
         // Named-tuning tokens are music-unambiguous: DADGAD, drop-D, open-G,
         // open-D, double-drop-D, DGCGCD. The "X step down" phrase is also a

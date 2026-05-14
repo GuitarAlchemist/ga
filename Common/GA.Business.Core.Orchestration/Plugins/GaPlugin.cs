@@ -84,6 +84,16 @@ public sealed class GaPlugin : IChatPlugin
         // BACKLOG dealbreaker #2.
         services.AddOrchestratorSkillIntent<AlternateTuningsSkill>();
 
+        // Grothendieck stolen-from-demo bundle (2026-05-14):
+        // Five domain-backed skills that surface the same in-process
+        // GrothendieckService used by /test/grothendieck-dsl. ICV math,
+        // delta, neighbors, shortest path, plus the F# DSL parser.
+        services.AddOrchestratorSkillIntent<IntervalClassVectorSkill>();
+        services.AddOrchestratorSkillIntent<GrothendieckDeltaSkill>();
+        services.AddOrchestratorSkillIntent<IcvNeighborsSkill>();
+        services.AddOrchestratorSkillIntent<IcvShortestPathSkill>();
+        services.AddOrchestratorSkillIntent<GrothendieckParseSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
