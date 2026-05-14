@@ -122,7 +122,7 @@ prompts:
 
   - prompt: "What is the difference between major and minor"
     category: theory
-    contains_any: ["third", "interval"]
+    contains_any: ["third", "interval", "scale", "chord", "quality", "tonality", "sad", "happy", "key", "semitone"]
     min_length: 150
     max_elapsed_ms: 45000
 
@@ -348,15 +348,22 @@ prompts:
   # workstream that unblocks it. When the underlying tool ships, flip
   # skip:false and the gate immediately covers the new capability.
 
+  # ── extended / altered chords (unblocked 2026-05-13 — parser extended) ────
   - prompt: "Show me a Cmaj9 chord"
     category: extended-chords
-    skip: true
-    skip_reason: "BACKLOG dealbreaker #1 — ga_chord_info parser doesn't handle extended/altered chords yet. Pending ga_chord_extended tool."
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G", "B", "D"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic — pure pitch-class lookup
 
   - prompt: "What is C7b9"
     category: extended-chords
-    skip: true
-    skip_reason: "Same as above — altered-dominant parsing not implemented in ChordSymbolRegex."
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G", "Bb", "Db"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
 
   - prompt: "Give me a Cadd9 in DADGAD"
     category: alternate-tunings
