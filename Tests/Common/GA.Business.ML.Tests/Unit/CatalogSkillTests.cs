@@ -127,14 +127,17 @@ public class CatalogSkillTests
     }
 
     [TestCaseSource(nameof(AllCases))]
-    public async Task ExecuteAsync_BodyMatchesSkillMdVerbatim(CatalogSkillCase c)
+    public async Task ExecuteAsync_BodyMatchesSkillMdAfterMetaStrip(CatalogSkillCase c)
     {
-        // The strongest test: the wrapper must return the SKILL.md body
-        // exactly. A stubbed implementation that returns a hardcoded
-        // string would fail this immediately. Drift between SKILL.md and
-        // the C# answer is also caught here (the bug pattern from the
-        // PR #121 audit, where SKILL.md fixes hadn't propagated to the
-        // duplicated C# fast-path content).
+        // The catalog wrapper returns the SKILL.md body AFTER
+        // CatalogSkillMdLoader.StripModelDirectivePreamble has removed:
+        //   - preamble directive lines between H1 and first H2
+        //   - whole meta-sections like "## How to dispatch" / "## Routing"
+        //     (added 2026-05-14 after live discovery — dispatch templates
+        //     were reaching users when the practice-routine skill misrouted)
+        // The test asserts against that stripped output — NOT raw body —
+        // so SKILL.md edits to dispatch/preamble content don't break the
+        // wrapper and so the test fails loudly if the stripper regresses.
         var skill = MakeSkill(c.SkillType);
 
         var skillsDir = GA.Business.ML.Agents.Plugins.SkillMdPlugin.ResolveSkillsPath();
@@ -147,12 +150,22 @@ public class CatalogSkillTests
         Assert.That(skillMd, Is.Not.Null,
             $"prerequisite: SKILL.md at {path} must parse cleanly");
 
+        var expected = CatalogSkillMdLoader.StripModelDirectivePreamble(skillMd!.Body);
+
         var response = await skill.ExecuteAsync("test query");
 
-        Assert.That(response.Result, Is.EqualTo(skillMd!.Body),
-            $"{c.SkillType.Name}.ExecuteAsync must emit the SKILL.md body verbatim — " +
-            $"any drift means the C# class is duplicating content that should live " +
-            $"only in the .md, OR the loader returned the fallback");
+        Assert.That(response.Result, Is.EqualTo(expected),
+            $"{c.SkillType.Name}.ExecuteAsync must emit the SKILL.md body after " +
+            $"meta-stripping — any drift means the C# class is duplicating content " +
+            $"OR the loader returned the fallback OR the stripper changed behavior");
+
+        // Meta-section headings should never appear in user-facing output —
+        // independent assertion in case the StripModelDirectivePreamble
+        // expectation drifts.
+        Assert.That(response.Result, Does.Not.Contain("## How to dispatch"),
+            $"{c.SkillType.Name} leaked '## How to dispatch' meta-section into " +
+            $"the response — CatalogSkillMdLoader is supposed to strip whole " +
+            $"sections with this heading. See 2026-05-14 fix.");
     }
 
     [TestCaseSource(nameof(AllCases))]

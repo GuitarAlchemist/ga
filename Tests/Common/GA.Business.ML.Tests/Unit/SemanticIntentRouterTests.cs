@@ -40,9 +40,27 @@ public class SemanticIntentRouterTests
     /// strings → orthogonal-ish vectors. Lets us drive cosine similarity
     /// without standing up a real embedder.
     /// </summary>
+    /// <remarks>
+    /// Case-insensitive lookup. The production
+    /// <see cref="SemanticIntentRouter"/> normalises queries and examples
+    /// to lower case before embedding (PR #152, "Router case-normalize for
+    /// embedding routing"); this helper mirrors that so test fixtures
+    /// remain readable in original casing without silently zero-vectoring.
+    /// </remarks>
     private static IEmbeddingGenerator<string, Embedding<float>> StubEmbedder(
         Dictionary<string, float[]> vectors)
     {
+        // Re-key for case-insensitive lookup. Tests author vectors in their
+        // natural casing; the router queries with NormalizeForEmbedding(...)
+        // (Trim + ToLowerInvariant). Without this remap the test
+        // "What is C major?" vector silently misses the runtime
+        // "what is c major?" lookup.
+        var normalised = new Dictionary<string, float[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, value) in vectors)
+        {
+            normalised[key.Trim()] = value;
+        }
+
         var mock = new Mock<IEmbeddingGenerator<string, Embedding<float>>>();
         mock.Setup(e => e.GenerateAsync(
                 It.IsAny<IEnumerable<string>>(),
@@ -53,7 +71,7 @@ public class SemanticIntentRouterTests
                 {
                     var fallback = new float[] { 0f, 0f, 0f, 0f };
                     var list = inputs.Select(input =>
-                        vectors.TryGetValue(input, out var v)
+                        normalised.TryGetValue(input?.Trim() ?? string.Empty, out var v)
                             ? new Embedding<float>(v)
                             : new Embedding<float>(fallback))
                         .ToList();

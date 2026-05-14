@@ -69,6 +69,94 @@ public class ProductionOrchestrator(
     }
 
     /// <summary>
+    /// Maximum length (chars) of a message that we consider a candidate for
+    /// follow-up context enrichment. Long messages already carry enough
+    /// embedding signal on their own; this gates the heuristic to short
+    /// utterances that look like pronoun-bearing follow-ups
+    /// ("show me a practical example on guitar", "and how about minor",
+    /// "do that for Dm7").
+    /// </summary>
+    private const int FollowUpMaxLength = 80;
+
+    /// <summary>
+    /// Surface tokens that signal a follow-up turn — short imperatives,
+    /// continuation markers, or pronouns that have no antecedent in the
+    /// message itself. Matched case-insensitively at the start of the
+    /// trimmed message.
+    /// </summary>
+    private static readonly System.Text.RegularExpressions.Regex FollowUpPrefix =
+        new(@"^(?:show me|give me an example|give an example|what about|how about|and|do (?:that|the same)|same for|more (?:like )?(?:that|this)|tell me more|continue|expand|elaborate|in (?:the )?(?:same|that) key|for (?:that|this))\b",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// If the message looks like a follow-up to a prior turn, prepend the
+    /// most recent prior user message so the embedding pass sees the
+    /// conversation thread, not the snippet. Otherwise returns the input
+    /// unchanged. Used ONLY for the semantic-router input — downstream
+    /// agents and the LLM continue to see the raw message.
+    /// </summary>
+    /// <remarks>
+    /// Live found 2026-05-14 — "Show me a practical example on guitar"
+    /// after "How do I make this progression sound darker?" routed to
+    /// skill.practiceroutine at 70% confidence because "practical" /
+    /// "practice" share an embedding centroid. With this enrichment the
+    /// router sees "How do I make this progression sound darker?
+    /// Show me a practical example on guitar" — pulls the embedding into
+    /// the chord-substitution / harmony region where the prior question
+    /// already lived.
+    /// </remarks>
+    private string EnrichRoutingMessageIfFollowUp(
+        string message,
+        string sessionId,
+        IReadOnlyList<ConversationTurn>? requestHistory)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return message;
+        if (message.Length > FollowUpMaxLength) return message;
+        if (!FollowUpPrefix.IsMatch(message.TrimStart())) return message;
+
+        // Look in two places. (1) Session-scoped store — the just-added user
+        // turn is the last entry; we want the most recent EARLIER user turn.
+        // (2) Request-supplied history — the React frontend posts the prior
+        // turns per request without a stable sessionId, so the store can be
+        // empty even mid-conversation. We fall through to requestHistory in
+        // that case.
+        ConversationTurn? priorUser = FindMostRecentPriorUserTurn(
+            historyStore.GetHistory(sessionId),
+            skipLast: true);
+
+        if (priorUser is null && requestHistory is { Count: > 0 })
+        {
+            // requestHistory does NOT include the just-arrived turn, so don't
+            // skip the last entry — the last "user" entry IS the prior turn.
+            priorUser = FindMostRecentPriorUserTurn(requestHistory, skipLast: false);
+        }
+
+        if (priorUser is null) return message;
+
+        // Cap the prior turn so we don't blow embedder context (some models
+        // truncate silently past ~512 tokens). 240 chars ≈ ~60 tokens — fits
+        // alongside a short follow-up.
+        var priorContent = priorUser.Content.Length > 240
+            ? priorUser.Content[..240] + "…"
+            : priorUser.Content;
+
+        return $"{priorContent} {message}";
+    }
+
+    private static ConversationTurn? FindMostRecentPriorUserTurn(
+        IReadOnlyList<ConversationTurn> turns,
+        bool skipLast)
+    {
+        var start = skipLast ? turns.Count - 2 : turns.Count - 1;
+        for (var i = start; i >= 0; i--)
+        {
+            if (string.Equals(turns[i].Role, "user", StringComparison.OrdinalIgnoreCase))
+                return turns[i];
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Emit a routing.candidates trace step with the top-3 intents the
     /// router considered, so the agentic trace shows the routing decision
     /// instead of hiding it inside the "orchestration.answer" black-box
@@ -341,12 +429,35 @@ public class ProductionOrchestrator(
                 activity, sw, ct);
         }
 
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // A short prompt like "Show me a practical example on guitar" right
+        // after a substantive turn ("How do I make this progression sound
+        // darker?") used to mis-embed as a standalone request and route to
+        // skill.practiceroutine (because "practice" / "practical" share a
+        // centroid). For follow-up-shaped messages, prepend the most recent
+        // prior user turn to the routing query so the embedding represents
+        // the conversation thread, not just the snippet. The downstream
+        // `message` variable stays clean (the LLM gets the real message
+        // plus full history separately).
+        //
+        // The history lookup checks BOTH (a) the in-memory historyStore
+        // (session-scoped, populated by the just-added user turn plus any
+        // earlier turns from this session) AND (b) req.History (the
+        // controller may forward client-supplied prior turns even when
+        // sessionId is null — the React frontend posts conversationHistory
+        // per request without a stable sessionId). Without (b), the very
+        // first follow-up after a page reload would miss enrichment.
+        //
+        // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
+        // task #168.
+        var routingMessage = EnrichRoutingMessageIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
         // algebra, deterministic skills, and tab-handling intents. Replaces
         // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
         // CanHandle foreach. See migration recommendation §"Routing classifiers".
-        var intentMatch = await intentRouter.RouteAsync(message, services, ct);
+        var intentMatch = await intentRouter.RouteAsync(routingMessage, services, ct);
         EmitRoutingTrace(intentMatch);
         if (intentMatch is { } pick)
         {
