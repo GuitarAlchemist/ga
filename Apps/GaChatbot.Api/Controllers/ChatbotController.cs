@@ -226,7 +226,28 @@ public sealed class ChatbotController(
 
     private async Task WriteSseLineAsync(string data, CancellationToken cancellationToken)
     {
-        await Response.WriteAsync($"data: {data}\n\n", cancellationToken);
+        // Per the SSE spec, each line of an event body must be prefixed with
+        // `data: ` and the event is terminated by a single blank line. If the
+        // payload itself contains '\n' (markdown tables, multi-paragraph
+        // prose, code blocks), naively emitting `data: <multi-line>\n\n`
+        // makes everything after the first embedded '\n' look like
+        // unprefixed lines to the parser — they get silently dropped, and
+        // the first embedded '\n\n' terminates the event prematurely.
+        //
+        // Symptom: chatbot responses with markdown tables rendered only
+        // their leading paragraph in the UI even though `/chat` returned
+        // the full text. Caught 2026-05-13 via chrome-devtools click-test
+        // on "Diatonic chords in G major".
+        //
+        // Strip '\r' first so CRLF-on-Windows doesn't double-terminate.
+        var normalized = data.Replace("\r", string.Empty);
+        foreach (var line in normalized.Split('\n'))
+        {
+            await Response.WriteAsync("data: ", cancellationToken);
+            await Response.WriteAsync(line, cancellationToken);
+            await Response.WriteAsync("\n", cancellationToken);
+        }
+        await Response.WriteAsync("\n", cancellationToken);
         await Response.Body.FlushAsync(cancellationToken);
     }
 
