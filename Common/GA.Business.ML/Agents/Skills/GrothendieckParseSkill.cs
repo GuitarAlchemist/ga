@@ -28,6 +28,17 @@ using GA.Business.DSL.Types;
 /// </remarks>
 public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logger) : IOrchestratorSkill
 {
+    // Verbose parser errors are great in dev (you want to see Expecting:
+    // 'tensor', 'pullback', etc. when iterating) but leak the F# grammar's
+    // internal token alphabet to anonymous prod callers. Gate on the standard
+    // ASPNETCORE_ENVIRONMENT signal: anything other than "Development" gets
+    // the redacted message. We read once at type-init so cost is negligible.
+    private static readonly bool VerboseErrors =
+        string.Equals(
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "Development",
+            StringComparison.OrdinalIgnoreCase);
+
     public string Name => "GrothendieckParse";
     public string Description =>
         "Parses Grothendieck category-theory DSL expressions (tensor ⊗, " +
@@ -151,11 +162,27 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
                 return Result(sb.ToString(), $"grothendieck-parse(ok, {category})");
             }
 
+            // Log the full FParsec error message server-side. Surface the
+            // detail to clients only in Development — in Production the
+            // raw error leaks the F# grammar's internal token alphabet
+            // (Forte, PC, Ω, ⊗, etc. — see /test/grothendieck-dsl) and
+            // partial parser state to anonymous callers.
+            logger.LogInformation(
+                "GrothendieckParseSkill: parse failure on {Expression}: {ParserError}",
+                expression, result.ErrorValue);
+
+            var publicMessage = VerboseErrors
+                ? $"Couldn't parse `{expression}` as a Grothendieck operation. Parser said: {result.ErrorValue}"
+                : $"Couldn't parse `{expression}` as a Grothendieck operation. Try a simpler form like `C ⊗ G`, `Transpose(Cmaj7)`, or `pullback(Cmaj7, Transpose, Gmaj7)`.";
+
             return new AgentResponse
             {
                 AgentId    = AgentIds.Theory,
-                Result     = $"Couldn't parse `{expression}` as a Grothendieck operation. Parser said: {result.ErrorValue}",
+                Result     = publicMessage,
                 Confidence = 0.3f,
+                // Evidence is server-side-only telemetry (frontend trace panel
+                // is dev-facing). Keep the raw parser error there regardless
+                // of environment so we can still diagnose from logs/traces.
                 Evidence   = [$"Source: GrothendieckParseSkill (parse failure)", $"input: {expression}", $"error: {result.ErrorValue}"],
             };
         }
