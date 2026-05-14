@@ -3,6 +3,7 @@ namespace GA.Business.ML.Agents.Skills;
 using System.Text;
 using System.Text.RegularExpressions;
 using GA.Business.Config;
+using Microsoft.FSharp.Core;
 
 /// <summary>
 /// Domain-backed modes skill — pulls families and modes from
@@ -59,6 +60,13 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "What modes have a major 7th",
         "Mixolydian versus Ionian differences",
         "Characteristics of Locrian",
+        // Atonal-catalog queries (~200 families indexed by ICV)
+        "What families have ICV <2 5 4 3 6 1>",
+        "What is Forte number 7-29",
+        "List symmetric families",
+        "List atonal modal families",
+        "List unnamed modal families",
+        "What are modes of limited transposition",
     ];
 
     private static readonly Regex ModesPattern =
@@ -68,6 +76,18 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        var query = (message ?? string.Empty).ToLowerInvariant();
+
+        // Try the atonal-catalog path first when the query mentions
+        // atonal-theory vocabulary or matches an ICV / Forte-number
+        // pattern. This domain has ~200 families enumerated from
+        // PitchClassSet.Items (vs ~31 named tonal families); the user
+        // explicitly asked for coverage of "modes" here so atonal lookups
+        // get routed to the same skill rather than a sibling.
+        var atonalAnswer = TryAnswerAtonal(query, message ?? string.Empty);
+        if (atonalAnswer is not null)
+            return Task.FromResult(atonalAnswer);
+
         var families = ModesConfig.GetModalFamilies();
         if (families.Count == 0)
         {
@@ -75,7 +95,6 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
             return Task.FromResult(MinimalFallback());
         }
 
-        var query = (message ?? string.Empty).ToLowerInvariant();
         var asksForFamilyListing = AsksForFamilyListing(query);
 
         // Classify the query against the domain. Order matters — more
@@ -299,7 +318,12 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         var degree = family.Modes.ToList().FindIndex(m => m.Name == mode.Name) + 1;
         sb.Append($"**{mode.Name}** is mode {degree} of the **{StripFamilySuffix(family.Name)}** family");
         if (!string.IsNullOrWhiteSpace(mode.Notes))
+        {
             sb.Append($"; on C its notes are `{mode.Notes}`");
+            var formula = ComputeFormulaFromNotes(mode.Notes);
+            if (!string.IsNullOrEmpty(formula))
+                sb.Append($" (formula `{formula}`)");
+        }
         sb.Append('.');
         sb.AppendLine();
         if (mode.CharacteristicIntervals.Count > 0)
@@ -410,4 +434,283 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 
     private static string StripFamilySuffix(string familyName) =>
         familyName.Replace(" Family", "", StringComparison.OrdinalIgnoreCase);
+
+    // ── Atonal path ──────────────────────────────────────────────────────────
+
+    private static readonly Regex IcvPattern =
+        new(@"<\s*\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s*>", RegexOptions.Compiled);
+    private static readonly Regex FortePattern =
+        new(@"\b\d{1,2}-Z?\d{1,3}\b", RegexOptions.Compiled);
+
+    private static readonly string[] AtonalMarkers =
+    [
+        "atonal mode",
+        "atonal famil",
+        "atonal scale",
+        "all atonal",
+        "list atonal",
+        "icv",
+        "interval class vector",
+        "forte number",
+        "forte numbers",
+        "unnamed famil",
+        "without a name",
+        "have no traditional name",
+        "all 200",
+        "every modal famil",
+        "all modal famil",
+    ];
+
+    private AgentResponse? TryAnswerAtonal(string lowerQuery, string originalQuery)
+    {
+        // 1) Explicit ICV pattern in the query — look up that exact family.
+        var icvMatch = IcvPattern.Match(originalQuery);
+        if (icvMatch.Success)
+        {
+            var familyOpt = AtonalModalFamiliesConfig.TryGetByIntervalClassVector(icvMatch.Value);
+            if (FSharpOption<AtonalModalFamiliesConfig.AtonalModalFamily>.get_IsSome(familyOpt))
+                return FormatAtonalFamily(familyOpt.Value);
+            // ICV pattern but no match — explain that's not a valid ICV.
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = $"No modal family with interval class vector `{icvMatch.Value}` exists in the atonal catalog. Valid ICVs have six non-negative integers separated by spaces inside angle brackets.",
+                Confidence = 0.8f,
+                Evidence   = [$"AtonalModalFamiliesConfig.TryGetByIntervalClassVector({icvMatch.Value}) = None"],
+            };
+        }
+
+        // 2) Forte-number pattern — look up by that label. A "-Z" infix is
+        //    valid for hexachord Z-pairs (e.g. "6-Z29").
+        var forteMatch = FortePattern.Match(originalQuery);
+        if (forteMatch.Success && ContainsAnyOf(lowerQuery, "forte", "atonal", "pitch class set", "pc set", "set class"))
+        {
+            var families = AtonalModalFamiliesConfig.TryGetByForteNumber(forteMatch.Value);
+            if (families.Length > 0)
+                return FormatAtonalForteResults(forteMatch.Value, families);
+            return new AgentResponse
+            {
+                AgentId    = AgentIds.Theory,
+                Result     = $"No modal family with Forte number `{forteMatch.Value}` exists in the atonal catalog.",
+                Confidence = 0.8f,
+                Evidence   = [$"AtonalModalFamiliesConfig.TryGetByForteNumber({forteMatch.Value}) = []"],
+            };
+        }
+
+        // 3) "symmetric modes" / "Messiaen modes" → list symmetric families.
+        if (ContainsAnyOf(lowerQuery, "symmetric mode", "symmetric famil", "messiaen mode", "modes of limited transposition"))
+        {
+            var symmetric = AtonalModalFamiliesConfig.GetSymmetricFamilies().ToList();
+            return FormatAtonalSymmetricListing(symmetric);
+        }
+
+        // 4) "unnamed families" / "families with no name" — pedagogical
+        //    curiosity; surfaces what the atonal catalog has beyond the
+        //    tonal-tradition naming.
+        if (ContainsAnyOf(lowerQuery, "unnamed famil", "no traditional name", "without a name", "forte-numbered famil"))
+        {
+            var unnamed = AtonalModalFamiliesConfig.GetUnnamedFamilies().Take(20).ToList();
+            var total   = AtonalModalFamiliesConfig.GetUnnamedFamilies().Count();
+            return FormatAtonalUnnamedListing(unnamed, total);
+        }
+
+        // 5) Generic "atonal" / "ICV" / "interval class vector" — summary stats.
+        var saysAtonal = false;
+        foreach (var marker in AtonalMarkers)
+            if (lowerQuery.Contains(marker)) { saysAtonal = true; break; }
+        if (saysAtonal)
+        {
+            var all       = AtonalModalFamiliesConfig.GetAll().ToList();
+            var symmetric = all.Count(f => f.IsSymmetric);
+            var named     = all.Count(f => !f.FamilyName.StartsWith("Family-", StringComparison.Ordinal));
+            return FormatAtonalSummary(all.Count, named, symmetric);
+        }
+
+        return null;
+    }
+
+    private AgentResponse FormatAtonalFamily(AtonalModalFamiliesConfig.AtonalModalFamily family)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"**{family.FamilyName}** — ICV `{family.IntervalClassVector}`, {family.NoteCount}-note set, {family.DistinctModeCount} distinct mode{(family.DistinctModeCount == 1 ? "" : "s")}{(family.IsSymmetric ? " (symmetric — modes of limited transposition)" : "")}.");
+        if (family.ForteNumbers.Any())
+            sb.AppendLine($"Forte number{(family.ForteNumbers.Length == 1 ? "" : "s")}: {string.Join(", ", family.ForteNumbers)}.");
+        if (family.TonalSubfamilies.Any())
+            sb.AppendLine($"Tonal analogs: {string.Join(", ", family.TonalSubfamilies)}.");
+
+        sb.AppendLine();
+        sb.AppendLine($"Modes ({family.Modes.Length}):");
+        var idx = 1;
+        foreach (var mode in family.Modes.Take(12))
+        {
+            var label = FSharpOption<string>.get_IsSome(mode.TonalAnalog) ? mode.TonalAnalog.Value : $"(unnamed mode {mode.Position})";
+            sb.Append($"  {idx}. {label}");
+            if (!string.IsNullOrWhiteSpace(mode.PitchClasses))
+                sb.Append($" — PCs: `{mode.PitchClasses}`");
+            sb.AppendLine();
+            idx++;
+        }
+        if (family.Modes.Length > 12)
+            sb.AppendLine($"  … + {family.Modes.Length - 12} more");
+
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   =
+            [
+                $"Source: AtonalModalFamiliesConfig",
+                $"Family: {family.FamilyName}",
+                $"ICV: {family.IntervalClassVector}",
+                $"Modes: {family.Modes.Length}",
+            ],
+        };
+    }
+
+    private AgentResponse FormatAtonalForteResults(string forte, IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> families)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Forte number **{forte}** matches {families.Count} famil{(families.Count == 1 ? "y" : "ies")}:");
+        sb.AppendLine();
+        foreach (var f in families)
+        {
+            sb.AppendLine($"- **{f.FamilyName}** — ICV `{f.IntervalClassVector}` — {f.NoteCount} notes, {f.DistinctModeCount} mode{(f.DistinctModeCount == 1 ? "" : "s")}{(f.IsSymmetric ? " (symmetric)" : "")}");
+            if (f.TonalSubfamilies.Any())
+                sb.AppendLine($"  Tonal analogs: {string.Join(", ", f.TonalSubfamilies)}");
+        }
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   = [$"AtonalModalFamiliesConfig.TryGetByForteNumber({forte}) returned {families.Count} match(es)"],
+        };
+    }
+
+    private AgentResponse FormatAtonalSymmetricListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> symmetric)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"**{symmetric.Count} symmetric / modes-of-limited-transposition families** in the atonal catalog:");
+        sb.AppendLine();
+        foreach (var f in symmetric.OrderBy(f => f.NoteCount).ThenBy(f => f.IntervalClassVector))
+        {
+            sb.AppendLine($"- **{f.FamilyName}** — ICV `{f.IntervalClassVector}` — {f.NoteCount} notes" + (f.ForteNumbers.Any() ? $" (Forte {string.Join("/", f.ForteNumbers)})" : ""));
+        }
+        sb.AppendLine();
+        sb.Append("These are Messiaen's classical category — scales that repeat under rotation by fewer than 12 transpositions. The whole-tone scale (2 transpositions), octatonic (3), and hexatonic (4) are the most common in jazz / film vocabulary.");
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   = [$"AtonalModalFamiliesConfig.GetSymmetricFamilies() returned {symmetric.Count} families"],
+        };
+    }
+
+    private AgentResponse FormatAtonalUnnamedListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> unnamed, int total)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"**{total} modal families have no traditional name** in the atonal catalog — they're labelled `Family-{{ForteNumber}}` and indexed by interval class vector. First {unnamed.Count}:");
+        sb.AppendLine();
+        foreach (var f in unnamed)
+            sb.AppendLine($"- **{f.FamilyName}** — ICV `{f.IntervalClassVector}` — {f.NoteCount} notes, {f.DistinctModeCount} mode{(f.DistinctModeCount == 1 ? "" : "s")}");
+        sb.AppendLine();
+        sb.Append("Ask for a specific ICV (e.g. `<2 5 4 3 6 1>`) or Forte number (e.g. `6-Z29`) for full detail.");
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   = [$"AtonalModalFamiliesConfig.GetUnnamedFamilies() count = {total}"],
+        };
+    }
+
+    private AgentResponse FormatAtonalSummary(int total, int named, int symmetric)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"The **atonal modal-families catalog** has **{total} families** indexed by interval class vector (ICV):");
+        sb.AppendLine();
+        sb.AppendLine($"- **{named}** have traditional names from Modes.yaml (Major Scale, Melodic Minor, Whole Tone, etc.)");
+        sb.AppendLine($"- **{total - named}** are labelled `Family-{{ForteNumber}}` — they exist mathematically but no tradition names them");
+        sb.AppendLine($"- **{symmetric}** are symmetric (modes of limited transposition) — whole-tone, octatonic, augmented, etc.");
+        sb.AppendLine();
+        sb.Append("Try: \"what families have ICV `<2 5 4 3 6 1>`?\", \"what is Forte number 7-29?\", \"list symmetric families\", \"list unnamed families\".");
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   =
+            [
+                $"AtonalModalFamiliesConfig: {total} families total",
+                $"Named (tonal analog): {named}",
+                $"Symmetric: {symmetric}",
+            ],
+        };
+    }
+
+    private static bool ContainsAnyOf(string s, params string[] markers)
+    {
+        foreach (var m in markers)
+            if (s.Contains(m)) return true;
+        return false;
+    }
+
+    // ── Formula derivation (notes → scale-degree formula like "1 2 3 #4 5 6 b7")
+    // Lifted to skill-level since no domain helper exists yet for this; once the
+    // domain-backed refactor sweeps Tier 1, this belongs in ModeFormula.
+
+    private static readonly Dictionary<string, int> PitchSemitone =
+        new(StringComparer.Ordinal)
+        {
+            { "C",   0 }, { "C#",  1 }, { "Db",  1 }, { "D",   2 },
+            { "D#",  3 }, { "Eb",  3 }, { "E",   4 }, { "Fb",  4 },
+            { "E#",  5 }, { "F",   5 }, { "F#",  6 }, { "Gb",  6 },
+            { "G",   7 }, { "G#",  8 }, { "Ab",  8 }, { "A",   9 },
+            { "A#", 10 }, { "Bb", 10 }, { "B",  11 }, { "Cb", 11 },
+            { "B#",  0 },
+            // Double accidentals — show up in some altered/symmetric scales
+            { "Dbb", 0 }, { "Ebb", 2 }, { "Fbb", 3 }, { "Gbb", 5 },
+            { "Abb", 7 }, { "Bbb", 9 }, { "Cbb", 10 },
+            { "C##", 2 }, { "D##", 4 }, { "E##", 6 }, { "F##", 7 },
+            { "G##", 9 }, { "A##", 11 }, { "B##", 1 },
+        };
+
+    // C major reference: semitone offset for each natural degree 1..7.
+    private static readonly int[] DegreeSemitones = [0, 2, 4, 5, 7, 9, 11];
+
+    private static string ComputeFormulaFromNotes(string notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes)) return string.Empty;
+        var tokens = notes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length == 0) return string.Empty;
+
+        var parts = new List<string>(tokens.Length);
+        for (var i = 0; i < tokens.Length; i++)
+        {
+            if (!PitchSemitone.TryGetValue(tokens[i], out var semi))
+                return string.Empty;  // unknown token — bail rather than guess
+            // For scales of <=7 notes, position maps directly to degree slot.
+            // For 8-note (Bebop) or longer scales, modulo 7 keeps the reference
+            // sensible — the formula notation is still recognizable.
+            var slot = i % 7;
+            var expected = DegreeSemitones[slot];
+            var diff = semi - expected;
+            // Normalize across octave boundary for late notes in 8+-note scales.
+            if (diff > 6) diff -= 12;
+            if (diff < -6) diff += 12;
+            var acc = diff switch
+            {
+                -2 => "bb",
+                -1 => "b",
+                  0 => "",
+                  1 => "#",
+                  2 => "##",
+                  _ => string.Empty  // out of expected range — omit accidental rather than emit garbage
+            };
+            parts.Add($"{acc}{i + 1}");
+        }
+        return string.Join(" ", parts);
+    }
 }
