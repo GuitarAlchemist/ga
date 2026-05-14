@@ -69,6 +69,21 @@ public sealed class GaPlugin : IChatPlugin
         // failure where LLM wording was too variable for substring asserts.
         services.AddOrchestratorSkillIntent<SetTheoryEquivalenceSkill>();
 
+        // Domain-backed capo skill — pure semitone arithmetic for
+        // sounding↔shape conversion at a given capo fret. Built 2026-05-14 to
+        // close BACKLOG dealbreaker #3.
+        services.AddOrchestratorSkillIntent<CapoSkill>();
+
+        // Domain-backed voice-leading skill — optimal pitch-class assignment
+        // between two chords via exhaustive permutation. Built 2026-05-14 to
+        // close BACKLOG dealbreaker #4.
+        services.AddOrchestratorSkillIntent<VoiceLeadingSkill>();
+
+        // Domain-backed alternate-tunings skill — tuning-table lookup with
+        // string-by-string interval analysis. Built 2026-05-14 to close
+        // BACKLOG dealbreaker #2.
+        services.AddOrchestratorSkillIntent<AlternateTuningsSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
