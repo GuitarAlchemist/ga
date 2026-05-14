@@ -405,15 +405,38 @@ prompts:
     skip: true
     skip_reason: "BACKLOG dealbreaker #4 — current ga_chord_substitutions ranks by ICV cost, not voice-leading. Pending ga_voice_leading(chordA, chordB) tool."
 
+  # ── chord-from-notes (unblocked 2026-05-14, BACKLOG dealbreaker #5) ─────
   - prompt: "What chord is C E G"
     category: chord-from-notes
-    skip: true
-    skip_reason: "BACKLOG dealbreaker #5 — chord-from-notes identification gap. Pending ga_chord_identify(notes) tool."
+    routes_to: skill.chordinfo
+    contains: ["C major", "C", "E", "G"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic pitch-class identification
 
   - prompt: "What chord is F A C E"
     category: chord-from-notes
-    skip: true
-    skip_reason: "Same as above — should return Fmaj7 plus inversion alternatives."
+    routes_to: skill.chordinfo
+    contains: ["F major 7", "F", "A", "C", "E"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "What chord is C E G Bb D"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["C dominant 9", "C", "E", "G", "Bb", "D"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "What chord is D F A C E"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["D minor 9", "D", "F", "A", "C", "E"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
 
   # ── grounding-strict (assert ga.dsl evidence on every closure-backed answer)
 

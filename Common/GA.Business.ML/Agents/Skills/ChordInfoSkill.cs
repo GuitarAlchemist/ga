@@ -62,6 +62,15 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "what makes a chord a major seventh",
         "what makes a chord diminished",
         "what makes a chord a dominant seventh",
+        // Chord-identification-from-notes phrasings (BACKLOG dealbreaker #5,
+        // 2026-05-14). Without these, "what chord is F A C E" misrouted to
+        // skill.chordsubstitution because the substitution skill's
+        // alternation patterns matched "F" + "A" as two chords. Anchored
+        // examples make the chordinfo intent dominate for these queries.
+        "What chord is C E G",
+        "What chord is F A C E",
+        "Which chord contains the notes G B D F",
+        "What chord is C E G Bb D",
         // v0.5 corpus expansion (2026-05-12): "anatomy of" / "break down"
         // / "add 9" / "sus" / "maj13" patterns weren't covered. These
         // were misrouting to diatonicchords because "chord" + extension
@@ -157,7 +166,12 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (notes.Count is < 3 or > 4)
+        // Accept 3–5 note sets. 3 covers triads + sus, 4 covers 7th-family
+        // and add9, 5 covers 9th-family (dominant/major/minor 9). Cap at 5
+        // because 6+ note sets (11th/13th) have multiple legitimate
+        // identifications and the first-match algorithm can't pick a
+        // "best" answer without voicing context.
+        if (notes.Count is < 3 or > 5)
         {
             return null;
         }
@@ -299,6 +313,16 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         yield return ("minor 7", GetFormula("minor 7"));
         yield return ("diminished 7", GetFormula("diminished 7"));
         yield return ("half-diminished", GetFormula("half-diminished"));
+        // 4-note add-9 and 5-note 9th-family for note-set identification.
+        // BACKLOG dealbreaker #5 — "what chord is C E G Bb D" → "C9".
+        yield return ("add9", GetFormula("add9"));
+        yield return ("dominant 9", GetFormula("dominant 9"));
+        yield return ("major 9", GetFormula("major 9"));
+        yield return ("minor 9", GetFormula("minor 9"));
+        // 7-with-altered-fifth covers e.g. Cmaj7 with #5 in voicings;
+        // common enough in jazz that "what chord is C E G# B" should ID.
+        yield return ("dominant 7 flat 5", GetFormula("dominant 7 flat 5"));
+        yield return ("dominant 7 sharp 5", GetFormula("dominant 7 sharp 5"));
     }
 
     private static bool HasChordIntent(string message)
@@ -339,7 +363,11 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
     [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)(?<quality>maj13|min13|m13|maj11|min11|m11|maj9|min9|m9|maj7|min7|maj6|min6|m6|m7b5|m7|dim7|7b5|7#5|7b9|7#9|7alt|alt|13|11|9|7|6|maj|min|dim|aug|sus2|sus4|sus|add9|m|\+)\b(?![A-Za-z])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CompactChordRegex();
 
-    [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // "what/which chord (is|contains|has|uses) X Y Z" — accepts both the
+    // chord-identification phrasing and the prior "contains/has/uses"
+    // patterns. The "is" branch was missing 2026-05-14 — caught by the
+    // multi-LLM correctness review's testing-gap note on PR #210.
+    [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:is|contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoteSetQuestionRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]

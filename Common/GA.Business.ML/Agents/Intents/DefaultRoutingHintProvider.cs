@@ -97,6 +97,17 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordinfo"),
 
+        // Chord-identification-from-notes — "what/which chord is/contains
+        // <NOTE> <NOTE> <NOTE>...". Two or more capital-letter pitch tokens
+        // with optional accidentals, separated by spaces or commas. Anchored
+        // on the "what/which chord is/contains" prefix so it doesn't fire
+        // on prose that happens to mention pitches. Added 2026-05-14 — bare
+        // "what chord is F A C E" was misrouting to chordsubstitution
+        // because chord-letter pairs F+A read as two chord roots.
+        (new Regex(@"\b(?:what|which)\s+chord\s+(?:is|contains|has|uses)\b\s*(?:the\s+notes?\s+)?(?-i:[A-G])(?:#|b)?(?:\s*,?\s*(?-i:[A-G])(?:#|b)?){1,5}\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.chordinfo"),
+
         // Transpose — added post-baseline-2026-05-11 to close a 4/5 F1
         // hole. Failing prompts in the eval corpus included "transpose
         // this progression down a half step", "transpose C-Am-F-G to G
