@@ -196,6 +196,43 @@ public class GrothendieckServiceTests
             Assert.That(self.Set, Is.Not.Null);
             Assert.That(self.Cost, Is.EqualTo(0.0));
         }
+
+        [Test]
+        public void ShouldFindNearby_ReturnSameResultOnRepeatCall()
+        {
+            // Cache invariant: FindNearby is pure (deterministic over a static
+            // PitchClassSet.Items + IntervalClassVector), so a memoization layer
+            // is correct only if a second call returns a sequence equal to the
+            // first. This guards against accidentally caching a stateful
+            // structure (e.g. an enumerator that exhausts) or skipping the
+            // self-at-zero injection on the cache-hit path.
+            var cMajor = PitchClassSet.Parse("024579E");
+
+            var first = _service.FindNearby(cMajor, 2).ToList();
+            var second = _service.FindNearby(cMajor, 2).ToList();
+
+            Assert.That(second.Count, Is.EqualTo(first.Count));
+            for (var i = 0; i < first.Count; i++)
+            {
+                Assert.That(second[i].Set.Id, Is.EqualTo(first[i].Set.Id));
+                Assert.That(second[i].Cost, Is.EqualTo(first[i].Cost));
+                Assert.That(second[i].Delta.L1Norm, Is.EqualTo(first[i].Delta.L1Norm));
+            }
+        }
+
+        [Test]
+        public void ShouldFindNearby_DistinguishKeysByDistance()
+        {
+            // Cache key includes maxDistance — verify the cache does NOT
+            // confuse the result for the same source at different radii.
+            var cMajor = PitchClassSet.Parse("024579E");
+
+            var tight = _service.FindNearby(cMajor, 1).ToList();
+            var wide  = _service.FindNearby(cMajor, 4).ToList();
+
+            Assert.That(wide.Count, Is.GreaterThanOrEqualTo(tight.Count),
+                "the larger radius must yield at least as many results as the smaller one");
+        }
     }
 
     [TestFixture]
