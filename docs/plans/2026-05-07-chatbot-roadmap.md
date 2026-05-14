@@ -7,7 +7,9 @@ related:
   - docs/architecture/chat-surfaces.md
   - docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
   - docs/plans/2026-05-03-chatbot-ix-and-ga-dsl-scoping.md
-one_way_doors: [public chat wire contract, canonical-host choice]
+  - docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md
+  - docs/runbooks/chatbot-improvement-loop.md
+one_way_doors: [public chat wire contract, canonical-host choice, OPTIC-K dim count, skill catalog → domain delegation direction]
 revisit_trigger:
   - any P0 item shipped → re-rank
   - public-demo SLA changes
@@ -17,6 +19,34 @@ revisit_trigger:
 # GA chatbot roadmap
 
 Synthesised 2026-05-07 from the multi-LLM review (codex CLI second-opinion) + live smoke set against `https://demos.guitaralchemist.com/chatbot/` + this session's eight commits.
+
+## North Star (synthesised 2026-05-13)
+
+The GA chatbot is **the conversational front end to the Guitar Alchemist domain** — typed music theory in `GA.Domain.Core` / `GA.Business.Core`, the F# DSL (`ga_dsl_eval` closures), and the OPTIC-K voicing index. It is not a general-purpose LLM, and it is not a SKILL.md catalog. Each user query is **routed by intent**, **answered by the domain**, **formatted by the skill**, and **shaped by the LLM only at the prose layer**.
+
+**What it is today (2026-05-13):**
+- Single deployable host: **`Apps/GaChatbot.Api`** on :5252, served at `https://demos.guitaralchemist.com/chatbot/` via Cloudflare Tunnel.
+- Single served HTML: **`Apps/GaChatbot.Api/wwwroot/index.html`** (showcase modal + SSE-driven right-panel agentic trace + markdown rendering with tables/lists/headings + VexFlow tab notation).
+- Single routing layer: `SemanticIntentRouter` (embedding-keyed `IIntent` registry) gated by `VoicingIntent` deterministic guard, with `TraceableChatApplicationService` + `ReadinessGatedChatApplicationService` + optional `FallbackChatApplicationService` decorators around the canonical `IChatApplicationService`.
+- Single trust gate: **prompt-corpus invariant runner** at `Tests/Apps/GaChatbot.Api.Tests/Corpus/`. Every fix passes through it before merge; the autonomous improvement loop (`docs/runbooks/chatbot-improvement-loop.md`) uses it as its oracle.
+- Skills coverage: 31 tonal mode families + ~200 atonal modal families (ICV-keyed, Forte-numbered) + diatonic chord builder + transpose / common-tones / chord substitutions via `ga_dsl_eval` + the OPTIC-K voicing index when loaded.
+
+**What it is not (and will not be):**
+- A SKILL.md catalog of frozen markdown bodies. The 2026-05-13 architectural critique closed that door; the pilot ModesSkill refactor in `docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md` is the template the rest of Tier 1 follows.
+- A SignalR-only surface. `/chatbot/` runs on REST + SSE for stream parity with the AG-UI clients and ergonomics for the right-panel trace.
+- A second host. GaApi's `/api/chatbot/*` controller endpoints remain only for the GaApi smoke-test fixture and direct localhost callers; cloudflared sends nothing there.
+
+**Three-month direction (2026-05-13 → 2026-08-13):**
+1. **Domain-backed skills sweep** — finish Tier 1 in the domain-backed plan (`circle-of-fifths`, `relative-key`, `scale-info`, `diatonic-chords` rebuild, `transpose` + `common-tones` formalised as templates). Each one PR, each one a clean two-way door.
+2. **Corpus growth + Cherny loop on it** — grow `prompts.yaml` to ~100 prompts covering BACKLOG dealbreakers (extended/altered chords, alternate tunings, capo, voice-leading, chord-from-notes) marked `skip: true` with `skip_reason` until the underlying tools ship. The autonomous improvement loop runs continuously against this oracle.
+3. **Streaming truth** — `ProductionOrchestrator.AnswerStreamingAsync` currently word-splits after the full answer arrives (P2 #9). Either make it true-stream per agent type, or own the word-split in the AG-UI contract and update the right-panel trace's expectations accordingly.
+4. **Eval beyond substring** — promote the latency soft-warning to a gate on the worst-performing prompts; add a `judges:` block alongside `contains:` for cases where exact substring is too brittle (rubric scoring via `/octo:multi` or a small LLM-as-judge in `PromptCorpusTests`).
+5. **Voice + voicing** — once the OPTIC-K index ships to production, restore the Voicings showcase category (removed in v1.1 because the index wasn't loaded). The dealbreaker BACKLOG items (alternate tunings, voice-leading between two chords) feed off this same index.
+
+**Non-goals (deliberate):**
+- Adding a third chatbot host. The 2026-05-13 consolidation deleted the GaApi `wwwroot/chatbot/index.html` duplicate; resurrecting it requires a concrete deploy reason.
+- Editing the corpus from the autonomous loop. The corpus IS the gate; locked to human review per the runbook safety rails.
+- Replacing semantic routing with regex. Memory `feedback_skill_routing_semantic` already settled this: deterministic skills keep `CanHandle`, agentic dispatch handles multi-step.
 
 ## TL;DR
 
