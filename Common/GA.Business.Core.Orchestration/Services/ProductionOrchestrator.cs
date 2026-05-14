@@ -34,6 +34,7 @@ public class ProductionOrchestrator(
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
+    RoutingContextEnricher routingContextEnricher,
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
     TabTokenizer tabTokenizer,
@@ -68,122 +69,9 @@ public class ProductionOrchestrator(
         return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
     }
 
-    /// <summary>
-    /// Maximum length (chars) of a message that we consider a candidate for
-    /// follow-up context enrichment. Long messages already carry enough
-    /// embedding signal on their own; this gates the heuristic to short
-    /// utterances that look like pronoun-bearing follow-ups
-    /// ("show me a practical example on guitar", "and how about minor",
-    /// "do that for Dm7").
-    /// </summary>
-    private const int FollowUpMaxLength = 80;
-
-    /// <summary>
-    /// Surface tokens that signal a follow-up turn — these are deictic
-    /// phrases that REQUIRE a prior turn to make sense (they don't take a
-    /// noun-phrase complement on their own). Matched case-insensitively at
-    /// the start of the trimmed message.
-    /// </summary>
-    /// <remarks>
-    /// Tightened 2026-05-14 (correctness review). The earlier list included
-    /// "show me", "and", "expand", "elaborate" which routinely take their
-    /// own object noun — "show me the C major scale", "and the diatonic
-    /// chords of G?", "expand C7 into voicings" are STANDALONE questions
-    /// that an UNRELATED prior turn should not contaminate. The remaining
-    /// prefixes are genuinely context-bound: "what about" / "how about"
-    /// always reference something prior; "do that" / "same for" / "more
-    /// like that" / "tell me more" / "continue" / "in the same key" /
-    /// "for that" can only resolve against a prior turn.
-    /// </remarks>
-    private static readonly System.Text.RegularExpressions.Regex FollowUpPrefix =
-        new(@"^(?:what about|how about|do (?:that|the same)|same for|more (?:like )?(?:that|this)|tell me more|continue|in (?:the )?(?:same|that) key|for (?:that|this)|show me a practical example|give (?:me )?an? example|show me an? example)\b",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    /// <summary>
-    /// If the message looks like a follow-up to a prior turn, prepend the
-    /// most recent prior user message so the embedding pass sees the
-    /// conversation thread, not the snippet. Otherwise returns the input
-    /// unchanged. Used ONLY for the semantic-router input — downstream
-    /// agents and the LLM continue to see the raw message.
-    /// </summary>
-    /// <remarks>
-    /// Live found 2026-05-14 — "Show me a practical example on guitar"
-    /// after "How do I make this progression sound darker?" routed to
-    /// skill.practiceroutine at 70% confidence because "practical" /
-    /// "practice" share an embedding centroid. With this enrichment the
-    /// router sees "How do I make this progression sound darker?
-    /// Show me a practical example on guitar" — pulls the embedding into
-    /// the chord-substitution / harmony region where the prior question
-    /// already lived.
-    /// </remarks>
-    private string EnrichRoutingMessageIfFollowUp(
-        string message,
-        string sessionId,
-        IReadOnlyList<ConversationTurn>? requestHistory)
-    {
-        if (string.IsNullOrWhiteSpace(message)) return message;
-        if (message.Length > FollowUpMaxLength) return message;
-        if (!FollowUpPrefix.IsMatch(message.TrimStart())) return message;
-
-        // Look in two places. (1) Session-scoped store — the just-added user
-        // turn is the last entry; we want the most recent EARLIER user turn.
-        // (2) Request-supplied history — the React frontend posts the prior
-        // turns per request without a stable sessionId, so the store can be
-        // empty even mid-conversation. We fall through to requestHistory in
-        // that case.
-        ConversationTurn? priorUser = FindMostRecentPriorUserTurn(
-            historyStore.GetHistory(sessionId),
-            skipLast: true);
-
-        if (priorUser is null && requestHistory is { Count: > 0 })
-        {
-            // requestHistory does NOT include the just-arrived turn, so don't
-            // skip the last entry — the last "user" entry IS the prior turn.
-            priorUser = FindMostRecentPriorUserTurn(requestHistory, skipLast: false);
-        }
-
-        if (priorUser is null) return message;
-
-        // Cap the prior turn so we don't blow embedder context (some models
-        // truncate silently past ~512 tokens). 240 chars ≈ ~60 tokens — fits
-        // alongside a short follow-up.
-        //
-        // Surrogate-pair safety: C# string indexing is by UTF-16 code unit.
-        // If position 239 holds a high surrogate (e.g. an emoji or astral-
-        // plane character), `Content[..240]` would produce an unpaired
-        // surrogate that downstream JSON serialisation rejects — a known
-        // HTTP-500 trigger flagged by the 2026-05-14 security audit.
-        var priorContent = TruncatePreservingSurrogates(priorUser.Content, 240);
-
-        return $"{priorContent} {message}";
-    }
-
-    /// <summary>
-    /// UTF-16-safe string truncation. If the cut would land between a
-    /// high surrogate and its low surrogate, back the cut up by one so the
-    /// resulting string contains only well-formed code points. Appends an
-    /// ellipsis when truncation actually happens.
-    /// </summary>
-    private static string TruncatePreservingSurrogates(string s, int maxUtf16Units)
-    {
-        if (s.Length <= maxUtf16Units) return s;
-        var cut = maxUtf16Units;
-        if (cut > 0 && char.IsHighSurrogate(s[cut - 1])) cut--;
-        return s[..cut] + "…";
-    }
-
-    private static ConversationTurn? FindMostRecentPriorUserTurn(
-        IReadOnlyList<ConversationTurn> turns,
-        bool skipLast)
-    {
-        var start = skipLast ? turns.Count - 2 : turns.Count - 1;
-        for (var i = start; i >= 0; i--)
-        {
-            if (string.Equals(turns[i].Role, "user", StringComparison.OrdinalIgnoreCase))
-                return turns[i];
-        }
-        return null;
-    }
+    // Routing-context enrichment lives in RoutingContextEnricher (2026-05-14
+    // extraction) so it can be unit-tested without spinning up the full
+    // orchestrator. Behaviour is unchanged from the inlined form.
 
     /// <summary>
     /// Emit a routing.candidates trace step with the top-3 intents the
@@ -304,7 +192,7 @@ public class ProductionOrchestrator(
         // The streaming path is the one the React demo uses, so without this
         // line the headline "Show me a practical example" follow-up fix would
         // not actually fire on the live surface — caught by code-review 2026-05-14.
-        var routingMessage = EnrichRoutingMessageIfFollowUp(message, sessionId, req.History);
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
 
         // ── Unified semantic intent dispatch (replaces the legacy algebra check
         //    and the per-skill CanHandle foreach). One embedding similarity pass
@@ -486,7 +374,7 @@ public class ProductionOrchestrator(
         //
         // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
         // task #168.
-        var routingMessage = EnrichRoutingMessageIfFollowUp(message, sessionId, req.History);
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
 
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers

@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
         services.TryAddSingleton<ConversationHistoryStore>();
+        services.TryAddSingleton<RoutingContextEnricher>();
         services.AddSingleton<IChatProviderReadinessProbe, ChatProviderReadinessProbe>();
         services.AddScoped<DirectChatApplicationService>();
         services.AddScoped<RoutedChatApplicationService>();
