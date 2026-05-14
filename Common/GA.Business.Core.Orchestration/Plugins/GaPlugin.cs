@@ -63,6 +63,12 @@ public sealed class GaPlugin : IChatPlugin
         // Built 2026-05-13 to close "parallel minor of C major" corpus failure.
         services.AddOrchestratorSkillIntent<RelativeKeySkill>();
 
+        // Domain-backed set-theory equivalence skill — deterministic Y/N for
+        // "are two PC-sets equivalent under T / I / TI" via SetClass prime
+        // form. Built 2026-05-13 to close the pitch-class equivalence corpus
+        // failure where LLM wording was too variable for substring asserts.
+        services.AddOrchestratorSkillIntent<SetTheoryEquivalenceSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);

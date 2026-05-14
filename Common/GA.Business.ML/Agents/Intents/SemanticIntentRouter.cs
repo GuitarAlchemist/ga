@@ -34,7 +34,13 @@ public sealed class SemanticIntentRouter(
     IRoutingHintProvider hintProvider,
     ILogger<SemanticIntentRouter> logger)
 {
-    private const float DefaultMinConfidence = 0.65f;
+    // Lowered 2026-05-13 from 0.65 → 0.55 after corpus iter showed short-form
+    // queries like "What is dorian" failing to clear the threshold even with
+    // the +0.06 routing-hint boost for the mode-name pattern. The +0.06 boost
+    // tops out around 0.58–0.62 for short queries against domain-backed
+    // skills; 0.55 gives the hint provider room to land its win without
+    // letting truly-unrelated queries grab an intent.
+    private const float DefaultMinConfidence = 0.55f;
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
