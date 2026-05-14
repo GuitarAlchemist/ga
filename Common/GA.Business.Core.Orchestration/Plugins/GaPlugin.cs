@@ -59,6 +59,10 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<CommonTonesSkill>();
         services.AddOrchestratorSkillIntent<DiatonicChordsSkill>();
 
+        // Domain-backed key-arithmetic skill (Tier 1 of 2026-05-13 plan).
+        // Built 2026-05-13 to close "parallel minor of C major" corpus failure.
+        services.AddOrchestratorSkillIntent<RelativeKeySkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);

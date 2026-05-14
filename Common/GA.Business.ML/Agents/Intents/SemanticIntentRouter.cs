@@ -89,7 +89,7 @@ public sealed class SemanticIntentRouter(
             timeoutCts.CancelAfter(EmbeddingTimeout);
 
             var queryEmbedding = await textEmbeddings.GenerateAsync(
-                [query], cancellationToken: timeoutCts.Token);
+                [NormalizeForEmbedding(query)], cancellationToken: timeoutCts.Token);
             queryVec = queryEmbedding[0].Vector.ToArray();
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -254,8 +254,14 @@ public sealed class SemanticIntentRouter(
 
             foreach (var intent in missing)
             {
-                var inputs = new List<string> { intent.Description };
-                inputs.AddRange(intent.ExamplePrompts);
+                // Lowercase BOTH description and examples before embedding to
+                // match the case-normalized query embedding (RouteAsync uses
+                // query.ToLowerInvariant() before calling GenerateAsync).
+                // Without paired normalization, "DIATONIC CHORDS IN G MAJOR"
+                // landed far from "diatonic chords in c major" and routed to
+                // skill.transpose. Caught 2026-05-13 via corpus case-variants.
+                var inputs = new List<string> { NormalizeForEmbedding(intent.Description) };
+                inputs.AddRange(intent.ExamplePrompts.Select(NormalizeForEmbedding));
 
                 var batch = await textEmbeddings!.GenerateAsync(inputs, cancellationToken: ct);
                 _intentEmbeddings[intent.Id] = batch.Select(e => e.Vector.ToArray()).ToArray();
@@ -278,6 +284,16 @@ public sealed class SemanticIntentRouter(
             _initLock.Release();
         }
     }
+
+    // Embedding-side normalization: lowercase + trim only. The embedding
+    // model (nomic-embed-text) tokenizes case-sensitively and produces
+    // measurably different vectors for "X" vs "x" — enough to flip
+    // routing winners on close calls. Applying the same normalization
+    // to both stored examples and the runtime query keeps comparisons
+    // case-invariant without losing semantic content. Skills still get
+    // the ORIGINAL message (case preserved) at execution time.
+    private static string NormalizeForEmbedding(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : text.Trim().ToLowerInvariant();
 
     private static float Cosine(float[] a, float[] b)
     {

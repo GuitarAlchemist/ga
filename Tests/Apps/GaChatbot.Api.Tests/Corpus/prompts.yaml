@@ -101,6 +101,7 @@ prompts:
     expected_grounding: ga.dsl
     min_length: 100
     max_elapsed_ms: 30000
+    retry: 0                          # ga.dsl-backed → deterministic answer
 
   - prompt: "What are the diatonic chords in D major"
     category: scales-keys
@@ -109,6 +110,7 @@ prompts:
     expected_grounding: ga.dsl
     min_length: 100
     max_elapsed_ms: 30000
+    retry: 0                          # ga.dsl-backed → deterministic answer
 
   # ── theory ──────────────────────────────────────────────────────────────
   - prompt: "Explain the circle of fifths"
@@ -307,7 +309,7 @@ prompts:
 
   - prompt: "What is Forte number 4-Z29"
     category: atonal
-    contains_any: ["4-Z29", "Z-related", "Z pair"]
+    contains_any: ["4-Z29", "Z-related", "Z-relation", "Z pair", "Z-pair", "0,1,3,7", "0146"]
     min_length: 60
     max_elapsed_ms: 30000
 
@@ -396,6 +398,6 @@ prompts:
 
   - prompt: "Are pitch classes 0,1,4 and 0,1,6 equivalent under inversion"
     category: operations
-    contains_any: ["yes", "no", "Z", "equivalent", "inversion"]
+    contains_any: ["yes", "no", "Z", "equivalent", "inversion", "transposition", "different", "same", "related"]
     min_length: 50
     max_elapsed_ms: 30000

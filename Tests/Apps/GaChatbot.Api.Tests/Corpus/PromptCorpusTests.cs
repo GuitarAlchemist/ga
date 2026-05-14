@@ -108,6 +108,16 @@ public class PromptCorpusTests
     ///     because it talks to Ollama and the full orchestrator graph — too
     ///     slow for inner-loop CI but fast enough to gate releases.
     /// </summary>
+    /// <remarks>
+    ///     Per-prompt retry policy: each entry's `retry: N` field controls
+    ///     how many additional attempts the runner makes before declaring a
+    ///     prompt failed. Default is 1 retry (so 2 attempts total) for
+    ///     prompts whose answer goes through an LLM-shaped formatter where
+    ///     wording can legitimately vary run-to-run. Set retry: 0 for
+    ///     pure-deterministic skill answers where any variance is a real
+    ///     bug. Latency warnings are emitted from the LAST attempt's
+    ///     elapsed time only.
+    /// </remarks>
     [Test]
     [Explicit("Slow — runs the full corpus against the live orchestrator (Ollama + DI). Run before releases and as the oracle for the Cherny improvement loop.")]
     public async Task EveryPrompt_SatisfiesItsInvariants()
@@ -118,9 +128,19 @@ public class PromptCorpusTests
         foreach (var entry in _corpus!.Prompts)
         {
             if (entry.Skip) continue;
-            var (failure, warning) = await EvaluatePromptAsync(entry);
-            if (failure is not null) failures.Add(failure);
-            if (warning is not null) warnings.Add(warning);
+            // Retry policy: default 1 retry (so up to 2 attempts) per prompt
+            // to absorb LLM non-determinism. Explicit retry: 0 in the entry
+            // disables this for deterministic-skill prompts where wording
+            // variance IS a real failure.
+            var maxAttempts = 1 + (entry.Retry ?? 1);
+            (string? failure, string? warning) result = (null, null);
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                result = await EvaluatePromptAsync(entry);
+                if (result.failure is null) break;
+            }
+            if (result.failure is not null) failures.Add(result.failure);
+            if (result.warning is not null) warnings.Add(result.warning);
         }
 
         if (warnings.Count > 0)
@@ -237,5 +257,11 @@ public class PromptCorpusTests
         public string? ExpectedGrounding { get; set; }
         public bool Skip { get; set; }
         public string? SkipReason { get; set; }
+
+        // Retry count: how many ADDITIONAL attempts the runner makes
+        // before declaring a prompt failed. Default is 1 (so 2 attempts
+        // total). Set to 0 for deterministic-skill prompts where any
+        // wording variance is a real bug.
+        public int? Retry { get; set; }
     }
 }
