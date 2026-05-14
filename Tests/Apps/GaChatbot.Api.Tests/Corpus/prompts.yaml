@@ -1,0 +1,177 @@
+# GA Chatbot prompt corpus — invariant gate
+#
+# Each entry asserts what a real user-facing answer must contain, must NOT
+# contain, and where it must route to. Run by PromptCorpusTests.cs against
+# the GaChatbot.Api host (the host actually serving demos.guitaralchemist.com).
+#
+# Tags map to the architecture:
+#   routes_to                — expected agentId from /chat response
+#   routing_method           — optional expected routing.method
+#   contains                 — substrings that MUST appear (case-insensitive)
+#   contains_any             — at least one of these must appear
+#   not_contains             — substrings that must NOT appear
+#   min_length               — minimum useful answer size (chars)
+#   max_elapsed_ms           — soft latency budget (warns if exceeded)
+#   expected_grounding       — expected grounding.source ("ga.dsl", "ix-compatible", null)
+#   category                 — bucket name for failure aggregation
+#   skip                     — if true, prompt is documented but not run
+#   skip_reason              — why it's skipped (must be set when skip=true)
+#
+# Universally-banned phrases (any answer with these is a regression):
+#   - "Reproduce the catalog below verbatim"   ← leaked SKILL.md preamble
+#   - "Pure pedagogy"                          ← leaked SKILL.md preamble
+#   - "Use when a learner asks"                ← leaked SKILL.md preamble
+#   - "returned no matches"                    ← unloaded OPTIC-K index
+#   - "not yet implemented"                    ← stub response
+# These are baked into PromptCorpusTests.UniversalBannedMarkers; per-prompt
+# `not_contains` adds prompt-specific bans on top.
+
+prompts:
+
+  # ── modes (domain-backed ModesSkill, refactored 2026-05-13) ─────────────
+  - prompt: "What are the modes of the major scale"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"]
+    not_contains: ["I don't know"]
+    min_length: 200
+    max_elapsed_ms: 30000
+
+  - prompt: "What are the modes of melodic minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Melodic Minor", "Lydian Dominant", "Altered"]
+    min_length: 150
+    max_elapsed_ms: 30000
+
+  - prompt: "What are the modes of harmonic minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Harmonic Minor", "Phrygian"]
+    min_length: 150
+    max_elapsed_ms: 30000
+
+  - prompt: "What is Lydian dominant"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Lydian Dominant", "Acoustic"]
+    contains: ["#4", "b7"]
+    min_length: 100
+    max_elapsed_ms: 30000
+
+  - prompt: "Phrygian dominant"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Phrygian Dominant"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  - prompt: "Tell me about Hijaz"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Hijaz", "Phrygian Dominant"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  - prompt: "What are the byzantine modes"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Byzantine", "Double Harmonic"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  # ── scales / keys ───────────────────────────────────────────────────────
+  - prompt: "Show me the notes in C major"
+    category: scales-keys
+    contains: ["C", "D", "E", "F", "G", "A", "B"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What is the relative minor of G major"
+    category: scales-keys
+    contains: ["E minor"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What are the diatonic chords in G major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["G", "Am", "Bm", "C", "D", "Em"]
+    contains_any: ["F#°", "F#m7b5", "vii°"]
+    expected_grounding: ga.dsl
+    min_length: 100
+    max_elapsed_ms: 30000
+
+  - prompt: "What are the diatonic chords in D major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["D", "Em", "F#m", "G", "A", "Bm"]
+    expected_grounding: ga.dsl
+    min_length: 100
+    max_elapsed_ms: 30000
+
+  # ── theory ──────────────────────────────────────────────────────────────
+  - prompt: "Explain the circle of fifths"
+    category: theory
+    contains_any: ["fifth", "perfect fifth"]
+    contains: ["key signature"]
+    min_length: 200
+    max_elapsed_ms: 45000
+
+  - prompt: "What is the difference between major and minor"
+    category: theory
+    contains_any: ["third", "interval"]
+    min_length: 150
+    max_elapsed_ms: 45000
+
+  # ── chord operations (ga_dsl_eval-backed) ───────────────────────────────
+  - prompt: "Transpose C E G to D"
+    category: operations
+    contains: ["D", "F#", "A"]
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What are the common tones between Cmaj7 and Am7"
+    category: operations
+    contains: ["C", "E", "G"]
+    expected_grounding: ga.dsl
+    min_length: 50
+    max_elapsed_ms: 20000
+
+  - prompt: "Are 0146 and 0137 z-related"
+    category: operations
+    contains: ["Z"]
+    contains_any: ["z-related", "Z-related", "same interval"]
+    min_length: 50
+    max_elapsed_ms: 20000
+
+  # ── progressions / substitution ─────────────────────────────────────────
+  - prompt: "Identify the key of Am F C G"
+    category: progressions
+    contains_any: ["C major", "A minor"]
+    min_length: 50
+    max_elapsed_ms: 45000
+
+  - prompt: "Suggest substitutions for G7 in a ii-V-I"
+    category: progressions
+    min_length: 100
+    max_elapsed_ms: 60000
+
+  # ── beginner / getting started ──────────────────────────────────────────
+  - prompt: "Show me some easy beginner chords"
+    category: getting-started
+    contains_any: ["E", "A", "D", "G", "C"]
+    min_length: 100
+    max_elapsed_ms: 30000
+
+  # ── atonal (blocked — diagnostic pending, see task #137) ────────────────
+  - prompt: "List atonal modal families"
+    category: atonal
+    skip: true
+    skip_reason: "Task #137 — AtonalModalFamiliesConfig.GetAll() returns 0 families; diagnostic eprintfn deployed but not yet re-probed."
+
+  - prompt: "What is the interval class vector of 0,1,3,4,6,8"
+    category: atonal
+    skip: true
+    skip_reason: "Task #137 — atonal lookup path blocked until YAML loader exception is identified."
