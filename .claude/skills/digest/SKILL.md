@@ -131,6 +131,29 @@ new `success_criteria` frontmatter prevents drift.
 8. **Report** one line to the session:
    `Digest updated: <branch>@<sha> · next: <one-line> · criteria: <N>`.
 
+## Driving criteria autonomously with `/goal`
+
+After writing the digest, **consider `/goal <condition>` (native Claude
+Code v2.1.139+) for substantial autonomous work**. `/goal` mechanizes
+Karpathy R4: a small fast model evaluates after every turn whether the
+condition holds and either fires another turn or clears the goal.
+
+Use `/goal` when the Next action has:
+
+- A verifiable end state (build green, tests pass, file count under
+  budget, an empty queue)
+- 5+ minutes of expected autonomous work
+- An evaluator-checkable result (the check happens against what Claude
+  surfaces in the transcript — no tool calls)
+
+Skip `/goal` for short tasks (overhead isn't worth it), visual/UX
+judgement calls, or anything that needs human taste to call "done."
+
+When `/goal` lands a "yes," the achievement appears in the transcript
+with the condition + duration. The next `/digest` invocation should
+read this and mark the corresponding `success_criteria` entry as
+`achieved` with the `/goal` evidence.
+
 ## Anti-patterns
 
 - **Transcript capture.** "We did X, then Y, then Z." Git log is the

@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File Scripts/digest-activity-tracker.ps1"
+            "command": "pwsh -NoProfile -Command \"& $env:CLAUDE_PROJECT_DIR/Scripts/digest-activity-tracker.ps1\""
           }
         ]
       }
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File Scripts/digest-staleness-nudge.ps1"
+            "command": "pwsh -NoProfile -Command \"& $env:CLAUDE_PROJECT_DIR/Scripts/digest-staleness-nudge.ps1\""
           }
         ]
       }
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File Scripts/precompact-digest.ps1"
+            "command": "pwsh -NoProfile -Command \"& $env:CLAUDE_PROJECT_DIR/Scripts/precompact-digest.ps1\""
           }
         ]
       }
@@ -49,7 +49,7 @@
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File Scripts/sessionstart-digest.ps1"
+            "command": "pwsh -NoProfile -Command \"& $env:CLAUDE_PROJECT_DIR/Scripts/sessionstart-digest.ps1\""
           }
         ]
       }
@@ -63,7 +63,7 @@
           },
           {
             "type": "command",
-            "command": "pwsh -NoProfile -File Scripts/digest-stop-finalize.ps1"
+            "command": "pwsh -NoProfile -Command \"& $env:CLAUDE_PROJECT_DIR/Scripts/digest-stop-finalize.ps1\""
           }
         ]
       }
