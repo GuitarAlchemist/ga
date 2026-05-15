@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0",
+  "risk_thresholds": {
+    "pass": 0.25,
+    "warn": 0.6
+  },
+  "blocked_paths": [
+    ".github/workflows/**",
+    "infra/production/**",
+    "billing/**",
+    "legal/**",
+    "security/**",
+    "Directory.Packages.props",
+    "global.json"
+  ],
+  "one_way_door_paths": [
+    "schemas/**",
+    "contracts/**",
+    "migrations/**",
+    "**/*.sln",
+    "**/*.slnx",
+    "**/*.csproj",
+    "**/*.fsproj"
+  ],
+  "required_evidence": [
+    "changed_files",
+    "test_output",
+    "risk_report"
+  ]
+}
