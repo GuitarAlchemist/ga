@@ -218,6 +218,13 @@ state/telemetry/
 state/handoffs/*
 !state/handoffs/README.md
 
+# Session digests — per-session cursor state captured by the /digest skill
+# and the PreCompact hook fallback. The README explaining the layout is
+# tracked; the digest contents (which may include in-flight model context)
+# are gitignored.
+state/digests/*
+!state/digests/README.md
+
 # Thin chatbot host deployment files stay local/private
 Apps/GaChatbot.Api/appsettings.Production.json
 Apps/GaChatbot.Api/.env*
