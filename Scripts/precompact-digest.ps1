@@ -7,6 +7,27 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference     = 'SilentlyContinue'
 
+# Sanitizers — applied to ALL untrusted strings (stdin payload, branch name,
+# commit subject, PR number) before interpolation into paths or YAML.
+# Closes the path-traversal + YAML-injection findings from the 2026-05-15
+# octo security review.
+function Get-SafeId {
+    param([string]$Value, [string]$Fallback = 'unknown', [int]$MaxLen = 64)
+    if (-not $Value) { return $Fallback }
+    $cleaned = $Value -replace '[\r\n\t]', ''
+    if ($cleaned.Length -gt $MaxLen) { $cleaned = $cleaned.Substring(0, $MaxLen) }
+    if ($cleaned -match '^[A-Za-z0-9._\-]+$') { return $cleaned }
+    return $Fallback
+}
+function Get-SafeYaml {
+    param([string]$Value, [int]$MaxLen = 200)
+    if ($null -eq $Value -or $Value -eq '') { return 'null' }
+    $cleaned = ($Value -replace '[\r\n]', ' ')
+    if ($cleaned.Length -gt $MaxLen) { $cleaned = $cleaned.Substring(0, $MaxLen) + '...' }
+    $escaped = $cleaned -replace "'", "''"
+    return "'$escaped'"
+}
+
 $repoRoot = & git rev-parse --show-toplevel 2>$null
 if (-not $repoRoot) { exit 0 }
 
@@ -29,8 +50,9 @@ $ts     = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
 $tsFile = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH-mm-ssZ')
 
 # Archive existing digest first (preserves model-driven content for audit)
+$safeSession = Get-SafeId $sessionId
 if (Test-Path $latest) {
-    Copy-Item $latest (Join-Path $archDir "$tsFile-$sessionId.md") -Force
+    Copy-Item $latest (Join-Path $archDir "$tsFile-$safeSession.md") -Force
 
     # If the existing digest is recent (<30 min), the model just ran /digest —
     # don't overwrite it with the hook's metadata-only stub. The archive copy
@@ -57,13 +79,13 @@ $prLine = if ($openPr) { "**Open PR:** $openPr`n" } else { '' }
 $digest = @"
 ---
 schema_version: 1
-session_id: $sessionId
+session_id: $(Get-SafeYaml $sessionId)
 written_at: $ts
 trigger: precompact-hook-fallback
-branch: $branch
-head_sha: $headSha
-head_subject: $headSubj
-open_pr: $openPr
+branch: $(Get-SafeYaml $branch)
+head_sha: $(Get-SafeYaml $headSha)
+head_subject: $(Get-SafeYaml $headSubj)
+open_pr: $(Get-SafeYaml $openPr)
 ---
 
 # Session digest (fallback — /digest was not invoked before compaction)
