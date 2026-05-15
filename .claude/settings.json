@@ -9,6 +9,25 @@
             "command": "pwsh -NoProfile -Command \"try { $hookData = $input | ConvertFrom-Json; $f = $hookData.tool_input.file_path; if ($f -and $f -match 'GA\\.Business\\.DSL') { Write-Host 'DSL file changed' } } catch { }\""
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File Scripts/digest-activity-tracker.ps1"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File Scripts/digest-staleness-nudge.ps1"
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -41,6 +60,10 @@
           {
             "type": "command",
             "command": "pwsh -NoProfile -File Scripts/session-pr-check.ps1"
+          },
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File Scripts/digest-stop-finalize.ps1"
           }
         ]
       }

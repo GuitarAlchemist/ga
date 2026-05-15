@@ -26,19 +26,24 @@ metadata-only fallback when /digest isn't invoked before auto-compaction.
 
 ## What it captures
 
-Git metadata is gravy. The value is in the **content sections**.
+Git metadata is gravy. The value is in the **content sections** + the
+**success_criteria** field (Karpathy R4: "task complete != goal achieved").
 
 ```yaml
 ---
 schema_version: 1
 session_id: <session_id, propagated from PreCompact stdin when known>
 written_at: <RFC3339 UTC>
-trigger: digest-skill | precompact-hook-fallback
+trigger: digest-skill
 branch: <git branch>
 head_sha: <short SHA>
 head_subject: <commit subject>
 open_pr: <"#N" or null>
 last_model_update: <RFC3339 UTC>
+success_criteria:
+  - criterion: "<testable assertion for the Next action>"
+    status: pending | in-progress | achieved | abandoned
+    evidence: "<file:line | PR# | metric path | null>"
 ---
 
 # Session digest — <branch> @ <sha>
@@ -48,6 +53,9 @@ last_model_update: <RFC3339 UTC>
 ONE imperative sentence describing the next concrete step. If multiple
 things are queued, pick the one with highest blast radius. If nothing is
 queued, write `Wait for user direction on <specific question>`.
+
+The next action must map 1:1 to entries in the `success_criteria`
+frontmatter array — each criterion testable, not vibes.
 
 ## In-flight
 
@@ -71,6 +79,19 @@ Numbered. Questions you would ask the user if they walked in right now.
 rejected designs, abandoned approaches, paths the user explicitly closed.
 Without this, a fresh model context will silently re-derive bad ideas you
 already filtered.
+
+## Prior success criteria status (Karpathy R4)
+
+When a prior digest exists, this section reports the status delta:
+
+```
+- ✅ achieved: <prior criterion> — evidence: <file:line | commit | PR>
+- ⏳ in-progress: <prior criterion> — last touched: <where>
+- ⛔ abandoned: <prior criterion> — reason: <one sentence>
+```
+
+Carrying forward only the still-pending or in-progress criteria into the
+new `success_criteria` frontmatter prevents drift.
 ```
 
 ## How to run
@@ -79,19 +100,36 @@ already filtered.
    sections still current; rewrite stale ones. Don't drop "Do NOT carry
    forward" entries from the prior digest unless they're definitively
    resolved.
-2. **Capture git state** via Bash:
+2. **Karpathy R4 — review prior success criteria** if the prior digest had
+   them. For each: did the work since complete it? Mark `achieved` with
+   evidence, `in-progress` with where it's parked, or `abandoned` with a
+   one-sentence reason. Build the "Prior success criteria status" section.
+3. **Capture git state** via Bash:
    ```bash
    git rev-parse --abbrev-ref HEAD
    git rev-parse --short HEAD
    git log -1 --format='%s'
    gh pr view --json number 2>$null
    ```
-3. **Synthesize the content sections** from your current working context.
+4. **Synthesize the content sections** from your current working context.
    The first line of "Next action" is the most important sentence in the
-   digest — make it imperative and concrete.
-4. **Write** the full digest to `state/digests/latest.md` (overwrite).
-5. **Report** one line to the session:
-   `Digest updated: <branch>@<sha> · next: <one-line>`.
+   digest — make it imperative and concrete. Then derive 1–3 testable
+   `success_criteria` entries from it (Karpathy R4: every Next action
+   declares verifiable criteria, not "task complete").
+5. **Write** the full digest to `state/digests/latest.md` (overwrite).
+   Set `trigger: digest-skill` and `last_model_update` to current RFC3339 UTC.
+6. **Reset the activity counter** so the staleness nudge starts fresh:
+   ```bash
+   rm -f state/digests/.activity-counter
+   ```
+7. **Validate** the written digest against the schema (Karpathy R11:
+   runtime rejects schema mismatches):
+   ```bash
+   pwsh -NoProfile -File Scripts/digest-validate.ps1
+   ```
+   Non-zero exit = the digest you just wrote is malformed; fix and rewrite.
+8. **Report** one line to the session:
+   `Digest updated: <branch>@<sha> · next: <one-line> · criteria: <N>`.
 
 ## Anti-patterns
 
