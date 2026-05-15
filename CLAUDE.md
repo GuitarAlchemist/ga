@@ -59,17 +59,19 @@ For detailed C#/F#/Frontend standards, consult `.agent/skills/` (auto-discovered
 
 ## AI surfaces in this workspace
 
-This repo is typically opened in **Antigravity** (a VS Code fork). That gives two AI surfaces in the same window:
+This repo is typically opened in **Antigravity** (a VS Code fork). That gives two in-window AI surfaces, with Augment as a third option (extension, in Antigravity or any other VS Code / JetBrains / Vim host):
 
 - **Antigravity native AI** (bottom-right panel, Claude Opus 4.6 Thinking) — fast, ad-hoc, MCP-capped at 100 tools per instance.
 - **Claude Code extension** (top-right panel, `anthropic.claude-code-2.1.126`) — multi-step, large-context, no tool cap. Reads project-level `.mcp.json`.
+- **Augment** (VS Code / JetBrains / Vim extension, Claude Opus 4.7) — proprietary real-time codebase index for semantic retrieval across C#/F#/TS/Rust; first-class Linear / Jira / Confluence / Notion tools without MCP setup; `sub-agent-skill-author` and `sub-agent-skill-graduator` wired for the GA chatbot `SKILL.md` lifecycle. Smaller context window than Claude Code, no `/feature` orchestration, no cross-repo fanout.
 
 Split the work:
 
 - **Antigravity native** → quick lookups, single-file edits, sketch-level brainstorming.
 - **Claude Code** → multi-step plans, multi-file refactors, cross-repo work, anything that needs `/feature`, agent fanout, or the 1M context window.
+- **Augment** → "where is X across C#/F#/TS" semantic queries via the codebase index; Linear/Jira-driven changes without standing up MCP; `skills-dev/` → `skills/` SKILL.md drafting and graduation; non-Antigravity IDE work (Rider, plain VS Code, JetBrains).
 
-Hand off between surfaces via [`Scripts/antigravity-bridge.ps1`](Scripts/antigravity-bridge.ps1) — drops a note in `state/handoffs/` (gitignored) that the other surface reads on next ask. Plan: [docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md](docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md).
+Hand off between surfaces via [`Scripts/antigravity-bridge.ps1`](Scripts/antigravity-bridge.ps1) — drops a note in `state/handoffs/` (gitignored) that the other surface reads on next ask. The bridge is documented for the Antigravity native ↔ Claude Code pair; Augment can read/write the same `state/handoffs/` directory when asked. Plan: [docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md](docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md).
 
 ## Cross-repo contracts
 
@@ -89,3 +91,28 @@ Drawn from Karpathy's skill + sohaibt/product-mode (merged, not installed). Appl
 - **Frame problem before solution.** State who is in pain and what changes for them before proposing code. Check prior art first: `Common/GA.Business.Core/Analysis/**`, `Common/GA.Domain.Services/**`, `docs/methodology/**`.
 - **Instrument before you ship.** Metric-moving changes declare baseline + expected direction + guardrail. Baselines live in `state/quality/{embeddings,voicing-analysis,chatbot-qa}/`, aggregated by `ix-quality-trend` → `docs/quality/README.md`. Never "we'll add analytics later."
 - **Log one-way doors.** Non-trivial `docs/plans/*.md` must record reversibility (one-way / two-way door) and revisit trigger (metric / date / condition). One-way doors — OPTIC-K dims/partitions, public API shapes, schema changes, pricing — require explicit sign-off.
+
+## Karpathy 4 Rules — AI coding discipline
+
+These rules complement (don't replace) the Collaboration discipline above. They apply to every Claude proposal that touches code:
+
+1. **Think before coding.** State your interpretation of the request + assumptions; ask one clarifying question if anything is ambiguous; wait for confirmation before writing code.
+2. **Simplicity first.** Write minimum code that solves the exact problem. No speculative features, no future-proofing.
+3. **Surgical changes only.** Only modify code directly related to the request. Don't refactor adjacent code, don't fix unrelated style issues.
+4. **Goal-driven execution.** Transform every task into verifiable success criteria. Loop until each is demonstrably met. "Task completed" ≠ "goal achieved."
+
+Self-improvement reflex: when the user corrects you, invoke `/correct` so the rule lands in this file's **Session-learned rules** section — Cherny's "most important loop" from the 2026 Sequoia talk.
+
+## Session continuity (Cherny pattern)
+
+- `/digest` — captures meaningful session state (cursor, in-flight, hypotheses, success criteria) to `state/digests/latest.md`. Auto-fallback via `Scripts/precompact-digest.ps1`; auto-injected on next session via `Scripts/sessionstart-digest.ps1`. See `.claude/skills/digest/SKILL.md`.
+- `/learnings` — captures surprises (non-obvious facts worth grep-finding later) into `docs/solutions/<category>/<date>-<topic>.md`.
+- `/correct` — turns user corrections into permanent rules in this CLAUDE.md.
+
+The hooks are validated in CI by `.github/workflows/karpathy-cherny-discipline.yml`.
+
+## Session-learned rules
+
+_Appended by `/correct` when the user corrects an approach. Persists across sessions._
+
+(none yet)
