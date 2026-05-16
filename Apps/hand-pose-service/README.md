@@ -100,8 +100,9 @@ Prometheus metrics (placeholder).
 ### Python (Development)
 ```bash
 cd Apps/hand-pose-service
-pip install -r requirements.txt
-python main.py
+uv venv
+uv pip install -r requirements.txt
+uv run python main.py
 ```
 
 Service runs on http://localhost:8080

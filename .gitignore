@@ -17,6 +17,8 @@ obj/
 packages/
 /nuget/
 TestResults/
+**/TestResults/
+*.trx
 *.nupkg
 project.lock.json
 *.nuget.props
