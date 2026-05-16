@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "domain": "chatbot-qa",
+  "purpose": "Baseline + scope-boundary contract for the /auto-optimize loop on the GA chatbot corpus. Consumed by .claude/skills/auto-optimize/SKILL.md per docs/plans/2026-05-14-arch-cherny-adoption-and-tribunal-ci-plan-v2.md §Phase 2 item 4.",
+  "established_at": "2026-05-16T05:30:00Z",
+  "established_by": "auto-optimize skill scaffold (#181)",
+  "schema_pin": {
+    "OPTIC-K": "v1.8",
+    "dotnet": "10.0.1xx",
+    "qa_verdict_schema": "docs/contracts/qa-verdict.schema.json"
+  },
+
+  "metric": "pass_pct",
+  "metric_description": "Fraction of non-skipped prompts in Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml that satisfy ALL their declared invariants (contains, not_contains, routes_to, must_not_fallback, forbidden_agent_ids, min_routing_confidence, _signature.json shape). Computed by Scripts/run-prompt-corpus.ps1 -Snapshot.",
+  "primary_baseline": 0.94,
+  "primary_baseline_source": "post-#224 local snapshot 2026-05-16: 47/50 active prompts passed (94%). The remaining 3 are LLM-bound wording-variance cases on local Ollama. Re-baseline after demos host is redeployed past #221/#224/#225/#227 and cascade is enabled (Mistral fallback should bump the pass rate further).",
+
+  "_harness": {
+    "rollback_metadata": {
+      "roundtrip_validator": ".claude/skills/chatbot-qa-roundtrip-validate/SKILL.md",
+      "reject_on_loss": true,
+      "reject_on_regression": true,
+      "regression_threshold": 0.02
+    },
+    "kill_switches": {
+      "global":     "state/.loop-halted",
+      "per_domain": "state/quality/chatbot-qa/.STOP"
+    },
+    "lock_file": "state/quality/chatbot-qa/.lock",
+    "history_file": "state/quality/chatbot-qa/loop-history.jsonl"
+  },
+
+  "scope_boundary": {
+    "allow_edit": [
+      "Common/GA.Business.ML/Agents/Skills/*.cs",
+      "Common/GA.Business.ML/Agents/Mcp/*.cs",
+      "Common/GA.Business.ML/Agents/Intents/*.cs",
+      "Common/GA.Business.ML/Agents/Plugins/*.cs",
+      "Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs",
+      "Common/GA.Domain.Services/**/*.cs",
+      "Common/GA.Business.Core/**/*.cs",
+      "Apps/GaChatbot.Api/Services/*.cs"
+    ],
+    "allow_edit_rationale": "Loop edits skill implementations, MCP wrappers, intent routing, orchestrator plugins, and domain services — the layers behind a chatbot answer. NEVER prompts, corpus, oracle scripts, runbooks, or CI workflows.",
+
+    "protected": [
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/PromptCorpusTests.cs",
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/CanonicalSignatureChecker.cs",
+      "state/quality/chatbot-qa/golden-traces/**/_signature.json",
+      "state/quality/chatbot-qa/baseline.json",
+      "docs/runbooks/chatbot-improvement-loop.md",
+      "docs/runbooks/gstack-methodology-borrows.md",
+      "Scripts/run-prompt-corpus.ps1",
+      "Scripts/record-golden-traces.ps1",
+      "Scripts/extract-trace-dominators.ps1",
+      "Scripts/compare-trace-to-canonical.ps1",
+      ".github/workflows/*",
+      ".claude/skills/*"
+    ],
+    "protected_rationale": "Oracle, baselines, gates, and signature fixtures are operator-owned. The loop must NOT alter the contract it's measured against. Override marker required in commit subject: [allow-protected: <path>] — but only the operator may add this."
+  },
+
+  "constraints": {
+    "max_commits_per_session": 50,
+    "max_wall_clock_minutes": 480,
+    "plateau_window": 5,
+    "plateau_threshold": 0.005,
+    "plateau_threshold_note": "Five consecutive cycles where the relative metric delta is <0.5% triggers a graceful exit. Plateau is signal that the loop's toolbox is exhausted for this corpus shape — not failure."
+  },
+
+  "gates": {
+    "pre_merge": [
+      "auto-loop-PR receives /octo:review (auto-invoked by branch-protection workflow)",
+      "Demerzel tribunal verdict on PRs touching Common/GA.Business.ML/Agents/** or Mcp/** (per feedback_multi_llm_review_pays_off memory)",
+      "Backend Tests, Build Solution, claude-review CI checks all green",
+      "Branch protection requires protected-files-hook to confirm no diff outside allow_edit"
+    ],
+    "human_only": [
+      "Loop NEVER merges its own PRs in Phase 2.",
+      "Level 4 (auto-merge on multi-LLM green) requires Ollama-vs-cloud signal-measurement gate clearance per v2 plan §Phase 2 item 6."
+    ]
+  },
+
+  "dependencies": {
+    "cascade_pr": "#225 (CascadingChatClient + MistralChatClient) — once merged + enabled on demos, expect baseline to climb",
+    "signature_pr": "#227 (CanonicalSignatureChecker) — provides the trace-shape gate the loop relies on",
+    "depends_on_baselines": [
+      "state/quality/optick-sae/baseline-2026-05-03.json (cross-repo embedding contract)"
+    ]
+  }
+}
