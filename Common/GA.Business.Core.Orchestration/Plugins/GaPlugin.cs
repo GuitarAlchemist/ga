@@ -107,6 +107,11 @@ public sealed class GaPlugin : IChatPlugin
         // Closes the "show me voicings for Cmaj7" gap in chatbot routing.
         services.AddOrchestratorSkillIntent<ChordVoicingsSkill>();
 
+        // ImprovisationSkill (2026-05-16, #219) — "what scale can I use to
+        // solo over X" — single-chord chord-scale recommendations from a
+        // canonical quality→scales mapping. Pure domain compute, no LLM.
+        services.AddOrchestratorSkillIntent<ImprovisationSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
