@@ -33,7 +33,32 @@ $latest    = Join-Path $digestDir 'latest.md'
 
 if (Test-Path $latest) {
     $age = (Get-Date) - (Get-Item $latest).LastWriteTime
+
+    # Bypass 1: very recent write — protects against rapid re-stomps in the
+    # same session (a Stop hook firing seconds after a tool call wraps).
     if ($age.TotalMinutes -lt 10) { exit 0 }
+
+    # Bypass 2: model-driven digest written by /digest — these carry
+    # `trigger: digest-skill` in their frontmatter and represent
+    # intentional state capture. The fallback stub is meant ONLY as
+    # safety net for sessions that ended without /digest; it must
+    # never clobber a model-driven write, regardless of age.
+    # Observed problem: 4 stomps in one session on 2026-05-16 because
+    # the original 10-min guard was too narrow for long-running sessions.
+    try {
+        $head = Get-Content $latest -TotalCount 12 -ErrorAction Stop
+        $trigger = $head | Where-Object { $_ -match '^\s*trigger:\s*(\S+)' } |
+                   Select-Object -First 1
+        if ($trigger -and ($trigger -match '^\s*trigger:\s*digest-skill\s*$')) {
+            # Respect the model's authoritative write. The audit archive
+            # already captured the prior state via the Copy-Item below
+            # whenever a Stop hook DOES fire, so we lose nothing.
+            exit 0
+        }
+    } catch {
+        # Frontmatter unreadable — fall through to the stub write so a
+        # corrupt digest still gets replaced with a usable fallback.
+    }
 }
 
 New-Item -ItemType Directory -Path $digestDir, $archDir -Force | Out-Null
