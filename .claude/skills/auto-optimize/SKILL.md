@@ -169,7 +169,14 @@ For each cycle (up to `max_iterations`):
 1. **Check halt signals again** (Step 0 markers may have appeared mid-run).
 2. **Run oracle**: `pwsh $oracle_script_path -Worst 1 -Json state/quality/$domain/last.json`.
    The oracle MUST produce a JSON-shaped `state/quality/$domain/last.json`
-   with fields `{metric_value, worst_item, worst_item_diagnostic}`.
+   with fields `{metric_value, worst_item, worst_item_diagnostic,
+   oracle_status}`. **Fail-closed contract**: if `metric_value` is
+   `null` OR `oracle_status` is anything other than `"ok"`, the loop
+   MUST refuse to use the file as a baseline and exit
+   `aborted-oracle-unreliable`. A green report from an oracle that
+   never ran is the worst possible failure mode (see
+   `docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md`
+   for the chatbot-qa incident that motivated this contract).
 3. **Compare metric** against `baseline.primary_baseline`. If the new
    value is at-or-above baseline AND there are no failing items, the
    loop has run out of work — exit with status `converged`.

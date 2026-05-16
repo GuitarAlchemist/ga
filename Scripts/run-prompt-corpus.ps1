@@ -49,6 +49,17 @@ $proc = Start-Process -FilePath dotnet -ArgumentList $args -NoNewWindow -Wait -P
 $out = Get-Content $tmpLog -Raw
 Remove-Item $tmpLog, "$tmpLog.err" -ErrorAction SilentlyContinue
 
+# Did the test runner actually complete? If a build failure (or any other
+# pre-test crash) prevented EveryPrompt_SatisfiesItsInvariants from running,
+# none of the completion markers will appear in $out. We MUST detect that
+# before any "all passed" claim — otherwise an unattended /auto-optimize
+# loop would treat the build failure as a perfect baseline. See
+# docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md.
+$runnerCompleted = $out -match 'Prompts violating invariants \(\d+\):' `
+                -or $out -match '✓ All prompts passed' `
+                -or $out -match 'Passed!\s*-?\s*Failed:\s*0' `
+                -or $out -match 'Test Run Successful'
+
 # Parse failures: the test aggregates them as a multi-line message after
 # "Prompts violating invariants (N):" — extract those lines.
 $failures = @()
@@ -71,7 +82,12 @@ if ($out -match "Warnings \(\d+\):") {
 
 # Summary
 Write-Host ""
-if ($failures.Count -eq 0) {
+if (-not $runnerCompleted) {
+    Write-Host "✗ Oracle did NOT run to completion." -ForegroundColor Red
+    Write-Host "  dotnet test exit=$($proc.ExitCode); no parseable verdict line in output." -ForegroundColor Red
+    Write-Host "  Common cause: a running GaChatbot.Api (or GaApi) is holding open bin/Debug/net10.0/*.dll." -ForegroundColor DarkYellow
+    Write-Host "  Stop the host (Stop-Process -Id <pid> -Force) and retry. Do NOT trust any 0-failure verdict from this run." -ForegroundColor DarkYellow
+} elseif ($failures.Count -eq 0) {
     Write-Host "✓ All prompts passed." -ForegroundColor Green
 } else {
     Write-Host "✗ $($failures.Count) prompt(s) failed invariants:" -ForegroundColor Red
@@ -90,13 +106,64 @@ if ($warnings.Count -gt 0) {
 }
 
 if ($Json) {
-    $summary = @{
-        timestamp = (Get-Date -Format "o")
-        totalFailures = $failures.Count
-        totalWarnings = $warnings.Count
-        failures = $failures
-        warnings = $warnings
-        exitCode = $proc.ExitCode
+    if (-not $runnerCompleted) {
+        # Fail-loud shape: explicit nulls (NOT empty arrays) so the
+        # /auto-optimize loop's "no metric_value = refuse to read"
+        # gate kicks in. See .claude/skills/auto-optimize/SKILL.md.
+        $summary = [ordered]@{
+            timestamp             = (Get-Date -Format "o")
+            oracle_status         = "build_or_runner_failed"
+            metric_value          = $null
+            worst_item            = $null
+            worst_item_diagnostic = $null
+            totalFailures         = $null
+            totalWarnings         = $null
+            failures              = $null
+            warnings              = $null
+            exitCode              = $proc.ExitCode
+        }
+    } else {
+        # Walk prompts.yaml once to recover the active-prompt total so
+        # we can express metric_value as pass-rate. Mirrors the walk in
+        # the -Snapshot branch below; kept inline to avoid changing the
+        # snapshot logic in this fix.
+        $promptsYamlForMetric = Join-Path $repoRoot "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml"
+        $totalActive = 0
+        $inBlock = $false
+        $blockSkipped = $false
+        $flushTotal = {
+            if ($script:inBlock -and -not $script:blockSkipped) { $script:totalActive++ }
+            $script:inBlock = $false
+            $script:blockSkipped = $false
+        }
+        Get-Content $promptsYamlForMetric | ForEach-Object {
+            if ($_ -match '^\s*-\s*prompt:') {
+                & $flushTotal
+                $script:inBlock = $true
+            } elseif ($script:inBlock -and $_ -match '^\s+skip:\s*true') {
+                $script:blockSkipped = $true
+            }
+        }
+        & $flushTotal
+
+        $metricValue = if ($totalActive -gt 0) {
+            [math]::Round((($totalActive - $failures.Count) / $totalActive), 4)
+        } else { $null }
+        $worst = if ($failures.Count -gt 0) { $failures[0] } else { $null }
+
+        $summary = [ordered]@{
+            timestamp             = (Get-Date -Format "o")
+            oracle_status         = "ok"
+            metric_value          = $metricValue
+            worst_item            = $worst
+            worst_item_diagnostic = $worst
+            totalActivePrompts    = $totalActive
+            totalFailures         = $failures.Count
+            totalWarnings         = $warnings.Count
+            failures              = $failures
+            warnings              = $warnings
+            exitCode              = $proc.ExitCode
+        }
     }
     $summary | ConvertTo-Json -Depth 4 | Set-Content $Json -Encoding UTF8
     Write-Host ""
