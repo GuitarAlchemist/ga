@@ -114,9 +114,22 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
             .Trim();
         if (remainder.Length == 0 || remainder.Length > 60) return false;
 
+        // Chord/triad in the remainder signals chord-construction intent,
+        // not mode intent — route to ChordInfoSkill instead. Without this,
+        // "tell me about a major seventh chord" matches the YAML entry
+        // "Major Seventh Chord Family" and ModesSkill answers a chord
+        // question with a phantom mode family (#220).
+        var lowerRemainder = remainder.ToLowerInvariant();
+        if (lowerRemainder.Contains("chord", StringComparison.Ordinal) ||
+            lowerRemainder.Contains("triad", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         // Check known family + mode aliases (case-insensitive). Cheap —
-        // ModesConfig is in-memory.
-        var families = ModesConfig.GetModalFamilies();
+        // ModesConfig is in-memory. Chord/triad families are filtered out
+        // because they describe chord *construction*, not modal families.
+        var families = GetTonalModalFamilies();
         if (families.Count == 0) return false;
         var lower = remainder.ToLowerInvariant();
 
@@ -149,7 +162,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         if (atonalAnswer is not null)
             return Task.FromResult(atonalAnswer);
 
-        var families = ModesConfig.GetModalFamilies();
+        var families = GetTonalModalFamilies();
         if (families.Count == 0)
         {
             logger.LogWarning("ModesSkill: ModesConfig returned 0 families — falling back to a minimal answer");
@@ -495,6 +508,27 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
 
     private static string StripFamilySuffix(string familyName) =>
         familyName.Replace(" Family", "", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Returns ModesConfig families with chord/triad entries filtered out.
+    /// Modes.yaml contains 4 entries that describe chord construction
+    /// (Major/Diminished/Augmented Triad, Major Seventh Chord) rather than
+    /// modal families. They were leaking into mode-query answers (#220) —
+    /// e.g. "tell me about a major seventh chord" returned a fake mode
+    /// family. Filtering at the skill layer keeps the YAML intact for any
+    /// cross-references (AtonalModalFamiliesConfig.TonalSubfamilies).
+    /// </summary>
+    private static IReadOnlyList<ModesConfig.ModalFamilyInfo> GetTonalModalFamilies()
+    {
+        var all = ModesConfig.GetModalFamilies();
+        return all
+            .Where(f => !IsChordOrTriadFamilyName(f.Name))
+            .ToList();
+    }
+
+    private static bool IsChordOrTriadFamilyName(string name) =>
+        name.Contains("Chord Family", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Triad Family", StringComparison.OrdinalIgnoreCase);
 
     // ── Atonal path ──────────────────────────────────────────────────────────
 
