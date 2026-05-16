@@ -102,6 +102,11 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<IcvShortestPathSkill>();
         services.AddOrchestratorSkillIntent<GrothendieckParseSkill>();
 
+        // ChordVoicingsSkill (2026-05-16) — chat-layer wrapper over the
+        // OPTIC-K voicing-search pipeline that already powers VoicingAgent.
+        // Closes the "show me voicings for Cmaj7" gap in chatbot routing.
+        services.AddOrchestratorSkillIntent<ChordVoicingsSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
