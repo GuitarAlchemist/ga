@@ -167,6 +167,10 @@ interface FingerChain {
 
 // FABRIK in 3D — joints[0] is the root (fixed), last is the tip (drawn
 // to target). Maintains bone lengths exactly and converges quickly.
+// Joint-DOF constraints (cone for MCP, hinge for PIP/DIP) tracked as
+// follow-up task #222 — full per-DOF model needed to avoid the
+// regressions a minimal palm-plane projection introduces on barré chords
+// (see docs/plans/2026-05-16-arch-ik-joint-constraints-plan.md).
 function fabrikSolve(
   joints: THREE.Vector3[],
   bones: number[],
