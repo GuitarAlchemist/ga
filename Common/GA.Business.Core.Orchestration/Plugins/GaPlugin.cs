@@ -63,6 +63,14 @@ public sealed class GaPlugin : IChatPlugin
         // Built 2026-05-13 to close "parallel minor of C major" corpus failure.
         services.AddOrchestratorSkillIntent<RelativeKeySkill>();
 
+        // Deterministic theory-comparison skill. Built 2026-05-16 to close
+        // "What is the difference between major and minor" — that prompt
+        // was being semantically misrouted to RelativeKeySkill, returning
+        // 0.1 confidence, then timing out at the Ollama fallback. This
+        // skill's description scores higher for "difference / compare /
+        // vs" queries so the semantic router picks it first.
+        services.AddOrchestratorSkillIntent<TheoryComparisonSkill>();
+
         // Domain-backed set-theory equivalence skill — deterministic Y/N for
         // "are two PC-sets equivalent under T / I / TI" via SetClass prime
         // form. Built 2026-05-13 to close the pitch-class equivalence corpus
