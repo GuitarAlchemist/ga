@@ -116,41 +116,63 @@ public static class AiServiceExtensions
     }
 
     /// <summary>
-    /// Adds an <see cref="IChatClient"/> based on the specified provider.
+    /// Adds an <see cref="IChatClient"/> based on the specified provider. If
+    /// <c>AI:CascadeProvider</c> is set (e.g. <c>mistral</c>), the primary
+    /// client is wrapped in a <see cref="Providers.CascadingChatClient"/>
+    /// that falls back to the secondary on timeout or network failure.
     /// </summary>
     public static IServiceCollection AddGuitarAlchemistChatClient(
         this IServiceCollection services,
         string provider,
         IConfiguration configuration)
     {
-        switch (provider.ToLowerInvariant())
+        IChatClient BuildPrimary() => provider.ToLowerInvariant() switch
         {
-            case "ollama":
-                services.TryAddSingleton<IChatClient>(_ =>
-                    Providers.OllamaProvider.CreateChatClientFromConfig(configuration));
-                break;
+            "ollama"  => Providers.OllamaProvider.CreateChatClientFromConfig(configuration),
+            "docker"  => Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration),
+            "mistral" => Providers.Mistral.MistralProvider.CreateChatClientFromConfig(configuration),
+            "github"  => Providers.GitHubModelsProvider.IsAvailable()
+                ? Providers.GitHubModelsProvider.CreateChatClientFromConfig(configuration)
+                : throw new InvalidOperationException("GitHub Models requires the GITHUB_TOKEN environment variable."),
+            _ => throw new ArgumentException($"Unknown chat provider: {provider}", nameof(provider)),
+        };
 
-            case "docker":
-                services.TryAddSingleton<IChatClient>(_ =>
-                    Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration));
-                break;
-
-            case "github":
-                if (!Providers.GitHubModelsProvider.IsAvailable())
-                {
-                    throw new InvalidOperationException(
-                        "GitHub Models requires the GITHUB_TOKEN environment variable.");
-                }
-                services.TryAddSingleton<IChatClient>(_ =>
-                    Providers.GitHubModelsProvider.CreateChatClientFromConfig(configuration));
-                break;
-
-            default:
-                throw new ArgumentException($"Unknown chat provider: {provider}", nameof(provider));
+        var cascadeProvider = configuration.GetValue<string>("AI:CascadeProvider");
+        if (string.IsNullOrWhiteSpace(cascadeProvider))
+        {
+            services.TryAddSingleton<IChatClient>(_ => BuildPrimary());
+            return services;
         }
+
+        // Cascade mode: primary + secondary, wrapped in CascadingChatClient.
+        // Secondary is constructed lazily inside the factory so a missing
+        // MISTRAL_API_KEY surfaces at first DI resolution (typically app
+        // startup) rather than at the cascade trigger point.
+        services.TryAddSingleton<IChatClient>(sp =>
+        {
+            var primary   = BuildPrimary();
+            var secondary = BuildCascadeSecondary(cascadeProvider, configuration);
+            var logger    = sp.GetService<ILogger<Providers.CascadingChatClient>>();
+            return new Providers.CascadingChatClient(primary, secondary, logger);
+        });
 
         return services;
     }
+
+    private static IChatClient BuildCascadeSecondary(string cascadeProvider, IConfiguration configuration) =>
+        cascadeProvider.ToLowerInvariant() switch
+        {
+            "mistral" => Providers.Mistral.MistralProvider.CreateChatClientFromConfig(configuration),
+            "ollama"  => Providers.OllamaProvider.CreateChatClientFromConfig(configuration),
+            "docker"  => Providers.DockerModelRunnerProvider.CreateChatClientFromConfig(configuration),
+            "github"  => Providers.GitHubModelsProvider.IsAvailable()
+                ? Providers.GitHubModelsProvider.CreateChatClientFromConfig(configuration)
+                : throw new InvalidOperationException(
+                    "GitHub Models cascade requires the GITHUB_TOKEN environment variable."),
+            _ => throw new ArgumentException(
+                $"Unknown AI:CascadeProvider '{cascadeProvider}'. Valid values: mistral, ollama, docker, github.",
+                nameof(cascadeProvider)),
+        };
 
     /// <summary>
     /// Adds a text embedding generator based on the specified provider.
