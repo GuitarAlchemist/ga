@@ -453,11 +453,15 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
           const p = fretted[i];
           finger.target.copy(targetForFret(p.string, p.fret));
         } else {
-          // Park unused fingers above the fretboard near the lowest fret.
+          // Park unused fingers just above the fretboard near the lowest
+          // fret. y-float kept small (was 0.4 + 0.1*i = up to 0.7 above
+          // surface) so parked targets stay within bone reach — pinky has
+          // only 0.72 units of total chain length and was hitting the
+          // "stretched straight" FABRIK branch on every parked frame.
           const restFret = Math.max(1, (fretted[0]?.fret ?? 1));
           const restString = 1 + i; // line them up over high strings
           finger.target.copy(targetForFret(restString, restFret));
-          finger.target.y += 0.4 + i * 0.1; // float up a little
+          finger.target.y += 0.12 + i * 0.04; // gentle float, not a launch
         }
       }
 
@@ -476,7 +480,22 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       const cz = fretted.length > 0
         ? fretted.reduce((s, p) => s + stringZ(p.string), 0) / fretted.length
         : 0;
-      wrist.position.set(cx + 0.25, -0.05, cz - 0.35);
+      // Anatomically correct LEFT-hand fretting pose:
+      //   - Wrist sits BELOW the neck and OFFSET to the low-E side
+      //     (-Z direction) — that's where a player's hand approaches.
+      //   - Wrist X is aligned with the chord centroid (not offset toward
+      //     nut as before) so the knuckle row sits roughly OVER the chord.
+      //   - Palm faces UP (+Y) toward the strings.
+      //   - Palm-forward = +Z (across the strings, away from the player)
+      //     so fingers chain perpendicular to the neck and span string 1-6.
+      //
+      // Geometry check (C major: index str2/fret1 / middle str4/fret2 /
+      // ring str5/fret3): every MCP→target distance lands at 0.31–0.52
+      // units vs bone budgets of 0.88–0.98, leaving 0.36–0.46 units of
+      // slack for a comfortable curl rather than a stretched-straight line.
+      const wristZOffset = -0.55;   // tucked under the low-E side
+      const wristYOffset = -0.15;   // just below the neck plane
+      wrist.position.set(cx, wristYOffset, cz + wristZOffset);
 
       // Initialize each finger's joint chain in a pre-curled "above
       // the fretboard" pose. FABRIK has no joint constraints — it
