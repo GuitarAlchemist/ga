@@ -1,0 +1,50 @@
+name: QA Verdict Dispatch
+
+# Phase 0 deliverable #4 of docs/plans/2026-05-14-arch-cherny-adoption-and-
+# tribunal-ci-plan-v2.md. Fires on every pull_request event and dispatches
+# a `sibling-pr-opened` event to Demerzel's qa-tribunal.yml (Phase 0 #3
+# RECEIVER). Demerzel's emitter validates the payload, computes
+# blast_radius, and writes a verdict to state/quality/verdicts/.
+#
+# Auth: uses secrets.PAT_TOKEN (fine-grained PAT with `repo` scope on
+# GuitarAlchemist/Demerzel). Falls back to github.token, which will fail
+# the gh api call because the default token can't write dispatches to
+# another repo — this is the documented user-action prerequisite.
+#
+# When GitHub App `demerzel-tribunal` ships (D-auth, Phase 3 admin
+# action), the workflow MAY be updated to use the app's installation
+# token instead of a PAT.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Phase 0 fail-closed on forked PRs — full isolation is Phase 3 work.
+    if: ${{ github.event.pull_request.head.repo.fork == false }}
+    steps:
+      - name: Dispatch sibling-pr-opened to Demerzel
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          IDEMPOTENCY_KEY="${REPO}:${PR}:${HEAD_SHA}"
+          gh api repos/GuitarAlchemist/Demerzel/dispatches \
+            --method POST \
+            -f "event_type=sibling-pr-opened" \
+            -f "client_payload[repo]=${REPO}" \
+            -F "client_payload[pr]=${PR}" \
+            -f "client_payload[head_sha]=${HEAD_SHA}" \
+            -f "client_payload[base_sha]=${BASE_SHA}" \
+            -f "client_payload[idempotency_key]=${IDEMPOTENCY_KEY}"
+          echo "Dispatched sibling-pr-opened: repo=${REPO} pr=${PR} head_sha=${HEAD_SHA}"
