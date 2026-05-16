@@ -461,15 +461,22 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         }
       }
 
-      // Wrist position: align under the centroid of fretted positions.
+      // Wrist position: align under the centroid of fretted positions,
+      // sitting on the low-E side of the neck so fingers reach UP + OVER.
+      //
+      // Previous offsets (Y=-0.4, Z=-0.6) put the wrist farther than the
+      // total bone length (0.88 max for index = 0.42+0.26+0.20). FABRIK
+      // then fell into its "target unreachable — point + stretch" branch
+      // and drew fingers as straight lines that overshot the fretboard,
+      // producing the "fingers across the neck" report. New offsets keep
+      // every target reachable for the bundled CHORD_LIBRARY voicings.
       const cx = fretted.length > 0
         ? fretted.reduce((s, p) => s + fretX(p.fret), 0) / fretted.length
         : 0;
       const cz = fretted.length > 0
         ? fretted.reduce((s, p) => s + stringZ(p.string), 0) / fretted.length
         : 0;
-      // Wrist sits below + behind (low strings side) the chord centroid.
-      wrist.position.set(cx + 0.3, -0.4, cz - 0.6);
+      wrist.position.set(cx + 0.25, -0.05, cz - 0.35);
     };
 
     updateTargetsFromChord(chordRef.current);
@@ -551,12 +558,33 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         targetMeshes[i].visible = showTargetsRef.current;
       }
 
-      // Smoothed wrist orientation: roll/pitch toward the chord's
-      // strongest finger so the palm faces the strings naturally.
-      // Index finger tip points down/forward toward fretboard.
-      tmpV.copy(fingers[0].target).sub(wrist.position).normalize();
-      tmpQ.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tmpV);
-      wrist.quaternion.slerp(tmpQ, 0.05);
+      // Smoothed wrist orientation. Use a CONSTRAINED basis instead of
+      // `setFromUnitVectors`: the latter aligns local +Z with the target
+      // direction but leaves the local +X (knuckle-row axis) free to roll
+      // arbitrarily, which used to swing fingers across the neck.
+      //
+      // Build an explicit basis anchored to the fretboard surface:
+      //   local +Y = world +Y  (palm-back perpendicular to fretboard; flat)
+      //   local +Z = horizontal direction toward the chord centroid (palm
+      //              forward, toward strings — projected onto the XZ plane
+      //              so the palm never tilts off the fretboard)
+      //   local +X = +Y × +Z   (knuckle-row axis spans across strings)
+      //
+      // Then slerp toward that basis so chord changes still animate.
+      tmpDir.set(
+        fingers[0].target.x - wrist.position.x,
+        0, // <-- zero the Y component to keep the palm flat
+        fingers[0].target.z - wrist.position.z,
+      );
+      if (tmpDir.lengthSq() > 1e-6) {
+        tmpDir.normalize();
+        const palmForward = tmpDir;
+        const palmUp = yAxis;
+        const palmRight = new THREE.Vector3().crossVectors(palmUp, palmForward).normalize();
+        const basis = new THREE.Matrix4().makeBasis(palmRight, palmUp, palmForward);
+        tmpQ.setFromRotationMatrix(basis);
+        wrist.quaternion.slerp(tmpQ, 0.08);
+      }
 
       composer.render();
       raf = requestAnimationFrame(animate);

@@ -1,6 +1,10 @@
 import { MusicHierarchyItem, MusicHierarchyLevel, MusicHierarchyLevelInfo } from '../types/musicHierarchy';
 
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_GA_GRAPHQL_URL ?? 'https://localhost:7001/graphql';
+// Default to relative `/graphql` so the Vite proxy (or production same-origin
+// routing) handles host resolution. The legacy `https://localhost:7001` default
+// pointed at a port GaApi has not used since the move to :5232; broke the
+// Music Hierarchy Navigator on 2026-05-16.
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_GA_GRAPHQL_URL ?? '/graphql';
 
 interface GraphQLResponse<T> {
   data?: T;
