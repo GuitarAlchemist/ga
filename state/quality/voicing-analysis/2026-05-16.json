@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-16T00:27:30.0147729Z",
+  "Timestamp": "2026-05-16T01:00:27.2287726Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -153,16 +153,6 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-7-11-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
-        "Diagram": "x-5-9-x-x-x",
-        "Description": "IntervalSpread=0 for 2-note voicing"
-      },
-      {
-        "Instrument": "guitar",
         "Diagram": "x-6-10-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
@@ -173,12 +163,12 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-9-13-x-x-x",
+        "Diagram": "x-7-11-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-11-15-x-x-x",
+        "Diagram": "x-5-9-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -188,12 +178,22 @@
       },
       {
         "Instrument": "guitar",
-        "Diagram": "x-12-16-x-x-x",
+        "Diagram": "x-9-13-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
         "Instrument": "guitar",
         "Diagram": "x-10-14-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-12-16-x-x-x",
+        "Description": "IntervalSpread=0 for 2-note voicing"
+      },
+      {
+        "Instrument": "guitar",
+        "Diagram": "x-11-15-x-x-x",
         "Description": "IntervalSpread=0 for 2-note voicing"
       },
       {
@@ -240,9 +240,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 84.3720304,
-    "VoicingsPerSec": 3710.3172522442933,
-    "PeakWorkingSetMb": 397.52734375
+    "RuntimeSeconds": 80.7877461,
+    "VoicingsPerSec": 3874.9317206164756,
+    "PeakWorkingSetMb": 407.78515625
   },
   "IssueSamples": {
     "NullChordName": [],
