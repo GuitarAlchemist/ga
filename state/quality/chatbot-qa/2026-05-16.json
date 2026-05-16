@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-05-16T02:21:15.2718500+00:00",
+  "total_prompts": 50,
+  "pass_pct": 0.0,
+  "by_category": {
+    "atonal": {
+      "pass_pct": 0.0,
+      "total": 4
+    },
+    "case-variants": {
+      "pass_pct": 0.0,
+      "total": 2
+    },
+    "chord-from-notes": {
+      "pass_pct": 0.0,
+      "total": 4
+    },
+    "extended-chords": {
+      "pass_pct": 0.0,
+      "total": 2
+    },
+    "getting-started": {
+      "pass_pct": 0.0,
+      "total": 1
+    },
+    "modes": {
+      "pass_pct": 0.0,
+      "total": 13
+    },
+    "operations": {
+      "pass_pct": 0.0,
+      "total": 7
+    },
+    "progressions": {
+      "pass_pct": 0.0,
+      "total": 3
+    },
+    "scales-keys": {
+      "pass_pct": 0.0,
+      "total": 8
+    },
+    "theory": {
+      "pass_pct": 0.0,
+      "total": 2
+    },
+    "typo-tolerance": {
+      "pass_pct": 0.0,
+      "total": 4
+    }
+  }
+}
