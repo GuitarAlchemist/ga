@@ -18,11 +18,11 @@
 
   "_harness": {
     "rollback_metadata": {
-      "roundtrip_validator": null,
+      "roundtrip_validator": ".claude/skills/embeddings-roundtrip-validate/SKILL.md",
       "reject_on_loss": true,
       "reject_on_regression": true,
       "regression_threshold": 0.01,
-      "note": "No roundtrip validator yet for this domain — embedding changes that move the metric must be hand-reviewed until #192 ships the producer CI workflow + a domain-specific validator."
+      "note": "Validator ships in PR landing this baseline change. CRITICAL: this domain is LOWER-IS-BETTER (full_classifier_accuracy near baseline_random ~0.333 is ideal). delta > +regression_threshold = reject. Validator handles the polarity flip; do NOT replicate chatbot-qa's higher-is-better logic."
     },
     "kill_switches": {
       "global":     "state/.loop-halted",
@@ -50,8 +50,9 @@
   },
 
   "_open_gaps": {
-    "snapshot_cadence": "No daily producer yet — latest snapshot is 2026-04-17. Per docs/plans/2026-05-16-arch-embeddings-snapshot-pipeline-plan.md, a CI workflow that builds ix-embedding-diagnostics cross-repo and runs it against state/voicings/optick.index is the unblock.",
-    "loader_filename_strictness": "ix-quality-trend silently skips snapshots whose stem isn't YYYY-MM-DD. The existing 2026-04-17-postrefactor.json is invisible to the trend dashboard. Either the producer writes one canonical YYYY-MM-DD.json per day, or the loader becomes permissive about suffixes.",
-    "roundtrip_validator": "Not yet implemented — no skill mirrors chatbot-qa-roundtrip-validate for the embeddings domain. Until it exists, auto-optimize on this domain is operator-supervised only."
+    "snapshot_cadence": "RESOLVED 2026-05-16 in PR #250 — .github/workflows/embeddings-snapshot.yml runs daily at 07:00 UTC. First production snapshot lands when the cron fires next.",
+    "loader_filename_strictness": "RESOLVED 2026-05-16 in PR #250 — workflow renames embedding-diagnostics-YYYY-MM-DD.json to canonical YYYY-MM-DD.json before commit.",
+    "roundtrip_validator": "RESOLVED 2026-05-16 in this PR — .claude/skills/embeddings-roundtrip-validate/SKILL.md mirrors chatbot-qa-roundtrip-validate with reversed metric polarity for lower-is-better.",
+    "still_open_v2": "Roundtrip-equivalence gate (golden voicings re-embedded must hit cosine < ε), per-partition reject gates, and trend-aware threshold derivation are documented in the validator SKILL.md `Open improvements` section. Not blockers for v1 of the unattended loop."
   }
 }
