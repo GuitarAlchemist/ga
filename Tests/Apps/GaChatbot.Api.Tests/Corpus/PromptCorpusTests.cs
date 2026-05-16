@@ -228,6 +228,67 @@ public class PromptCorpusTests
             && !string.Equals(grounding, entry.ExpectedGrounding, StringComparison.OrdinalIgnoreCase))
             return ($"{label} → grounding '{grounding ?? "<null>"}' but expected '{entry.ExpectedGrounding}'", null);
 
+        // ── trace-shape invariants ──────────────────────────────────────────
+        // The chatbot response carries a structured trace
+        // (response.trace.steps[]). Treating the trace as the test surface —
+        // rather than the answer text — catches *trajectory* bugs (wrong
+        // skill picked, fallback fired, low-confidence routing) before they
+        // turn into text-pattern failures, which is what the GitHub
+        // "validating agentic behavior" framework calls out: don't judge
+        // outputs when the path itself is the evidence.
+        //
+        // Three invariants today, all optional and opt-in per prompt:
+        //   - must_not_fallback:        no "orchestration.fallback" or
+        //                               "gen_ai.chat.fallback" step
+        //   - forbidden_agent_ids:      none of these may appear as
+        //                               agent.id on any trace step
+        //   - min_routing_confidence:   routing.confidence on the answer
+        //                               step must be >= this value
+        // Each fires only when the corresponding field is set on the
+        // PromptEntry, so adding the field is a per-prompt opt-in.
+
+        var traceSteps = ExtractTraceSteps(body);
+
+        if (entry.MustNotFallback == true)
+        {
+            var fallbackStep = traceSteps.FirstOrDefault(s =>
+                string.Equals(s.Name, "orchestration.fallback", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(s.Name, "gen_ai.chat.fallback",   StringComparison.OrdinalIgnoreCase));
+            if (fallbackStep.Name is not null)
+            {
+                var reason = fallbackStep.Attributes is not null
+                    && fallbackStep.Attributes.TryGetValue("fallback.reason", out var r) ? r : "<unknown>";
+                return ($"{label} → trace visited '{fallbackStep.Name}' (fallback.reason={reason}); must_not_fallback violated", null);
+            }
+        }
+
+        if (entry.ForbiddenAgentIds is { Count: > 0 })
+        {
+            foreach (var step in traceSteps)
+            {
+                if (step.Attributes is null) continue;
+                if (!step.Attributes.TryGetValue("agent.id", out var stepAgentId) || stepAgentId is null) continue;
+                foreach (var forbidden in entry.ForbiddenAgentIds)
+                {
+                    if (string.Equals(stepAgentId, forbidden, StringComparison.OrdinalIgnoreCase))
+                        return ($"{label} → trace step '{step.Name}' visited forbidden agent.id '{forbidden}'", null);
+                }
+            }
+        }
+
+        if (entry.MinRoutingConfidence is { } minConf)
+        {
+            var answerStep = traceSteps.FirstOrDefault(s =>
+                string.Equals(s.Name, "orchestration.answer", StringComparison.OrdinalIgnoreCase));
+            if (answerStep.Attributes is not null
+                && answerStep.Attributes.TryGetValue("routing.confidence", out var confStr)
+                && double.TryParse(confStr, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var conf)
+                && conf < minConf)
+            {
+                return ($"{label} → routing.confidence {conf:F3} below required minimum {minConf:F3}", null);
+            }
+        }
+
         // Latency warnings (not failures — production latency varies)
         string? warning = null;
         if (entry.MaxElapsedMs.HasValue && sw.ElapsedMilliseconds > entry.MaxElapsedMs.Value)
@@ -263,5 +324,77 @@ public class PromptCorpusTests
         // total). Set to 0 for deterministic-skill prompts where any
         // wording variance is a real bug.
         public int? Retry { get; set; }
+
+        // ── Trace-shape invariants (GitHub agentic-behavior validation) ─────
+        // These check the structured trace returned with every chat
+        // response, not the answer text. They catch trajectory bugs
+        // before they degrade into text-pattern failures.
+        //
+        // YAML form (snake_case via UnderscoredNamingConvention):
+        //   must_not_fallback: true
+        //   forbidden_agent_ids: [skill.relativekey, skill.chordsubstitution]
+        //   min_routing_confidence: 0.5
+        //
+        // Each is opt-in per prompt. Existing prompts without these
+        // fields run with the same invariant set as before.
+
+        /// <summary>
+        /// If true, the trace must not visit "orchestration.fallback" or
+        /// "gen_ai.chat.fallback" steps. Useful for prompts the chatbot
+        /// should answer deterministically — fallback firing is itself
+        /// the bug.
+        /// </summary>
+        public bool? MustNotFallback { get; set; }
+
+        /// <summary>
+        /// Agent IDs that must not appear on any trace step's `agent.id`
+        /// attribute. Useful for prompts the chatbot routes incorrectly
+        /// via semantic similarity (e.g., "what is major vs minor"
+        /// semantically pulls skill.relativekey).
+        /// </summary>
+        public List<string>? ForbiddenAgentIds { get; set; }
+
+        /// <summary>
+        /// Minimum `routing.confidence` on the orchestration.answer step.
+        /// Low-confidence picks are not actively wrong, but if the corpus
+        /// asserts a specific routes_to + min_routing_confidence, regressions
+        /// where the orchestrator picks the right skill weakly become
+        /// visible.
+        /// </summary>
+        public double? MinRoutingConfidence { get; set; }
+    }
+
+    private readonly record struct TraceStep(string Name, IDictionary<string, string?>? Attributes);
+
+    private static List<TraceStep> ExtractTraceSteps(JsonElement body)
+    {
+        var steps = new List<TraceStep>();
+        if (!body.TryGetProperty("trace", out var trace) || trace.ValueKind != JsonValueKind.Object)
+            return steps;
+        if (!trace.TryGetProperty("steps", out var stepsArr) || stepsArr.ValueKind != JsonValueKind.Array)
+            return steps;
+
+        foreach (var step in stepsArr.EnumerateArray())
+        {
+            var name = step.TryGetProperty("name", out var n) ? n.GetString() : null;
+            if (string.IsNullOrEmpty(name)) continue;
+
+            Dictionary<string, string?>? attrs = null;
+            if (step.TryGetProperty("attributes", out var attrsObj) && attrsObj.ValueKind == JsonValueKind.Object)
+            {
+                attrs = [];
+                foreach (var prop in attrsObj.EnumerateObject())
+                {
+                    attrs[prop.Name] = prop.Value.ValueKind switch
+                    {
+                        JsonValueKind.String => prop.Value.GetString(),
+                        JsonValueKind.Null   => null,
+                        _                    => prop.Value.ToString(),
+                    };
+                }
+            }
+            steps.Add(new TraceStep(name!, attrs));
+        }
+        return steps;
     }
 }
