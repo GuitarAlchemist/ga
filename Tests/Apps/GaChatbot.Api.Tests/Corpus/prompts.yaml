@@ -17,6 +17,17 @@
 #   skip                     — if true, prompt is documented but not run
 #   skip_reason              — why it's skipped (must be set when skip=true)
 #
+# Trace-shape invariants (process validation, opt-in per prompt; PR #222):
+#   must_not_fallback        — fail if trace visits orchestration.fallback
+#                              or gen_ai.chat.fallback (i.e. orchestrator
+#                              gave up on skills and called LLM directly)
+#   forbidden_agent_ids      — fail if any trace step's agent.id is in
+#                              this list (catches semantic-similarity
+#                              misroutes like "major vs minor" →
+#                              skill.relativekey)
+#   min_routing_confidence   — fail if orchestration.answer step's
+#                              routing.confidence is below this value
+#
 # Universally-banned phrases (any answer with these is a regression):
 #   - "Reproduce the catalog below verbatim"   ← leaked SKILL.md preamble
 #   - "Pure pedagogy"                          ← leaked SKILL.md preamble
@@ -132,6 +143,16 @@ prompts:
     contains_any: ["third", "interval", "scale", "chord", "quality", "tonality", "sad", "happy", "key", "semitone"]
     min_length: 150
     max_elapsed_ms: 45000
+    # Trace-shape invariants (added 2026-05-16, infra from PR #222).
+    # The 2026-05-15 live probe trace showed skill.relativekey grabbing
+    # this prompt via semantic similarity ("major / minor / key" embed
+    # close to its description) → routing.confidence 0.1 →
+    # orchestration.fallback → gen_ai.chat.fallback timeout. Asserting
+    # the trajectory turns that 18-second timeout into a clear named
+    # failure ("trace visited forbidden agent.id 'skill.relativekey'")
+    # at the moment of the misroute.
+    forbidden_agent_ids: ["skill.relativekey"]
+    must_not_fallback: true
 
   # ── chord operations (ga_dsl_eval-backed) ───────────────────────────────
   - prompt: "Transpose C E G to D"
