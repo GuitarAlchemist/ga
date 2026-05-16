@@ -9,6 +9,7 @@ related_plans:
   - docs/plans/2026-05-14-arch-cherny-adoption-and-tribunal-ci-plan-v2.md
   - docs/plans/2026-05-02-arch-qa-architect-tribunal-plan.md
   - docs/plans/2026-05-16-arch-nardien-distillation-plan.md
+  - docs/plans/2026-05-16-feat-development-process-overseer-plan.md  # tactical per-repo companion (Codex)
 related_contracts:
   - docs/contracts/2026-05-02-qa-verdict.contract.md
   - docs/contracts/qa-verdict.schema.json
@@ -22,6 +23,29 @@ revisit_trigger: end of Phase 1 — if HALT-ALL adoption across 4 repos slips pa
 ---
 
 # Demerzel as cross-repo AI-oversight control plane
+
+## Tactical companion
+
+This plan composes with the **per-repo tactical overseer** drafted by a parallel Codex session and shipped in this same PR:
+
+- `Scripts/dev-process-overseer.ps1` — 341-line deterministic policy engine. Reads `state/quality/<domain>/baseline.json` + `last.json` + `loop-history.jsonl` + `git status --porcelain`. Emits `pause` / `supervised-goal` / `loop-eligible` per invocation.
+- `docs/plans/2026-05-16-feat-development-process-overseer-plan.md` — Codex's 4-phase tactical plan.
+
+The two plans **layer cleanly** rather than overlap:
+
+| Layer | Tactical (Codex) | Strategic (this plan) |
+|---|---|---|
+| Per-cycle decision | ✅ shipped MVP | — (delegates to tactical) |
+| Per-repo state checks | ✅ shipped | — (delegates) |
+| Cross-repo halt marker | — (Codex Phase 2 stub) | ✅ Phase 1 |
+| Append-only audit log | — | ✅ Phase 2 |
+| Trust score derivation | — | ✅ Phase 3 |
+| Hard budget enforcement | — | ✅ Phase 4 |
+| Dashboard | — | deferred to Phase 5+ |
+
+**Adoption contract**: every per-repo `/auto-optimize` Step 0 should `Invoke-Expression "pwsh Scripts/dev-process-overseer.ps1 -Domain $domain -Json"`. If the verdict is anything other than `loop-eligible`, abort. This makes Codex's engine the deterministic gate; this plan's HALT-ALL / audit / trust layers are additional checks the engine reads.
+
+Empirical validation: Codex's overseer run against this PR's branch at commit time correctly returned `pause` with two blocking reasons (oracle-shape-invalid, dirty-outside-loop-scope) and one warning (recent-oracle-abort). This is the exact policy decision the supervised first-cycle pattern produced manually during the 2026-05-16 session.
 
 ## Problem frame
 

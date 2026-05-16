@@ -109,6 +109,7 @@ These are real problems guitarists hit. They're the North Star for every feature
 
 ## Infrastructure Ideas
 
+- **Development process overseer** — deterministic repo-local scanner that watches Claude Code loops/goals, oracle health, dirty scope, protected paths, and kill switches; recommends whether to pause, use `/goal`, schedule `/loop`, or add Stop-hook enforcement. MVP: `Scripts/dev-process-overseer.ps1`; plan: `docs/plans/2026-05-16-feat-development-process-overseer-plan.md`.
 - **Live fretboard overlay** — show scale degrees on the React 3D fretboard in real time as the chatbot explains a concept
 - **Chatbot chord diagram rendering** — when TheoryAgent mentions a chord, auto-generate a VexTab diagram inline in the chat response
 - **BSP room chord assignment** — assign a diatonic chord function (I, ii, V…) to each BSP room and visualise harmonic flow through rooms
