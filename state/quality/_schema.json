@@ -1,0 +1,16 @@
+{
+  "$comment": "Schema pin declaration for state/quality/** artifacts in this repo. Phase 0 deliverable #5 of docs/plans/2026-05-14-arch-cherny-adoption-and-tribunal-ci-plan-v2.md. Closes the silent-baseline-invalidation gap surfaced in the 2026-05-14 octo brainstorm: when OPTIC-K bumps (e.g. v1.8 -> v1.9), this file MUST be updated *before* consumers re-tune against new artifacts.",
+  "schema_version": 1,
+  "applies_to_path": "state/quality/**",
+  "pins": {
+    "OPTIC-K": "v1.8",
+    "dotnet": "10.0.1xx",
+    "qa_verdict_schema": "docs/contracts/qa-verdict.schema.json",
+    "digest_schema": "docs/contracts/digest-schema.json"
+  },
+  "policy": {
+    "scope": "Quality artifacts produced AFTER this file's git introduction are considered pinned to these versions. Artifacts pre-dating this file are implicitly draft/v0.",
+    "bump_rule": "On any pin version bump, the autonomous improvement loop MUST refuse to compare new outputs against pre-bump baselines. Cascade invalidation enforced via per-domain .lock + manual rebaselining.",
+    "owner": "GA + cross-repo coordinator (Demerzel tribunal)"
+  }
+}
