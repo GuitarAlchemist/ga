@@ -47,6 +47,12 @@ $proc = Start-Process -FilePath dotnet -ArgumentList $args -NoNewWindow -Wait -P
     -RedirectStandardOutput $tmpLog -RedirectStandardError "$tmpLog.err"
 
 $out = Get-Content $tmpLog -Raw
+# Capture stderr tail BEFORE deleting — rel-002 from PR #229 review. The
+# fail-loud branch surfaces this to operators so they see the real MSB3027
+# / SDK error instead of a guess.
+$errTail = if (Test-Path "$tmpLog.err") {
+    (Get-Content "$tmpLog.err" -Tail 30 -ErrorAction SilentlyContinue) -join "`n"
+} else { '' }
 Remove-Item $tmpLog, "$tmpLog.err" -ErrorAction SilentlyContinue
 
 # Did the test runner actually complete? If a build failure (or any other
@@ -55,17 +61,52 @@ Remove-Item $tmpLog, "$tmpLog.err" -ErrorAction SilentlyContinue
 # before any "all passed" claim — otherwise an unattended /auto-optimize
 # loop would treat the build failure as a perfect baseline. See
 # docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md.
+#
+# Marker disjunction covers both VSTest console-logger output ("Passed! - Failed: 0") AND the newer
+# Microsoft.Testing.Platform output ("Tests passed", lowercase "failed: 0").
+# rel-001 from PR #229 review: add lowercase variants and a deterministic
+# "Total tests: N" detector so we can distinguish "ran 1 test that passed"
+# from "ran 0 tests" (the --no-build + missing DLL false-green path).
 $runnerCompleted = $out -match 'Prompts violating invariants \(\d+\):' `
                 -or $out -match '✓ All prompts passed' `
                 -or $out -match 'Passed!\s*-?\s*Failed:\s*0' `
-                -or $out -match 'Test Run Successful'
+                -or $out -match 'Test Run Successful' `
+                -or $out -match '(?i)\bTests\s+passed:\s*\d+' `
+                -or $out -match '(?i)\bfailed:\s*0\b'
+
+# rel-008: enforce that at least one test actually ran. dotnet test emits
+# "Total tests: N" (vstest console) or "test execution summary ... total: N"
+# (microsoft.testing.platform). If no count is found OR N == 0, treat as
+# runner-did-not-complete regardless of the marker above. This catches the
+# --no-build + missing DLL scenario where 0 tests are discovered and the
+# runner reports "Test Run Successful".
+$totalTestsRan = $null
+if ($out -match '(?i)Total tests:\s*(\d+)') {
+    $totalTestsRan = [int]$Matches[1]
+} elseif ($out -match '(?i)total:\s*(\d+)\s*,\s*duration') {
+    # microsoft.testing.platform format
+    $totalTestsRan = [int]$Matches[1]
+}
+if ($null -ne $totalTestsRan -and $totalTestsRan -lt 1) {
+    $runnerCompleted = $false
+}
 
 # Parse failures: the test aggregates them as a multi-line message after
-# "Prompts violating invariants (N):" — extract those lines.
+# "Prompts violating invariants (N):" — extract those lines. rel-004: scope
+# the global scan to the SUBSTRING after the marker so ambient `- ` lines
+# (NuGet restore, test-discovery bullets, etc.) elsewhere in the log don't
+# pollute the failure list.
 $failures = @()
-if ($out -match "Prompts violating invariants \((\d+)\):\s*(?:\r?\n\s*-\s*(.+))+") {
-    $matches = [regex]::Matches($out, "^\s*-\s*(.+)$", "Multiline")
-    foreach ($m in $matches) {
+$failureMatch = [regex]::Match($out, "Prompts violating invariants \(\d+\):", 'Multiline')
+if ($failureMatch.Success) {
+    $failureBlock = $out.Substring($failureMatch.Index + $failureMatch.Length)
+    # Stop at the next blank-line break OR the test-platform's summary line,
+    # whichever comes first, to bound the scan tightly.
+    $endIdx = [regex]::Match($failureBlock, '(?m)^\s*$|^(Passed!|Failed!|Test Run|Total tests)').Index
+    if ($endIdx -gt 0) { $failureBlock = $failureBlock.Substring(0, $endIdx) }
+    # rel-006: renamed from $matches (PowerShell auto-variable) to avoid collision.
+    $failureMatches = [regex]::Matches($failureBlock, "^\s*-\s*(.+)$", 'Multiline')
+    foreach ($m in $failureMatches) {
         $line = $m.Groups[1].Value.Trim()
         if ($line) { $failures += $line }
     }
@@ -80,13 +121,36 @@ if ($out -match "Warnings \(\d+\):") {
     }
 }
 
+# rel-003: a green completion marker with a non-zero exit code is still
+# a failure. Cross-check; if exit != 0 we treat the whole run as unsafe
+# regardless of whether the failure-parser found anything to print.
+$oracleHealthy = $runnerCompleted -and ($proc.ExitCode -eq 0)
+
 # Summary
 Write-Host ""
-if (-not $runnerCompleted) {
-    Write-Host "✗ Oracle did NOT run to completion." -ForegroundColor Red
-    Write-Host "  dotnet test exit=$($proc.ExitCode); no parseable verdict line in output." -ForegroundColor Red
-    Write-Host "  Common cause: a running GaChatbot.Api (or GaApi) is holding open bin/Debug/net10.0/*.dll." -ForegroundColor DarkYellow
-    Write-Host "  Stop the host (Stop-Process -Id <pid> -Force) and retry. Do NOT trust any 0-failure verdict from this run." -ForegroundColor DarkYellow
+if (-not $oracleHealthy) {
+    Write-Host "✗ Oracle did NOT run cleanly." -ForegroundColor Red
+    Write-Host "  dotnet test exit=$($proc.ExitCode); runner_completed=$runnerCompleted; total_tests_ran=$(if ($null -eq $totalTestsRan) { '<unknown>' } else { $totalTestsRan })." -ForegroundColor Red
+    # rel-010: tiered failure-mode messages instead of a single guess.
+    if ($errTail -match 'MSB3027|MSB3021|file is locked') {
+        Write-Host "  Cause (from stderr): build failed — a DLL is locked by a running host (GaChatbot.Api or GaApi)." -ForegroundColor DarkYellow
+        Write-Host "  Fix: Stop-Process -Name 'GaChatbot.Api' -Force; then retry." -ForegroundColor DarkYellow
+    } elseif ($errTail -match 'MSB1009|did not specify a project|workload') {
+        Write-Host "  Cause (from stderr): SDK / project-resolution failure. Run 'dotnet build' separately and inspect." -ForegroundColor DarkYellow
+    } elseif ($null -ne $totalTestsRan -and $totalTestsRan -lt 1) {
+        Write-Host "  Cause: 0 tests discovered. Likely --no-build with stale/missing binary, or test-discovery loaded the wrong assembly." -ForegroundColor DarkYellow
+    } elseif (-not $runnerCompleted) {
+        Write-Host "  Cause: no parseable verdict line found. dotnet test may have crashed before emitting a summary." -ForegroundColor DarkYellow
+    } else {
+        Write-Host "  Cause: marker found but exit code is non-zero — a non-corpus test (or teardown) failed." -ForegroundColor DarkYellow
+    }
+    if ($errTail) {
+        Write-Host "  --- stderr tail (last 30 lines) ---" -ForegroundColor DarkGray
+        foreach ($line in ($errTail -split "`n" | Select-Object -Last 20)) {
+            Write-Host "  $line" -ForegroundColor DarkGray
+        }
+    }
+    Write-Host "  Do NOT trust any 0-failure verdict from this run." -ForegroundColor Red
 } elseif ($failures.Count -eq 0) {
     Write-Host "✓ All prompts passed." -ForegroundColor Green
 } else {
@@ -106,10 +170,12 @@ if ($warnings.Count -gt 0) {
 }
 
 if ($Json) {
-    if (-not $runnerCompleted) {
+    if (-not $oracleHealthy) {
         # Fail-loud shape: explicit nulls (NOT empty arrays) so the
         # /auto-optimize loop's "no metric_value = refuse to read"
         # gate kicks in. See .claude/skills/auto-optimize/SKILL.md.
+        # rel-002: stderr_tail surfaces the actual diagnostic to operators
+        # and unattended consumers (e.g. CI logs).
         $summary = [ordered]@{
             timestamp             = (Get-Date -Format "o")
             oracle_status         = "build_or_runner_failed"
@@ -118,8 +184,11 @@ if ($Json) {
             worst_item_diagnostic = $null
             totalFailures         = $null
             totalWarnings         = $null
+            totalTestsRan         = $totalTestsRan
+            runnerCompleted       = $runnerCompleted
             failures              = $null
             warnings              = $null
+            stderr_tail           = $errTail
             exitCode              = $proc.ExitCode
         }
     } else {
@@ -146,18 +215,28 @@ if ($Json) {
         }
         & $flushTotal
 
-        $metricValue = if ($totalActive -gt 0) {
-            [math]::Round((($totalActive - $failures.Count) / $totalActive), 4)
-        } else { $null }
+        # Tighter regex than `^\s+skip:\s*true$` — handles YAML booleans
+        # case-insensitively (skip: True, skip: TRUE) and trailing comments.
+        # If the denominator is 0 (prompts.yaml missing / all skipped / parse
+        # drift), emit `denominator_unavailable` instead of `ok` so the loop
+        # sees explicit "metric not measurable" rather than silent null.
+        if ($totalActive -lt 1) {
+            $oracleStatus = 'denominator_unavailable'
+            $metricValue  = $null
+        } else {
+            $oracleStatus = 'ok'
+            $metricValue  = [math]::Round((($totalActive - $failures.Count) / $totalActive), 4)
+        }
         $worst = if ($failures.Count -gt 0) { $failures[0] } else { $null }
 
         $summary = [ordered]@{
             timestamp             = (Get-Date -Format "o")
-            oracle_status         = "ok"
+            oracle_status         = $oracleStatus
             metric_value          = $metricValue
             worst_item            = $worst
             worst_item_diagnostic = $worst
             totalActivePrompts    = $totalActive
+            totalTestsRan         = $totalTestsRan
             totalFailures         = $failures.Count
             totalWarnings         = $warnings.Count
             failures              = $failures
@@ -176,14 +255,12 @@ if ($Snapshot) {
     # ChatbotCategoryStats). Field names are snake_case to match serde
     # default deserialization (no rename_all attribute on the struct).
 
-    # Guard: only emit a snapshot if the runner actually completed.
-    # Otherwise we'd report `pass_pct: 100` for a crashed run with
-    # zero parsed failures — actively misleading.
-    $runnerCompleted = $out -match 'Prompts violating invariants \(\d+\):' `
-                    -or $out -match '✓ All prompts passed' `
-                    -or $out -match 'Passed!\s*-?\s*Failed:\s*0' `
-                    -or $out -match 'Test Run Successful'
-    if (-not $runnerCompleted) {
+    # Guard: only emit a snapshot if the runner actually completed AND
+    # exited cleanly. $oracleHealthy is computed once at script scope above;
+    # using it here keeps -Snapshot and -Json in sync. Previously this
+    # block recomputed $runnerCompleted with a narrower marker disjunction
+    # (rel-001 / PR #229 review). Single source of truth now.
+    if (-not $oracleHealthy) {
         Write-Host ""
         Write-Host "Snapshot skipped: corpus runner did not complete (test output did not match a known completion marker). Inspect the run before trusting any pass-rate number." -ForegroundColor Red
         exit $proc.ExitCode
