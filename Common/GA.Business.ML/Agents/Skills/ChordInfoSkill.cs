@@ -80,6 +80,17 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "what is a C add 9 chord",
         "give me the notes of an F#m7b5",
         "tones in a Bb diminished seventh",
+        // Bare-symbol queries without the word "chord" — "What is C7b9",
+        // "What is Cmaj9", "What is Dm7b5". Without these, the semantic
+        // router scored "What is C7b9" below threshold against the longer
+        // examples and fell through to the LLM cascade (corpus regression
+        // #216, 2026-05-16). The CompactChordRegex already handles the
+        // parse; these examples just route the prompt to the right skill.
+        "What is C7b9",
+        "What is Cmaj9",
+        "What is Dm7b5",
+        "What is F#m7",
+        "What is Bbdim7",
     ];
 
     public bool CanHandle(string message)
@@ -330,8 +341,21 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         var normalized = message.ToLowerInvariant();
         return normalized.Contains("chord", StringComparison.Ordinal) ||
                normalized.Contains("triad", StringComparison.Ordinal) ||
-               normalized.Contains("note", StringComparison.Ordinal);
+               normalized.Contains("note", StringComparison.Ordinal) ||
+               // Question lead-ins that don't carry the word "chord" but
+               // still identify a chord-spelling intent — e.g. "what is
+               // C7b9", "what's Dm9", "tell me about Bbsus2", "describe
+               // F#m7b5". Without this the prompt routes to the LLM
+               // cascade and times out (corpus regression #216, 2026-05-16).
+               QuestionLeadInRegex().IsMatch(normalized);
     }
+
+    // Lead-in patterns that signal "ask about a single noun". Combined with
+    // CompactChordRegex matching the noun, this catches "what is C7b9"-style
+    // bare-symbol queries.
+    [GeneratedRegex(@"^\s*(what\s+is|what's|whats|tell\s+me\s+about|describe)\s+",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex QuestionLeadInRegex();
 
     // Delegates to the shared helper (PR #102) so this skill and
     // ChordMcpTools cannot drift on enharmonic accounting.

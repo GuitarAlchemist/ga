@@ -30,7 +30,7 @@ using Microsoft.FSharp.Core;
 /// by the YAML config, not by what the skill author happened to write.
 /// </para>
 /// </remarks>
-public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
+public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Modes";
     public string Description =>
@@ -57,6 +57,18 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
         "What modes are non-diatonic",
         "Show me all the mode families",
         "What is Hirajoshi",
+        // Bare diatonic-mode names without scale-family qualifiers.
+        // Without these, "What is dorian" scored below the routing
+        // threshold against the longer phrases and fell through to the
+        // LLM cascade where it timed out (corpus regression #216,
+        // 2026-05-16). Each canonical name needs its own embedding anchor.
+        "What is Dorian",
+        "What is Phrygian",
+        "What is Lydian",
+        "What is Mixolydian",
+        "What is Aeolian",
+        "What is Ionian",
+        "What is Locrian",
         // Regional alt-names (Modes.yaml AlternateNames). Without these the
         // semantic router misroutes queries like "Tell me about Hijaz" to
         // fallback even though the alias is plumbed through to ModesSkill.
@@ -82,7 +94,46 @@ public sealed class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
     private static readonly Regex ModesPattern =
         new(@"\bmodes?\b|\bscale\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    public bool CanHandle(string message) => false;  // semantic-routing only
+    // Deterministic fast-path: "what is <bareword>" / "tell me about <bareword>"
+    // where the bareword is a known mode / mode-family name. The semantic
+    // router used to handle these via embedding similarity, but bare queries
+    // like "What is dorian" scored below threshold against ExamplePrompts
+    // and fell through to the LLM cascade — which then timed out and
+    // produced fallback-direct (corpus regression #216, 2026-05-16).
+    public bool CanHandle(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return false;
+        var match = QuestionLeadInRegex().Match(message);
+        if (!match.Success) return false;
+
+        // Strip lead-in + trailing punctuation; treat remainder as a name query.
+        var remainder = message
+            .Substring(match.Length)
+            .Trim()
+            .TrimEnd('?', '.', '!')
+            .Trim();
+        if (remainder.Length == 0 || remainder.Length > 60) return false;
+
+        // Check known family + mode aliases (case-insensitive). Cheap —
+        // ModesConfig is in-memory.
+        var families = ModesConfig.GetModalFamilies();
+        if (families.Count == 0) return false;
+        var lower = remainder.ToLowerInvariant();
+
+        foreach (var family in families)
+        {
+            foreach (var alias in ExtractNameAliases(family.Name))
+                if (lower == alias) return true;
+            foreach (var mode in family.Modes)
+                foreach (var alias in ExtractNameAliases(mode.Name))
+                    if (lower == alias) return true;
+        }
+        return false;
+    }
+
+    [GeneratedRegex(@"^\s*(what\s+is|what's|whats|tell\s+me\s+about|describe)\s+",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex QuestionLeadInRegex();
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
