@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "suggest-substitutions-for-g7-in-a-ii-v-i",
+  "prompt": "Suggest substitutions for G7 in a ii-V-I",
+  "category": "progressions",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "skill.chordsubstitution"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "skill.chordsubstitution"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "skill.chordsubstitution"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}

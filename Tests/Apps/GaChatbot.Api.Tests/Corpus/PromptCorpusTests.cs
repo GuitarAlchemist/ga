@@ -26,6 +26,7 @@ public class PromptCorpusTests
     private WebApplicationFactory<Program>? _factory;
     private HttpClient? _client;
     private CorpusFile? _corpus;
+    private string? _goldenTracesRoot;
 
     /// <summary>
     ///     Universally-banned substrings — any answer containing these is a
@@ -75,6 +76,24 @@ public class PromptCorpusTests
             .Build();
         _corpus = deserializer.Deserialize<CorpusFile>(yaml)
             ?? throw new InvalidOperationException("prompts.yaml deserialized to null");
+
+        // Resolve the golden-traces root if it exists. The path is optional —
+        // when a signature file is committed for a prompt, the trace-vs-
+        // signature check fires; otherwise it skips silently. This is the
+        // .NET counterpart to Scripts/compare-trace-to-canonical.ps1 so the
+        // same shape contract runs both in CI and in local PowerShell.
+        // Candidates cover both the source-tree path (developer test run)
+        // and any future test fixture co-location.
+        var goldenCandidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..",
+                "state", "quality", "chatbot-qa", "golden-traces"),
+            Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", "..", "..",
+                "state", "quality", "chatbot-qa", "golden-traces"),
+        };
+        _goldenTracesRoot = goldenCandidates
+            .Select(p => Path.GetFullPath(p))
+            .FirstOrDefault(Directory.Exists);
     }
 
     [OneTimeTearDown]
@@ -286,6 +305,30 @@ public class PromptCorpusTests
                 && conf < minConf)
             {
                 return ($"{label} → routing.confidence {conf:F3} below required minimum {minConf:F3}", null);
+            }
+        }
+
+        // ── Canonical signature check ───────────────────────────────────────
+        // If a _signature.json file is committed for this prompt's slug
+        // under state/quality/chatbot-qa/golden-traces/, assert the live
+        // trace's (name, agent.id) per step matches. This is the offline-
+        // validation pipeline's CI wire-up — produced by
+        // Scripts/extract-trace-dominators.ps1 and committed once vetted.
+        // Prompts without a signature file silently skip this check, so
+        // the gate is opt-in per prompt by file presence (no YAML field
+        // needed).
+        if (_goldenTracesRoot is not null)
+        {
+            var sigPath = CanonicalSignatureChecker.ResolveSignaturePath(_goldenTracesRoot, entry.Prompt);
+            if (sigPath is not null)
+            {
+                var signature = CanonicalSignatureChecker.Load(sigPath);
+                var trace = traceSteps.Select(s => (s.Name, s.Attributes)).ToList();
+                var sigDiff = CanonicalSignatureChecker.Compare(trace, signature);
+                if (sigDiff is not null)
+                {
+                    return ($"{label} → canonical signature mismatch: {sigDiff}", null);
+                }
             }
         }
 

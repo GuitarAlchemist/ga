@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "explain-the-circle-of-fifths",
+  "prompt": "Explain the circle of fifths",
+  "category": "theory",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "skill.circleoffifths"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "skill.circleoffifths"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "skill.circleoffifths"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}
