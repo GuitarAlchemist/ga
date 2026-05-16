@@ -5,11 +5,6 @@
       "args": ["run", "--release", "-p", "ix-agent"],
       "cwd": "C:/Users/spare/source/repos/ix"
     },
-    "meshy-ai": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["mcp-servers/meshy-ai/dist/index.js"]
-    },
     "demerzel": {
       "type": "stdio",
       "command": "dotnet",
@@ -17,14 +12,6 @@
       "env": {
         "DEMERZEL_API_KEY": "${DEMERZEL_API_KEY}",
         "DEMERZEL_URL": "http://localhost:8200"
-      }
-    },
-    "paper-search": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["--from", "paper-search-mcp", "python", "-m", "paper_search_mcp.server"],
-      "env": {
-        "PAPER_SEARCH_MCP_UNPAYWALL_EMAIL": "spareilleux@gmail.com"
       }
     },
     "chrome-devtools": {
