@@ -192,6 +192,12 @@ state/quality/**/embedding-clusters-*.json
 # when weekly soaks start.
 state/quality/dsl-eval/[0-9]*-soak-results.json
 
+# Golden trace snapshots from Scripts/record-golden-traces.ps1.
+# Per-run captures (different traceId/elapsedMs each time); not a stable
+# baseline. Re-record locally when needed. Dominator analysis runs offline
+# against whatever's currently on disk.
+state/quality/chatbot-qa/golden-traces/
+
 # Chatbot claim traces — per-day JSONL, regenerable from MCP tool calls
 state/claims/
 state/chatbot/
