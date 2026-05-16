@@ -196,6 +196,24 @@ if ($Snapshot) {
         [math]::Round((($totalPrompts - $failures.Count) / $totalPrompts) * 100, 2)
     } else { 0 }
 
+    # Detect "environment failure" — when nearly every failure is an HTTP
+    # 500/connection error, the chatbot backend (Ollama, OPTIC-K index,
+    # ...) is unavailable rather than the chatbot answering badly.
+    # Recording pass_pct=0 in that case actively pollutes the trend line
+    # with a false floor. Emit null + a note instead so the dashboard
+    # shows "no useful signal" rather than "the chatbot collapsed."
+    $envFailureFailures = @($failures | Where-Object {
+        $_ -match 'HTTP 5\d\d' -or `
+        $_ -match 'connection refused' -or `
+        $_ -match 'timed out' -or `
+        $_ -match 'SocketException' -or `
+        $_ -match 'No such host'
+    })
+    $envFailureRatio = if ($failures.Count -gt 0) {
+        $envFailureFailures.Count / $failures.Count
+    } else { 0 }
+    $environmentDegraded = $envFailureRatio -ge 0.9
+
     $date = Get-Date -Format "yyyy-MM-dd"
     $snapshotDir = Join-Path $repoRoot "state/quality/chatbot-qa"
     if (-not (Test-Path $snapshotDir)) {
@@ -206,8 +224,16 @@ if ($Snapshot) {
     $snap = [ordered]@{
         timestamp     = (Get-Date -Format "o")
         total_prompts = $totalPrompts
-        pass_pct      = $overallPassPct
-        by_category   = $byCategory
+    }
+    if ($environmentDegraded) {
+        $snap.pass_pct = $null
+        $snap.note = "Environment degraded: $($envFailureFailures.Count)/$($failures.Count) failures were HTTP 5xx / network errors. pass_pct omitted — backend (Ollama / OPTIC-K index / deps) was unavailable, not the chatbot itself failing."
+        # Don't write a by_category breakdown either — every category is
+        # 0% for the same reason, and the per-category line would lock in
+        # a misleading low baseline on the dashboard.
+    } else {
+        $snap.pass_pct = $overallPassPct
+        $snap.by_category = $byCategory
     }
     $snap | ConvertTo-Json -Depth 4 | Set-Content $snapshotPath -Encoding UTF8
     Write-Host ""
