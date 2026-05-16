@@ -427,8 +427,21 @@
       <div id="messages" class="messages" aria-live="polite">
         <div class="message assistant">Ready. Try a theory question or use one of the examples.</div>
       </div>
-      <form id="chatForm">
-        <textarea id="messageInput" placeholder="Ask about chords, scales, voice leading, or set-class algebra..." required>Are 0146 and 0137 z-related?</textarea>
+      <!--
+        WebMCP declarative-API annotations per W3C Community Group Draft +
+        Chrome 146 beta preview. Lets AI agents (Claude, ChatGPT, Gemini,
+        browser-native agents) discover and invoke the chat action without
+        DOM scraping. See docs/plans/2026-05-16-feat-webmcp-prep-plan.md.
+        Attributes are ignored by non-WebMCP browsers.
+      -->
+      <form id="chatForm"
+            toolname="ask-guitar-alchemist"
+            tooldescription="Ask the Guitar Alchemist chatbot a music-theory question. Returns a natural-language answer plus a structured agentic trace showing which skill answered (chord parsing, scale lookup, voice leading, set-class algebra, etc.)."
+            toolautosubmit="false">
+        <textarea id="messageInput"
+                  name="Message"
+                  toolparamdescription="The music-theory question to ask. Examples: 'What are the notes in C major?', 'Suggest substitutions for G7 in a ii-V-I', 'Show me a Cmaj9 chord', 'Are 0146 and 0137 z-related?'. Supports pitch-class set notation, chord symbols, and natural-language theory questions."
+                  placeholder="Ask about chords, scales, voice leading, or set-class algebra..." required>Are 0146 and 0137 z-related?</textarea>
         <button id="sendButton" type="submit">Send</button>
       </form>
     </div>
