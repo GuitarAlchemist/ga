@@ -67,6 +67,7 @@ public class ChatbotWebSocketTests : PageTest
 
     [Test]
     [Category("Chatbot")]
+    [Category("Smoke")]
     [Category("WebSocket")]
     public async Task WebSocket_ShouldConnectSuccessfully()
     {
