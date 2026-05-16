@@ -477,6 +477,44 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         ? fretted.reduce((s, p) => s + stringZ(p.string), 0) / fretted.length
         : 0;
       wrist.position.set(cx + 0.25, -0.05, cz - 0.35);
+
+      // Initialize each finger's joint chain in a pre-curled "above
+      // the fretboard" pose. FABRIK has no joint constraints — it
+      // finds the shortest 3D path from MCP to target, which routes
+      // UNDER the fretboard (Y < 0) for the natural straight-line
+      // solution. Pre-curling biases the steady state UP-AND-OVER:
+      // PIP arches up, DIP comes back down, TIP rests on the target.
+      // Without this, the lerp-from-zero start meant FABRIK never
+      // converged to a guitarist-shaped curl.
+      wrist.updateMatrixWorld(true);
+      for (const finger of fingers) {
+        const mcp = finger.mcpLocal.clone().applyMatrix4(wrist.matrixWorld);
+        const target = finger.target;
+        // Vector from MCP to target in the horizontal plane.
+        const dx = target.x - mcp.x;
+        const dz = target.z - mcp.z;
+        const horiz = Math.hypot(dx, dz);
+        const fx = horiz > 1e-4 ? dx / horiz : 0;
+        const fz = horiz > 1e-4 ? dz / horiz : 1;
+        // Bone lengths.
+        const [b0, b1, b2] = finger.bones;
+        // PIP arched up + 40% of horizontal travel.
+        finger.joints[0].copy(mcp);
+        finger.joints[1].set(
+          mcp.x + fx * (horiz * 0.4),
+          mcp.y + b0 * 0.7,
+          mcp.z + fz * (horiz * 0.4),
+        );
+        // DIP at peak of arc, ~75% of horizontal travel.
+        finger.joints[2].set(
+          mcp.x + fx * (horiz * 0.75),
+          mcp.y + b0 * 0.7 + b1 * 0.4,
+          mcp.z + fz * (horiz * 0.75),
+        );
+        // TIP on the target (so first frame already shows fingertip on fret).
+        finger.joints[3].copy(target);
+        // Knuckle / mesh transforms catch up the next animation frame.
+      }
     };
 
     updateTargetsFromChord(chordRef.current);
