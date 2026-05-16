@@ -115,4 +115,21 @@ The hooks are validated in CI by `.github/workflows/karpathy-cherny-discipline.y
 
 _Appended by `/correct` when the user corrects an approach. Persists across sessions._
 
-(none yet)
+### Stop-hook digest stomp pattern (2026-05-16)
+
+The `Stop` hook auto-finalize (`Scripts/precompact-digest.ps1` and similar) writes a metadata-only fallback digest to `state/digests/latest.md` if `/digest` hasn't been invoked recently. This **overwrites** any model-driven digest written earlier in the same session, replacing rich content (in-flight, hypotheses, success criteria, "Do NOT carry forward") with a stub.
+
+**Rule:** after invoking `/digest` and writing a model-driven digest, expect the Stop hook to stomp it. Either:
+
+1. Re-write the model-driven digest as the final action of the session (the most recent write wins), OR
+2. Read `state/digests/latest.md` immediately after any tool-call lull or natural breakpoint, and if `trigger: stop-hook-finalize` appears in the frontmatter, rewrite from your in-memory content.
+
+**Why:** observed at least twice on 2026-05-16 — once during the PR #225 / #227 / #228 merge drive (digest stomped by Stop hook between merges), and once during the supervised `/auto-optimize` cycle 1 (digest stomped between cycle abort and the post-cycle digest refresh). Each stomp reverts the digest's `session_id` to `stop-finalize` and the body to a four-line stub starting with `_Session ended without a recent /digest._`.
+
+**How to apply:**
+
+- When you've just written a rich `state/digests/latest.md` and you're about to do any further work, plan to re-write it after that work concludes.
+- If a system-reminder says `state/digests/latest.md was modified, either by the user or by a linter`, treat that as the stomp signal — re-read and rewrite.
+- Don't argue with the Stop hook — fixing the hook itself is a separate concern (`Scripts/precompact-digest.ps1`). For now, just outlive it.
+
+This rule is the surface symptom; the root cause may merit its own fix once observed enough times to characterize. See `docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md` for the family pattern (silent-output replaces real-output).
