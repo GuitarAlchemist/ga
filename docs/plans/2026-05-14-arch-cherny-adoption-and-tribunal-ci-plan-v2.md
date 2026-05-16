@@ -19,7 +19,9 @@ revisit_trigger: end of Phase 2 (loops running in 3 of 4 repos for 2 sprints wit
 
 v1's shape was right; reviewers found 7 convergent issues + the Compound and Karpathy notebooks named the missing patterns. v2 folds both in.
 
-## Decisions made (4 defaults that v1 left open)
+## Decisions LOCKED — signed off 2026-05-15
+
+The 4 defaults below were proposed by the v2 plan and **locked in by the user 2026-05-15** ("ok I let you drive"). Phase 0 work proceeds against these defaults; future reversals would require a new sign-off cycle.
 
 | # | Decision | v2 default | Why |
 |---|---|---|---|
@@ -258,14 +260,27 @@ Two-way: per-repo doc skeleton, hooks (already two-way per design), digest schem
 - **Q2.** Cross-repo schema canonical source — still in GA's `docs/contracts/`. Defer hub/spoke contract repo. v1's Q3 punt stands.
 - **Q3.** Loop-PR auto-merge threshold — at what signal-delta confidence does auto-merge unlock? Phase 2 measurement task names the gate; the threshold itself is open until data lands.
 
-## Sign-off Required Before Phase 0
+## Sign-off Status — COMPLETE 2026-05-15
 
-1. **Confirm D-deadline 2026-06-01** (move trigger via `gh schedule`).
-2. **Authorize GitHub App `demerzel-tribunal` registration** + install on GA + ix + tars (D6).
-3. **Confirm D-runtime = Path B** (Python emitter); Path A as separate Q3 project.
-4. **Confirm D-uniformity** (per-repo, ix gets contracts-only).
-5. **Confirm Q1** (override marker syntax).
-6. **Confirm `Co-Authored-By: <repo>-auto-loop <noreply@guitar-alchemist.io>` tag format** for loop commits.
+All 4 v2 defaults locked in via user delegation 2026-05-15. Phase 0 deliverables proceed against the defaults.
+
+**Operational follow-ups still needed (not Phase 0 blockers):**
+
+- Move external scheduler trigger `trig_01WdRGSqgxah5PD46wg8u4Qq` from `2026-05-18T09:00Z` to **`2026-06-01T09:00Z`** via `gh schedule` or `/octo:schedule`.
+- Register GitHub App `demerzel-tribunal` per D-auth (admin action; Phase 3 only).
+- Add branch protection on GA/ix/tars `main` requiring `qa-architect/tribunal` Check Run (admin action; Phase 3 only).
+- Pick Q1 override-marker syntax (`[allow-protected: <path>]` recommended). Pick Q5 `Co-Authored-By` tag format (`<repo>-auto-loop@guitar-alchemist.io` recommended). Both lockable any time before Phase 2.
+
+---
+
+### Original sign-off list (now closed — kept for audit)
+
+1. ✅ **D-deadline 2026-06-01** — locked. Trigger reschedule pending operational follow-up.
+2. ✅ **GitHub App `demerzel-tribunal`** — locked. Registration pending admin action (Phase 3 only).
+3. ✅ **D-runtime = Path B** Python emitter; Path A → separate Q3 project.
+4. ✅ **D-uniformity** — per-repo; ix gets contracts-only.
+5. Q1 override marker syntax — open, pickable before Phase 2.
+6. Q5 `Co-Authored-By` tag format — open, pickable before Phase 2.
 
 ## Phase 0 status as of this commit (2026-05-14)
 
