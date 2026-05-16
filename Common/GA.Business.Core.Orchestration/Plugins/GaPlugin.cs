@@ -59,6 +59,41 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<CommonTonesSkill>();
         services.AddOrchestratorSkillIntent<DiatonicChordsSkill>();
 
+        // Domain-backed key-arithmetic skill (Tier 1 of 2026-05-13 plan).
+        // Built 2026-05-13 to close "parallel minor of C major" corpus failure.
+        services.AddOrchestratorSkillIntent<RelativeKeySkill>();
+
+        // Domain-backed set-theory equivalence skill — deterministic Y/N for
+        // "are two PC-sets equivalent under T / I / TI" via SetClass prime
+        // form. Built 2026-05-13 to close the pitch-class equivalence corpus
+        // failure where LLM wording was too variable for substring asserts.
+        services.AddOrchestratorSkillIntent<SetTheoryEquivalenceSkill>();
+
+        // Domain-backed capo skill — pure semitone arithmetic for
+        // sounding↔shape conversion at a given capo fret. Built 2026-05-14 to
+        // close BACKLOG dealbreaker #3.
+        services.AddOrchestratorSkillIntent<CapoSkill>();
+
+        // Domain-backed voice-leading skill — optimal pitch-class assignment
+        // between two chords via exhaustive permutation. Built 2026-05-14 to
+        // close BACKLOG dealbreaker #4.
+        services.AddOrchestratorSkillIntent<VoiceLeadingSkill>();
+
+        // Domain-backed alternate-tunings skill — tuning-table lookup with
+        // string-by-string interval analysis. Built 2026-05-14 to close
+        // BACKLOG dealbreaker #2.
+        services.AddOrchestratorSkillIntent<AlternateTuningsSkill>();
+
+        // Grothendieck stolen-from-demo bundle (2026-05-14):
+        // Five domain-backed skills that surface the same in-process
+        // GrothendieckService used by /test/grothendieck-dsl. ICV math,
+        // delta, neighbors, shortest path, plus the F# DSL parser.
+        services.AddOrchestratorSkillIntent<IntervalClassVectorSkill>();
+        services.AddOrchestratorSkillIntent<GrothendieckDeltaSkill>();
+        services.AddOrchestratorSkillIntent<IcvNeighborsSkill>();
+        services.AddOrchestratorSkillIntent<IcvShortestPathSkill>();
+        services.AddOrchestratorSkillIntent<GrothendieckParseSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);

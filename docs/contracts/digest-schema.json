@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitar-alchemist/contracts/session-digest-v1.json",
+  "title": "Session Digest",
+  "description": "Frontmatter schema for state/digests/latest.md. The markdown body follows the section structure documented in .claude/skills/digest/SKILL.md. Karpathy R11: every AI step declares an output schema; runtime rejects mismatches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "written_at", "trigger", "branch", "head_sha", "head_subject"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "written_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp of last write."
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "digest-skill",
+        "precompact-hook-fallback",
+        "stop-hook-finalize",
+        "auto-write-routine"
+      ],
+      "description": "Which writer produced this digest. digest-skill = model-driven rich content; the others = hook-driven metadata-only fallbacks."
+    },
+    "branch": { "type": "string" },
+    "head_sha": { "type": "string" },
+    "head_subject": { "type": "string" },
+    "open_pr": { "type": ["string", "null"] },
+    "last_model_update": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the model last wrote rich content sections via the digest skill. null when only hooks have written."
+    },
+    "success_criteria": {
+      "type": "array",
+      "description": "Karpathy R4 (goal-driven execution): every Next action declares testable criteria. The next /digest invocation marks each as achieved / in-progress / abandoned. 'task complete != goal achieved.'",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion", "status"],
+        "properties": {
+          "criterion": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "achieved", "abandoned"]
+          },
+          "evidence": {
+            "type": ["string", "null"],
+            "description": "Optional pointer to where achievement can be verified (file:line, commit, PR, metric path)."
+          }
+        }
+      }
+    }
+  }
+}

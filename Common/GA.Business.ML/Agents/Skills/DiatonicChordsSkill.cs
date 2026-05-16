@@ -49,5 +49,17 @@ public sealed class DiatonicChordsSkill(
         "what's the V chord in F",
         "ii chord of E minor",
         "what chord is the I in D major",
+        // Bare "Diatonic chords in <KEY>" phrasings — without these, the
+        // SemanticIntentRouter scored ChordSubstitutionSkill higher (which
+        // has "Modal interchange substitutes for C major" + "Alternative
+        // chord for F major in C") because the "in <KEY>" tail dominates
+        // similarity. Caught 2026-05-13 via live UI click-test on
+        // "Diatonic chords in G major" → 94% misroute to substitution.
+        "Diatonic chords in G major",
+        "Diatonic chords in D major",
+        "Diatonic chords in F major",
+        "Diatonic chords in E minor",
+        "Show me diatonic chords in F# major",
+        "Seven diatonic chords of B major",
     ];
 }

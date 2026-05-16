@@ -97,6 +97,81 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordinfo"),
 
+        // Chord-identification-from-notes — "what/which chord is/contains
+        // <NOTE> <NOTE> <NOTE>...". Two or more capital-letter pitch tokens
+        // with optional accidentals, separated by spaces or commas. Anchored
+        // on the "what/which chord is/contains" prefix so it doesn't fire
+        // on prose that happens to mention pitches. Added 2026-05-14 — bare
+        // "what chord is F A C E" was misrouting to chordsubstitution
+        // because chord-letter pairs F+A read as two chord roots.
+        (new Regex(@"\b(?:what|which)\s+chord\s+(?:is|contains|has|uses)\b\s*(?:the\s+notes?\s+)?(?-i:[A-G])(?:#|b)?(?:\s*,?\s*(?-i:[A-G])(?:#|b)?){1,5}\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.chordinfo"),
+
+        // Grothendieck bundle (stolen-from-demo 2026-05-14). Five anchors:
+        //
+        // 1. ICV (interval-class vector) — "ICV of <chord>" / "interval-class
+        //    vector of {pcs}". Token "ICV" or the bigram is rare and music-
+        //    specific enough to hard-anchor.
+        (new Regex(@"\b(?:icv|interval[\s-]*class[\s-]*vector|interval[\s-]*vector)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.intervalclassvector"),
+
+        // 2. Grothendieck delta / harmonic distance between two chords.
+        // Tightened 2026-05-14: removed bare `\bdelta\s+(?:from|between|to)\b`
+        // which matched non-music phrasings ("delta from Tuesday to Friday").
+        // Require the music-domain qualifier (ICV / harmonic / Grothendieck).
+        (new Regex(@"\bgrothendieck[\s-]*(?:delta|distance)\b|\bharmonic(?:ally)?\s+(?:distance|far|distant)\b|\b(?:harmonic|icv)\s+delta\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.grothendieckdelta"),
+
+        // 3. ICV neighbors — "neighbors of <chord>" / "harmonically close to".
+        (new Regex(@"\b(?:icv\s+neighbors?|harmonic(?:ally)?\s+(?:close|near|adjacent)|harmonic(?:al)?\s+neighbors?)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.icvneighbors"),
+
+        // 4. ICV shortest path — "shortest harmonic path", "PC-set path".
+        (new Regex(@"\bshortest(?:[\s-]*harmonic)?[\s-]*(?:path|route)\b|\bharmonic[\s-]*(?:path|route)\b|\bPC[\s-]*set\s+path\b|\bICV\s+path\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.icvshortestpath"),
+
+        // 5. Grothendieck parse — DSL expression interpretation.
+        // Tightened 2026-05-14: dropped bare `\bgrothendieck\b` (also fires
+        // for the delta hint, double-boosting). Dropped bare `\bpower\b` —
+        // covered nowhere in the alternation but "power chord" prose would
+        // accidentally route here. Kept domain-specific tokens and symbols.
+        (new Regex(@"\b(?:tensor[\s-]*product|direct[\s-]*sum|pullback|pushout|coequalizer|natural[\s-]+transformation|subobject|power[\s-]+object|sheaf|functor[\s-]+composition)\b|⊗|⊕|∘|Hom\s*\(",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.grothendieckparse"),
+
+        // Alternate tunings — added 2026-05-14 to close BACKLOG dealbreaker #2.
+        // Named-tuning tokens are music-unambiguous: DADGAD, drop-D, open-G,
+        // open-D, double-drop-D, DGCGCD. The "X step down" phrase is also a
+        // tuning-specific idiom in guitar context.
+        (new Regex(@"\b(?:dadgad|drop[\s-]?d|open[\s-]?g|open[\s-]?d|double[\s-]?drop[\s-]?d|dgcgcd|half[\s-]?step[\s-]?down|whole[\s-]?step[\s-]?down)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.alternatetunings"),
+
+        // Voice leading — added 2026-05-14 to close BACKLOG dealbreaker #4.
+        // The phrase "voice leading" (or "voice-leading", or "smooth voicing"
+        // followed by two chords) is unambiguous music-theory terminology.
+        // Without this boost, "voice leading C to F" embedded close to
+        // skill.transpose because both involve moving between chords.
+        (new Regex(@"\bvoice[\s-]*lead\w*\b|\bsmooth(?:est)?\s+voic\w*\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.voiceleading"),
+
+        // Capo — added 2026-05-14 to close BACKLOG dealbreaker #3. Anchored on
+        // the literal "capo" token (music-unambiguous — no English homonyms
+        // that overlap meaningfully) plus a fret number or the "shape" keyword.
+        // Without this boost, "song in E with capo 4" embedded close to
+        // transpose ("transpose down 4 semitones") and the score gap was
+        // tight enough that intent flicked between routes across runs. The
+        // capo token is a stable discriminator.
+        (new Regex(@"\bcapo\b\s*(?:on\s+|at\s+|fret\s+)?\d{1,2}\b|\bcapo\s+(?:on\s+|fret\s+|at\s+)?\d{1,2}\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.capo"),
+
         // Transpose — added post-baseline-2026-05-11 to close a 4/5 F1
         // hole. Failing prompts in the eval corpus included "transpose
         // this progression down a half step", "transpose C-Am-F-G to G

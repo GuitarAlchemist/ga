@@ -92,19 +92,30 @@ public class LazyWithExpirationTests
     {
         // This test ensures that accessing Value triggers the expiration timer; until then, value is not created.
         var counter = 0;
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMilliseconds(100));
+        var expiration = TimeSpan.FromMilliseconds(200);
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), expiration);
 
         // Wait longer than expiration but without accessing Value; timer should not have started yet.
-        Thread.Sleep(200);
+        Thread.Sleep(400);
         Assert.That(counter, Is.EqualTo(0), "Factory should not be called before first Value access");
 
         var first = lazy.Value;
         Assert.That(first, Is.EqualTo(1));
 
-        // Now wait for expiration and verify recompute happens on next access
-        // Use generous margin for slow CI runners
-        Thread.Sleep(300);
-        var second = lazy.Value;
+        // Spin until expiration fires (or we hit a hard cap). Threadpool-scheduled Timer
+        // callbacks under CI load can lag past a fixed Thread.Sleep — observed 525ms on
+        // a slow runner where expiration=100ms + Sleep(300) still saw counter=1. The
+        // window is intentionally generous (10x expiration) so this only flips when the
+        // timer is genuinely broken, not when CI is busy.
+        var deadline = DateTime.UtcNow + TimeSpan.FromMilliseconds(expiration.TotalMilliseconds * 10);
+        int second;
+        do
+        {
+            Thread.Sleep(50);
+            second = lazy.Value;
+        }
+        while (second == 1 && DateTime.UtcNow < deadline);
+
         Assert.That(second, Is.EqualTo(2));
     }
 }

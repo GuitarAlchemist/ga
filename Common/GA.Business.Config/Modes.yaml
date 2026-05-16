@@ -62,6 +62,8 @@
         Description: Natural minor with lowered 2nd degree
         AlternateNames:
           - Phrygian Mode
+          - Bhairavi
+          - Indian Phrygian
         CharacteristicIntervals:
           - 'b2'
           - 'b3'
@@ -227,6 +229,11 @@
         AlternateNames:
           - Spanish Phrygian
           - Jewish Scale
+          - Hijaz
+          - Maqam Hijaz
+          - Freygish
+          - Ahava Rabbah
+          - Spanish Gypsy
       - Name: 'Lydian #2'
         Notes: C D# E F# G A B
         Description: Sixth mode of harmonic minor
@@ -635,8 +642,16 @@
         Notes: C Db Eb Fb G Ab Bbb
       - Name: Hungarian Minor
         Notes: C D Eb F# G Ab B
+        AlternateNames:
+          - Gypsy Minor
+          - Roma Minor
+          - Romani Minor
+          - Double Harmonic Minor
       - Name: Oriental
         Notes: C Db E F Gb A Bb
+        AlternateNames:
+          - Persian
+          - Arabic
       - Name: Ionian Augmented #2
         Notes: C D# E F G# A B
       - Name: Locrian bb3 bb7
