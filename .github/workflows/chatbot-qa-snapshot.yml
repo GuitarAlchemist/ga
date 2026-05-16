@@ -1,0 +1,86 @@
+name: Chatbot QA Snapshot
+
+# Daily snapshot producer for state/quality/chatbot-qa/. Closes the
+# trend gap surfaced 2026-05-16 (psychohistory trend dashboard showed
+# 0 chatbot-qa snapshots, so ix-quality-trend had no chatbot signal to
+# track). Schema consumed by ix/crates/ix-quality-trend/src/snapshot.rs
+# (ChatbotQaSnapshot — timestamp / total_prompts / pass_pct /
+# avg_response_ms / by_category).
+#
+# Producer: Scripts/run-prompt-corpus.ps1 -Snapshot
+# Output:   state/quality/chatbot-qa/YYYY-MM-DD.json
+#
+# Failure semantics:
+#   - The script's `-Snapshot` path writes the snapshot whether or not
+#     the corpus passes — pass_pct is the data point we care about.
+#   - It will NOT write a snapshot if the runner crashes before
+#     printing a completion marker (avoids fabricating pass_pct=100%
+#     for a host that never started). That case fails the workflow.
+#   - We do not fail the workflow on a low pass_pct; failures land
+#     as data, which the dashboard turns into a trend line.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC daily — keeps CI off peak hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chatbot-qa-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj
+
+      - name: Build chatbot tests
+        run: dotnet build Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj -c Debug --no-restore
+
+      - name: Run corpus + emit snapshot
+        shell: pwsh
+        run: pwsh Scripts/run-prompt-corpus.ps1 -Snapshot -NoBuild
+        continue-on-error: true   # snapshot is the artifact; low pass_pct isn't a workflow failure
+
+      - name: Commit snapshot if produced
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          SNAP="state/quality/chatbot-qa/${DATE}.json"
+          if [ ! -f "$SNAP" ]; then
+            echo "No snapshot at $SNAP — runner-completed guard tripped or path mismatch. Failing workflow."
+            exit 1
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$SNAP"
+          if git diff --cached --quiet; then
+            echo "Snapshot identical to existing — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): chatbot-qa snapshot ${DATE} [skip ci]"
+          git push
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatbot-qa-snapshot-${{ github.run_id }}
+          path: state/quality/chatbot-qa/
+          retention-days: 90
