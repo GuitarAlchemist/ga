@@ -7,6 +7,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: read
   checks: write
 
 env:
@@ -90,8 +91,10 @@ jobs:
         shell: bash
         env:
           AGENT_BLACKBOX_REVIEWED: ${{ contains(github.event.pull_request.labels.*.name, 'agent-blackbox-reviewed') }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "$AGENT_BLACKBOX_REVIEWED" = "true" ]; then
+          live_reviewed="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/labels" --jq 'any(.[]; .name == "agent-blackbox-reviewed")')"
+          if [ "$AGENT_BLACKBOX_REVIEWED" = "true" ] || [ "$live_reviewed" = "true" ]; then
             echo "Agent Blackbox human-review override label present; skipping hard enforcement."
             exit 0
           fi
