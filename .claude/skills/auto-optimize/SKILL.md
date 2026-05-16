@@ -69,7 +69,8 @@ Memory notes worth honoring (read at session start):
 
 ### Step 0: Domain validity + killswitch + governance
 
-Before any iteration, validate that the domain is real and not halted.
+Before any iteration, validate that the domain is real and not halted. The
+checks are ordered cheapest-first; any one of them tripping aborts the cycle.
 
 ```powershell
 # 1. Domain validity
@@ -79,7 +80,7 @@ if (-not $baseline.schema_version) {
     exit 2
 }
 
-# 2. Local killswitch
+# 2. Local killswitch (per-repo)
 if (Test-Path state/.loop-halted) {
     Write-Host "Loop halted globally — sentinel state/.loop-halted present" -ForegroundColor Red
     Get-Content state/.loop-halted
@@ -91,14 +92,46 @@ if (Test-Path "state/quality/$domain/.STOP") {
     exit 0
 }
 
-# 3. Demerzel governance check (only if mcp__demerzel server is wired)
+# 3. Cross-repo HALT-ALL marker (overseer Phase 1).
+# Opportunistic check: if ~/.demerzel/HALT-ALL exists, every loop in every
+# sibling repo MUST pause. See docs/contracts/2026-05-16-overseer-halt-marker.contract.md
+# for the schema. If the file is unreadable / dir is missing / agent is in
+# exempt_agents, fall through silently — per-repo .loop-halted above is the
+# authoritative offline fallback (D-offline-fallback in the strategic plan).
+$haltMarker = Join-Path $env:USERPROFILE '.demerzel\HALT-ALL'
+if (-not $env:USERPROFILE) { $haltMarker = Join-Path $env:HOME '.demerzel/HALT-ALL' }
+if (Test-Path $haltMarker) {
+    try {
+        $halt = Get-Content $haltMarker -Raw | ConvertFrom-Json
+        $expired = $halt.expires_at -and ([datetime]::Parse($halt.expires_at) -lt (Get-Date).ToUniversalTime())
+        $exempt  = $halt.exempt_agents -and ($halt.exempt_agents -contains 'auto-optimize')
+        $unknownVersion = $halt.schema_version -ne 1
+        if ($unknownVersion) {
+            Write-Host "Cross-repo HALT-ALL marker has unknown schema_version=$($halt.schema_version) — failing closed" -ForegroundColor Red
+            exit 0
+        }
+        if (-not $expired -and -not $exempt -and ($halt.scope -in @($null, 'loops-only', 'loops-and-batch', 'global'))) {
+            Write-Host "Halted by overseer at $($halt.halted_at):" -ForegroundColor Red
+            Write-Host "  reason: $($halt.reason)" -ForegroundColor DarkYellow
+            Write-Host "  halted_by: $($halt.halted_by)" -ForegroundColor DarkYellow
+            Write-Host "  To resume: delete $haltMarker (or wait for expires_at)" -ForegroundColor DarkYellow
+            exit 0
+        }
+    } catch {
+        # Unreadable / unparseable marker → fall through to per-repo halt
+        Write-Host "Cross-repo HALT-ALL marker unreadable; falling back to per-repo killswitch" -ForegroundColor DarkGray
+    }
+}
+
+# 4. Demerzel governance check (only if mcp__demerzel server is wired)
 # Skip silently if MCP not available — local-only loops still run.
 ```
 
 To resume:
 ```powershell
-pwsh Scripts/loop-killswitch.ps1 -Reset       # global
-Remove-Item "state/quality/$domain/.STOP"      # per-domain
+pwsh Scripts/loop-killswitch.ps1 -Reset                                 # global per-repo
+Remove-Item "state/quality/$domain/.STOP"                               # per-domain
+Remove-Item (Join-Path $env:USERPROFILE '.demerzel\HALT-ALL')           # cross-repo
 ```
 
 ### Step 1: Acquire domain lock
