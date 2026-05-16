@@ -41,7 +41,7 @@ public sealed class MistralChatClient : IChatClient
         ArgumentNullException.ThrowIfNull(baseUrl);
 
         _model    = model;
-        _endpoint = new Uri(baseUrl, "v1/chat/completions");
+        _endpoint = ResolveChatCompletionsEndpoint(baseUrl);
         _http     = httpClient ?? new HttpClient();
         _ownsHttp = httpClient is null;
 
@@ -50,6 +50,30 @@ public sealed class MistralChatClient : IChatClient
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         _metadata = new ChatClientMetadata("mistral", baseUrl, model);
+    }
+
+    /// <summary>
+    /// Composes the <c>chat/completions</c> endpoint from a configurable base
+    /// URL. Operators sometimes set <c>Mistral:BaseUrl</c> to the bare host
+    /// (<c>https://api.mistral.ai</c>) and sometimes to the already-versioned
+    /// form (<c>https://api.mistral.ai/v1/</c>); naively concatenating
+    /// <c>v1/chat/completions</c> against the latter produces
+    /// <c>/v1/v1/chat/completions</c>. Codex P2 review on #225 caught this.
+    /// </summary>
+    private static Uri ResolveChatCompletionsEndpoint(Uri baseUrl)
+    {
+        var path = baseUrl.AbsolutePath.TrimEnd('/');
+        var suffix = path.EndsWith("/v1", StringComparison.OrdinalIgnoreCase)
+            ? "chat/completions"
+            : "v1/chat/completions";
+
+        // Append the suffix to the base — preserves scheme/host/port and any
+        // existing path (e.g. an OpenAI-compatible proxy sitting on a subpath).
+        var normalized = path.Length == 0
+            ? new Uri(baseUrl, "/")
+            : new UriBuilder(baseUrl) { Path = path + "/" }.Uri;
+
+        return new Uri(normalized, suffix);
     }
 
     public async Task<ChatResponse> GetResponseAsync(

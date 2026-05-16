@@ -78,6 +78,13 @@ public sealed class CascadingChatClient(
             {
                 enumerator = _primary.GetStreamingResponseAsync(snapshot, options, cancellationToken).GetAsyncEnumerator(cancellationToken);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Caller-driven cancellation — must not cascade. Mirrors the
+                // MoveNextAsync guard below; Codex P1 review #225 caught this
+                // pre-enumerator path violating the documented contract.
+                throw;
+            }
             catch (Exception ex) when (ShouldCascade(ex))
             {
                 primaryFailure = ex;

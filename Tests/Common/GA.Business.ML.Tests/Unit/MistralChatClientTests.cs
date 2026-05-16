@@ -77,6 +77,35 @@ public class MistralChatClientTests
         Assert.That(m.DefaultModelId, Is.EqualTo("mistral-medium-latest"));
     }
 
+    [TestCase("https://api.mistral.ai",      "https://api.mistral.ai/v1/chat/completions")]
+    [TestCase("https://api.mistral.ai/",     "https://api.mistral.ai/v1/chat/completions")]
+    [TestCase("https://api.mistral.ai/v1",   "https://api.mistral.ai/v1/chat/completions")]
+    [TestCase("https://api.mistral.ai/v1/",  "https://api.mistral.ai/v1/chat/completions")]
+    [TestCase("https://api.mistral.ai/V1/",  "https://api.mistral.ai/V1/chat/completions")]  // case-insensitive v1 detection
+    [TestCase("https://proxy.example/openai/v1/", "https://proxy.example/openai/v1/chat/completions")]
+    public async Task GetResponseAsync_NormalizesVersionedBaseUrl(string baseUrl, string expectedAbsoluteUri)
+    {
+        // Codex P2 review on PR #225: operators commonly set Mistral:BaseUrl to
+        // either the bare host or the already-versioned `/v1/` form. The
+        // hand-rolled client must produce the same endpoint either way.
+        Uri? observed = null;
+        var handler = new RecordingHandler((req, _) =>
+        {
+            observed = req.RequestUri;
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"choices":[{"message":{"role":"assistant","content":"ok"},"finish_reason":"stop"}]}""", Encoding.UTF8, "application/json"),
+            };
+        });
+
+        using var http = new HttpClient(handler);
+        using var client = new MistralChatClient("test-key", "mistral-medium-latest", new Uri(baseUrl), http);
+
+        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "hi")]);
+
+        Assert.That(observed!.AbsoluteUri, Is.EqualTo(expectedAbsoluteUri));
+    }
+
     [Test]
     public void Constructor_NullArgs_Throws()
     {

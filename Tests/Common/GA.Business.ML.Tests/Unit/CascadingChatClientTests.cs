@@ -174,6 +174,35 @@ public class CascadingChatClientTests
     }
 
     [Test]
+    public void GetStreamingResponseAsync_CallerCancelsBeforeFirstToken_DoesNotCascade()
+    {
+        // Codex P1 review on PR #225: the pre-enumerator catch must distinguish
+        // caller-driven cancellation from primary-internal failures. Otherwise
+        // a cancelled caller still gets a wasted outbound request to secondary.
+        var primary   = new Mock<IChatClient>();
+        var secondary = new Mock<IChatClient>(MockBehavior.Strict);
+
+        primary
+            .Setup(c => c.GetStreamingResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions>(), It.IsAny<CancellationToken>()))
+            .Returns(FailBeforeYielding(new OperationCanceledException("caller cancelled")));
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var cascade = new CascadingChatClient(primary.Object, secondary.Object);
+
+        Assert.That(async () =>
+        {
+            await foreach (var _ in cascade.GetStreamingResponseAsync([UserMessage("hi")], cancellationToken: cts.Token))
+            {
+                // empty
+            }
+        }, Throws.InstanceOf<OperationCanceledException>());
+
+        secondary.VerifyNoOtherCalls();
+    }
+
+    [Test]
     public async Task GetStreamingResponseAsync_PrimaryFailsBeforeFirstToken_CascadesToSecondary()
     {
         var primary   = new Mock<IChatClient>();
