@@ -234,7 +234,7 @@
     // Initialize SignalR connection
     async function initializeConnection() {
         connection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7001/hubs/chatbot")
+            .withUrl("/hubs/chatbot")
             .withAutomaticReconnect()
             .build();
 

@@ -60,7 +60,9 @@ public class ChatbotWebSocketTests : PageTest
         TestContext.WriteLine("");
     }
 
-    private const string _demoUrl = "http://localhost:5232/chatbot-demo.html";
+    private static readonly string _demoUrl =
+        Environment.GetEnvironmentVariable("CHATBOT_BASE_URL")
+        ?? "http://localhost:5232/chatbot-demo.html";
     private const int _defaultTimeout = 60000; // 60 seconds
 
     [Test]
