@@ -405,13 +405,26 @@ internal static class Program
             }
 
             var chars = analysis.VoicingCharacteristics;
-            if (chars != null && analysis.MidiNotes.Length >= 2 && chars.IntervalSpread <= 0)
+            // IntervalSpread = 0 is valid for unison voicings — two strings
+            // played at the same MIDI pitch (e.g., `x-3-7-x-x-x` puts D on
+            // both the G string fret 7 and the B string fret 3). The real
+            // bug is when *distinct* pitches collapse to a 0/negative spread,
+            // which can only happen if the analyzer mis-sorted the array.
+            // Counting via Distinct() de-dupes the unison case.
+            //
+            // 2026-05-16: this invariant previously fired 50 times against
+            // the corpus — 100% false positives, all of them legit unisons.
+            // Narrowing the check is what actually fixes the
+            // `Voicing · invariant failures (total) = 50 → 50 → 50` flat
+            // line in the quality trend.
+            var distinctMidi = analysis.MidiNotes.Distinct().Count();
+            if (chars != null && distinctMidi >= 2 && chars.IntervalSpread <= 0)
             {
                 _intervalSpreadInvariant++;
                 if (_invariantFailureSamples.Count < 20)
                 {
                     _invariantFailureSamples.Add(new InvariantFailure(instrument, diagram,
-                        $"IntervalSpread={chars.IntervalSpread} for {analysis.MidiNotes.Length}-note voicing"));
+                        $"IntervalSpread={chars.IntervalSpread} for {distinctMidi}-distinct-pitch voicing"));
                 }
             }
         }
