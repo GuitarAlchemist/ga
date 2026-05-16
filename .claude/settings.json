@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "40"
+  },
   "hooks": {
     "PostToolUse": [
       {
