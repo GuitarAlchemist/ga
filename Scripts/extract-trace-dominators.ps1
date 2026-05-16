@@ -261,6 +261,36 @@ foreach ($dir in $dirs) {
         $outPath = Join-Path $dir.FullName "_canonical.json"
         $artifact | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $outPath -Encoding UTF8
 
+        # Also emit a pruned signature — just (name, status, agent.id) per
+        # canonical step. Strips run-dependent values (routing.confidence,
+        # response.length, traceId, etc.) so signatures are stable across
+        # environments and can be committed as CI test fixtures.
+        $signatureSteps = New-Object 'System.Collections.Generic.List[object]'
+        foreach ($step in $canonical) {
+            $agentId = $null
+            if ($null -ne $step.invariantAttributes) {
+                if ($step.invariantAttributes.Contains("agent.id")) {
+                    $agentId = $step.invariantAttributes["agent.id"]
+                }
+            }
+            $signatureSteps.Add([ordered]@{
+                name    = $step.name
+                status  = $step.status
+                agentId = $agentId
+            }) | Out-Null
+        }
+
+        $signature = [ordered]@{
+            schemaVersion = 1
+            promptId      = $dir.Name
+            prompt        = if ($meta) { $meta.prompt } else { $null }
+            category      = if ($meta) { $meta.category } else { $null }
+            steps         = $signatureSteps.ToArray()
+        }
+
+        $sigPath = Join-Path $dir.FullName "_signature.json"
+        $signature | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $sigPath -Encoding UTF8
+
         $extracted++
         $summary += [pscustomobject]@{
             promptId   = $dir.Name
