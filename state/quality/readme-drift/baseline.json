@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "domain": "readme-drift",
+  "purpose": "Cross-repo README staleness contract. Surveyed weekly by .github/workflows/readme-drift-sensor.yml; each snapshot is consumed by ix-quality-trend as a quality signal and by an issue-bot that opens/updates a single tracking issue in ga when any repo crosses the 'stale' threshold. Mechanism documented in docs/methodology/readme-drift.md.",
+  "established_at": "2026-05-17T01:00:00Z",
+  "established_by": "feat/readme-drift-sensor (response to user observation 2026-05-17: 'README.md on all repos don't look up to date')",
+
+  "metric": "cross_repo_stale_count",
+  "metric_description": "Number of tracked sibling repos whose README hasn't been touched within `thresholds_days.stale` of the HEAD commit. LOWER is better — 0 means every sibling's README is within the freshness window.",
+  "primary_baseline": 3,
+  "primary_baseline_source": "Hand-survey 2026-05-17 — ga (52d), Demerzel (42d), tars (42d), guitaralchemist.github.io (40d) all >30d stale. Setting baseline=3 because PR #254 refreshed ga before this snapshot lands; the remaining 3 are the in-flight refresh queue.",
+  "metric_polarity": "lower-is-better",
+
+  "thresholds_days": {
+    "borderline": 14,
+    "stale":      30,
+    "very_stale": 60
+  },
+
+  "tracked_repos": [
+    "ga",
+    "ix",
+    "Demerzel",
+    "tars",
+    "guitaralchemist.github.io",
+    "mergerisk",
+    "agent-blackbox",
+    "demerzel-bot",
+    "devto-mcp",
+    "fin",
+    "ga-godot",
+    "hari"
+  ],
+
+  "_harness": {
+    "rollback_metadata": {
+      "roundtrip_validator": null,
+      "reject_on_loss": false,
+      "reject_on_regression": false,
+      "regression_threshold": 1,
+      "note": "README drift is a slow-moving signal. The sensor surfaces it via issue + state file; remediation is operator-driven (refresh the README, merge PR, signal naturally improves). No auto-loop yet — that would require a /readme-sync skill that can author content, which is out of scope for v1."
+    },
+    "kill_switches": {
+      "global":     "state/.loop-halted",
+      "per_domain": "state/quality/readme-drift/.STOP"
+    },
+    "lock_file":   "state/quality/readme-drift/.lock",
+    "history_file":"state/quality/readme-drift/loop-history.jsonl"
+  },
+
+  "scope_boundary": {
+    "allow_edit": [
+      "README.md",
+      "**/README.md"
+    ],
+    "protected": [
+      "state/quality/readme-drift/baseline.json",
+      "Scripts/readme-drift-survey.ps1",
+      ".github/workflows/readme-drift-sensor.yml",
+      "docs/methodology/readme-drift.md"
+    ],
+    "note": "README content is what should drift to match HEAD. The sensor itself (script, workflow, baseline, methodology doc) is protected because changing it without thought breaks the cross-repo signal."
+  },
+
+  "_open_gaps": {
+    "per_repo_propagation": "v1 surveys cross-repo from ga. v2 could propagate the sensor workflow into each sibling so each repo emits its own drift check on its own PRs. Tracked under task-TBD.",
+    "semantic_drift": "v1 measures filename-mtime drift only. v2 could detect content drift — e.g., 'README mentions .NET 9 but global.json says .NET 10' — via an LLM-comparator skill.",
+    "auto_remediation": "v1 surfaces a tracking issue. v2 could draft auto-PRs (like what we did manually for PRs #254 + #9 + the two pending) via a /readme-sync skill."
+  }
+}
