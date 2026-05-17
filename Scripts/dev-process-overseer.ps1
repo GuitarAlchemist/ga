@@ -13,7 +13,9 @@
 param(
     [string]$RepoRoot = (Resolve-Path .).Path,
     [string]$Domain = '',
-    [switch]$Json
+    [switch]$Json,
+    [string]$OutPath = 'state/governance/dev-process-overseer.json',
+    [switch]$NoEmit
 )
 
 $ErrorActionPreference = 'Stop'
@@ -311,6 +313,19 @@ $report = [ordered]@{
         claudeGoal = $goalTemplate
         claudeLoop = $loopTemplate
     }
+}
+
+$artifactPath = if ([System.IO.Path]::IsPathRooted($OutPath)) { $OutPath } else { Join-Path $RepoRoot $OutPath }
+if (-not $NoEmit -and $artifactPath) {
+    $artifactDirectory = Split-Path -Parent $artifactPath
+    if ($artifactDirectory) {
+        New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
+    }
+
+    $artifactJson = $report | ConvertTo-Json -Depth 12
+    $temporaryPath = "$artifactPath.tmp"
+    Set-Content -LiteralPath $temporaryPath -Value $artifactJson -Encoding UTF8
+    Move-Item -LiteralPath $temporaryPath -Destination $artifactPath -Force
 }
 
 if ($Json) {
