@@ -7,7 +7,7 @@
 
 import { type CSSProperties, useMemo } from 'react';
 import type { BSPLayout } from './layoutTree';
-import { hexFor } from './tonalityColors';
+import { hexForRegion } from './tonalityColors';
 import * as THREE from 'three';
 
 interface Props {
@@ -21,11 +21,11 @@ const PANEL: CSSProperties = {
   position: 'absolute',
   bottom: 12,
   right: 12,
-  background: 'rgba(0, 0, 0, 0.55)',
-  border: '1px solid rgba(0, 255, 0, 0.35)',
-  borderRadius: 4,
+  background: 'rgba(13, 17, 23, 0.85)',
+  border: '1px solid #30363d',
+  borderRadius: 6,
   pointerEvents: 'none',
-  padding: 4,
+  padding: 6,
 };
 
 export function Minimap({ layout, playerPosition, currentRegionName, size = 180 }: Props) {
@@ -46,24 +46,40 @@ export function Minimap({ layout, playerPosition, currentRegionName, size = 180 
       <svg width={size} height={size} style={{ display: 'block' }}>
         <rect width={size} height={size} fill="#070710" />
 
+        <rect width={size} height={size} fill="#0d1117" />
+
         {regions.map((r) => {
           const x = w2s(r.center.x - r.size.x / 2);
           const y = w2s(r.center.z - r.size.z / 2);
           const w = (r.size.x / worldSize) * size;
           const h = (r.size.z / worldSize) * size;
           const isActive = r.node.region.name === currentRegionName;
+          const fill = `#${hexForRegion(r.node.region).toString(16).padStart(6, '0')}`;
           return (
-            <rect
-              key={r.node.region.name}
-              x={x}
-              y={y}
-              width={w - 1}
-              height={h - 1}
-              fill={`#${hexFor(r.node.region.tonalityType).toString(16).padStart(6, '0')}`}
-              opacity={isActive ? 0.85 : 0.35}
-              stroke={isActive ? '#fff' : 'transparent'}
-              strokeWidth={1}
-            />
+            <g key={r.node.region.name}>
+              <rect
+                x={x}
+                y={y}
+                width={w - 1}
+                height={h - 1}
+                fill={fill}
+                opacity={isActive ? 0.9 : 0.45}
+                stroke={isActive ? '#e6edf3' : '#30363d'}
+                strokeWidth={isActive ? 1.5 : 0.5}
+              />
+              <text
+                x={x + w / 2}
+                y={y + h / 2 + 3}
+                textAnchor="middle"
+                fontSize={9}
+                fontFamily="ui-monospace, monospace"
+                fontWeight={isActive ? 700 : 500}
+                fill={isActive ? '#0d1117' : '#e6edf3'}
+                pointerEvents="none"
+              >
+                {r.node.region.name}
+              </text>
+            </g>
           );
         })}
 
@@ -72,14 +88,14 @@ export function Minimap({ layout, playerPosition, currentRegionName, size = 180 
           const cz = w2s(wall.position.z);
           if (wall.axis === 'x') {
             const h = (wall.size.z / worldSize) * size;
-            return <line key={i} x1={cx} y1={cz - h / 2} x2={cx} y2={cz + h / 2} stroke="#7CFC7C" strokeWidth={1} opacity={0.4} />;
+            return <line key={i} x1={cx} y1={cz - h / 2} x2={cx} y2={cz + h / 2} stroke="#8b949e" strokeWidth={1} opacity={0.5} />;
           }
           const w = (wall.size.x / worldSize) * size;
-          return <line key={i} x1={cx - w / 2} y1={cz} x2={cx + w / 2} y2={cz} stroke="#7CFC7C" strokeWidth={1} opacity={0.4} />;
+          return <line key={i} x1={cx - w / 2} y1={cz} x2={cx + w / 2} y2={cz} stroke="#8b949e" strokeWidth={1} opacity={0.5} />;
         })}
 
         {/* Player dot */}
-        <circle cx={w2s(playerPosition.x)} cy={w2s(playerPosition.z)} r={3} fill="#0f0" />
+        <circle cx={w2s(playerPosition.x)} cy={w2s(playerPosition.z)} r={3} fill="#e6edf3" stroke="#0d1117" strokeWidth={0.5} />
       </svg>
     </div>
   );
