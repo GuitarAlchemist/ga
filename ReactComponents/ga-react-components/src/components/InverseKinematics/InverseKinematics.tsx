@@ -659,7 +659,6 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
     composer.addPass(new OutputPass());
 
     // ─── Animate ─────────────────────────────────────────────────────────
-    const tmpV = new THREE.Vector3();
     const tmpQ = new THREE.Quaternion();
     const yAxis = new THREE.Vector3(0, 1, 0); // used by bone-mesh orientation
     const tmpDir = new THREE.Vector3();
@@ -721,37 +720,16 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         targetMeshes[i].visible = showTargetsRef.current;
       }
 
-      // Per-frame palm basis recomputation: same tilted-down convention as
-      // updateTargetsFromChord. Recomputing each frame lets the wrist slerp
-      // smoothly when the chord changes (instead of snapping to the new
-      // basis instantly).
-      //
-      // CRITICAL: use the centroid of finger targets, NOT fingers[0]. The
-      // first fretted target may be far along the neck (e.g., C Major has
-      // index on string-2 fret-1 at high X, ring on string-5 fret-3 at low X)
-      // and using it as the anchor pulls the basis along the +X (neck) axis —
-      // visually parallel to the fretboard. The centroid sits at ~wrist.x,
-      // so the horizontal vector wrist→centroid is dominated by Z (across
-      // the strings), keeping the wrist perpendicular to the neck the way
-      // a real guitarist holds it. (2026-05-17 fix per user observation
-      // "wrist should be perpendicular to fretboard, not parallel".)
-      let cTx = 0, cTz = 0;
-      for (let i = 0; i < fingers.length; i++) {
-        cTx += fingers[i].target.x;
-        cTz += fingers[i].target.z;
-      }
-      cTx /= fingers.length;
-      cTz /= fingers.length;
-      tmpDir.set(
-        cTx - wrist.position.x,
-        0,
-        cTz - wrist.position.z,
-      );
-      if (tmpDir.lengthSq() > 1e-6) {
-        const basis = computePalmBasis(tmpDir);
-        tmpQ.setFromRotationMatrix(basis.matrix);
-        wrist.quaternion.slerp(tmpQ, 0.08);
-      }
+      // Wrist orientation is set in updateTargetsFromChord (perpendicular
+      // to the neck, tilted down by TILT_ANGLE_RAD). Deliberately NOT
+      // recomputed per frame: parked-finger targets are derived FROM the
+      // basis, so recomputing each frame creates a feedback loop that
+      // drags the basis ~22° off-perpendicular within seconds of slerping
+      // (user observation 2026-05-17 — "wrist should be perpendicular to
+      // fretboard, not parallel"). If smooth slerp on chord change becomes
+      // desirable, store the target quaternion in a ref at chord-change
+      // time and slerp toward THAT (not toward a recomputed-from-targets
+      // quaternion).
 
       composer.render();
       raf = requestAnimationFrame(animate);
