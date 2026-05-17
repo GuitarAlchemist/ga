@@ -3520,6 +3520,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   }, []);
 
   // ─── Backend connectivity check ───
+  // Probes /api/health (GaApi) as the primary "is the API up" signal.
+  // /api/chatbot/status used to be the primary probe, but GaChatbot.Api
+  // is a separate service on :5252 (cloudflared routes /chatbot and
+  // /api/chatbot/* to it on demos). When GaChatbot.Api was down but
+  // GaApi was up, the badge flipped to "Offline" even though the bulk
+  // of the API was healthy. The chatbot service is now a secondary
+  // capability surface — see the popover below.
   useEffect(() => {
     // Use VITE env var, or same origin as the page (works for deployed demo), or localhost fallback
     const envBase = typeof import.meta !== 'undefined'
@@ -3529,7 +3536,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     const checkBackend = async () => {
       try {
-        const url = `${baseUrl}/api/chatbot/status`;
+        const url = `${baseUrl}/api/health`;
         console.log('[PrimeRadiant] Checking backend at:', url);
         const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
         console.log('[PrimeRadiant] Backend status:', res.status);
