@@ -4,13 +4,13 @@
  * of the laid-out tree.
  */
 
-import { useMemo } from 'react';
+import { forwardRef, useMemo } from 'react';
 import { Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import type { BSPLayout, LaidOutRegion } from './layoutTree';
 import { BSPRegionVolume } from './BSPRegionVolume';
 import { BSPPartitionWall } from './BSPPartitionWall';
-import { Player } from './Player';
+import { Player, type PlayerHandle } from './Player';
 
 interface Props {
   layout: BSPLayout;
@@ -20,13 +20,13 @@ interface Props {
   onPositionChange: (p: THREE.Vector3) => void;
 }
 
-export function BSPScene({
+export const BSPScene = forwardRef<PlayerHandle, Props>(function BSPScene({
   layout,
   currentRegionName,
   moveSpeed,
   lookSpeed,
   onPositionChange,
-}: Props) {
+}, playerRef) {
   const groundSize = useMemo(() => {
     const s = layout.worldBounds.getSize(new THREE.Vector3());
     return Math.max(s.x, s.z) * 1.5;
@@ -34,28 +34,28 @@ export function BSPScene({
 
   return (
     <>
-      {/* DOOM-style sector lighting: dim ambient + one strong directional. */}
-      <ambientLight intensity={0.35} color={0xbcd0ff} />
+      {/* Dim ambient + one directional, matching GA's dark aesthetic. */}
+      <ambientLight intensity={0.45} color={0xc9d1d9} />
       <directionalLight
         position={[40, 80, 40]}
-        intensity={1.1}
+        intensity={0.9}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
-      <fog attach="fog" args={[0x0a0a14, 30, 220]} />
+      <fog attach="fog" args={[0x0d1117, 40, 260]} />
 
-      {/* Faint sky for orientation. */}
-      <Sky distance={450000} sunPosition={[40, 80, 40]} turbidity={6} rayleigh={2} />
+      {/* Faint, low-turbidity sky — dawn over a dark world. */}
+      <Sky distance={450000} sunPosition={[40, 80, 40]} turbidity={10} rayleigh={1} />
 
-      {/* Ground plate underneath everything. */}
+      {/* Ground plate underneath everything (GA bg colour). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.05, 0]}
         receiveShadow
       >
         <planeGeometry args={[groundSize, groundSize]} />
-        <meshStandardMaterial color={0x0e0e1a} roughness={0.95} />
+        <meshStandardMaterial color={0x0d1117} roughness={0.95} />
       </mesh>
 
       {/* BSP regions (rooms) */}
@@ -73,6 +73,7 @@ export function BSPScene({
       ))}
 
       <Player
+        ref={playerRef}
         moveSpeed={moveSpeed}
         lookSpeed={lookSpeed}
         initialPosition={[0, 4, layout.worldBounds.max.z - 8]}
@@ -80,4 +81,4 @@ export function BSPScene({
       />
     </>
   );
-}
+});
