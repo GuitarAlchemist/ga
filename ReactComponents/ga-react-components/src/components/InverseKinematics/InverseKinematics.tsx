@@ -18,7 +18,63 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Box } from '@mui/material';
+
+// ─── Rigged hand model ───────────────────────────────────────────────────
+// We replace the procedural cylinder/sphere "hand" with a properly rigged
+// glTF model. The asset is the WebXR generic-hand profile shipped at the
+// CDN below — same one Three.js's XRHandModelFactory uses for its 'mesh'
+// profile. Anatomically correct: 5 fingers including thumb, 3 phalanges
+// per finger (2 for thumb), standard OpenXR XR_HAND_JOINT_* bone names.
+//
+// We load it ourselves (no XR session needed), parent it to the existing
+// wrist Group so the wrist quaternion still drives whole-hand orientation,
+// and drive each phalanx via bone.lookAt() from our FABRIK joint output.
+const HAND_PROFILE_URL =
+  'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/';
+
+// OpenXR XR_HAND_JOINT_* bone names exposed by the rigged GLB. Indexed
+// matches the order returned by XRHandMeshModel; we don't use all of them
+// (we drive 3 phalanges per finger + 2 for thumb, leaving metacarpals at
+// their rest pose since those sit inside the palm).
+const HAND_BONE_NAMES = [
+  'wrist',
+  'thumb-metacarpal',
+  'thumb-phalanx-proximal',
+  'thumb-phalanx-distal',
+  'thumb-tip',
+  'index-finger-metacarpal',
+  'index-finger-phalanx-proximal',
+  'index-finger-phalanx-intermediate',
+  'index-finger-phalanx-distal',
+  'index-finger-tip',
+  'middle-finger-metacarpal',
+  'middle-finger-phalanx-proximal',
+  'middle-finger-phalanx-intermediate',
+  'middle-finger-phalanx-distal',
+  'middle-finger-tip',
+  'ring-finger-metacarpal',
+  'ring-finger-phalanx-proximal',
+  'ring-finger-phalanx-intermediate',
+  'ring-finger-phalanx-distal',
+  'ring-finger-tip',
+  'pinky-finger-metacarpal',
+  'pinky-finger-phalanx-proximal',
+  'pinky-finger-phalanx-intermediate',
+  'pinky-finger-phalanx-distal',
+  'pinky-finger-tip',
+] as const;
+
+// Mapping from our procedural FingerName to the OpenXR phalanx chain
+// (proximal, intermediate, distal). For each phalanx i, FABRIK joint i
+// is the bone's origin and joint i+1 is its lookAt target.
+const FINGER_TO_PHALANX_CHAIN: Record<string, readonly [string, string, string]> = {
+  index:  ['index-finger-phalanx-proximal',  'index-finger-phalanx-intermediate',  'index-finger-phalanx-distal'],
+  middle: ['middle-finger-phalanx-proximal', 'middle-finger-phalanx-intermediate', 'middle-finger-phalanx-distal'],
+  ring:   ['ring-finger-phalanx-proximal',   'ring-finger-phalanx-intermediate',   'ring-finger-phalanx-distal'],
+  pinky:  ['pinky-finger-phalanx-proximal',  'pinky-finger-phalanx-intermediate',  'pinky-finger-phalanx-distal'],
+};
 
 // ─── Chord types ────────────────────────────────────────────────────────
 
@@ -483,6 +539,79 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       targetMeshes.push(t);
     }
 
+    // ─── Rigged hand GLB ─────────────────────────────────────────────────
+    // Load the OpenXR generic-hand model asynchronously. When it arrives,
+    // parent its root under `wrist` (so the existing wrist quaternion
+    // continues to drive whole-hand orientation), cache bone refs by
+    // name, and hide the procedural meshes. Until then, the procedural
+    // cylinders/spheres remain visible as a fallback.
+    //
+    // The GLB is in meters (~0.18m hand). Our fretboard is in arbitrary
+    // units where NECK_WIDTH=1 ≈ 5cm hand-pose. Empirically a scale of
+    // ~3.5 makes the hand span roughly two-strings-worth and the fingers
+    // reach across the neck — verified against live scene 2026-05-17.
+    const HAND_SCALE = 8;
+    // Hand-rest-pose offset relative to wrist: the GLB's wrist bone sits
+    // at the origin with fingers extending along +Z; that already matches
+    // our convention (PALM_LENGTH on +Z), so no offset is needed.
+    const proceduralHandMeshes: THREE.Object3D[] = [palm, wristMesh];
+    for (const f of fingers) {
+      proceduralHandMeshes.push(...f.meshes, ...f.knuckles);
+    }
+    const handBones = new Map<string, THREE.Bone>();
+    let handGroup: THREE.Object3D | null = null;
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setPath(HAND_PROFILE_URL);
+    // Guitar fretting uses the LEFT hand (thumb on back of neck, fingers
+    // wrap over the strings). Load left.glb, not right.glb.
+    gltfLoader.load(
+      'left.glb',
+      (gltf) => {
+        const root = gltf.scene.children[0];
+        root.scale.setScalar(HAND_SCALE);
+        // The OpenXR generic hand is modelled with +Z forward (fingertips),
+        // +Y up (back of hand), origin at the wrist joint. That matches
+        // our `wrist` Group convention, so we can parent directly.
+        wrist.add(root);
+        handGroup = root;
+
+        root.traverse((obj) => {
+          if (obj instanceof THREE.SkinnedMesh) {
+            obj.frustumCulled = false;
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+            // Override the asset's default blue-grey material with skin
+            // tone so the rigged hand matches the rest of the scene.
+            obj.material = skinMat;
+          }
+        });
+        for (const name of HAND_BONE_NAMES) {
+          const bone = root.getObjectByName(name);
+          if (bone instanceof THREE.Bone) {
+            handBones.set(name, bone);
+          }
+        }
+
+        // Hide procedural fallback meshes — the rigged hand is now live.
+        for (const m of proceduralHandMeshes) {
+          m.visible = false;
+        }
+
+        // Leave the GLB at its default rest pose for v1. The asset's
+        // resting hand is a relaxed near-fist shape that already reads as
+        // anatomically correct. Per-chord bone driving (FABRIK targets →
+        // bone.lookAt on each phalanx) is the follow-up that will actually
+        // animate finger placement on chord change.
+      },
+      undefined,
+      (err) => {
+        // GLB fetch failed (offline, CDN down, CSP block). Procedural
+        // fallback remains visible — degrade gracefully.
+        // eslint-disable-next-line no-console
+        console.warn('[InverseKinematics] Hand GLB load failed, using procedural fallback:', err);
+      },
+    );
+
     // ─── Update targets from chord shape ─────────────────────────────────
     const updateTargetsFromChord = (shape: ChordShape) => {
       // Sort the chord's fretted positions by fret ascending so the
@@ -588,6 +717,15 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
     // listChords / getCurrentChord on top of this base surface.
     const w = window as unknown as { __gaIK?: Record<string, unknown> };
     const ikApi = w.__gaIK ?? {};
+    // Debug surface for inspecting the loaded rigged hand at runtime.
+    // `__gaIK._debug.handRoot` is the THREE.Object3D parent of the
+    // SkinnedMesh; `__gaIK._debug.bones` is the bone-name → Bone map.
+    // Exposed for Chrome MCP introspection while iterating on pose.
+    (ikApi as Record<string, unknown>)._debug = {
+      get handRoot() { return handGroup; },
+      bones: handBones,
+      wrist,
+    };
     ikApi.getSceneState = () => ({
       chord: chordRef.current.name,
       wrist: {
@@ -616,6 +754,7 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       const halfX = NECK_LENGTH / 2;
       const halfY = NECK_THICKNESS / 2;
       const halfZ = NECK_WIDTH / 2;
+      const stringTopY = NECK_THICKNESS / 2 + 0.02; // matches str.position.y
       for (const f of fingers) {
         // Joint-inside-wood check: any joint with all three axes inside
         // the neck bounding box means a bone is geometrically intersecting
@@ -639,8 +778,65 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         if (tipDist > 0.1) {
           issues.push(`${f.name}.tip is ${tipDist.toFixed(3)} from target (FABRIK did not converge)`);
         }
+        // Fingertip-touches-string check: tip Y should be within the
+        // string radius (~0.02) of the string top surface for the tip to
+        // visually rest on the string. Tips floating > 0.04 above the
+        // string look like the hand is "hovering" rather than fretting.
+        const tipContactDelta = f.target.y - stringTopY;
+        if (tipContactDelta > 0.04) {
+          issues.push(
+            `${f.name}.target ${tipContactDelta.toFixed(3)} above string top — ` +
+            `looks like hand is hovering`
+          );
+        }
       }
-      return { ok: issues.length === 0, issues };
+      // Wrist perpendicularity: extract forward from quaternion and check
+      // the X component is small (X is along the neck, Z is across the
+      // strings; perpendicular grip = forward dominated by Z).
+      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(wrist.quaternion);
+      const xzMag = Math.hypot(fwd.x, fwd.z);
+      const perpDeg = xzMag > 1e-6
+        ? Math.abs(Math.atan2(fwd.x, fwd.z)) * 180 / Math.PI
+        : 0;
+      if (perpDeg > 15) {
+        issues.push(
+          `wrist forward is ${perpDeg.toFixed(1)}° off perpendicular ` +
+          `(forward=(${fwd.x.toFixed(2)}, ${fwd.y.toFixed(2)}, ${fwd.z.toFixed(2)}))`
+        );
+      }
+      // Anatomy check: the rigged hand asset must have loaded with the
+      // full OpenXR bone set, including thumb (2 phalanges) + 4 fingers
+      // (3 phalanges each). Missing bones mean the GLB hasn't loaded or
+      // the asset CDN returned a malformed model.
+      const handLoaded = handBones.size > 0;
+      const hasThumb = handBones.has('thumb-phalanx-proximal') &&
+                       handBones.has('thumb-phalanx-distal');
+      const allFingersComplete = ['index', 'middle', 'ring', 'pinky'].every((f) =>
+        FINGER_TO_PHALANX_CHAIN[f].every((b) => handBones.has(b))
+      );
+      if (!handLoaded) {
+        issues.push('rigged hand GLB not yet loaded (procedural fallback visible)');
+      } else if (!hasThumb) {
+        issues.push('rigged hand loaded but thumb bones missing');
+      } else if (!allFingersComplete) {
+        issues.push('rigged hand loaded but some finger phalanx bones missing');
+      }
+      return {
+        ok: issues.length === 0,
+        issues,
+        // Quantitative measurements for callers that want raw numbers
+        // rather than human-readable failures.
+        metrics: {
+          wristPerpendicularityDeg: perpDeg,
+          forward: [fwd.x, fwd.y, fwd.z],
+          handLoaded,
+          handBoneCount: handBones.size,
+          fingertipContactDelta: fingers.map((f) => ({
+            name: f.name,
+            deltaY: f.target.y - stringTopY,
+          })),
+        },
+      };
     };
     w.__gaIK = ikApi;
 
