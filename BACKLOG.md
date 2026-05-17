@@ -109,6 +109,7 @@ These are real problems guitarists hit. They're the North Star for every feature
 
 ## Infrastructure Ideas
 
+- **install-audit observability +10 (workflow-step strings)** — the remaining install-audit deduction (`observability` 5/15) requires the literal strings `harness-audit` and `response-quality` in `.github/workflows/agent-blackbox.yml`. The `feat/install-audit-closure-ga` branch closed the review-independence deduction via docs only (96 → 100) but cannot reach 110 without an operator workflow edit, which `agent-blackbox.policy.json` `blocked_paths` and the supervised-loop hard gates both prohibit. Follow-up: either (a) add a `harness-audit` + `response-quality` step to the workflow under explicit human approval, or (b) relax the audit rule in agent-blackbox to credit `docs/harness-observability.md` + on-disk artifact evidence.
 - **Development process overseer** — deterministic repo-local scanner that watches Claude Code loops/goals, oracle health, dirty scope, protected paths, and kill switches; recommends whether to pause, use `/goal`, schedule `/loop`, or add Stop-hook enforcement. MVP: `Scripts/dev-process-overseer.ps1`; plan: `docs/plans/2026-05-16-feat-development-process-overseer-plan.md`.
 - **Live fretboard overlay** — show scale degrees on the React 3D fretboard in real time as the chatbot explains a concept
 - **Chatbot chord diagram rendering** — when TheoryAgent mentions a chord, auto-generate a VexTab diagram inline in the chat response
