@@ -89,10 +89,18 @@ Read `state/governance/dev-process-overseer.json`. Abort if:
 - `haltAll.active == true`
 - any `domains[].oracleStatus != "ok"`
 
-If the file is stale, refresh it first with
-`pwsh Scripts/dev-process-overseer.ps1 -Json | Out-Null` (the script also
-writes the artifact to `state/governance/dev-process-overseer.json`
-when invoked with `-OutPath`, if that param exists in your local version).
+If the file is stale, refresh it first:
+
+```powershell
+pwsh Scripts/supervised-loop-harness-oracle.ps1
+pwsh Scripts/dev-process-overseer.ps1 -Domain ga-harness
+```
+
+The harness oracle emits `state/quality/ga-harness/last.json` with the
+contract shape the overseer expects. Scoping the overseer to
+`-Domain ga-harness` avoids pre-existing `missing-oracle-output`
+warnings from other domains (chatbot-qa, embeddings, etc.) that may not
+have a fresh `last.json`. See `docs/loop-onboarding.md` for why.
 
 ### Step 2: Pin policy into working memory
 

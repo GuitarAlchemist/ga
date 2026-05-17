@@ -129,18 +129,37 @@ scope is a sibling artifact so the risk-policy stays pristine.
 ## Daily-use recipe
 
 ```powershell
-# 1. Refresh the overseer evidence
-pwsh Scripts/dev-process-overseer.ps1
+# 1. Run the harness oracle (emits state/quality/ga-harness/last.json)
+pwsh Scripts/supervised-loop-harness-oracle.ps1
 
-# 2. Run the preflight (exit 0 == LOOP_READY=true)
+# 2. Refresh the overseer evidence (defaults to scanning all domains;
+#    scope to one to avoid pre-existing missing-oracle warnings)
+pwsh Scripts/dev-process-overseer.ps1 -Domain ga-harness
+
+# 3. Run the preflight (exit 0 == LOOP_READY=true)
 pwsh Scripts/supervised-loop-preflight.ps1
 
-# 3. If ready, dispatch the skill from a Claude Code session
+# 4. If ready, dispatch the skill from a Claude Code session
 #    "run one supervised loop cycle on this repo"
 
-# 4. Inspect the cycle evidence
+# 5. Inspect the cycle evidence
 Get-Content state/governance/supervised-loop-cycle.json
 ```
+
+### Why `-Domain ga-harness`?
+
+GA already has several `state/quality/<domain>/baseline.json` files
+(chatbot-qa, embeddings, voicing-analysis, dsl-eval, readme-drift,
+optick-sae, invariants, memory-curator, gate-ledger) — but not all of
+them have a current `last.json`. The unscoped overseer enumerates every
+domain and warns on the missing oracle outputs, which downgrades
+`workflowMode` from `loop-eligible` to `supervised-goal`.
+
+For the supervised-loop kit's own readiness gate, scoping to
+`ga-harness` is the canonical pattern. When you run a real domain loop
+(e.g. chatbot-qa via `/auto-optimize`), pass `-Domain chatbot-qa`
+instead — that domain's existing `last.json` is up-to-date and the
+overseer reports `loop-eligible` for it.
 
 ## Pre-existing GA loops eligible for supervision
 
