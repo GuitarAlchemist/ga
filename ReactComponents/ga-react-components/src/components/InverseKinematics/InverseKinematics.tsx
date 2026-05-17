@@ -724,12 +724,28 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       // Per-frame palm basis recomputation: same tilted-down convention as
       // updateTargetsFromChord. Recomputing each frame lets the wrist slerp
       // smoothly when the chord changes (instead of snapping to the new
-      // basis instantly). Uses fingers[0].target as the anchor — that's
-      // always the first fretted target, which dominates the chord shape.
+      // basis instantly).
+      //
+      // CRITICAL: use the centroid of finger targets, NOT fingers[0]. The
+      // first fretted target may be far along the neck (e.g., C Major has
+      // index on string-2 fret-1 at high X, ring on string-5 fret-3 at low X)
+      // and using it as the anchor pulls the basis along the +X (neck) axis —
+      // visually parallel to the fretboard. The centroid sits at ~wrist.x,
+      // so the horizontal vector wrist→centroid is dominated by Z (across
+      // the strings), keeping the wrist perpendicular to the neck the way
+      // a real guitarist holds it. (2026-05-17 fix per user observation
+      // "wrist should be perpendicular to fretboard, not parallel".)
+      let cTx = 0, cTz = 0;
+      for (let i = 0; i < fingers.length; i++) {
+        cTx += fingers[i].target.x;
+        cTz += fingers[i].target.z;
+      }
+      cTx /= fingers.length;
+      cTz /= fingers.length;
       tmpDir.set(
-        fingers[0].target.x - wrist.position.x,
+        cTx - wrist.position.x,
         0,
-        fingers[0].target.z - wrist.position.z,
+        cTz - wrist.position.z,
       );
       if (tmpDir.lengthSq() > 1e-6) {
         const basis = computePalmBasis(tmpDir);
