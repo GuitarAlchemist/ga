@@ -186,7 +186,14 @@ function Test-PathMatchesAnyPattern {
 }
 
 try {
-    $porcelain = & git status --porcelain 2>&1
+    # --ignore-submodules=all: submodule directories (governance/demerzel,
+    # mcp-servers/**) are in protected_paths precisely because the loop must
+    # never touch them. Their *internal* dirty state is operator-managed
+    # cross-repo work, not a GA loop concern, so we hide submodule lines from
+    # the worktree-clean gate. If the loop ever modifies a submodule pointer
+    # in the parent index that will still surface as a tracked-file change
+    # outside the submodule directory.
+    $porcelain = & git status --porcelain --ignore-submodules=all 2>&1
 } catch {
     Emit-Result -Ready:$false -Reason "git_status_failed"
 }
