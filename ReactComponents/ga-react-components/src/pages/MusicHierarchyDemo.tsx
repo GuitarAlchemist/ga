@@ -81,40 +81,49 @@ function findParentId(item: MusicHierarchyItem): string | undefined {
   return undefined;
 }
 
+// Column definitions align with what the GraphQL backend actually emits.
+// SetClass/Forte/Prime/Scale are wired against the real domain repository;
+// Chord and ChordVoicing currently return placeholder rows (see backend
+// `ChordRepository` TODOs), so their tables intentionally stay sparse.
+//
+// Metadata key lookups use BOTH the new wire form (e.g. `icv`,
+// `cardinality`) and the historical PascalCase aliases (`IntervalVector`,
+// `Cardinality`) — the API layer in musicHierarchyApi.ts adds the aliases.
+const meta = (key: string) => (item: MusicHierarchyItem) => item.metadata?.[key] ?? '—';
+
 const baseTableColumns: Record<MusicHierarchyLevel, TableColumn[]> = {
   SetClass: [
     { key: 'name', label: 'Set Class' },
     { key: 'category', label: 'Category' },
-    { key: 'metadata.Cardinality', label: 'Cardinality', render: item => item.metadata?.['Cardinality'] ?? '—' },
-    { key: 'metadata.IntervalVector', label: 'Interval Vector', render: item => item.metadata?.['IntervalVector'] ?? '—' },
+    { key: 'metadata.Cardinality',    label: 'Cardinality',     render: meta('Cardinality') },
+    { key: 'metadata.IntervalVector', label: 'Interval Vector', render: meta('IntervalVector') },
+    { key: 'metadata.IsModal',        label: 'Modal',           render: meta('IsModal') },
   ],
   ForteNumber: [
-    { key: 'name', label: 'Forte Number' },
-    { key: 'metadata.Cardinality', label: 'Cardinality', render: item => item.metadata?.['Cardinality'] ?? '—' },
-    { key: 'metadata.ParentSetClassId', label: 'Set Class', render: item => item.metadata?.['ParentSetClassId'] ?? '—' },
+    { key: 'name',                 label: 'Forte Number' },
+    { key: 'metadata.Cardinality', label: 'Cardinality', render: meta('Cardinality') },
+    { key: 'metadata.index',       label: 'Index in Cardinality', render: meta('index') },
   ],
   PrimeForm: [
-    { key: 'name', label: 'Prime Form' },
-    { key: 'category', label: 'Category' },
-    { key: 'metadata.Cardinality', label: 'Cardinality', render: item => item.metadata?.['Cardinality'] ?? '—' },
+    { key: 'name',           label: 'Prime Form' },
+    { key: 'category',       label: 'Category' },
+    { key: 'metadata.count', label: 'Cardinality', render: meta('count') },
+    { key: 'metadata.forte', label: 'Forte',       render: meta('forte') },
   ],
   Chord: [
-    { key: 'name', label: 'Chord' },
+    { key: 'name',     label: 'Chord' },
     { key: 'category', label: 'Family' },
-    { key: 'metadata.Extension', label: 'Extension', render: item => item.metadata?.['Extension'] ?? '—' },
-    { key: 'metadata.NoteCount', label: '# Notes', render: item => item.metadata?.['NoteCount'] ?? '—' },
   ],
   ChordVoicing: [
-    { key: 'name', label: 'Position' },
-    { key: 'metadata.Frets', label: 'Frets', render: item => item.metadata?.['Frets'] ?? '—' },
-    { key: 'metadata.Strings', label: 'Strings', render: item => item.metadata?.['Strings'] ?? '—' },
-    { key: 'metadata.Root', label: 'Root', render: item => item.metadata?.['Root'] ?? '—' },
+    { key: 'name',     label: 'Position' },
+    { key: 'category', label: 'Family' },
   ],
   Scale: [
-    { key: 'name', label: 'Scale / Mode' },
-    { key: 'category', label: 'Family' },
-    { key: 'metadata.Root', label: 'Root', render: item => item.metadata?.['Root'] ?? '—' },
-    { key: 'metadata.NoteCount', label: '# Notes', render: item => item.metadata?.['NoteCount'] ?? '—' },
+    { key: 'name',                  label: 'Scale / Mode' },
+    { key: 'category',              label: 'Family' },
+    { key: 'metadata.notes',        label: 'Notes',  render: meta('notes') },
+    { key: 'metadata.forte',        label: 'Forte',  render: meta('forte') },
+    { key: 'metadata.common',       label: 'Common', render: meta('common') },
   ],
 };
 
