@@ -1,15 +1,28 @@
 ---
 title: Embeddings snapshot pipeline — filename + cadence
-status: planned
+status: shipped (workflow at .github/workflows/embeddings-snapshot.yml — Step 1 + Step 2)
 date: 2026-05-16
 reversibility: two-way door
 revisit_trigger: "next session implementing #182 (auto-optimize for embeddings) or whenever the quality dashboard shows the embedding panel as stale > 30 days"
 related:
   - state/quality/embeddings/baseline.json
   - .github/workflows/chatbot-qa-snapshot.yml (template)
+  - .github/workflows/embeddings-snapshot.yml (this plan's implementation)
   - task #192
   - task #182 (auto-optimize loop blocked on this)
 ---
+
+> **Correction (2026-05-16, post-impl):** the plan said the binary was
+> `ix-embedding-diagnostics`. The actual binary name in
+> `ix/crates/ix-embedding-diagnostics/Cargo.toml` is **`baseline-diagnostics`**.
+> The crate name is `ix-embedding-diagnostics`; the bin target inside it is
+> `baseline-diagnostics`. The workflow at
+> `.github/workflows/embeddings-snapshot.yml` uses
+> `cargo build -p ix-embedding-diagnostics --bin baseline-diagnostics` and
+> invokes `ix/target/release/baseline-diagnostics`.
+>
+> Also: the producer writes `embedding-diagnostics-YYYY-MM-DD.json` (prefixed),
+> not the canonical `YYYY-MM-DD.json`. The workflow renames it at commit time.
 
 # Embeddings snapshot pipeline — filename + cadence
 
