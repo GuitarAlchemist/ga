@@ -58,14 +58,19 @@ public sealed partial class ChordVoicingsSkill(
         var q = message.ToLowerInvariant();
         var hasVoicingIntent = VoicingKeywords.Any(k => q.Contains(k, StringComparison.Ordinal));
         if (!hasVoicingIntent) return false;
-        // Guard: at least one chord-shaped token (letter + optional accidental
-        // + optional quality). Avoids matching "voicing" alone.
-        return ChordTokenRegex().IsMatch(message);
+        // Require a real chord token. The two regexes are case-sensitive on the
+        // root so bare lowercase "a"/"e" in normal English ("show me a shape")
+        // won't trigger. Strict form requires an accidental/quality/digit
+        // immediately after the root (Cmaj7, G7, F#m); spaced form allows
+        // "[A-G] major/minor/dim/aug/sus" with whitespace between root and
+        // quality (Bb major, C minor).
+        return ChordSuffixRegex().IsMatch(message)
+               || ChordWithSpacedQualityRegex().IsMatch(message);
     }
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        var structured = await extractor.ExtractAsync(message, cancellationToken);
+        var structured = await extractor.ExtractAsync(message, cancellationToken).ConfigureAwait(false);
         var hasIntent = structured.ChordSymbol is not null
                         || structured.PitchClasses is { Length: > 0 }
                         || structured.ModeName is not null
@@ -90,7 +95,19 @@ public sealed partial class ChordVoicingsSkill(
         var filters = VoicingAgent.BuildSearchFilters(structured);
 
         Task<double[]> Generator(string _) => Task.FromResult(queryVector);
-        var results = await voicingSearch.SearchAsync(message, Generator, topK: 8, filters, cancellationToken);
+        var results = await voicingSearch.SearchAsync(message, Generator, topK: 8, filters, cancellationToken).ConfigureAwait(false);
+
+        // Corpus-tagging mismatch workaround (docs/solutions/architecture/2026-05-08-
+        // voicing-search-corpus-tagging-mismatch.md): filters target Tags/ChordName
+        // fields the corpus doesn't populate, so filter-bearing queries reliably
+        // return 0 hits. Retry without filters before reporting failure.
+        if (results.Count == 0 && filters is not null)
+        {
+            logger.LogDebug(
+                "ChordVoicingsSkill: zero hits with filters for {Intent}, retrying without filters",
+                structured.ChordSymbol ?? structured.ModeName ?? "(tags)");
+            results = await voicingSearch.SearchAsync(message, Generator, topK: 8, null, cancellationToken).ConfigureAwait(false);
+        }
 
         if (results.Count == 0)
         {
@@ -145,8 +162,16 @@ public sealed partial class ChordVoicingsSkill(
         };
     }
 
-    // Chord-shape detector: letter + optional accidental + optional
-    // quality suffix. Conservative — only matches what looks like a chord.
-    [GeneratedRegex(@"\b[A-G][#b]?(maj|min|m|M|dim|aug|sus|add|alt|°|Δ)?\d*\b", RegexOptions.IgnoreCase)]
-    private static partial Regex ChordTokenRegex();
+    // Chord-shape detector: uppercase root (no IgnoreCase) followed by an
+    // accidental/quality/digit immediately. Matches "Cmaj7", "G7", "F#m",
+    // "Calt", "C7b9". Case-sensitive root prevents false positives on bare
+    // lowercase "a" / "e" in normal English ("show me a beginner shape").
+    [GeneratedRegex(@"\b[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|\d)\w*\b")]
+    private static partial Regex ChordSuffixRegex();
+
+    // Spaced quality form: "C major", "Bb minor", "F# augmented". Quality word
+    // accepts upper- and lower-case first letters but requires the root to be
+    // an uppercase chord letter.
+    [GeneratedRegex(@"\b[A-G][#b]?\s+(?:[Mm]ajor|[Mm]inor|[Mm]aj|[Mm]in|[Dd]im|[Aa]ug|[Ss]us)\b")]
+    private static partial Regex ChordWithSpacedQualityRegex();
 }
