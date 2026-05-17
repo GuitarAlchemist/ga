@@ -73,9 +73,17 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
   const forward = useRef(new THREE.Vector3());
   const right = useRef(new THREE.Vector3());
 
+  // Apply the spawn position exactly once on mount. We deliberately do
+  // NOT include `initialPosition` (or `camera`) in the dep array: callers
+  // pass a fresh tuple literal every render (e.g. `[0, 4, layout.max.z]`),
+  // which would otherwise re-fire this effect on every parent re-render
+  // and yank the camera back to spawn *after* a click-to-teleport — the
+  // HUD `currentRegion` would then flicker to null because the region
+  // detector sees the player back outside every room. See PR #264.
   useEffect(() => {
     camera.position.set(...initialPosition);
-  }, [camera, initialPosition]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
