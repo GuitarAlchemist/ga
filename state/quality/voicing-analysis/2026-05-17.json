@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-17T20:03:20.6396621Z",
+  "Timestamp": "2026-05-17T21:38:46.0368813Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -51,7 +51,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 398
+        "Count": 394
       },
       {
         "Name": "Ebdim/Gb",
@@ -75,7 +75,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 370
+        "Count": 371
       },
       {
         "Name": "Adim/C",
@@ -139,9 +139,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 83.5207412,
-    "VoicingsPerSec": 3748.1348405466497,
-    "PeakWorkingSetMb": 401.5234375
+    "RuntimeSeconds": 86.9188135,
+    "VoicingsPerSec": 3601.6023159358933,
+    "PeakWorkingSetMb": 413.75390625
   },
   "IssueSamples": {
     "NullChordName": [],
