@@ -13,7 +13,9 @@
 param(
     [string]$RepoRoot = (Resolve-Path .).Path,
     [string]$Domain = '',
-    [switch]$Json
+    [switch]$Json,
+    [string]$OutPath = 'state/governance/dev-process-overseer.json',
+    [switch]$NoEmit
 )
 
 $ErrorActionPreference = 'Stop'
@@ -76,7 +78,12 @@ function Test-PathMatchesAnyPattern {
 function Get-GitStatusEntries {
     param([string]$RepoRoot)
 
-    $raw = & git -C $RepoRoot status --porcelain=v1 2>$null
+    # --ignore-submodules=all: submodule directories (governance/demerzel,
+    # mcp-servers/**) are out-of-scope by design — the supervised loop's
+    # ga.loop-policy.json puts them in protected_paths, and per-domain
+    # baselines also exclude them. Their *internal* dirty state is
+    # operator-managed cross-repo work and must not gate the overseer.
+    $raw = & git -C $RepoRoot status --porcelain=v1 --ignore-submodules=all 2>$null
     $entries = @()
     foreach ($line in @($raw)) {
         if (-not $line -or $line.Length -lt 4) { continue }
@@ -311,6 +318,19 @@ $report = [ordered]@{
         claudeGoal = $goalTemplate
         claudeLoop = $loopTemplate
     }
+}
+
+$artifactPath = if ([System.IO.Path]::IsPathRooted($OutPath)) { $OutPath } else { Join-Path $RepoRoot $OutPath }
+if (-not $NoEmit -and $artifactPath) {
+    $artifactDirectory = Split-Path -Parent $artifactPath
+    if ($artifactDirectory) {
+        New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
+    }
+
+    $artifactJson = $report | ConvertTo-Json -Depth 12
+    $temporaryPath = "$artifactPath.tmp"
+    Set-Content -LiteralPath $temporaryPath -Value $artifactJson -Encoding UTF8
+    Move-Item -LiteralPath $temporaryPath -Destination $artifactPath -Force
 }
 
 if ($Json) {
