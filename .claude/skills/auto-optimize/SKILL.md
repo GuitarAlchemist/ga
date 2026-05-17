@@ -275,7 +275,7 @@ Remove-Item $lock
 | Domain                | Baseline                                          | Oracle                                          | Roundtrip validator skill                          |
 |-----------------------|---------------------------------------------------|-------------------------------------------------|----------------------------------------------------|
 | `chatbot-qa`          | `state/quality/chatbot-qa/baseline.json`          | `Scripts/run-prompt-corpus.ps1 -Worst 1 -Json…` | `.claude/skills/chatbot-qa-roundtrip-validate/`    |
-| `embeddings`          | `state/quality/embeddings/baseline.json`          | `Scripts/run-embedding-diagnostics.ps1 -Json…`  | _(pending; see #182)_                              |
+| `embeddings`          | `state/quality/embeddings/baseline.json`          | `ix/target/release/baseline-diagnostics --index … --out-dir …` | `.claude/skills/embeddings-roundtrip-validate/` (LOWER-IS-BETTER) |
 | `voicing-analysis`    | `state/quality/voicing-analysis/baseline.json`    | _(pending recorder)_                            | _(pending)_                                        |
 | `chatbot-signatures`  | _(implicit — uses committed _signature.json)_     | `pwsh Scripts/compare-trace-to-canonical.ps1 -Sweep` | _(reuses chatbot-qa roundtrip)_                |
 | `optick-sae` (ix)     | `state/quality/optick-sae/baseline.json`          | _(in ix sibling; cross-repo dispatch)_          | _(in ix sibling)_                                  |
