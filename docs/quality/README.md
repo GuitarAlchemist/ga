@@ -54,7 +54,7 @@ _21 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 ## Chatbot QA detail
 
-_1 snapshot(s) loaded. Sparklines show up to 24 most recent points._
+_2 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 | Metric | Latest | Δ vs prev | Δ vs 7d | Drift | 30d avg | n | Sparkline |
 |---|---|---|---|---|---|---|---|
@@ -64,7 +64,7 @@ _1 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 ## Methodology
 
 - **Snapshots root:** `state/quality`
-- **Snapshots loaded:** 1 embeddings / 21 voicing-analysis / 1 chatbot-qa
+- **Snapshots loaded:** 1 embeddings / 21 voicing-analysis / 2 chatbot-qa
 - **Regression threshold:** 5.0% absolute Δ vs 7-day average, in the "bad" direction
 - **Drift detection:** Page-Hinkley over direction-adjusted metric levels; only higher-is-better and lower-is-better metrics participate
 - **Direction semantics:** higher-is-better (pass rates, coverage, consistency), lower-is-better (leak accuracy, unknown-chord rate, invariant failures), neutral (corpus counts, Betti numbers — reported for context only)
