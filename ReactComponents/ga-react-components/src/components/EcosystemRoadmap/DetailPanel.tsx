@@ -16,25 +16,31 @@ import { DOMAIN_COLORS, DOMAIN_LABELS } from './types';
 import type { RoadmapNode } from './types';
 import { getAncestors } from './roadmapData';
 
-const PANEL_STYLE = {
-  bgcolor: '#161b22',
-  border: '1px solid #30363d',
-  borderRadius: 1,
-  p: 1.5,
-  minHeight: 200,
-  maxHeight: 200,
-  overflowY: 'auto' as const,
-  color: '#c9d1d9',
-};
+interface DetailPanelProps {
+  /** When true, render a tighter version (less vertical space, shorter cap). */
+  compact?: boolean;
+}
 
-export const DetailPanel: React.FC = () => {
+const panelStyle = (compact: boolean) =>
+  ({
+    bgcolor: '#161b22',
+    borderTop: '1px solid #30363d',
+    p: { xs: 1, sm: 1.5 },
+    minHeight: compact ? 96 : 140,
+    maxHeight: compact ? 180 : 240,
+    overflowY: 'auto' as const,
+    color: '#c9d1d9',
+    flexShrink: 0,
+  }) as const;
+
+export const DetailPanel: React.FC<DetailPanelProps> = ({ compact = false }) => {
   const [selectedNode, setSelectedNode] = useAtom(selectedNodeAtom);
 
   if (!selectedNode) {
     return (
-      <Box sx={PANEL_STYLE}>
-        <Typography variant="body2" sx={{ color: '#8b949e', fontStyle: 'italic', mt: 1 }}>
-          Select a node to view details
+      <Box sx={panelStyle(compact)}>
+        <Typography variant="body2" sx={{ color: '#8b949e', fontStyle: 'italic' }}>
+          Tap a node in the visualization or open the tree to view details.
         </Typography>
       </Box>
     );
@@ -53,7 +59,7 @@ export const DetailPanel: React.FC = () => {
   };
 
   return (
-    <Box sx={PANEL_STYLE}>
+    <Box sx={panelStyle(compact)}>
       {/* Breadcrumb */}
       {ancestors.length > 0 && (
         <Breadcrumbs
