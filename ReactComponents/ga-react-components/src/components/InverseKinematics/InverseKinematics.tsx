@@ -55,26 +55,36 @@ const NECK_THICKNESS = 0.25;
 const FRET_COUNT = 12;
 const STRING_COUNT = 6;
 
-const FINGER_NAMES = ['index', 'middle', 'ring', 'pinky'] as const;
+// Order matters: index/middle/ring/pinky receive fretted-note targets
+// in ascending-fret order via `updateTargetsFromChord`; the thumb is
+// always parked (rests against the back of the neck in a real grip).
+const FINGER_NAMES = ['index', 'middle', 'ring', 'pinky', 'thumb'] as const;
 type FingerName = typeof FINGER_NAMES[number];
 
 // Base palm offset (relative to wrist), and per-finger MCP offset (the
-// knuckles span the palm width).
+// knuckles span the palm width). Thumb sits on the -X side (opposite
+// the pinky), slightly below the palm plane, mimicking how the thumb
+// wraps to the back of the neck on a real fretting hand.
 const PALM_LENGTH = 0.55;
 const FINGER_MCP_OFFSETS: Record<FingerName, [number, number, number]> = {
-  index:  [-0.18, 0, PALM_LENGTH],
-  middle: [-0.06, 0, PALM_LENGTH + 0.02],
-  ring:   [ 0.06, 0, PALM_LENGTH],
-  pinky:  [ 0.18, 0, PALM_LENGTH - 0.04],
+  index:  [-0.18, 0,     PALM_LENGTH],
+  middle: [-0.06, 0,     PALM_LENGTH + 0.02],
+  ring:   [ 0.06, 0,     PALM_LENGTH],
+  pinky:  [ 0.18, 0,     PALM_LENGTH - 0.04],
+  thumb:  [-0.30, -0.05, PALM_LENGTH * 0.4],
 };
 
-// Phalanx lengths for each finger: proximal, middle, distal. Drawn
-// loosely from anthropometric averages, scaled up.
-const FINGER_BONE_LENGTHS: Record<FingerName, [number, number, number]> = {
-  index:  [0.42, 0.26, 0.20],
-  middle: [0.46, 0.30, 0.22],
-  ring:   [0.42, 0.28, 0.20],
-  pinky:  [0.34, 0.22, 0.16],
+// Phalanx lengths per finger (proximal → distal). Fingers have 3 bones
+// (4 joints); the thumb anatomically has only 2 phalanges (3 joints):
+// proximal + distal, the metacarpal stays inside the palm.
+// Scaled up ~25% from the original anthropometric draft so the fingers
+// read as fully-extended rather than bunched up under the wrist.
+const FINGER_BONE_LENGTHS: Record<FingerName, number[]> = {
+  index:  [0.52, 0.32, 0.25],
+  middle: [0.58, 0.38, 0.28],
+  ring:   [0.52, 0.35, 0.25],
+  pinky:  [0.42, 0.28, 0.20],
+  thumb:  [0.40, 0.32],
 };
 
 // ─── Palm basis ─────────────────────────────────────────────────────────
@@ -139,8 +149,13 @@ const targetForFret = (string: number, fret: number): THREE.Vector3 => {
   const xPrev = fretX(Math.max(0, fret - 1));
   const x = (xCurr + xPrev) / 2;
   const z = stringZ(string);
-  // Slightly above the fretboard surface.
-  const y = NECK_THICKNESS / 2 + 0.03;
+  // Tip joint Y is set so the fingertip sphere VISUALLY contacts the
+  // strings. Strings sit at y = NECK_THICKNESS/2 + 0.02 (radius up to
+  // 0.018 for low E). With a tip-sphere radius of 0.062, placing the
+  // joint Y at 0.150 puts the sphere center near the string surface
+  // and the lower hemisphere overlapping the strings — i.e. visibly
+  // pressing them. The previous Y (0.155) left a ~10mm air gap.
+  const y = 0.150;
   return new THREE.Vector3(x, y, z);
 };
 
@@ -153,13 +168,13 @@ interface FingerChain {
   name: FingerName;
   /** Local-to-wrist MCP offset. Stays fixed; the palm is rigid. */
   mcpLocal: THREE.Vector3;
-  /** Bone lengths (proximal → distal). */
-  bones: [number, number, number];
-  /** Joint world positions: [mcp, pip, dip, tip] — 4 entries, 3 bones. */
-  joints: [THREE.Vector3, THREE.Vector3, THREE.Vector3, THREE.Vector3];
+  /** Bone lengths (proximal → distal). 3 for fingers, 2 for the thumb. */
+  bones: number[];
+  /** Joint world positions: bones.length + 1 entries (mcp..tip). */
+  joints: THREE.Vector3[];
   /** Mesh per bone. */
   meshes: THREE.Mesh[];
-  /** Knuckle spheres (4: one per joint). */
+  /** Knuckle spheres (one per joint, so bones.length + 1 total). */
   knuckles: THREE.Mesh[];
   /** Solver target (world). Fingers tween toward this. */
   target: THREE.Vector3;
@@ -432,15 +447,20 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       const mcpLocal = new THREE.Vector3(...FINGER_MCP_OFFSETS[name]);
       const bones = FINGER_BONE_LENGTHS[name];
       // Initial rest pose: bone chain reaches forward in +z from MCP.
-      const j0 = new THREE.Vector3();
-      const j1 = new THREE.Vector3();
-      const j2 = new THREE.Vector3();
-      const j3 = new THREE.Vector3();
+      // joints.length = bones.length + 1 (one per segment endpoint).
+      const joints: THREE.Vector3[] = Array.from(
+        { length: bones.length + 1 },
+        () => new THREE.Vector3(),
+      );
 
-      // Build capsule meshes for each bone segment.
+      // Bone-radius schedule: thumb is slightly thicker, fingers taper
+      // from base (0.085) to tip (0.060). For 2-bone thumb, the radii
+      // are [0.085, 0.065]. For 3-bone fingers, [0.085, 0.072, 0.060].
+      const boneRadii =
+        bones.length === 2 ? [0.092, 0.070] : [0.085, 0.072, 0.060];
       const meshes: THREE.Mesh[] = [];
-      for (let i = 0; i < 3; i++) {
-        const r = i === 0 ? 0.085 : i === 1 ? 0.072 : 0.060;
+      for (let i = 0; i < bones.length; i++) {
+        const r = boneRadii[i];
         const geo = new THREE.CylinderGeometry(r, r * 0.85, bones[i], 16, 1, false);
         // Cylinder is along +Y by default; we orient it per-frame.
         const mesh = new THREE.Mesh(geo, skinMat);
@@ -449,10 +469,12 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         meshes.push(mesh);
       }
 
-      // Knuckle spheres at each joint (4 total).
+      // Knuckle spheres at each joint (bones.length + 1 total).
+      const knuckleRadii =
+        bones.length === 2 ? [0.105, 0.085, 0.070] : [0.10, 0.085, 0.075, 0.062];
       const knuckles: THREE.Mesh[] = [];
-      for (let i = 0; i < 4; i++) {
-        const r = i === 0 ? 0.10 : i === 1 ? 0.085 : i === 2 ? 0.075 : 0.062;
+      for (let i = 0; i < bones.length + 1; i++) {
+        const r = knuckleRadii[i];
         const k = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), skinMat);
         k.castShadow = true;
         scene.add(k);
@@ -463,7 +485,7 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         name,
         mcpLocal,
         bones,
-        joints: [j0, j1, j2, j3],
+        joints,
         meshes,
         knuckles,
         target: new THREE.Vector3(0, NECK_THICKNESS / 2 + 0.05, stringZ(1)),
@@ -540,11 +562,12 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         if (finger.target.y < woodFloor) finger.target.y = woodFloor;
       }
 
-      // Pre-curl: from MCP, PIP arches UP-AND-BACK (toward the palm-up
-      // direction, since the hand approaches from above), DIP comes down
-      // toward the target, TIP rests on the target. This biases FABRIK's
-      // steady-state into a guitarist-shaped curl instead of a flat
-      // straight-line solution.
+      // Pre-curl: from MCP, intermediate joints arch UP-AND-BACK (along
+      // palm-up since the hand approaches from above), TIP rests on the
+      // target. Generalised to any bone count: each intermediate joint i
+      // sits at fraction i/n of the way along the MCP→TIP direction plus
+      // a diminishing arch. This biases FABRIK's steady-state into a
+      // guitarist-shaped curl rather than a flat straight-line solution.
       for (const finger of fingers) {
         const mcp = finger.mcpLocal.clone().applyMatrix4(wrist.matrixWorld);
         const target = finger.target;
@@ -555,26 +578,23 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         const ux = dist > 1e-4 ? dx / dist : 0;
         const uy = dist > 1e-4 ? dy / dist : -1;
         const uz = dist > 1e-4 ? dz / dist : 0;
-        const [b0, b1] = finger.bones;
-        // PIP: 35% of the way toward target, plus a small UP-AND-BACK arch
-        // (along palm-up direction).
-        const arch = b0 * 0.45;
+        const n = finger.bones.length;       // 3 for fingers, 2 for thumb
         finger.joints[0].copy(mcp);
-        finger.joints[1].set(
-          mcp.x + ux * (dist * 0.35) + basis.up.x * arch,
-          mcp.y + uy * (dist * 0.35) + basis.up.y * arch,
-          mcp.z + uz * (dist * 0.35) + basis.up.z * arch,
-        );
-        // DIP: 70% of the way toward target, with reduced arch as we
-        // curl back down.
-        const arch2 = b1 * 0.20;
-        finger.joints[2].set(
-          mcp.x + ux * (dist * 0.70) + basis.up.x * arch2,
-          mcp.y + uy * (dist * 0.70) + basis.up.y * arch2,
-          mcp.z + uz * (dist * 0.70) + basis.up.z * arch2,
-        );
+        for (let j = 1; j < n; j++) {
+          const t = j / n;
+          // Arch peaks at the middle joint and tapers toward TIP, mimicking
+          // a finger curl. For thumb (n=2) only one intermediate joint;
+          // the arch is small to keep the thumb roughly straight.
+          const archFrac = (j < n) ? (1 - Math.abs(2 * t - 1)) * 0.45 : 0;
+          const arch = finger.bones[j - 1] * archFrac;
+          finger.joints[j].set(
+            mcp.x + ux * (dist * t) + basis.up.x * arch,
+            mcp.y + uy * (dist * t) + basis.up.y * arch,
+            mcp.z + uz * (dist * t) + basis.up.z * arch,
+          );
+        }
         // TIP on the target so frame 0 already has the fingertip planted.
-        finger.joints[3].copy(target);
+        finger.joints[n].copy(target);
       }
     };
 
@@ -594,16 +614,27 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         position: wrist.position.toArray(),
         quaternion: wrist.quaternion.toArray(),
       },
-      fingers: fingers.map((f) => ({
-        name: f.name,
-        mcp: f.joints[0].toArray(),
-        pip: f.joints[1].toArray(),
-        dip: f.joints[2].toArray(),
-        tip: f.joints[3].toArray(),
-        target: f.target.toArray(),
-        targetDistance: f.joints[3].distanceTo(f.target),
-        boneBudget: f.bones[0] + f.bones[1] + f.bones[2],
-      })),
+      fingers: fingers.map((f) => {
+        const tip = f.joints[f.joints.length - 1];
+        return {
+          name: f.name,
+          // Per-joint positions, generalised over variable bone count.
+          // For 3-bone fingers: [mcp, pip, dip, tip]. For 2-bone thumb:
+          // [mcp, ip, tip]. Callers should index by length, not by name.
+          joints: f.joints.map((j) => j.toArray()),
+          // Legacy named accessors retained for compatibility with the
+          // 3-bone (4-joint) inspection scripts. For the thumb (2 bones)
+          // pip/dip alias to the single IP joint; tip is always last.
+          mcp: f.joints[0].toArray(),
+          pip: f.joints[1].toArray(),
+          dip: (f.joints[2] ?? f.joints[f.joints.length - 1]).toArray(),
+          tip: tip.toArray(),
+          target: f.target.toArray(),
+          targetDistance: tip.distanceTo(f.target),
+          boneBudget: f.bones.reduce((s, b) => s + b, 0),
+          boneCount: f.bones.length,
+        };
+      }),
       neck: {
         length: NECK_LENGTH,
         width: NECK_WIDTH,
@@ -620,8 +651,12 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         // Joint-inside-wood check: any joint with all three axes inside
         // the neck bounding box means a bone is geometrically intersecting
         // the fretboard wood, which is physically impossible.
-        const jointNames = ['mcp', 'pip', 'dip', 'tip'] as const;
-        for (let i = 0; i < 4; i++) {
+        // Generalised joint names: 3-bone fingers use [mcp, pip, dip, tip],
+        // 2-bone thumb uses [mcp, ip, tip].
+        const jointNames = f.joints.length === 4
+          ? ['mcp', 'pip', 'dip', 'tip']
+          : ['mcp', 'ip', 'tip'];
+        for (let i = 0; i < f.joints.length; i++) {
           const j = f.joints[i];
           if (
             Math.abs(j.x) < halfX &&
@@ -635,7 +670,8 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
           }
         }
         // Fingertip convergence check.
-        const tipDist = f.joints[3].distanceTo(f.target);
+        const tip = f.joints[f.joints.length - 1];
+        const tipDist = tip.distanceTo(f.target);
         if (tipDist > 0.1) {
           issues.push(`${f.name}.tip is ${tipDist.toFixed(3)} from target (FABRIK did not converge)`);
         }
@@ -687,14 +723,15 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         // Tween joints toward where FABRIK would put them this frame.
         // We do FABRIK on a working copy then exponentially damp.
         const work = finger.joints.map((j) => j.clone());
-        fabrikSolve(work, finger.bones as unknown as number[], mcpWorld, finger.target, it);
+        fabrikSolve(work, finger.bones, mcpWorld, finger.target, it);
 
-        for (let i = 1; i < 4; i++) {
+        const n = finger.bones.length;       // 3 for fingers, 2 for thumb
+        for (let i = 1; i <= n; i++) {
           finger.joints[i].lerp(work[i], damp);
         }
 
         // Orient capsule meshes along consecutive joint pairs.
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < n; i++) {
           const a = finger.joints[i];
           const b = finger.joints[i + 1];
           const mesh = finger.meshes[i];
@@ -709,7 +746,7 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         }
 
         // Knuckle spheres at the joints.
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i <= n; i++) {
           finger.knuckles[i].position.copy(finger.joints[i]);
         }
       }
