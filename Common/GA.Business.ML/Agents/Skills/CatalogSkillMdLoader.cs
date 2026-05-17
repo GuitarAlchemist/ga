@@ -83,7 +83,7 @@ internal static class CatalogSkillMdLoader
             var trimmed = line.TrimStart();
 
             // H1 — title; starts the preamble zone.
-            if (trimmed.StartsWith("# "))
+            if (trimmed.StartsWith("# ", StringComparison.Ordinal))
             {
                 inPreambleZone = true;
                 preambleDone   = false;
@@ -94,7 +94,7 @@ internal static class CatalogSkillMdLoader
 
             // H2 — ends preamble zone, and decides whether the new section
             // is meta (drop) or content (keep).
-            if (trimmed.StartsWith("## "))
+            if (trimmed.StartsWith("## ", StringComparison.Ordinal))
             {
                 preambleDone   = true;
                 inPreambleZone = false;

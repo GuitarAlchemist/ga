@@ -167,8 +167,14 @@ public sealed partial class ImprovisationSkill(
         // short-circuit otherwise).
         if (s.Contains("alt", StringComparison.Ordinal)) return QualityClass.Altered;
         if (s.Contains("m7b5", StringComparison.Ordinal) || s.Contains("ø", StringComparison.Ordinal)) return QualityClass.HalfDiminished;
-        if (s.Contains("dim7", StringComparison.Ordinal) || s.Contains("°7", StringComparison.Ordinal)) return QualityClass.Diminished7;
-        if (s.StartsWith("dim", StringComparison.Ordinal) || s.StartsWith("°", StringComparison.Ordinal) || s.Contains("o7", StringComparison.Ordinal)) return QualityClass.Diminished7;
+        // Diminished family — order matters: check the 4-note (dim7 / °7 / o7)
+        // form first, then fall to the 3-note triad. Pre-fix, `Cdim` (triad)
+        // matched the `StartsWith("dim")` branch and returned Diminished7 — a
+        // category error: the canonical scale for a dim TRIAD is Locrian,
+        // while dim7 takes Whole-Half Diminished. Caught by multi-LLM review
+        // 2026-05-17 (same family as the pre-#253 CmMaj7→major7 bug).
+        if (s.Contains("dim7", StringComparison.Ordinal) || s.Contains("°7", StringComparison.Ordinal) || s.Contains("o7", StringComparison.Ordinal)) return QualityClass.Diminished7;
+        if (s.StartsWith("dim", StringComparison.Ordinal) || s.StartsWith("°", StringComparison.Ordinal)) return QualityClass.Diminished;
         if (s.Contains("mmaj7", StringComparison.Ordinal) || s.Contains("minmaj7", StringComparison.Ordinal)) return QualityClass.MinorMajor7;
         if (s.Contains("maj7#11", StringComparison.Ordinal) || s.Contains("maj7+11", StringComparison.Ordinal)) return QualityClass.LydianMaj7;
         if (s.Contains("maj7", StringComparison.Ordinal) || s.Contains("maj9", StringComparison.Ordinal) || s.Contains("maj13", StringComparison.Ordinal) || s.Contains("δ", StringComparison.Ordinal)) return QualityClass.Major7;
@@ -250,6 +256,11 @@ public sealed partial class ImprovisationSkill(
             new("Locrian", "diatonic — but b9 is an avoid note"),
             new("Locrian #2", "raise the 2 from melodic minor — better tonal target"),
         ],
+        QualityKind.Diminished =>
+        [
+            new("Locrian", "the diatonic mode whose 1-b3-b5 triad IS the dim chord"),
+            new("Half-Whole Diminished", "symmetric — works when the chord moves like a passing dim"),
+        ],
         QualityKind.Diminished7 =>
         [
             new("Whole-Half Diminished", "symmetric scale that contains all chord tones"),
@@ -291,6 +302,7 @@ public sealed partial class ImprovisationSkill(
         Minor7,
         MinorMajor7,
         HalfDiminished,
+        Diminished,
         Diminished7,
         Augmented,
     }
@@ -321,6 +333,8 @@ public sealed partial class ImprovisationSkill(
             "Melodic Minor is the home scale; m6 chords also live here.");
         public static readonly QualityClass HalfDiminished = new(QualityKind.HalfDiminished, "half-diminished (m7b5)",
             "Locrian #2 (from melodic minor) is more usable than vanilla Locrian — the b9 is an avoid note.");
+        public static readonly QualityClass Diminished = new(QualityKind.Diminished, "diminished triad",
+            "Locrian is the diatonic home; Half-Whole works for passing-dim contexts.");
         public static readonly QualityClass Diminished7 = new(QualityKind.Diminished7, "diminished 7",
             "Whole-Half Diminished is symmetric and contains every chord tone of a dim7.");
         public static readonly QualityClass Augmented = new(QualityKind.Augmented, "augmented",
