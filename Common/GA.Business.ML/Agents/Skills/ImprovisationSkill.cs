@@ -47,6 +47,11 @@ public sealed partial class ImprovisationSkill(
         "what scale", "scale for", "scale over", "scale to use", "scales for",
         "scales over", "scales work", "what to play over", "play over",
         "modes for", "modes over", "modes to solo", "modal choice", "modal choices",
+        // 2026-05-17 post-PR-253 feature-dev review: cover ExamplePrompts
+        // phrasings that the original keyword list missed in the CanHandle
+        // fallback path (semantic router catches them; fallback didn't).
+        "which mode", "which modes", "what mode", "what modes",
+        "chord-scale", "chord scale",
     ];
 
     public bool CanHandle(string message)

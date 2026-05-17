@@ -35,6 +35,12 @@ public class ImprovisationSkillTests
     [TestCase("what scale over D7sus")]
     [TestCase("modes over F#m7")]
     [TestCase("modal choices for Bbmaj7")]
+    // 2026-05-17 post-PR-253 feature-dev review — the two ExamplePrompts
+    // that the original keyword list missed in the CanHandle fallback path:
+    [TestCase("which mode fits Cmaj7")]
+    [TestCase("chord-scale for G7")]
+    [TestCase("which mode works over Am7")]
+    [TestCase("chord scale options for D7")]
     public void CanHandle_True_OnRealImprovQueries(string message)
     {
         var skill = MakeSkill();
