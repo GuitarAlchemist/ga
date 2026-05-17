@@ -64,7 +64,7 @@ public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<P
 
         var top          = candidates[0];
         var prompt       = BuildPrompt(message, chords, top, candidates);
-        var responseText = await ChatAsync(message, prompt, cancellationToken);
+        var responseText = await ChatAsync(message, prompt, cancellationToken).ConfigureAwait(false);
         var result       = ParseStructuredResponse(responseText, BuildFallback(chords, top));
 
         return result with

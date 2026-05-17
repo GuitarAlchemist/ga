@@ -129,7 +129,13 @@ public class ImprovisationSkillTests
     [TestCase("Am7(b5)", "HalfDiminished")]
     [TestCase("Cm7b5", "HalfDiminished")]
     [TestCase("Cdim7", "Diminished7")]
-    [TestCase("Cdim", "Diminished7")]
+    // Cdim is the triad, NOT the 7th chord. Fixed 2026-05-17 (PR for
+    // multi-LLM finding-5): pre-fix returned Diminished7 due to
+    // StartsWith("dim") match order. Now returns the dedicated triad class.
+    [TestCase("Cdim", "Diminished")]
+    [TestCase("C°", "Diminished")]
+    [TestCase("Co7", "Diminished7")]
+    [TestCase("C°7", "Diminished7")]
     [TestCase("Caug", "Augmented")]
     [TestCase("C7#5", "Augmented")]
     [TestCase("C7sus", "SuspendedDominant")]
