@@ -78,7 +78,12 @@ function Test-PathMatchesAnyPattern {
 function Get-GitStatusEntries {
     param([string]$RepoRoot)
 
-    $raw = & git -C $RepoRoot status --porcelain=v1 2>$null
+    # --ignore-submodules=all: submodule directories (governance/demerzel,
+    # mcp-servers/**) are out-of-scope by design — the supervised loop's
+    # ga.loop-policy.json puts them in protected_paths, and per-domain
+    # baselines also exclude them. Their *internal* dirty state is
+    # operator-managed cross-repo work and must not gate the overseer.
+    $raw = & git -C $RepoRoot status --porcelain=v1 --ignore-submodules=all 2>$null
     $entries = @()
     foreach ($line in @($raw)) {
         if (-not $line -or $line.Length -lt 4) { continue }
