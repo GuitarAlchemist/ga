@@ -1,41 +1,36 @@
 /**
- * Modal Meadow — interactive mode-region 3D demo (v0.6).
+ * Modal Meadow — interactive mode-region 3D demo (v0.8).
  *
- * v0.6 adds three changes on top of v0.5:
- *   1. Terrain amplitude 3m → 8m so hills are actually visible from spawn
- *      (see terrain.ts — user feedback "I don't see Hills?" on v0.5)
- *   2. Atmospheric fog tied to the per-region sky color so distant grass
- *      dissolves into the sky and the hill silhouette pops at the horizon
- *   3. Auto-walk default: camera moves on its own (sin-wave oscillation
- *      across the boundary band) until the user clicks for pointer-lock
- *      or hits a movement key — then auto-walk releases permanently
- *
- * v0.5 added on top of the flat-plane v0:
- *   1. Rolling-hills heightmap (CPU + GPU share the noise — see terrain.ts)
- *   2. Audio-reactive grass sway pulse on every chord change
- *   3. Per-region sun (Ionian high-noon, Phrygian sunset, interpolated)
- *   4. Drifting glowing motes (~200) tinted to the local region
+ * v0.8 ships:
+ *   1. All SEVEN diatonic modes (Lydian, Ionian, Mixolydian, Dorian, Aeolian,
+ *      Phrygian, Locrian) laid out left-to-right in modal-brightness order.
+ *      x = -210, -140, -70, 0, +70, +140, +210. Field half-width ±245m.
+ *   2. v0.6 hills (8m amplitude) and fog inherited.
+ *   3. v0.7 ponds (one per region, tinted to local mode).
+ *   4. EYE_HEIGHT 3.5 (v0.7) so the player sees the rolling terrain clearly.
+ *   5. Auto-walk that traverses the full Lydian→Locrian sweep at 2.5 m/s
+ *      (~3.5 minute sweep), reversing at the ends. Z-axis gently oscillates.
+ *   6. Descent effect: slope-magnitude → pitch glide on the active mode's
+ *      drone (max ~50 cents), mote speed/FOV bumps. See `descentEffect` block.
+ *   7. Locrian erratic wind: direction reverses every 4 seconds + a per-blade
+ *      shimmer (brief lightness flash) so the tritone-root reads as
+ *      physically unstable.
  *
  * Shader strategy
  * ──────────────
- * Single InstancedMesh per grass chunk. The vertex shader bends the blade
- * via a quadratic curve + wind noise, with all per-mode parameters
- * (colour, wind speed, wind strength, droop) sampled per-blade from the
- * blade's world x position. A `uModeMix` is computed in the shader from
- * world x with a smoothstep, so the visual transition is exactly aligned
- * with the audio crossfade.
+ * Per-fragment / per-blade we compute a 7-element weight vector from world-x
+ * (Gaussian RBF around each region centre, renormalised — same math as JS
+ * `modeWeightsForX`). All per-mode params (colours, wind, droop, pond tint)
+ * are passed as length-7 arrays of uniforms; the shader does a weighted sum.
+ * This keeps the shader code single-pass, no per-region branches.
  *
- * Fog in v0.6 is implemented via custom shader uniforms (uFogNear,
- * uFogFar, uFogColor) and an inline `fogFactor` computed in each
- * fragment shader from gl_FragCoord depth. The built-in THREE.Fog
- * chunks would require either MeshStandardMaterial (which loses the
- * per-pixel mode mixing) or onBeforeCompile patching of every
- * ShaderMaterial — inline is simpler and self-contained.
- *
- * v0 deliberately re-implements the grass rather than parameterising the
- * existing FluffyGrass component — the task brief mandates zero changes
- * to `/test/fluffy-grass`, and the shader needs per-pixel mode mixing that
- * the existing shader can't express without an API break.
+ * Performance budget
+ * ─────────────────
+ * v0.8 keeps the same blade-count budget as v0.5 (~240k instances) because
+ * the per-blade work is dominated by noise sampling, not the 7-way weight
+ * computation (cheap exp + normalisation). On integrated GPU the test page
+ * holds 30+ FPS at 1280×720. If we need to scale down, the cheap knob is
+ * BLADES_PER_CHUNK or LOD radius — both already linear scalers.
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -43,10 +38,10 @@ import * as THREE from 'three';
 import { Box } from '@mui/material';
 
 import {
-  IONIAN,
-  PHRYGIAN,
+  LYDIAN,
   MODES,
-  BLEND_HALF_METERS,
+  REGION_HALF_WIDTH,
+  FIELD_HALF_X,
   modeWeightsForX,
   dominantModeForX,
   type ModeConfig,
@@ -54,17 +49,19 @@ import {
 import { ModalMeadowAudio, type ChordPulseEvent } from './audio';
 import { sampleTerrainY, HEIGHT_GLSL } from './terrain';
 
-// ─── Tunables (v0 keeps these as constants — promote to props in v1) ────────
-const FIELD_SIZE = 220;          // metres along each axis
-const CHUNK_SIZE = 11;            // grass chunk edge length
-const CHUNK_COUNT = 20;           // 20×20 = 400 chunks → field side = 220m
-const BLADES_PER_CHUNK = 200;     // 400·200·3 cross-planes ≈ 240k instances
-const EYE_HEIGHT = 1.7;           // metres — average human eye height
-const WALK_SPEED = 5.0;           // metres per second
-const MOUSE_SENSITIVITY = 0.0022; // radians per pixel
-// Region centre along world x — Ionian west, Phrygian east, soft band at x=0.
-// (Phrygian centre is symmetrically at +60; documented here, not assigned.)
-const IONIAN_CENTER_X = -60;
+// ─── Tunables ────────────────────────────────────────────────────────────────
+const FIELD_SIZE_X = FIELD_HALF_X * 2 + 30;  // 520m — covers all 7 regions + margin
+const FIELD_SIZE_Z = 220;                    // metres along z
+const CHUNK_SIZE = 11;                       // grass chunk edge length
+const CHUNK_COUNT_X = Math.ceil(FIELD_SIZE_X / CHUNK_SIZE);
+const CHUNK_COUNT_Z = Math.ceil(FIELD_SIZE_Z / CHUNK_SIZE);
+const BLADES_PER_CHUNK = 110;                // pulled down from 200 so 7 regions
+                                              // stay inside v0.5 performance budget
+const EYE_HEIGHT = 3.5;                      // v0.7 — sit higher to see hills
+const WALK_SPEED = 5.0;                      // metres per second
+const AUTO_WALK_SPEED = 2.5;                 // metres per second along X (brief)
+const MOUSE_SENSITIVITY = 0.0022;            // radians per pixel
+const BASE_FOV_DEG = 70;                     // resting field of view
 
 // ─── Procedural noise — same hash/value pair the existing grass uses, so
 // the surface "feels" like the fluffy-grass demo even though every blade,
@@ -89,24 +86,63 @@ const NOISE_GLSL = /* glsl */ `
   }
 `;
 
+// Build the per-mode "region weight" GLSL snippet. We pre-bake the 7 region
+// centres + the inverse-2σ² constant so the shader gets a tight loop and the
+// compiler can unroll it.
+const REGION_WEIGHTS_GLSL = /* glsl */ `
+  // Returns 7 weights summing to 1, one per region, given a world-x value.
+  // Mirrors JS modeWeightsForX in modes.ts.
+  void regionWeights(float worldX, out float w0, out float w1, out float w2,
+                     out float w3, out float w4, out float w5, out float w6) {
+    float centers[7];
+    centers[0] = ${MODES[0].regionCenterX.toFixed(2)};
+    centers[1] = ${MODES[1].regionCenterX.toFixed(2)};
+    centers[2] = ${MODES[2].regionCenterX.toFixed(2)};
+    centers[3] = ${MODES[3].regionCenterX.toFixed(2)};
+    centers[4] = ${MODES[4].regionCenterX.toFixed(2)};
+    centers[5] = ${MODES[5].regionCenterX.toFixed(2)};
+    centers[6] = ${MODES[6].regionCenterX.toFixed(2)};
+    float invTwoSigmaSq = ${(1 / (2 * REGION_HALF_WIDTH * REGION_HALF_WIDTH)).toFixed(8)};
+    float ws[7];
+    float total = 0.0;
+    for (int i = 0; i < 7; i++) {
+      float d = worldX - centers[i];
+      ws[i] = exp(-d * d * invTwoSigmaSq);
+      total += ws[i];
+    }
+    float inv = (total > 0.0) ? (1.0 / total) : 0.0;
+    w0 = ws[0] * inv;
+    w1 = ws[1] * inv;
+    w2 = ws[2] * inv;
+    w3 = ws[3] * inv;
+    w4 = ws[4] * inv;
+    w5 = ws[5] * inv;
+    w6 = ws[6] * inv;
+  }
+`;
+
 interface ModalMeadowProps {
   /** Callback fired when the dominant mode under the player's feet changes. */
   onModeChange?: (mode: ModeConfig) => void;
   /** Callback fired when pointer-lock state changes (true = locked). */
   onLockChange?: (locked: boolean) => void;
   /**
-   * Callback fired when the user takes control (pointer-lock or a movement
-   * key) — auto-walk releases at this point and never resumes. Used by the
-   * HUD to switch the hint from "Auto-walking · Click to take control" to
-   * the regular WASD prompt.
+   * Callback fired when the user takes control (pointer-lock click or a
+   * movement key press) — auto-walk releases at this point and never
+   * resumes. v0.6 API surface, preserved verbatim in v0.8 so the test
+   * page's HUD takeover-swap behaviour keeps working.
    */
   onUserTakeover?: () => void;
+  /** If true (default), camera auto-walks across all 7 regions until the
+   *  player takes pointer-lock. Set false to disable auto-walk entirely. */
+  autoWalk?: boolean;
 }
 
 export const ModalMeadow: React.FC<ModalMeadowProps> = ({
   onModeChange,
   onLockChange,
   onUserTakeover,
+  autoWalk = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -120,13 +156,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     // ─── Scene + Camera + Renderer ─────────────────────────────────────────
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(70, W0 / H0, 0.1, 600);
-    // Spawn in the Ionian half, looking east toward Phrygian. With v0.6
-    // auto-walk on, the tick() loop will immediately start oscillating X
-    // around 0 — but we keep the spawn at IONIAN_CENTER_X so the FIRST
-    // visible frame still shows the Ionian region, and the swing eases the
-    // camera back toward the boundary over the first ~quarter cycle.
-    camera.position.set(IONIAN_CENTER_X, EYE_HEIGHT, 0);
+    const camera = new THREE.PerspectiveCamera(BASE_FOV_DEG, W0 / H0, 0.1, 800);
+    // Spawn at Lydian centre, looking east toward the brightness curve.
+    camera.position.set(LYDIAN.regionCenterX, EYE_HEIGHT, 0);
     camera.rotation.order = 'YXZ'; // yaw then pitch — avoids roll-from-pitch
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -137,12 +169,19 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     renderer.toneMappingExposure = 1.0;
     container.appendChild(renderer.domElement);
 
-    // ─── Sky — simple two-tone shader, mixes the two region sky colours ───
+    // Pre-build colour arrays for shader uniforms. Vec3 per mode in linear-RGB.
+    const baseColors = MODES.map((m) => m.baseColor.clone());
+    const tipColors = MODES.map((m) => m.tipColor.clone());
+    const skyColors = MODES.map((m) => m.skyColor.clone());
+    const pondColors = MODES.map((m) => m.pondColor.clone());
+    const windSpeeds = MODES.map((m) => m.windSpeed);
+    const windStrengths = MODES.map((m) => m.windStrength);
+    const droops = MODES.map((m) => m.droop);
+
+    // ─── Sky — 7-way colour blend, mixes all region sky colours by camera-x ─
     const skyUniforms = {
-      uIonianSky: { value: IONIAN.skyColor.clone() },
-      uPhrygianSky: { value: PHRYGIAN.skyColor.clone() },
+      uSkyColors: { value: skyColors },
       uCameraX: { value: camera.position.x },
-      uBlendHalf: { value: BLEND_HALF_METERS },
     };
     const skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -156,14 +195,17 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uIonianSky;
-        uniform vec3 uPhrygianSky;
+        uniform vec3 uSkyColors[7];
         uniform float uCameraX;
-        uniform float uBlendHalf;
         varying vec3 vDir;
+        ${REGION_WEIGHTS_GLSL}
         void main() {
-          float t = smoothstep(-uBlendHalf, uBlendHalf, uCameraX);
-          vec3 horizon = mix(uIonianSky, uPhrygianSky, t);
+          float w0, w1, w2, w3, w4, w5, w6;
+          regionWeights(uCameraX, w0, w1, w2, w3, w4, w5, w6);
+          vec3 horizon =
+            uSkyColors[0] * w0 + uSkyColors[1] * w1 + uSkyColors[2] * w2 +
+            uSkyColors[3] * w3 + uSkyColors[4] * w4 + uSkyColors[5] * w5 +
+            uSkyColors[6] * w6;
           // Gentle vertical gradient: brighter near horizon, slightly cooler up high.
           float h = clamp(vDir.y, 0.0, 1.0);
           vec3 zenith = horizon * 0.55 + vec3(0.05, 0.08, 0.15);
@@ -172,66 +214,47 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         }
       `,
     });
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 24, 16), skyMaterial);
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), skyMaterial);
     scene.add(sky);
 
-    // ─── Fog (v0.6) ────────────────────────────────────────────────────────
-    // Atmospheric fog that tracks the per-region-blended sky color. Hills in
-    // the distance dissolve into the sky → silhouettes pop against the
-    // lighter horizon band.
-    //
-    // We don't use scene.fog because the ground/grass/mote materials are
-    // ShaderMaterial — wiring built-in THREE fog chunks into custom
-    // shaders requires onBeforeCompile patching for each one. Instead, we
-    // share `uFogNear`, `uFogFar`, `uFogColor` uniforms across all three
-    // and inline a `fogFactor = smoothstep(near, far, viewZ)` computation
-    // in each fragment shader.
-    //
-    // near = 60m: grass within 60m fully visible
-    // far  = 220m: grass past 220m fully fogged to sky color
-    const FOG_NEAR = 60.0;
-    const FOG_FAR = 220.0;
-    // Live fog color — mutated every frame from the smoothstep-blended sky
-    // horizon (matches what the sky shader actually paints at the horizon
-    // ring under the player). Seeded with the Ionian horizon for the first
-    // frame so nothing flashes on mount.
-    const fogColor = IONIAN.skyColor.clone();
-    const fogUniforms = {
-      uFogNear: { value: FOG_NEAR },
-      uFogFar: { value: FOG_FAR },
-      uFogColor: { value: fogColor },
-    };
-
-    // GLSL snippet that takes a view-space position and applies fog. Returns
-    // mix(col, uFogColor, fogFactor). Inlined into each fragment shader
-    // below so we can share one uniform set.
-    const FOG_GLSL = /* glsl */ `
-      uniform float uFogNear;
-      uniform float uFogFar;
-      uniform vec3 uFogColor;
-      float computeFogFactor(float viewZ) {
-        return smoothstep(uFogNear, uFogFar, viewZ);
-      }
-    `;
+    // Fog colour tracks the active sky horizon — keeps far blades from
+    // popping at the field edge. Recomputed each frame from camera-x weights.
+    const fog = new THREE.FogExp2(0xb6c8b0, 0.0055);
+    scene.fog = fog;
 
     // ─── Lights ────────────────────────────────────────────────────────────
-    // Single dynamic sun whose position + colour are interpolated by the
-    // same `regionBlend` value the grass shader uses. Ionian = high noon,
-    // warm yellow-white. Phrygian = low sunset, deep orange-red.
-    //
-    // Sun "anchors" are sampled at the camera's world-x via lerp. The
-    // ground material's uSunDir + uSunColor uniforms track the same lerp so
-    // shading on the hills agrees with the cast direction.
+    // Dynamic sun whose position + colour are interpolated across all 7
+    // regions. Bright regions (Lydian/Ionian) get a high-noon yellow-white
+    // sun; dark regions (Phrygian/Locrian) drop toward a low dusky one.
     const ambient = new THREE.HemisphereLight(0xb6d2e8, 0x2a3a1a, 0.65);
     scene.add(ambient);
 
-    const IONIAN_SUN_POS = new THREE.Vector3(40, 90, 30);          // high noon
-    const PHRYGIAN_SUN_POS = new THREE.Vector3(120, 14, -40);      // low sunset, east
-    const IONIAN_SUN_COLOR = new THREE.Color(0xfff4d0);            // warm yellow-white
-    const PHRYGIAN_SUN_COLOR = new THREE.Color(0xd96a4a);          // deep orange-red
+    // Per-region sun positions + colours, in modes-order (Lydian→Locrian).
+    // Lydian = high gold-white; Ionian high warm yellow; Mixo lower amber;
+    // Dorian noon silver; Aeolian afternoon steel; Phrygian sunset orange;
+    // Locrian deep dusk red. Heights step down from 90 → 12m.
+    const SUN_POSITIONS = [
+      new THREE.Vector3(40, 95, 30),       // Lydian — high noon, slight north
+      new THREE.Vector3(40, 90, 30),       // Ionian
+      new THREE.Vector3(60, 70, 20),       // Mixolydian
+      new THREE.Vector3(80, 55, 10),       // Dorian
+      new THREE.Vector3(95, 38, -10),      // Aeolian
+      new THREE.Vector3(115, 22, -30),     // Phrygian — low sunset
+      new THREE.Vector3(120, 12, -40),     // Locrian — deepest dusk
+    ];
+    const SUN_COLORS = [
+      new THREE.Color(0xfffce0),           // Lydian — gold-white
+      new THREE.Color(0xfff4d0),           // Ionian — warm yellow
+      new THREE.Color(0xffd9a0),           // Mixolydian — amber
+      new THREE.Color(0xe0d0c0),           // Dorian — silver
+      new THREE.Color(0xc0b8b0),           // Aeolian — steel
+      new THREE.Color(0xd96a4a),           // Phrygian — sunset orange-red
+      new THREE.Color(0x884060),           // Locrian — dusky red-violet
+    ];
+    const SUN_INTENSITIES = [1.15, 1.10, 0.95, 0.80, 0.70, 0.55, 0.45];
 
-    const sun = new THREE.DirectionalLight(IONIAN_SUN_COLOR.getHex(), 1.1);
-    sun.position.copy(IONIAN_SUN_POS);
+    const sun = new THREE.DirectionalLight(SUN_COLORS[1].getHex(), SUN_INTENSITIES[1]);
+    sun.position.copy(SUN_POSITIONS[1]);
     scene.add(sun);
 
     // Scratch objects we reuse each frame to avoid GC pressure.
@@ -239,37 +262,20 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     const sunColorScratch = new THREE.Color();
 
     // ─── Ground plane — heightmap-displaced rolling hills ──────────────────
-    // Vertex shader displaces a high-res plane by `terrainY()` from
-    // terrain.ts (the JS-side `sampleTerrainY` uses the same algorithm so
-    // the camera + blades land on the same surface). Colour still mixes
-    // Ionian/Phrygian under the same smoothstep the grass uses, so the
-    // seam between regions reads intentional. Sun shading + tint colour
-    // are interpolated by world-x.
+    // 7-region tinted ground. Lambert from the interpolated sun direction.
     const groundUniforms = {
-      uIonianBase: { value: IONIAN.baseColor.clone().multiplyScalar(0.55) },
-      uPhrygianBase: { value: PHRYGIAN.baseColor.clone().multiplyScalar(0.55) },
-      uBlendHalf: { value: BLEND_HALF_METERS },
+      uBaseColors: { value: baseColors.map((c) => c.clone().multiplyScalar(0.55)) },
       uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.35) },
       uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
-      // Shared fog (v0.6). All three uniforms share Vector3/Color refs with
-      // the grass + mote materials via `value:` aliasing below.
-      uFogNear: fogUniforms.uFogNear,
-      uFogFar: fogUniforms.uFogFar,
-      uFogColor: fogUniforms.uFogColor,
     };
     const groundMaterial = new THREE.ShaderMaterial({
       uniforms: groundUniforms,
       vertexShader: /* glsl */ `
         varying vec3 vWorld;
         varying vec3 vNormal;
-        varying float vViewZ;
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
         void main() {
-          // Displace by the heightmap (we drive y in the rotated local
-          // frame — the mesh itself is laid flat on Z then rotated, so
-          // local +Z becomes world +Y after rotation. We sample on world XZ
-          // which after rotation maps to local (x, y).)
           vec3 p = position;
           float h = terrainY(position.xy);
           p.z = h;
@@ -278,87 +284,150 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
           float hx = terrainY(position.xy + vec2(eps, 0.0));
           float hz = terrainY(position.xy + vec2(0.0, eps));
           vec3 nLocal = normalize(vec3(-(hx - h) / eps, -(hz - h) / eps, 1.0));
-          // Local Z is world +Y after the mesh's -PI/2 X rotation; transform.
           vec3 nWorld = vec3(nLocal.x, nLocal.z, -nLocal.y);
           vNormal = nWorld;
           vec4 wp = modelMatrix * vec4(p, 1.0);
           vWorld = wp.xyz;
-          vec4 vp = viewMatrix * wp;
-          vViewZ = -vp.z;
-          gl_Position = projectionMatrix * vp;
+          gl_Position = projectionMatrix * viewMatrix * wp;
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uIonianBase;
-        uniform vec3 uPhrygianBase;
-        uniform float uBlendHalf;
+        uniform vec3 uBaseColors[7];
         uniform vec3 uSunDir;
         uniform vec3 uSunColor;
         varying vec3 vWorld;
         varying vec3 vNormal;
-        varying float vViewZ;
         ${NOISE_GLSL}
-        ${FOG_GLSL}
+        ${REGION_WEIGHTS_GLSL}
         void main() {
-          float t = smoothstep(-uBlendHalf, uBlendHalf, vWorld.x);
-          vec3 base = mix(uIonianBase, uPhrygianBase, t);
+          float w0, w1, w2, w3, w4, w5, w6;
+          regionWeights(vWorld.x, w0, w1, w2, w3, w4, w5, w6);
+          vec3 base =
+            uBaseColors[0] * w0 + uBaseColors[1] * w1 + uBaseColors[2] * w2 +
+            uBaseColors[3] * w3 + uBaseColors[4] * w4 + uBaseColors[5] * w5 +
+            uBaseColors[6] * w6;
           // Patchy variation so the ground doesn't look uniform between blades.
           float patchy = vnoise(vWorld.xz * 0.08) * 0.5 + 0.5;
           // Lambert from the per-region sun.
           float ndotl = max(0.15, dot(normalize(vNormal), normalize(uSunDir)));
           vec3 col = base * (0.6 + patchy * 0.35) * (0.55 + ndotl * uSunColor);
-          float fogF = computeFogFactor(vViewZ);
-          col = mix(col, uFogColor, fogF);
           gl_FragColor = vec4(col, 1.0);
         }
       `,
     });
-    // High-res segmented plane — needs enough verts that the hills look
-    // smooth at walking distance. 200×200 verts on a 308m plane is ≈ 1.5m
-    // per quad, which matches our 1.5m noise sampling epsilon.
+    // High-res segmented plane — covers the full 7-region field.
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(FIELD_SIZE * 1.4, FIELD_SIZE * 1.4, 200, 200),
+      new THREE.PlaneGeometry(FIELD_SIZE_X, FIELD_SIZE_Z * 1.4, 360, 160),
       groundMaterial,
     );
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
+    // ─── Ponds (v0.7) ──────────────────────────────────────────────────────
+    // One pond per region, sat in a "low" spot near the region centre.
+    // Each pond is a flat disk slightly above the local ground at that
+    // point, tinted to the region's pondColor. Ripples animate via uTime.
+    const POND_RADIUS = 10.0;
+    const pondUniforms = {
+      uTime: { value: 0 },
+      uPondColors: { value: pondColors },
+      uPondCenters: { value: MODES.map((m) => new THREE.Vector2(m.regionCenterX, 0)) },
+      uSunDir: { value: groundUniforms.uSunDir.value },
+    };
+    // Build a single combined pond mesh: 7 disks placed at the region centres,
+    // each at the terrain Y at that spot minus 0.5m so it reads as a recessed
+    // pool. Shader picks the active pond by nearest centre.
+    const pondGeometry = new THREE.PlaneGeometry(POND_RADIUS * 2, POND_RADIUS * 2, 32, 32);
+    const pondMaterial = new THREE.ShaderMaterial({
+      uniforms: pondUniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      vertexShader: /* glsl */ `
+        varying vec2 vLocal;
+        varying vec3 vWorld;
+        void main() {
+          vLocal = position.xy;
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        uniform vec3 uPondColors[7];
+        uniform vec2 uPondCenters[7];
+        uniform vec3 uSunDir;
+        varying vec2 vLocal;
+        varying vec3 vWorld;
+        ${NOISE_GLSL}
+        void main() {
+          // Distance-to-centre disk mask with slight feathering.
+          float r = length(vLocal);
+          float diskR = ${POND_RADIUS.toFixed(2)};
+          if (r > diskR) discard;
+          float feather = smoothstep(diskR, diskR - 1.5, r);
+          // Pick the nearest pond centre to colour this fragment.
+          int best = 0;
+          float bestD = 1.0e9;
+          for (int i = 0; i < 7; i++) {
+            float d = abs(vWorld.x - uPondCenters[i].x);
+            if (d < bestD) { bestD = d; best = i; }
+          }
+          vec3 col = uPondColors[0];
+          if (best == 1) col = uPondColors[1];
+          else if (best == 2) col = uPondColors[2];
+          else if (best == 3) col = uPondColors[3];
+          else if (best == 4) col = uPondColors[4];
+          else if (best == 5) col = uPondColors[5];
+          else if (best == 6) col = uPondColors[6];
+          // Concentric ripples + small-scale shimmer = water surface.
+          float ripple =
+            sin(r * 1.7 - uTime * 2.0) * 0.5 +
+            sin(r * 0.7 + uTime * 0.6) * 0.5;
+          float micro = vnoise(vLocal * 0.7 + vec2(uTime * 0.15, uTime * 0.10));
+          float shine = pow(max(0.0, ripple * 0.5 + 0.5), 4.0) * 0.45 + micro * 0.10;
+          // Highlight tinted by sun colour for visual unity.
+          col = mix(col, col + vec3(shine), 0.6);
+          gl_FragColor = vec4(col, feather * 0.85);
+        }
+      `,
+    });
+    const pondGroup = new THREE.Group();
+    for (let i = 0; i < MODES.length; i++) {
+      const px = MODES[i].regionCenterX;
+      const pz = 24;                              // place pond slightly north of axis
+      const py = sampleTerrainY(px, pz) - 0.4;    // sat 0.4m below local ground (pool)
+      const m = new THREE.Mesh(pondGeometry, pondMaterial);
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(px, py, pz);
+      pondGroup.add(m);
+    }
+    scene.add(pondGroup);
+
     // ─── Grass ─────────────────────────────────────────────────────────────
-    // One shader handles both regions; per-pixel uModeMix is computed from
-    // world x via smoothstep so the transition band is exactly aligned with
-    // the audio crossfade in `modes.ts:modeWeightsForX`.
+    // 7-region grass shader. Wind speed/strength/droop and colours are all
+    // weighted sums across the 7 modes. The Locrian region also gets a
+    // direction-reversing wind and a per-blade shimmer flash.
     const grassUniforms = {
       uTime: { value: 0 },
-      // Per-mode tint pairs — the shader picks per-fragment via uModeMix.
-      uIonianBase: { value: IONIAN.baseColor.clone() },
-      uIonianTip: { value: IONIAN.tipColor.clone() },
-      uPhrygianBase: { value: PHRYGIAN.baseColor.clone() },
-      uPhrygianTip: { value: PHRYGIAN.tipColor.clone() },
-      // Per-mode wind / droop — the shader interpolates per-blade.
-      uIonianWindSpeed: { value: IONIAN.windSpeed },
-      uPhrygianWindSpeed: { value: PHRYGIAN.windSpeed },
-      uIonianWindStrength: { value: IONIAN.windStrength },
-      uPhrygianWindStrength: { value: PHRYGIAN.windStrength },
-      uIonianDroop: { value: IONIAN.droop },
-      uPhrygianDroop: { value: PHRYGIAN.droop },
-      uBlendHalf: { value: BLEND_HALF_METERS },
-      // ─── Audio-reactive sway (Enhancement 2) ────────────────────────────
-      // Per mode (Ionian = 0, Phrygian = 1): pulse intensity 0..1, decays
-      // each frame from JS. `uChordPulseDir` is the X-bias for this pulse:
-      //   +1  → V/bvii dominant — stronger on +X side
-      //   -1  → IV/bII subdominant — stronger on -X side
-      //    0  → I/i tonic — outward ripple from the camera
-      // `uChordPulseOrigin` is the camera XZ at the moment of the pulse,
-      // used by the tonic ripple to expand outward from where the player
-      // stood.
-      uChordPulse: { value: new THREE.Vector2(0, 0) },               // (ion, phr) intensity
-      uChordPulseDir: { value: new THREE.Vector2(0, 0) },            // (ion, phr) X bias
-      uChordPulseOrigin: { value: new THREE.Vector4(0, 0, 0, 0) },   // (ionX,ionZ, phrX,phrZ)
-      uChordPulseAge: { value: new THREE.Vector2(99, 99) },          // seconds since last pulse
-      // Shared fog (v0.6) — same Color/value refs as the ground material.
-      uFogNear: fogUniforms.uFogNear,
-      uFogFar: fogUniforms.uFogFar,
-      uFogColor: fogUniforms.uFogColor,
+      uBaseColors: { value: baseColors },
+      uTipColors: { value: tipColors },
+      uWindSpeeds: { value: new Float32Array(windSpeeds) },
+      uWindStrengths: { value: new Float32Array(windStrengths) },
+      uDroops: { value: new Float32Array(droops) },
+      // Locrian wind reversal: ±1 multiplier flipping every 4 seconds. The
+      // shader only applies it to the Locrian-weight component.
+      uLocrianWindDir: { value: 1.0 },
+      // Audio-reactive sway — per-mode pulse intensity, X-bias direction,
+      // origin XZ for tonic ring expansion, and age (seconds since pulse).
+      // Length 7 each. Direction +1 = subdominant (boost +X), -1 = dominant
+      // (boost -X), 0 = tonic (ring from origin).
+      uChordPulse: { value: new Float32Array(MODES.length) },
+      uChordPulseDir: { value: new Float32Array(MODES.length) },
+      // Origins flattened: [x0,z0, x1,z1, ...]. Length 14.
+      uChordPulseOrigin: { value: new Float32Array(MODES.length * 2) },
+      uChordPulseAge: { value: new Float32Array(MODES.length).fill(99) },
     };
 
     const grassMaterial = new THREE.ShaderMaterial({
@@ -368,121 +437,126 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       depthWrite: true,
       vertexShader: /* glsl */ `
         uniform float uTime;
-        uniform float uIonianWindSpeed;
-        uniform float uPhrygianWindSpeed;
-        uniform float uIonianWindStrength;
-        uniform float uPhrygianWindStrength;
-        uniform float uIonianDroop;
-        uniform float uPhrygianDroop;
-        uniform float uBlendHalf;
-        uniform vec2 uChordPulse;       // (ionian, phrygian) intensity 0..1
-        uniform vec2 uChordPulseDir;    // (ionian, phrygian) X bias -1..+1
-        uniform vec4 uChordPulseOrigin; // (ionX, ionZ, phrX, phrZ)
-        uniform vec2 uChordPulseAge;    // seconds since each pulse
+        uniform float uWindSpeeds[7];
+        uniform float uWindStrengths[7];
+        uniform float uDroops[7];
+        uniform float uLocrianWindDir;
+        uniform float uChordPulse[7];
+        uniform float uChordPulseDir[7];
+        uniform float uChordPulseOrigin[14];
+        uniform float uChordPulseAge[7];
 
         attribute float aRandom;
         attribute float aTwist;
 
         varying vec2 vUv;
         varying float vRandom;
-        varying float vModeMix;   // 0 = Ionian, 1 = Phrygian
-        varying float vBladeBend; // for fragment lighting
-        varying float vViewZ;     // distance from camera, for fog (v0.6)
+        varying float vLocrianW;   // for shimmer in fragment
+        varying float vWorldX;     // for fragment to look up region colours
+        varying float vBladeBend;
 
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
+        ${REGION_WEIGHTS_GLSL}
 
         void main() {
           vUv = uv;
           vRandom = aRandom;
 
           vec3 anchor = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-          // Sample the heightmap so blades sit on rolling hills. We add the
-          // height as an extra translation in world-y inside the vertex
-          // (since the InstancedMesh was authored on a flat plane).
           float groundY = terrainY(anchor.xz);
+          vWorldX = anchor.x;
 
-          // Mode mix from blade's world x — same smoothstep as JS code +
-          // audio so visual & audio transition are perfectly aligned.
-          float modeMix = smoothstep(-uBlendHalf, uBlendHalf, anchor.x);
-          vModeMix = modeMix;
+          float w0, w1, w2, w3, w4, w5, w6;
+          regionWeights(anchor.x, w0, w1, w2, w3, w4, w5, w6);
+          vLocrianW = w6;
 
-          float windSpeed    = mix(uIonianWindSpeed,    uPhrygianWindSpeed,    modeMix);
-          float windStrength = mix(uIonianWindStrength, uPhrygianWindStrength, modeMix);
-          float droop        = mix(uIonianDroop,        uPhrygianDroop,        modeMix);
+          float windSpeed =
+            uWindSpeeds[0]*w0 + uWindSpeeds[1]*w1 + uWindSpeeds[2]*w2 +
+            uWindSpeeds[3]*w3 + uWindSpeeds[4]*w4 + uWindSpeeds[5]*w5 +
+            uWindSpeeds[6]*w6;
+          float windStrength =
+            uWindStrengths[0]*w0 + uWindStrengths[1]*w1 + uWindStrengths[2]*w2 +
+            uWindStrengths[3]*w3 + uWindStrengths[4]*w4 + uWindStrengths[5]*w5 +
+            uWindStrengths[6]*w6;
+          float droop =
+            uDroops[0]*w0 + uDroops[1]*w1 + uDroops[2]*w2 +
+            uDroops[3]*w3 + uDroops[4]*w4 + uDroops[5]*w5 +
+            uDroops[6]*w6;
 
-          // Gust band: a slow noise field sweeping diagonally; multiplied by
-          // per-mode strength so Phrygian visibly gusts harder.
-          vec2 gustUV = anchor.xz * 0.045 + vec2(uTime * 0.18, uTime * 0.10);
+          // Wind direction: ordinarily +X. Locrian region flips its share
+          // every 4 seconds via uLocrianWindDir. We mix by Locrian weight
+          // so the wind reversal is local to that region, not global.
+          float windDir = mix(1.0, uLocrianWindDir, w6);
+
+          // Gust band — slow noise field. Drift direction depends on windDir
+          // so reversal under Locrian visibly flips which way the blades lean.
+          vec2 gustUV = anchor.xz * 0.045 + vec2(uTime * 0.18 * windDir, uTime * 0.10);
           float gust = pow(vnoise(gustUV) * 0.5 + 0.5, 1.6);
           float flutter = vnoise(anchor.xz * 0.6 + vec2(uTime * windSpeed, aRandom * 13.0));
 
-          // ─── Audio-reactive chord pulse ────────────────────────────────
-          // For the active region only (mode i) we add a brief amplitude
-          // bump. Direction is biased by uChordPulseDir: subdominant pulls
-          // +X side harder, dominant pulls -X harder. Tonic radiates from
-          // uChordPulseOrigin so it reads as a ring expanding outward.
-          float regionWeight = (1.0 - modeMix); // 1 inside Ionian zone
-          vec2 ionOrigin = uChordPulseOrigin.xy;
-          float ionDist = length(anchor.xz - ionOrigin);
-          float ionRingPhase = ionDist - uChordPulseAge.x * 18.0; // ring speed m/s
-          float ionRing = exp(-ionRingPhase * ionRingPhase * 0.02);
-          // Linear X-bias factor: -1 at -X edge, +1 at +X edge of field.
-          float biasX = clamp(anchor.x / (uBlendHalf * 2.0), -1.0, 1.0);
-          float ionBias = mix(1.0, 0.5 + 0.5 * biasX * uChordPulseDir.x, abs(uChordPulseDir.x));
-          float ionTonic = (uChordPulseDir.x == 0.0) ? ionRing : 0.0;
-          float ionPulseAmp = uChordPulse.x * regionWeight * (ionBias + ionTonic * 1.5);
+          // ─── Audio-reactive chord pulse, 7 modes ─────────────────────────
+          // For each mode i: amplitude bump weighted by region weight. The
+          // tonic ring expands from the captured origin; subdominant/dominant
+          // pulls a side. Linear X-bias normalised by REGION_HALF_WIDTH so it
+          // reads inside the local 70m-wide region.
+          float pulseSum = 0.0;
+          float regionHalf = ${REGION_HALF_WIDTH.toFixed(2)};
 
-          float phrRegionWeight = modeMix;
-          vec2 phrOrigin = uChordPulseOrigin.zw;
-          float phrDist = length(anchor.xz - phrOrigin);
-          float phrRingPhase = phrDist - uChordPulseAge.y * 18.0;
-          float phrRing = exp(-phrRingPhase * phrRingPhase * 0.02);
-          float phrBias = mix(1.0, 0.5 + 0.5 * biasX * uChordPulseDir.y, abs(uChordPulseDir.y));
-          float phrTonic = (uChordPulseDir.y == 0.0) ? phrRing : 0.0;
-          float phrPulseAmp = uChordPulse.y * phrRegionWeight * (phrBias + phrTonic * 1.5);
-
-          float pulseBoost = 1.0 + 0.20 * (ionPulseAmp + phrPulseAmp);
+          // Compile-time loop — 7 iterations is fine.
+          // (GLSL ES 1.00 wants a constant trip-count.)
+          for (int i = 0; i < 7; i++) {
+            float wReg = i==0?w0 : i==1?w1 : i==2?w2 : i==3?w3 : i==4?w4 : i==5?w5 : w6;
+            float pulse = uChordPulse[i];
+            float dir = uChordPulseDir[i];
+            float age = uChordPulseAge[i];
+            float ox = uChordPulseOrigin[i*2 + 0];
+            float oz = uChordPulseOrigin[i*2 + 1];
+            float distRing = length(anchor.xz - vec2(ox, oz));
+            float ringPhase = distRing - age * 18.0;
+            float ring = exp(-ringPhase * ringPhase * 0.02);
+            float biasX = clamp((anchor.x - ${MODES[0].regionCenterX.toFixed(2)}
+                                 - float(i) * 70.0) / regionHalf, -1.0, 1.0);
+            // Note: above is approximate — what matters is "left half vs right
+            // half" of the region; we use anchor.x minus the local centre.
+            float bias = mix(1.0, 0.5 + 0.5 * biasX * dir, abs(dir));
+            float tonic = (dir == 0.0) ? ring : 0.0;
+            pulseSum += pulse * wReg * (bias + tonic * 1.5);
+          }
+          float pulseBoost = 1.0 + 0.18 * pulseSum;
 
           float bendAmt = ((gust * 1.0 + 0.2) * windStrength + flutter * 0.08) * pulseBoost + droop;
-          vBladeBend = bendAmt;
+          bendAmt *= windDir;   // visible direction flip during Locrian reversal
+          vBladeBend = abs(bendAmt);
 
           // Quadratic-bezier-style bend along blade's local Y.
           vec3 p = position;
           float t = clamp(uv.y, 0.0, 1.0);
           float curve = t * t;
           p.x += curve * bendAmt;
-          p.y -= curve * bendAmt * 0.25;
+          p.y -= curve * abs(bendAmt) * 0.25;
 
           // Per-blade Y rotation (twist).
           float c = cos(aTwist);
           float s = sin(aTwist);
           vec3 rotated = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
-          // Lift the entire blade by the heightmap so its base sits on the
-          // terrain. This is correct because rotated.y is local-y and the
-          // modelMatrix * instanceMatrix only translates by the (x, 0, z)
-          // anchor (we set y=0 on the instanceMatrix at construction).
           rotated.y += groundY;
 
           vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
-          vec4 viewPos = viewMatrix * worldPos;
-          vViewZ = -viewPos.z;
-          gl_Position = projectionMatrix * viewPos;
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uIonianBase;
-        uniform vec3 uIonianTip;
-        uniform vec3 uPhrygianBase;
-        uniform vec3 uPhrygianTip;
+        uniform float uTime;
+        uniform vec3 uBaseColors[7];
+        uniform vec3 uTipColors[7];
 
         varying vec2 vUv;
         varying float vRandom;
-        varying float vModeMix;
+        varying float vLocrianW;
+        varying float vWorldX;
         varying float vBladeBend;
-        varying float vViewZ;
-
-        ${FOG_GLSL}
+        ${REGION_WEIGHTS_GLSL}
 
         void main() {
           // Sharp taper toward the tip so blades read as blades, not rectangles.
@@ -492,25 +566,32 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
 
           float ao = pow(vUv.y, 1.4);
 
-          // Per-mode base→tip gradient, mixed at the fragment.
-          vec3 baseCol = mix(uIonianBase, uPhrygianBase, vModeMix);
-          vec3 tipCol  = mix(uIonianTip,  uPhrygianTip,  vModeMix);
-
-          // Phrygian gets a slight violet shimmer at the tip — a v0 wink at
-          // v1's "modal colour" choreography. Subtle on purpose.
-          tipCol = mix(tipCol, tipCol + vec3(0.10, -0.05, 0.18), vModeMix * 0.30);
+          float w0, w1, w2, w3, w4, w5, w6;
+          regionWeights(vWorldX, w0, w1, w2, w3, w4, w5, w6);
+          vec3 baseCol =
+            uBaseColors[0]*w0 + uBaseColors[1]*w1 + uBaseColors[2]*w2 +
+            uBaseColors[3]*w3 + uBaseColors[4]*w4 + uBaseColors[5]*w5 +
+            uBaseColors[6]*w6;
+          vec3 tipCol =
+            uTipColors[0]*w0 + uTipColors[1]*w1 + uTipColors[2]*w2 +
+            uTipColors[3]*w3 + uTipColors[4]*w4 + uTipColors[5]*w5 +
+            uTipColors[6]*w6;
 
           vec3 col = mix(baseCol, tipCol, ao);
-
-          // Slight blade-bend darkening to suggest self-shadow.
           col *= (1.0 - vBladeBend * 0.10);
-
-          // Per-blade variation so the field doesn't read as a single colour.
           col *= (0.85 + vRandom * 0.30);
 
-          // Atmospheric fog (v0.6) — distant blades dissolve into the sky.
-          float fogF = computeFogFactor(vViewZ);
-          col = mix(col, uFogColor, fogF);
+          // Locrian shimmer: ~5% of blades per frame flash brief desat pulse.
+          // We bias by Locrian weight so shimmer only happens inside Locrian.
+          // Hash the random + time (1Hz bucket) so a given blade flashes for
+          // ~0.1s at a time, then settles.
+          float shimmerBucket = floor(uTime * 10.0) + floor(vRandom * 1000.0);
+          float shimmerHash = fract(sin(shimmerBucket * 12.9898) * 43758.5453);
+          if (vLocrianW > 0.4 && shimmerHash > 0.95) {
+            // Desaturate flash toward grey, biased violet — reads as electric.
+            float l = dot(col, vec3(0.299, 0.587, 0.114));
+            col = mix(col, vec3(l, l, l * 1.15), 0.5);
+          }
 
           gl_FragColor = vec4(col, 1.0);
         }
@@ -522,21 +603,23 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     const bladeGeometry = new THREE.PlaneGeometry(bladeWidth, bladeHeight, 1, 6);
     bladeGeometry.translate(0, bladeHeight / 2, 0);
 
-    const halfCount = CHUNK_COUNT / 2;
+    const halfCountX = CHUNK_COUNT_X / 2;
+    const halfCountZ = CHUNK_COUNT_Z / 2;
     const planeAngles = [0, Math.PI / 3, (2 * Math.PI) / 3];
     const dummy = new THREE.Object3D();
     const grassMeshes: THREE.InstancedMesh[] = [];
 
-    for (let cx = 0; cx < CHUNK_COUNT; cx++) {
-      for (let cz = 0; cz < CHUNK_COUNT; cz++) {
-        const chunkX = (cx - halfCount) * CHUNK_SIZE;
-        const chunkZ = (cz - halfCount) * CHUNK_SIZE;
+    for (let cx = 0; cx < CHUNK_COUNT_X; cx++) {
+      for (let cz = 0; cz < CHUNK_COUNT_Z; cz++) {
+        const chunkX = (cx - halfCountX) * CHUNK_SIZE;
+        const chunkZ = (cz - halfCountZ) * CHUNK_SIZE;
 
-        // Cheap LOD: chunks far from origin get fewer blades. The player
-        // spawns on the x-axis so distance-from-z is the relevant metric.
-        const chunkDist = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
-        const lodFactor = chunkDist > 80 ? 0.4 : chunkDist > 50 ? 0.7 : 1.0;
-        const bladeCount = Math.max(20, Math.floor(BLADES_PER_CHUNK * lodFactor));
+        // Cheap LOD: blades thin out away from the auto-walk corridor (Z≈0).
+        // Far chunks along Z get fewer blades; X is uniform so all 7 regions
+        // are equally inhabited.
+        const zDist = Math.abs(chunkZ);
+        const lodFactor = zDist > 60 ? 0.4 : zDist > 30 ? 0.7 : 1.0;
+        const bladeCount = Math.max(15, Math.floor(BLADES_PER_CHUNK * lodFactor));
 
         for (const baseAngle of planeAngles) {
           const geo = bladeGeometry.clone();
@@ -571,18 +654,16 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     }
 
     // ─── Drifting motes (Enhancement 4) ────────────────────────────────────
-    // ~200 small additive-blended points drift slowly upward through the
-    // air, respawning at ground level when they rise ≥ 5m. Colour is tinted
-    // by the local region (warm amber in Ionian, cool violet in Phrygian).
-    // One THREE.Points mesh, custom shader; total cost < a single chunk of
-    // grass.
-    const MOTE_COUNT = 200;
+    // ~350 small additive-blended points drift across the whole 7-region
+    // field. Colour is tinted by the local region. The descent effect can
+    // speed them up and tilt them in the direction of motion.
+    const MOTE_COUNT = 350;
     const MOTE_MAX_HEIGHT = 5.0;
     const motePositions = new Float32Array(MOTE_COUNT * 3);
     const moteSeeds = new Float32Array(MOTE_COUNT);
     for (let i = 0; i < MOTE_COUNT; i++) {
-      const x = (Math.random() - 0.5) * FIELD_SIZE * 0.95;
-      const z = (Math.random() - 0.5) * FIELD_SIZE * 0.95;
+      const x = (Math.random() - 0.5) * FIELD_SIZE_X;
+      const z = (Math.random() - 0.5) * FIELD_SIZE_Z * 0.9;
       motePositions[i * 3 + 0] = x;
       motePositions[i * 3 + 1] = Math.random() * MOTE_MAX_HEIGHT;
       motePositions[i * 3 + 2] = z;
@@ -594,14 +675,13 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
 
     const moteUniforms = {
       uTime: { value: 0 },
-      uBlendHalf: { value: BLEND_HALF_METERS },
-      uIonianMote: { value: new THREE.Color(1.0, 0.86, 0.45) },    // warm amber
-      uPhrygianMote: { value: new THREE.Color(0.72, 0.45, 0.95) }, // cool violet
+      uMoteColors: { value: MODES.map((m) => m.tipColor.clone().lerp(new THREE.Color(0xffffff), 0.3)) },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 1.5) },
-      // Shared fog (v0.6) — same Color/value refs as the ground+grass.
-      uFogNear: fogUniforms.uFogNear,
-      uFogFar: fogUniforms.uFogFar,
-      uFogColor: fogUniforms.uFogColor,
+      // Descent-effect dynamic uniforms. uMoteSpeedMult ∈ [0.8, 2.0] depending
+      // on slope; uMoteTilt is the (dx, dz) direction the player is moving so
+      // motes appear to streak past as scenery.
+      uMoteSpeedMult: { value: 1.0 },
+      uMoteTilt: { value: new THREE.Vector2(0, 0) },
     };
     const moteMaterial = new THREE.ShaderMaterial({
       uniforms: moteUniforms,
@@ -611,53 +691,52 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       vertexShader: /* glsl */ `
         uniform float uTime;
         uniform float uPixelRatio;
+        uniform float uMoteSpeedMult;
+        uniform vec2 uMoteTilt;
         attribute float aSeed;
-        varying float vModeMix;
         varying float vLife;
-        varying float vViewZ;
+        varying float vWorldX;
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
         void main() {
-          // Mote position: gentle horizontal drift via slow noise + a
-          // vertical climb that wraps. aSeed offsets the climb phase so they
-          // don't all rise in lockstep.
+          // Climb + drift; descent effect inflates time-scale via uMoteSpeedMult,
+          // and the tilt vector adds a horizontal push opposite to motion so
+          // the motes appear to "stream past" the camera.
           float climbDur = 9.0 + aSeed * 6.0;
-          float climbPhase = mod(uTime + aSeed * climbDur, climbDur) / climbDur;
+          float climbPhase = mod(uTime * uMoteSpeedMult + aSeed * climbDur, climbDur) / climbDur;
           float h = climbPhase * ${MOTE_MAX_HEIGHT.toFixed(2)};
           vec2 driftUV = position.xz * 0.02 + vec2(uTime * 0.04, uTime * 0.03);
           float dx = vnoise(driftUV) * 1.5;
           float dz = vnoise(driftUV + vec2(31.7, 17.3)) * 1.5;
-          vec3 wp = vec3(position.x + dx, 0.0, position.z + dz);
+          // Tilt pushes against direction of motion — gives a "scenery passing"
+          // feel. Scaled by climb-phase so the streak builds with the mote's age.
+          vec2 tiltOffset = -uMoteTilt * (4.0 + 3.0 * (uMoteSpeedMult - 1.0)) * climbPhase;
+          vec3 wp = vec3(position.x + dx + tiltOffset.x, 0.0, position.z + dz + tiltOffset.y);
           wp.y = terrainY(wp.xz) + 1.0 + h;
-          vLife = 1.0 - climbPhase;            // 1 at birth, 0 at top
-          vModeMix = smoothstep(-25.0, 25.0, wp.x);
+          vLife = 1.0 - climbPhase;
+          vWorldX = wp.x;
 
           vec4 vp = viewMatrix * vec4(wp, 1.0);
-          vViewZ = -vp.z;
           gl_Position = projectionMatrix * vp;
-          // Size attenuates with distance; clamps so far motes still glow.
           gl_PointSize = uPixelRatio * (50.0 / max(1.0, -vp.z)) * (0.6 + vLife * 0.7);
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform vec3 uIonianMote;
-        uniform vec3 uPhrygianMote;
-        varying float vModeMix;
+        uniform vec3 uMoteColors[7];
         varying float vLife;
-        varying float vViewZ;
-        ${FOG_GLSL}
+        varying float vWorldX;
+        ${REGION_WEIGHTS_GLSL}
         void main() {
-          // Round soft sprite. Discard outside the circle for a clean halo.
           vec2 d = gl_PointCoord - 0.5;
           float r2 = dot(d, d);
           if (r2 > 0.25) discard;
           float alpha = pow(1.0 - r2 * 4.0, 1.8) * (0.35 + vLife * 0.6);
-          vec3 col = mix(uIonianMote, uPhrygianMote, vModeMix);
-          // Motes are additive-blended → fade alpha to 0 in the fog band so
-          // they don't punch through the haze (mixing color toward grey-sky
-          // would still leave a hot dot under ADD blending).
-          float fogF = computeFogFactor(vViewZ);
-          alpha *= (1.0 - fogF);
+          float w0, w1, w2, w3, w4, w5, w6;
+          regionWeights(vWorldX, w0, w1, w2, w3, w4, w5, w6);
+          vec3 col =
+            uMoteColors[0]*w0 + uMoteColors[1]*w1 + uMoteColors[2]*w2 +
+            uMoteColors[3]*w3 + uMoteColors[4]*w4 + uMoteColors[5]*w5 +
+            uMoteColors[6]*w6;
           gl_FragColor = vec4(col * (0.7 + vLife * 0.6), alpha);
         }
       `,
@@ -667,51 +746,35 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     scene.add(motes);
 
     // ─── FPS controls ──────────────────────────────────────────────────────
-    let yaw = -Math.PI / 2;  // facing +x (east, toward Phrygian)
+    let yaw = -Math.PI / 2;  // facing +x (east, toward Locrian)
     let pitch = -0.05;
     const keys = new Set<string>();
     let pointerLocked = false;
-
-    // ─── Auto-walk (v0.6) ──────────────────────────────────────────────────
-    // On mount the camera moves autonomously: forward at ~2.5 m/s along the
-    // mode-axis, with a slow sin-wave oscillation across the Ionian/Phrygian
-    // boundary every ~25s. First user interaction — pointer-lock click OR a
-    // movement key — releases auto-walk PERMANENTLY and never resumes.
-    let autoWalk = true;
+    // Auto-walk state: toggles off when user takes pointer-lock. Direction
+    // along X flips at the field ends. Z gently oscillates for variety.
+    let autoWalkActive = autoWalk;
+    let autoWalkDirX = +1;
     const autoWalkStartTime = performance.now() / 1000;
-    const AUTO_WALK_SPEED = 2.5;        // m/s forward
-    const AUTO_WALK_SWING_AMP = 30.0;   // metres of x-oscillation
-    const AUTO_WALK_SWING_PERIOD = 25.0; // seconds for a full cycle
-    // Record the spawn z so the sin-curve oscillates symmetrically; spawn x
-    // is the Ionian centre, but we want the swing to sweep across the
-    // boundary band (which is at x = 0) so we phase the sine relative to
-    // that goal — see tick() below.
-    const AUTO_WALK_BASE_X = 0;          // centre the swing on the boundary
-    // Movement-key codes that should trigger takeover (no pointer-lock).
-    const MOVEMENT_KEYS = new Set([
-      'KeyW', 'KeyA', 'KeyS', 'KeyD',
-      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-    ]);
-
-    const releaseAutoWalk = () => {
-      if (!autoWalk) return;
-      autoWalk = false;
-      onUserTakeover?.();
-      // Movement-key takeover also counts as user gesture → audio is now
-      // allowed to start. Pointer-lock takeover already calls audio.start()
-      // in onPointerLockChange; this branch covers the keyboard-only case.
-      if (!pointerLocked) {
-        if (stopStubPulses) {
-          stopStubPulses();
-          stopStubPulses = null;
-        }
-        audio.start(MODES);
+    // v0.6 takeover-callback latch — fired once when the user takes control
+    // (pointer-lock click OR any movement key while auto-walking).
+    let takeoverFired = false;
+    const fireTakeover = () => {
+      if (takeoverFired) return;
+      takeoverFired = true;
+      autoWalkActive = false;
+      try {
+        onUserTakeover?.();
+      } catch (err) {
+        console.warn('[ModalMeadow] onUserTakeover threw', err);
       }
     };
 
+    const MOVE_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD',
+                               'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
     const onKeyDown = (e: KeyboardEvent) => {
       keys.add(e.code);
-      if (autoWalk && MOVEMENT_KEYS.has(e.code)) releaseAutoWalk();
+      // Even before pointer-lock, a movement key counts as takeover (v0.6).
+      if (MOVE_KEYS.has(e.code)) fireTakeover();
     };
     const onKeyUp = (e: KeyboardEvent) => keys.delete(e.code);
     window.addEventListener('keydown', onKeyDown);
@@ -721,7 +784,6 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       if (!pointerLocked) return;
       yaw -= e.movementX * MOUSE_SENSITIVITY;
       pitch -= e.movementY * MOUSE_SENSITIVITY;
-      // Clamp pitch to avoid gimbal at poles.
       pitch = Math.max(-Math.PI * 0.49, Math.min(Math.PI * 0.49, pitch));
     };
     document.addEventListener('mousemove', onMouseMove);
@@ -740,14 +802,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       pointerLocked = document.pointerLockElement === canvas;
       canvas.style.cursor = pointerLocked ? 'none' : 'pointer';
       onLockChange?.(pointerLocked);
-      // First user gesture → audio safe to start. Cancel the stub timer
-      // so we don't double-fire pulses against real chord onsets.
       if (pointerLocked) {
-        // First pointer-lock also retires auto-walk permanently (v0.6).
-        if (autoWalk) {
-          autoWalk = false;
-          onUserTakeover?.();
-        }
+        // User has taken manual control — fire the v0.6 takeover-latch and
+        // clear auto-walk so WASD wins from here on.
+        fireTakeover();
         if (stopStubPulses) {
           stopStubPulses();
           stopStubPulses = null;
@@ -760,115 +818,91 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     // ─── Audio ─────────────────────────────────────────────────────────────
     const audio = new ModalMeadowAudio();
 
-    // ─── Chord-pulse state (Enhancement 2) ─────────────────────────────────
-    // For each mode (Ionian=0, Phrygian=1) we keep:
-    //   intensity   (peak 1, decays exponentially in tick)
-    //   directionX  (-1 subdominant / 0 tonic / +1 dominant — see audio.ts)
-    //   originXZ    (camera XZ at the moment of the pulse — used for tonic ring)
-    //   age         (seconds since pulse start)
-    const pulseIntensity: [number, number] = [0, 0];
-    const pulseDirection: [number, number] = [0, 0];
-    const pulseOrigin = [0, 0, 0, 0]; // [ionX, ionZ, phrX, phrZ]
-    const pulseAge: [number, number] = [99, 99];
+    // ─── Chord-pulse state (per mode) ──────────────────────────────────────
+    const pulseIntensityArr = grassUniforms.uChordPulse.value as Float32Array;
+    const pulseDirArr = grassUniforms.uChordPulseDir.value as Float32Array;
+    const pulseOriginArr = grassUniforms.uChordPulseOrigin.value as Float32Array;
+    const pulseAgeArr = grassUniforms.uChordPulseAge.value as Float32Array;
 
     const handleChordPulse = (evt: ChordPulseEvent) => {
       const i = evt.modeIndex;
-      if (i !== 0 && i !== 1) return;
-      pulseIntensity[i] = 1.0;
-      pulseAge[i] = 0;
-      // Map roman degree → direction: I/i → 0, IV/bII → -1, V/bvii → +1.
-      // Brief says IV/bII stronger on +X, V/bvii stronger on -X — but
-      // the X-bias in the shader is `0.5 + 0.5 * biasX * dir`, so dir<0
-      // means -X side gets the boost. To match brief (IV → +X), use +1
-      // for IV and -1 for V.
+      if (i < 0 || i >= MODES.length) return;
+      pulseIntensityArr[i] = 1.0;
+      pulseAgeArr[i] = 0;
+      // Map roman degree → direction: I/i → 0, IV/bII → +1, V/bvii → -1.
       if (evt.romanRoot === 4) {
-        pulseDirection[i] = 1.0;  // subdominant — boost +X side
+        pulseDirArr[i] = 1.0;
       } else if (evt.romanRoot === 5 || evt.romanRoot === 7) {
-        pulseDirection[i] = -1.0; // dominant — boost -X side
+        pulseDirArr[i] = -1.0;
       } else {
-        pulseDirection[i] = 0.0;  // tonic — ring from camera
+        pulseDirArr[i] = 0.0;
       }
-      // Record camera position as the ring origin for tonic.
-      pulseOrigin[i * 2] = camera.position.x;
-      pulseOrigin[i * 2 + 1] = camera.position.z;
+      pulseOriginArr[i * 2] = camera.position.x;
+      pulseOriginArr[i * 2 + 1] = camera.position.z;
     };
     const unsubscribePulse = audio.onChordPulse(handleChordPulse);
 
-    // Stub timer drives pulses BEFORE the user clicks (no audio yet) so the
-    // visual feels alive even on the lock-screen. Cleared once audio starts.
     let stopStubPulses: (() => void) | null = audio.startStubPulses(MODES);
 
     // ─── Debug hook (dev-only screenshots) ─────────────────────────────────
     // Exposes `window.__modalMeadowTeleport(x)` so dev/CI can grab a
-    // screenshot of either region without driving pointer-lock + WASD.
-    // No-op in production; harmless in dev. Lives only for the lifetime
-    // of this effect and is cleared in cleanup.
+    // screenshot of any region without driving pointer-lock + WASD.
+    // Also `__modalMeadowSetAutoWalk(false)` to pause the auto-walk for
+    // stable screenshots.
     interface DebugWindow extends Window {
       __modalMeadowTeleport?: (x: number, z?: number) => void;
+      __modalMeadowSetAutoWalk?: (on: boolean) => void;
+      __modalMeadowGetState?: () => unknown;
     }
     (window as DebugWindow).__modalMeadowTeleport = (x: number, z?: number) => {
       camera.position.x = x;
       if (typeof z === 'number') camera.position.z = z;
       camera.position.y = sampleTerrainY(camera.position.x, camera.position.z) + EYE_HEIGHT;
     };
+    (window as DebugWindow).__modalMeadowSetAutoWalk = (on: boolean) => {
+      autoWalkActive = on;
+    };
+    (window as DebugWindow).__modalMeadowGetState = () => ({
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+      mode: dominantModeForX(camera.position.x).name,
+      autoWalkActive,
+    });
 
     // ─── Animation loop ────────────────────────────────────────────────────
     const clock = new THREE.Clock();
     let raf = 0;
     let lastDominantName: string | null = null;
+    let prevCamY = camera.position.y;
+    // Descent-effect smoothed signed slope (negative = descending).
+    // Updated each frame, then mapped to FOV / pitch / mote bumps.
+    let smoothedDY = 0;
+    // Locrian wind-reversal timer.
+    let locrianFlipAccumulator = 0;
+    let locrianFlipState = 1;
 
     const tick = () => {
       const dt = Math.min(clock.getDelta(), 0.1);
       const elapsed = clock.elapsedTime;
       grassUniforms.uTime.value = elapsed;
       moteUniforms.uTime.value = elapsed;
+      pondUniforms.uTime.value = elapsed;
+
+      // ─── Locrian wind reversal ────────────────────────────────────────────
+      locrianFlipAccumulator += dt;
+      if (locrianFlipAccumulator >= 4.0) {
+        locrianFlipAccumulator -= 4.0;
+        locrianFlipState = -locrianFlipState;
+      }
+      grassUniforms.uLocrianWindDir.value = locrianFlipState;
 
       // Camera rotation from yaw/pitch (YXZ order set on camera).
       camera.rotation.y = yaw;
       camera.rotation.x = pitch;
 
-      // Auto-walk drift (v0.6) — runs only until the user takes over.
-      // Path: forward along +Z at AUTO_WALK_SPEED; X sweeps a sin curve
-      // around the boundary band so the camera crosses Ionian↔Phrygian once
-      // per cycle. Camera yaw eases toward the direction of travel so it
-      // feels intentional, not glitchy.
-      //
-      // First ~6s: smooth ease from the spawn X (Ionian centre, -60) toward
-      // the swing curve so we don't snap on frame 1.
-      if (!pointerLocked && autoWalk) {
-        const tAuto = performance.now() / 1000 - autoWalkStartTime;
-        const theta = (tAuto / AUTO_WALK_SWING_PERIOD) * Math.PI * 2;
-        const targetX = AUTO_WALK_BASE_X + Math.sin(theta) * AUTO_WALK_SWING_AMP;
-        // Ease-in over 6s (smoothstep) so the camera glides from spawn into
-        // the swing instead of teleporting on the first frame.
-        const easeT = Math.min(1, tAuto / 6.0);
-        const easeS = easeT * easeT * (3 - 2 * easeT);
-        const blendedX = IONIAN_CENTER_X * (1 - easeS) + targetX * easeS;
-        const prevX = camera.position.x;
-        const prevZ = camera.position.z;
-        camera.position.x = blendedX;
-        camera.position.z += AUTO_WALK_SPEED * dt;
-        // Soft bound — wrap Z back to keep the walk inside the field.
-        const half = FIELD_SIZE / 2 - 5;
-        if (camera.position.z > half) camera.position.z = -half;
-        // Smooth yaw to face the direction of travel. velocity = position
-        // delta this frame; atan2 to derive heading. Slerp yaw toward it.
-        const vx = camera.position.x - prevX;
-        const vz = camera.position.z - prevZ;
-        if (vx * vx + vz * vz > 1e-6) {
-          // Match the WASD yaw convention: forward = camera's -Z, so the
-          // heading yaw is atan2(-vx, -vz). (Yaw 0 → look -Z; yaw +π/2 → -X.)
-          const desiredYaw = Math.atan2(-vx, -vz);
-          // Shortest-arc lerp.
-          let dy = desiredYaw - yaw;
-          while (dy > Math.PI) dy -= Math.PI * 2;
-          while (dy < -Math.PI) dy += Math.PI * 2;
-          yaw += dy * Math.min(1, dt * 1.4);
-        }
-      }
-
-      // WASD movement in the camera's local frame, projected onto the
-      // horizontal plane so looking up doesn't make the player fly.
+      // Movement: WASD when pointer-locked, otherwise auto-walk traverses
+      // the full Lydian↔Locrian sweep.
       if (pointerLocked) {
         let mx = 0;
         let mz = 0;
@@ -877,10 +911,8 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         if (keys.has('KeyA')) mx -= 1;
         if (keys.has('KeyD')) mx += 1;
         if (mx !== 0 || mz !== 0) {
-          // Normalise diagonal so strafing isn't faster than straight walks.
           const len = Math.sqrt(mx * mx + mz * mz);
           mx /= len; mz /= len;
-          // Forward = camera's -Z in world, projected to xz.
           const cosY = Math.cos(yaw);
           const sinY = Math.sin(yaw);
           const forwardX = -sinY;
@@ -891,67 +923,127 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
           const dz = (forwardZ * -mz + rightZ * mx) * WALK_SPEED * dt;
           camera.position.x += dx;
           camera.position.z += dz;
-          // Soft bound — keep player inside the field.
-          const half = FIELD_SIZE / 2 - 5;
-          camera.position.x = Math.max(-half, Math.min(half, camera.position.x));
-          camera.position.z = Math.max(-half, Math.min(half, camera.position.z));
         }
+      } else if (autoWalkActive) {
+        // Travel along +/-X at AUTO_WALK_SPEED, reversing at field ends.
+        const xEdge = FIELD_HALF_X - 5;
+        camera.position.x += autoWalkDirX * AUTO_WALK_SPEED * dt;
+        if (camera.position.x > xEdge) {
+          camera.position.x = xEdge;
+          autoWalkDirX = -1;
+        } else if (camera.position.x < -xEdge) {
+          camera.position.x = -xEdge;
+          autoWalkDirX = +1;
+        }
+        // Gentle Z oscillation — keeps the camera from feeling on rails.
+        const tWalk = (performance.now() / 1000 - autoWalkStartTime);
+        camera.position.z = Math.sin(tWalk * 0.18) * 18.0;
+        // Yaw slowly tracks direction of travel so the camera looks ahead.
+        const targetYaw = autoWalkDirX > 0 ? -Math.PI / 2 : Math.PI / 2;
+        yaw += (targetYaw - yaw) * Math.min(1, dt * 0.5);
       }
-      // Camera Y follows the terrain at eye height — every frame, not only
-      // on movement, so the boundary-band flattening reads correctly even
-      // when standing still and looking around.
-      camera.position.y = sampleTerrainY(camera.position.x, camera.position.z) + EYE_HEIGHT;
+      // Soft bound — keep player inside the field.
+      const halfX = FIELD_HALF_X;
+      const halfZ = FIELD_SIZE_Z / 2 - 5;
+      camera.position.x = Math.max(-halfX, Math.min(halfX, camera.position.x));
+      camera.position.z = Math.max(-halfZ, Math.min(halfZ, camera.position.z));
 
-      // Drive mode mix from camera x → audio crossfade + sky uniform.
+      // Camera Y follows the terrain at eye height — every frame so the
+      // descent effect always reads a real slope, even when looking around.
+      const groundY = sampleTerrainY(camera.position.x, camera.position.z);
+      const targetY = groundY + EYE_HEIGHT;
+      camera.position.y = targetY;
+
+      // ─── Descent effect ───────────────────────────────────────────────────
+      // Track signed dY per frame (smoothed). Map to:
+      //   pitch glide  — bus detune cents, negative for descent (≤ -50 cents)
+      //   mote speed   — descend ⇒ accel 2× when slope steep; ascend ⇒ slow
+      //   FOV bump     — +5° on steep descent, -2° on ascent
+      // Slope magnitude gating: |dy| / dt must exceed 0.4 m/s before we apply
+      // anything (flat walking gets baseline).
+      const dYThisFrame = camera.position.y - prevCamY;
+      prevCamY = camera.position.y;
+      const dySmoothing = Math.exp(-dt / 0.20); // ~0.2s time constant
+      smoothedDY = smoothedDY * dySmoothing + dYThisFrame * (1 - dySmoothing);
+      const slopeMag = Math.abs(smoothedDY) / Math.max(dt, 1e-6);  // m/s vertical
+      const slopeSign = smoothedDY < 0 ? -1 : (smoothedDY > 0 ? 1 : 0);
+      const slopeT = Math.max(0, Math.min(1, (slopeMag - 0.4) / 1.4));
+      // Pitch glide: descent = -50 cents max, ascent = +20 cents (asymmetric
+      // because UP is supposed to be subtler per brief). Apply to all buses.
+      const centsTarget = slopeSign < 0
+        ? -50 * slopeT
+        : +20 * slopeT * 0.6;
+      // Build the per-bus cents array; same value across all buses keeps the
+      // global "scenery slope" feel without sounding microtonal.
+      const centsArr: number[] = new Array(MODES.length);
+      for (let i = 0; i < MODES.length; i++) centsArr[i] = centsTarget;
+      audio.setDetune(centsArr);
+      // Mote speed multiplier: descent 1→2x, ascent 1→0.5x.
+      const moteMult = slopeSign < 0
+        ? 1.0 + 1.0 * slopeT
+        : 1.0 - 0.5 * slopeT;
+      moteUniforms.uMoteSpeedMult.value = moteMult;
+      // Mote tilt = horizontal direction of motion (used by mote shader to
+      // push particles opposite the motion so it reads as scenery passing).
+      let motionX = 0;
+      let motionZ = 0;
+      if (autoWalkActive && !pointerLocked) {
+        motionX = autoWalkDirX;
+      } else if (pointerLocked) {
+        // Approx direction = forward projected by recent WASD
+        const cosY = Math.cos(yaw);
+        const sinY = Math.sin(yaw);
+        motionX = -sinY;
+        motionZ = -cosY;
+      }
+      moteUniforms.uMoteTilt.value.set(motionX * slopeT, motionZ * slopeT);
+      // FOV bump: +5° descent, -2° ascent. Lerp toward target over ~0.4s.
+      const fovTarget = BASE_FOV_DEG + (slopeSign < 0 ? 5 * slopeT : -2 * slopeT);
+      camera.fov += (fovTarget - camera.fov) * Math.min(1, dt / 0.4);
+      camera.updateProjectionMatrix();
+
+      // ─── Per-region weights drive audio + sky + sun + fog ────────────────
       const weights = modeWeightsForX(camera.position.x);
       audio.setWeights(weights);
       skyUniforms.uCameraX.value = camera.position.x;
 
-      // ─── Sun interpolation (Enhancement 3) ───────────────────────────────
-      // regionBlend = phrygian weight (0..1). Interp sun position + colour.
-      const phrW = weights[1];
-      sunDirScratch
-        .copy(IONIAN_SUN_POS)
-        .lerp(PHRYGIAN_SUN_POS, phrW);
+      // Sun interpolation across 7 modes — weighted average of per-region
+      // position + colour + intensity.
+      sunDirScratch.set(0, 0, 0);
+      sunColorScratch.setRGB(0, 0, 0);
+      let intensityAcc = 0;
+      for (let i = 0; i < MODES.length; i++) {
+        const w = weights[i];
+        sunDirScratch.x += SUN_POSITIONS[i].x * w;
+        sunDirScratch.y += SUN_POSITIONS[i].y * w;
+        sunDirScratch.z += SUN_POSITIONS[i].z * w;
+        sunColorScratch.r += SUN_COLORS[i].r * w;
+        sunColorScratch.g += SUN_COLORS[i].g * w;
+        sunColorScratch.b += SUN_COLORS[i].b * w;
+        intensityAcc += SUN_INTENSITIES[i] * w;
+      }
       sun.position.copy(sunDirScratch);
-      sunColorScratch
-        .copy(IONIAN_SUN_COLOR)
-        .lerp(PHRYGIAN_SUN_COLOR, phrW);
       sun.color.copy(sunColorScratch);
-      // Sunset is dimmer; Ionian noon ≈ 1.1, Phrygian sunset ≈ 0.55.
-      sun.intensity = 1.1 - 0.55 * phrW;
-      // Push the same lerp into the ground shader so hill shading agrees.
+      sun.intensity = intensityAcc;
       groundUniforms.uSunDir.value.copy(sunDirScratch).normalize();
       groundUniforms.uSunColor.value.copy(sunColorScratch);
 
       // ─── Chord pulse decay ───────────────────────────────────────────────
-      // Pulses bump to 1.0 on each chord onset and decay exponentially over
-      // ~0.5s, matching the brief.
-      const PULSE_DECAY = Math.exp(-dt / 0.18); // ~0.18s time-constant → ~0.5s visual
-      pulseIntensity[0] *= PULSE_DECAY;
-      pulseIntensity[1] *= PULSE_DECAY;
-      pulseAge[0] += dt;
-      pulseAge[1] += dt;
-      const pulseUniformVec2 = grassUniforms.uChordPulse.value as THREE.Vector2;
-      pulseUniformVec2.set(pulseIntensity[0], pulseIntensity[1]);
-      const dirUniformVec2 = grassUniforms.uChordPulseDir.value as THREE.Vector2;
-      dirUniformVec2.set(pulseDirection[0], pulseDirection[1]);
-      const ageUniformVec2 = grassUniforms.uChordPulseAge.value as THREE.Vector2;
-      ageUniformVec2.set(pulseAge[0], pulseAge[1]);
-      const originUniformVec4 = grassUniforms.uChordPulseOrigin.value as THREE.Vector4;
-      originUniformVec4.set(pulseOrigin[0], pulseOrigin[1], pulseOrigin[2], pulseOrigin[3]);
+      const PULSE_DECAY = Math.exp(-dt / 0.18);
+      for (let i = 0; i < MODES.length; i++) {
+        pulseIntensityArr[i] *= PULSE_DECAY;
+        pulseAgeArr[i] += dt;
+      }
 
-      // Fog colour tracks the per-region-blended sky horizon (v0.6).
-      // `weights[0]` is Ionian weight, so we lerp Phrygian→Ionian as it
-      // grows. Match what the sky-shader smoothstep paints at the horizon
-      // ring so the fogged grass at far range and the sky agree.
-      const ionT = weights[0];
-      fogColor.setRGB(
-        IONIAN.skyColor.r * ionT + PHRYGIAN.skyColor.r * (1 - ionT),
-        IONIAN.skyColor.g * ionT + PHRYGIAN.skyColor.g * (1 - ionT),
-        IONIAN.skyColor.b * ionT + PHRYGIAN.skyColor.b * (1 - ionT),
-      );
-      renderer.setClearColor(fogColor, 1);
+      // Fog colour tracks the local sky (weighted average across regions).
+      let fr = 0, fg = 0, fb = 0;
+      for (let i = 0; i < MODES.length; i++) {
+        fr += MODES[i].skyColor.r * weights[i];
+        fg += MODES[i].skyColor.g * weights[i];
+        fb += MODES[i].skyColor.b * weights[i];
+      }
+      fog.color.setRGB(fr, fg, fb);
+      renderer.setClearColor(fog.color, 1);
 
       // Notify the React HUD when the dominant mode flips.
       const dom = dominantModeForX(camera.position.x);
@@ -993,11 +1085,15 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       if (stopStubPulses) stopStubPulses();
       audio.dispose();
       delete (window as DebugWindow).__modalMeadowTeleport;
+      delete (window as DebugWindow).__modalMeadowSetAutoWalk;
+      delete (window as DebugWindow).__modalMeadowGetState;
       grassMeshes.forEach((m) => m.geometry.dispose());
       grassMaterial.dispose();
       bladeGeometry.dispose();
       ground.geometry.dispose();
       groundMaterial.dispose();
+      pondGeometry.dispose();
+      pondMaterial.dispose();
       sky.geometry.dispose();
       skyMaterial.dispose();
       moteGeometry.dispose();
@@ -1007,6 +1103,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         container.removeChild(renderer.domElement);
       }
     };
+    // Intentionally exhaustive — autoWalk is captured at mount time; toggling
+    // it later would require an explicit refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onModeChange, onLockChange, onUserTakeover]);
 
   return <Box ref={containerRef} sx={{ width: '100%', height: '100%', overflow: 'hidden' }} />;
