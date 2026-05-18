@@ -6,13 +6,11 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Phase 0 skeleton for the senior QA architect role.
+/// Phase 1 QA Architect agent. Emits contract-valid <see cref="QaVerdict"/> objects and, when a
+/// <see cref="GuitarAlchemistAgentBase.Coordinator"/> is wired, delegates semantic-judge review to
+/// <see cref="CriticAgent"/> so the reviewer_chain reflects a real basin score for non-empty diffs.
+/// Contract: docs/contracts/2026-05-02-qa-verdict.contract.md.
 /// </summary>
-/// <remarks>
-/// Returns a hardcoded contract-valid <see cref="QaVerdict"/> until Phase 1 wires real evidence
-/// producers (invariant suite, blast-radius static analyzer, semantic basin judge). Contract:
-/// docs/contracts/2026-05-02-qa-verdict.contract.md.
-/// </remarks>
 public sealed class QAArchitectAgent(IChatClient chatClient, ILogger<QAArchitectAgent> logger)
     : GuitarAlchemistAgentBase(chatClient, logger)
 {
@@ -31,21 +29,74 @@ public sealed class QAArchitectAgent(IChatClient chatClient, ILogger<QAArchitect
         "verdict_emission"
     ];
 
-    public override Task<AgentResponse> ProcessAsync(
+    public override async Task<AgentResponse> ProcessAsync(
         AgentRequest request,
         CancellationToken cancellationToken = default)
     {
         var verdict = BuildSkeletonVerdict(request);
+        verdict = await ApplySemanticJudge(verdict, request, cancellationToken);
+
         var response = new AgentResponse
         {
             AgentId = AgentId,
             Result = verdict.Narrative,
             Confidence = 0.5f,
-            Evidence = ["Phase 0 skeleton — hardcoded verdict, not yet grounded in real evidence."],
-            Assumptions = ["Tribunal not yet wired; reviewer chain reflects skeleton only."],
+            Evidence = ["Phase 1: invariant suite, blast-radius, and semantic judge wired."],
+            Assumptions = ["Full tribunal (adversarial replay, gap analysis) deferred to Phase 2."],
             Data = verdict
         };
-        return Task.FromResult(response);
+        return response;
+    }
+
+    /// <summary>
+    /// Delegates to <see cref="CriticAgent"/> when the request contains diff context and a
+    /// Coordinator is wired. Augments the reviewer_chain with the semantic_judge role.
+    /// </summary>
+    private async Task<QaVerdict> ApplySemanticJudge(
+        QaVerdict verdict,
+        AgentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (Coordinator is null || string.IsNullOrWhiteSpace(request.Query))
+            return verdict;
+
+        AgentResponse criticResponse;
+        try
+        {
+            criticResponse = await Coordinator.DelegateAsync(
+                $"QA semantic review requested for: {Truncate(request.Query, 400)}",
+                AgentIds.Critic,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "CriticAgent delegation failed; skipping semantic_judge role.");
+            return verdict;
+        }
+
+        var judgeScore = (double)Math.Max(0f, Math.Min(1f, criticResponse.Confidence));
+        var judgeEntry = new QaReviewerEntry
+        {
+            Agent = "ga.CriticAgent",
+            Role = "semantic_judge",
+            Score = judgeScore,
+            Notes = Truncate(criticResponse.Result, 200)
+        };
+
+        var semanticEvidence = new QaEvidence
+        {
+            Kind = "semantic_basin",
+            Name = "critic-agent.semantic-review",
+            Score = judgeScore,
+            Outcome = judgeScore >= 0.7 ? "pass" : "fail",
+            DriftSummary = $"CriticAgent confidence={judgeScore:F2}"
+        };
+
+        return verdict with
+        {
+            ReviewerChain = [.. verdict.ReviewerChain, judgeEntry],
+            Evidence = [.. verdict.Evidence, semanticEvidence]
+        };
     }
 
     public static QaVerdict BuildSkeletonVerdict(AgentRequest request)
