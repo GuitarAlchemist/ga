@@ -237,6 +237,8 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     // Scratch objects we reuse each frame to avoid GC pressure.
     const sunDirScratch = new THREE.Vector3();
     const sunColorScratch = new THREE.Color();
+    // Scratch for the ground-clamp sample-ahead vector (see tick()).
+    const groundClampDirScratch = new THREE.Vector3();
 
     // ─── Ground plane — heightmap-displaced rolling hills ──────────────────
     // Vertex shader displaces a high-res plane by `terrainY()` from
@@ -900,7 +902,43 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       // Camera Y follows the terrain at eye height — every frame, not only
       // on movement, so the boundary-band flattening reads correctly even
       // when standing still and looking around.
-      camera.position.y = sampleTerrainY(camera.position.x, camera.position.z) + EYE_HEIGHT;
+      //
+      // Ground clamp: sample terrain at camera XZ AND at three points ahead
+      // along the camera's facing direction, and ride the MAX. With v0.6's
+      // 8m amplitude hills, sampling only at the camera's centre lets the
+      // near-frustum clip through approaching hillsides — the geometric
+      // centre is above its local terrain Y, but the upcoming hill face is
+      // higher. Riding the max of (here, +1m, +2.5m, +4m ahead) lifts the
+      // camera onto the approaching slope before its near plane reaches it.
+      // Facing direction is a reasonable proxy for movement direction:
+      // auto-walk eases yaw toward velocity each frame, and pure-rotation
+      // browsing still wants "ahead = where you're looking" so the camera
+      // never tilts to reveal sub-terrain.
+      camera.getWorldDirection(groundClampDirScratch);
+      groundClampDirScratch.y = 0;
+      // Guard against the degenerate straight-down/up case where the
+      // horizontal projection is zero. Fall back to the local sample.
+      const horizLen2 =
+        groundClampDirScratch.x * groundClampDirScratch.x +
+        groundClampDirScratch.z * groundClampDirScratch.z;
+      let highestTerrain = sampleTerrainY(camera.position.x, camera.position.z);
+      if (horizLen2 > 1e-6) {
+        const invLen = 1 / Math.sqrt(horizLen2);
+        const dirX = groundClampDirScratch.x * invLen;
+        const dirZ = groundClampDirScratch.z * invLen;
+        // 1.0 / 2.5 / 4.0 m — covers the near-plane (0.1m) plus reasonable
+        // step-ahead at WALK_SPEED 5 m/s. Tight enough to avoid the
+        // "invisible wall" feel of clamping to a distant peak.
+        const camX = camera.position.x;
+        const camZ = camera.position.z;
+        const a1 = sampleTerrainY(camX + dirX * 1.0, camZ + dirZ * 1.0);
+        if (a1 > highestTerrain) highestTerrain = a1;
+        const a2 = sampleTerrainY(camX + dirX * 2.5, camZ + dirZ * 2.5);
+        if (a2 > highestTerrain) highestTerrain = a2;
+        const a3 = sampleTerrainY(camX + dirX * 4.0, camZ + dirZ * 4.0);
+        if (a3 > highestTerrain) highestTerrain = a3;
+      }
+      camera.position.y = highestTerrain + EYE_HEIGHT;
 
       // Drive mode mix from camera x → audio crossfade + sky uniform.
       const weights = modeWeightsForX(camera.position.x);
