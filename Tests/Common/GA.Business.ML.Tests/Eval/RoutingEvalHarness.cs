@@ -7,8 +7,11 @@ using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Extensions;
+using GA.Business.ML.Search;
 using GA.Domain.Services.Atonal.Grothendieck;
+using Domain.Services.Fretboard.Voicings.Filtering;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -402,6 +405,27 @@ public class RoutingEvalHarness
         sc.TryAddSingleton<IMcpToolsProvider>(_ => new StubMcpToolsProvider());
         sc.TryAddSingleton<IChatClientFactory>(_ => new StubChatClientFactory());
         sc.TryAddSingleton<IChatClient>(_ => new StubChatClient());
+
+        // Voicing-search stack — required by ChordVoicingsSkill (PR #251).
+        // Mirrors the OrchestratorTestHarness wiring; the router never
+        // exercises these, but the skill ctor demands them.
+        sc.AddMemoryCache();
+        sc.TryAddSingleton<VoicingIndexingService>();
+        sc.TryAddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
+        sc.TryAddSingleton<EnhancedVoicingSearchService>();
+
+        // Musical-query extractor stack — required by ChordVoicingsSkill
+        // and ImprovisationSkill (PR #253). CompositeMusicalQueryExtractor
+        // sits on top of Typed + Llm; both must be registered.
+        // MusicalQueryEncoder depends on the four partition vector services
+        // — AddMusicalEmbeddings wires them up alongside the rest of the
+        // OPTIC-K embedding stack so future additions stay in lockstep with
+        // production.
+        sc.AddMusicalEmbeddings();
+        sc.TryAddSingleton<MusicalQueryEncoder>();
+        sc.TryAddSingleton<TypedMusicalQueryExtractor>();
+        sc.TryAddSingleton<LlmMusicalQueryExtractor>();
+        sc.TryAddSingleton<IMusicalQueryExtractor, CompositeMusicalQueryExtractor>();
 
         // Reflect-discover every concrete IOrchestratorSkill in the
         // GA.Business.ML assembly. (Skills implemented in host apps —

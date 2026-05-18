@@ -353,6 +353,22 @@ public class ProductionOrchestrator(
                 activity, sw, ct);
         }
 
+        // ── Deterministic algebra fast-path runs BEFORE semantic intent routing ──
+        // Algebra prompts (prime form, ICV, Forte label, Z-relation, set class) are
+        // pure finite math handled by IxAlgebraService — no LLM, no embeddings. The
+        // unified semantic dispatch otherwise routes algebra via embeddings, which
+        // means an environment without an embedding endpoint (CI runners without
+        // Ollama) fails through to the LLM agent path and 500s when the LLM is
+        // ALSO unreachable. The classifier is high-precision: keyword hit OR
+        // bracketed/compact pitch-class set pattern. When it fires we already know
+        // the prompt is algebra-shaped, so there is no value in paying the
+        // embedding round-trip. Mirrors the deterministic voicing guard above.
+        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(req, message, sessionId, correlationId, activity, sw, ct);
+        if (algebraFastPath is not null)
+        {
+            return algebraFastPath;
+        }
+
         // ── Follow-up context enrichment for the routing pass ────────────────
         // A short prompt like "Show me a practical example on guitar" right
         // after a substantive turn ("How do I make this progression sound
@@ -630,6 +646,93 @@ public class ProductionOrchestrator(
             await hook.OnResponseSent(sentCtx, ct);
 
         return deterministicResponse;
+    }
+
+    /// <summary>
+    /// Deterministic algebra fast-path. Detects set-class-algebra prompts via
+    /// <see cref="IAlgebraPromptClassifier"/> (regex over keywords + bracketed/
+    /// compact pitch-class sets) and dispatches to <see cref="IIxAlgebraService"/>
+    /// directly. Bypasses <see cref="SemanticIntentRouter"/> so the dispatch
+    /// works in environments without an embedding endpoint (CI without Ollama,
+    /// offline dev). Returns <c>null</c> when the classifier rejects the prompt
+    /// or when the service can't extract a usable pitch-class set — caller falls
+    /// through to the unified semantic-intent dispatch as before.
+    /// </summary>
+    /// <remarks>
+    /// Why this isn't the only algebra path: the semantic router's example-prompt
+    /// matching still beats the classifier on edge cases where the user phrases an
+    /// algebra question without keyword hits ("are these two collections related?").
+    /// The fast-path is a STRICTLY HIGH-PRECISION subset — if it fires we short-
+    /// circuit; if it doesn't, semantic dispatch still owns the prompt. Mirrors
+    /// the deterministic voicing guard's relationship to VoicingIntent.
+    ///
+    /// The routing method <c>"ix-algebra"</c> matches <see cref="AlgebraIntent.ExecuteAsync"/>
+    /// so downstream consumers (FallbackChatApplicationService deterministic-failure
+    /// protection, trace dashboards) can't tell whether the fast-path or the
+    /// semantic-routed AlgebraIntent answered.
+    /// </remarks>
+    private async Task<ChatResponse?> TryAnswerWithAlgebraFastPathAsync(
+        ChatRequest req,
+        string message,
+        string sessionId,
+        Guid correlationId,
+        Activity? activity,
+        Stopwatch sw,
+        CancellationToken ct)
+    {
+        if (!algebraPromptClassifier.IsAlgebraPrompt(message))
+        {
+            return null;
+        }
+
+        var answer = await ixAlgebraService.TryAnswerAsync(message, ct);
+        if (answer is null)
+        {
+            // Classifier said algebra-shaped but service couldn't extract a set.
+            // Fall through to semantic dispatch so AlgebraIntent can emit its
+            // "I couldn't extract a pitch-class set" guidance with proper trace
+            // attribution. Returning the same message inline would short-circuit
+            // observability for the failure mode.
+            return null;
+        }
+
+        sw.Stop();
+        activity?.SetTag("orchestration.branch", "algebra.fast_path");
+        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+        var algebraResponse = new ChatResponse(
+            NaturalLanguageAnswer: answer.NaturalLanguageAnswer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                AgentId: "algebra",
+                Confidence: 1.0f,
+                RoutingMethod: "ix-algebra"),
+            Grounding: answer.Grounding);
+
+        historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
+
+        // OnResponseSent for parity with every other dispatch path. Wrap the
+        // facts dictionary as evidence strings so MemoryHook / analytics see a
+        // shape consistent with skill responses.
+        var sentCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = message,
+            CorrelationId   = correlationId,
+            SessionId       = sessionId,
+            Response        = new AgentResponse
+            {
+                AgentId    = "algebra",
+                Result     = answer.NaturalLanguageAnswer,
+                Confidence = 1.0f,
+                Evidence   = answer.Facts.Select(kv => $"{kv.Key}: {kv.Value}").ToList(),
+                Assumptions = [],
+            },
+        };
+        foreach (var hook in _hooks)
+            await hook.OnResponseSent(sentCtx, ct);
+
+        return algebraResponse;
     }
 
     private bool TrySelectDeterministicAgent(
