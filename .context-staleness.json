@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "_comment": "Config for Scripts/check-context-staleness.ps1. Each rule pairs a code_path glob with a CONTEXT.md file and a max staleness in days. Rules whose context_file does not exist are silently skipped, so the file is safe to seed before the parallel CONTEXT.md sweep merges. WARNING-only; never blocks commits.",
+  "rules": [
+    {
+      "code_path": "Common/GA.Business.ML/Agents/**",
+      "context_file": "Common/GA.Business.ML/Agents/CONTEXT.md",
+      "max_staleness_days": 30
+    },
+    {
+      "code_path": "Apps/GaChatbot.Api/**",
+      "context_file": "Apps/GaChatbot.Api/CONTEXT.md",
+      "max_staleness_days": 30
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+name: context-decay-check
+
+# Daily scan of every CONTEXT.md in the repo for links/references to files
+# that no longer exist (or empty directories). Surfaces context decay before
+# it rots beyond cheap repair. Purely informational — never fails.
+#
+# Per O'Reilly "Context Management": context artifacts are only useful while
+# their references are still grounded. When a CONTEXT.md cites a file that
+# was renamed/removed, downstream agents form wrong mental models silently.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 08:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan CONTEXT.md files for broken references
+        id: scan
+        shell: bash
+        run: |
+          set +e
+          report_file="$(mktemp)"
+          echo "# Context decay report" > "$report_file"
+          echo "" >> "$report_file"
+          echo "_Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)_" >> "$report_file"
+          echo "" >> "$report_file"
+
+          found_any=0
+
+          # Find every CONTEXT.md. Use null-delimited to handle paths with spaces.
+          while IFS= read -r -d '' ctx; do
+            ctx_dir="$(dirname "$ctx")"
+            ctx_rel="${ctx#./}"
+
+            # Extract markdown link targets: [text](path) — ignore http(s)/mailto/anchor-only.
+            # Extract backtick-quoted bare paths that look like files: `foo/bar.ext` or `foo/bar/`
+            mapfile -t refs < <(
+              {
+                grep -oE '\]\([^)]+\)' "$ctx" 2>/dev/null \
+                  | sed -E 's/^\]\(//; s/\)$//' \
+                  | grep -vE '^(https?|mailto|tel|#|data:)' \
+                  | sed -E 's/#.*$//' \
+                  | sed -E 's/[[:space:]].*$//'
+                grep -oE '`[^`]+`' "$ctx" 2>/dev/null \
+                  | sed -E 's/^`//; s/`$//' \
+                  | grep -E '(/|\.[a-zA-Z0-9]{1,8}$)' \
+                  | grep -vE '^(https?|mailto|#)'
+              } | sort -u
+            )
+
+            for ref in "${refs[@]}"; do
+              [ -z "$ref" ] && continue
+              # Resolve relative to the CONTEXT.md directory; if absolute-from-repo (starts with /), strip it.
+              if [[ "$ref" = /* ]]; then
+                target=".${ref}"
+              else
+                target="$ctx_dir/$ref"
+              fi
+
+              if [ ! -e "$target" ]; then
+                # Reference target doesn't exist.
+                msg="[decay] ${ctx_rel} references missing file: ${ref}"
+                echo "$msg"
+                echo "- \`${ctx_rel}\` → missing: \`${ref}\`" >> "$report_file"
+                found_any=1
+              elif [ -d "$target" ]; then
+                # Empty directory check.
+                if [ -z "$(ls -A "$target" 2>/dev/null)" ]; then
+                  msg="[decay] ${ctx_rel} references empty directory: ${ref}"
+                  echo "$msg"
+                  echo "- \`${ctx_rel}\` → empty dir: \`${ref}\`" >> "$report_file"
+                  found_any=1
+                fi
+              fi
+            done
+          done < <(find . -name CONTEXT.md -not -path '*/node_modules/*' -not -path '*/bin/*' -not -path '*/obj/*' -print0)
+
+          if [ "$found_any" -eq 0 ]; then
+            echo "_No decay detected._" >> "$report_file"
+          fi
+
+          # Persist for the next step (use heredoc-style output to handle multiline safely).
+          {
+            echo "report_path=$report_file"
+            echo "found_any=$found_any"
+          } >> "$GITHUB_OUTPUT"
+
+          # Always succeed — informational only.
+          exit 0
+
+      - name: Ensure context-health label exists
+        if: steps.scan.outputs.found_any == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set +e
+          gh label create "context-health" \
+            --description "Context-decay reports posted by context-decay-check workflow" \
+            --color "fbca04" 2>/dev/null || true
+
+      - name: Comment on most recent context-health PR (or write to file)
+        if: steps.scan.outputs.found_any == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set +e
+          report="$(cat ${{ steps.scan.outputs.report_path }})"
+          pr_number="$(gh pr list --state open --label context-health --json number --jq '.[0].number')"
+
+          if [ -n "$pr_number" ] && [ "$pr_number" != "null" ]; then
+            echo "Posting decay report to PR #$pr_number"
+            gh pr comment "$pr_number" --body "$report"
+          else
+            echo "No open context-health PR — writing to state/context-decay-report.md"
+            mkdir -p state
+            cat ${{ steps.scan.outputs.report_path }} > state/context-decay-report.md
+
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add state/context-decay-report.md
+            if ! git diff --cached --quiet; then
+              git commit -m "chore(context): daily decay report [skip ci]"
+              git push || echo "(push failed — likely main protected, report remains in artifacts)"
+            else
+              echo "(no changes to commit)"
+            fi
+          fi
+
+      - name: Upload report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: context-decay-report
+          path: ${{ steps.scan.outputs.report_path }}
+          if-no-files-found: ignore
