@@ -173,6 +173,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'modal-meadow',
+    title: 'Modal Meadow',
+    description: 'Walk a 220m meadow split into musical mode-regions; ambient chord progression and grass colour shift as you cross from Ionian to Phrygian',
+    technology: 'Three.js + Web Audio + FPS Controls',
+    path: '/test/modal-meadow',
+    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Two Mode Regions', 'Per-Region Wind', 'Web Audio Pad', 'Crossfade'],
+    status: 'partial',
+  },
+  {
     id: 'ocean',
     title: 'Ocean Shader',
     description: 'Realistic ocean water simulation with Gerstner waves, reflections, and dynamic lighting',
