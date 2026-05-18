@@ -1,0 +1,102 @@
+# Context decay report
+
+_Generated: 2026-05-18T09:23:12Z_
+
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Common/GA.Business.Core.Orchestration/Plugins/`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/<Name>Skill.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `MemoryWriteHook.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Program.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ServiceLifetime.Scoped`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/architecture/layers.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-di-composition-root-casing-drift.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-11-memoryhook-conflates-transcript-log-with-durable-memory.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `> 0.85`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `AgentResponse.Data`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `ChordVoicingsSkillTests.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Common/GA.Business.ML/Agents/`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `GaPlugin.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Hooks/*`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `ServiceLifetime.Scoped`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `SkillMdDrivenWrapperBase.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Skills/<Name>Skill.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `Tests/Common/GA.Business.ML.Tests/Unit/<Name>SkillTests.cs`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/architecture/layers.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/runbooks/chatbot-improvement-loop.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-08-voicing-search-corpus-tagging-mismatch.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-11-memoryhook-conflates-transcript-log-with-durable-memory.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/solutions/runtime-errors/enricher-substring-on-wrong-field-cmaj7-jazz.md`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `prompts.yaml`
+- `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/three-best-practices/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.env.local`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/ai-copilot`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/api`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/chatbot`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/graphql`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/hubs`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/panels/diatonic`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/codestral`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/ollama`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/voxtral`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/*`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/fleet`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/ga-chat`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `<Route path="/test/<kebab-name>" element={<App><YourTest /></App>} />`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@mui/x-tree-view`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@react-three/fiber`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `Apps/GaChatbot.Api/appsettings.json`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ReactComponents/ga-react-components/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `TestIndex.tsx`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `demos.guitaralchemist.com`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/architecture/layers.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/best-practices/showcase-demo-end-to-end-qa-2026-05-12.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ag-ui-scale-event-sse-streaming-frontend-bridge.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/playwright-tests-against-ghost-ui-2026-05-06.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ga-react-components.js`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `hmr.overlay`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `optimizeDeps.include`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/components/GAChatPanel/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/pages/<Name>Test.tsx`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/chat`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/health`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot/`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/proxy/voxtral`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `<base>/state`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Apps/GaChatbot.Api/`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot:PathBase=/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot__PathBase=/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Scripts/start-dev.ps1`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `ServiceCollectionExtensions.cs`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `[ApiController] [Route("api/chatbot/<verb>")]`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `api/chatbot/...`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com/chatbot/*`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/runbooks/chatbot-improvement-loop.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-process-wide-memory-store-leaks-into-anonymous-prompts.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-slot-build-stale-static-web-assets-manifest.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ollama-client-extraction-hot-alloc-fix.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `fetch('api/chatbot/chat')`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `index.html`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `vite.config.ts`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `winget upgrade Ollama.Ollama`
