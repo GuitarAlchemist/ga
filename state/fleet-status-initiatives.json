@@ -1,0 +1,44 @@
+[
+  {
+    "id": "blackbox-100-all-repos",
+    "name": "Agent Blackbox 100/100 fleet baseline",
+    "phase": "Phase 1 — install-audit closure",
+    "description": "Post install-audit subcommand: agent-blackbox 110, ga 96, Demerzel 90, ix 71, tars 59. Original 100/100 was the older harness-audit surface; install-audit adds review-independence + observability checks, so numbers regressed. Cross-repo overseer still reports loop-eligible.",
+    "lastUpdated": "2026-05-17"
+  },
+  {
+    "id": "qa-architect-tribunal",
+    "name": "QA Architect Tribunal",
+    "phase": "Phase 0 shipped; Phase 1 scheduled",
+    "description": "Cross-repo QA verdict protocol spanning GA, Demerzel, ix, TARS. Phase 0 shipped 2026-05-02. Phase 1 implementation scheduled 2026-05-18. Schema is v0.1 draft; not frozen.",
+    "lastUpdated": "2026-05-17"
+  },
+  {
+    "id": "optick-sae",
+    "name": "OPTIC-K Sparse Autoencoder",
+    "phase": "Phase 0 drafted; Phase 1 scheduled",
+    "description": "SAE over the 313k-voicing OPTIC-K corpus to validate partition design, discover latent musical features, and feed drift signals into the QA tribunal. Cross-repo: ix crate + GA consumer + Demerzel orchestration. Phase 1 fires 2026-05-19.",
+    "lastUpdated": "2026-05-17"
+  },
+  {
+    "id": "chatbot-skills-migration",
+    "name": "Chatbot skills migration (complete)",
+    "phase": "Complete + post-migration evolution",
+    "description": "23 PRs (13 migration + 10 evolution) migrating 10 IOrchestratorSkill implementations to SKILL.md. 15 canonical skills (11 fast-path + 4 catalog-only), 7 MCP tools under ga_* prefix. Multi-LLM review caught 9 bugs in migration + 11 in audits.",
+    "lastUpdated": "2026-05-05"
+  },
+  {
+    "id": "ix-sweep-2026-05-18",
+    "name": "IX 6-item improvement sweep",
+    "phase": "Wave 1 in flight",
+    "description": "6-item IX improvement sweep — wave 1 (issues #2/#3/#4/#5) in flight 2026-05-18. Wave 2 (issue #1) fires after.",
+    "lastUpdated": "2026-05-18"
+  },
+  {
+    "id": "epistemic-constitution",
+    "name": "Epistemic Constitution (Demerzel)",
+    "phase": "Adopted",
+    "description": "10 articles, 17 named concepts establishing demarcation, evidence, falsifiability, and epistemic humility norms for Demerzel governance and cross-repo tribunals.",
+    "lastUpdated": "2026-03-29"
+  }
+]

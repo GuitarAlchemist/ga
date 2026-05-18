@@ -1,0 +1,32 @@
+[
+  {
+    "surface": "GA chatbot dev",
+    "hard": "None",
+    "soft": "Auto-optimize oracle needs $proc.ExitCode gate (chatbot-qa producer landed; embeddings producer needs filename + cadence fix per task #192)."
+  },
+  {
+    "surface": "Demos site (demos.guitaralchemist.com)",
+    "hard": "None",
+    "soft": "cloudflared occasionally stuck STOP_PENDING; recovery doc at reference_cloudflared_recovery.md."
+  },
+  {
+    "surface": "IX dev",
+    "hard": "install-audit score 71/110 — observability + review-independence gaps.",
+    "soft": "Cargo fmt drift (PR #48 in flight to close)."
+  },
+  {
+    "surface": "Demerzel",
+    "hard": "None",
+    "soft": "install-audit score 90/110; harness-audit was 100/100 on older surface."
+  },
+  {
+    "surface": "agent-blackbox",
+    "hard": "None",
+    "soft": "Loop-governance restored 15/15 after stale oracle_status warn deadlock fix; monitor for regression."
+  },
+  {
+    "surface": "tars",
+    "hard": "install-audit score 59/110 — install footprint underbuilt.",
+    "soft": "Auto-compact threshold rollout pending merge (PR #23)."
+  }
+]

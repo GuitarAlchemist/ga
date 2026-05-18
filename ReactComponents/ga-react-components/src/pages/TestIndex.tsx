@@ -173,6 +173,15 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'modal-meadow',
+    title: 'Modal Meadow',
+    description: 'Walk a 220m meadow split into musical mode-regions; ambient chord progression and grass colour shift as you cross from Ionian to Phrygian',
+    technology: 'Three.js + Web Audio + FPS Controls',
+    path: '/test/modal-meadow',
+    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Two Mode Regions', 'Per-Region Wind', 'Web Audio Pad', 'Crossfade'],
+    status: 'partial',
+  },
+  {
     id: 'ocean',
     title: 'Ocean Shader',
     description: 'Realistic ocean water simulation with Gerstner waves, reflections, and dynamic lighting',
@@ -396,6 +405,15 @@ const testPages: TestPageInfo[] = [
     path: '/test/ix-hand-voicing',
     features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
     status: 'partial',
+  },
+  {
+    id: 'fleet',
+    title: 'Fleet Status',
+    description: 'Unified "what is happening across the 5 sibling repos right now" view — PRs, install-audit scores, active initiatives, blockers. Static page, baked by CI cron.',
+    technology: 'React + MUI + GitHub Actions cron + agent-blackbox install-audit',
+    path: '/test/fleet',
+    features: ['Active PRs', 'Install-audit scores', 'Active initiatives', 'Surface blockers', 'Markdown mirror', 'CI-baked'],
+    status: 'complete',
   },
 ];
 

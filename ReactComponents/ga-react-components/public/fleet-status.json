@@ -1,0 +1,310 @@
+{
+  "blockers": [
+    {
+      "hard": "None",
+      "soft": "Auto-optimize oracle needs $proc.ExitCode gate (chatbot-qa producer landed; embeddings producer needs filename + cadence fix per task #192).",
+      "surface": "GA chatbot dev"
+    },
+    {
+      "hard": "None",
+      "soft": "cloudflared occasionally stuck STOP_PENDING; recovery doc at reference_cloudflared_recovery.md.",
+      "surface": "Demos site (demos.guitaralchemist.com)"
+    },
+    {
+      "hard": "install-audit score 71/110 \u2014 observability + review-independence gaps.",
+      "soft": "Cargo fmt drift (PR #48 in flight to close).",
+      "surface": "IX dev"
+    },
+    {
+      "hard": "None",
+      "soft": "install-audit score 90/110; harness-audit was 100/100 on older surface.",
+      "surface": "Demerzel"
+    },
+    {
+      "hard": "None",
+      "soft": "Loop-governance restored 15/15 after stale oracle_status warn deadlock fix; monitor for regression.",
+      "surface": "agent-blackbox"
+    },
+    {
+      "hard": "install-audit score 59/110 \u2014 install footprint underbuilt.",
+      "soft": "Auto-compact threshold rollout pending merge (PR #23).",
+      "surface": "tars"
+    }
+  ],
+  "initiatives": [
+    {
+      "description": "Post install-audit subcommand: agent-blackbox 110, ga 96, Demerzel 90, ix 71, tars 59. Original 100/100 was the older harness-audit surface; install-audit adds review-independence + observability checks, so numbers regressed. Cross-repo overseer still reports loop-eligible.",
+      "id": "blackbox-100-all-repos",
+      "lastUpdated": "2026-05-17",
+      "name": "Agent Blackbox 100/100 fleet baseline",
+      "phase": "Phase 1 \u2014 install-audit closure"
+    },
+    {
+      "description": "Cross-repo QA verdict protocol spanning GA, Demerzel, ix, TARS. Phase 0 shipped 2026-05-02. Phase 1 implementation scheduled 2026-05-18. Schema is v0.1 draft; not frozen.",
+      "id": "qa-architect-tribunal",
+      "lastUpdated": "2026-05-17",
+      "name": "QA Architect Tribunal",
+      "phase": "Phase 0 shipped; Phase 1 scheduled"
+    },
+    {
+      "description": "SAE over the 313k-voicing OPTIC-K corpus to validate partition design, discover latent musical features, and feed drift signals into the QA tribunal. Cross-repo: ix crate + GA consumer + Demerzel orchestration. Phase 1 fires 2026-05-19.",
+      "id": "optick-sae",
+      "lastUpdated": "2026-05-17",
+      "name": "OPTIC-K Sparse Autoencoder",
+      "phase": "Phase 0 drafted; Phase 1 scheduled"
+    },
+    {
+      "description": "23 PRs (13 migration + 10 evolution) migrating 10 IOrchestratorSkill implementations to SKILL.md. 15 canonical skills (11 fast-path + 4 catalog-only), 7 MCP tools under ga_* prefix. Multi-LLM review caught 9 bugs in migration + 11 in audits.",
+      "id": "chatbot-skills-migration",
+      "lastUpdated": "2026-05-05",
+      "name": "Chatbot skills migration (complete)",
+      "phase": "Complete + post-migration evolution"
+    },
+    {
+      "description": "6-item IX improvement sweep \u2014 wave 1 (issues #2/#3/#4/#5) in flight 2026-05-18. Wave 2 (issue #1) fires after.",
+      "id": "ix-sweep-2026-05-18",
+      "lastUpdated": "2026-05-18",
+      "name": "IX 6-item improvement sweep",
+      "phase": "Wave 1 in flight"
+    },
+    {
+      "description": "10 articles, 17 named concepts establishing demarcation, evidence, falsifiability, and epistemic humility norms for Demerzel governance and cross-repo tribunals.",
+      "id": "epistemic-constitution",
+      "lastUpdated": "2026-03-29",
+      "name": "Epistemic Constitution (Demerzel)",
+      "phase": "Adopted"
+    }
+  ],
+  "meta": {
+    "commitSha": "54177164b380fa17e1fce4f5eeb03f4512ec18c0",
+    "generatedAt": "2026-05-18T01:19:36.776366+00:00",
+    "repoCount": 5,
+    "totalPRs": 11
+  },
+  "repos": [
+    {
+      "fullName": "GuitarAlchemist/agent-blackbox",
+      "installAudit": {
+        "available": true,
+        "checkCount": 9,
+        "failingChecks": [],
+        "maxScore": 110,
+        "readiness": "installed",
+        "score": 110,
+        "verdict": "pass"
+      },
+      "name": "agent-blackbox",
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-05-17T16:25:25Z",
+          "failingChecks": 0,
+          "headRef": "feat/ai-implementation-branch-creation",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 19,
+          "title": "[cycle-1] feat(cli): implementation-branch spec module (Phase 5)",
+          "url": "https://github.com/GuitarAlchemist/agent-blackbox/pull/19"
+        }
+      ]
+    },
+    {
+      "fullName": "GuitarAlchemist/ga",
+      "installAudit": {
+        "available": true,
+        "checkCount": 9,
+        "failingChecks": [
+          "observability"
+        ],
+        "maxScore": 110,
+        "readiness": "partial",
+        "score": 102,
+        "verdict": "warn"
+      },
+      "name": "ga",
+      "prCount": 7,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-05-18T01:14:00Z",
+          "failingChecks": 0,
+          "headRef": "feat/ga-retrieval-quality-w2",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 268,
+          "title": "feat(quality): GA retrieval quality producer (Workflow 2 Phase 1)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/268"
+        },
+        {
+          "ageDays": 1,
+          "author": "spareilleux",
+          "createdAt": "2026-05-16T18:22:49Z",
+          "failingChecks": 0,
+          "headRef": "feat/distillation-plan-only",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 238,
+          "title": "docs(plan): recover Nardien distillation plan (was held in closed #230)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/238"
+        },
+        {
+          "ageDays": 2,
+          "author": "spareilleux",
+          "createdAt": "2026-05-15T13:08:42Z",
+          "failingChecks": 5,
+          "headRef": "feat/install-agent-blackbox",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 211,
+          "title": "feat: install agent-blackbox PR risk-report workflow + policy",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/211"
+        },
+        {
+          "ageDays": 4,
+          "author": "spareilleux",
+          "createdAt": "2026-05-13T02:28:43Z",
+          "failingChecks": 4,
+          "headRef": "docs/cherny-loops-cross-repo",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 209,
+          "title": "docs(architecture): consolidate Cherny loops across ga/ix/Demerzel/tars",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/209"
+        },
+        {
+          "ageDays": 4,
+          "author": "spareilleux",
+          "createdAt": "2026-05-13T02:23:33Z",
+          "failingChecks": 4,
+          "headRef": "feat/inception-subagent-integration-2026-05-13",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 208,
+          "title": "feat(subagent): Inception Mercury 2 integration behind two-flag opt-in",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/208"
+        },
+        {
+          "ageDays": 4,
+          "author": "spareilleux",
+          "createdAt": "2026-05-13T02:12:16Z",
+          "failingChecks": 4,
+          "headRef": "docs/mercury-subagent-eval-2026-05-13",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 207,
+          "title": "docs(plans): Mercury 2 subagent evaluation \u00e2\u20ac\u201d benchmark + design + tuned prompt",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/207"
+        },
+        {
+          "ageDays": 5,
+          "author": "spareilleux",
+          "createdAt": "2026-05-13T00:44:21Z",
+          "failingChecks": 2,
+          "headRef": "fix/ci-include-static-web-assets-artifact",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 201,
+          "title": "fix(ci): include obj/Release/**/compressed + staticwebassets in artifact",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/201"
+        }
+      ]
+    },
+    {
+      "fullName": "GuitarAlchemist/ix",
+      "installAudit": {
+        "available": true,
+        "checkCount": 9,
+        "failingChecks": [],
+        "maxScore": 110,
+        "readiness": "installed",
+        "score": 110,
+        "verdict": "pass"
+      },
+      "name": "ix",
+      "prCount": 2,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-05-18T01:11:18Z",
+          "failingChecks": 1,
+          "headRef": "chore/cargo-fmt-cleanup",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 48,
+          "title": "chore: cargo fmt --all (close chronic risk-report fmt drift)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/48"
+        },
+        {
+          "ageDays": 4,
+          "author": "spareilleux",
+          "createdAt": "2026-05-13T04:22:12Z",
+          "failingChecks": 1,
+          "headRef": "chore/register-hari-mcp-2026-05-13",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 35,
+          "title": "chore(federation): register hari MCP peer",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/35"
+        }
+      ]
+    },
+    {
+      "fullName": "GuitarAlchemist/tars",
+      "installAudit": {
+        "available": true,
+        "checkCount": 9,
+        "failingChecks": [
+          "instructions",
+          "workflow",
+          "pinning",
+          "enforcement",
+          "observability",
+          "loop-controls",
+          "review-independence"
+        ],
+        "maxScore": 110,
+        "readiness": "missing",
+        "score": 56,
+        "verdict": "fail"
+      },
+      "name": "tars",
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 1,
+          "author": "spareilleux",
+          "createdAt": "2026-05-16T01:24:40Z",
+          "failingChecks": 5,
+          "headRef": "chore/auto-compact-threshold",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 23,
+          "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/23"
+        }
+      ]
+    },
+    {
+      "fullName": "GuitarAlchemist/Demerzel",
+      "installAudit": {
+        "available": true,
+        "checkCount": 9,
+        "failingChecks": [
+          "observability"
+        ],
+        "maxScore": 110,
+        "readiness": "partial",
+        "score": 105,
+        "verdict": "warn"
+      },
+      "name": "Demerzel",
+      "prCount": 0,
+      "prs": []
+    }
+  ],
+  "schemaVersion": "0.1"
+}
