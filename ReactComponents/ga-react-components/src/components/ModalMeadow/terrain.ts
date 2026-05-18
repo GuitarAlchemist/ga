@@ -1,22 +1,22 @@
 /**
- * Modal Meadow — heightmap sampler (v0.6).
+ * Modal Meadow — heightmap sampler (v0.8).
  *
  * Rolling hills derived from a tiny inline 2D hash-noise function so we do
  * NOT add `simplex-noise` as a dependency. The same algorithm is mirrored
  * in GLSL inside ModalMeadow.tsx (`HEIGHT_GLSL`) so the camera, grass
- * blades, and any other JS-side queries agree with what the shader paints.
+ * blades, ground mesh, and any other JS-side queries agree.
  *
- * Surface character (v0.6):
- *  - amplitude AMP_M ≈ 8m (peak-to-trough ≈ 16m over ~22m horizontal —
- *    actual hills, not gentle rolling; v0.5 used 3m and user reported
- *    "I don't see Hills?")
- *  - dominant wavelength ≈ 45m primary + 18m detail (unchanged from v0.5)
+ * v0.8 surface character:
+ *  - amplitude AMP_M ≈ 8m (peak-to-trough ≈ 16m) — bumped from v0.5's 3m
+ *    via the v0.6 "visible hills" beat. With EYE_HEIGHT 3.5m the hills
+ *    feel like real terrain, not bumps.
+ *  - dominant wavelength ≈ 30–60m via two octaves of value noise
  *  - bandlimited so the camera doesn't jitter as you walk
- *  - flattened toward the boundary band (|x| < BLEND_HALF) to keep the
- *    Ionian/Phrygian transition readable and avoid a giant wall mid-field
+ *  - flattened toward each of the 7 region boundaries so each region
+ *    presents itself as recognisable rather than a wall of hills.
  *
  * Cost: ~10 multiplies / sample on the CPU. Camera samples once per frame;
- * blades sample once at construction. No per-frame per-blade JS work.
+ * blades sample once at construction. Ponds also sample to find shore.
  */
 
 const HASH_K1 = 127.1;
@@ -55,7 +55,7 @@ const vnoise = (x: number, y: number): number => {
   return mx0 + (mx1 - mx0) * uy;
 };
 
-/** Amplitude of the rolling hills, metres above mean ground. */
+/** Amplitude of the rolling hills, metres above mean ground. v0.8: bumped 3→8. */
 export const TERRAIN_AMP_M = 8.0;
 
 /** Dominant wavelength in metres (low frequency ≈ broad rolling shape). */
@@ -63,21 +63,37 @@ const FREQ_A = 1 / 45; // ≈ 45m wavelength
 const FREQ_B = 1 / 18; // ≈ 18m secondary detail
 
 /**
+ * v0.8 region boundaries along world-x (midpoints between adjacent
+ * regionCenterX values from modes.ts). Each boundary gets a soft 10m
+ * flattening so the player can clearly read which region they're in,
+ * but the field still feels rolling.
+ *
+ *   centres:   -210  -140  -70   0   +70  +140  +210
+ *   boundaries:    -175   -105  -35   +35   +105   +175
+ */
+const REGION_BOUNDARIES = [-175, -105, -35, 35, 105, 175];
+
+/**
  * Returns terrain elevation in metres at world XZ.
  *
- * The boundary band (|x| < BLEND_HALF_METERS, 25m) is flattened via a
- * smoothstep so the mode transition reads cleanly. Far from the boundary
- * the surface is full amplitude.
+ * The 6 inter-region boundaries are flattened via smoothsteps so each
+ * region presents itself recognisably. Far from any boundary the
+ * surface is full amplitude.
  */
 export const sampleTerrainY = (x: number, z: number): number => {
   const big = vnoise(x * FREQ_A, z * FREQ_A);
   const small = vnoise(x * FREQ_B + 7.3, z * FREQ_B - 4.1) * 0.35;
   const raw = big + small;
-  // Flatten the boundary band so crossing Ionian↔Phrygian doesn't put a
-  // hill in the player's face. boundaryFlat = 1 at ±BLEND_HALF and beyond,
-  // 0.25 at x=0 (gentle bowl, never zero so it doesn't look stamped flat).
-  const absX = Math.abs(x);
-  const flatT = Math.min(1, Math.max(0, (absX - 5) / 25));
+
+  // Multiplicative flattening — find the nearest boundary, attenuate near it.
+  // boundaryFlat = 0.25 at any boundary, 1.0 well inside any region.
+  let minDist = Infinity;
+  for (const b of REGION_BOUNDARIES) {
+    const d = Math.abs(x - b);
+    if (d < minDist) minDist = d;
+  }
+  // Smoothstep over the 10m on either side of each boundary.
+  const flatT = Math.min(1, Math.max(0, (minDist - 2) / 10));
   const boundaryFlat = 0.25 + 0.75 * (flatT * flatT * (3 - 2 * flatT));
   return raw * TERRAIN_AMP_M * boundaryFlat;
 };
@@ -97,8 +113,20 @@ export const HEIGHT_GLSL = /* glsl */ `
     float big = vnoise(xz * ${(FREQ_A).toFixed(6)});
     float small = vnoise(xz * ${(FREQ_B).toFixed(6)} + vec2(7.3, -4.1)) * 0.35;
     float raw = big + small;
-    float absX = abs(xz.x);
-    float flatT = clamp((absX - 5.0) / 25.0, 0.0, 1.0);
+    // Boundary array — 6 inter-region midpoints.
+    float boundaries[6];
+    boundaries[0] = -175.0;
+    boundaries[1] = -105.0;
+    boundaries[2] = -35.0;
+    boundaries[3] = 35.0;
+    boundaries[4] = 105.0;
+    boundaries[5] = 175.0;
+    float minDist = 1.0e9;
+    for (int i = 0; i < 6; i++) {
+      float d = abs(xz.x - boundaries[i]);
+      if (d < minDist) minDist = d;
+    }
+    float flatT = clamp((minDist - 2.0) / 10.0, 0.0, 1.0);
     float boundaryFlat = 0.25 + 0.75 * (flatT * flatT * (3.0 - 2.0 * flatT));
     return raw * ${TERRAIN_AMP_M.toFixed(4)} * boundaryFlat;
   }

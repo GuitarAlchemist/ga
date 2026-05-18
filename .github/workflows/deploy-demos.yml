@@ -65,9 +65,17 @@ jobs:
       # missing patches). `npm ci` would require a committed
       # package-lock.json which this repo's .gitignore excludes — same
       # situation as the existing build-frontend job in ci.yml.
+      #
+      # `--force` is required because the package.json devDependencies
+      # include `@esbuild/win32-x64` (pinned for local Windows dev). On
+      # Linux runners npm refuses to install platform-locked packages
+      # with EBADPLATFORM. `--force` skips the OS check; the unusable
+      # win32 binary is harmless on Linux because the Linux esbuild
+      # picks up its own platform-matched native binary from
+      # `@esbuild/linux-x64` via Vite's optional-deps resolution.
       - name: Install dependencies
         working-directory: ReactComponents/ga-react-components
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund --force
 
       # Run patches manually after install (the npm postinstall was
       # skipped above). Tolerate missing patch-package gracefully.
@@ -96,8 +104,7 @@ jobs:
       # over client-side. Without this, https://.../ga/test/fleet
       # 404s on first hit.
       - name: Add SPA 404 fallback
-        run: cp ReactComponents/ga-react-components/dist-demos/index.html \
-              ReactComponents/ga-react-components/dist-demos/404.html
+        run: cp ReactComponents/ga-react-components/dist-demos/index.html ReactComponents/ga-react-components/dist-demos/404.html
 
       # Bypass Jekyll: GH Pages defaults to running Jekyll on the
       # uploaded site, which strips files starting with `_` (like

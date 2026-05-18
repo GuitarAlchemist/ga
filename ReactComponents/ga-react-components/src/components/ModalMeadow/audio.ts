@@ -1,5 +1,5 @@
 /**
- * Modal Meadow — Web Audio chord-pad engine (v0.9: synth rewrite).
+ * Modal Meadow — Web Audio chord-pad engine (v0.9: synth rewrite + v0.8 detune).
  *
  * v0.5–0.8 played root-position triads in a single octave (C4–C5) with two
  * oscillators per pitch and a 350ms release that overlapped the next chord's
@@ -12,7 +12,9 @@
  *
  *  1. Spread voicings — each incoming triad is re-voiced across ~3 octaves:
  *     bass = root − 24, mid = original root, top = third or fifth + 12.
- *     Eliminates close-interval beating in the muddy register.
+ *     Applied uniformly to all 7 mode progressions (Lydian, Ionian, Mixo,
+ *     Dorian, Aeolian, Phrygian, Locrian) so Locrian's tritone-root chord
+ *     reads atmospheric rather than crunchy.
  *  2. Per-note ADSR — attack 80ms, decay 200ms, sustain 0.6, release 900ms.
  *     Release of the OUTGOING chord starts 220ms BEFORE the new chord's
  *     attack so they don't stack into a dissonant cluster during overlap.
@@ -24,9 +26,14 @@
  *  5. Crossfade between mode buses still uses setTargetAtTime smoothing; the
  *     long release means a bus fading out doesn't click off mid-chord.
  *
- * The public API is unchanged: start(), setWeights(), dispose(),
- * onChordPulse(), startStubPulses() — ModalMeadow.tsx still drives it as in
- * v0.5. The ChordPulseEvent shape is unchanged.
+ * v0.8 retained: `setDetune(centsArray)` for the descent-effect controller
+ * — glides each bus's pitch down by up to ~50 cents on downhill slopes
+ * and back up on uphill. Applied on top of each oscillator's intrinsic
+ * detune (the triangle's -5 cent shimmer + the saw's +7 cent beating).
+ *
+ * The public API is unchanged: start(), setWeights(), setDetune(), setMix(),
+ * dispose(), onChordPulse(), startStubPulses() — ModalMeadow.tsx still drives
+ * it as in v0.8. The ChordPulseEvent shape is unchanged.
  *
  * Browser autoplay policy: callers must `start()` after a user gesture
  * (attached to canvas click + first WASD key in ModalMeadow.tsx). Before
@@ -60,6 +67,12 @@ const PER_NOTE_GAIN = dbToGain(-6);
 interface ChordVoice {
   /** All running OscillatorNodes for this chord (kept so we can stop them). */
   oscillators: OscillatorNode[];
+  /**
+   * Each oscillator's "intrinsic" detune in cents (e.g. -5 for the triangle
+   * shimmer voice, +7 for the saw). The descent-effect adds the bus-level
+   * detune on top.
+   */
+  intrinsicDetune: number[];
   /** ADSR envelope gain. Released by `releaseVoice`. */
   envGain: GainNode;
   /** Scheduled absolute stop time, so we don't double-stop. */
@@ -77,6 +90,8 @@ interface ChordBus {
   timer: number | null;
   /** Timeout handle for the pre-release of the current chord. */
   preReleaseTimer: number | null;
+  /** Current bus-level detune in cents — applied on top of intrinsic detune. */
+  detuneCents: number;
 }
 
 /**
@@ -84,7 +99,8 @@ interface ChordBus {
  * Consumers (the visual grass shader) read this to animate a brief
  * sway pulse synchronised with the pad attack.
  *
- *   modeIndex   — 0 = Ionian, 1 = Phrygian (matches MODES array order)
+ *   modeIndex   — 0..N-1 (matches MODES array order: Lydian, Ionian, Mixo,
+ *                 Dorian, Aeolian, Phrygian, Locrian in v0.8)
  *   chordIndex  — index into the mode's progression (0..progression.length-1)
  *   romanRoot   — degree of the chord root (1 = tonic, 4 = subdominant,
  *                 5 = dominant, 2 = supertonic, etc.). Used by the
@@ -103,35 +119,32 @@ export type ChordPulseListener = (evt: ChordPulseEvent) => void;
 
 /**
  * Cheap heuristic: read the *lowest* MIDI in the chord and map it back to
- * a scale-degree within the mode's tonic. v0 only uses Ionian (tonic C=60)
- * and Phrygian (tonic E=64) — both diatonic — so this is good enough to
- * drive a "tonic / subdominant / dominant" sway directional cue without
- * the caller needing a music-theory dependency.
+ * a scale-degree within the mode's tonic. Each mode declares its tonic
+ * pitch-class via TONIC_PC; degrees are derived from the semitone offset.
+ *
+ * This is good enough to drive a "tonic / subdominant / dominant" sway
+ * directional cue without the caller needing a music-theory dependency.
  */
-const TONIC_BY_MODE_INDEX: Record<number, number> = {
-  0: 60, // Ionian tonic = C (60 mod 12 = 0)
-  1: 64, // Phrygian tonic = E (64 mod 12 = 4)
+const TONIC_BY_MODE_NAME: Record<string, number> = {
+  Lydian: 60,     // C
+  Ionian: 60,     // C
+  Mixolydian: 60, // C
+  Dorian: 60,     // C
+  Aeolian: 60,    // C
+  Phrygian: 64,   // E
+  Locrian: 59,    // B
 };
 
-const degreeOfChord = (modeIndex: number, chordMidi: number[]): number => {
+const degreeOfChord = (mode: ModeConfig, chordMidi: number[]): number => {
   if (chordMidi.length === 0) return 1;
   const root = Math.min(...chordMidi);
-  const tonic = TONIC_BY_MODE_INDEX[modeIndex] ?? 60;
+  const tonic = TONIC_BY_MODE_NAME[mode.name] ?? 60;
   const semis = ((root - tonic) % 12 + 12) % 12;
-  // Major scale degree → semitone offsets: 1→0, 2→2, 3→4, 4→5, 5→7, 6→9, 7→11.
-  // Phrygian gets bII (offset 1) which we map to "subdominant-like" (degree 4)
-  // because the brief says bII should pulse the +X side like IV.
+  // Diatonic-ish lookup: 0→1, 1→4 (bII like subdominant), 2→2, 3→3 (bIII), 4→3,
+  // 5→4 (IV), 6→4 (#IV / b5 — used for Locrian's tritone root), 7→5 (V),
+  // 8→6 (bVI), 9→6 (VI), 10→7 (bVII), 11→7 (VII).
   const table: Record<number, number> = {
-    0: 1,  // I or i
-    1: 4,  // bII → treat as subdominant per brief
-    2: 2,
-    3: 3,
-    4: 3,  // iii / bIII
-    5: 4,  // IV
-    7: 5,  // V
-    9: 6,
-    10: 7, // bVII / bvii → treat as dominant per brief
-    11: 7, // VII
+    0: 1, 1: 4, 2: 2, 3: 3, 4: 3, 5: 4, 6: 4, 7: 5, 8: 6, 9: 6, 10: 7, 11: 7,
   };
   return table[semis] ?? 1;
 };
@@ -153,9 +166,9 @@ const degreeOfChord = (modeIndex: number, chordMidi: number[]): number => {
  * register where minor-thirds sound modal-elegant, not crunchy. For the
  * Phrygian bII (an F-major chord against an E-minor root) we spread the
  * half-step interval (E↔F) into a 10th by putting the F up an octave so
- * it sounds atmospheric rather than crunchy. Locrian (which v1.0+ will
- * add) keeps the tritone but voices it across 2 octaves for the same
- * reason — implemented generically by the "+12 on the top voice" rule.
+ * it sounds atmospheric rather than crunchy. Locrian's tritone (i°) gets
+ * the same spread treatment — atmospheric across 2 octaves rather than
+ * crunchy in one — implemented generically by the "+12 on the top voice".
  */
 const spreadVoicing = (chord: number[]): number[] => {
   if (chord.length === 0) return chord;
@@ -272,6 +285,7 @@ export class ModalMeadowAudio {
         nextIndex: 0,
         timer: null,
         preReleaseTimer: null,
+        detuneCents: 0,
       };
       this.buses.push(bus);
       this.advanceChord(bus, mode);
@@ -282,6 +296,8 @@ export class ModalMeadowAudio {
    * Set the relative gain of each mode bus. Weights should sum to ~1; we
    * scale by sqrt to keep perceived loudness roughly even across mixes
    * (equal-power crossfade). Smoothing avoids zipper noise.
+   *
+   * Accepts any length ≤ buses.length; extra entries are ignored.
    */
   setWeights(weights: number[]): void {
     if (!this.ctx) return;
@@ -295,6 +311,31 @@ export class ModalMeadowAudio {
   /** Backwards-compat alias for v0.5+ callers. */
   setMix(weights: number[]): void {
     this.setWeights(weights);
+  }
+
+  /**
+   * Smoothly glide each bus's pitch detune (cents). Used by the descent
+   * effect: descending → negative cents (pitch dips down), ascending →
+   * positive cents (pitch nudges up).
+   *
+   * cents[i] is applied on top of each oscillator's intrinsic detune
+   * (e.g. the -5 cent shimmer voice on triangle, +7 cent on saw).
+   * Smoothing constant ~0.08s → reaches the target in ~0.4s, matching
+   * the brief's "0.5s window".
+   */
+  setDetune(cents: number[]): void {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    for (let i = 0; i < this.buses.length && i < cents.length; i++) {
+      const bus = this.buses[i];
+      bus.detuneCents = cents[i];
+      if (bus.current) {
+        for (let v = 0; v < bus.current.oscillators.length; v++) {
+          const target = (bus.current.intrinsicDetune[v] ?? 0) + cents[i];
+          bus.current.oscillators[v].detune.setTargetAtTime(target, now, 0.08);
+        }
+      }
+    }
   }
 
   /** Stop everything and free resources. Idempotent. */
@@ -341,7 +382,7 @@ export class ModalMeadowAudio {
       const tick = () => {
         const chordIndex = i % mode.progression.length;
         i += 1;
-        const romanRoot = degreeOfChord(modeIndex, mode.progression[chordIndex]);
+        const romanRoot = degreeOfChord(mode, mode.progression[chordIndex]);
         for (const l of this.chordPulseListeners) {
           try {
             l({ modeIndex, chordIndex, romanRoot });
@@ -351,7 +392,8 @@ export class ModalMeadowAudio {
         }
         handles.push(window.setTimeout(tick, mode.chordDurationSec * 1000));
       };
-      handles.push(window.setTimeout(tick, 100));
+      // Stagger the modes so all 7 stubs don't pulse on the same frame.
+      handles.push(window.setTimeout(tick, 100 + modeIndex * 350));
     });
     return () => {
       for (const h of handles) window.clearTimeout(h);
@@ -377,7 +419,7 @@ export class ModalMeadowAudio {
     // Emit chord-pulse for the visual sway. modeIndex = position of this bus
     // in `this.buses` (which mirrors `modes` argument order to start()).
     const modeIndex = this.buses.indexOf(bus);
-    const romanRoot = degreeOfChord(modeIndex, chord);
+    const romanRoot = degreeOfChord(mode, chord);
     for (const l of this.chordPulseListeners) {
       try {
         l({ modeIndex, chordIndex, romanRoot });
@@ -416,6 +458,9 @@ export class ModalMeadowAudio {
    * `envGain` is what we automate for attack/decay/release; one envGain
    * covers ALL notes in the chord so we don't lose phase relationships
    * between layers when releasing.
+   *
+   * Each oscillator's `detune` is set to `intrinsicDetune + bus.detuneCents`
+   * so the descent-effect's `setDetune()` can slide all voices simultaneously.
    */
   private playChord(bus: ChordBus, midi: number[]): ChordVoice {
     if (!this.ctx) {
@@ -427,7 +472,7 @@ export class ModalMeadowAudio {
     const now = ctx.currentTime;
 
     // Spread the input chord across ~3 octaves (see spreadVoicing for the
-    // full rationale).
+    // full rationale). Applied uniformly to all 7 mode progressions.
     const voiced = spreadVoicing(midi);
 
     // ADSR envelope shared by all notes in this chord.
@@ -454,6 +499,7 @@ export class ModalMeadowAudio {
     noteGain.connect(noteLP);
 
     const oscillators: OscillatorNode[] = [];
+    const intrinsicDetune: number[] = [];
     for (const m of voiced) {
       const hz = midiToHz(m);
 
@@ -461,41 +507,46 @@ export class ModalMeadowAudio {
       const sine = ctx.createOscillator();
       sine.type = 'sine';
       sine.frequency.value = hz;
+      sine.detune.value = bus.detuneCents;     // intrinsic 0 + bus detune
       const sineMix = ctx.createGain();
       sineMix.gain.value = 1.0;
       sine.connect(sineMix);
       sineMix.connect(noteGain);
       sine.start(now);
       oscillators.push(sine);
+      intrinsicDetune.push(0);
 
       // Triangle one octave up at 30% — adds gentle upper-body warmth.
       const tri = ctx.createOscillator();
       tri.type = 'triangle';
       tri.frequency.value = hz * 2;
-      tri.detune.value = -5; // slight chorus shimmer, 5 cents flat
+      tri.detune.value = -5 + bus.detuneCents; // slight chorus shimmer
       const triMix = ctx.createGain();
       triMix.gain.value = 0.30;
       tri.connect(triMix);
       triMix.connect(noteGain);
       tri.start(now);
       oscillators.push(tri);
+      intrinsicDetune.push(-5);
 
       // Saw two octaves up at 10% — air/harmonics. The LP hard-rolls
       // most of this above 1.5kHz; what's left adds presence without bite.
       const saw = ctx.createOscillator();
       saw.type = 'sawtooth';
       saw.frequency.value = hz * 4;
-      saw.detune.value = 7; // 7 cents sharp → tiny beating against the tri
+      saw.detune.value = 7 + bus.detuneCents;  // 7 cents sharp → tiny beating
       const sawMix = ctx.createGain();
       sawMix.gain.value = 0.10;
       saw.connect(sawMix);
       sawMix.connect(noteGain);
       saw.start(now);
       oscillators.push(saw);
+      intrinsicDetune.push(7);
     }
 
     return {
       oscillators,
+      intrinsicDetune,
       envGain,
       // stopTime is set when releaseVoice runs; initialise to a sentinel.
       stopTime: 0,
