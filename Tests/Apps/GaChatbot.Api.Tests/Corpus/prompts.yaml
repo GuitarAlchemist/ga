@@ -1,0 +1,474 @@
+# GA Chatbot prompt corpus — invariant gate
+#
+# Each entry asserts what a real user-facing answer must contain, must NOT
+# contain, and where it must route to. Run by PromptCorpusTests.cs against
+# the GaChatbot.Api host (the host actually serving demos.guitaralchemist.com).
+#
+# Tags map to the architecture:
+#   routes_to                — expected agentId from /chat response
+#   routing_method           — optional expected routing.method
+#   contains                 — substrings that MUST appear (case-insensitive)
+#   contains_any             — at least one of these must appear
+#   not_contains             — substrings that must NOT appear
+#   min_length               — minimum useful answer size (chars)
+#   max_elapsed_ms           — soft latency budget (warns if exceeded)
+#   expected_grounding       — expected grounding.source ("ga.dsl", "ix-compatible", null)
+#   category                 — bucket name for failure aggregation
+#   skip                     — if true, prompt is documented but not run
+#   skip_reason              — why it's skipped (must be set when skip=true)
+#
+# Trace-shape invariants (process validation, opt-in per prompt; PR #222):
+#   must_not_fallback        — fail if trace visits orchestration.fallback
+#                              or gen_ai.chat.fallback (i.e. orchestrator
+#                              gave up on skills and called LLM directly)
+#   forbidden_agent_ids      — fail if any trace step's agent.id is in
+#                              this list (catches semantic-similarity
+#                              misroutes like "major vs minor" →
+#                              skill.relativekey)
+#   min_routing_confidence   — fail if orchestration.answer step's
+#                              routing.confidence is below this value
+#
+# Universally-banned phrases (any answer with these is a regression):
+#   - "Reproduce the catalog below verbatim"   ← leaked SKILL.md preamble
+#   - "Pure pedagogy"                          ← leaked SKILL.md preamble
+#   - "Use when a learner asks"                ← leaked SKILL.md preamble
+#   - "returned no matches"                    ← unloaded OPTIC-K index
+#   - "not yet implemented"                    ← stub response
+# These are baked into PromptCorpusTests.UniversalBannedMarkers; per-prompt
+# `not_contains` adds prompt-specific bans on top.
+
+prompts:
+
+  # ── modes (domain-backed ModesSkill, refactored 2026-05-13) ─────────────
+  - prompt: "What are the modes of the major scale"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"]
+    not_contains: ["I don't know"]
+    min_length: 200
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What are the modes of melodic minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Melodic Minor", "Lydian Dominant", "Altered"]
+    min_length: 150
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What are the modes of harmonic minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Harmonic Minor", "Phrygian"]
+    min_length: 150
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is Lydian dominant"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Lydian Dominant", "Acoustic"]
+    contains: ["#4", "b7"]
+    min_length: 100
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "Phrygian dominant"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Phrygian Dominant"]
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "Tell me about Hijaz"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Hijaz", "Phrygian Dominant"]
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What are the byzantine modes"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Byzantine", "Double Harmonic"]
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  # ── scales / keys ───────────────────────────────────────────────────────
+  - prompt: "Show me the notes in C major"
+    category: scales-keys
+    contains: ["C", "D", "E", "F", "G", "A", "B"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What is the relative minor of G major"
+    category: scales-keys
+    contains: ["E minor"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What are the diatonic chords in G major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["G", "Am", "Bm", "C", "D", "Em"]
+    contains_any: ["F#°", "F#m7b5", "vii°"]
+    expected_grounding: ga.dsl
+    min_length: 100
+    max_elapsed_ms: 30000
+    retry: 0                          # ga.dsl-backed → deterministic answer
+
+  - prompt: "What are the diatonic chords in D major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["D", "Em", "F#m", "G", "A", "Bm"]
+    expected_grounding: ga.dsl
+    min_length: 100
+    max_elapsed_ms: 30000
+    retry: 0                          # ga.dsl-backed → deterministic answer
+
+  # ── theory ──────────────────────────────────────────────────────────────
+  - prompt: "Explain the circle of fifths"
+    category: theory
+    contains_any: ["fifth", "perfect fifth"]
+    contains: ["key signature"]
+    min_length: 200
+    max_elapsed_ms: 45000
+
+  - prompt: "What is the difference between major and minor"
+    category: theory
+    contains_any: ["third", "interval", "scale", "chord", "quality", "tonality", "sad", "happy", "key", "semitone"]
+    min_length: 150
+    max_elapsed_ms: 45000
+    # Trace-shape invariants (added 2026-05-16, infra from PR #222).
+    # The 2026-05-15 live probe trace showed skill.relativekey grabbing
+    # this prompt via semantic similarity ("major / minor / key" embed
+    # close to its description) → routing.confidence 0.1 →
+    # orchestration.fallback → gen_ai.chat.fallback timeout. Asserting
+    # the trajectory turns that 18-second timeout into a clear named
+    # failure ("trace visited forbidden agent.id 'skill.relativekey'")
+    # at the moment of the misroute.
+    forbidden_agent_ids: ["skill.relativekey"]
+    must_not_fallback: true
+
+  # ── chord operations (ga_dsl_eval-backed) ───────────────────────────────
+  - prompt: "Transpose C E G to D"
+    category: operations
+    contains: ["D", "F#", "A"]
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What are the common tones between Cmaj7 and Am7"
+    category: operations
+    contains: ["C", "E", "G"]
+    expected_grounding: ga.dsl
+    min_length: 50
+    max_elapsed_ms: 20000
+
+  - prompt: "Are 0146 and 0137 z-related"
+    category: operations
+    contains: ["Z"]
+    contains_any: ["z-related", "Z-related", "same interval"]
+    min_length: 50
+    max_elapsed_ms: 20000
+
+  # ── progressions / substitution ─────────────────────────────────────────
+  - prompt: "Identify the key of Am F C G"
+    category: progressions
+    contains_any: ["C major", "A minor"]
+    min_length: 50
+    max_elapsed_ms: 45000
+
+  - prompt: "Suggest substitutions for G7 in a ii-V-I"
+    category: progressions
+    min_length: 100
+    max_elapsed_ms: 60000
+
+  # ── beginner / getting started ──────────────────────────────────────────
+  - prompt: "Show me some easy beginner chords"
+    category: getting-started
+    contains_any: ["E", "A", "D", "G", "C"]
+    min_length: 100
+    max_elapsed_ms: 30000
+
+  # ── atonal (unblocked 2026-05-13 — F# private-type ctor accessibility fix)
+  - prompt: "List atonal modal families"
+    category: atonal
+    routes_to: skill.modes
+    contains: ["200 families"]
+    contains_any: ["Major Scale", "Melodic Minor", "Whole Tone", "named"]
+    min_length: 150
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is the interval class vector of C E G"
+    category: atonal
+    contains_any: ["ICV", "interval class vector", "<"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  # ── adversarial / typo tolerance ────────────────────────────────────────
+  # Real users misspell. The router should still get them home.
+
+  - prompt: "modes of melodi minor"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains_any: ["Melodic Minor", "Lydian Dominant", "Altered"]
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "diatnic chords in G major"
+    category: typo-tolerance
+    contains_any: ["G", "Am", "Bm"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "What is dorian"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains: ["Dorian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "tell me about phrygian"
+    category: typo-tolerance
+    routes_to: skill.modes
+    contains: ["Phrygian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  # ── case sensitivity / pitch-class spelling variants ────────────────────
+
+  - prompt: "notes in c major"
+    category: case-variants
+    contains: ["C", "D", "E", "F", "G", "A", "B"]
+    min_length: 20
+    max_elapsed_ms: 20000
+
+  - prompt: "DIATONIC CHORDS IN G MAJOR"
+    category: case-variants
+    routes_to: skill.diatonicchords
+    contains_any: ["G", "Am", "Bm"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  # ── more domain-backed coverage (Tier 1 candidates) ─────────────────────
+  # These exercise skills slated for the domain-backed refactor sweep
+  # (docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md).
+
+  - prompt: "What is the relative major of A minor"
+    category: scales-keys
+    contains: ["C"]
+    contains_any: ["C major", "relative major"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "What is the parallel minor of C major"
+    category: scales-keys
+    contains: ["C minor"]
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Diatonic chords in F major"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["F", "Gm", "Am", "Bb", "C", "Dm"]
+    expected_grounding: ga.dsl
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "Diatonic chords in A minor"
+    category: scales-keys
+    routes_to: skill.diatonicchords
+    contains: ["Am", "Dm", "Em"]
+    contains_any: ["E", "C", "F", "G"]
+    expected_grounding: ga.dsl
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  # ── more mode variants ──────────────────────────────────────────────────
+
+  - prompt: "What is the altered scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Altered", "Super Locrian"]
+    min_length: 80
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is Hungarian minor"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Hungarian Minor"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is the whole tone scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Whole Tone", "whole tone"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is the diminished scale"
+    category: modes
+    routes_to: skill.modes
+    contains_any: ["Diminished", "Octatonic"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is Locrian"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Locrian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  - prompt: "What is Mixolydian"
+    category: modes
+    routes_to: skill.modes
+    contains: ["Mixolydian"]
+    min_length: 60
+    max_elapsed_ms: 30000
+    retry: 0                          # deterministic-skill — wording variance is a real bug
+
+  # ── atonal deeper coverage ──────────────────────────────────────────────
+
+  - prompt: "What is Forte number 4-Z29"
+    category: atonal
+    contains_any: ["4-Z29", "Z-related", "Z-relation", "Z pair", "Z-pair", "0,1,3,7", "0146"]
+    min_length: 60
+    max_elapsed_ms: 30000
+
+  - prompt: "List symmetric atonal families"
+    category: atonal
+    contains_any: ["symmetric", "whole tone", "diminished", "augmented"]
+    min_length: 80
+    max_elapsed_ms: 30000
+
+  # ── progression / chord operations (more coverage) ──────────────────────
+
+  - prompt: "Transpose C major to E"
+    category: operations
+    contains: ["E"]
+    contains_any: ["G#", "B"]
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Common tones between G7 and Dm7"
+    category: operations
+    contains_any: ["D", "F"]
+    expected_grounding: ga.dsl
+    min_length: 40
+    max_elapsed_ms: 20000
+
+  - prompt: "What key is Cm Ab Eb Bb in"
+    category: progressions
+    contains_any: ["E♭", "Eb", "C minor"]
+    min_length: 50
+    max_elapsed_ms: 45000
+
+  # ── BACKLOG dealbreakers (currently broken — skip with reason) ──────────
+  # These prompts document the pro-grade capability gaps from
+  # BACKLOG.md lines 124-144. Each is skip:true with a pointer to the
+  # workstream that unblocks it. When the underlying tool ships, flip
+  # skip:false and the gate immediately covers the new capability.
+
+  # ── extended / altered chords (unblocked 2026-05-13 — parser extended) ────
+  - prompt: "Show me a Cmaj9 chord"
+    category: extended-chords
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G", "B", "D"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic — pure pitch-class lookup
+
+  - prompt: "What is C7b9"
+    category: extended-chords
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G", "Bb", "Db"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "Give me a Cadd9 in DADGAD"
+    category: alternate-tunings
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #2 — no tuning context in chord lookup. Pending ga_chord_voicings(chord, tuning) tool."
+
+  - prompt: "What's the easiest A minor in drop-D"
+    category: alternate-tunings
+    skip: true
+    skip_reason: "Same as above — needs alternate-tuning chord-voicing tool."
+
+  - prompt: "Transpose this progression to capo 3"
+    category: capo
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #3 — no capo math. Pending ga_capo_render(progression, capoFret) tool."
+
+  - prompt: "What's the smoothest voice leading from Cmaj7 to Fmaj7"
+    category: voice-leading
+    skip: true
+    skip_reason: "BACKLOG dealbreaker #4 — current ga_chord_substitutions ranks by ICV cost, not voice-leading. Pending ga_voice_leading(chordA, chordB) tool."
+
+  # ── chord-from-notes (unblocked 2026-05-14, BACKLOG dealbreaker #5) ─────
+  - prompt: "What chord is C E G"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["C major", "C", "E", "G"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic pitch-class identification
+
+  - prompt: "What chord is F A C E"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["F major 7", "F", "A", "C", "E"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "What chord is C E G Bb D"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["C dominant 9", "C", "E", "G", "Bb", "D"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "What chord is D F A C E"
+    category: chord-from-notes
+    routes_to: skill.chordinfo
+    contains: ["D minor 9", "D", "F", "A", "C", "E"]
+    min_length: 30
+    max_elapsed_ms: 20000
+    retry: 0
+
+  # ── grounding-strict (assert ga.dsl evidence on every closure-backed answer)
+
+  - prompt: "Transpose A minor to C minor"
+    category: operations
+    expected_grounding: ga.dsl
+    min_length: 30
+    max_elapsed_ms: 20000
+
+  - prompt: "Are pitch classes 0,1,4 and 0,1,6 equivalent under inversion"
+    category: operations
+    contains_any: ["yes", "no", "Z", "equivalent", "inversion", "transposition", "different", "same", "related"]
+    min_length: 50
+    max_elapsed_ms: 30000

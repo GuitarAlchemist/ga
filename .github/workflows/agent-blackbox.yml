@@ -1,0 +1,103 @@
+name: Agent Blackbox
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+  checks: write
+
+env:
+  AGENT_BLACKBOX_REF: "v0.1.0-beta.1"
+  DOTNET_VERSION: "10.0.1xx"
+  VERIFY_COMMAND: >-
+    dotnet test AllProjects.slnx
+    --filter "TestCategory!=Integration&TestCategory!=RequiresModel"
+    --logger "console;verbosity=normal"
+
+jobs:
+  risk-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Checkout Agent Blackbox
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/agent-blackbox
+          ref: ${{ env.AGENT_BLACKBOX_REF }}
+          path: .agent-blackbox
+          token: ${{ secrets.AGENT_BLACKBOX_TOKEN }}
+
+      - name: Collect PR evidence
+        shell: bash
+        run: |
+          mkdir -p dist
+          git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > dist/changed-files.txt
+          git diff "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > dist/diff.patch
+          set +e
+          bash -lc "$VERIFY_COMMAND" > dist/test-output.txt 2>&1
+          verify_exit=$?
+          set -e
+          echo "verify_exit=$verify_exit" >> "$GITHUB_ENV"
+          echo "verify command exited with code $verify_exit" >> dist/test-output.txt
+          cat dist/test-output.txt
+
+      - name: Generate risk report
+        shell: bash
+        run: |
+          PYTHONPATH=.agent-blackbox python -m cli.agent_blackbox analyze \
+            --policy agent-blackbox.policy.json \
+            --changed-files dist/changed-files.txt \
+            --diff dist/diff.patch \
+            --test-output dist/test-output.txt \
+            --out-dir dist
+
+      - name: Comment risk report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- agent-blackbox-risk-report -->';
+            const body = marker + '\n' + fs.readFileSync('dist/risk-report.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const existing = comments.data.find(comment =>
+              comment.user.type === 'Bot' && comment.body && comment.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Upload risk artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-blackbox-risk-report
+          path: dist/
+
+      - name: Enforce verdict
+        shell: bash
+        env:
+          AGENT_BLACKBOX_REVIEWED: ${{ contains(github.event.pull_request.labels.*.name, 'agent-blackbox-reviewed') }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          live_reviewed="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/labels" --jq 'any(.[]; .name == "agent-blackbox-reviewed")')"
+          if [ "$AGENT_BLACKBOX_REVIEWED" = "true" ] || [ "$live_reviewed" = "true" ]; then
+            echo "Agent Blackbox human-review override label present; skipping hard enforcement."
+            exit 0
+          fi
+          PYTHONPATH=.agent-blackbox python -m cli.agent_blackbox enforce --report dist/risk-report.json

@@ -220,9 +220,21 @@ public sealed class OrchestratedChatApplicationService(
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
+                // Honest user-facing message: the LLM backend (Ollama on the
+                // demos host) is slow or unavailable. The previous wording
+                // told users to "try a narrower prompt or use the Stop
+                // control" which implies user error — but this branch only
+                // fires when our reasoning service exceeded its timeout
+                // budget, never because of the user's input. Surface that
+                // clearly and point at the deterministic skills (those don't
+                // depend on the LLM and answer instantly).
+                //
+                // Durable fix tracked in task #193 (cascade Mistral as a
+                // secondary handler when Ollama times out).
                 var answer =
-                    "The request exceeded the chatbot fallback timeout before a grounded answer was ready. " +
-                    "Try a narrower prompt or use the Stop control while we investigate this slow path.";
+                    $"Our reasoning service is currently slow or unavailable — the LLM call exceeded the {_fallbackTimeoutSeconds}s timeout. " +
+                    "This is on our side, not your prompt. Try again in a moment, or use a deterministic music-theory query " +
+                    "(e.g. \"modes of C major\", \"relative minor of G major\", \"transpose C E G to D\") which doesn't depend on the LLM.";
 
                 fallbackStep.Complete(
                     "error",

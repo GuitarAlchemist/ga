@@ -21,7 +21,14 @@ module ModesConfig =
         { Name: string
           Notes: string
           Description: string
-          CharacteristicIntervals: string[] }
+          CharacteristicIntervals: string[]
+          // Cross-tradition / regional alt names — YAML key "AlternateNames".
+          // Modes.yaml already populates this for many modes (e.g. Phrygian
+          // Dominant -> ["Spanish Phrygian", "Jewish Scale"]). Previously
+          // only the legacy ModeInfo type surfaced AlternateNames; this
+          // exposes it through the GetModalFamilies path so consumers like
+          // ModesSkill can answer regional-name queries.
+          AlternateNames: string[] }
 
     [<CLIMutable>]
     type ModalFamily =
@@ -237,6 +244,9 @@ module ModesConfig =
         Name: string;
         Notes: string;
         CharacteristicIntervals: IReadOnlyList<string>
+        // Cross-tradition / regional alt names — see ModeConfigData.AlternateNames.
+        // Empty for modes that don't declare alternate names in YAML.
+        AlternateNames: IReadOnlyList<string>
     }
     type ModalFamilyInfo =
         { Name: string
@@ -254,7 +264,8 @@ module ModesConfig =
                     |> Seq.map (fun m ->
                         { Name = m.Name;
                           Notes = m.Notes;
-                          CharacteristicIntervals = (if isNull m.CharacteristicIntervals then [||] else m.CharacteristicIntervals) :> IReadOnlyList<string> })
+                          CharacteristicIntervals = (if isNull m.CharacteristicIntervals then [||] else m.CharacteristicIntervals) :> IReadOnlyList<string>
+                          AlternateNames = (if isNull m.AlternateNames then [||] else m.AlternateNames) :> IReadOnlyList<string> })
                     |> Seq.toList
 
                 if not (List.isEmpty modes) then

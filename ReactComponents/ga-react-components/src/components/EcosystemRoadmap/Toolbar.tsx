@@ -10,6 +10,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import AdjustIcon from '@mui/icons-material/Adjust';
 import PublicIcon from '@mui/icons-material/Public';
@@ -23,7 +24,17 @@ const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 4.0;
 const ZOOM_STEP = 0.25;
 
-export const Toolbar: React.FC = () => {
+interface ToolbarProps {
+  /** Show the burger menu (mobile drawer trigger). */
+  showMenuButton?: boolean;
+  /** Called when the burger menu is tapped. */
+  onMenuClick?: () => void;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({
+  showMenuButton = false,
+  onMenuClick,
+}) => {
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
   const [zoomLevel, setZoomLevel] = useAtom(zoomLevelAtom);
   const rendererType = useAtomValue(rendererTypeAtom);
@@ -56,7 +67,9 @@ export const Toolbar: React.FC = () => {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 2,
+        flexWrap: 'wrap',
+        rowGap: 0.5,
+        columnGap: { xs: 1, sm: 2 },
         px: 1,
         py: 0.5,
         backgroundColor: '#161b22',
@@ -65,6 +78,21 @@ export const Toolbar: React.FC = () => {
         flexShrink: 0,
       }}
     >
+      {showMenuButton && (
+        <IconButton
+          aria-label="open navigation"
+          onClick={onMenuClick}
+          size="small"
+          sx={{
+            color: '#c9d1d9',
+            mr: 0.5,
+            '&:hover': { color: '#fff', backgroundColor: '#21262d' },
+          }}
+        >
+          <MenuIcon fontSize="small" />
+        </IconButton>
+      )}
+
       {/* View Mode Toggle */}
       <ToggleButtonGroup
         value={viewMode}

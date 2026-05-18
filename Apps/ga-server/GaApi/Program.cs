@@ -26,8 +26,19 @@ builder.AddServiceDefaults();
 if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets(userSecretsId: "0c749f53-3fda-4099-a8d4-ee77ffdd1913", reloadOnChange: false);
 
-// Add Redis distributed cache (Aspire integration)
-builder.AddRedisDistributedCache("redis");
+// Add Redis distributed cache (Aspire integration) — only when a
+// connection string is actually configured. AddRedisDistributedCache
+// auto-registers a health check on the Redis client; in dev environments
+// without Redis the check fails on every probe and pins /health to
+// 503 "Unhealthy" forever. Guarding registration on a present connection
+// string lets the rest of the API report Healthy when Redis is genuinely
+// absent rather than configured-but-broken.
+var redisConn = builder.Configuration.GetConnectionString("redis")
+    ?? builder.Configuration["Aspire:StackExchange:Redis:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(redisConn))
+{
+    builder.AddRedisDistributedCache("redis");
+}
 
 // Add services to the container.
 
@@ -114,6 +125,7 @@ builder.Services
     .AddQueryType<Query>()
     .AddTypeExtension<ChordNamingQuery>()
     .AddTypeExtension<MusicTheoryQuery>()
+    .AddTypeExtension<MusicHierarchyQuery>()
     .AddTypeExtension<DomainSchemaQuery>()
     .AddTypeExtension<MongoCollectionsQuery>()
     .AddProjections()

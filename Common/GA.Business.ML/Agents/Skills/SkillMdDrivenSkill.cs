@@ -53,6 +53,12 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 
     public bool CanHandle(string message)
     {
+        // Reject null/empty/whitespace before any string work — mirrors the
+        // guard in peer skills (ImprovisationSkill, ChordVoicingsSkill, etc).
+        // Without this, `message.ToLowerInvariant()` on null throws NRE and
+        // tanks the entire skill enumeration loop. Caught by multi-LLM
+        // review 2026-05-17.
+        if (string.IsNullOrWhiteSpace(message)) return false;
         if (_skillMd.Triggers.Count == 0) return false;
         var lower = message.ToLowerInvariant();
         return _skillMd.Triggers.Any(t => lower.Contains(t.ToLowerInvariant()));
@@ -60,7 +66,7 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken ct = default)
     {
-        var tools = await _toolsProvider.GetToolsAsync(ct);
+        var tools = await _toolsProvider.GetToolsAsync(ct).ConfigureAwait(false);
         var options = new ChatOptions { Tools = [.. tools] };
 
         ChatMessage[] messages =
@@ -78,7 +84,7 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
                 "SkillMdDrivenSkill [{Skill}] → tools={ToolCount}",
                 _skillMd.Name, tools.Count);
 
-            var response = await _chatClient.Value.GetResponseAsync(messages, options, ct);
+            var response = await _chatClient.Value.GetResponseAsync(messages, options, ct).ConfigureAwait(false);
             var text = response.Text ?? string.Empty;
 
             // Walk response.Messages to collect every tool call the LLM

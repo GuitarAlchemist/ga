@@ -359,6 +359,15 @@ export default defineConfig({
                 secure: false,
                 ws: true,
             },
+            // GraphQL endpoint — proxied so musicHierarchyApi.ts and any
+            // other GraphQL consumer can use the relative `/graphql` URL
+            // and avoid the stale hardcoded `https://localhost:7001` default
+            // that broke the Music Hierarchy Navigator (2026-05-16).
+            '/graphql': {
+                target: 'http://localhost:5232',
+                changeOrigin: true,
+                secure: false,
+            },
             // Ollama proxy — avoids CORS when checking local Ollama.
             // SECURITY: the dev server binds to all interfaces (host:true) so
             // tablet/phone can reach Prime Radiant on the LAN. Without an

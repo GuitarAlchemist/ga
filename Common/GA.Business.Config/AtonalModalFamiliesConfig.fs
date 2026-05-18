@@ -41,9 +41,16 @@ module AtonalModalFamiliesConfig =
           Modes: AtonalMode list }
 
     // ── Internal YAML shape (CLIMutable for YamlDotNet) ──────────────────────
+    // NOTE: these MUST NOT be `private`. F# `private` types compile to private
+    // nested classes that YamlDotNet's Activator.CreateInstance cannot reach
+    // even when [<CLIMutable>] emits a public parameterless ctor at the IL
+    // level — surface symptom is MissingMethodException at deserialize time.
+    // Module-scoped (no access modifier) is enough: still hidden from external
+    // callers because the surrounding module API only exposes the public
+    // AtonalModalFamily/AtonalMode records below.
 
     [<CLIMutable>]
-    type private YAtonalMode =
+    type YAtonalMode =
         { Position: int
           PitchClasses: string
           PitchClassSetId: int
@@ -51,7 +58,7 @@ module AtonalModalFamiliesConfig =
           Aliases: ResizeArray<string> }
 
     [<CLIMutable>]
-    type private YAtonalFamily =
+    type YAtonalFamily =
         { IntervalClassVector: string
           FamilyName: string
           ForteNumbers: ResizeArray<string>
@@ -63,7 +70,7 @@ module AtonalModalFamiliesConfig =
           Modes: ResizeArray<YAtonalMode> }
 
     [<CLIMutable>]
-    type private YFile =
+    type YFile =
         { Families: ResizeArray<YAtonalFamily> }
 
     // ── Config discovery ─────────────────────────────────────────────────────
@@ -143,9 +150,18 @@ module AtonalModalFamiliesConfig =
                            PrimeModeId = f.PrimeModeId
                            Modes = modes } : AtonalModalFamily))
                     |> List.ofSeq
-            with _ ->
+            with ex ->
+                eprintfn "AtonalModalFamiliesConfig load failed at %s: %s — %s" path (ex.GetType().Name) ex.Message
+                let mutable inner = ex.InnerException
+                let mutable depth = 1
+                while not (isNull inner) && depth < 5 do
+                    eprintfn "  inner [%d]: %s — %s" depth (inner.GetType().Name) inner.Message
+                    inner <- inner.InnerException
+                    depth <- depth + 1
                 []
-        | None -> []
+        | None ->
+            eprintfn "AtonalModalFamiliesConfig: AtonalModalFamilies.yaml not found in any search path"
+            []
 
     let private catalog = lazy (loadCatalog ())
 

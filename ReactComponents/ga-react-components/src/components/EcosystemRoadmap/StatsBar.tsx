@@ -11,10 +11,14 @@ export const StatsBar: React.FC = () => {
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 1,
+        gap: 0.75,
         justifyContent: 'center',
         alignItems: 'center',
-        py: 0.75,
+        px: 1,
+        py: { xs: 0.5, sm: 0.75 },
+        bgcolor: '#0d1117',
+        borderTop: '1px solid #30363d',
+        flexShrink: 0,
       }}
     >
       {STATS.map((stat) => (

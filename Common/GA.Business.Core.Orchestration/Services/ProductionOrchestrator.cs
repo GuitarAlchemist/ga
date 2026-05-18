@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Intents;
@@ -33,9 +34,11 @@ public class ProductionOrchestrator(
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
+    RoutingContextEnricher routingContextEnricher,
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
     TabTokenizer tabTokenizer,
+    IAgenticTraceCapture traceCapture,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
@@ -64,6 +67,60 @@ public class ProductionOrchestrator(
         if (string.IsNullOrWhiteSpace(message)) return false;
         var blocks = tabTokenizer.Tokenize(message);
         return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
+    }
+
+    // Routing-context enrichment lives in RoutingContextEnricher (2026-05-14
+    // extraction) so it can be unit-tested without spinning up the full
+    // orchestrator. Behaviour is unchanged from the inlined form.
+
+    /// <summary>
+    /// Emit a routing.candidates trace step with the top-3 intents the
+    /// router considered, so the agentic trace shows the routing decision
+    /// instead of hiding it inside the "orchestration.answer" black-box
+    /// step. Surfaces base cosine score, boost (if any), and final score
+    /// for each candidate — enough to debug routing misses without
+    /// re-running the request.
+    /// </summary>
+    /// <remarks>
+    /// Added 2026-05-13 in response to user critique on demos.guitaralchemist.com/chatbot/:
+    /// "Agentic trace is not detailed at all, we seem to see only the end
+    /// result not each intermediate steps". When intentMatch is null (no
+    /// intent crossed threshold) we still emit the step so the trace shows
+    /// WHY we fell through to the LLM agent path.
+    /// </remarks>
+    private void EmitRoutingTrace(IntentMatch? match)
+    {
+        if (match is { Ranking: { Count: > 0 } ranking })
+        {
+            var attrs = new Dictionary<string, object?>
+            {
+                ["routing.outcome"]      = "matched",
+                ["routing.selected_id"]  = match.Value.Intent.Id,
+                ["routing.confidence"]   = match.Value.Confidence,
+                ["routing.matched_with"] = match.Value.MatchedExample,
+                ["routing.top_count"]    = ranking.Count,
+            };
+            for (var i = 0; i < ranking.Count; i++)
+            {
+                var c = ranking[i];
+                attrs[$"routing.top{i + 1}.id"]       = c.IntentId;
+                attrs[$"routing.top{i + 1}.base"]     = c.BaseScore;
+                attrs[$"routing.top{i + 1}.boost"]    = c.Boost;
+                attrs[$"routing.top{i + 1}.final"]    = c.FinalScore;
+                attrs[$"routing.top{i + 1}.matched"]  = c.MatchedSource;
+            }
+            traceCapture.AddStep("routing.candidates", "completed", 0, attrs);
+            return;
+        }
+
+        // No match — fall-through to LLM path. Still emit the step so the
+        // trace shows we DID try semantic routing and chose to give up.
+        traceCapture.AddStep("routing.candidates", "completed", 0,
+            new Dictionary<string, object?>
+            {
+                ["routing.outcome"] = "below_threshold_or_unavailable",
+                ["routing.note"]    = "no intent crossed MinConfidence; falling through to LLM agent path",
+            });
     }
     private static readonly string[] ExplicitVoicingKeywords =
     [
@@ -130,13 +187,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // Same enrichment as the non-streaming AnswerAsync path (see task #168).
+        // The streaming path is the one the React demo uses, so without this
+        // line the headline "Show me a practical example" follow-up fix would
+        // not actually fire on the live surface — caught by code-review 2026-05-14.
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch (replaces the legacy algebra check
         //    and the per-skill CanHandle foreach). One embedding similarity pass
         //    over IIntent registrations covers algebra, deterministic skills,
         //    and tab-handling intents. See
         //    docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
         //    §"Routing classifiers".
-        var semanticResp = await TryDispatchViaIntentAsync(message, ct);
+        var semanticResp = await TryDispatchViaIntentAsync(routingMessage, message, ct);
         if (semanticResp is not null)
         {
             foreach (var word in semanticResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -289,12 +353,36 @@ public class ProductionOrchestrator(
                 activity, sw, ct);
         }
 
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // A short prompt like "Show me a practical example on guitar" right
+        // after a substantive turn ("How do I make this progression sound
+        // darker?") used to mis-embed as a standalone request and route to
+        // skill.practiceroutine (because "practice" / "practical" share a
+        // centroid). For follow-up-shaped messages, prepend the most recent
+        // prior user turn to the routing query so the embedding represents
+        // the conversation thread, not just the snippet. The downstream
+        // `message` variable stays clean (the LLM gets the real message
+        // plus full history separately).
+        //
+        // The history lookup checks BOTH (a) the in-memory historyStore
+        // (session-scoped, populated by the just-added user turn plus any
+        // earlier turns from this session) AND (b) req.History (the
+        // controller may forward client-supplied prior turns even when
+        // sessionId is null — the React frontend posts conversationHistory
+        // per request without a stable sessionId). Without (b), the very
+        // first follow-up after a page reload would miss enrichment.
+        //
+        // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
+        // task #168.
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
         // algebra, deterministic skills, and tab-handling intents. Replaces
         // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
         // CanHandle foreach. See migration recommendation §"Routing classifiers".
-        var intentMatch = await intentRouter.RouteAsync(message, services, ct);
+        var intentMatch = await intentRouter.RouteAsync(routingMessage, services, ct);
+        EmitRoutingTrace(intentMatch);
         if (intentMatch is { } pick)
         {
             // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
@@ -596,12 +684,21 @@ public class ProductionOrchestrator(
     /// null when no intent scored above threshold (caller falls through to
     /// the LLM agent path).
     /// </summary>
-    private async Task<ChatResponse?> TryDispatchViaIntentAsync(string message, CancellationToken ct)
+    /// <param name="routingMessage">Message used ONLY for the embedding-router
+    /// score. May be enriched with prior conversation context.</param>
+    /// <param name="executeMessage">Original user message — the intent's
+    /// <c>ExecuteAsync</c> receives this so its internal regex parsers see
+    /// the raw text without the enrichment prefix.</param>
+    private async Task<ChatResponse?> TryDispatchViaIntentAsync(
+        string routingMessage,
+        string executeMessage,
+        CancellationToken ct)
     {
-        var match = await intentRouter.RouteAsync(message, services, ct);
+        var match = await intentRouter.RouteAsync(routingMessage, services, ct);
+        EmitRoutingTrace(match);
         if (match is not { } pick) return null;
 
-        var result = await pick.Intent.ExecuteAsync(message, ct);
+        var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
         return new ChatResponse(
             NaturalLanguageAnswer: result.Answer,
             Candidates: [],

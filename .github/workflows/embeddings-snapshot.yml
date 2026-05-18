@@ -1,0 +1,117 @@
+name: Embeddings Snapshot
+
+# Daily snapshot producer for state/quality/embeddings/. Closes the second
+# half of #192 (cadence) — paired with state/quality/embeddings/baseline.json
+# (PR #248). The trend gap surfaced 2026-05-16 when ix-quality-trend showed
+# zero recent embeddings signal because the most recent snapshot was
+# 2026-04-17 and the existing 2026-04-17-postrefactor.json had a non-strict
+# filename that the loader silently skipped.
+#
+# Producer: ix sibling crate ix-embedding-diagnostics
+#   Binary:  baseline-diagnostics
+#   CLI:     --index <optick.index> --out-dir <dir>
+#   Writes:  embedding-diagnostics-YYYY-MM-DD.json + embedding-clusters-k50.json
+#
+# The producer name has a prefix; ix-quality-trend's snapshot loader at
+# ix/crates/ix-quality-trend/src/snapshot.rs:342 requires the stem to parse
+# as %Y-%m-%d (no prefix), so this workflow RENAMES the report to the
+# canonical state/quality/embeddings/${DATE}.json on commit.
+#
+# Schedule rationale: 07:00 UTC (one hour after chatbot-qa-snapshot at 06:00)
+# so a multi-domain trend run at ~08:00 sees both producers' fresh data.
+#
+# Failure semantics:
+#   - Rust build failure → workflow fails (we want loud signal).
+#   - Diagnostics run failure → workflow fails (no snapshot to commit).
+#   - Snapshot identical to existing day → quiet success (no empty commit).
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # 07:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: embeddings-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout ga
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Checkout ix sibling
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/ix
+          path: ix
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ix -> target
+
+      - name: Build baseline-diagnostics
+        working-directory: ix
+        run: cargo build --release -p ix-embedding-diagnostics --bin baseline-diagnostics
+
+      - name: Run diagnostics
+        run: |
+          mkdir -p tmp-baseline
+          ix/target/release/baseline-diagnostics \
+            --index state/voicings/optick.index \
+            --out-dir tmp-baseline \
+            --cluster-sample 5000
+
+      - name: Normalize filename and stage canonical snapshot
+        id: stage
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          SRC="tmp-baseline/embedding-diagnostics-${DATE}.json"
+          DST="state/quality/embeddings/${DATE}.json"
+          if [ ! -f "$SRC" ]; then
+            echo "Diagnostics did not produce $SRC — check the run logs." >&2
+            ls -la tmp-baseline || true
+            exit 1
+          fi
+          mkdir -p state/quality/embeddings
+          mv "$SRC" "$DST"
+          echo "snapshot_path=$DST" >> "$GITHUB_OUTPUT"
+          echo "snapshot_date=$DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Commit snapshot if new
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          SNAP: ${{ steps.stage.outputs.snapshot_path }}
+          DATE: ${{ steps.stage.outputs.snapshot_date }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$SNAP"
+          if git diff --cached --quiet; then
+            echo "Snapshot identical to existing — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): embeddings snapshot ${DATE} [skip ci]"
+          git push
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embeddings-snapshot-${{ github.run_id }}
+          path: |
+            state/quality/embeddings/
+            tmp-baseline/
+          retention-days: 90

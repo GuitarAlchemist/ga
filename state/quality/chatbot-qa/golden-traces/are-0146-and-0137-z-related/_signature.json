@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "are-0146-and-0137-z-related",
+  "prompt": "Are 0146 and 0137 z-related",
+  "category": "operations",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "algebra"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "algebra"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "algebra"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}

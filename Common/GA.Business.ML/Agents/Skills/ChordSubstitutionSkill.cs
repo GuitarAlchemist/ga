@@ -219,8 +219,8 @@ public sealed class ChordSubstitutionSkill(
 
         foreach (var rel in rels)
         {
-            var stars = rel.Type.Contains("Tritone") ? "★★★" :
-                        rel.Type.StartsWith("ICV")   ? "★"   : "★★";
+            var stars = rel.Type.Contains("Tritone", StringComparison.Ordinal) ? "★★★" :
+                        rel.Type.StartsWith("ICV", StringComparison.Ordinal)   ? "★"   : "★★";
             sb.AppendLine($"{stars} **{rel.Type}**");
             sb.AppendLine($"  {rel.Explanation}");
             sb.AppendLine();
