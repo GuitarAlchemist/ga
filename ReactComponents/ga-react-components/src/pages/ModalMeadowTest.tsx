@@ -1,9 +1,14 @@
 /**
- * Modal Meadow Test Page (v0).
+ * Modal Meadow Test Page (v0.6).
  *
  * Mounts the ModalMeadow component full-screen with two HUDs:
  *   - bottom-left: current mode name + descriptor
- *   - centre-top: pointer-lock hint, only visible when not locked
+ *   - centre-top: pointer-lock hint, swaps based on auto-walk vs takeover
+ *
+ * v0.6: the canvas now auto-walks by default; the centre-top hint reads
+ * "Auto-walking · Click to take control" until the user clicks (pointer
+ * lock) or presses a movement key, then it switches to the regular
+ * "Click to enter · WASD to walk · ESC to release" prompt.
  *
  * The mode state lives here so the HUD can be plain React; the canvas
  * notifies us via the onModeChange callback.
@@ -21,11 +26,15 @@ import {
 const ModalMeadowTest: React.FC = () => {
   const [mode, setMode] = useState<ModeConfig>(IONIAN);
   const [locked, setLocked] = useState<boolean>(false);
+  // v0.6: track whether the user has taken control. Auto-walk is on until
+  // this flips true (pointer-lock click or movement-key press).
+  const [tookOver, setTookOver] = useState<boolean>(false);
 
   // Callbacks are useCallback'd because ModalMeadow's effect depends on them;
   // a fresh function each render would re-tear-down the whole scene.
   const handleModeChange = useCallback((m: ModeConfig) => setMode(m), []);
   const handleLockChange = useCallback((l: boolean) => setLocked(l), []);
+  const handleUserTakeover = useCallback(() => setTookOver(true), []);
 
   return (
     <DemoErrorBoundary demoName="Modal Meadow">
@@ -34,9 +43,14 @@ const ModalMeadowTest: React.FC = () => {
         disableGutters
         sx={{ height: '100vh', overflow: 'hidden', position: 'relative' }}
       >
-        <ModalMeadow onModeChange={handleModeChange} onLockChange={handleLockChange} />
+        <ModalMeadow
+          onModeChange={handleModeChange}
+          onLockChange={handleLockChange}
+          onUserTakeover={handleUserTakeover}
+        />
 
-        {/* Centre-top pointer-lock hint — only when not locked. */}
+        {/* Centre-top pointer-lock hint — only when not locked. v0.6 swaps
+            the text based on whether the camera is auto-walking. */}
         {!locked && (
           <Paper
             elevation={3}
@@ -55,7 +69,9 @@ const ModalMeadowTest: React.FC = () => {
               letterSpacing: 1,
             }}
           >
-            Click to enter · WASD to walk · ESC to release
+            {tookOver
+              ? 'Click to enter · WASD to walk · ESC to release'
+              : 'Auto-walking · Click to take control'}
           </Paper>
         )}
 
@@ -109,7 +125,7 @@ const ModalMeadowTest: React.FC = () => {
             letterSpacing: 1,
           }}
         >
-          MODAL MEADOW · v0.5 · Ionian ↔ Phrygian · Hills + Suns + Motes
+          MODAL MEADOW · v0.6 · Ionian ↔ Phrygian · Visible Hills + Fog + Auto-walk
         </Box>
       </Container>
     </DemoErrorBoundary>

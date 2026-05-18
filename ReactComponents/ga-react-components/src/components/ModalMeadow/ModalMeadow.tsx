@@ -1,7 +1,16 @@
 /**
- * Modal Meadow — interactive mode-region 3D demo (v0.5).
+ * Modal Meadow — interactive mode-region 3D demo (v0.6).
  *
- * v0.5 adds four bounded enhancements on top of the flat-plane v0:
+ * v0.6 adds three changes on top of v0.5:
+ *   1. Terrain amplitude 3m → 8m so hills are actually visible from spawn
+ *      (see terrain.ts — user feedback "I don't see Hills?" on v0.5)
+ *   2. Atmospheric fog tied to the per-region sky color so distant grass
+ *      dissolves into the sky and the hill silhouette pops at the horizon
+ *   3. Auto-walk default: camera moves on its own (sin-wave oscillation
+ *      across the boundary band) until the user clicks for pointer-lock
+ *      or hits a movement key — then auto-walk releases permanently
+ *
+ * v0.5 added on top of the flat-plane v0:
  *   1. Rolling-hills heightmap (CPU + GPU share the noise — see terrain.ts)
  *   2. Audio-reactive grass sway pulse on every chord change
  *   3. Per-region sun (Ionian high-noon, Phrygian sunset, interpolated)
@@ -15,6 +24,13 @@
  * blade's world x position. A `uModeMix` is computed in the shader from
  * world x with a smoothstep, so the visual transition is exactly aligned
  * with the audio crossfade.
+ *
+ * Fog in v0.6 is implemented via custom shader uniforms (uFogNear,
+ * uFogFar, uFogColor) and an inline `fogFactor` computed in each
+ * fragment shader from gl_FragCoord depth. The built-in THREE.Fog
+ * chunks would require either MeshStandardMaterial (which loses the
+ * per-pixel mode mixing) or onBeforeCompile patching of every
+ * ShaderMaterial — inline is simpler and self-contained.
  *
  * v0 deliberately re-implements the grass rather than parameterising the
  * existing FluffyGrass component — the task brief mandates zero changes
@@ -78,9 +94,20 @@ interface ModalMeadowProps {
   onModeChange?: (mode: ModeConfig) => void;
   /** Callback fired when pointer-lock state changes (true = locked). */
   onLockChange?: (locked: boolean) => void;
+  /**
+   * Callback fired when the user takes control (pointer-lock or a movement
+   * key) — auto-walk releases at this point and never resumes. Used by the
+   * HUD to switch the hint from "Auto-walking · Click to take control" to
+   * the regular WASD prompt.
+   */
+  onUserTakeover?: () => void;
 }
 
-export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockChange }) => {
+export const ModalMeadow: React.FC<ModalMeadowProps> = ({
+  onModeChange,
+  onLockChange,
+  onUserTakeover,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,7 +121,11 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(70, W0 / H0, 0.1, 600);
-    // Spawn in the Ionian half, looking east toward Phrygian.
+    // Spawn in the Ionian half, looking east toward Phrygian. With v0.6
+    // auto-walk on, the tick() loop will immediately start oscillating X
+    // around 0 — but we keep the spawn at IONIAN_CENTER_X so the FIRST
+    // visible frame still shows the Ionian region, and the swing eases the
+    // camera back toward the boundary over the first ~quarter cycle.
     camera.position.set(IONIAN_CENTER_X, EYE_HEIGHT, 0);
     camera.rotation.order = 'YXZ'; // yaw then pitch — avoids roll-from-pitch
 
@@ -144,10 +175,44 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
     const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 24, 16), skyMaterial);
     scene.add(sky);
 
-    // Fog colour tracks the active sky horizon — keeps far blades from
-    // popping at the field edge.
-    const fog = new THREE.FogExp2(0xb6c8b0, 0.006);
-    scene.fog = fog;
+    // ─── Fog (v0.6) ────────────────────────────────────────────────────────
+    // Atmospheric fog that tracks the per-region-blended sky color. Hills in
+    // the distance dissolve into the sky → silhouettes pop against the
+    // lighter horizon band.
+    //
+    // We don't use scene.fog because the ground/grass/mote materials are
+    // ShaderMaterial — wiring built-in THREE fog chunks into custom
+    // shaders requires onBeforeCompile patching for each one. Instead, we
+    // share `uFogNear`, `uFogFar`, `uFogColor` uniforms across all three
+    // and inline a `fogFactor = smoothstep(near, far, viewZ)` computation
+    // in each fragment shader.
+    //
+    // near = 60m: grass within 60m fully visible
+    // far  = 220m: grass past 220m fully fogged to sky color
+    const FOG_NEAR = 60.0;
+    const FOG_FAR = 220.0;
+    // Live fog color — mutated every frame from the smoothstep-blended sky
+    // horizon (matches what the sky shader actually paints at the horizon
+    // ring under the player). Seeded with the Ionian horizon for the first
+    // frame so nothing flashes on mount.
+    const fogColor = IONIAN.skyColor.clone();
+    const fogUniforms = {
+      uFogNear: { value: FOG_NEAR },
+      uFogFar: { value: FOG_FAR },
+      uFogColor: { value: fogColor },
+    };
+
+    // GLSL snippet that takes a view-space position and applies fog. Returns
+    // mix(col, uFogColor, fogFactor). Inlined into each fragment shader
+    // below so we can share one uniform set.
+    const FOG_GLSL = /* glsl */ `
+      uniform float uFogNear;
+      uniform float uFogFar;
+      uniform vec3 uFogColor;
+      float computeFogFactor(float viewZ) {
+        return smoothstep(uFogNear, uFogFar, viewZ);
+      }
+    `;
 
     // ─── Lights ────────────────────────────────────────────────────────────
     // Single dynamic sun whose position + colour are interpolated by the
@@ -186,12 +251,18 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       uBlendHalf: { value: BLEND_HALF_METERS },
       uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.35) },
       uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
+      // Shared fog (v0.6). All three uniforms share Vector3/Color refs with
+      // the grass + mote materials via `value:` aliasing below.
+      uFogNear: fogUniforms.uFogNear,
+      uFogFar: fogUniforms.uFogFar,
+      uFogColor: fogUniforms.uFogColor,
     };
     const groundMaterial = new THREE.ShaderMaterial({
       uniforms: groundUniforms,
       vertexShader: /* glsl */ `
         varying vec3 vWorld;
         varying vec3 vNormal;
+        varying float vViewZ;
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
         void main() {
@@ -212,7 +283,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           vNormal = nWorld;
           vec4 wp = modelMatrix * vec4(p, 1.0);
           vWorld = wp.xyz;
-          gl_Position = projectionMatrix * viewMatrix * wp;
+          vec4 vp = viewMatrix * wp;
+          vViewZ = -vp.z;
+          gl_Position = projectionMatrix * vp;
         }
       `,
       fragmentShader: /* glsl */ `
@@ -223,7 +296,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         uniform vec3 uSunColor;
         varying vec3 vWorld;
         varying vec3 vNormal;
+        varying float vViewZ;
         ${NOISE_GLSL}
+        ${FOG_GLSL}
         void main() {
           float t = smoothstep(-uBlendHalf, uBlendHalf, vWorld.x);
           vec3 base = mix(uIonianBase, uPhrygianBase, t);
@@ -232,6 +307,8 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           // Lambert from the per-region sun.
           float ndotl = max(0.15, dot(normalize(vNormal), normalize(uSunDir)));
           vec3 col = base * (0.6 + patchy * 0.35) * (0.55 + ndotl * uSunColor);
+          float fogF = computeFogFactor(vViewZ);
+          col = mix(col, uFogColor, fogF);
           gl_FragColor = vec4(col, 1.0);
         }
       `,
@@ -278,6 +355,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       uChordPulseDir: { value: new THREE.Vector2(0, 0) },            // (ion, phr) X bias
       uChordPulseOrigin: { value: new THREE.Vector4(0, 0, 0, 0) },   // (ionX,ionZ, phrX,phrZ)
       uChordPulseAge: { value: new THREE.Vector2(99, 99) },          // seconds since last pulse
+      // Shared fog (v0.6) — same Color/value refs as the ground material.
+      uFogNear: fogUniforms.uFogNear,
+      uFogFar: fogUniforms.uFogFar,
+      uFogColor: fogUniforms.uFogColor,
     };
 
     const grassMaterial = new THREE.ShaderMaterial({
@@ -306,6 +387,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         varying float vRandom;
         varying float vModeMix;   // 0 = Ionian, 1 = Phrygian
         varying float vBladeBend; // for fragment lighting
+        varying float vViewZ;     // distance from camera, for fog (v0.6)
 
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
@@ -383,7 +465,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           rotated.y += groundY;
 
           vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
-          gl_Position = projectionMatrix * viewMatrix * worldPos;
+          vec4 viewPos = viewMatrix * worldPos;
+          vViewZ = -viewPos.z;
+          gl_Position = projectionMatrix * viewPos;
         }
       `,
       fragmentShader: /* glsl */ `
@@ -396,6 +480,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         varying float vRandom;
         varying float vModeMix;
         varying float vBladeBend;
+        varying float vViewZ;
+
+        ${FOG_GLSL}
 
         void main() {
           // Sharp taper toward the tip so blades read as blades, not rectangles.
@@ -420,6 +507,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
 
           // Per-blade variation so the field doesn't read as a single colour.
           col *= (0.85 + vRandom * 0.30);
+
+          // Atmospheric fog (v0.6) — distant blades dissolve into the sky.
+          float fogF = computeFogFactor(vViewZ);
+          col = mix(col, uFogColor, fogF);
 
           gl_FragColor = vec4(col, 1.0);
         }
@@ -507,6 +598,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       uIonianMote: { value: new THREE.Color(1.0, 0.86, 0.45) },    // warm amber
       uPhrygianMote: { value: new THREE.Color(0.72, 0.45, 0.95) }, // cool violet
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 1.5) },
+      // Shared fog (v0.6) — same Color/value refs as the ground+grass.
+      uFogNear: fogUniforms.uFogNear,
+      uFogFar: fogUniforms.uFogFar,
+      uFogColor: fogUniforms.uFogColor,
     };
     const moteMaterial = new THREE.ShaderMaterial({
       uniforms: moteUniforms,
@@ -519,6 +614,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         attribute float aSeed;
         varying float vModeMix;
         varying float vLife;
+        varying float vViewZ;
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
         void main() {
@@ -537,6 +633,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           vModeMix = smoothstep(-25.0, 25.0, wp.x);
 
           vec4 vp = viewMatrix * vec4(wp, 1.0);
+          vViewZ = -vp.z;
           gl_Position = projectionMatrix * vp;
           // Size attenuates with distance; clamps so far motes still glow.
           gl_PointSize = uPixelRatio * (50.0 / max(1.0, -vp.z)) * (0.6 + vLife * 0.7);
@@ -547,6 +644,8 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         uniform vec3 uPhrygianMote;
         varying float vModeMix;
         varying float vLife;
+        varying float vViewZ;
+        ${FOG_GLSL}
         void main() {
           // Round soft sprite. Discard outside the circle for a clean halo.
           vec2 d = gl_PointCoord - 0.5;
@@ -554,6 +653,11 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           if (r2 > 0.25) discard;
           float alpha = pow(1.0 - r2 * 4.0, 1.8) * (0.35 + vLife * 0.6);
           vec3 col = mix(uIonianMote, uPhrygianMote, vModeMix);
+          // Motes are additive-blended → fade alpha to 0 in the fog band so
+          // they don't punch through the haze (mixing color toward grey-sky
+          // would still leave a hot dot under ADD blending).
+          float fogF = computeFogFactor(vViewZ);
+          alpha *= (1.0 - fogF);
           gl_FragColor = vec4(col * (0.7 + vLife * 0.6), alpha);
         }
       `,
@@ -568,7 +672,47 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
     const keys = new Set<string>();
     let pointerLocked = false;
 
-    const onKeyDown = (e: KeyboardEvent) => keys.add(e.code);
+    // ─── Auto-walk (v0.6) ──────────────────────────────────────────────────
+    // On mount the camera moves autonomously: forward at ~2.5 m/s along the
+    // mode-axis, with a slow sin-wave oscillation across the Ionian/Phrygian
+    // boundary every ~25s. First user interaction — pointer-lock click OR a
+    // movement key — releases auto-walk PERMANENTLY and never resumes.
+    let autoWalk = true;
+    const autoWalkStartTime = performance.now() / 1000;
+    const AUTO_WALK_SPEED = 2.5;        // m/s forward
+    const AUTO_WALK_SWING_AMP = 30.0;   // metres of x-oscillation
+    const AUTO_WALK_SWING_PERIOD = 25.0; // seconds for a full cycle
+    // Record the spawn z so the sin-curve oscillates symmetrically; spawn x
+    // is the Ionian centre, but we want the swing to sweep across the
+    // boundary band (which is at x = 0) so we phase the sine relative to
+    // that goal — see tick() below.
+    const AUTO_WALK_BASE_X = 0;          // centre the swing on the boundary
+    // Movement-key codes that should trigger takeover (no pointer-lock).
+    const MOVEMENT_KEYS = new Set([
+      'KeyW', 'KeyA', 'KeyS', 'KeyD',
+      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ]);
+
+    const releaseAutoWalk = () => {
+      if (!autoWalk) return;
+      autoWalk = false;
+      onUserTakeover?.();
+      // Movement-key takeover also counts as user gesture → audio is now
+      // allowed to start. Pointer-lock takeover already calls audio.start()
+      // in onPointerLockChange; this branch covers the keyboard-only case.
+      if (!pointerLocked) {
+        if (stopStubPulses) {
+          stopStubPulses();
+          stopStubPulses = null;
+        }
+        audio.start(MODES);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      keys.add(e.code);
+      if (autoWalk && MOVEMENT_KEYS.has(e.code)) releaseAutoWalk();
+    };
     const onKeyUp = (e: KeyboardEvent) => keys.delete(e.code);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -599,6 +743,11 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       // First user gesture → audio safe to start. Cancel the stub timer
       // so we don't double-fire pulses against real chord onsets.
       if (pointerLocked) {
+        // First pointer-lock also retires auto-walk permanently (v0.6).
+        if (autoWalk) {
+          autoWalk = false;
+          onUserTakeover?.();
+        }
         if (stopStubPulses) {
           stopStubPulses();
           stopStubPulses = null;
@@ -678,6 +827,46 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       camera.rotation.y = yaw;
       camera.rotation.x = pitch;
 
+      // Auto-walk drift (v0.6) — runs only until the user takes over.
+      // Path: forward along +Z at AUTO_WALK_SPEED; X sweeps a sin curve
+      // around the boundary band so the camera crosses Ionian↔Phrygian once
+      // per cycle. Camera yaw eases toward the direction of travel so it
+      // feels intentional, not glitchy.
+      //
+      // First ~6s: smooth ease from the spawn X (Ionian centre, -60) toward
+      // the swing curve so we don't snap on frame 1.
+      if (!pointerLocked && autoWalk) {
+        const tAuto = performance.now() / 1000 - autoWalkStartTime;
+        const theta = (tAuto / AUTO_WALK_SWING_PERIOD) * Math.PI * 2;
+        const targetX = AUTO_WALK_BASE_X + Math.sin(theta) * AUTO_WALK_SWING_AMP;
+        // Ease-in over 6s (smoothstep) so the camera glides from spawn into
+        // the swing instead of teleporting on the first frame.
+        const easeT = Math.min(1, tAuto / 6.0);
+        const easeS = easeT * easeT * (3 - 2 * easeT);
+        const blendedX = IONIAN_CENTER_X * (1 - easeS) + targetX * easeS;
+        const prevX = camera.position.x;
+        const prevZ = camera.position.z;
+        camera.position.x = blendedX;
+        camera.position.z += AUTO_WALK_SPEED * dt;
+        // Soft bound — wrap Z back to keep the walk inside the field.
+        const half = FIELD_SIZE / 2 - 5;
+        if (camera.position.z > half) camera.position.z = -half;
+        // Smooth yaw to face the direction of travel. velocity = position
+        // delta this frame; atan2 to derive heading. Slerp yaw toward it.
+        const vx = camera.position.x - prevX;
+        const vz = camera.position.z - prevZ;
+        if (vx * vx + vz * vz > 1e-6) {
+          // Match the WASD yaw convention: forward = camera's -Z, so the
+          // heading yaw is atan2(-vx, -vz). (Yaw 0 → look -Z; yaw +π/2 → -X.)
+          const desiredYaw = Math.atan2(-vx, -vz);
+          // Shortest-arc lerp.
+          let dy = desiredYaw - yaw;
+          while (dy > Math.PI) dy -= Math.PI * 2;
+          while (dy < -Math.PI) dy += Math.PI * 2;
+          yaw += dy * Math.min(1, dt * 1.4);
+        }
+      }
+
       // WASD movement in the camera's local frame, projected onto the
       // horizontal plane so looking up doesn't make the player fly.
       if (pointerLocked) {
@@ -752,14 +941,17 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       const originUniformVec4 = grassUniforms.uChordPulseOrigin.value as THREE.Vector4;
       originUniformVec4.set(pulseOrigin[0], pulseOrigin[1], pulseOrigin[2], pulseOrigin[3]);
 
-      // Fog colour tracks the local sky (rough blend of horizon palette).
+      // Fog colour tracks the per-region-blended sky horizon (v0.6).
+      // `weights[0]` is Ionian weight, so we lerp Phrygian→Ionian as it
+      // grows. Match what the sky-shader smoothstep paints at the horizon
+      // ring so the fogged grass at far range and the sky agree.
       const ionT = weights[0];
-      fog.color.setRGB(
+      fogColor.setRGB(
         IONIAN.skyColor.r * ionT + PHRYGIAN.skyColor.r * (1 - ionT),
         IONIAN.skyColor.g * ionT + PHRYGIAN.skyColor.g * (1 - ionT),
         IONIAN.skyColor.b * ionT + PHRYGIAN.skyColor.b * (1 - ionT),
       );
-      renderer.setClearColor(fog.color, 1);
+      renderer.setClearColor(fogColor, 1);
 
       // Notify the React HUD when the dominant mode flips.
       const dom = dominantModeForX(camera.position.x);
@@ -815,7 +1007,7 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         container.removeChild(renderer.domElement);
       }
     };
-  }, [onModeChange, onLockChange]);
+  }, [onModeChange, onLockChange, onUserTakeover]);
 
   return <Box ref={containerRef} sx={{ width: '100%', height: '100%', overflow: 'hidden' }} />;
 };
