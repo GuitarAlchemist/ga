@@ -89,6 +89,34 @@ if ($ropViolations.Count -gt 0) {
 }
 
 # ============================================
+# CONTEXT STALENESS CHECK (warning-only, never blocks)
+# ============================================
+Write-Host "`n▶ Checking context staleness..." -ForegroundColor Blue
+
+$stalenessScript = Join-Path $PSScriptRoot ".." "Scripts" "check-context-staleness.ps1"
+$stalenessScript = (Resolve-Path -Path $stalenessScript -ErrorAction SilentlyContinue)
+if ($stalenessScript -and (Test-Path $stalenessScript))
+{
+    # Capture stderr — the linter writes warnings there and always exits 0.
+    $stalenessWarnings = & pwsh -NoProfile -File $stalenessScript 2>&1 | Where-Object { $_ -match '^\[staleness\]' }
+    if ($stalenessWarnings)
+    {
+        foreach ($w in $stalenessWarnings) {
+            Write-Host "⚠  $w" -ForegroundColor Yellow
+        }
+        Write-Host "   (warning only — commit not blocked)" -ForegroundColor DarkGray
+    }
+    else
+    {
+        Write-Host "✓ Context artifacts in sync" -ForegroundColor Green
+    }
+}
+else
+{
+    # Script missing — silent, this is opt-in surface.
+}
+
+# ============================================
 # RESULT
 # ============================================
 Write-Host "`n========================================" -ForegroundColor Cyan
