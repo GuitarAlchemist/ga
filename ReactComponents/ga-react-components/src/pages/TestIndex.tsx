@@ -397,6 +397,15 @@ const testPages: TestPageInfo[] = [
     features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
     status: 'partial',
   },
+  {
+    id: 'fleet',
+    title: 'Fleet Status',
+    description: 'Unified "what is happening across the 5 sibling repos right now" view — PRs, install-audit scores, active initiatives, blockers. Static page, baked by CI cron.',
+    technology: 'React + MUI + GitHub Actions cron + agent-blackbox install-audit',
+    path: '/test/fleet',
+    features: ['Active PRs', 'Install-audit scores', 'Active initiatives', 'Surface blockers', 'Markdown mirror', 'CI-baked'],
+    status: 'complete',
+  },
 ];
 
 const statusColors = {
