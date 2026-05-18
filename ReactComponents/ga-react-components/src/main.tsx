@@ -408,7 +408,18 @@ const DiatonicPanel: React.FC = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    {/*
+      basename uses Vite's BASE_URL. For the lib-mode dev server (current
+      cloudflared origin) BASE_URL is "/" and the router behaves exactly
+      as before. For the GitHub Pages SPA build (vite.config.demos.ts with
+      DEMOS_BASE_PATH=/ga/) BASE_URL is "/ga/", which makes routes resolve
+      under that sub-path. Trailing slash is stripped because react-router
+      expects the basename without it.
+    */}
+    <BrowserRouter
+      basename={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <Routes>
         {/* Test pages */}
         <Route path="/test" element={<App><TestIndex /></App>} />
