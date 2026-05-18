@@ -1,14 +1,16 @@
 /**
- * Modal Meadow — heightmap sampler (v0.5).
+ * Modal Meadow — heightmap sampler (v0.6).
  *
  * Rolling hills derived from a tiny inline 2D hash-noise function so we do
  * NOT add `simplex-noise` as a dependency. The same algorithm is mirrored
  * in GLSL inside ModalMeadow.tsx (`HEIGHT_GLSL`) so the camera, grass
  * blades, and any other JS-side queries agree with what the shader paints.
  *
- * Surface character:
- *  - amplitude AMP_M ≈ 3m (peak-to-trough ≈ 6m)
- *  - dominant wavelength ≈ 30–60m via two octaves of value noise
+ * Surface character (v0.6):
+ *  - amplitude AMP_M ≈ 8m (peak-to-trough ≈ 16m over ~22m horizontal —
+ *    actual hills, not gentle rolling; v0.5 used 3m and user reported
+ *    "I don't see Hills?")
+ *  - dominant wavelength ≈ 45m primary + 18m detail (unchanged from v0.5)
  *  - bandlimited so the camera doesn't jitter as you walk
  *  - flattened toward the boundary band (|x| < BLEND_HALF) to keep the
  *    Ionian/Phrygian transition readable and avoid a giant wall mid-field
@@ -54,7 +56,7 @@ const vnoise = (x: number, y: number): number => {
 };
 
 /** Amplitude of the rolling hills, metres above mean ground. */
-export const TERRAIN_AMP_M = 3.0;
+export const TERRAIN_AMP_M = 8.0;
 
 /** Dominant wavelength in metres (low frequency ≈ broad rolling shape). */
 const FREQ_A = 1 / 45; // ≈ 45m wavelength
