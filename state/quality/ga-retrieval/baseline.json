@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "domain": "ga-retrieval",
+  "purpose": "Baseline for the Workflow 2 retrieval-quality oracle (docs/ix-real-problems-plan.md §Workflow 2). Consumed by Scripts/emit-ga-retrieval-quality.ps1 to compute deltas against the latest state/quality/chatbot-qa/ snapshot. Emitted artifact: dist/ga-retrieval-quality.json. Evidence is then attached by agent-blackbox via --ga-retrieval-quality-cmd.",
+  "established_at": "2026-05-17T00:00:00Z",
+  "established_by": "feat/ga-retrieval-quality-w2 (initial seed)",
+  "seed_source": "state/quality/chatbot-qa/last.json from local 2026-05-16T18:37:41 run (totalActivePrompts=50, totalFailures=0, totalWarnings=1). Same data point that backs the chatbot-qa baseline pass_pct=0.94. Latency warning intentionally absent from these counters — Workflow 2 is about retrieval correctness, not response time.",
+
+  "counters": {
+    "grounded": 50,
+    "unsupported": 0,
+    "corpus_misses": 0,
+    "injection_refusals": 0,
+    "total": 50
+  },
+
+  "counter_definitions": {
+    "grounded": "Prompts that satisfied ALL declared invariants (contains, not_contains, routes_to, must_not_fallback, forbidden_agent_ids, min_routing_confidence, _signature.json shape). Currently derived as total_prompts - totalFailures from the chatbot-qa snapshot.",
+    "unsupported": "Prompts whose response violated at least one declared invariant. Currently equals totalFailures.",
+    "corpus_misses": "Placeholder for prompts that hit a routing/agent-resolution miss before invariants could even be checked. The current chatbot-qa runner does not split this from `unsupported`. Future task: surface routing-miss as a distinct counter in PromptCorpusTests.cs.",
+    "injection_refusals": "Placeholder for prompts that exercise injection / jailbreak resistance. The current corpus does not yet contain injection prompts. Future task: add an `injection` category to prompts.yaml + expected refusal patterns."
+  },
+
+  "verdict_thresholds": {
+    "pass": "grounded did not drop AND unsupported did not rise",
+    "warn": "grounded dropped by 1 OR 2 OR unsupported rose by 1 OR 2",
+    "fail": "grounded dropped by 3 or more OR unsupported rose by 3 or more",
+    "rationale": "Tuned for the 50-prompt corpus (post-#224). A single regression is noisy enough that we want a visible warn; 3+ is a clear ship-blocker. Re-tune after ~5 PRs of accumulated signal."
+  },
+
+  "environment_degraded_policy": {
+    "behaviour": "If the upstream chatbot-qa snapshot is marked degraded (pass_pct=null + HTTP 5xx note), the artifact records null counters and emits verdict='warn'. The chatbot itself did not regress — the backend was unavailable.",
+    "rationale": "Recording grounded=0 in that case would falsely score every dependency outage as a chatbot collapse, polluting the trend and triggering spurious fail verdicts on PRs that did nothing wrong."
+  },
+
+  "non_goals": [
+    "Replacing PromptCorpusTests.cs as the canonical chatbot-qa oracle.",
+    "Mutating prompts.yaml or the runner — Workflow 2 is post-processing only.",
+    "Running GaApi or any service. The producer reads on-disk snapshots."
+  ]
+}

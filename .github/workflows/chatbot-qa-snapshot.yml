@@ -57,6 +57,19 @@ jobs:
         run: pwsh Scripts/run-prompt-corpus.ps1 -Snapshot -NoBuild
         continue-on-error: true   # snapshot is the artifact; low pass_pct isn't a workflow failure
 
+      - name: Emit ga-retrieval-quality artifact (Workflow 2)
+        shell: pwsh
+        run: pwsh Scripts/emit-ga-retrieval-quality.ps1
+        continue-on-error: true   # the artifact itself is evidence; agent-blackbox decides the verdict
+
+      - name: Upload ga-retrieval-quality artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga-retrieval-quality-${{ github.run_id }}
+          path: dist/ga-retrieval-quality.json
+          retention-days: 90
+
       - name: Commit snapshot if produced
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
