@@ -104,8 +104,7 @@ jobs:
       # over client-side. Without this, https://.../ga/test/fleet
       # 404s on first hit.
       - name: Add SPA 404 fallback
-        run: cp ReactComponents/ga-react-components/dist-demos/index.html \
-              ReactComponents/ga-react-components/dist-demos/404.html
+        run: cp ReactComponents/ga-react-components/dist-demos/index.html ReactComponents/ga-react-components/dist-demos/404.html
 
       # Bypass Jekyll: GH Pages defaults to running Jekyll on the
       # uploaded site, which strips files starting with `_` (like
