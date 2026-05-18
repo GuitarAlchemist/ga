@@ -125,7 +125,7 @@ const ModalMeadowTest: React.FC = () => {
             letterSpacing: 1,
           }}
         >
-          MODAL MEADOW · v0.6 · Ionian ↔ Phrygian · Visible Hills + Fog + Auto-walk
+          MODAL MEADOW · v1.0 · Ionian ↔ Phrygian · Cinematic (Bloom + Shadows + God Rays)
         </Box>
       </Container>
     </DemoErrorBoundary>
