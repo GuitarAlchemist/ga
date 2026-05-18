@@ -1,0 +1,148 @@
+{
+  "generatedAt": "2026-05-18T01:13:25.847659+00:00",
+  "recommendations": [
+    "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
+  ],
+  "repos": [
+    {
+      "checks": [
+        {
+          "evidence": [
+            "AGENTS.md"
+          ],
+          "id": "instructions",
+          "maxScore": 10,
+          "name": "Agent instructions",
+          "recommendation": "Add AGENTS.md with the repo verification command and Agent Blackbox operating boundaries.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "agent-blackbox.policy.json"
+          ],
+          "id": "policy",
+          "maxScore": 15,
+          "name": "Agent Blackbox policy",
+          "recommendation": "Install a valid agent-blackbox.policy.json with conservative thresholds and blocked path rules.",
+          "score": 15,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            ".github/workflows/agent-blackbox.yml"
+          ],
+          "id": "workflow",
+          "maxScore": 20,
+          "name": "GitHub Action workflow",
+          "recommendation": "Install .github/workflows/agent-blackbox.yml so PRs emit risk reports, comments, and artifacts.",
+          "score": 20,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "AGENT_BLACKBOX_REF=v0.1.0-beta.1"
+          ],
+          "id": "pinning",
+          "maxScore": 10,
+          "name": "Agent Blackbox version pin",
+          "recommendation": "Pin AGENT_BLACKBOX_REF to a release tag or commit SHA; do not consume main for enforcement.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "VERIFY_COMMAND=>-"
+          ],
+          "id": "verification",
+          "maxScore": 10,
+          "name": "Verification command",
+          "recommendation": "Configure VERIFY_COMMAND or a repo-local verify script so reports include test evidence.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "enforce --report",
+            "agent-blackbox-reviewed"
+          ],
+          "id": "enforcement",
+          "maxScore": 10,
+          "name": "Review override enforcement",
+          "recommendation": "Run enforce on risk-report.json and require the agent-blackbox-reviewed label for deliberate overrides.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "response-quality documented in docs/harness-observability.md",
+            "state/quality/chatbot-qa/baseline.json",
+            "state/quality/embeddings/baseline.json",
+            "state/quality/ga-harness/baseline.json"
+          ],
+          "id": "observability",
+          "maxScore": 15,
+          "name": "Harness and quality observability",
+          "recommendation": "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence.",
+          "score": 7,
+          "status": "warn"
+        },
+        {
+          "evidence": [
+            "scripts/supervised-loop-preflight.ps1",
+            "Scripts/supervised-loop-preflight.ps1",
+            ".claude/skills/supervised-loop/SKILL.md",
+            "state/quality/chatbot-qa/baseline.json",
+            "state/quality/embeddings/baseline.json",
+            "state/quality/ga-harness/baseline.json"
+          ],
+          "id": "loop-controls",
+          "maxScore": 10,
+          "name": "Loop controls",
+          "recommendation": "Install loop policy, supervised-loop preflight, quality baselines, and halt-marker handling before autonomous loops.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "producer-reviewer: docs/harness-observability.md",
+            "fresh-evaluator: docs/harness-observability.md",
+            "cross-vendor-review: README.md",
+            "rewrite-budget: docs/review-independence.md"
+          ],
+          "id": "review-independence",
+          "maxScore": 10,
+          "name": "Review independence",
+          "recommendation": "Separate generation from evaluation with producer-reviewer, fresh evaluator, cross-vendor review, or rewrite-budget evidence before trusting unattended loops.",
+          "score": 10,
+          "status": "pass"
+        }
+      ],
+      "findings": [
+        {
+          "code": "install.observability.partial",
+          "message": "Harness and quality observability is partially installed.",
+          "recommendation": "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence.",
+          "severity": "warn"
+        }
+      ],
+      "maxScore": 110,
+      "name": "ga-fleet-status",
+      "readiness": "partial",
+      "recommendations": [
+        "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
+      ],
+      "root": "C:/tmp/ga-fleet-status",
+      "score": 102,
+      "verdict": "warn"
+    }
+  ],
+  "schemaVersion": "0.1",
+  "summary": {
+    "fail": 0,
+    "pass": 0,
+    "repoCount": 1,
+    "warn": 1
+  },
+  "verdict": "warn"
+}

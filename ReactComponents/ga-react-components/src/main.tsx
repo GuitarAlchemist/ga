@@ -29,6 +29,7 @@ import FretboardWithHandTest from './pages/FretboardWithHandTest';
 import Sunburst3DTest from './pages/Sunburst3DTest';
 import ImmersiveMusicalWorldTest from './pages/ImmersiveMusicalWorldTest';
 import FluffyGrassTest from './pages/FluffyGrassTest';
+import ModalMeadowTest from './pages/ModalMeadowTest';
 import OceanTest from './pages/OceanTest';
 import SandDunesTest from './pages/SandDunesTest';
 import CheeseAvalancheTest from './pages/CheeseAvalancheTest';
@@ -55,6 +56,7 @@ import SunflowerFieldTest from './pages/SunflowerFieldTest';
 import MandelbulbTest from './pages/MandelbulbTest';
 import MapleTreeTest from './pages/MapleTreeTest';
 import GaussianSplatTest from './pages/GaussianSplatTest';
+import FleetStatusTest from './pages/FleetStatusTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -429,6 +431,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/sunburst-3d" element={<App><Sunburst3DTest /></App>} />
         <Route path="/test/immersive-musical-world" element={<App><ImmersiveMusicalWorldTest /></App>} />
         <Route path="/test/fluffy-grass" element={<App><FluffyGrassTest /></App>} />
+        <Route path="/test/modal-meadow" element={<App><ModalMeadowTest /></App>} />
         <Route path="/test/ocean" element={<App><OceanTest /></App>} />
         <Route path="/test/sand-dunes" element={<App><SandDunesTest /></App>} />
         <Route path="/test/cheese-avalanche" element={<App><CheeseAvalancheTest /></App>} />
@@ -453,6 +456,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
         <Route path="/test/gaussian-splat" element={<App><GaussianSplatTest /></App>} />
         <Route path="/test/maple-tree" element={<App><MapleTreeTest /></App>} />
+        <Route path="/test/fleet" element={<App><FleetStatusTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
