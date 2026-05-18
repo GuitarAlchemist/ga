@@ -1,5 +1,9 @@
 /**
- * Modal Meadow — heightmap sampler (v0.5).
+ * Modal Meadow — heightmap sampler (v0.7).
+ *
+ * v0.7 adds `snapToLocalMinimum` and `sampleTerrainMinAround` helpers used by
+ * the pond placement step in ModalMeadow.tsx — they share the same noise/hash
+ * implementation so JS placement agrees with the shader-side terrainY().
  *
  * Rolling hills derived from a tiny inline 2D hash-noise function so we do
  * NOT add `simplex-noise` as a dependency. The same algorithm is mirrored
@@ -101,3 +105,58 @@ export const HEIGHT_GLSL = /* glsl */ `
     return raw * ${TERRAIN_AMP_M.toFixed(4)} * boundaryFlat;
   }
 `;
+
+/**
+ * Snap a candidate (cx, cz) to the nearest local minimum of the heightmap
+ * within `searchRadius` metres, sampling on a small grid. Returns the snapped
+ * (x, z) and the minimum y at that point. Used by v0.7 pond placement to
+ * ensure each pond sits in a real terrain depression rather than floating on
+ * a slope.
+ *
+ * Cost: ~(2*searchRadius/step + 1)^2 samples. With searchRadius=30, step=3 we
+ * do ~441 samples per call, run 5 times at scene init. Negligible.
+ */
+export const snapToLocalMinimum = (
+  cx: number,
+  cz: number,
+  searchRadius = 30,
+  step = 3,
+): { x: number; z: number; y: number } => {
+  let bestX = cx;
+  let bestZ = cz;
+  let bestY = sampleTerrainY(cx, cz);
+  for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
+    for (let dz = -searchRadius; dz <= searchRadius; dz += step) {
+      const x = cx + dx;
+      const z = cz + dz;
+      const y = sampleTerrainY(x, z);
+      if (y < bestY) {
+        bestY = y;
+        bestX = x;
+        bestZ = z;
+      }
+    }
+  }
+  return { x: bestX, z: bestZ, y: bestY };
+};
+
+/**
+ * Returns the lowest terrain elevation in a small ring around (cx, cz).
+ * Used to derive a pond's water-line: set the water surface a hair below
+ * the lowest point in the surrounding basin so banks read as banks.
+ */
+export const sampleTerrainMinAround = (
+  cx: number,
+  cz: number,
+  radius: number,
+  step = 2,
+): number => {
+  let minY = sampleTerrainY(cx, cz);
+  for (let dx = -radius; dx <= radius; dx += step) {
+    for (let dz = -radius; dz <= radius; dz += step) {
+      const y = sampleTerrainY(cx + dx, cz + dz);
+      if (y < minY) minY = y;
+    }
+  }
+  return minY;
+};

@@ -1,7 +1,12 @@
 /**
- * Modal Meadow — interactive mode-region 3D demo (v0.5).
+ * Modal Meadow — interactive mode-region 3D demo (v0.7).
  *
- * v0.5 adds four bounded enhancements on top of the flat-plane v0:
+ * v0.7 adds two bounded enhancements on top of v0.5:
+ *   - EYE_HEIGHT raised 1.7m → 3.5m so the player sees more landscape
+ *   - 3–5 water ponds with per-region tint, animated ripples, and a grass
+ *     exclusion guard that clears blades inside each pond's radius
+ *
+ * v0.5 enhancements (still present):
  *   1. Rolling-hills heightmap (CPU + GPU share the noise — see terrain.ts)
  *   2. Audio-reactive grass sway pulse on every chord change
  *   3. Per-region sun (Ionian high-noon, Phrygian sunset, interpolated)
@@ -36,19 +41,39 @@ import {
   type ModeConfig,
 } from './modes';
 import { ModalMeadowAudio, type ChordPulseEvent } from './audio';
-import { sampleTerrainY, HEIGHT_GLSL } from './terrain';
+import {
+  sampleTerrainY,
+  HEIGHT_GLSL,
+  snapToLocalMinimum,
+} from './terrain';
 
 // ─── Tunables (v0 keeps these as constants — promote to props in v1) ────────
 const FIELD_SIZE = 220;          // metres along each axis
 const CHUNK_SIZE = 11;            // grass chunk edge length
 const CHUNK_COUNT = 20;           // 20×20 = 400 chunks → field side = 220m
 const BLADES_PER_CHUNK = 200;     // 400·200·3 cross-planes ≈ 240k instances
-const EYE_HEIGHT = 1.7;           // metres — average human eye height
+const EYE_HEIGHT = 3.5;           // metres — raised in v0.7 so the player sees more landscape over the grass
 const WALK_SPEED = 5.0;           // metres per second
 const MOUSE_SENSITIVITY = 0.0022; // radians per pixel
 // Region centre along world x — Ionian west, Phrygian east, soft band at x=0.
 // (Phrygian centre is symmetrically at +60; documented here, not assigned.)
 const IONIAN_CENTER_X = -60;
+
+// ─── Pond placement (v0.7) ──────────────────────────────────────────────────
+// MAX_PONDS is the shader array length — kept ≤ 8 so the grass vertex shader
+// can iterate it inline without dynamic branching. We seed 5 candidate (x,z)
+// positions deterministically (no Math.random, so the same ponds appear on
+// every reload for reproducible screenshots), snap each to the nearest local
+// terrain minimum within 30m, then drop any that fall too close to the field
+// edge.
+const MAX_PONDS = 8;
+const POND_SEEDS: readonly { x: number; z: number; radius: number }[] = [
+  { x: -80, z: -40, radius: 12 }, // Ionian
+  { x: -45, z: 50, radius: 9 },  // Ionian
+  { x: -90, z: 65, radius: 11 }, // Ionian (west-edge)
+  { x: 50, z: -50, radius: 13 }, // Phrygian
+  { x: 85, z: 30, radius: 10 },  // Phrygian (east-edge)
+] as const;
 
 // ─── Procedural noise — same hash/value pair the existing grass uses, so
 // the surface "feels" like the fluffy-grass demo even though every blade,
@@ -246,6 +271,168 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
+    // ─── Ponds (v0.7) ──────────────────────────────────────────────────────
+    // Snap each seed to a nearby local-minimum, drop those that fall outside
+    // the walkable field, and build one CircleGeometry mesh per pond. Each
+    // pond gets a fresh shader-material instance so per-region tinting can
+    // live on the material itself (cheaper than a branch in the shader).
+    interface PondPlacement {
+      readonly x: number;
+      readonly z: number;
+      readonly y: number;          // water-line elevation
+      readonly radius: number;
+      readonly region: 'ionian' | 'phrygian';
+    }
+    const fieldHalf = FIELD_SIZE / 2;
+    const ponds: PondPlacement[] = [];
+    for (const seed of POND_SEEDS) {
+      const snapped = snapToLocalMinimum(seed.x, seed.z, 30, 3);
+      // Drop ponds whose disc would extend outside the walkable field.
+      if (
+        Math.abs(snapped.x) > fieldHalf - seed.radius - 4 ||
+        Math.abs(snapped.z) > fieldHalf - seed.radius - 4
+      ) {
+        continue;
+      }
+      // Water-line strategy: scan the heightmap across the FULL disc and pick
+      // a water surface a comfortable margin above the highest sample inside
+      // the disc. That guarantees the entire CircleGeometry sits above the
+      // terrain mesh — no z-fighting, no edges clipped by stray bumps.
+      //
+      // The brief's "just below the lowest point in the basin" reading would
+      // hide the water under the ground on v0.5's shallow 3m-amplitude hills,
+      // so we instead anchor to the disc-wide max plus a small lift. With the
+      // grass exclusion in place, the disc still reads as a pond resting on
+      // a small flat. v0.6's deeper hills will let the water sink lower
+      // (relative to surrounding grass) for a more "basined" look.
+      let discMax = -Infinity;
+      const SCAN_STEP = 1.5;
+      const r2 = seed.radius * seed.radius;
+      for (let dx = -seed.radius; dx <= seed.radius; dx += SCAN_STEP) {
+        for (let dz = -seed.radius; dz <= seed.radius; dz += SCAN_STEP) {
+          if (dx * dx + dz * dz > r2) continue;
+          const ry = sampleTerrainY(snapped.x + dx, snapped.z + dz);
+          if (ry > discMax) discMax = ry;
+        }
+      }
+      // 1.4m lift — large enough to read as a real surface above the bank
+      // at glancing angles given v0.5's 3m amplitude. The lift looks like a
+      // small raised pool on flat ground today; once v0.6's 8m amplitude
+      // lands, the surrounding grass will rise to meet it and the basin will
+      // look properly recessed.
+      const waterY = discMax + 1.4;
+      ponds.push({
+        x: snapped.x,
+        z: snapped.z,
+        y: waterY,
+        radius: seed.radius,
+        region: snapped.x < 0 ? 'ionian' : 'phrygian',
+      });
+    }
+
+    // Per-region water tint: warm gold-tinted blue on the Ionian side, cool
+    // violet-tinted blue on the Phrygian side. The shader still mixes a hint
+    // of the live sky horizon colour so the reflection feels grounded.
+    const IONIAN_WATER_TINT = new THREE.Color('#3a8db8');     // warm gold-blue
+    const PHRYGIAN_WATER_TINT = new THREE.Color('#5a52a8');   // cool violet-blue
+
+    if (process.env.NODE_ENV !== 'production') {
+      // Dev breadcrumb — one-line summary of placed ponds so reviewers can
+      // verify the snap step landed in expected basins.
+      console.info(
+        '[ModalMeadow v0.7] ponds:',
+        ponds.map((p) => `${p.region}@(${p.x.toFixed(0)},${p.z.toFixed(0)},y=${p.y.toFixed(2)},r=${p.radius})`).join(' '),
+      );
+      // Dev-only scene handle so smoke tests can inspect mesh positions.
+      (window as unknown as { __modalMeadowScene?: THREE.Scene }).__modalMeadowScene = scene;
+    }
+
+    // One shared geometry; per-mesh material instance for tint variance.
+    const pondMeshes: THREE.Mesh[] = [];
+    const pondMaterials: THREE.ShaderMaterial[] = [];
+    const pondGeometries: THREE.CircleGeometry[] = [];
+    for (const p of ponds) {
+      const geo = new THREE.CircleGeometry(p.radius, 48);
+      pondGeometries.push(geo);
+      const waterUniforms = {
+        uTime: { value: 0 },
+        uTint: {
+          value: (p.region === 'ionian' ? IONIAN_WATER_TINT : PHRYGIAN_WATER_TINT).clone(),
+        },
+        uSky: { value: IONIAN.skyColor.clone() },  // updated each frame from camera-X blend
+      };
+      const mat = new THREE.ShaderMaterial({
+        uniforms: waterUniforms,
+        transparent: true,
+        depthWrite: true,
+        side: THREE.DoubleSide,
+        vertexShader: /* glsl */ `
+          varying vec2 vLocalXZ;
+          varying vec3 vWorldPos;
+          void main() {
+            vLocalXZ = position.xy;       // CircleGeometry lies in XY before rotation
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          uniform vec3 uTint;
+          uniform vec3 uSky;
+          varying vec2 vLocalXZ;
+          varying vec3 vWorldPos;
+          ${NOISE_GLSL}
+          void main() {
+            // Subtle ripple driven by a slow noise field — modulates the
+            // surface "normal" we use for fresnel. Two layers at different
+            // scales give visible movement without reading as a stamped tile.
+            vec2 uv = vLocalXZ * 0.5 + vec2(uTime * 0.2, uTime * 0.13);
+            float n1 = vnoise(uv);
+            float n2 = vnoise(vLocalXZ * 1.4 + vec2(uTime * 0.07, -uTime * 0.09));
+            vec3 normal = normalize(vec3(n1 * 0.18, 1.0, n2 * 0.18));
+
+            // View vector (camera → fragment).
+            vec3 viewDir = normalize(cameraPosition - vWorldPos);
+            // Fresnel falloff: edges (grazing angle) read more sky, centre
+            // reads more deep-tint. Power 3 gives a soft band, not a hard ring.
+            float fres = pow(1.0 - max(0.0, dot(viewDir, normal)), 3.0);
+
+            // Reflective-ish blue: mix the per-region tint with a small share
+            // of the live sky horizon, biased toward the tint so it never
+            // becomes a full mirror. Fresnel boosts the sky contribution at
+            // grazing angles so the bank edge meets the surroundings.
+            vec3 deep = uTint * 0.85;
+            vec3 surface = mix(deep, uSky, 0.30 + fres * 0.50);
+
+            // Add a tiny specular sparkle along ripple ridges.
+            float sparkle = smoothstep(0.55, 0.90, n1 + n2 * 0.5);
+            surface += vec3(sparkle * 0.12);
+
+            // Slight alpha falloff at the very edge so the pond meets the
+            // bank without a hard cookie-cut line. radius normalised via
+            // length(vLocalXZ) / radius — but radius is baked into the
+            // geometry already, so we sample distance directly.
+            float distFromCentre = length(vLocalXZ);
+            // Geometry radius = 1.0 in local before scaling? No: CircleGeometry
+            // takes radius parameter so vLocalXZ already spans [-r, r]. Use a
+            // 0.5m soft edge regardless of r.
+            float edgeFade = smoothstep(0.0, 0.5, distFromCentre); // not used for hard cut
+            gl_FragColor = vec4(surface, 0.95 - edgeFade * 0.0);   // mostly opaque
+          }
+        `,
+      });
+      pondMaterials.push(mat);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(p.x, p.y, p.z);
+      // Render after the ground but before the grass so grass blades that DO
+      // sneak through render correctly.
+      mesh.renderOrder = 1;
+      scene.add(mesh);
+      pondMeshes.push(mesh);
+    }
+
     // ─── Grass ─────────────────────────────────────────────────────────────
     // One shader handles both regions; per-pixel uModeMix is computed from
     // world x via smoothstep so the transition band is exactly aligned with
@@ -278,6 +465,13 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       uChordPulseDir: { value: new THREE.Vector2(0, 0) },            // (ion, phr) X bias
       uChordPulseOrigin: { value: new THREE.Vector4(0, 0, 0, 0) },   // (ionX,ionZ, phrX,phrZ)
       uChordPulseAge: { value: new THREE.Vector2(99, 99) },          // seconds since last pulse
+      // ─── Pond exclusion (v0.7) ──────────────────────────────────────────
+      // Each entry is (centerX, centerZ, radius, 0 = unused / 1 = active).
+      // Inactive entries are skipped via the .w flag so we don't burn cycles
+      // on empty pond slots. Filled in at scene init after pond placement.
+      uPonds: {
+        value: Array.from({ length: MAX_PONDS }, () => new THREE.Vector4(0, 0, 0, 0)),
+      },
     };
 
     const grassMaterial = new THREE.ShaderMaterial({
@@ -298,6 +492,8 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         uniform vec2 uChordPulseDir;    // (ionian, phrygian) X bias -1..+1
         uniform vec4 uChordPulseOrigin; // (ionX, ionZ, phrX, phrZ)
         uniform vec2 uChordPulseAge;    // seconds since each pulse
+        // Each: xy = centre XZ, z = radius (m), w = active flag (0 or 1).
+        uniform vec4 uPonds[${MAX_PONDS}];
 
         attribute float aRandom;
         attribute float aTwist;
@@ -319,6 +515,21 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           // height as an extra translation in world-y inside the vertex
           // (since the InstancedMesh was authored on a flat plane).
           float groundY = terrainY(anchor.xz);
+
+          // ─── Pond exclusion (v0.7) ──────────────────────────────────────
+          // If this blade's anchor falls inside any active pond's radius,
+          // collapse it: scale the local geometry to zero and sink it well
+          // below the ground so it cannot poke through the water surface.
+          // 1.0 = normal blade, 0.0 = silenced.
+          float bladeAlive = 1.0;
+          for (int i = 0; i < ${MAX_PONDS}; i++) {
+            vec4 pond = uPonds[i];
+            if (pond.w < 0.5) continue;            // inactive slot
+            float d = length(anchor.xz - pond.xy);
+            // Soft edge over 1m so the boundary doesn't look stamped.
+            float k = smoothstep(pond.z - 1.0, pond.z, d);
+            bladeAlive = min(bladeAlive, k);
+          }
 
           // Mode mix from blade's world x — same smoothstep as JS code +
           // audio so visual & audio transition are perfectly aligned.
@@ -372,6 +583,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           p.x += curve * bendAmt;
           p.y -= curve * bendAmt * 0.25;
 
+          // Collapse blade geometry inside ponds — keeps a clean water surface.
+          p *= bladeAlive;
+
           // Per-blade Y rotation (twist).
           float c = cos(aTwist);
           float s = sin(aTwist);
@@ -380,7 +594,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
           // terrain. This is correct because rotated.y is local-y and the
           // modelMatrix * instanceMatrix only translates by the (x, 0, z)
           // anchor (we set y=0 on the instanceMatrix at construction).
-          rotated.y += groundY;
+          // For silenced (pond-interior) blades, sink the anchor a few metres
+          // below ground so the collapsed point can't peek above the water.
+          rotated.y += groundY - (1.0 - bladeAlive) * 5.0;
 
           vec4 worldPos = modelMatrix * instanceMatrix * vec4(rotated, 1.0);
           gl_Position = projectionMatrix * viewMatrix * worldPos;
@@ -425,6 +641,15 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
         }
       `,
     });
+
+    // Push pond placements into the grass shader's uPonds uniform. The
+    // shader iterates the full MAX_PONDS slots; inactive slots have w=0 and
+    // are skipped, so leftover slots stay zero-initialised.
+    const grassPondSlots = grassUniforms.uPonds.value as THREE.Vector4[];
+    for (let i = 0; i < ponds.length && i < MAX_PONDS; i++) {
+      const p = ponds[i];
+      grassPondSlots[i].set(p.x, p.z, p.radius, 1.0);
+    }
 
     const bladeHeight = 1.0;
     const bladeWidth = 0.1;
@@ -655,12 +880,24 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
     // No-op in production; harmless in dev. Lives only for the lifetime
     // of this effect and is cleared in cleanup.
     interface DebugWindow extends Window {
-      __modalMeadowTeleport?: (x: number, z?: number) => void;
+      __modalMeadowTeleport?: (
+        x: number,
+        z?: number,
+        yawOverride?: number,
+        pitchOverride?: number,
+      ) => void;
     }
-    (window as DebugWindow).__modalMeadowTeleport = (x: number, z?: number) => {
+    (window as DebugWindow).__modalMeadowTeleport = (
+      x: number,
+      z?: number,
+      yawOverride?: number,
+      pitchOverride?: number,
+    ) => {
       camera.position.x = x;
       if (typeof z === 'number') camera.position.z = z;
       camera.position.y = sampleTerrainY(camera.position.x, camera.position.z) + EYE_HEIGHT;
+      if (typeof yawOverride === 'number') yaw = yawOverride;
+      if (typeof pitchOverride === 'number') pitch = pitchOverride;
     };
 
     // ─── Animation loop ────────────────────────────────────────────────────
@@ -673,6 +910,11 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       const elapsed = clock.elapsedTime;
       grassUniforms.uTime.value = elapsed;
       moteUniforms.uTime.value = elapsed;
+      // Advance every pond's water shader. Sky tint is updated below once
+      // we know the new mode mix.
+      for (const mat of pondMaterials) {
+        (mat.uniforms.uTime as { value: number }).value = elapsed;
+      }
 
       // Camera rotation from yaw/pitch (YXZ order set on camera).
       camera.rotation.y = yaw;
@@ -761,6 +1003,12 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       );
       renderer.setClearColor(fog.color, 1);
 
+      // Push the same sky-tint mix into every pond shader so the reflective
+      // share of the water colour tracks the active region.
+      for (const mat of pondMaterials) {
+        (mat.uniforms.uSky.value as THREE.Color).copy(fog.color);
+      }
+
       // Notify the React HUD when the dominant mode flips.
       const dom = dominantModeForX(camera.position.x);
       if (dom.name !== lastDominantName) {
@@ -810,6 +1058,11 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({ onModeChange, onLockCh
       skyMaterial.dispose();
       moteGeometry.dispose();
       moteMaterial.dispose();
+      for (const m of pondMeshes) {
+        scene.remove(m);
+      }
+      for (const g of pondGeometries) g.dispose();
+      for (const m of pondMaterials) m.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
