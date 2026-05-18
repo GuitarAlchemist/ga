@@ -14,6 +14,7 @@
 #   pwsh Scripts/emit-ga-retrieval-quality.ps1
 #   pwsh Scripts/emit-ga-retrieval-quality.ps1 -Output dist/ga-retrieval-quality.json
 #   pwsh Scripts/emit-ga-retrieval-quality.ps1 -SnapshotPath state/quality/chatbot-qa/2026-05-17.json
+#   pwsh Scripts/emit-ga-retrieval-quality.ps1 -Stdout   # emit JSON to stdout (for agent-blackbox)
 #
 # Verdict thresholds (chosen for the post-#224 baseline at pass_pct=0.94):
 #   pass : grounded did not drop AND unsupported did not rise
@@ -29,8 +30,14 @@ param(
     [string]$Output = "",
     [string]$SnapshotPath = "",
     [string]$BaselinePath = "",
-    [switch]$Quiet
+    [switch]$Quiet,
+    [switch]$Stdout
 )
+
+# -Stdout suppresses informational chatter and prints the artifact JSON
+# to standard output instead of writing it to a file. Used by
+# agent-blackbox `analyze --ga-retrieval-quality-cmd`.
+if ($Stdout) { $Quiet = $true }
 
 $ErrorActionPreference = "Stop"
 
@@ -235,21 +242,30 @@ $artifact = [ordered]@{
     verdict        = $verdict
 }
 
-$outDir = Split-Path $Output -Parent
-if ($outDir -and -not (Test-Path $outDir)) {
-    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+$json = $artifact | ConvertTo-Json -Depth 8
+if ($Stdout) {
+    # Emit JSON to stdout for agent-blackbox consumption. Nothing else writes to
+    # stdout in this mode (informational lines are gated on -Quiet).
+    [Console]::Out.Write($json)
+} else {
+    $outDir = Split-Path $Output -Parent
+    if ($outDir -and -not (Test-Path $outDir)) {
+        New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+    }
+    $json | Set-Content $Output -Encoding UTF8
 }
-$artifact | ConvertTo-Json -Depth 8 | Set-Content $Output -Encoding UTF8
 
-Write-Info ""
-Write-Info "─── verdict: $verdict ───"
-if (-not $current.degraded) {
-    Write-Info ("  grounded:           {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.grounded, $baseCounters.grounded, $deltas.grounded_delta)
-    Write-Info ("  unsupported:        {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.unsupported, $baseCounters.unsupported, $deltas.unsupported_delta)
-    Write-Info ("  corpus_misses:      {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.corpus_misses, $baseCounters.corpus_misses, $deltas.corpus_misses_delta)
-    Write-Info ("  injection_refusals: {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.injection_refusals, $baseCounters.injection_refusals, $deltas.injection_refusals_delta)
+if (-not $Stdout) {
+    Write-Info ""
+    Write-Info "─── verdict: $verdict ───"
+    if (-not $current.degraded) {
+        Write-Info ("  grounded:           {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.grounded, $baseCounters.grounded, $deltas.grounded_delta)
+        Write-Info ("  unsupported:        {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.unsupported, $baseCounters.unsupported, $deltas.unsupported_delta)
+        Write-Info ("  corpus_misses:      {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.corpus_misses, $baseCounters.corpus_misses, $deltas.corpus_misses_delta)
+        Write-Info ("  injection_refusals: {0} (baseline {1}, Δ {2:+#;-#;0})" -f $currentBlock.injection_refusals, $baseCounters.injection_refusals, $deltas.injection_refusals_delta)
+    }
+    Write-Info "  wrote artifact to: $Output"
 }
-Write-Info "  wrote artifact to: $Output"
 
 # Exit-code policy mirrors run-prompt-corpus.ps1: emit the artifact and exit 0
 # even on warn/fail. The consumer (agent-blackbox) is the one that gates.
