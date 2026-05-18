@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "domain": "readme-drift",
+  "snapshot_date": "2026-05-18",
+  "snapshot_at": "2026-05-18T09:17:26.5128984Z",
+  "thresholds_days": {
+    "borderline": 14,
+    "stale": 30,
+    "very_stale": 60
+  },
+  "repos": [
+    {
+      "repo": "ga",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-18",
+      "drift_days": 2
+    },
+    {
+      "repo": "ix",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-05-17",
+      "drift_days": 0
+    },
+    {
+      "repo": "Demerzel",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-17",
+      "drift_days": 1
+    },
+    {
+      "repo": "tars",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-17",
+      "drift_days": 1
+    },
+    {
+      "repo": "guitaralchemist.github.io",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-16",
+      "drift_days": 0
+    },
+    {
+      "repo": "mergerisk",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/mergerisk"
+    },
+    {
+      "repo": "agent-blackbox",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-05-17",
+      "drift_days": 0
+    },
+    {
+      "repo": "demerzel-bot",
+      "status": "stale",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-05-15",
+      "drift_days": 40
+    },
+    {
+      "repo": "devto-mcp",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/devto-mcp"
+    },
+    {
+      "repo": "fin",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/fin"
+    },
+    {
+      "repo": "ga-godot",
+      "status": "stale",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-05-15",
+      "drift_days": 40
+    },
+    {
+      "repo": "hari",
+      "status": "ok",
+      "readme_mtime": "2026-05-18",
+      "readme_touch": "2026-05-01",
+      "head_date": "2026-05-02",
+      "drift_days": 1
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "ok": 7,
+    "borderline": 0,
+    "stale": 2,
+    "very_stale": 0,
+    "absent": 3
+  }
+}
