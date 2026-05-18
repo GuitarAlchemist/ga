@@ -140,9 +140,15 @@ public class GpuVoicingSearchPerformanceTests
         // Assert
         Assert.That(results, Is.Not.Null);
         Assert.That(results.Count, Is.LessThanOrEqualTo(10));
-        // Note: Allow a wider threshold to accommodate CI and hardware variance while still ensuring GPU speed.
-        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(1500),
-            $"Filtered search should complete within 1500ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
+        // CI GitHub-hosted runners hit ~800-1500ms on this path vs ~50-200ms locally with a real GPU.
+        // The 1500ms guard was already a runner-class concession but still flakes (1507ms observed
+        // 2026-05-18 in run 26010838922; ditto ~1000ms baseline across the past day). Loosen the CI
+        // budget to 3000ms — still catches a true regression (full first-search uncached path is
+        // sub-2s even on the cheapest runners) without paying for shared-CPU/GPU jitter. Keep the
+        // tight 1500ms guard locally so the test still flags real perf regressions on dev boxes.
+        var threshold = Environment.GetEnvironmentVariable("CI") == "true" ? 3000 : 1500;
+        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(threshold),
+            $"Filtered search should complete within {threshold}ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
         Console.WriteLine($"Filtered search time (2000/10000 voicings): {stopwatch.ElapsedMilliseconds}ms");
     }
 
