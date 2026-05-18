@@ -109,7 +109,7 @@ const ModalMeadowTest: React.FC = () => {
             letterSpacing: 1,
           }}
         >
-          MODAL MEADOW · v0 · Ionian ↔ Phrygian
+          MODAL MEADOW · v0.5 · Ionian ↔ Phrygian · Hills + Suns + Motes
         </Box>
       </Container>
     </DemoErrorBoundary>
