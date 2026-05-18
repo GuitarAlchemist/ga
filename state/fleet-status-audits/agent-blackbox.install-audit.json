@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-05-18T01:13:34.486931+00:00",
+  "recommendations": [
+    "All audited repos have Agent Blackbox installed with required enforcement and observability."
+  ],
+  "repos": [
+    {
+      "checks": [
+        {
+          "evidence": [
+            "AGENTS.md"
+          ],
+          "id": "instructions",
+          "maxScore": 10,
+          "name": "Agent instructions",
+          "recommendation": "Add AGENTS.md with the repo verification command and Agent Blackbox operating boundaries.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "agent-blackbox.policy.json"
+          ],
+          "id": "policy",
+          "maxScore": 15,
+          "name": "Agent Blackbox policy",
+          "recommendation": "Install a valid agent-blackbox.policy.json with conservative thresholds and blocked path rules.",
+          "score": 15,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            ".github/workflows/agent-blackbox.yml"
+          ],
+          "id": "workflow",
+          "maxScore": 20,
+          "name": "GitHub Action workflow",
+          "recommendation": "Install .github/workflows/agent-blackbox.yml so PRs emit risk reports, comments, and artifacts.",
+          "score": 20,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "local Agent Blackbox checkout"
+          ],
+          "id": "pinning",
+          "maxScore": 10,
+          "name": "Agent Blackbox version pin",
+          "recommendation": "Pin AGENT_BLACKBOX_REF to a release tag or commit SHA; do not consume main for enforcement.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "workflow runs scripts/verify.ps1"
+          ],
+          "id": "verification",
+          "maxScore": 10,
+          "name": "Verification command",
+          "recommendation": "Configure VERIFY_COMMAND or a repo-local verify script so reports include test evidence.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "enforce --report",
+            "agent-blackbox-reviewed"
+          ],
+          "id": "enforcement",
+          "maxScore": 10,
+          "name": "Review override enforcement",
+          "recommendation": "Run enforce on risk-report.json and require the agent-blackbox-reviewed label for deliberate overrides.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "harness-audit workflow step",
+            "response-quality workflow step",
+            "state/governance/dev-process-overseer.json",
+            "state/quality/agent-blackbox-harness/baseline.json"
+          ],
+          "id": "observability",
+          "maxScore": 15,
+          "name": "Harness and quality observability",
+          "recommendation": "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence.",
+          "score": 15,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "agent-blackbox.loop-policy.json",
+            "scripts/supervised-loop-preflight.ps1",
+            "Scripts/supervised-loop-preflight.ps1",
+            ".claude/skills/supervised-loop/SKILL.md",
+            "state/quality/agent-blackbox-harness/baseline.json"
+          ],
+          "id": "loop-controls",
+          "maxScore": 10,
+          "name": "Loop controls",
+          "recommendation": "Install loop policy, supervised-loop preflight, quality baselines, and halt-marker handling before autonomous loops.",
+          "score": 10,
+          "status": "pass"
+        },
+        {
+          "evidence": [
+            "producer-reviewer: AGENTS.md",
+            "fresh-evaluator: docs/review-independence.md",
+            "cross-vendor-review: AGENTS.md",
+            "rewrite-budget: docs/review-independence.md"
+          ],
+          "id": "review-independence",
+          "maxScore": 10,
+          "name": "Review independence",
+          "recommendation": "Separate generation from evaluation with producer-reviewer, fresh evaluator, cross-vendor review, or rewrite-budget evidence before trusting unattended loops.",
+          "score": 10,
+          "status": "pass"
+        }
+      ],
+      "findings": [],
+      "maxScore": 110,
+      "name": "agent-blackbox",
+      "readiness": "installed",
+      "recommendations": [
+        "Agent Blackbox install is ready for PR risk reporting behind normal review gates."
+      ],
+      "root": "C:/Users/spare/source/repos/agent-blackbox",
+      "score": 110,
+      "verdict": "pass"
+    }
+  ],
+  "schemaVersion": "0.1",
+  "summary": {
+    "fail": 0,
+    "pass": 1,
+    "repoCount": 1,
+    "warn": 0
+  },
+  "verdict": "pass"
+}
