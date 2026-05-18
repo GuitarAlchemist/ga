@@ -23,6 +23,7 @@ public class LazyWithExpirationTests
     }
 
     [Test]
+    [Category("Timing")]
     public void Recomputes_AfterExpiration_OnNextAccess()
     {
         // Arrange
@@ -62,6 +63,7 @@ public class LazyWithExpirationTests
     }
 
     [Test]
+    [Category("Timing")]
     public void ConcurrentAccess_InitializesOnlyOnce_BeforeExpiration()
     {
         // Arrange
@@ -88,6 +90,7 @@ public class LazyWithExpirationTests
     }
 
     [Test]
+    [Category("Timing")]
     public void TimerStartsOnFirstAccess_NotOnConstruction()
     {
         // This test ensures that accessing Value triggers the expiration timer; until then, value is not created.
