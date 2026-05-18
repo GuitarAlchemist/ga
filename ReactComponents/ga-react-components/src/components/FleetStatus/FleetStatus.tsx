@@ -115,8 +115,10 @@ const FleetStatus: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Public assets are served from the Vite root; bust cache on first paint.
-    fetch('/fleet-status.json', { cache: 'no-cache' })
+    // Public assets are served from Vite's BASE_URL (root in dev,
+    // /ga/ on GitHub Pages); bust cache on first paint.
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    fetch(`${base}/fleet-status.json`, { cache: 'no-cache' })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
