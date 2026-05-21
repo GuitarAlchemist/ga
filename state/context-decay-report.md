@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-05-20T09:18:27Z_
+_Generated: 2026-05-21T09:18:05Z_
 
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
