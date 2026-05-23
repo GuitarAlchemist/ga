@@ -34,10 +34,13 @@ jobs:
       - name: Verify digest schema is well-formed JSON
         run: python -c "import json; json.load(open('docs/contracts/digest-schema.json'))"
 
-      - name: Verify CLAUDE.md contains Karpathy 4 Rules section
+      - name: Verify CLAUDE.md contains Karpathy Rules section
         run: |
-          if ! grep -q "Karpathy 4 Rules" CLAUDE.md; then
-            echo "::error file=CLAUDE.md::CLAUDE.md must contain a 'Karpathy 4 Rules' section."
+          # Match "Karpathy <N> Rules" — N was bumped from 4 → 6 (2026-05 added
+          # "Frame problem before solution" and "Instrument + log one-way doors").
+          # Stay tolerant of future additions; only require the heading family.
+          if ! grep -qE "Karpathy [0-9]+ Rules" CLAUDE.md; then
+            echo "::error file=CLAUDE.md::CLAUDE.md must contain a 'Karpathy N Rules' section (N=4..9)."
             exit 1
           fi
 
