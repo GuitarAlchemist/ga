@@ -8,7 +8,11 @@ import App from './App';
 import GuitarFretboard, { FretboardPosition } from './components/GuitarFretboard';
 import RealisticFretboard from './components/RealisticFretboard';
 import { ThreeFretboard } from './components/ThreeFretboard';
-import { Container, Box, Typography, Stack } from '@mui/material';
+import { Container, Box, Typography, Stack, ThemeProvider, CssBaseline } from '@mui/material';
+// Generated MUI theme sourced from /DESIGN.md via scripts/gen-theme-from-design.mjs.
+// Edit DESIGN.md, then `npm run gen:theme`. See DESIGN.md Phase 2 in
+// docs/plans/2026-05-23-arch-design-md-adoption-plan.md.
+import { theme } from './theme';
 
 // Test pages
 import TestIndex from './pages/TestIndex';
@@ -409,19 +413,21 @@ const DiatonicPanel: React.FC = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/*
-      basename uses Vite's BASE_URL. For the lib-mode dev server (current
-      cloudflared origin) BASE_URL is "/" and the router behaves exactly
-      as before. For the GitHub Pages SPA build (vite.config.demos.ts with
-      DEMOS_BASE_PATH=/ga/) BASE_URL is "/ga/", which makes routes resolve
-      under that sub-path. Trailing slash is stripped because react-router
-      expects the basename without it.
-    */}
-    <BrowserRouter
-      basename={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
-      <Routes>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {/*
+        basename uses Vite's BASE_URL. For the lib-mode dev server (current
+        cloudflared origin) BASE_URL is "/" and the router behaves exactly
+        as before. For the GitHub Pages SPA build (vite.config.demos.ts with
+        DEMOS_BASE_PATH=/ga/) BASE_URL is "/ga/", which makes routes resolve
+        under that sub-path. Trailing slash is stripped because react-router
+        expects the basename without it.
+      */}
+      <BrowserRouter
+        basename={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
         {/* Test pages */}
         <Route path="/test" element={<App><TestIndex /></App>} />
         <Route path="/test/manifest" element={<App><ManifestViewer /></App>} />
@@ -485,7 +491,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         {/* Default route - redirect to test index */}
         <Route path="/" element={<Navigate to="/test" replace />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 

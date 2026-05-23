@@ -152,6 +152,27 @@ else
 }
 
 # ============================================
+# THEME.TS SYNC CHECK (DESIGN.md Phase 2)
+# ============================================
+# Only run when a DESIGN.md or theme.ts change is staged, to avoid the
+# ~1s node startup cost on every commit. Reads the canonical tokens
+# from /DESIGN.md and verifies src/theme.ts matches; if out of sync,
+# the developer needs to `npm run gen:theme` and re-stage.
+$themeRelevantStaged = git diff --cached --name-only 2>$null |
+    Where-Object { $_ -match '^DESIGN\.md$' -or $_ -match 'ReactComponents/ga-react-components/(src/theme\.ts|scripts/gen-theme-from-design\.mjs)$' }
+if ($themeRelevantStaged) {
+    Write-Host "`n▶ Checking src/theme.ts is in sync with DESIGN.md..." -ForegroundColor Blue
+    Push-Location (Join-Path $PSScriptRoot '..' 'ReactComponents' 'ga-react-components')
+    & npm run gen:theme:check --silent 2>&1 | Where-Object { $_ -match '^[✓✗]' } | ForEach-Object { Write-Host "  $_" }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "✗ src/theme.ts is out of sync with DESIGN.md" -ForegroundColor Red
+        Write-Host "  Run: cd ReactComponents/ga-react-components && npm run gen:theme && git add src/theme.ts" -ForegroundColor Yellow
+        $script:HasErrors = $true
+    }
+    Pop-Location
+}
+
+# ============================================
 # RESULT
 # ============================================
 Write-Host "`n========================================" -ForegroundColor Cyan
