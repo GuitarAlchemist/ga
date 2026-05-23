@@ -1,4 +1,5 @@
 export { ModalMeadow, default } from './ModalMeadow';
+export { MobileFallback } from './MobileFallback';
 export type { ModeConfig } from './modes';
 export {
   LYDIAN,
