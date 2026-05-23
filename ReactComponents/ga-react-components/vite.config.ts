@@ -5,8 +5,8 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
 import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
-import { parseBacklog, extractDocTitle, binActivityByDay } from './dev-data/parsers'
-import type { BacklogPayload } from './dev-data/parsers'
+import { parseBacklog, extractDocTitle, binActivityByDay } from './src/dev-data/parsers'
+import type { BacklogPayload } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
