@@ -253,6 +253,29 @@
     .showcase-prompt:hover { background: #ecedf5; border-color: #667eea; }
     .showcase-prompt-text { font-weight: 500; margin-bottom: 3px; color: #2a2a3a; }
     .showcase-prompt-desc { font-size: 11.5px; color: #888; }
+    .showcase-qa {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 10.5px;
+      line-height: 1.2;
+    }
+    .qa-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .qa-badge.verified { background: #e3f5ea; color: #168a4a; border: 1px solid #c5e6d2; }
+    .qa-badge.warning  { background: #fff3e0; color: #b56a00; border: 1px solid #ffd9a5; }
+    .qa-badge.unverified { background: #f1f1f5; color: #777; border: 1px dashed #c8c8d0; }
+    .qa-meta { color: #888; }
+    .qa-meta strong { color: #555; font-weight: 600; }
     .showcase-loading, .showcase-error {
       text-align: center;
       padding: 32px 12px;
@@ -981,7 +1004,48 @@
     }
   });
 
-  function renderShowcase(script) {
+  // Normalize prompt text to match server-side QA lookup key
+  // (trim + strip trailing .?! — server uses the same rule).
+  function normalizePromptKey(s) {
+    return (s || '').trim().replace(/[.?!]+$/, '');
+  }
+
+  function formatRelative(iso) {
+    if (!iso) return '';
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return '';
+    const days = Math.floor((Date.now() - then) / 86400000);
+    if (days < 1) return 'today';
+    if (days < 30) return `${days}d ago`;
+    if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+    return `${Math.floor(days / 365)}y ago`;
+  }
+
+  function renderQaBadge(qa) {
+    if (!qa) {
+      return '<div class="showcase-qa"><span class="qa-badge unverified">○ not yet QA-validated</span></div>';
+    }
+    const verified = qa.runCount > 0;
+    if (!verified) {
+      return '<div class="showcase-qa"><span class="qa-badge unverified">○ recorded, not yet measured</span></div>';
+    }
+    const badgeClass = qa.hasWarning ? 'warning' : 'verified';
+    const badgeIcon = qa.hasWarning ? '⚠' : '✓';
+    const badgeLabel = qa.hasWarning ? 'QA passed (slow)' : 'QA verified';
+    const median = qa.medianElapsedMs;
+    const medianStr = (median != null)
+      ? (median < 1000 ? `<strong>${Math.round(median)}ms</strong>` : `<strong>${(median / 1000).toFixed(1)}s</strong>`)
+      : '';
+    const parts = [
+      `<span class="qa-badge ${badgeClass}">${badgeIcon} ${escapeHtml(badgeLabel)}</span>`,
+      medianStr ? `<span class="qa-meta">median ${medianStr}</span>` : '',
+      qa.agentId ? `<span class="qa-meta">via <strong>${escapeHtml(qa.agentId.replace(/^skill\./, ''))}</strong></span>` : '',
+      qa.lastValidated ? `<span class="qa-meta">${escapeHtml(formatRelative(qa.lastValidated))}</span>` : '',
+    ].filter(Boolean);
+    return `<div class="showcase-qa">${parts.join('')}</div>`;
+  }
+
+  function renderShowcase(script, qaByPrompt) {
     if (!script || !Array.isArray(script.categories) || script.categories.length === 0) {
       return '<div class="showcase-loading">No showcase categories available.</div>';
     }
@@ -989,12 +1053,16 @@
       <div class="showcase-category">
         <h3>${escapeHtml(cat.name)}</h3>
         <div class="showcase-category-description">${escapeHtml(cat.description)}</div>
-        ${cat.prompts.map(p => `
-          <button class="showcase-prompt" data-prompt="${escapeHtml(p.prompt)}">
-            <div class="showcase-prompt-text">${escapeHtml(p.prompt)}</div>
-            <div class="showcase-prompt-desc">${escapeHtml(p.description)}</div>
-          </button>
-        `).join('')}
+        ${cat.prompts.map(p => {
+          const qa = qaByPrompt && qaByPrompt[normalizePromptKey(p.prompt)];
+          return `
+            <button class="showcase-prompt" data-prompt="${escapeHtml(p.prompt)}">
+              <div class="showcase-prompt-text">${escapeHtml(p.prompt)}</div>
+              <div class="showcase-prompt-desc">${escapeHtml(p.description)}</div>
+              ${renderQaBadge(qa)}
+            </button>
+          `;
+        }).join('')}
       </div>
     `).join('');
   }
@@ -1005,10 +1073,26 @@
     modal.classList.add('open');
     content.innerHTML = '<div class="showcase-loading">Loading…</div>';
     try {
-      const resp = await fetch('api/chatbot/demo');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const script = await resp.json();
-      content.innerHTML = renderShowcase(script);
+      // Fetch demo script + per-prompt QA summary in parallel. QA is
+      // best-effort — if it fails, we still render the showcase with
+      // "not yet QA-validated" badges instead of failing the whole modal.
+      const [demoResp, qaResp] = await Promise.all([
+        fetch('api/chatbot/demo'),
+        fetch('api/chatbot/qa-summary').catch(() => null),
+      ]);
+      if (!demoResp.ok) throw new Error(`HTTP ${demoResp.status}`);
+      const script = await demoResp.json();
+      let qaByPrompt = {};
+      if (qaResp && qaResp.ok) {
+        try {
+          const raw = await qaResp.json();
+          // Server returns keys already normalized (NormalizePromptKey on C# side).
+          qaByPrompt = Object.fromEntries(
+            Object.entries(raw).map(([k, v]) => [normalizePromptKey(k), v])
+          );
+        } catch { /* keep empty */ }
+      }
+      content.innerHTML = renderShowcase(script, qaByPrompt);
       content.querySelectorAll('.showcase-prompt').forEach(btn => {
         btn.addEventListener('click', () => sendShowcasePrompt(btn.dataset.prompt));
       });
@@ -1043,6 +1127,12 @@
 
   refreshStatus();
   loadExamples();
+
+  // Shareable showcase link: /chatbot/#showcase auto-opens the modal so
+  // friends can land directly on the curated demo prompts.
+  if (window.location.hash === '#showcase') {
+    setTimeout(() => openShowcase(), 100);
+  }
 </script>
 </body>
 </html>
