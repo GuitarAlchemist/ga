@@ -12,6 +12,7 @@
     "build": "vite build",
     "build:demos": "vite build --config vite.config.demos.ts",
     "build:with-types": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:api": "node ./node_modules/nswag/bin/nswag.js run nswag.json",
