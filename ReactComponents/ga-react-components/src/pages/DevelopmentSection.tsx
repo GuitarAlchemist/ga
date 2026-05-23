@@ -519,6 +519,10 @@ const operationalTodos: OperationalTodo[] = [
     title: 'Migrate /dev-data middleware to real backend for production builds',
     why: 'devDataPlugin only runs under `vite` dev server. `vite build` strips it. If demos.guitaralchemist.com ever serves a static build instead of dev mode, the Development tab breaks.',
   },
+  {
+    title: 'Wire per-agent token-quota visibility',
+    why: 'The AI Contributors card surfaces handoffs + commit counts, but "Tokens left" is —. Real values require per-provider auth: Anthropic console API for Claude, OpenAI usage API for Codex, Google AI Studio for Gemini. Each is a separate integration with its own credentials.',
+  },
 ];
 
 const OperationalTodoCard: React.FC = () => {
@@ -766,6 +770,141 @@ const AgentCollaborationCard: React.FC = () => {
   );
 };
 
+interface AgentActivityEntry {
+  agent: string;
+  display_name: string;
+  last_seen_at: string | null;
+  handoff_count: number;
+  coauthored_commits_30d: number;
+  recent_handoffs: { at: string; branch: string | null; head: string | null; path: string }[];
+}
+interface AgentActivityPayload {
+  generated_at: string;
+  agents: AgentActivityEntry[];
+  recent_handoffs: { from: string; at: string; branch: string | null; head: string | null; path: string }[];
+}
+
+const agentColor = (id: string): 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'default' => {
+  switch (id) {
+    case 'claude': return 'primary';
+    case 'codex': return 'success';
+    case 'antigravity': return 'warning';
+    case 'gemini': return 'info';
+    case 'junie': return 'secondary';
+    default: return 'default';
+  }
+};
+
+const AgentContributorsCard: React.FC = () => {
+  const [data, setData] = useState<AgentActivityPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/agent-activity')
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() as Promise<AgentActivityPayload>; })
+      .then((p) => { if (!cancelled) setData(p); })
+      .catch((e) => { if (!cancelled) setError(String(e.message ?? e)); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const formatRelative = (iso: string | null): string => {
+    if (!iso) return '—';
+    const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
+
+  return (
+    <Paper sx={{ p: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <GroupsIcon fontSize="small" sx={{ color: 'primary.main' }} />
+        <Typography variant="h6">AI Contributors</Typography>
+        {data && <Chip label={`${data.agents.length} agents`} size="small" />}
+      </Stack>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+        Activity signal across all AI agents working on this repo. Handoffs from{' '}
+        <Box component="code" sx={{ px: 0.5, bgcolor: 'action.hover', borderRadius: 0.5, fontSize: '0.8rem' }}>state/handoffs/</Box>{' '}
+        + commit counts from{' '}
+        <Box component="code" sx={{ px: 0.5, bgcolor: 'action.hover', borderRadius: 0.5, fontSize: '0.8rem' }}>git log --since=30 days ago</Box>.
+      </Typography>
+
+      {error && <Alert severity="error">Failed to load: {error}</Alert>}
+      {!data && !error && <CircularProgress size={20} />}
+
+      {data && (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={7}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Per-agent activity</Typography>
+            <Box sx={{ overflow: 'auto' }}>
+              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <Box component="thead" sx={{ '& th': { textAlign: 'left', py: 0.5, color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem', borderBottom: '1px solid', borderColor: 'divider' } }}>
+                  <tr>
+                    <th>Agent</th>
+                    <th style={{ textAlign: 'right' }}>Commits (30d)</th>
+                    <th style={{ textAlign: 'right' }}>Handoffs</th>
+                    <th style={{ textAlign: 'right' }}>Last seen</th>
+                    <th style={{ textAlign: 'right' }}>Tokens left</th>
+                  </tr>
+                </Box>
+                <Box component="tbody" sx={{ '& td': { py: 0.75, borderBottom: '1px solid', borderColor: 'divider' } }}>
+                  {data.agents.map((a) => (
+                    <tr key={a.agent}>
+                      <td>
+                        <Chip label={a.display_name} color={agentColor(a.agent)} size="small" sx={{ fontSize: '0.7rem' }} />
+                      </td>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{a.coauthored_commits_30d || '—'}</td>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{a.handoff_count || '—'}</td>
+                      <td style={{ textAlign: 'right', color: '#888' }}>{formatRelative(a.last_seen_at)}</td>
+                      <td style={{ textAlign: 'right', color: '#bbb' }}>—</td>
+                    </tr>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5, fontStyle: 'italic' }}>
+              "Tokens left" is not tracked yet — requires per-provider auth (Anthropic / OpenAI / Google).
+              See Operational TODO below.
+            </Typography>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Recent handoffs</Typography>
+            <Box sx={{ maxHeight: 280, overflow: 'auto' }}>
+              {data.recent_handoffs.length === 0 && (
+                <Typography variant="caption" color="text.secondary">No handoffs recorded.</Typography>
+              )}
+              {data.recent_handoffs.map((h) => (
+                <Box key={h.path} sx={{ py: 0.75, borderBottom: '1px solid', borderColor: 'divider' }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip label={h.from} color={agentColor(h.from)} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
+                    <Typography variant="caption" color="text.secondary">{formatRelative(h.at)}</Typography>
+                  </Stack>
+                  {h.branch && (
+                    <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.7rem', color: 'text.secondary' }}>
+                      {h.branch}{h.head ? ` @ ${h.head.slice(0, 8)}` : ''}
+                    </Typography>
+                  )}
+                  <MuiLink
+                    href={`https://github.com/GuitarAlchemist/ga/blob/main/${h.path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    {h.path.replace('state/handoffs/', '')}
+                  </MuiLink>
+                </Box>
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+      )}
+    </Paper>
+  );
+};
+
 const ManifestBanner: React.FC = () => {
   const navigate = useNavigate();
   return (
@@ -791,45 +930,7 @@ const ManifestBanner: React.FC = () => {
   );
 };
 
-type AccessMode = 'loading' | 'local' | 'gated' | 'error';
-
-const GatedPlaceholder: React.FC = () => (
-  <Paper sx={{ p: 3, bgcolor: 'action.hover' }}>
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
-      <CodeIcon sx={{ fontSize: 40, color: 'info.main' }} />
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>Dashboard is local-only</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          The Development dashboard reads from <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>/dev-data/*</Box> endpoints
-          that are gated to local-origin requests for security (they expose backlog, commit history,
-          quality snapshots, and agent config). The public site doesn't see them. The Demos tab
-          and the link cards above remain fully functional from anywhere.
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Developers: open <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>http://localhost:5176/test</Box> on
-          the dev host to see the full dashboard.
-        </Typography>
-      </Box>
-    </Stack>
-  </Paper>
-);
-
 export const DevelopmentSection: React.FC = () => {
-  const [access, setAccess] = React.useState<AccessMode>('loading');
-
-  React.useEffect(() => {
-    let cancelled = false;
-    fetch('/dev-data/manifest', { cache: 'no-store' })
-      .then((r) => {
-        if (cancelled) return;
-        if (r.ok) setAccess('local');
-        else if (r.status === 403) setAccess('gated');
-        else setAccess('error');
-      })
-      .catch(() => { if (!cancelled) setAccess('error'); });
-    return () => { cancelled = true; };
-  }, []);
-
   return (
     <Stack spacing={3}>
       <Box>
@@ -840,35 +941,34 @@ export const DevelopmentSection: React.FC = () => {
         <DashboardLinks />
       </Box>
 
-      {access === 'local' && <ManifestBanner />}
-      {access === 'gated' && <GatedPlaceholder />}
+      <ManifestBanner />
 
-      {access === 'local' && <OverviewSection />}
+      <OverviewSection />
 
-      {access === 'local' && (
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <BacklogCard />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Stack spacing={2}>
-              <QualityCard />
-              <ProcessHealthCard />
-            </Stack>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <ActivityCard />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <ArchitectureCard />
-          </Grid>
-          <Grid item xs={12}>
-            <AgentCollaborationCard />
-          </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <BacklogCard />
         </Grid>
-      )}
+        <Grid item xs={12} md={6}>
+          <Stack spacing={2}>
+            <QualityCard />
+            <ProcessHealthCard />
+          </Stack>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <ActivityCard />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <ArchitectureCard />
+        </Grid>
+        <Grid item xs={12}>
+          <AgentContributorsCard />
+        </Grid>
+        <Grid item xs={12}>
+          <AgentCollaborationCard />
+        </Grid>
+      </Grid>
 
-      {/* OperationalTodo is static content — show regardless of access mode */}
       <OperationalTodoCard />
     </Stack>
   );

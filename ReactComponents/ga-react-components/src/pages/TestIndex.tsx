@@ -187,15 +187,6 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
-    id: 'chord-progression',
-    title: 'Chord Progression Visualizer',
-    description: '3D visualization of chord progressions with circle of fifths and animated chord transitions',
-    technology: 'Three.js + WebGL',
-    path: '/test/chord-progression',
-    features: ['Circle of Fifths', 'Color-Coded Chords', 'Auto-Progression', 'Stacked Notes', 'VSM Shadows', 'Interactive Camera'],
-    status: 'complete',
-  },
-  {
     id: 'sand-dunes',
     title: 'Sand Dunes Terrain',
     description: 'Procedural desert landscape with ridged multifractal noise, micro ripples, and atmospheric fog',
@@ -232,15 +223,6 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
-    id: 'fractal-splat',
-    title: 'Fractal Splat',
-    description: 'Procedural Mandelbulb-style fractal rendered as soft Gaussian splats with bloom, palette controls, and animated morphing',
-    technology: 'Three.js + GLSL point sprites',
-    path: '/test/fractal-splat',
-    features: ['Gaussian Splats', 'Mandelbulb Boundary Cloud', 'Shader Point Sprites', 'Bloom', 'Palette Controls', 'Procedural Generation'],
-    status: 'complete',
-  },
-  {
     id: 'mandelbulb',
     title: 'Mandelbulb',
     description: 'True raymarched Mandelbulb fractal with distance estimation, orbit-trap coloring, soft shadows, and interactive power controls',
@@ -256,24 +238,6 @@ const testPages: TestPageInfo[] = [
     technology: 'Three.js + @mkkellogg/gaussian-splats-3d',
     path: '/test/gaussian-splat',
     features: ['3D Gaussian Splatting', 'Compressed PLY Streaming', 'Multi-Version CDN Resolver', 'CPU Worker Sort', 'SOG Format Detection', 'Custom Scene URL'],
-    status: 'complete',
-  },
-  {
-    id: 'sunflower-field',
-    title: 'Sunflower Field',
-    description: 'Hyper-real procedural sunflower rows with instanced flowers, canvas-textured heads, golden-hour light, and Gaussian pollen haze',
-    technology: 'Three.js + InstancedMesh + Gaussian point sprites',
-    path: '/test/sunflower-field',
-    features: ['Instanced Sunflowers', 'Procedural Textures', 'Golden Hour', 'Wind Sway', 'Gaussian Pollen', 'Bloom'],
-    status: 'complete',
-  },
-  {
-    id: 'maple-tree',
-    title: 'Maple Tree',
-    description: 'Hyper-real procedural maple tree with textured bark, recursive branches, instanced leaves, wind, and seasonal palettes',
-    technology: 'Three.js + InstancedMesh + Procedural Textures',
-    path: '/test/maple-tree',
-    features: ['Maple Leaves', 'Procedural Bark', 'Recursive Branches', 'Wind Flutter', 'Autumn Palette', 'Ground Litter'],
     status: 'complete',
   },
   {
@@ -393,15 +357,6 @@ const testPages: TestPageInfo[] = [
     features: ['Force-Directed Graph', '3D Node Types', 'Particle Streams', 'Health Overlay', 'Search', 'Detail Panel'],
     status: 'complete',
   },
-  {
-    id: 'ix-hand-voicing',
-    title: 'IX Hand Voicing Lab',
-    description: 'Webcam hand-pose landmarks become fretboard contacts, then IX-style ranking estimates playable chord voicings',
-    technology: 'MediaPipe + Rust WASM + IX scoring',
-    path: '/test/ix-hand-voicing',
-    features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
-    status: 'partial',
-  },
 ];
 
 const statusColors = {
@@ -418,18 +373,10 @@ const statusLabels = {
 
 export const TestIndex: React.FC = () => {
   const navigate = useNavigate();
-  // Default to 'demos' so public visitors (sharing the URL with friends)
-  // land on the showcase. Probe /dev-data/manifest on mount: if it returns
-  // 200 (local dev), switch to the Development tab. Public visitors will
-  // get 403 and stay on Demos.
-  const [tab, setTab] = React.useState<'dev' | 'demos'>('demos');
-  React.useEffect(() => {
-    let cancelled = false;
-    fetch('/dev-data/manifest', { cache: 'no-store' })
-      .then((r) => { if (!cancelled && r.ok) setTab('dev'); })
-      .catch(() => { /* ignore */ });
-    return () => { cancelled = true; };
-  }, []);
+  // Development is the default landing surface — it's the live "behind the
+  // scenes" view (epic progress, QA, AI contributors, commit activity) and
+  // is publicly readable. Demos remains one click away.
+  const [tab, setTab] = React.useState<'dev' | 'demos'>('dev');
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>

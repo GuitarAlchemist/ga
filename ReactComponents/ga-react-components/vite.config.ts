@@ -34,11 +34,23 @@ try {
 // Every endpoint reads fresh per request so CI-pushed quality snapshots,
 // edited BACKLOG.md, and new commits show up without a rebuild.
 //
-// SECURITY: this plugin is dev-only (configureServer; vite build strips it),
-// BUT the dev server is exposed publicly via Cloudflare tunnel
-// (demos.guitaralchemist.com). Each endpoint gates on isLocalOrigin() so
-// external clients get 403. localhost / 127.0.0.1 / private LAN ranges
-// (192.168/16, 10/8, 172.16/12) are allowed; everything else is rejected.
+// SECURITY MODEL — public by design:
+// All data sources here are already public on github.com/GuitarAlchemist/ga:
+// BACKLOG.md, docs/architecture/, state/quality/, git log, .mcp.json,
+// CLAUDE.md / AGENTS.md / GEMINI.md, etc. Serving them here is a UX
+// convenience for the dashboard, not a privileged surface. **Do not** add
+// secrets, private state, or user data behind any /dev-data/* endpoint —
+// they are reachable from the public Cloudflare tunnel.
+//
+// One redaction is kept defensively: gatherMcpServers() returns
+// names + transport types only, never the full .mcp.json body. That
+// protects against the foot-gun of a contributor inlining a resolved
+// ${ENV_VAR} secret into .mcp.json for local debugging and then
+// committing it.
+//
+// /pr/* (Prime Radiant control bus) IS gated — it's a live SSE command
+// bus that accepts arbitrary actions. Public access there is a real
+// disruption vector, not a data leak.
 //
 // Schema is intentionally stable — see /dev-data/manifest top-level keys.
 // Add new fields rather than renaming existing ones.
@@ -184,6 +196,155 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── AI agent activity ────────────────────────────────────────────────
+    // Surface which agents are actively contributing — from state/handoffs/
+    // YAML frontmatter (durable cross-agent notes) plus Co-Authored-By
+    // signature counts from recent git log. Token-quota visibility is
+    // intentionally NOT here: it requires per-provider auth (Anthropic,
+    // OpenAI, Google) and would leak credentials. Surfaced as an
+    // Operational TODO instead.
+
+    interface AgentActivity {
+        agent: string;
+        display_name: string;
+        last_seen_at: string | null;
+        handoff_count: number;
+        coauthored_commits_30d: number;
+        recent_handoffs: { at: string; branch: string | null; head: string | null; path: string }[];
+    }
+
+    interface RecentHandoffEntry {
+        from: string;
+        at: string;
+        branch: string | null;
+        head: string | null;
+        path: string;
+    }
+
+    interface AgentActivityPayload {
+        generated_at: string;
+        agents: AgentActivity[];
+        recent_handoffs: RecentHandoffEntry[];
+    }
+
+    function canonicalAgent(raw: string): { id: string; display: string } {
+        const norm = raw.toLowerCase().trim().replace(/^["']|["']$/g, '');
+        if (norm.includes('antigravity')) return { id: 'antigravity', display: 'Antigravity' };
+        if (norm.includes('codex') || norm.includes('chatgpt')) return { id: 'codex', display: 'Codex (OpenAI)' };
+        if (norm.includes('claude')) return { id: 'claude', display: 'Claude Code' };
+        if (norm.includes('gemini')) return { id: 'gemini', display: 'Gemini' };
+        if (norm.includes('junie')) return { id: 'junie', display: 'Junie (JetBrains)' };
+        if (norm.includes('demerzel')) return { id: 'demerzel', display: 'Demerzel' };
+        if (norm.includes('human') || norm.includes('operator')) return { id: 'human', display: 'Human operator' };
+        // Generic 'agent' or unknown
+        return { id: norm || 'unknown', display: norm ? norm[0].toUpperCase() + norm.slice(1) : 'Unknown' };
+    }
+
+    function parseHandoffFrontmatter(text: string): { from?: string; at?: string; branch?: string; head?: string } {
+        // Frontmatter: --- ... --- at the top. Tolerate both
+        //   from: codex                  (unquoted)
+        //   from: "codex"                (quoted)
+        // and ISO-8601 timestamps under `at:` or `generated_at:`.
+        const m = text.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+        if (!m) return {};
+        const out: Record<string, string> = {};
+        for (const line of m[1].split(/\r?\n/)) {
+            const kv = line.match(/^(\w+):\s*(.+?)\s*$/);
+            if (!kv) continue;
+            out[kv[1]] = kv[2].replace(/^["']|["']$/g, '');
+        }
+        return {
+            from: out.from,
+            at: out.at || out.generated_at,
+            branch: out.branch,
+            head: out.head,
+        };
+    }
+
+    function gatherAgentActivity(): AgentActivityPayload {
+        const generated_at = new Date().toISOString();
+        const stats = new Map<string, AgentActivity>();
+        const recent: RecentHandoffEntry[] = [];
+
+        // 1. Scan state/handoffs/*.md
+        const handoffDir = path.join(repoRoot, 'state', 'handoffs');
+        if (existsSync(handoffDir)) {
+            for (const file of readdirSync(handoffDir)) {
+                if (!file.endsWith('.md') || file === 'README.md') continue;
+                const full = path.join(handoffDir, file);
+                try {
+                    const fm = parseHandoffFrontmatter(readFileSync(full, 'utf-8'));
+                    if (!fm.from || !fm.at) continue;
+                    const { id, display } = canonicalAgent(fm.from);
+                    const entry: RecentHandoffEntry = {
+                        from: id,
+                        at: fm.at,
+                        branch: fm.branch ?? null,
+                        head: fm.head ?? null,
+                        path: `state/handoffs/${file}`,
+                    };
+                    recent.push(entry);
+                    let row = stats.get(id);
+                    if (!row) {
+                        row = { agent: id, display_name: display, last_seen_at: null, handoff_count: 0, coauthored_commits_30d: 0, recent_handoffs: [] };
+                        stats.set(id, row);
+                    }
+                    row.handoff_count += 1;
+                    if (!row.last_seen_at || fm.at > row.last_seen_at) row.last_seen_at = fm.at;
+                    row.recent_handoffs.push({ at: fm.at, branch: entry.branch, head: entry.head, path: entry.path });
+                } catch { /* skip malformed */ }
+            }
+        }
+
+        // 2. Count Co-Authored-By signatures in last 30d of git log.
+        // %b is the full commit message body — includes trailers.
+        try {
+            const body = execFileSync(
+                'git',
+                ['log', '--since=30 days ago', '--pretty=format:%H%n%b%n---END-COMMIT---'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            const seenCommitsByAgent = new Map<string, Set<string>>();
+            let currentSha: string | null = null;
+            for (const line of body.split(/\r?\n/)) {
+                if (line === '---END-COMMIT---') { currentSha = null; continue; }
+                if (currentSha === null && /^[0-9a-f]{40}$/.test(line)) { currentSha = line; continue; }
+                const ca = line.match(/^Co-Authored-By:\s*(.+?)\s*<.*>$/i);
+                if (ca && currentSha) {
+                    const { id } = canonicalAgent(ca[1]);
+                    if (!seenCommitsByAgent.has(id)) seenCommitsByAgent.set(id, new Set());
+                    seenCommitsByAgent.get(id)!.add(currentSha);
+                }
+            }
+            for (const [id, shas] of seenCommitsByAgent) {
+                let row = stats.get(id);
+                if (!row) {
+                    const { display } = canonicalAgent(id);
+                    row = { agent: id, display_name: display, last_seen_at: null, handoff_count: 0, coauthored_commits_30d: 0, recent_handoffs: [] };
+                    stats.set(id, row);
+                }
+                row.coauthored_commits_30d = shas.size;
+            }
+        } catch { /* git unavailable — leave counts at 0 */ }
+
+        // Sort handoffs newest-first; trim per-agent recent list to 3
+        recent.sort((a, b) => b.at.localeCompare(a.at));
+        for (const row of stats.values()) {
+            row.recent_handoffs.sort((a, b) => b.at.localeCompare(a.at));
+            row.recent_handoffs = row.recent_handoffs.slice(0, 3);
+        }
+
+        // Sort agents by last_seen desc, then commits desc
+        const agents = Array.from(stats.values()).sort((a, b) => {
+            const aSeen = a.last_seen_at ?? '';
+            const bSeen = b.last_seen_at ?? '';
+            if (aSeen !== bSeen) return bSeen.localeCompare(aSeen);
+            return b.coauthored_commits_30d - a.coauthored_commits_30d;
+        });
+
+        return { generated_at, agents, recent_handoffs: recent.slice(0, 10) };
+    }
+
     interface ArchDoc { file: string; title: string; modified_at: string; size: number }
     function gatherArchitecture(): ArchDoc[] {
         const archDir = path.join(repoRoot, 'docs', 'architecture');
@@ -291,7 +452,6 @@ function devDataPlugin(): Plugin {
         configureServer(server) {
             server.middlewares.use('/dev-data/backlog', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 const p = path.join(repoRoot, 'BACKLOG.md');
                 if (!existsSync(p)) {
                     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -304,14 +464,12 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/quality', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
             });
 
             server.middlewares.use('/dev-data/activity', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') ?? 10)));
                 const days = Math.max(1, Math.min(180, Number(url.searchParams.get('days') ?? 30)));
@@ -325,14 +483,12 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/architecture', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
             });
 
             server.middlewares.use('/dev-data/agents', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({
                     generated_at: new Date().toISOString(),
@@ -341,9 +497,14 @@ function devDataPlugin(): Plugin {
                 }));
             });
 
+            server.middlewares.use('/dev-data/agent-activity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherAgentActivity()));
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                if (!gateLocal(req, res)) return;
                 const manifest = {
                     schema_version: '1.0.0',
                     generated_at: new Date().toISOString(),
@@ -355,6 +516,7 @@ function devDataPlugin(): Plugin {
                         activity: '/dev-data/activity',
                         architecture: '/dev-data/architecture',
                         agents: '/dev-data/agents',
+                        agent_activity: '/dev-data/agent-activity',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -365,6 +527,7 @@ function devDataPlugin(): Plugin {
                     architecture: gatherArchitecture(),
                     agent_files: gatherAgentFiles(),
                     mcp_servers: gatherMcpServers(),
+                    agent_activity: gatherAgentActivity(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));
