@@ -135,11 +135,11 @@ function devDataPlugin(): Plugin {
     function gatherBacklog(): { total_sections: number; top_sections: BacklogSection[] } | null {
         const p = path.join(repoRoot, 'BACKLOG.md');
         if (!existsSync(p)) return null;
-        const lines = readFileSync(p, 'utf-8').split('\n');
+        const lines = readFileSync(p, 'utf-8').split(/\r?\n/);
         const sections: BacklogSection[] = [];
         let current: BacklogSection | null = null;
         for (const line of lines) {
-            const h2 = line.match(/^##\s+(.+)$/);
+            const h2 = line.match(/^##\s+(.+?)\s*$/);
             if (h2) {
                 if (current) sections.push(current);
                 current = { title: h2[1].trim(), item_count: 0 };

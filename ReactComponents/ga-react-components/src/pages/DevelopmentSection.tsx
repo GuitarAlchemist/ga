@@ -583,29 +583,30 @@ const OperationalTodoCard: React.FC = () => {
   );
 };
 
-const ManifestBanner: React.FC = () => (
-  <Alert
-    severity="info"
-    icon={<CodeIcon fontSize="small" />}
-    sx={{ '& .MuiAlert-message': { width: '100%' } }}
-  >
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
-      <Typography variant="body2">
-        AI tools (Claude, Junie, Codex): fetch <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>/dev-data/manifest</Box> for full project context.
-      </Typography>
-      <Button
-        size="small"
-        variant="outlined"
-        href="/dev-data/manifest"
-        target="_blank"
-        rel="noopener noreferrer"
-        endIcon={<OpenInNewIcon />}
-      >
-        Open manifest
-      </Button>
-    </Stack>
-  </Alert>
-);
+const ManifestBanner: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <Alert
+      severity="info"
+      icon={<CodeIcon fontSize="small" />}
+      sx={{ '& .MuiAlert-message': { width: '100%' } }}
+    >
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
+        <Typography variant="body2">
+          AI tools (Claude, Junie, Codex): fetch <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>/dev-data/manifest</Box> for full project context.
+        </Typography>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => navigate('/test/manifest')}
+          endIcon={<OpenInNewIcon />}
+        >
+          Open manifest
+        </Button>
+      </Stack>
+    </Alert>
+  );
+};
 
 export const DevelopmentSection: React.FC = () => {
   return (
