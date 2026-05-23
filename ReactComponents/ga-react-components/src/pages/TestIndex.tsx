@@ -180,10 +180,10 @@ const testPages: TestPageInfo[] = [
   {
     id: 'modal-meadow',
     title: 'Modal Meadow',
-    description: 'Walk through a meadow split into seven musical mode-regions (Lydian → Locrian, modal-brightness order); ambient chord progression, grass color, sun, and wind shift as you cross between modes. v0.9 rewrites the synth (ADSR pad voices, spread voicings root −24/root/top +12, fake-reverb send) so the bII half-step in Phrygian reads as a 10th not a m2. v0.8 keeps the slope-driven pitch glide + FOV bump on descents. v1.2 ground-clamp samples terrain ahead so the camera rides approaching hills.',
+    description: 'Walk through a meadow split into seven musical mode-regions (Lydian → Locrian, modal-brightness order); ambient chord progression, grass color, sun, and wind shift as you cross between modes. v1.3 cinematic pass: EffectComposer + UnrealBloomPass on the sun + brightest motes, real PCF-soft directional shadows from the per-region sun (hills self-occlude), 3-band atmospheric sky with sun disc + halo + warmth bleed, volumetric god rays gated by dusk-mode weight, and a ?perf=high|medium|low URL toggle. v0.9 rewrites the synth (ADSR pad voices, spread voicings root −24/root/top +12, fake-reverb send). v1.2 ground-clamp samples terrain ahead so the camera rides approaching hills.',
     technology: 'Three.js + Web Audio + FPS Controls',
     path: '/test/modal-meadow',
-    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Seven Modes', 'Auto-Walk Default', 'Hills + Ponds', 'ADSR Spread Voicings', 'Fake-Reverb Send', 'Descent Pitch Glide', 'Ground Clamp'],
+    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Seven Modes', 'Auto-Walk Default', 'Hills + Ponds', 'ADSR Spread Voicings', 'Cinematic Bloom', 'Real Shadows', '3-Band Sky + Sun Disc', 'God Rays (Dusk)', 'perf=high/med/low'],
     status: 'complete',
   },
   {
