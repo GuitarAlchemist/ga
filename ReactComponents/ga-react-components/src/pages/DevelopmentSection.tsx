@@ -13,6 +13,8 @@ import {
   Link as MuiLink,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -37,6 +39,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import LayersIcon from '@mui/icons-material/Layers';
 
 interface DevLink {
   title: string;
@@ -930,7 +936,70 @@ const ManifestBanner: React.FC = () => {
   );
 };
 
+// Bottom-up 5-layer model lifted from CLAUDE.md (Architecture section).
+// Static content — if CLAUDE.md changes, this list should be updated to match.
+const LayerMapCard: React.FC = () => {
+  const layers = [
+    { n: 1, name: 'Core', projects: 'GA.Core, GA.Domain.Core', desc: 'Pure primitives: Note, Interval, Fretboard' },
+    { n: 2, name: 'Domain', projects: 'GA.Business.Core, GA.Business.Config, GA.BSP.Core', desc: 'Logic, YAML config, BSP' },
+    { n: 3, name: 'Analysis', projects: 'GA.Business.Core.Harmony, GA.Business.Core.Fretboard', desc: 'Chord/scale, voice leading, spectral' },
+    { n: 4, name: 'AI/ML', projects: 'GA.Business.ML', desc: 'Embeddings, vector search, RAG, OPTIC-K schema' },
+    { n: 5, name: 'Orchestration', projects: 'GA.Business.Core.Orchestration, GA.Business.Assets, GA.Business.Intelligence', desc: 'Top layer; AI code lives at layer 4, orchestration at 5' },
+  ];
+  return (
+    <Paper sx={{ p: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <LayersIcon fontSize="small" sx={{ color: 'primary.main' }} />
+        <Typography variant="h6">Five-layer model</Typography>
+      </Stack>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+        Strict bottom-up dependency. AI code in layer 4. Orchestration in layer 5. Never in lower layers. Full map:{' '}
+        <MuiLink href="https://github.com/GuitarAlchemist/ga/blob/main/docs/architecture/layers.md" target="_blank" rel="noopener noreferrer">docs/architecture/layers.md</MuiLink>.
+      </Typography>
+      <Stack spacing={1}>
+        {layers.map((l) => (
+          <Box key={l.n} sx={{ p: 1.25, bgcolor: 'action.hover', borderRadius: 1, borderLeft: 3, borderColor: 'primary.main' }}>
+            <Stack direction="row" spacing={1} alignItems="baseline">
+              <Chip label={l.n} size="small" color="primary" sx={{ fontWeight: 700, height: 22 }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{l.name}</Typography>
+              <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>{l.projects}</Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>{l.desc}</Typography>
+          </Box>
+        ))}
+      </Stack>
+    </Paper>
+  );
+};
+
+type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa';
+const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa'];
+
+const readSubTabFromHash = (): DevSubTab => {
+  if (typeof window === 'undefined') return 'summary';
+  const m = window.location.hash.match(/^#dev\/(\w+)$/);
+  if (m && (DEV_SUB_TABS as string[]).includes(m[1])) return m[1] as DevSubTab;
+  return 'summary';
+};
+
 export const DevelopmentSection: React.FC = () => {
+  const [subTab, setSubTab] = React.useState<DevSubTab>(readSubTabFromHash);
+
+  // Keep URL hash in sync with the selected tab so /test#dev/qa is deep-linkable.
+  React.useEffect(() => {
+    const target = `#dev/${subTab}`;
+    if (window.location.hash !== target) {
+      window.history.replaceState(null, '', target);
+    }
+  }, [subTab]);
+
+  // Listen for back/forward navigation that changes the hash externally.
+  React.useEffect(() => {
+    const onHashChange = () => setSubTab(readSubTabFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -943,33 +1012,69 @@ export const DevelopmentSection: React.FC = () => {
 
       <ManifestBanner />
 
-      <OverviewSection />
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs
+          value={subTab}
+          onChange={(_, v: DevSubTab) => setSubTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="Development sub-sections"
+        >
+          <Tab value="summary"      label="Summary"      icon={<DashboardIcon fontSize="small" />}   iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="architecture" label="Architecture" icon={<AccountTreeIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="product"      label="Product"      icon={<InventoryIcon fontSize="small" />}   iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="project"      label="Project"      icon={<GroupsIcon fontSize="small" />}      iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="qa"           label="QA"           icon={<VerifiedIcon fontSize="small" />}    iconPosition="start" sx={{ minHeight: 44 }} />
+        </Tabs>
+      </Box>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+      {subTab === 'summary' && (
+        <Stack spacing={2}>
+          <OverviewSection />
+          <ProcessHealthCard />
+        </Stack>
+      )}
+
+      {subTab === 'architecture' && (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <LayerMapCard />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <ArchitectureCard />
+          </Grid>
+        </Grid>
+      )}
+
+      {subTab === 'product' && (
+        <Stack spacing={2}>
           <BacklogCard />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Stack spacing={2}>
-            <QualityCard />
-            <ProcessHealthCard />
-          </Stack>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <ActivityCard />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <ArchitectureCard />
-        </Grid>
-        <Grid item xs={12}>
-          <AgentContributorsCard />
-        </Grid>
-        <Grid item xs={12}>
-          <AgentCollaborationCard />
-        </Grid>
-      </Grid>
+        </Stack>
+      )}
 
-      <OperationalTodoCard />
+      {subTab === 'project' && (
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <ActivityCard />
+          </Grid>
+          <Grid item xs={12}>
+            <AgentContributorsCard />
+          </Grid>
+          <Grid item xs={12}>
+            <AgentCollaborationCard />
+          </Grid>
+          <Grid item xs={12}>
+            <OperationalTodoCard />
+          </Grid>
+        </Grid>
+      )}
+
+      {subTab === 'qa' && (
+        <Stack spacing={2}>
+          <QualityCard />
+          <ProcessHealthCard />
+        </Stack>
+      )}
     </Stack>
   );
 };
