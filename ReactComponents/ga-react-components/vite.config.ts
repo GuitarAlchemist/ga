@@ -376,6 +376,20 @@ function devDataPlugin(): Plugin {
         return parseBacklog(readFileSync(p, 'utf-8'));
     }
 
+    // Harness engineering adoption progress, sourced from state/harness/items.json.
+    // Manually authored — edit that file when an item ships or a PR opens.
+    // Schema documented inline in items.json. Returns null if the file is missing
+    // so the dashboard renders an empty-state hint instead of throwing.
+    function gatherHarness(): unknown | null {
+        const p = path.join(repoRoot, 'state/harness/items.json');
+        if (!existsSync(p)) return null;
+        try {
+            return JSON.parse(readFileSync(p, 'utf-8'));
+        } catch {
+            return null;
+        }
+    }
+
     interface AgentFileEntry {
         path: string;
         exists: boolean;
@@ -503,6 +517,18 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(gatherAgentActivity()));
             });
 
+            server.middlewares.use('/dev-data/harness', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const payload = gatherHarness();
+                if (payload == null) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'state/harness/items.json not found' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const manifest = {
@@ -517,6 +543,7 @@ function devDataPlugin(): Plugin {
                         architecture: '/dev-data/architecture',
                         agents: '/dev-data/agents',
                         agent_activity: '/dev-data/agent-activity',
+                        harness: '/dev-data/harness',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -528,6 +555,7 @@ function devDataPlugin(): Plugin {
                     agent_files: gatherAgentFiles(),
                     mcp_servers: gatherMcpServers(),
                     agent_activity: gatherAgentActivity(),
+                    harness: gatherHarness(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));
