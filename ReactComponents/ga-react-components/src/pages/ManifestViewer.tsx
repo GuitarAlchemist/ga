@@ -35,7 +35,23 @@ interface ServiceTopology {
 }
 
 interface BacklogSection { title: string; item_count: number }
-interface BacklogSummary { total_sections: number; top_sections: BacklogSection[] }
+interface BacklogEpic {
+  title: string;
+  total_items: number;
+  shipped: number;
+  active: number;
+  backlog: number;
+  progress_pct: number;
+}
+interface BacklogSummary {
+  total_sections: number;
+  top_sections: BacklogSection[];
+  total_epics?: number;
+  total_items?: number;
+  total_shipped?: number;
+  overall_progress_pct?: number;
+  epics?: BacklogEpic[];
+}
 
 interface QualityEntry { source: string; data: Record<string, unknown> }
 interface QualityPayload { domains: Record<string, QualityEntry>; regressions?: string[] }
@@ -299,7 +315,43 @@ export const ManifestViewer: React.FC = () => {
               }
             />
             {!manifest.backlog && <Typography color="text.secondary">BACKLOG.md not found.</Typography>}
-            {manifest.backlog && (
+            {manifest.backlog?.epics && manifest.backlog.epics.length > 0 && (
+              <>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                  Overall: <strong>{manifest.backlog.overall_progress_pct ?? 0}%</strong> shipped
+                  ({manifest.backlog.total_shipped ?? 0} of {manifest.backlog.total_items ?? 0} items across {manifest.backlog.total_epics ?? 0} epics)
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Epic</TableCell>
+                        <TableCell sx={{ fontWeight: 700, width: 70, textAlign: 'right' }}>Total</TableCell>
+                        <TableCell sx={{ fontWeight: 700, width: 80, textAlign: 'right' }}>Shipped</TableCell>
+                        <TableCell sx={{ fontWeight: 700, width: 80, textAlign: 'right' }}>Active</TableCell>
+                        <TableCell sx={{ fontWeight: 700, width: 80, textAlign: 'right' }}>Backlog</TableCell>
+                        <TableCell sx={{ fontWeight: 700, width: 80, textAlign: 'right' }}>Progress</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {manifest.backlog.epics.map((e) => (
+                        <TableRow key={e.title} hover>
+                          <TableCell>{e.title}</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', textAlign: 'right' }}>{e.total_items}</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', textAlign: 'right', color: 'success.main' }}>{e.shipped}</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', textAlign: 'right', color: 'warning.main' }}>{e.active}</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', textAlign: 'right', color: 'text.secondary' }}>{e.backlog}</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', textAlign: 'right', fontWeight: 600 }}>
+                            {e.total_items > 0 ? `${e.progress_pct}%` : '—'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+            {manifest.backlog && (!manifest.backlog.epics || manifest.backlog.epics.length === 0) && (
               <TableContainer>
                 <Table size="small">
                   <TableHead>

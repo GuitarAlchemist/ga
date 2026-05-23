@@ -106,6 +106,33 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    interface ActivityByDay { date: string; count: number }
+    function gatherActivityByDay(days = 30): ActivityByDay[] | { error: string } {
+        try {
+            const out = execSync(
+                `git log --since="${days} days ago" --pretty=format:%aI`,
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            const bins: Record<string, number> = {};
+            // Pre-seed every day in the window with 0 so the chart always has full extent
+            const now = new Date();
+            for (let i = days - 1; i >= 0; i -= 1) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                bins[key] = 0;
+            }
+            for (const line of out.split('\n')) {
+                if (!line) continue;
+                const day = line.slice(0, 10);
+                if (day in bins) bins[day] += 1;
+            }
+            return Object.entries(bins).map(([date, count]) => ({ date, count }));
+        } catch (e) {
+            return { error: String((e as Error).message ?? e) };
+        }
+    }
+
     interface ArchDoc { file: string; title: string; modified_at: string; size: number }
     function gatherArchitecture(): ArchDoc[] {
         const archDir = path.join(repoRoot, 'docs', 'architecture');
@@ -131,24 +158,93 @@ function devDataPlugin(): Plugin {
             .sort((a, b) => b.modified_at.localeCompare(a.modified_at));
     }
 
-    interface BacklogSection { title: string; item_count: number }
-    function gatherBacklog(): { total_sections: number; top_sections: BacklogSection[] } | null {
+    type SubSectionCategory = 'shipped' | 'active' | 'backlog';
+    interface EpicSubSection { title: string; category: SubSectionCategory; item_count: number }
+    interface BacklogEpic {
+        title: string;
+        total_items: number;
+        shipped: number;
+        active: number;
+        backlog: number;
+        progress_pct: number;
+        sub_sections: EpicSubSection[];
+    }
+    interface BacklogPayload {
+        total_epics: number;
+        total_items: number;
+        total_shipped: number;
+        overall_progress_pct: number;
+        epics: BacklogEpic[];
+        // Legacy fields for back-compat with the original ManifestViewer Backlog table
+        total_sections: number;
+        top_sections: { title: string; item_count: number }[];
+    }
+    function categorize(title: string): SubSectionCategory {
+        const t = title.toLowerCase();
+        if (t.startsWith('shipped') || / shipped\b/.test(t) || t.includes('(shipped')) return 'shipped';
+        if (t.startsWith('active') || / active\b/.test(t) || t.startsWith('in progress') || t.startsWith('in-progress')) return 'active';
+        return 'backlog';
+    }
+    function gatherBacklog(): BacklogPayload | null {
         const p = path.join(repoRoot, 'BACKLOG.md');
         if (!existsSync(p)) return null;
         const lines = readFileSync(p, 'utf-8').split(/\r?\n/);
-        const sections: BacklogSection[] = [];
-        let current: BacklogSection | null = null;
+        const epics: BacklogEpic[] = [];
+        let currentEpic: BacklogEpic | null = null;
+        // Implicit sub-section for bullets that appear directly under H2 (no H3 yet).
+        let currentSub: EpicSubSection | null = null;
         for (const line of lines) {
             const h2 = line.match(/^##\s+(.+?)\s*$/);
+            const h3 = line.match(/^###\s+(.+?)\s*$/);
+            const bullet = /^[-*]\s/.test(line);
             if (h2) {
-                if (current) sections.push(current);
-                current = { title: h2[1].trim(), item_count: 0 };
-            } else if (current && /^[-*]\s/.test(line)) {
-                current.item_count += 1;
+                if (currentEpic) {
+                    if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
+                    epics.push(currentEpic);
+                }
+                currentEpic = {
+                    title: h2[1].trim(),
+                    total_items: 0,
+                    shipped: 0,
+                    active: 0,
+                    backlog: 0,
+                    progress_pct: 0,
+                    sub_sections: [],
+                };
+                currentSub = { title: '(untriaged)', category: 'backlog', item_count: 0 };
+            } else if (h3 && currentEpic) {
+                if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
+                currentSub = { title: h3[1].trim(), category: categorize(h3[1].trim()), item_count: 0 };
+            } else if (bullet && currentSub) {
+                currentSub.item_count += 1;
             }
         }
-        if (current) sections.push(current);
-        return { total_sections: sections.length, top_sections: sections.slice(0, 8) };
+        if (currentEpic) {
+            if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
+            epics.push(currentEpic);
+        }
+        // Tally totals per epic
+        for (const e of epics) {
+            for (const s of e.sub_sections) {
+                e.total_items += s.item_count;
+                if (s.category === 'shipped') e.shipped += s.item_count;
+                else if (s.category === 'active') e.active += s.item_count;
+                else e.backlog += s.item_count;
+            }
+            e.progress_pct = e.total_items > 0 ? Math.round((e.shipped / e.total_items) * 100) : 0;
+        }
+        const totalItems = epics.reduce((sum, e) => sum + e.total_items, 0);
+        const totalShipped = epics.reduce((sum, e) => sum + e.shipped, 0);
+        return {
+            total_epics: epics.length,
+            total_items: totalItems,
+            total_shipped: totalShipped,
+            overall_progress_pct: totalItems > 0 ? Math.round((totalShipped / totalItems) * 100) : 0,
+            epics,
+            // Legacy view: section titles + counts (used by older Backlog table)
+            total_sections: epics.length,
+            top_sections: epics.slice(0, 8).map((e) => ({ title: e.title, item_count: e.total_items })),
+        };
     }
 
     interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
@@ -184,8 +280,13 @@ function devDataPlugin(): Plugin {
                 if (req.method !== 'GET') { next(); return; }
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') ?? 10)));
+                const days = Math.max(1, Math.min(180, Number(url.searchParams.get('days') ?? 30)));
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-                res.end(JSON.stringify({ generated_at: new Date().toISOString(), commits: gatherActivity(limit) }));
+                res.end(JSON.stringify({
+                    generated_at: new Date().toISOString(),
+                    commits: gatherActivity(limit),
+                    by_day: gatherActivityByDay(days),
+                }));
             });
 
             server.middlewares.use('/dev-data/architecture', (req, res, next) => {
@@ -212,6 +313,7 @@ function devDataPlugin(): Plugin {
                     backlog: gatherBacklog(),
                     quality: gatherQuality(),
                     activity: gatherActivity(10),
+                    activity_by_day: gatherActivityByDay(30),
                     architecture: gatherArchitecture(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
