@@ -18,6 +18,31 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "ga": {
+      "command": "dotnet",
+      "args": ["run", "--project", "C:/Users/spare/source/repos/ga/GaMcpServer/GaMcpServer.csproj", "--no-build", "--"]
+    },
+    "tars": {
+      "command": "C:/Users/spare/source/repos/tars/v2/src/Tars.Interface.Cli/bin/Release/net10.0/Tars.Interface.Cli.exe",
+      "args": ["mcp", "server"]
+    },
+    "notebooklm": {
+      "command": "npx",
+      "args": ["notebooklm-mcp@latest"]
+    },
+    "sentrux": {
+      "command": "C:/Users/spare/bin/sentrux.exe",
+      "args": ["mcp"]
+    },
+    "hari": {
+      "command": "C:/Users/spare/source/repos/hari/target/release/hari-mcp.exe",
+      "args": [],
+      "env": { "HARI_STATE_DIR": "C:/Users/spare/source/repos/hari/state/harness" }
     }
   }
 }

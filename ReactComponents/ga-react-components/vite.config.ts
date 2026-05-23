@@ -2,8 +2,11 @@ import {defineConfig, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
-import { createReadStream, existsSync, statSync, readFileSync } from 'fs'
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
+import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
+import { parseBacklog, extractDocTitle, binActivityByDay } from './src/dev-data/parsers'
+import type { BacklogPayload } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -22,6 +25,516 @@ try {
     }
   }
 } catch { /* ignore */ }
+
+// Serve repo-root dev artifacts (BACKLOG.md, state/quality/*, git log,
+// docs/architecture/) for the Development dashboard on /test, plus a single
+// /dev-data/manifest aggregated JSON that both the UI and external AI tools
+// (Claude, Junie, Codex) can hit to bootstrap project context.
+//
+// Every endpoint reads fresh per request so CI-pushed quality snapshots,
+// edited BACKLOG.md, and new commits show up without a rebuild.
+//
+// SECURITY MODEL — public by design:
+// All data sources here are already public on github.com/GuitarAlchemist/ga:
+// BACKLOG.md, docs/architecture/, state/quality/, git log, .mcp.json,
+// CLAUDE.md / AGENTS.md / GEMINI.md, etc. Serving them here is a UX
+// convenience for the dashboard, not a privileged surface. **Do not** add
+// secrets, private state, or user data behind any /dev-data/* endpoint —
+// they are reachable from the public Cloudflare tunnel.
+//
+// One redaction is kept defensively: gatherMcpServers() returns
+// names + transport types only, never the full .mcp.json body. That
+// protects against the foot-gun of a contributor inlining a resolved
+// ${ENV_VAR} secret into .mcp.json for local debugging and then
+// committing it.
+//
+// /pr/* (Prime Radiant control bus) IS gated — it's a live SSE command
+// bus that accepts arbitrary actions. Public access there is a real
+// disruption vector, not a data leak.
+//
+// Schema is intentionally stable — see /dev-data/manifest top-level keys.
+// Add new fields rather than renaming existing ones.
+// SECURITY: the Cloudflare tunnel proxies remote traffic to localhost:5176,
+// so req.socket.remoteAddress is always 127.0.0.1 — useless as a trust
+// signal. The real signal is the Host header: tunnel traffic carries the
+// public hostname (demos.guitaralchemist.com); direct-local traffic carries
+// localhost:5176 / 127.0.0.1 / LAN IP. We also reject anything bearing
+// Cloudflare headers (CF-Ray, CF-Connecting-IP, etc.) as a belt-and-suspenders
+// check. Used by /dev-data/* and /pr/* middlewares to keep them local-only.
+function isLocalOrigin(req: import('http').IncomingMessage): boolean {
+    const host = ((req.headers.host as string) || '').toLowerCase().split(':')[0];
+    if (!host) return false;
+    for (const k of Object.keys(req.headers)) {
+        if (k.toLowerCase().startsWith('cf-')) return false;
+    }
+    const isPrivate = (h: string): boolean => {
+        if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+        if (/^192\.168\./.test(h)) return true;
+        if (/^10\./.test(h)) return true;
+        if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
+        return false;
+    };
+    if (!isPrivate(host)) return false;
+    const origin = (req.headers.origin as string) || '';
+    const referer = (req.headers.referer as string) || '';
+    const checkUrl = (raw: string): boolean => {
+        if (!raw) return true;
+        try { return isPrivate(new URL(raw).hostname); } catch { return false; }
+    };
+    if (!checkUrl(origin)) return false;
+    if (!checkUrl(referer)) return false;
+    return true;
+}
+
+function gateLocal(req: import('http').IncomingMessage, res: import('http').ServerResponse, label = 'dev-data'): boolean {
+    if (isLocalOrigin(req)) return true;
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'forbidden', reason: `${label} endpoints are local-only` }));
+    return false;
+}
+
+function devDataPlugin(): Plugin {
+    const repoRoot = path.resolve(__dirname, '../..');
+
+    interface QualityEntry { source: string; data: unknown }
+    function gatherQuality(): { domains: Record<string, QualityEntry>; regressions: string[] } {
+        const qualityDir = path.join(repoRoot, 'state', 'quality');
+        const domains: Record<string, QualityEntry> = {};
+        const regressions: string[] = [];
+        if (!existsSync(qualityDir)) return { domains, regressions };
+
+        for (const entry of readdirSync(qualityDir, { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            const subDir = path.join(qualityDir, entry.name);
+            const lastJson = path.join(subDir, 'last.json');
+            let chosen: QualityEntry | null = null;
+            if (existsSync(lastJson)) {
+                try {
+                    chosen = { source: 'last.json', data: JSON.parse(readFileSync(lastJson, 'utf-8')) };
+                } catch (e) {
+                    chosen = { source: 'last.json', data: { error: 'parse_failed', message: String(e) } };
+                }
+            } else {
+                const dated = readdirSync(subDir)
+                    .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+                    .sort();
+                const latest = dated[dated.length - 1];
+                if (latest) {
+                    try {
+                        const data = JSON.parse(readFileSync(path.join(subDir, latest), 'utf-8'));
+                        chosen = { source: latest, data };
+                        // Compare against prior dated snapshot for regression detection
+                        const prior = dated[dated.length - 2];
+                        if (prior) {
+                            try {
+                                const priorData = JSON.parse(readFileSync(path.join(subDir, prior), 'utf-8'));
+                                const curVal = (data as Record<string, unknown>).metric_value;
+                                const priorVal = (priorData as Record<string, unknown>).metric_value;
+                                if (typeof curVal === 'number' && typeof priorVal === 'number' && curVal < priorVal) {
+                                    regressions.push(`${entry.name}: ${priorVal} → ${curVal}`);
+                                }
+                            } catch { /* ignore comparison failures */ }
+                        }
+                    } catch (e) {
+                        chosen = { source: latest, data: { error: 'parse_failed', message: String(e) } };
+                    }
+                }
+            }
+            if (chosen) {
+                domains[entry.name] = chosen;
+                const status = (chosen.data as Record<string, unknown>).oracle_status;
+                if (status && status !== 'ok') regressions.push(`${entry.name}: oracle_status=${status}`);
+            }
+        }
+        return { domains, regressions };
+    }
+
+    interface ActivityEntry { sha: string; short_sha: string; author: string; date: string; subject: string }
+    function gatherActivity(limit = 10): ActivityEntry[] | { error: string } {
+        // SECURITY: argv-form execFileSync — no shell, no interpolation, no
+        // injection surface even if limit ever escapes its numeric clamp.
+        try {
+            const out = execFileSync(
+                'git',
+                ['log', '-n', String(Math.max(1, Math.floor(limit))), '--pretty=format:%H%x09%an%x09%aI%x09%s'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            return out.trim().split('\n').filter(Boolean).map((line) => {
+                const [sha, author, date, ...rest] = line.split('\t');
+                return { sha, short_sha: sha.slice(0, 8), author, date, subject: rest.join('\t') };
+            });
+        } catch (e) {
+            return { error: String((e as Error).message ?? e) };
+        }
+    }
+
+    interface ActivityByDay { date: string; count: number }
+    function gatherActivityByDay(days = 30): ActivityByDay[] | { error: string } {
+        try {
+            const out = execFileSync(
+                'git',
+                ['log', `--since=${Math.max(1, Math.floor(days))} days ago`, '--pretty=format:%aI'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            const bins: Record<string, number> = {};
+            // Pre-seed every day in the window with 0 so the chart always has full extent
+            const now = new Date();
+            for (let i = days - 1; i >= 0; i -= 1) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                bins[key] = 0;
+            }
+            for (const line of out.split('\n')) {
+                if (!line) continue;
+                const day = line.slice(0, 10);
+                if (day in bins) bins[day] += 1;
+            }
+            return Object.entries(bins).map(([date, count]) => ({ date, count }));
+        } catch (e) {
+            return { error: String((e as Error).message ?? e) };
+        }
+    }
+
+    // ── AI agent activity ────────────────────────────────────────────────
+    // Surface which agents are actively contributing — from state/handoffs/
+    // YAML frontmatter (durable cross-agent notes) plus Co-Authored-By
+    // signature counts from recent git log. Token-quota visibility is
+    // intentionally NOT here: it requires per-provider auth (Anthropic,
+    // OpenAI, Google) and would leak credentials. Surfaced as an
+    // Operational TODO instead.
+
+    interface AgentActivity {
+        agent: string;
+        display_name: string;
+        last_seen_at: string | null;
+        handoff_count: number;
+        coauthored_commits_30d: number;
+        recent_handoffs: { at: string; branch: string | null; head: string | null; path: string }[];
+    }
+
+    interface RecentHandoffEntry {
+        from: string;
+        at: string;
+        branch: string | null;
+        head: string | null;
+        path: string;
+    }
+
+    interface AgentActivityPayload {
+        generated_at: string;
+        agents: AgentActivity[];
+        recent_handoffs: RecentHandoffEntry[];
+    }
+
+    function canonicalAgent(raw: string): { id: string; display: string } {
+        const norm = raw.toLowerCase().trim().replace(/^["']|["']$/g, '');
+        if (norm.includes('antigravity')) return { id: 'antigravity', display: 'Antigravity' };
+        if (norm.includes('codex') || norm.includes('chatgpt')) return { id: 'codex', display: 'Codex (OpenAI)' };
+        if (norm.includes('claude')) return { id: 'claude', display: 'Claude Code' };
+        if (norm.includes('gemini')) return { id: 'gemini', display: 'Gemini' };
+        if (norm.includes('junie')) return { id: 'junie', display: 'Junie (JetBrains)' };
+        if (norm.includes('demerzel')) return { id: 'demerzel', display: 'Demerzel' };
+        if (norm.includes('human') || norm.includes('operator')) return { id: 'human', display: 'Human operator' };
+        // Generic 'agent' or unknown
+        return { id: norm || 'unknown', display: norm ? norm[0].toUpperCase() + norm.slice(1) : 'Unknown' };
+    }
+
+    function parseHandoffFrontmatter(text: string): { from?: string; at?: string; branch?: string; head?: string } {
+        // Frontmatter: --- ... --- at the top. Tolerate both
+        //   from: codex                  (unquoted)
+        //   from: "codex"                (quoted)
+        // and ISO-8601 timestamps under `at:` or `generated_at:`.
+        const m = text.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+        if (!m) return {};
+        const out: Record<string, string> = {};
+        for (const line of m[1].split(/\r?\n/)) {
+            const kv = line.match(/^(\w+):\s*(.+?)\s*$/);
+            if (!kv) continue;
+            out[kv[1]] = kv[2].replace(/^["']|["']$/g, '');
+        }
+        return {
+            from: out.from,
+            at: out.at || out.generated_at,
+            branch: out.branch,
+            head: out.head,
+        };
+    }
+
+    function gatherAgentActivity(): AgentActivityPayload {
+        const generated_at = new Date().toISOString();
+        const stats = new Map<string, AgentActivity>();
+        const recent: RecentHandoffEntry[] = [];
+
+        // 1. Scan state/handoffs/*.md
+        const handoffDir = path.join(repoRoot, 'state', 'handoffs');
+        if (existsSync(handoffDir)) {
+            for (const file of readdirSync(handoffDir)) {
+                if (!file.endsWith('.md') || file === 'README.md') continue;
+                const full = path.join(handoffDir, file);
+                try {
+                    const fm = parseHandoffFrontmatter(readFileSync(full, 'utf-8'));
+                    if (!fm.from || !fm.at) continue;
+                    const { id, display } = canonicalAgent(fm.from);
+                    const entry: RecentHandoffEntry = {
+                        from: id,
+                        at: fm.at,
+                        branch: fm.branch ?? null,
+                        head: fm.head ?? null,
+                        path: `state/handoffs/${file}`,
+                    };
+                    recent.push(entry);
+                    let row = stats.get(id);
+                    if (!row) {
+                        row = { agent: id, display_name: display, last_seen_at: null, handoff_count: 0, coauthored_commits_30d: 0, recent_handoffs: [] };
+                        stats.set(id, row);
+                    }
+                    row.handoff_count += 1;
+                    if (!row.last_seen_at || fm.at > row.last_seen_at) row.last_seen_at = fm.at;
+                    row.recent_handoffs.push({ at: fm.at, branch: entry.branch, head: entry.head, path: entry.path });
+                } catch { /* skip malformed */ }
+            }
+        }
+
+        // 2. Count Co-Authored-By signatures in last 30d of git log.
+        // %b is the full commit message body — includes trailers.
+        try {
+            const body = execFileSync(
+                'git',
+                ['log', '--since=30 days ago', '--pretty=format:%H%n%b%n---END-COMMIT---'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            const seenCommitsByAgent = new Map<string, Set<string>>();
+            let currentSha: string | null = null;
+            for (const line of body.split(/\r?\n/)) {
+                if (line === '---END-COMMIT---') { currentSha = null; continue; }
+                if (currentSha === null && /^[0-9a-f]{40}$/.test(line)) { currentSha = line; continue; }
+                const ca = line.match(/^Co-Authored-By:\s*(.+?)\s*<.*>$/i);
+                if (ca && currentSha) {
+                    const { id } = canonicalAgent(ca[1]);
+                    if (!seenCommitsByAgent.has(id)) seenCommitsByAgent.set(id, new Set());
+                    seenCommitsByAgent.get(id)!.add(currentSha);
+                }
+            }
+            for (const [id, shas] of seenCommitsByAgent) {
+                let row = stats.get(id);
+                if (!row) {
+                    const { display } = canonicalAgent(id);
+                    row = { agent: id, display_name: display, last_seen_at: null, handoff_count: 0, coauthored_commits_30d: 0, recent_handoffs: [] };
+                    stats.set(id, row);
+                }
+                row.coauthored_commits_30d = shas.size;
+            }
+        } catch { /* git unavailable — leave counts at 0 */ }
+
+        // Sort handoffs newest-first; trim per-agent recent list to 3
+        recent.sort((a, b) => b.at.localeCompare(a.at));
+        for (const row of stats.values()) {
+            row.recent_handoffs.sort((a, b) => b.at.localeCompare(a.at));
+            row.recent_handoffs = row.recent_handoffs.slice(0, 3);
+        }
+
+        // Sort agents by last_seen desc, then commits desc
+        const agents = Array.from(stats.values()).sort((a, b) => {
+            const aSeen = a.last_seen_at ?? '';
+            const bSeen = b.last_seen_at ?? '';
+            if (aSeen !== bSeen) return bSeen.localeCompare(aSeen);
+            return b.coauthored_commits_30d - a.coauthored_commits_30d;
+        });
+
+        return { generated_at, agents, recent_handoffs: recent.slice(0, 10) };
+    }
+
+    interface ArchDoc { file: string; title: string; modified_at: string; size: number }
+    function gatherArchitecture(): ArchDoc[] {
+        const archDir = path.join(repoRoot, 'docs', 'architecture');
+        if (!existsSync(archDir)) return [];
+        return readdirSync(archDir)
+            .filter((f) => f.endsWith('.md'))
+            .map((f) => {
+                const full = path.join(archDir, f);
+                const stat = statSync(full);
+                let title = f.replace(/\.md$/, '').replace(/-/g, ' ');
+                try {
+                    const head = readFileSync(full, 'utf-8').split('\n').slice(0, 15);
+                    const h1 = head.find((l) => /^#\s/.test(l));
+                    if (h1) title = h1.replace(/^#\s+/, '').trim();
+                    else {
+                        // Fall back to frontmatter title:
+                        const fm = head.find((l) => /^title:\s/.test(l));
+                        if (fm) title = fm.replace(/^title:\s+/, '').trim().replace(/^["']|["']$/g, '');
+                    }
+                } catch { /* ignore */ }
+                return { file: f, title, modified_at: stat.mtime.toISOString(), size: stat.size };
+            })
+            .sort((a, b) => b.modified_at.localeCompare(a.modified_at));
+    }
+
+    function gatherBacklog(): BacklogPayload | null {
+        const p = path.join(repoRoot, 'BACKLOG.md');
+        if (!existsSync(p)) return null;
+        return parseBacklog(readFileSync(p, 'utf-8'));
+    }
+
+    interface AgentFileEntry {
+        path: string;
+        exists: boolean;
+        size: number | null;
+        modified_at: string | null;
+        is_directory: boolean;
+        description: string;
+    }
+    function gatherAgentFiles(): AgentFileEntry[] {
+        // Files and directories that govern how AI agents (Claude, Antigravity v2, codex,
+        // Gemini CLI) behave in this repo. Order roughly matches "general → specific".
+        const entries: { rel: string; description: string }[] = [
+            { rel: 'CLAUDE.md', description: 'Canonical agent rules — Claude reads this; AGENTS.md is auto-synced from it.' },
+            { rel: 'AGENTS.md', description: 'codex/OpenAI convention. Auto-generated from CLAUDE.md via Scripts/sync-agents-md.ps1.' },
+            { rel: 'GEMINI.md', description: 'Gemini CLI / Antigravity native AI configuration entry point.' },
+            { rel: '.mcp.json', description: 'Project-level MCP server registrations. Antigravity v2 and Claude Code both read this.' },
+            { rel: '.claude', description: 'Claude Code project settings, skills, hooks, slash commands.' },
+            { rel: '.gemini', description: 'Gemini CLI / Antigravity settings, commands, skills.' },
+            { rel: '.codex', description: 'Codex CLI workspace config (rules, slash commands).' },
+            { rel: '.agent/skills', description: 'Shared agent skills (language standards, ROP, etc.) auto-discovered by Claude Code.' },
+            { rel: 'Scripts/sync-agents-md.ps1', description: 'Keeps AGENTS.md in sync with CLAUDE.md.' },
+            { rel: '.githooks/pre-commit', description: 'Pre-commit hook that runs sync-agents-md, dotnet format, build, ROP check.' },
+        ];
+        return entries.map(({ rel, description }) => {
+            const full = path.join(repoRoot, rel);
+            const exists = existsSync(full);
+            if (!exists) {
+                return { path: rel, exists: false, size: null, modified_at: null, is_directory: false, description };
+            }
+            const stat = statSync(full);
+            return {
+                path: rel,
+                exists: true,
+                size: stat.isFile() ? stat.size : null,
+                modified_at: stat.mtime.toISOString(),
+                is_directory: stat.isDirectory(),
+                description,
+            };
+        });
+    }
+
+    function gatherMcpServers(): { count: number; names: string[]; types: Record<string, string> } {
+        // SECURITY: never serve raw .mcp.json — it may contain env-var references
+        // (${DEMERZEL_API_KEY} etc.) that would be auto-exfiltrated if anyone
+        // ever inlines a resolved secret for debugging. Names + transport type
+        // only; consumers can look at their own .mcp.json for full config.
+        const mcpPath = path.join(repoRoot, '.mcp.json');
+        if (!existsSync(mcpPath)) return { count: 0, names: [], types: {} };
+        try {
+            const raw = JSON.parse(readFileSync(mcpPath, 'utf-8'));
+            const servers = raw?.mcpServers ?? {};
+            const names = Object.keys(servers);
+            const types: Record<string, string> = {};
+            for (const name of names) {
+                const s = servers[name];
+                types[name] = (s?.type as string) ?? (s?.url ? 'http' : 'stdio');
+            }
+            return { count: names.length, names, types };
+        } catch {
+            return { count: 0, names: [], types: {} };
+        }
+    }
+
+    interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
+    const serviceTopology: ServiceTopology[] = [
+        { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
+        { name: 'GaApi', port: 5232, public_path: '/api/*, /hubs/*', expected: '/health → "Healthy"' },
+        { name: 'GaChatbot.Api', port: 5252, public_path: '/chatbot/*, /api/chatbot/*', expected: '/api/chatbot/status → JSON' },
+        { name: 'cloudflared (ga-demos)', port: 0, public_path: 'demos.guitaralchemist.com', expected: 'reverse tunnel to local services' },
+    ];
+
+    return {
+        name: 'dev-data',
+        configureServer(server) {
+            server.middlewares.use('/dev-data/backlog', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const p = path.join(repoRoot, 'BACKLOG.md');
+                if (!existsSync(p)) {
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end('BACKLOG.md not found');
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'no-store' });
+                res.end(readFileSync(p, 'utf-8'));
+            });
+
+            server.middlewares.use('/dev-data/quality', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
+            });
+
+            server.middlewares.use('/dev-data/activity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') ?? 10)));
+                const days = Math.max(1, Math.min(180, Number(url.searchParams.get('days') ?? 30)));
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({
+                    generated_at: new Date().toISOString(),
+                    commits: gatherActivity(limit),
+                    by_day: gatherActivityByDay(days),
+                }));
+            });
+
+            server.middlewares.use('/dev-data/architecture', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
+            });
+
+            server.middlewares.use('/dev-data/agents', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({
+                    generated_at: new Date().toISOString(),
+                    agent_files: gatherAgentFiles(),
+                    mcp_servers: gatherMcpServers(),
+                }));
+            });
+
+            server.middlewares.use('/dev-data/agent-activity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherAgentActivity()));
+            });
+
+            server.middlewares.use('/dev-data/manifest', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const manifest = {
+                    schema_version: '1.0.0',
+                    generated_at: new Date().toISOString(),
+                    repo: 'GuitarAlchemist/ga',
+                    public_url: 'https://demos.guitaralchemist.com',
+                    endpoints: {
+                        backlog: '/dev-data/backlog',
+                        quality: '/dev-data/quality',
+                        activity: '/dev-data/activity',
+                        architecture: '/dev-data/architecture',
+                        agents: '/dev-data/agents',
+                        agent_activity: '/dev-data/agent-activity',
+                        manifest: '/dev-data/manifest',
+                    },
+                    services: serviceTopology,
+                    backlog: gatherBacklog(),
+                    quality: gatherQuality(),
+                    activity: gatherActivity(10),
+                    activity_by_day: gatherActivityByDay(30),
+                    architecture: gatherArchitecture(),
+                    agent_files: gatherAgentFiles(),
+                    mcp_servers: gatherMcpServers(),
+                    agent_activity: gatherAgentActivity(),
+                };
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(manifest, null, 2));
+            });
+        },
+    };
+}
 
 // Serve Godot HTML5 export files from /godot/ path during dev
 function godotStaticPlugin(): Plugin {
@@ -75,6 +588,11 @@ interface PrResult {
     timestamp: number;
 }
 
+// Cap the unbounded pendingCommands array so the SSE command bus can't be
+// flooded into OOM (sec-sentinel #9). At 1000 commands the bus is already
+// pathological; older entries fall off the front.
+const PR_PENDING_COMMANDS_CAP = 1000;
+
 function primeRadiantControlPlugin(): Plugin {
     // Command queue: Claude pushes, React pops via SSE
     const pendingCommands: PrCommand[] = [];
@@ -84,6 +602,12 @@ function primeRadiantControlPlugin(): Plugin {
     const clientStates = new Map<string, Record<string, unknown>>();
     const sseClients: Set<import('http').ServerResponse> = new Set();
     let cmdCounter = 0;
+    function pushBounded(cmd: PrCommand) {
+        pendingCommands.push(cmd);
+        while (pendingCommands.length > PR_PENDING_COMMANDS_CAP) {
+            pendingCommands.shift();
+        }
+    }
 
     // ── Backend Observer — watches UI state and sends corrective commands ──
     let observerTimer: ReturnType<typeof setInterval> | null = null;
@@ -96,7 +620,7 @@ function primeRadiantControlPlugin(): Plugin {
             params,
             timestamp: Date.now(),
         };
-        pendingCommands.push(cmd);
+        pushBounded(cmd);
         const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
         for (const client of sseClients) client.write(sseData);
     }
@@ -146,6 +670,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/observer — read observer log ──
             server.middlewares.use('/pr/observer', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ log: observerLog, clientCount: clientStates.size }));
             });
@@ -167,6 +692,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/command — Claude sends a command ──
             server.middlewares.use('/pr/command', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -178,7 +704,7 @@ function primeRadiantControlPlugin(): Plugin {
                             params: params ?? {},
                             timestamp: Date.now(),
                         };
-                        pendingCommands.push(cmd);
+                        pushBounded(cmd);
                         // Push to SSE clients
                         const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
                         for (const client of sseClients) {
@@ -196,6 +722,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/batch — Claude sends multiple commands at once ──
             server.middlewares.use('/pr/batch', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -214,7 +741,7 @@ function primeRadiantControlPlugin(): Plugin {
                                 params: params ?? {},
                                 timestamp: Date.now(),
                             };
-                            pendingCommands.push(cmd);
+                            pushBounded(cmd);
                             commandIds.push(cmd.id);
                             // Push each command to SSE clients as a separate event
                             const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
@@ -235,6 +762,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ?client=<id> returns specific client, otherwise returns all clients
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const clientId = url.searchParams.get('client');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -252,6 +780,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/state — React updates state (per-client) ──
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -283,11 +812,13 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/events — SSE stream for React to receive commands ──
             server.middlewares.use('/pr/events', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 res.writeHead(200, {
                     'Content-Type': 'text/event-stream',
                     'Cache-Control': 'no-cache',
                     'Connection': 'keep-alive',
-                    'Access-Control-Allow-Origin': '*',
+                    // SSE event stream is gated to local origin already; no need
+                    // to advertise it cross-origin.
                 });
                 // Send any pending commands
                 for (const cmd of pendingCommands) {
@@ -300,6 +831,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/result — React posts command results ──
             server.middlewares.use('/pr/result', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -321,6 +853,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/result/:id — Claude checks result of a command ──
             server.middlewares.use('/pr/result', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const cmdId = url.searchParams.get('id');
                 if (!cmdId) {
@@ -339,7 +872,7 @@ function primeRadiantControlPlugin(): Plugin {
 
 export default defineConfig({
     // 3d-force-graph WebGPU bug fixed via patch-package (see patches/3d-force-graph+1.79.1.patch)
-    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin()],
+    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin()],
     server: {
         port: 5176,
         host: true,

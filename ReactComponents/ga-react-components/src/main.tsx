@@ -12,6 +12,7 @@ import { Container, Box, Typography, Stack } from '@mui/material';
 
 // Test pages
 import TestIndex from './pages/TestIndex';
+import ManifestViewer from './pages/ManifestViewer';
 import ThreeFretboardTest from './pages/ThreeFretboardTest';
 import ThreeHeadstockTest from './pages/ThreeHeadstockTest';
 import RealisticFretboardTest from './pages/RealisticFretboardTest';
@@ -423,6 +424,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         {/* Test pages */}
         <Route path="/test" element={<App><TestIndex /></App>} />
+        <Route path="/test/manifest" element={<App><ManifestViewer /></App>} />
         <Route path="/test/minimal-three" element={<App><MinimalThreeTest /></App>} />
         <Route path="/test/music-theory" element={<App><MusicTheoryTest /></App>} />
         <Route path="/test/three-fretboard" element={<App><ThreeFretboardTest /></App>} />

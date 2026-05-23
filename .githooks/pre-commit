@@ -89,6 +89,41 @@ if ($ropViolations.Count -gt 0) {
 }
 
 # ============================================
+# SYNC AGENTS.md FROM CLAUDE.md
+# ============================================
+Write-Host "`n▶ Syncing AGENTS.md from CLAUDE.md..." -ForegroundColor Blue
+$syncScript = Join-Path $PSScriptRoot '..' 'Scripts' 'sync-agents-md.ps1'
+
+# Safety: never auto-sync while a merge/rebase/cherry-pick is in progress, or
+# when AGENTS.md has an unresolved conflict (UU/AA in porcelain). Auto-sync
+# during merge resolution silently clobbers the human's resolution choice.
+$inMerge = (Test-Path '.git/MERGE_HEAD') -or (Test-Path '.git/REBASE_HEAD') -or (Test-Path '.git/CHERRY_PICK_HEAD')
+$agentsConflict = $false
+if (Test-Path AGENTS.md) {
+    $porcelain = git status --porcelain AGENTS.md 2>$null
+    if ($porcelain -and $porcelain -match '^(UU|AA|DD|AU|UA|DU|UD)') { $agentsConflict = $true }
+}
+
+if ($inMerge -or $agentsConflict) {
+    Write-Host "⚠ Merge/conflict state detected — skipping AGENTS.md sync to preserve manual resolution" -ForegroundColor Yellow
+} elseif (Test-Path $syncScript) {
+    & pwsh -NoProfile -File $syncScript
+    if ($LASTEXITCODE -eq 0) {
+        # If sync produced changes, stage AGENTS.md so the commit includes the update.
+        $agentsStatus = git diff --name-only AGENTS.md 2>$null
+        if ($agentsStatus) {
+            git add AGENTS.md
+            Write-Host "  (AGENTS.md was out of sync — restaged)" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "✗ AGENTS.md sync failed" -ForegroundColor Red
+        $script:HasErrors = $true
+    }
+} else {
+    Write-Host "⚠ Sync script missing at $syncScript" -ForegroundColor Yellow
+}
+
+# ============================================
 # CONTEXT STALENESS CHECK (warning-only, never blocks)
 # ============================================
 Write-Host "`n▶ Checking context staleness..." -ForegroundColor Blue

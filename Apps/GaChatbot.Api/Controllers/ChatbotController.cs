@@ -224,6 +224,158 @@ public sealed class ChatbotController(
                     ])
             ]));
 
+    // ── QA summary for showcase prompts ──────────────────────────────────────
+    // Surfaces per-prompt validation signal in the chatbot UI: which prompts
+    // have a recorded golden trace, their median response time, and which
+    // skill agent handled them. Data source: state/quality/chatbot-qa/
+    // golden-traces/<slug>/{_meta.json, run-*.json}.
+    //
+    // Cached for 60s to avoid disk scans on every chatbot page load. Reads
+    // are best-effort: malformed JSON or missing fields silently drop that
+    // entry rather than returning an error.
+
+    private static readonly object QaSummaryLock = new();
+    private static Dictionary<string, ChatbotQaSummary>? _qaSummaryCache;
+    private static DateTimeOffset _qaSummaryCachedAt = DateTimeOffset.MinValue;
+    private static readonly TimeSpan QaSummaryCacheTtl = TimeSpan.FromSeconds(60);
+
+    [HttpGet("qa-summary")]
+    [ProducesResponseType(typeof(Dictionary<string, ChatbotQaSummary>), StatusCodes.Status200OK)]
+    public ActionResult<Dictionary<string, ChatbotQaSummary>> GetQaSummary()
+    {
+        lock (QaSummaryLock)
+        {
+            if (_qaSummaryCache is not null && DateTimeOffset.UtcNow - _qaSummaryCachedAt < QaSummaryCacheTtl)
+            {
+                return Ok(_qaSummaryCache);
+            }
+            _qaSummaryCache = BuildQaSummary();
+            _qaSummaryCachedAt = DateTimeOffset.UtcNow;
+            return Ok(_qaSummaryCache);
+        }
+    }
+
+    private static Dictionary<string, ChatbotQaSummary> BuildQaSummary()
+    {
+        var result = new Dictionary<string, ChatbotQaSummary>(StringComparer.OrdinalIgnoreCase);
+        var repoRoot = FindRepoRoot();
+        if (repoRoot is null) return result;
+
+        var goldenDir = Path.Combine(repoRoot, "state", "quality", "chatbot-qa", "golden-traces");
+        if (!Directory.Exists(goldenDir)) return result;
+
+        // Aggregate warning prompts from the latest last.json so we can mark
+        // entries that are validated-but-slow (e.g. modes prompt that
+        // exceeded soft budget).
+        var warningPrompts = LoadWarningPrompts(Path.Combine(repoRoot, "state", "quality", "chatbot-qa", "last.json"));
+
+        foreach (var promptDir in Directory.EnumerateDirectories(goldenDir))
+        {
+            var metaPath = Path.Combine(promptDir, "_meta.json");
+            if (!System.IO.File.Exists(metaPath)) continue;
+
+            ChatbotQaMeta? meta;
+            try { meta = JsonSerializer.Deserialize<ChatbotQaMeta>(System.IO.File.ReadAllText(metaPath), JsonOptions); }
+            catch { continue; }
+            if (meta is null || string.IsNullOrWhiteSpace(meta.Prompt)) continue;
+
+            var elapsedMsSamples = new List<double>();
+            string? lastAgent = null;
+            double? lastConfidence = null;
+            DateTimeOffset? lastRunAt = null;
+
+            foreach (var runPath in Directory.EnumerateFiles(promptDir, "run-*.json"))
+            {
+                ChatbotQaRun? run;
+                try { run = JsonSerializer.Deserialize<ChatbotQaRun>(System.IO.File.ReadAllText(runPath), JsonOptions); }
+                catch { continue; }
+                if (run?.Response is null) continue;
+
+                if (run.Response.ElapsedMs is { } ms) elapsedMsSamples.Add(ms);
+                if (!string.IsNullOrWhiteSpace(run.Response.AgentId)) lastAgent = run.Response.AgentId;
+                if (run.Response.Confidence is { } c) lastConfidence = c;
+                if (run.RecordedAt is { } recordedAt && (lastRunAt is null || recordedAt > lastRunAt))
+                {
+                    lastRunAt = recordedAt;
+                }
+            }
+
+            double? median = null;
+            if (elapsedMsSamples.Count > 0)
+            {
+                elapsedMsSamples.Sort();
+                median = elapsedMsSamples[elapsedMsSamples.Count / 2];
+            }
+
+            var summary = new ChatbotQaSummary(
+                PromptId: meta.PromptId ?? Path.GetFileName(promptDir),
+                Prompt: meta.Prompt,
+                Category: meta.Category,
+                LastValidated: lastRunAt ?? meta.FirstRecordedAt,
+                RunCount: elapsedMsSamples.Count,
+                MedianElapsedMs: median,
+                AgentId: lastAgent,
+                Confidence: lastConfidence,
+                HasWarning: warningPrompts.Contains(meta.Prompt));
+
+            // Index by normalized prompt text so the frontend can do a direct
+            // case-insensitive lookup on the showcase prompt label.
+            result[NormalizePromptKey(meta.Prompt)] = summary;
+        }
+        return result;
+    }
+
+    private static string NormalizePromptKey(string prompt) =>
+        prompt.Trim().TrimEnd('.', '?', '!');
+
+    private static HashSet<string> LoadWarningPrompts(string lastJsonPath)
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!System.IO.File.Exists(lastJsonPath)) return set;
+        try
+        {
+            using var doc = JsonDocument.Parse(System.IO.File.ReadAllText(lastJsonPath));
+            if (!doc.RootElement.TryGetProperty("warnings", out var warnings)) return set;
+            foreach (var w in warnings.EnumerateArray())
+            {
+                var text = w.GetString();
+                if (string.IsNullOrWhiteSpace(text)) continue;
+                // Warning format: "[category] 'prompt text' → 40716ms exceeded soft budget 30000ms"
+                var firstQuote = text.IndexOf('\'');
+                if (firstQuote < 0) continue;
+                var lastQuote = text.LastIndexOf('\'');
+                if (lastQuote <= firstQuote) continue;
+                var prompt = text.Substring(firstQuote + 1, lastQuote - firstQuote - 1);
+                set.Add(NormalizePromptKey(prompt));
+            }
+        }
+        catch { /* ignore malformed last.json */ }
+        return set;
+    }
+
+    private static string? _cachedRepoRoot;
+    private static string? FindRepoRoot()
+    {
+        if (_cachedRepoRoot is not null) return _cachedRepoRoot;
+        // Walk up from ContentRootPath looking for .git. Falls back to
+        // Environment.CurrentDirectory which is where `dotnet run` was
+        // invoked (typically the repo root per the runbook).
+        foreach (var start in new[] { Environment.CurrentDirectory, AppContext.BaseDirectory })
+        {
+            var dir = new DirectoryInfo(start);
+            while (dir is not null)
+            {
+                if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+                {
+                    _cachedRepoRoot = dir.FullName;
+                    return _cachedRepoRoot;
+                }
+                dir = dir.Parent;
+            }
+        }
+        return null;
+    }
+
     private async Task WriteSseLineAsync(string data, CancellationToken cancellationToken)
     {
         // Per the SSE spec, each line of an event body must be prefixed with
@@ -260,6 +412,33 @@ public sealed class ChatbotController(
             .Select(m => new ConversationTurn(m.Role, m.Content, DateTimeOffset.UtcNow))
             .ToList();
 }
+
+// ── DTOs for /api/chatbot/qa-summary ────────────────────────────────────────
+public sealed record ChatbotQaSummary(
+    string PromptId,
+    string Prompt,
+    string? Category,
+    DateTimeOffset? LastValidated,
+    int RunCount,
+    double? MedianElapsedMs,
+    string? AgentId,
+    double? Confidence,
+    bool HasWarning);
+
+internal sealed record ChatbotQaMeta(
+    string? PromptId,
+    string Prompt,
+    string? Category,
+    DateTimeOffset? FirstRecordedAt);
+
+internal sealed record ChatbotQaRun(
+    DateTimeOffset? RecordedAt,
+    ChatbotQaResponse? Response);
+
+internal sealed record ChatbotQaResponse(
+    string? AgentId,
+    double? Confidence,
+    double? ElapsedMs);
 
 public sealed class ChatRequest
 {
