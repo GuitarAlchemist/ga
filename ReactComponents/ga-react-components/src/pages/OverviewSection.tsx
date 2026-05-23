@@ -252,9 +252,63 @@ export const OverviewSection: React.FC = () => {
 
   const b = manifest.backlog;
   const byDay = manifest.activity_by_day && Array.isArray(manifest.activity_by_day) ? manifest.activity_by_day : [];
+  const totalCommits30d = byDay.reduce((s, d) => s + d.count, 0);
+  // QA domain count: how many are explicitly oracle_status="ok"
+  const qaDomains = manifest.quality?.domains ? Object.entries(manifest.quality.domains) : [];
+  const qaOk = qaDomains.filter(([, e]) => (e.data as Record<string, unknown>)?.oracle_status === 'ok').length;
+  const qaTotal = qaDomains.length;
+  const regressionCount = manifest.quality?.regressions?.length ?? 0;
+  // Most recent commit + relative time
+  const latestCommit = Array.isArray(manifest.activity) ? manifest.activity[0] : null;
+  const heartbeatRel = (() => {
+    if (!latestCommit?.date) return '';
+    const minutes = Math.floor((Date.now() - new Date(latestCommit.date).getTime()) / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  })();
+  const healthy = regressionCount === 0 && qaOk === qaTotal && qaTotal > 0;
 
   return (
     <Stack spacing={2}>
+      {/* Heartbeat — one-line project status banner */}
+      <Paper
+        sx={{
+          p: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          flexWrap: 'wrap',
+          bgcolor: healthy ? 'success.main' : regressionCount > 0 ? 'warning.main' : 'info.main',
+          color: 'common.white',
+        }}
+      >
+        <Box sx={{ fontSize: '1.1rem', lineHeight: 1 }}>
+          {healthy ? '⚡' : regressionCount > 0 ? '⚠' : 'ⓘ'}
+        </Box>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'inherit' }}>
+          {healthy ? 'Live · all systems nominal' : regressionCount > 0 ? `Live · ${regressionCount} regression${regressionCount === 1 ? '' : 's'}` : 'Live'}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'inherit', opacity: 0.92 }}>
+          · {b?.total_epics ?? 0} epics, <strong>{b?.overall_progress_pct ?? 0}%</strong> shipped ({b?.total_shipped ?? 0}/{b?.total_items ?? 0})
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'inherit', opacity: 0.92 }}>
+          · <strong>{totalCommits30d}</strong> commits/30d
+        </Typography>
+        {qaTotal > 0 && (
+          <Typography variant="body2" sx={{ color: 'inherit', opacity: 0.92 }}>
+            · QA <strong>{qaOk}/{qaTotal}</strong>
+          </Typography>
+        )}
+        {latestCommit && (
+          <Typography variant="body2" sx={{ color: 'inherit', opacity: 0.92, flex: 1, textAlign: 'right' }}>
+            last commit {heartbeatRel} · <Box component="span" sx={{ fontFamily: 'monospace' }}>{latestCommit.short_sha}</Box>
+          </Typography>
+        )}
+      </Paper>
+
       {/* Top stat tiles */}
       <Grid container spacing={2}>
         <Grid item xs={6} md={3}>
