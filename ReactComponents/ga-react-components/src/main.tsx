@@ -32,6 +32,7 @@ import InstrumentIconsTest from './pages/InstrumentIconsTest';
 import BSPDoomExplorerTest from './pages/BSPDoomExplorerTest';
 import FretboardWithHandTest from './pages/FretboardWithHandTest';
 import Sunburst3DTest from './pages/Sunburst3DTest';
+import TonalOrbitTest from './pages/TonalOrbitTest';
 import ImmersiveMusicalWorldTest from './pages/ImmersiveMusicalWorldTest';
 import FluffyGrassTest from './pages/FluffyGrassTest';
 import ModalMeadowTest from './pages/ModalMeadowTest';
@@ -448,6 +449,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/bsp-doom-explorer" element={<App><BSPDoomExplorerTest /></App>} />
         <Route path="/test/fretboard-with-hand" element={<App><FretboardWithHandTest /></App>} />
         <Route path="/test/sunburst-3d" element={<App><Sunburst3DTest /></App>} />
+        <Route path="/test/tonal-orbit" element={<App><TonalOrbitTest /></App>} />
         <Route path="/test/immersive-musical-world" element={<App><ImmersiveMusicalWorldTest /></App>} />
         <Route path="/test/fluffy-grass" element={<App><FluffyGrassTest /></App>} />
         <Route path="/test/modal-meadow" element={<App><ModalMeadowTest /></App>} />
