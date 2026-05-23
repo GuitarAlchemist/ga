@@ -1,0 +1,191 @@
+{
+  "_comment": "Source of truth for the 8 prioritized items in the harness engineering adoption plan. Edit this file manually when an item ships (or a PR opens). The /test#dev/harness tab reads /dev-data/harness which is served from this file.",
+  "_plan": "docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md",
+  "schema_version": "1.0.0",
+  "last_updated": "2026-05-23",
+  "items": [
+    {
+      "number": 1,
+      "title": "\"Where to find things\" map in CLAUDE.md",
+      "category": "Context & memory",
+      "effort": "S",
+      "impact": "M",
+      "status": "in_flight",
+      "pr_number": 300,
+      "pr_state": "blocked-on-agent-blackbox",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/300",
+      "owner": "next session",
+      "notes": "PR open; currently blocked on Agent Blackbox policy review."
+    },
+    {
+      "number": 2,
+      "title": "Add `npm run typecheck` to pre-commit hook (warning-only)",
+      "category": "Verification & feedback loops",
+      "effort": "S",
+      "impact": "M",
+      "status": "in_flight",
+      "pr_number": 301,
+      "pr_state": "ci-running",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/301",
+      "owner": "next session",
+      "notes": "Warning-only mode so the ~185 existing errors do not break commits while the baseline is paid down."
+    },
+    {
+      "number": 3,
+      "title": "Per-session `.claude/local/state.md`",
+      "category": "Context & memory",
+      "effort": "S",
+      "impact": "M",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "next session",
+      "notes": "Adopt the forge's `.claude/local/state.md` pattern for cross-session same-agent continuity."
+    },
+    {
+      "number": 4,
+      "title": "Post-merge smoke (curl + screenshot the 3 demo URLs) via GitHub Action",
+      "category": "Verification & feedback loops",
+      "effort": "M",
+      "impact": "H",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "week of",
+      "notes": "Closes the 25-min-outage class. Curls /test, /api/chatbot/status, /dev-data/manifest after each push to main."
+    },
+    {
+      "number": 5,
+      "title": "`/grade-last-pr` skill: re-run octo:review against the merged diff",
+      "category": "Verification & feedback loops",
+      "effort": "M",
+      "impact": "M",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "week of",
+      "notes": "Closes the intent-vs-delivery loop. Writes score to state/quality/pr-grades/<sha>.json."
+    },
+    {
+      "number": 6,
+      "title": "Adopt `/council` from claude-codex-forge for one-way-door PRs",
+      "category": "Architecture-aligned techniques",
+      "effort": "M",
+      "impact": "M",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "sprint of",
+      "notes": "Opt-in pre-merge gate for schema changes, public API surfaces, OPTIC-K dims, pricing — the one-way doors already enumerated in CLAUDE.md."
+    },
+    {
+      "number": 7,
+      "title": "Playwright E2E job on demos dashboard + chatbot showcase",
+      "category": "Workflow & environment security",
+      "effort": "M",
+      "impact": "H",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "sprint of",
+      "notes": "Outside-in browser verification. Asserts heartbeat banner color, manifest schema_version, and chatbot showcase response time < 5s."
+    },
+    {
+      "number": 8,
+      "title": "Run Vite + GaApi as a non-admin Windows service",
+      "category": "Workflow & environment security",
+      "effort": "L",
+      "impact": "H",
+      "status": "todo",
+      "pr_number": null,
+      "pr_state": null,
+      "evidence_url": null,
+      "owner": "when the same outage recurs",
+      "notes": "Eliminates the elevated-process kill problem (GaApi PID 21036 today). Or install the GuitarAlchemist Windows service via Scripts/install-ga-service.ps1."
+    }
+  ],
+  "related_prs": [
+    {
+      "number": 295,
+      "title": "Harness engineering adoption plan",
+      "state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/295",
+      "note": "Source document for this rollout — landed the plan itself."
+    },
+    {
+      "number": 302,
+      "title": "karpathy-rules workflow regex fix (split from #300)",
+      "state": "blocked-on-agent-blackbox",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/302",
+      "note": "Workflow tweak split out of item #1 so the CLAUDE.md change can land independently."
+    }
+  ],
+  "principles": [
+    {
+      "name": "Context & memory management",
+      "techniques": [
+        "Progressive disclosure navigation — small map + on-demand drill-down, not a 5000-line CLAUDE.md.",
+        "Disk-persistent state — decisions go to state/, docs/solutions/, docs/plans/ on the same beat as the conversation.",
+        "Cross-session memory compaction — auto-compact at 40%; durable knowledge off-loaded via the digest skill + precompact hook."
+      ]
+    },
+    {
+      "name": "Verification & feedback loops",
+      "techniques": [
+        "Cybernetic governance loops — feed-forward skills + post-action evaluators against architecture boundaries.",
+        "Generator-evaluator separation — the agent that wrote the code is never the one to grade it.",
+        "Pre-completion interceptors — block 'done' until lint, type-check, build, and E2E suites are green."
+      ]
+    },
+    {
+      "name": "Workflow & environment security",
+      "techniques": [
+        "User-experience E2E verification — outside-in browser checks so the agent sees what the user sees.",
+        "Mechanical invariant enforcement — encode rules into tooling (pre-commit, hooks, OS sandboxes), not prompts."
+      ]
+    },
+    {
+      "name": "Architecture-aligned techniques",
+      "techniques": [
+        "claude-codex-forge 7-phase workflow — PRD → Research → Design → Review → Build → Verify → Ship.",
+        "`state.md` Workflow / Done / Now / Next — gitignored, read by hooks, kept out of auto-loaded context.",
+        "ADR / CHANGELOG / solutions/ as compounded knowledge — every session builds on the previous."
+      ]
+    }
+  ],
+  "baselines": {
+    "frontend_typecheck_errors": {
+      "value": 185,
+      "as_of": "2026-05-23",
+      "source": "cd ReactComponents/ga-react-components && npx tsc -b 2>&1 | grep -c 'error TS'",
+      "target": 0,
+      "note": "Treat as a debt ledger. Number should never go up between PRs once item #2 lands."
+    },
+    "post_merge_smoke_urls": {
+      "value": 0,
+      "target": 3,
+      "urls": ["/test", "/api/chatbot/status", "/dev-data/manifest"],
+      "note": "Item #4 ships these as automated post-merge curls."
+    },
+    "one_way_door_prs_gated_by_council": {
+      "value": 0,
+      "target": "all schema/API/pricing PRs",
+      "note": "Item #6 ships the `/council` opt-in pre-merge gate."
+    },
+    "e2e_dashboard_coverage_tests": {
+      "value": 0,
+      "target": 3,
+      "note": "Item #7 ships Playwright tests for /test, /test/manifest, /chatbot/#showcase."
+    },
+    "auto_compact_threshold_pct": {
+      "value": 40,
+      "as_of": "2026-05-23",
+      "note": "Set globally in ~/.claude/settings.json across all 6 repos. Status: have."
+    }
+  }
+}
