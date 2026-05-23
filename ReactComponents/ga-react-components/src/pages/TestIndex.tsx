@@ -180,11 +180,11 @@ const testPages: TestPageInfo[] = [
   {
     id: 'modal-meadow',
     title: 'Modal Meadow',
-    description: 'Walk a 220m meadow split into musical mode-regions; ambient chord progression and grass colour shift as you cross from Ionian to Phrygian',
+    description: 'Walk through a meadow split into seven musical mode-regions (Ionian → Locrian); ambient chord progression, grass color, and wind shift as you cross between modes. v0.8 adds rolling hills, ponds, and a descent effect.',
     technology: 'Three.js + Web Audio + FPS Controls',
     path: '/test/modal-meadow',
-    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Two Mode Regions', 'Per-Region Wind', 'Web Audio Pad', 'Crossfade'],
-    status: 'partial',
+    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Seven Modes', 'Auto-Walk Default', 'Hills + Ponds', 'Web Audio Pad', 'Crossfade'],
+    status: 'complete',
   },
   {
     id: 'ocean',
