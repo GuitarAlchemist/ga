@@ -12,6 +12,10 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Node globals needed by vite.config.ts (process, Buffer, __dirname,
+       URL, IncomingMessage). @types/node is already in devDependencies. */
+    "types": ["node"],
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
