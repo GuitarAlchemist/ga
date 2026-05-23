@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
   Grid,
+  IconButton,
   Link as MuiLink,
   Paper,
   Stack,
@@ -22,6 +25,12 @@ import ForumIcon from '@mui/icons-material/Forum';
 import CategoryIcon from '@mui/icons-material/Category';
 import CircleIcon from '@mui/icons-material/Circle';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ArticleIcon from '@mui/icons-material/Article';
+import HistoryIcon from '@mui/icons-material/History';
+import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CodeIcon from '@mui/icons-material/Code';
 
 interface DevLink {
   title: string;
@@ -65,6 +74,32 @@ interface QualityEntry {
 interface QualityPayload {
   generated_at: string;
   domains: Record<string, QualityEntry>;
+  regressions?: string[];
+}
+
+interface ArchDoc {
+  file: string;
+  title: string;
+  modified_at: string;
+  size: number;
+}
+
+interface ArchitecturePayload {
+  generated_at: string;
+  docs: ArchDoc[];
+}
+
+interface ActivityCommit {
+  sha: string;
+  short_sha: string;
+  author: string;
+  date: string;
+  subject: string;
+}
+
+interface ActivityPayload {
+  generated_at: string;
+  commits: ActivityCommit[] | { error: string };
 }
 
 interface HealthProbe {
@@ -235,6 +270,16 @@ const QualityCard: React.FC = () => {
           Full report <OpenInNewIcon fontSize="inherit" />
         </MuiLink>
       </Stack>
+      {data?.regressions && data.regressions.length > 0 && (
+        <Alert
+          severity="warning"
+          icon={<WarningAmberIcon fontSize="small" />}
+          sx={{ mb: 1, py: 0, fontSize: '0.8rem' }}
+        >
+          <strong>{data.regressions.length} regression{data.regressions.length === 1 ? '' : 's'}:</strong>{' '}
+          {data.regressions.join(' · ')}
+        </Alert>
+      )}
       <Box sx={{ maxHeight: 480, overflow: 'auto' }}>
         {error && <Typography color="error">Failed to load: {error}</Typography>}
         {!data && !error && <CircularProgress size={20} />}
@@ -325,16 +370,255 @@ const ProcessHealthCard: React.FC = () => {
   );
 };
 
+const ArchitectureCard: React.FC = () => {
+  const [data, setData] = useState<ArchitecturePayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/architecture')
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() as Promise<ArchitecturePayload>; })
+      .then((p) => { if (!cancelled) setData(p); })
+      .catch((e) => { if (!cancelled) setError(String(e.message ?? e)); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <Paper sx={{ p: 2, height: '100%' }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <ArticleIcon fontSize="small" />
+          <Typography variant="h6">Architecture</Typography>
+        </Stack>
+        <MuiLink
+          href="https://github.com/GuitarAlchemist/ga/tree/main/docs/architecture"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 0.5 }}
+        >
+          docs/architecture <OpenInNewIcon fontSize="inherit" />
+        </MuiLink>
+      </Stack>
+      <Box sx={{ maxHeight: 280, overflow: 'auto' }}>
+        {error && <Typography color="error">Failed to load: {error}</Typography>}
+        {!data && !error && <CircularProgress size={20} />}
+        {data && data.docs.length === 0 && (
+          <Typography color="text.secondary">No docs in docs/architecture/.</Typography>
+        )}
+        {data && data.docs.map((doc) => (
+          <Box key={doc.file} sx={{ py: 0.75, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <MuiLink
+              href={`https://github.com/GuitarAlchemist/ga/blob/main/docs/architecture/${doc.file}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ fontSize: '0.875rem', fontWeight: 500, display: 'block' }}
+            >
+              {doc.title}
+            </MuiLink>
+            <Typography variant="caption" color="text.secondary">
+              {doc.file} · {new Date(doc.modified_at).toLocaleDateString()} · {Math.round(doc.size / 1024)} KB
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Paper>
+  );
+};
+
+const ActivityCard: React.FC = () => {
+  const [data, setData] = useState<ActivityPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/activity?limit=10')
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() as Promise<ActivityPayload>; })
+      .then((p) => { if (!cancelled) setData(p); })
+      .catch((e) => { if (!cancelled) setError(String(e.message ?? e)); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const relative = (iso: string): string => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
+  const commits = data && Array.isArray(data.commits) ? data.commits : [];
+  const gitError = data && !Array.isArray(data.commits) ? (data.commits as { error: string }).error : null;
+
+  return (
+    <Paper sx={{ p: 2, height: '100%' }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <HistoryIcon fontSize="small" />
+          <Typography variant="h6">Recent Activity</Typography>
+        </Stack>
+        <Typography variant="caption" color="text.secondary">last 10 commits</Typography>
+      </Stack>
+      <Box sx={{ maxHeight: 280, overflow: 'auto' }}>
+        {error && <Typography color="error">Failed to load: {error}</Typography>}
+        {gitError && <Typography color="error">git log failed: {gitError}</Typography>}
+        {!data && !error && <CircularProgress size={20} />}
+        {commits.map((c) => (
+          <Box key={c.sha} sx={{ py: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Stack direction="row" spacing={1} alignItems="baseline">
+              <MuiLink
+                href={`https://github.com/GuitarAlchemist/ga/commit/${c.sha}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ fontFamily: 'monospace', fontSize: '0.75rem', flexShrink: 0 }}
+              >
+                {c.short_sha}
+              </MuiLink>
+              <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subject}>
+                {c.subject}
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              {c.author} · {relative(c.date)}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Paper>
+  );
+};
+
+interface OperationalTodo {
+  title: string;
+  why: string;
+  command?: string;
+  doc?: string;
+}
+
+const operationalTodos: OperationalTodo[] = [
+  {
+    title: 'Install GuitarAlchemist Windows service',
+    why: 'Vite + GaApi + GaChatbot.Api currently die on reboot/logoff (24h outage on 2026-05-22). Service install supervises them.',
+    command: 'pwsh C:\\Users\\spare\\source\\repos\\ga\\Scripts\\install-ga-service.ps1',
+    doc: 'docs/runbooks/chatbot-deploy.md',
+  },
+  {
+    title: 'Set MISTRAL_API_KEY for chatbot cascade',
+    why: 'Without it the chatbot falls back to local Ollama (llama3.2:3b). Mistral cascade is the recommended production path per runbook.',
+    command: '$env:MISTRAL_API_KEY = "<your-key>"; $env:AI__CascadeProvider = "mistral"',
+  },
+  {
+    title: 'Migrate /dev-data middleware to real backend for production builds',
+    why: 'devDataPlugin only runs under `vite` dev server. `vite build` strips it. If demos.guitaralchemist.com ever serves a static build instead of dev mode, the Development tab breaks.',
+  },
+];
+
+const OperationalTodoCard: React.FC = () => {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(text);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+  return (
+    <Paper sx={{ p: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <AssignmentLateIcon fontSize="small" sx={{ color: 'warning.main' }} />
+        <Typography variant="h6">Operational TODO</Typography>
+        <Chip label={`${operationalTodos.length} item${operationalTodos.length === 1 ? '' : 's'}`} size="small" />
+      </Stack>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+        Action items that need a human/admin. Not auto-run.
+      </Typography>
+      <Stack spacing={1.5}>
+        {operationalTodos.map((t) => (
+          <Box key={t.title} sx={{ p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{t.title}</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: t.command ? 1 : 0 }}>
+              {t.why}
+            </Typography>
+            {t.command && (
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                <Box
+                  component="code"
+                  sx={{
+                    flex: 1,
+                    p: 0.75,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 0.5,
+                    fontSize: '0.75rem',
+                    fontFamily: 'monospace',
+                    overflow: 'auto',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t.command}
+                </Box>
+                <Tooltip title={copied === t.command ? 'Copied!' : 'Copy command'}>
+                  <IconButton size="small" onClick={() => copy(t.command!)}>
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            )}
+            {t.doc && (
+              <MuiLink
+                href={`https://github.com/GuitarAlchemist/ga/blob/main/${t.doc}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
+              >
+                {t.doc} <OpenInNewIcon fontSize="inherit" />
+              </MuiLink>
+            )}
+          </Box>
+        ))}
+      </Stack>
+    </Paper>
+  );
+};
+
+const ManifestBanner: React.FC = () => (
+  <Alert
+    severity="info"
+    icon={<CodeIcon fontSize="small" />}
+    sx={{ '& .MuiAlert-message': { width: '100%' } }}
+  >
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">
+      <Typography variant="body2">
+        AI tools (Claude, Junie, Codex): fetch <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>/dev-data/manifest</Box> for full project context.
+      </Typography>
+      <Button
+        size="small"
+        variant="outlined"
+        href="/dev-data/manifest"
+        target="_blank"
+        rel="noopener noreferrer"
+        endIcon={<OpenInNewIcon />}
+      >
+        Open manifest
+      </Button>
+    </Stack>
+  </Alert>
+);
+
 export const DevelopmentSection: React.FC = () => {
   return (
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5" gutterBottom>Development</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Roadmap, architecture, and QA at a glance. Live data from BACKLOG.md, state/quality, and local health probes.
+          Roadmap, architecture, and QA at a glance. Live data from BACKLOG.md, state/quality, git log, and local health probes.
         </Typography>
         <DashboardLinks />
       </Box>
+
+      <ManifestBanner />
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
@@ -345,6 +629,15 @@ export const DevelopmentSection: React.FC = () => {
             <QualityCard />
             <ProcessHealthCard />
           </Stack>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <ActivityCard />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <ArchitectureCard />
+        </Grid>
+        <Grid item xs={12}>
+          <OperationalTodoCard />
         </Grid>
       </Grid>
     </Stack>

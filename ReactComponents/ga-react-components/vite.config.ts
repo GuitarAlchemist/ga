@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
+import { execSync } from 'child_process'
 import type { Plugin } from 'vite'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
@@ -23,11 +24,141 @@ try {
   }
 } catch { /* ignore */ }
 
-// Serve repo-root dev artifacts (BACKLOG.md, state/quality/*) for the
-// Development dashboard on /test. Reads fresh on every request so CI-pushed
-// quality snapshots and edited BACKLOG.md show up without a rebuild.
+// Serve repo-root dev artifacts (BACKLOG.md, state/quality/*, git log,
+// docs/architecture/) for the Development dashboard on /test, plus a single
+// /dev-data/manifest aggregated JSON that both the UI and external AI tools
+// (Claude, Junie, Codex) can hit to bootstrap project context.
+//
+// Every endpoint reads fresh per request so CI-pushed quality snapshots,
+// edited BACKLOG.md, and new commits show up without a rebuild.
+//
+// Schema is intentionally stable — see /dev-data/manifest top-level keys.
+// Add new fields rather than renaming existing ones.
 function devDataPlugin(): Plugin {
     const repoRoot = path.resolve(__dirname, '../..');
+
+    interface QualityEntry { source: string; data: unknown }
+    function gatherQuality(): { domains: Record<string, QualityEntry>; regressions: string[] } {
+        const qualityDir = path.join(repoRoot, 'state', 'quality');
+        const domains: Record<string, QualityEntry> = {};
+        const regressions: string[] = [];
+        if (!existsSync(qualityDir)) return { domains, regressions };
+
+        for (const entry of readdirSync(qualityDir, { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            const subDir = path.join(qualityDir, entry.name);
+            const lastJson = path.join(subDir, 'last.json');
+            let chosen: QualityEntry | null = null;
+            if (existsSync(lastJson)) {
+                try {
+                    chosen = { source: 'last.json', data: JSON.parse(readFileSync(lastJson, 'utf-8')) };
+                } catch (e) {
+                    chosen = { source: 'last.json', data: { error: 'parse_failed', message: String(e) } };
+                }
+            } else {
+                const dated = readdirSync(subDir)
+                    .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+                    .sort();
+                const latest = dated[dated.length - 1];
+                if (latest) {
+                    try {
+                        const data = JSON.parse(readFileSync(path.join(subDir, latest), 'utf-8'));
+                        chosen = { source: latest, data };
+                        // Compare against prior dated snapshot for regression detection
+                        const prior = dated[dated.length - 2];
+                        if (prior) {
+                            try {
+                                const priorData = JSON.parse(readFileSync(path.join(subDir, prior), 'utf-8'));
+                                const curVal = (data as Record<string, unknown>).metric_value;
+                                const priorVal = (priorData as Record<string, unknown>).metric_value;
+                                if (typeof curVal === 'number' && typeof priorVal === 'number' && curVal < priorVal) {
+                                    regressions.push(`${entry.name}: ${priorVal} → ${curVal}`);
+                                }
+                            } catch { /* ignore comparison failures */ }
+                        }
+                    } catch (e) {
+                        chosen = { source: latest, data: { error: 'parse_failed', message: String(e) } };
+                    }
+                }
+            }
+            if (chosen) {
+                domains[entry.name] = chosen;
+                const status = (chosen.data as Record<string, unknown>).oracle_status;
+                if (status && status !== 'ok') regressions.push(`${entry.name}: oracle_status=${status}`);
+            }
+        }
+        return { domains, regressions };
+    }
+
+    interface ActivityEntry { sha: string; short_sha: string; author: string; date: string; subject: string }
+    function gatherActivity(limit = 10): ActivityEntry[] | { error: string } {
+        try {
+            const out = execSync(
+                `git log -n ${limit} --pretty=format:%H%x09%an%x09%aI%x09%s`,
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            return out.trim().split('\n').filter(Boolean).map((line) => {
+                const [sha, author, date, ...rest] = line.split('\t');
+                return { sha, short_sha: sha.slice(0, 8), author, date, subject: rest.join('\t') };
+            });
+        } catch (e) {
+            return { error: String((e as Error).message ?? e) };
+        }
+    }
+
+    interface ArchDoc { file: string; title: string; modified_at: string; size: number }
+    function gatherArchitecture(): ArchDoc[] {
+        const archDir = path.join(repoRoot, 'docs', 'architecture');
+        if (!existsSync(archDir)) return [];
+        return readdirSync(archDir)
+            .filter((f) => f.endsWith('.md'))
+            .map((f) => {
+                const full = path.join(archDir, f);
+                const stat = statSync(full);
+                let title = f.replace(/\.md$/, '').replace(/-/g, ' ');
+                try {
+                    const head = readFileSync(full, 'utf-8').split('\n').slice(0, 15);
+                    const h1 = head.find((l) => /^#\s/.test(l));
+                    if (h1) title = h1.replace(/^#\s+/, '').trim();
+                    else {
+                        // Fall back to frontmatter title:
+                        const fm = head.find((l) => /^title:\s/.test(l));
+                        if (fm) title = fm.replace(/^title:\s+/, '').trim().replace(/^["']|["']$/g, '');
+                    }
+                } catch { /* ignore */ }
+                return { file: f, title, modified_at: stat.mtime.toISOString(), size: stat.size };
+            })
+            .sort((a, b) => b.modified_at.localeCompare(a.modified_at));
+    }
+
+    interface BacklogSection { title: string; item_count: number }
+    function gatherBacklog(): { total_sections: number; top_sections: BacklogSection[] } | null {
+        const p = path.join(repoRoot, 'BACKLOG.md');
+        if (!existsSync(p)) return null;
+        const lines = readFileSync(p, 'utf-8').split('\n');
+        const sections: BacklogSection[] = [];
+        let current: BacklogSection | null = null;
+        for (const line of lines) {
+            const h2 = line.match(/^##\s+(.+)$/);
+            if (h2) {
+                if (current) sections.push(current);
+                current = { title: h2[1].trim(), item_count: 0 };
+            } else if (current && /^[-*]\s/.test(line)) {
+                current.item_count += 1;
+            }
+        }
+        if (current) sections.push(current);
+        return { total_sections: sections.length, top_sections: sections.slice(0, 8) };
+    }
+
+    interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
+    const serviceTopology: ServiceTopology[] = [
+        { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
+        { name: 'GaApi', port: 5232, public_path: '/api/*, /hubs/*', expected: '/health → "Healthy"' },
+        { name: 'GaChatbot.Api', port: 5252, public_path: '/chatbot/*, /api/chatbot/*', expected: '/api/chatbot/status → JSON' },
+        { name: 'cloudflared (ga-demos)', port: 0, public_path: 'demos.guitaralchemist.com', expected: 'reverse tunnel to local services' },
+    ];
+
     return {
         name: 'dev-data',
         configureServer(server) {
@@ -45,38 +176,46 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/quality', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
-                const qualityDir = path.join(repoRoot, 'state', 'quality');
-                const domains: Record<string, unknown> = {};
-                if (existsSync(qualityDir)) {
-                    for (const entry of readdirSync(qualityDir, { withFileTypes: true })) {
-                        if (!entry.isDirectory()) continue;
-                        const subDir = path.join(qualityDir, entry.name);
-                        const lastJson = path.join(subDir, 'last.json');
-                        let chosen: { source: string; data: unknown } | null = null;
-                        if (existsSync(lastJson)) {
-                            try {
-                                chosen = { source: 'last.json', data: JSON.parse(readFileSync(lastJson, 'utf-8')) };
-                            } catch (e) {
-                                chosen = { source: 'last.json', data: { error: 'parse_failed', message: String(e) } };
-                            }
-                        } else {
-                            const dated = readdirSync(subDir)
-                                .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
-                                .sort()
-                                .pop();
-                            if (dated) {
-                                try {
-                                    chosen = { source: dated, data: JSON.parse(readFileSync(path.join(subDir, dated), 'utf-8')) };
-                                } catch (e) {
-                                    chosen = { source: dated, data: { error: 'parse_failed', message: String(e) } };
-                                }
-                            }
-                        }
-                        if (chosen) domains[entry.name] = chosen;
-                    }
-                }
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-                res.end(JSON.stringify({ generated_at: new Date().toISOString(), domains }));
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
+            });
+
+            server.middlewares.use('/dev-data/activity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') ?? 10)));
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), commits: gatherActivity(limit) }));
+            });
+
+            server.middlewares.use('/dev-data/architecture', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
+            });
+
+            server.middlewares.use('/dev-data/manifest', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const manifest = {
+                    schema_version: '1.0.0',
+                    generated_at: new Date().toISOString(),
+                    repo: 'GuitarAlchemist/ga',
+                    public_url: 'https://demos.guitaralchemist.com',
+                    endpoints: {
+                        backlog: '/dev-data/backlog',
+                        quality: '/dev-data/quality',
+                        activity: '/dev-data/activity',
+                        architecture: '/dev-data/architecture',
+                        manifest: '/dev-data/manifest',
+                    },
+                    services: serviceTopology,
+                    backlog: gatherBacklog(),
+                    quality: gatherQuality(),
+                    activity: gatherActivity(10),
+                    architecture: gatherArchitecture(),
+                };
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(manifest, null, 2));
             });
         },
     };
