@@ -151,12 +151,12 @@ const testPages: TestPageInfo[] = [
     status: 'partial',
   },
   {
-    id: 'sunburst-3d',
-    title: 'Sunburst 3D',
-    description: '3D sunburst visualization with slope effect and LOD for hierarchical musical data exploration',
-    technology: 'Three.js + WebGL',
-    path: '/test/sunburst-3d',
-    features: ['3D Sunburst', 'Slope Effect', 'LOD System', 'Interactive Zoom', 'Breadcrumb Trail', 'Auto-Rotate'],
+    id: 'tonal-orbit',
+    title: 'Tonal Orbit',
+    description: 'Music theory as a planetary system — pitch classes orbit the tonic, chord families orbit pitches, scales drift in outer rings. Pinch / drag / tap to navigate. Performance tiers + Cast-friendly tour mode.',
+    technology: 'Three.js + WebGL + Web Audio',
+    path: '/test/tonal-orbit',
+    features: ['Pitch / Chord / Scale Orbits', 'Touch + Drag + Pinch', 'Web Audio Drone', 'Bloom Post-Processing', 'Tour Mode (?tour=auto)', 'perf=high/med/low'],
     status: 'complete',
   },
   {
