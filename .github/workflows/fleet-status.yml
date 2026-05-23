@@ -1,0 +1,128 @@
+name: Fleet Status
+
+# Generates the cross-repo Fleet Status snapshot:
+#   - state/fleet-status.md
+#   - ReactComponents/ga-react-components/public/fleet-status.json
+#
+# Inputs:
+#   - PRs from `gh pr list` against each of the 5 sibling repos
+#   - install-audit JSON from agent-blackbox CLI (one per repo, against fresh clones)
+#   - state/fleet-status-initiatives.json (hand-curated, sanitised)
+#   - state/fleet-status-blockers.json    (hand-curated)
+#
+# Commits both artifacts back to main with `[skip ci]` so the workflow does
+# not retrigger itself.
+
+on:
+  schedule:
+    # Daily at 06:00 UTC — early enough to be ready before the operator wakes
+    # up, late enough that European overnight work has landed. Cron is plenty
+    # of cadence for a status snapshot (page is not real-time by design).
+    - cron: '0 6 * * *'
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'state/fleet-status.md'
+      - 'state/fleet-status-audits/**'
+      - 'ReactComponents/ga-react-components/public/fleet-status.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: fleet-status
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: Build fleet snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout GA
+        uses: actions/checkout@v4
+        with:
+          path: ga
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout agent-blackbox (for install-audit CLI)
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/agent-blackbox
+          ref: main
+          path: agent-blackbox
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Clone sibling repos (shallow)
+        run: |
+          set -e
+          mkdir -p siblings
+          for slug in GuitarAlchemist/ix GuitarAlchemist/tars GuitarAlchemist/Demerzel; do
+            short="${slug##*/}"
+            git clone --depth 1 "https://github.com/${slug}.git" "siblings/${short}" \
+              || echo "::warning::clone failed for ${slug} — install-audit will skip it"
+          done
+
+      - name: Run install-audit per repo
+        working-directory: ga
+        run: |
+          set -e
+          mkdir -p state/fleet-status-audits
+          cli="../agent-blackbox/cli/agent_blackbox.py"
+
+          # ga (this repo)
+          python "$cli" install-audit --repo . \
+            --out-dir /tmp/audit-ga || true
+          cp /tmp/audit-ga/install-audit.json \
+             state/fleet-status-audits/ga.install-audit.json || true
+
+          # agent-blackbox itself
+          python "$cli" install-audit --repo ../agent-blackbox \
+            --out-dir /tmp/audit-ab || true
+          cp /tmp/audit-ab/install-audit.json \
+             state/fleet-status-audits/agent-blackbox.install-audit.json || true
+
+          # ix / tars / Demerzel — fall through quietly if clone failed
+          for short in ix tars Demerzel; do
+            if [ -d "../siblings/${short}" ]; then
+              python "$cli" install-audit --repo "../siblings/${short}" \
+                --out-dir "/tmp/audit-${short}" || true
+              cp "/tmp/audit-${short}/install-audit.json" \
+                "state/fleet-status-audits/${short}.install-audit.json" || true
+            fi
+          done
+
+          ls -la state/fleet-status-audits/
+
+      - name: Generate fleet-status.md + fleet-status.json
+        working-directory: ga
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python Scripts/fleet-status-generate.py --root .
+
+      - name: Commit + push if changed
+        working-directory: ga
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/fleet-status.md \
+                  state/fleet-status-audits/ \
+                  ReactComponents/ga-react-components/public/fleet-status.json
+
+          if git diff --cached --quiet; then
+            echo "No fleet-status changes — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(fleet): fleet-status snapshot $(date -u +%Y-%m-%d) [skip ci]"
+          git push origin HEAD:main

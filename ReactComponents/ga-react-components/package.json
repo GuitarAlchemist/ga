@@ -10,6 +10,7 @@
     "postinstall": "npx -y patch-package || echo patch-package skipped (deps hoisted to parent)",
     "dev": "vite",
     "build": "vite build",
+    "build:demos": "vite build --config vite.config.demos.ts",
     "build:with-types": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

@@ -53,7 +53,8 @@ Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "✓ Git hooks installed successfully!`n" -ForegroundColor Green
 
 Write-Host "Available hooks:" -ForegroundColor Yellow
-Write-Host "  • pre-commit - Checks formatting and builds before commit`n" -ForegroundColor White
+Write-Host "  • pre-commit - Checks formatting and builds before commit" -ForegroundColor White
+Write-Host "                 + warns on CONTEXT.md staleness via Scripts/check-context-staleness.ps1`n" -ForegroundColor White
 
 Write-Host "To disable hooks temporarily:" -ForegroundColor Yellow
 Write-Host "  git commit --no-verify`n" -ForegroundColor Cyan

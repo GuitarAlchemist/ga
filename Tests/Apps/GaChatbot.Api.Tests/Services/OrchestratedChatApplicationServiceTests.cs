@@ -54,7 +54,12 @@ public sealed class OrchestratedChatApplicationServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.NaturalLanguageAnswer, Does.Contain("fallback timeout"));
+            // Producer message was rewritten in #221 to surface the actual
+            // timeout duration and avoid blaming the user's prompt. Match
+            // the substring that's stable across timeout values: "exceeded
+            // the {N}s timeout". Test config sets FallbackTimeoutSeconds=1
+            // above, so the rendered string contains "exceeded the 1s timeout".
+            Assert.That(result.NaturalLanguageAnswer, Does.Contain("exceeded the 1s timeout"));
             Assert.That(result.Routing.AgentId, Is.EqualTo("fallback-direct"));
             Assert.That(result.Routing.Confidence, Is.EqualTo(0f));
             Assert.That(result.Routing.RoutingMethod, Is.EqualTo("error-fallback-timeout"));

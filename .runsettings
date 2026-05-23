@@ -12,4 +12,35 @@
     <!-- Increase default timeout to reduce false timeouts under load (10 minutes). -->
     <DefaultTimeout>600000</DefaultTimeout>
   </NUnit>
+
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <!--
+            Exclude the ILGPU-backed GPU analyzer assembly from Coverlet instrumentation.
+
+            Coverlet injects `RecordHit(int)` calls referencing a mutable static
+            `HitsArray` into every method. ILGPU's kernel compiler walks the call
+            graph at kernel-load time and rejects any method that reads from a
+            non-readonly static field, throwing:
+
+              System.NotSupportedException: Cannot load from the static field
+              'Int32[] HitsArray' since it is not read only
+
+            ...which surfaces as an `ILGPU.InternalCompilerException` when
+            `SetClassGpuAnalyzer..ctor` loads `ComputeMagnitudeKernel`. The
+            failure was hidden until PR #201 unblocked Backend Tests by
+            shipping the static-web-assets artifact path — now visible on
+            every CI run that hits `SetClassGpuAnalyzerTests`.
+
+            GPU kernel coverage is not meaningful (kernels are compiled to PTX
+            / OpenCL, not the CLR being measured), so the GPU assembly is the
+            cleanest exclusion target.
+          -->
+          <Exclude>[GA.Business.Core.Analysis.Gpu]*</Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
 </RunSettings>
