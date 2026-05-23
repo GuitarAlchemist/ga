@@ -12,10 +12,15 @@ import {
   Paper,
   Chip,
   Button,
-  Stack
+  Stack,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
+import BuildIcon from '@mui/icons-material/Build';
+import ScienceIcon from '@mui/icons-material/Science';
 import { useNavigate } from 'react-router-dom';
+import DevelopmentSection from './DevelopmentSection';
 
 interface TestPageInfo {
   id: string;
@@ -413,6 +418,7 @@ const statusLabels = {
 
 export const TestIndex: React.FC = () => {
   const navigate = useNavigate();
+  const [tab, setTab] = React.useState<'dev' | 'demos'>('dev');
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -482,6 +488,29 @@ export const TestIndex: React.FC = () => {
         </Stack>
       </Paper>
 
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v as 'dev' | 'demos')} aria-label="Test index sections">
+          <Tab
+            value="dev"
+            label="Development"
+            icon={<BuildIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab
+            value="demos"
+            label={`Demos (${testPages.length})`}
+            icon={<ScienceIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+        </Tabs>
+      </Box>
+
+      {tab === 'dev' && <DevelopmentSection />}
+
+      {tab === 'demos' && (
+      <>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" gutterBottom>
           🎸 Component Test Suite
@@ -576,6 +605,8 @@ export const TestIndex: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      </>
+      )}
     </Container>
   );
 };

@@ -2,7 +2,7 @@ import {defineConfig, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
-import { createReadStream, existsSync, statSync, readFileSync } from 'fs'
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
 import type { Plugin } from 'vite'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
@@ -22,6 +22,65 @@ try {
     }
   }
 } catch { /* ignore */ }
+
+// Serve repo-root dev artifacts (BACKLOG.md, state/quality/*) for the
+// Development dashboard on /test. Reads fresh on every request so CI-pushed
+// quality snapshots and edited BACKLOG.md show up without a rebuild.
+function devDataPlugin(): Plugin {
+    const repoRoot = path.resolve(__dirname, '../..');
+    return {
+        name: 'dev-data',
+        configureServer(server) {
+            server.middlewares.use('/dev-data/backlog', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const p = path.join(repoRoot, 'BACKLOG.md');
+                if (!existsSync(p)) {
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end('BACKLOG.md not found');
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'no-store' });
+                res.end(readFileSync(p, 'utf-8'));
+            });
+
+            server.middlewares.use('/dev-data/quality', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const qualityDir = path.join(repoRoot, 'state', 'quality');
+                const domains: Record<string, unknown> = {};
+                if (existsSync(qualityDir)) {
+                    for (const entry of readdirSync(qualityDir, { withFileTypes: true })) {
+                        if (!entry.isDirectory()) continue;
+                        const subDir = path.join(qualityDir, entry.name);
+                        const lastJson = path.join(subDir, 'last.json');
+                        let chosen: { source: string; data: unknown } | null = null;
+                        if (existsSync(lastJson)) {
+                            try {
+                                chosen = { source: 'last.json', data: JSON.parse(readFileSync(lastJson, 'utf-8')) };
+                            } catch (e) {
+                                chosen = { source: 'last.json', data: { error: 'parse_failed', message: String(e) } };
+                            }
+                        } else {
+                            const dated = readdirSync(subDir)
+                                .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+                                .sort()
+                                .pop();
+                            if (dated) {
+                                try {
+                                    chosen = { source: dated, data: JSON.parse(readFileSync(path.join(subDir, dated), 'utf-8')) };
+                                } catch (e) {
+                                    chosen = { source: dated, data: { error: 'parse_failed', message: String(e) } };
+                                }
+                            }
+                        }
+                        if (chosen) domains[entry.name] = chosen;
+                    }
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ generated_at: new Date().toISOString(), domains }));
+            });
+        },
+    };
+}
 
 // Serve Godot HTML5 export files from /godot/ path during dev
 function godotStaticPlugin(): Plugin {
@@ -339,7 +398,7 @@ function primeRadiantControlPlugin(): Plugin {
 
 export default defineConfig({
     // 3d-force-graph WebGPU bug fixed via patch-package (see patches/3d-force-graph+1.79.1.patch)
-    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin()],
+    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin()],
     server: {
         port: 5176,
         host: true,
