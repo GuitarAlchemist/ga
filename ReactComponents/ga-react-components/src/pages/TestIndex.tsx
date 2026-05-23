@@ -418,7 +418,18 @@ const statusLabels = {
 
 export const TestIndex: React.FC = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = React.useState<'dev' | 'demos'>('dev');
+  // Default to 'demos' so public visitors (sharing the URL with friends)
+  // land on the showcase. Probe /dev-data/manifest on mount: if it returns
+  // 200 (local dev), switch to the Development tab. Public visitors will
+  // get 403 and stay on Demos.
+  const [tab, setTab] = React.useState<'dev' | 'demos'>('demos');
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/manifest', { cache: 'no-store' })
+      .then((r) => { if (!cancelled && r.ok) setTab('dev'); })
+      .catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>

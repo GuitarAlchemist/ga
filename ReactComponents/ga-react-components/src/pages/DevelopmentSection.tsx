@@ -791,7 +791,45 @@ const ManifestBanner: React.FC = () => {
   );
 };
 
+type AccessMode = 'loading' | 'local' | 'gated' | 'error';
+
+const GatedPlaceholder: React.FC = () => (
+  <Paper sx={{ p: 3, bgcolor: 'action.hover' }}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+      <CodeIcon sx={{ fontSize: 40, color: 'info.main' }} />
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>Dashboard is local-only</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          The Development dashboard reads from <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>/dev-data/*</Box> endpoints
+          that are gated to local-origin requests for security (they expose backlog, commit history,
+          quality snapshots, and agent config). The public site doesn't see them. The Demos tab
+          and the link cards above remain fully functional from anywhere.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Developers: open <Box component="code" sx={{ px: 0.5, bgcolor: 'background.paper', borderRadius: 0.5 }}>http://localhost:5176/test</Box> on
+          the dev host to see the full dashboard.
+        </Typography>
+      </Box>
+    </Stack>
+  </Paper>
+);
+
 export const DevelopmentSection: React.FC = () => {
+  const [access, setAccess] = React.useState<AccessMode>('loading');
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/manifest', { cache: 'no-store' })
+      .then((r) => {
+        if (cancelled) return;
+        if (r.ok) setAccess('local');
+        else if (r.status === 403) setAccess('gated');
+        else setAccess('error');
+      })
+      .catch(() => { if (!cancelled) setAccess('error'); });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -802,33 +840,36 @@ export const DevelopmentSection: React.FC = () => {
         <DashboardLinks />
       </Box>
 
-      <ManifestBanner />
+      {access === 'local' && <ManifestBanner />}
+      {access === 'gated' && <GatedPlaceholder />}
 
-      <OverviewSection />
+      {access === 'local' && <OverviewSection />}
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <BacklogCard />
+      {access === 'local' && (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <BacklogCard />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Stack spacing={2}>
+              <QualityCard />
+              <ProcessHealthCard />
+            </Stack>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <ActivityCard />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <ArchitectureCard />
+          </Grid>
+          <Grid item xs={12}>
+            <AgentCollaborationCard />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Stack spacing={2}>
-            <QualityCard />
-            <ProcessHealthCard />
-          </Stack>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <ActivityCard />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <ArchitectureCard />
-        </Grid>
-        <Grid item xs={12}>
-          <AgentCollaborationCard />
-        </Grid>
-        <Grid item xs={12}>
-          <OperationalTodoCard />
-        </Grid>
-      </Grid>
+      )}
+
+      {/* OperationalTodo is static content — show regardless of access mode */}
+      <OperationalTodoCard />
     </Stack>
   );
 };

@@ -5,6 +5,8 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
 import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
+import { parseBacklog, extractDocTitle, binActivityByDay } from './dev-data/parsers'
+import type { BacklogPayload } from './dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -208,100 +210,10 @@ function devDataPlugin(): Plugin {
             .sort((a, b) => b.modified_at.localeCompare(a.modified_at));
     }
 
-    type SubSectionCategory = 'shipped' | 'active' | 'backlog';
-    interface EpicSubSection { title: string; category: SubSectionCategory; item_count: number }
-    interface BacklogEpic {
-        title: string;
-        total_items: number;
-        shipped: number;
-        active: number;
-        backlog: number;
-        progress_pct: number;
-        sub_sections: EpicSubSection[];
-    }
-    interface BacklogPayload {
-        total_epics: number;
-        total_items: number;
-        total_shipped: number;
-        overall_progress_pct: number;
-        epics: BacklogEpic[];
-        // Legacy fields for back-compat with the original ManifestViewer Backlog table
-        total_sections: number;
-        top_sections: { title: string; item_count: number }[];
-    }
-    function categorize(title: string): SubSectionCategory {
-        const t = title.toLowerCase();
-        if (t.startsWith('shipped') || / shipped\b/.test(t) || t.includes('(shipped')) return 'shipped';
-        if (t.startsWith('active') || / active\b/.test(t) || t.startsWith('in progress') || t.startsWith('in-progress')) return 'active';
-        return 'backlog';
-    }
     function gatherBacklog(): BacklogPayload | null {
         const p = path.join(repoRoot, 'BACKLOG.md');
         if (!existsSync(p)) return null;
-        const lines = readFileSync(p, 'utf-8').split(/\r?\n/);
-        const epics: BacklogEpic[] = [];
-        let currentEpic: BacklogEpic | null = null;
-        // Implicit sub-section for bullets that appear directly under H2 (no H3 yet).
-        let currentSub: EpicSubSection | null = null;
-        for (const line of lines) {
-            const h2 = line.match(/^##\s+(.+?)\s*$/);
-            const h3 = line.match(/^###\s+(.+?)\s*$/);
-            const bullet = /^[-*]\s/.test(line);
-            if (h2) {
-                if (currentEpic) {
-                    if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
-                    epics.push(currentEpic);
-                }
-                const epicTitle = h2[1].trim();
-                currentEpic = {
-                    title: epicTitle,
-                    total_items: 0,
-                    shipped: 0,
-                    active: 0,
-                    backlog: 0,
-                    progress_pct: 0,
-                    sub_sections: [],
-                };
-                // Inherit category from the H2 title for any bullets that
-                // appear before the first H3 — otherwise an epic whose H2 says
-                // "Shipped" silently rolls up to backlog and progress_pct
-                // under-reports. categorize() defaults to 'backlog' when no
-                // marker is present, which preserves the previous behavior for
-                // untagged epics.
-                currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0 };
-            } else if (h3 && currentEpic) {
-                if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
-                currentSub = { title: h3[1].trim(), category: categorize(h3[1].trim()), item_count: 0 };
-            } else if (bullet && currentSub) {
-                currentSub.item_count += 1;
-            }
-        }
-        if (currentEpic) {
-            if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
-            epics.push(currentEpic);
-        }
-        // Tally totals per epic
-        for (const e of epics) {
-            for (const s of e.sub_sections) {
-                e.total_items += s.item_count;
-                if (s.category === 'shipped') e.shipped += s.item_count;
-                else if (s.category === 'active') e.active += s.item_count;
-                else e.backlog += s.item_count;
-            }
-            e.progress_pct = e.total_items > 0 ? Math.round((e.shipped / e.total_items) * 100) : 0;
-        }
-        const totalItems = epics.reduce((sum, e) => sum + e.total_items, 0);
-        const totalShipped = epics.reduce((sum, e) => sum + e.shipped, 0);
-        return {
-            total_epics: epics.length,
-            total_items: totalItems,
-            total_shipped: totalShipped,
-            overall_progress_pct: totalItems > 0 ? Math.round((totalShipped / totalItems) * 100) : 0,
-            epics,
-            // Legacy view: section titles + counts (used by older Backlog table)
-            total_sections: epics.length,
-            top_sections: epics.slice(0, 8).map((e) => ({ title: e.title, item_count: e.total_items })),
-        };
+        return parseBacklog(readFileSync(p, 'utf-8'));
     }
 
     interface AgentFileEntry {
