@@ -32,6 +32,11 @@ import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CodeIcon from '@mui/icons-material/Code';
+import GroupsIcon from '@mui/icons-material/Groups';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import FolderIcon from '@mui/icons-material/Folder';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 interface DevLink {
   title: string;
@@ -584,6 +589,183 @@ const OperationalTodoCard: React.FC = () => {
   );
 };
 
+interface AgentFileEntry {
+  path: string;
+  exists: boolean;
+  size: number | null;
+  modified_at: string | null;
+  is_directory: boolean;
+  description: string;
+}
+
+interface McpServersInfo {
+  count: number;
+  names: string[];
+}
+
+interface AgentsPayload {
+  generated_at: string;
+  agent_files: AgentFileEntry[];
+  mcp_servers: McpServersInfo;
+}
+
+const AgentCollaborationCard: React.FC = () => {
+  const [data, setData] = useState<AgentsPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/dev-data/agents')
+      .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() as Promise<AgentsPayload>; })
+      .then((p) => { if (!cancelled) setData(p); })
+      .catch((e) => { if (!cancelled) setError(String(e.message ?? e)); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(text);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+
+  const bootstrapCommands: { label: string; command: string }[] = [
+    {
+      label: 'Bootstrap any AI agent',
+      command: 'curl -sS https://demos.guitaralchemist.com/dev-data/manifest | jq .',
+    },
+    {
+      label: 'Codex CLI on this repo',
+      command: 'cd C:\\Users\\spare\\source\\repos\\ga && codex',
+    },
+    {
+      label: 'Antigravity v2 in this workspace',
+      command: 'antigravity C:\\Users\\spare\\source\\repos\\ga',
+    },
+  ];
+
+  const presentFiles = data?.agent_files.filter((f) => f.exists) ?? [];
+  const missingFiles = data?.agent_files.filter((f) => !f.exists) ?? [];
+
+  return (
+    <Paper sx={{ p: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <GroupsIcon fontSize="small" sx={{ color: 'primary.main' }} />
+        <Typography variant="h6">Agent Collaboration</Typography>
+        <Chip label={`${presentFiles.length}/${data?.agent_files.length ?? 0} config files`} size="small" />
+        {data && <Chip label={`${data.mcp_servers.count} MCP servers`} size="small" color="primary" />}
+      </Stack>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+        Files that govern how AI agents (Claude, Antigravity v2, codex, Gemini CLI) behave in this repo.
+        Source via{' '}
+        <Box component="code" sx={{ px: 0.5, bgcolor: 'action.hover', borderRadius: 0.5, fontSize: '0.8rem' }}>
+          /dev-data/agents
+        </Box>.
+      </Typography>
+
+      {error && <Alert severity="error">Failed to load: {error}</Alert>}
+      {!data && !error && <CircularProgress size={20} />}
+
+      {data && (
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={7}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Config files</Typography>
+            <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+              {data.agent_files.map((f) => (
+                <Stack
+                  key={f.path}
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ py: 0.5, borderBottom: '1px solid', borderColor: 'divider', opacity: f.exists ? 1 : 0.55 }}
+                >
+                  {f.exists ? (
+                    <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                  ) : (
+                    <CancelIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+                  )}
+                  {f.exists && (f.is_directory ? <FolderIcon sx={{ fontSize: 16, color: 'text.secondary' }} /> : <InsertDriveFileIcon sx={{ fontSize: 16, color: 'text.secondary' }} />)}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Tooltip title={f.description}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 500 }}>
+                        {f.path}
+                      </Typography>
+                    </Tooltip>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {f.description}
+                    </Typography>
+                  </Box>
+                  {f.exists && f.modified_at && (
+                    <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                      {new Date(f.modified_at).toLocaleDateString()}
+                    </Typography>
+                  )}
+                </Stack>
+              ))}
+            </Box>
+            {missingFiles.length > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
+                {missingFiles.length} not yet present: {missingFiles.map((f) => f.path).join(', ')}
+              </Typography>
+            )}
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+              MCP federation
+              {data.mcp_servers.count > 0 && (
+                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  via .mcp.json (read by Claude + Antigravity)
+                </Typography>
+              )}
+            </Typography>
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+              {data.mcp_servers.names.map((name) => (
+                <Chip key={name} label={name} size="small" variant="outlined" sx={{ fontSize: '0.7rem' }} />
+              ))}
+            </Stack>
+
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Quick start</Typography>
+            <Stack spacing={1}>
+              {bootstrapCommands.map((c) => (
+                <Box key={c.label}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 500 }}>
+                    {c.label}
+                  </Typography>
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Box
+                      component="code"
+                      sx={{
+                        flex: 1,
+                        p: 0.5,
+                        bgcolor: 'action.hover',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 0.5,
+                        fontSize: '0.7rem',
+                        fontFamily: 'monospace',
+                        overflow: 'auto',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {c.command}
+                    </Box>
+                    <Tooltip title={copied === c.command ? 'Copied!' : 'Copy'}>
+                      <IconButton size="small" onClick={() => copy(c.command)}>
+                        <ContentCopyIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          </Grid>
+        </Grid>
+      )}
+    </Paper>
+  );
+};
+
 const ManifestBanner: React.FC = () => {
   const navigate = useNavigate();
   return (
@@ -639,6 +821,9 @@ export const DevelopmentSection: React.FC = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <ArchitectureCard />
+        </Grid>
+        <Grid item xs={12}>
+          <AgentCollaborationCard />
         </Grid>
         <Grid item xs={12}>
           <OperationalTodoCard />

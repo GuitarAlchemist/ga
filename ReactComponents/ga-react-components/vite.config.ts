@@ -247,6 +247,60 @@ function devDataPlugin(): Plugin {
         };
     }
 
+    interface AgentFileEntry {
+        path: string;
+        exists: boolean;
+        size: number | null;
+        modified_at: string | null;
+        is_directory: boolean;
+        description: string;
+    }
+    function gatherAgentFiles(): AgentFileEntry[] {
+        // Files and directories that govern how AI agents (Claude, Antigravity v2, codex,
+        // Gemini CLI) behave in this repo. Order roughly matches "general → specific".
+        const entries: { rel: string; description: string }[] = [
+            { rel: 'CLAUDE.md', description: 'Canonical agent rules — Claude reads this; AGENTS.md is auto-synced from it.' },
+            { rel: 'AGENTS.md', description: 'codex/OpenAI convention. Auto-generated from CLAUDE.md via Scripts/sync-agents-md.ps1.' },
+            { rel: 'GEMINI.md', description: 'Gemini CLI / Antigravity native AI configuration entry point.' },
+            { rel: '.mcp.json', description: 'Project-level MCP server registrations. Antigravity v2 and Claude Code both read this.' },
+            { rel: '.claude', description: 'Claude Code project settings, skills, hooks, slash commands.' },
+            { rel: '.gemini', description: 'Gemini CLI / Antigravity settings, commands, skills.' },
+            { rel: '.codex', description: 'Codex CLI workspace config (rules, slash commands).' },
+            { rel: '.agent/skills', description: 'Shared agent skills (language standards, ROP, etc.) auto-discovered by Claude Code.' },
+            { rel: 'Scripts/sync-agents-md.ps1', description: 'Keeps AGENTS.md in sync with CLAUDE.md.' },
+            { rel: '.githooks/pre-commit', description: 'Pre-commit hook that runs sync-agents-md, dotnet format, build, ROP check.' },
+        ];
+        return entries.map(({ rel, description }) => {
+            const full = path.join(repoRoot, rel);
+            const exists = existsSync(full);
+            if (!exists) {
+                return { path: rel, exists: false, size: null, modified_at: null, is_directory: false, description };
+            }
+            const stat = statSync(full);
+            return {
+                path: rel,
+                exists: true,
+                size: stat.isFile() ? stat.size : null,
+                modified_at: stat.mtime.toISOString(),
+                is_directory: stat.isDirectory(),
+                description,
+            };
+        });
+    }
+
+    function gatherMcpServers(): { count: number; names: string[]; raw: unknown } {
+        const mcpPath = path.join(repoRoot, '.mcp.json');
+        if (!existsSync(mcpPath)) return { count: 0, names: [], raw: null };
+        try {
+            const raw = JSON.parse(readFileSync(mcpPath, 'utf-8'));
+            const servers = raw?.mcpServers ?? {};
+            const names = Object.keys(servers);
+            return { count: names.length, names, raw: servers };
+        } catch (e) {
+            return { count: 0, names: [], raw: { error: String((e as Error).message ?? e) } };
+        }
+    }
+
     interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
     const serviceTopology: ServiceTopology[] = [
         { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
@@ -295,6 +349,16 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
             });
 
+            server.middlewares.use('/dev-data/agents', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({
+                    generated_at: new Date().toISOString(),
+                    agent_files: gatherAgentFiles(),
+                    mcp_servers: gatherMcpServers(),
+                }));
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const manifest = {
@@ -307,6 +371,7 @@ function devDataPlugin(): Plugin {
                         quality: '/dev-data/quality',
                         activity: '/dev-data/activity',
                         architecture: '/dev-data/architecture',
+                        agents: '/dev-data/agents',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -315,6 +380,8 @@ function devDataPlugin(): Plugin {
                     activity: gatherActivity(10),
                     activity_by_day: gatherActivityByDay(30),
                     architecture: gatherArchitecture(),
+                    agent_files: gatherAgentFiles(),
+                    mcp_servers: gatherMcpServers(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));

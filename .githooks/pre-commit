@@ -89,6 +89,28 @@ if ($ropViolations.Count -gt 0) {
 }
 
 # ============================================
+# SYNC AGENTS.md FROM CLAUDE.md
+# ============================================
+Write-Host "`n▶ Syncing AGENTS.md from CLAUDE.md..." -ForegroundColor Blue
+$syncScript = Join-Path $PSScriptRoot '..' 'Scripts' 'sync-agents-md.ps1'
+if (Test-Path $syncScript) {
+    & pwsh -NoProfile -File $syncScript
+    if ($LASTEXITCODE -eq 0) {
+        # If sync produced changes, stage AGENTS.md so the commit includes the update.
+        $agentsStatus = git diff --name-only AGENTS.md 2>$null
+        if ($agentsStatus) {
+            git add AGENTS.md
+            Write-Host "  (AGENTS.md was out of sync — restaged)" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "✗ AGENTS.md sync failed" -ForegroundColor Red
+        $script:HasErrors = $true
+    }
+} else {
+    Write-Host "⚠ Sync script missing at $syncScript" -ForegroundColor Yellow
+}
+
+# ============================================
 # RESULT
 # ============================================
 Write-Host "`n========================================" -ForegroundColor Cyan
