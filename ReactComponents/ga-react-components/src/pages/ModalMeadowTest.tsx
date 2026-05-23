@@ -1,5 +1,5 @@
 /**
- * Modal Meadow Test Page (v1.2).
+ * Modal Meadow Test Page (v1.4).
  *
  * Mounts the ModalMeadow component full-screen with two HUDs:
  *   - bottom-left: current mode name + descriptor + position along the
@@ -10,6 +10,11 @@
  *     the hint reads "Auto-walking · Click to take control"; afterward it
  *     becomes "Click to enter · WASD to walk · ESC to release".
  *
+ * v1.4 (mobile fallback): if `useIsMobile()` reports coarse pointer or a
+ * narrow viewport, render <MobileFallback> instead of mounting the heavy
+ * Three.js scene. Saves the 240k-blade GPU cost on devices where the
+ * controls (WASD + pointer-lock) wouldn't work anyway.
+ *
  * The mode state lives here so the HUD can be plain React; the canvas
  * notifies us via the onModeChange / onUserTakeover callbacks.
  */
@@ -17,14 +22,17 @@
 import React, { useState, useCallback } from 'react';
 import { Container, Box, Typography, Paper } from '@mui/material';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
+import { useIsMobile } from '../components/Common/ResponsiveDemoShell';
 import {
   ModalMeadow,
+  MobileFallback,
   LYDIAN,
   MODES,
   type ModeConfig,
 } from '../components/ModalMeadow';
 
 const ModalMeadowTest: React.FC = () => {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<ModeConfig>(LYDIAN);
   const [locked, setLocked] = useState<boolean>(false);
   // v0.6 pattern (kept): auto-walk is on until this flips true via
@@ -33,9 +41,22 @@ const ModalMeadowTest: React.FC = () => {
 
   // Callbacks are useCallback'd because ModalMeadow's effect depends on them;
   // a fresh function each render would re-tear-down the whole scene.
+  // Hooks must always run unconditionally — even on mobile, where we'll
+  // skip rendering ModalMeadow — so they live above the early return.
   const handleModeChange = useCallback((m: ModeConfig) => setMode(m), []);
   const handleLockChange = useCallback((l: boolean) => setLocked(l), []);
   const handleUserTakeover = useCallback(() => setTookOver(true), []);
+
+  // v1.4: short-circuit before instantiating the Three.js scene on mobile.
+  // Saves the 240k-blade GPU spin-up and avoids the pointer-lock /
+  // keyboard / mouse controls that don't exist on touch devices.
+  if (isMobile) {
+    return (
+      <DemoErrorBoundary demoName="Modal Meadow (mobile)">
+        <MobileFallback />
+      </DemoErrorBoundary>
+    );
+  }
 
   // Index of the current mode (0..6, Lydian..Locrian). Used to draw the
   // "you are here" pip in the brightness curve below the HUD.
