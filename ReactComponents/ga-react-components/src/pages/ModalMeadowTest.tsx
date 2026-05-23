@@ -174,7 +174,7 @@ const ModalMeadowTest: React.FC = () => {
             letterSpacing: 1,
           }}
         >
-          MODAL MEADOW · v1.2 · 7 modes · ADSR Spread Voicings · Reverb · Hills + Ponds · Descent · Ground Clamp
+          MODAL MEADOW · v1.4 · 7 modes · ADSR · Reverb · Hills · Ponds · Descent · Ground Clamp · Sky · Sun · PCF Shadows · God Rays · Mobile Fallback
         </Box>
       </Container>
     </DemoErrorBoundary>
