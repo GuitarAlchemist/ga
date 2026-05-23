@@ -77,6 +77,37 @@ Split the work:
 
 Hand off between surfaces via [`Scripts/antigravity-bridge.ps1`](Scripts/antigravity-bridge.ps1) — drops a note in `state/handoffs/` (gitignored) that the other surface reads on next ask. Plan: [docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md](docs/plans/2026-05-05-tools-antigravity-claude-code-integration-plan.md). Multi-agent project context: fetch `https://demos.guitaralchemist.com/dev-data/manifest` (or `http://localhost:5176/dev-data/manifest` locally).
 
+## Where to find things
+
+Progressive-disclosure map for fresh agents. Look here before grepping — most "I'll add X" reflexes already exist. Plan rationale: [docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md](docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md) item #1.
+
+**Read first (always):**
+- `CLAUDE.md` (this file) — conventions, layered architecture, AI surfaces.
+- `state/digests/latest.md` — last session's cursor + in-flight + hypotheses. Written by `/digest` (or the Stop-hook fallback in `Scripts/precompact-digest.ps1`); auto-injected at session start by `Scripts/sessionstart-digest.ps1`.
+- `BACKLOG.md` — H2 epics → H3 sub-sections. Top-of-queue work.
+
+**If you're …**
+
+| Doing | Look here |
+|---|---|
+| Implementing a non-trivial feature | `docs/plans/YYYY-MM-DD-<type>-<name>-plan.md` (in flight) → `docs/archive/` (shipped) |
+| Debugging a known class of bug | `docs/solutions/<category>/<date>-<topic>.md` (compounded fixes, frontmatter: `module / tags / problem_type`) |
+| Touching the layered architecture | `docs/architecture/layers.md` (the 5-layer rule), `docs/architecture/audit-YYYY-MM-DD.md` (latest decisions) |
+| Adding a chat / agent endpoint | `docs/architecture/chat-surfaces.md` — which path is canonical, which are dead |
+| Touching OPTIC-K embeddings | `Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs` (constants, never hardcode); rebuild runbook: `.claude/skills/optic-k-rebuild/SKILL.md` |
+| Writing language-standard code (C# / F# / TS) | `.agent/skills/` (per-language standards), `.claude/skills/` (slash commands) |
+| Coordinating with a sibling repo | `docs/contracts/*.contract.md` + `docs/contracts/*.schema.json`; sibling repos at `../ix/`, `../tars/`, `../Demerzel/`, `../sentrux/`, `../hari/` |
+| Handing off to / from another agent | `state/handoffs/` via [`Scripts/antigravity-bridge.ps1`](Scripts/antigravity-bridge.ps1) (actor / branch / goal / write scope / tests / evidence / next ask) |
+| Checking quality baselines | `state/quality/` (daily snapshots: chatbot-qa, voicing-analysis, readme-drift). Aggregated trend: `docs/quality/README.md` |
+| Looking up an MCP / federation peer | `.mcp.json` (ix, demerzel, chrome-devtools, context7, ga, tars, notebooklm, sentrux, hari). Capability registry: `../Demerzel/schemas/capability-registry.json` |
+| Updating UI tokens / colors | `DESIGN.md` (canonical YAML frontmatter) → `npm run gen:theme` in `ReactComponents/ga-react-components` → `src/theme.ts`. Pre-commit hook verifies sync. |
+| Running anything | `Scripts/` (`start-all.ps1`, `install-ga-service.ps1`, `run-all-tests.ps1`, `precompact-digest.ps1`, `sessionstart-digest.ps1`); runbooks in `docs/runbooks/` (`chatbot-deploy.md`) |
+| Reading governance / Galactic Protocol | `../Demerzel/` constitutions + IXQL pipelines; `demerzel-*` skills locally |
+
+**Live everything-summary:** `https://demos.guitaralchemist.com/dev-data/manifest` aggregates BACKLOG, quality snapshots, architecture inventory, process health, recent activity, agent files, MCP servers — generated fresh on each request from `vite.config.ts` middleware. The visual dashboard wraps it at `/test` (Demos + Development tabs).
+
+**Knowledge packages:** `governance/state/knowledge/YYYY-MM-DD-*.json` (Demerzel submodule) — Galactic-Protocol-framed lessons from completed work. Read when starting a sibling-repo integration.
+
 ## Karpathy 6 Rules — AI coding discipline
 
 Apply to every code-touching turn:
