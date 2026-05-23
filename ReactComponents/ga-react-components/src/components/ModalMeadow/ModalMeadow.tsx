@@ -1,7 +1,15 @@
 /**
- * Modal Meadow — interactive mode-region 3D demo (v0.8).
+ * Modal Meadow — interactive mode-region 3D demo (v1.2).
  *
- * v0.8 ships:
+ * v1.2 (PR #297): ground-clamp samples terrain at camera XZ plus three
+ * points ahead along facing direction, riding the max so the camera rides
+ * up approaching hillsides instead of clipping through them.
+ *
+ * v0.9 (PR #284, in audio.ts): synth rewrite — ADSR pad voices, spread
+ * voicings (bass −24 / root / top +12), fake-reverb send. ModalMeadow.tsx
+ * is unchanged; the public API surface of audio.ts is preserved.
+ *
+ * v0.8 shipped:
  *   1. All SEVEN diatonic modes (Lydian, Ionian, Mixolydian, Dorian, Aeolian,
  *      Phrygian, Locrian) laid out left-to-right in modal-brightness order.
  *      x = -210, -140, -70, 0, +70, +140, +210. Field half-width ±245m.
