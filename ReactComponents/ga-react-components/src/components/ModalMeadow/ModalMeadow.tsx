@@ -1,5 +1,13 @@
 /**
- * Modal Meadow — interactive mode-region 3D demo (v1.2).
+ * Modal Meadow — interactive mode-region 3D demo (v1.3 cinematic).
+ *
+ * v1.3 — cinematic visual pass: EffectComposer + UnrealBloomPass (sun + bright
+ * motes glow), real directional shadows from the per-region sun (PCF soft,
+ * 2048² on perf=high / 1024² on medium), 3-band atmospheric sky shader with
+ * sun disc + halo + warmth bleed, volumetric god rays gated by dusk-mode
+ * weights (Aeolian+Phrygian+Locrian), and a `?perf=high|medium|low` URL
+ * toggle. Defaults to "high" on desktop; "low" is a renderer.render() fallback
+ * with no post-processing or shadows.
  *
  * v1.2 (PR #297): ground-clamp samples terrain at camera XZ plus three
  * points ahead along facing direction, riding the max so the camera rides
@@ -44,6 +52,11 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Box } from '@mui/material';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 import {
   LYDIAN,
@@ -56,6 +69,20 @@ import {
 } from './modes';
 import { ModalMeadowAudio, type ChordPulseEvent } from './audio';
 import { sampleTerrainY, HEIGHT_GLSL } from './terrain';
+
+// ─── Performance mode (v1.3) ─────────────────────────────────────────────────
+// URL ?perf=high|medium|low overrides — defaults to "high" on desktop.
+// Determines which post-processing passes run + shadow map size.
+//   high:   bloom + shadows@2048 + god rays
+//   medium: bloom + shadows@1024 (no god rays)
+//   low:    no post-processing (renderer.render fallback), no shadows
+type PerfMode = 'high' | 'medium' | 'low';
+const getPerfMode = (): PerfMode => {
+  if (typeof window === 'undefined') return 'high';
+  const q = new URLSearchParams(window.location.search).get('perf');
+  if (q === 'low' || q === 'medium' || q === 'high') return q;
+  return 'high';
+};
 
 // ─── Tunables ────────────────────────────────────────────────────────────────
 const FIELD_SIZE_X = FIELD_HALF_X * 2 + 30;  // 520m — covers all 7 regions + margin
@@ -169,12 +196,20 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     camera.position.set(LYDIAN.regionCenterX, EYE_HEIGHT, 0);
     camera.rotation.order = 'YXZ'; // yaw then pitch — avoids roll-from-pitch
 
+    const perfMode = getPerfMode();
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(W0, H0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
+    // ─── Shadow map (v1.3) ────────────────────────────────────────────────
+    // PCF soft shadows enabled outside low-perf mode. Sun configures its
+    // shadow camera further below.
+    if (perfMode !== 'low') {
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
     container.appendChild(renderer.domElement);
 
     // Pre-build colour arrays for shader uniforms. Vec3 per mode in linear-RGB.
@@ -186,10 +221,19 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     const windStrengths = MODES.map((m) => m.windStrength);
     const droops = MODES.map((m) => m.droop);
 
-    // ─── Sky — 7-way colour blend, mixes all region sky colours by camera-x ─
+    // ─── Sky — 7-way colour blend with sun disc + halo (v1.3) ──────────────
+    // v0.8 ships a 7-region horizon-colour blend. v1.3 layers on top:
+    //   • Three-band vertical atmosphere (ground haze → horizon → zenith)
+    //   • Sun-direction warmth bleed (atmospheric scattering cheat)
+    //   • Bright sun disc + halo so UnrealBloomPass has a luminance source
+    //   • Uniforms (uSunDirWorld, uSunColor, uSunIntensity) driven each
+    //     frame from the same lerp that moves the directional light
     const skyUniforms = {
       uSkyColors: { value: skyColors },
       uCameraX: { value: camera.position.x },
+      uSunDirWorld: { value: new THREE.Vector3(0.4, 0.85, 0.35).normalize() },
+      uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
+      uSunIntensity: { value: 1.1 },
     };
     const skyMaterial = new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -205,24 +249,48 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       fragmentShader: /* glsl */ `
         uniform vec3 uSkyColors[7];
         uniform float uCameraX;
+        uniform vec3 uSunDirWorld;
+        uniform vec3 uSunColor;
+        uniform float uSunIntensity;
         varying vec3 vDir;
         ${REGION_WEIGHTS_GLSL}
         void main() {
+          vec3 dir = normalize(vDir);
           float w0, w1, w2, w3, w4, w5, w6;
           regionWeights(uCameraX, w0, w1, w2, w3, w4, w5, w6);
-          vec3 horizon =
+          vec3 horizonCol =
             uSkyColors[0] * w0 + uSkyColors[1] * w1 + uSkyColors[2] * w2 +
             uSkyColors[3] * w3 + uSkyColors[4] * w4 + uSkyColors[5] * w5 +
             uSkyColors[6] * w6;
-          // Gentle vertical gradient: brighter near horizon, slightly cooler up high.
-          float h = clamp(vDir.y, 0.0, 1.0);
-          vec3 zenith = horizon * 0.55 + vec3(0.05, 0.08, 0.15);
-          vec3 col = mix(horizon, zenith, smoothstep(0.0, 0.7, h));
+
+          // Three-band vertical atmosphere — bottom warmer (ground haze),
+          // horizon brightest, zenith cooler (Rayleigh-tinted blue).
+          float h = dir.y;
+          vec3 zenithCol = horizonCol * 0.55 + vec3(0.05, 0.08, 0.15);
+          vec3 groundHaze = horizonCol * 0.85 + vec3(0.05, 0.04, 0.03);
+          float horizonBand = exp(-pow(h * 4.5, 2.0));
+          vec3 col = mix(groundHaze, zenithCol, smoothstep(-0.05, 0.65, h));
+          col += horizonCol * horizonBand * 0.25;
+
+          // Sun-direction warmth bleed — stronger near horizon (low sun).
+          float sunAngular = max(0.0, dot(dir, normalize(uSunDirWorld)));
+          float sunWarmth = pow(sunAngular, 4.0)
+            * (0.5 + (1.0 - smoothstep(0.0, 0.4, uSunDirWorld.y)) * 0.7);
+          col += uSunColor * sunWarmth * 0.2;
+
+          // Sun disc + halo. Bright disc is HDR so UnrealBloomPass picks it
+          // up above its luminance threshold.
+          float discCos = max(0.0, dot(dir, normalize(uSunDirWorld)));
+          float disc = smoothstep(0.9985, 0.9995, discCos);
+          float halo = pow(max(0.0, discCos), 80.0) * 0.45;
+          float wideHalo = pow(max(0.0, discCos), 12.0) * 0.12;
+          col += uSunColor * (disc * 3.0 * uSunIntensity + halo + wideHalo);
+
           gl_FragColor = vec4(col, 1.0);
         }
       `,
     });
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), skyMaterial);
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 24), skyMaterial);
     scene.add(sky);
 
     // Fog colour tracks the active sky horizon — keeps far blades from
@@ -264,25 +332,65 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     const sun = new THREE.DirectionalLight(SUN_COLORS[1].getHex(), SUN_INTENSITIES[1]);
     sun.position.copy(SUN_POSITIONS[1]);
     scene.add(sun);
+    scene.add(sun.target);
+
+    // ─── Shadow setup (v1.3) ───────────────────────────────────────────────
+    // Sun casts shadows onto the heightmap-displaced ground. Grass blades
+    // intentionally do NOT cast shadows (240k+ instances would tank FPS);
+    // the heightmap-displaced ground is the dominant occluder anyway, so
+    // hills self-occlude as the sun crosses the field.
+    //
+    // Shadow camera frustum follows the player along world-XZ; light stays
+    // at the per-region sun position offset from the camera target.
+    const SHADOW_HALF = 90;
+    const SHADOWS_ENABLED = perfMode !== 'low';
+    if (SHADOWS_ENABLED) {
+      sun.castShadow = true;
+      const mapSize = perfMode === 'high' ? 2048 : 1024;
+      sun.shadow.mapSize.set(mapSize, mapSize);
+      sun.shadow.camera.left = -SHADOW_HALF;
+      sun.shadow.camera.right = SHADOW_HALF;
+      sun.shadow.camera.top = SHADOW_HALF;
+      sun.shadow.camera.bottom = -SHADOW_HALF;
+      sun.shadow.camera.near = 1;
+      sun.shadow.camera.far = 260;
+      sun.shadow.bias = -0.0008;
+      sun.shadow.normalBias = 0.04;
+    }
 
     // Scratch objects we reuse each frame to avoid GC pressure.
     const sunDirScratch = new THREE.Vector3();
     const sunColorScratch = new THREE.Color();
+    const sunPosScratch = new THREE.Vector3(); // v1.3: project sun → screen UV
     // Scratch for the ground-clamp sample-ahead vector (see tick()).
     const groundClampDirScratch = new THREE.Vector3();
 
     // ─── Ground plane — heightmap-displaced rolling hills ──────────────────
     // 7-region tinted ground. Lambert from the interpolated sun direction.
+    // Ground material uses Three.js's shadow uniform plumbing by setting
+    // `lights: true` on the ShaderMaterial — THREE auto-injects the
+    // directionalLightShadows / directionalShadowMap / vDirectionalShadowCoord
+    // uniforms required by the shadowmap chunks, so we only declare our own
+    // here.
     const groundUniforms = {
       uBaseColors: { value: baseColors.map((c) => c.clone().multiplyScalar(0.55)) },
       uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.35) },
       uSunColor: { value: new THREE.Color(1.0, 0.95, 0.85) },
     };
+    const groundShadowDefines: Record<string, string> = SHADOWS_ENABLED
+      ? { USE_SHADOWMAP: '', SHADOWMAP_TYPE_PCF_SOFT: '' }
+      : {};
     const groundMaterial = new THREE.ShaderMaterial({
       uniforms: groundUniforms,
+      defines: groundShadowDefines,
+      lights: SHADOWS_ENABLED,
+      fog: true,
       vertexShader: /* glsl */ `
         varying vec3 vWorld;
         varying vec3 vNormal;
+        #include <common>
+        #include <fog_pars_vertex>
+        #include <shadowmap_pars_vertex>
         ${NOISE_GLSL}
         ${HEIGHT_GLSL}
         void main() {
@@ -298,7 +406,13 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
           vNormal = nWorld;
           vec4 wp = modelMatrix * vec4(p, 1.0);
           vWorld = wp.xyz;
-          gl_Position = projectionMatrix * viewMatrix * wp;
+          // Required for shadowmap_vertex chunk: supplies worldPosition + normal.
+          vec4 worldPosition = wp;
+          vec3 transformedNormal = nWorld;
+          #include <shadowmap_vertex>
+          vec4 mvPosition = viewMatrix * wp;
+          #include <fog_vertex>
+          gl_Position = projectionMatrix * mvPosition;
         }
       `,
       fragmentShader: /* glsl */ `
@@ -307,6 +421,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         uniform vec3 uSunColor;
         varying vec3 vWorld;
         varying vec3 vNormal;
+        #include <common>
+        #include <packing>
+        #include <fog_pars_fragment>
+        #include <shadowmap_pars_fragment>
         ${NOISE_GLSL}
         ${REGION_WEIGHTS_GLSL}
         void main() {
@@ -320,8 +438,28 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
           float patchy = vnoise(vWorld.xz * 0.08) * 0.5 + 0.5;
           // Lambert from the per-region sun.
           float ndotl = max(0.15, dot(normalize(vNormal), normalize(uSunDir)));
-          vec3 col = base * (0.6 + patchy * 0.35) * (0.55 + ndotl * uSunColor);
+
+          // Shadow lookup (v1.3). When USE_SHADOWMAP is not defined this
+          // collapses to 1.0 at compile time so low-perf mode pays nothing.
+          float shadow = 1.0;
+          #ifdef USE_SHADOWMAP
+            #if NUM_DIR_LIGHT_SHADOWS > 0
+              DirectionalLightShadow dShadow = directionalLightShadows[0];
+              shadow = getShadow(
+                directionalShadowMap[0],
+                dShadow.shadowMapSize,
+                dShadow.shadowIntensity,
+                dShadow.shadowBias,
+                dShadow.shadowRadius,
+                vDirectionalShadowCoord[0]
+              );
+              shadow = mix(0.45, 1.0, shadow);
+            #endif
+          #endif
+
+          vec3 col = base * (0.6 + patchy * 0.35) * (0.55 + ndotl * uSunColor * shadow);
           gl_FragColor = vec4(col, 1.0);
+          #include <fog_fragment>
         }
       `,
     });
@@ -331,6 +469,32 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       groundMaterial,
     );
     ground.rotation.x = -Math.PI / 2;
+    // Ground is both shadow catcher and caster — hills self-occlude as the
+    // sun crosses the field. The standard MeshDepthMaterial used for shadow
+    // casting would NOT see our heightmap displacement, so we attach a
+    // customDepthMaterial that runs the same terrainY() displacement.
+    ground.receiveShadow = SHADOWS_ENABLED;
+    ground.castShadow = SHADOWS_ENABLED;
+    if (SHADOWS_ENABLED) {
+      ground.customDepthMaterial = new THREE.ShaderMaterial({
+        defines: { DEPTH_PACKING: 3201 }, // RGBADepthPacking
+        vertexShader: /* glsl */ `
+          ${NOISE_GLSL}
+          ${HEIGHT_GLSL}
+          void main() {
+            vec3 p = position;
+            p.z = terrainY(position.xy);
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(p, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          #include <packing>
+          void main() {
+            gl_FragColor = packDepthToRGBA(gl_FragCoord.z);
+          }
+        `,
+      });
+    }
     scene.add(ground);
 
     // ─── Ponds (v0.7) ──────────────────────────────────────────────────────
@@ -755,6 +919,97 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     motes.frustumCulled = false;
     scene.add(motes);
 
+    // ─── Post-processing pipeline (v1.3) ───────────────────────────────────
+    // EffectComposer chain:
+    //   RenderPass         → scene to render target
+    //   GodRaysPass        → radial blur from sun screen position (perf=high)
+    //   UnrealBloomPass    → bright sun disc + motes glow
+    //   OutputPass         → tone-map + output color space
+    //
+    // perf=low skips the composer entirely and falls back to direct
+    // renderer.render() in the animation loop.
+    const BLOOM_PASS_ENABLED = perfMode !== 'low';
+    const GODRAYS_PASS_ENABLED = perfMode === 'high';
+
+    let composer: EffectComposer | null = null;
+    let bloomPass: UnrealBloomPass | null = null;
+    let godRaysPass: ShaderPass | null = null;
+
+    if (BLOOM_PASS_ENABLED) {
+      composer = new EffectComposer(renderer);
+      composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      composer.setSize(W0, H0);
+      composer.addPass(new RenderPass(scene, camera));
+
+      // ─── God rays pass (perf=high only) ────────────────────────────────
+      // Radial blur from the sun's screen-space position. Strength is
+      // gated by the sum of dusk-mode weights (Aeolian + Phrygian +
+      // Locrian — indices 4..6 in MODES). Cross-fades in smoothly so
+      // it's not jarring.
+      if (GODRAYS_PASS_ENABLED) {
+        godRaysPass = new ShaderPass({
+          uniforms: {
+            tDiffuse: { value: null },
+            uSunScreen: { value: new THREE.Vector2(0.5, 0.5) },
+            uIntensity: { value: 0.0 },
+            uSunColor: { value: new THREE.Color(0xd96a4a) },
+            uSunBehind: { value: 0.0 },
+          },
+          vertexShader: /* glsl */ `
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: /* glsl */ `
+            uniform sampler2D tDiffuse;
+            uniform vec2 uSunScreen;
+            uniform float uIntensity;
+            uniform vec3 uSunColor;
+            uniform float uSunBehind;
+            varying vec2 vUv;
+            void main() {
+              vec4 col = texture2D(tDiffuse, vUv);
+              if (uIntensity < 0.01 || uSunBehind < 0.5) {
+                gl_FragColor = col;
+                return;
+              }
+              const int SAMPLES = 24;
+              float decay = 0.96;
+              float density = 0.92;
+              float weight = 0.35;
+              vec2 delta = (uSunScreen - vUv) * (1.0 / float(SAMPLES)) * density;
+              vec2 uv = vUv;
+              vec3 accum = vec3(0.0);
+              float illumDecay = 1.0;
+              for (int i = 0; i < SAMPLES; i++) {
+                uv += delta;
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+                vec3 sCol = texture2D(tDiffuse, uv).rgb;
+                float lum = dot(sCol, vec3(0.299, 0.587, 0.114));
+                sCol *= smoothstep(0.45, 0.9, lum);
+                accum += sCol * (illumDecay * weight);
+                illumDecay *= decay;
+              }
+              vec3 rays = accum * uSunColor * uIntensity;
+              gl_FragColor = vec4(col.rgb + rays, col.a);
+            }
+          `,
+        });
+        composer.addPass(godRaysPass);
+      }
+
+      bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(W0, H0),
+        0.45, // strength
+        0.45, // radius
+        0.95, // threshold — only brightest pixels (sun disc, brightest motes) bloom
+      );
+      composer.addPass(bloomPass);
+      composer.addPass(new OutputPass());
+    }
+
     // ─── FPS controls ──────────────────────────────────────────────────────
     let yaw = -Math.PI / 2;  // facing +x (east, toward Locrian)
     let pitch = -0.05;
@@ -860,14 +1115,21 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
     // Also `__modalMeadowSetAutoWalk(false)` to pause the auto-walk for
     // stable screenshots.
     interface DebugWindow extends Window {
-      __modalMeadowTeleport?: (x: number, z?: number) => void;
+      __modalMeadowTeleport?: (x: number, z?: number, yawDeg?: number, pitchDeg?: number) => void;
       __modalMeadowSetAutoWalk?: (on: boolean) => void;
       __modalMeadowGetState?: () => unknown;
     }
-    (window as DebugWindow).__modalMeadowTeleport = (x: number, z?: number) => {
+    (window as DebugWindow).__modalMeadowTeleport = (
+      x: number,
+      z?: number,
+      yawDeg?: number,
+      pitchDeg?: number,
+    ) => {
       camera.position.x = x;
       if (typeof z === 'number') camera.position.z = z;
       camera.position.y = sampleTerrainY(camera.position.x, camera.position.z) + EYE_HEIGHT;
+      if (typeof yawDeg === 'number') yaw = (yawDeg * Math.PI) / 180;
+      if (typeof pitchDeg === 'number') pitch = (pitchDeg * Math.PI) / 180;
     };
     (window as DebugWindow).__modalMeadowSetAutoWalk = (on: boolean) => {
       autoWalkActive = on;
@@ -1070,6 +1332,24 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       sun.intensity = intensityAcc;
       groundUniforms.uSunDir.value.copy(sunDirScratch).normalize();
       groundUniforms.uSunColor.value.copy(sunColorScratch);
+      // Push the sun direction into the sky shader so the sun disc + halo
+      // (v1.3) moves with the per-region interpolation.
+      skyUniforms.uSunDirWorld.value.copy(sunDirScratch).normalize();
+      skyUniforms.uSunColor.value.copy(sunColorScratch);
+      skyUniforms.uSunIntensity.value = intensityAcc;
+      // ─── Move the shadow camera with the player (v1.3) ───────────────────
+      // Shadow map is centred on the player's XZ projection so the shadow
+      // stays high-resolution where it matters. Light position is anchored
+      // relative to the moving target so its direction stays correct.
+      if (SHADOWS_ENABLED) {
+        sun.target.position.set(camera.position.x, 0, camera.position.z);
+        sun.target.updateMatrixWorld();
+        sun.position.set(
+          camera.position.x + sunDirScratch.x,
+          sunDirScratch.y,
+          camera.position.z + sunDirScratch.z,
+        );
+      }
 
       // ─── Chord pulse decay ───────────────────────────────────────────────
       const PULSE_DECAY = Math.exp(-dt / 0.18);
@@ -1095,7 +1375,33 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
         onModeChange?.(dom);
       }
 
-      renderer.render(scene, camera);
+      // ─── Drive the god rays pass (v1.3) ──────────────────────────────────
+      // Intensity ramps with the sum of the "dusk" mode weights (Aeolian,
+      // Phrygian, Locrian — indices 4..6). Cross-fade with smoothed onset so
+      // the rays don't pop on/off.
+      if (godRaysPass) {
+        const sunPosVec = sunPosScratch.copy(sun.position);
+        sunPosVec.project(camera);
+        const inFront = sunPosVec.z > -1 && sunPosVec.z < 1;
+        const u = sunPosVec.x * 0.5 + 0.5;
+        const v = sunPosVec.y * 0.5 + 0.5;
+        godRaysPass.uniforms.uSunScreen.value.set(u, v);
+        godRaysPass.uniforms.uSunBehind.value = inFront ? 1.0 : 0.0;
+        // Sum dusk weights (last 3 modes). Threshold > 0.3 then linear.
+        const duskW = (weights[4] || 0) + (weights[5] || 0) + (weights[6] || 0);
+        const targetIntensity = Math.max(0, (duskW - 0.3) / 0.7);
+        const curIntensity = godRaysPass.uniforms.uIntensity.value as number;
+        godRaysPass.uniforms.uIntensity.value =
+          curIntensity + (targetIntensity - curIntensity) * Math.min(1, dt * 4);
+        godRaysPass.uniforms.uSunColor.value.copy(sunColorScratch);
+      }
+
+      // Render via composer (post-pipeline) when enabled, otherwise direct.
+      if (composer) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -1108,6 +1414,9 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
+      // v1.3: composer + bloom pass render targets resize with the window.
+      if (composer) composer.setSize(w, h);
+      if (bloomPass) bloomPass.setSize(w, h);
     };
     const ro = new ResizeObserver(onResize);
     ro.observe(container);
@@ -1141,6 +1450,10 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       skyMaterial.dispose();
       moteGeometry.dispose();
       moteMaterial.dispose();
+      // v1.3: tear down post-processing render targets + custom depth material.
+      if (bloomPass) bloomPass.dispose();
+      if (composer) composer.dispose();
+      if (ground.customDepthMaterial) ground.customDepthMaterial.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
