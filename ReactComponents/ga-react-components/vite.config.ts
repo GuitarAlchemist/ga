@@ -42,48 +42,47 @@ try {
 //
 // Schema is intentionally stable — see /dev-data/manifest top-level keys.
 // Add new fields rather than renaming existing ones.
+// SECURITY: the Cloudflare tunnel proxies remote traffic to localhost:5176,
+// so req.socket.remoteAddress is always 127.0.0.1 — useless as a trust
+// signal. The real signal is the Host header: tunnel traffic carries the
+// public hostname (demos.guitaralchemist.com); direct-local traffic carries
+// localhost:5176 / 127.0.0.1 / LAN IP. We also reject anything bearing
+// Cloudflare headers (CF-Ray, CF-Connecting-IP, etc.) as a belt-and-suspenders
+// check. Used by /dev-data/* and /pr/* middlewares to keep them local-only.
+function isLocalOrigin(req: import('http').IncomingMessage): boolean {
+    const host = ((req.headers.host as string) || '').toLowerCase().split(':')[0];
+    if (!host) return false;
+    for (const k of Object.keys(req.headers)) {
+        if (k.toLowerCase().startsWith('cf-')) return false;
+    }
+    const isPrivate = (h: string): boolean => {
+        if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+        if (/^192\.168\./.test(h)) return true;
+        if (/^10\./.test(h)) return true;
+        if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
+        return false;
+    };
+    if (!isPrivate(host)) return false;
+    const origin = (req.headers.origin as string) || '';
+    const referer = (req.headers.referer as string) || '';
+    const checkUrl = (raw: string): boolean => {
+        if (!raw) return true;
+        try { return isPrivate(new URL(raw).hostname); } catch { return false; }
+    };
+    if (!checkUrl(origin)) return false;
+    if (!checkUrl(referer)) return false;
+    return true;
+}
+
+function gateLocal(req: import('http').IncomingMessage, res: import('http').ServerResponse, label = 'dev-data'): boolean {
+    if (isLocalOrigin(req)) return true;
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'forbidden', reason: `${label} endpoints are local-only` }));
+    return false;
+}
+
 function devDataPlugin(): Plugin {
     const repoRoot = path.resolve(__dirname, '../..');
-
-    function isLocalOrigin(req: import('http').IncomingMessage): boolean {
-        // SECURITY: the Cloudflare tunnel proxies remote traffic to
-        // localhost:5176, so req.socket.remoteAddress is always 127.0.0.1.
-        // The real signal is the Host header — tunnel traffic carries the
-        // public hostname (demos.guitaralchemist.com), direct-local traffic
-        // carries localhost:5176 / 127.0.0.1 / LAN IP. Also reject anything
-        // bearing Cloudflare headers (CF-Ray, CF-Connecting-IP, etc.).
-        const host = ((req.headers.host as string) || '').toLowerCase().split(':')[0];
-        if (!host) return false;
-        // Cloudflare always adds CF-* headers — short-circuit deny.
-        for (const k of Object.keys(req.headers)) {
-            if (k.toLowerCase().startsWith('cf-')) return false;
-        }
-        const isPrivate = (h: string): boolean => {
-            if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
-            if (/^192\.168\./.test(h)) return true;
-            if (/^10\./.test(h)) return true;
-            if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
-            return false;
-        };
-        if (!isPrivate(host)) return false;
-        // Optionally cross-check Origin/Referer when present (browser fetches).
-        const origin = (req.headers.origin as string) || '';
-        const referer = (req.headers.referer as string) || '';
-        const checkUrl = (raw: string): boolean => {
-            if (!raw) return true; // missing = ok (curl, fetch w/o cors)
-            try { return isPrivate(new URL(raw).hostname); } catch { return false; }
-        };
-        if (!checkUrl(origin)) return false;
-        if (!checkUrl(referer)) return false;
-        return true;
-    }
-
-    function gateLocal(req: import('http').IncomingMessage, res: import('http').ServerResponse): boolean {
-        if (isLocalOrigin(req)) return true;
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'forbidden', reason: 'dev-data endpoints are local-only' }));
-        return false;
-    }
 
     interface QualityEntry { source: string; data: unknown }
     function gatherQuality(): { domains: Record<string, QualityEntry>; regressions: string[] } {
@@ -426,6 +425,11 @@ interface PrResult {
     timestamp: number;
 }
 
+// Cap the unbounded pendingCommands array so the SSE command bus can't be
+// flooded into OOM (sec-sentinel #9). At 1000 commands the bus is already
+// pathological; older entries fall off the front.
+const PR_PENDING_COMMANDS_CAP = 1000;
+
 function primeRadiantControlPlugin(): Plugin {
     // Command queue: Claude pushes, React pops via SSE
     const pendingCommands: PrCommand[] = [];
@@ -435,6 +439,12 @@ function primeRadiantControlPlugin(): Plugin {
     const clientStates = new Map<string, Record<string, unknown>>();
     const sseClients: Set<import('http').ServerResponse> = new Set();
     let cmdCounter = 0;
+    function pushBounded(cmd: PrCommand) {
+        pendingCommands.push(cmd);
+        while (pendingCommands.length > PR_PENDING_COMMANDS_CAP) {
+            pendingCommands.shift();
+        }
+    }
 
     // ── Backend Observer — watches UI state and sends corrective commands ──
     let observerTimer: ReturnType<typeof setInterval> | null = null;
@@ -447,7 +457,7 @@ function primeRadiantControlPlugin(): Plugin {
             params,
             timestamp: Date.now(),
         };
-        pendingCommands.push(cmd);
+        pushBounded(cmd);
         const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
         for (const client of sseClients) client.write(sseData);
     }
@@ -497,6 +507,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/observer — read observer log ──
             server.middlewares.use('/pr/observer', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ log: observerLog, clientCount: clientStates.size }));
             });
@@ -518,6 +529,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/command — Claude sends a command ──
             server.middlewares.use('/pr/command', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -529,7 +541,7 @@ function primeRadiantControlPlugin(): Plugin {
                             params: params ?? {},
                             timestamp: Date.now(),
                         };
-                        pendingCommands.push(cmd);
+                        pushBounded(cmd);
                         // Push to SSE clients
                         const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
                         for (const client of sseClients) {
@@ -547,6 +559,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/batch — Claude sends multiple commands at once ──
             server.middlewares.use('/pr/batch', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -565,7 +578,7 @@ function primeRadiantControlPlugin(): Plugin {
                                 params: params ?? {},
                                 timestamp: Date.now(),
                             };
-                            pendingCommands.push(cmd);
+                            pushBounded(cmd);
                             commandIds.push(cmd.id);
                             // Push each command to SSE clients as a separate event
                             const sseData = `data: ${JSON.stringify(cmd)}\n\n`;
@@ -586,6 +599,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ?client=<id> returns specific client, otherwise returns all clients
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const clientId = url.searchParams.get('client');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -603,6 +617,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/state — React updates state (per-client) ──
             server.middlewares.use('/pr/state', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -634,11 +649,13 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/events — SSE stream for React to receive commands ──
             server.middlewares.use('/pr/events', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 res.writeHead(200, {
                     'Content-Type': 'text/event-stream',
                     'Cache-Control': 'no-cache',
                     'Connection': 'keep-alive',
-                    'Access-Control-Allow-Origin': '*',
+                    // SSE event stream is gated to local origin already; no need
+                    // to advertise it cross-origin.
                 });
                 // Send any pending commands
                 for (const cmd of pendingCommands) {
@@ -651,6 +668,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── POST /pr/result — React posts command results ──
             server.middlewares.use('/pr/result', (req, res, next) => {
                 if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 let body = '';
                 req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
                 req.on('end', () => {
@@ -672,6 +690,7 @@ function primeRadiantControlPlugin(): Plugin {
             // ── GET /pr/result/:id — Claude checks result of a command ──
             server.middlewares.use('/pr/result', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'prime-radiant')) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const cmdId = url.searchParams.get('id');
                 if (!cmdId) {
