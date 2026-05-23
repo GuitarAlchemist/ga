@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
@@ -32,10 +32,56 @@ try {
 // Every endpoint reads fresh per request so CI-pushed quality snapshots,
 // edited BACKLOG.md, and new commits show up without a rebuild.
 //
+// SECURITY: this plugin is dev-only (configureServer; vite build strips it),
+// BUT the dev server is exposed publicly via Cloudflare tunnel
+// (demos.guitaralchemist.com). Each endpoint gates on isLocalOrigin() so
+// external clients get 403. localhost / 127.0.0.1 / private LAN ranges
+// (192.168/16, 10/8, 172.16/12) are allowed; everything else is rejected.
+//
 // Schema is intentionally stable — see /dev-data/manifest top-level keys.
 // Add new fields rather than renaming existing ones.
 function devDataPlugin(): Plugin {
     const repoRoot = path.resolve(__dirname, '../..');
+
+    function isLocalOrigin(req: import('http').IncomingMessage): boolean {
+        // SECURITY: the Cloudflare tunnel proxies remote traffic to
+        // localhost:5176, so req.socket.remoteAddress is always 127.0.0.1.
+        // The real signal is the Host header — tunnel traffic carries the
+        // public hostname (demos.guitaralchemist.com), direct-local traffic
+        // carries localhost:5176 / 127.0.0.1 / LAN IP. Also reject anything
+        // bearing Cloudflare headers (CF-Ray, CF-Connecting-IP, etc.).
+        const host = ((req.headers.host as string) || '').toLowerCase().split(':')[0];
+        if (!host) return false;
+        // Cloudflare always adds CF-* headers — short-circuit deny.
+        for (const k of Object.keys(req.headers)) {
+            if (k.toLowerCase().startsWith('cf-')) return false;
+        }
+        const isPrivate = (h: string): boolean => {
+            if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
+            if (/^192\.168\./.test(h)) return true;
+            if (/^10\./.test(h)) return true;
+            if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
+            return false;
+        };
+        if (!isPrivate(host)) return false;
+        // Optionally cross-check Origin/Referer when present (browser fetches).
+        const origin = (req.headers.origin as string) || '';
+        const referer = (req.headers.referer as string) || '';
+        const checkUrl = (raw: string): boolean => {
+            if (!raw) return true; // missing = ok (curl, fetch w/o cors)
+            try { return isPrivate(new URL(raw).hostname); } catch { return false; }
+        };
+        if (!checkUrl(origin)) return false;
+        if (!checkUrl(referer)) return false;
+        return true;
+    }
+
+    function gateLocal(req: import('http').IncomingMessage, res: import('http').ServerResponse): boolean {
+        if (isLocalOrigin(req)) return true;
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'forbidden', reason: 'dev-data endpoints are local-only' }));
+        return false;
+    }
 
     interface QualityEntry { source: string; data: unknown }
     function gatherQuality(): { domains: Record<string, QualityEntry>; regressions: string[] } {
@@ -92,9 +138,12 @@ function devDataPlugin(): Plugin {
 
     interface ActivityEntry { sha: string; short_sha: string; author: string; date: string; subject: string }
     function gatherActivity(limit = 10): ActivityEntry[] | { error: string } {
+        // SECURITY: argv-form execFileSync — no shell, no interpolation, no
+        // injection surface even if limit ever escapes its numeric clamp.
         try {
-            const out = execSync(
-                `git log -n ${limit} --pretty=format:%H%x09%an%x09%aI%x09%s`,
+            const out = execFileSync(
+                'git',
+                ['log', '-n', String(Math.max(1, Math.floor(limit))), '--pretty=format:%H%x09%an%x09%aI%x09%s'],
                 { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
             );
             return out.trim().split('\n').filter(Boolean).map((line) => {
@@ -109,8 +158,9 @@ function devDataPlugin(): Plugin {
     interface ActivityByDay { date: string; count: number }
     function gatherActivityByDay(days = 30): ActivityByDay[] | { error: string } {
         try {
-            const out = execSync(
-                `git log --since="${days} days ago" --pretty=format:%aI`,
+            const out = execFileSync(
+                'git',
+                ['log', `--since=${Math.max(1, Math.floor(days))} days ago`, '--pretty=format:%aI'],
                 { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
             );
             const bins: Record<string, number> = {};
@@ -202,8 +252,9 @@ function devDataPlugin(): Plugin {
                     if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
                     epics.push(currentEpic);
                 }
+                const epicTitle = h2[1].trim();
                 currentEpic = {
-                    title: h2[1].trim(),
+                    title: epicTitle,
                     total_items: 0,
                     shipped: 0,
                     active: 0,
@@ -211,7 +262,13 @@ function devDataPlugin(): Plugin {
                     progress_pct: 0,
                     sub_sections: [],
                 };
-                currentSub = { title: '(untriaged)', category: 'backlog', item_count: 0 };
+                // Inherit category from the H2 title for any bullets that
+                // appear before the first H3 — otherwise an epic whose H2 says
+                // "Shipped" silently rolls up to backlog and progress_pct
+                // under-reports. categorize() defaults to 'backlog' when no
+                // marker is present, which preserves the previous behavior for
+                // untagged epics.
+                currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0 };
             } else if (h3 && currentEpic) {
                 if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
                 currentSub = { title: h3[1].trim(), category: categorize(h3[1].trim()), item_count: 0 };
@@ -288,16 +345,25 @@ function devDataPlugin(): Plugin {
         });
     }
 
-    function gatherMcpServers(): { count: number; names: string[]; raw: unknown } {
+    function gatherMcpServers(): { count: number; names: string[]; types: Record<string, string> } {
+        // SECURITY: never serve raw .mcp.json — it may contain env-var references
+        // (${DEMERZEL_API_KEY} etc.) that would be auto-exfiltrated if anyone
+        // ever inlines a resolved secret for debugging. Names + transport type
+        // only; consumers can look at their own .mcp.json for full config.
         const mcpPath = path.join(repoRoot, '.mcp.json');
-        if (!existsSync(mcpPath)) return { count: 0, names: [], raw: null };
+        if (!existsSync(mcpPath)) return { count: 0, names: [], types: {} };
         try {
             const raw = JSON.parse(readFileSync(mcpPath, 'utf-8'));
             const servers = raw?.mcpServers ?? {};
             const names = Object.keys(servers);
-            return { count: names.length, names, raw: servers };
-        } catch (e) {
-            return { count: 0, names: [], raw: { error: String((e as Error).message ?? e) } };
+            const types: Record<string, string> = {};
+            for (const name of names) {
+                const s = servers[name];
+                types[name] = (s?.type as string) ?? (s?.url ? 'http' : 'stdio');
+            }
+            return { count: names.length, names, types };
+        } catch {
+            return { count: 0, names: [], types: {} };
         }
     }
 
@@ -314,6 +380,7 @@ function devDataPlugin(): Plugin {
         configureServer(server) {
             server.middlewares.use('/dev-data/backlog', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 const p = path.join(repoRoot, 'BACKLOG.md');
                 if (!existsSync(p)) {
                     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -326,12 +393,14 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/quality', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
             });
 
             server.middlewares.use('/dev-data/activity', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
                 const limit = Math.max(1, Math.min(50, Number(url.searchParams.get('limit') ?? 10)));
                 const days = Math.max(1, Math.min(180, Number(url.searchParams.get('days') ?? 30)));
@@ -345,12 +414,14 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/architecture', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
             });
 
             server.middlewares.use('/dev-data/agents', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({
                     generated_at: new Date().toISOString(),
@@ -361,6 +432,7 @@ function devDataPlugin(): Plugin {
 
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res)) return;
                 const manifest = {
                     schema_version: '1.0.0',
                     generated_at: new Date().toISOString(),

@@ -93,7 +93,20 @@ if ($ropViolations.Count -gt 0) {
 # ============================================
 Write-Host "`n▶ Syncing AGENTS.md from CLAUDE.md..." -ForegroundColor Blue
 $syncScript = Join-Path $PSScriptRoot '..' 'Scripts' 'sync-agents-md.ps1'
-if (Test-Path $syncScript) {
+
+# Safety: never auto-sync while a merge/rebase/cherry-pick is in progress, or
+# when AGENTS.md has an unresolved conflict (UU/AA in porcelain). Auto-sync
+# during merge resolution silently clobbers the human's resolution choice.
+$inMerge = (Test-Path '.git/MERGE_HEAD') -or (Test-Path '.git/REBASE_HEAD') -or (Test-Path '.git/CHERRY_PICK_HEAD')
+$agentsConflict = $false
+if (Test-Path AGENTS.md) {
+    $porcelain = git status --porcelain AGENTS.md 2>$null
+    if ($porcelain -and $porcelain -match '^(UU|AA|DD|AU|UA|DU|UD)') { $agentsConflict = $true }
+}
+
+if ($inMerge -or $agentsConflict) {
+    Write-Host "⚠ Merge/conflict state detected — skipping AGENTS.md sync to preserve manual resolution" -ForegroundColor Yellow
+} elseif (Test-Path $syncScript) {
     & pwsh -NoProfile -File $syncScript
     if ($LASTEXITCODE -eq 0) {
         # If sync produced changes, stage AGENTS.md so the commit includes the update.
