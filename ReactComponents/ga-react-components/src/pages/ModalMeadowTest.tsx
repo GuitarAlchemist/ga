@@ -1,5 +1,5 @@
 /**
- * Modal Meadow Test Page (v0.8).
+ * Modal Meadow Test Page (v1.2).
  *
  * Mounts the ModalMeadow component full-screen with two HUDs:
  *   - bottom-left: current mode name + descriptor + position along the
@@ -153,7 +153,7 @@ const ModalMeadowTest: React.FC = () => {
             letterSpacing: 1,
           }}
         >
-          MODAL MEADOW · v0.8 · 7 modes · Hills + Ponds + Descent · Brightness walk
+          MODAL MEADOW · v1.2 · 7 modes · ADSR Spread Voicings · Reverb · Hills + Ponds · Descent · Ground Clamp
         </Box>
       </Container>
     </DemoErrorBoundary>
