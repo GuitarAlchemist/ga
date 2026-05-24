@@ -53,6 +53,7 @@ import {
   SentruxRulesCard,
   SentruxTestGapsCard,
   SentruxDsmCard,
+  SentruxNextStepsCard,
 } from '../components/Sentrux';
 import { AuthChip } from '../components/Auth';
 import { TestPlansCard } from '../components/TestPlans';
@@ -1165,6 +1166,9 @@ export const DevelopmentSection: React.FC = () => {
 
       {subTab === 'sentrux' && (
         <Stack spacing={2}>
+          {/* Next Steps lives FIRST — actionable prescriptions outrank
+              raw measurements when answering "what do I do next?" */}
+          <SentruxNextStepsCard />
           <SentruxHealthCard />
           <SentruxRulesCard />
           <SentruxTestGapsCard />
