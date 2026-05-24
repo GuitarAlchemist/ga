@@ -1,0 +1,209 @@
+name: Playwright Dashboard E2E
+
+# Harness item #7 (docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md).
+#
+# Outside-in browser verification of /test, /test/manifest, and /chatbot/.
+# Runs against the live deployed URL (demos.guitaralchemist.com) to test what
+# users actually see, with zero CI build burden. Future iteration could move
+# the SPA build in-CI for hermetic isolation.
+#
+# Triggers:
+#   - on push to main (full coverage post-merge)
+#   - on PRs touching the React SPA or the chatbot API (catch dashboard
+#     regressions before merge; PRs hit the live URL — fine for v1 because
+#     PRs don't deploy yet)
+#
+# Artifacts:
+#   - state/quality/e2e/dashboard-playwright/<timestamp>.json  (pass/fail per test)
+#   - playwright-report-dashboard/                              (HTML on failure)
+#   - test-results/                                             (screenshots/video on failure)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ReactComponents/ga-react-components/**'
+      - 'Apps/GaChatbot.Api/**'
+      - '.github/workflows/playwright-dashboard.yml'
+  pull_request:
+    paths:
+      - 'ReactComponents/ga-react-components/**'
+      - 'Apps/GaChatbot.Api/**'
+      - '.github/workflows/playwright-dashboard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # for committing JSON snapshot back to main
+
+concurrency:
+  group: playwright-dashboard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Dashboard + chatbot showcase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: ReactComponents/ga-react-components
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ReactComponents/ga-react-components/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || npm install
+        # The repo uses pnpm-lock.yaml as a checked-in artifact but the CI
+        # pipeline is npm-based (see existing ci.yml). Fall through to
+        # `npm install` if package-lock.json is absent (the typical case here).
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright dashboard suite
+        id: pw
+        env:
+          PLAYWRIGHT_BASE_URL: https://demos.guitaralchemist.com
+          CI: 'true'
+        # `continue-on-error` so a real dashboard regression doesn't block
+        # the post-snapshot commit. The exit code is captured separately
+        # and surfaced in the snapshot JSON.
+        continue-on-error: true
+        run: npx playwright test --config=playwright.dashboard.config.ts
+
+      - name: Build JSON snapshot
+        # Always runs (regardless of test pass/fail) so we get a per-run
+        # artifact even on failure.
+        if: always()
+        env:
+          PW_OUTCOME: ${{ steps.pw.outcome }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -e
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          OUT_DIR="../../state/quality/e2e/dashboard-playwright"
+          mkdir -p "$OUT_DIR"
+          OUT="$OUT_DIR/${TS}.json"
+
+          # Default summary if Playwright didn't emit a JSON reporter file
+          # (e.g. install step failed before tests ran).
+          PW_JSON="test-results/dashboard-results.json"
+          if [ ! -f "$PW_JSON" ]; then
+            echo "::warning::Playwright JSON missing — emitting skeleton snapshot"
+            cat > "$OUT" <<EOF
+          {
+            "schema_version": "1.0.0",
+            "kind": "e2e-dashboard-playwright",
+            "timestamp": "${TS}",
+            "git_sha": "${GITHUB_SHA}",
+            "git_ref": "${GITHUB_REF}",
+            "run_id": "${GITHUB_RUN_ID}",
+            "outcome": "${PW_OUTCOME}",
+            "tests": [],
+            "summary": { "total": 0, "passed": 0, "failed": 0, "skipped": 0 },
+            "error": "playwright JSON reporter did not emit"
+          }
+          EOF
+          else
+            node <<'NODE' "$PW_JSON" "$OUT" "$TS" "$PW_OUTCOME"
+          const fs = require('fs');
+          const [,, inPath, outPath, ts, outcome] = process.argv;
+          const raw = JSON.parse(fs.readFileSync(inPath, 'utf8'));
+          // Playwright JSON reporter shape:
+          //   { suites: [ { specs: [ { title, tests: [ { results: [ { status, duration } ] } ] } ] } ] }
+          const tests = [];
+          function walk(suite, parentTitle) {
+            const title = [parentTitle, suite.title].filter(Boolean).join(' › ');
+            for (const spec of (suite.specs || [])) {
+              for (const t of (spec.tests || [])) {
+                const lastResult = (t.results || []).slice(-1)[0] || {};
+                tests.push({
+                  title: [title, spec.title].filter(Boolean).join(' › '),
+                  file: spec.file || suite.file || null,
+                  status: lastResult.status || 'unknown',
+                  duration_ms: lastResult.duration ?? null,
+                  error: lastResult.error ? (lastResult.error.message || String(lastResult.error)).slice(0, 500) : null,
+                });
+              }
+            }
+            for (const child of (suite.suites || [])) walk(child, title);
+          }
+          for (const suite of (raw.suites || [])) walk(suite);
+          const summary = {
+            total: tests.length,
+            passed: tests.filter((t) => t.status === 'passed').length,
+            failed: tests.filter((t) => t.status === 'failed' || t.status === 'timedOut').length,
+            skipped: tests.filter((t) => t.status === 'skipped').length,
+          };
+          const snapshot = {
+            schema_version: '1.0.0',
+            kind: 'e2e-dashboard-playwright',
+            timestamp: ts,
+            git_sha: process.env.GITHUB_SHA,
+            git_ref: process.env.GITHUB_REF,
+            run_id: process.env.GITHUB_RUN_ID,
+            outcome,
+            base_url: process.env.PLAYWRIGHT_BASE_URL || 'https://demos.guitaralchemist.com',
+            summary,
+            tests,
+          };
+          fs.writeFileSync(outPath, JSON.stringify(snapshot, null, 2));
+          console.log(`Wrote ${outPath} (${summary.passed}/${summary.total} passed)`);
+          NODE
+          fi
+
+          echo "snapshot_path=$OUT" >> "$GITHUB_OUTPUT"
+        id: snapshot
+
+      - name: Upload Playwright HTML report (on failure)
+        if: always() && steps.pw.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-dashboard
+          path: |
+            ReactComponents/ga-react-components/playwright-report-dashboard/
+            ReactComponents/ga-react-components/test-results/
+          retention-days: 14
+
+      - name: Commit snapshot back to main
+        # Only commit on push-to-main runs (not on PRs — PR runs are
+        # informational and shouldn't pollute git history).
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: .
+        run: |
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/quality/e2e/dashboard-playwright/
+          if git diff --cached --quiet; then
+            echo "No snapshot changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(e2e): dashboard playwright snapshot $(date -u +%Y-%m-%dT%H-%M-%SZ) [skip ci]"
+          # Pull-rebase in case quality-snapshot or another auto-commit
+          # workflow pushed in the meantime.
+          git pull --rebase origin main || true
+          git push origin HEAD:main
+
+      - name: Fail the job if any tests failed
+        # We continue-on-error'd the test step so the snapshot+commit could
+        # run regardless. Now re-surface the failure to mark the workflow red.
+        if: steps.pw.outcome != 'success'
+        run: |
+          echo "::error::Playwright dashboard suite did not pass — see snapshot + report artifacts"
+          exit 1
