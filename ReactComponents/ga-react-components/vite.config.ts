@@ -390,6 +390,174 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── Test plans — proposals from the /test-plan skill ──────────────────
+    // Aggregates state/quality/test-plans/*.md + *.meta.json into a single
+    // structured payload for the TestPlansCard on /test#dev/qa. The .md is
+    // the human-readable plan; the .meta.json sidecar (test-plan-v1 schema)
+    // carries the structured fields the card surfaces as chips.
+    //
+    // Parses lightweight YAML-ish frontmatter from the .md to surface a
+    // title / target / status when no sidecar exists yet — keeps the card
+    // usable for hand-authored seed plans as well as workflow-generated ones.
+    //
+    // Also fetches state/quality/chatbot-qa/last.json (or the latest dated
+    // snapshot) so the card footer can answer "is the chatbot loop healthy?".
+
+    interface TestPlanSummary {
+        id: string;
+        path: string;
+        title: string;
+        target: string;
+        generated_at: string | null;
+        step_count: number;
+        status: 'draft' | 'reviewed' | 'executed' | 'unknown';
+        markdown: string;
+    }
+
+    interface ChatbotQaSummary {
+        pass_pct: number | null;
+        fail_count: number | null;
+        total_prompts: number | null;
+        last_run_at: string | null;
+        degraded?: boolean;
+        degraded_reason?: string | null;
+        last_known_good_pass_pct?: number | null;
+    }
+
+    interface TestPlansPayload {
+        generated_at: string;
+        total: number;
+        plans: TestPlanSummary[];
+        chatbot_qa: ChatbotQaSummary | null;
+    }
+
+    function parsePlanFrontmatter(text: string): Record<string, string> {
+        // Tolerate both `---` YAML blocks and the markdown title (#) for
+        // plans that pre-date the convention. Returns lowercase keys.
+        const out: Record<string, string> = {};
+        const fm = text.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+        if (fm) {
+            for (const line of fm[1].split(/\r?\n/)) {
+                const kv = line.match(/^(\w+):\s*(.+?)\s*$/);
+                if (!kv) continue;
+                out[kv[1].toLowerCase()] = kv[2].replace(/^["']|["']$/g, '');
+            }
+        }
+        if (!out.title) {
+            const h1 = text.split(/\r?\n/).find((l) => /^#\s+\S/.test(l));
+            if (h1) out.title = h1.replace(/^#\s+/, '').trim();
+        }
+        return out;
+    }
+
+    function countPlanSteps(text: string): number {
+        // Count proposal items across the four sections (Unit / Integration
+        // / E2E / Chatbot). Each item starts with `- [ ]` or `- [x]` on its
+        // own line (the skill template). Fall back to plain `- ` bullets
+        // for hand-authored plans.
+        const checkboxes = (text.match(/^\s*-\s+\[[ xX]\]\s+/gm) ?? []).length;
+        if (checkboxes > 0) return checkboxes;
+        return (text.match(/^\s*-\s+\S/gm) ?? []).length;
+    }
+
+    function deriveStatus(meta: Record<string, unknown> | null, fm: Record<string, string>): TestPlanSummary['status'] {
+        const raw = (fm.status ?? (meta?.status as string | undefined) ?? '').toLowerCase().trim();
+        if (raw === 'draft' || raw === 'reviewed' || raw === 'executed') return raw;
+        return 'unknown';
+    }
+
+    function gatherTestPlans(): TestPlanSummary[] {
+        const plansDir = path.join(repoRoot, 'state', 'quality', 'test-plans');
+        if (!existsSync(plansDir)) return [];
+        const out: TestPlanSummary[] = [];
+        for (const file of readdirSync(plansDir)) {
+            if (!file.endsWith('.md')) continue;
+            // Skip README / SCHEMA-style docs at the root of the dir.
+            if (file === 'README.md') continue;
+            const full = path.join(plansDir, file);
+            try {
+                const markdown = readFileSync(full, 'utf-8');
+                const fm = parsePlanFrontmatter(markdown);
+                const id = file.replace(/\.md$/, '');
+                // Look for a sidecar — accept both <id>.meta.json (skill convention)
+                // and <id>.json (looser, hand-authored).
+                let meta: Record<string, unknown> | null = null;
+                for (const ext of ['.meta.json', '.json']) {
+                    const sidecar = path.join(plansDir, `${id}${ext}`);
+                    if (existsSync(sidecar)) {
+                        try { meta = JSON.parse(readFileSync(sidecar, 'utf-8')) as Record<string, unknown>; }
+                        catch { /* leave meta null */ }
+                        break;
+                    }
+                }
+                const stat = statSync(full);
+                const generated_at = (meta?.generated_at as string | undefined)
+                    ?? fm.generated_at
+                    ?? stat.mtime.toISOString();
+                const title = fm.title
+                    ?? (meta?.title as string | undefined)
+                    ?? id.replace(/[-_]/g, ' ');
+                const target = fm.target
+                    ?? (meta?.target as string | undefined)
+                    ?? ((meta?.layers_touched as string[] | undefined)?.join(', '))
+                    ?? 'unspecified';
+                out.push({
+                    id,
+                    path: `state/quality/test-plans/${file}`,
+                    title,
+                    target,
+                    generated_at,
+                    step_count: countPlanSteps(markdown),
+                    status: deriveStatus(meta, fm),
+                    markdown,
+                });
+            } catch { /* skip malformed plan */ }
+        }
+        // Newest first.
+        out.sort((a, b) => (b.generated_at ?? '').localeCompare(a.generated_at ?? ''));
+        return out;
+    }
+
+    function gatherChatbotQa(): ChatbotQaSummary | null {
+        const cbDir = path.join(repoRoot, 'state', 'quality', 'chatbot-qa');
+        if (!existsSync(cbDir)) return null;
+        // Prefer last.json; fall back to the most recent dated snapshot.
+        let raw: string | null = null;
+        const lastJson = path.join(cbDir, 'last.json');
+        if (existsSync(lastJson)) {
+            try { raw = readFileSync(lastJson, 'utf-8'); } catch { /* ignore */ }
+        }
+        if (!raw) {
+            const dated = readdirSync(cbDir)
+                .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+                .sort();
+            const latest = dated[dated.length - 1];
+            if (latest) {
+                try { raw = readFileSync(path.join(cbDir, latest), 'utf-8'); } catch { /* ignore */ }
+            }
+        }
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw) as Record<string, unknown>;
+            const total = typeof parsed.total_prompts === 'number' ? parsed.total_prompts : null;
+            // pass_pct in the snapshots is a fraction (0..1) when present.
+            const passPctRaw = parsed.pass_pct;
+            const pass_pct = typeof passPctRaw === 'number' ? passPctRaw : null;
+            const fail_count = (pass_pct != null && total != null) ? Math.round(total * (1 - pass_pct)) : null;
+            return {
+                pass_pct,
+                fail_count,
+                total_prompts: total,
+                last_run_at: (parsed.timestamp as string | undefined) ?? null,
+                degraded: parsed.degraded === true ? true : undefined,
+                degraded_reason: typeof parsed.degraded_reason === 'string' ? parsed.degraded_reason : null,
+                last_known_good_pass_pct: typeof parsed.last_known_good_pass_pct === 'number' ? parsed.last_known_good_pass_pct : null,
+            };
+        } catch {
+            return null;
+        }
+    }
+
     // ── AI annotations (phase 2 of the ai-annotations campaign) ───────
     //
     // Reads two ix-produced files:
@@ -1192,7 +1360,7 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(gatherAgentActivity()));
             });
 
-            // ── POST /dev-data/harness/skill/<name> — queue a skill invocation ──
+            // ── POST harness/skill/<name> — queue a skill invocation ──
             // The harness tab exposes "Invoke" buttons for skills like
             // /grade-last-pr, /council, /backlog-groom, /test-plan. Clicking
             // a button writes a line to state/harness/skill-invocations.jsonl
@@ -1201,17 +1369,36 @@ function devDataPlugin(): Plugin {
             //
             // Body: { source?: string, context?: string, item_number?: number }
             // Allowed skill names are restricted to /^[a-z0-9][a-z0-9-]{0,48}$/.
-            // Local-only via gateLocal.
-            server.middlewares.use('/dev-data/harness/skill', (req, res, next) => {
-                if (req.method !== 'POST') { next(); return; }
-                if (!gateLocal(req, res, 'harness/skill')) return;
-
+            //
+            // Two route prefixes, identical behaviour:
+            //   /actions/harness/skill/<name>     — canonical; gated by
+            //                                       Cloudflare Access at the
+            //                                       edge (path policy on
+            //                                       /actions/*). Both local
+            //                                       and tunnel traffic land
+            //                                       here; CF Access proves
+            //                                       operator identity before
+            //                                       traffic reaches Vite.
+            //   /dev-data/harness/skill/<name>    — deprecated mirror, still
+            //                                       gated locally via
+            //                                       gateLocal. Emits a
+            //                                       Deprecation response
+            //                                       header so callers can
+            //                                       migrate. Remove after one
+            //                                       release.
+            const handleSkillInvoke = (
+                req: import('http').IncomingMessage,
+                res: import('http').ServerResponse,
+                stripPrefix: string,
+            ) => {
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-                // The middleware strips '/dev-data/harness/skill', leaving e.g. '/<name>'.
+                // Vite's `use(prefix, fn)` already strips the prefix from
+                // req.url, so url.pathname here is just '/<name>'. The
+                // stripPrefix arg is informational (used for error labels).
                 const name = url.pathname.replace(/^\/+/, '');
                 if (!/^[a-z0-9][a-z0-9-]{0,48}$/.test(name)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'bad skill name' }));
+                    res.end(JSON.stringify({ error: 'bad skill name', route: stripPrefix }));
                     return;
                 }
 
@@ -1252,6 +1439,25 @@ function devDataPlugin(): Plugin {
                         message: `Invocation queued — agents typically pick this up from state/handoffs/ within 5 minutes. Or run locally: /${name}`,
                     }));
                 });
+            };
+
+            // Canonical: /actions/harness/skill/<name> — auth happens at CF
+            // Access (path policy). We do NOT call gateLocal here, so the
+            // tunnel can carry signed-in operator traffic through.
+            server.middlewares.use('/actions/harness/skill', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                handleSkillInvoke(req, res, '/actions/harness/skill');
+            });
+
+            // Deprecated mirror — still local-only. Emits Deprecation header
+            // so old clients can migrate before removal.
+            server.middlewares.use('/dev-data/harness/skill', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'harness/skill')) return;
+                res.setHeader('Deprecation', 'true');
+                res.setHeader('Sunset', 'use /actions/harness/skill/<name> instead');
+                res.setHeader('Link', '</actions/harness/skill>; rel="successor-version"');
+                handleSkillInvoke(req, res, '/dev-data/harness/skill');
             });
 
             server.middlewares.use('/dev-data/harness', (req, res, next) => {
@@ -1265,6 +1471,34 @@ function devDataPlugin(): Plugin {
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
             });
+
+            // ── GET /dev-data/test-plans — list /test-plan proposals ──
+            // Aggregates state/quality/test-plans/*.md + sidecars into a
+            // payload the TestPlansCard on /test#dev/qa consumes. Returns
+            // an empty list (not 404) when the directory is missing so the
+            // card can render the empty state hint without an extra fetch.
+            //
+            // The /actions/test-plans alias below mirrors this handler so a
+            // future CF Access-gated public surface can hit the same logic
+            // without duplicating the gather code.
+            const testPlansHandler = (
+                req: import('http').IncomingMessage,
+                res: import('http').ServerResponse,
+                next: () => void,
+            ) => {
+                if (req.method !== 'GET') { next(); return; }
+                const plans = gatherTestPlans();
+                const payload: TestPlansPayload = {
+                    generated_at: new Date().toISOString(),
+                    total: plans.length,
+                    plans,
+                    chatbot_qa: gatherChatbotQa(),
+                };
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(payload));
+            };
+            server.middlewares.use('/dev-data/test-plans', testPlansHandler);
+            server.middlewares.use('/actions/test-plans', testPlansHandler);
 
             // ── /dev-data/ai-annotations — merged extractor + reconciler ──
             // Always 200 (returns {empty:true} when no data exists, so the
@@ -1377,19 +1611,28 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(projectAlgedonic()));
             });
 
-            // ── POST /dev-data/algedonic/ack/<id> — ack a signal ───────────
+            // ── POST algedonic/ack/<id> — ack a signal ─────────────────────
             // Body: optional { acked_by, resolution }. Writes a new line to
-            // inbox.jsonl with ack.acked = true. Local-only.
-            server.middlewares.use('/dev-data/algedonic/ack', (req, res, next) => {
-                if (req.method !== 'POST') { next(); return; }
-                if (!gateLocal(req, res, 'algedonic')) return;
-
+            // inbox.jsonl with ack.acked = true.
+            //
+            // Two route prefixes, identical behaviour (same auth split as
+            // harness/skill above):
+            //   /actions/algedonic/ack/<id>      — canonical; gated by CF
+            //                                       Access path policy.
+            //   /dev-data/algedonic/ack/<id>     — deprecated mirror;
+            //                                       local-only + Deprecation
+            //                                       header.
+            const handleAlgedonicAck = (
+                req: import('http').IncomingMessage,
+                res: import('http').ServerResponse,
+                stripPrefix: string,
+            ) => {
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-                // The middleware strips '/dev-data/algedonic/ack', leaving e.g. '/<id>'.
+                // Vite's `use(prefix, fn)` strips the prefix already.
                 const id = url.pathname.replace(/^\/+/, '');
                 if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'bad id' }));
+                    res.end(JSON.stringify({ error: 'bad id', route: stripPrefix }));
                     return;
                 }
                 let body = '';
@@ -1413,6 +1656,52 @@ function devDataPlugin(): Plugin {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ ok: true, ack: ackLine }));
                 });
+            };
+
+            server.middlewares.use('/actions/algedonic/ack', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                handleAlgedonicAck(req, res, '/actions/algedonic/ack');
+            });
+
+            server.middlewares.use('/dev-data/algedonic/ack', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'algedonic')) return;
+                res.setHeader('Deprecation', 'true');
+                res.setHeader('Sunset', 'use /actions/algedonic/ack/<id> instead');
+                res.setHeader('Link', '</actions/algedonic/ack>; rel="successor-version"');
+                handleAlgedonicAck(req, res, '/dev-data/algedonic/ack');
+            });
+
+            // ── /cdn-cgi/access/get-identity — local dev stub ──────────────
+            // Cloudflare Access serves this path in production with the
+            // signed-in user's identity ({ email, name, ... }) or 401 if not
+            // authenticated. In local dev there's no CF in front, so we stub
+            // it with a fixed dev identity. This keeps the auth-aware UI
+            // (useCfIdentity hook + AuthChip) working when running
+            // `npm run dev` directly.
+            //
+            // Production traffic for this path is handled by CF before it
+            // reaches Vite — Cloudflare intercepts /cdn-cgi/* and responds
+            // itself. The middleware here only fires for local-origin
+            // requests; if a tunnel request somehow reached it, gateLocal
+            // would reject it so we still don't impersonate identities.
+            server.middlewares.use('/cdn-cgi/access/get-identity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                if (!isLocalOrigin(req)) {
+                    // Tunnel / external — let CF handle this in prod; in
+                    // dev-without-CF the request would have been blocked
+                    // earlier. Return 401 to mirror CF's "not signed in".
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'not authenticated' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({
+                    email: 'dev@localhost',
+                    name: 'Local Dev',
+                    id: 'local-dev-stub',
+                    type: 'local-dev-stub',
+                }));
             });
 
             // ── /dev-data/in-flight ───────────────────────────────────────
@@ -1442,6 +1731,7 @@ function devDataPlugin(): Plugin {
                         agent_activity: '/dev-data/agent-activity',
                         harness: '/dev-data/harness',
                         algedonic: '/dev-data/algedonic',
+                        test_plans: '/dev-data/test-plans',
                         in_flight: '/dev-data/in-flight',
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
                         sentrux_health: '/dev-data/sentrux/health',
@@ -1450,6 +1740,15 @@ function devDataPlugin(): Plugin {
                         sentrux_dsm: '/dev-data/sentrux/dsm',
                         ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
+                        // Action endpoints — CF-Access-gated in production
+                        // (path policy on /actions/*). Read endpoints above
+                        // stay public; only state-mutating POSTs require
+                        // operator identity.
+                        actions: {
+                            invoke_skill: '/actions/harness/skill/<name>',
+                            ack_algedonic: '/actions/algedonic/ack/<id>',
+                            identity: '/cdn-cgi/access/get-identity',
+                        },
                     },
                     services: serviceTopology,
                     backlog: gatherBacklog(),

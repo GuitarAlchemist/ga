@@ -29,6 +29,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useCfIdentity } from '../../hooks/useCfIdentity';
 
 export type Severity = 'info' | 'warn' | 'fail' | 'critical';
 
@@ -96,6 +98,12 @@ export const AlgedonicCard: React.FC<AlgedonicCardProps> = ({ refreshIntervalMs 
   const [error, setError] = useState<string | null>(null);
   const [ackingId, setAckingId] = useState<string | null>(null);
 
+  // Read endpoint (/dev-data/algedonic) is public; ack endpoint
+  // (/actions/algedonic/ack/<id>) is gated by Cloudflare Access. Hook
+  // tells us whether the operator can fire acks. If not, we render the
+  // Ack button with a lock + sign-in CTA instead of disabling it dead.
+  const { authed, loading: authLoading, signInUrl } = useCfIdentity();
+
   const load = useCallback(async () => {
     try {
       const r = await fetch('/dev-data/algedonic', { cache: 'no-store' });
@@ -116,13 +124,24 @@ export const AlgedonicCard: React.FC<AlgedonicCardProps> = ({ refreshIntervalMs 
 
   const ack = useCallback(
     async (id: string) => {
+      if (!authed) {
+        window.location.href = signInUrl;
+        return;
+      }
       setAckingId(id);
       try {
-        const r = await fetch(`/dev-data/algedonic/ack/${encodeURIComponent(id)}`, {
+        const r = await fetch(`/actions/algedonic/ack/${encodeURIComponent(id)}`, {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ acked_by: 'dashboard', resolution: 'acked from Heartbeat tile' }),
         });
+        if (r.status === 401 || r.status === 403) {
+          // CF Access session lapsed — bounce to login.
+          setError('Sign-in required. Redirecting to Cloudflare Access…');
+          window.setTimeout(() => { window.location.href = signInUrl; }, 1200);
+          return;
+        }
         if (!r.ok) throw new Error(`ack HTTP ${r.status}`);
         await load();
       } catch (e) {
@@ -131,7 +150,7 @@ export const AlgedonicCard: React.FC<AlgedonicCardProps> = ({ refreshIntervalMs 
         setAckingId(null);
       }
     },
-    [load],
+    [authed, signInUrl, load],
   );
 
   if (error && !projection) {
@@ -252,15 +271,29 @@ export const AlgedonicCard: React.FC<AlgedonicCardProps> = ({ refreshIntervalMs 
                       </IconButton>
                     </Tooltip>
                   )}
-                  <Tooltip title="Acknowledge — moves out of unacked list">
+                  <Tooltip
+                    title={
+                      authLoading
+                        ? 'Checking sign-in…'
+                        : !authed
+                          ? 'Sign in via Cloudflare Access to acknowledge signals'
+                          : 'Acknowledge — moves out of unacked list'
+                    }
+                  >
                     <span>
                       <Button
                         size="small"
                         variant="outlined"
-                        startIcon={<CheckCircleOutlineIcon fontSize="small" />}
-                        disabled={ackingId === sig.id}
+                        startIcon={
+                          authed
+                            ? <CheckCircleOutlineIcon fontSize="small" />
+                            : <LockOutlinedIcon fontSize="small" />
+                        }
+                        disabled={ackingId === sig.id || authLoading}
                         onClick={() => ack(sig.id)}
-                        sx={{ minWidth: 0, px: 1 }}
+                        aria-label={!authed ? 'Sign in required to ack' : `Ack signal ${sig.id}`}
+                        data-authed={authed ? 'true' : 'false'}
+                        sx={{ minWidth: 0, px: 1, opacity: !authed ? 0.7 : 1 }}
                       >
                         Ack
                       </Button>
