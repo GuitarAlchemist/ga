@@ -45,7 +45,14 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
+import SensorsIcon from '@mui/icons-material/Sensors';
 import { HarnessTab } from '../components/Harness';
+import {
+  SentruxHealthCard,
+  SentruxRulesCard,
+  SentruxTestGapsCard,
+  SentruxDsmCard,
+} from '../components/Sentrux';
 
 interface DevLink {
   title: string;
@@ -1026,8 +1033,8 @@ const LayerMapCard: React.FC = () => {
 };
 
 
-type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'harness';
-const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'harness'];
+type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'sentrux' | 'harness';
+const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'sentrux', 'harness'];
 
 const readSubTabFromHash = (): DevSubTab => {
   if (typeof window === 'undefined') return 'summary';
@@ -1079,6 +1086,7 @@ export const DevelopmentSection: React.FC = () => {
           <Tab value="product"      label="Product"      icon={<InventoryIcon fontSize="small" />}   iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="project"      label="Project"      icon={<GroupsIcon fontSize="small" />}      iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="qa"           label="QA"           icon={<VerifiedIcon fontSize="small" />}    iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="sentrux"      label="Sentrux"      icon={<SensorsIcon fontSize="small" />}     iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="harness"      label="Harness"      icon={<ConstructionIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
         </Tabs>
       </Box>
@@ -1128,6 +1136,15 @@ export const DevelopmentSection: React.FC = () => {
         <Stack spacing={2}>
           <QualityCard />
           <ProcessHealthCard />
+        </Stack>
+      )}
+
+      {subTab === 'sentrux' && (
+        <Stack spacing={2}>
+          <SentruxHealthCard />
+          <SentruxRulesCard />
+          <SentruxTestGapsCard />
+          <SentruxDsmCard />
         </Stack>
       )}
 

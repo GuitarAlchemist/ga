@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
-import { execFileSync } from 'child_process'
+import { execFileSync, spawn } from 'child_process'
 import type { Plugin } from 'vite'
 import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals } from './src/dev-data/parsers'
 import type { BacklogPayload, LoopsGoalsProjection } from './src/dev-data/parsers'
@@ -943,6 +943,10 @@ function devDataPlugin(): Plugin {
                         harness: '/dev-data/harness',
                         algedonic: '/dev-data/algedonic',
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
+                        sentrux_health: '/dev-data/sentrux/health',
+                        sentrux_rules: '/dev-data/sentrux/rules',
+                        sentrux_test_gaps: '/dev-data/sentrux/test-gaps',
+                        sentrux_dsm: '/dev-data/sentrux/dsm',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -1299,9 +1303,247 @@ function primeRadiantControlPlugin(): Plugin {
     };
 }
 
+// ---------------------------------------------------------------------------
+// Sentrux MCP bridge — surfaces realtime structural-quality signals from
+// the optional `sentrux.exe` peer (see .mcp.json). Each endpoint spawns
+// `sentrux.exe mcp` as a one-shot stdio child, runs an
+// initialize → scan → <tool> JSON-RPC chain, and unwraps the inner tool
+// payload before returning it to the React dashboard.
+//
+// Sentrux's CLI subcommands (`check`, `gate`, `scan`) do NOT expose a `--json`
+// output, but the `mcp` subcommand speaks standard MCP stdio. We use that
+// rather than parsing the GUI/CLI output.
+//
+// Graceful degradation: if sentrux.exe is missing OR errors, the endpoints
+// return `{ ok: false, error, hint }` (HTTP 200) and the cards render an
+// empty state. The dashboard never crashes on a missing optional peer.
+//
+// Caching: scan is the slow part (~5-10s on the ga repo). We cache the
+// tool result per-endpoint for a tool-specific window so the React cards
+// can refresh on a 30s / 60s / 5min cadence without re-scanning every time.
+// ---------------------------------------------------------------------------
+function sentruxPlugin(): Plugin {
+    const repoRoot = path.resolve(__dirname, '../..');
+    const sentruxExe = process.env.SENTRUX_EXE ?? 'C:/Users/spare/bin/sentrux.exe';
+
+    // Per-tool TTL cache. Health / rules / test_gaps refresh on the
+    // frontend at 30s / 60s / 5min, so we keep cache slightly shorter to
+    // ensure each frontend tick gets fresh data without thrashing sentrux.
+    interface CacheEntry { value: unknown; expires_at: number }
+    const cache = new Map<string, CacheEntry>();
+    const cacheTtlMs: Record<string, number> = {
+        health: 20_000,
+        check_rules: 45_000,
+        test_gaps: 4 * 60_000,
+        dsm: 5 * 60_000,
+    };
+
+    // Track an MCP child for the lifetime of one tools/call. We spawn fresh
+    // each time because the MCP server is small and a long-lived child
+    // would need supervision (PID file, restart-on-crash) we don't want
+    // in the Vite dev plugin.
+    type McpResult = { ok: true; result: unknown } | { ok: false; error: string; hint?: string };
+
+    function callSentruxTool(toolName: string, args: Record<string, unknown> = {}): Promise<McpResult> {
+        return new Promise((resolve) => {
+            if (!existsSync(sentruxExe)) {
+                resolve({
+                    ok: false,
+                    error: `sentrux.exe not found at ${sentruxExe}`,
+                    hint: 'Install sentrux (https://github.com/sentrux/sentrux) or set SENTRUX_EXE to its path.',
+                });
+                return;
+            }
+
+            let child: ReturnType<typeof spawn>;
+            try {
+                child = spawn(sentruxExe, ['mcp'], {
+                    cwd: repoRoot,
+                    stdio: ['pipe', 'pipe', 'pipe'],
+                    windowsHide: true,
+                });
+            } catch (e) {
+                resolve({ ok: false, error: `failed to spawn sentrux: ${(e as Error)?.message ?? e}` });
+                return;
+            }
+
+            const stdoutChunks: string[] = [];
+            let stderr = '';
+            let done = false;
+            const finish = (r: McpResult) => {
+                if (done) return;
+                done = true;
+                try { child.kill(); } catch { /* ignore */ }
+                resolve(r);
+            };
+
+            // Most tools complete within 12s; first scan on a cold repo can
+            // take ~10s, so a 60s ceiling is safe headroom. dsm + test_gaps
+            // can be slower on huge repos — bump if necessary.
+            const timeoutMs = toolName === 'dsm' ? 90_000 : 60_000;
+            const timer = setTimeout(() => {
+                finish({ ok: false, error: `sentrux ${toolName} timed out after ${timeoutMs}ms` });
+            }, timeoutMs);
+
+            child.stdout?.on('data', (buf: Buffer) => {
+                stdoutChunks.push(buf.toString());
+                // Sentrux emits one JSON-RPC response per line. The last
+                // response we care about has id = 99 (the tool call).
+                const text = stdoutChunks.join('');
+                for (const line of text.split('\n')) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('{')) continue;
+                    let parsed: unknown;
+                    try { parsed = JSON.parse(trimmed); } catch { continue; }
+                    const obj = parsed as { id?: number; result?: unknown; error?: { message?: string } };
+                    if (obj.id !== 99) continue;
+                    clearTimeout(timer);
+                    if (obj.error) {
+                        finish({ ok: false, error: obj.error.message ?? 'sentrux returned an error' });
+                        return;
+                    }
+                    finish({ ok: true, result: obj.result });
+                    return;
+                }
+            });
+
+            child.stderr?.on('data', (buf: Buffer) => { stderr += buf.toString(); });
+
+            child.on('error', (e) => {
+                clearTimeout(timer);
+                finish({ ok: false, error: `sentrux spawn error: ${e.message}` });
+            });
+            child.on('exit', (code) => {
+                clearTimeout(timer);
+                if (!done) {
+                    finish({
+                        ok: false,
+                        error: `sentrux exited (code ${code ?? 'null'}) before responding`,
+                        hint: stderr.slice(-500) || undefined,
+                    });
+                }
+            });
+
+            // Send the JSON-RPC handshake → scan → tool call pipeline. We always
+            // run `scan` first because sentrux requires it before any other
+            // tool (see tools/list description). For tools that need their
+            // own arguments, merge them into the call.
+            const lines: string[] = [
+                JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {
+                    protocolVersion: '2024-11-05',
+                    capabilities: {},
+                    clientInfo: { name: 'ga-dashboard-sentrux-tab', version: '1' },
+                } }),
+                JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+            ];
+
+            if (toolName !== 'scan') {
+                // Run scan implicitly so the requested tool has data to chew on.
+                // The scan response (id=2) will arrive but be ignored; we only
+                // resolve on id=99 below.
+                lines.push(JSON.stringify({
+                    jsonrpc: '2.0', id: 2, method: 'tools/call',
+                    params: { name: 'scan', arguments: { path: repoRoot } },
+                }));
+            }
+            lines.push(JSON.stringify({
+                jsonrpc: '2.0', id: 99, method: 'tools/call',
+                params: { name: toolName, arguments: toolName === 'scan' ? { path: repoRoot, ...args } : args },
+            }));
+
+            try {
+                child.stdin?.write(lines.join('\n') + '\n');
+                child.stdin?.end();
+            } catch (e) {
+                clearTimeout(timer);
+                finish({ ok: false, error: `sentrux stdin write failed: ${(e as Error)?.message}` });
+            }
+        });
+    }
+
+    // Unwrap the MCP tool envelope { content: [{ text: '...' }] } → parsed JSON.
+    function unwrap(result: unknown): unknown {
+        const r = result as { content?: Array<{ text?: string }> } | undefined;
+        const text = r?.content?.[0]?.text;
+        if (typeof text !== 'string') return null;
+        try {
+            return JSON.parse(text);
+        } catch {
+            // Some sentrux tools return human-readable text; pass it through
+            // verbatim under a `text` key so the cards can render it.
+            return { text };
+        }
+    }
+
+    async function cached(tool: string, args: Record<string, unknown> = {}): Promise<{
+        ok: boolean; data?: unknown; error?: string; hint?: string; duration_ms: number;
+    }> {
+        const key = `${tool}:${JSON.stringify(args)}`;
+        const now = Date.now();
+        const hit = cache.get(key);
+        if (hit && hit.expires_at > now) {
+            return { ok: true, data: hit.value, duration_ms: 0 };
+        }
+        const t0 = Date.now();
+        const res = await callSentruxTool(tool, args);
+        const duration = Date.now() - t0;
+        if (!res.ok) {
+            return { ok: false, error: res.error, hint: (res as { hint?: string }).hint, duration_ms: duration };
+        }
+        const data = unwrap(res.result);
+        cache.set(key, { value: data, expires_at: now + (cacheTtlMs[tool] ?? 30_000) });
+        return { ok: true, data, duration_ms: duration };
+    }
+
+    function writeJson(res: import('http').ServerResponse, payload: unknown): void {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
+    }
+
+    return {
+        name: 'sentrux-bridge',
+        configureServer(server) {
+            server.middlewares.use('/dev-data/sentrux/health', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                void cached('health').then((r) => writeJson(res, r));
+            });
+
+            server.middlewares.use('/dev-data/sentrux/rules', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                void cached('check_rules').then((r) => writeJson(res, r));
+            });
+
+            server.middlewares.use('/dev-data/sentrux/test-gaps', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                void cached('test_gaps', { limit: 20 }).then((r) => writeJson(res, r));
+            });
+
+            server.middlewares.use('/dev-data/sentrux/dsm', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                void cached('dsm', { format: 'stats' }).then((r) => writeJson(res, r));
+            });
+
+            // POST /actions/sentrux/rescan — local-only, drops the cache and
+            // forces a fresh scan on the next health probe.
+            server.middlewares.use('/actions/sentrux/rescan', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'sentrux/rescan')) return;
+                cache.clear();
+                const scanId = `scan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                // Fire-and-forget — the next GET /health will trigger the
+                // actual scan and surface results. Returning here keeps the
+                // POST fast and lets the UI poll for the new health number.
+                void callSentruxTool('rescan').catch(() => { /* ignored */ });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ queued: true, scan_id: scanId }));
+            });
+        },
+    };
+}
+
 export default defineConfig({
     // 3d-force-graph WebGPU bug fixed via patch-package (see patches/3d-force-graph+1.79.1.patch)
-    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin()],
+    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin(), sentruxPlugin()],
     server: {
         port: 5176,
         host: true,
