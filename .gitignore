@@ -141,6 +141,10 @@ jetbrains-plugin/.gradle/
 # Claude Code local settings and working directories (not shared)
 .claude/settings.local.json
 .claude/worktrees/
+# Per-session same-agent state (harness plan item #3). The actual file
+# is .claude/local/state.md — the .claude/local-template/ directory
+# (tracked) holds the schema + README + setup script.
+.claude/local/
 
 # AI chat exports (ChatGPT, Gemini, etc. — personal notes, not repo artifacts)
 ChatGPT-*.md

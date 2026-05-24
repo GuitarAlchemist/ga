@@ -73,8 +73,8 @@ Auto-summarize the volatile conversation; off-load durable knowledge to external
 
 Pre-defined skills + automated post-action evaluation against architecture boundaries.
 
-- **Status: 🟡 Partial.** We have feed-forward via skills (`/digest`, `/learnings`, `/correct`, `/feature`) and feedback via the `karpathy-cherny-discipline.yml` workflow + the ROP-naked-throws check in `.githooks/pre-commit`. Missing: a structured **post-merge** evaluator that grades the merged PR against the original goal. Today an agent declares "done" and that's the end of the loop.
-- **Action (M):** Add a `/grade-last-pr` skill that runs `octo:review` against `git diff HEAD~1` and writes the score to `state/quality/pr-grades/<sha>.json`. Surfaces drift between intent and delivery without humans manually reviewing.
+- **Status: 🟡 In flight.** We have feed-forward via skills (`/digest`, `/learnings`, `/correct`, `/feature`) and feedback via the `karpathy-cherny-discipline.yml` workflow + the ROP-naked-throws check in `.githooks/pre-commit`. The post-merge evaluator is now scaffolded: `/grade-last-pr` ships in this PR (`.claude/skills/grade-last-pr/SKILL.md`) with the artifact directory at `state/quality/pr-grades/` and `pr-grade-v1` JSON Schema. Mark ✅ once the skill has been invoked on its own merge SHA and the grade card is committed.
+- **Action (M):** Add a `/grade-last-pr` skill that runs `octo:review` against `git diff HEAD~1` and writes the score to `state/quality/pr-grades/<sha>.json`. Surfaces drift between intent and delivery without humans manually reviewing. **(skill landed; first dogfood grade card pending)**
 
 ### Generator-evaluator separation
 

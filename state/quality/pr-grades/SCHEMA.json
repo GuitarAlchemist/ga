@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/state/quality/pr-grades/SCHEMA.json",
+  "title": "PR Grade Card",
+  "description": "Schema for post-merge intent-vs-delivery grades produced by the /grade-last-pr skill.",
+  "type": "object",
+  "required": [
+    "schema",
+    "pr_number",
+    "merge_sha",
+    "merged_at",
+    "title",
+    "stated_intent",
+    "actual_files_changed",
+    "alignment",
+    "reasons",
+    "graded_at",
+    "grader"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "pr-grade-v1",
+      "description": "Schema version literal. Bump only on field removal/rename; additive changes do not need a bump."
+    },
+    "pr_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "GitHub PR number."
+    },
+    "merge_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full 40-char merge commit SHA. No truncation — files sort chronologically and never collide on a short-SHA prefix."
+    },
+    "merged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp when the PR was merged."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "PR title from `gh pr view`."
+    },
+    "stated_intent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "PR title plus the `## Summary` section of the body. If no Summary, the title only — and `intent_section_missing` should appear in `reasons`."
+    },
+    "actual_files_changed": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "File paths from `git show --name-only <sha>`."
+    },
+    "alignment": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "high = diff matches intent; medium = matches but introduces something not called out; low = drifts from intent."
+    },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "maxItems": 5,
+      "description": "1–5 short sentences explaining the alignment call."
+    },
+    "specialist_notes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Map of specialist name → one-paragraph verdict (typically from `/octo:review`). Common keys: code-reviewer, security-sentinel, architecture-architect."
+    },
+    "graded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp when this grade was written."
+    },
+    "grader": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Model name that performed the grading (e.g. claude-opus-4-7)."
+    },
+    "prior_grades": {
+      "type": "array",
+      "description": "Populated only on re-grades. The original card's content (minus pr_number / merge_sha / title / stated_intent / actual_files_changed, which are immutable for a given SHA) is moved here.",
+      "items": {
+        "type": "object",
+        "required": ["alignment", "reasons", "graded_at", "grader"],
+        "properties": {
+          "alignment": { "type": "string", "enum": ["high", "medium", "low"] },
+          "reasons": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "specialist_notes": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "graded_at": { "type": "string", "format": "date-time" },
+          "grader": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
