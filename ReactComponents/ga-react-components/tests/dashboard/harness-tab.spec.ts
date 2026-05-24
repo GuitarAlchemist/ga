@@ -7,21 +7,22 @@
 //   - /dev-data/harness server endpoint stops serving (vite plugin
 //     devDataPlugin regression in vite.config.ts)
 //   - baseline tile renderer throws when value/target are non-numeric
-//   - the item card grid loses a card on re-render
+//   - the item card grid loses a card on re-render (new layout) OR the
+//     rollout table loses a row (old layout) — supports both during the
+//     deploy crossover window
+//
+// NOTE — runs against a LIVE URL (see playwright.dashboard.config.ts).
+// Until the new layout is deployed, this test must accept the old layout
+// (Prioritized rollout table) as well as the new (card grid + donut +
+// timeline). After the crossover, the old branches can be deleted.
 //
 // See src/components/Harness/HarnessTab.tsx and the donut + timeline
 // + per-item card components in src/components/Harness/.
 import { test, expect } from '@playwright/test';
 
 test.describe('Harness tab', () => {
-  test('renders item cards + baseline tiles', async ({ page }) => {
+  test('renders items + baseline tiles', async ({ page }) => {
     await page.goto('/test#dev/harness', { waitUntil: 'domcontentloaded' });
-
-    // Wait for the items section heading from the new card grid.
-    const itemsHeading = page.locator('text=/^Items \\(/i').first();
-    await expect(itemsHeading, 'Items (N) heading should appear').toBeVisible({
-      timeout: 20_000,
-    });
 
     // Cross-check the data source: /dev-data/harness must serve the items.
     const apiResp = await page.request.get('/dev-data/harness');
@@ -33,14 +34,35 @@ test.describe('Harness tab', () => {
       'state/harness/items.json should declare at least 8 items',
     ).toBeGreaterThanOrEqual(8);
 
-    // Each item card has a stable id so the timeline pills can scroll to it.
-    // Verify the first and last item ids exist in the DOM.
-    const firstNumber = harness.items[0].number as number;
-    const lastNumber = harness.items[harness.items.length - 1].number as number;
-    await expect(page.locator(`#harness-item-${firstNumber}`)).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator(`#harness-item-${lastNumber}`)).toBeVisible({ timeout: 10_000 });
+    // Wait for either the new card-grid layout OR the old rollout table.
+    // The new design ships with HarnessTab.tsx and renders "Items (N)";
+    // the old design renders "Prioritized rollout" in a <Paper> heading.
+    const newHeading = page.locator('text=Items (').first();
+    const oldHeading = page.locator('text=/Prioritized rollout/i').first();
+    await expect.poll(async () => {
+      const n = await newHeading.isVisible().catch(() => false);
+      const o = await oldHeading.isVisible().catch(() => false);
+      return n || o;
+    }, {
+      timeout: 20_000,
+      message: 'Either Items (N) or Prioritized rollout heading should appear',
+    }).toBe(true);
 
-    // Baseline tiles section ("Baseline metrics") should be visible.
+    // Each item title should appear in the rendered DOM (works for both
+    // table rows and card layouts).
+    const firstTitle = harness.items[0].title as string;
+    const lastTitle = harness.items[harness.items.length - 1].title as string;
+    const firstFragment = firstTitle.slice(0, Math.min(20, firstTitle.length));
+    const lastFragment = lastTitle.slice(0, Math.min(20, lastTitle.length));
+    await expect(page.getByText(firstFragment, { exact: false }).first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText(lastFragment, { exact: false }).first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // Baseline tiles section ("Baseline metrics") should be visible (kept
+    // in both old and new layouts).
     await expect(
       page.locator('text=/Baseline metrics/i').first(),
       'Baseline metrics heading should appear',
@@ -52,12 +74,15 @@ test.describe('Harness tab', () => {
     ).toBeGreaterThan(0);
   });
 
-  test('skill action button queues an invocation', async ({ page, request }) => {
-    await page.goto('/test#dev/harness', { waitUntil: 'domcontentloaded' });
+  test('skill action button queues an invocation', async ({ request }) => {
+    // The skill action endpoint is local-only by design (gateLocal in
+    // vite.config.ts), so this test only runs when targeting a local Vite.
+    // Against the live URL it would correctly return 403 / 404. Skip it
+    // unless the test runner is pointed at a local origin.
+    const baseURL = (test.info().project.use.baseURL as string | undefined) ?? '';
+    const isLocal = /localhost|127\.0\.0\.1/.test(baseURL);
+    test.skip(!isLocal, 'skill POST endpoint is local-only; skipping on live deploy');
 
-    // The skill action button POSTs to /dev-data/harness/skill/<name>.
-    // We verify the endpoint contract directly (the UI button is just a
-    // friendly wrapper around this POST).
     const resp = await request.post('/dev-data/harness/skill/test-plan', {
       data: { source: 'playwright', context: 'harness-tab spec', item_number: 13 },
     });
