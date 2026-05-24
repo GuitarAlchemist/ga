@@ -262,7 +262,13 @@ const QualityCard: React.FC = () => {
     const metricValue = d.metric_value as number | undefined;
     const oracleStatus = d.oracle_status as string | undefined;
     const emittedAt = d.emitted_at as string | undefined;
-    const summary = d.summary as string | undefined;
+    // Defensive narrowing: a few producers (notably readme-drift) keep a
+    // structured `summary` object for back-compat with their own consumers
+    // — coercing it via `as string` would crash React with "Objects are not
+    // valid as a React child". Only render `summary` when it's actually a
+    // string; otherwise leave it out of this row (the metric_value + chip
+    // still convey status).
+    const summary = typeof d.summary === 'string' ? d.summary : undefined;
     const problems = d.problems as unknown[] | undefined;
 
     const statusColor = oracleStatus === 'ok' ? 'success' : oracleStatus === 'warn' ? 'warning' : oracleStatus ? 'error' : 'default';
