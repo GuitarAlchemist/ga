@@ -761,13 +761,28 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       return new THREE.Vector3(Math.cos(a) * PITCH_RADIUS, 0, Math.sin(a) * PITCH_RADIUS);
     }
     function chordAnchor(c: ChordBody, _p: PitchBody): THREE.Vector3 {
-      const chords = chordsForPitch(_p);
-      const i = chords.findIndex((x) => x.family.key === c.family.key);
+      // Derive the chord ring from the SAME source the ring was built from
+      // (see setPitchFocus). In Mode A (root chords) the chord set is
+      // chordsForPitch — 8 unique family.key entries. In Mode B (key
+      // chords) it's keyChordsForPitch — 7 diatonic chords whose families
+      // can repeat (I/IV/V are all Major). Matching on family.key alone
+      // would land on the first repeat, sending the camera to the wrong
+      // body. Match on (rootPc, family.key) so it's unique in both modes.
+      const chords = chordModeRef.current === 'key'
+        ? keyChordsForPitch(_p)
+        : chordsForPitch(_p);
+      const i = chords.findIndex((x) => x.family.key === c.family.key && x.rootPc === c.rootPc);
       const a = (i / chords.length) * Math.PI * 2;
       return new THREE.Vector3(Math.cos(a) * CHORD_RADIUS, 0, Math.sin(a) * CHORD_RADIUS);
     }
     function scaleAnchor(s: ScaleBody, c: ChordBody, _p: PitchBody): THREE.Vector3 {
-      const scales = scalesForChord(c);
+      // Mode A: the outer scale ring is scalesForChord(c) (per-chord).
+      // Mode B: the outer scale ring is keyModesForPitch(_p) — the same
+      // seven modes for every chord on the focused pitch. Pull from the
+      // matching source so the look-target lines up with the rendered ring.
+      const scales = chordModeRef.current === 'key'
+        ? keyModesForPitch(_p)
+        : scalesForChord(c);
       const i = scales.findIndex((x) => x.scale.key === s.scale.key);
       const a = (i / scales.length) * Math.PI * 2;
       return new THREE.Vector3(Math.cos(a) * SCALE_RADIUS, 0, Math.sin(a) * SCALE_RADIUS);
