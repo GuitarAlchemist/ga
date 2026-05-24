@@ -1,7 +1,7 @@
 import type { CanonicalBodyId, TextureAssetSet } from './assetTypes';
 
 const solarSystemScopeUrl = 'https://www.solarsystemscope.com/textures/';
-const noaaScienceOnSphereMilkyWayUrl = 'https://sos.noaa.gov/catalog/datasets/milky-way-panorama/';
+const esoGigaGalaxyMilkyWayUrl = 'https://www.eso.org/public/images/eso0932a/';
 
 export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   sun: {
@@ -120,16 +120,17 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   },
   'milky-way': {
     id: 'milky-way',
-    displayName: 'Milky Way All-Sky Panorama',
-    source: 'NOAA Science On a Sphere',
-    sourceUrl: noaaScienceOnSphereMilkyWayUrl,
-    license: 'NOAA/NASA GSFC dataset; credit Axel Mellinger',
+    displayName: 'Milky Way 360 Panorama',
+    source: 'ESO',
+    sourceUrl: esoGigaGalaxyMilkyWayUrl,
+    license: 'Credit ESO/S. Brunier; NOAA/NASA fallback credit Axel Mellinger',
     textures: {
       stars: {
         '2k': '/textures/milky-way-nasa-sos-2048.jpg',
+        '8k': '/textures/milky-way-eso-gigagalaxy-6000.jpg',
       },
     },
-    notes: 'Visible-light all-sky Milky Way map from the NOAA Science On a Sphere catalog, developed with NASA GSFC.',
+    notes: 'Prime Radiant prefers the 6000x3000 ESO GigaGalaxy panorama and falls back to the NOAA/NASA GSFC all-sky map.',
   },
   stars: {
     id: 'stars',

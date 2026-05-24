@@ -2,10 +2,10 @@
 // Photographic Milky Way panorama — samples an equirectangular astrophotography
 // texture instead of procedurally generating the galactic band.
 //
-// Source: NOAA Science On a Sphere Milky Way Panorama
-// https://sos.noaa.gov/catalog/datasets/milky-way-panorama/
-// Visible-light all-sky map developed with NASA GSFC; standard 2:1
-// equirectangular format.
+// Source: canonical Prime Radiant space asset manifest. The preferred
+// high-quality asset is ESO's GigaGalaxy Milky Way panorama; the fallback
+// is the NOAA/NASA GSFC all-sky map. Both are standard 2:1 equirectangular
+// sky textures.
 //
 // Rendered on a BackSide sphere — we're inside it, looking out. SphereGeometry's
 // built-in UVs are equirectangular, so we sample with `uv()` directly.

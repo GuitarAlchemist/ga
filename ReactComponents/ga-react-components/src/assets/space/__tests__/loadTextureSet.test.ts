@@ -20,8 +20,8 @@ describe('space asset manifest', () => {
     });
   });
 
-  it('uses the real NOAA/NASA Milky Way panorama and falls back cleanly', () => {
-    expect(resolveTexturePath('milky-way', 'stars', '8k')).toBe('/textures/milky-way-nasa-sos-2048.jpg');
+  it('uses the high-resolution real Milky Way panorama and falls back cleanly', () => {
+    expect(resolveTexturePath('milky-way', 'stars', '8k')).toBe('/textures/milky-way-eso-gigagalaxy-6000.jpg');
     expect(resolveTexturePath('milky-way', 'stars', '4k')).toBe('/textures/milky-way-nasa-sos-2048.jpg');
   });
 

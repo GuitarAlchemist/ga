@@ -11,6 +11,8 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
 import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
+import { createMilkyWayTextureMaterial } from './shaders/MilkyWayTextureTSL';
+import { resolveTexturePath } from '../../assets/space';
 import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
 import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
 import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
@@ -2628,15 +2630,44 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(ambientDust);
     dustHandleOuter = dustHandle;
 
-    // ─── SKYBOX — nebula background sphere + multi-layer starfield ───
+    // ─── SKYBOX — real Milky Way panorama + multi-layer starfield ───
 
-    // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
+    // Layer 0: Photographic visible-light Milky Way 360 map. Start with
+    // the old procedural material only as a fallback while the image loads.
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
     const skyMat = createSkyboxNebulaMaterialTSL({ quality: budgetToTier(qualityBudget) });
     (skyMat as THREE.Material & { fog?: boolean }).fog = false; // opt out of atmospheric fog
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
+    const skyTexturePath = resolveTexturePath('milky-way', 'stars', '8k');
+    const usesPhotographicSkybox = Boolean(skyTexturePath);
+    if (skyTexturePath) {
+      new THREE.TextureLoader().load(
+        skyTexturePath,
+        (tex) => {
+          if (disposed) {
+            tex.dispose();
+            return;
+          }
+          const fallbackMaterial = skySphere.material as THREE.Material;
+          const photographicMaterial = createMilkyWayTextureMaterial(tex, {
+            brightness: 0.62,
+            saturation: 0.88,
+            flipU: true,
+          });
+          (photographicMaterial as THREE.Material & { fog?: boolean }).fog = false;
+          skySphere.material = photographicMaterial;
+          skySphere.userData.source = 'ESO GigaGalaxy / NOAA-NASA Milky Way Panorama';
+          fallbackMaterial.dispose();
+          console.info(`[PrimeRadiant] Skybox loaded real Milky Way panorama: ${skyTexturePath}`);
+        },
+        undefined,
+        (err) => {
+          console.warn('[PrimeRadiant] NASA skybox texture failed; keeping procedural fallback:', err);
+        },
+      );
+    }
     // Added directly to scene — follows camera exactly (infinite distance, no parallax)
 
     // Layer 1: Bright prominent stars (spectral class distribution)
@@ -2748,7 +2779,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Bakes the procedural TSL skybox to a static cubemap, replacing the
     // per-frame shader evaluation with a cheap texture lookup.
     // WebGL2 only (WebGPU uses async render pipeline incompatible with readRenderTargetPixels).
-    if (!USE_WEBGPU && !isLowEnd) {
+    if (!USE_WEBGPU && !isLowEnd && !usesPhotographicSkybox) {
       setTimeout(() => {
         if (disposed) return;
         try {
