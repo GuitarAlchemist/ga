@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
+  ButtonBase,
   Chip,
   CircularProgress,
+  Collapse,
   Grid,
   LinearProgress,
+  Link,
   Paper,
   Stack,
   Tooltip,
@@ -16,13 +19,28 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import {
   AlgedonicCard,
   AlgedonicCriticalBanner,
   type AlgedonicProjection,
 } from '../components/Algedonic/AlgedonicCard';
 
-interface EpicSubSection { title: string; category: 'shipped' | 'active' | 'backlog'; item_count: number }
+interface BacklogItem {
+  text: string;
+  status: 'shipped' | 'active' | 'backlog';
+  pr_refs?: number[];
+  doc_refs?: string[];
+  raw_line: string;
+}
+interface EpicSubSection {
+  title: string;
+  category: 'shipped' | 'active' | 'backlog';
+  item_count: number;
+  items?: BacklogItem[];
+}
 interface BacklogEpic {
   title: string;
   total_items: number;
@@ -71,46 +89,221 @@ const StatTile: React.FC<{ icon: React.ReactNode; label: string; value: string |
   </Paper>
 );
 
-const EpicRow: React.FC<{ epic: BacklogEpic }> = ({ epic }) => {
-  const empty = epic.total_items === 0;
-  return (
-    <Box sx={{ py: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={2}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, flex: 1 }}>{epic.title}</Typography>
-        <Typography variant="body2" sx={{ fontFamily: 'monospace', minWidth: 60, textAlign: 'right' }}>
-          {empty ? '—' : `${epic.progress_pct}%`}
-        </Typography>
-      </Stack>
-      <LinearProgress
-        variant="determinate"
-        value={empty ? 0 : epic.progress_pct}
+const PR_BASE_URL = 'https://github.com/GuitarAlchemist/ga/pull/';
+const DOC_BASE_URL = 'https://github.com/GuitarAlchemist/ga/blob/main/';
+
+const StatusIcon: React.FC<{ status: BacklogItem['status'] }> = ({ status }) => {
+  if (status === 'shipped') {
+    return <CheckCircleIcon sx={{ fontSize: 14, color: 'success.main', flexShrink: 0 }} />;
+  }
+  if (status === 'active') {
+    return <HourglassEmptyIcon sx={{ fontSize: 14, color: 'warning.main', flexShrink: 0 }} />;
+  }
+  return <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0 }} />;
+};
+
+const truncate = (s: string, max = 140): string => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
+
+const BacklogItemRow: React.FC<{ item: BacklogItem }> = ({ item }) => (
+  <Stack
+    direction="row"
+    spacing={0.75}
+    alignItems="center"
+    sx={{ py: 0.5, pl: 1.5, '&:hover': { bgcolor: 'action.hover' } }}
+  >
+    <StatusIcon status={item.status} />
+    <Tooltip title={item.text} placement="top-start" enterDelay={400}>
+      <Typography
+        variant="caption"
         sx={{
-          height: 6,
-          borderRadius: 1,
-          my: 0.75,
-          bgcolor: 'action.hover',
-          '& .MuiLinearProgress-bar': {
-            bgcolor: epic.progress_pct >= 70 ? 'success.main' : epic.progress_pct >= 30 ? 'warning.main' : 'info.main',
-          },
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          color: item.status === 'shipped' ? 'text.secondary' : 'text.primary',
+          textDecoration: item.status === 'shipped' ? 'line-through' : 'none',
         }}
-      />
-      <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-        {epic.shipped > 0 && (
-          <Chip label={`✓ ${epic.shipped} shipped`} size="small" color="success" sx={{ fontSize: '0.7rem', height: 20 }} />
-        )}
-        {epic.active > 0 && (
-          <Chip label={`◐ ${epic.active} active`} size="small" color="warning" sx={{ fontSize: '0.7rem', height: 20 }} />
-        )}
-        {epic.backlog > 0 && (
-          <Chip label={`○ ${epic.backlog} backlog`} size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
-        )}
-        {empty && (
-          <Chip label="empty (no bullets yet)" size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20, color: 'text.disabled' }} />
-        )}
-      </Stack>
+      >
+        {truncate(item.text)}
+      </Typography>
+    </Tooltip>
+    <Stack direction="row" spacing={0.25} flexShrink={0}>
+      {item.pr_refs?.map((n) => (
+        <Tooltip key={`pr-${n}`} title={`PR #${n} on GitHub`}>
+          <Chip
+            component={Link}
+            href={`${PR_BASE_URL}${n}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            label={`#${n}`}
+            size="small"
+            clickable
+            sx={{
+              fontSize: '0.65rem',
+              height: 18,
+              cursor: 'pointer',
+              fontFamily: 'monospace',
+            }}
+          />
+        </Tooltip>
+      ))}
+      {item.doc_refs?.map((path) => {
+        const filename = path.split('/').pop() ?? path;
+        return (
+          <Tooltip key={`doc-${path}`} title={path}>
+            <Chip
+              component={Link}
+              href={`${DOC_BASE_URL}${path}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              label={filename}
+              size="small"
+              variant="outlined"
+              clickable
+              sx={{
+                fontSize: '0.65rem',
+                height: 18,
+                cursor: 'pointer',
+                maxWidth: 160,
+                '& .MuiChip-label': {
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                },
+              }}
+            />
+          </Tooltip>
+        );
+      })}
+    </Stack>
+  </Stack>
+);
+
+const EpicRow: React.FC<{
+  epic: BacklogEpic;
+  expanded: boolean;
+  onToggle: () => void;
+}> = ({ epic, expanded, onToggle }) => {
+  const empty = epic.total_items === 0;
+  const hasDetails = !empty && epic.sub_sections.length > 0;
+  return (
+    <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }} data-testid="epic-row">
+      <ButtonBase
+        onClick={onToggle}
+        disabled={!hasDetails}
+        focusRipple
+        aria-expanded={expanded}
+        aria-label={`Toggle details for ${epic.title}`}
+        sx={{
+          width: '100%',
+          textAlign: 'left',
+          py: 1.25,
+          px: 0.5,
+          display: 'block',
+          borderRadius: 0.5,
+          cursor: hasDetails ? 'pointer' : 'default',
+          '&:hover': hasDetails ? { bgcolor: 'action.hover' } : {},
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+            {hasDetails && (expanded
+              ? <ExpandLessIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              : <ExpandMoreIcon sx={{ fontSize: 18, color: 'text.secondary' }} />)}
+            {!hasDetails && <Box sx={{ width: 18 }} />}
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, flex: 1 }}>{epic.title}</Typography>
+          </Stack>
+          <Typography variant="body2" sx={{ fontFamily: 'monospace', minWidth: 60, textAlign: 'right' }}>
+            {empty ? '—' : `${epic.progress_pct}%`}
+          </Typography>
+        </Stack>
+        <LinearProgress
+          variant="determinate"
+          value={empty ? 0 : epic.progress_pct}
+          sx={{
+            height: 6,
+            borderRadius: 1,
+            my: 0.75,
+            bgcolor: 'action.hover',
+            '& .MuiLinearProgress-bar': {
+              bgcolor: epic.progress_pct >= 70 ? 'success.main' : epic.progress_pct >= 30 ? 'warning.main' : 'info.main',
+            },
+          }}
+        />
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+          {epic.shipped > 0 && (
+            <Chip label={`✓ ${epic.shipped} shipped`} size="small" color="success" sx={{ fontSize: '0.7rem', height: 20 }} />
+          )}
+          {epic.active > 0 && (
+            <Chip label={`◐ ${epic.active} active`} size="small" color="warning" sx={{ fontSize: '0.7rem', height: 20 }} />
+          )}
+          {epic.backlog > 0 && (
+            <Chip label={`○ ${epic.backlog} backlog`} size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
+          )}
+          {empty && (
+            <Chip label="empty (no bullets yet)" size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20, color: 'text.disabled' }} />
+          )}
+        </Stack>
+      </ButtonBase>
+      <Collapse in={expanded && hasDetails} timeout="auto" unmountOnExit>
+        <Box sx={{ pl: 3, pb: 1.5, pt: 0.5 }} data-testid="epic-details">
+          {epic.sub_sections.map((sub) => (
+            <Box key={sub.title} sx={{ mb: 1.25 }}>
+              <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.5 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: 'text.secondary' }}>
+                  {sub.title}
+                </Typography>
+                <Chip
+                  label={sub.category}
+                  size="small"
+                  color={sub.category === 'shipped' ? 'success' : sub.category === 'active' ? 'warning' : 'default'}
+                  variant={sub.category === 'backlog' ? 'outlined' : 'filled'}
+                  sx={{ fontSize: '0.6rem', height: 16 }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  {sub.item_count} item{sub.item_count === 1 ? '' : 's'}
+                </Typography>
+              </Stack>
+              {sub.items && sub.items.length > 0 ? (
+                <Box>
+                  {sub.items.map((item, idx) => (
+                    <BacklogItemRow key={`${sub.title}-${idx}`} item={item} />
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="caption" color="text.disabled" sx={{ pl: 1.5, fontStyle: 'italic' }}>
+                  (item bodies not available — older payload)
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Collapse>
     </Box>
   );
 };
+
+// localStorage key for persisting which epics are expanded across reloads.
+const EXPANDED_EPICS_LS_KEY = 'dev-summary-expanded-epics';
+
+function loadExpandedEpics(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.localStorage.getItem(EXPANDED_EPICS_LS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return new Set(parsed.filter((s): s is string => typeof s === 'string'));
+  } catch { /* corrupted / unavailable — start empty */ }
+  return new Set();
+}
+
+function saveExpandedEpics(set: Set<string>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(EXPANDED_EPICS_LS_KEY, JSON.stringify([...set]));
+  } catch { /* quota / unavailable — silently ignore */ }
+}
 
 const CommitActivityChart: React.FC<{ data: ActivityByDay[] }> = ({ data }) => {
   if (data.length === 0) return null;
@@ -246,6 +439,16 @@ const MetadataConventionCard: React.FC = () => (
 export const OverviewSection: React.FC = () => {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedEpics, setExpandedEpics] = useState<Set<string>>(() => loadExpandedEpics());
+
+  const toggleEpic = useCallback((title: string) => {
+    setExpandedEpics((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title); else next.add(title);
+      saveExpandedEpics(next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -369,7 +572,14 @@ export const OverviewSection: React.FC = () => {
               <Typography variant="caption" color="text.secondary">shipped / total derived from BACKLOG.md H3 sections</Typography>
             </Stack>
             {b && b.epics.length === 0 && <Typography color="text.secondary">No epics found.</Typography>}
-            {b && b.epics.map((e) => <EpicRow key={e.title} epic={e} />)}
+            {b && b.epics.map((e) => (
+              <EpicRow
+                key={e.title}
+                epic={e}
+                expanded={expandedEpics.has(e.title)}
+                onToggle={() => toggleEpic(e.title)}
+              />
+            ))}
           </Paper>
         </Grid>
         <Grid item xs={12} md={5}>
