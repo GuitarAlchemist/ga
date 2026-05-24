@@ -51,7 +51,11 @@ Write-Host "  Chatbot API starting (Job $($apiJob.Id))..." -ForegroundColor Gree
 $frontendJob = Start-Job -ScriptBlock {
     Set-Location $using:frontendDir
     $env:VITE_GA_API_URL = $using:apiUrl
-    npm run dev -- --host --port $using:FrontendPort 2>&1
+    # `dev` is intentionally sabotaged with process.exit(1) — ga-client is
+    # the legacy demo client; the `:legacy` alias runs vite without the
+    # port-5176 guard. We pass --host/--port through so this script can
+    # still drive the FrontendPort parameter.
+    npm run dev:legacy -- --host --port $using:FrontendPort 2>&1
 }
 Write-Host "  Frontend starting (Job $($frontendJob.Id))..." -ForegroundColor Green
 
@@ -95,7 +99,11 @@ try {
             $frontendJob = Start-Job -ScriptBlock {
                 Set-Location $using:frontendDir
                 $env:VITE_GA_API_URL = $using:apiUrl
-                npm run dev -- --host --port $using:FrontendPort 2>&1
+                # `dev` is intentionally sabotaged with process.exit(1) — ga-client is
+    # the legacy demo client; the `:legacy` alias runs vite without the
+    # port-5176 guard. We pass --host/--port through so this script can
+    # still drive the FrontendPort parameter.
+    npm run dev:legacy -- --host --port $using:FrontendPort 2>&1
             }
         }
     }

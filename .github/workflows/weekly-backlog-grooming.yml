@@ -682,15 +682,20 @@ jobs:
               --json number,title \
               --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
           if [ -z "$NUM" ]; then
-            NUM=$(gh issue create \
+            # `gh issue create` does NOT support --json/--jq — its
+            # documented flags are --title/--body/--label/etc. and it
+            # prints the new issue URL on success. With set -euo pipefail
+            # the prior --json invocation exited non-zero, NUM stayed
+            # unset, and the workflow couldn't post the weekly comment.
+            # Capture the URL and slice off the trailing number.
+            ISSUE_URL=$(gh issue create \
                 --title "$TITLE" \
                 --body "Long-lived tracker for the weekly \`/backlog-groom\` proposals. Each Monday at 8:57 local, \`.github/workflows/weekly-backlog-grooming.yml\` posts a new comment with the lightweight top-3 signal stack. See \`.claude/skills/backlog-groom/SKILL.md\` for the interactive (richer) variant and the scoring rubric." \
-                --label 'meta' 2>/dev/null \
-                --json number --jq '.number' || \
+                --label 'meta' 2>/dev/null || \
               gh issue create \
                 --title "$TITLE" \
-                --body "Long-lived tracker for the weekly \`/backlog-groom\` proposals. See \`.claude/skills/backlog-groom/SKILL.md\`." \
-                --json number --jq '.number')
+                --body "Long-lived tracker for the weekly \`/backlog-groom\` proposals. See \`.claude/skills/backlog-groom/SKILL.md\`.")
+            NUM="${ISSUE_URL##*/}"
           fi
           echo "number=$NUM" >> "$GITHUB_OUTPUT"
 

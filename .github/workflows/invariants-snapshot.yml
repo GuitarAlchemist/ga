@@ -143,3 +143,18 @@ jobs:
             -Details "The daily invariants snapshot did not produce a new state/quality/invariants/YYYY-MM-DD.json. The structural-quality trend will drift stale until the next successful run. See evidence_url for the failing job logs." `
             -EvidenceUrl "$env:RUN_URL" `
             -AffectedArtifacts state/quality/invariants/
+
+      - name: Upload algedonic inbox on failure
+        # algedonic-emit appends to the runner workspace's
+        # state/algedonic/inbox.jsonl, but the workflow never commits that
+        # path on the failure path. Without this artifact upload, the warn
+        # signal is discarded when the job ends — re-introducing the
+        # silent-rot risk this workflow is meant to close. Retention
+        # matches the snapshot artifact above.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: algedonic-inbox-${{ github.run_id }}
+          path: state/algedonic/inbox.jsonl
+          if-no-files-found: warn
+          retention-days: 90

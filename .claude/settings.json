@@ -23,11 +23,26 @@
         ]
       },
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/ai-annotation-scan.ps1"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/pr-rationale-capture.ps1"
+          },
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File $CLAUDE_PROJECT_DIR/Scripts/ai-annotation-merge-gate.ps1"
           }
         ]
       }

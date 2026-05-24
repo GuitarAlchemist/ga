@@ -7,10 +7,24 @@
 
 export type SubSectionCategory = 'shipped' | 'active' | 'backlog';
 
+export interface BacklogItem {
+    /** Bullet body with the leading marker (- / *) stripped. */
+    text: string;
+    /** Inherits from the enclosing sub-section's category. */
+    status: SubSectionCategory;
+    /** GitHub PR numbers extracted from `#NNN` patterns. */
+    pr_refs?: number[];
+    /** Doc paths extracted from `docs/...` patterns. */
+    doc_refs?: string[];
+    /** Original markdown line for debugging. */
+    raw_line: string;
+}
+
 export interface EpicSubSection {
     title: string;
     category: SubSectionCategory;
     item_count: number;
+    items: BacklogItem[];
 }
 
 export interface BacklogEpic {
@@ -60,13 +74,70 @@ export function categorize(title: string): SubSectionCategory {
 }
 
 /**
- * Parse a markdown backlog into epics + sub-sections + item counts.
+ * Extract `#NNN` patterns from a line. Matches PR/issue references like `(#137)`,
+ * `#138`, `PR #207`. Ignores in-word matches (e.g. `foo#1` won't match because
+ * we require a non-word boundary before `#`). Returns numbers deduplicated in
+ * order of first appearance.
+ */
+export function extractPrRefs(line: string): number[] {
+    const refs: number[] = [];
+    const seen = new Set<number>();
+    const re = /(?:^|[^\w])#(\d+)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line)) !== null) {
+        const n = Number(m[1]);
+        if (!Number.isNaN(n) && !seen.has(n)) {
+            seen.add(n);
+            refs.push(n);
+        }
+    }
+    return refs;
+}
+
+/**
+ * Extract `docs/...` paths from a line. Matches Markdown-link targets and bare
+ * paths (`docs/plans/foo.md`, `[link](docs/plans/foo.md)`). Stops at whitespace,
+ * `)`, `]`, backtick, or end-of-line. Deduplicates in order of first appearance.
+ */
+export function extractDocRefs(line: string): string[] {
+    const refs: string[] = [];
+    const seen = new Set<string>();
+    const re = /\bdocs\/[^\s)\]`]+/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line)) !== null) {
+        // Trim trailing punctuation that's commonly attached to a sentence
+        // boundary but not part of the path itself.
+        const cleaned = m[0].replace(/[.,;:]+$/, '');
+        if (!seen.has(cleaned)) {
+            seen.add(cleaned);
+            refs.push(cleaned);
+        }
+    }
+    return refs;
+}
+
+/**
+ * Convert a bullet line into a BacklogItem. Strips the leading `- ` or `* `
+ * marker, extracts PR refs and doc refs.
+ */
+function bulletToItem(line: string, status: SubSectionCategory): BacklogItem {
+    const text = line.replace(/^[-*]\s+/, '').trim();
+    const pr_refs = extractPrRefs(line);
+    const doc_refs = extractDocRefs(line);
+    const item: BacklogItem = { text, status, raw_line: line };
+    if (pr_refs.length > 0) item.pr_refs = pr_refs;
+    if (doc_refs.length > 0) item.doc_refs = doc_refs;
+    return item;
+}
+
+/**
+ * Parse a markdown backlog into epics + sub-sections + items.
  *
  * Structure expected:
  *   # H1 ignored (project title)
  *   ## Epic name           → BacklogEpic
  *   ### Sub-section name   → EpicSubSection (categorized via categorize())
- *   - bullet               → counted into the current sub-section
+ *   - bullet               → BacklogItem under the current sub-section
  *
  * Bullets that appear directly under an H2 (before any H3) inherit the H2's
  * category so an epic titled "Shipped 2026" with direct bullets reports
@@ -100,12 +171,14 @@ export function parseBacklog(content: string): BacklogPayload {
                 progress_pct: 0,
                 sub_sections: [],
             };
-            currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0 };
+            currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0, items: [] };
         } else if (h3 && currentEpic) {
             if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
-            currentSub = { title: h3[1].trim(), category: categorize(h3[1].trim()), item_count: 0 };
+            const subTitle = h3[1].trim();
+            currentSub = { title: subTitle, category: categorize(subTitle), item_count: 0, items: [] };
         } else if (bullet && currentSub) {
             currentSub.item_count += 1;
+            currentSub.items.push(bulletToItem(line, currentSub.category));
         }
     }
     if (currentEpic) {
@@ -231,7 +304,19 @@ export function projectLoopsGoals(
             const existing = byId.get(rec.id);
             const recAct = rec.last_activity_at ?? rec.started_at ?? '';
             const existingAct = existing?.last_activity_at ?? existing?.started_at ?? '';
-            if (!existing || recAct >= existingAct) {
+            // Compare numerically — hook events use second precision
+            // (`yyyy-MM-ddTHH:mm:ssZ`) while dashboard stop events use
+            // `toISOString()` with milliseconds. Lexicographic compare on
+            // mixed formats made `...00.123Z` sort BEFORE `...00Z`, so a
+            // newer completion event could be ignored and the row stayed
+            // active after pressing Stop. `Date.parse` collapses both to
+            // epoch ms; NaN falls back to ordering an unparseable value
+            // before a parseable one so we never starve a valid update.
+            const recMs = Date.parse(recAct);
+            const existingMs = Date.parse(existingAct);
+            const recCmp = Number.isNaN(recMs) ? -Infinity : recMs;
+            const existingCmp = Number.isNaN(existingMs) ? -Infinity : existingMs;
+            if (!existing || recCmp >= existingCmp) {
                 byId.set(rec.id, {
                     id: rec.id,
                     kind: rec.kind,
