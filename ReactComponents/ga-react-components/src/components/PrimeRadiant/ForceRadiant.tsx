@@ -13,9 +13,9 @@ import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
 import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
 import { createMilkyWayTextureMaterial } from './shaders/MilkyWayTextureTSL';
 import { resolveTexturePath } from '../../assets/space';
-import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
-import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
+import type { GovernanceGraph, GovernanceNode, GovernanceNodeType, NodeAugmentation } from './types';
+import { HEALTH_COLORS, HEALTH_STATUS_COLORS, HEXAVALENT_COLORS, type GovernanceHealthStatus } from './types';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, enrichNodesWithDevData, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
 import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
 import { AuthProvider } from './AuthContext';
@@ -196,10 +196,12 @@ interface GraphNode extends NodeObject {
   val: number;        // size factor
   repo?: string;
   version?: string;
+  filePath?: string;  // needed for algedonic pulse matching by source path
   health?: GovernanceNode['health'];
   healthStatus?: GovernanceHealthStatus;
   children?: string[];
   metadata?: Record<string, unknown>;
+  augmentation?: NodeAugmentation; // dashboard channels — rim/halo/pulse data
   // force-graph adds these at runtime:
   x?: number;
   y?: number;
@@ -602,6 +604,45 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
     group.userData._uncertaintyHalo = halo;
   }
 
+  // ── Dashboard channels ──
+  // 5. Hexavalent truth-value rim — thin ring around the node colored by the
+  // dominant AI-annotation truth-value. Always rendered (default U=gray)
+  // so the channel is visible even before enrichment lands.
+  const dominant = node.augmentation?.annotations?.dominant ?? 'U';
+  const rimColorHex = HEXAVALENT_COLORS[dominant];
+  const rimGeo = new THREE.RingGeometry(radius * 1.15, radius * 1.28, 48);
+  const rimMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(rimColorHex),
+    transparent: true,
+    opacity: node.augmentation?.annotations ? 0.85 : 0.25, // dim when no annotations
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const rim = new THREE.Mesh(rimGeo, rimMat);
+  rim.userData = { isDashboardRim: true };
+  group.add(rim);
+  group.userData._dashboardRim = rim;
+
+  // 6. Test-coverage halo — semi-transparent sphere; opacity = 1 - risk_score.
+  // Larger radius than the rim, additive blending so it reads as a glow.
+  // No augmentation yet → opacity 0 (invisible until data lands).
+  const haloOpacity = node.augmentation?.testGap
+    ? Math.max(0, Math.min(1, 1 - node.augmentation.testGap.risk_score)) * 0.35
+    : 0;
+  const coverageGeo = new THREE.SphereGeometry(radius * 1.6, 16, 12);
+  const coverageMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(0x66ff99), // soft green — "covered" reads positive
+    transparent: true,
+    opacity: haloOpacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const coverageHalo = new THREE.Mesh(coverageGeo, coverageMat);
+  coverageHalo.userData = { isCoverageHalo: true };
+  group.add(coverageHalo);
+  group.userData._coverageHalo = coverageHalo;
+
   return group;
 }
 
@@ -646,10 +687,12 @@ function toForceData(graph: GovernanceGraph): { nodes: GraphNode[]; links: Graph
     val: TYPE_SIZE[n.type] ?? 5,
     repo: n.repo,
     version: n.version,
+    filePath: n.filePath,
     health: n.health,
     healthStatus: n.healthStatus,
     children: n.children,
     metadata: n.metadata,
+    augmentation: n.augmentation,
   }));
 
   const links: GraphLink[] = graph.edges.map((e) => ({
@@ -1382,6 +1425,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const now = Date.now() * 0.001;
     const signalColor = signal.type === 'pain' ? '#FF4444' : '#FFD700';
 
+    // ─── Dashboard channel: 5-second glow pulse on the matching node ───
+    // Match by id OR by source path against node.filePath/id. Set pulseUntil
+    // so the tick loop can ease the glow back to baseline.
+    {
+      const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
+      const pulseUntil = Date.now() + 5000;
+      const matchSource = (signal.source ?? '').toLowerCase().replace(/\\/g, '/');
+      const matchNodeId = signal.nodeId;
+      for (const n of graphNodes) {
+        const nFilePath = n.filePath?.toLowerCase().replace(/\\/g, '/');
+        const matches =
+          (matchNodeId && n.id === matchNodeId) ||
+          (matchSource && nFilePath && (matchSource === nFilePath ||
+            matchSource.endsWith('/' + nFilePath) || nFilePath.endsWith('/' + matchSource))) ||
+          (matchSource && matchSource === n.id);
+        if (matches) {
+          if (!n.augmentation) n.augmentation = {};
+          const existingRecent = n.augmentation.algedonic?.recent ?? [];
+          n.augmentation.algedonic = {
+            recent: [
+              {
+                id: signal.id,
+                signal: signal.signal,
+                type: signal.type,
+                severity: signal.severity,
+                timestamp: signal.timestamp,
+              },
+              ...existingRecent,
+            ].slice(0, 3),
+            pulseUntil,
+          };
+        }
+      }
+    }
+
     // ─── Unit 4: Node ripple ───
     if (signal.nodeId) {
       const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
@@ -1459,10 +1537,20 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Load data — try API first, fall back to static
     const initGraph = async () => {
       // Pre-load GLB models in parallel with governance data
-      const [graph] = await Promise.all([
+      const [baseGraph] = await Promise.all([
         liveDataUrl ? loadGovernanceDataAsync(liveDataUrl) : Promise.resolve(loadGovernanceData(data)),
         preloadBorgCubeModel(), // loads /models/borg-cube.glb if present
       ]);
+      if (disposed) return;
+
+      // Augment with dev-dashboard channels (annotations / test-gaps / algedonic).
+      // Fault-tolerant: any failure here is logged and the base graph renders as-is.
+      let graph = baseGraph;
+      try {
+        graph = await enrichNodesWithDevData(baseGraph);
+      } catch (err) {
+        console.warn('[PrimeRadiant] Dev-data enrichment failed, rendering base graph:', err);
+      }
       if (disposed) return;
       initScene(graph);
     };
@@ -2230,6 +2318,53 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const cachedHalo = group.userData._uncertaintyHalo as THREE.Mesh | undefined;
         if (cachedHalo) {
           updateUncertaintyHalo(cachedHalo, t, phase);
+        }
+
+        // ── Dashboard channels: rim + coverage halo + algedonic pulse ──
+        // Pulse: when a recent algedonic signal targeted this node, multiply
+        // its rim+halo opacity by 1.8 for 5s, then linearly ease to 1.0 over
+        // the last 1s of the window. After that, return to baseline.
+        let pulseMultiplier = 1.0;
+        const pulseUntil = n.augmentation?.algedonic?.pulseUntil;
+        if (pulseUntil) {
+          const nowMs = Date.now();
+          const remaining = pulseUntil - nowMs;
+          if (remaining > 0) {
+            // Last 1000 ms: linear ease from 1.8 → 1.0
+            pulseMultiplier = remaining < 1000
+              ? 1.0 + 0.8 * (remaining / 1000)
+              : 1.8;
+          } else {
+            // Pulse window closed — clear so we don't keep recomputing
+            if (n.augmentation?.algedonic) n.augmentation.algedonic.pulseUntil = undefined;
+          }
+        }
+
+        // Rim: keep color in sync with dominant truth-value (data may have
+        // arrived after the node was created with the default U=gray rim).
+        const cachedRim = group.userData._dashboardRim as THREE.Mesh | undefined;
+        if (cachedRim) {
+          const rimMat = cachedRim.material as THREE.MeshBasicMaterial;
+          const dominant = n.augmentation?.annotations?.dominant ?? 'U';
+          const targetHex = HEXAVALENT_COLORS[dominant];
+          const currentHex = '#' + rimMat.color.getHexString();
+          if (currentHex.toLowerCase() !== targetHex.toLowerCase()) {
+            rimMat.color.set(targetHex);
+          }
+          const baseOpacity = n.augmentation?.annotations ? 0.85 : 0.25;
+          rimMat.opacity = Math.min(1, baseOpacity * pulseMultiplier);
+          // Counter-rotate so rim always faces camera-ish — billboard via lookAt
+          cachedRim.quaternion.copy(fg.camera().quaternion);
+        }
+
+        // Coverage halo: opacity = (1 - risk_score) * 0.35, pulse-modulated.
+        const cachedCoverage = group.userData._coverageHalo as THREE.Mesh | undefined;
+        if (cachedCoverage) {
+          const covMat = cachedCoverage.material as THREE.MeshBasicMaterial;
+          const baseHaloOpacity = n.augmentation?.testGap
+            ? Math.max(0, Math.min(1, 1 - n.augmentation.testGap.risk_score)) * 0.35
+            : 0;
+          covMat.opacity = Math.min(1, baseHaloOpacity * pulseMultiplier);
         }
 
         // ── Governance Redshift / Blueshift — compliance drift as color shift ──
