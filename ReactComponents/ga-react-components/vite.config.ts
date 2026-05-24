@@ -390,6 +390,97 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── AI annotations (phase 2 of the ai-annotations campaign) ───────
+    //
+    // Reads two ix-produced files:
+    //   state/quality/ai-annotations.jsonl         (extractor output)
+    //   state/quality/ai-annotations-reconciliation.json (reconciler output)
+    //
+    // The reconciliation report supersedes the raw JSONL when present
+    // (richer schema, includes bucket counts). When neither exists we
+    // return an "empty" payload — the dashboard renders an onboarding
+    // hint instead of an error. See docs/contracts/2026-05-24-ai-annotation.contract.md
+    // (in the ix repo) for the field shapes.
+    function gatherAiAnnotations(): Record<string, unknown> {
+        const reconPath = path.join(repoRoot, 'state/quality/ai-annotations-reconciliation.json');
+        const jsonlPath = path.join(repoRoot, 'state/quality/ai-annotations.jsonl');
+        const now = new Date().toISOString();
+
+        if (existsSync(reconPath)) {
+            try {
+                const recon = JSON.parse(readFileSync(reconPath, 'utf-8')) as Record<string, unknown>;
+                return {
+                    generated_at: recon.generated_at ?? now,
+                    total: recon.total_annotations ?? 0,
+                    by_truth_value: recon.by_truth_value ?? {},
+                    by_certainty: recon.by_certainty ?? {},
+                    by_kind: recon.by_kind ?? {},
+                    verified_by_test: recon.verified_by_test ?? 0,
+                    stale: recon.stale ?? 0,
+                    contradictory: recon.contradictory ?? 0,
+                    annotations: recon.annotations ?? [],
+                };
+            } catch {
+                // fall through to JSONL
+            }
+        }
+
+        if (existsSync(jsonlPath)) {
+            try {
+                const lines = readFileSync(jsonlPath, 'utf-8')
+                    .split('\n')
+                    .map((l) => l.trim())
+                    .filter((l) => l.length > 0);
+                const annotations: Record<string, unknown>[] = [];
+                const byTv: Record<string, number> = {};
+                const byCert: Record<string, number> = {};
+                const byKind: Record<string, number> = {};
+                let stale = 0;
+                for (const line of lines) {
+                    try {
+                        const a = JSON.parse(line) as Record<string, unknown>;
+                        annotations.push(a);
+                        const tv = (a.truth_value as string) ?? 'U';
+                        byTv[tv] = (byTv[tv] ?? 0) + 1;
+                        const cert = (a.certainty as string) ?? 'uncertain';
+                        byCert[cert] = (byCert[cert] ?? 0) + 1;
+                        const k = (a.kind as string) ?? 'hint';
+                        byKind[k] = (byKind[k] ?? 0) + 1;
+                        if (a.stale) stale += 1;
+                    } catch {
+                        // skip malformed line
+                    }
+                }
+                return {
+                    generated_at: now,
+                    total: annotations.length,
+                    by_truth_value: byTv,
+                    by_certainty: byCert,
+                    by_kind: byKind,
+                    verified_by_test: 0,
+                    stale,
+                    contradictory: byTv['C'] ?? 0,
+                    annotations,
+                };
+            } catch {
+                // fall through
+            }
+        }
+
+        return {
+            generated_at: now,
+            total: 0,
+            by_truth_value: {},
+            by_certainty: {},
+            by_kind: {},
+            verified_by_test: 0,
+            stale: 0,
+            contradictory: 0,
+            annotations: [],
+            empty: true,
+        };
+    }
+
     // /loop and /goal runtime tracker — reads the append-only JSONL written by
     // .claude/hooks/loops-goals-tracker.ps1 (repo-local mirror lives at
     // state/.runtime-loops-goals.jsonl; the user-level canonical copy at
@@ -1175,6 +1266,15 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
             });
 
+            // ── /dev-data/ai-annotations — merged extractor + reconciler ──
+            // Always 200 (returns {empty:true} when no data exists, so the
+            // dashboard renders an onboarding hint instead of throwing).
+            server.middlewares.use('/dev-data/ai-annotations', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherAiAnnotations()));
+            });
+
             // ── /dev-data/runtime-loops-goals — read latest projection ──
             // Returns active /loop + /goal invocations across all Claude
             // sessions on this machine, with age + last-activity decoration.
@@ -1344,6 +1444,7 @@ function devDataPlugin(): Plugin {
                         algedonic: '/dev-data/algedonic',
                         in_flight: '/dev-data/in-flight',
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
+                        ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -1359,6 +1460,7 @@ function devDataPlugin(): Plugin {
                     algedonic: projectAlgedonic(),
                     in_flight: buildInFlight(),
                     runtime_loops_goals: gatherLoopsGoals(),
+                    ai_annotations: gatherAiAnnotations(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));

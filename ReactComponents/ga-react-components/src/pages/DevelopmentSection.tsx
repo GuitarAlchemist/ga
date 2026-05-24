@@ -45,7 +45,9 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
+import RuleIcon from '@mui/icons-material/Rule';
 import { HarnessTab } from '../components/Harness';
+import { AiAnnotationsCard } from '../components/AiAnnotations';
 
 interface DevLink {
   title: string;
@@ -1026,8 +1028,8 @@ const LayerMapCard: React.FC = () => {
 };
 
 
-type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'harness';
-const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'harness'];
+type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'harness' | 'annotations';
+const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'harness', 'annotations'];
 
 const readSubTabFromHash = (): DevSubTab => {
   if (typeof window === 'undefined') return 'summary';
@@ -1080,6 +1082,7 @@ export const DevelopmentSection: React.FC = () => {
           <Tab value="project"      label="Project"      icon={<GroupsIcon fontSize="small" />}      iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="qa"           label="QA"           icon={<VerifiedIcon fontSize="small" />}    iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="harness"      label="Harness"      icon={<ConstructionIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="annotations"  label="Annotations"  icon={<RuleIcon fontSize="small" />}         iconPosition="start" sx={{ minHeight: 44 }} />
         </Tabs>
       </Box>
 
@@ -1135,6 +1138,12 @@ export const DevelopmentSection: React.FC = () => {
         <Stack spacing={2}>
           <LoopsGoalsCard />
           <HarnessTab />
+        </Stack>
+      )}
+
+      {subTab === 'annotations' && (
+        <Stack spacing={2}>
+          <AiAnnotationsCard />
         </Stack>
       )}
     </Stack>
