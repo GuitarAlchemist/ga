@@ -528,17 +528,19 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       const depth = focusDepth(focus);
       const dist = CAMERA_DIST_BY_DEPTH[depth];
 
-      // Look-at: focused body's anchor on its orbit. Falls back to origin.
+      // Look-at: the deepest focused body's WORLD position. Chord and
+      // scale meshes are placed on concentric rings centered at the origin
+      // (see setPitchFocus: `new THREE.Vector3(cos*CHORD_RADIUS, 0,
+      // sin*CHORD_RADIUS)` — NOT nested around the parent pitch). Summing
+      // pitch + chord (+ scale) anchors used to translate the look-target
+      // by an extra ring radius per drill level, so chord focus pointed
+      // roughly one pitch-ring radius past the clicked chord and the
+      // camera framed empty space. Aim at the deepest anchor directly.
       let look = new THREE.Vector3(0, 0, 0);
       if (focus.scale && focus.chord && focus.pitch) {
-        const p = pitchAnchor(focus.pitch);
-        const c = chordAnchor(focus.chord, focus.pitch);
-        const s = scaleAnchor(focus.scale, focus.chord, focus.pitch);
-        look = new THREE.Vector3().addVectors(p, c).add(s);
+        look = scaleAnchor(focus.scale, focus.chord, focus.pitch);
       } else if (focus.chord && focus.pitch) {
-        const p = pitchAnchor(focus.pitch);
-        const c = chordAnchor(focus.chord, focus.pitch);
-        look = new THREE.Vector3().addVectors(p, c);
+        look = chordAnchor(focus.chord, focus.pitch);
       } else if (focus.pitch) {
         look = pitchAnchor(focus.pitch);
       }
