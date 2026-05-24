@@ -2,7 +2,7 @@
   "_comment": "Source of truth for the 8 prioritized items in the harness engineering adoption plan. Edit this file manually when an item ships (or a PR opens). The /test#dev/harness tab reads /dev-data/harness which is served from this file.",
   "_plan": "docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md",
   "schema_version": "1.0.0",
-  "last_updated": "2026-05-24T00:12:00Z",
+  "last_updated": "2026-05-24T00:38:00Z",
   "items": [
     {
       "number": 1,
@@ -88,12 +88,12 @@
       "category": "Workflow & environment security",
       "effort": "M",
       "impact": "H",
-      "status": "in_flight",
-      "pr_number": null,
-      "pr_state": "agent-in-progress",
-      "evidence_url": null,
-      "owner": "playwright-dashboard-agent (dispatched 2026-05-23)",
-      "notes": "Outside-in browser verification. Asserts heartbeat banner color, manifest schema_version, and chatbot showcase response time < 5s. Will need admin-merge (workflow file → blackbox)."
+      "status": "shipped",
+      "pr_number": 313,
+      "pr_state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/313",
+      "owner": "shipped 2026-05-23",
+      "notes": "5 specs at ReactComponents/ga-react-components/tests/dashboard/. Asserts dashboard loads, heartbeat banner color, manifest schema_version, chatbot showcase response time < 5s, harness tab populates 8 items. First-run snapshot at state/quality/e2e/dashboard-playwright/<timestamp>.json. First run caught a real bug: stale local Vite serving SPA shell at /dev-data/harness — exact regression class the test is designed for."
     },
     {
       "number": 8,
@@ -185,9 +185,9 @@
       "note": "Item #6 shipped the `/council` skill. Counter increments once a real one-way-door PR opens and someone runs /council on it."
     },
     "e2e_dashboard_coverage_tests": {
-      "value": 0,
+      "value": 5,
       "target": 3,
-      "note": "Item #7 in flight (playwright-dashboard-agent) — will ship tests for /test, /test/manifest, /chatbot/#showcase."
+      "note": "Item #7 shipped via PR #313 — 5 specs (dashboard-loads, heartbeat-banner, manifest-page, chatbot-showcase, harness-tab). 4/5 passing on first run; harness-tab caught a real local-Vite-stale bug (since fixed)."
     },
     "auto_compact_threshold_pct": {
       "value": 40,
