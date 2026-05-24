@@ -45,9 +45,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    defaults:
-      run:
-        working-directory: ReactComponents/ga-react-components
+    # The dashboard suite hits a live URL, so we don't build the SPA.
+    # We install Playwright into a sibling temp dir (`tools/pw/`) instead of
+    # `ReactComponents/ga-react-components/`, because that package.json
+    # pins @esbuild/win32-x64 which fails platform check on linux runners.
 
     steps:
       - name: Checkout
@@ -67,18 +68,22 @@ jobs:
           # requires the pnpm action and would change install semantics.
           # First run installs cold; future PR can wire pnpm caching.
 
-      - name: Install Playwright only (live-URL tests don't need React deps)
+      - name: Install Playwright (in isolated temp dir)
         run: |
-          # Full `npm install` fails on Linux runners because the React
-          # devDependencies include @esbuild/win32-x64 (a Windows-only
-          # optional binary the dev box pinned). For the dashboard E2E we
-          # only need Playwright itself — the tests hit a live URL and
-          # don't build the SPA. Install just @playwright/test.
-          npm install --no-save --no-audit --no-fund --no-package-lock \
-            "@playwright/test@$(node -p "require('./package.json').devDependencies['@playwright/test']")"
+          # Read the @playwright/test version pinned by the React package.json
+          # so CI uses the same Playwright as the local dev box.
+          PW_VERSION=$(node -p "require('./ReactComponents/ga-react-components/package.json').devDependencies['@playwright/test']")
+          echo "Installing @playwright/test@${PW_VERSION}"
+          mkdir -p tools/pw
+          cd tools/pw
+          # Bootstrap a minimal package.json so npm doesn't walk up to the
+          # React package.json (which pins win32-only @esbuild and fails
+          # EBADPLATFORM on linux runners).
+          echo '{ "name": "pw-runner", "private": true, "version": "0.0.0" }' > package.json
+          npm install --no-audit --no-fund "@playwright/test@${PW_VERSION}"
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: cd tools/pw && npx playwright install --with-deps chromium
 
       - name: Run Playwright dashboard suite
         id: pw
@@ -89,7 +94,13 @@ jobs:
         # the post-snapshot commit. The exit code is captured separately
         # and surfaced in the snapshot JSON.
         continue-on-error: true
-        run: npx playwright test --config=playwright.dashboard.config.ts
+        # We run the React-side config from the tools/pw npm env so node
+        # resolves @playwright/test from tools/pw/node_modules.
+        run: |
+          cd ReactComponents/ga-react-components
+          NODE_PATH=$GITHUB_WORKSPACE/tools/pw/node_modules \
+            $GITHUB_WORKSPACE/tools/pw/node_modules/.bin/playwright test \
+            --config=playwright.dashboard.config.ts
 
       - name: Build JSON snapshot
         # Always runs (regardless of test pass/fail) so we get a per-run
@@ -103,13 +114,13 @@ jobs:
         run: |
           set -e
           TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
-          OUT_DIR="../../state/quality/e2e/dashboard-playwright"
+          OUT_DIR="state/quality/e2e/dashboard-playwright"
           mkdir -p "$OUT_DIR"
           OUT="$OUT_DIR/${TS}.json"
 
           # Default summary if Playwright didn't emit a JSON reporter file
           # (e.g. install step failed before tests ran).
-          PW_JSON="test-results/dashboard-results.json"
+          PW_JSON="ReactComponents/ga-react-components/test-results/dashboard-results.json"
           if [ ! -f "$PW_JSON" ]; then
             echo "::warning::Playwright JSON missing — emitting skeleton snapshot"
             cat > "$OUT" <<EOF
@@ -191,7 +202,6 @@ jobs:
         # Only commit on push-to-main runs (not on PRs — PR runs are
         # informational and shouldn't pollute git history).
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        working-directory: .
         run: |
           set -e
           git config user.name  "github-actions[bot]"
