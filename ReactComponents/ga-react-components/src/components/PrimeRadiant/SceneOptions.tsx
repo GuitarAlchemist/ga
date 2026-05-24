@@ -15,8 +15,11 @@ export interface SceneOptionsDef {
   group: string;
 }
 
+export type SkyboxMode = 'milky-way' | 'hubble-deep-field' | 'jwst-deep-field';
+
 export interface SceneOptionsState {
-  [key: string]: boolean;
+  [key: string]: boolean | SkyboxMode;
+  skyboxMode?: SkyboxMode;
 }
 
 export interface SceneOptionsProps {
@@ -30,6 +33,7 @@ export interface SceneOptionsProps {
 const OPTIONS: SceneOptionsDef[] = [
   // Cosmic
   { id: 'stars',         label: 'Star Field',         icon: '\u2728', default: true,  group: 'Cosmic' },
+  { id: 'nearbyStars',   label: 'Nearby Stars',       icon: '\u22C6', default: true,  group: 'Cosmic' },
   { id: 'dust',          label: 'Ambient Dust',       icon: '\u2601', default: true,  group: 'Cosmic' },
   { id: 'milkyway',      label: 'Milky Way',          icon: '\uD83C\uDF0C', default: true,  group: 'Cosmic' },
   { id: 'orbits',        label: 'Orbit Lines',        icon: '\u25EF', default: true,  group: 'Cosmic' },
@@ -50,12 +54,16 @@ const OPTIONS: SceneOptionsDef[] = [
 function getDefaults(): SceneOptionsState {
   const state: SceneOptionsState = {};
   for (const opt of OPTIONS) state[opt.id] = opt.default;
+  state.skyboxMode = 'milky-way';
   // Check URL params for overrides
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     if (params.has('tower')) state.tower = true;
     if (params.has('constellations')) state.constellations = true;
     if (params.has('weather')) state.weather = true;
+    const skybox = params.get('skybox');
+    if (skybox === 'hubble' || skybox === 'hubble-deep-field') state.skyboxMode = 'hubble-deep-field';
+    if (skybox === 'jwst' || skybox === 'jwt' || skybox === 'webb' || skybox === 'jwst-deep-field') state.skyboxMode = 'jwst-deep-field';
   }
   // Check localStorage for saved preferences
   try {
@@ -77,6 +85,15 @@ export const SceneOptions: React.FC<SceneOptionsProps> = ({ onChange }) => {
     setOptions(prev => {
       const next = { ...prev, [id]: !prev[id] };
       // Persist to localStorage
+      try { localStorage.setItem('prime-radiant-scene-options', JSON.stringify(next)); } catch { /* */ }
+      onChange(next);
+      return next;
+    });
+  }, [onChange]);
+
+  const setSkyboxMode = useCallback((mode: SkyboxMode) => {
+    setOptions(prev => {
+      const next = { ...prev, skyboxMode: mode };
       try { localStorage.setItem('prime-radiant-scene-options', JSON.stringify(next)); } catch { /* */ }
       onChange(next);
       return next;
@@ -107,6 +124,18 @@ export const SceneOptions: React.FC<SceneOptionsProps> = ({ onChange }) => {
       {!collapsed && (
         <div className="scene-options__panel">
           <div className="scene-options__title">Scene</div>
+          <label className="scene-options__select-row">
+            <span className="scene-options__select-label">Skybox</span>
+            <select
+              className="scene-options__select"
+              value={(options.skyboxMode as SkyboxMode) ?? 'milky-way'}
+              onChange={e => setSkyboxMode(e.target.value as SkyboxMode)}
+            >
+              <option value="milky-way">Milky Way</option>
+              <option value="hubble-deep-field">Hubble Deep Field</option>
+              <option value="jwst-deep-field">JWST Deep Field</option>
+            </select>
+          </label>
           {[...groups.entries()].map(([group, opts]) => (
             <div key={group} className="scene-options__group">
               <div className="scene-options__group-label">{group}</div>

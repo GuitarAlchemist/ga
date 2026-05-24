@@ -104,6 +104,7 @@ import { GovernanceLensingShader, updateLensingSources, type LensingSource } fro
 import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
+import { createNearbyStars, type NearbyStarsHandle } from './NearbyStars';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -115,7 +116,7 @@ import { DispersionShader } from './shaders/DispersionPass';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 const IxqlCodeGen = React.lazy(() => import('./IxqlCodeGen').then(m => ({ default: m.IxqlCodeGen })));
-import { SceneOptions, type SceneOptionsState } from './SceneOptions';
+import { SceneOptions, type SceneOptionsState, type SkyboxMode } from './SceneOptions';
 const QAPanel = React.lazy(() => import('./QAPanel').then(m => ({ default: m.QAPanel })));
 const AgentSpectralPanel = React.lazy(() => import('./AgentSpectralPanel').then(m => ({ default: m.AgentSpectralPanel })));
 const GodotSceneInspectorPanel = React.lazy(() => import('./GodotSceneInspectorPanel').then(m => ({ default: m.GodotSceneInspectorPanel })));
@@ -142,6 +143,57 @@ interface EdgePropagation {
   startTime: number;
   color: string;
   hop: number;
+}
+
+interface SkyboxTextureConfig {
+  path: string;
+  label: string;
+  brightness: number;
+  saturation: number;
+  flipU?: boolean;
+  repeatU?: number;
+  repeatV?: number;
+  offsetU?: number;
+  offsetV?: number;
+}
+
+const SKYBOX_TEXTURES: Record<SkyboxMode, SkyboxTextureConfig> = {
+  'milky-way': {
+    path: resolveTexturePath('milky-way', 'stars', '8k') ?? '/textures/milky-way-eso-gigagalaxy-6000.jpg',
+    label: 'ESO GigaGalaxy / NOAA-NASA Milky Way Panorama',
+    brightness: 0.62,
+    saturation: 0.88,
+    flipU: true,
+    offsetU: 0.5,
+  },
+  'hubble-deep-field': {
+    path: '/textures/skybox-hubble-ultra-deep-field.jpg',
+    label: 'NASA/ESA Hubble Ultra Deep Field',
+    brightness: 0.54,
+    saturation: 0.92,
+    flipU: false,
+    repeatU: 5,
+    repeatV: 3,
+    offsetU: 0.08,
+    offsetV: 0.12,
+  },
+  'jwst-deep-field': {
+    path: '/textures/skybox-jwst-first-deep-field.png',
+    label: "NASA/ESA/CSA/STScI Webb's First Deep Field",
+    brightness: 0.5,
+    saturation: 0.96,
+    flipU: false,
+    repeatU: 4,
+    repeatV: 3,
+    offsetU: 0.18,
+    offsetV: 0.04,
+  },
+};
+
+function normalizeSkyboxMode(value: unknown): SkyboxMode {
+  if (value === 'hubble-deep-field') return 'hubble-deep-field';
+  if (value === 'jwst-deep-field') return 'jwst-deep-field';
+  return 'milky-way';
 }
 
 // ---------------------------------------------------------------------------
@@ -1440,6 +1492,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let atmosphereHandleOuter: AtmosphericPerspectiveHandle | undefined;
     let bakedSkyOuter: BakeSkyboxResult | undefined;
     let dustHandleOuter: AmbientDustHandle | undefined;
+    let nearbyStarsHandleOuter: NearbyStarsHandle | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -1529,6 +1582,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
       useWebGPU: USE_WEBGPU,
     })(container);
+    fg.width(container.clientWidth).height(container.clientHeight);
 
     // WebGPURenderer requires async init() to acquire GPU adapter + device.
     // 3d-force-graph doesn't call it, so the renderer uses its WebGL fallback.
@@ -1938,6 +1992,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const sOpts = sceneOptionsRef.current;
       if (Object.keys(sOpts).length > 0) {
         setStarsVisible(sOpts.stars !== false);
+        nearbyStars.visible = sOpts.stars !== false && sOpts.nearbyStars !== false;
+        applySkyboxMode(normalizeSkyboxMode(sOpts.skyboxMode));
         ambientDust.visible = sOpts.dust !== false && qualityLevel !== 'low';
         if (filamentsHandle) filamentsHandle.group.visible = sOpts.filaments !== false && qualityLevel !== 'low';
         if (eiffelHandleOuter) eiffelHandleOuter.group.visible = sOpts.tower === true;
@@ -2307,6 +2363,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       skySphere.position.copy(camPos);
       brightStars.position.copy(camPos);
       dimStars.position.copy(camPos);
+      nearbyStarsHandle.update(t, camPos);
 
       // Milky Way: 0.2% lerp → very subtle galactic drift
       milkyWayMesh.position.lerp(camPos, 0.002);
@@ -2640,34 +2697,44 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
-    const skyTexturePath = resolveTexturePath('milky-way', 'stars', '8k');
-    const usesPhotographicSkybox = Boolean(skyTexturePath);
-    if (skyTexturePath) {
+    const usesPhotographicSkybox = true;
+    let activeSkyboxMode: SkyboxMode | null = null;
+    let skyboxLoadSeq = 0;
+    const applySkyboxMode = (mode: SkyboxMode) => {
+      if (activeSkyboxMode === mode) return;
+      activeSkyboxMode = mode;
+      const loadId = ++skyboxLoadSeq;
+      const config = SKYBOX_TEXTURES[mode];
       new THREE.TextureLoader().load(
-        skyTexturePath,
+        config.path,
         (tex) => {
-          if (disposed) {
+          if (disposed || loadId !== skyboxLoadSeq) {
             tex.dispose();
             return;
           }
-          const fallbackMaterial = skySphere.material as THREE.Material;
+          const previousMaterial = skySphere.material as THREE.Material;
           const photographicMaterial = createMilkyWayTextureMaterial(tex, {
-            brightness: 0.62,
-            saturation: 0.88,
-            flipU: true,
+            brightness: config.brightness,
+            saturation: config.saturation,
+            flipU: config.flipU,
+            repeatU: config.repeatU,
+            repeatV: config.repeatV,
+            offsetU: config.offsetU,
+            offsetV: config.offsetV,
           });
           (photographicMaterial as THREE.Material & { fog?: boolean }).fog = false;
           skySphere.material = photographicMaterial;
-          skySphere.userData.source = 'ESO GigaGalaxy / NOAA-NASA Milky Way Panorama';
-          fallbackMaterial.dispose();
-          console.info(`[PrimeRadiant] Skybox loaded real Milky Way panorama: ${skyTexturePath}`);
+          skySphere.userData.source = config.label;
+          previousMaterial.dispose();
+          console.info(`[PrimeRadiant] Skybox loaded ${config.label}: ${config.path}`);
         },
         undefined,
         (err) => {
-          console.warn('[PrimeRadiant] NASA skybox texture failed; keeping procedural fallback:', err);
+          console.warn(`[PrimeRadiant] Skybox texture failed for ${config.label}; keeping previous skybox:`, err);
         },
       );
-    }
+    };
+    applySkyboxMode(normalizeSkyboxMode(sceneOptionsRef.current.skyboxMode));
     // Added directly to scene — follows camera exactly (infinite distance, no parallax)
 
     // Layer 1: Bright prominent stars (spectral class distribution)
@@ -2730,6 +2797,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dimStars = new THREE.Points(dimGeo, dimMat);
     dimStars.name = 'stars-dim';
 
+    // Layer 3: curated nearby/bright stars with real RA/Dec positions.
+    const nearbyStarsHandle = createNearbyStars();
+    const nearbyStars = nearbyStarsHandle.group;
+    nearbyStarsHandleOuter = nearbyStarsHandle;
+
     // Milky Way band — skip on mobile (8000-unit sphere is expensive)
     const milkyWayMesh = isLowEnd ? new THREE.Group() : createMilkyWay(8000);
     const milkyWayPref = (() => { try { return localStorage.getItem('prime-radiant-milky-way'); } catch { return null; } })();
@@ -2741,6 +2813,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const setStarsVisible = (v: boolean) => {
       brightStars.visible = v;
       dimStars.visible = v;
+      nearbyStars.visible = v;
       skySphere.visible = v;
       milkyWayMesh.visible = v;
       starField.visible = v;
@@ -2764,6 +2837,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (!skipSky) fg.scene().add(skySphere);         // follows exactly (infinite)
     fg.scene().add(brightStars);                      // 2% parallax
     fg.scene().add(dimStars);                         // 0.5% parallax
+    fg.scene().add(nearbyStars);                      // gentle foreground parallax
     fg.scene().add(starField);                        // empty group for legacy queries
 
     // ─── Governance Sky Reactor — stars react to aggregate health ───
@@ -3468,6 +3542,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       atmosphereHandleOuter?.dispose();
       bakedSkyOuter?.dispose();
       dustHandleOuter?.dispose();
+      nearbyStarsHandleOuter?.dispose();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
@@ -3825,7 +3900,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
-        <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
+        <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0, overflow: 'hidden' }} />
 
         {/* YouTube course PiP — appears near planet when zoomed in OR toggled via PlanetNav */}
         {(pipState || videoPlanet) && (
