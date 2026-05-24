@@ -218,6 +218,9 @@ state/quality/dsl-eval/[0-9]*-soak-results.json
 # against whatever's currently on disk.
 state/quality/chatbot-qa/golden-traces/**/run-*.json
 state/quality/chatbot-qa/golden-traces/**/_canonical.json
+# ix-ai-annotations extractor output (regenerated locally per session)
+state/quality/ai-annotations.jsonl
+state/quality/ai-annotations-reconciliation.json
 # Note: _signature.json IS tracked — pruned to (name, status, agent.id)
 # per step, stable across runs, used as a CI test fixture by
 # PromptCorpusTests + CanonicalSignatureChecker.

@@ -11,6 +11,7 @@ using GA.Business.ML.Search;
 /// Pure domain compute when the parser finds a chord/mode/tag; returns a
 /// "no intent" response otherwise (no LLM fallback at the skill layer).
 /// </summary>
+// @ai:business-value top-1 chatbot skill by traffic — voicing lookup is the canonical chord-question flow we sell the product on [T:manually-reviewed conf:0.92 src:product-owner@2026-05-24]
 public sealed partial class ChordVoicingsSkill(
     ILogger<ChordVoicingsSkill> logger,
     EnhancedVoicingSearchService voicingSearch,

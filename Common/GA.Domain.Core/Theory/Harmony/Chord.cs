@@ -15,6 +15,7 @@ using Interval = Primitives.Intervals.Interval;
 [PublicAPI]
 [DomainInvariant("A chord must have a root note and a pitch class set", "Root != null && PitchClassSet != null")]
 [DomainRelationship(typeof(PitchClassSet), RelationshipType.IsChildOf, "A chord is a tonal realization of a pitch class set")]
+// @ai:business-value foundational domain model — every Voicing, ChordRecognizer, and chatbot answer constructs or reasons about Chord instances [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 public sealed class Chord : IEquatable<Chord>
 {
     /// <summary>

@@ -679,6 +679,7 @@ export interface ForceRadiantProps {
   pollIntervalMs?: number;
 }
 
+// @ai:business-value Prime Radiant 3D — the headline visualization (governance + chord cosmos); landing-page demo and 268 commits in 90d signal this is the most user-visible surface [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   data,
   width = '100%',

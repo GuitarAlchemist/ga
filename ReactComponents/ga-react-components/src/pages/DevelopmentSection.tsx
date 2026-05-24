@@ -56,7 +56,7 @@ import {
 } from '../components/Sentrux';
 import { AuthChip } from '../components/Auth';
 import { TestPlansCard } from '../components/TestPlans';
-import { AiAnnotationsCard } from '../components/AiAnnotations';
+import { AiAnnotationsCard, ValueComplexityHeatmap } from '../components/AiAnnotations';
 
 interface DevLink {
   title: string;
@@ -1181,6 +1181,9 @@ export const DevelopmentSection: React.FC = () => {
 
       {subTab === 'annotations' && (
         <Stack spacing={2}>
+          {/* Strategic view first: 2×2 quadrants of value × complexity. */}
+          <ValueComplexityHeatmap />
+          {/* Detail view: full annotation table with filters. */}
           <AiAnnotationsCard />
         </Stack>
       )}
