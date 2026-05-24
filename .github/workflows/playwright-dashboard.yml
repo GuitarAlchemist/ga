@@ -145,7 +145,12 @@ jobs:
           }
           EOF
           else
-            node <<'NODE' "$PW_JSON" "$OUT" "$TS" "$PW_OUTCOME"
+            # Write the transformer script to a .cjs file so Node always
+            # treats it as CommonJS (the repo's package.json near
+            # tools/pw is type:"commonjs" but spawning node directly with
+            # heredoc has been unreliable on Node 20 ESM loader).
+            TRANSFORM=$(mktemp --suffix=.cjs)
+            cat > "$TRANSFORM" <<'NODE'
           const fs = require('fs');
           const [,, inPath, outPath, ts, outcome] = process.argv;
           const raw = JSON.parse(fs.readFileSync(inPath, 'utf8'));
@@ -161,7 +166,7 @@ jobs:
                   title: [title, spec.title].filter(Boolean).join(' › '),
                   file: spec.file || suite.file || null,
                   status: lastResult.status || 'unknown',
-                  duration_ms: lastResult.duration ?? null,
+                  duration_ms: lastResult.duration != null ? lastResult.duration : null,
                   error: lastResult.error ? (lastResult.error.message || String(lastResult.error)).slice(0, 500) : null,
                 });
               }
@@ -190,6 +195,8 @@ jobs:
           fs.writeFileSync(outPath, JSON.stringify(snapshot, null, 2));
           console.log(`Wrote ${outPath} (${summary.passed}/${summary.total} passed)`);
           NODE
+            node "$TRANSFORM" "$PW_JSON" "$OUT" "$TS" "$PW_OUTCOME"
+            rm -f "$TRANSFORM"
           fi
 
           echo "snapshot_path=$OUT" >> "$GITHUB_OUTPUT"
