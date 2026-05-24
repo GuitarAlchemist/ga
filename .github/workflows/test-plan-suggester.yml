@@ -1,0 +1,541 @@
+name: Test Plan Suggester
+
+# Phase 2+ harness item — see docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md
+# and .claude/skills/test-plan/SKILL.md.
+#
+# Diff-driven test-plan proposer. On PR opened/synchronize:
+#   1. If body contains "[skip test-plan]" anywhere — exit clean.
+#   2. If body has a "## Test plan" section AND the PR is not from a known agent
+#      author — exit clean (developer wrote one themselves).
+#   3. Otherwise: assemble a heuristic proposal via the lightweight bash
+#      assembler below (mirrors the SKILL.md heuristic; richer ranking comes
+#      from invoking /test-plan interactively in a session) and post it as a
+#      sticky PR comment with marker <!-- test-plan -->.
+#
+# Always posts on every push for agent-authored PRs as a "second opinion"
+# even when the body already has a test plan section — agents are the most
+# likely to miss coverage and the cost is one comment.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  # One run per PR; cancel in-flight runs if a new commit lands.
+  group: test-plan-suggester-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  suggest:
+    name: Assemble + post test-plan proposal
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Skip draft PRs unless they're ready-for-review — drafts churn too fast.
+    if: github.event.pull_request.draft != true || github.event.action == 'ready_for_review'
+    steps:
+      - name: Checkout PR head (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Decide whether to post
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # 1. Skip-suppression marker in body
+          if echo "${PR_BODY:-}" | grep -qiE '\[skip test-plan\]'; then
+            echo "decision=skip-marker" >> "$GITHUB_OUTPUT"
+            echo "Reason: PR body contains [skip test-plan]"
+            exit 0
+          fi
+
+          # 2. Bot-author skip (dependabot / renovate / *-bot)
+          if echo "$PR_AUTHOR" | grep -qiE '(dependabot|renovate|^.*-bot$)'; then
+            echo "decision=skip-bot" >> "$GITHUB_OUTPUT"
+            echo "Reason: PR author '$PR_AUTHOR' looks like a bot"
+            exit 0
+          fi
+
+          # 3. Detect "## Test plan" section in body (case-insensitive)
+          HAS_TP="false"
+          if echo "${PR_BODY:-}" | grep -qiE '^##\s+test plan\b'; then
+            HAS_TP="true"
+          fi
+          echo "has_test_plan_section=$HAS_TP" >> "$GITHUB_OUTPUT"
+
+          # 4. Detect agent-authored PR via commit trailers in the PR range
+          AGENT_AUTHORED="false"
+          if git log --format='%B' "${BASE_SHA}..${HEAD_SHA}" 2>/dev/null \
+              | grep -qiE 'Co-Authored-By:\s*(Claude|Codex|Mercury|Gemini|GPT)'; then
+            AGENT_AUTHORED="true"
+          fi
+          echo "agent_authored=$AGENT_AUTHORED" >> "$GITHUB_OUTPUT"
+
+          # 5. Decision matrix
+          #    - has test plan + human author    → skip (author owns it)
+          #    - has test plan + agent author    → post as second opinion
+          #    - no test plan + any author       → post
+          if [ "$HAS_TP" = "true" ] && [ "$AGENT_AUTHORED" = "false" ]; then
+            echo "decision=skip-has-plan" >> "$GITHUB_OUTPUT"
+            echo "Reason: PR body has '## Test plan' section and author is human"
+            exit 0
+          fi
+
+          echo "decision=post" >> "$GITHUB_OUTPUT"
+          if [ "$AGENT_AUTHORED" = "true" ] && [ "$HAS_TP" = "true" ]; then
+            echo "Reason: agent-authored PR — posting second opinion"
+          else
+            echo "Reason: no '## Test plan' section in body"
+          fi
+
+      - name: Assemble proposal (lightweight, no Claude runtime in CI)
+        id: assemble
+        if: steps.gate.outputs.decision == 'post'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HAS_TP: ${{ steps.gate.outputs.has_test_plan_section }}
+          AGENT: ${{ steps.gate.outputs.agent_authored }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p state/quality/test-plans
+          OUT="state/quality/test-plans/${HEAD_SHA}.md"
+          META="state/quality/test-plans/${HEAD_SHA}.meta.json"
+          COMMENT="/tmp/test-plan-comment.md"
+          NOW_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          SHORT_SHA="${HEAD_SHA:0:8}"
+
+          echo "out=$OUT" >> "$GITHUB_OUTPUT"
+          echo "meta=$META" >> "$GITHUB_OUTPUT"
+          echo "comment=$COMMENT" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+          # --- Diff stat + per-file change counts ---
+          git fetch origin "$BASE_REF" --depth=50 2>/dev/null || true
+          CHANGED_FILES=$(git diff --name-only "${BASE_SHA}...${HEAD_SHA}" || true)
+          STAT=$(git diff --shortstat "${BASE_SHA}...${HEAD_SHA}" || true)
+          NUM_FILES=$(echo "$CHANGED_FILES" | grep -c . || true)
+
+          # --- Layer detection (mirrors SKILL.md §3a) ---
+          declare -A LAYER_FILES
+          declare -A LAYER_LABEL
+          LAYER_LABEL[dotnet-domain]=".NET domain"
+          LAYER_LABEL[dotnet-ml]=".NET ML pipeline"
+          LAYER_LABEL[dotnet-api-controller]=".NET HTTP API (controller)"
+          LAYER_LABEL[dotnet-api-internal]=".NET API internals"
+          LAYER_LABEL[mcp-server]=".NET MCP server"
+          LAYER_LABEL[fsharp-dsl]="F# DSL"
+          LAYER_LABEL[react-spa]="TS/React SPA"
+          LAYER_LABEL[vite-middleware]="Vite middleware"
+          LAYER_LABEL[react-e2e]="Playwright E2E spec"
+          LAYER_LABEL[powershell-tooling]="PowerShell tooling"
+          LAYER_LABEL[ci-workflow]="CI/CD workflow"
+          LAYER_LABEL[contract]="Cross-repo contract"
+          LAYER_LABEL[plan-doc]="Plan doc"
+          LAYER_LABEL[state-artifact]="State artifact"
+          LAYER_LABEL[docs]="Documentation"
+          LAYER_LABEL[other]="Other"
+
+          classify_file() {
+            local f="$1"
+            case "$f" in
+              Common/GA.Business.ML/*) echo "dotnet-ml" ;;
+              Common/GA.Business.Core/*) echo "dotnet-domain" ;;
+              Common/GA.Business.DSL/*.fs) echo "fsharp-dsl" ;;
+              Apps/ga-server/GaApi/Controllers/*) echo "dotnet-api-controller" ;;
+              Apps/ga-server/GaApi/*) echo "dotnet-api-internal" ;;
+              Apps/ga-server/GaMcpServer/*) echo "mcp-server" ;;
+              ReactComponents/ga-react-components/tests/*.spec.ts) echo "react-e2e" ;;
+              ReactComponents/ga-react-components/vite.config.ts) echo "vite-middleware" ;;
+              ReactComponents/ga-react-components/src/*) echo "react-spa" ;;
+              Scripts/*.ps1) echo "powershell-tooling" ;;
+              .github/workflows/*) echo "ci-workflow" ;;
+              docs/contracts/*) echo "contract" ;;
+              docs/plans/*) echo "plan-doc" ;;
+              state/*) echo "state-artifact" ;;
+              docs/*) echo "docs" ;;
+              *.md) echo "docs" ;;
+              *) echo "other" ;;
+            esac
+          }
+
+          # Default test-type density per layer (unit, integration, e2e, chatbot)
+          density_for() {
+            case "$1" in
+              dotnet-domain)         echo "1 0 0 0" ;;
+              dotnet-ml)             echo "1 1 0 1" ;;
+              dotnet-api-controller) echo "0 1 0 0" ;;
+              dotnet-api-internal)   echo "1 0 0 0" ;;
+              mcp-server)            echo "0 1 0 0" ;;
+              fsharp-dsl)            echo "1 0 0 0" ;;
+              react-spa)             echo "1 0 1 0" ;;
+              vite-middleware)       echo "0 1 0 0" ;;
+              react-e2e)             echo "0 0 0 0" ;;  # the PR IS the test
+              powershell-tooling)    echo "0 1 0 0" ;;
+              ci-workflow)           echo "0 1 0 0" ;;
+              contract)              echo "0 1 0 0" ;;
+              plan-doc|state-artifact|docs|other) echo "0 0 0 0" ;;
+            esac
+          }
+
+          LAYERS_SEEN=()
+          declare -A LAYER_FILE_LIST
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            L=$(classify_file "$f")
+            if [ -z "${LAYER_FILE_LIST[$L]+x}" ]; then
+              LAYER_FILE_LIST[$L]="$f"
+              LAYERS_SEEN+=("$L")
+            else
+              LAYER_FILE_LIST[$L]="${LAYER_FILE_LIST[$L]}|$f"
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # --- Risk class (per-PR) ---
+          # one-way-door: matches /council's door list
+          # api-change:   added public/exported symbols
+          # refactor:     existing-file modifications + deletions
+          # pure-additive: only new files
+          RISK="pure-additive"
+
+          # Pure-additive check: every changed file is "A" (added) per git diff
+          ADD_ONLY="true"
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            STATUS=$(echo "$line" | cut -f1)
+            if [ "$STATUS" != "A" ]; then
+              ADD_ONLY="false"
+              break
+            fi
+          done < <(git diff --name-status "${BASE_SHA}...${HEAD_SHA}" || true)
+
+          if [ "$ADD_ONLY" = "false" ]; then
+            RISK="refactor"
+          fi
+
+          # API-change check: added public/exported symbols
+          if git diff "${BASE_SHA}...${HEAD_SHA}" 2>/dev/null \
+              | grep -qE '^\+[[:space:]]*(public[[:space:]]+(class|interface|record|enum|struct)|export[[:space:]]+(function|const|class|interface|type)|\[HttpGet|\[HttpPost|\[Route\b)'; then
+            RISK="api-change"
+          fi
+
+          # One-way-door check: explicit path list (mirrors /council §When-to-run)
+          DOOR_PATHS=()
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs) DOOR_PATHS+=("$f") ;;
+              docs/contracts/*.contract.md|docs/contracts/*.schema.json) DOOR_PATHS+=("$f") ;;
+              Apps/ga-server/GaApi/Controllers/*.cs) DOOR_PATHS+=("$f") ;;
+              ReactComponents/ga-react-components/src/main.tsx) DOOR_PATHS+=("$f") ;;
+              Scripts/install-*.ps1|Scripts/uninstall-*.ps1) DOOR_PATHS+=("$f") ;;
+            esac
+          done <<< "$CHANGED_FILES"
+          if [ ${#DOOR_PATHS[@]} -gt 0 ]; then
+            RISK="one-way-door"
+          fi
+
+          # Risk multiplier
+          case "$RISK" in
+            pure-additive) MULT=1 ;;
+            refactor)      MULT=2 ;;  # bash int — represents 1.5× rounded up
+            api-change)    MULT=2 ;;
+            one-way-door)  MULT=3 ;;
+          esac
+
+          # --- Per-section counts ---
+          UNIT=0; INT=0; E2E=0; CHAT=0; GAPS=0
+          for L in "${LAYERS_SEEN[@]}"; do
+            FILE_COUNT=$(echo "${LAYER_FILE_LIST[$L]}" | tr '|' '\n' | grep -c . || true)
+            read U I E C <<< "$(density_for "$L")"
+            UNIT=$(( UNIT + U * FILE_COUNT * MULT ))
+            INT=$(( INT + I * FILE_COUNT * MULT ))
+            E2E=$(( E2E + E * FILE_COUNT * MULT ))
+            CHAT=$(( CHAT + C * FILE_COUNT * MULT ))
+          done
+
+          # Content-regex refinements (cheap, additive)
+          if git diff "${BASE_SHA}...${HEAD_SHA}" 2>/dev/null \
+              | grep -qE '^\+.*(IRecognizer|ICanonical|ChordRecognizer)\b'; then
+            CHAT=$(( CHAT + 1 ))
+          fi
+          if git diff "${BASE_SHA}...${HEAD_SHA}" 2>/dev/null \
+              | grep -qE '^\+.*(OpticK|VoicingSearch|EmbeddingSchema)\b'; then
+            INT=$(( INT + 1 ))
+          fi
+          if git diff "${BASE_SHA}...${HEAD_SHA}" 2>/dev/null \
+              | grep -qE '^\+.*throw[[:space:]]+new\b'; then
+            UNIT=$(( UNIT + 1 ))
+          fi
+
+          # Section cap (mirrors SKILL.md §4 — keep proposals readable)
+          cap10() { if [ "$1" -gt 10 ]; then echo 10; else echo "$1"; fi; }
+          UNIT=$(cap10 "$UNIT"); INT=$(cap10 "$INT"); E2E=$(cap10 "$E2E"); CHAT=$(cap10 "$CHAT")
+
+          # --- Coverage gaps: paths touched with no co-changed *.test.* or *.spec.* sibling ---
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            # Skip files that ARE tests
+            case "$f" in
+              *.test.*|*.spec.*|*Test.cs|*Tests.cs|*.Tests/*|*tests/*|*/test/*) continue ;;
+            esac
+            # Skip docs/state/plan files (no expected test surface)
+            L=$(classify_file "$f")
+            case "$L" in
+              docs|plan-doc|state-artifact|other) continue ;;
+            esac
+            # Check whether the PR also touched any matching test file
+            BASE_NAME=$(basename "$f" | sed 's/\.[^.]*$//')
+            if ! echo "$CHANGED_FILES" | grep -qiE "(${BASE_NAME}\.test\.|${BASE_NAME}\.spec\.|${BASE_NAME}Tests?\.cs)"; then
+              GAPS=$(( GAPS + 1 ))
+            fi
+          done <<< "$CHANGED_FILES"
+          GAPS=$(cap10 "$GAPS")
+
+          # --- Layer summary string for the Scope line ---
+          LAYER_SUMMARY=""
+          for L in "${LAYERS_SEEN[@]}"; do
+            FILE_COUNT=$(echo "${LAYER_FILE_LIST[$L]}" | tr '|' '\n' | grep -c . || true)
+            LABEL="${LAYER_LABEL[$L]:-$L}"
+            if [ -z "$LAYER_SUMMARY" ]; then
+              LAYER_SUMMARY="${LABEL} (${FILE_COUNT})"
+            else
+              LAYER_SUMMARY="${LAYER_SUMMARY}, ${LABEL} (${FILE_COUNT})"
+            fi
+          done
+
+          # --- Write the markdown artifact ---
+          {
+            echo "# Test plan — PR #${PR_NUM} (${SHORT_SHA})"
+            echo
+            echo "**Generated:** ${NOW_UTC}"
+            echo "**Author:** @${PR_AUTHOR}"
+            echo "**Scope:** ${NUM_FILES} file(s) changed,${STAT#* }; touching ${LAYER_SUMMARY:-no recognized layer}."
+            echo "**Risk class:** ${RISK}"
+            echo
+            if [ "$RISK" = "one-way-door" ]; then
+              echo "> **One-way-door touched** — consider running \`/council ${PR_NUM}\` before merge."
+              echo "> Door paths:"
+              for d in "${DOOR_PATHS[@]}"; do
+                echo "> - \`$d\`"
+              done
+              echo
+            fi
+
+            echo "## Unit tests (${UNIT} proposed)"
+            echo
+            if [ "$UNIT" -gt 0 ]; then
+              count=0
+              for L in "${LAYERS_SEEN[@]}"; do
+                read U _ _ _ <<< "$(density_for "$L")"
+                [ "$U" -eq 0 ] && continue
+                for f in $(echo "${LAYER_FILE_LIST[$L]}" | tr '|' '\n'); do
+                  [ -z "$f" ] && continue
+                  [ "$count" -ge "$UNIT" ] && break 2
+                  echo "- [ ] **${LAYER_LABEL[$L]}** \`${f}\`: add unit case(s) for the changed branch."
+                  echo "  - Rationale: layer default for ${L}; diff modifies behavior, baseline unit coverage expected."
+                  count=$(( count + 1 ))
+                done
+              done
+            else
+              echo "_No unit-test surface detected._"
+            fi
+            echo
+
+            echo "## Integration tests (${INT} proposed)"
+            echo
+            if [ "$INT" -gt 0 ]; then
+              count=0
+              for L in "${LAYERS_SEEN[@]}"; do
+                read _ I _ _ <<< "$(density_for "$L")"
+                [ "$I" -eq 0 ] && continue
+                for f in $(echo "${LAYER_FILE_LIST[$L]}" | tr '|' '\n'); do
+                  [ -z "$f" ] && continue
+                  [ "$count" -ge "$INT" ] && break 2
+                  echo "- [ ] **${LAYER_LABEL[$L]}** \`${f}\`: integration test through the boundary this file owns."
+                  echo "  - Rationale: layer default for ${L}; verifies end-to-end wiring, not just the unit logic."
+                  count=$(( count + 1 ))
+                done
+              done
+            else
+              echo "_No integration-test surface detected._"
+            fi
+            echo
+
+            echo "## E2E tests (Playwright) (${E2E} proposed)"
+            echo
+            if [ "$E2E" -gt 0 ]; then
+              count=0
+              for L in "${LAYERS_SEEN[@]}"; do
+                read _ _ E _ <<< "$(density_for "$L")"
+                [ "$E" -eq 0 ] && continue
+                for f in $(echo "${LAYER_FILE_LIST[$L]}" | tr '|' '\n'); do
+                  [ -z "$f" ] && continue
+                  [ "$count" -ge "$E2E" ] && break 2
+                  echo "- [ ] **${LAYER_LABEL[$L]}** \`${f}\`: Playwright spec asserting the user-visible change."
+                  echo "  - Rationale: route or component change; user-flow regression bait."
+                  count=$(( count + 1 ))
+                done
+              done
+            else
+              echo "_No user-visible surface detected._"
+            fi
+            echo
+
+            echo "## Chatbot prompts (${CHAT} proposed)"
+            echo
+            if [ "$CHAT" -gt 0 ]; then
+              echo "- [ ] Add ${CHAT} prompt(s) covering the recognizer / OPTIC-K path(s) modified by this PR."
+              echo "  - Existing similar prompts: \`state/quality/chatbot-qa/golden-traces/\` (browse for closest)"
+              echo "  - Why now: changed recognizer / voicing code can silently regress chatbot answers — add a golden trace."
+            else
+              echo "_No recognizer / OPTIC-K path detected in the diff._"
+            fi
+            echo
+
+            echo "## Coverage gaps surfaced"
+            echo
+            if [ "$GAPS" -gt 0 ]; then
+              count=0
+              while IFS= read -r f; do
+                [ -z "$f" ] && continue
+                case "$f" in
+                  *.test.*|*.spec.*|*Test.cs|*Tests.cs|*.Tests/*|*tests/*|*/test/*) continue ;;
+                esac
+                L=$(classify_file "$f")
+                case "$L" in
+                  docs|plan-doc|state-artifact|other) continue ;;
+                esac
+                BASE_NAME=$(basename "$f" | sed 's/\.[^.]*$//')
+                if ! echo "$CHANGED_FILES" | grep -qiE "(${BASE_NAME}\.test\.|${BASE_NAME}\.spec\.|${BASE_NAME}Tests?\.cs)"; then
+                  [ "$count" -ge "$GAPS" ] && break
+                  echo "- **No co-changed test** for \`${f}\` (layer: ${L})"
+                  count=$(( count + 1 ))
+                fi
+              done <<< "$CHANGED_FILES"
+            else
+              echo "_No coverage gaps surfaced — every modified file has a co-changed test sibling._"
+            fi
+            echo
+
+            echo "## Rubric"
+            echo
+            echo "This plan was generated by **the test-plan-suggester workflow** (lightweight assembler — mirrors \`.claude/skills/test-plan/SKILL.md\` heuristic):"
+            echo
+            echo "- **Diff-driven**: proposals are keyed to changed files / lines, not the whole module."
+            echo "- **Surface-aware**: each layer maps to its canonical test type (unit → integration → e2e → chatbot)."
+            echo "- **Risk-weighted**: \`${RISK}\` PRs get ${MULT}× the baseline density."
+            echo "- **Coverage-gap-aware**: files with no co-changed test sibling are called out explicitly."
+            echo
+            echo "Run \`/test-plan ${PR_NUM}\` in a session for the richer per-line proposal with rationale citations."
+            echo "Override at will — this is advisory, not prescriptive."
+          } > "$OUT"
+
+          # --- Sidecar JSON (built with printf to keep YAML-friendly indentation) ---
+          LAYERS_JSON=$(printf '"%s",' "${LAYERS_SEEN[@]}" | sed 's/,$//')
+          {
+            printf '{\n'
+            printf '  "schema": "test-plan-v1",\n'
+            printf '  "pr_number": %s,\n' "$PR_NUM"
+            printf '  "head_sha": "%s",\n' "$HEAD_SHA"
+            printf '  "risk_class": "%s",\n' "$RISK"
+            printf '  "proposal_counts": {\n'
+            printf '    "unit": %s,\n' "$UNIT"
+            printf '    "integration": %s,\n' "$INT"
+            printf '    "e2e": %s,\n' "$E2E"
+            printf '    "chatbot": %s,\n' "$CHAT"
+            printf '    "coverage_gaps": %s\n' "$GAPS"
+            printf '  },\n'
+            printf '  "layers_touched": [%s],\n' "$LAYERS_JSON"
+            printf '  "generated_at": "%s",\n' "$NOW_UTC"
+            printf '  "generator": "workflow-bash-assembler",\n'
+            printf '  "author_is_agent": %s,\n' "$AGENT"
+            printf '  "body_has_test_plan_section": %s\n' "$HAS_TP"
+            printf '}\n'
+          } > "$META"
+
+          # --- Comment body ---
+          {
+            echo "<!-- test-plan -->"
+            echo "## Proposed test plan (heuristic)"
+            echo
+            if [ "$AGENT" = "true" ] && [ "$HAS_TP" = "true" ]; then
+              echo "_Your PR body already has a \`## Test plan\` section. This is an automatic **second opinion** because the PR is agent-authored (Co-Authored-By trailer detected). Add \`[skip test-plan]\` to the body to disable._"
+              echo
+            fi
+            cat "$OUT"
+            echo
+            echo "---"
+            echo
+            echo "_Generated by [\`.github/workflows/test-plan-suggester.yml\`](/.github/workflows/test-plan-suggester.yml) · persisted artifact: \`state/quality/test-plans/${HEAD_SHA}.md\` · suppress with \`[skip test-plan]\` in PR body._"
+          } > "$COMMENT"
+
+          echo "----- BEGIN PROPOSAL -----"
+          cat "$COMMENT"
+          echo "----- END PROPOSAL -----"
+
+      - name: Upload proposal artifact
+        if: steps.gate.outputs.decision == 'post'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-plan-${{ steps.assemble.outputs.head_sha }}
+          path: |
+            state/quality/test-plans/${{ steps.assemble.outputs.head_sha }}.md
+            state/quality/test-plans/${{ steps.assemble.outputs.head_sha }}.meta.json
+          retention-days: 90
+
+      - name: Post / update PR comment
+        if: steps.gate.outputs.decision == 'post'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- test-plan -->';
+            const path = '${{ steps.assemble.outputs.comment }}';
+            if (!fs.existsSync(path)) {
+              core.warning(`Comment file ${path} not produced; skipping comment post.`);
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const existing = comments.data.find(c =>
+              c.user && c.user.type === 'Bot' && c.body && c.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`Updated existing test-plan comment ${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info('Posted new test-plan comment.');
+            }
+
+      - name: Log skip reason
+        if: steps.gate.outputs.decision != 'post'
+        shell: bash
+        run: |
+          echo "Skipped: ${{ steps.gate.outputs.decision }}"
+          echo "  has_test_plan_section=${{ steps.gate.outputs.has_test_plan_section }}"
+          echo "  agent_authored=${{ steps.gate.outputs.agent_authored }}"
