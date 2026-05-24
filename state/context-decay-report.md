@@ -1,7 +1,8 @@
 # Context decay report
 
-_Generated: 2026-05-23T08:49:05Z_
+_Generated: 2026-05-24T08:59:18Z_
 
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `../../../docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Common/GA.Business.Core.Orchestration/Plugins/`

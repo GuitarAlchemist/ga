@@ -72,6 +72,56 @@
       "additionalProperties": { "type": "string" },
       "description": "Map of specialist name → one-paragraph verdict (typically from `/octo:review`). Common keys: code-reviewer, security-sentinel, architecture-architect."
     },
+    "codex_review": {
+      "type": "object",
+      "description": "Result of the Codex bot comment scan (the Codex review gate). P0/P1 unresolved findings degrade the alignment tier per the SKILL.",
+      "required": ["status", "comments_total"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["reviewed", "not_reviewed", "skipped"],
+          "description": "reviewed = Codex returned comments (possibly zero); not_reviewed = Codex hasn't visited yet; skipped = API call failed (record reason in parent `reasons`)."
+        },
+        "comments_total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total Codex bot comments on the PR."
+        },
+        "unresolved": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "P0": { "type": "integer", "minimum": 0 },
+            "P1": { "type": "integer", "minimum": 0 },
+            "P2": { "type": "integer", "minimum": 0 },
+            "P3": { "type": "integer", "minimum": 0 }
+          },
+          "description": "Per-priority count of unresolved Codex findings. Resolution heuristic in SKILL step 5."
+        },
+        "findings": {
+          "type": "array",
+          "description": "Per-comment detail. Omit for status=not_reviewed / skipped.",
+          "items": {
+            "type": "object",
+            "required": ["priority", "title", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3", "?"] },
+              "title": { "type": "string", "minLength": 1 },
+              "path": { "type": "string" },
+              "line": { "type": "integer", "minimum": 1 },
+              "status": {
+                "type": "string",
+                "enum": ["unresolved", "acknowledged", "replied", "possibly_addressed"]
+              },
+              "url": { "type": "string", "format": "uri" },
+              "excerpt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
     "graded_at": {
       "type": "string",
       "format": "date-time",
@@ -98,6 +148,10 @@
           "specialist_notes": {
             "type": "object",
             "additionalProperties": { "type": "string" }
+          },
+          "codex_review": {
+            "type": "object",
+            "description": "Snapshot of the Codex review scan at the time this prior grade was written."
           },
           "graded_at": { "type": "string", "format": "date-time" },
           "grader": { "type": "string", "minLength": 1 }

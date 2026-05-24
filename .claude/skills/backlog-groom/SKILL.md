@@ -292,6 +292,157 @@ item because it's a one-way door without a council), document why
 here so the next grooming can audit the call.
 ```
 
+## Weekly digest mode
+
+When invoked as `/backlog-groom --digest` OR when
+`.github/workflows/weekly-backlog-grooming.yml` runs its Monday cron,
+the skill produces a **"Last 7 days" trend digest** *in addition to*
+the top-3 work-item proposal. The two artifacts are concatenated into
+a single output (top-3 first, digest after the `---`) so one comment
+on the tracker issue carries both.
+
+The digest is the **trend-level supervisor complement** to the
+algedonic-channel real-time incident layer (`state/algedonic/`):
+
+- Algedonic = "what broke right now, who acks it" (seconds → hours).
+- Weekly digest = "what shipped, what regressed, what's stuck" (days
+  → weeks). The supervisor doesn't ack pings; it spots drift.
+
+### Digest sections
+
+Each section is a small markdown block. Empty sections render as
+`_None this week._` rather than being silently dropped — the reader
+needs to know the question was asked and answered "nothing".
+
+1. **Shipped PRs (last 7d)** — table with columns `#`, title (truncated
+   to 60 chars), merge SHA (short, 7 chars), shipper (parsed from the
+   `Co-Authored-By:` trailer on the merge commit; falls back to PR
+   author), and category. Category is a heuristic on title prefix:
+   `feat(frontend|tonal-orbit|test-page)` → frontend; `feat(chatbot|
+   semantic|llm)` → chatbot; `feat(harness|skill)` → harness;
+   `fix(...)` → fix; `chore|docs|ci` → chore.
+2. **Algedonic signals (last 7d)** — read `state/algedonic/inbox.jsonl`,
+   filter to `emitted_at >= now - 7d`, project the LATEST line per `id`
+   (acks supersede). Output:
+   - Counts table: rows = repo, columns = severity (`info`/`warn`/`fail`).
+   - **Top 3 unacked** — by severity then recency. Show id (first 8
+     chars), severity, repo/source, summary (60 chars).
+   - **Top 3 acked-with-resolution** — same shape, plus `resolution`
+     text (truncated to 60 chars). Surfaces what got fixed this week.
+3. **Quality snapshot deltas (last 7d)** — for each domain
+   (`chatbot-qa`, `voicing-analysis`, `embeddings`, `invariants`, `e2e`),
+   find the latest snapshot and the snapshot closest to 7 days ago.
+   Compute the delta on the primary metric (per-domain mapping below)
+   and emit a verdict:
+   - **chatbot-qa**: metric = `pass_pct`; verdict thresholds — improved
+     if Δ ≥ +0.02, regressed if Δ ≤ −0.02, stable otherwise; degraded
+     if `pass_pct: null` in latest (env-degraded marker).
+   - **voicing-analysis**: metric = `Corpus.Total`; same thresholds
+     scaled to ±1% of baseline.
+   - **embeddings**: metric = `leak_detection.full_classifier_accuracy`;
+     CARE — *higher* leak accuracy is *worse* (more identity leak), so
+     verdict inverts: improved if Δ ≤ −0.02, regressed if Δ ≥ +0.02.
+   - **invariants**: metric = `exemplars.length` (proxy for coverage
+     surface); improved if grew, regressed if shrank.
+   - **e2e** (under `dashboard-playwright/`): metric = `summary.passed
+     / summary.total`; same thresholds as chatbot-qa.
+   - If the 7d-ago snapshot is missing, output `(no baseline)` and skip
+     the delta — but still emit the latest value, so the reader sees
+     the absolute level.
+4. **`/grade-last-pr` verdicts (last 7d)** — walk
+   `state/quality/pr-grades/*.json`, filter by `graded_at >= now − 7d`,
+   bucket by `alignment` (`high` / `medium` / `low`). Output the counts
+   table and **list every "low" PR** by `pr_number` + `title` (these
+   are the misses worth re-reading; high/medium aren't named).
+5. **`/test-plan` activity (last 7d)** — walk
+   `state/quality/test-plans/*.meta.json`, filter by `generated_at >=
+   now − 7d`. Output:
+   - Total proposals (auto-fired count — anything with `generator`
+     containing `test-plan-suggester.yml`).
+   - **Developer-written follow-up rate** — informational; today this
+     is always "n/a" because we don't yet record developer overrides.
+     The placeholder reminds us to wire it in when that signal exists.
+   - **PRs that had no test plan** — gh PRs merged in the window whose
+     head SHAs don't have a corresponding `<sha>.md`. Names listed.
+6. **`/council` activations (last 7d)** — walk
+   `state/quality/council/*.json`, filter by `convened_at >= now − 7d`.
+   Output count by `final_verdict` (`approve` / `request_changes` /
+   `block`). **List every "block" verdict** by PR + one-way-door paths
+   touched (these are the explicit one-way-door saves).
+
+### Persistence
+
+Each weekly run also writes the rendered digest to
+`state/quality/weekly-digest/<YYYY-WW>.md` (ISO week — e.g.
+`2026-W21.md`). The GitHub issue comment is *ephemeral* via the
+sticky-replace pattern; the on-disk file is the durable audit trail.
+
+The on-disk write happens in the workflow (so commits land in CI),
+not in the interactive skill — running `/backlog-groom --digest` in
+a session prints to the transcript and the user can manually save.
+
+### Output template (appended to the existing top-3)
+
+```markdown
+---
+
+## Last 7 days across all loops (<YYYY-MM-DD> → <YYYY-MM-DD>)
+
+### Shipped PRs
+
+| # | Title | SHA | Shipper | Category |
+|---|---|---|---|---|
+| 320 | feat(skill): /backlog-groom | 5e1e4c0 | claude-opus-4-7 | harness |
+| ... |
+
+### Algedonic signals
+
+| Repo | info | warn | fail |
+|---|---|---|---|
+| ga | 2 | 1 | 0 |
+| sentrux | 0 | 3 | 0 |
+
+**Top 3 unacked:** ...
+
+**Top 3 acked-with-resolution:** ...
+
+### Quality snapshot deltas
+
+| Domain | Latest | Δ vs 7d ago | Verdict |
+|---|---|---|---|
+| chatbot-qa | 0.94 | +0.02 | improved |
+| voicing-analysis | 313047 | 0 | stable |
+| embeddings | 0.747 | (no baseline) | n/a |
+| invariants | 41 | 0 | stable |
+| e2e | 5/5 | +1 | improved |
+
+### `/grade-last-pr` verdicts
+
+| Alignment | Count |
+|---|---|
+| high | 4 |
+| medium | 1 |
+| low | 0 |
+
+_No "low" alignment PRs this week._
+
+### `/test-plan` activity
+
+- Auto-fired proposals: 3
+- Developer-written follow-ups: n/a (not yet tracked)
+- PRs without a test plan: 1 (#324)
+
+### `/council` activations
+
+| Verdict | Count |
+|---|---|
+| approve | 0 |
+| request_changes | 0 |
+| block | 0 |
+
+_No council was convened this week._
+```
+
 ## Anti-patterns
 
 - **Re-reading the full backlog as text into the model.** The H3-bullet

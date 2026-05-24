@@ -356,6 +356,12 @@ export const ModalMeadow: React.FC<ModalMeadowProps> = ({
       sun.shadow.camera.far = 260;
       sun.shadow.bias = -0.0008;
       sun.shadow.normalBias = 0.04;
+      // Three.js OrthographicCamera caches its projection matrix — mutating
+      // left/right/top/bottom/near/far does NOT re-derive it. Without this
+      // call the shadow camera kept its default 1×1 projection, clipping
+      // shadows outside that tiny footprint instead of the SHADOW_HALF=90
+      // bounds we just wrote. Recompute once after every frustum edit.
+      sun.shadow.camera.updateProjectionMatrix();
     }
 
     // Scratch objects we reuse each frame to avoid GC pressure.

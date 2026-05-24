@@ -21,6 +21,7 @@ import {
   AlgedonicCriticalBanner,
   type AlgedonicProjection,
 } from '../components/Algedonic/AlgedonicCard';
+import { InFlightCard } from '../components/Summary/InFlightCard';
 
 interface EpicSubSection { title: string; category: 'shipped' | 'active' | 'backlog'; item_count: number }
 interface BacklogEpic {
@@ -321,6 +322,11 @@ export const OverviewSection: React.FC = () => {
           </Typography>
         )}
       </Paper>
+
+      {/* In Flight — what's being worked on right now and when will it ship.
+          Sits right after Heartbeat because operators' first question is "what's
+          happening right now," not "what's the trend." */}
+      <InFlightCard />
 
       {/* Top stat tiles */}
       <Grid container spacing={2}>

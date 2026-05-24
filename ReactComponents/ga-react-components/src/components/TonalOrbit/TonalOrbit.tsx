@@ -528,17 +528,19 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       const depth = focusDepth(focus);
       const dist = CAMERA_DIST_BY_DEPTH[depth];
 
-      // Look-at: focused body's anchor on its orbit. Falls back to origin.
+      // Look-at: the deepest focused body's WORLD position. Chord and
+      // scale meshes are placed on concentric rings centered at the origin
+      // (see setPitchFocus: `new THREE.Vector3(cos*CHORD_RADIUS, 0,
+      // sin*CHORD_RADIUS)` — NOT nested around the parent pitch). Summing
+      // pitch + chord (+ scale) anchors used to translate the look-target
+      // by an extra ring radius per drill level, so chord focus pointed
+      // roughly one pitch-ring radius past the clicked chord and the
+      // camera framed empty space. Aim at the deepest anchor directly.
       let look = new THREE.Vector3(0, 0, 0);
       if (focus.scale && focus.chord && focus.pitch) {
-        const p = pitchAnchor(focus.pitch);
-        const c = chordAnchor(focus.chord, focus.pitch);
-        const s = scaleAnchor(focus.scale, focus.chord, focus.pitch);
-        look = new THREE.Vector3().addVectors(p, c).add(s);
+        look = scaleAnchor(focus.scale, focus.chord, focus.pitch);
       } else if (focus.chord && focus.pitch) {
-        const p = pitchAnchor(focus.pitch);
-        const c = chordAnchor(focus.chord, focus.pitch);
-        look = new THREE.Vector3().addVectors(p, c);
+        look = chordAnchor(focus.chord, focus.pitch);
       } else if (focus.pitch) {
         look = pitchAnchor(focus.pitch);
       }
@@ -761,13 +763,28 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       return new THREE.Vector3(Math.cos(a) * PITCH_RADIUS, 0, Math.sin(a) * PITCH_RADIUS);
     }
     function chordAnchor(c: ChordBody, _p: PitchBody): THREE.Vector3 {
-      const chords = chordsForPitch(_p);
-      const i = chords.findIndex((x) => x.family.key === c.family.key);
+      // Derive the chord ring from the SAME source the ring was built from
+      // (see setPitchFocus). In Mode A (root chords) the chord set is
+      // chordsForPitch — 8 unique family.key entries. In Mode B (key
+      // chords) it's keyChordsForPitch — 7 diatonic chords whose families
+      // can repeat (I/IV/V are all Major). Matching on family.key alone
+      // would land on the first repeat, sending the camera to the wrong
+      // body. Match on (rootPc, family.key) so it's unique in both modes.
+      const chords = chordModeRef.current === 'key'
+        ? keyChordsForPitch(_p)
+        : chordsForPitch(_p);
+      const i = chords.findIndex((x) => x.family.key === c.family.key && x.rootPc === c.rootPc);
       const a = (i / chords.length) * Math.PI * 2;
       return new THREE.Vector3(Math.cos(a) * CHORD_RADIUS, 0, Math.sin(a) * CHORD_RADIUS);
     }
     function scaleAnchor(s: ScaleBody, c: ChordBody, _p: PitchBody): THREE.Vector3 {
-      const scales = scalesForChord(c);
+      // Mode A: the outer scale ring is scalesForChord(c) (per-chord).
+      // Mode B: the outer scale ring is keyModesForPitch(_p) — the same
+      // seven modes for every chord on the focused pitch. Pull from the
+      // matching source so the look-target lines up with the rendered ring.
+      const scales = chordModeRef.current === 'key'
+        ? keyModesForPitch(_p)
+        : scalesForChord(c);
       const i = scales.findIndex((x) => x.scale.key === s.scale.key);
       const a = (i / scales.length) * Math.PI * 2;
       return new THREE.Vector3(Math.cos(a) * SCALE_RADIUS, 0, Math.sin(a) * SCALE_RADIUS);
