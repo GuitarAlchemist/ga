@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitaralchemist.com/schemas/semantic-regression-v1.json",
+  "title": "Semantic Regression Run (chatbot goldens)",
+  "description": "One artifact per PR head SHA, written by Scripts/replay-chatbot-goldens.ps1. Captures cosine similarity between each prompt's stored reference answer and the PR-HEAD chatbot's fresh answer. Consumed by the dashboard QA tab and by ix-quality-trend if/when a SemanticRegressionSnapshot is added there.",
+  "type": "object",
+  "required": ["schema", "head_sha", "run_at", "encoder", "threshold_cosine", "prompts", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schema":           { "const": "semantic-regression-v1" },
+    "head_sha":         { "type": "string", "minLength": 7 },
+    "run_at":           { "type": "string", "format": "date-time" },
+    "chatbot_url":      { "type": "string" },
+    "encoder":          { "type": "string", "description": "Embedding model id. One per run. Examples: text-embedding-3-small, ga_generate_voicing_embedding (not appropriate for prose — see README)." },
+    "threshold_cosine": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sample_size":      { "type": "integer", "minimum": 0, "description": "0 == all prompts; N > 0 == random N sampled for cost." },
+    "elapsed_seconds":  { "type": "number", "minimum": 0 },
+    "cost_warning":     { "type": ["string", "null"] },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "prompt", "category", "verdict"],
+        "additionalProperties": false,
+        "properties": {
+          "slug":            { "type": "string" },
+          "prompt":          { "type": "string" },
+          "category":        { "type": "string" },
+          "provider_ref":    { "type": ["string", "null"], "description": "agent.id from the stored reference run." },
+          "provider_new":    { "type": ["string", "null"], "description": "agent.id from this PR HEAD's replay." },
+          "ref_cosine_self": { "type": "number", "const": 1.0 },
+          "new_cosine":      { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+          "delta":           { "type": ["number", "null"], "description": "new_cosine - 1.0 (negative == drift away from reference)." },
+          "verdict":         { "enum": ["ok", "drift", "provider_mismatch", "errored", "no_baseline"] },
+          "tokens":          { "type": "integer", "minimum": 0 },
+          "error":           { "type": ["string", "null"] }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "ok", "drift", "errored"],
+      "additionalProperties": false,
+      "properties": {
+        "total":             { "type": "integer", "minimum": 0 },
+        "ok":                { "type": "integer", "minimum": 0 },
+        "drift":             { "type": "integer", "minimum": 0 },
+        "errored":           { "type": "integer", "minimum": 0 },
+        "provider_mismatch": { "type": "integer", "minimum": 0 },
+        "no_baseline":       { "type": "integer", "minimum": 0 },
+        "total_tokens":      { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
