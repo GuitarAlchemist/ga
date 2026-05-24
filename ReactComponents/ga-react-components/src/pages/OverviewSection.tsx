@@ -28,6 +28,7 @@ import {
   type AlgedonicProjection,
 } from '../components/Algedonic/AlgedonicCard';
 import { InFlightCard } from '../components/Summary/InFlightCard';
+import { MissionControl } from '../components/Summary/MissionControl';
 
 interface BacklogItem {
   text: string;
@@ -489,6 +490,11 @@ export const OverviewSection: React.FC = () => {
       {/* Critical algedonic banner — only renders when has_critical=true. */}
       {/* Sits above the Heartbeat so it can never be scrolled past. */}
       <AlgedonicCriticalBanner projection={manifest.algedonic ?? null} />
+
+      {/* Mission Control — 4-quadrant "what's happening RIGHT NOW" summary.
+          Sits above-the-fold so a cold operator answers the project status in
+          5 seconds without scrolling. Existing tiles below are the drill-down. */}
+      <MissionControl />
 
       {/* Heartbeat — one-line project status banner */}
       <Paper
