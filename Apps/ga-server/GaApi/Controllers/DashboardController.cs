@@ -77,6 +77,17 @@ public class DashboardController(
     [HttpPost("screenshot")]
     public async Task<ActionResult> Screenshot([FromBody] DashboardScreenshotRequest request)
     {
+        // Validate the optional subTab BEFORE any connection / hub work so a
+        // bad tab gives the agent a precise 400 instead of a misleading 404.
+        if (!string.IsNullOrWhiteSpace(request.SubTab) && !ValidSubTabs.Contains(request.SubTab))
+        {
+            return BadRequest(new
+            {
+                error = "subTab must be one of: " + string.Join(", ", ValidSubTabs),
+                received = request.SubTab,
+            });
+        }
+
         if (DevDashboardHub.ConnectionCount == 0)
         {
             return NotFound(new
@@ -86,17 +97,9 @@ public class DashboardController(
             });
         }
 
-        // Optionally navigate first
+        // Optionally navigate first (subTab already validated above)
         if (!string.IsNullOrWhiteSpace(request.SubTab))
         {
-            if (!ValidSubTabs.Contains(request.SubTab))
-            {
-                return BadRequest(new
-                {
-                    error = "subTab must be one of: " + string.Join(", ", ValidSubTabs),
-                    received = request.SubTab,
-                });
-            }
             await DevDashboardHub.BroadcastNavigateTo(hubContext, request.SubTab.ToLowerInvariant());
             // Give the SPA a moment to switch + render the tab before capturing.
             await Task.Delay(700);
