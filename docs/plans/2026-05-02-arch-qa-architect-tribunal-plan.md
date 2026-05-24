@@ -196,3 +196,23 @@ Two-way doors (everything else): MCP server language, judge model, tribunal comp
 3. Confirm Phase 0 done-when criteria.
 
 Phase 0 work is reversible — no schema freeze, no PR gating, no GitHub workflow yet. Skeletons can be deleted if direction changes.
+
+## 2026-05-24 next-slice
+
+REVIVE per `/backlog-groom` silent-rot fix #2 (2026-05-24 triage).
+
+**Status update.** Shipped since 2026-05-02:
+- Phase 0 QA Architect Tribunal scaffolding (PR #57, commit `69987da1`)
+- `qa-verdict-dispatch.yml` sender to Demerzel tribunal (PR #216, commit `4d771521`)
+- `/auto-optimize` skill generalizes chatbot loop to any quality domain (PR #228)
+- Cross-repo algedonic-channel layer Option C (PR #322, commit `6df5bccc`)
+- `/chatbot-iterate` L2 loop + tribunal gate (commit `9ecff7b1`)
+- QA verdict schema v0.1.x in active multi-PR use
+
+**Next slice (in priority order):**
+1. Verdict schema soak — 2-sprint observation window per §"Sign-off Required Before Phase 1"; decide v1.0.0 freeze or another iteration.
+2. Per-PR P0/P1/P2 comment gating beyond informational mode (per Risks table row "Verdict noise overwhelms PR signal").
+3. Defect knowledge graph age-decay tuning (per Risks table row about Graphiti staleness).
+4. Revisit `revisit_trigger` ("end of Phase 4 (verdict-driven PR gating live for 2 sprints) → review schema, decide v1.0 freeze") — track this gate.
+
+**Why kept:** strategic active plan; tribunal is now load-bearing for chatbot QA loop and cross-repo verdict routing.

@@ -139,3 +139,18 @@ Two-way doors: SAE architecture choice, dictionary size, sparsity penalty, train
 4. Confirm Tue 2026-05-19 09:00 UTC schedule (1 day after QA Architect Phase 1 fires).
 
 Phase 0 work is reversible — no code shipped yet, no schema frozen.
+
+## 2026-05-24 next-slice
+
+REVIVE per `/backlog-groom` silent-rot fix #2 (2026-05-24 triage).
+
+**Status update.** Shipped since 2026-05-02:
+- Phase 1 partition drift live (commit `2d797036` — Windows python3 stub + drift detection)
+- `qa_score_quality_drift` Phase 2 wires SAE artifact drift into tribunal (commit `22ea066d`, PR #112)
+
+**Next slice (in priority order):**
+1. Confirm trainer/dependency choice (`sae-lens` vs alternatives) — outstanding sign-off question from original plan §"Sign-off Required Before Phase 1" item 3.
+2. Land Phase 3 (manual feature labeling pipeline + `labeled_features_pct` governance metric) — gated by enough drift signal accumulated from Phase 2 verdicts.
+3. Revisit `revisit_trigger` ("end of Phase 2 (first drift signal in a real verdict) → review whether features earn their cost") — that gate has fired; do the review and either commit to Phase 3 or KILL.
+
+**Why kept:** companion plan to active QA Architect Tribunal; SAE artifact contract is live in production verdict path; this is current strategic work.
