@@ -1433,6 +1433,124 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
             });
 
+            // ── /dev-data/quality-gates — unified quality-gate ledger ──────
+            // Reads state/quality/gate-ledger.jsonl line-by-line. v1 entries
+            // (schema_version==1) parse into the dashboard payload; legacy v0
+            // rows (no schema_version) are surfaced under `legacy_rows` so
+            // the chatbot PR ledger doesn't disappear during the transition.
+            //
+            // Query params (all optional):
+            //   source=ix-quality-trend|sentrux|chatbot-qa|ga-retrieval|...
+            //   domain=structural|chatbot|tests|...
+            //   decision=pass|fail|warn|skip
+            //   since=2026-05-20T00:00:00Z   (RFC3339)
+            //   limit=50                     (default 100, max 500)
+            //
+            // Schema mirror: ix/docs/contracts/2026-05-24-quality-gate-ledger.contract.md
+            server.middlewares.use('/dev-data/quality-gates', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'quality-gates')) { return; }
+                try {
+                    const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                    const sourceFilter = url.searchParams.get('source') ?? undefined;
+                    const domainFilter = url.searchParams.get('domain') ?? undefined;
+                    const decisionFilter = url.searchParams.get('decision') ?? undefined;
+                    const sinceFilter = url.searchParams.get('since') ?? undefined;
+                    const limit = Math.max(1, Math.min(500, Number(url.searchParams.get('limit') ?? 100)));
+
+                    const ledgerPath = path.join(repoRoot, 'state/quality/gate-ledger.jsonl');
+                    if (!existsSync(ledgerPath)) {
+                        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                        res.end(JSON.stringify({
+                            generated_at: new Date().toISOString(),
+                            ledger_path: 'state/quality/gate-ledger.jsonl',
+                            v1_entries: [],
+                            legacy_rows: [],
+                            counts_by_source: {},
+                            counts_by_decision: {},
+                            note: 'ledger not yet present (no producer has emitted a row)',
+                        }));
+                        return;
+                    }
+
+                    interface V1Entry {
+                        schema_version: 1;
+                        schema: string;
+                        id: string;
+                        run_at: string;
+                        source: string;
+                        domain: string;
+                        decision: 'pass' | 'fail' | 'warn' | 'skip';
+                        metric: { name: string; value: number; threshold?: number; trend?: string };
+                        evidence?: { kind: string; ref: string };
+                        supersedes?: string[];
+                        operator_ack?: unknown;
+                        extra?: Record<string, unknown>;
+                    }
+
+                    const raw = readFileSync(ledgerPath, 'utf-8');
+                    const v1: V1Entry[] = [];
+                    const legacy: unknown[] = [];
+                    for (const line of raw.split(/\r?\n/)) {
+                        const t = line.trim();
+                        if (!t) continue;
+                        let obj: unknown;
+                        try { obj = JSON.parse(t); } catch { continue; }
+                        if (obj && typeof obj === 'object' && (obj as { schema_version?: unknown }).schema_version === 1) {
+                            v1.push(obj as V1Entry);
+                        } else {
+                            legacy.push(obj);
+                        }
+                    }
+
+                    // Filter v1
+                    let filtered = v1;
+                    if (sourceFilter)   filtered = filtered.filter(e => e.source === sourceFilter);
+                    if (domainFilter)   filtered = filtered.filter(e => e.domain === domainFilter);
+                    if (decisionFilter) filtered = filtered.filter(e => e.decision === decisionFilter);
+                    if (sinceFilter) {
+                        const since = Date.parse(sinceFilter);
+                        if (!Number.isNaN(since)) {
+                            filtered = filtered.filter(e => Date.parse(e.run_at) >= since);
+                        }
+                    }
+                    // Newest-first, then limit
+                    filtered.sort((a, b) => b.run_at.localeCompare(a.run_at));
+                    const top = filtered.slice(0, limit);
+
+                    // Aggregate counts (over filtered, pre-limit so the
+                    // tile numbers don't shift with pagination).
+                    const countsBySource: Record<string, number> = {};
+                    const countsByDecision: Record<string, number> = { pass: 0, fail: 0, warn: 0, skip: 0 };
+                    for (const e of filtered) {
+                        countsBySource[e.source] = (countsBySource[e.source] ?? 0) + 1;
+                        countsByDecision[e.decision] = (countsByDecision[e.decision] ?? 0) + 1;
+                    }
+
+                    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                    res.end(JSON.stringify({
+                        generated_at: new Date().toISOString(),
+                        ledger_path: 'state/quality/gate-ledger.jsonl',
+                        filters: {
+                            source: sourceFilter ?? null,
+                            domain: domainFilter ?? null,
+                            decision: decisionFilter ?? null,
+                            since: sinceFilter ?? null,
+                            limit,
+                        },
+                        v1_total: v1.length,
+                        v1_after_filter: filtered.length,
+                        v1_entries: top,
+                        legacy_rows_count: legacy.length,
+                        counts_by_source: countsBySource,
+                        counts_by_decision: countsByDecision,
+                    }));
+                } catch (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'quality-gates middleware failed', detail: String(err) }));
+                }
+            });
+
             // Renders docs/quality/README.md (auto-generated by ix-quality-trend)
             // verbatim. The QA tab embeds it via react-markdown so the same
             // headline tables + sparklines + per-domain detail show inline,
