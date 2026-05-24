@@ -231,7 +231,19 @@ export function projectLoopsGoals(
             const existing = byId.get(rec.id);
             const recAct = rec.last_activity_at ?? rec.started_at ?? '';
             const existingAct = existing?.last_activity_at ?? existing?.started_at ?? '';
-            if (!existing || recAct >= existingAct) {
+            // Compare numerically — hook events use second precision
+            // (`yyyy-MM-ddTHH:mm:ssZ`) while dashboard stop events use
+            // `toISOString()` with milliseconds. Lexicographic compare on
+            // mixed formats made `...00.123Z` sort BEFORE `...00Z`, so a
+            // newer completion event could be ignored and the row stayed
+            // active after pressing Stop. `Date.parse` collapses both to
+            // epoch ms; NaN falls back to ordering an unparseable value
+            // before a parseable one so we never starve a valid update.
+            const recMs = Date.parse(recAct);
+            const existingMs = Date.parse(existingAct);
+            const recCmp = Number.isNaN(recMs) ? -Infinity : recMs;
+            const existingCmp = Number.isNaN(existingMs) ? -Infinity : existingMs;
+            if (!existing || recCmp >= existingCmp) {
                 byId.set(rec.id, {
                     id: rec.id,
                     kind: rec.kind,
