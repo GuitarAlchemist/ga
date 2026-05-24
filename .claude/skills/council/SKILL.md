@@ -18,7 +18,41 @@ This is **opt-in by design**. It does not auto-fire on every PR. The operator
 invokes it on PRs they would lose sleep about reverting. For routine review,
 use `/octo:review` or the existing `chatbot-iterate` tribunal gate.
 
-## When to run
+## Auto-invocation triggers
+
+`/council` is opt-in by default. **One** auto-trigger is reserved (wiring in a
+follow-up; see below):
+
+- **Critical-severity algedonic signal lands in the inbox.** Per the
+  algedonic-channel contract (`docs/contracts/2026-05-24-algedonic-channel.contract.md`,
+  §7), a signal with `severity == "critical"` SHOULD auto-fire `/council` with
+  the signal's `affected_artifacts` standing in for the PR diff.
+
+  Invocation form (when wired):
+
+  ```bash
+  /council --signal <id>
+  ```
+
+  The skill reads the signal from `state/algedonic/inbox.jsonl`, treats
+  `affected_artifacts` as the door-touch set, and proceeds from **Step 3**
+  (advisor convening) — skipping Steps 1–2 because there is no PR to resolve.
+
+  The synthesized verdict is appended back to the inbox as an `info` signal
+  with `supersedes: [<original-id>]` and the council's `resolution` text. This
+  closes the loop: the operator sees one tile go from "critical, unacked" to
+  "council resolved" without manual ack.
+
+  **Status: documented, not yet wired.** This PR ships the contract and the
+  Heartbeat algedonic tile. The watcher that actually triggers `/council`
+  on a critical signal is a follow-up (it needs to live somewhere — Vite
+  middleware, a sidecar process, or a session-start hook — and that choice
+  is its own design decision).
+
+No other auto-triggers exist. Routine PR review still goes through
+`/octo:review` or `chatbot-iterate`.
+
+## When to run (manual)
 
 Invoke `/council` (or `/council <PR#>`) when the PR touches one of:
 

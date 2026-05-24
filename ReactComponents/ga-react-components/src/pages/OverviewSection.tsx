@@ -16,6 +16,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import {
+  AlgedonicCard,
+  AlgedonicCriticalBanner,
+  type AlgedonicProjection,
+} from '../components/Algedonic/AlgedonicCard';
 
 interface EpicSubSection { title: string; category: 'shipped' | 'active' | 'backlog'; item_count: number }
 interface BacklogEpic {
@@ -40,11 +45,15 @@ interface QualityPayload { domains: Record<string, QualityEntry>; regressions?: 
 
 interface ActivityByDay { date: string; count: number }
 
+interface ActivityCommit { sha: string; short_sha: string; author: string; date: string; subject: string }
+
 interface Manifest {
   generated_at: string;
   backlog: BacklogPayload | null;
   quality: QualityPayload;
+  activity?: ActivityCommit[] | { error: string };
   activity_by_day?: ActivityByDay[] | { error: string };
+  algedonic?: AlgedonicProjection;
 }
 
 const StatTile: React.FC<{ icon: React.ReactNode; label: string; value: string | number; sub?: string; color?: string }> = ({
@@ -273,6 +282,10 @@ export const OverviewSection: React.FC = () => {
 
   return (
     <Stack spacing={2}>
+      {/* Critical algedonic banner — only renders when has_critical=true. */}
+      {/* Sits above the Heartbeat so it can never be scrolled past. */}
+      <AlgedonicCriticalBanner projection={manifest.algedonic ?? null} />
+
       {/* Heartbeat — one-line project status banner */}
       <Paper
         sx={{
@@ -363,6 +376,7 @@ export const OverviewSection: React.FC = () => {
           <Stack spacing={2} sx={{ height: '100%' }}>
             <CommitActivityChart data={byDay} />
             <QualityStatusRow quality={manifest.quality} />
+            <AlgedonicCard />
           </Stack>
         </Grid>
       </Grid>

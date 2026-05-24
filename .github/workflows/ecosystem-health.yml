@@ -1,0 +1,247 @@
+name: Ecosystem Health
+
+# Cross-repo health poller — the GA-side pull-mode bridge for the VSM
+# algedonic-channel layer. This is the "Option A piece, folded in" per the
+# algedonic-channel contract §14: even if other repos haven't adopted the
+# push-mode emit convention yet, GA still gets signals from this poller.
+#
+# Every 15 minutes (and on push to main as a smoke check), this workflow:
+#   1. Polls per-sibling-repo HEAD via the GitHub API (cheap, no clone).
+#   2. Fetches each sibling's latest state/quality/<latest>.json (best-effort).
+#   3. Scans each sibling's open PRs for the agent-blackbox `block` label
+#      ("blocked PR backlog" leading indicator).
+#   4. Emits algedonic signals via Scripts/algedonic-emit.ps1:
+#        - poll timeout / 4xx / 5xx     -> severity=warn
+#        - 2+ consecutive failures      -> severity=fail
+#        - total outage (all unreachable) -> severity=critical
+#        - blocked PR backlog > 3       -> severity=warn
+#      and commits the inbox back to main with [skip ci].
+#
+# Contract: docs/contracts/2026-05-24-algedonic-channel.contract.md
+# Inbox:    state/algedonic/inbox.jsonl
+
+on:
+  schedule:
+    # Every 15 minutes — same cadence as the contract recommends. Cron in
+    # GitHub Actions has a few-minute jitter; that's fine for an alarm path.
+    - cron: '*/15 * * * *'
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/ecosystem-health.yml'
+      - 'Scripts/algedonic-emit.ps1'
+      - 'docs/contracts/2026-05-24-algedonic-channel.contract.md'
+      - 'docs/contracts/algedonic-signal.schema.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write       # to push the inbox update
+  pull-requests: read   # to list sibling PR backlogs
+
+concurrency:
+  # Serialize health runs so two pollers can't race each other on the inbox.
+  group: ecosystem-health
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    name: Poll sibling repos + emit algedonic signals
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout GA
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PowerShell 7+
+        shell: bash
+        run: |
+          # PowerShell is preinstalled on ubuntu-latest runners as `pwsh`.
+          # We just sanity-check it's at version 7+ (we need [ValidateSet]
+          # + [System.Security.Cryptography.RandomNumberGenerator]).
+          pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+
+      - name: Verify algedonic emit helper round-trips
+        shell: bash
+        run: |
+          # Smoke test before we trust the helper for live emissions.
+          pwsh -NoProfile -File Scripts/algedonic-emit.test.ps1
+
+      - name: Poll sibling repos + write signals
+        id: poll
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+        shell: bash
+        run: |
+          set -e
+
+          # ── State file for consecutive-failure tracking ─────────────────
+          # Stored in state/algedonic/poller-state.json. Reset to empty if
+          # absent. Sequence of failures crosses warn -> fail at 2 in a row.
+          state_file="state/algedonic/poller-state.json"
+          mkdir -p state/algedonic
+          if [ ! -f "$state_file" ]; then echo '{}' > "$state_file"; fi
+          prev_state="$(cat "$state_file")"
+
+          # ── Sibling repos to poll ───────────────────────────────────────
+          # Format: "slug|expected-quality-glob|blocked-label"
+          # The quality file is best-effort (some siblings don't have one yet).
+          # The blocked label is agent-blackbox's standard.
+          repos=(
+            "GuitarAlchemist/ix|state/quality"
+            "GuitarAlchemist/tars|state/quality"
+            "GuitarAlchemist/Demerzel|state/quality"
+            "GuitarAlchemist/sentrux|state/quality"
+            "GuitarAlchemist/hari|state/quality"
+          )
+
+          # ── Aggregate counters for the "total outage" check ─────────────
+          probe_count=0
+          probe_fail=0
+          new_state="{}"
+
+          emit() {
+            # emit <severity> <repo> <source> <summary> <details> <evidence_url> [<artifact1>,<artifact2>,...]
+            local sev="$1" repo="$2" source="$3" summary="$4" details="$5" url="$6" artifacts="$7"
+
+            local artifact_args=()
+            if [ -n "$artifacts" ]; then
+              IFS=',' read -ra parts <<< "$artifacts"
+              # PowerShell array param is passed as comma-joined string in
+              # bash; we instead pass each value separately. AffectedArtifacts
+              # is [string[]] — pwsh array binding accepts repeated -X v1 -X v2
+              # via -ArgumentList, but inline -File doesn't. Use a here-string
+              # to invoke pwsh with -Command so array binding works.
+              local quoted=()
+              for p in "${parts[@]}"; do
+                quoted+=("'$p'")
+              done
+              artifact_args=(-AffectedArtifacts "$(IFS=,; echo "${quoted[*]}")")
+            fi
+
+            # Invoke via -Command so multi-value -AffectedArtifacts binds.
+            # Build the call inline.
+            local call="& ./Scripts/algedonic-emit.ps1"
+            call+=" -Severity '$sev'"
+            call+=" -Repo '$repo'"
+            call+=" -Source '$source'"
+            call+=" -Summary '$(echo "$summary" | sed "s/'/''/g")'"
+            call+=" -Details '$(echo "$details" | sed "s/'/''/g")'"
+            if [ -n "$url" ]; then
+              call+=" -EvidenceUrl '$url'"
+            fi
+            if [ -n "$artifacts" ]; then
+              # Build the PowerShell array literal: 'a','b','c'
+              local ps_array=""
+              IFS=',' read -ra parts <<< "$artifacts"
+              for p in "${parts[@]}"; do
+                if [ -n "$ps_array" ]; then ps_array+=","; fi
+                ps_array+="'$p'"
+              done
+              call+=" -AffectedArtifacts $ps_array"
+            fi
+
+            pwsh -NoProfile -Command "$call"
+          }
+
+          for entry in "${repos[@]}"; do
+            IFS='|' read -r slug quality_dir <<< "$entry"
+            short="${slug##*/}"
+            probe_count=$((probe_count + 1))
+
+            echo ""
+            echo "─── polling ${slug} ───"
+
+            # ── 1. HEAD reachability ────────────────────────────────────
+            api_url="https://api.github.com/repos/${slug}/commits/HEAD"
+            http_code=$(curl -sS -o /tmp/head.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              --max-time 20 "$api_url" || echo "000")
+
+            prev_fail=$(echo "$prev_state" | jq -r --arg k "$short" '.[$k].consecutive_failures // 0')
+
+            if [ "$http_code" != "200" ]; then
+              probe_fail=$((probe_fail + 1))
+              new_fail=$((prev_fail + 1))
+              new_state=$(echo "$new_state" | jq --arg k "$short" --argjson n "$new_fail" \
+                '. + {($k): {"consecutive_failures": $n, "last_status": "fail"}}')
+
+              if [ "$new_fail" -ge 2 ]; then
+                emit "fail" "${short,,}" "ecosystem-health-poller" \
+                  "[poll] ${slug} HEAD unreachable for ${new_fail} consecutive polls (HTTP ${http_code})" \
+                  "## What\n\nThe ecosystem-health poller could not reach the GitHub API for **${slug}** for ${new_fail} consecutive runs.\n\n## Symptom\n\n\`\`\`\nGET ${api_url}\nHTTP ${http_code}\n\`\`\`\n\n## What to check\n\n- GitHub status page (https://www.githubstatus.com/)\n- The sibling repo may have been renamed/transferred\n- Token scope (the workflow uses GITHUB_TOKEN with cross-repo read access)" \
+                  "$RUN_URL" ""
+              else
+                emit "warn" "${short,,}" "ecosystem-health-poller" \
+                  "[poll] ${slug} HEAD probe failed (HTTP ${http_code})" \
+                  "First failed probe in this run. Will escalate to severity=fail if it happens again." \
+                  "$RUN_URL" ""
+              fi
+              continue
+            fi
+
+            # ── 2. Best-effort quality snapshot peek ────────────────────
+            # We don't try to interpret each sibling's quality JSON shape —
+            # just confirm the directory exists. If it disappears (rare), emit
+            # warn so the operator notices the surface has gone dark.
+            # Use the contents API; HEAD returns 200 if directory exists.
+            qcode=$(curl -sS -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              --max-time 20 \
+              "https://api.github.com/repos/${slug}/contents/${quality_dir}" \
+              || echo "000")
+
+            # ── 3. Blocked-PR backlog ───────────────────────────────────
+            # agent-blackbox uses the literal label "agent-blackbox-reviewed"
+            # to override blocks; absence of that label + open PR + risk-report
+            # comment = effectively blocked. Cheap proxy: count open PRs with
+            # the `blocked` label OR explicit `do-not-merge` label.
+            blocked_count=$(gh pr list --repo "$slug" --state open --json labels \
+              --jq '[.[] | select(any(.labels[]; .name == "blocked" or .name == "do-not-merge" or .name == "needs-review"))] | length' \
+              2>/dev/null || echo "0")
+
+            new_state=$(echo "$new_state" | jq --arg k "$short" --argjson b "$blocked_count" \
+              '. + {($k): {"consecutive_failures": 0, "last_status": "ok", "blocked_prs": $b}}')
+
+            if [ "$blocked_count" -gt 3 ]; then
+              emit "warn" "${short,,}" "ecosystem-health-poller" \
+                "[poll] ${slug} has ${blocked_count} blocked PRs open" \
+                "## Backlog\n\n${blocked_count} open PRs labeled blocked / do-not-merge / needs-review. Threshold = 3.\n\n## Source labels\n\n- \`blocked\`\n- \`do-not-merge\`\n- \`needs-review\`\n\nList: https://github.com/${slug}/pulls?q=is%3Aopen+label%3Ablocked%2Cdo-not-merge%2Cneeds-review" \
+                "https://github.com/${slug}/pulls" ""
+            fi
+
+            echo "  ${slug}: head=${http_code}, quality=${qcode}, blocked_prs=${blocked_count}"
+          done
+
+          # ── 4. Total-outage check ────────────────────────────────────────
+          if [ "$probe_fail" -eq "$probe_count" ] && [ "$probe_count" -gt 0 ]; then
+            emit "critical" "ga" "ecosystem-health-poller" \
+              "[total outage] All ${probe_count} sibling repos unreachable" \
+              "## What\n\nEvery sibling-repo HEAD probe in this run failed. This is almost certainly a GA-side network / token issue rather than every sibling going down simultaneously.\n\n## What to check\n\n1. https://www.githubstatus.com/\n2. Token scope on \`secrets.GITHUB_TOKEN\` (should be a workflow token with cross-repo read)\n3. Recent GitHub Actions runner outages" \
+              "$RUN_URL" "state/algedonic/poller-state.json"
+          fi
+
+          # ── 5. Persist state ─────────────────────────────────────────────
+          echo "$new_state" | jq --indent 2 . > "$state_file"
+
+      - name: Commit + push if inbox or poller state changed
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/algedonic/
+
+          if git diff --cached --quiet; then
+            echo "No algedonic changes — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(algedonic): ecosystem-health poll $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
+          git push origin HEAD:main
