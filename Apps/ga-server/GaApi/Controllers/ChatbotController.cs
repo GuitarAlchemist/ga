@@ -23,6 +23,7 @@ using Services;
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
+// @ai:business-value SSE chatbot ingress — the demo flow every visitor sees on guitaralchemist.com; outage here = product invisible [T:manually-reviewed conf:0.95 src:product-owner@2026-05-24]
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatApplicationService chatService,
