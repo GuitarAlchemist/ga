@@ -85,6 +85,17 @@ jobs:
       - name: Install Playwright browsers
         run: cd tools/pw && npx playwright install --with-deps chromium
 
+      - name: Symlink node_modules into React dir
+        # Node ESM resolver doesn't honor NODE_PATH, and the
+        # playwright.dashboard.config.ts file imports
+        # '@playwright/test' relatively. Symlinking the installed
+        # node_modules into ReactComponents/ga-react-components/ lets
+        # Node's normal resolver find it without polluting npm state
+        # (the symlink is in workspace tmpfs and never touched by git).
+        run: |
+          ln -sfn "$GITHUB_WORKSPACE/tools/pw/node_modules" \
+            "$GITHUB_WORKSPACE/ReactComponents/ga-react-components/node_modules"
+
       - name: Run Playwright dashboard suite
         id: pw
         env:
@@ -94,13 +105,9 @@ jobs:
         # the post-snapshot commit. The exit code is captured separately
         # and surfaced in the snapshot JSON.
         continue-on-error: true
-        # We run the React-side config from the tools/pw npm env so node
-        # resolves @playwright/test from tools/pw/node_modules.
         run: |
           cd ReactComponents/ga-react-components
-          NODE_PATH=$GITHUB_WORKSPACE/tools/pw/node_modules \
-            $GITHUB_WORKSPACE/tools/pw/node_modules/.bin/playwright test \
-            --config=playwright.dashboard.config.ts
+          npx playwright test --config=playwright.dashboard.config.ts
 
       - name: Build JSON snapshot
         # Always runs (regardless of test pass/fail) so we get a per-run
