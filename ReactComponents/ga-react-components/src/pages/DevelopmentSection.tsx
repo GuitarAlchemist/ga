@@ -46,6 +46,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import SensorsIcon from '@mui/icons-material/Sensors';
+import RuleIcon from '@mui/icons-material/Rule';
 import { HarnessTab } from '../components/Harness';
 import {
   SentruxHealthCard,
@@ -53,6 +54,7 @@ import {
   SentruxTestGapsCard,
   SentruxDsmCard,
 } from '../components/Sentrux';
+import { AiAnnotationsCard } from '../components/AiAnnotations';
 
 interface DevLink {
   title: string;
@@ -1033,8 +1035,8 @@ const LayerMapCard: React.FC = () => {
 };
 
 
-type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'sentrux' | 'harness';
-const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'sentrux', 'harness'];
+type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'sentrux' | 'harness' | 'annotations';
+const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'sentrux', 'harness', 'annotations'];
 
 const readSubTabFromHash = (): DevSubTab => {
   if (typeof window === 'undefined') return 'summary';
@@ -1088,6 +1090,7 @@ export const DevelopmentSection: React.FC = () => {
           <Tab value="qa"           label="QA"           icon={<VerifiedIcon fontSize="small" />}    iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="sentrux"      label="Sentrux"      icon={<SensorsIcon fontSize="small" />}     iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="harness"      label="Harness"      icon={<ConstructionIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="annotations"  label="Annotations"  icon={<RuleIcon fontSize="small" />}         iconPosition="start" sx={{ minHeight: 44 }} />
         </Tabs>
       </Box>
 
@@ -1152,6 +1155,12 @@ export const DevelopmentSection: React.FC = () => {
         <Stack spacing={2}>
           <LoopsGoalsCard />
           <HarnessTab />
+        </Stack>
+      )}
+
+      {subTab === 'annotations' && (
+        <Stack spacing={2}>
+          <AiAnnotationsCard />
         </Stack>
       )}
     </Stack>
