@@ -227,13 +227,23 @@ public sealed class AlgedonicEmitter
         // ceiling means a single Write is atomic on the file systems we ship
         // on (NTFS, ext4); the lock just keeps concurrent emits from
         // interleaving partial lines.
+        //
+        // FileShare.ReadWrite: the inbox is explicitly a cross-process shared
+        // append target (Scripts/algedonic-emit.ps1 and the .NET emitter both
+        // write to it). FileShare.Read would block a concurrent PowerShell
+        // emit and surface as an IOException that Emit() catches and logs
+        // but drops — silently losing security/governance signals on
+        // contention. The <4 KB-per-line ceiling keeps each append atomic
+        // on NTFS/ext4; this in-process lock keeps our own threads from
+        // interleaving, and OS append-mode handles inter-process atomicity
+        // within that same ceiling.
         lock (_writeGate)
         {
             using var stream = new FileStream(
                 _inboxPath,
                 FileMode.Append,
                 FileAccess.Write,
-                FileShare.Read);
+                FileShare.ReadWrite);
             using var writer = new StreamWriter(stream, Utf8NoBom);
             writer.WriteLine(jsonLine);
         }
