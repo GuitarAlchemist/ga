@@ -146,6 +146,15 @@ jetbrains-plugin/.gradle/
 # (tracked) holds the schema + README + setup script.
 .claude/local/
 
+# Per-machine runtime tracker mirror for Claude Code /loop and /goal
+# invocations. The canonical copy lives under
+# ~/.claude/projects/<encoded-repo>/state/runtime-loops-goals.jsonl;
+# this repo-local mirror is the readable-by-Vite copy. Schema in
+# .claude/hooks/README.md. The tracker script itself is committed at
+# .claude/hooks/loops-goals-tracker.ps1.
+state/.runtime-loops-goals.jsonl
+.claude/hooks/local-state/
+
 # AI chat exports (ChatGPT, Gemini, etc. — personal notes, not repo artifacts)
 ChatGPT-*.md
 Gemini-*.md
