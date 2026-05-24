@@ -1,0 +1,122 @@
+name: PR Token Spend
+
+# Estimates the dollar cost of an agent loop on each PR by inspecting
+# Co-Authored-By: trailers, diff size, and commit message length. Posts
+# the estimate as a sticky PR comment and writes a per-PR JSON record
+# to state/quality/ai-costs/<head_sha>.json for the AI Contributors
+# dashboard card to consume.
+#
+# This is intentionally a *heuristic* upper bound, not provider billing.
+# See Scripts/pr-token-tally.ps1 and state/quality/ai-costs/README.md.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write   # for the optional threshold-alert issue
+
+concurrency:
+  # One run per PR; cancel in-flight runs if a new commit lands.
+  group: pr-token-spend-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  estimate-spend:
+    runs-on: ubuntu-latest
+    # Cost of this job itself ~= 30s ubuntu-latest minute => ~$0.004 per run.
+    # See "Cost of this workflow" note in state/quality/ai-costs/README.md.
+    timeout-minutes: 5
+    steps:
+      - name: Checkout PR head (full history)
+        uses: actions/checkout@v4
+        with:
+          # Need full history to walk BASE_SHA..HEAD_SHA and read commit bodies.
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Resolve commit range
+        id: range
+        shell: bash
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          # Use the PR-base SHA directly; GitHub already provides the merge base
+          # for the PR. Walking with rev-list ensures we count only PR commits.
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "Range: $base..$head"
+          git log --oneline "$base..$head" || true
+
+      - name: Run token tally
+        id: tally
+        shell: pwsh
+        env:
+          # threshold_alert_usd: set to e.g. 5.00 to enable. null/0 = disabled.
+          # Kept at 0 by default per design doc: alert wiring exists but is
+          # intentionally not enabled until we have telemetry to calibrate.
+          PR_TOKEN_SPEND_THRESHOLD_USD: "0"
+        run: |
+          pwsh ./Scripts/pr-token-tally.ps1 `
+            -PrNumber ${{ github.event.pull_request.number }} `
+            -BaseSha "${{ steps.range.outputs.base }}" `
+            -HeadSha "${{ steps.range.outputs.head }}" `
+            -CommentOutFile pr-token-spend-comment.md `
+            -ThresholdAlertUsd ([double]$env:PR_TOKEN_SPEND_THRESHOLD_USD)
+
+      - name: Upload per-PR JSON artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-token-spend-${{ steps.range.outputs.head }}
+          path: |
+            state/quality/ai-costs/${{ steps.range.outputs.head }}.json
+            pr-token-spend-comment.md
+          retention-days: 30
+
+      - name: Post / update PR comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- pr-token-spend -->';
+            const path = 'pr-token-spend-comment.md';
+            if (!fs.existsSync(path)) {
+              core.warning(`Comment file ${path} not produced; skipping comment post.`);
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const existing = comments.data.find(c =>
+              c.user && c.user.type === 'Bot' && c.body && c.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              core.info(`Updated existing comment ${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info('Posted new PR comment.');
+            }
+
+      - name: Open threshold-alert issue
+        # Only fires if Scripts/pr-token-tally.ps1 set spend_alert=true (which
+        # requires PR_TOKEN_SPEND_THRESHOLD_USD > 0 *and* total > threshold).
+        # Intentionally disabled in the default config above.
+        if: steps.tally.outputs.spend_alert == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const total = '${{ steps.tally.outputs.total_cost_usd }}';
+            const pr = context.issue.number;
+            await github.rest.issues.create({
+              owner, repo,
+              title: `Agent budget exceeded on PR #${pr} (est. $${total})`,
+              body: `Workflow \`pr-token-spend\` flagged PR #${pr} as exceeding the configured budget.\n\nEstimated cost: **$${total}**\n\nSee the PR comment for the per-agent breakdown and \`state/quality/ai-costs/\` for the JSON record.\n\n_Estimate only; verify against provider billing dashboards before taking action._`,
+              labels: ['governance', 'agent-budget'],
+            });
