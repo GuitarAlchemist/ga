@@ -452,6 +452,20 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
     const focus: FocusState = { pitch: null, chord: null, scale: null };
     let cameraTargetPos = camera.position.clone();
     let cameraTargetLook = new THREE.Vector3(0, 0, 0);
+    // True only while a focus-driven camera transition is in flight. The
+    // animation loop only lerps camera.position toward cameraTargetPos
+    // when this is true; otherwise OrbitControls owns the camera (so user
+    // wheel-zoom / pinch / drag-rotate aren't snapped back next frame).
+    // Set true by updateCameraTarget(); cleared either when the lerp
+    // converges (within CAMERA_SETTLE_EPS) or when the user grabs
+    // controls (the 'start' listener below).
+    let cameraAnimating = false;
+    const CAMERA_SETTLE_EPS = 0.05;
+
+    // OrbitControls fires 'start' the moment the user touches the canvas
+    // with a gesture that affects the camera (wheel, pinch, drag). That's
+    // our signal to release the focus-driven ease — the user has spoken.
+    controls.addEventListener('start', () => { cameraAnimating = false; });
 
     const removeMeshes = (meshes: OrbitMesh[]) => {
       for (const m of meshes) {
@@ -509,6 +523,10 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
           .add(dir.clone().multiplyScalar(dist * 0.8))
           .add(new THREE.Vector3(0, dist * elev, 0));
       }
+      // Arm the focus-driven ease. The animation loop will lerp until
+      // it converges (or the user grabs OrbitControls and the 'start'
+      // listener cancels us).
+      cameraAnimating = true;
     };
 
     // ─── Audio ──────────────────────────────────────────────────────────────
@@ -764,9 +782,16 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
     if (tourRef.current) startTour();
 
     // ─── Resize ────────────────────────────────────────────────────────────
+    // Watch BOTH the window (orientation / browser-chrome changes) AND
+    // the container element (MUI styles / parent flexbox can settle a
+    // few frames after mount, so the initial clientHeight read in the
+    // useEffect was undersized — the canvas would stay short until the
+    // next window resize). ResizeObserver fires whenever the container
+    // box changes for any reason.
     const onResize = () => {
       const W = container.clientWidth || window.innerWidth;
       const H = container.clientHeight || window.innerHeight;
+      if (W < 1 || H < 1) return;
       camera.aspect = W / H;
       camera.updateProjectionMatrix();
       renderer.setSize(W, H);
@@ -774,6 +799,8 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       bloomPass?.setSize(W, H);
     };
     window.addEventListener('resize', onResize);
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
 
     // ─── Animation loop ────────────────────────────────────────────────────
     let lastT = performance.now();
@@ -810,10 +837,21 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       const haloScale = 6.0 + 0.6 * pulseSrc;
       halo.scale.set(haloScale, haloScale, 1);
 
-      // Ease camera toward target.
-      const easeFactor = 1 - Math.pow(0.001, dt);
-      camera.position.lerp(cameraTargetPos, easeFactor);
-      controls.target.lerp(cameraTargetLook, easeFactor);
+      // Ease camera toward target — only when a focus transition is
+      // active. Once converged (or the user grabs OrbitControls), we
+      // hand the camera back to controls entirely so wheel-zoom / pinch
+      // / drag-rotate persist instead of snapping back next frame.
+      if (cameraAnimating) {
+        const easeFactor = 1 - Math.pow(0.001, dt);
+        camera.position.lerp(cameraTargetPos, easeFactor);
+        controls.target.lerp(cameraTargetLook, easeFactor);
+        if (
+          camera.position.distanceTo(cameraTargetPos) < CAMERA_SETTLE_EPS &&
+          controls.target.distanceTo(cameraTargetLook) < CAMERA_SETTLE_EPS
+        ) {
+          cameraAnimating = false;
+        }
+      }
       controls.update();
 
       // Motes time uniform.
@@ -827,6 +865,16 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       if (composer) composer.render();
       else renderer.render(scene, camera);
 
+      // Test-harness instrumentation (opt-in via `?test=zoom` URL param).
+      // TonalOrbitTest sets `data-test=zoom` on the canvas when the URL
+      // param is present; we then expose camera state in DOM attributes
+      // so a headless --dump-dom probe can verify the zoom-stays fix.
+      // Zero overhead on the production code path.
+      if (renderer.domElement.getAttribute('data-test') === 'zoom') {
+        renderer.domElement.setAttribute('data-camera-dist', camera.position.length().toFixed(2));
+        renderer.domElement.setAttribute('data-camera-animating', String(cameraAnimating));
+      }
+
       rafId = requestAnimationFrame(animate);
     };
     rafId = requestAnimationFrame(animate);
@@ -836,6 +884,7 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       cancelTour();
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
+      resizeObserver.disconnect();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
