@@ -1,6 +1,7 @@
 import type { CanonicalBodyId, TextureAssetSet } from './assetTypes';
 
 const solarSystemScopeUrl = 'https://www.solarsystemscope.com/textures/';
+const noaaScienceOnSphereMilkyWayUrl = 'https://sos.noaa.gov/catalog/datasets/milky-way-panorama/';
 
 export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   sun: {
@@ -119,17 +120,16 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   },
   'milky-way': {
     id: 'milky-way',
-    displayName: 'Milky Way Panorama',
-    source: 'Solar System Scope',
-    sourceUrl: solarSystemScopeUrl,
-    license: 'CC BY 4.0',
+    displayName: 'Milky Way All-Sky Panorama',
+    source: 'NOAA Science On a Sphere',
+    sourceUrl: noaaScienceOnSphereMilkyWayUrl,
+    license: 'NOAA/NASA GSFC dataset; credit Axel Mellinger',
     textures: {
       stars: {
-        '2k': '/textures/milky-way-2k.jpg',
-        '8k': '/textures/milky-way-8k.jpg',
+        '2k': '/textures/milky-way-nasa-sos-2048.jpg',
       },
     },
-    notes: 'Canonical photographic sky panorama used behind the star dome.',
+    notes: 'Visible-light all-sky Milky Way map from the NOAA Science On a Sphere catalog, developed with NASA GSFC.',
   },
   stars: {
     id: 'stars',

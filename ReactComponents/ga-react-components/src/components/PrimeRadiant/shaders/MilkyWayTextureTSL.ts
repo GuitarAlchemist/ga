@@ -2,9 +2,10 @@
 // Photographic Milky Way panorama — samples an equirectangular astrophotography
 // texture instead of procedurally generating the galactic band.
 //
-// Source: Solar System Scope (https://www.solarsystemscope.com/textures/)
-// Their Milky Way panoramas are composites of real ESO/NASA imagery,
-// CC-BY 4.0 licensed, standard 2:1 equirectangular format.
+// Source: NOAA Science On a Sphere Milky Way Panorama
+// https://sos.noaa.gov/catalog/datasets/milky-way-panorama/
+// Visible-light all-sky map developed with NASA GSFC; standard 2:1
+// equirectangular format.
 //
 // Rendered on a BackSide sphere — we're inside it, looking out. SphereGeometry's
 // built-in UVs are equirectangular, so we sample with `uv()` directly.

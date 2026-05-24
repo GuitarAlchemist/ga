@@ -36,7 +36,7 @@ export interface TextureTierSet {
 export interface TextureAssetSet {
   id: CanonicalBodyId;
   displayName: string;
-  source: 'Solar System Scope' | 'Internal';
+  source: 'Solar System Scope' | 'NOAA Science On a Sphere' | 'Internal';
   sourceUrl: string;
   license: string;
   textures: Partial<Record<TextureMapKind, TextureTierSet>>;
