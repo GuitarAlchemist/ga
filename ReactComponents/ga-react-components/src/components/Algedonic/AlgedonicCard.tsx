@@ -173,7 +173,7 @@ export const AlgedonicCard: React.FC<AlgedonicCardProps> = ({ refreshIntervalMs 
     projection.by_severity.info + projection.by_severity.warn + projection.by_severity.fail + projection.by_severity.critical;
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2 }} data-testid="algedonic-card">
       <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <NotificationsActiveIcon
