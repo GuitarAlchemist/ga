@@ -363,24 +363,115 @@ if ($Snapshot) {
     }
     $snapshotPath = Join-Path $snapshotDir "$date.json"
 
+    # Silent-rot fix (#43-followup): when the backend is degraded we used to
+    # write `pass_pct: null` and call it a day. Eight days running of that
+    # punched a `null` hole in the ix-quality-trend chart and nobody noticed
+    # because the workflow stayed green ("green CI on dead workflow" —
+    # `feedback_green_but_dead` rule). The new shape:
+    #   - keep `pass_pct: null` so consumers that already special-case null
+    #     (ix-quality-trend, emit-ga-retrieval-quality) keep working
+    #   - add `degraded: true` so the JSON itself carries the diagnosis
+    #   - add `last_known_good_pass_pct` + `last_known_good_date` carried
+    #     forward from prior on-disk snapshots so the trend chart sees a
+    #     flat line instead of a null gap
+    #   - exit the script with code 2 so the workflow can route the
+    #     degradation to the algedonic inbox + tracking issue
+    function _FindLastKnownGood {
+        param([string]$Dir, [string]$TodayStem)
+        if (-not (Test-Path $Dir)) { return $null }
+        # Iterate snapshots newest -> oldest, skipping today's file (which we
+        # are about to overwrite) and skipping baseline.json / last.json
+        # which are not date-stamped trend points.
+        $candidates = Get-ChildItem -Path $Dir -Filter '*.json' -File |
+            Where-Object { $_.BaseName -match '^\d{4}-\d{2}-\d{2}$' -and $_.BaseName -ne $TodayStem } |
+            Sort-Object BaseName -Descending
+        foreach ($f in $candidates) {
+            try {
+                $obj = Get-Content -Raw -Path $f.FullName -Encoding UTF8 | ConvertFrom-Json
+                if ($null -ne $obj.pass_pct) {
+                    return [pscustomobject]@{ pass_pct = [double]$obj.pass_pct; date = $f.BaseName; source = 'snapshot' }
+                }
+                # Walk further back through previously-degraded files that
+                # themselves carried a last_known_good — chain the carryforward
+                # so we don't lose history through a long degraded streak.
+                if ($null -ne $obj.last_known_good_pass_pct) {
+                    return [pscustomobject]@{
+                        pass_pct = [double]$obj.last_known_good_pass_pct
+                        date     = if ($obj.last_known_good_date) { [string]$obj.last_known_good_date } else { $f.BaseName }
+                        source   = 'carryforward'
+                    }
+                }
+            } catch { continue }
+        }
+        # Final fallback: the operator-pinned baseline.json. baseline.primary_baseline
+        # is a 0..1 fraction; the trend snapshot uses 0..100 percent. Convert.
+        $baselineFile = Join-Path $Dir 'baseline.json'
+        if (Test-Path $baselineFile) {
+            try {
+                $baseObj = Get-Content -Raw -Path $baselineFile -Encoding UTF8 | ConvertFrom-Json
+                if ($null -ne $baseObj.primary_baseline) {
+                    # PowerShell's ConvertFrom-Json auto-parses ISO-8601 strings
+                    # into [datetime]. Format back to ISO to keep the snapshot
+                    # field a string in every locale.
+                    $bdate = if ($baseObj.established_at -is [datetime]) {
+                        $baseObj.established_at.ToUniversalTime().ToString("o")
+                    } elseif ($baseObj.established_at) {
+                        [string]$baseObj.established_at
+                    } else {
+                        'baseline.json'
+                    }
+                    return [pscustomobject]@{
+                        pass_pct = [math]::Round([double]$baseObj.primary_baseline * 100, 2)
+                        date     = $bdate
+                        source   = 'baseline'
+                    }
+                }
+            } catch {}
+        }
+        return $null
+    }
+
     $snap = [ordered]@{
         timestamp     = (Get-Date -Format "o")
         total_prompts = $totalPrompts
     }
     if ($environmentDegraded) {
+        $lkg = _FindLastKnownGood -Dir $snapshotDir -TodayStem $date
         $snap.pass_pct = $null
+        $snap.degraded = $true
+        $snap.degraded_reason = "backend_unavailable"
         $snap.note = "Environment degraded: $($envFailureFailures.Count)/$($failures.Count) failures were HTTP 5xx / network errors. pass_pct omitted — backend (Ollama / OPTIC-K index / deps) was unavailable, not the chatbot itself failing."
+        if ($lkg) {
+            $snap.last_known_good_pass_pct   = $lkg.pass_pct
+            $snap.last_known_good_date       = $lkg.date
+            $snap.last_known_good_source     = $lkg.source   # 'snapshot' | 'carryforward' | 'baseline'
+        } else {
+            $snap.last_known_good_pass_pct   = $null
+            $snap.last_known_good_date       = $null
+            $snap.last_known_good_source     = $null
+        }
         # Don't write a by_category breakdown either — every category is
         # 0% for the same reason, and the per-category line would lock in
         # a misleading low baseline on the dashboard.
     } else {
         $snap.pass_pct = $overallPassPct
+        $snap.degraded = $false
         $snap.by_category = $byCategory
     }
     $snap | ConvertTo-Json -Depth 4 | Set-Content $snapshotPath -Encoding UTF8
     Write-Host ""
     Write-Host "Wrote trend snapshot to $snapshotPath" -ForegroundColor Cyan
-    Write-Host "  total=$totalPrompts (+$skippedPrompts skipped)  failed=$($failures.Count)  pass_pct=$overallPassPct%" -ForegroundColor Cyan
+    if ($environmentDegraded) {
+        $lkgPctDisplay = if ($snap.last_known_good_pass_pct -ne $null) { "$($snap.last_known_good_pass_pct)% (from $($snap.last_known_good_date))" } else { "<none on disk>" }
+        Write-Host "  DEGRADED: backend unavailable; pass_pct=null; last_known_good=$lkgPctDisplay" -ForegroundColor Yellow
+        # Exit code 2 = degraded-but-snapshot-written. The workflow uses this
+        # to decide whether to emit an algedonic signal. We still want the
+        # snapshot file committed (the carryforward IS the dashboard signal),
+        # but we want the workflow to flag the run as needing attention.
+        exit 2
+    } else {
+        Write-Host "  total=$totalPrompts (+$skippedPrompts skipped)  failed=$($failures.Count)  pass_pct=$overallPassPct%" -ForegroundColor Cyan
+    }
 }
 
 exit $dotnetExitCode

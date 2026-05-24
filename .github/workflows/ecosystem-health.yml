@@ -91,11 +91,17 @@ jobs:
           # Format: "slug|expected-quality-glob|blocked-label"
           # The quality file is best-effort (some siblings don't have one yet).
           # The blocked label is agent-blackbox's standard.
+          #
+          # sentrux is INTENTIONALLY EXCLUDED — it ships as a binary at
+          # C:/Users/spare/bin/sentrux.exe (see .mcp.json) with no
+          # GuitarAlchemist/sentrux GitHub repo. Its health is monitored
+          # via the `mcp__sentrux__health` tool, not the GitHub API.
+          # See follow-up TODO: add an MCP-health-probe path so binary-only
+          # siblings get poll coverage too (current path is GitHub-only).
           repos=(
             "GuitarAlchemist/ix|state/quality"
             "GuitarAlchemist/tars|state/quality"
             "GuitarAlchemist/Demerzel|state/quality"
-            "GuitarAlchemist/sentrux|state/quality"
             "GuitarAlchemist/hari|state/quality"
           )
 
