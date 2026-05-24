@@ -31,6 +31,7 @@ import {
   type FocusState,
   type TonalOrbitApi,
   type PerfMode,
+  type ChordMode,
 } from '../components/TonalOrbit';
 
 const detectDefaultPerf = (): PerfMode => {
@@ -54,6 +55,44 @@ const readTourFromUrl = (): boolean => {
   if (typeof window === 'undefined') return false;
   const q = new URLSearchParams(window.location.search).get('tour');
   return q === 'auto' || q === '1' || q === 'true';
+};
+
+const readChordModeFromUrl = (): ChordMode => {
+  if (typeof window === 'undefined') return 'root';
+  const q = new URLSearchParams(window.location.search).get('chord-mode');
+  return q === 'key' ? 'key' : 'root'; // default is Mode A (root chords)
+};
+
+// Pitch-class name → PC lookup for the auto-focus harness URL syntax.
+const PC_BY_NAME: Record<string, number> = {
+  C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
+  'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11,
+};
+
+/**
+ * Optional auto-focus harness — when URL has `?auto-focus=<pitchName>`
+ * (e.g. `?auto-focus=C`), programmatically focuses that pitch 1.5s after
+ * mount via the imperative API. Lets a headless screenshot capture the
+ * focused state (chord + optionally scale orbits visible) without
+ * having to guess pitch-planet screen coordinates. Records the chosen
+ * pitch on `<body data-auto-focus="...">` so a dump-dom probe can tell
+ * whether the harness ran.
+ */
+const armAutoFocus = (): void => {
+  if (typeof window === 'undefined') return;
+  const pitchName = new URLSearchParams(window.location.search).get('auto-focus');
+  if (!pitchName) return;
+  const pc = PC_BY_NAME[pitchName];
+  if (pc === undefined) return;
+  setTimeout(() => {
+    const api = (window as unknown as { __tonalOrbitApi?: TonalOrbitApi }).__tonalOrbitApi;
+    if (!api) {
+      document.body.setAttribute('data-auto-focus', `FAIL_NO_API:${pitchName}`);
+      return;
+    }
+    api.focusPitchByPc(pc);
+    document.body.setAttribute('data-auto-focus', `${pitchName}:pc=${pc}`);
+  }, 1500);
 };
 
 /**
@@ -105,16 +144,29 @@ const TonalOrbitTest: React.FC = () => {
   // Read once on mount — perf tier change requires remount of the scene.
   const perf = useMemo<PerfMode>(readPerfFromUrl, []);
   const tour = useMemo<boolean>(readTourFromUrl, []);
-  React.useEffect(() => { armZoomTest(); }, []);
+  React.useEffect(() => { armZoomTest(); armAutoFocus(); }, []);
 
   const [focus, setFocus] = useState<FocusState>({ pitch: null, chord: null, scale: null });
   const [audioOn, setAudioOn] = useState<boolean>(true);
   const [orbitingOn, setOrbitingOn] = useState<boolean>(true);
+  // Chord mode: 'root' (Mode A — chord families on the focused pitch as
+  // root) or 'key' (Mode B — diatonic chords of the focused pitch's
+  // major key, with the 7 modes of that key in the outer ring).
+  const [chordMode, setChordMode] = useState<ChordMode>(readChordModeFromUrl);
   const apiRef = React.useRef<TonalOrbitApi | null>(null);
 
   const handleFocus = useCallback((f: FocusState) => setFocus(f), []);
   const handleReady = useCallback((api: TonalOrbitApi) => {
     apiRef.current = api;
+    // Push the URL-driven mode into the scene the moment the API hooks up.
+    api.setChordMode(chordMode);
+    // Expose the API on window for headless-screenshot probes so they
+    // don't have to guess pitch-planet screen coordinates. Gated behind
+    // the same `?auto-focus=` URL param the rest of the harness uses.
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('auto-focus')) {
+      (window as unknown as { __tonalOrbitApi?: TonalOrbitApi }).__tonalOrbitApi = api;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const path = focusPath(focus);
@@ -128,6 +180,18 @@ const TonalOrbitTest: React.FC = () => {
     setOrbitingOn(on);
     apiRef.current?.setOrbiting(on);
   };
+  const toggleChordMode = (next: ChordMode) => {
+    if (next === chordMode) return;
+    setChordMode(next);
+    apiRef.current?.setChordMode(next);
+    // Reflect the new mode in the URL so it survives page reloads / shares.
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (next === 'root') url.searchParams.delete('chord-mode'); // keep default URL clean
+      else url.searchParams.set('chord-mode', next);
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
 
   return (
     <DemoErrorBoundary demoName="Tonal Orbit">
@@ -140,8 +204,91 @@ const TonalOrbitTest: React.FC = () => {
         disableGutters
         sx={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', backgroundColor: '#000' }}
       >
-        <TonalOrbit perf={perf} tour={tour} onFocusChange={handleFocus} onReady={handleReady} />
+        <TonalOrbit perf={perf} tour={tour} chordMode={chordMode} onFocusChange={handleFocus} onReady={handleReady} />
         <CastButton label="Cast" />
+
+        {/* Chord-mode pill. Switches the chord/scale orbit between
+            "Root chords" (Mode A — chord qualities on the focused pitch
+            as root) and "Key chords" (Mode B — diatonic chords of the
+            focused pitch's major key + the 7 modes of that key). The
+            mode change rebuilds only the chord/scale orbit, not the
+            renderer or starfield.
+
+            Placement: top-centre on tablet+ (sm and up); on mobile (xs)
+            the breadcrumb + Cast button squeeze the centre, so the
+            pill drops below them (top: 60). The "MODE" label is
+            collapsed on mobile to keep the pill narrow. */}
+        <Paper
+          elevation={3}
+          sx={{
+            position: 'absolute',
+            top: { xs: 60, sm: 16 },
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1,
+            py: 0.5,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(155, 195, 255, 0.35)',
+            borderRadius: 1.5,
+            pointerEvents: 'auto',
+            zIndex: 5,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Typography
+            sx={{
+              color: '#7da8cf', fontFamily: 'monospace', fontSize: 11, letterSpacing: 1,
+              mr: 1,
+              display: { xs: 'none', sm: 'inline' }, // MODE label takes too much room on mobile
+            }}
+          >
+            MODE
+          </Typography>
+          <Box
+            role="button"
+            tabIndex={0}
+            aria-pressed={chordMode === 'root'}
+            onClick={() => toggleChordMode('root')}
+            sx={{
+              cursor: 'pointer',
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: chordMode === 'root' ? '#0a0e2a' : '#cfe7ff',
+              backgroundColor: chordMode === 'root' ? '#9bc3ff' : 'transparent',
+              userSelect: 'none',
+              transition: 'background-color 120ms ease, color 120ms ease',
+            }}
+          >
+            Root chords
+          </Box>
+          <Box
+            role="button"
+            tabIndex={0}
+            aria-pressed={chordMode === 'key'}
+            onClick={() => toggleChordMode('key')}
+            sx={{
+              cursor: 'pointer',
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: chordMode === 'key' ? '#0a0e2a' : '#cfe7ff',
+              backgroundColor: chordMode === 'key' ? '#9bc3ff' : 'transparent',
+              userSelect: 'none',
+              transition: 'background-color 120ms ease, color 120ms ease',
+            }}
+          >
+            Key chords
+          </Box>
+        </Paper>
 
         {/* Breadcrumb — top-left. Clicking pops focus. Right-side max-width
             leaves a 120px gutter for the CastButton (top-right) so the two

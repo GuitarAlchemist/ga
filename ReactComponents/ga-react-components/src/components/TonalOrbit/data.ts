@@ -108,6 +108,94 @@ export function chordsForPitch(pitch: PitchBody): ChordBody[] {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// Mode B: "Key chords" — diatonic chords and modes of the focused pitch's
+// major key.
+//
+// Where Mode A ("Root chords") asks "what chords can I build ON this
+// pitch as the root?" (Cmaj, Cm, C7, Cmaj7, ...), Mode B asks "what
+// chords belong to this pitch's major KEY?" (in C major: C, Dm, Em, F,
+// G, Am, B°). The roots vary across the orbit; the qualities are fixed
+// by the major-scale diatonic pattern.
+//
+// The seven diatonic triad qualities of a major key, in scale-degree
+// order I, ii, iii, IV, V, vi, vii°:
+// ──────────────────────────────────────────────────────────────────────
+
+/** Semitone offsets of the major scale (Ionian) above the tonic. */
+const MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11] as const;
+
+/** Roman-numeral labels for the seven diatonic chord positions. */
+const DIATONIC_DEGREE_LABELS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'] as const;
+
+/** Chord-family key per scale degree (parallels Roman numerals). */
+const DIATONIC_FAMILY_KEYS: readonly string[] = ['Major', 'Minor', 'Minor', 'Major', 'Major', 'Minor', 'Dim'];
+
+/**
+ * Diatonic triads of `pitch`'s major key. Returns 7 ChordBody entries
+ * whose roots step through the major scale and whose qualities follow
+ * the I-ii-iii-IV-V-vi-vii° pattern. Each chord's `rootPc` is the
+ * chord's own root pitch class (NOT the parent pitch).
+ */
+export function keyChordsForPitch(pitch: PitchBody): ChordBody[] {
+  return MAJOR_SCALE_INTERVALS.map((step, degreeIdx) => {
+    const rootPc = (pitch.pc + step) % 12;
+    const familyKey = DIATONIC_FAMILY_KEYS[degreeIdx];
+    const family = CHORD_FAMILIES.find((f) => f.key === familyKey)!;
+    const rootName = PITCH_CLASS_NAMES[rootPc];
+    const rootColor = pitchClassColor(rootPc);
+    return {
+      kind: 'chord',
+      family,
+      rootPc,
+      // Display: "I · C", "ii · Dm", "iii · Em", ... — Roman numeral up
+      // front so the user reads the diatonic structure immediately, then
+      // the actual chord symbol.
+      displayName: `${DIATONIC_DEGREE_LABELS[degreeIdx]} · ${rootName}${family.suffix}`,
+      // Tint by the CHORD's root colour (not the parent pitch's), so
+      // adjacent diatonic chords show their distinct circle-of-fifths
+      // hues — visually reinforces that the roots are different.
+      color: family.baseColor.clone().lerp(rootColor, 0.4),
+    };
+  });
+}
+
+// Names + intervals of the seven modes of the major scale, in
+// scale-degree order. Used for Mode B's outer ring (a ring of 7 modes
+// of the focused pitch's major key, each rooted on its scale degree).
+const MAJOR_MODE_KEYS = ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian'] as const;
+
+/**
+ * The seven modes of `pitch`'s major key, each rooted on its scale
+ * degree. Returns 7 ScaleBody entries: C Ionian, D Dorian, E Phrygian,
+ * F Lydian, G Mixolydian, A Aeolian, B Locrian (for pitch = C).
+ *
+ * In Mode B this outer ring is the SAME for any chord chosen within the
+ * parent pitch — all seven modes belong to the same parent key. The
+ * focused chord on the mid ring corresponds to one of these modes by
+ * scale-degree position (chord on degree 2 ↔ Dorian, etc.).
+ */
+export function keyModesForPitch(pitch: PitchBody): ScaleBody[] {
+  return MAJOR_SCALE_INTERVALS.map((step, degreeIdx) => {
+    const rootPc = (pitch.pc + step) % 12;
+    const scaleKey = MAJOR_MODE_KEYS[degreeIdx];
+    const scale = ALL_SCALES.find((s) => s.key === scaleKey)!;
+    const rootName = PITCH_CLASS_NAMES[rootPc];
+    const rootColor = pitchClassColor(rootPc);
+    const familyColor = SCALE_FAMILY_COLORS[scale.familyBucket] ?? new THREE.Color('#9ad0ff');
+    return {
+      kind: 'scale',
+      scale,
+      rootPc,
+      displayName: `${rootName} ${scale.display}`,
+      color: familyColor.clone().lerp(rootColor, 0.3),
+    };
+  });
+}
+
+/** Which chord-system the orbit is showing — set via URL `?chord-mode=`. */
+export type ChordMode = 'root' | 'key';
+
+// ──────────────────────────────────────────────────────────────────────
 // Scale (outer orbit, 7 bodies per chord)
 // ──────────────────────────────────────────────────────────────────────
 
