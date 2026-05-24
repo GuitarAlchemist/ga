@@ -57,6 +57,7 @@ import {
 import { AuthChip } from '../components/Auth';
 import { TestPlansCard } from '../components/TestPlans';
 import { AiAnnotationsCard } from '../components/AiAnnotations';
+import { McpControlProvider } from '../providers/McpControlProvider';
 
 interface DevLink {
   title: string;
@@ -1066,7 +1067,8 @@ export const DevelopmentSection: React.FC = () => {
   }, []);
 
   return (
-    <Stack spacing={3}>
+    <McpControlProvider>
+    <Stack spacing={3} {...{ 'data-dashboard-root': 'true' } as Record<string, string>}>
       <Box>
         <Typography variant="h5" gutterBottom>Development</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -1185,6 +1187,7 @@ export const DevelopmentSection: React.FC = () => {
         </Stack>
       )}
     </Stack>
+    </McpControlProvider>
   );
 };
 
