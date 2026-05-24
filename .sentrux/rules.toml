@@ -1,0 +1,108 @@
+# GA Sentrux architectural constraints — initial baseline (tightened post-cleanup)
+#
+# Purpose: unblock the Sentrux dashboard's "Rule violations" surface and start
+# enforcing layering/complexity discipline. Numbers here are REALISTIC starting
+# points derived from the current repo state on 2026-05-24, AFTER untracking
+# vendored node_modules and archiving the Delphi legacy tree.
+#
+# Tightening strategy:
+#   1. Whenever a PR FIXES a violator, ratchet the relevant constraint down by
+#      the amount fixed (no slack reserved).
+#   2. Never tighten a constraint past the current value without also fixing
+#      the offending code in the same PR — the dashboard goes red instantly.
+#   3. Goal end-state: max_cycles=0, max_cc=15, max_fn_lines=60. Get there over
+#      several quarters via incremental PRs.
+#
+# Baseline snapshot (sentrux check after node_modules untrack + Delphi archive):
+#   files = 5033 (was 8038), import_edges = 2255 (was 7053),
+#   cross_module_edges = 464 (was 632), cycles = 10 (unchanged — all first-party),
+#   quality_signal = 3806/10000 (was 3016 — +26%).
+
+[constraints]
+# Acyclicity: 10 cycles detected today, all in first-party code (node_modules
+# untracking did not change this — confirms cycles are genuine, not vendored).
+# Buffer to 12 for normal churn, tighten as soon as a `dead-code` /
+# `decouple-react-shim` PR lands.
+max_cycles = 12
+
+# Coupling: leave A-F coupling unconstrained for now — ga has heavy C# DI which
+# inflates raw coupling counts. Revisit after splitting GA.Business.Core.
+# max_coupling = "C"
+
+# Cyclomatic complexity ceiling: 19x tighter than the pre-cleanup 6000.
+# Top violator: ReactComponents/.../PrimeRadiant/ForceRadiant.tsx:initScene (cc=302).
+# Second: ReactComponents/.../vite.config.ts:devDataPlugin (cc=261).
+# Third drops to cc=87. Once ForceRadiant + vite.config split into smaller
+# functions, drop this to 100.
+max_cc = 310
+
+# Function length: 2x tighter than the pre-cleanup 4100.
+# Top violator: same ForceRadiant.tsx:initScene (1961 lines).
+# Second: vite.config.ts:devDataPlugin (1829 lines).
+# Once these are decomposed, drop this to 300.
+max_fn_lines = 2000
+
+# God-file detection: 10 god-files today (was 33 before cleanup). Still too
+# noisy to enforce — enable after a dedicated "shrink the giants" pass.
+no_god_files = false
+
+# ---- Layers ----
+# Bottom (order 0) = pure-domain, no project refs upward allowed.
+# Each higher layer may only depend on layers at strictly lower order.
+
+[[layers]]
+name = "core-domain"
+paths = ["Common/GA.Business.Core/*", "Common/GA.Core/*"]
+order = 0
+
+[[layers]]
+name = "ml-and-analysis"
+paths = [
+  "Common/GA.Business.ML/*",
+  "Common/GA.Business.AI/*",
+  "Common/GA.Business.Analytics/*",
+  "Common/GA.Business.Intelligence/*",
+]
+order = 1
+
+[[layers]]
+name = "mcp-and-services"
+paths = ["GaMcpServer/*", "Apps/GaQaMcp/*", "Apps/ga-graphiti-service/*"]
+order = 2
+
+[[layers]]
+name = "api"
+paths = ["Apps/ga-server/*"]
+order = 3
+
+[[layers]]
+name = "ui"
+paths = [
+  "Apps/ga-client/*",
+  "Apps/ga-dashboard/*",
+  "ReactComponents/ga-react-components/*",
+]
+order = 4
+
+[[layers]]
+name = "demos-and-cli"
+paths = ["Demos/*", "Examples/*", "GaCLI/*", "Apps/GaCli/*", "Apps/GaChatbotCli/*"]
+order = 5
+
+# ---- Boundaries ----
+# Things that should never happen, ranked by likelihood-to-be-violated.
+
+[[boundaries]]
+from = "Common/GA.Business.Core/*"
+to = "Apps/*"
+reason = "Core domain must not reference any app/host — keeps Core embeddable in CLI, server, demos."
+
+[[boundaries]]
+from = "Common/GA.Business.Core/*"
+to = "ReactComponents/*"
+reason = "Core domain must not reference React/TypeScript — UI is downstream."
+
+[[boundaries]]
+from = "Common/GA.Business.ML/*"
+to = "Apps/ga-server/*"
+reason = "ML library should not pull in ASP.NET hosting — it must run from CLI, MCP, and demos."
