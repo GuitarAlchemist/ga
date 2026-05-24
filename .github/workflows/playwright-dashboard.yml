@@ -60,14 +60,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ReactComponents/ga-react-components/package-lock.json
+          # Repo tracks pnpm-lock.yaml but the local install script in
+          # package.json (postinstall: patch-package) is npm-compatible.
+          # We avoid setup-node's cache because the file it'd hash
+          # (package-lock.json) isn't present — caching pnpm-lock here
+          # requires the pnpm action and would change install semantics.
+          # First run installs cold; future PR can wire pnpm caching.
 
       - name: Install dependencies
-        run: npm ci || npm install
-        # The repo uses pnpm-lock.yaml as a checked-in artifact but the CI
-        # pipeline is npm-based (see existing ci.yml). Fall through to
-        # `npm install` if package-lock.json is absent (the typical case here).
+        run: npm install --no-audit --no-fund
+        # Plain `npm install` (not `npm ci`) — there's no package-lock.json
+        # in the repo. The pnpm-lock.yaml is informational; the runtime
+        # contract is package.json.
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
