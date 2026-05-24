@@ -56,10 +56,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 1. Skip-suppression marker in body
-          if echo "${PR_BODY:-}" | grep -qiE '\[skip test-plan\]'; then
+          # 1. Skip-suppression marker in body. Must appear on its own line
+          #    (with optional surrounding whitespace) to avoid false positives
+          #    when the marker is *quoted* inside the PR body — e.g. a PR that
+          #    documents this very skill will mention `[skip test-plan]` inside
+          #    a backtick code span without intending to suppress.
+          if printf '%s\n' "${PR_BODY:-}" | grep -qiE '^[[:space:]]*\[skip test-plan\][[:space:]]*$'; then
             echo "decision=skip-marker" >> "$GITHUB_OUTPUT"
-            echo "Reason: PR body contains [skip test-plan]"
+            echo "Reason: PR body contains [skip test-plan] on its own line"
             exit 0
           fi
 

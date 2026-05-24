@@ -70,9 +70,12 @@ gh pr view "$PR_NUM" --json title,body,baseRefName,headRefName,headRefOid,files,
   > /tmp/test-plan-pr-$PR_NUM.json
 ```
 
-Skip-suppression: if the PR body contains `[skip test-plan]` (case-insensitive,
-anywhere in the body), exit clean with `suppressed by author`. This mirrors
-the convention from other bot workflows.
+Skip-suppression: if the PR body contains `[skip test-plan]` on its own line
+(case-insensitive, with optional surrounding whitespace), exit clean with
+`suppressed by author`. The marker must be on its own line so that PR bodies
+that *describe* the skill (mentioning the marker inside a backtick code span)
+do not accidentally suppress the workflow on themselves. This mirrors the
+convention from other bot workflows.
 
 ### 2. Capture the diff
 
