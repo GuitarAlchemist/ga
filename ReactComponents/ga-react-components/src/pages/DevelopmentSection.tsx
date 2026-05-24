@@ -45,6 +45,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import { HarnessTab } from '../components/Harness';
+import { TestPlansCard } from '../components/TestPlans';
 
 interface DevLink {
   title: string;
@@ -1125,6 +1126,7 @@ export const DevelopmentSection: React.FC = () => {
 
       {subTab === 'qa' && (
         <Stack spacing={2}>
+          <TestPlansCard />
           <QualityCard />
           <ProcessHealthCard />
         </Stack>
