@@ -6,10 +6,17 @@ name: Weekly Backlog Grooming
 # Runs every Monday at 8:57 local (13:57 UTC) — off the :00 mark so we don't
 # collide with quality-snapshot / gemini-scheduled-triage / etc.
 #
-# Posts a lightweight grooming proposal as a comment on the long-lived
-# `[meta] Backlog grooming tracker` issue. Does NOT dispatch work — the
-# human reads the comment, picks a winner, then a session runs the
-# /backlog-groom skill interactively for the richer view.
+# Posts a lightweight grooming proposal AND a "Last 7 days across all loops"
+# trend digest as a single comment on the long-lived `[meta] Backlog grooming
+# tracker` issue. Does NOT dispatch work — the human reads the comment, picks
+# a winner, then a session runs the /backlog-groom skill interactively for the
+# richer view.
+#
+# Trend digest is the supervisor-layer complement to the algedonic real-time
+# incident channel. See "Weekly digest mode" in
+# .claude/skills/backlog-groom/SKILL.md for the per-section contract.
+# Each weekly run also archives the digest to
+# state/quality/weekly-digest/<YYYY-WW>.md (ISO week).
 
 on:
   schedule:
@@ -24,7 +31,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write  # write — needed to commit the weekly digest archive under state/quality/weekly-digest/
   issues: write
 
 concurrency:
@@ -207,6 +214,460 @@ jobs:
           cat "$OUT"
           echo "----- END PROPOSAL -----"
 
+      - name: Assemble "Last 7 days" digest
+        id: digest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATE_UTC="$(date -u +%Y-%m-%d)"
+          # ISO week (e.g. 2026-W21) — used as the sticky-replace marker and
+          # the on-disk archive filename.
+          ISO_WEEK="$(date -u +%G-W%V)"
+          # 7d-ago window cutoff for filtering JSONL / JSON / gh listings.
+          CUTOFF_TS=$(date -d '7 days ago' +%s)
+          CUTOFF_ISO=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          mkdir -p state/quality/weekly-digest
+          DIGEST="state/quality/weekly-digest/${ISO_WEEK}.md"
+          echo "iso_week=$ISO_WEEK" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "marker=<!-- weekly-digest-${ISO_WEEK} -->" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "<!-- weekly-digest-${ISO_WEEK} -->"
+            echo
+            echo "## Last 7 days across all loops ($(date -u -d '7 days ago' +%Y-%m-%d) → ${DATE_UTC})"
+            echo
+            echo "_Trend-level supervisor digest. Real-time incidents go through \`state/algedonic/\`._"
+            echo
+          } > "$DIGEST"
+
+          # --- 1. Shipped PRs ---------------------------------------------
+          {
+            echo "### Shipped PRs"
+            echo
+          } >> "$DIGEST"
+          # gh pr list returns mergedAt as RFC3339; filter to last 7d.
+          PR_JSON=$(gh pr list --state merged --limit 100 \
+              --json number,title,mergeCommit,mergedAt,author,body 2>/dev/null || echo '[]')
+          PR_COUNT=$(echo "$PR_JSON" | jq --arg cutoff "$CUTOFF_ISO" '[.[] | select(.mergedAt >= $cutoff)] | length')
+          if [ "$PR_COUNT" -eq 0 ]; then
+            echo "_None this week._" >> "$DIGEST"
+          else
+            {
+              echo "| # | Title | SHA | Shipper | Category |"
+              echo "|---|---|---|---|---|"
+            } >> "$DIGEST"
+            echo "$PR_JSON" | jq -r --arg cutoff "$CUTOFF_ISO" '
+              .[] | select(.mergedAt >= $cutoff) |
+              # Category heuristic on title prefix.
+              (.title) as $t |
+              (if   ($t | test("^feat\\((frontend|tonal-orbit|test-page|ui|dashboard)"; "i")) then "frontend"
+                elif ($t | test("^feat\\((chatbot|semantic|llm|nebula)"; "i"))                 then "chatbot"
+                elif ($t | test("^feat\\((harness|skill|backlog|grade|council|test-plan)"; "i")) then "harness"
+                elif ($t | test("^fix"; "i"))                                                   then "fix"
+                elif ($t | test("^(chore|docs|ci|build|refactor|test)"; "i"))                  then "chore"
+                else "other" end) as $cat |
+              # Shipper: Co-Authored-By trailer from PR body, else author.
+              # Shipper = first Co-Authored-By trailer in body; restrict to a
+              # single line (no newlines, no '<', <= 40 chars) so multi-line
+              # bodies don't bleed into the table. `capture(...)? | .name` returns
+              # null on no-match without aborting the pipeline; `// .author.login`
+              # then resolves at the outer object scope.
+              ((((.body // "") | capture("Co-Authored-By:[ \\t]*(?<name>[^\\n<]{1,40}?)[ \\t]*<"; "im")?) | .name) // .author.login // "?") as $shipper |
+              # Cell sanitizer: strip newlines + escape pipes, then cap length.
+              (($shipper // "") | gsub("[\\r\\n]"; " ") | gsub("\\|"; "\\\\|") | .[0:40]) as $shipper_clean |
+              ((.title // "") | gsub("[\\r\\n]"; " ") | gsub("\\|"; "\\\\|") | .[0:60]) as $title_clean |
+              "| \(.number) | \($title_clean) | \((.mergeCommit.oid // "")[0:7]) | \($shipper_clean) | \($cat) |"
+            ' >> "$DIGEST"
+          fi
+          echo >> "$DIGEST"
+
+          # --- 2. Algedonic signals ---------------------------------------
+          {
+            echo "### Algedonic signals"
+            echo
+          } >> "$DIGEST"
+          if [ ! -s state/algedonic/inbox.jsonl ]; then
+            echo "_None this week._" >> "$DIGEST"
+          else
+            # Project latest record per id, then filter to last 7d.
+            ALGED_FILTERED=$(jq -s --argjson cutoff "$CUTOFF_TS" '
+              # Reduce to latest line per id (ack supersedes).
+              [ group_by(.id)[] | max_by(.emitted_at) ] |
+              # Filter to last 7d by emitted_at.
+              map(select((.emitted_at | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) >= $cutoff))
+            ' state/algedonic/inbox.jsonl 2>/dev/null || echo '[]')
+            ALGED_COUNT=$(echo "$ALGED_FILTERED" | jq 'length')
+            if [ "$ALGED_COUNT" -eq 0 ]; then
+              echo "_None this week._" >> "$DIGEST"
+            else
+              {
+                echo "| Repo | info | warn | fail |"
+                echo "|---|---|---|---|"
+              } >> "$DIGEST"
+              echo "$ALGED_FILTERED" | jq -r '
+                group_by(.repo) | .[] |
+                {
+                  repo: .[0].repo,
+                  info: ([.[] | select(.severity == "info")] | length),
+                  warn: ([.[] | select(.severity == "warn")] | length),
+                  fail: ([.[] | select(.severity == "fail")] | length)
+                } |
+                "| \(.repo) | \(.info) | \(.warn) | \(.fail) |"
+              ' >> "$DIGEST"
+              echo >> "$DIGEST"
+
+              # Top 3 unacked by severity (fail > warn > info) then recency.
+              {
+                echo "**Top 3 unacked:**"
+                echo
+              } >> "$DIGEST"
+              UNACKED=$(echo "$ALGED_FILTERED" | jq -r '
+                map(select(.ack.acked == false)) |
+                sort_by(
+                  (if .severity == "fail" then 0 elif .severity == "warn" then 1 else 2 end),
+                  -(.emitted_at | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)
+                ) | .[0:3] | .[] |
+                "- `\(.id[0:8])` **\(.severity)** \(.repo)/\(.source): \(.summary | .[0:60])"
+              ')
+              if [ -z "$UNACKED" ]; then
+                echo "_None — all signals acked._" >> "$DIGEST"
+              else
+                echo "$UNACKED" >> "$DIGEST"
+              fi
+              echo >> "$DIGEST"
+
+              # Top 3 acked-with-resolution.
+              {
+                echo "**Top 3 acked-with-resolution:**"
+                echo
+              } >> "$DIGEST"
+              ACKED=$(echo "$ALGED_FILTERED" | jq -r '
+                map(select(.ack.acked == true and (.ack.resolution // "") != "")) |
+                sort_by(
+                  -(.ack.acked_at // .emitted_at | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)
+                ) | .[0:3] | .[] |
+                "- `\(.id[0:8])` **\(.severity)** \(.repo)/\(.source): \(.summary | .[0:60]) → \(.ack.resolution | .[0:60])"
+              ')
+              if [ -z "$ACKED" ]; then
+                echo "_None — no resolutions recorded this week._" >> "$DIGEST"
+              else
+                echo "$ACKED" >> "$DIGEST"
+              fi
+            fi
+          fi
+          echo >> "$DIGEST"
+
+          # --- 3. Quality snapshot deltas ---------------------------------
+          {
+            echo "### Quality snapshot deltas"
+            echo
+            echo "| Domain | Latest | Δ vs 7d ago | Verdict |"
+            echo "|---|---|---|---|"
+          } >> "$DIGEST"
+
+          # Helper: list dated snapshots in chronological order, excluding
+          # baseline/schema/meta files.
+          list_snapshots() {
+            local dir="$1"
+            ls -1 "$dir"/*.json 2>/dev/null \
+              | grep -vE '(SCHEMA|schema|baseline|_meta|README)\.json$' \
+              | sort || true
+          }
+
+          # Helper: pick latest + closest-to-7d-ago from a dated snapshot dir.
+          # Files are typically named YYYY-MM-DD.json; sort lexicographically =
+          # chronological. We pick the last one and the most recent one whose
+          # name (stripped to date) is <= cutoff_date.
+          pick_pair() {
+            local dir="$1"
+            local cutoff_date
+            cutoff_date=$(date -u -d '7 days ago' +%Y-%m-%d)
+            local latest baseline
+            latest=$(list_snapshots "$dir" | tail -1)
+            # The baseline is the most recent snapshot with a date <= cutoff_date.
+            baseline=$(list_snapshots "$dir" | while read -r f; do
+              fname=$(basename "$f" .json)
+              # Extract first 10 chars as YYYY-MM-DD if it looks like a date.
+              fdate="${fname:0:10}"
+              if [[ "$fdate" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [[ "$fdate" < "$cutoff_date" || "$fdate" == "$cutoff_date" ]]; then
+                echo "$f"
+              fi
+            done | tail -1)
+            echo "$latest|$baseline"
+          }
+
+          emit_row() {
+            local domain="$1"
+            local latest_val="$2"
+            local delta="$3"
+            local verdict="$4"
+            echo "| $domain | $latest_val | $delta | $verdict |" >> "$DIGEST"
+          }
+
+          # 3a. chatbot-qa — metric = pass_pct
+          PAIR=$(pick_pair state/quality/chatbot-qa)
+          LATEST="${PAIR%%|*}"; BASE="${PAIR##*|}"
+          if [ -n "$LATEST" ]; then
+            LV=$(jq -r '.pass_pct // "null"' "$LATEST")
+            if [ "$LV" = "null" ]; then
+              emit_row "chatbot-qa" "null (env-degraded)" "n/a" "degraded"
+            elif [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
+              BV=$(jq -r '.pass_pct // "null"' "$BASE")
+              if [ "$BV" = "null" ]; then
+                emit_row "chatbot-qa" "$LV" "(no baseline)" "n/a"
+              else
+                D=$(awk "BEGIN { printf \"%+.3f\", $LV - $BV }")
+                V=$(awk "BEGIN { d = $LV - $BV; if (d >= 0.02) print \"improved\"; else if (d <= -0.02) print \"regressed\"; else print \"stable\" }")
+                emit_row "chatbot-qa" "$LV" "$D" "$V"
+              fi
+            else
+              emit_row "chatbot-qa" "$LV" "(no baseline)" "n/a"
+            fi
+          else
+            emit_row "chatbot-qa" "(none)" "(none)" "n/a"
+          fi
+
+          # 3b. voicing-analysis — metric = Corpus.Total
+          PAIR=$(pick_pair state/quality/voicing-analysis)
+          LATEST="${PAIR%%|*}"; BASE="${PAIR##*|}"
+          if [ -n "$LATEST" ]; then
+            LV=$(jq -r '.Corpus.Total // 0' "$LATEST")
+            if [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
+              BV=$(jq -r '.Corpus.Total // 0' "$BASE")
+              D=$((LV - BV))
+              V=$(awk "BEGIN { d = $LV - $BV; b = $BV; if (b == 0) print \"n/a\"; else if (d / b >= 0.01) print \"improved\"; else if (d / b <= -0.01) print \"regressed\"; else print \"stable\" }")
+              emit_row "voicing-analysis" "$LV" "$D" "$V"
+            else
+              emit_row "voicing-analysis" "$LV" "(no baseline)" "n/a"
+            fi
+          else
+            emit_row "voicing-analysis" "(none)" "(none)" "n/a"
+          fi
+
+          # 3c. embeddings — metric = leak_detection.full_classifier_accuracy
+          # Lower-is-better (less identity leak), so verdict inverts.
+          PAIR=$(pick_pair state/quality/embeddings)
+          LATEST="${PAIR%%|*}"; BASE="${PAIR##*|}"
+          if [ -n "$LATEST" ]; then
+            LV=$(jq -r '.leak_detection.full_classifier_accuracy // "null"' "$LATEST")
+            if [ "$LV" = "null" ]; then
+              emit_row "embeddings" "(no metric)" "n/a" "n/a"
+            elif [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
+              BV=$(jq -r '.leak_detection.full_classifier_accuracy // "null"' "$BASE")
+              if [ "$BV" = "null" ]; then
+                emit_row "embeddings" "$LV" "(no baseline)" "n/a"
+              else
+                D=$(awk "BEGIN { printf \"%+.3f\", $LV - $BV }")
+                # Inverted: improved = leak fell.
+                V=$(awk "BEGIN { d = $LV - $BV; if (d <= -0.02) print \"improved\"; else if (d >= 0.02) print \"regressed\"; else print \"stable\" }")
+                emit_row "embeddings" "$LV" "$D" "$V"
+              fi
+            else
+              emit_row "embeddings" "$LV" "(no baseline)" "n/a"
+            fi
+          else
+            emit_row "embeddings" "(none)" "(none)" "n/a"
+          fi
+
+          # 3d. invariants — metric = exemplars | length (coverage surface)
+          PAIR=$(pick_pair state/quality/invariants)
+          LATEST="${PAIR%%|*}"; BASE="${PAIR##*|}"
+          if [ -n "$LATEST" ]; then
+            LV=$(jq -r '.exemplars | length' "$LATEST")
+            if [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
+              BV=$(jq -r '.exemplars | length' "$BASE")
+              D=$((LV - BV))
+              if [ "$D" -gt 0 ]; then V="improved"; elif [ "$D" -lt 0 ]; then V="regressed"; else V="stable"; fi
+              emit_row "invariants" "$LV exemplars" "$D" "$V"
+            else
+              emit_row "invariants" "$LV exemplars" "(no baseline)" "n/a"
+            fi
+          else
+            emit_row "invariants" "(none)" "(none)" "n/a"
+          fi
+
+          # 3e. e2e — metric = summary.passed / summary.total (under dashboard-playwright/)
+          E2E_DIR=state/quality/e2e/dashboard-playwright
+          if [ -d "$E2E_DIR" ]; then
+            LATEST=$(ls -1 "$E2E_DIR"/*.json 2>/dev/null | sort | tail -1)
+            # Baseline: most-recent file whose ISO-timestamp prefix is <= cutoff date.
+            cutoff_date=$(date -u -d '7 days ago' +%Y-%m-%d)
+            BASE=$(ls -1 "$E2E_DIR"/*.json 2>/dev/null | while read -r f; do
+              fname=$(basename "$f" .json)
+              fdate="${fname:0:10}"
+              if [[ "$fdate" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && [[ "$fdate" < "$cutoff_date" || "$fdate" == "$cutoff_date" ]]; then
+                echo "$f"
+              fi
+            done | tail -1)
+            if [ -n "$LATEST" ]; then
+              LP=$(jq -r '.summary.passed' "$LATEST")
+              LT=$(jq -r '.summary.total' "$LATEST")
+              if [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
+                BP=$(jq -r '.summary.passed' "$BASE")
+                D=$((LP - BP))
+                V=$(awk "BEGIN { lp=$LP; lt=$LT; bp=$BP; if (lt == 0) print \"n/a\"; else { lr = lp/lt; br = (bp/lt); d = lr-br; if (d >= 0.02) print \"improved\"; else if (d <= -0.02) print \"regressed\"; else print \"stable\" } }")
+                emit_row "e2e" "$LP/$LT" "$D" "$V"
+              else
+                emit_row "e2e" "$LP/$LT" "(no baseline)" "n/a"
+              fi
+            else
+              emit_row "e2e" "(none)" "(none)" "n/a"
+            fi
+          else
+            emit_row "e2e" "(none)" "(none)" "n/a"
+          fi
+          echo >> "$DIGEST"
+
+          # --- 4. /grade-last-pr verdicts ---------------------------------
+          {
+            echo "### \`/grade-last-pr\` verdicts"
+            echo
+          } >> "$DIGEST"
+          PR_GRADES=$(ls -1 state/quality/pr-grades/*.json 2>/dev/null \
+              | grep -vE '(SCHEMA|README)\.json$' || true)
+          if [ -z "$PR_GRADES" ]; then
+            echo "_None this week._" >> "$DIGEST"
+          else
+            GRADES_JSON=$(jq -s --arg cutoff "$CUTOFF_ISO" '
+              map(select(.graded_at >= $cutoff))
+            ' $PR_GRADES 2>/dev/null || echo '[]')
+            GCOUNT=$(echo "$GRADES_JSON" | jq 'length')
+            if [ "$GCOUNT" -eq 0 ]; then
+              echo "_None this week._" >> "$DIGEST"
+            else
+              {
+                echo "| Alignment | Count |"
+                echo "|---|---|"
+                echo "$GRADES_JSON" | jq -r '
+                  {
+                    high: ([.[] | select(.alignment == "high")] | length),
+                    medium: ([.[] | select(.alignment == "medium")] | length),
+                    low: ([.[] | select(.alignment == "low")] | length)
+                  } |
+                  "| high | \(.high) |\n| medium | \(.medium) |\n| low | \(.low) |"
+                '
+                echo
+                LOWS=$(echo "$GRADES_JSON" | jq -r '[.[] | select(.alignment == "low")] | .[] | "- #\(.pr_number) \(.title)"')
+                if [ -z "$LOWS" ]; then
+                  echo "_No \"low\" alignment PRs this week._"
+                else
+                  echo "**Low-alignment PRs:**"
+                  echo
+                  echo "$LOWS"
+                fi
+              } >> "$DIGEST"
+            fi
+          fi
+          echo >> "$DIGEST"
+
+          # --- 5. /test-plan activity -------------------------------------
+          {
+            echo "### \`/test-plan\` activity"
+            echo
+          } >> "$DIGEST"
+          TP_METAS=$(ls -1 state/quality/test-plans/*.meta.json 2>/dev/null || true)
+          if [ -z "$TP_METAS" ]; then
+            AUTO_COUNT=0
+          else
+            AUTO_COUNT=$(jq -s --arg cutoff "$CUTOFF_ISO" '
+              [.[] | select(.generated_at >= $cutoff)] | length
+            ' $TP_METAS 2>/dev/null || echo 0)
+          fi
+          # PRs merged in the window with no <head_sha>.md test plan.
+          NO_PLAN_PRS=$(echo "$PR_JSON" | jq -r --arg cutoff "$CUTOFF_ISO" '
+            .[] | select(.mergedAt >= $cutoff) |
+            "\(.number)|\(.mergeCommit.oid // "")"
+          ' | while IFS='|' read -r num sha; do
+            [ -z "$sha" ] && continue
+            # The test-plan artifact is keyed on the PR head SHA, not the merge
+            # commit SHA. Best-effort: if we have a markdown file whose name
+            # contains the merge sha OR a sha that appears in the PR's commits,
+            # skip. For the simple case, just check if ANY meta references this
+            # PR number — the schema has `pr_number`.
+            HAS_PLAN=$(jq -s --argjson num "$num" '[.[] | select(.pr_number == $num)] | length' state/quality/test-plans/*.meta.json 2>/dev/null || echo 0)
+            if [ "$HAS_PLAN" = "0" ]; then echo "#$num"; fi
+          done | paste -sd', ' -)
+          {
+            echo "- Auto-fired proposals: $AUTO_COUNT"
+            echo "- Developer-written follow-ups: n/a (not yet tracked)"
+            if [ -z "$NO_PLAN_PRS" ]; then
+              echo "- PRs without a test plan: none"
+            else
+              echo "- PRs without a test plan: $NO_PLAN_PRS"
+            fi
+          } >> "$DIGEST"
+          echo >> "$DIGEST"
+
+          # --- 6. /council activations ------------------------------------
+          {
+            echo "### \`/council\` activations"
+            echo
+          } >> "$DIGEST"
+          COUNCIL_FILES=$(ls -1 state/quality/council/*.json 2>/dev/null \
+              | grep -vE '(SCHEMA|README)\.json$' || true)
+          if [ -z "$COUNCIL_FILES" ]; then
+            echo "_No council was convened this week._" >> "$DIGEST"
+          else
+            COUNCIL_JSON=$(jq -s --arg cutoff "$CUTOFF_ISO" '
+              map(select(.convened_at >= $cutoff))
+            ' $COUNCIL_FILES 2>/dev/null || echo '[]')
+            CCOUNT=$(echo "$COUNCIL_JSON" | jq 'length')
+            if [ "$CCOUNT" -eq 0 ]; then
+              echo "_No council was convened this week._" >> "$DIGEST"
+            else
+              {
+                echo "| Verdict | Count |"
+                echo "|---|---|"
+                echo "$COUNCIL_JSON" | jq -r '
+                  {
+                    approve: ([.[] | select(.final_verdict == "approve")] | length),
+                    request_changes: ([.[] | select(.final_verdict == "request_changes")] | length),
+                    block: ([.[] | select(.final_verdict == "block")] | length)
+                  } |
+                  "| approve | \(.approve) |\n| request_changes | \(.request_changes) |\n| block | \(.block) |"
+                '
+                echo
+                BLOCKS=$(echo "$COUNCIL_JSON" | jq -r '
+                  [.[] | select(.final_verdict == "block")] | .[] |
+                  "- #\(.pr_number) — paths: \((.one_way_door_paths // []) | join(", "))"
+                ')
+                if [ -z "$BLOCKS" ]; then
+                  echo "_No block verdicts this week._"
+                else
+                  echo "**Block verdicts:**"
+                  echo
+                  echo "$BLOCKS"
+                fi
+              } >> "$DIGEST"
+            fi
+          fi
+
+          echo "----- BEGIN DIGEST -----"
+          cat "$DIGEST"
+          echo "----- END DIGEST -----"
+
+      - name: Commit weekly digest archive
+        if: ${{ inputs.dry_run != true }}
+        env:
+          DIGEST_PATH: ${{ steps.digest.outputs.digest }}
+          ISO_WEEK: ${{ steps.digest.outputs.iso_week }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "$DIGEST_PATH" "${{ steps.assemble.outputs.out }}" || true
+          # state/backlog-grooming/<date>.md may also be new from the assembler.
+          if git diff --cached --quiet; then
+            echo "No new files to commit."
+          else
+            git commit -m "chore(quality): weekly digest ${ISO_WEEK} [skip ci]" || true
+            git push || echo "Push failed (continuing — comment still posts)."
+          fi
+
       - name: Find or create the tracker issue
         id: tracker
         if: ${{ inputs.dry_run != true }}
@@ -233,18 +694,34 @@ jobs:
           fi
           echo "number=$NUM" >> "$GITHUB_OUTPUT"
 
-      - name: Post proposal as comment
+      - name: Post combined proposal + digest as comment (sticky by ISO-week)
         if: ${{ inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ steps.tracker.outputs.number }}
+          MARKER: ${{ steps.digest.outputs.marker }}
         shell: bash
         run: |
           set -euo pipefail
           BODY_FILE="${{ steps.assemble.outputs.out }}"
+          DIGEST_FILE="${{ steps.digest.outputs.digest }}"
           {
             cat "$BODY_FILE"
+            echo
+            cat "$DIGEST_FILE"
             echo
             echo "---"
             echo "cc @spareilleux — go/no-go on this week's top item?"
           } > /tmp/comment.md
-          gh issue comment "${{ steps.tracker.outputs.number }}" --body-file /tmp/comment.md
+
+          # Sticky-replace: if a prior comment with the same ISO-week marker
+          # exists, delete it before posting the new one. Marker is the first
+          # line of the digest (HTML comment).
+          PRIOR_ID=$(gh api "repos/$REPO/issues/$ISSUE/comments" --paginate \
+              --jq "[.[] | select(.body | contains(\"$MARKER\"))] | .[0].id // empty")
+          if [ -n "$PRIOR_ID" ]; then
+            echo "Deleting prior comment $PRIOR_ID with marker $MARKER"
+            gh api -X DELETE "repos/$REPO/issues/comments/$PRIOR_ID"
+          fi
+          gh issue comment "$ISSUE" --body-file /tmp/comment.md
