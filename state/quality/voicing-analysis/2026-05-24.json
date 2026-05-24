@@ -1,5 +1,5 @@
 {
-  "Timestamp": "2026-05-24T04:26:42.5837702Z",
+  "Timestamp": "2026-05-24T15:01:06.3890970Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -139,9 +139,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 81.4240734,
-    "VoicingsPerSec": 3844.6492164809824,
-    "PeakWorkingSetMb": 397.56640625
+    "RuntimeSeconds": 83.3394251,
+    "VoicingsPerSec": 3756.2894107365278,
+    "PeakWorkingSetMb": 411.4296875
   },
   "IssueSamples": {
     "NullChordName": [],
