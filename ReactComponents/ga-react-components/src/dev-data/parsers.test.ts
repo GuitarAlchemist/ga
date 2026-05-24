@@ -9,6 +9,9 @@ import {
     parseBacklog,
     extractDocTitle,
     binActivityByDay,
+    projectLoopsGoals,
+    extractPrRefs,
+    extractDocRefs,
 } from './parsers';
 
 describe('categorize', () => {
@@ -179,6 +182,151 @@ describe('parseBacklog', () => {
         expect(p.total_epics).toBe(12);
         expect(p.top_sections).toHaveLength(8);
     });
+
+    it('captures bullet text on each item', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- First bullet body',
+            '- Second bullet body',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items).toHaveLength(2);
+        expect(items[0].text).toBe('First bullet body');
+        expect(items[1].text).toBe('Second bullet body');
+        expect(items[0].status).toBe('active');
+        expect(items[0].raw_line).toBe('- First bullet body');
+    });
+
+    it('extracts PR refs from bullets', () => {
+        const md = [
+            '## Epic',
+            '### Shipped',
+            '- Foo (#313)',
+            '- Bar — see PR #207 and #208',
+            '- Baz without refs',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items[0].pr_refs).toEqual([313]);
+        expect(items[1].pr_refs).toEqual([207, 208]);
+        expect(items[2].pr_refs).toBeUndefined();
+    });
+
+    it('extracts doc refs from bullets', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- See docs/plans/foo.md for the plan',
+            '- Two refs: docs/plans/a.md and [b](docs/plans/b.md)',
+            '- No doc here',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items[0].doc_refs).toEqual(['docs/plans/foo.md']);
+        expect(items[1].doc_refs).toEqual(['docs/plans/a.md', 'docs/plans/b.md']);
+        expect(items[2].doc_refs).toBeUndefined();
+    });
+
+    it('still works for empty epics (no bullets, items: [])', () => {
+        const md = [
+            '## Empty Epic',
+            '## Other',
+            '### Shipped',
+            '- one',
+        ].join('\n');
+        const p = parseBacklog(md);
+        expect(p.epics[0].title).toBe('Empty Epic');
+        expect(p.epics[0].total_items).toBe(0);
+        expect(p.epics[0].sub_sections).toHaveLength(0);
+        expect(p.epics[1].sub_sections[0].items).toHaveLength(1);
+    });
+
+    it('inherits sub-section category on each item', () => {
+        const md = [
+            '## Epic',
+            '### Shipped',
+            '- s1',
+            '### Active',
+            '- a1',
+            '### New',
+            '- n1',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const subs = p.epics[0].sub_sections;
+        expect(subs[0].items[0].status).toBe('shipped');
+        expect(subs[1].items[0].status).toBe('active');
+        expect(subs[2].items[0].status).toBe('backlog');
+    });
+
+    it('item_count and items.length stay in sync', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- a',
+            '* b',
+            '- c (#42)',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const sub = p.epics[0].sub_sections[0];
+        expect(sub.item_count).toBe(3);
+        expect(sub.items).toHaveLength(3);
+    });
+});
+
+describe('extractPrRefs', () => {
+    it('extracts a single PR ref from parens', () => {
+        expect(extractPrRefs('- Foo (#313)')).toEqual([313]);
+    });
+
+    it('extracts multiple PR refs', () => {
+        expect(extractPrRefs('See #207 and #208')).toEqual([207, 208]);
+    });
+
+    it('deduplicates', () => {
+        expect(extractPrRefs('#42 and #42 again')).toEqual([42]);
+    });
+
+    it('returns empty for no matches', () => {
+        expect(extractPrRefs('plain text')).toEqual([]);
+    });
+
+    it('ignores in-word matches like foo#1', () => {
+        // The non-word boundary requirement should block this.
+        expect(extractPrRefs('foo#99')).toEqual([]);
+    });
+
+    it('matches at start of line', () => {
+        expect(extractPrRefs('#1 first')).toEqual([1]);
+    });
+});
+
+describe('extractDocRefs', () => {
+    it('extracts a bare docs path', () => {
+        expect(extractDocRefs('See docs/plans/foo.md')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('extracts a markdown link target', () => {
+        expect(extractDocRefs('[plan](docs/plans/foo.md)')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('extracts multiple docs paths', () => {
+        const line = 'docs/a.md and docs/b/c.md';
+        expect(extractDocRefs(line)).toEqual(['docs/a.md', 'docs/b/c.md']);
+    });
+
+    it('deduplicates', () => {
+        expect(extractDocRefs('docs/x.md, docs/x.md')).toEqual(['docs/x.md']);
+    });
+
+    it('trims trailing punctuation', () => {
+        expect(extractDocRefs('See docs/plans/foo.md, please.')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('returns empty for no matches', () => {
+        expect(extractDocRefs('plain text with no doc refs')).toEqual([]);
+    });
 });
 
 describe('extractDocTitle', () => {
@@ -252,5 +400,79 @@ describe('binActivityByDay', () => {
         const bins = binActivityByDay(['', '2026-05-23T00:00:00Z'], 7, fixedNow);
         const total = bins.reduce((s, b) => s + b.count, 0);
         expect(total).toBe(1);
+    });
+});
+
+describe('projectLoopsGoals', () => {
+    const now = new Date('2026-05-24T12:00:00Z');
+
+    it('returns empty buckets for no lines', () => {
+        const p = projectLoopsGoals([], now);
+        expect(p.active_loops).toEqual([]);
+        expect(p.active_goals).toEqual([]);
+        expect(p.completed_recent).toEqual([]);
+        expect(p.total_records).toBe(0);
+    });
+
+    it('skips blank lines + malformed JSON without throwing', () => {
+        const lines = [
+            '',
+            '   ',
+            '{not valid json',
+            '{"id":"x"}',                              // missing kind+status — drop
+            '{"id":"y","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s1","prompt_or_condition":"keep","turn_count":0}',
+        ];
+        const p = projectLoopsGoals(lines, now);
+        expect(p.active_loops.length).toBe(1);
+        expect(p.active_loops[0].id).toBe('y');
+    });
+
+    it('latest-line-per-id wins (turn event supersedes start event)', () => {
+        const start = '{"id":"a1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s1","prompt_or_condition":"test","turn_count":0}';
+        const turn  = '{"id":"a1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:30:00Z","session_id":"s1","prompt_or_condition":"test","turn_count":3}';
+        const p = projectLoopsGoals([start, turn], now);
+        expect(p.active_loops.length).toBe(1);
+        expect(p.active_loops[0].turn_count).toBe(3);
+        expect(p.active_loops[0].last_activity_at).toBe('2026-05-24T11:30:00Z');
+    });
+
+    it('separates loops from goals', () => {
+        const loop = '{"id":"L1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"x","turn_count":1}';
+        const goal = '{"id":"G1","kind":"goal","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"y","turn_count":1}';
+        const p = projectLoopsGoals([loop, goal], now);
+        expect(p.active_loops.map((r) => r.id)).toEqual(['L1']);
+        expect(p.active_goals.map((r) => r.id)).toEqual(['G1']);
+    });
+
+    it('drops archived records, surfaces completed ones < cutoff', () => {
+        const archived = '{"id":"old","kind":"loop","status":"archived","started_at":"2026-05-01T00:00:00Z","last_activity_at":"2026-05-01T00:00:00Z","session_id":"s","prompt_or_condition":"old","turn_count":99}';
+        const completedRecent = '{"id":"done","kind":"goal","status":"completed","started_at":"2026-05-23T00:00:00Z","last_activity_at":"2026-05-23T12:00:00Z","session_id":"s","prompt_or_condition":"finished","turn_count":5}';
+        const completedStale  = '{"id":"stale","kind":"goal","status":"completed","started_at":"2026-05-10T00:00:00Z","last_activity_at":"2026-05-10T00:00:00Z","session_id":"s","prompt_or_condition":"forgotten","turn_count":12}';
+        const p = projectLoopsGoals([archived, completedRecent, completedStale], now, 7);
+        expect(p.active_loops).toEqual([]);
+        expect(p.active_goals).toEqual([]);
+        expect(p.completed_recent.map((r) => r.id)).toEqual(['done']);
+    });
+
+    it('decorates active rows with age + last_activity_min_ago', () => {
+        const rec = '{"id":"d1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:45:00Z","session_id":"s","prompt_or_condition":"hi","turn_count":2}';
+        const p = projectLoopsGoals([rec], now);
+        expect(p.active_loops[0].age_min).toBe(120);
+        expect(p.active_loops[0].last_activity_min_ago).toBe(15);
+    });
+
+    it('sorts active rows newest-activity-first', () => {
+        const a = '{"id":"A","kind":"loop","status":"active","started_at":"2026-05-24T08:00:00Z","last_activity_at":"2026-05-24T08:30:00Z","session_id":"s","prompt_or_condition":"a","turn_count":0}';
+        const b = '{"id":"B","kind":"loop","status":"active","started_at":"2026-05-24T09:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"b","turn_count":0}';
+        const c = '{"id":"C","kind":"loop","status":"active","started_at":"2026-05-24T07:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s","prompt_or_condition":"c","turn_count":0}';
+        const p = projectLoopsGoals([a, b, c], now);
+        expect(p.active_loops.map((r) => r.id)).toEqual(['B', 'C', 'A']);
+    });
+
+    it('paused records appear in the active bucket (operator action queued)', () => {
+        const paused = '{"id":"p1","kind":"goal","status":"paused","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"hold","turn_count":4}';
+        const p = projectLoopsGoals([paused], now);
+        expect(p.active_goals.length).toBe(1);
+        expect(p.active_goals[0].status).toBe('paused');
     });
 });

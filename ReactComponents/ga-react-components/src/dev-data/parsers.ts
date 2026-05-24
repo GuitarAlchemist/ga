@@ -7,10 +7,24 @@
 
 export type SubSectionCategory = 'shipped' | 'active' | 'backlog';
 
+export interface BacklogItem {
+    /** Bullet body with the leading marker (- / *) stripped. */
+    text: string;
+    /** Inherits from the enclosing sub-section's category. */
+    status: SubSectionCategory;
+    /** GitHub PR numbers extracted from `#NNN` patterns. */
+    pr_refs?: number[];
+    /** Doc paths extracted from `docs/...` patterns. */
+    doc_refs?: string[];
+    /** Original markdown line for debugging. */
+    raw_line: string;
+}
+
 export interface EpicSubSection {
     title: string;
     category: SubSectionCategory;
     item_count: number;
+    items: BacklogItem[];
 }
 
 export interface BacklogEpic {
@@ -60,13 +74,70 @@ export function categorize(title: string): SubSectionCategory {
 }
 
 /**
- * Parse a markdown backlog into epics + sub-sections + item counts.
+ * Extract `#NNN` patterns from a line. Matches PR/issue references like `(#137)`,
+ * `#138`, `PR #207`. Ignores in-word matches (e.g. `foo#1` won't match because
+ * we require a non-word boundary before `#`). Returns numbers deduplicated in
+ * order of first appearance.
+ */
+export function extractPrRefs(line: string): number[] {
+    const refs: number[] = [];
+    const seen = new Set<number>();
+    const re = /(?:^|[^\w])#(\d+)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line)) !== null) {
+        const n = Number(m[1]);
+        if (!Number.isNaN(n) && !seen.has(n)) {
+            seen.add(n);
+            refs.push(n);
+        }
+    }
+    return refs;
+}
+
+/**
+ * Extract `docs/...` paths from a line. Matches Markdown-link targets and bare
+ * paths (`docs/plans/foo.md`, `[link](docs/plans/foo.md)`). Stops at whitespace,
+ * `)`, `]`, backtick, or end-of-line. Deduplicates in order of first appearance.
+ */
+export function extractDocRefs(line: string): string[] {
+    const refs: string[] = [];
+    const seen = new Set<string>();
+    const re = /\bdocs\/[^\s)\]`]+/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(line)) !== null) {
+        // Trim trailing punctuation that's commonly attached to a sentence
+        // boundary but not part of the path itself.
+        const cleaned = m[0].replace(/[.,;:]+$/, '');
+        if (!seen.has(cleaned)) {
+            seen.add(cleaned);
+            refs.push(cleaned);
+        }
+    }
+    return refs;
+}
+
+/**
+ * Convert a bullet line into a BacklogItem. Strips the leading `- ` or `* `
+ * marker, extracts PR refs and doc refs.
+ */
+function bulletToItem(line: string, status: SubSectionCategory): BacklogItem {
+    const text = line.replace(/^[-*]\s+/, '').trim();
+    const pr_refs = extractPrRefs(line);
+    const doc_refs = extractDocRefs(line);
+    const item: BacklogItem = { text, status, raw_line: line };
+    if (pr_refs.length > 0) item.pr_refs = pr_refs;
+    if (doc_refs.length > 0) item.doc_refs = doc_refs;
+    return item;
+}
+
+/**
+ * Parse a markdown backlog into epics + sub-sections + items.
  *
  * Structure expected:
  *   # H1 ignored (project title)
  *   ## Epic name           → BacklogEpic
  *   ### Sub-section name   → EpicSubSection (categorized via categorize())
- *   - bullet               → counted into the current sub-section
+ *   - bullet               → BacklogItem under the current sub-section
  *
  * Bullets that appear directly under an H2 (before any H3) inherit the H2's
  * category so an epic titled "Shipped 2026" with direct bullets reports
@@ -100,12 +171,14 @@ export function parseBacklog(content: string): BacklogPayload {
                 progress_pct: 0,
                 sub_sections: [],
             };
-            currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0 };
+            currentSub = { title: '(untriaged)', category: categorize(epicTitle), item_count: 0, items: [] };
         } else if (h3 && currentEpic) {
             if (currentSub && currentSub.item_count > 0) currentEpic.sub_sections.push(currentSub);
-            currentSub = { title: h3[1].trim(), category: categorize(h3[1].trim()), item_count: 0 };
+            const subTitle = h3[1].trim();
+            currentSub = { title: subTitle, category: categorize(subTitle), item_count: 0, items: [] };
         } else if (bullet && currentSub) {
             currentSub.item_count += 1;
+            currentSub.items.push(bulletToItem(line, currentSub.category));
         }
     }
     if (currentEpic) {
@@ -170,4 +243,135 @@ export function binActivityByDay(timestamps: string[], days: number, now: Date =
         if (day in bins) bins[day] += 1;
     }
     return Object.entries(bins).map(([date, count]) => ({ date, count }));
+}
+
+// ─── /loop and /goal runtime tracker projection ─────────────────────────
+// Reads the append-only JSONL emitted by .claude/hooks/loops-goals-tracker.ps1
+// and projects it into "currently active" + "recently completed" buckets.
+// Schema of each JSONL line (one per event):
+//   { id, kind, started_at, session_id, prompt_or_condition, turn_count,
+//     last_activity_at, status, event, branch }
+// Status transitions: active → paused → completed → archived.
+
+export type LoopsGoalsKind = 'loop' | 'goal';
+export type LoopsGoalsStatus = 'active' | 'paused' | 'completed' | 'archived';
+
+export interface LoopsGoalsRecord {
+    id: string;
+    kind: LoopsGoalsKind;
+    started_at: string;
+    session_id: string;
+    prompt_or_condition: string;
+    turn_count: number;
+    last_activity_at: string;
+    status: LoopsGoalsStatus;
+    branch?: string | null;
+}
+
+export interface LoopsGoalsActiveView extends LoopsGoalsRecord {
+    age_min: number;
+    last_activity_min_ago: number;
+}
+
+export interface LoopsGoalsProjection {
+    fetched_at: string;
+    active_loops: LoopsGoalsActiveView[];
+    active_goals: LoopsGoalsActiveView[];
+    completed_recent: LoopsGoalsRecord[];
+    total_records: number;
+}
+
+/**
+ * Project an array of JSONL lines into the dashboard's view of active +
+ * recently-completed loops/goals. Latest record-per-id wins, archived rows
+ * are dropped, completed rows older than `archiveCutoffDays` are dropped.
+ * Pure function — `now` is injected for testability.
+ */
+export function projectLoopsGoals(
+    lines: string[],
+    now: Date = new Date(),
+    archiveCutoffDays = 7,
+): LoopsGoalsProjection {
+    const byId = new Map<string, LoopsGoalsRecord>();
+    let totalRecords = 0;
+    for (const line of lines) {
+        const trim = (line ?? '').trim();
+        if (!trim) continue;
+        totalRecords += 1;
+        try {
+            const rec = JSON.parse(trim) as Partial<LoopsGoalsRecord>;
+            if (!rec.id || !rec.kind || !rec.status) continue;
+            const existing = byId.get(rec.id);
+            const recAct = rec.last_activity_at ?? rec.started_at ?? '';
+            const existingAct = existing?.last_activity_at ?? existing?.started_at ?? '';
+            // Compare numerically — hook events use second precision
+            // (`yyyy-MM-ddTHH:mm:ssZ`) while dashboard stop events use
+            // `toISOString()` with milliseconds. Lexicographic compare on
+            // mixed formats made `...00.123Z` sort BEFORE `...00Z`, so a
+            // newer completion event could be ignored and the row stayed
+            // active after pressing Stop. `Date.parse` collapses both to
+            // epoch ms; NaN falls back to ordering an unparseable value
+            // before a parseable one so we never starve a valid update.
+            const recMs = Date.parse(recAct);
+            const existingMs = Date.parse(existingAct);
+            const recCmp = Number.isNaN(recMs) ? -Infinity : recMs;
+            const existingCmp = Number.isNaN(existingMs) ? -Infinity : existingMs;
+            if (!existing || recCmp >= existingCmp) {
+                byId.set(rec.id, {
+                    id: rec.id,
+                    kind: rec.kind,
+                    started_at: rec.started_at ?? '',
+                    session_id: rec.session_id ?? 'unknown',
+                    prompt_or_condition: rec.prompt_or_condition ?? '',
+                    turn_count: typeof rec.turn_count === 'number' ? rec.turn_count : 0,
+                    last_activity_at: rec.last_activity_at ?? rec.started_at ?? '',
+                    status: rec.status,
+                    branch: rec.branch ?? null,
+                });
+            }
+        } catch { /* skip malformed */ }
+    }
+
+    const minutesSince = (iso: string): number => {
+        if (!iso) return -1;
+        const t = Date.parse(iso);
+        if (Number.isNaN(t)) return -1;
+        return Math.max(0, Math.floor((now.getTime() - t) / 60000));
+    };
+
+    const decorate = (r: LoopsGoalsRecord): LoopsGoalsActiveView => ({
+        ...r,
+        age_min: minutesSince(r.started_at),
+        last_activity_min_ago: minutesSince(r.last_activity_at),
+    });
+
+    const active_loops: LoopsGoalsActiveView[] = [];
+    const active_goals: LoopsGoalsActiveView[] = [];
+    const completed_recent: LoopsGoalsRecord[] = [];
+    const cutoffMs = now.getTime() - archiveCutoffDays * 24 * 60 * 60 * 1000;
+
+    for (const rec of byId.values()) {
+        if (rec.status === 'archived') continue;
+        if (rec.status === 'active' || rec.status === 'paused') {
+            const view = decorate(rec);
+            if (rec.kind === 'loop') active_loops.push(view);
+            else active_goals.push(view);
+        } else if (rec.status === 'completed') {
+            const t = Date.parse(rec.last_activity_at);
+            if (!Number.isNaN(t) && t >= cutoffMs) completed_recent.push(rec);
+        }
+    }
+
+    // Newest activity first
+    active_loops.sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at));
+    active_goals.sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at));
+    completed_recent.sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at));
+
+    return {
+        fetched_at: now.toISOString(),
+        active_loops,
+        active_goals,
+        completed_recent: completed_recent.slice(0, 20),
+        total_records: totalRecords,
+    };
 }

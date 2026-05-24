@@ -5,8 +5,8 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
 import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
-import { parseBacklog, extractDocTitle, binActivityByDay } from './src/dev-data/parsers'
-import type { BacklogPayload } from './src/dev-data/parsers'
+import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals } from './src/dev-data/parsers'
+import type { BacklogPayload, LoopsGoalsProjection } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -390,6 +390,130 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── AI annotations (phase 2 of the ai-annotations campaign) ───────
+    //
+    // Reads two ix-produced files:
+    //   state/quality/ai-annotations.jsonl         (extractor output)
+    //   state/quality/ai-annotations-reconciliation.json (reconciler output)
+    //
+    // The reconciliation report supersedes the raw JSONL when present
+    // (richer schema, includes bucket counts). When neither exists we
+    // return an "empty" payload — the dashboard renders an onboarding
+    // hint instead of an error. See docs/contracts/2026-05-24-ai-annotation.contract.md
+    // (in the ix repo) for the field shapes.
+    function gatherAiAnnotations(): Record<string, unknown> {
+        const reconPath = path.join(repoRoot, 'state/quality/ai-annotations-reconciliation.json');
+        const jsonlPath = path.join(repoRoot, 'state/quality/ai-annotations.jsonl');
+        const now = new Date().toISOString();
+
+        if (existsSync(reconPath)) {
+            try {
+                const recon = JSON.parse(readFileSync(reconPath, 'utf-8')) as Record<string, unknown>;
+                return {
+                    generated_at: recon.generated_at ?? now,
+                    total: recon.total_annotations ?? 0,
+                    by_truth_value: recon.by_truth_value ?? {},
+                    by_certainty: recon.by_certainty ?? {},
+                    by_kind: recon.by_kind ?? {},
+                    verified_by_test: recon.verified_by_test ?? 0,
+                    stale: recon.stale ?? 0,
+                    contradictory: recon.contradictory ?? 0,
+                    annotations: recon.annotations ?? [],
+                };
+            } catch {
+                // fall through to JSONL
+            }
+        }
+
+        if (existsSync(jsonlPath)) {
+            try {
+                const lines = readFileSync(jsonlPath, 'utf-8')
+                    .split('\n')
+                    .map((l) => l.trim())
+                    .filter((l) => l.length > 0);
+                const annotations: Record<string, unknown>[] = [];
+                const byTv: Record<string, number> = {};
+                const byCert: Record<string, number> = {};
+                const byKind: Record<string, number> = {};
+                let stale = 0;
+                for (const line of lines) {
+                    try {
+                        const a = JSON.parse(line) as Record<string, unknown>;
+                        annotations.push(a);
+                        const tv = (a.truth_value as string) ?? 'U';
+                        byTv[tv] = (byTv[tv] ?? 0) + 1;
+                        const cert = (a.certainty as string) ?? 'uncertain';
+                        byCert[cert] = (byCert[cert] ?? 0) + 1;
+                        const k = (a.kind as string) ?? 'hint';
+                        byKind[k] = (byKind[k] ?? 0) + 1;
+                        if (a.stale) stale += 1;
+                    } catch {
+                        // skip malformed line
+                    }
+                }
+                return {
+                    generated_at: now,
+                    total: annotations.length,
+                    by_truth_value: byTv,
+                    by_certainty: byCert,
+                    by_kind: byKind,
+                    verified_by_test: 0,
+                    stale,
+                    contradictory: byTv['C'] ?? 0,
+                    annotations,
+                };
+            } catch {
+                // fall through
+            }
+        }
+
+        return {
+            generated_at: now,
+            total: 0,
+            by_truth_value: {},
+            by_certainty: {},
+            by_kind: {},
+            verified_by_test: 0,
+            stale: 0,
+            contradictory: 0,
+            annotations: [],
+            empty: true,
+        };
+    }
+
+    // /loop and /goal runtime tracker — reads the append-only JSONL written by
+    // .claude/hooks/loops-goals-tracker.ps1 (repo-local mirror lives at
+    // state/.runtime-loops-goals.jsonl; the user-level canonical copy at
+    // ~/.claude/projects/<encoded-repo>/state/runtime-loops-goals.jsonl is
+    // intentionally NOT served — Vite has no way to know the encoded path
+    // without path-traversal risk). Empty projection on missing file so the
+    // dashboard renders an "invoke /loop or /goal to populate" hint.
+    function gatherLoopsGoals(): LoopsGoalsProjection {
+        const p = path.join(repoRoot, 'state', '.runtime-loops-goals.jsonl');
+        const now = new Date();
+        if (!existsSync(p)) {
+            return {
+                fetched_at: now.toISOString(),
+                active_loops: [],
+                active_goals: [],
+                completed_recent: [],
+                total_records: 0,
+            };
+        }
+        try {
+            const raw = readFileSync(p, 'utf-8');
+            return projectLoopsGoals(raw.split('\n'), now);
+        } catch {
+            return {
+                fetched_at: now.toISOString(),
+                active_loops: [],
+                active_goals: [],
+                completed_recent: [],
+                total_records: 0,
+            };
+        }
+    }
+
     interface AgentFileEntry {
         path: string;
         exists: boolean;
@@ -592,6 +716,396 @@ function devDataPlugin(): Plugin {
         return ackLine;
     }
 
+    // ── /dev-data/in-flight — "what's being worked on right now" ─────────
+    // Aggregates open PRs, recent merges, active loops/goals, and recent
+    // algedonic activity into one snapshot. Drives the "In Flight" tile
+    // on the Summary tab. Read-only; safe to expose without gateLocal.
+    //
+    // Data sources:
+    //   - Open PRs:        gh pr list --state open --json ...
+    //   - Recent merges:   gh pr list --state merged --limit 20 --json ...
+    //   - Author-is-agent: parse commit messages for Co-Authored-By:
+    //                      (Claude|Codex|Mercury|Gemini|...)
+    //   - ETA:             state/quality/pr-eta-baseline.json (computed
+    //                      weekly by Scripts/compute-pr-eta-baseline.ps1).
+    //                      Falls back to 30-minute default when missing.
+    //   - Loops/goals:     state/.runtime-loops-goals.jsonl (PR #330,
+    //                      may be absent until that lands — return []).
+    //   - Algedonic:       reuse projectAlgedonic() above, filter to
+    //                      last 24h, return severity counts + top
+    //                      unacked summary.
+    //
+    // Cached per-process for 10s to keep gh shell-outs predictable when
+    // the operator pins the dashboard tab. Cache is intentionally short:
+    // an open PR's check status moves in real-time and operators are
+    // watching for the merge-able moment.
+
+    interface InFlightPrCheck { name: string; status: string; conclusion: string | null; workflow: string }
+    interface InFlightPr {
+        number: number;
+        title: string;
+        url: string;
+        head_branch: string;
+        author: string;
+        author_is_agent: boolean;
+        author_agent_name: string | null;
+        opened_at: string;
+        updated_at: string;
+        age_minutes: number;
+        draft: boolean;
+        labels: string[];
+        checks: {
+            total: number;
+            passed: number;
+            failed: number;
+            pending: number;
+            details: InFlightPrCheck[];
+        };
+        mergeable: string;
+        eta_minutes: number | null;
+        eta_basis: string;
+        pr_type: string;
+    }
+    interface InFlightRecentMerge { number: number; title: string; url: string; merged_at: string; ago_minutes: number; author: string }
+    interface InFlightLoopOrGoal { id: string; label: string; status: string; updated_at: string }
+    interface InFlightAlgedonicSummary {
+        info: number;
+        warn: number;
+        fail: number;
+        critical: number;
+        top_unacked: { id: string; severity: string; summary: string; emitted_at: string; repo: string }[];
+    }
+    interface InFlightPayload {
+        fetched_at: string;
+        open_prs: InFlightPr[];
+        recent_merges: InFlightRecentMerge[];
+        active_loops: InFlightLoopOrGoal[];
+        active_goals: InFlightLoopOrGoal[];
+        algedonic_recent: InFlightAlgedonicSummary;
+        eta_baseline: { source: string; window_days: number | null; computed_at: string | null };
+        warnings: string[];
+    }
+
+    // PR-type classifier — mirrors Scripts/compute-pr-eta-baseline.ps1.
+    // Keep these two in sync if either side changes the bucket names.
+    function prTypeFromTitle(title: string): string {
+        if (!title) return 'other';
+        const m = title.match(/^(?<type>[a-z]+)(\([^)]*\))?\s*:/i);
+        if (!m || !m.groups) return 'other';
+        const t = m.groups.type.toLowerCase();
+        if (t === 'chore') return 'chore';
+        if (t === 'feat' || t === 'feature') return 'feat';
+        if (t === 'fix' || t === 'bugfix') return 'fix';
+        if (t === 'docs' || t === 'doc') return 'docs';
+        return 'other';
+    }
+
+    // Known agent names that show up as Co-Authored-By identities. Matched
+    // case-insensitively against the trailer line; first hit wins.
+    const AGENT_PATTERNS: { pattern: RegExp; name: string }[] = [
+        { pattern: /claude/i, name: 'Claude' },
+        { pattern: /codex|chatgpt|openai/i, name: 'Codex' },
+        { pattern: /mercury|inception/i, name: 'Mercury' },
+        { pattern: /gemini|antigravity/i, name: 'Gemini' },
+        { pattern: /junie/i, name: 'Junie' },
+        { pattern: /copilot/i, name: 'Copilot' },
+    ];
+
+    // Per-process cache. Keyed by PR number; entries live for one /dev-data/in-flight cycle
+    // (the cache is wiped by the 10s payload cache below, so this is mostly belt-and-suspenders
+    // for when multiple PRs share the same commits sampling cost).
+    const prAgentCache = new Map<number, { isAgent: boolean; agentName: string | null }>();
+
+    function detectAgentForPr(prNumber: number): { isAgent: boolean; agentName: string | null } {
+        const cached = prAgentCache.get(prNumber);
+        if (cached) return cached;
+        try {
+            const out = execFileSync(
+                'gh',
+                ['pr', 'view', String(prNumber), '--json', 'commits'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 8000 },
+            );
+            const parsed = JSON.parse(out) as { commits?: { messageBody?: string; authors?: { name?: string }[] }[] };
+            const commits = parsed.commits ?? [];
+            for (const c of commits) {
+                const body = c.messageBody ?? '';
+                for (const line of body.split(/\r?\n/)) {
+                    const ca = line.match(/^Co-Authored-By:\s*(.+?)\s*<.*>$/i);
+                    if (!ca) continue;
+                    for (const a of AGENT_PATTERNS) {
+                        if (a.pattern.test(ca[1])) {
+                            const v = { isAgent: true, agentName: a.name };
+                            prAgentCache.set(prNumber, v);
+                            return v;
+                        }
+                    }
+                }
+                // Also check the authors[] array — co-authors are returned as separate entries
+                for (const a of (c.authors ?? [])) {
+                    const n = a.name ?? '';
+                    for (const ap of AGENT_PATTERNS) {
+                        if (ap.pattern.test(n)) {
+                            const v = { isAgent: true, agentName: ap.name };
+                            prAgentCache.set(prNumber, v);
+                            return v;
+                        }
+                    }
+                }
+            }
+        } catch { /* gh unreachable, return false */ }
+        const v = { isAgent: false, agentName: null };
+        prAgentCache.set(prNumber, v);
+        return v;
+    }
+
+    interface EtaBaseline {
+        '_schema'?: string;
+        computed_at?: string;
+        window_days?: number;
+        by_type?: Record<string, { sample_n: number; median_minutes: number; p90_minutes: number }>;
+    }
+    let etaBaselineCache: { baseline: EtaBaseline | null; loaded_at: number } | null = null;
+    const ETA_BASELINE_TTL_MS = 5 * 60 * 1000; // 5 minutes; file changes weekly
+    function loadEtaBaseline(): { baseline: EtaBaseline | null; source: string } {
+        const now = Date.now();
+        if (etaBaselineCache && (now - etaBaselineCache.loaded_at) < ETA_BASELINE_TTL_MS) {
+            return { baseline: etaBaselineCache.baseline, source: 'cache' };
+        }
+        const p = path.join(repoRoot, 'state', 'quality', 'pr-eta-baseline.json');
+        if (!existsSync(p)) {
+            etaBaselineCache = { baseline: null, loaded_at: now };
+            return { baseline: null, source: 'missing' };
+        }
+        try {
+            const data = JSON.parse(readFileSync(p, 'utf-8')) as EtaBaseline;
+            etaBaselineCache = { baseline: data, loaded_at: now };
+            return { baseline: data, source: 'file' };
+        } catch {
+            etaBaselineCache = { baseline: null, loaded_at: now };
+            return { baseline: null, source: 'parse_error' };
+        }
+    }
+
+    function computeEta(prType: string, ageMinutes: number): { etaMinutes: number | null; basis: string } {
+        const { baseline, source } = loadEtaBaseline();
+        if (!baseline || !baseline.by_type) {
+            const remaining = Math.max(30 - ageMinutes, 0);
+            return { etaMinutes: remaining, basis: `fallback 30-min default (baseline source: ${source})` };
+        }
+        const bucket = baseline.by_type[prType] ?? baseline.by_type['other'];
+        if (!bucket || bucket.median_minutes <= 0) {
+            // Sample too small or all merges were ~instant — fall back to default
+            const remaining = Math.max(30 - ageMinutes, 0);
+            return { etaMinutes: remaining, basis: `fallback 30-min default (${prType} median was 0)` };
+        }
+        const remaining = Math.max(bucket.median_minutes - ageMinutes, 0);
+        const window = baseline.window_days ?? 30;
+        return {
+            etaMinutes: remaining,
+            basis: `median time-to-merge for ${prType} PRs in last ${window}d = ${bucket.median_minutes} min (n=${bucket.sample_n})`,
+        };
+    }
+
+    interface GhPrAuthor { login?: string; name?: string }
+    interface GhPrCheckRollup {
+        __typename?: string;
+        name?: string;
+        status?: string;
+        conclusion?: string;
+        workflowName?: string;
+        state?: string;
+    }
+    interface GhOpenPr {
+        number: number;
+        title: string;
+        headRefName: string;
+        author: GhPrAuthor;
+        createdAt: string;
+        updatedAt: string;
+        isDraft: boolean;
+        labels: { name: string }[];
+        statusCheckRollup: GhPrCheckRollup[];
+        mergeStateStatus: string;
+    }
+
+    function fetchOpenPrs(): { prs: InFlightPr[]; warning: string | null } {
+        try {
+            const out = execFileSync(
+                'gh',
+                ['pr', 'list', '--state', 'open', '--limit', '30',
+                    '--json', 'number,title,headRefName,author,createdAt,updatedAt,isDraft,labels,statusCheckRollup,mergeStateStatus'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 10000 },
+            );
+            const raw = JSON.parse(out) as GhOpenPr[];
+            const now = Date.now();
+            const prs: InFlightPr[] = raw.map((p) => {
+                const ageMin = Math.max(0, Math.floor((now - new Date(p.createdAt).getTime()) / 60000));
+                const prType = prTypeFromTitle(p.title);
+                const { etaMinutes, basis } = computeEta(prType, ageMin);
+                const checks = (p.statusCheckRollup ?? []).map((c) => ({
+                    name: c.name ?? '(unnamed)',
+                    status: (c.status ?? c.state ?? 'UNKNOWN').toUpperCase(),
+                    conclusion: c.conclusion ? String(c.conclusion).toUpperCase() : null,
+                    workflow: c.workflowName ?? '',
+                }));
+                // SKIPPED counts as neither passed nor failed nor pending — it's a no-op
+                const passed = checks.filter((c) => c.conclusion === 'SUCCESS').length;
+                const failed = checks.filter((c) => c.conclusion === 'FAILURE' || c.conclusion === 'CANCELLED' || c.conclusion === 'TIMED_OUT').length;
+                const pending = checks.filter((c) => c.status === 'IN_PROGRESS' || c.status === 'QUEUED' || c.status === 'PENDING').length;
+                const author = p.author?.login ?? p.author?.name ?? 'unknown';
+                const { isAgent, agentName } = detectAgentForPr(p.number);
+                return {
+                    number: p.number,
+                    title: p.title,
+                    url: `https://github.com/GuitarAlchemist/ga/pull/${p.number}`,
+                    head_branch: p.headRefName,
+                    author,
+                    author_is_agent: isAgent,
+                    author_agent_name: agentName,
+                    opened_at: p.createdAt,
+                    updated_at: p.updatedAt,
+                    age_minutes: ageMin,
+                    draft: !!p.isDraft,
+                    labels: (p.labels ?? []).map((l) => l.name),
+                    checks: { total: checks.length, passed, failed, pending, details: checks },
+                    mergeable: p.mergeStateStatus ?? 'UNKNOWN',
+                    eta_minutes: etaMinutes,
+                    eta_basis: basis,
+                    pr_type: prType,
+                };
+            });
+            // Sort by age desc (oldest first), then by PR number for stability
+            prs.sort((a, b) => b.age_minutes - a.age_minutes || a.number - b.number);
+            return { prs, warning: null };
+        } catch (e) {
+            return { prs: [], warning: `gh pr list (open) failed: ${String((e as Error).message ?? e)}` };
+        }
+    }
+
+    interface GhMergedPr { number: number; title: string; mergedAt: string; author: GhPrAuthor }
+    function fetchRecentMerges(): { merges: InFlightRecentMerge[]; warning: string | null } {
+        try {
+            const out = execFileSync(
+                'gh',
+                ['pr', 'list', '--state', 'merged', '--limit', '20', '--json', 'number,title,mergedAt,author'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 10000 },
+            );
+            const raw = JSON.parse(out) as GhMergedPr[];
+            const now = Date.now();
+            const merges: InFlightRecentMerge[] = raw
+                .filter((p) => p.mergedAt)
+                .map((p) => ({
+                    number: p.number,
+                    title: p.title,
+                    url: `https://github.com/GuitarAlchemist/ga/pull/${p.number}`,
+                    merged_at: p.mergedAt,
+                    ago_minutes: Math.max(0, Math.floor((now - new Date(p.mergedAt).getTime()) / 60000)),
+                    author: p.author?.login ?? p.author?.name ?? 'unknown',
+                }))
+                .sort((a, b) => a.ago_minutes - b.ago_minutes);
+            return { merges, warning: null };
+        } catch (e) {
+            return { merges: [], warning: `gh pr list (merged) failed: ${String((e as Error).message ?? e)}` };
+        }
+    }
+
+    // Loops/goals tracker — PR #330 will populate state/.runtime-loops-goals.jsonl.
+    // Until then, return empty arrays so the tile gracefully hides those sub-sections.
+    interface LoopGoalLine { kind?: 'loop' | 'goal'; id?: string; label?: string; status?: string; updated_at?: string }
+    function fetchActiveLoopsGoals(): { loops: InFlightLoopOrGoal[]; goals: InFlightLoopOrGoal[] } {
+        const p = path.join(repoRoot, 'state', '.runtime-loops-goals.jsonl');
+        if (!existsSync(p)) return { loops: [], goals: [] };
+        const latestById = new Map<string, LoopGoalLine>();
+        try {
+            const raw = readFileSync(p, 'utf-8');
+            for (const line of raw.split('\n')) {
+                const t = line.trim();
+                if (!t) continue;
+                try {
+                    const parsed = JSON.parse(t) as LoopGoalLine;
+                    if (!parsed.id) continue;
+                    const existing = latestById.get(parsed.id);
+                    if (!existing || (parsed.updated_at ?? '') >= (existing.updated_at ?? '')) {
+                        latestById.set(parsed.id, parsed);
+                    }
+                } catch { /* skip malformed */ }
+            }
+        } catch { return { loops: [], goals: [] }; }
+        const loops: InFlightLoopOrGoal[] = [];
+        const goals: InFlightLoopOrGoal[] = [];
+        for (const entry of latestById.values()) {
+            // Treat "done"/"completed"/"cancelled" as no-longer-active
+            const status = (entry.status ?? 'unknown').toLowerCase();
+            if (status === 'done' || status === 'completed' || status === 'cancelled') continue;
+            const row: InFlightLoopOrGoal = {
+                id: entry.id ?? '',
+                label: entry.label ?? entry.id ?? '(unlabeled)',
+                status: entry.status ?? 'unknown',
+                updated_at: entry.updated_at ?? '',
+            };
+            if (entry.kind === 'goal') goals.push(row);
+            else loops.push(row);
+        }
+        // Newest first
+        loops.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+        goals.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+        return { loops, goals };
+    }
+
+    function summarizeAlgedonicRecent(): InFlightAlgedonicSummary {
+        const projection = projectAlgedonic();
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const recent = projection.unacked.filter((s) => new Date(s.emitted_at).getTime() >= cutoff);
+        const out: InFlightAlgedonicSummary = {
+            info: 0, warn: 0, fail: 0, critical: 0,
+            top_unacked: [],
+        };
+        for (const s of recent) out[s.severity] = (out[s.severity] ?? 0) + 1;
+        out.top_unacked = recent.slice(0, 3).map((s) => ({
+            id: s.id,
+            severity: s.severity,
+            summary: s.summary,
+            emitted_at: s.emitted_at,
+            repo: s.repo,
+        }));
+        return out;
+    }
+
+    // Cache the assembled payload for 10s so dashboard auto-refresh (every
+    // 20s from the UI) only hits gh once per cycle.
+    let inFlightCache: { payload: InFlightPayload; built_at: number } | null = null;
+    const IN_FLIGHT_TTL_MS = 10_000;
+    function buildInFlight(): InFlightPayload {
+        const now = Date.now();
+        if (inFlightCache && (now - inFlightCache.built_at) < IN_FLIGHT_TTL_MS) {
+            return inFlightCache.payload;
+        }
+        const warnings: string[] = [];
+        prAgentCache.clear(); // refresh agent detection each cycle (small cost)
+        const { prs: openPrs, warning: w1 } = fetchOpenPrs();
+        const { merges: recentMerges, warning: w2 } = fetchRecentMerges();
+        if (w1) warnings.push(w1);
+        if (w2) warnings.push(w2);
+        const { loops, goals } = fetchActiveLoopsGoals();
+        const { baseline, source } = loadEtaBaseline();
+        const payload: InFlightPayload = {
+            fetched_at: new Date().toISOString(),
+            open_prs: openPrs,
+            recent_merges: recentMerges.slice(0, 10),
+            active_loops: loops,
+            active_goals: goals,
+            algedonic_recent: summarizeAlgedonicRecent(),
+            eta_baseline: {
+                source,
+                window_days: baseline?.window_days ?? null,
+                computed_at: baseline?.computed_at ?? null,
+            },
+            warnings,
+        };
+        inFlightCache = { payload, built_at: now };
+        return payload;
+    }
+
     interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
     const serviceTopology: ServiceTopology[] = [
         { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
@@ -790,6 +1304,105 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
             });
 
+            // ── /dev-data/ai-annotations — merged extractor + reconciler ──
+            // Always 200 (returns {empty:true} when no data exists, so the
+            // dashboard renders an onboarding hint instead of throwing).
+            server.middlewares.use('/dev-data/ai-annotations', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherAiAnnotations()));
+            });
+
+            // ── /dev-data/runtime-loops-goals — read latest projection ──
+            // Returns active /loop + /goal invocations across all Claude
+            // sessions on this machine, with age + last-activity decoration.
+            // Always 200 with the empty shape when no data exists (the
+            // dashboard renders an empty-state hint instead of error).
+            server.middlewares.use('/dev-data/runtime-loops-goals', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // POST routes (e.g. /stop/<id>) are handled by the sibling
+                // middleware registered below; this GET handler ignores them.
+                if (url.pathname.startsWith('/stop/')) { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherLoopsGoals()));
+            });
+
+            // ── POST /dev-data/runtime-loops-goals/stop/<id> — mark completed ──
+            // Appends a synthetic record with status=completed for the dashboard
+            // Stop button. Local-only (writes mutate state). Append-only:
+            // never rewrites existing lines. Matches the algedonic /ack pattern.
+            server.middlewares.use('/dev-data/runtime-loops-goals/stop', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'runtime-loops-goals')) return;
+
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // Middleware strips '/dev-data/runtime-loops-goals/stop' so
+                // pathname is e.g. '/<id>'.
+                const id = url.pathname.replace(/^\/+/, '');
+                if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'bad id' }));
+                    return;
+                }
+                const inboxPath = path.join(repoRoot, 'state', '.runtime-loops-goals.jsonl');
+                if (!existsSync(inboxPath)) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'no tracker state on disk' }));
+                    return;
+                }
+                // Find the latest record for this id so we can preserve schema
+                // fields when synthesizing the completion event.
+                let latest: Record<string, unknown> | null = null;
+                try {
+                    const raw = readFileSync(inboxPath, 'utf-8');
+                    for (const line of raw.split('\n')) {
+                        const trim = line.trim();
+                        if (!trim) continue;
+                        try {
+                            const rec = JSON.parse(trim) as Record<string, unknown>;
+                            if (rec.id === id) {
+                                const recAct = String(rec.last_activity_at ?? rec.started_at ?? '');
+                                const latestAct = String(latest?.last_activity_at ?? latest?.started_at ?? '');
+                                if (!latest || recAct >= latestAct) latest = rec;
+                            }
+                        } catch { /* skip malformed */ }
+                    }
+                } catch {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'failed to read tracker state' }));
+                    return;
+                }
+                if (!latest) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'id not found in tracker state' }));
+                    return;
+                }
+                const now = new Date().toISOString();
+                const completion = {
+                    id: String(latest.id),
+                    kind: String(latest.kind),
+                    started_at: String(latest.started_at ?? ''),
+                    session_id: String(latest.session_id ?? 'unknown'),
+                    prompt_or_condition: String(latest.prompt_or_condition ?? ''),
+                    turn_count: Number(latest.turn_count ?? 0),
+                    last_activity_at: now,
+                    status: 'completed',
+                    event: 'status_change',
+                    branch: latest.branch ?? null,
+                    completed_by: 'dashboard',
+                };
+                try {
+                    appendFileSync(inboxPath, JSON.stringify(completion) + '\n', 'utf-8');
+                } catch {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'append failed' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, completion }));
+            });
+
             // ── /dev-data/algedonic — read latest projection of inbox.jsonl ──
             // Returns the unacked signal list grouped by severity. Used by the
             // Heartbeat algedonic tile (OverviewSection.tsx). Refreshed every
@@ -895,6 +1508,16 @@ function devDataPlugin(): Plugin {
                 }));
             });
 
+            // ── /dev-data/in-flight ───────────────────────────────────────
+            // Single endpoint feeding the Summary-tab "In Flight" tile.
+            // Returns open PRs + checks + ETAs, recent merges, active
+            // loops/goals, and last-24h algedonic counts. Read-only.
+            server.middlewares.use('/dev-data/in-flight', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(buildInFlight(), null, 2));
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const manifest = {
@@ -912,6 +1535,9 @@ function devDataPlugin(): Plugin {
                         agent_activity: '/dev-data/agent-activity',
                         harness: '/dev-data/harness',
                         algedonic: '/dev-data/algedonic',
+                        in_flight: '/dev-data/in-flight',
+                        runtime_loops_goals: '/dev-data/runtime-loops-goals',
+                        ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
                         // Action endpoints — CF-Access-gated in production
                         // (path policy on /actions/*). Read endpoints above
@@ -934,6 +1560,9 @@ function devDataPlugin(): Plugin {
                     agent_activity: gatherAgentActivity(),
                     harness: gatherHarness(),
                     algedonic: projectAlgedonic(),
+                    in_flight: buildInFlight(),
+                    runtime_loops_goals: gatherLoopsGoals(),
+                    ai_annotations: gatherAiAnnotations(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));

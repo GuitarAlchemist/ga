@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import OverviewSection from './OverviewSection';
+import LoopsGoalsCard from '../components/Harness/LoopsGoalsCard';
 import HubIcon from '@mui/icons-material/Hub';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import ForumIcon from '@mui/icons-material/Forum';
@@ -44,8 +45,10 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
+import RuleIcon from '@mui/icons-material/Rule';
 import { HarnessTab } from '../components/Harness';
 import { AuthChip } from '../components/Auth';
+import { AiAnnotationsCard } from '../components/AiAnnotations';
 
 interface DevLink {
   title: string;
@@ -1026,8 +1029,8 @@ const LayerMapCard: React.FC = () => {
 };
 
 
-type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'harness';
-const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'harness'];
+type DevSubTab = 'summary' | 'architecture' | 'product' | 'project' | 'qa' | 'harness' | 'annotations';
+const DEV_SUB_TABS: DevSubTab[] = ['summary', 'architecture', 'product', 'project', 'qa', 'harness', 'annotations'];
 
 const readSubTabFromHash = (): DevSubTab => {
   if (typeof window === 'undefined') return 'summary';
@@ -1091,6 +1094,7 @@ export const DevelopmentSection: React.FC = () => {
           <Tab value="project"      label="Project"      icon={<GroupsIcon fontSize="small" />}      iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="qa"           label="QA"           icon={<VerifiedIcon fontSize="small" />}    iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="harness"      label="Harness"      icon={<ConstructionIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
+          <Tab value="annotations"  label="Annotations"  icon={<RuleIcon fontSize="small" />}         iconPosition="start" sx={{ minHeight: 44 }} />
         </Tabs>
         {/* CF Access auth pill — tells the operator whether action buttons
             below will work before they click one. Hidden if the runbook
@@ -1151,7 +1155,14 @@ export const DevelopmentSection: React.FC = () => {
 
       {subTab === 'harness' && (
         <Stack spacing={2}>
+          <LoopsGoalsCard />
           <HarnessTab />
+        </Stack>
+      )}
+
+      {subTab === 'annotations' && (
+        <Stack spacing={2}>
+          <AiAnnotationsCard />
         </Stack>
       )}
     </Stack>
