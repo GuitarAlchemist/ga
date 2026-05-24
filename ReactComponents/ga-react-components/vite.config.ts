@@ -678,6 +678,68 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(gatherAgentActivity()));
             });
 
+            // ── POST /dev-data/harness/skill/<name> — queue a skill invocation ──
+            // The harness tab exposes "Invoke" buttons for skills like
+            // /grade-last-pr, /council, /backlog-groom, /test-plan. Clicking
+            // a button writes a line to state/harness/skill-invocations.jsonl
+            // (gitignored — per-developer-machine). An agent session can read
+            // the queue and dispatch; we don't run skills server-side here.
+            //
+            // Body: { source?: string, context?: string, item_number?: number }
+            // Allowed skill names are restricted to /^[a-z0-9][a-z0-9-]{0,48}$/.
+            // Local-only via gateLocal.
+            server.middlewares.use('/dev-data/harness/skill', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'harness/skill')) return;
+
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // The middleware strips '/dev-data/harness/skill', leaving e.g. '/<name>'.
+                const name = url.pathname.replace(/^\/+/, '');
+                if (!/^[a-z0-9][a-z0-9-]{0,48}$/.test(name)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'bad skill name' }));
+                    return;
+                }
+
+                let body = '';
+                req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+                req.on('end', () => {
+                    let source: string | null = null;
+                    let context: string | null = null;
+                    let itemNumber: number | null = null;
+                    if (body.trim()) {
+                        try {
+                            const parsed = JSON.parse(body) as { source?: string; context?: string; item_number?: number };
+                            if (parsed.source) source = String(parsed.source).slice(0, 64);
+                            if (parsed.context) context = String(parsed.context).slice(0, 280);
+                            if (typeof parsed.item_number === 'number') itemNumber = parsed.item_number;
+                        } catch { /* fall through with defaults */ }
+                    }
+                    const queuePath = path.join(repoRoot, 'state/harness/skill-invocations.jsonl');
+                    const line = {
+                        id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                        skill: name,
+                        queued_at: new Date().toISOString(),
+                        source: source ?? 'harness-tab',
+                        context,
+                        item_number: itemNumber,
+                    };
+                    try {
+                        appendFileSync(queuePath, JSON.stringify(line) + '\n', 'utf-8');
+                    } catch (e) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'queue write failed', detail: String(e) }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        ok: true,
+                        queued: line,
+                        message: `Invocation queued — agents typically pick this up from state/handoffs/ within 5 minutes. Or run locally: /${name}`,
+                    }));
+                });
+            });
+
             server.middlewares.use('/dev-data/harness', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const payload = gatherHarness();
