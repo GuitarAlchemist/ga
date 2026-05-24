@@ -9,6 +9,7 @@ import {
     parseBacklog,
     extractDocTitle,
     binActivityByDay,
+    projectLoopsGoals,
 } from './parsers';
 
 describe('categorize', () => {
@@ -252,5 +253,79 @@ describe('binActivityByDay', () => {
         const bins = binActivityByDay(['', '2026-05-23T00:00:00Z'], 7, fixedNow);
         const total = bins.reduce((s, b) => s + b.count, 0);
         expect(total).toBe(1);
+    });
+});
+
+describe('projectLoopsGoals', () => {
+    const now = new Date('2026-05-24T12:00:00Z');
+
+    it('returns empty buckets for no lines', () => {
+        const p = projectLoopsGoals([], now);
+        expect(p.active_loops).toEqual([]);
+        expect(p.active_goals).toEqual([]);
+        expect(p.completed_recent).toEqual([]);
+        expect(p.total_records).toBe(0);
+    });
+
+    it('skips blank lines + malformed JSON without throwing', () => {
+        const lines = [
+            '',
+            '   ',
+            '{not valid json',
+            '{"id":"x"}',                              // missing kind+status — drop
+            '{"id":"y","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s1","prompt_or_condition":"keep","turn_count":0}',
+        ];
+        const p = projectLoopsGoals(lines, now);
+        expect(p.active_loops.length).toBe(1);
+        expect(p.active_loops[0].id).toBe('y');
+    });
+
+    it('latest-line-per-id wins (turn event supersedes start event)', () => {
+        const start = '{"id":"a1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s1","prompt_or_condition":"test","turn_count":0}';
+        const turn  = '{"id":"a1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:30:00Z","session_id":"s1","prompt_or_condition":"test","turn_count":3}';
+        const p = projectLoopsGoals([start, turn], now);
+        expect(p.active_loops.length).toBe(1);
+        expect(p.active_loops[0].turn_count).toBe(3);
+        expect(p.active_loops[0].last_activity_at).toBe('2026-05-24T11:30:00Z');
+    });
+
+    it('separates loops from goals', () => {
+        const loop = '{"id":"L1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"x","turn_count":1}';
+        const goal = '{"id":"G1","kind":"goal","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"y","turn_count":1}';
+        const p = projectLoopsGoals([loop, goal], now);
+        expect(p.active_loops.map((r) => r.id)).toEqual(['L1']);
+        expect(p.active_goals.map((r) => r.id)).toEqual(['G1']);
+    });
+
+    it('drops archived records, surfaces completed ones < cutoff', () => {
+        const archived = '{"id":"old","kind":"loop","status":"archived","started_at":"2026-05-01T00:00:00Z","last_activity_at":"2026-05-01T00:00:00Z","session_id":"s","prompt_or_condition":"old","turn_count":99}';
+        const completedRecent = '{"id":"done","kind":"goal","status":"completed","started_at":"2026-05-23T00:00:00Z","last_activity_at":"2026-05-23T12:00:00Z","session_id":"s","prompt_or_condition":"finished","turn_count":5}';
+        const completedStale  = '{"id":"stale","kind":"goal","status":"completed","started_at":"2026-05-10T00:00:00Z","last_activity_at":"2026-05-10T00:00:00Z","session_id":"s","prompt_or_condition":"forgotten","turn_count":12}';
+        const p = projectLoopsGoals([archived, completedRecent, completedStale], now, 7);
+        expect(p.active_loops).toEqual([]);
+        expect(p.active_goals).toEqual([]);
+        expect(p.completed_recent.map((r) => r.id)).toEqual(['done']);
+    });
+
+    it('decorates active rows with age + last_activity_min_ago', () => {
+        const rec = '{"id":"d1","kind":"loop","status":"active","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:45:00Z","session_id":"s","prompt_or_condition":"hi","turn_count":2}';
+        const p = projectLoopsGoals([rec], now);
+        expect(p.active_loops[0].age_min).toBe(120);
+        expect(p.active_loops[0].last_activity_min_ago).toBe(15);
+    });
+
+    it('sorts active rows newest-activity-first', () => {
+        const a = '{"id":"A","kind":"loop","status":"active","started_at":"2026-05-24T08:00:00Z","last_activity_at":"2026-05-24T08:30:00Z","session_id":"s","prompt_or_condition":"a","turn_count":0}';
+        const b = '{"id":"B","kind":"loop","status":"active","started_at":"2026-05-24T09:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"b","turn_count":0}';
+        const c = '{"id":"C","kind":"loop","status":"active","started_at":"2026-05-24T07:00:00Z","last_activity_at":"2026-05-24T10:00:00Z","session_id":"s","prompt_or_condition":"c","turn_count":0}';
+        const p = projectLoopsGoals([a, b, c], now);
+        expect(p.active_loops.map((r) => r.id)).toEqual(['B', 'C', 'A']);
+    });
+
+    it('paused records appear in the active bucket (operator action queued)', () => {
+        const paused = '{"id":"p1","kind":"goal","status":"paused","started_at":"2026-05-24T10:00:00Z","last_activity_at":"2026-05-24T11:00:00Z","session_id":"s","prompt_or_condition":"hold","turn_count":4}';
+        const p = projectLoopsGoals([paused], now);
+        expect(p.active_goals.length).toBe(1);
+        expect(p.active_goals[0].status).toBe('paused');
     });
 });

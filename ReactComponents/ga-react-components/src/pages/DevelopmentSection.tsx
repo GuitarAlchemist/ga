@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import OverviewSection from './OverviewSection';
+import LoopsGoalsCard from '../components/Harness/LoopsGoalsCard';
 import HubIcon from '@mui/icons-material/Hub';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import ForumIcon from '@mui/icons-material/Forum';
@@ -1456,6 +1457,7 @@ export const DevelopmentSection: React.FC = () => {
 
       {subTab === 'harness' && (
         <Stack spacing={2}>
+          <LoopsGoalsCard />
           <HarnessCard />
         </Stack>
       )}

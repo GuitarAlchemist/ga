@@ -5,8 +5,8 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
 import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
-import { parseBacklog, extractDocTitle, binActivityByDay } from './src/dev-data/parsers'
-import type { BacklogPayload } from './src/dev-data/parsers'
+import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals } from './src/dev-data/parsers'
+import type { BacklogPayload, LoopsGoalsProjection } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -390,6 +390,39 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // /loop and /goal runtime tracker — reads the append-only JSONL written by
+    // .claude/hooks/loops-goals-tracker.ps1 (repo-local mirror lives at
+    // state/.runtime-loops-goals.jsonl; the user-level canonical copy at
+    // ~/.claude/projects/<encoded-repo>/state/runtime-loops-goals.jsonl is
+    // intentionally NOT served — Vite has no way to know the encoded path
+    // without path-traversal risk). Empty projection on missing file so the
+    // dashboard renders an "invoke /loop or /goal to populate" hint.
+    function gatherLoopsGoals(): LoopsGoalsProjection {
+        const p = path.join(repoRoot, 'state', '.runtime-loops-goals.jsonl');
+        const now = new Date();
+        if (!existsSync(p)) {
+            return {
+                fetched_at: now.toISOString(),
+                active_loops: [],
+                active_goals: [],
+                completed_recent: [],
+                total_records: 0,
+            };
+        }
+        try {
+            const raw = readFileSync(p, 'utf-8');
+            return projectLoopsGoals(raw.split('\n'), now);
+        } catch {
+            return {
+                fetched_at: now.toISOString(),
+                active_loops: [],
+                active_goals: [],
+                completed_recent: [],
+                total_records: 0,
+            };
+        }
+    }
+
     interface AgentFileEntry {
         path: string;
         exists: boolean;
@@ -690,6 +723,96 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
             });
 
+            // ── /dev-data/runtime-loops-goals — read latest projection ──
+            // Returns active /loop + /goal invocations across all Claude
+            // sessions on this machine, with age + last-activity decoration.
+            // Always 200 with the empty shape when no data exists (the
+            // dashboard renders an empty-state hint instead of error).
+            server.middlewares.use('/dev-data/runtime-loops-goals', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // POST routes (e.g. /stop/<id>) are handled by the sibling
+                // middleware registered below; this GET handler ignores them.
+                if (url.pathname.startsWith('/stop/')) { next(); return; }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(gatherLoopsGoals()));
+            });
+
+            // ── POST /dev-data/runtime-loops-goals/stop/<id> — mark completed ──
+            // Appends a synthetic record with status=completed for the dashboard
+            // Stop button. Local-only (writes mutate state). Append-only:
+            // never rewrites existing lines. Matches the algedonic /ack pattern.
+            server.middlewares.use('/dev-data/runtime-loops-goals/stop', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'runtime-loops-goals')) return;
+
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // Middleware strips '/dev-data/runtime-loops-goals/stop' so
+                // pathname is e.g. '/<id>'.
+                const id = url.pathname.replace(/^\/+/, '');
+                if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'bad id' }));
+                    return;
+                }
+                const inboxPath = path.join(repoRoot, 'state', '.runtime-loops-goals.jsonl');
+                if (!existsSync(inboxPath)) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'no tracker state on disk' }));
+                    return;
+                }
+                // Find the latest record for this id so we can preserve schema
+                // fields when synthesizing the completion event.
+                let latest: Record<string, unknown> | null = null;
+                try {
+                    const raw = readFileSync(inboxPath, 'utf-8');
+                    for (const line of raw.split('\n')) {
+                        const trim = line.trim();
+                        if (!trim) continue;
+                        try {
+                            const rec = JSON.parse(trim) as Record<string, unknown>;
+                            if (rec.id === id) {
+                                const recAct = String(rec.last_activity_at ?? rec.started_at ?? '');
+                                const latestAct = String(latest?.last_activity_at ?? latest?.started_at ?? '');
+                                if (!latest || recAct >= latestAct) latest = rec;
+                            }
+                        } catch { /* skip malformed */ }
+                    }
+                } catch {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'failed to read tracker state' }));
+                    return;
+                }
+                if (!latest) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'id not found in tracker state' }));
+                    return;
+                }
+                const now = new Date().toISOString();
+                const completion = {
+                    id: String(latest.id),
+                    kind: String(latest.kind),
+                    started_at: String(latest.started_at ?? ''),
+                    session_id: String(latest.session_id ?? 'unknown'),
+                    prompt_or_condition: String(latest.prompt_or_condition ?? ''),
+                    turn_count: Number(latest.turn_count ?? 0),
+                    last_activity_at: now,
+                    status: 'completed',
+                    event: 'status_change',
+                    branch: latest.branch ?? null,
+                    completed_by: 'dashboard',
+                };
+                try {
+                    appendFileSync(inboxPath, JSON.stringify(completion) + '\n', 'utf-8');
+                } catch {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'append failed' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, completion }));
+            });
+
             // ── /dev-data/algedonic — read latest projection of inbox.jsonl ──
             // Returns the unacked signal list grouped by severity. Used by the
             // Heartbeat algedonic tile (OverviewSection.tsx). Refreshed every
@@ -757,6 +880,7 @@ function devDataPlugin(): Plugin {
                         agent_activity: '/dev-data/agent-activity',
                         harness: '/dev-data/harness',
                         algedonic: '/dev-data/algedonic',
+                        runtime_loops_goals: '/dev-data/runtime-loops-goals',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -770,6 +894,7 @@ function devDataPlugin(): Plugin {
                     agent_activity: gatherAgentActivity(),
                     harness: gatherHarness(),
                     algedonic: projectAlgedonic(),
+                    runtime_loops_goals: gatherLoopsGoals(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));
