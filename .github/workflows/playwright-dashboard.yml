@@ -67,11 +67,15 @@ jobs:
           # requires the pnpm action and would change install semantics.
           # First run installs cold; future PR can wire pnpm caching.
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-        # Plain `npm install` (not `npm ci`) — there's no package-lock.json
-        # in the repo. The pnpm-lock.yaml is informational; the runtime
-        # contract is package.json.
+      - name: Install Playwright only (live-URL tests don't need React deps)
+        run: |
+          # Full `npm install` fails on Linux runners because the React
+          # devDependencies include @esbuild/win32-x64 (a Windows-only
+          # optional binary the dev box pinned). For the dashboard E2E we
+          # only need Playwright itself — the tests hit a live URL and
+          # don't build the SPA. Install just @playwright/test.
+          npm install --no-save --no-audit --no-fund --no-package-lock \
+            "@playwright/test@$(node -p "require('./package.json').devDependencies['@playwright/test']")"
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
