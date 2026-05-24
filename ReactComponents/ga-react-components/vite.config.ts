@@ -1360,7 +1360,7 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(gatherAgentActivity()));
             });
 
-            // ── POST /dev-data/harness/skill/<name> — queue a skill invocation ──
+            // ── POST harness/skill/<name> — queue a skill invocation ──
             // The harness tab exposes "Invoke" buttons for skills like
             // /grade-last-pr, /council, /backlog-groom, /test-plan. Clicking
             // a button writes a line to state/harness/skill-invocations.jsonl
@@ -1369,17 +1369,36 @@ function devDataPlugin(): Plugin {
             //
             // Body: { source?: string, context?: string, item_number?: number }
             // Allowed skill names are restricted to /^[a-z0-9][a-z0-9-]{0,48}$/.
-            // Local-only via gateLocal.
-            server.middlewares.use('/dev-data/harness/skill', (req, res, next) => {
-                if (req.method !== 'POST') { next(); return; }
-                if (!gateLocal(req, res, 'harness/skill')) return;
-
+            //
+            // Two route prefixes, identical behaviour:
+            //   /actions/harness/skill/<name>     — canonical; gated by
+            //                                       Cloudflare Access at the
+            //                                       edge (path policy on
+            //                                       /actions/*). Both local
+            //                                       and tunnel traffic land
+            //                                       here; CF Access proves
+            //                                       operator identity before
+            //                                       traffic reaches Vite.
+            //   /dev-data/harness/skill/<name>    — deprecated mirror, still
+            //                                       gated locally via
+            //                                       gateLocal. Emits a
+            //                                       Deprecation response
+            //                                       header so callers can
+            //                                       migrate. Remove after one
+            //                                       release.
+            const handleSkillInvoke = (
+                req: import('http').IncomingMessage,
+                res: import('http').ServerResponse,
+                stripPrefix: string,
+            ) => {
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-                // The middleware strips '/dev-data/harness/skill', leaving e.g. '/<name>'.
+                // Vite's `use(prefix, fn)` already strips the prefix from
+                // req.url, so url.pathname here is just '/<name>'. The
+                // stripPrefix arg is informational (used for error labels).
                 const name = url.pathname.replace(/^\/+/, '');
                 if (!/^[a-z0-9][a-z0-9-]{0,48}$/.test(name)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'bad skill name' }));
+                    res.end(JSON.stringify({ error: 'bad skill name', route: stripPrefix }));
                     return;
                 }
 
@@ -1420,6 +1439,25 @@ function devDataPlugin(): Plugin {
                         message: `Invocation queued — agents typically pick this up from state/handoffs/ within 5 minutes. Or run locally: /${name}`,
                     }));
                 });
+            };
+
+            // Canonical: /actions/harness/skill/<name> — auth happens at CF
+            // Access (path policy). We do NOT call gateLocal here, so the
+            // tunnel can carry signed-in operator traffic through.
+            server.middlewares.use('/actions/harness/skill', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                handleSkillInvoke(req, res, '/actions/harness/skill');
+            });
+
+            // Deprecated mirror — still local-only. Emits Deprecation header
+            // so old clients can migrate before removal.
+            server.middlewares.use('/dev-data/harness/skill', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'harness/skill')) return;
+                res.setHeader('Deprecation', 'true');
+                res.setHeader('Sunset', 'use /actions/harness/skill/<name> instead');
+                res.setHeader('Link', '</actions/harness/skill>; rel="successor-version"');
+                handleSkillInvoke(req, res, '/dev-data/harness/skill');
             });
 
             server.middlewares.use('/dev-data/harness', (req, res, next) => {
@@ -1573,19 +1611,28 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(projectAlgedonic()));
             });
 
-            // ── POST /dev-data/algedonic/ack/<id> — ack a signal ───────────
+            // ── POST algedonic/ack/<id> — ack a signal ─────────────────────
             // Body: optional { acked_by, resolution }. Writes a new line to
-            // inbox.jsonl with ack.acked = true. Local-only.
-            server.middlewares.use('/dev-data/algedonic/ack', (req, res, next) => {
-                if (req.method !== 'POST') { next(); return; }
-                if (!gateLocal(req, res, 'algedonic')) return;
-
+            // inbox.jsonl with ack.acked = true.
+            //
+            // Two route prefixes, identical behaviour (same auth split as
+            // harness/skill above):
+            //   /actions/algedonic/ack/<id>      — canonical; gated by CF
+            //                                       Access path policy.
+            //   /dev-data/algedonic/ack/<id>     — deprecated mirror;
+            //                                       local-only + Deprecation
+            //                                       header.
+            const handleAlgedonicAck = (
+                req: import('http').IncomingMessage,
+                res: import('http').ServerResponse,
+                stripPrefix: string,
+            ) => {
                 const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-                // The middleware strips '/dev-data/algedonic/ack', leaving e.g. '/<id>'.
+                // Vite's `use(prefix, fn)` strips the prefix already.
                 const id = url.pathname.replace(/^\/+/, '');
                 if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'bad id' }));
+                    res.end(JSON.stringify({ error: 'bad id', route: stripPrefix }));
                     return;
                 }
                 let body = '';
@@ -1609,6 +1656,52 @@ function devDataPlugin(): Plugin {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ ok: true, ack: ackLine }));
                 });
+            };
+
+            server.middlewares.use('/actions/algedonic/ack', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                handleAlgedonicAck(req, res, '/actions/algedonic/ack');
+            });
+
+            server.middlewares.use('/dev-data/algedonic/ack', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'algedonic')) return;
+                res.setHeader('Deprecation', 'true');
+                res.setHeader('Sunset', 'use /actions/algedonic/ack/<id> instead');
+                res.setHeader('Link', '</actions/algedonic/ack>; rel="successor-version"');
+                handleAlgedonicAck(req, res, '/dev-data/algedonic/ack');
+            });
+
+            // ── /cdn-cgi/access/get-identity — local dev stub ──────────────
+            // Cloudflare Access serves this path in production with the
+            // signed-in user's identity ({ email, name, ... }) or 401 if not
+            // authenticated. In local dev there's no CF in front, so we stub
+            // it with a fixed dev identity. This keeps the auth-aware UI
+            // (useCfIdentity hook + AuthChip) working when running
+            // `npm run dev` directly.
+            //
+            // Production traffic for this path is handled by CF before it
+            // reaches Vite — Cloudflare intercepts /cdn-cgi/* and responds
+            // itself. The middleware here only fires for local-origin
+            // requests; if a tunnel request somehow reached it, gateLocal
+            // would reject it so we still don't impersonate identities.
+            server.middlewares.use('/cdn-cgi/access/get-identity', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                if (!isLocalOrigin(req)) {
+                    // Tunnel / external — let CF handle this in prod; in
+                    // dev-without-CF the request would have been blocked
+                    // earlier. Return 401 to mirror CF's "not signed in".
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'not authenticated' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({
+                    email: 'dev@localhost',
+                    name: 'Local Dev',
+                    id: 'local-dev-stub',
+                    type: 'local-dev-stub',
+                }));
             });
 
             // ── /dev-data/in-flight ───────────────────────────────────────
@@ -1643,6 +1736,15 @@ function devDataPlugin(): Plugin {
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
                         ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
+                        // Action endpoints — CF-Access-gated in production
+                        // (path policy on /actions/*). Read endpoints above
+                        // stay public; only state-mutating POSTs require
+                        // operator identity.
+                        actions: {
+                            invoke_skill: '/actions/harness/skill/<name>',
+                            ack_algedonic: '/actions/algedonic/ack/<id>',
+                            identity: '/cdn-cgi/access/get-identity',
+                        },
                     },
                     services: serviceTopology,
                     backlog: gatherBacklog(),

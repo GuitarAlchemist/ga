@@ -47,6 +47,7 @@ import LayersIcon from '@mui/icons-material/Layers';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import RuleIcon from '@mui/icons-material/Rule';
 import { HarnessTab } from '../components/Harness';
+import { AuthChip } from '../components/Auth';
 import { TestPlansCard } from '../components/TestPlans';
 import { AiAnnotationsCard } from '../components/AiAnnotations';
 
@@ -1069,13 +1070,24 @@ export const DevelopmentSection: React.FC = () => {
 
       <ManifestBanner />
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          flexWrap: 'wrap',
+        }}
+      >
         <Tabs
           value={subTab}
           onChange={(_, v: DevSubTab) => setSubTab(v)}
           variant="scrollable"
           scrollButtons="auto"
           aria-label="Development sub-sections"
+          sx={{ flex: 1, minWidth: 0 }}
         >
           <Tab value="summary"      label="Summary"      icon={<DashboardIcon fontSize="small" />}   iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="architecture" label="Architecture" icon={<AccountTreeIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
@@ -1085,6 +1097,13 @@ export const DevelopmentSection: React.FC = () => {
           <Tab value="harness"      label="Harness"      icon={<ConstructionIcon fontSize="small" />} iconPosition="start" sx={{ minHeight: 44 }} />
           <Tab value="annotations"  label="Annotations"  icon={<RuleIcon fontSize="small" />}         iconPosition="start" sx={{ minHeight: 44 }} />
         </Tabs>
+        {/* CF Access auth pill — tells the operator whether action buttons
+            below will work before they click one. Hidden if the runbook
+            CF Access app hasn't been set up; chip still shows "Sign in"
+            but the link 404s gracefully in that case. */}
+        <Box sx={{ pr: 1, pl: 1 }}>
+          <AuthChip />
+        </Box>
       </Box>
 
       {subTab === 'summary' && (
