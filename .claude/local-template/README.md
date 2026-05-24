@@ -18,10 +18,14 @@ re-orient.
 
 ## How to use it
 
-1. Copy the template into place:
+1. Create the (gitignored) local directory and copy the template into place:
    ```bash
+   mkdir -p .claude/local
    cp .claude/local-template/state.md.template .claude/local/state.md
    ```
+   The `mkdir -p` is required on a fresh checkout — `.claude/local/` is
+   gitignored, so it does not exist until you create it. Without the
+   `mkdir`, the `cp` fails with `No such file or directory`.
 2. Edit it as you work. The four sections (Done / Now / Next /
    Blocked-by) are the minimum useful schema; Hypotheses + Notes are
    optional carry-forward.

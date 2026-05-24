@@ -37,6 +37,7 @@ what the PR title and Summary promised.
 | `alignment` | enum | One of `"high"`, `"medium"`, `"low"`. See the SKILL for tie-breakers. |
 | `reasons` | string[] | 1–5 short sentences explaining the alignment call. |
 | `specialist_notes` | object | Map of specialist name → one-paragraph verdict (from `/octo:review`). |
+| `codex_review` | object | Codex bot review scan result. `status` (`reviewed`/`not_reviewed`/`skipped`), `comments_total`, `unresolved` per priority, `findings[]`. P0/P1 degrade the grade — see SKILL step 5. |
 | `graded_at` | string | RFC3339 UTC. When the grade was written. |
 | `grader` | string | Model name (e.g. `"claude-opus-4-7"`). |
 | `prior_grades` | object[] | Optional. Populated only on re-grades — see "Re-grading" below. |

@@ -1,8 +1,8 @@
 ---
 name: grade-last-pr
-description: Post-merge intent-vs-delivery evaluator. Resolves the most recent squash-merged PR, captures its stated intent (title + Summary), diffs it against what actually landed, runs /octo:review for specialist commentary, computes a high/medium/low alignment score, and writes a structured grade to state/quality/pr-grades/<merge-sha>.json. Closes the "agent declared done, nobody checked the goal" loop.
+description: Post-merge intent-vs-delivery evaluator. Resolves the most recent squash-merged PR, captures its stated intent (title + Summary), diffs it against what actually landed, runs /octo:review for specialist commentary, scans Codex bot comments (P0/P1 degrade the grade), computes a high/medium/low alignment score, and writes a structured grade to state/quality/pr-grades/<merge-sha>.json. Closes the "agent declared done, nobody checked the goal" loop.
 allowed-tools: Bash, Read, Write, Skill
-last_verified: 2026-05-23
+last_verified: 2026-05-24
 karpathy_rule: R4-goal-driven-execution (task complete != goal achieved)
 ---
 
@@ -68,7 +68,61 @@ Capture the specialists' verdicts — at minimum `code-reviewer` and `security-s
 
 If `/octo:review` is unavailable in the current session (no `plugin:octo:review` in the skill list), record `"specialist_notes": {"unavailable": "octo:review skill not loaded; grade based on diff inspection only"}` and proceed with a Claude-only review pass.
 
-### 5. Compute the alignment score
+### 5. Scan Codex bot review comments
+
+Codex (`chatgpt-codex-connector[bot]`) leaves inline review comments on PRs that are **not** surfaced in the standard `gh pr view` merge flow. We've shipped PRs with unresolved Codex findings before (e.g. PR #308's `mkdir -p .claude/local` fix), so this step is a hard requirement, not advisory.
+
+```bash
+REPO="GuitarAlchemist/ga"
+gh api "repos/$REPO/pulls/$PR/comments" \
+  --jq '.[] | select(.user.login == "chatgpt-codex-connector[bot]")'
+```
+
+For each Codex comment, extract:
+
+- **Priority** — parse from the `![P{0,1,2,3} Badge]` markdown shield at the start of `body`. The regex `!\[P([0-3]) Badge\]` is reliable; if the shield is missing, treat priority as `?` and surface in `reasons`.
+- **Title** — the bold heading after the badge (the `**<sub>…</sub>  Title text**` line).
+- **Body excerpt** — the first paragraph of the comment (everything up to the first blank line after the title).
+- **Resolution status** — heuristic, in this order:
+  1. Any `+1` / thumbs-up reaction from a human → `acknowledged`.
+  2. Any reply comment on the same `pull_request_review_id` (or a `path`+`line` match) authored by a non-bot → `replied`.
+  3. Any commit on the PR with `created_at > comment.created_at` → `possibly_addressed` (weak signal — still flag for human review unless commit message references the fix).
+  4. Otherwise → `unresolved`.
+
+Aggregate the counts and emit a "Codex review" block in the grade card:
+
+```json
+"codex_review": {
+  "status": "reviewed",
+  "comments_total": 1,
+  "unresolved": { "P0": 0, "P1": 0, "P2": 1, "P3": 0 },
+  "findings": [
+    {
+      "priority": "P2",
+      "title": "Create `.claude/local` before copy instruction",
+      "path": ".claude/local-template/README.md",
+      "line": 23,
+      "status": "unresolved",
+      "url": "https://github.com/GuitarAlchemist/ga/pull/308#discussion_r3293624339",
+      "excerpt": "The setup command in this README fails on a fresh checkout because `.claude/local/` is gitignored…"
+    }
+  ]
+}
+```
+
+If the API returns no Codex comments at all, record `"codex_review": { "status": "not_reviewed", "comments_total": 0 }` — Codex hasn't visited the PR yet (or isn't installed). Don't degrade the grade for this.
+
+**Codex-driven grade adjustment** — apply AFTER computing the alignment in step 6, but record the adjustment in `reasons`:
+
+| Unresolved | Effect on grade |
+|---|---|
+| Any **P0** | Force `alignment = "low"` regardless of intent-vs-delivery match. Surface every P0 comment body verbatim in `reasons`. |
+| Any **P1** | Degrade one tier: `high → medium`, `medium → low`. Cite the P1 titles in `reasons`. |
+| **P2** / **P3** only | Informational. Quote the titles in `reasons` so the operator sees them; do not change the tier. |
+
+This is the **Codex review gate**: a `low` grade with a P0/P1 attached is a signal to revert or to fast-follow with a fix PR, not just a number in an artifact.
+
+### 6. Compute the alignment score
 
 Three buckets — no in-between. Be honest, not generous.
 
@@ -86,7 +140,7 @@ Tie-breaker examples — these are the calls that matter most:
 - **Multi-feature PR with a single-feature title.** → **low**.
 - **Stated feature ships + a Karpathy-rule self-improvement gets bundled.** → **medium** (legitimate compound work, but the title hid the rule change).
 
-### 6. Write the grade card
+### 7. Write the grade card
 
 To `state/quality/pr-grades/<merge-sha>.json` — the **full** SHA, no truncation, so it sorts alphabetically and never collides with a short-SHA prefix.
 
@@ -115,6 +169,12 @@ To `state/quality/pr-grades/<merge-sha>.json` — the **full** SHA, no truncatio
     "code-reviewer": "Markdown-only addition; no executable changes; zero TS regression risk.",
     "security-sentinel": "Skill reads gh CLI + git output, no network egress, no eval."
   },
+  "codex_review": {
+    "status": "reviewed",
+    "comments_total": 0,
+    "unresolved": { "P0": 0, "P1": 0, "P2": 0, "P3": 0 },
+    "findings": []
+  },
   "graded_at": "2026-05-23T23:50:00Z",
   "grader": "claude-opus-4-7"
 }
@@ -129,8 +189,9 @@ Schema notes:
 - `alignment` is one of `"high"`, `"medium"`, `"low"` — no other values.
 - `reasons` is 1–5 short sentences. If you can't articulate a reason, the grade isn't ready.
 - `grader` is the model name (free-form string; example: `"claude-opus-4-7"`).
+- `codex_review` is optional but **strongly recommended**. Set `status` to `"reviewed"` if the API returned any Codex comments (even zero unresolved), `"not_reviewed"` if Codex hasn't visited yet, or `"skipped"` if the API call failed (record the error in `reasons`).
 
-### 7. Print the terminal summary
+### 8. Print the terminal summary
 
 One concise block. Keep it under 10 lines.
 
@@ -139,6 +200,7 @@ PR #308 graded · alignment: high
   merge:   5bb745b0  (2026-05-23T23:35:20Z)
   title:   feat(harness): /grade-last-pr skill
   changed: 5 files, +312/-2
+  codex:   reviewed · P0=0 P1=0 P2=0 P3=0 unresolved
 
   reasons:
   • Diff matches stated intent: skill + artifact dir + state bump.
@@ -150,6 +212,25 @@ PR #308 graded · alignment: high
 
 Surface the absolute path to the JSON in the last line so the user can `cat` it without rebuilding it.
 
+If Codex degrades the grade, the block should show the new tier, the original tier, and the offending comment titles — e.g.:
+
+```
+PR #308 graded · alignment: medium  (Codex-degraded from high)
+  merge:   abc12345  (2026-05-23T23:35:20Z)
+  title:   feat(harness): adopt .claude/local/state.md pattern
+  changed: 3 files, +84/-0
+  codex:   reviewed · P0=0 P1=0 P2=1 P3=0 unresolved
+    P2: Create `.claude/local` before copy instruction
+        .claude/local-template/README.md:23
+        https://github.com/GuitarAlchemist/ga/pull/308#discussion_r3293624339
+
+  reasons:
+  • Diff matches stated intent: README + template + state-md fixture.
+  • Codex P2 (unresolved): mkdir step missing from setup snippet — informational only, no tier change.
+```
+
+(P2 example shows the *informational* path — no tier change. If a P1 were unresolved, the first line would read `alignment: medium (Codex-degraded from high)` and `reasons` would explain the demotion.)
+
 ## Edge cases
 
 - **Detached HEAD or non-main branch.** Use `gh pr list --state merged --base main` to filter, or accept the argument override (`/grade-last-pr 308`).
@@ -157,6 +238,9 @@ Surface the absolute path to the JSON in the last line so the user can `cat` it 
 - **Bot-merged PR (dependabot, renovate).** Treat as a separate class — grade still applies but `grader_notes` should call out the bot author. Auto-bumps usually score `high`.
 - **Squash with edited commit message.** GitHub sometimes rewrites the merge subject. Use the PR title from `gh pr view`, not the commit subject.
 - **Multiple PRs merged in the same minute.** `git log -1` and `gh pr list --limit 1` may disagree. Cross-check the SHA. If still ambiguous, accept the merge SHA as an argument.
+- **Codex API rate-limited or unreachable.** Set `codex_review.status = "skipped"` and proceed; do not block grading on Codex availability. Surface the failure in `reasons` so the operator can re-run.
+- **Codex comment with no badge shield.** Some older Codex comments lack the `![P{0-3} Badge]` shield. Treat as `priority = "?"` and surface in `reasons`. Do not silently downgrade — flag for human review.
+- **Codex comment with an empty body or only an image.** Skip and continue; record in `findings` with `priority = "?"`, `excerpt = "(empty body)"`.
 
 ## Anti-patterns
 
