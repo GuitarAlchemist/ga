@@ -11066,9 +11066,9 @@
 /* ─── Scene Options — left rail ─── */
 .scene-options {
   position: absolute;
-  top: 120px;
-  left: 56px;  /* right of icon rail (48px + 8px gap) */
-  z-index: 30;
+  top: 176px;
+  left: 8px;
+  z-index: 45;
   font-family: 'JetBrains Mono', monospace;
 }
 .scene-options__toggle {
