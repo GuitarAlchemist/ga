@@ -122,6 +122,48 @@ If the API returns no Codex comments at all, record `"codex_review": { "status":
 
 This is the **Codex review gate**: a `low` grade with a P0/P1 attached is a signal to revert or to fast-follow with a fix PR, not just a number in an artifact.
 
+### 5b. AI annotation hygiene (ai-annotations gate)
+
+The ai-annotations campaign (`docs/contracts/2026-05-24-ai-annotation.contract.md` in ix) drops `@ai:invariant`, `@ai:assumption`, etc. markers in source. When the reconciler runs, it writes a report to `state/quality/ai-annotations-reconciliation.json` (path is shared across repos; ga sees the ix-produced file when run side-by-side, or copies it via the federation pattern).
+
+Before computing the grade in step 6:
+
+```bash
+RECON="state/quality/ai-annotations-reconciliation.json"
+if [ -f "$RECON" ]; then
+  CHANGED_FILES=$(git show HEAD --name-only --pretty=format: | tr -d '\r')
+  # Pull annotations that live in any of the changed files
+  RELEVANT=$(jq --argjson files "$(echo "$CHANGED_FILES" | jq -R -s 'split("\n") | map(select(length > 0))')" \
+    '.annotations | map(select(.location.path as $p | $files | index($p)))' "$RECON")
+  C_COUNT=$(echo "$RELEVANT" | jq '[.[] | select(.truth_value == "C")] | length')
+  F_COUNT=$(echo "$RELEVANT" | jq '[.[] | select(.truth_value == "F" and (.reconciliation.test_match // null) == null)] | length')
+  STALE_COUNT=$(echo "$RELEVANT" | jq '[.[] | select(.stale == true)] | length')
+fi
+```
+
+**Annotation-driven grade adjustment** — apply AFTER Codex adjustment, record in `reasons`:
+
+| Unresolved in changed files | Effect on grade |
+|---|---|
+| Any **C** (contradictory) annotation | Degrade one tier (`high → medium`, `medium → low`). Cite the contradicting annotations in `reasons` with `path:line` references. |
+| Any **F** (refuted) annotation without a `dismissed` certainty | Degrade one tier. Cite which claims got refuted. |
+| Any **stale** annotation (file mtime > annotation.updated_at + 7d) | Informational. List in `reasons` so the author can refresh; do not change the tier. |
+
+Record under `ai_annotations` in the grade card:
+
+```json
+"ai_annotations": {
+  "status": "reviewed",
+  "in_changed_files": 12,
+  "unresolved": { "C": 0, "F": 1, "stale": 2 },
+  "findings": [
+    {"truth_value": "F", "kind": "invariant", "path": "src/foo.rs", "line": 42, "claim": "..." }
+  ]
+}
+```
+
+If `ai-annotations-reconciliation.json` doesn't exist, set `"ai_annotations": { "status": "not_run" }` and skip the adjustment — don't penalize PRs in a repo where the campaign hasn't shipped yet.
+
 ### 6. Compute the alignment score
 
 Three buckets — no in-between. Be honest, not generous.
