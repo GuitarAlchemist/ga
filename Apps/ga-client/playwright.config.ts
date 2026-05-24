@@ -68,9 +68,15 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run your local dev server before starting the tests.
+   * Uses `dev:legacy` because `dev` is intentionally sabotaged with
+   * process.exit(1) — ga-client is the legacy demo client and the
+   * canonical dev server is ReactComponents/ga-react-components. The
+   * `:legacy` script binds vite to port 5173 explicitly so it never
+   * competes with port 5176 (the tunneled demos.guitaralchemist.com).
+   */
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev:legacy',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
