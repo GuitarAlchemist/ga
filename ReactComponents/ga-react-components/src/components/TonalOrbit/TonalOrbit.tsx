@@ -46,12 +46,15 @@ import {
   PITCH_BODIES,
   chordsForPitch,
   scalesForChord,
+  keyChordsForPitch,
+  keyModesForPitch,
   focusDepth,
   type Body,
   type PitchBody,
   type ChordBody,
   type ScaleBody,
   type FocusState,
+  type ChordMode,
 } from './data';
 import { SPACE_TOP, SPACE_BOTTOM } from './palette';
 import { TonalOrbitAudio } from './audio';
@@ -63,6 +66,17 @@ export interface TonalOrbitProps {
   perf?: PerfMode;
   /** When true the camera auto-cycles through the hierarchy (Cast-friendly). */
   tour?: boolean;
+  /**
+   * Which chord/scale system the orbit shows:
+   *   - 'root' (default): mid-orbit = 8 chord families on the focused
+   *     pitch as root (Cmaj, Cm, C7, ...); outer-orbit = 7 scales
+   *     curated per chord family. All share the focused pitch's root.
+   *   - 'key': mid-orbit = 7 diatonic triads of the focused pitch's
+   *     major key (I, ii, iii, IV, V, vi, vii° — each with its own
+   *     root); outer-orbit = 7 modes of that major key, each rooted
+   *     on its scale degree (Ionian, Dorian, Phrygian, ...).
+   */
+  chordMode?: ChordMode;
   /** Fires when the focus state changes (parent renders the HUD/breadcrumb). */
   onFocusChange?: (focus: FocusState) => void;
   /**
@@ -80,6 +94,19 @@ export interface TonalOrbitApi {
   setOrbiting: (on: boolean) => void;
   /** Toggle audio drone. */
   setAudioEnabled: (on: boolean) => void;
+  /**
+   * Swap chord-mode in place. Rebuilds the chord (+ scale, in Mode B)
+   * orbit around the focused pitch without tearing down the renderer,
+   * star, lights, or starfield. If no pitch is focused yet this just
+   * stores the new mode for the next focus.
+   */
+  setChordMode: (mode: ChordMode) => void;
+  /**
+   * Programmatic focus by pitch class (0..11), used by headless test
+   * harnesses to capture the chord-orbit state without simulating
+   * mouse coordinates onto a small planet target.
+   */
+  focusPitchByPc: (pc: number) => void;
 }
 
 // ─── Layout tunables ──────────────────────────────────────────────────────────
@@ -119,6 +146,7 @@ interface OrbitMesh {
 export const TonalOrbit: React.FC<TonalOrbitProps> = ({
   perf = 'high',
   tour = false,
+  chordMode = 'root',
   onFocusChange,
   onReady,
 }) => {
@@ -130,6 +158,11 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
   callbacksRef.current = { onFocusChange, onReady };
   const tourRef = useRef<boolean>(tour);
   tourRef.current = tour;
+  // Mode is read via ref inside the scene closure so a prop change can
+  // flow through without re-mounting Three. The actual orbit rebuild on
+  // mode change happens in `api.setChordMode()` below.
+  const chordModeRef = useRef<ChordMode>(chordMode);
+  chordModeRef.current = chordMode;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -542,19 +575,43 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
         audio.setState({ rootMidi: null, chordIntervals: null, shimmerSemitone: null });
         return;
       }
+      // Drone root midi:
+      //   - If a chord is focused, use the CHORD's root. In Mode A the
+      //     chord shares the pitch's root (no audible difference), but in
+      //     Mode B every diatonic chord has its own root (Dm under C,
+      //     etc.) so the drone follows the chord — sounds like a
+      //     progression in the key, not different qualities on one root.
+      //   - Else fall back to the focused pitch's midi.
+      // PITCH_BODIES sets midi = 60 + pc, so (midi - pc) = 60 (C4) for
+      // every pitch; adding chord.rootPc gives the chord's root MIDI in
+      // the same octave the pitch drone uses, keeping the audio in a
+      // consistent register across chord changes.
+      const octaveBaseMidi = focus.pitch.midi - focus.pitch.pc; // = 60
+      const rootMidi = focus.chord
+        ? octaveBaseMidi + focus.chord.rootPc
+        : focus.pitch.midi;
       // Shimmer = scale's "characteristic" interval — the semitone farthest
-      // from the chord's notes (i.e. the most colourful tone). Falls back
-      // to the seventh.
+      // from the chord's notes (i.e. the most colourful tone). Mode B: the
+      // shimmer pitch lives on the SCALE's root, not the chord's; we
+      // express it as a semitone offset above the rootMidi (chord root)
+      // so the audio engine adds it directly.
       let shimmer: number | null = null;
       if (focus.scale && focus.chord) {
+        // Offset between scale-root and chord-root, normalised to 0..11.
+        const offset = ((focus.scale.rootPc - focus.chord.rootPc) % 12 + 12) % 12;
         const chordSet = new Set(focus.chord.family.intervals);
-        const candidates = focus.scale.scale.intervals.filter((i) => !chordSet.has(i));
+        // Look for a characteristic scale tone not already in the chord
+        // — measured relative to the chord root by adding `offset` to
+        // each scale interval. Use the middle candidate for stable feel.
+        const candidates = focus.scale.scale.intervals
+          .map((i) => (i + offset) % 12)
+          .filter((i) => !chordSet.has(i));
         if (candidates.length > 0) {
           shimmer = candidates[Math.floor(candidates.length / 2)];
         }
       }
       audio.setState({
-        rootMidi: focus.pitch.midi,
+        rootMidi,
         chordIntervals: focus.chord ? focus.chord.family.intervals : null,
         shimmerSemitone: shimmer,
       });
@@ -578,9 +635,11 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       focus.scale = null;
 
       if (pitch) {
-        // Build chord orbit around the focused pitch.
+        // Build chord orbit around the focused pitch. Source depends on
+        // chord-mode: Mode A = 8 chord families on the pitch as root;
+        // Mode B = 7 diatonic triads of the pitch's major key.
         chordRing = addOrbitRing(CHORD_RADIUS, 0xb88c4c, 0.14);
-        const chords = chordsForPitch(pitch);
+        const chords = chordModeRef.current === 'key' ? keyChordsForPitch(pitch) : chordsForPitch(pitch);
         chords.forEach((cb, i) => {
           const baseAngle = (i / chords.length) * Math.PI * 2;
           // Chord bodies orbit in their own ring around the origin (not
@@ -590,6 +649,22 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
           const z = Math.sin(baseAngle) * CHORD_RADIUS;
           orbitMeshes.push(buildBody(cb, CHORD_BODY_SIZE, baseAngle, new THREE.Vector3(x, 0, z), pitch));
         });
+
+        // In Mode B the outer scale-ring is the SAME for every chord on
+        // this pitch — all 7 modes belong to the same parent key. We
+        // build it up-front so it's visible alongside the chord ring;
+        // tapping a chord doesn't rebuild the modes (just changes the
+        // audio + camera focus).
+        if (chordModeRef.current === 'key') {
+          scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12);
+          const modes = keyModesForPitch(pitch);
+          modes.forEach((sb, i) => {
+            const baseAngle = (i / modes.length) * Math.PI * 2;
+            const x = Math.cos(baseAngle) * SCALE_RADIUS;
+            const z = Math.sin(baseAngle) * SCALE_RADIUS;
+            orbitMeshes.push(buildBody(sb, SCALE_BODY_SIZE, baseAngle, new THREE.Vector3(x, 0, z), pitch));
+          });
+        }
 
         // Adjust star colour to the focused pitch.
         starUniforms.uColor.value.copy(pitch.color.clone().lerp(new THREE.Color('#fff2c4'), 0.5));
@@ -605,17 +680,23 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
     };
 
     const setChordFocus = (chord: ChordBody | null) => {
-      const scaleMeshes = orbitMeshes.filter((m) => m.body.kind === 'scale');
-      removeMeshes(scaleMeshes);
-      for (let i = orbitMeshes.length - 1; i >= 0; i--) {
-        if (orbitMeshes[i].body.kind === 'scale') orbitMeshes.splice(i, 1);
+      // In Mode A the scale ring is per-chord, so we rebuild it on every
+      // chord change. In Mode B the scale ring belongs to the parent
+      // pitch (same 7 modes for any chord on that pitch); we leave it
+      // intact and only update audio + camera.
+      if (chordModeRef.current === 'root') {
+        const scaleMeshes = orbitMeshes.filter((m) => m.body.kind === 'scale');
+        removeMeshes(scaleMeshes);
+        for (let i = orbitMeshes.length - 1; i >= 0; i--) {
+          if (orbitMeshes[i].body.kind === 'scale') orbitMeshes.splice(i, 1);
+        }
+        removeRing(scaleRing); scaleRing = null;
       }
-      removeRing(scaleRing); scaleRing = null;
 
       focus.chord = chord;
       focus.scale = null;
 
-      if (chord) {
+      if (chord && chordModeRef.current === 'root') {
         scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12);
         const scales = scalesForChord(chord);
         scales.forEach((sb, i) => {
@@ -650,6 +731,22 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
         audioEnabled = on;
         if (on) audio.start();
         updateAudio();
+      },
+      setChordMode: (mode) => {
+        if (mode === chordModeRef.current) return;
+        chordModeRef.current = mode;
+        // Re-run the focus pipeline against the same pitch so the chord +
+        // scale orbits get rebuilt under the new mode. If no pitch is
+        // focused yet, the next setPitchFocus call will pick up the new
+        // mode automatically.
+        const currentPitch = focus.pitch;
+        if (currentPitch) {
+          setPitchFocus(currentPitch);
+        }
+      },
+      focusPitchByPc: (pc) => {
+        const pitch = PITCH_BODIES.find((p) => p.pc === ((pc % 12) + 12) % 12);
+        if (pitch) setPitchFocus(pitch);
       },
     };
     const orbitingRef = { value: true };
