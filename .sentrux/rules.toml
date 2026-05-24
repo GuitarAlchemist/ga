@@ -1,0 +1,104 @@
+# GA Sentrux architectural constraints — initial baseline
+#
+# Purpose: unblock the Sentrux dashboard's "Rule violations" surface and start
+# enforcing layering/complexity discipline. Numbers here are REALISTIC starting
+# points derived from the current repo state on 2026-05-24, not aspirational.
+#
+# Tightening strategy:
+#   1. Whenever a PR FIXES a violator, ratchet the relevant constraint down by
+#      the amount fixed (no slack reserved).
+#   2. Never tighten a constraint past the current value without also fixing
+#      the offending code in the same PR — the dashboard goes red instantly.
+#   3. Goal end-state: max_cycles=0, max_cc=15, max_fn_lines=60. Get there over
+#      several quarters via incremental PRs.
+#
+# Baseline snapshot (sentrux scan on feat/sentrux-rules):
+#   files = 8038, import_edges = 7053, cross_module_edges = 632,
+#   detected cycles = 10, quality_signal = 3016/10000.
+
+[constraints]
+# Acyclicity: 10 cycles detected today. Buffer to 12 for normal churn,
+# tighten as soon as a `dead-code` / `decouple-react-shim` PR lands.
+max_cycles = 12
+
+# Coupling: leave A-F coupling unconstrained for now — ga has heavy C# DI which
+# inflates raw coupling counts. Revisit after splitting GA.Business.Core.
+# max_coupling = "C"
+
+# Cyclomatic complexity ceiling: ga checks in `node_modules/` (three.js,
+# rollup, vite) and a legacy Delphi tree, which contain minified/vendored
+# functions up to cc=5577. Setting max_cc above that until we either (a) add
+# an ignore-paths feature to sentrux, or (b) untrack node_modules. The
+# in-house first-party max sits in the cc=120 range (PrimeRadiant ForceRadiant
+# scene init). TODO: drop to 150 once vendored trees are excluded.
+max_cc = 6000
+
+# Function length: ColladaLoader.parse from three.js sits at 4032 lines.
+# First-party max is ~280 lines in PrimeRadiant TS modules (TonalOrbit, etc).
+# TODO: drop to 300 once vendored trees are excluded from scan.
+max_fn_lines = 4100
+
+# God-file detection: too noisy on a 2.4M-line repo. Enable after a dedicated
+# "shrink the giants" pass.
+no_god_files = false
+
+# ---- Layers ----
+# Bottom (order 0) = pure-domain, no project refs upward allowed.
+# Each higher layer may only depend on layers at strictly lower order.
+
+[[layers]]
+name = "core-domain"
+paths = ["Common/GA.Business.Core/*", "Common/GA.Core/*"]
+order = 0
+
+[[layers]]
+name = "ml-and-analysis"
+paths = [
+  "Common/GA.Business.ML/*",
+  "Common/GA.Business.AI/*",
+  "Common/GA.Business.Analytics/*",
+  "Common/GA.Business.Intelligence/*",
+]
+order = 1
+
+[[layers]]
+name = "mcp-and-services"
+paths = ["GaMcpServer/*", "Apps/GaQaMcp/*", "Apps/ga-graphiti-service/*"]
+order = 2
+
+[[layers]]
+name = "api"
+paths = ["Apps/ga-server/*"]
+order = 3
+
+[[layers]]
+name = "ui"
+paths = [
+  "Apps/ga-client/*",
+  "Apps/ga-dashboard/*",
+  "ReactComponents/ga-react-components/*",
+]
+order = 4
+
+[[layers]]
+name = "demos-and-cli"
+paths = ["Demos/*", "Examples/*", "GaCLI/*", "Apps/GaCli/*", "Apps/GaChatbotCli/*"]
+order = 5
+
+# ---- Boundaries ----
+# Things that should never happen, ranked by likelihood-to-be-violated.
+
+[[boundaries]]
+from = "Common/GA.Business.Core/*"
+to = "Apps/*"
+reason = "Core domain must not reference any app/host — keeps Core embeddable in CLI, server, demos."
+
+[[boundaries]]
+from = "Common/GA.Business.Core/*"
+to = "ReactComponents/*"
+reason = "Core domain must not reference React/TypeScript — UI is downstream."
+
+[[boundaries]]
+from = "Common/GA.Business.ML/*"
+to = "Apps/ga-server/*"
+reason = "ML library should not pull in ASP.NET hosting — it must run from CLI, MCP, and demos."
