@@ -2,7 +2,7 @@
   "_comment": "Source of truth for the 8 prioritized items in the harness engineering adoption plan. Edit this file manually when an item ships (or a PR opens). The /test#dev/harness tab reads /dev-data/harness which is served from this file.",
   "_plan": "docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md",
   "schema_version": "1.0.0",
-  "last_updated": "2026-05-24T00:08:00Z",
+  "last_updated": "2026-05-24T00:12:00Z",
   "items": [
     {
       "number": 1,
@@ -10,12 +10,12 @@
       "category": "Context & memory",
       "effort": "S",
       "impact": "M",
-      "status": "in_flight",
+      "status": "shipped",
       "pr_number": 300,
-      "pr_state": "blocked-on-agent-blackbox",
+      "pr_state": "merged",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/300",
-      "owner": "next session",
-      "notes": "PR open; currently blocked on Agent Blackbox policy review."
+      "owner": "shipped 2026-05-23",
+      "notes": "Progressive-disclosure ToC + symbol map landed in CLAUDE.md and AGENTS.md. Admin-merged after PR #302 (workflow regex) cleared the validate check."
     },
     {
       "number": 2,
@@ -23,12 +23,12 @@
       "category": "Verification & feedback loops",
       "effort": "S",
       "impact": "M",
-      "status": "in_flight",
+      "status": "shipped",
       "pr_number": 301,
-      "pr_state": "ci-running",
+      "pr_state": "merged",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/301",
-      "owner": "next session",
-      "notes": "Warning-only mode so the ~185 existing errors do not break commits while the baseline is paid down."
+      "owner": "shipped 2026-05-23",
+      "notes": "Warning-only mode so the ~185 existing errors do not break commits while the baseline is paid down. Promote to fatal once baseline reaches 0."
     },
     {
       "number": 3,
@@ -36,12 +36,12 @@
       "category": "Context & memory",
       "effort": "S",
       "impact": "M",
-      "status": "todo",
-      "pr_number": null,
-      "pr_state": null,
-      "evidence_url": null,
-      "owner": "next session",
-      "notes": "Adopt the forge's `.claude/local/state.md` pattern for cross-session same-agent continuity."
+      "status": "shipped",
+      "pr_number": 308,
+      "pr_state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/308",
+      "owner": "shipped 2026-05-23",
+      "notes": "Template + README at .claude/local-template/; gitignored .claude/local/. Cross-session same-agent continuity. Auto-inject hook is deferred to a future PR."
     },
     {
       "number": 4,
@@ -51,7 +51,7 @@
       "impact": "H",
       "status": "shipped",
       "pr_number": 311,
-      "pr_state": "open",
+      "pr_state": "merged",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/311",
       "owner": "shipped 2026-05-23",
       "notes": "Curls /test, /chatbot/, /dev-data/manifest after each push to main. Writes state/quality/e2e/<timestamp>.json, comments on the merge commit + opens a tracking issue on per-URL regression, tunnel-down heuristic suppresses noise when >=2 URLs unreachable. Paired Scripts/post-merge-smoke.ps1 for local runs."
@@ -62,12 +62,12 @@
       "category": "Verification & feedback loops",
       "effort": "M",
       "impact": "M",
-      "status": "in_flight",
-      "pr_number": null,
-      "pr_state": "open",
-      "evidence_url": null,
-      "owner": "next session",
-      "notes": "Closes the intent-vs-delivery loop. Writes score to state/quality/pr-grades/<sha>.json. Skill at .claude/skills/grade-last-pr/SKILL.md; artifact dir with SCHEMA.json + README.md at state/quality/pr-grades/. PR shipping; bump status to 'shipped' on merge and populate pr_number + evidence_url."
+      "status": "shipped",
+      "pr_number": 309,
+      "pr_state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/309",
+      "owner": "shipped 2026-05-23",
+      "notes": "Closes the intent-vs-delivery loop. Writes score to state/quality/pr-grades/<sha>.json. Skill at .claude/skills/grade-last-pr/SKILL.md."
     },
     {
       "number": 6,
@@ -75,12 +75,12 @@
       "category": "Architecture-aligned techniques",
       "effort": "M",
       "impact": "M",
-      "status": "todo",
-      "pr_number": null,
-      "pr_state": null,
-      "evidence_url": null,
-      "owner": "sprint of",
-      "notes": "Opt-in pre-merge gate for schema changes, public API surfaces, OPTIC-K dims, pricing — the one-way doors already enumerated in CLAUDE.md."
+      "status": "shipped",
+      "pr_number": 310,
+      "pr_state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/310",
+      "owner": "shipped 2026-05-23",
+      "notes": "Opt-in pre-merge gate. Detects one-way-door file paths (OPTIC-K dims, public APIs, contracts), spawns 5 specialist personas as advisors, backend-architect chairs synthesis. Output to state/quality/council/<sha>.json."
     },
     {
       "number": 7,
@@ -88,12 +88,12 @@
       "category": "Workflow & environment security",
       "effort": "M",
       "impact": "H",
-      "status": "todo",
+      "status": "in_flight",
       "pr_number": null,
-      "pr_state": null,
+      "pr_state": "agent-in-progress",
       "evidence_url": null,
-      "owner": "sprint of",
-      "notes": "Outside-in browser verification. Asserts heartbeat banner color, manifest schema_version, and chatbot showcase response time < 5s."
+      "owner": "playwright-dashboard-agent (dispatched 2026-05-23)",
+      "notes": "Outside-in browser verification. Asserts heartbeat banner color, manifest schema_version, and chatbot showcase response time < 5s. Will need admin-merge (workflow file → blackbox)."
     },
     {
       "number": 8,
@@ -101,12 +101,12 @@
       "category": "Workflow & environment security",
       "effort": "L",
       "impact": "H",
-      "status": "todo",
-      "pr_number": null,
-      "pr_state": null,
-      "evidence_url": null,
-      "owner": "when the same outage recurs",
-      "notes": "Eliminates the elevated-process kill problem (GaApi PID 21036 today). Or install the GuitarAlchemist Windows service via Scripts/install-ga-service.ps1."
+      "status": "ready-for-install",
+      "pr_number": 312,
+      "pr_state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/312",
+      "owner": "scaffolded 2026-05-23 — needs admin install",
+      "notes": "Scaffold only. Three independent NSSM services (GA-Vite-5176, GA-Api-5232, GA-Chatbot-5252) under NetworkService. Runbook at docs/runbooks/non-admin-service-install.md. Status flips to 'shipped' only after user runs the install with admin. Existing install script was unfit for harness goal (wrapped Aspire AppHost); rewritten from ground up with -WhatIf support."
     }
   ],
   "related_prs": [
@@ -120,9 +120,16 @@
     {
       "number": 302,
       "title": "karpathy-rules workflow regex fix (split from #300)",
-      "state": "blocked-on-agent-blackbox",
+      "state": "merged",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/302",
-      "note": "Workflow tweak split out of item #1 so the CLAUDE.md change can land independently."
+      "note": "Workflow tweak split out of item #1 so the CLAUDE.md change could land via independent human review. Admin-merged after the split."
+    },
+    {
+      "number": 303,
+      "title": "Harness sub-tab on /test#dev/harness",
+      "state": "merged",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/303",
+      "note": "Visual dashboard that reads this items.json file. Built alongside the rollout to give live visibility into harness state."
     }
   ],
   "principles": [
@@ -167,20 +174,20 @@
       "note": "Treat as a debt ledger. Number should never go up between PRs once item #2 lands."
     },
     "post_merge_smoke_urls": {
-      "value": 0,
+      "value": 3,
       "target": 3,
       "urls": ["/test", "/api/chatbot/status", "/dev-data/manifest"],
-      "note": "Item #4 ships these as automated post-merge curls."
+      "note": "Item #4 shipped — these 3 are now automated post-merge curls via .github/workflows/post-merge-smoke.yml."
     },
     "one_way_door_prs_gated_by_council": {
       "value": 0,
       "target": "all schema/API/pricing PRs",
-      "note": "Item #6 ships the `/council` opt-in pre-merge gate."
+      "note": "Item #6 shipped the `/council` skill. Counter increments once a real one-way-door PR opens and someone runs /council on it."
     },
     "e2e_dashboard_coverage_tests": {
       "value": 0,
       "target": 3,
-      "note": "Item #7 ships Playwright tests for /test, /test/manifest, /chatbot/#showcase."
+      "note": "Item #7 in flight (playwright-dashboard-agent) — will ship tests for /test, /test/manifest, /chatbot/#showcase."
     },
     "auto_compact_threshold_pct": {
       "value": 40,
