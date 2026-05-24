@@ -10,6 +10,8 @@ import {
     extractDocTitle,
     binActivityByDay,
     projectLoopsGoals,
+    extractPrRefs,
+    extractDocRefs,
 } from './parsers';
 
 describe('categorize', () => {
@@ -179,6 +181,151 @@ describe('parseBacklog', () => {
         const p = parseBacklog(epics);
         expect(p.total_epics).toBe(12);
         expect(p.top_sections).toHaveLength(8);
+    });
+
+    it('captures bullet text on each item', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- First bullet body',
+            '- Second bullet body',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items).toHaveLength(2);
+        expect(items[0].text).toBe('First bullet body');
+        expect(items[1].text).toBe('Second bullet body');
+        expect(items[0].status).toBe('active');
+        expect(items[0].raw_line).toBe('- First bullet body');
+    });
+
+    it('extracts PR refs from bullets', () => {
+        const md = [
+            '## Epic',
+            '### Shipped',
+            '- Foo (#313)',
+            '- Bar — see PR #207 and #208',
+            '- Baz without refs',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items[0].pr_refs).toEqual([313]);
+        expect(items[1].pr_refs).toEqual([207, 208]);
+        expect(items[2].pr_refs).toBeUndefined();
+    });
+
+    it('extracts doc refs from bullets', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- See docs/plans/foo.md for the plan',
+            '- Two refs: docs/plans/a.md and [b](docs/plans/b.md)',
+            '- No doc here',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const items = p.epics[0].sub_sections[0].items;
+        expect(items[0].doc_refs).toEqual(['docs/plans/foo.md']);
+        expect(items[1].doc_refs).toEqual(['docs/plans/a.md', 'docs/plans/b.md']);
+        expect(items[2].doc_refs).toBeUndefined();
+    });
+
+    it('still works for empty epics (no bullets, items: [])', () => {
+        const md = [
+            '## Empty Epic',
+            '## Other',
+            '### Shipped',
+            '- one',
+        ].join('\n');
+        const p = parseBacklog(md);
+        expect(p.epics[0].title).toBe('Empty Epic');
+        expect(p.epics[0].total_items).toBe(0);
+        expect(p.epics[0].sub_sections).toHaveLength(0);
+        expect(p.epics[1].sub_sections[0].items).toHaveLength(1);
+    });
+
+    it('inherits sub-section category on each item', () => {
+        const md = [
+            '## Epic',
+            '### Shipped',
+            '- s1',
+            '### Active',
+            '- a1',
+            '### New',
+            '- n1',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const subs = p.epics[0].sub_sections;
+        expect(subs[0].items[0].status).toBe('shipped');
+        expect(subs[1].items[0].status).toBe('active');
+        expect(subs[2].items[0].status).toBe('backlog');
+    });
+
+    it('item_count and items.length stay in sync', () => {
+        const md = [
+            '## Epic',
+            '### Active',
+            '- a',
+            '* b',
+            '- c (#42)',
+        ].join('\n');
+        const p = parseBacklog(md);
+        const sub = p.epics[0].sub_sections[0];
+        expect(sub.item_count).toBe(3);
+        expect(sub.items).toHaveLength(3);
+    });
+});
+
+describe('extractPrRefs', () => {
+    it('extracts a single PR ref from parens', () => {
+        expect(extractPrRefs('- Foo (#313)')).toEqual([313]);
+    });
+
+    it('extracts multiple PR refs', () => {
+        expect(extractPrRefs('See #207 and #208')).toEqual([207, 208]);
+    });
+
+    it('deduplicates', () => {
+        expect(extractPrRefs('#42 and #42 again')).toEqual([42]);
+    });
+
+    it('returns empty for no matches', () => {
+        expect(extractPrRefs('plain text')).toEqual([]);
+    });
+
+    it('ignores in-word matches like foo#1', () => {
+        // The non-word boundary requirement should block this.
+        expect(extractPrRefs('foo#99')).toEqual([]);
+    });
+
+    it('matches at start of line', () => {
+        expect(extractPrRefs('#1 first')).toEqual([1]);
+    });
+});
+
+describe('extractDocRefs', () => {
+    it('extracts a bare docs path', () => {
+        expect(extractDocRefs('See docs/plans/foo.md')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('extracts a markdown link target', () => {
+        expect(extractDocRefs('[plan](docs/plans/foo.md)')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('extracts multiple docs paths', () => {
+        const line = 'docs/a.md and docs/b/c.md';
+        expect(extractDocRefs(line)).toEqual(['docs/a.md', 'docs/b/c.md']);
+    });
+
+    it('deduplicates', () => {
+        expect(extractDocRefs('docs/x.md, docs/x.md')).toEqual(['docs/x.md']);
+    });
+
+    it('trims trailing punctuation', () => {
+        expect(extractDocRefs('See docs/plans/foo.md, please.')).toEqual(['docs/plans/foo.md']);
+    });
+
+    it('returns empty for no matches', () => {
+        expect(extractDocRefs('plain text with no doc refs')).toEqual([]);
     });
 });
 
