@@ -238,3 +238,30 @@ Every consumer SHOULD treat unknown enum values as the most-conservative bucket 
 - v1.0.0 — first frozen schema. Requires sign-off from GA, ix, Demerzel maintainers.
 - v1.x — additive only (new optional fields, new enum variants treated conservatively by old consumers).
 - v2.0.0 — breaking. Coordinated migration of `state/quality/verdicts/` and consumer code.
+
+---
+
+## 8. Algedonic Channel Integration (added 2026-05-24)
+
+> When the QA Architect Tribunal issues a `verdict: "block"` verdict, the
+> dispatcher MUST also emit an algedonic signal via the algedonic-channel
+> contract (`docs/contracts/2026-05-24-algedonic-channel.contract.md`) at
+> `severity: "critical"`.
+
+This is how a `block` verdict reaches the GA operator's dashboard without
+requiring the operator to be watching the Demerzel pipeline output. The mapping
+from QA verdict to algedonic signal is:
+
+| QA verdict field | Algedonic signal field |
+|---|---|
+| `narrative` (truncated to 140 chars) | `summary` |
+| markdown render of `followups` array | `details` |
+| `links.pr` (or the verdict file path) | `evidence_url` |
+| `blast_radius.components_reached` | `affected_artifacts` |
+| (constant) | `severity: "critical"` |
+| (constant) | `repo: "demerzel"` |
+| (constant) | `source: "qa-architect-tribunal"` |
+
+The Demerzel-side emit lands in a follow-up PR in the Demerzel repo. This
+contract documents the integration so both sides can land independently — GA
+gets the inbox + dashboard now; Demerzel adds the emit next.

@@ -2,7 +2,7 @@ import {defineConfig, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
-import { createReadStream, existsSync, statSync, readFileSync, readdirSync } from 'fs'
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
 import { execFileSync } from 'child_process'
 import type { Plugin } from 'vite'
 import { parseBacklog, extractDocTitle, binActivityByDay } from './src/dev-data/parsers'
@@ -453,6 +453,145 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── Algedonic channel — VSM alarm path ────────────────────────────────
+    // Reads state/algedonic/inbox.jsonl (append-only JSONL per the contract
+    // at docs/contracts/2026-05-24-algedonic-channel.contract.md), projects
+    // the latest-line-per-id, drops superseded records, and groups by severity.
+    //
+    // Writes (acks) are append-only too — never rewrite existing lines.
+    // Local-only via gateLocal because writes mutate state.
+
+    interface AlgedonicAck {
+        acked: boolean;
+        acked_by: string | null;
+        acked_at: string | null;
+        resolution: string | null;
+    }
+    interface AlgedonicSignal {
+        id: string;
+        schema: string;
+        emitted_at: string;
+        repo: string;
+        source: string;
+        severity: 'info' | 'warn' | 'fail' | 'critical';
+        summary: string;
+        details: string;
+        evidence_url: string | null;
+        affected_artifacts: string[];
+        ttl_hours: number;
+        escalation: { on_unack_after_hours: number | null; route_to: string };
+        ack: AlgedonicAck;
+        supersedes: string[];
+    }
+    interface AlgedonicProjection {
+        generated_at: string;
+        total: number;
+        by_severity: { info: number; warn: number; fail: number; critical: number };
+        unacked: AlgedonicSignal[];
+        top3: AlgedonicSignal[];
+        has_critical: boolean;
+    }
+    const SEVERITY_RANK: Record<string, number> = { critical: 4, fail: 3, warn: 2, info: 1 };
+
+    function projectAlgedonic(): AlgedonicProjection {
+        const inboxPath = path.join(repoRoot, 'state', 'algedonic', 'inbox.jsonl');
+        const empty: AlgedonicProjection = {
+            generated_at: new Date().toISOString(),
+            total: 0,
+            by_severity: { info: 0, warn: 0, fail: 0, critical: 0 },
+            unacked: [],
+            top3: [],
+            has_critical: false,
+        };
+        if (!existsSync(inboxPath)) return empty;
+
+        // Group lines by id; latest-line-per-id wins.
+        const byId = new Map<string, AlgedonicSignal>();
+        const superseded = new Set<string>();
+        try {
+            const raw = readFileSync(inboxPath, 'utf-8');
+            for (const line of raw.split('\n')) {
+                const trim = line.trim();
+                if (!trim) continue;
+                try {
+                    const sig = JSON.parse(trim) as AlgedonicSignal;
+                    if (!sig.id || !sig.severity) continue;
+                    const existing = byId.get(sig.id);
+                    if (!existing || sig.emitted_at >= existing.emitted_at) {
+                        byId.set(sig.id, sig);
+                    }
+                    if (Array.isArray(sig.supersedes)) {
+                        for (const s of sig.supersedes) superseded.add(s);
+                    }
+                } catch { /* skip malformed line */ }
+            }
+        } catch { return empty; }
+
+        // Build the unacked list — drop acked, drop superseded.
+        const unacked = Array.from(byId.values())
+            .filter((s) => !superseded.has(s.id))
+            .filter((s) => !s.ack?.acked)
+            .sort((a, b) => {
+                const sevDelta = (SEVERITY_RANK[b.severity] ?? 0) - (SEVERITY_RANK[a.severity] ?? 0);
+                if (sevDelta !== 0) return sevDelta;
+                return b.emitted_at.localeCompare(a.emitted_at);
+            });
+
+        const by_severity = { info: 0, warn: 0, fail: 0, critical: 0 };
+        for (const s of unacked) by_severity[s.severity] = (by_severity[s.severity] ?? 0) + 1;
+
+        return {
+            generated_at: new Date().toISOString(),
+            total: byId.size,
+            by_severity,
+            unacked,
+            top3: unacked.slice(0, 3),
+            has_critical: by_severity.critical > 0,
+        };
+    }
+
+    // Append an ack line for an existing signal. Returns the synthesized ack
+    // line on success, or null if the id is unknown.
+    function appendAck(id: string, ackedBy: string, resolution: string | null): AlgedonicSignal | null {
+        const inboxPath = path.join(repoRoot, 'state', 'algedonic', 'inbox.jsonl');
+        if (!existsSync(inboxPath)) return null;
+
+        // Find the latest line for this id so we can preserve required fields.
+        let source: AlgedonicSignal | null = null;
+        const raw = readFileSync(inboxPath, 'utf-8');
+        for (const line of raw.split('\n')) {
+            const trim = line.trim();
+            if (!trim) continue;
+            try {
+                const sig = JSON.parse(trim) as AlgedonicSignal;
+                if (sig.id === id && (!source || sig.emitted_at >= source.emitted_at)) {
+                    source = sig;
+                }
+            } catch { /* skip */ }
+        }
+        if (!source) return null;
+
+        const now = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+        const ackLine: AlgedonicSignal = {
+            id: source.id,
+            schema: source.schema,
+            emitted_at: now,
+            repo: source.repo,
+            source: source.source,
+            severity: source.severity,
+            summary: source.summary,
+            details: source.details,
+            evidence_url: source.evidence_url,
+            affected_artifacts: source.affected_artifacts ?? [],
+            ttl_hours: source.ttl_hours,
+            escalation: source.escalation,
+            ack: { acked: true, acked_by: ackedBy, acked_at: now, resolution: resolution },
+            supersedes: [],
+        };
+        appendFileSync(inboxPath, JSON.stringify(ackLine) + '\n', 'utf-8');
+        return ackLine;
+    }
+
     interface ServiceTopology { name: string; port: number; public_path: string; expected: string }
     const serviceTopology: ServiceTopology[] = [
         { name: 'ga-react-components (Vite SPA)', port: 5176, public_path: '/', expected: 'serves React SPA + dev-data middleware' },
@@ -529,6 +668,56 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...(payload as Record<string, unknown>) }));
             });
 
+            // ── /dev-data/algedonic — read latest projection of inbox.jsonl ──
+            // Returns the unacked signal list grouped by severity. Used by the
+            // Heartbeat algedonic tile (OverviewSection.tsx). Refreshed every
+            // request — the inbox is small and reading is cheap.
+            server.middlewares.use('/dev-data/algedonic', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                if (url.pathname.startsWith('/ack/')) { next(); return; } // POST handler below
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(projectAlgedonic()));
+            });
+
+            // ── POST /dev-data/algedonic/ack/<id> — ack a signal ───────────
+            // Body: optional { acked_by, resolution }. Writes a new line to
+            // inbox.jsonl with ack.acked = true. Local-only.
+            server.middlewares.use('/dev-data/algedonic/ack', (req, res, next) => {
+                if (req.method !== 'POST') { next(); return; }
+                if (!gateLocal(req, res, 'algedonic')) return;
+
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                // The middleware strips '/dev-data/algedonic/ack', leaving e.g. '/<id>'.
+                const id = url.pathname.replace(/^\/+/, '');
+                if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'bad id' }));
+                    return;
+                }
+                let body = '';
+                req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+                req.on('end', () => {
+                    let ackedBy = 'dashboard-user';
+                    let resolution: string | null = null;
+                    if (body.trim()) {
+                        try {
+                            const parsed = JSON.parse(body) as { acked_by?: string; resolution?: string };
+                            if (parsed.acked_by) ackedBy = String(parsed.acked_by).slice(0, 64);
+                            if (parsed.resolution) resolution = String(parsed.resolution).slice(0, 280);
+                        } catch { /* fall through with defaults */ }
+                    }
+                    const ackLine = appendAck(id, ackedBy, resolution);
+                    if (!ackLine) {
+                        res.writeHead(404, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'signal id not found in inbox' }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: true, ack: ackLine }));
+                });
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const manifest = {
@@ -544,6 +733,7 @@ function devDataPlugin(): Plugin {
                         agents: '/dev-data/agents',
                         agent_activity: '/dev-data/agent-activity',
                         harness: '/dev-data/harness',
+                        algedonic: '/dev-data/algedonic',
                         manifest: '/dev-data/manifest',
                     },
                     services: serviceTopology,
@@ -556,6 +746,7 @@ function devDataPlugin(): Plugin {
                     mcp_servers: gatherMcpServers(),
                     agent_activity: gatherAgentActivity(),
                     harness: gatherHarness(),
+                    algedonic: projectAlgedonic(),
                 };
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify(manifest, null, 2));
