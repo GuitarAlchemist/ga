@@ -1,8 +1,8 @@
 {
-  "_comment": "Source of truth for the 8 prioritized items in the harness engineering adoption plan. Edit this file manually when an item ships (or a PR opens). The /test#dev/harness tab reads /dev-data/harness which is served from this file.",
+  "_comment": "Source of truth for the 13 items in the harness engineering adoption plan (8 original + 5 Phase 2 / Option C). Edit this file manually when an item ships (or a PR opens). The /test#dev/harness tab reads /dev-data/harness which is served from this file.",
   "_plan": "docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md",
-  "schema_version": "1.0.0",
-  "last_updated": "2026-05-24T00:38:00Z",
+  "schema_version": "1.1.0",
+  "last_updated": "2026-05-24T03:15:00Z",
   "items": [
     {
       "number": 1,
@@ -13,6 +13,8 @@
       "status": "shipped",
       "pr_number": 300,
       "pr_state": "merged",
+      "merged_at": "2026-05-23T23:34:52Z",
+      "merge_sha": "a2a6499f",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/300",
       "owner": "shipped 2026-05-23",
       "notes": "Progressive-disclosure ToC + symbol map landed in CLAUDE.md and AGENTS.md. Admin-merged after PR #302 (workflow regex) cleared the validate check."
@@ -26,6 +28,8 @@
       "status": "shipped",
       "pr_number": 301,
       "pr_state": "merged",
+      "merged_at": "2026-05-23T23:02:01Z",
+      "merge_sha": "0ec205de",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/301",
       "owner": "shipped 2026-05-23",
       "notes": "Warning-only mode so the ~185 existing errors do not break commits while the baseline is paid down. Promote to fatal once baseline reaches 0."
@@ -39,6 +43,8 @@
       "status": "shipped",
       "pr_number": 308,
       "pr_state": "merged",
+      "merged_at": "2026-05-23T23:56:12Z",
+      "merge_sha": "3296294f",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/308",
       "owner": "shipped 2026-05-23",
       "notes": "Template + README at .claude/local-template/; gitignored .claude/local/. Cross-session same-agent continuity. Auto-inject hook is deferred to a future PR."
@@ -52,6 +58,8 @@
       "status": "shipped",
       "pr_number": 311,
       "pr_state": "merged",
+      "merged_at": "2026-05-24T00:24:46Z",
+      "merge_sha": "271b5862",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/311",
       "owner": "shipped 2026-05-23",
       "notes": "Curls /test, /chatbot/, /dev-data/manifest after each push to main. Writes state/quality/e2e/<timestamp>.json, comments on the merge commit + opens a tracking issue on per-URL regression, tunnel-down heuristic suppresses noise when >=2 URLs unreachable. Paired Scripts/post-merge-smoke.ps1 for local runs."
@@ -65,9 +73,12 @@
       "status": "shipped",
       "pr_number": 309,
       "pr_state": "merged",
+      "merged_at": "2026-05-24T00:04:28Z",
+      "merge_sha": "b7de8807",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/309",
       "owner": "shipped 2026-05-23",
-      "notes": "Closes the intent-vs-delivery loop. Writes score to state/quality/pr-grades/<sha>.json. Skill at .claude/skills/grade-last-pr/SKILL.md."
+      "notes": "Closes the intent-vs-delivery loop. Writes score to state/quality/pr-grades/<sha>.json. Skill at .claude/skills/grade-last-pr/SKILL.md.",
+      "skill": "grade-last-pr"
     },
     {
       "number": 6,
@@ -78,9 +89,12 @@
       "status": "shipped",
       "pr_number": 310,
       "pr_state": "merged",
+      "merged_at": "2026-05-24T00:21:35Z",
+      "merge_sha": "b08be6e2",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/310",
       "owner": "shipped 2026-05-23",
-      "notes": "Opt-in pre-merge gate. Detects one-way-door file paths (OPTIC-K dims, public APIs, contracts), spawns 5 specialist personas as advisors, backend-architect chairs synthesis. Output to state/quality/council/<sha>.json."
+      "notes": "Opt-in pre-merge gate. Detects one-way-door file paths (OPTIC-K dims, public APIs, contracts), spawns 5 specialist personas as advisors, backend-architect chairs synthesis. Output to state/quality/council/<sha>.json.",
+      "skill": "council"
     },
     {
       "number": 7,
@@ -91,6 +105,8 @@
       "status": "shipped",
       "pr_number": 313,
       "pr_state": "merged",
+      "merged_at": "2026-05-24T00:42:18Z",
+      "merge_sha": "e36dbfa8",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/313",
       "owner": "shipped 2026-05-23",
       "notes": "5 specs at ReactComponents/ga-react-components/tests/dashboard/. Asserts dashboard loads, heartbeat banner color, manifest schema_version, chatbot showcase response time < 5s, harness tab populates 8 items. First-run snapshot at state/quality/e2e/dashboard-playwright/<timestamp>.json. First run caught a real bug: stale local Vite serving SPA shell at /dev-data/harness — exact regression class the test is designed for."
@@ -104,9 +120,88 @@
       "status": "ready-for-install",
       "pr_number": 312,
       "pr_state": "merged",
+      "merged_at": "2026-05-24T00:24:43Z",
+      "merge_sha": "e774e969",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/312",
       "owner": "scaffolded 2026-05-23 — needs admin install",
       "notes": "Scaffold only. Three independent NSSM services (GA-Vite-5176, GA-Api-5232, GA-Chatbot-5252) under NetworkService. Runbook at docs/runbooks/non-admin-service-install.md. Status flips to 'shipped' only after user runs the install with admin. Existing install script was unfit for harness goal (wrapped Aspire AppHost); rewritten from ground up with -WhatIf support."
+    },
+    {
+      "number": 9,
+      "title": "Semantic-regression chatbot suite (Phase 2 #1)",
+      "category": "Verification & feedback loops",
+      "effort": "M",
+      "impact": "H",
+      "status": "shipped",
+      "pr_number": 319,
+      "pr_state": "merged",
+      "merged_at": "2026-05-24T02:08:11Z",
+      "merge_sha": "16c53c70",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/319",
+      "owner": "shipped 2026-05-23",
+      "notes": "Phase 2 #1. Adds semantic-equivalence regression tests on the chatbot golden traces so a model swap that changes wording but not meaning still passes, while a regression in correctness fails. Workflow auto-fires on chatbot-touching PRs."
+    },
+    {
+      "number": 10,
+      "title": "Per-PR token spend annotation",
+      "category": "Workflow & environment security",
+      "effort": "M",
+      "impact": "M",
+      "status": "shipped",
+      "pr_number": 318,
+      "pr_state": "merged",
+      "merged_at": "2026-05-24T02:08:08Z",
+      "merge_sha": "0d3dfd6a",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/318",
+      "owner": "shipped 2026-05-23",
+      "notes": "Phase 2 #2. Workflow walks the PR commit range, sums token usage across agent providers (Claude / Codex / Gemini), and annotates the PR description with the spend ledger. Surfaces runaway-cost regressions before merge."
+    },
+    {
+      "number": 11,
+      "title": "/backlog-groom skill + weekly cron",
+      "category": "Verification & feedback loops",
+      "effort": "S",
+      "impact": "M",
+      "status": "shipped",
+      "pr_number": 320,
+      "pr_state": "merged",
+      "merged_at": "2026-05-24T02:19:37Z",
+      "merge_sha": "5e1e4c05",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/320",
+      "owner": "shipped 2026-05-23",
+      "notes": "Phase 2 #3. Ranked top-3 work-item proposer over BACKLOG.md. Weekly cron runs the skill and posts the ranked proposal as a tracking issue. Closes the loop between strategic intent and what the next session picks up.",
+      "skill": "backlog-groom"
+    },
+    {
+      "number": 12,
+      "title": "VSM cross-repo algedonic-channel layer (Option C)",
+      "category": "Architecture-aligned techniques",
+      "effort": "L",
+      "impact": "H",
+      "status": "shipped",
+      "pr_number": 322,
+      "pr_state": "merged",
+      "merged_at": "2026-05-24T02:38:16Z",
+      "merge_sha": "6df5bccc",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/322",
+      "owner": "shipped 2026-05-23",
+      "notes": "Option C — Beer/Stafford VSM alarm channel. Append-only state/algedonic/inbox.jsonl with severity-ranked signals (info/warn/fail/critical), ack-by-append semantics, supersedes chain. Contract at docs/contracts/2026-05-24-algedonic-channel.contract.md. Dashboard tile + /dev-data/algedonic endpoint. First live signal: sentrux not visible on GitHub Actions (PR #323 in flight)."
+    },
+    {
+      "number": 13,
+      "title": "/test-plan skill + auto-fire workflow",
+      "category": "Verification & feedback loops",
+      "effort": "S",
+      "impact": "M",
+      "status": "shipped",
+      "pr_number": 324,
+      "pr_state": "merged",
+      "merged_at": "2026-05-24T03:00:54Z",
+      "merge_sha": "f6c63f8d",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/324",
+      "owner": "shipped 2026-05-23",
+      "notes": "Generates a structured test plan for any PR touching production code paths, writes to state/quality/test-plans/<sha>.json, auto-fires from a workflow on PR open. Pre-completion interceptor that turns 'I added a feature' into 'here are the explicit success criteria'.",
+      "skill": "test-plan"
     }
   ],
   "related_prs": [
@@ -130,6 +225,13 @@
       "state": "merged",
       "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/303",
       "note": "Visual dashboard that reads this items.json file. Built alongside the rollout to give live visibility into harness state."
+    },
+    {
+      "number": 323,
+      "title": "fix(algedonic): make sentrux visible on GitHub Actions",
+      "state": "open",
+      "evidence_url": "https://github.com/GuitarAlchemist/ga/pull/323",
+      "note": "First real algedonic signal — sentrux not visible on GitHub-side health checks. PR #323 acks the signal by fixing the workflow path."
     }
   ],
   "principles": [
@@ -161,17 +263,18 @@
       "techniques": [
         "claude-codex-forge 7-phase workflow — PRD → Research → Design → Review → Build → Verify → Ship.",
         "`state.md` Workflow / Done / Now / Next — gitignored, read by hooks, kept out of auto-loaded context.",
-        "ADR / CHANGELOG / solutions/ as compounded knowledge — every session builds on the previous."
+        "ADR / CHANGELOG / solutions/ as compounded knowledge — every session builds on the previous.",
+        "VSM algedonic channel — out-of-band alarm path bypassing normal hierarchy when something needs immediate attention."
       ]
     }
   ],
   "baselines": {
     "frontend_typecheck_errors": {
-      "value": 185,
-      "as_of": "2026-05-23",
+      "value": 177,
+      "as_of": "2026-05-24",
       "source": "cd ReactComponents/ga-react-components && npx tsc -b 2>&1 | grep -c 'error TS'",
       "target": 0,
-      "note": "Treat as a debt ledger. Number should never go up between PRs once item #2 lands."
+      "note": "Treat as a debt ledger. algedonic-vsm-agent reduced 185 to 177 by fixing pre-existing errors. Number should never go up between PRs."
     },
     "post_merge_smoke_urls": {
       "value": 3,
@@ -188,6 +291,16 @@
       "value": 5,
       "target": 3,
       "note": "Item #7 shipped via PR #313 — 5 specs (dashboard-loads, heartbeat-banner, manifest-page, chatbot-showcase, harness-tab). 4/5 passing on first run; harness-tab caught a real local-Vite-stale bug (since fixed)."
+    },
+    "chatbot_semantic_regression_runs": {
+      "value": 0,
+      "target": "every chatbot PR",
+      "note": "Item #9 (PR #319) shipped the workflow. Counter increments once a chatbot-touching PR triggers it."
+    },
+    "algedonic_signals_unacked": {
+      "value": 1,
+      "target": 0,
+      "note": "Item #12 (PR #322) shipped the channel. Currently 1 unacked: sentrux-not-on-github. PR #323 will ack."
     },
     "auto_compact_threshold_pct": {
       "value": 40,

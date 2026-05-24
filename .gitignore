@@ -241,6 +241,11 @@ state/handoffs/*
 state/digests/*
 !state/digests/README.md
 
+# Harness skill-invocation queue — written by the harness tab when a user
+# clicks a skill action button. Per-developer-machine; agents pick it up
+# locally. Never committed.
+state/harness/skill-invocations.jsonl
+
 # Thin chatbot host deployment files stay local/private
 Apps/GaChatbot.Api/appsettings.Production.json
 Apps/GaChatbot.Api/.env*
