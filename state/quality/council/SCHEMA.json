@@ -45,8 +45,9 @@
     },
     "advisors": {
       "type": "array",
-      "minItems": 1,
-      "description": "Per-advisor verdicts. Default slate is 4 advisors (security, data, code-quality, ux) plus the chair which appears separately in the `chair` field.",
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "Per-advisor verdicts. The full slate is exactly 4 advisors (security, data, code-quality, ux) plus the chair which appears separately in the `chair` field. minItems/maxItems = 4 prevents a partial run (advisor failure/timeout) from producing a schema-valid verdict and being treated as merge-gating-complete. The four roles must collectively cover {security, data, code-quality, ux}; this is asserted by the writer (the JSON Schema draft-07 vocabulary lacks set-equality on a nested field, but the role enum below pins each entry to one of the four).",
       "items": {
         "type": "object",
         "required": ["name", "role", "verdict", "reasoning"],
@@ -58,8 +59,8 @@
           },
           "role": {
             "type": "string",
-            "enum": ["security", "data", "code-quality", "ux", "other"],
-            "description": "Focus area assigned to this advisor in the council brief."
+            "enum": ["security", "data", "code-quality", "ux"],
+            "description": "Focus area assigned to this advisor in the council brief. The four roles must collectively appear across the four advisor entries. 'other' is no longer accepted — if a future council needs a fifth perspective, bump the schema to v2."
           },
           "verdict": {
             "type": "string",
