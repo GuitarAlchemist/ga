@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/state/quality/e2e/SCHEMA.json",
+  "title": "post-merge-smoke-v1",
+  "description": "Post-merge smoke artifact produced by .github/workflows/post-merge-smoke.yml. See state/quality/e2e/README.md for context.",
+  "type": "object",
+  "required": ["schema", "run_at", "head_sha", "all_passed", "tunnel_down", "unreachable_count", "checks"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "post-merge-smoke-v1",
+      "description": "Discriminator. Bump when shape changes."
+    },
+    "run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of the run."
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{0,40}$",
+      "description": "Git SHA of the merge commit being smoke-tested. Empty string allowed for local runs without git."
+    },
+    "all_passed": {
+      "type": "boolean",
+      "description": "True iff every check has ok=true."
+    },
+    "tunnel_down": {
+      "type": "boolean",
+      "description": "True iff >=2 of the URLs were unreachable (treated as transient infrastructure outage, not a regression)."
+    },
+    "unreachable_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of URLs that timed out / connection-refused / DNS-failed."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Check" }
+    }
+  },
+  "$defs": {
+    "Check": {
+      "type": "object",
+      "required": ["url", "status", "ok", "latency_ms", "size_bytes", "content_marker", "content_marker_found", "unreachable"],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "HTTP status code, or 0 if the request never completed."
+        },
+        "ok": {
+          "type": "boolean",
+          "description": "True iff status==200 AND size_bytes>0 AND content_marker_found."
+        },
+        "latency_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTF-8 byte count of the response body."
+        },
+        "content_marker": {
+          "type": "string",
+          "description": "Substring asserted in the response body."
+        },
+        "content_marker_found": {
+          "type": "boolean"
+        },
+        "unreachable": {
+          "type": "boolean",
+          "description": "True iff the request never received a status (connection-refused, timeout, DNS failure)."
+        }
+      }
+    }
+  }
+}

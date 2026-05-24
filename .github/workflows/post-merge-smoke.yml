@@ -1,0 +1,299 @@
+name: Post-Merge Smoke
+
+# Item #4 of docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md.
+# Closes the "live demo silently went down" outage class observed 2026-05-23
+# (port-displacement outage, ~25 min undetected).
+#
+# What it does after each merge to main:
+#   1. Curls the three core demo URLs the user actually depends on:
+#        - /test                  (dashboard root; <title>Guitar Alchemist - Demos</title>)
+#        - /chatbot/              (chatbot host;   <title>GA Chatbot</title>)
+#        - /dev-data/manifest     (JSON; must parse + contain "schema_version")
+#   2. For each: asserts HTTP 200, non-empty body, and a content-pattern marker.
+#   3. Writes structured JSON to state/quality/e2e/YYYY-MM-DDTHH-MM-SSZ.json.
+#   4. Commits the artifact back to main via the [skip ci] chore(quality) pattern.
+#   5. On per-URL failure: posts a comment on the merge commit AND opens a
+#      tracking issue. (Tunnel-down case is logged but does NOT page - see below.)
+#
+# Tunnel-down heuristic:
+#   If >=2 of 3 URLs fail with connection-refused / timeout, the user's local
+#   Cloudflare tunnel is probably down (Vite SPA on port 5176 is served via
+#   `cloudflared` from spareilleux's workstation). In that case the workflow
+#   logs "tunnel_down=true" and exits 0 without opening issues, to avoid
+#   noise that masks the real "one URL broke" regression signal.
+#
+# Phase 2 (not done here): move this earlier into the PR check flow so we
+# detect regressions before they land. v1 catches it within minutes after.
+
+on:
+  push:
+    branches: [ main ]
+    # Avoid retriggering ourselves when we commit the artifact back.
+    paths-ignore:
+      - 'state/quality/e2e/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write       # commit the artifact + post commit comments
+  issues: write         # open a tracking issue on per-URL regression
+
+concurrency:
+  # Serialize so two pushes can't race each other to commit.
+  group: post-merge-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Curl + content-marker
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The three URLs are defined here as JSON so Python can read them
+      # directly without bash quoting headaches. Keep in sync with
+      # Scripts/post-merge-smoke.ps1.
+      - name: Write checks manifest
+        shell: bash
+        run: |
+          mkdir -p state/quality/e2e
+          cat > /tmp/checks.json <<'JSON'
+          [
+            { "url": "https://demos.guitaralchemist.com/test",              "marker": "Guitar Alchemist" },
+            { "url": "https://demos.guitaralchemist.com/chatbot/",          "marker": "GA Chatbot" },
+            { "url": "https://demos.guitaralchemist.com/dev-data/manifest", "marker": "schema_version" }
+          ]
+          JSON
+
+      - name: Run smoke checks
+        id: smoke
+        shell: bash
+        env:
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -u
+          RUN_AT_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          RUN_AT_FS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          OUT="state/quality/e2e/${RUN_AT_FS}.json"
+          echo "OUT=${OUT}" >> "$GITHUB_ENV"
+          echo "RUN_AT_ISO=${RUN_AT_ISO}" >> "$GITHUB_ENV"
+
+          # Per-URL curl. Each iteration writes a numbered raw-data file that
+          # the Python aggregator below reads. Keeps bash <-> python boundary
+          # narrow (no inline Python with bash variable interpolation).
+          mkdir -p /tmp/smoke
+          rm -rf /tmp/smoke/*
+
+          idx=0
+          while IFS=$'\t' read -r url marker; do
+            body_file="/tmp/smoke/${idx}.body"
+            meta_file="/tmp/smoke/${idx}.meta"
+            echo "::group::Checking ${url}"
+            # status=0 fallback if curl never completes (DNS / timeout / refused).
+            curl -sSL --max-time 15 \
+                 -o "${body_file}" \
+                 -w '{"status":%{http_code},"latency_s":%{time_total},"size":%{size_download}}' \
+                 "${url}" > "${meta_file}" 2>/dev/null \
+                 || echo '{"status":0,"latency_s":0,"size":0}' > "${meta_file}"
+            # Write the per-URL config alongside.
+            printf '%s\n%s\n' "${url}" "${marker}" > "/tmp/smoke/${idx}.cfg"
+            cat "${meta_file}"
+            echo
+            echo "::endgroup::"
+            idx=$((idx + 1))
+          done < <(python3 -c "import json; [print('{}\t{}'.format(c['url'], c['marker'])) for c in json.load(open('/tmp/checks.json'))]")
+
+          # Aggregate: one Python script, no bash interpolation into Python source.
+          python3 - <<'PYEOF'
+          import json, os, glob, sys
+
+          cfgs  = sorted(glob.glob('/tmp/smoke/*.cfg'))
+          checks = []
+          failures = []
+          unreachable_count = 0
+          for cfg_path in cfgs:
+              idx = os.path.basename(cfg_path).split('.')[0]
+              with open(cfg_path) as f:
+                  url    = f.readline().rstrip('\n')
+                  marker = f.readline().rstrip('\n')
+              meta = json.load(open(f'/tmp/smoke/{idx}.meta'))
+              status      = int(meta.get('status', 0))
+              latency_ms  = int(float(meta.get('latency_s', 0)) * 1000)
+              size_bytes  = int(meta.get('size', 0))
+              body_path   = f'/tmp/smoke/{idx}.body'
+              marker_found = False
+              if size_bytes > 0 and os.path.exists(body_path):
+                  with open(body_path, 'rb') as bf:
+                      body = bf.read()
+                  marker_found = marker.encode('utf-8') in body
+              unreachable = (status == 0)
+              if unreachable:
+                  unreachable_count += 1
+              ok = (status == 200 and size_bytes > 0 and marker_found)
+              if not ok:
+                  failures.append({
+                      'url': url, 'status': status,
+                      'marker_found': marker_found, 'unreachable': unreachable,
+                  })
+              checks.append({
+                  'url': url,
+                  'status': status,
+                  'ok': ok,
+                  'latency_ms': latency_ms,
+                  'size_bytes': size_bytes,
+                  'content_marker': marker,
+                  'content_marker_found': marker_found,
+                  'unreachable': unreachable,
+              })
+
+          tunnel_down = unreachable_count >= 2
+          all_passed  = len(failures) == 0
+
+          doc = {
+              'schema': 'post-merge-smoke-v1',
+              'run_at': os.environ['RUN_AT_ISO'],
+              'head_sha': os.environ['HEAD_SHA'],
+              'all_passed': all_passed,
+              'tunnel_down': tunnel_down,
+              'unreachable_count': unreachable_count,
+              'checks': checks,
+          }
+          out_path = os.environ['OUT']
+          with open(out_path, 'w', encoding='utf-8') as f:
+              json.dump(doc, f, indent=2)
+              f.write('\n')
+          print('wrote', out_path)
+          print(json.dumps(doc, indent=2))
+
+          # Step outputs.
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as gh:
+              gh.write(f'all_passed={"true" if all_passed else "false"}\n')
+              gh.write(f'tunnel_down={"true" if tunnel_down else "false"}\n')
+              gh.write(f'unreachable_count={unreachable_count}\n')
+              gh.write('failures_json<<EOF\n')
+              gh.write(json.dumps(failures))
+              gh.write('\nEOF\n')
+          PYEOF
+
+      - name: Commit artifact
+        if: always()
+        shell: bash
+        env:
+          ARTIFACT: ${{ env.OUT }}
+        run: |
+          if [ -z "${ARTIFACT}" ] || [ ! -f "${ARTIFACT}" ]; then
+            echo "::warning::No artifact written; skipping commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${ARTIFACT}"
+          if git diff --cached --quiet; then
+            echo "Artifact unchanged; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): post-merge smoke ${ARTIFACT##*/} [skip ci]"
+          # Retry once if there was a concurrent push race.
+          for attempt in 1 2; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push failed (attempt ${attempt}); pulling --rebase and retrying."
+            git pull --rebase origin main || true
+          done
+          echo "::warning::Could not push smoke artifact after 2 attempts; artifact remains on the workflow run."
+
+      - name: Comment on merge commit (only on per-URL regression)
+        if: steps.smoke.outputs.all_passed != 'true' && steps.smoke.outputs.tunnel_down != 'true'
+        uses: actions/github-script@v7
+        env:
+          FAILURES_JSON: ${{ steps.smoke.outputs.failures_json }}
+          ARTIFACT_PATH: ${{ env.OUT }}
+        with:
+          script: |
+            const failures = JSON.parse(process.env.FAILURES_JSON || '[]');
+            const lines = failures.map(f =>
+              `- ${f.url} -> status=${f.status}, marker_found=${f.marker_found}, unreachable=${f.unreachable}`
+            ).join('\n');
+            const body = [
+              '<!-- post-merge-smoke -->',
+              '## Post-merge smoke failed',
+              '',
+              `Workflow: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `Artifact: \`${process.env.ARTIFACT_PATH}\``,
+              '',
+              '### Failing checks',
+              lines || '_(none reported)_',
+              '',
+              'See [Item #4 of the harness adoption plan](../blob/main/docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md) for context.'
+            ].join('\n');
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body,
+            });
+
+      - name: Open tracking issue (only on per-URL regression)
+        if: steps.smoke.outputs.all_passed != 'true' && steps.smoke.outputs.tunnel_down != 'true'
+        uses: actions/github-script@v7
+        env:
+          FAILURES_JSON: ${{ steps.smoke.outputs.failures_json }}
+          ARTIFACT_PATH: ${{ env.OUT }}
+        with:
+          script: |
+            const failures = JSON.parse(process.env.FAILURES_JSON || '[]');
+            const short = context.sha.substring(0, 7);
+            const title = `[post-merge-smoke] Live demo regression on ${short}`;
+
+            // De-dup: don't open a new issue if one is already open for the same SHA.
+            const existing = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${short}"`,
+            });
+            if (existing.data.total_count > 0) {
+              console.log(`Issue already open for ${short}; skipping.`);
+              return;
+            }
+
+            const lines = failures.map(f =>
+              `- \`${f.url}\` -> status=${f.status}, marker_found=${f.marker_found}, unreachable=${f.unreachable}`
+            ).join('\n');
+
+            const body = [
+              '## Live demo regression detected',
+              '',
+              `**Merge commit:** ${context.sha}`,
+              `**Workflow run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `**Artifact:** \`${process.env.ARTIFACT_PATH}\``,
+              '',
+              '### Failing URLs',
+              lines,
+              '',
+              '### Repro locally',
+              '```powershell',
+              'pwsh Scripts/post-merge-smoke.ps1',
+              '```',
+              '',
+              'This issue was opened automatically by `.github/workflows/post-merge-smoke.yml`.',
+              'See [docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md](../blob/main/docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md) item #4 for the rationale.',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['post-merge-smoke', 'regression'],
+            });
+
+      - name: Fail the job on per-URL regression
+        if: steps.smoke.outputs.all_passed != 'true' && steps.smoke.outputs.tunnel_down != 'true'
+        shell: bash
+        run: |
+          echo "::error::Post-merge smoke failed (not a tunnel-down case). See artifact + opened issue."
+          exit 1

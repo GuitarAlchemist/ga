@@ -90,6 +90,7 @@ Block the agent from declaring done until lint, type-check, build, and E2E suite
 - **Status: 🟡 Partial.** `.githooks/pre-commit` runs `dotnet format` + build + ROP check + AGENTS.md sync + DESIGN.md/theme sync (post-#294). Missing: frontend type-check + a programmatic "is the public URL still serving 200?" check. Today's session shipped a port-guard fix (#289) because no one detected the displacement before merging.
 - **Action (S):** Add an `npm run typecheck` step to the React project (currently `build:with-types` exists but isn't pre-commit), call it from `.githooks/pre-commit` when any `.tsx`/`.ts` file is staged.
 - **Action (M):** Add a `Scripts/post-merge-smoke.ps1` invoked from a post-merge hook OR a GitHub Action that curls `https://demos.guitaralchemist.com/test` + `/chatbot/api/chatbot/status` + `/dev-data/manifest` after each push to main. Page the operator if any returns non-200. Closes today's 25-min-outage class of bugs.
+  - **Shipped 2026-05-23 in [#311](https://github.com/GuitarAlchemist/ga/pull/311).** `.github/workflows/post-merge-smoke.yml` curls `/test`, `/chatbot/`, `/dev-data/manifest` after each merge to main and writes `state/quality/e2e/<timestamp>.json`. Per-URL regression: comment on the merge commit + open a tracking issue. Tunnel-down heuristic (`>=2 of 3 unreachable`) suppresses noise during local-Cloudflare outages. Paired `Scripts/post-merge-smoke.ps1` for local runs. Phase 2 to move the check earlier into the PR-check flow is noted in the workflow header.
 
 ## Workflow & environment security
 
@@ -151,7 +152,7 @@ Each item is independent; pick by hand or work top-down.
 | 1 | "Where to find things" map in CLAUDE.md | S | M (every new agent needs it) | next session |
 | 2 | Add `npm run typecheck` to pre-commit hook | S | M (catches a class of regressions) | next session |
 | 3 | Per-session `.claude/local/state.md` | S | M (cross-session continuity) | next session |
-| 4 | Post-merge smoke (curl + screenshot the 3 demo URLs) via GitHub Action | M | H (closes 25-min-outage class) | week of |
+| 4 | Post-merge smoke (curl + screenshot the 3 demo URLs) via GitHub Action | M | H (closes 25-min-outage class) | shipped 2026-05-23 (#311) |
 | 5 | `/grade-last-pr` skill: re-run octo:review against the merged diff | M | M (closes the intent-vs-delivery loop) | week of |
 | 6 | Adopt `/council` from claude-codex-forge as opt-in pre-merge gate for one-way doors | M | M (only fires on high-stakes PRs, low ongoing cost) | sprint of |
 | 7 | Playwright E2E job on demos dashboard + chatbot showcase | M | H (UX verification automated) | sprint of |
