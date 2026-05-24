@@ -1243,6 +1243,136 @@ function devDataPlugin(): Plugin {
     // 20s from the UI) only hits gh once per cycle.
     let inFlightCache: { payload: InFlightPayload; built_at: number } | null = null;
     const IN_FLIGHT_TTL_MS = 10_000;
+
+    // ── /dev-data/recent-events — last-6h fleet activity ────────────────────
+    // Feeds the MissionControl "JUST HAPPENED" quadrant. Pure aggregator:
+    // reads (a) recent merges from the same gh source as buildInFlight,
+    // (b) algedonic signals from inbox.jsonl within the window, (c) recent
+    // commits via `git log --since`. Heuristic — not a contract — so we
+    // can tweak the shape without coordinating across repos.
+    interface RecentEvent {
+        kind: 'merge' | 'algedonic' | 'commit' | 'ack';
+        at: string;
+        ago_minutes: number;
+        summary: string;
+        url?: string;
+        severity?: string;
+        author?: string;
+        pr_number?: number;
+    }
+    interface RecentEventsPayload {
+        fetched_at: string;
+        window_hours: number;
+        events: RecentEvent[];
+    }
+
+    let recentEventsCache: { payload: RecentEventsPayload; built_at: number } | null = null;
+    const RECENT_EVENTS_TTL_MS = 10_000;
+
+    function buildRecentEvents(windowHours = 6): RecentEventsPayload {
+        const now = Date.now();
+        if (recentEventsCache && (now - recentEventsCache.built_at) < RECENT_EVENTS_TTL_MS) {
+            return recentEventsCache.payload;
+        }
+        const cutoff = now - windowHours * 60 * 60 * 1000;
+        const events: RecentEvent[] = [];
+
+        // (a) Recent merges — reuse the same gh call path as fetchRecentMerges.
+        // Failure mode: just drop the bucket so the quadrant degrades to
+        // showing commits + signals only.
+        const { merges } = fetchRecentMerges();
+        for (const m of merges) {
+            const t = Date.parse(m.merged_at);
+            if (Number.isNaN(t) || t < cutoff) continue;
+            events.push({
+                kind: 'merge',
+                at: m.merged_at,
+                ago_minutes: Math.max(0, Math.floor((now - t) / 60000)),
+                summary: `#${m.number} ${m.title}`,
+                url: m.url,
+                author: m.author,
+                pr_number: m.number,
+            });
+        }
+
+        // (b) Algedonic signals — emitted within window. Both acks and signals.
+        const projection = projectAlgedonic();
+        // projection.unacked is the live signal list; we also want acks
+        // emitted in the window, so re-read inbox.jsonl to grab ack lines.
+        for (const s of projection.unacked) {
+            const t = Date.parse(s.emitted_at);
+            if (Number.isNaN(t) || t < cutoff) continue;
+            events.push({
+                kind: 'algedonic',
+                at: s.emitted_at,
+                ago_minutes: Math.max(0, Math.floor((now - t) / 60000)),
+                summary: `[${s.repo}] ${s.summary}`,
+                severity: s.severity,
+                url: s.evidence_url ?? undefined,
+            });
+        }
+        // Ack events from the raw inbox.jsonl
+        const inboxPath = path.join(repoRoot, 'state', 'algedonic', 'inbox.jsonl');
+        if (existsSync(inboxPath)) {
+            try {
+                const raw = readFileSync(inboxPath, 'utf-8');
+                for (const line of raw.split('\n')) {
+                    const t = line.trim();
+                    if (!t) continue;
+                    try {
+                        const rec = JSON.parse(t) as { ack?: { acked?: boolean; acked_at?: string; acked_by?: string }; summary?: string; repo?: string };
+                        if (!rec.ack?.acked || !rec.ack.acked_at) continue;
+                        const ms = Date.parse(rec.ack.acked_at);
+                        if (Number.isNaN(ms) || ms < cutoff) continue;
+                        events.push({
+                            kind: 'ack',
+                            at: rec.ack.acked_at,
+                            ago_minutes: Math.max(0, Math.floor((now - ms) / 60000)),
+                            summary: `[${rec.repo ?? '?'}] ${rec.summary ?? ''}`.slice(0, 120),
+                            author: rec.ack.acked_by ?? undefined,
+                        });
+                    } catch { /* skip malformed */ }
+                }
+            } catch { /* unreadable inbox → just skip the ack bucket */ }
+        }
+
+        // (c) Recent commits — `git log --since=Nh`. Limited to 10 for the
+        // quadrant's needs; older entries are uninteresting and would
+        // crowd merges out of the top-5.
+        try {
+            const out = execFileSync(
+                'git',
+                ['log', `--since=${windowHours} hours ago`, '-n', '10', '--pretty=format:%H%x09%an%x09%aI%x09%s'],
+                { cwd: repoRoot, encoding: 'utf-8', timeout: 5000 },
+            );
+            for (const line of out.split('\n')) {
+                if (!line) continue;
+                const [sha, author, date, ...rest] = line.split('\t');
+                if (!sha || !date) continue;
+                const t = Date.parse(date);
+                if (Number.isNaN(t)) continue;
+                events.push({
+                    kind: 'commit',
+                    at: date,
+                    ago_minutes: Math.max(0, Math.floor((now - t) / 60000)),
+                    summary: `${sha.slice(0, 8)} ${rest.join('\t')}`,
+                    author,
+                });
+            }
+        } catch { /* git failed → fine, drop commits bucket */ }
+
+        // Newest first
+        events.sort((a, b) => a.ago_minutes - b.ago_minutes);
+
+        const payload: RecentEventsPayload = {
+            fetched_at: new Date().toISOString(),
+            window_hours: windowHours,
+            events: events.slice(0, 20),
+        };
+        recentEventsCache = { payload, built_at: now };
+        return payload;
+    }
+
     function buildInFlight(): InFlightPayload {
         const now = Date.now();
         if (inFlightCache && (now - inFlightCache.built_at) < IN_FLIGHT_TTL_MS) {
@@ -1714,6 +1844,26 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(buildInFlight(), null, 2));
             });
 
+            // ── /dev-data/recent-events — last-6h fleet activity ──────────
+            // Aggregates merges + algedonic signals + commits within a
+            // sliding window. Feeds MissionControl's JUST HAPPENED quadrant.
+            // The default 6h window is operator-friendly: "what changed
+            // since I went to lunch?". Override via ?hours=N for debug.
+            server.middlewares.use('/dev-data/recent-events', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                const raw = url.searchParams.get('hours');
+                let windowHours = 6;
+                if (raw) {
+                    const parsed = Number.parseInt(raw, 10);
+                    if (Number.isFinite(parsed) && parsed > 0 && parsed <= 168) {
+                        windowHours = parsed;
+                    }
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(buildRecentEvents(windowHours), null, 2));
+            });
+
             server.middlewares.use('/dev-data/manifest', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 const manifest = {
@@ -1733,6 +1883,7 @@ function devDataPlugin(): Plugin {
                         algedonic: '/dev-data/algedonic',
                         test_plans: '/dev-data/test-plans',
                         in_flight: '/dev-data/in-flight',
+                        recent_events: '/dev-data/recent-events',
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
                         sentrux_health: '/dev-data/sentrux/health',
                         sentrux_rules: '/dev-data/sentrux/rules',
