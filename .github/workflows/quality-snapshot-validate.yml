@@ -1,0 +1,71 @@
+name: Quality Snapshot Validate
+
+# Validates every JSON file under state/quality/ against the canonical
+# dashboard-envelope schema defined in ix
+# (docs/contracts/quality-snapshot.schema.json). Fails the workflow if any
+# producer ships a snapshot missing required envelope fields
+# (oracle_status, metric_value, etc.) — preventing the silent
+# dashboard-misrender bug class that triggered ix#65 + ga#367/#368/#369
+# on 2026-05-24.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'state/quality/**'
+      - '.github/workflows/quality-snapshot-validate.yml'
+  pull_request:
+    paths:
+      - 'state/quality/**'
+      - '.github/workflows/quality-snapshot-validate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-snapshot-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate state/quality/*.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout GA
+        uses: actions/checkout@v4
+        with:
+          path: ga
+          fetch-depth: 1
+
+      - name: Checkout IX (sibling, for the validator + schema)
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/ix
+          ref: main
+          path: ix
+          fetch-depth: 1
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ix/target
+          key: ${{ runner.os }}-cargo-quality-validate-${{ hashFiles('ix/Cargo.lock', 'ix/crates/ix-quality-validate/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-quality-validate-
+            ${{ runner.os }}-cargo-
+
+      - name: Build ix-quality-validate
+        working-directory: ix
+        run: cargo build --release -p ix-quality-validate
+
+      - name: Validate state/quality/
+        working-directory: ga
+        run: ../ix/target/release/ix-quality-validate state/quality
