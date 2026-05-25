@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-05-24T08:59:18Z_
+_Generated: 2026-05-25T09:31:05Z_
 
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `../../../docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
