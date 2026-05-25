@@ -11197,6 +11197,178 @@
   box-shadow: 0 0 4px #33CC66;
 }
 
+/* ── Laniakea position HUD ─────────────────────────────────────────── */
+.laniakea-hud {
+  position: absolute;
+  left: 292px;
+  bottom: 16px;
+  width: 286px;
+  height: 214px;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(9, 13, 22, 0.84);
+  border: 1px solid rgba(88, 166, 255, 0.38);
+  border-radius: 8px;
+  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(10px);
+  font-family: 'JetBrains Mono', monospace;
+  color: #dbe8ff;
+  pointer-events: auto;
+}
+
+.laniakea-hud--collapsed {
+  width: 142px;
+  height: 36px;
+}
+
+.laniakea-hud__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 36px;
+  min-height: 36px;
+  padding: 6px 8px 6px 10px;
+  border-bottom: 1px solid rgba(88, 166, 255, 0.18);
+  background: rgba(13, 17, 23, 0.56);
+}
+
+.laniakea-hud--collapsed .laniakea-hud__head {
+  border-bottom: none;
+}
+
+.laniakea-hud__title {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #9be7ff;
+}
+
+.laniakea-hud__meta {
+  margin-top: 2px;
+  font-size: 8px;
+  line-height: 1;
+  color: #8b949e;
+}
+
+.laniakea-hud__collapse {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(139, 148, 158, 0.42);
+  border-radius: 6px;
+  background: rgba(22, 27, 34, 0.72);
+  color: #c9d1d9;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.laniakea-hud__collapse:hover {
+  border-color: #9be7ff;
+  color: #ffffff;
+}
+
+.laniakea-hud__canvas {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  background:
+    radial-gradient(circle at 52% 40%, rgba(88, 166, 255, 0.12), transparent 42%),
+    radial-gradient(circle at 22% 68%, rgba(51, 204, 102, 0.08), transparent 34%),
+    rgba(3, 6, 12, 0.5);
+}
+
+.laniakea-hud__canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.laniakea-hud__callout {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  max-width: 126px;
+  border-radius: 6px;
+  background: rgba(13, 17, 23, 0.72);
+  border: 1px solid rgba(139, 148, 158, 0.24);
+  color: #c9d1d9;
+  font-size: 8px;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.laniakea-hud__callout--home {
+  left: 12px;
+  bottom: 42px;
+}
+
+.laniakea-hud__callout--attractor {
+  right: 10px;
+  top: 48px;
+}
+
+.laniakea-hud__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 7px;
+}
+
+.laniakea-hud__dot--home {
+  background: #33CC66;
+  box-shadow: 0 0 8px rgba(51, 204, 102, 0.9);
+}
+
+.laniakea-hud__dot--attractor {
+  background: #ffc247;
+  box-shadow: 0 0 9px rgba(255, 194, 71, 0.82);
+}
+
+.laniakea-hud__legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px 7px;
+  border-top: 1px solid rgba(88, 166, 255, 0.18);
+  color: #8b949e;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  .laniakea-hud {
+    left: 56px;
+    right: 56px;
+    bottom: 74px;
+    width: auto;
+    height: 158px;
+  }
+
+  .laniakea-hud--collapsed {
+    left: 56px;
+    right: auto;
+    width: 132px;
+    height: 36px;
+  }
+
+  .laniakea-hud__callout {
+    max-width: 112px;
+    font-size: 7px;
+  }
+
+  .laniakea-hud__legend {
+    font-size: 7px;
+  }
+}
+
 /* ── Jurisdiction membrane legend ─────────────────────────────────────── */
 .prime-radiant__jurisdiction-legend {
   position: absolute;

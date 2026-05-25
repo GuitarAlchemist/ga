@@ -105,6 +105,7 @@ import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
 import { createNearbyStars, type NearbyStarsHandle } from './NearbyStars';
+import { LaniakeaHUD } from './LaniakeaHUD';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -761,9 +762,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // A2A agent presence — live status of ix, TARS, GA, Seldon, Demerzel
   const a2aAgents = useAgentPresence();
   // Scene options — toggles for visual features
+  const [sceneOptions, setSceneOptions] = useState<SceneOptionsState>({ laniakeaHud: true });
   const sceneOptionsRef = React.useRef<SceneOptionsState>({});
   const handleSceneOptions = React.useCallback((opts: SceneOptionsState) => {
     sceneOptionsRef.current = opts;
+    setSceneOptions(opts);
   }, []);
   // Deep linking — read/write URL params for shareable state
   const [shareToast, setShareToast] = useState(false);
@@ -3921,6 +3924,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         {/* Keyboard shortcut legend — discoverable runtime toggles for layers + post-FX */}
         <KeyboardLegend />
+
+        {sceneOptions.laniakeaHud !== false && <LaniakeaHUD />}
 
         {/* Floating label when hovering a Voronoi jurisdiction shell */}
         {hoveredShell && (

@@ -34,6 +34,7 @@ const OPTIONS: SceneOptionsDef[] = [
   // Cosmic
   { id: 'stars',         label: 'Star Field',         icon: '\u2728', default: true,  group: 'Cosmic' },
   { id: 'nearbyStars',   label: 'Nearby Stars',       icon: '\u22C6', default: true,  group: 'Cosmic' },
+  { id: 'laniakeaHud',   label: 'Laniakea HUD',        icon: 'L', default: true,  group: 'Cosmic' },
   { id: 'dust',          label: 'Ambient Dust',       icon: '\u2601', default: true,  group: 'Cosmic' },
   { id: 'milkyway',      label: 'Milky Way',          icon: '\uD83C\uDF0C', default: true,  group: 'Cosmic' },
   { id: 'orbits',        label: 'Orbit Lines',        icon: '\u25EF', default: true,  group: 'Cosmic' },
