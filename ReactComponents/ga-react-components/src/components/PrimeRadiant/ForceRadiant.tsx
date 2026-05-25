@@ -96,6 +96,7 @@ import { ScreenshotButton } from './ScreenshotButton';
 import { useDeepLink } from './DeepLink';
 import { createCrystalEiffelTower, type CrystalEiffelTowerHandle } from './CrystalEiffelTower';
 import { createVoicingCloud, type VoicingCloudHandle } from './VoicingCloud';
+import { VoicingSplatsLayer, type VoicingSplatsMode } from './VoicingSplatsLayer';
 import { getNodeMaterialWithGlow, applyGovernanceShift } from './CrystalNodeMaterials';
 import { createBorgCubeGeometry, createBorgCubeNode, preloadBorgCubeModel } from './BorgCubeNode';
 import { createAtmosphericPerspective, type AtmosphericPerspectiveHandle } from './AtmosphericPerspective';
@@ -764,9 +765,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // Scene options — toggles for visual features
   const [sceneOptions, setSceneOptions] = useState<SceneOptionsState>({ laniakeaHud: true });
   const sceneOptionsRef = React.useRef<SceneOptionsState>({});
+  const splatsLayerRef = useRef<VoicingSplatsLayer | null>(null);
   const handleSceneOptions = React.useCallback((opts: SceneOptionsState) => {
     sceneOptionsRef.current = opts;
     setSceneOptions(opts);
+    // Apply voicing-splats mode immediately — no need to wait for next tick.
+    const mode = (opts.voicingSplatsMode as VoicingSplatsMode | undefined) ?? 'backdrop';
+    splatsLayerRef.current?.setMode(mode);
   }, []);
   // Deep linking — read/write URL params for shareable state
   const [shareToast, setShareToast] = useState(false);
@@ -1504,6 +1509,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let solarClickHandler: (() => void) | null = null;
     let eiffelHandleOuter: CrystalEiffelTowerHandle | null = null;
     let voicingCloudHandle: VoicingCloudHandle | null = null;
+    let voicingSplatsLayer: VoicingSplatsLayer | null = null;
     let filamentsHandle: TerminalFilamentsHandle | null = null;
     let voronoiShellsHandle: VoronoiShellHandle | null = null;
     let jurisdictionVolHandle: JurisdictionVolumetricsHandle | null = null;
@@ -2001,6 +2007,16 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         if (filamentsHandle) filamentsHandle.group.visible = sOpts.filaments !== false && qualityLevel !== 'low';
         if (eiffelHandleOuter) eiffelHandleOuter.group.visible = sOpts.tower === true;
         if (controls) controls.autoRotate = sOpts.autorotate !== false;
+        // Solo-mode for voicing splats dims governance graph so the cloud reads cleanly.
+        // 3d-force-graph's *Opacity() setters are idempotent and cheap on no-op writes;
+        // we re-assert every tick rather than memoize to stay robust against external mutators.
+        const splatsMode = (sOpts.voicingSplatsMode as VoicingSplatsMode | undefined) ?? 'backdrop';
+        const targetNodeOpacity = splatsMode === 'solo' ? 0.08 : 0.75;
+        const targetLinkOpacity = splatsMode === 'solo' ? 0.04 : 0.25;
+        const currentNodeOpacity = fg.nodeOpacity();
+        const currentLinkOpacity = fg.linkOpacity();
+        if (currentNodeOpacity !== targetNodeOpacity) fg.nodeOpacity(targetNodeOpacity);
+        if (currentLinkOpacity !== targetLinkOpacity) fg.linkOpacity(targetLinkOpacity);
       }
 
       // ─── Camera sync: apply incoming position from presentation leader ───
@@ -3038,6 +3054,24 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         });
     }
 
+    // ─── Voicing splats backdrop (ix#68) — Gaussian splats from voicing-cloud.ply ───
+    // Renders as a translucent layer behind the governance graph by default.
+    // Async; non-blocking. If the PLY isn't generated (404), the layer logs a
+    // warning and the rest of the scene is unaffected.
+    try {
+      const renderer = fg.renderer() as THREE.WebGLRenderer;
+      const splatsLayer = new VoicingSplatsLayer(fg.scene(), fg.camera(), renderer);
+      voicingSplatsLayer = splatsLayer;
+      splatsLayerRef.current = splatsLayer;
+      const initialMode = (sceneOptionsRef.current.voicingSplatsMode as VoicingSplatsMode | undefined) ?? 'backdrop';
+      splatsLayer.setMode(initialMode);
+      void splatsLayer.load('/dev-data/voicing-cloud.ply').catch((err) => {
+        console.warn('[VoicingSplatsLayer] load rejected:', err);
+      });
+    } catch (err) {
+      console.warn('[VoicingSplatsLayer] init skipped:', err);
+    }
+
     // Live cloud updates disabled — GIBS Mercator→equirectangular mismatch causes blur
     // Static 2k_earth_clouds.jpg looks better until proper reprojection is implemented
     const stopCloudUpdates = () => {}; // no-op
@@ -3566,6 +3600,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       crisisTexturesHandle?.dispose();
       eiffelHandleOuter?.dispose();
       voicingCloudHandle?.dispose();
+      if (voicingSplatsLayer) {
+        // Fire-and-forget — async dispose; we don't block React unmount on GPU teardown.
+        void voicingSplatsLayer.dispose();
+        voicingSplatsLayer = null;
+      }
+      splatsLayerRef.current = null;
       reactiveEngine.dispose();
       violationMonitor.dispose();
       if (solarMouseMoveHandler) {

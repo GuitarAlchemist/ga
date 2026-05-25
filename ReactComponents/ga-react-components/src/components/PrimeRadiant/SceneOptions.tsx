@@ -16,10 +16,12 @@ export interface SceneOptionsDef {
 }
 
 export type SkyboxMode = 'milky-way' | 'hubble-deep-field' | 'jwst-deep-field';
+export type VoicingSplatsMode = 'off' | 'backdrop' | 'solo';
 
 export interface SceneOptionsState {
-  [key: string]: boolean | SkyboxMode;
+  [key: string]: boolean | SkyboxMode | VoicingSplatsMode | undefined;
   skyboxMode?: SkyboxMode;
+  voicingSplatsMode?: VoicingSplatsMode;
 }
 
 export interface SceneOptionsProps {
@@ -56,6 +58,7 @@ function getDefaults(): SceneOptionsState {
   const state: SceneOptionsState = {};
   for (const opt of OPTIONS) state[opt.id] = opt.default;
   state.skyboxMode = 'milky-way';
+  state.voicingSplatsMode = 'backdrop';
   // Check URL params for overrides
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
@@ -65,6 +68,8 @@ function getDefaults(): SceneOptionsState {
     const skybox = params.get('skybox');
     if (skybox === 'hubble' || skybox === 'hubble-deep-field') state.skyboxMode = 'hubble-deep-field';
     if (skybox === 'jwst' || skybox === 'jwt' || skybox === 'webb' || skybox === 'jwst-deep-field') state.skyboxMode = 'jwst-deep-field';
+    const splats = params.get('splats');
+    if (splats === 'off' || splats === 'backdrop' || splats === 'solo') state.voicingSplatsMode = splats;
   }
   // Check localStorage for saved preferences
   try {
@@ -95,6 +100,15 @@ export const SceneOptions: React.FC<SceneOptionsProps> = ({ onChange }) => {
   const setSkyboxMode = useCallback((mode: SkyboxMode) => {
     setOptions(prev => {
       const next = { ...prev, skyboxMode: mode };
+      try { localStorage.setItem('prime-radiant-scene-options', JSON.stringify(next)); } catch { /* */ }
+      onChange(next);
+      return next;
+    });
+  }, [onChange]);
+
+  const setVoicingSplatsMode = useCallback((mode: VoicingSplatsMode) => {
+    setOptions(prev => {
+      const next = { ...prev, voicingSplatsMode: mode };
       try { localStorage.setItem('prime-radiant-scene-options', JSON.stringify(next)); } catch { /* */ }
       onChange(next);
       return next;
@@ -137,6 +151,37 @@ export const SceneOptions: React.FC<SceneOptionsProps> = ({ onChange }) => {
               <option value="jwst-deep-field">JWST Deep Field</option>
             </select>
           </label>
+          <div className="scene-options__group">
+            <div className="scene-options__group-label">Voicing Cloud</div>
+            <div
+              className="scene-options__segmented"
+              role="radiogroup"
+              aria-label="Voicing cloud rendering mode"
+              style={{ display: 'flex', gap: 4, padding: '4px 8px' }}
+            >
+              {(['off', 'backdrop', 'solo'] as const).map(mode => {
+                const active = ((options.voicingSplatsMode as VoicingSplatsMode | undefined) ?? 'backdrop') === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={`scene-options__item ${active ? 'scene-options__item--on' : ''}`}
+                    onClick={() => setVoicingSplatsMode(mode)}
+                    title={
+                      mode === 'off' ? 'Hide voicing splats'
+                      : mode === 'backdrop' ? 'Translucent backdrop behind governance graph'
+                      : 'Voicing splats only; graph dimmed'
+                    }
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    <span className="scene-options__label" style={{ textTransform: 'capitalize' }}>{mode}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           {[...groups.entries()].map(([group, opts]) => (
             <div key={group} className="scene-options__group">
               <div className="scene-options__group-label">{group}</div>
