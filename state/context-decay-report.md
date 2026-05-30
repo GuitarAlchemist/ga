@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-05-29T09:21:16Z_
+_Generated: 2026-05-30T08:55:33Z_
 
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
