@@ -70,6 +70,15 @@ public class ProductionOrchestrator(
         return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
     }
 
+    // A tab-handling intent (tab.optimize / tab.analyze) can only act on a tab in the
+    // message — without one it just replies "paste a tab". The embedding router has no
+    // tab-content signal, so a tabless phrasing whose words overlap a tab example (e.g.
+    // "give me a ii-V-I progression in Bb" matching tab.optimize's example "make this
+    // progression smoother to play") can wrongly win a tab intent. Suppress that pick so
+    // the query falls through to a real handler instead of "I need a tab in the message".
+    private bool IsTabIntentWithoutTab(string intentId, string? message) =>
+        intentId.StartsWith("tab.", StringComparison.Ordinal) && !HasTabContent(message);
+
     // Routing-context enrichment lives in RoutingContextEnricher (2026-05-14
     // extraction) so it can be unit-tested without spinning up the full
     // orchestrator. Behaviour is unchanged from the inlined form.
@@ -400,7 +409,9 @@ public class ProductionOrchestrator(
         // CanHandle foreach. See migration recommendation §"Routing classifiers".
         var intentMatch = await intentRouter.RouteAsync(routingMessage, services, ct);
         EmitRoutingTrace(intentMatch);
-        if (intentMatch is { } pick)
+        // Suppress a tab intent picked for a tabless message (e.g. "give me a ii-V-I
+        // progression in Bb") so it falls through to the LLM agent path below.
+        if (intentMatch is { } pick && !IsTabIntentWithoutTab(pick.Intent.Id, message))
         {
             // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
             var beforeCtx = new ChatHookContext
@@ -801,6 +812,9 @@ public class ProductionOrchestrator(
         var match = await intentRouter.RouteAsync(routingMessage, services, ct);
         EmitRoutingTrace(match);
         if (match is not { } pick) return null;
+
+        // Tab intents cannot act without a tab present — fall through to a real handler.
+        if (IsTabIntentWithoutTab(pick.Intent.Id, executeMessage)) return null;
 
         var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
         return new ChatResponse(
