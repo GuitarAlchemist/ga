@@ -240,7 +240,8 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.MinBrightness.HasValue && voicing.BrightnessScore < filters.MinBrightness.Value) return false;
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.OmittedTones != null && filters.OmittedTones.Any() && !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase))) return false;
+        if (filters.OmittedTones != null && filters.OmittedTones.Any() &&
+            (voicing.OmittedTones == null || !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
 
         // Melody Note Filter
         if (filters.TopPitchClass.HasValue && voicing.TopPitchClass != filters.TopPitchClass.Value) return false;
