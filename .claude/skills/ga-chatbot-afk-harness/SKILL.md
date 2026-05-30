@@ -53,7 +53,10 @@ no editing protected paths; caps `max_commits_per_session=50`,
 ```
 A. NEVER push, open/merge a PR, deploy, or apply a review-bypass label.
    The harness produces COMMITS ON A BRANCH only. A human arms it and a
-   human (or a separate reviewed flow) lands it.
+   human (or a separate reviewed flow) lands it. This includes DELEGATED
+   flows: /auto-optimize's Step 4 normally runs `gh pr create` after a batch
+   — when the harness invokes it you MUST suppress that (see Step 2.0), so an
+   unattended run never opens a PR behind your back.
 B. NEVER fabricate a metric. If the backend is unreachable, emit a
    `blocked` status with the real reason and STOP. A degraded run is
    recorded honestly, never as pass_pct=100%.
@@ -76,21 +79,39 @@ C. EMIT status via Scripts/afk-harness-status.ps1 at every phase boundary
    per `docs/runbooks/chatbot-deploy.md`, then re-arm.)
 4. Create/checkout `branch`. Emit `state=running phase=qa-snapshot branch=<branch>`.
 
+> **SCALE — read this first.** Both oracles report `pass_pct` on a **0..100**
+> scale (e.g. `94`, `100`). `target_metric`, `afk-harness-status.ps1 -DetPct/-SemPct`,
+> and the dashboard are all **0..1 fractions**. So you MUST divide every
+> `pass_pct` by 100 before comparing it to `target_metric` or passing it to the
+> status writer. Skipping this makes `94 >= 0.97` true and the harness exits
+> "done" on a 94% run (and the dashboard shows 9400%). Always normalize.
+
 ### Step 1 — Baseline QA snapshot
 1. Run the deterministic oracle: `pwsh Scripts/run-prompt-corpus.ps1 -Snapshot`.
-   Read the resulting `pass_pct` → `-DetPct`.
-2. If `semantic=true`: run the `/ga-chatbot-qa-panel` workflow; read
-   `state/quality/chatbot-qa-semantic/<date>.json` `pass_pct` → `-SemPct`.
-3. Emit `phase=qa-snapshot` with both metrics + `target_metric`. If
-   `DetPct >= target_metric` already → skip to Step 3 (done).
+   Read `pass_pct` (0..100) from the snapshot and compute `det = pass_pct / 100`
+   → pass as `-DetPct det`.
+2. If `semantic=true`: run the `/ga-chatbot-qa-panel` workflow; read its
+   `state/quality/chatbot-qa-semantic/<date>.json` `pass_pct` (also 0..100),
+   compute `sem = pass_pct / 100` → `-SemPct sem`.
+3. Emit `phase=qa-snapshot` with both fractions + `target_metric`. If
+   `det >= target_metric` already → skip to Step 3 (done).
+
+**Step 2.0 — suppress delegated PR creation (Law A).** `/auto-optimize`'s Step 4
+opens a PR with `gh pr create` once commits land. The harness must NOT let that
+happen. When you invoke it, append an explicit instruction: *"Do NOT run Step 4 /
+`gh pr create` / any push or PR — commit on the current branch only; the AFK
+harness owns landing."* If a given `/auto-optimize` version cannot be told to skip
+its PR step, do NOT delegate — drive the cycle inline instead (pick worst prompt →
+fix → `/chatbot-qa-roundtrip-validate` → `git commit` on branch / revert).
 
 ### Step 2 — Improvement cycles (the AFK loop)
-Repeat until `DetPct >= target_metric`, `max_iterations` reached, plateau
-(baseline `plateau_threshold`), caps hit, or a killswitch appears:
-1. Run `/auto-optimize domain=chatbot-qa oracle_script_path=Scripts/run-prompt-corpus.ps1 baseline_path=state/quality/chatbot-qa/baseline.json max_iterations=<batch_size>`.
+Repeat until `det >= target_metric` (fractions, per the SCALE note),
+`max_iterations` reached, plateau (baseline `plateau_threshold`), caps hit, or a
+killswitch appears:
+1. Run `/auto-optimize domain=chatbot-qa oracle_script_path=Scripts/run-prompt-corpus.ps1 baseline_path=state/quality/chatbot-qa/baseline.json max_iterations=<batch_size>` **with the no-PR instruction from Step 2.0**.
    This does the real work: picks the worst prompt, proposes a fix, runs
    `/chatbot-qa-roundtrip-validate`, and commits on the branch or reverts.
-2. After each batch, re-read `pass_pct`; emit one status update per outcome:
+2. After each batch, re-read `pass_pct` and **normalize `det = pass_pct / 100`**; emit one status update per outcome (always pass fractions to `-DetPct`):
    - accepted → `-Kind commit -Iteration <n> -Commits <c> -DetPct <x> -Event "accepted fix for <prompt-id> (<+Δpp>)"`
    - reverted → `-Kind revert -Iteration <n> -Event "reverted <prompt-id>: <reject reason>"`
 3. Re-check killswitch/halt each iteration (Law C of auto-optimize). If set → emit `state=killed`, STOP.
