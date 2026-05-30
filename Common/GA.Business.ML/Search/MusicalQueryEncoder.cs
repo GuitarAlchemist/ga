@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Search;
 
+using System.Text.RegularExpressions;
 using Embeddings;
 using Embeddings.Services;
 using Rag.Models;
@@ -182,59 +183,13 @@ public sealed class MusicalQueryEncoder(
 /// </summary>
 public static class ChordPitchClasses
 {
-    // Quality → offsets from root (semitones within one octave).
-    private static readonly Dictionary<string, int[]> Qualities = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [""]          = [0, 4, 7],                    // major triad
-        ["maj"]       = [0, 4, 7],
-        ["m"]         = [0, 3, 7],                    // minor triad
-        ["min"]       = [0, 3, 7],
-        ["dim"]       = [0, 3, 6],
-        ["aug"]       = [0, 4, 8],
-        ["sus2"]      = [0, 2, 7],
-        ["sus4"]      = [0, 5, 7],
-        ["5"]         = [0, 7],                       // power chord
-        ["7"]         = [0, 4, 7, 10],                // dominant 7
-        ["maj7"]      = [0, 4, 7, 11],
-        ["M7"]        = [0, 4, 7, 11],
-        ["m7"]        = [0, 3, 7, 10],
-        ["min7"]      = [0, 3, 7, 10],
-        ["m7b5"]      = [0, 3, 6, 10],                // half-diminished
-        ["dim7"]      = [0, 3, 6, 9],
-        ["7sus4"]     = [0, 5, 7, 10],
-        ["6"]         = [0, 4, 7, 9],
-        ["m6"]        = [0, 3, 7, 9],
-        ["9"]         = [0, 4, 7, 10, 2],
-        ["maj9"]      = [0, 4, 7, 11, 2],
-        ["m9"]        = [0, 3, 7, 10, 2],
-        ["11"]        = [0, 4, 7, 10, 2, 5],
-        ["13"]        = [0, 4, 7, 10, 2, 5, 9],
-        ["add9"]      = [0, 4, 7, 2],
-
-        // Extended / altered qualities — jazz and fusion vocabulary
-        ["mmaj7"]     = [0, 3, 7, 11],                // minor-major 7
-        ["minmaj7"]   = [0, 3, 7, 11],
-        ["m(maj7)"]   = [0, 3, 7, 11],
-        ["maj13"]     = [0, 4, 7, 11, 2, 5, 9],
-        ["m11"]       = [0, 3, 7, 10, 2, 5],
-        ["m13"]       = [0, 3, 7, 10, 2, 5, 9],
-        ["9#11"]      = [0, 4, 7, 10, 2, 6],          // "Lydian dominant" flavor
-        ["maj9#11"]   = [0, 4, 7, 11, 2, 6],
-        ["13#11"]     = [0, 4, 7, 10, 2, 6, 9],
-        ["7b9"]       = [0, 4, 7, 10, 1],
-        ["7#9"]       = [0, 4, 7, 10, 3],             // "Hendrix chord" intervals
-        ["7b5"]       = [0, 4, 6, 10],
-        ["7#5"]       = [0, 4, 8, 10],
-        ["aug7"]      = [0, 4, 8, 10],
-        ["+7"]        = [0, 4, 8, 10],
-        ["13b9"]      = [0, 4, 7, 10, 1, 5, 9],
-        ["7alt"]      = [0, 4, 10, 1, 3, 6, 8],       // altered dominant: b9 #9 b5 b13
-        ["69"]        = [0, 4, 7, 9, 2],
-        ["6/9"]       = [0, 4, 7, 9, 2],              // conventional notation with slash
-        ["sus4add9"]  = [0, 5, 7, 2],
-        ["sus2add11"] = [0, 2, 5, 7],
-    };
-
+    // Chord-quality resolution is COMPOSITIONAL (see TryComputeChordOffsets): the parser
+    // builds the interval set algorithmically from a base triad + an optional
+    // sixth/seventh/extension spine + any sequence of alterations / additions / omissions,
+    // rather than enumerating named qualities in a finite lookup table. This makes it
+    // exhaustive over the combinatorial space — "7b13", "maj7#5", "13#9", "m11b5",
+    // "7sus4b9", "C(add#11)" all resolve — instead of silently failing (and dropping the
+    // query to a hallucinating LLM) whenever a symbol is missing from a hand-maintained list.
     private static readonly Dictionary<string, int> Roots = new(StringComparer.OrdinalIgnoreCase)
     {
         ["C"] = 0, ["C#"] = 1, ["Db"] = 1, ["D"] = 2, ["D#"] = 3, ["Eb"] = 3,
@@ -242,8 +197,23 @@ public static class ChordPitchClasses
         ["Ab"] = 8, ["A"] = 9, ["A#"] = 10, ["Bb"] = 10, ["B"] = 11, ["Cb"] = 11,
     };
 
-    /// <summary>Canonical chord-quality suffixes the parser recognizes (after the root letter).</summary>
-    public static IReadOnlyCollection<string> KnownQualities => Qualities.Keys;
+    // Representative suffixes — ADVISORY ONLY (vocabulary hints). The parser is
+    // compositional, so the accepted set is far larger than this list; never treat it as
+    // the exhaustive accepted set.
+    private static readonly string[] RepresentativeQualities =
+    [
+        "", "maj", "m", "dim", "aug", "sus2", "sus4", "5", "6", "m6", "69", "6/9",
+        "7", "maj7", "m7", "m7b5", "dim7", "mmaj7", "7sus4",
+        "9", "maj9", "m9", "11", "m11", "13", "maj13", "m13", "add9", "madd9", "add11",
+        "7b5", "7#5", "7b9", "7#9", "7#11", "7b13", "7alt", "9#11", "13#9", "13b9",
+        "maj7#5", "maj7b5", "maj9#11", "m7#5", "aug7", "+7",
+    ];
+
+    /// <summary>
+    ///     Representative chord-quality suffixes (advisory; the compositional parser accepts
+    ///     far more — any root + base triad + spine + alteration/addition sequence).
+    /// </summary>
+    public static IReadOnlyCollection<string> KnownQualities => RepresentativeQualities;
 
     /// <summary>Canonical root notes (C, C#, Db, D, ... B, Cb) the parser recognizes.</summary>
     public static IReadOnlyCollection<string> KnownRoots => Roots.Keys;
@@ -262,6 +232,7 @@ public static class ChordPitchClasses
         if (!Roots.TryGetValue(rootStr, out var r)) return false;
 
         var qualityStr = symbol[rootLen..];
+
         // Drop slash-BASS suffix (e.g. "Cmaj7/G" → bass G). But keep slash-in-quality
         // like "C6/9" where the token after the slash is a digit — that's an extension,
         // not a bass note.
@@ -273,35 +244,142 @@ public static class ChordPitchClasses
             qualityStr = qualityStr[..slashIdx];
         }
 
-        if (!Qualities.TryGetValue(qualityStr, out var offsets))
-        {
-            // Paren-stripped retry: the user-facing notation `E7(#9)`, `C7(b9)`,
-            // `C(add9)`, `Cm(maj9)` carries parens around the alteration suffix. The
-            // dictionary keys store the canonical paren-less forms ("7#9", "7b9",
-            // "add9"). Without this retry, removing parens from the tokenizer
-            // (companion fix in TypedMusicalQueryExtractor) would regress those
-            // forms — they'd reach TryParse as a single token, fail the lookup,
-            // and be dropped entirely. The only key that genuinely needs parens
-            // is "m(maj7)" which already matches on the first attempt.
-            if (qualityStr.Contains('(') || qualityStr.Contains(')'))
-            {
-                var stripped = qualityStr.Replace("(", "").Replace(")", "");
-                if (Qualities.TryGetValue(stripped, out offsets))
-                {
-                    root = r;
-                    pitchClasses = offsets.Select(o => (r + o) % 12).Distinct().OrderBy(x => x).ToArray();
-                    return true;
-                }
-            }
+        // Parens are cosmetic: "C7(#9)", "Cm(maj7)", "C(add9)" mean the paren-less forms.
+        qualityStr = qualityStr.Replace("(", "").Replace(")", "");
 
-            // Reject unknown qualities — otherwise every english word starting with a letter
-            // A-G (e.g. "and", "fade", "be") parses as a chord and every query carries false
-            // musical structure into retrieval.
-            return false;
-        }
+        if (!TryComputeChordOffsets(qualityStr, out var offsets)) return false;
 
         root = r;
         pitchClasses = offsets.Select(o => (r + o) % 12).Distinct().OrderBy(x => x).ToArray();
         return true;
     }
+
+    /// <summary>
+    ///     Compositional chord-quality → semitone-offsets (from the root). Assembles the
+    ///     interval set from a base triad (major / minor / diminished / augmented /
+    ///     suspended), an optional sixth or seventh/extension spine (6, 7, maj7, 9, 11, 13 —
+    ///     the 7th quality implied by maj/M/△ vs dominant vs diminished), and any sequence of
+    ///     alterations (b5 #5 b9 #9 #11 b13 …), additions (add2/4/6/9/11/13) and omissions
+    ///     (no3/omit5). Returns <see langword="false"/> when the suffix leaves residue it
+    ///     cannot explain, so a root letter followed by ordinary words ("Fade", "Bee") does
+    ///     NOT parse as a chord and inject false structure into retrieval.
+    /// </summary>
+    internal static bool TryComputeChordOffsets(string quality, out int[] offsets)
+    {
+        offsets = [];
+        var w = (quality ?? string.Empty).Trim();
+
+        // ── normalize symbol variants (case matters: 'M7' = major7, 'm' = minor) ──
+        w = Regex.Replace(w, "△|Δ", "maj");
+        w = Regex.Replace(w, "ø|Ø", "m7b5");
+        w = Regex.Replace(w, @"M(?=7|9|11|13|6)", "maj");        // M7 / M9 / M13 → major-7th family
+        w = w.Replace("Maj", "maj").Replace("MAJ", "maj").Replace("Major", "maj").Replace("major", "maj");
+        w = w.Replace("Min", "min").Replace("MIN", "min").Replace("minor", "min");
+        w = w.Replace("M", "maj");                                // any lone uppercase M ⇒ major
+        // The major-7th marker is now canonical, so folding to lower case leaves a residual
+        // 'm' meaning unambiguously minor.
+        w = w.ToLowerInvariant();
+        w = w.Replace("°", "dim").Replace("o7", "dim7");
+
+        if (w.Length == 0) { offsets = [0, 4, 7]; return true; }  // bare root → major triad
+        if (w == "5") { offsets = [0, 7]; return true; }          // power chord
+
+        // Altered dominant (7alt / alt) is a fixed 7-note sonority — 1 3 b7 b9 #9 #11 b13.
+        // It carries BOTH b9 and #9, which a one-value-per-degree map cannot express, so
+        // resolve it directly.
+        if (Regex.IsMatch(w, @"^7?alt$")) { offsets = [0, 1, 3, 4, 6, 8, 10]; return true; }
+
+        var set = new SortedSet<int> { 0 };
+        var explicitDegrees = new Dictionary<int, int>();         // degree (2/4/6/9/11/13) → semitone
+        var omit = new HashSet<int>();                            // chord degrees (3, 5) to drop
+        var noThird = false;
+        var fifth = 7;
+        int? sixth = null;
+        int? seventh = null;
+
+        // additions: add2 add4 add6 add9 add11 add13
+        foreach (Match m in Regex.Matches(w, @"add(2|4|6|9|11|13)"))
+        {
+            var d = int.Parse(m.Groups[1].Value);
+            explicitDegrees[d] = DegreeSemitone(d, '\0');
+        }
+        w = Regex.Replace(w, @"add(2|4|6|9|11|13)", "");
+
+        // alterations: b5 #5 b6 b9 #9 #11 b13 … (sign + degree)
+        foreach (Match m in Regex.Matches(w, @"(b|#)(5|6|9|11|13)"))
+        {
+            var sign = m.Groups[1].Value[0];
+            var deg = int.Parse(m.Groups[2].Value);
+            if (deg == 5) fifth = sign == 'b' ? 6 : 8;
+            else if (deg == 6) sixth = sign == 'b' ? 8 : 10;
+            else explicitDegrees[deg] = DegreeSemitone(deg, sign);
+        }
+        w = Regex.Replace(w, @"(b|#)(5|6|9|11|13)", "");
+
+        // omissions: no3 / no5 / omit3 / omit5
+        foreach (Match m in Regex.Matches(w, @"(omit|no)(3|5)")) omit.Add(int.Parse(m.Groups[2].Value));
+        w = Regex.Replace(w, @"(omit|no)(3|5)", "");
+
+        // ── base triad ──
+        bool thirdMinor;
+        if (w.Contains("sus2")) { noThird = true; explicitDegrees[2] = 2; w = w.Replace("sus2", ""); thirdMinor = false; }
+        else if (w.Contains("sus4") || w.Contains("sus")) { noThird = true; explicitDegrees[4] = 5; w = Regex.Replace(w, "sus4|sus", ""); thirdMinor = false; }
+        else if (w.Contains("dim")) { thirdMinor = true; fifth = 6; }
+        else if (w.Contains("aug") || w.StartsWith("+")) { thirdMinor = false; fifth = 8; w = w.Replace("aug", "").Replace("+", ""); }
+        else if (w.StartsWith("min")) { thirdMinor = true; }
+        else if (w.StartsWith("m") && !w.StartsWith("maj")) { thirdMinor = true; }
+        else thirdMinor = false;
+
+        var majSeventh = w.Contains("maj");
+        var dimBase = w.Contains("dim");
+        w = w.Replace("maj", "").Replace("min", "").Replace("dim", "");
+        if (w.StartsWith("m")) w = w[1..];                        // leading minor 'm'
+
+        // ── sixth / seventh / extension spine ──
+        if (Regex.IsMatch(w, @"6/9|69"))
+        {
+            sixth ??= 9;
+            explicitDegrees[9] = explicitDegrees.GetValueOrDefault(9, 2);
+            w = Regex.Replace(w, @"6/9|69", "");
+        }
+
+        var topExt = 0;
+        if (w.Contains("13")) { topExt = 13; w = w.Replace("13", ""); }
+        else if (w.Contains("11")) { topExt = 11; w = w.Replace("11", ""); }
+        else if (w.Contains("9")) { topExt = 9; w = w.Replace("9", ""); }
+        else if (w.Contains("7")) { topExt = 7; w = w.Replace("7", ""); }
+        else if (w.Contains("6")) { sixth ??= 9; w = w.Replace("6", ""); }
+
+        if (dimBase && topExt >= 7) seventh = 9;                  // dim7 → bb7
+        else if (topExt >= 7) seventh = majSeventh ? 11 : 10;
+
+        // residue check: anything left (besides separators) means it was not a chord symbol.
+        var residue = Regex.Replace(w, @"[\s/()+\-]", "");
+        if (residue.Length > 0) return false;
+
+        // ── assemble ──
+        if (!noThird && !omit.Contains(3)) set.Add(thirdMinor ? 3 : 4);
+        if (!omit.Contains(5)) set.Add(fifth);
+        if (sixth is { } s6) set.Add(s6);
+        if (seventh is { } s7) set.Add(s7);
+        if (topExt >= 9) set.Add(explicitDegrees.GetValueOrDefault(9, 2));
+        if (topExt >= 11) set.Add(explicitDegrees.GetValueOrDefault(11, 5));
+        if (topExt >= 13) set.Add(explicitDegrees.GetValueOrDefault(13, 9));
+        foreach (var kv in explicitDegrees) set.Add(kv.Value);   // adds + altered degrees, regardless of spine
+
+        offsets = set.Select(x => x % 12).Distinct().OrderBy(x => x).ToArray();
+        return true;
+    }
+
+    // Natural (sign='\0') or altered semitone for a chord degree, reduced to one octave.
+    private static int DegreeSemitone(int degree, char sign) => degree switch
+    {
+        2  => 2,
+        4  => 5,
+        6  => sign == 'b' ? 8 : sign == '#' ? 10 : 9,
+        9  => sign == 'b' ? 1 : sign == '#' ? 3 : 2,
+        11 => sign == '#' ? 6 : sign == 'b' ? 4 : 5,
+        13 => sign == 'b' ? 8 : sign == '#' ? 10 : 9,
+        _  => 0
+    };
 }
