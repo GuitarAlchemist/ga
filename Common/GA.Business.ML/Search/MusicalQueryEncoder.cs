@@ -316,9 +316,10 @@ public static class ChordPitchClasses
         }
         w = Regex.Replace(w, @"(b|#)(5|6|9|11|13)", "");
 
-        // omissions: no3 / no5 / omit3 / omit5
-        foreach (Match m in Regex.Matches(w, @"(omit|no)(3|5)")) omit.Add(int.Parse(m.Groups[2].Value));
-        w = Regex.Replace(w, @"(omit|no)(3|5)", "");
+        // omissions: no3 / no5 / omit5 … and extension omissions (no11 / no9 / omit13).
+        // "13no11" — the standard 13-without-11 voicing — must resolve, not fall through.
+        foreach (Match m in Regex.Matches(w, @"(omit|no)(2|3|4|5|6|9|11|13)")) omit.Add(int.Parse(m.Groups[2].Value));
+        w = Regex.Replace(w, @"(omit|no)(2|3|4|5|6|9|11|13)", "");
 
         // ── base triad ──
         bool thirdMinor;
@@ -360,12 +361,13 @@ public static class ChordPitchClasses
         // ── assemble ──
         if (!noThird && !omit.Contains(3)) set.Add(thirdMinor ? 3 : 4);
         if (!omit.Contains(5)) set.Add(fifth);
-        if (sixth is { } s6) set.Add(s6);
+        if (sixth is { } s6 && !omit.Contains(6)) set.Add(s6);
         if (seventh is { } s7) set.Add(s7);
-        if (topExt >= 9) set.Add(explicitDegrees.GetValueOrDefault(9, 2));
-        if (topExt >= 11) set.Add(explicitDegrees.GetValueOrDefault(11, 5));
-        if (topExt >= 13) set.Add(explicitDegrees.GetValueOrDefault(13, 9));
-        foreach (var kv in explicitDegrees) set.Add(kv.Value);   // adds + altered degrees, regardless of spine
+        if (topExt >= 9 && !omit.Contains(9)) set.Add(explicitDegrees.GetValueOrDefault(9, 2));
+        if (topExt >= 11 && !omit.Contains(11)) set.Add(explicitDegrees.GetValueOrDefault(11, 5));
+        if (topExt >= 13 && !omit.Contains(13)) set.Add(explicitDegrees.GetValueOrDefault(13, 9));
+        foreach (var kv in explicitDegrees)                      // adds + altered degrees, regardless of spine
+            if (!omit.Contains(kv.Key)) set.Add(kv.Value);
 
         offsets = set.Select(x => x % 12).Distinct().OrderBy(x => x).ToArray();
         return true;

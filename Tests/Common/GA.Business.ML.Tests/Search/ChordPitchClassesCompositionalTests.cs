@@ -92,6 +92,10 @@ public class ChordPitchClassesCompositionalTests
     [TestCase("C7b9", new[] { 0, 1, 4, 7, 10 })]
     [TestCase("Cm7#5", new[] { 0, 3, 8, 10 })]
     [TestCase("Cmadd9", new[] { 0, 2, 3, 7 })]
+    // Extension omissions — the standard "13 without 11" and friends must resolve:
+    [TestCase("C13no11", new[] { 0, 2, 4, 7, 9, 10 })]
+    [TestCase("C9no3", new[] { 0, 2, 7, 10 })]
+    [TestCase("Cmaj7no5", new[] { 0, 4, 11 })]
     public void ResolvesExactPitchClasses(string symbol, int[] expected)
     {
         Assert.That(ChordPitchClasses.TryParse(symbol, out var root, out var pcs), Is.True, $"{symbol} should parse");

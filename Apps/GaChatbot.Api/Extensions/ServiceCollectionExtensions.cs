@@ -140,15 +140,25 @@ public static class ServiceCollectionExtensions
             return System.IO.File.Exists(configured) ? configured : null;
         }
 
-        for (var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
-             dir is not null;
-             dir = dir.Parent)
+        // Walk up toward the repo root. Guard the walk: DirectoryInfo.Parent/FullName can
+        // throw on pathological mounts (PathTooLong / Security), and this runs at host
+        // startup — degrade to CPU (return null) rather than aborting boot, per the contract.
+        try
         {
-            var candidate = System.IO.Path.Combine(dir.FullName, "state", "voicings", "optick.index");
-            if (System.IO.File.Exists(candidate))
+            for (var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+                 dir is not null;
+                 dir = dir.Parent)
             {
-                return candidate;
+                var candidate = System.IO.Path.Combine(dir.FullName, "state", "voicings", "optick.index");
+                if (System.IO.File.Exists(candidate))
+                {
+                    return candidate;
+                }
             }
+        }
+        catch (Exception)
+        {
+            // fall through to null → CPU fallback
         }
 
         return null;
