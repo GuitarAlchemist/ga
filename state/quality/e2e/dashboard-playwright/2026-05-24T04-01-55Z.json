@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "e2e-dashboard-playwright",
+  "timestamp": "2026-05-24T04-01-55Z",
+  "git_sha": "76bce33cb6ed197e3b8872985fa2e8503454ac97",
+  "git_ref": "refs/heads/main",
+  "run_id": "26351364530",
+  "outcome": "success",
+  "base_url": "https://demos.guitaralchemist.com",
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 1
+  },
+  "tests": [
+    {
+      "title": "chatbot-showcase.spec.ts › Chatbot showcase › opens modal, clicks a prompt, response < 5s",
+      "file": "chatbot-showcase.spec.ts",
+      "status": "passed",
+      "duration_ms": 685,
+      "error": null
+    },
+    {
+      "title": "dashboard-loads.spec.ts › Dashboard loads › /test returns 200 and renders core chrome",
+      "file": "dashboard-loads.spec.ts",
+      "status": "passed",
+      "duration_ms": 3333,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › renders items + baseline tiles",
+      "file": "harness-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 3014,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › skill action button queues an invocation",
+      "file": "harness-tab.spec.ts",
+      "status": "skipped",
+      "duration_ms": 4,
+      "error": null
+    },
+    {
+      "title": "heartbeat-banner.spec.ts › Heartbeat banner › renders with healthy color + epic-shipped percentage",
+      "file": "heartbeat-banner.spec.ts",
+      "status": "passed",
+      "duration_ms": 3229,
+      "error": null
+    },
+    {
+      "title": "manifest-page.spec.ts › Manifest viewer › /test/manifest loads with copy-curl + schema_version",
+      "file": "manifest-page.spec.ts",
+      "status": "passed",
+      "duration_ms": 2801,
+      "error": null
+    }
+  ]
+}

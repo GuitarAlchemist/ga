@@ -7,7 +7,17 @@ export { BSPTutorial } from './BSPTutorial';
 export { BSPTreeVisualization } from './BSPTreeVisualization';
 export { ThreeHarmonicNavigator } from './ThreeHarmonicNavigator';
 export { HarmonicNavigator3D } from './HarmonicNavigator3D';
-export { BSPDoomExplorer } from './BSPDoomExplorer';
+// BSPDoomExplorer was a 6,250-line monolith that depended on the API being
+// reachable; the live `/test/bsp-doom-explorer` page was blank when it
+// wasn't. v2 is a from-scratch react-three-fiber + drei rewrite split
+// across ~10 focused files with a procedural fallback tree.
+//
+// The v1 component is still importable as `BSPDoomExplorerLegacy` for
+// rollback, but the default export here points at v2 so all consumers
+// (test page, demos table, etc.) pick it up automatically.
+export { BSPDoomExplorerV2 as BSPDoomExplorer } from './v2';
+export { BSPDoomExplorer as BSPDoomExplorerLegacy } from './BSPDoomExplorer';
+export type { BSPDoomExplorerV2Props } from './v2';
 export { AnkhReticle3D } from './AnkhReticle3D';
 export { Sunburst3D } from './Sunburst3D';
 export { Sunburst3DDemo } from './Sunburst3DDemo';

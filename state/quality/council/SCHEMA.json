@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/GuitarAlchemist/ga/state/quality/council/SCHEMA.json",
+  "title": "Council Verdict v1",
+  "description": "Verdict produced by the /council skill for a one-way-door PR. One file per convened council, named state/quality/council/<head_sha>.json. Adopts the claude-codex-forge council pattern: five specialist sub-agents + one chair synthesizes + one deterministic final verdict.",
+  "type": "object",
+  "required": [
+    "schema",
+    "pr_number",
+    "head_sha",
+    "one_way_door_paths",
+    "convened_at",
+    "advisors",
+    "chair",
+    "chair_synthesis",
+    "final_verdict",
+    "graded_by"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "council-verdict-v1",
+      "description": "Schema discriminator. Locked at v1."
+    },
+    "pr_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "GitHub PR number the council reviewed."
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "Commit SHA the council reviewed. A new push produces a new artifact."
+    },
+    "one_way_door_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Paths from the PR diff that matched one-way-door patterns. Must be non-empty — the skill exits early without writing an artifact if no doors were touched."
+    },
+    "convened_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when the council was convened."
+    },
+    "advisors": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "Per-advisor verdicts. The full slate is exactly 4 advisors (security, data, code-quality, ux) plus the chair which appears separately in the `chair` field. minItems/maxItems = 4 prevents a partial run (advisor failure/timeout) from producing a schema-valid verdict and being treated as merge-gating-complete. The four roles must collectively cover {security, data, code-quality, ux}; this is asserted by the writer (the JSON Schema draft-07 vocabulary lacks set-equality on a nested field, but the role enum below pins each entry to one of the four).",
+      "items": {
+        "type": "object",
+        "required": ["name", "role", "verdict", "reasoning"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Sub-agent identifier, e.g. 'octo:personas:security-auditor'."
+          },
+          "role": {
+            "type": "string",
+            "enum": ["security", "data", "code-quality", "ux"],
+            "description": "Focus area assigned to this advisor in the council brief. The four roles must collectively appear across the four advisor entries. 'other' is no longer accepted — if a future council needs a fifth perspective, bump the schema to v2."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["approve", "request_changes", "block"],
+            "description": "This advisor's call. 'block' means the one-way door is unsafe to open as-is and the PR must not merge."
+          },
+          "reasoning": {
+            "type": "string",
+            "minLength": 1,
+            "description": "2-5 sentences. Free text. The chair reads these to write the synthesis."
+          }
+        }
+      }
+    },
+    "chair": {
+      "type": "string",
+      "description": "Sub-agent identifier of the chair, e.g. 'octo:personas:backend-architect'. Default chair is backend-architect; future rev can swap by PR type."
+    },
+    "chair_synthesis": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Chair's prose explanation of the final verdict. 3-6 sentences naming each dissent, the decisive concern, and the recommendation. This is what gets posted as the PR comment."
+    },
+    "final_verdict": {
+      "type": "string",
+      "enum": ["approve", "request_changes", "block"],
+      "description": "Deterministic aggregation: any 'block' from any advisor → 'block'; else any 'request_changes' → 'request_changes'; else 'approve'. Mirrored in README.md."
+    },
+    "graded_by": {
+      "type": "string",
+      "description": "Model identifier of the chair LLM, e.g. 'claude-opus-4-7'. Useful for tracking which model class signed off across the history."
+    }
+  }
+}

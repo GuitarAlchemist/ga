@@ -89,6 +89,130 @@ if ($ropViolations.Count -gt 0) {
 }
 
 # ============================================
+# FRONTEND TYPECHECK (warning-only, harness plan item #2)
+# ============================================
+# Reports TypeScript errors when any .tsx/.ts file under
+# ReactComponents/ga-react-components/ is staged. Currently warning-only:
+# baseline at the time this hook was added carried ~185 pre-existing errors
+# (BSPDoomExplorer, ForceRadiant, StringedInstrumentFretboard, etc.), so
+# making this fatal would gate every commit. Promote to fatal once the
+# baseline reaches zero — see docs/plans/2026-05-23-arch-harness-engineering-
+# adoption-plan.md item #2.
+$stagedTsFiles = git diff --cached --name-only 2>/dev/null |
+    Where-Object { $_ -match "^ReactComponents/ga-react-components/.*\.(ts|tsx)$" }
+if ($stagedTsFiles.Count -gt 0) {
+    Write-Host "`n▶ Running frontend typecheck (warning-only)..." -ForegroundColor Blue
+    Push-Location ReactComponents/ga-react-components
+    try {
+        $typecheckOutput = npm run --silent typecheck 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Frontend typecheck clean" -ForegroundColor Green
+        } else {
+            $errorLines = $typecheckOutput | Select-String -Pattern 'error TS'
+            $errorCount = $errorLines.Count
+            $topOffenders = $errorLines |
+                ForEach-Object { ($_.Line -split '\(')[0] } |
+                Group-Object | Sort-Object Count -Descending |
+                Select-Object -First 3 |
+                ForEach-Object { "$($_.Name) ($($_.Count))" }
+            $topStr = $topOffenders -join ', '
+            Write-Host "⚠ Frontend typecheck reports $errorCount type errors (baseline ~185 — see plan item #2)" -ForegroundColor Yellow
+            Write-Host "  Top offenders: $topStr" -ForegroundColor Yellow
+            Write-Host "  Run: cd ReactComponents/ga-react-components; npm run typecheck" -ForegroundColor Yellow
+            # Warning only — does not block the commit
+        }
+    } finally {
+        Pop-Location
+    }
+} else {
+    # No frontend files staged; skip silently to keep hook fast on backend commits.
+}
+
+# ============================================
+# SYNC AGENTS.md FROM CLAUDE.md
+# ============================================
+Write-Host "`n▶ Syncing AGENTS.md from CLAUDE.md..." -ForegroundColor Blue
+$syncScript = Join-Path $PSScriptRoot '..' 'Scripts' 'sync-agents-md.ps1'
+
+# Safety: never auto-sync while a merge/rebase/cherry-pick is in progress, or
+# when AGENTS.md has an unresolved conflict (UU/AA in porcelain). Auto-sync
+# during merge resolution silently clobbers the human's resolution choice.
+$inMerge = (Test-Path '.git/MERGE_HEAD') -or (Test-Path '.git/REBASE_HEAD') -or (Test-Path '.git/CHERRY_PICK_HEAD')
+$agentsConflict = $false
+if (Test-Path AGENTS.md) {
+    $porcelain = git status --porcelain AGENTS.md 2>$null
+    if ($porcelain -and $porcelain -match '^(UU|AA|DD|AU|UA|DU|UD)') { $agentsConflict = $true }
+}
+
+if ($inMerge -or $agentsConflict) {
+    Write-Host "⚠ Merge/conflict state detected — skipping AGENTS.md sync to preserve manual resolution" -ForegroundColor Yellow
+} elseif (Test-Path $syncScript) {
+    & pwsh -NoProfile -File $syncScript
+    if ($LASTEXITCODE -eq 0) {
+        # If sync produced changes, stage AGENTS.md so the commit includes the update.
+        $agentsStatus = git diff --name-only AGENTS.md 2>$null
+        if ($agentsStatus) {
+            git add AGENTS.md
+            Write-Host "  (AGENTS.md was out of sync — restaged)" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "✗ AGENTS.md sync failed" -ForegroundColor Red
+        $script:HasErrors = $true
+    }
+} else {
+    Write-Host "⚠ Sync script missing at $syncScript" -ForegroundColor Yellow
+}
+
+# ============================================
+# CONTEXT STALENESS CHECK (warning-only, never blocks)
+# ============================================
+Write-Host "`n▶ Checking context staleness..." -ForegroundColor Blue
+
+$stalenessScript = Join-Path $PSScriptRoot ".." "Scripts" "check-context-staleness.ps1"
+$stalenessScript = (Resolve-Path -Path $stalenessScript -ErrorAction SilentlyContinue)
+if ($stalenessScript -and (Test-Path $stalenessScript))
+{
+    # Capture stderr — the linter writes warnings there and always exits 0.
+    $stalenessWarnings = & pwsh -NoProfile -File $stalenessScript 2>&1 | Where-Object { $_ -match '^\[staleness\]' }
+    if ($stalenessWarnings)
+    {
+        foreach ($w in $stalenessWarnings) {
+            Write-Host "⚠  $w" -ForegroundColor Yellow
+        }
+        Write-Host "   (warning only — commit not blocked)" -ForegroundColor DarkGray
+    }
+    else
+    {
+        Write-Host "✓ Context artifacts in sync" -ForegroundColor Green
+    }
+}
+else
+{
+    # Script missing — silent, this is opt-in surface.
+}
+
+# ============================================
+# THEME.TS SYNC CHECK (DESIGN.md Phase 2)
+# ============================================
+# Only run when a DESIGN.md or theme.ts change is staged, to avoid the
+# ~1s node startup cost on every commit. Reads the canonical tokens
+# from /DESIGN.md and verifies src/theme.ts matches; if out of sync,
+# the developer needs to `npm run gen:theme` and re-stage.
+$themeRelevantStaged = git diff --cached --name-only 2>$null |
+    Where-Object { $_ -match '^DESIGN\.md$' -or $_ -match 'ReactComponents/ga-react-components/(src/theme\.ts|scripts/gen-theme-from-design\.mjs)$' }
+if ($themeRelevantStaged) {
+    Write-Host "`n▶ Checking src/theme.ts is in sync with DESIGN.md..." -ForegroundColor Blue
+    Push-Location (Join-Path $PSScriptRoot '..' 'ReactComponents' 'ga-react-components')
+    & npm run gen:theme:check --silent 2>&1 | Where-Object { $_ -match '^[✓✗]' } | ForEach-Object { Write-Host "  $_" }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "✗ src/theme.ts is out of sync with DESIGN.md" -ForegroundColor Red
+        Write-Host "  Run: cd ReactComponents/ga-react-components && npm run gen:theme && git add src/theme.ts" -ForegroundColor Yellow
+        $script:HasErrors = $true
+    }
+    Pop-Location
+}
+
+# ============================================
 # RESULT
 # ============================================
 Write-Host "`n========================================" -ForegroundColor Cyan

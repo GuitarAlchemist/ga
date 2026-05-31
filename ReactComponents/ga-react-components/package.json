@@ -10,10 +10,14 @@
     "postinstall": "npx -y patch-package || echo patch-package skipped (deps hoisted to parent)",
     "dev": "vite",
     "build": "vite build",
+    "build:demos": "vite build --config vite.config.demos.ts",
     "build:with-types": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:api": "node ./node_modules/nswag/bin/nswag.js run nswag.json",
+    "gen:theme": "node scripts/gen-theme-from-design.mjs",
+    "gen:theme:check": "node scripts/gen-theme-from-design.mjs --check",
     "test": "playwright test",
     "test:unit": "vitest run",
     "test:ui": "playwright test --ui",
@@ -85,6 +89,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.7.0",
     "vite": "^5.4.8",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "yaml": "^2.6.0"
   }
 }

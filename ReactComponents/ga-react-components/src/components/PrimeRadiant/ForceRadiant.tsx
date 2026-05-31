@@ -11,9 +11,11 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { createVolumetricCoreMaterialTSL } from './shaders/VolumetricCoreTSL';
 import { createSkyboxNebulaMaterialTSL } from './shaders/SkyboxNebulaTSL';
-import type { GovernanceGraph, GovernanceNode, GovernanceNodeType } from './types';
-import { HEALTH_COLORS, HEALTH_STATUS_COLORS, type GovernanceHealthStatus } from './types';
-import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
+import { createMilkyWayTextureMaterial } from './shaders/MilkyWayTextureTSL';
+import { resolveTexturePath } from '../../assets/space';
+import type { GovernanceGraph, GovernanceNode, GovernanceNodeType, NodeAugmentation } from './types';
+import { HEALTH_COLORS, HEALTH_STATUS_COLORS, HEXAVALENT_COLORS, type GovernanceHealthStatus } from './types';
+import { loadGovernanceData, loadGovernanceDataAsync, getHealthStatus, startLivePolling, updateNodeHealth, enrichNodesWithDevData, type LivePollingHandle, type ViewerInfo, type CameraSyncData } from './DataLoader';
 import { JurisdictionLegend } from './JurisdictionLegend';
 import { KeyboardLegend } from './KeyboardLegend';
 import { AuthProvider } from './AuthContext';
@@ -102,6 +104,8 @@ import { GovernanceLensingShader, updateLensingSources, type LensingSource } fro
 import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
+import { createNearbyStars, type NearbyStarsHandle } from './NearbyStars';
+import { LaniakeaHUD } from './LaniakeaHUD';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -113,7 +117,7 @@ import { DispersionShader } from './shaders/DispersionPass';
 import { createCrisisTextures, type CrisisTextureHandle } from './CrisisTextureManager';
 import { updateTSLUniforms, budgetToTier } from './shaders/TSLUniforms';
 const IxqlCodeGen = React.lazy(() => import('./IxqlCodeGen').then(m => ({ default: m.IxqlCodeGen })));
-import { SceneOptions, type SceneOptionsState } from './SceneOptions';
+import { SceneOptions, type SceneOptionsState, type SkyboxMode } from './SceneOptions';
 const QAPanel = React.lazy(() => import('./QAPanel').then(m => ({ default: m.QAPanel })));
 const AgentSpectralPanel = React.lazy(() => import('./AgentSpectralPanel').then(m => ({ default: m.AgentSpectralPanel })));
 const GodotSceneInspectorPanel = React.lazy(() => import('./GodotSceneInspectorPanel').then(m => ({ default: m.GodotSceneInspectorPanel })));
@@ -140,6 +144,57 @@ interface EdgePropagation {
   startTime: number;
   color: string;
   hop: number;
+}
+
+interface SkyboxTextureConfig {
+  path: string;
+  label: string;
+  brightness: number;
+  saturation: number;
+  flipU?: boolean;
+  repeatU?: number;
+  repeatV?: number;
+  offsetU?: number;
+  offsetV?: number;
+}
+
+const SKYBOX_TEXTURES: Record<SkyboxMode, SkyboxTextureConfig> = {
+  'milky-way': {
+    path: resolveTexturePath('milky-way', 'stars', '8k') ?? '/textures/milky-way-eso-gigagalaxy-6000.jpg',
+    label: 'ESO GigaGalaxy / NOAA-NASA Milky Way Panorama',
+    brightness: 0.62,
+    saturation: 0.88,
+    flipU: true,
+    offsetU: 0.5,
+  },
+  'hubble-deep-field': {
+    path: '/textures/skybox-hubble-ultra-deep-field.jpg',
+    label: 'NASA/ESA Hubble Ultra Deep Field',
+    brightness: 0.54,
+    saturation: 0.92,
+    flipU: false,
+    repeatU: 5,
+    repeatV: 3,
+    offsetU: 0.08,
+    offsetV: 0.12,
+  },
+  'jwst-deep-field': {
+    path: '/textures/skybox-jwst-first-deep-field.png',
+    label: "NASA/ESA/CSA/STScI Webb's First Deep Field",
+    brightness: 0.5,
+    saturation: 0.96,
+    flipU: false,
+    repeatU: 4,
+    repeatV: 3,
+    offsetU: 0.18,
+    offsetV: 0.04,
+  },
+};
+
+function normalizeSkyboxMode(value: unknown): SkyboxMode {
+  if (value === 'hubble-deep-field') return 'hubble-deep-field';
+  if (value === 'jwst-deep-field') return 'jwst-deep-field';
+  return 'milky-way';
 }
 
 // ---------------------------------------------------------------------------
@@ -194,10 +249,12 @@ interface GraphNode extends NodeObject {
   val: number;        // size factor
   repo?: string;
   version?: string;
+  filePath?: string;  // needed for algedonic pulse matching by source path
   health?: GovernanceNode['health'];
   healthStatus?: GovernanceHealthStatus;
   children?: string[];
   metadata?: Record<string, unknown>;
+  augmentation?: NodeAugmentation; // dashboard channels — rim/halo/pulse data
   // force-graph adds these at runtime:
   x?: number;
   y?: number;
@@ -600,6 +657,45 @@ function createNodeObject(node: GraphNode): THREE.Object3D {
     group.userData._uncertaintyHalo = halo;
   }
 
+  // ── Dashboard channels ──
+  // 5. Hexavalent truth-value rim — thin ring around the node colored by the
+  // dominant AI-annotation truth-value. Always rendered (default U=gray)
+  // so the channel is visible even before enrichment lands.
+  const dominant = node.augmentation?.annotations?.dominant ?? 'U';
+  const rimColorHex = HEXAVALENT_COLORS[dominant];
+  const rimGeo = new THREE.RingGeometry(radius * 1.15, radius * 1.28, 48);
+  const rimMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(rimColorHex),
+    transparent: true,
+    opacity: node.augmentation?.annotations ? 0.85 : 0.25, // dim when no annotations
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const rim = new THREE.Mesh(rimGeo, rimMat);
+  rim.userData = { isDashboardRim: true };
+  group.add(rim);
+  group.userData._dashboardRim = rim;
+
+  // 6. Test-coverage halo — semi-transparent sphere; opacity = 1 - risk_score.
+  // Larger radius than the rim, additive blending so it reads as a glow.
+  // No augmentation yet → opacity 0 (invisible until data lands).
+  const haloOpacity = node.augmentation?.testGap
+    ? Math.max(0, Math.min(1, 1 - node.augmentation.testGap.risk_score)) * 0.35
+    : 0;
+  const coverageGeo = new THREE.SphereGeometry(radius * 1.6, 16, 12);
+  const coverageMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(0x66ff99), // soft green — "covered" reads positive
+    transparent: true,
+    opacity: haloOpacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const coverageHalo = new THREE.Mesh(coverageGeo, coverageMat);
+  coverageHalo.userData = { isCoverageHalo: true };
+  group.add(coverageHalo);
+  group.userData._coverageHalo = coverageHalo;
+
   return group;
 }
 
@@ -644,10 +740,12 @@ function toForceData(graph: GovernanceGraph): { nodes: GraphNode[]; links: Graph
     val: TYPE_SIZE[n.type] ?? 5,
     repo: n.repo,
     version: n.version,
+    filePath: n.filePath,
     health: n.health,
     healthStatus: n.healthStatus,
     children: n.children,
     metadata: n.metadata,
+    augmentation: n.augmentation,
   }));
 
   const links: GraphLink[] = graph.edges.map((e) => ({
@@ -679,6 +777,7 @@ export interface ForceRadiantProps {
   pollIntervalMs?: number;
 }
 
+// @ai:business-value Prime Radiant 3D — the headline visualization (governance + chord cosmos); landing-page demo and 268 commits in 90d signal this is the most user-visible surface [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   data,
   width = '100%',
@@ -706,9 +805,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   // A2A agent presence — live status of ix, TARS, GA, Seldon, Demerzel
   const a2aAgents = useAgentPresence();
   // Scene options — toggles for visual features
+  const [sceneOptions, setSceneOptions] = useState<SceneOptionsState>({ laniakeaHud: true });
   const sceneOptionsRef = React.useRef<SceneOptionsState>({});
   const handleSceneOptions = React.useCallback((opts: SceneOptionsState) => {
     sceneOptionsRef.current = opts;
+    setSceneOptions(opts);
   }, []);
   // Deep linking — read/write URL params for shareable state
   const [shareToast, setShareToast] = useState(false);
@@ -1379,6 +1480,41 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const now = Date.now() * 0.001;
     const signalColor = signal.type === 'pain' ? '#FF4444' : '#FFD700';
 
+    // ─── Dashboard channel: 5-second glow pulse on the matching node ───
+    // Match by id OR by source path against node.filePath/id. Set pulseUntil
+    // so the tick loop can ease the glow back to baseline.
+    {
+      const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
+      const pulseUntil = Date.now() + 5000;
+      const matchSource = (signal.source ?? '').toLowerCase().replace(/\\/g, '/');
+      const matchNodeId = signal.nodeId;
+      for (const n of graphNodes) {
+        const nFilePath = n.filePath?.toLowerCase().replace(/\\/g, '/');
+        const matches =
+          (matchNodeId && n.id === matchNodeId) ||
+          (matchSource && nFilePath && (matchSource === nFilePath ||
+            matchSource.endsWith('/' + nFilePath) || nFilePath.endsWith('/' + matchSource))) ||
+          (matchSource && matchSource === n.id);
+        if (matches) {
+          if (!n.augmentation) n.augmentation = {};
+          const existingRecent = n.augmentation.algedonic?.recent ?? [];
+          n.augmentation.algedonic = {
+            recent: [
+              {
+                id: signal.id,
+                signal: signal.signal,
+                type: signal.type,
+                severity: signal.severity,
+                timestamp: signal.timestamp,
+              },
+              ...existingRecent,
+            ].slice(0, 3),
+            pulseUntil,
+          };
+        }
+      }
+    }
+
     // ─── Unit 4: Node ripple ───
     if (signal.nodeId) {
       const graphNodes = (fg.graphData() as { nodes: GraphNode[] }).nodes;
@@ -1437,6 +1573,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     let atmosphereHandleOuter: AtmosphericPerspectiveHandle | undefined;
     let bakedSkyOuter: BakeSkyboxResult | undefined;
     let dustHandleOuter: AmbientDustHandle | undefined;
+    let nearbyStarsHandleOuter: NearbyStarsHandle | undefined;
     let solarMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let shellHoverCleanup: (() => void) | null = null;
     let solarDblClickHandler: (() => void) | null = null;
@@ -1456,10 +1593,20 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Load data — try API first, fall back to static
     const initGraph = async () => {
       // Pre-load GLB models in parallel with governance data
-      const [graph] = await Promise.all([
+      const [baseGraph] = await Promise.all([
         liveDataUrl ? loadGovernanceDataAsync(liveDataUrl) : Promise.resolve(loadGovernanceData(data)),
         preloadBorgCubeModel(), // loads /models/borg-cube.glb if present
       ]);
+      if (disposed) return;
+
+      // Augment with dev-dashboard channels (annotations / test-gaps / algedonic).
+      // Fault-tolerant: any failure here is logged and the base graph renders as-is.
+      let graph = baseGraph;
+      try {
+        graph = await enrichNodesWithDevData(baseGraph);
+      } catch (err) {
+        console.warn('[PrimeRadiant] Dev-data enrichment failed, rendering base graph:', err);
+      }
       if (disposed) return;
       initScene(graph);
     };
@@ -1526,6 +1673,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       rendererConfig: { preserveDrawingBuffer: true, antialias: true },
       useWebGPU: USE_WEBGPU,
     })(container);
+    fg.width(container.clientWidth).height(container.clientHeight);
 
     // WebGPURenderer requires async init() to acquire GPU adapter + device.
     // 3d-force-graph doesn't call it, so the renderer uses its WebGL fallback.
@@ -1935,6 +2083,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const sOpts = sceneOptionsRef.current;
       if (Object.keys(sOpts).length > 0) {
         setStarsVisible(sOpts.stars !== false);
+        nearbyStars.visible = sOpts.stars !== false && sOpts.nearbyStars !== false;
+        applySkyboxMode(normalizeSkyboxMode(sOpts.skyboxMode));
         ambientDust.visible = sOpts.dust !== false && qualityLevel !== 'low';
         if (filamentsHandle) filamentsHandle.group.visible = sOpts.filaments !== false && qualityLevel !== 'low';
         if (eiffelHandleOuter) eiffelHandleOuter.group.visible = sOpts.tower === true;
@@ -2229,6 +2379,53 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
           updateUncertaintyHalo(cachedHalo, t, phase);
         }
 
+        // ── Dashboard channels: rim + coverage halo + algedonic pulse ──
+        // Pulse: when a recent algedonic signal targeted this node, multiply
+        // its rim+halo opacity by 1.8 for 5s, then linearly ease to 1.0 over
+        // the last 1s of the window. After that, return to baseline.
+        let pulseMultiplier = 1.0;
+        const pulseUntil = n.augmentation?.algedonic?.pulseUntil;
+        if (pulseUntil) {
+          const nowMs = Date.now();
+          const remaining = pulseUntil - nowMs;
+          if (remaining > 0) {
+            // Last 1000 ms: linear ease from 1.8 → 1.0
+            pulseMultiplier = remaining < 1000
+              ? 1.0 + 0.8 * (remaining / 1000)
+              : 1.8;
+          } else {
+            // Pulse window closed — clear so we don't keep recomputing
+            if (n.augmentation?.algedonic) n.augmentation.algedonic.pulseUntil = undefined;
+          }
+        }
+
+        // Rim: keep color in sync with dominant truth-value (data may have
+        // arrived after the node was created with the default U=gray rim).
+        const cachedRim = group.userData._dashboardRim as THREE.Mesh | undefined;
+        if (cachedRim) {
+          const rimMat = cachedRim.material as THREE.MeshBasicMaterial;
+          const dominant = n.augmentation?.annotations?.dominant ?? 'U';
+          const targetHex = HEXAVALENT_COLORS[dominant];
+          const currentHex = '#' + rimMat.color.getHexString();
+          if (currentHex.toLowerCase() !== targetHex.toLowerCase()) {
+            rimMat.color.set(targetHex);
+          }
+          const baseOpacity = n.augmentation?.annotations ? 0.85 : 0.25;
+          rimMat.opacity = Math.min(1, baseOpacity * pulseMultiplier);
+          // Counter-rotate so rim always faces camera-ish — billboard via lookAt
+          cachedRim.quaternion.copy(fg.camera().quaternion);
+        }
+
+        // Coverage halo: opacity = (1 - risk_score) * 0.35, pulse-modulated.
+        const cachedCoverage = group.userData._coverageHalo as THREE.Mesh | undefined;
+        if (cachedCoverage) {
+          const covMat = cachedCoverage.material as THREE.MeshBasicMaterial;
+          const baseHaloOpacity = n.augmentation?.testGap
+            ? Math.max(0, Math.min(1, 1 - n.augmentation.testGap.risk_score)) * 0.35
+            : 0;
+          covMat.opacity = Math.min(1, baseHaloOpacity * pulseMultiplier);
+        }
+
         // ── Governance Redshift / Blueshift — compliance drift as color shift ──
         const complianceDelta = group.userData.complianceDelta as number | undefined;
         if (complianceDelta !== undefined && complianceDelta !== 0) {
@@ -2304,6 +2501,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       skySphere.position.copy(camPos);
       brightStars.position.copy(camPos);
       dimStars.position.copy(camPos);
+      nearbyStarsHandle.update(t, camPos);
 
       // Milky Way: 0.2% lerp → very subtle galactic drift
       milkyWayMesh.position.lerp(camPos, 0.002);
@@ -2627,15 +2825,54 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     fg.scene().add(ambientDust);
     dustHandleOuter = dustHandle;
 
-    // ─── SKYBOX — nebula background sphere + multi-layer starfield ───
+    // ─── SKYBOX — real Milky Way panorama + multi-layer starfield ───
 
-    // Layer 0: Deep space gradient sphere (subtle purple-blue nebula)
+    // Layer 0: Photographic visible-light Milky Way 360 map. Start with
+    // the old procedural material only as a fallback while the image loads.
     const skyGeo = new THREE.SphereGeometry(5000, 32, 32);
     const skyMat = createSkyboxNebulaMaterialTSL({ quality: budgetToTier(qualityBudget) });
     (skyMat as THREE.Material & { fog?: boolean }).fog = false; // opt out of atmospheric fog
     const skySphere = new THREE.Mesh(skyGeo, skyMat);
     skySphere.name = 'sky-nebula';
     skySphere.renderOrder = -2;
+    const usesPhotographicSkybox = true;
+    let activeSkyboxMode: SkyboxMode | null = null;
+    let skyboxLoadSeq = 0;
+    const applySkyboxMode = (mode: SkyboxMode) => {
+      if (activeSkyboxMode === mode) return;
+      activeSkyboxMode = mode;
+      const loadId = ++skyboxLoadSeq;
+      const config = SKYBOX_TEXTURES[mode];
+      new THREE.TextureLoader().load(
+        config.path,
+        (tex) => {
+          if (disposed || loadId !== skyboxLoadSeq) {
+            tex.dispose();
+            return;
+          }
+          const previousMaterial = skySphere.material as THREE.Material;
+          const photographicMaterial = createMilkyWayTextureMaterial(tex, {
+            brightness: config.brightness,
+            saturation: config.saturation,
+            flipU: config.flipU,
+            repeatU: config.repeatU,
+            repeatV: config.repeatV,
+            offsetU: config.offsetU,
+            offsetV: config.offsetV,
+          });
+          (photographicMaterial as THREE.Material & { fog?: boolean }).fog = false;
+          skySphere.material = photographicMaterial;
+          skySphere.userData.source = config.label;
+          previousMaterial.dispose();
+          console.info(`[PrimeRadiant] Skybox loaded ${config.label}: ${config.path}`);
+        },
+        undefined,
+        (err) => {
+          console.warn(`[PrimeRadiant] Skybox texture failed for ${config.label}; keeping previous skybox:`, err);
+        },
+      );
+    };
+    applySkyboxMode(normalizeSkyboxMode(sceneOptionsRef.current.skyboxMode));
     // Added directly to scene — follows camera exactly (infinite distance, no parallax)
 
     // Layer 1: Bright prominent stars (spectral class distribution)
@@ -2698,6 +2935,11 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const dimStars = new THREE.Points(dimGeo, dimMat);
     dimStars.name = 'stars-dim';
 
+    // Layer 3: curated nearby/bright stars with real RA/Dec positions.
+    const nearbyStarsHandle = createNearbyStars();
+    const nearbyStars = nearbyStarsHandle.group;
+    nearbyStarsHandleOuter = nearbyStarsHandle;
+
     // Milky Way band — skip on mobile (8000-unit sphere is expensive)
     const milkyWayMesh = isLowEnd ? new THREE.Group() : createMilkyWay(8000);
     const milkyWayPref = (() => { try { return localStorage.getItem('prime-radiant-milky-way'); } catch { return null; } })();
@@ -2709,6 +2951,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const setStarsVisible = (v: boolean) => {
       brightStars.visible = v;
       dimStars.visible = v;
+      nearbyStars.visible = v;
       skySphere.visible = v;
       milkyWayMesh.visible = v;
       starField.visible = v;
@@ -2732,6 +2975,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     if (!skipSky) fg.scene().add(skySphere);         // follows exactly (infinite)
     fg.scene().add(brightStars);                      // 2% parallax
     fg.scene().add(dimStars);                         // 0.5% parallax
+    fg.scene().add(nearbyStars);                      // gentle foreground parallax
     fg.scene().add(starField);                        // empty group for legacy queries
 
     // ─── Governance Sky Reactor — stars react to aggregate health ───
@@ -2747,7 +2991,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     // Bakes the procedural TSL skybox to a static cubemap, replacing the
     // per-frame shader evaluation with a cheap texture lookup.
     // WebGL2 only (WebGPU uses async render pipeline incompatible with readRenderTargetPixels).
-    if (!USE_WEBGPU && !isLowEnd) {
+    if (!USE_WEBGPU && !isLowEnd && !usesPhotographicSkybox) {
       setTimeout(() => {
         if (disposed) return;
         try {
@@ -3436,6 +3680,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       atmosphereHandleOuter?.dispose();
       bakedSkyOuter?.dispose();
       dustHandleOuter?.dispose();
+      nearbyStarsHandleOuter?.dispose();
       if (milkyWayToggleHandler) window.removeEventListener('keydown', milkyWayToggleHandler);
       if (jurisdictionHoverHandler) window.removeEventListener('prime-radiant:jurisdictions-hover', jurisdictionHoverHandler);
       if (autoZoomTimeoutOuter) clearTimeout(autoZoomTimeoutOuter);
@@ -3520,6 +3765,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   }, []);
 
   // ─── Backend connectivity check ───
+  // Probes /api/health (GaApi) as the primary "is the API up" signal.
+  // /api/chatbot/status used to be the primary probe, but GaChatbot.Api
+  // is a separate service on :5252 (cloudflared routes /chatbot and
+  // /api/chatbot/* to it on demos). When GaChatbot.Api was down but
+  // GaApi was up, the badge flipped to "Offline" even though the bulk
+  // of the API was healthy. The chatbot service is now a secondary
+  // capability surface — see the popover below.
   useEffect(() => {
     // Use VITE env var, or same origin as the page (works for deployed demo), or localhost fallback
     const envBase = typeof import.meta !== 'undefined'
@@ -3529,7 +3781,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     const checkBackend = async () => {
       try {
-        const url = `${baseUrl}/api/chatbot/status`;
+        const url = `${baseUrl}/api/health`;
         console.log('[PrimeRadiant] Checking backend at:', url);
         const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
         console.log('[PrimeRadiant] Backend status:', res.status);
@@ -3786,7 +4038,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     <div className={`prime-radiant ${className}`} style={{ width, height }}>
       {/* Canvas area — fills remaining space */}
       <div className="prime-radiant__canvas-area">
-        <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
+        <div ref={containerRef} style={{ width: '100%', flex: 1, minHeight: 0, overflow: 'hidden' }} />
 
         {/* YouTube course PiP — appears near planet when zoomed in OR toggled via PlanetNav */}
         {(pipState || videoPlanet) && (
@@ -3807,6 +4059,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         {/* Keyboard shortcut legend — discoverable runtime toggles for layers + post-FX */}
         <KeyboardLegend />
+
+        {sceneOptions.laniakeaHud !== false && <LaniakeaHUD />}
 
         {/* Floating label when hovering a Voronoi jurisdiction shell */}
         {hoveredShell && (

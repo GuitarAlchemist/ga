@@ -1,0 +1,133 @@
+name: Deploy Demos to GitHub Pages
+
+# Ships ReactComponents/ga-react-components as a static SPA to
+# GitHub Pages whenever main changes the demo surface.
+#
+# Why this exists: demos.guitaralchemist.com today is the local Vite
+# dev process on port 5176, exposed via Cloudflare Tunnel. New routes
+# added to ReactComponents/ga-react-components/src/main.tsx silently
+# 404 on the public host until someone restarts the local Vite. This
+# workflow gives the demos a durable, hands-off serve path. The
+# operator can flip cloudflared (or DNS) over to the GH Pages URL
+# when they want to retire the localhost-tunnel path.
+#
+# Behaviour notes:
+# - DOES NOT touch DNS or cloudflared config. The PR body documents
+#   the one-time operator step to flip the serve target.
+# - DOES NOT break the current setup: this workflow only adds a new
+#   serve URL (https://guitaralchemist.github.io/ga/). The existing
+#   tunnel keeps working until the operator chooses to retire it.
+# - DOES NOT deploy the .NET API. /api/* fetches inside test pages
+#   will only resolve when a reverse proxy (current Cloudflare Tunnel
+#   or its successor) routes /api/* to a live GaApi host.
+
+on:
+  push:
+    branches: [main]
+    # Trigger only on changes to the demo surface or this workflow
+    # itself. Most main pushes (C# work, docs, state snapshots) don't
+    # need a redeploy.
+    paths:
+      - 'ReactComponents/ga-react-components/**'
+      - '.github/workflows/deploy-demos.yml'
+  workflow_dispatch: {}
+
+# Required by actions/deploy-pages — it uses OIDC to authenticate
+# the deployment to the Pages environment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't ship two builds simultaneously; if a new push lands while a
+# deploy is in flight, queue it.
+concurrency:
+  group: deploy-demos
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build demos SPA
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      # `npm install --ignore-scripts` to skip the patch-package
+      # postinstall hook (it needs the patches/ dir but also tolerates
+      # missing patches). `npm ci` would require a committed
+      # package-lock.json which this repo's .gitignore excludes — same
+      # situation as the existing build-frontend job in ci.yml.
+      #
+      # `--force` is required because the package.json devDependencies
+      # include `@esbuild/win32-x64` (pinned for local Windows dev). On
+      # Linux runners npm refuses to install platform-locked packages
+      # with EBADPLATFORM. `--force` skips the OS check; the unusable
+      # win32 binary is harmless on Linux because the Linux esbuild
+      # picks up its own platform-matched native binary from
+      # `@esbuild/linux-x64` via Vite's optional-deps resolution.
+      - name: Install dependencies
+        working-directory: ReactComponents/ga-react-components
+        run: npm install --ignore-scripts --no-audit --no-fund --force
+
+      # Run patches manually after install (the npm postinstall was
+      # skipped above). Tolerate missing patch-package gracefully.
+      - name: Apply patches (best-effort)
+        working-directory: ReactComponents/ga-react-components
+        run: |
+          if [ -d patches ]; then
+            npx -y patch-package || echo "patch-package skipped"
+          else
+            echo "No patches/ dir — skipping"
+          fi
+
+      # Build with DEMOS_BASE_PATH=/ga/ so the bundle is correctly
+      # prefixed for https://guitaralchemist.github.io/ga/. If the
+      # operator later moves to a custom domain at the root, change
+      # this to '/' and remove CNAME special-casing below.
+      - name: Build SPA
+        working-directory: ReactComponents/ga-react-components
+        env:
+          DEMOS_BASE_PATH: /ga/
+        run: npm run build:demos
+
+      # GitHub Pages serves an SPA via the 404.html fallback trick:
+      # any path that doesn't resolve to a static file gets 404.html,
+      # which we set to a copy of index.html. React Router then takes
+      # over client-side. Without this, https://.../ga/test/fleet
+      # 404s on first hit.
+      - name: Add SPA 404 fallback
+        run: cp ReactComponents/ga-react-components/dist-demos/index.html ReactComponents/ga-react-components/dist-demos/404.html
+
+      # Bypass Jekyll: GH Pages defaults to running Jekyll on the
+      # uploaded site, which strips files starting with `_` (like
+      # _astro, _redirects, etc). Vite's hashed asset filenames
+      # don't start with `_`, but adding `.nojekyll` is the standard
+      # belt-and-braces step and protects future tooling changes.
+      - name: Disable Jekyll
+        run: touch ReactComponents/ga-react-components/dist-demos/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ReactComponents/ga-react-components/dist-demos
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

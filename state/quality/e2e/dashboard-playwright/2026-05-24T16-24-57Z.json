@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "e2e-dashboard-playwright",
+  "timestamp": "2026-05-24T16-24-57Z",
+  "git_sha": "0cbbf9785085e430be9c25a80af7db8172616507",
+  "git_ref": "refs/heads/main",
+  "run_id": "26366510483",
+  "outcome": "skipped",
+  "tests": [],
+  "summary": { "total": 0, "passed": 0, "failed": 0, "skipped": 0 },
+  "error": "playwright JSON reporter did not emit"
+}

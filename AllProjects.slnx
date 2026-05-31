@@ -5,6 +5,7 @@
         <Platform Name="x86" />
     </Configurations>
     <Folder Name="/Apps/">
+        <Project Path="Apps/GaChatbot.Api/GaChatbot.Api.csproj" />
         <Project Path="Apps/GaChatbotCli/GaChatbotCli.csproj" />
         <Project Path="Apps/GaCli/GaCli.fsproj" />
         <Project Path="Apps/GaMemoryCli/GaMemoryCli.csproj" />
@@ -252,6 +253,7 @@
     </Folder>
     <Folder Name="/Tests/">
         <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj" />
+        <Project Path="Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj" />
         <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
         <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
         <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
@@ -270,4 +272,6 @@
     <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj" />
     <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj" />
     <Project Path="GenerateNatData/GenerateNatData.csproj" />
+    <Project Path="GuitarAlchemist.Registry/GuitarAlchemist.Registry.csproj" />
+    <Project Path="GuitarAlchemist.Registry.Tests/GuitarAlchemist.Registry.Tests.csproj" />
 </Solution>

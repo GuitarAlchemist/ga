@@ -1,0 +1,59 @@
+---
+schema: claude-local-state-v1
+session_started: <YYYY-MM-DDTHH:MM:SSZ>
+updated: <YYYY-MM-DDTHH:MM:SSZ>
+branch: <feat/whatever-you're-on>
+---
+
+# Per-Session Working State
+
+Cross-session same-agent continuity. Edit this file as you work — survives
+auto-compaction (it's on disk, not in the conversation buffer). When you
+open a new Claude session, read this file FIRST to re-orient without
+re-explaining "I'm 6 PRs deep into dashboard work."
+
+This file is **gitignored** — per-developer-machine, never committed.
+
+See `docs/plans/2026-05-23-arch-harness-engineering-adoption-plan.md`
+item #3 for the rationale.
+
+## Done (this session's shipped work)
+
+What's already merged or otherwise completed. Append, don't overwrite.
+
+-
+
+## Now (active workstream)
+
+One or two items max. What you'd describe if someone asked "what are you
+in the middle of?" Include the PR number if there's one in flight.
+
+-
+
+## Next (queued / blocked / on-deck)
+
+What you'd start next if Now finished right now. Mark blockers explicitly.
+
+-
+
+## Blocked by
+
+External waits. Things only the human can unstick: labels, approvals,
+credentials, etc. Empty if nothing's blocked.
+
+-
+
+## Hypotheses (working theories worth checking)
+
+Things you suspect but haven't verified. Keep them out of Now until
+proven. Examples: "the flaky test is caused by GC pressure, not the
+test itself" or "the slowness is in OPTIC-K mmap fopen, not search."
+
+-
+
+## Notes
+
+Anything else worth carrying forward. Discoveries, gotchas, "next time
+remember to …". Free-form.
+
+-

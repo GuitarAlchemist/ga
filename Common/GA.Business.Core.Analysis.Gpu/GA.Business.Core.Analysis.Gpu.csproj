@@ -16,4 +16,17 @@
     <ProjectReference Include="..\GA.Domain.Services\GA.Domain.Services.csproj" />
   </ItemGroup>
 
+  <!--
+    Exclude this entire assembly from Coverlet code-coverage instrumentation.
+    Reason: Coverlet injects a static `int[] HitsArray` tracker into every instrumented
+    assembly. ILGPU's kernel compiler rejects loads from non-readonly static fields with
+    `System.NotSupportedException: Cannot load from the static field 'Int32[] HitsArray'
+    since it is not read only`, which surfaces as ILGPU.InternalCompilerException in CI
+    when XPlat Code Coverage is being collected. Coverlet honours
+    [ExcludeFromCodeCoverage] at assembly scope and skips instrumentation entirely.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute" />
+  </ItemGroup>
+
 </Project>

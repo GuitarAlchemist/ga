@@ -49,5 +49,31 @@ public sealed class DiatonicChordsSkill(
         "what's the V chord in F",
         "ii chord of E minor",
         "what chord is the I in D major",
+        // Bare "Diatonic chords in <KEY>" phrasings — without these, the
+        // SemanticIntentRouter scored ChordSubstitutionSkill higher (which
+        // has "Modal interchange substitutes for C major" + "Alternative
+        // chord for F major in C") because the "in <KEY>" tail dominates
+        // similarity. Caught 2026-05-13 via live UI click-test on
+        // "Diatonic chords in G major" → 94% misroute to substitution.
+        "Diatonic chords in G major",
+        "Diatonic chords in D major",
+        "Diatonic chords in F major",
+        "Diatonic chords in E minor",
+        "Show me diatonic chords in F# major",
+        "Seven diatonic chords of B major",
+        // PR (2026-05-30) — Roman-numeral "progression in <key>" surface. Live bug:
+        // "give me a ii-V-I progression in Bb" misrouted to tab.optimize because that
+        // intent's example "make this progression smoother to play" was the nearest
+        // centroid (the word "progression" dominated) and this skill had NO progression
+        // example. "ii-V-I in Bb" (terse form) already routed here correctly and returns
+        // Cm F Bb = degrees ii/V/I of domain.diatonicChords. These add the verbose
+        // "progression in <key>" phrasings only — deliberately paired with "in <key>"
+        // (which this skill owns) and NOT bare "ii-V-I" (which collides with the
+        // chord-substitution surface "substitute … in a ii-V-I"). Pairs with a
+        // ProductionOrchestrator guard that suppresses tab intents on tabless queries.
+        "Give me a ii-V-I progression in Bb",
+        "ii-V-I progression in C major",
+        "I-IV-V progression in G",
+        "Give me a I-vi-IV-V progression in C",
     ];
 }

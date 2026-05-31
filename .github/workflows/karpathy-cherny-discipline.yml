@@ -1,0 +1,106 @@
+name: Karpathy/Cherny Discipline Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/contracts/digest-schema.json'
+      - 'state/digests/**'
+      - '.claude/settings.json'
+      - '.claude/skills/digest/**'
+      - '.claude/skills/correct/**'
+      - 'Scripts/digest-*.ps1'
+      - 'Scripts/precompact-digest.ps1'
+      - 'Scripts/sessionstart-digest.ps1'
+      - 'CLAUDE.md'
+      - '.github/workflows/karpathy-cherny-discipline.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install validators
+        run: pip install jsonschema pyyaml
+
+      - name: Verify digest schema is well-formed JSON
+        run: python -c "import json; json.load(open('docs/contracts/digest-schema.json'))"
+
+      - name: Verify CLAUDE.md contains Karpathy Rules section
+        run: |
+          # Match "Karpathy <N> Rules" — N was bumped from 4 → 6 (2026-05 added
+          # "Frame problem before solution" and "Instrument + log one-way doors").
+          # Stay tolerant of future additions; only require the heading family.
+          if ! grep -qE "Karpathy [0-9]+ Rules" CLAUDE.md; then
+            echo "::error file=CLAUDE.md::CLAUDE.md must contain a 'Karpathy N Rules' section (N=4..9)."
+            exit 1
+          fi
+
+      - name: Verify required hook scripts exist (pwsh variants in GA)
+        shell: bash
+        run: |
+          missing=0
+          for f in \
+            "Scripts/precompact-digest.ps1" \
+            "Scripts/sessionstart-digest.ps1" \
+            "Scripts/digest-validate.ps1" \
+            "Scripts/digest-staleness-nudge.ps1" \
+            "Scripts/digest-activity-tracker.ps1" \
+            "Scripts/digest-stop-finalize.ps1"; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::Required Karpathy/Cherny hook script missing: $f"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Verify .claude/settings.json is valid JSON
+        run: python -c "import json; json.load(open('.claude/settings.json'))"
+
+      - name: Verify required skills exist
+        shell: bash
+        run: |
+          missing=0
+          for f in ".claude/skills/digest/SKILL.md" ".claude/skills/correct/SKILL.md"; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::Required skill missing: $f"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Validate any committed digest archives against schema
+        run: |
+          python <<'PYEOF'
+          import json, glob, re, sys, os
+          import yaml
+          from jsonschema import validate, ValidationError
+
+          if not os.path.exists('docs/contracts/digest-schema.json'):
+              sys.exit(0)
+          with open('docs/contracts/digest-schema.json') as f:
+              schema = json.load(f)
+          errors = []
+          for path in glob.glob('state/digests/archive/*.md'):
+              with open(path) as f:
+                  content = f.read()
+              m = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+              if not m: continue
+              try:
+                  fm = yaml.safe_load(m.group(1))
+                  validate(instance=fm, schema=schema)
+              except (ValidationError, yaml.YAMLError) as e:
+                  errors.append(f"{path}: {e}")
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('All committed digests valid (or none committed).')
+          PYEOF

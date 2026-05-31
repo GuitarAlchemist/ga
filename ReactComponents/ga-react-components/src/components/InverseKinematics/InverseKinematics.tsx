@@ -55,26 +55,76 @@ const NECK_THICKNESS = 0.25;
 const FRET_COUNT = 12;
 const STRING_COUNT = 6;
 
-const FINGER_NAMES = ['index', 'middle', 'ring', 'pinky'] as const;
+// Order matters: index/middle/ring/pinky receive fretted-note targets
+// in ascending-fret order via `updateTargetsFromChord`; the thumb is
+// always parked (rests against the back of the neck in a real grip).
+const FINGER_NAMES = ['index', 'middle', 'ring', 'pinky', 'thumb'] as const;
 type FingerName = typeof FINGER_NAMES[number];
 
 // Base palm offset (relative to wrist), and per-finger MCP offset (the
-// knuckles span the palm width).
+// knuckles span the palm width). Thumb sits on the -X side (opposite
+// the pinky), slightly below the palm plane, mimicking how the thumb
+// wraps to the back of the neck on a real fretting hand.
 const PALM_LENGTH = 0.55;
 const FINGER_MCP_OFFSETS: Record<FingerName, [number, number, number]> = {
-  index:  [-0.18, 0, PALM_LENGTH],
-  middle: [-0.06, 0, PALM_LENGTH + 0.02],
-  ring:   [ 0.06, 0, PALM_LENGTH],
-  pinky:  [ 0.18, 0, PALM_LENGTH - 0.04],
+  index:  [-0.18, 0,     PALM_LENGTH],
+  middle: [-0.06, 0,     PALM_LENGTH + 0.02],
+  ring:   [ 0.06, 0,     PALM_LENGTH],
+  pinky:  [ 0.18, 0,     PALM_LENGTH - 0.04],
+  thumb:  [-0.30, -0.05, PALM_LENGTH * 0.4],
 };
 
-// Phalanx lengths for each finger: proximal, middle, distal. Drawn
-// loosely from anthropometric averages, scaled up.
-const FINGER_BONE_LENGTHS: Record<FingerName, [number, number, number]> = {
-  index:  [0.42, 0.26, 0.20],
-  middle: [0.46, 0.30, 0.22],
-  ring:   [0.42, 0.28, 0.20],
-  pinky:  [0.34, 0.22, 0.16],
+// Phalanx lengths per finger (proximal → distal). Fingers have 3 bones
+// (4 joints); the thumb anatomically has only 2 phalanges (3 joints):
+// proximal + distal, the metacarpal stays inside the palm.
+// Scaled up ~25% from the original anthropometric draft so the fingers
+// read as fully-extended rather than bunched up under the wrist.
+const FINGER_BONE_LENGTHS: Record<FingerName, number[]> = {
+  index:  [0.52, 0.32, 0.25],
+  middle: [0.58, 0.38, 0.28],
+  ring:   [0.52, 0.35, 0.25],
+  pinky:  [0.42, 0.28, 0.20],
+  thumb:  [0.40, 0.32],
+};
+
+// ─── Palm basis ─────────────────────────────────────────────────────────
+// The hand approaches the strings FROM ABOVE the fretboard so the bone
+// segments never pass through the neck wood (the "physically impossible
+// crossing" bug). Palm tilts DOWN-AND-FORWARD by TILT_ANGLE_RAD from
+// horizontal so the knuckle row sits above the strings and the fingers
+// curl DOWN onto their targets.
+const TILT_ANGLE_RAD = Math.PI / 7; // ~25.7° down-tilt
+
+interface PalmBasis {
+  matrix: THREE.Matrix4;
+  forward: THREE.Vector3; // palm-forward (fingertip direction, tilted DOWN)
+  right: THREE.Vector3;   // knuckle-row axis (oriented so index → +X = nut side)
+  up: THREE.Vector3;      // back-of-hand normal
+}
+
+const computePalmBasis = (horizDir: THREE.Vector3): PalmBasis => {
+  const h = horizDir.clone();
+  h.y = 0;
+  if (h.lengthSq() < 1e-6) {
+    h.set(0, 0, 1); // stable default: chord-side direction
+  } else {
+    h.normalize();
+  }
+  const cos = Math.cos(TILT_ANGLE_RAD);
+  const sin = Math.sin(TILT_ANGLE_RAD);
+  // palm-forward = horizontal toward chord, tilted DOWN by TILT_ANGLE_RAD.
+  const forward = new THREE.Vector3(h.x * cos, -sin, h.z * cos);
+  // palm-up = horizontal pointed AWAY from chord, tilted UP by (90° - TILT)
+  //  — i.e., back-of-hand direction. Stays +Y dominant.
+  const up = new THREE.Vector3(h.x * sin, cos, h.z * sin);
+  // palm-right = up × forward (RIGHT-HANDED basis). Critical: doing this
+  // the other way (right × forward → up) produces a det = -1 reflection,
+  // which setFromRotationMatrix silently mis-extracts into a quaternion
+  // that rotates by ~2× the intended angle on a different axis (caught
+  // during MCP-controlled validation on 2026-05-16).
+  const right = new THREE.Vector3().crossVectors(up, forward).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(right, up, forward);
+  return { matrix, forward, right, up };
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -99,8 +149,13 @@ const targetForFret = (string: number, fret: number): THREE.Vector3 => {
   const xPrev = fretX(Math.max(0, fret - 1));
   const x = (xCurr + xPrev) / 2;
   const z = stringZ(string);
-  // Slightly above the fretboard surface.
-  const y = NECK_THICKNESS / 2 + 0.03;
+  // Tip joint Y is set so the fingertip sphere VISUALLY contacts the
+  // strings. Strings sit at y = NECK_THICKNESS/2 + 0.02 (radius up to
+  // 0.018 for low E). With a tip-sphere radius of 0.062, placing the
+  // joint Y at 0.150 puts the sphere center near the string surface
+  // and the lower hemisphere overlapping the strings — i.e. visibly
+  // pressing them. The previous Y (0.155) left a ~10mm air gap.
+  const y = 0.150;
   return new THREE.Vector3(x, y, z);
 };
 
@@ -113,13 +168,13 @@ interface FingerChain {
   name: FingerName;
   /** Local-to-wrist MCP offset. Stays fixed; the palm is rigid. */
   mcpLocal: THREE.Vector3;
-  /** Bone lengths (proximal → distal). */
-  bones: [number, number, number];
-  /** Joint world positions: [mcp, pip, dip, tip] — 4 entries, 3 bones. */
-  joints: [THREE.Vector3, THREE.Vector3, THREE.Vector3, THREE.Vector3];
+  /** Bone lengths (proximal → distal). 3 for fingers, 2 for the thumb. */
+  bones: number[];
+  /** Joint world positions: bones.length + 1 entries (mcp..tip). */
+  joints: THREE.Vector3[];
   /** Mesh per bone. */
   meshes: THREE.Mesh[];
-  /** Knuckle spheres (4: one per joint). */
+  /** Knuckle spheres (one per joint, so bones.length + 1 total). */
   knuckles: THREE.Mesh[];
   /** Solver target (world). Fingers tween toward this. */
   target: THREE.Vector3;
@@ -127,6 +182,10 @@ interface FingerChain {
 
 // FABRIK in 3D — joints[0] is the root (fixed), last is the tip (drawn
 // to target). Maintains bone lengths exactly and converges quickly.
+// Joint-DOF constraints (cone for MCP, hinge for PIP/DIP) tracked as
+// follow-up task #222 — full per-DOF model needed to avoid the
+// regressions a minimal palm-plane projection introduces on barré chords
+// (see docs/plans/2026-05-16-arch-ik-joint-constraints-plan.md).
 function fabrikSolve(
   joints: THREE.Vector3[],
   bones: number[],
@@ -388,15 +447,20 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       const mcpLocal = new THREE.Vector3(...FINGER_MCP_OFFSETS[name]);
       const bones = FINGER_BONE_LENGTHS[name];
       // Initial rest pose: bone chain reaches forward in +z from MCP.
-      const j0 = new THREE.Vector3();
-      const j1 = new THREE.Vector3();
-      const j2 = new THREE.Vector3();
-      const j3 = new THREE.Vector3();
+      // joints.length = bones.length + 1 (one per segment endpoint).
+      const joints: THREE.Vector3[] = Array.from(
+        { length: bones.length + 1 },
+        () => new THREE.Vector3(),
+      );
 
-      // Build capsule meshes for each bone segment.
+      // Bone-radius schedule: thumb is slightly thicker, fingers taper
+      // from base (0.085) to tip (0.060). For 2-bone thumb, the radii
+      // are [0.085, 0.065]. For 3-bone fingers, [0.085, 0.072, 0.060].
+      const boneRadii =
+        bones.length === 2 ? [0.092, 0.070] : [0.085, 0.072, 0.060];
       const meshes: THREE.Mesh[] = [];
-      for (let i = 0; i < 3; i++) {
-        const r = i === 0 ? 0.085 : i === 1 ? 0.072 : 0.060;
+      for (let i = 0; i < bones.length; i++) {
+        const r = boneRadii[i];
         const geo = new THREE.CylinderGeometry(r, r * 0.85, bones[i], 16, 1, false);
         // Cylinder is along +Y by default; we orient it per-frame.
         const mesh = new THREE.Mesh(geo, skinMat);
@@ -405,10 +469,12 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         meshes.push(mesh);
       }
 
-      // Knuckle spheres at each joint (4 total).
+      // Knuckle spheres at each joint (bones.length + 1 total).
+      const knuckleRadii =
+        bones.length === 2 ? [0.105, 0.085, 0.070] : [0.10, 0.085, 0.075, 0.062];
       const knuckles: THREE.Mesh[] = [];
-      for (let i = 0; i < 4; i++) {
-        const r = i === 0 ? 0.10 : i === 1 ? 0.085 : i === 2 ? 0.075 : 0.062;
+      for (let i = 0; i < bones.length + 1; i++) {
+        const r = knuckleRadii[i];
         const k = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), skinMat);
         k.castShadow = true;
         scene.add(k);
@@ -419,7 +485,7 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         name,
         mcpLocal,
         bones,
-        joints: [j0, j1, j2, j3],
+        joints,
         meshes,
         knuckles,
         target: new THREE.Vector3(0, NECK_THICKNESS / 2 + 0.05, stringZ(1)),
@@ -447,32 +513,172 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         .filter((p) => p.fret > 0)
         .sort((a, b) => a.fret - b.fret || a.string - b.string);
 
-      for (let i = 0; i < fingers.length; i++) {
-        const finger = fingers[i];
-        if (i < fretted.length) {
-          const p = fretted[i];
-          finger.target.copy(targetForFret(p.string, p.fret));
-        } else {
-          // Park unused fingers above the fretboard near the lowest fret.
-          const restFret = Math.max(1, (fretted[0]?.fret ?? 1));
-          const restString = 1 + i; // line them up over high strings
-          finger.target.copy(targetForFret(restString, restFret));
-          finger.target.y += 0.4 + i * 0.1; // float up a little
-        }
+      // Set fretted-finger targets at the strings (above fretboard surface).
+      for (let i = 0; i < Math.min(fingers.length, fretted.length); i++) {
+        const p = fretted[i];
+        fingers[i].target.copy(targetForFret(p.string, p.fret));
       }
 
-      // Wrist position: align under the centroid of fretted positions.
+      // Chord centroid in fretboard coords.
       const cx = fretted.length > 0
         ? fretted.reduce((s, p) => s + fretX(p.fret), 0) / fretted.length
         : 0;
       const cz = fretted.length > 0
         ? fretted.reduce((s, p) => s + stringZ(p.string), 0) / fretted.length
         : 0;
-      // Wrist sits below + behind (low strings side) the chord centroid.
-      wrist.position.set(cx + 0.3, -0.4, cz - 0.6);
+
+      // Wrist sits ABOVE the fretboard (Y > wood top at 0.125) and slightly
+      // OFFSET to the low-E side. Palm tilts DOWN-AND-FORWARD onto the
+      // strings so:
+      //   - bone segments never pass through the neck wood (the "hand
+      //     crosses the fretboard" bug — straight-line FABRIK from a wrist
+      //     below or beside the neck would always traverse the wood),
+      //   - all fretted targets stay within bone reach for index/middle/
+      //     ring (0.88–0.98 chain budget),
+      //   - the FABRIK ground constraint (y ≥ 0.185) keeps every joint
+      //     above the wood top.
+      const wristYOffset = 0.45;    // well above the wood top (0.125)
+      const wristZOffset = -0.35;   // slightly toward the low-E side
+      wrist.position.set(cx, wristYOffset, cz + wristZOffset);
+
+      // Orient palm BEFORE computing parked-target / pre-curl, so MCP
+      // world positions reflect the final tilt.
+      const horizDirInit = new THREE.Vector3(0, 0, -wristZOffset);
+      const basis = computePalmBasis(horizDirInit);
+      wrist.quaternion.setFromRotationMatrix(basis.matrix);
+      wrist.updateMatrixWorld(true);
+
+      // Parked-finger targets: relative to MCP world (guaranteed within
+      // proximal-bone reach), so the FABRIK "unreachable — stretch
+      // straight" branch never fires. Place 35% of b0 along palm-forward,
+      // then clamp Y above the wood top so the tip never lands inside
+      // the neck volume (caught by validate()).
+      const woodFloor = NECK_THICKNESS / 2 + 0.04;
+      for (let i = fretted.length; i < fingers.length; i++) {
+        const finger = fingers[i];
+        const mcpWorld = finger.mcpLocal.clone().applyMatrix4(wrist.matrixWorld);
+        finger.target.copy(mcpWorld)
+          .addScaledVector(basis.forward, finger.bones[0] * 0.35);
+        if (finger.target.y < woodFloor) finger.target.y = woodFloor;
+      }
+
+      // Pre-curl: from MCP, intermediate joints arch UP-AND-BACK (along
+      // palm-up since the hand approaches from above), TIP rests on the
+      // target. Generalised to any bone count: each intermediate joint i
+      // sits at fraction i/n of the way along the MCP→TIP direction plus
+      // a diminishing arch. This biases FABRIK's steady-state into a
+      // guitarist-shaped curl rather than a flat straight-line solution.
+      for (const finger of fingers) {
+        const mcp = finger.mcpLocal.clone().applyMatrix4(wrist.matrixWorld);
+        const target = finger.target;
+        const dx = target.x - mcp.x;
+        const dy = target.y - mcp.y;
+        const dz = target.z - mcp.z;
+        const dist = Math.hypot(dx, dy, dz);
+        const ux = dist > 1e-4 ? dx / dist : 0;
+        const uy = dist > 1e-4 ? dy / dist : -1;
+        const uz = dist > 1e-4 ? dz / dist : 0;
+        const n = finger.bones.length;       // 3 for fingers, 2 for thumb
+        finger.joints[0].copy(mcp);
+        for (let j = 1; j < n; j++) {
+          const t = j / n;
+          // Arch peaks at the middle joint and tapers toward TIP, mimicking
+          // a finger curl. For thumb (n=2) only one intermediate joint;
+          // the arch is small to keep the thumb roughly straight.
+          const archFrac = (j < n) ? (1 - Math.abs(2 * t - 1)) * 0.45 : 0;
+          const arch = finger.bones[j - 1] * archFrac;
+          finger.joints[j].set(
+            mcp.x + ux * (dist * t) + basis.up.x * arch,
+            mcp.y + uy * (dist * t) + basis.up.y * arch,
+            mcp.z + uz * (dist * t) + basis.up.z * arch,
+          );
+        }
+        // TIP on the target so frame 0 already has the fingertip planted.
+        finger.joints[n].copy(target);
+      }
     };
 
     updateTargetsFromChord(chordRef.current);
+
+    // ─── MCP control surface ────────────────────────────────────────────
+    // Expose window.__gaIK so chrome-devtools / playwright MCP tools can
+    // inspect the scene, validate the geometry, and (with the test page
+    // also registering setChord) drive the demo end-to-end via
+    // evaluate_script. The InverseKinematicsTest page adds setChord /
+    // listChords / getCurrentChord on top of this base surface.
+    const w = window as unknown as { __gaIK?: Record<string, unknown> };
+    const ikApi = w.__gaIK ?? {};
+    ikApi.getSceneState = () => ({
+      chord: chordRef.current.name,
+      wrist: {
+        position: wrist.position.toArray(),
+        quaternion: wrist.quaternion.toArray(),
+      },
+      fingers: fingers.map((f) => {
+        const tip = f.joints[f.joints.length - 1];
+        return {
+          name: f.name,
+          // Per-joint positions, generalised over variable bone count.
+          // For 3-bone fingers: [mcp, pip, dip, tip]. For 2-bone thumb:
+          // [mcp, ip, tip]. Callers should index by length, not by name.
+          joints: f.joints.map((j) => j.toArray()),
+          // Legacy named accessors retained for compatibility with the
+          // 3-bone (4-joint) inspection scripts. For the thumb (2 bones)
+          // pip/dip alias to the single IP joint; tip is always last.
+          mcp: f.joints[0].toArray(),
+          pip: f.joints[1].toArray(),
+          dip: (f.joints[2] ?? f.joints[f.joints.length - 1]).toArray(),
+          tip: tip.toArray(),
+          target: f.target.toArray(),
+          targetDistance: tip.distanceTo(f.target),
+          boneBudget: f.bones.reduce((s, b) => s + b, 0),
+          boneCount: f.bones.length,
+        };
+      }),
+      neck: {
+        length: NECK_LENGTH,
+        width: NECK_WIDTH,
+        thickness: NECK_THICKNESS,
+        woodTopY: NECK_THICKNESS / 2,
+      },
+    });
+    ikApi.validate = () => {
+      const issues: string[] = [];
+      const halfX = NECK_LENGTH / 2;
+      const halfY = NECK_THICKNESS / 2;
+      const halfZ = NECK_WIDTH / 2;
+      for (const f of fingers) {
+        // Joint-inside-wood check: any joint with all three axes inside
+        // the neck bounding box means a bone is geometrically intersecting
+        // the fretboard wood, which is physically impossible.
+        // Generalised joint names: 3-bone fingers use [mcp, pip, dip, tip],
+        // 2-bone thumb uses [mcp, ip, tip].
+        const jointNames = f.joints.length === 4
+          ? ['mcp', 'pip', 'dip', 'tip']
+          : ['mcp', 'ip', 'tip'];
+        for (let i = 0; i < f.joints.length; i++) {
+          const j = f.joints[i];
+          if (
+            Math.abs(j.x) < halfX &&
+            j.y > -halfY && j.y < halfY &&
+            Math.abs(j.z) < halfZ
+          ) {
+            issues.push(
+              `${f.name}.${jointNames[i]} inside neck wood at ` +
+              `(${j.x.toFixed(3)}, ${j.y.toFixed(3)}, ${j.z.toFixed(3)})`
+            );
+          }
+        }
+        // Fingertip convergence check.
+        const tip = f.joints[f.joints.length - 1];
+        const tipDist = tip.distanceTo(f.target);
+        if (tipDist > 0.1) {
+          issues.push(`${f.name}.tip is ${tipDist.toFixed(3)} from target (FABRIK did not converge)`);
+        }
+      }
+      return { ok: issues.length === 0, issues };
+    };
+    w.__gaIK = ikApi;
 
     // ─── Bloom post-pass ─────────────────────────────────────────────────
     const composer = new EffectComposer(renderer);
@@ -489,9 +695,8 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
     composer.addPass(new OutputPass());
 
     // ─── Animate ─────────────────────────────────────────────────────────
-    const tmpV = new THREE.Vector3();
     const tmpQ = new THREE.Quaternion();
-    const yAxis = new THREE.Vector3(0, 1, 0);
+    const yAxis = new THREE.Vector3(0, 1, 0); // used by bone-mesh orientation
     const tmpDir = new THREE.Vector3();
     let raf = 0;
     let lastChordName = chordRef.current.name;
@@ -518,14 +723,15 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         // Tween joints toward where FABRIK would put them this frame.
         // We do FABRIK on a working copy then exponentially damp.
         const work = finger.joints.map((j) => j.clone());
-        fabrikSolve(work, finger.bones as unknown as number[], mcpWorld, finger.target, it);
+        fabrikSolve(work, finger.bones, mcpWorld, finger.target, it);
 
-        for (let i = 1; i < 4; i++) {
+        const n = finger.bones.length;       // 3 for fingers, 2 for thumb
+        for (let i = 1; i <= n; i++) {
           finger.joints[i].lerp(work[i], damp);
         }
 
         // Orient capsule meshes along consecutive joint pairs.
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < n; i++) {
           const a = finger.joints[i];
           const b = finger.joints[i + 1];
           const mesh = finger.meshes[i];
@@ -540,7 +746,7 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         }
 
         // Knuckle spheres at the joints.
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i <= n; i++) {
           finger.knuckles[i].position.copy(finger.joints[i]);
         }
       }
@@ -551,12 +757,16 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
         targetMeshes[i].visible = showTargetsRef.current;
       }
 
-      // Smoothed wrist orientation: roll/pitch toward the chord's
-      // strongest finger so the palm faces the strings naturally.
-      // Index finger tip points down/forward toward fretboard.
-      tmpV.copy(fingers[0].target).sub(wrist.position).normalize();
-      tmpQ.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tmpV);
-      wrist.quaternion.slerp(tmpQ, 0.05);
+      // Wrist orientation is set in updateTargetsFromChord (perpendicular
+      // to the neck, tilted down by TILT_ANGLE_RAD). Deliberately NOT
+      // recomputed per frame: parked-finger targets are derived FROM the
+      // basis, so recomputing each frame creates a feedback loop that
+      // drags the basis ~22° off-perpendicular within seconds of slerping
+      // (user observation 2026-05-17 — "wrist should be perpendicular to
+      // fretboard, not parallel"). If smooth slerp on chord change becomes
+      // desirable, store the target quaternion in a ref at chord-change
+      // time and slerp toward THAT (not toward a recomputed-from-targets
+      // quaternion).
 
       composer.render();
       raf = requestAnimationFrame(animate);
@@ -592,6 +802,9 @@ const InverseKinematics: React.FC<InverseKinematicsProps> = ({
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
+      // Tear down only the scene-side keys; the test page owns its own.
+      delete ikApi.getSceneState;
+      delete ikApi.validate;
     };
   }, [width, height]);
 

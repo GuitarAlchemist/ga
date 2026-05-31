@@ -11,6 +11,7 @@ using GA.Infrastructure.Documentation;
 using GA.Infrastructure.Persistence.Repositories;
 using GaChatbot.Api.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 public static class ServiceCollectionExtensions
 {
@@ -25,6 +26,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
         services.TryAddSingleton<ConversationHistoryStore>();
+        services.TryAddSingleton<RoutingContextEnricher>();
         services.AddSingleton<IChatProviderReadinessProbe, ChatProviderReadinessProbe>();
         services.AddScoped<DirectChatApplicationService>();
         services.AddScoped<RoutedChatApplicationService>();
@@ -60,7 +62,43 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IProgressionCorpusRepository, InMemoryProgressionCorpusRepository>();
             services.AddSingleton<SchemaDiscoveryService>();
             services.AddSingleton<VoicingIndexingService>();
-            services.AddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
+
+            // Voicing search strategy. The chatbot encodes queries with MusicalQueryEncoder
+            // (124-dim OPTK compact vectors), so it must score against the matching OPTK mmap
+            // index — exactly what GaApi and GaMcpServer already do successfully.
+            // CpuVoicingSearchStrategy instead scores those 124-dim musical vectors against
+            // per-voicing 768-dim text embeddings; the dimension mismatch makes its
+            // CosineSimilarity return 0.0 for EVERY voicing, collapsing the ranking to corpus
+            // insertion order and returning arbitrary wrong chords at score 0.000. Prefer the
+            // dimension-clean OPTK index; fall back to CPU only when it is genuinely absent.
+            services.AddSingleton<IVoicingSearchStrategy>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<EnhancedVoicingSearchService>>();
+                var indexPath = ResolveOpticIndexPath(configuration);
+                if (indexPath is not null)
+                {
+                    try
+                    {
+                        var strategy = new OptickSearchStrategy(indexPath);
+                        logger.LogInformation("Chatbot voicing search using OPTK index at {Path}", indexPath);
+                        return strategy;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex,
+                            "OPTK index at {Path} failed to open; falling back to CPU voicing search", indexPath);
+                    }
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "OPTK voicing index not found (set VoicingSearch:OpticIndexPath or " +
+                        "GA_OPTICK_INDEX_PATH, or place it under state/voicings/optick.index); " +
+                        "falling back to CPU voicing search — relevance scores will be degraded.");
+                }
+
+                return new CpuVoicingSearchStrategy();
+            });
             services.AddSingleton<EnhancedVoicingSearchService>();
             services.AddMemoryCache();
             services.AddSingleton<MusicalQueryEncoder>();
@@ -83,5 +121,46 @@ public static class ServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    /// <summary>
+    ///     Resolves the OPTK voicing index path the same way GaMcpServer does: an explicit
+    ///     <c>VoicingSearch:OpticIndexPath</c> config value or <c>GA_OPTICK_INDEX_PATH</c>
+    ///     environment override first, then a walk up from the entry directory toward the
+    ///     repo root looking for <c>state/voicings/optick.index</c>. Returns <see langword="null"/>
+    ///     when the index is absent so the caller can degrade to CPU search instead of
+    ///     throwing at host startup.
+    /// </summary>
+    private static string? ResolveOpticIndexPath(IConfiguration configuration)
+    {
+        var configured = configuration["VoicingSearch:OpticIndexPath"]
+                         ?? Environment.GetEnvironmentVariable("GA_OPTICK_INDEX_PATH");
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return System.IO.File.Exists(configured) ? configured : null;
+        }
+
+        // Walk up toward the repo root. Guard the walk: DirectoryInfo.Parent/FullName can
+        // throw on pathological mounts (PathTooLong / Security), and this runs at host
+        // startup — degrade to CPU (return null) rather than aborting boot, per the contract.
+        try
+        {
+            for (var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+                 dir is not null;
+                 dir = dir.Parent)
+            {
+                var candidate = System.IO.Path.Combine(dir.FullName, "state", "voicings", "optick.index");
+                if (System.IO.File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // fall through to null → CPU fallback
+        }
+
+        return null;
     }
 }

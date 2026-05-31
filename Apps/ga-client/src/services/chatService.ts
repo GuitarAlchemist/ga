@@ -193,6 +193,39 @@ export const fetchChatExamples = async (
   return response.json();
 };
 
+export interface ChatbotDemoPrompt {
+  prompt: string;
+  description: string;
+}
+
+export interface ChatbotDemoCategory {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  prompts: ChatbotDemoPrompt[];
+}
+
+export interface ChatbotDemoScript {
+  version: string;
+  categories: ChatbotDemoCategory[];
+}
+
+export const fetchChatDemo = async (
+  baseUrl: string,
+  signal?: AbortSignal,
+): Promise<ChatbotDemoScript> => {
+  const response = await fetch(buildUrl(baseUrl, '/api/chatbot/demo'), {
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to retrieve chatbot demo script: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
 export const mapMessagesToApi = (messages: ConversationMessage[]): ChatApiMessage[] =>
   messages
     .filter((message) => message.role !== 'system')

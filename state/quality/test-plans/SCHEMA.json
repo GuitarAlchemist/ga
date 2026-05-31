@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/state/quality/test-plans/SCHEMA.json",
+  "title": "Test Plan Proposal (sidecar)",
+  "description": "Structured metadata sidecar for diff-driven test-plan proposals produced by the /test-plan skill. The human-readable proposal lives next to this file as <head-sha>.md.",
+  "type": "object",
+  "required": [
+    "schema",
+    "pr_number",
+    "head_sha",
+    "risk_class",
+    "proposal_counts",
+    "layers_touched",
+    "generated_at",
+    "generator"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "test-plan-v1",
+      "description": "Schema discriminator. Bump only on field removal/rename; additive changes do not need a bump."
+    },
+    "pr_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "GitHub PR number the proposal targets."
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full 40-char head commit SHA at proposal time. A new push to the PR produces a new SHA and a new artifact pair."
+    },
+    "risk_class": {
+      "type": "string",
+      "enum": ["pure-additive", "refactor", "api-change", "one-way-door"],
+      "description": "Per-PR risk classification driving test-density multipliers. See SKILL.md §3c."
+    },
+    "proposal_counts": {
+      "type": "object",
+      "required": ["unit", "integration", "e2e", "chatbot", "coverage_gaps"],
+      "additionalProperties": false,
+      "properties": {
+        "unit":          { "type": "integer", "minimum": 0 },
+        "integration":   { "type": "integer", "minimum": 0 },
+        "e2e":           { "type": "integer", "minimum": 0 },
+        "chatbot":       { "type": "integer", "minimum": 0 },
+        "coverage_gaps": { "type": "integer", "minimum": 0 }
+      },
+      "description": "Per-section proposal counts. Each section is capped at 10 in the markdown artifact; values above 10 mean the heuristic is firing on a refactor."
+    },
+    "layers_touched": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Layer slugs derived from the path-prefix table in SKILL.md §3a (e.g. 'dotnet-domain', 'react-spa', 'vite-middleware', 'fsharp-dsl', 'mcp-server', 'ci-workflow', 'contract', 'powershell-tooling')."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp when the proposal was written."
+    },
+    "generator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Model identifier that generated the proposal (e.g. 'claude-opus-4-7', 'workflow-bash-assembler')."
+    },
+    "suppressed": {
+      "type": "boolean",
+      "description": "True when the PR body contained '[skip test-plan]' and the skill exited without posting. The artifact is still written for audit."
+    },
+    "author_is_agent": {
+      "type": "boolean",
+      "description": "True when any commit in the PR range has a 'Co-Authored-By: <known agent>' trailer (Claude / Codex / Mercury / etc.). Agents get the proposal as a second opinion even when the body has a test plan section."
+    },
+    "body_has_test_plan_section": {
+      "type": "boolean",
+      "description": "True when the PR body has a '## Test plan' section at proposal time (case-insensitive match). Drives the auto-fire workflow's decision to post or skip."
+    }
+  }
+}

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Intents;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Intents;
@@ -17,6 +18,7 @@ using GA.Business.ML.Tabs;
 /// Top-level orchestrator that unifies RAG, tab analysis, path optimization,
 /// and semantic routing into a single production-grade chat entry point.
 /// </summary>
+// @ai:business-value top-level chat orchestrator — fan-out point for tab analysis, voicings, suggestions, modulation; behaviour change here ripples to every chatbot answer [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 public class ProductionOrchestrator(
     TabAwareOrchestrator tabOrchestrator,
     TabAnalysisService tabAnalyzer,
@@ -33,9 +35,11 @@ public class ProductionOrchestrator(
     IEnumerable<IOrchestratorSkill> orchestratorSkills,
     IEnumerable<IChatHook> chatHooks,
     ConversationHistoryStore historyStore,
+    RoutingContextEnricher routingContextEnricher,
     SemanticIntentRouter intentRouter,
     TabAnalysisOrchestrationService tabAnalysisService,
     TabTokenizer tabTokenizer,
+    IAgenticTraceCapture traceCapture,
     IServiceProvider services) : IHarmonicChatOrchestrator
 {
     private readonly IReadOnlyList<IOrchestratorSkill> _skills = orchestratorSkills.ToList();
@@ -64,6 +68,69 @@ public class ProductionOrchestrator(
         if (string.IsNullOrWhiteSpace(message)) return false;
         var blocks = tabTokenizer.Tokenize(message);
         return blocks.Any(b => b.Slices.Any(s => s.Notes.Any()));
+    }
+
+    // A tab-handling intent (tab.optimize / tab.analyze) can only act on a tab in the
+    // message — without one it just replies "paste a tab". The embedding router has no
+    // tab-content signal, so a tabless phrasing whose words overlap a tab example (e.g.
+    // "give me a ii-V-I progression in Bb" matching tab.optimize's example "make this
+    // progression smoother to play") can wrongly win a tab intent. Suppress that pick so
+    // the query falls through to a real handler instead of "I need a tab in the message".
+    private bool IsTabIntentWithoutTab(string intentId, string? message) =>
+        intentId.StartsWith("tab.", StringComparison.Ordinal) && !HasTabContent(message);
+
+    // Routing-context enrichment lives in RoutingContextEnricher (2026-05-14
+    // extraction) so it can be unit-tested without spinning up the full
+    // orchestrator. Behaviour is unchanged from the inlined form.
+
+    /// <summary>
+    /// Emit a routing.candidates trace step with the top-3 intents the
+    /// router considered, so the agentic trace shows the routing decision
+    /// instead of hiding it inside the "orchestration.answer" black-box
+    /// step. Surfaces base cosine score, boost (if any), and final score
+    /// for each candidate — enough to debug routing misses without
+    /// re-running the request.
+    /// </summary>
+    /// <remarks>
+    /// Added 2026-05-13 in response to user critique on demos.guitaralchemist.com/chatbot/:
+    /// "Agentic trace is not detailed at all, we seem to see only the end
+    /// result not each intermediate steps". When intentMatch is null (no
+    /// intent crossed threshold) we still emit the step so the trace shows
+    /// WHY we fell through to the LLM agent path.
+    /// </remarks>
+    private void EmitRoutingTrace(IntentMatch? match)
+    {
+        if (match is { Ranking: { Count: > 0 } ranking })
+        {
+            var attrs = new Dictionary<string, object?>
+            {
+                ["routing.outcome"]      = "matched",
+                ["routing.selected_id"]  = match.Value.Intent.Id,
+                ["routing.confidence"]   = match.Value.Confidence,
+                ["routing.matched_with"] = match.Value.MatchedExample,
+                ["routing.top_count"]    = ranking.Count,
+            };
+            for (var i = 0; i < ranking.Count; i++)
+            {
+                var c = ranking[i];
+                attrs[$"routing.top{i + 1}.id"]       = c.IntentId;
+                attrs[$"routing.top{i + 1}.base"]     = c.BaseScore;
+                attrs[$"routing.top{i + 1}.boost"]    = c.Boost;
+                attrs[$"routing.top{i + 1}.final"]    = c.FinalScore;
+                attrs[$"routing.top{i + 1}.matched"]  = c.MatchedSource;
+            }
+            traceCapture.AddStep("routing.candidates", "completed", 0, attrs);
+            return;
+        }
+
+        // No match — fall-through to LLM path. Still emit the step so the
+        // trace shows we DID try semantic routing and chose to give up.
+        traceCapture.AddStep("routing.candidates", "completed", 0,
+            new Dictionary<string, object?>
+            {
+                ["routing.outcome"] = "below_threshold_or_unavailable",
+                ["routing.note"]    = "no intent crossed MinConfidence; falling through to LLM agent path",
+            });
     }
     private static readonly string[] ExplicitVoicingKeywords =
     [
@@ -130,13 +197,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // Same enrichment as the non-streaming AnswerAsync path (see task #168).
+        // The streaming path is the one the React demo uses, so without this
+        // line the headline "Show me a practical example" follow-up fix would
+        // not actually fire on the live surface — caught by code-review 2026-05-14.
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch (replaces the legacy algebra check
         //    and the per-skill CanHandle foreach). One embedding similarity pass
         //    over IIntent registrations covers algebra, deterministic skills,
         //    and tab-handling intents. See
         //    docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md
         //    §"Routing classifiers".
-        var semanticResp = await TryDispatchViaIntentAsync(message, ct);
+        var semanticResp = await TryDispatchViaIntentAsync(routingMessage, message, ct);
         if (semanticResp is not null)
         {
             foreach (var word in semanticResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -289,13 +363,55 @@ public class ProductionOrchestrator(
                 activity, sw, ct);
         }
 
+        // ── Deterministic algebra fast-path runs BEFORE semantic intent routing ──
+        // Algebra prompts (prime form, ICV, Forte label, Z-relation, set class) are
+        // pure finite math handled by IxAlgebraService — no LLM, no embeddings. The
+        // unified semantic dispatch otherwise routes algebra via embeddings, which
+        // means an environment without an embedding endpoint (CI runners without
+        // Ollama) fails through to the LLM agent path and 500s when the LLM is
+        // ALSO unreachable. The classifier is high-precision: keyword hit OR
+        // bracketed/compact pitch-class set pattern. When it fires we already know
+        // the prompt is algebra-shaped, so there is no value in paying the
+        // embedding round-trip. Mirrors the deterministic voicing guard above.
+        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(req, message, sessionId, correlationId, activity, sw, ct);
+        if (algebraFastPath is not null)
+        {
+            return algebraFastPath;
+        }
+
+        // ── Follow-up context enrichment for the routing pass ────────────────
+        // A short prompt like "Show me a practical example on guitar" right
+        // after a substantive turn ("How do I make this progression sound
+        // darker?") used to mis-embed as a standalone request and route to
+        // skill.practiceroutine (because "practice" / "practical" share a
+        // centroid). For follow-up-shaped messages, prepend the most recent
+        // prior user turn to the routing query so the embedding represents
+        // the conversation thread, not just the snippet. The downstream
+        // `message` variable stays clean (the LLM gets the real message
+        // plus full history separately).
+        //
+        // The history lookup checks BOTH (a) the in-memory historyStore
+        // (session-scoped, populated by the just-added user turn plus any
+        // earlier turns from this session) AND (b) req.History (the
+        // controller may forward client-supplied prior turns even when
+        // sessionId is null — the React frontend posts conversationHistory
+        // per request without a stable sessionId). Without (b), the very
+        // first follow-up after a page reload would miss enrichment.
+        //
+        // Live found 2026-05-14 via demos.guitaralchemist.com/chatbot — see
+        // task #168.
+        var routingMessage = routingContextEnricher.EnrichIfFollowUp(message, sessionId, req.History);
+
         // ── Unified semantic intent dispatch with the hook lifecycle ─────────
         // One embedding similarity pass over IIntent registrations covers
         // algebra, deterministic skills, and tab-handling intents. Replaces
         // the legacy TryAnswerWithAlgebraAsync branch and the per-skill
         // CanHandle foreach. See migration recommendation §"Routing classifiers".
-        var intentMatch = await intentRouter.RouteAsync(message, services, ct);
-        if (intentMatch is { } pick)
+        var intentMatch = await intentRouter.RouteAsync(routingMessage, services, ct);
+        EmitRoutingTrace(intentMatch);
+        // Suppress a tab intent picked for a tabless message (e.g. "give me a ii-V-I
+        // progression in Bb") so it falls through to the LLM agent path below.
+        if (intentMatch is { } pick && !IsTabIntentWithoutTab(pick.Intent.Id, message))
         {
             // OnBeforeSkill hooks (intent.Id replaces the legacy MatchedSkillName).
             var beforeCtx = new ChatHookContext
@@ -544,6 +660,93 @@ public class ProductionOrchestrator(
         return deterministicResponse;
     }
 
+    /// <summary>
+    /// Deterministic algebra fast-path. Detects set-class-algebra prompts via
+    /// <see cref="IAlgebraPromptClassifier"/> (regex over keywords + bracketed/
+    /// compact pitch-class sets) and dispatches to <see cref="IIxAlgebraService"/>
+    /// directly. Bypasses <see cref="SemanticIntentRouter"/> so the dispatch
+    /// works in environments without an embedding endpoint (CI without Ollama,
+    /// offline dev). Returns <c>null</c> when the classifier rejects the prompt
+    /// or when the service can't extract a usable pitch-class set — caller falls
+    /// through to the unified semantic-intent dispatch as before.
+    /// </summary>
+    /// <remarks>
+    /// Why this isn't the only algebra path: the semantic router's example-prompt
+    /// matching still beats the classifier on edge cases where the user phrases an
+    /// algebra question without keyword hits ("are these two collections related?").
+    /// The fast-path is a STRICTLY HIGH-PRECISION subset — if it fires we short-
+    /// circuit; if it doesn't, semantic dispatch still owns the prompt. Mirrors
+    /// the deterministic voicing guard's relationship to VoicingIntent.
+    ///
+    /// The routing method <c>"ix-algebra"</c> matches <see cref="AlgebraIntent.ExecuteAsync"/>
+    /// so downstream consumers (FallbackChatApplicationService deterministic-failure
+    /// protection, trace dashboards) can't tell whether the fast-path or the
+    /// semantic-routed AlgebraIntent answered.
+    /// </remarks>
+    private async Task<ChatResponse?> TryAnswerWithAlgebraFastPathAsync(
+        ChatRequest req,
+        string message,
+        string sessionId,
+        Guid correlationId,
+        Activity? activity,
+        Stopwatch sw,
+        CancellationToken ct)
+    {
+        if (!algebraPromptClassifier.IsAlgebraPrompt(message))
+        {
+            return null;
+        }
+
+        var answer = await ixAlgebraService.TryAnswerAsync(message, ct);
+        if (answer is null)
+        {
+            // Classifier said algebra-shaped but service couldn't extract a set.
+            // Fall through to semantic dispatch so AlgebraIntent can emit its
+            // "I couldn't extract a pitch-class set" guidance with proper trace
+            // attribution. Returning the same message inline would short-circuit
+            // observability for the failure mode.
+            return null;
+        }
+
+        sw.Stop();
+        activity?.SetTag("orchestration.branch", "algebra.fast_path");
+        activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+        var algebraResponse = new ChatResponse(
+            NaturalLanguageAnswer: answer.NaturalLanguageAnswer,
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                AgentId: "algebra",
+                Confidence: 1.0f,
+                RoutingMethod: "ix-algebra"),
+            Grounding: answer.Grounding);
+
+        historyStore.AddTurn(sessionId, "assistant", algebraResponse.NaturalLanguageAnswer);
+
+        // OnResponseSent for parity with every other dispatch path. Wrap the
+        // facts dictionary as evidence strings so MemoryHook / analytics see a
+        // shape consistent with skill responses.
+        var sentCtx = new ChatHookContext
+        {
+            OriginalMessage = req.Message,
+            CurrentMessage  = message,
+            CorrelationId   = correlationId,
+            SessionId       = sessionId,
+            Response        = new AgentResponse
+            {
+                AgentId    = "algebra",
+                Result     = answer.NaturalLanguageAnswer,
+                Confidence = 1.0f,
+                Evidence   = answer.Facts.Select(kv => $"{kv.Key}: {kv.Value}").ToList(),
+                Assumptions = [],
+            },
+        };
+        foreach (var hook in _hooks)
+            await hook.OnResponseSent(sentCtx, ct);
+
+        return algebraResponse;
+    }
+
     private bool TrySelectDeterministicAgent(
         string message,
         out GuitarAlchemistAgentBase agent,
@@ -596,12 +799,24 @@ public class ProductionOrchestrator(
     /// null when no intent scored above threshold (caller falls through to
     /// the LLM agent path).
     /// </summary>
-    private async Task<ChatResponse?> TryDispatchViaIntentAsync(string message, CancellationToken ct)
+    /// <param name="routingMessage">Message used ONLY for the embedding-router
+    /// score. May be enriched with prior conversation context.</param>
+    /// <param name="executeMessage">Original user message — the intent's
+    /// <c>ExecuteAsync</c> receives this so its internal regex parsers see
+    /// the raw text without the enrichment prefix.</param>
+    private async Task<ChatResponse?> TryDispatchViaIntentAsync(
+        string routingMessage,
+        string executeMessage,
+        CancellationToken ct)
     {
-        var match = await intentRouter.RouteAsync(message, services, ct);
+        var match = await intentRouter.RouteAsync(routingMessage, services, ct);
+        EmitRoutingTrace(match);
         if (match is not { } pick) return null;
 
-        var result = await pick.Intent.ExecuteAsync(message, ct);
+        // Tab intents cannot act without a tab present — fall through to a real handler.
+        if (IsTabIntentWithoutTab(pick.Intent.Id, executeMessage)) return null;
+
+        var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
         return new ChatResponse(
             NaturalLanguageAnswer: result.Answer,
             Candidates: [],

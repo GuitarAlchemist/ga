@@ -62,6 +62,15 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "what makes a chord a major seventh",
         "what makes a chord diminished",
         "what makes a chord a dominant seventh",
+        // Chord-identification-from-notes phrasings (BACKLOG dealbreaker #5,
+        // 2026-05-14). Without these, "what chord is F A C E" misrouted to
+        // skill.chordsubstitution because the substitution skill's
+        // alternation patterns matched "F" + "A" as two chords. Anchored
+        // examples make the chordinfo intent dominate for these queries.
+        "What chord is C E G",
+        "What chord is F A C E",
+        "Which chord contains the notes G B D F",
+        "What chord is C E G Bb D",
         // v0.5 corpus expansion (2026-05-12): "anatomy of" / "break down"
         // / "add 9" / "sus" / "maj13" patterns weren't covered. These
         // were misrouting to diatonicchords because "chord" + extension
@@ -71,6 +80,17 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "what is a C add 9 chord",
         "give me the notes of an F#m7b5",
         "tones in a Bb diminished seventh",
+        // Bare-symbol queries without the word "chord" — "What is C7b9",
+        // "What is Cmaj9", "What is Dm7b5". Without these, the semantic
+        // router scored "What is C7b9" below threshold against the longer
+        // examples and fell through to the LLM cascade (corpus regression
+        // #216, 2026-05-16). The CompactChordRegex already handles the
+        // parse; these examples just route the prompt to the right skill.
+        "What is C7b9",
+        "What is Cmaj9",
+        "What is Dm7b5",
+        "What is F#m7",
+        "What is Bbdim7",
     ];
 
     public bool CanHandle(string message)
@@ -157,7 +177,12 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        if (notes.Count is < 3 or > 4)
+        // Accept 3–5 note sets. 3 covers triads + sus, 4 covers 7th-family
+        // and add9, 5 covers 9th-family (dominant/major/minor 9). Cap at 5
+        // because 6+ note sets (11th/13th) have multiple legitimate
+        // identifications and the first-match algorithm can't pick a
+        // "best" answer without voicing context.
+        if (notes.Count is < 3 or > 5)
         {
             return null;
         }
@@ -202,6 +227,10 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     private static string NormalizeQuality(string value)
     {
+        // Strip whitespace + lowercase; the parser writes the canonical form
+        // that NormalizeQuality returns into Quality, and GetFormula keys on
+        // that form. Adding a new chord = entry here + entry in GetFormula +
+        // entry in CandidateFormulas.
         var normalized = value.Trim().ToLowerInvariant();
         return normalized switch
         {
@@ -209,10 +238,35 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             "maj" or "major" => "major",
             "m" or "min" or "minor" => "minor",
             "dim" or "diminished" => "diminished",
-            "aug" or "augmented" => "augmented",
+            "aug" or "augmented" or "+" => "augmented",
+            "5" or "no3" or "power" => "power",
+            // Triad extensions
+            "sus2" => "sus2",
+            "sus4" or "sus" => "sus4",
+            "add9" => "add9",
+            "6" or "maj6" or "major 6" => "major 6",
+            "m6" or "min6" or "minor 6" => "minor 6",
+            // 7th family
             "7" or "dominant" or "dominant 7" => "dominant 7",
-            "maj7" or "major 7" => "major 7",
-            "m7" or "min7" or "minor 7" => "minor 7",
+            "maj7" or "major 7" or "ma7" or "Δ7" => "major 7",
+            "m7" or "min7" or "minor 7" or "-7" => "minor 7",
+            "dim7" or "°7" => "diminished 7",
+            "m7b5" or "ø" or "ø7" or "half-diminished" or "half diminished" or "minor 7 flat 5" => "half-diminished",
+            "7b5" or "dominant 7 flat 5" => "dominant 7 flat 5",
+            "7#5" or "7+5" or "dominant 7 sharp 5" => "dominant 7 sharp 5",
+            "7b9" or "dominant 7 flat 9" => "dominant 7 flat 9",
+            "7#9" or "dominant 7 sharp 9" => "dominant 7 sharp 9",
+            "7alt" or "alt" or "altered" or "altered dominant" => "altered dominant",
+            // 9 / 11 / 13 extensions
+            "9" or "dominant 9" => "dominant 9",
+            "maj9" or "major 9" => "major 9",
+            "m9" or "min9" or "minor 9" => "minor 9",
+            "11" or "dominant 11" => "dominant 11",
+            "maj11" or "major 11" => "major 11",
+            "m11" or "min11" or "minor 11" => "minor 11",
+            "13" or "dominant 13" => "dominant 13",
+            "maj13" or "major 13" => "major 13",
+            "m13" or "min13" or "minor 13" => "minor 13",
             _ => normalized
         };
     }
@@ -223,21 +277,63 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             "minor" => new ChordFormula("minor chord", [0, 3, 7], [0, 2, 4], ["root", "minor third", "perfect fifth"]),
             "diminished" => new ChordFormula("diminished chord", [0, 3, 6], [0, 2, 4], ["root", "minor third", "diminished fifth"]),
             "augmented" => new ChordFormula("augmented chord", [0, 4, 8], [0, 2, 4], ["root", "major third", "augmented fifth"]),
+            "power" => new ChordFormula("power chord", [0, 7], [0, 4], ["root", "perfect fifth"]),
+            "sus2" => new ChordFormula("sus2 chord", [0, 2, 7], [0, 1, 4], ["root", "major second", "perfect fifth"]),
+            "sus4" => new ChordFormula("sus4 chord", [0, 5, 7], [0, 3, 4], ["root", "perfect fourth", "perfect fifth"]),
+            "add9" => new ChordFormula("add9 chord", [0, 4, 7, 14], [0, 2, 4, 8], ["root", "major third", "perfect fifth", "ninth"]),
+            "major 6" => new ChordFormula("major 6 chord", [0, 4, 7, 9], [0, 2, 4, 5], ["root", "major third", "perfect fifth", "major sixth"]),
+            "minor 6" => new ChordFormula("minor 6 chord", [0, 3, 7, 9], [0, 2, 4, 5], ["root", "minor third", "perfect fifth", "major sixth"]),
             "dominant 7" => new ChordFormula("dominant 7 chord", [0, 4, 7, 10], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "minor seventh"]),
             "major 7" => new ChordFormula("major 7 chord", [0, 4, 7, 11], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "major seventh"]),
             "minor 7" => new ChordFormula("minor 7 chord", [0, 3, 7, 10], [0, 2, 4, 6], ["root", "minor third", "perfect fifth", "minor seventh"]),
+            "diminished 7" => new ChordFormula("diminished 7 chord", [0, 3, 6, 9], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "diminished seventh"]),
+            "half-diminished" => new ChordFormula("half-diminished chord (m7b5)", [0, 3, 6, 10], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "minor seventh"]),
+            "dominant 7 flat 5" => new ChordFormula("dominant 7 flat 5 chord", [0, 4, 6, 10], [0, 2, 4, 6], ["root", "major third", "diminished fifth", "minor seventh"]),
+            "dominant 7 sharp 5" => new ChordFormula("dominant 7 sharp 5 chord (augmented dominant)", [0, 4, 8, 10], [0, 2, 4, 6], ["root", "major third", "augmented fifth", "minor seventh"]),
+            "dominant 7 flat 9" => new ChordFormula("dominant 7 flat 9 chord", [0, 4, 7, 10, 13], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "minor ninth"]),
+            "dominant 7 sharp 9" => new ChordFormula("dominant 7 sharp 9 chord (\"Hendrix chord\")", [0, 4, 7, 10, 15], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "augmented ninth"]),
+            "altered dominant" => new ChordFormula("altered dominant chord (7alt)", [0, 4, 6, 8, 10, 13, 15], [0, 2, 3, 4, 6, 8, 8], ["root", "major third", "flat fifth", "sharp fifth", "minor seventh", "flat ninth", "sharp ninth"]),
+            "dominant 9" => new ChordFormula("dominant 9 chord", [0, 4, 7, 10, 14], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "major ninth"]),
+            "major 9" => new ChordFormula("major 9 chord", [0, 4, 7, 11, 14], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "major seventh", "major ninth"]),
+            "minor 9" => new ChordFormula("minor 9 chord", [0, 3, 7, 10, 14], [0, 2, 4, 6, 8], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth"]),
+            "dominant 11" => new ChordFormula("dominant 11 chord", [0, 4, 7, 10, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "major third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh"]),
+            "major 11" => new ChordFormula("major 11 chord", [0, 4, 7, 11, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "major third", "perfect fifth", "major seventh", "major ninth", "perfect eleventh"]),
+            "minor 11" => new ChordFormula("minor 11 chord", [0, 3, 7, 10, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh"]),
+            "dominant 13" => new ChordFormula("dominant 13 chord", [0, 4, 7, 10, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "major third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
+            "major 13" => new ChordFormula("major 13 chord", [0, 4, 7, 11, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "major third", "perfect fifth", "major seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
+            "minor 13" => new ChordFormula("minor 13 chord", [0, 3, 7, 10, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
             _ => new ChordFormula("major chord", [0, 4, 7], [0, 2, 4], ["root", "major third", "perfect fifth"])
         };
 
     private static IEnumerable<(string Quality, ChordFormula Formula)> CandidateFormulas()
     {
+        // Note-set identification (TryIdentifyNoteSet) iterates these and
+        // matches when the given pitch classes equal a formula's transposed
+        // intervals. Order doesn't affect correctness; keep simple triads
+        // first so basic chord identification is fast.
         yield return ("major", GetFormula("major"));
         yield return ("minor", GetFormula("minor"));
         yield return ("diminished", GetFormula("diminished"));
         yield return ("augmented", GetFormula("augmented"));
+        yield return ("sus2", GetFormula("sus2"));
+        yield return ("sus4", GetFormula("sus4"));
+        yield return ("major 6", GetFormula("major 6"));
+        yield return ("minor 6", GetFormula("minor 6"));
         yield return ("dominant 7", GetFormula("dominant 7"));
         yield return ("major 7", GetFormula("major 7"));
         yield return ("minor 7", GetFormula("minor 7"));
+        yield return ("diminished 7", GetFormula("diminished 7"));
+        yield return ("half-diminished", GetFormula("half-diminished"));
+        // 4-note add-9 and 5-note 9th-family for note-set identification.
+        // BACKLOG dealbreaker #5 — "what chord is C E G Bb D" → "C9".
+        yield return ("add9", GetFormula("add9"));
+        yield return ("dominant 9", GetFormula("dominant 9"));
+        yield return ("major 9", GetFormula("major 9"));
+        yield return ("minor 9", GetFormula("minor 9"));
+        // 7-with-altered-fifth covers e.g. Cmaj7 with #5 in voicings;
+        // common enough in jazz that "what chord is C E G# B" should ID.
+        yield return ("dominant 7 flat 5", GetFormula("dominant 7 flat 5"));
+        yield return ("dominant 7 sharp 5", GetFormula("dominant 7 sharp 5"));
     }
 
     private static bool HasChordIntent(string message)
@@ -245,8 +341,21 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         var normalized = message.ToLowerInvariant();
         return normalized.Contains("chord", StringComparison.Ordinal) ||
                normalized.Contains("triad", StringComparison.Ordinal) ||
-               normalized.Contains("note", StringComparison.Ordinal);
+               normalized.Contains("note", StringComparison.Ordinal) ||
+               // Question lead-ins that don't carry the word "chord" but
+               // still identify a chord-spelling intent — e.g. "what is
+               // C7b9", "what's Dm9", "tell me about Bbsus2", "describe
+               // F#m7b5". Without this the prompt routes to the LLM
+               // cascade and times out (corpus regression #216, 2026-05-16).
+               QuestionLeadInRegex().IsMatch(normalized);
     }
+
+    // Lead-in patterns that signal "ask about a single noun". Combined with
+    // CompactChordRegex matching the noun, this catches "what is C7b9"-style
+    // bare-symbol queries.
+    [GeneratedRegex(@"^\s*(what\s+is|what's|whats|tell\s+me\s+about|describe)\s+",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex QuestionLeadInRegex();
 
     // Delegates to the shared helper (PR #102) so this skill and
     // ChordMcpTools cannot drift on enharmonic accounting.
@@ -262,13 +371,27 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
             _ => $"{string.Join(", ", notes.Take(notes.Count - 1))}, and {notes[^1]}"
         };
 
-    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)\s*(?<quality>major 7|minor 7|dominant 7|major|minor|maj|min|diminished|dim|augmented|aug|7)?\s*(?:chord|triad)\b", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)\s*(?<quality>major 13|minor 13|dominant 13|major 11|minor 11|dominant 11|major 9|minor 9|dominant 9|major 7|minor 7|dominant 7|major 6|minor 6|half[- ]diminished|altered dominant|major|minor|maj|min|diminished|dim|augmented|aug|sus[24]?|add9|7alt|alt|13|11|9|7|6)?\s*(?:chord|triad)\b", RegexOptions.CultureInvariant)]
     private static partial Regex ChordQuestionRegex();
 
-    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)(?<quality>maj7|min7|m7|maj|min|m|dim|aug|7)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // Compact form supports: triads (maj/min/m/dim/aug/+, sus2/sus4, add9,
+    // power 5/no3), 6 / m6, 7th family (maj7/m7/7/dim7/m7b5/7b5/7#5/7b9/7#9),
+    // upper extensions (9/maj9/m9/11/maj11/m11/13/maj13/m13), and altered
+    // dominant (7alt/alt). Order matters — LONGER alternations match first,
+    // so "maj13" wins over "maj" and "m7b5" wins over "m7" / "m".
+    //
+    // Quality is REQUIRED (not optional). Without this, bare letters like
+    // "a" in "Show me a Cmaj9 chord" matched as root="a" quality="" → "A
+    // major" before the regex ever reached the real "Cmaj9". Caught
+    // 2026-05-13 during the extended-chord-parser probe.
+    [GeneratedRegex(@"\b(?<root>[A-Ga-g][#b]?)(?<quality>maj13|min13|m13|maj11|min11|m11|maj9|min9|m9|maj7|min7|maj6|min6|m6|m7b5|m7|dim7|7b5|7#5|7b9|7#9|7alt|alt|13|11|9|7|6|maj|min|dim|aug|sus2|sus4|sus|add9|m|\+)\b(?![A-Za-z])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CompactChordRegex();
 
-    [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // "what/which chord (is|contains|has|uses) X Y Z" — accepts both the
+    // chord-identification phrasing and the prior "contains/has/uses"
+    // patterns. The "is" branch was missing 2026-05-14 — caught by the
+    // multi-LLM correctness review's testing-gap note on PR #210.
+    [GeneratedRegex(@"\b(?:which|what)\s+chord\s+(?:is|contains|has|uses)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex NoteSetQuestionRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]

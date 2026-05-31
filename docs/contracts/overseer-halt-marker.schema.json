@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitaralchemist.dev/contracts/overseer-halt-marker.schema.json",
+  "title": "Overseer HALT-ALL marker",
+  "description": "Per-user halt marker that pauses every /auto-optimize loop across every repo in the GuitarAlchemist ecosystem. Lives at $env:USERPROFILE/.demerzel/HALT-ALL (Windows) or ~/.demerzel/HALT-ALL (Unix). Presence == halted; absence == not halted. The file body is metadata for human readers and audit; the gate-trip is the file's existence.\n\nProduced by: Demerzel ACP `/halt POST` endpoint, MCP tool `demerzel:halt-all`, or operator hand-edit.\n\nConsumed by: per-repo loop runners (e.g. /auto-optimize Step 0, Scripts/dev-process-overseer.ps1) BEFORE proceeding to any cycle. Opportunistic check — if the file does not exist OR the directory is unreadable, the consumer falls back to per-repo `state/.loop-halted` per the offline-fallback decision (D-offline-fallback in docs/plans/2026-05-16-arch-demerzel-overseer-extension-plan.md).",
+  "type": "object",
+  "required": ["schema_version", "halted_at", "reason"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Bump on breaking changes to this schema. Consumers MUST reject markers with unknown schema_version."
+    },
+    "halted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp when the marker was written."
+    },
+    "halted_by": {
+      "type": "string",
+      "description": "Identifier of the operator or agent that wrote the marker. Free-form for v1 (e.g. 'operator:spareilleux', 'agent:claude-code-2.1.126', 'demerzel-acp')."
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Short human-readable reason for the halt. Shown to agents that abort. Examples: 'Investigating runaway cost burn', 'Pause before quarterly release freeze', 'Operator paged — testing rollback'."
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["global", "loops-only", "loops-and-batch"],
+      "default": "loops-only",
+      "description": "What the halt covers. 'loops-only' (default) = /auto-optimize and similar cycle drivers; 'loops-and-batch' = also CI-side autonomous batch jobs; 'global' = everything including manual /digest writes. Per D-halt-scope, v1 ships with 'loops-only' as the only honored value."
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Optional RFC3339 UTC timestamp after which the halt is no longer in effect. Null = halt persists until manually lifted. Consumers MUST check expires_at and treat an expired marker as absent."
+    },
+    "exempt_agents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional list of agent identifiers that can ignore this halt (e.g. when halting all loops EXCEPT one debugging session). Empty or absent = no exemptions."
+    },
+    "links": {
+      "type": "object",
+      "description": "Optional cross-references for audit context.",
+      "properties": {
+        "incident_url": { "type": "string", "format": "uri" },
+        "issue_ref": { "type": "string" },
+        "supersedes_marker": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "schema_version": 1,
+      "halted_at": "2026-05-16T16:30:00Z",
+      "halted_by": "operator:spareilleux",
+      "reason": "Investigating cost burn on Mistral teacher rollouts",
+      "scope": "loops-only",
+      "expires_at": null,
+      "exempt_agents": [],
+      "links": {
+        "issue_ref": "ga#999"
+      }
+    },
+    {
+      "schema_version": 1,
+      "halted_at": "2026-05-17T03:00:00Z",
+      "halted_by": "demerzel-acp",
+      "reason": "Scheduled freeze: mobile release branch cut",
+      "scope": "loops-only",
+      "expires_at": "2026-05-19T00:00:00Z"
+    }
+  ]
+}

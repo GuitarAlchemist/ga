@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitar-alchemist/contracts/algedonic-signal-v0.1.0.json",
+  "title": "Algedonic Signal",
+  "description": "Cross-repo VSM algedonic-channel signal v0.1.0. Source: docs/contracts/2026-05-24-algedonic-channel.contract.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema",
+    "emitted_at",
+    "repo",
+    "source",
+    "severity",
+    "summary",
+    "details",
+    "affected_artifacts",
+    "ttl_hours",
+    "escalation",
+    "ack",
+    "supersedes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 36,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "UUIDv7 or ULID preferred. URL/filename-safe characters only."
+    },
+    "schema": {
+      "type": "string",
+      "const": "algedonic-signal-v0.1.0"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repo": {
+      "type": "string",
+      "enum": ["ga", "ix", "demerzel", "tars", "sentrux", "hari"]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warn", "fail", "critical"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140
+    },
+    "details": {
+      "type": "string"
+    },
+    "evidence_url": {
+      "type": ["string", "null"]
+    },
+    "affected_artifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ttl_hours": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8760
+    },
+    "escalation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["on_unack_after_hours", "route_to"],
+      "properties": {
+        "on_unack_after_hours": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 8760
+        },
+        "route_to": {
+          "type": "string",
+          "enum": ["operator", "council", "qa-architect", "on-call"]
+        }
+      }
+    },
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acked", "acked_by", "acked_at", "resolution"],
+      "properties": {
+        "acked": { "type": "boolean" },
+        "acked_by": { "type": ["string", "null"] },
+        "acked_at": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "string", "format": "date-time" }
+          ]
+        },
+        "resolution": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "string", "maxLength": 280 }
+          ]
+        }
+      }
+    },
+    "supersedes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 36 }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "If acked == true, acked_by and acked_at MUST be populated.",
+      "if": {
+        "properties": {
+          "ack": {
+            "properties": { "acked": { "const": true } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "ack": {
+            "required": ["acked", "acked_by", "acked_at", "resolution"],
+            "properties": {
+              "acked_by": { "type": "string", "minLength": 1 },
+              "acked_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "If severity == info, escalation.on_unack_after_hours SHOULD be null.",
+      "if": {
+        "properties": { "severity": { "const": "info" } }
+      },
+      "then": {
+        "properties": {
+          "escalation": {
+            "properties": {
+              "on_unack_after_hours": { "type": "null" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -83,6 +83,20 @@ public sealed class VoicingAgent(
         var results = await voicingSearch.SearchAsync(
             request.Query, Generator, limit, filters, cancellationToken);
 
+        // Geometric fallback. The OPTK index is ranked by pitch-class geometry, but a hard
+        // ChordName filter rejects voicings the corpus never labelled with this exact symbol
+        // (e.g. "G7b13", "Amaj7#5", "Galt") even when pc-matching voicings plainly exist. The
+        // query vector already encodes the chord's pitch classes, so when the name-filtered
+        // search finds nothing, retry on geometry alone — keeping the instrument/mode/tag
+        // filters — so ANY valid chord grounds in real voicings instead of dropping to the LLM.
+        // (Safe to retry: this is the dimension-clean OPTK strategy; on the old CPU strategy a
+        // retry returned score-0.000 garbage, which is why an earlier attempt was reverted.)
+        if (results.Count == 0 && filters is { ChordName: not null })
+        {
+            results = await voicingSearch.SearchAsync(
+                request.Query, Generator, limit, filters with { ChordName = null }, cancellationToken);
+        }
+
         if (results.Count == 0)
         {
             return new AgentResponse

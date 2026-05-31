@@ -1,0 +1,256 @@
+name: Chatbot QA Snapshot
+
+# Daily snapshot producer for state/quality/chatbot-qa/. Closes the
+# trend gap surfaced 2026-05-16 (psychohistory trend dashboard showed
+# 0 chatbot-qa snapshots, so ix-quality-trend had no chatbot signal to
+# track). Schema consumed by ix/crates/ix-quality-trend/src/snapshot.rs
+# (ChatbotQaSnapshot — timestamp / total_prompts / pass_pct /
+# avg_response_ms / by_category).
+#
+# Producer: Scripts/run-prompt-corpus.ps1 -Snapshot
+# Output:   state/quality/chatbot-qa/YYYY-MM-DD.json
+#
+# Failure semantics:
+#   - The script's `-Snapshot` path writes the snapshot whether or not
+#     the corpus passes — pass_pct is the data point we care about.
+#   - It will NOT write a snapshot if the runner crashes before
+#     printing a completion marker (avoids fabricating pass_pct=100%
+#     for a host that never started). That case fails the workflow.
+#   - We do not fail the workflow on a low pass_pct; failures land
+#     as data, which the dashboard turns into a trend line.
+#   - When the script exits with code 2 ("snapshot written but
+#     environment was degraded"), the snapshot itself carries
+#     `degraded: true` + a carried-forward `last_known_good_pass_pct`,
+#     AND we emit an algedonic signal + tracking issue so the silent-rot
+#     pattern (8 days of null pass_pct under a green checkmark, surfaced
+#     2026-05-24 by /backlog-groom) cannot repeat unnoticed.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC daily — keeps CI off peak hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chatbot-qa-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj
+
+      - name: Build chatbot tests
+        run: dotnet build Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj -c Debug --no-restore
+
+      - name: Backend preflight
+        id: preflight
+        shell: pwsh
+        run: |
+          # Probe Ollama (default backend). The hosted ubuntu-latest runner
+          # has no Ollama installed and no OPTIC-K index — so this preflight
+          # is expected to fail today. The point is to *make the failure
+          # explicit* in the workflow log + downstream steps, instead of
+          # letting it manifest 50× as opaque HTTP 5xx in the corpus run.
+          $ollamaUrl = if ($env:OLLAMA_BASE_URL) { $env:OLLAMA_BASE_URL } else { 'http://localhost:11434' }
+          $opticIndex = 'state/voicings/optick.index'
+
+          $ollamaOk = $false
+          try {
+            $resp = Invoke-WebRequest -Uri "$ollamaUrl/api/version" -Method GET -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+            if ($resp.StatusCode -eq 200) { $ollamaOk = $true }
+          } catch {
+            Write-Host "Ollama probe failed at ${ollamaUrl}: $($_.Exception.Message)" -ForegroundColor Yellow
+          }
+
+          $opticOk = Test-Path $opticIndex
+          if (-not $opticOk) {
+            Write-Host "OPTIC-K index missing at $opticIndex (expected on hosted runner — corpus run will degrade gracefully)." -ForegroundColor Yellow
+          }
+
+          $backendOk = $ollamaOk -and $opticOk
+          "ollama_ok=$($ollamaOk.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "optic_ok=$($opticOk.ToString().ToLower())"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "backend_ok=$($backendOk.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+          if (-not $backendOk) {
+            # Surface in the Actions UI as a warning annotation — but do NOT
+            # exit non-zero. The corpus run still produces a degraded
+            # snapshot (carryforward), which IS the trend signal we want.
+            Write-Host "::warning::Backend preflight DEGRADED — ollama_ok=$ollamaOk optic_ok=$opticOk. Snapshot will be marked degraded with carryforward."
+          } else {
+            Write-Host "Backend preflight OK."
+          }
+
+      - name: Run corpus + emit snapshot
+        id: run_corpus
+        shell: pwsh
+        # `Scripts/run-prompt-corpus.ps1 -Snapshot` exits:
+        #   0 = clean run, snapshot written with real pass_pct
+        #   1 = runner did not complete (no snapshot written)
+        #   2 = snapshot written but environment-degraded (carryforward)
+        # We tolerate 0 and 2; we want the workflow visibility for 1.
+        run: |
+          pwsh Scripts/run-prompt-corpus.ps1 -Snapshot -NoBuild
+          $code = $LASTEXITCODE
+          "exit_code=$code" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          if ($code -eq 0)   { Write-Host "::notice::Corpus run OK."; exit 0 }
+          if ($code -eq 2)   { Write-Host "::warning::Corpus run DEGRADED — snapshot carries last_known_good_pass_pct."; exit 0 }
+          Write-Host "::error::Corpus runner did not complete (exit=$code) — no snapshot written."
+          exit $code
+        continue-on-error: true   # snapshot is the artifact; low pass_pct isn't a workflow failure
+
+      - name: Emit ga-retrieval-quality artifact (Workflow 2)
+        shell: pwsh
+        run: pwsh Scripts/emit-ga-retrieval-quality.ps1
+        continue-on-error: true   # the artifact itself is evidence; agent-blackbox decides the verdict
+
+      - name: Upload ga-retrieval-quality artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga-retrieval-quality-${{ github.run_id }}
+          path: dist/ga-retrieval-quality.json
+          retention-days: 90
+
+      - name: Inspect snapshot for degradation
+        id: inspect
+        if: always()
+        shell: pwsh
+        run: |
+          $date = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+          $snap = "state/quality/chatbot-qa/$date.json"
+          if (-not (Test-Path $snap)) {
+            "snapshot_exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "degraded=unknown"      | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+          $obj = Get-Content -Raw $snap | ConvertFrom-Json
+          $degraded = ($obj.degraded -eq $true) -or ($null -eq $obj.pass_pct)
+          $passPct  = if ($null -ne $obj.pass_pct) { $obj.pass_pct } else { 'null' }
+          $lkg      = if ($null -ne $obj.last_known_good_pass_pct) { "$($obj.last_known_good_pass_pct)% from $($obj.last_known_good_date)" } else { 'none' }
+          "snapshot_exists=true"      | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "degraded=$($degraded.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "pass_pct=$passPct"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "lkg_summary=$lkg"          | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "snapshot=$snap degraded=$degraded pass_pct=$passPct last_known_good=$lkg"
+
+      - name: Emit algedonic signal on degradation
+        if: always() && steps.inspect.outputs.degraded == 'true' && steps.inspect.outputs.snapshot_exists == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          $evidence = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
+          $date = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+          $snap = "state/quality/chatbot-qa/$date.json"
+          $summary = "Chatbot QA backend degraded $date — pass_pct unmeasurable"
+          $details = "Preflight: ollama_ok=${{ steps.preflight.outputs.ollama_ok }} optic_ok=${{ steps.preflight.outputs.optic_ok }}. Snapshot wrote degraded=true with carryforward ${{ steps.inspect.outputs.lkg_summary }}. Run: $evidence"
+          pwsh Scripts/algedonic-emit.ps1 `
+            -Severity warn `
+            -Repo ga `
+            -Source chatbot-qa-snapshot `
+            -Summary $summary `
+            -Details $details `
+            -EvidenceUrl $evidence `
+            -AffectedArtifacts $snap `
+            -TtlHours 48 `
+            -RouteTo operator
+
+      - name: Open / update tracking issue on degradation
+        if: always() && steps.inspect.outputs.degraded == 'true' && steps.inspect.outputs.snapshot_exists == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          OLLAMA_OK: ${{ steps.preflight.outputs.ollama_ok }}
+          OPTIC_OK: ${{ steps.preflight.outputs.optic_ok }}
+          PASS_PCT: ${{ steps.inspect.outputs.pass_pct }}
+          LKG_SUMMARY: ${{ steps.inspect.outputs.lkg_summary }}
+        run: |
+          $title  = '[meta] Chatbot QA degradation'
+          $date   = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+          $evidence = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
+          # Build the body via -join to avoid here-string indentation traps
+          # in YAML. Backticks inside markdown code spans are intentional.
+          $bt = [char]0x60   # backtick
+          $body = @(
+            "## Chatbot QA snapshot degraded — $date",
+            "",
+            "The Chatbot QA snapshot workflow could not measure a real ${bt}pass_pct${bt} today.",
+            "",
+            "- ${bt}ollama_ok${bt}: $($env:OLLAMA_OK)",
+            "- ${bt}optic_ok${bt}: $($env:OPTIC_OK)",
+            "- ${bt}pass_pct${bt}: ${bt}$($env:PASS_PCT)${bt}",
+            "- ${bt}last_known_good${bt}: $($env:LKG_SUMMARY)",
+            "- Snapshot: ${bt}state/quality/chatbot-qa/$date.json${bt}",
+            "- Run: $evidence",
+            "",
+            "The hosted ${bt}ubuntu-latest${bt} runner has no Ollama and no OPTIC-K index,",
+            "so the chatbot QA corpus is permanently degraded under this workflow. Either:",
+            "",
+            "1. Provision the backend in CI (Ollama service container + index download), OR",
+            "2. Move daily QA snapshots to a self-hosted runner with the backend warm, OR",
+            "3. Accept that this signal is operator-only and trim the workflow to a",
+            "   schema-shape check instead of a live corpus run.",
+            "",
+            "See ${bt}feedback_green_but_dead${bt} rule + 2026-05-24 ${bt}/backlog-groom${bt} finding."
+          ) -join "`n"
+
+          $existing = gh issue list --search "$title in:title" --state open --json number,title --limit 5 | ConvertFrom-Json
+          $matchIssue = $null
+          if ($existing) {
+            $matchIssue = $existing | Where-Object { $_.title -eq $title } | Select-Object -First 1
+          }
+          if ($matchIssue) {
+            Write-Host "Updating existing tracking issue #$($matchIssue.number)"
+            $body | gh issue comment $matchIssue.number -F -
+          } else {
+            Write-Host "Opening new tracking issue"
+            $body | gh issue create --title $title --label chatbot -F -
+          }
+
+      - name: Commit snapshot if produced
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          SNAP="state/quality/chatbot-qa/${DATE}.json"
+          if [ ! -f "$SNAP" ]; then
+            echo "No snapshot at $SNAP — runner-completed guard tripped or path mismatch. Failing workflow."
+            exit 1
+          fi
+          # Also commit the algedonic inbox line + poller state if they
+          # changed (algedonic-emit.ps1 appends to state/algedonic/inbox.jsonl).
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$SNAP"
+          if [ -f "state/algedonic/inbox.jsonl" ]; then git add state/algedonic/inbox.jsonl; fi
+          if git diff --cached --quiet; then
+            echo "Snapshot identical to existing — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): chatbot-qa snapshot ${DATE} [skip ci]"
+          git push
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatbot-qa-snapshot-${{ github.run_id }}
+          path: state/quality/chatbot-qa/
+          retention-days: 90

@@ -109,6 +109,150 @@ public class DefaultRoutingHintProviderTests
             $"Did NOT expect skill.modes boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
     }
 
+    // Common-tones hint — the comparison phrasing (share / shared / in-common
+    // / common|overlapping|pivot|mutual + notes|tones|pitches / intersection)
+    // is the discriminator. Added 2026-05-31 to close the 4 razor-thin misses
+    // in routing-eval-2026-05-30 (ct-3/7/8/10 lost by 0.001–0.022 to
+    // chordinfo / voiceleading / relativekey on chord-name-heavy queries).
+    [TestCase("what notes do Am7 and Dm7 share")]
+    [TestCase("which pitches do Dm and Bbmaj share")]
+    [TestCase("shared pitches in Cmaj and G7")]
+    [TestCase("common notes between F major and D minor")]
+    [TestCase("common tones between Cmaj7 and Am7")]
+    [TestCase("overlapping notes in Cmaj7 and Em7")]
+    [TestCase("pivot tones between Fmaj7 and Bb7")]
+    [TestCase("find the intersection of Em and Cmaj7")]
+    public void CommonTones_PositiveExamples_BoostCommonTonesIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.commontones"), Is.True,
+            $"Expected skill.commontones boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.commontones"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // False-positive guards — "notes/tones in <X>" without a comparison verb is
+    // a chordinfo / scaleinfo / modes query, NOT common-tones. These must abstain
+    // or the boost would steal single-entity chord/scale prompts.
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("spell a Bbdim chord")]
+    [TestCase("notes in C major scale")]
+    [TestCase("notes of D Dorian")]
+    [TestCase("tones in a Bb diminished seventh")]
+    public void CommonTones_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.commontones"), Is.False,
+            $"Common-tones rule should NOT fire for: \"{query}\" — false-positive guard. " +
+            $"Got deltas: {string.Join(", ", deltas.Select(kv => $"{kv.Key}={kv.Value}"))}");
+    }
+
+    // Key-identification synonyms — "tonal center/centre" and "home key" were
+    // added 2026-05-31 to close ki-8 ("figure out the tonal center of E A B E"),
+    // which scaleinfo was stealing. The original what-key/key-is anchors miss them.
+    [TestCase("figure out the tonal center of E A B E")]
+    [TestCase("what is the tonal centre of this progression")]
+    [TestCase("what's the home key for F C G Am")]
+    [TestCase("what key is this progression")]
+    public void KeyIdentification_PositiveExamples_BoostKeyIdIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.keyidentification"), Is.True,
+            $"Expected skill.keyidentification boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
+    // Progression-mood (transform) — added 2026-05-31. progressionmood had no
+    // hint rule; mood-transform queries leaked to scaleinfo/others on the
+    // chord/key centroid. pm-9 ("lift the mood of D minor") is the target.
+    [TestCase("lift the mood of D minor")]
+    [TestCase("make C G Am F sound darker")]
+    [TestCase("brighten up a minor key tune")]
+    [TestCase("give this progression a sadder feel")]
+    [TestCase("make my chords feel more melancholy")]
+    [TestCase("make these chords sound more cinematic")]
+    [TestCase("techniques to add tension to a happy progression")]
+    [TestCase("darken a vi-IV-I-V progression")]
+    public void ProgressionMood_PositiveExamples_BoostMoodIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressionmood"), Is.True,
+            $"Expected skill.progressionmood boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.progressionmood"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // False-positive guards for the two new rules — descriptive scale/chord
+    // queries must NOT boost keyidentification or progressionmood.
+    [TestCase("notes in C major scale")]
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("diatonic chords in C major")]
+    public void KeyIdAndMood_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.keyidentification"), Is.False,
+            $"keyidentification should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas.ContainsKey("skill.progressionmood"), Is.False,
+            $"progressionmood should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
+    // Progression-completion (continuation) — added 2026-05-31. recall was 0.60;
+    // pc-3/7/9/10 were stolen by keyid/commontones/grothendieckparse/diatonic.
+    [TestCase("complete this: C Am F")]
+    [TestCase("next chord after Dm7 G7")]
+    [TestCase("what resolves Fmaj7 best")]
+    [TestCase("chord after V in a major key")]
+    [TestCase("what chord comes next after C Am F")]
+    [TestCase("suggest a chord to finish this progression")]
+    [TestCase("predict the next chord in I V vi")]
+    [TestCase("I have C G — what should follow")]
+    public void ProgressionCompletion_PositiveExamples_BoostCompletionIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressioncompletion"), Is.True,
+            $"Expected skill.progressioncompletion boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.progressioncompletion"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // Diatonic-chords hint + scaleinfo over-fire suppression — "harmonized A
+    // minor scale" (dc-8) must boost diatonicchords and must NOT boost scaleinfo
+    // (the harmonized-lookbehind guard), while plain scale queries still boost
+    // scaleinfo (regression guard).
+    [TestCase("harmonized A minor scale",        true)]
+    [TestCase("diatonic chords in C major",      true)]
+    [TestCase("diatonic seventh chords in E minor", true)]
+    public void Diatonic_PositiveExamples_BoostDiatonicIntent(string query, bool _)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.diatonicchords"), Is.True,
+            $"Expected skill.diatonicchords boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
+    [Test]
+    public void Scaleinfo_HarmonizedScale_DoesNotBoostScaleinfo_ButPlainScaleStillDoes()
+    {
+        // dc-8: "harmonized A minor scale" is a diatonic query — scaleinfo must
+        // NOT fire (suppressed by the harmonized-lookbehind), diatonic must.
+        var harm = _hints.GetDeltas("harmonized A minor scale");
+        Assert.That(harm.ContainsKey("skill.scaleinfo"), Is.False,
+            "scaleinfo must NOT fire on 'harmonized A minor scale' (over-fire guard).");
+        Assert.That(harm.ContainsKey("skill.diatonicchords"), Is.True,
+            "diatonicchords must fire on 'harmonized A minor scale'.");
+
+        // Regression guard: plain scale queries must still boost scaleinfo.
+        Assert.That(_hints.GetDeltas("notes in C major scale").ContainsKey("skill.scaleinfo"), Is.True);
+        Assert.That(_hints.GetDeltas("A minor scale notes").ContainsKey("skill.scaleinfo"), Is.True);
+    }
+
+    // False-positive guard — descriptive chord/scale prompts must not boost
+    // progressioncompletion.
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("diatonic chords in C major")]
+    [TestCase("notes in C major scale")]
+    public void ProgressionCompletion_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressioncompletion"), Is.False,
+            $"progressioncompletion should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
     [Test]
     public void EmptyQuery_ReturnsNoDeltas()
     {

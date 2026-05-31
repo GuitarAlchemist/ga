@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-05-23T06:51:09.2336637+00:00",
+  "total_prompts": 50,
+  "pass_pct": null,
+  "note": "Environment degraded: 49/49 failures were HTTP 5xx / network errors. pass_pct omitted — backend (Ollama / OPTIC-K index / deps) was unavailable, not the chatbot itself failing."
+}

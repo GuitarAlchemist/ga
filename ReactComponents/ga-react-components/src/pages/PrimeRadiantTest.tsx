@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { Box, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import CastButton from '../components/Common/CastButton';
 
 // Use the new force-directed Prime Radiant
@@ -23,11 +23,11 @@ const PrimeRadiantTest: React.FC = () => {
 
   return (
     <Container maxWidth={false} disableGutters sx={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
-      <CastButton />
+      <CastButton right={64} />
       <Suspense fallback={
         <div style={{
           width: '100%',
-          height: '100vh',
+          height: '100%',
           background: '#000008',
           display: 'flex',
           alignItems: 'center',

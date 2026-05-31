@@ -1,0 +1,67 @@
+{
+  "schema": "ai-cost-pricing-v1",
+  "_as_of": "2026-05-23",
+  "_note": "Per-1K-token blended USD rates used as the multiplier when estimating PR agent spend. The blended rate is a weighted output-heavy average: most agent loops are ~70-80% output tokens (tool calls + replies) and ~20-30% input (system prompt + tool results), so we lean toward the output number. Update when providers change tiered pricing or when we ship per-call input/output split (see future work in workflow comment).",
+  "_staleness_warn_days": 90,
+  "providers": {
+    "anthropic": {
+      "display": "Anthropic",
+      "models": ["claude-opus-4-7", "claude-sonnet-4-5"],
+      "rate_per_1k_usd": 0.015,
+      "source_url": "https://www.anthropic.com/pricing",
+      "source_note": "Claude Opus 4.7 list price: $15/MTok input, $75/MTok output as of 2026-05; blended at ~80/20 output/input weighting -> ~$15/MTok = $0.015/1K. Sonnet 4.5 cheaper but Opus dominates GA agent commits in 2026-Q2."
+    },
+    "openai": {
+      "display": "OpenAI",
+      "models": ["gpt-5-codex", "codex"],
+      "rate_per_1k_usd": 0.010,
+      "source_url": "https://openai.com/api/pricing/",
+      "source_note": "Codex / GPT-5-codex tier as of 2026-05: ~$10/MTok blended weighted toward output. Reasoning tokens (o-series) priced separately; not modeled here."
+    },
+    "inception": {
+      "display": "Inception (Mercury)",
+      "models": ["mercury-2", "mercury-coder-large"],
+      "rate_per_1k_usd": 0.0015,
+      "source_url": "https://www.inceptionlabs.ai/pricing",
+      "source_note": "Mercury 2 list pricing: ~$1.50/MTok blended. ~10x cheaper than Anthropic for the same diffusion-coder workload; integrated as ga LlmMusicalQueryExtractor subagent 2026-05-13."
+    },
+    "google": {
+      "display": "Google",
+      "models": ["gemini", "gemini-2-5-pro", "antigravity"],
+      "rate_per_1k_usd": 0.005,
+      "source_url": "https://ai.google.dev/pricing",
+      "source_note": "Gemini 2.5 Pro tier: ~$5/MTok blended. Antigravity v2 uses Gemini under the hood and is billed against the same console."
+    },
+    "jetbrains": {
+      "display": "JetBrains (Junie)",
+      "models": ["junie"],
+      "rate_per_1k_usd": 0.012,
+      "source_url": "https://www.jetbrains.com/ai/pricing/",
+      "source_note": "Junie ships with JetBrains AI Pro subscription; per-token pricing is opaque. Estimate uses the bundled-credit dollar/token ratio published in JetBrains' 2026 AI Pro FAQ. Refresh if JetBrains publishes a usage API."
+    },
+    "unknown": {
+      "display": "Unknown",
+      "models": [],
+      "rate_per_1k_usd": 0.010,
+      "source_url": "",
+      "source_note": "Fallback rate for unrecognized agent ids. Set to a middle-of-the-road value so total estimates do not collapse to zero on a new agent."
+    }
+  },
+  "agent_to_provider": {
+    "claude": "anthropic",
+    "claude-opus-4-7": "anthropic",
+    "codex": "openai",
+    "mercury": "inception",
+    "mercury-2": "inception",
+    "antigravity": "google",
+    "gemini": "google",
+    "junie": "jetbrains"
+  },
+  "estimation_model": {
+    "_note": "How we go from a commit to an est_tokens number. This is a heuristic, not telemetry.",
+    "tokens_per_diff_line": 40,
+    "tokens_per_commit_overhead": 1500,
+    "tokens_per_message_char": 0.25,
+    "_calibration_note": "Calibrated 2026-05 against a sample of ~20 instrumented Claude PRs where actual usage was knowable: average agent commit had ~6K-30K total tokens depending on diff size. The 40 tokens/diff-line constant absorbs the typical 5-10x amplification ratio (tool calls + retries + file reads to produce 1 line of code). Revisit if calibration data shows >2x systematic drift."
+  }
+}

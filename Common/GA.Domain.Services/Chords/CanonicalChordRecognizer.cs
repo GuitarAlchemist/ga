@@ -14,6 +14,7 @@ using GA.Domain.Core.Theory.Harmony;
 ///     on every instrument.
 /// </para>
 /// </summary>
+// @ai:business-value canonical PC-set → chord-name identity is the foundation of every voicing search, naming, and explanation surface — every dashboard and chatbot answer routes through it [T:manually-reviewed conf:0.95 src:product-owner@2026-05-24]
 public static class CanonicalChordRecognizer
 {
     /// <summary>

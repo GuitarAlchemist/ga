@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "domain": "embeddings",
+  "purpose": "Baseline + scope-boundary contract for the /auto-optimize loop on the OPTIC-K embedding-quality domain (the 240-dim partition-weighted geometry that powers RAG). Consumed by .claude/skills/auto-optimize/SKILL.md.",
+  "established_at": "2026-05-16T22:30:00Z",
+  "established_by": "embeddings-baseline-bootstrap (#192 follow-up to #182)",
+  "schema_pin": {
+    "OPTIC-K": "v1.8",
+    "ix_tool": "ix-embedding-diagnostics 0.1.0",
+    "snapshot_schema": "see state/quality/embeddings/2026-04-17.json"
+  },
+
+  "metric": "leak_detection_full_classifier_accuracy",
+  "metric_description": "Random-forest cross-validation accuracy on a 6000-sample balanced classifier predicting voicing instrument from embedding vector. LOWER is better — the OPTIC-K geometry should be T-invariant / instrument-agnostic, so a perfect embedding scores near baseline_random (~0.333). Higher = the embedding leaks instrument identity, a known regression direction tracked since OPTIC-K v1.3.",
+  "primary_baseline": 0.7522,
+  "primary_baseline_source": "post-refactor run 2026-04-17T04:50:22Z (state/quality/embeddings/2026-04-17-postrefactor.json). Pre-refactor was 0.7473; postrefactor improved by +0.005, so the post-refactor accuracy IS the more conservative baseline (later refactors should not regress past it).",
+  "metric_polarity": "lower-is-better",
+
+  "_harness": {
+    "rollback_metadata": {
+      "roundtrip_validator": ".claude/skills/embeddings-roundtrip-validate/SKILL.md",
+      "reject_on_loss": true,
+      "reject_on_regression": true,
+      "regression_threshold": 0.01,
+      "note": "Validator ships in PR landing this baseline change. CRITICAL: this domain is LOWER-IS-BETTER (full_classifier_accuracy near baseline_random ~0.333 is ideal). delta > +regression_threshold = reject. Validator handles the polarity flip; do NOT replicate chatbot-qa's higher-is-better logic."
+    },
+    "kill_switches": {
+      "global":     "state/.loop-halted",
+      "per_domain": "state/quality/embeddings/.STOP"
+    },
+    "lock_file":   "state/quality/embeddings/.lock",
+    "history_file":"state/quality/embeddings/loop-history.jsonl"
+  },
+
+  "scope_boundary": {
+    "allow_edit": [
+      "Common/GA.Business.ML/Embeddings/**/*.cs",
+      "Common/GA.Business.ML/Search/MusicalQueryEncoder.cs",
+      "Common/GA.Business.ML/Text/**/*.cs"
+    ],
+    "protected": [
+      "Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs",
+      "state/voicings/optick.index",
+      "state/quality/embeddings/baseline.json",
+      "Tests/**/*.cs",
+      "Scripts/run-prompt-corpus.ps1",
+      ".github/workflows/*"
+    ],
+    "note": "EmbeddingSchema.cs is the canonical 240-dim contract — changing TotalDimension or partition layout is a one-way door per CLAUDE.md. Schema changes must come through a coordinated /feature plan, not from the auto-loop."
+  },
+
+  "_open_gaps": {
+    "snapshot_cadence": "RESOLVED 2026-05-16 in PR #250 — .github/workflows/embeddings-snapshot.yml runs daily at 07:00 UTC. First production snapshot lands when the cron fires next.",
+    "loader_filename_strictness": "RESOLVED 2026-05-16 in PR #250 — workflow renames embedding-diagnostics-YYYY-MM-DD.json to canonical YYYY-MM-DD.json before commit.",
+    "roundtrip_validator": "RESOLVED 2026-05-16 in this PR — .claude/skills/embeddings-roundtrip-validate/SKILL.md mirrors chatbot-qa-roundtrip-validate with reversed metric polarity for lower-is-better.",
+    "still_open_v2": "Roundtrip-equivalence gate (golden voicings re-embedded must hit cosine < ε), per-partition reject gates, and trend-aware threshold derivation are documented in the validator SKILL.md `Open improvements` section. Not blockers for v1 of the unattended loop."
+  }
+}

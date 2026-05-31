@@ -5,6 +5,7 @@ import {
   Settings,
   MusicNote,
   Info,
+  AutoAwesome,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -20,6 +21,7 @@ import {
 import DiatonicChordTable from 'ga-react-components/src/components/DiatonicChordTable';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
+import ShowcasePanel from './ShowcasePanel';
 import {
   fetchChatExamples,
   fetchChatStatus,
@@ -46,6 +48,7 @@ const ChatInterface: React.FC = () => {
     'What is a ii-V-I progression?',
     'Show me chord voicings for Cmaj7',
   ]);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   // Measure container height for virtualization
   useEffect(() => {
@@ -179,6 +182,16 @@ const ChatInterface: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
+            <Tooltip title="Showcase — what this chatbot can do">
+              <IconButton
+                color="inherit"
+                size="small"
+                onClick={() => setShowcaseOpen(true)}
+                aria-label="Open showcase"
+              >
+                <AutoAwesome />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="About">
               <IconButton color="inherit" size="small">
                 <Info />
@@ -259,6 +272,13 @@ const ChatInterface: React.FC = () => {
 
       {/* Input Area */}
       <ChatInput onSend={handleSendMessage} isLoading={isLoading} onClear={clearMessages} />
+
+      <ShowcasePanel
+        open={showcaseOpen}
+        apiBaseUrl={chatConfig.apiEndpoint}
+        onClose={() => setShowcaseOpen(false)}
+        onSelectPrompt={handleSendMessage}
+      />
     </div>
   );
 };

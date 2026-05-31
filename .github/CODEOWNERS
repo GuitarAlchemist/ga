@@ -1,0 +1,33 @@
+# CODEOWNERS — required reviewer rules
+# https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
+#
+# Rules below are *additive* to branch protection. GitHub requires a CODEOWNERS
+# reviewer on PRs touching listed paths when branch protection enables it.
+#
+# Maintainer: @spareilleux. Add additional reviewers per path as the team grows.
+
+# ============================================================================
+# Cross-repo contracts — canonical source for ga / ix / tars / Demerzel
+# ============================================================================
+# These schemas are vendored into sibling repos and bumping them silently
+# invalidates downstream baselines. The 2026-05-15 octo security review
+# flagged auto-propagation of GA schema changes as a HIGH-severity gap:
+# a compromised PR could widen schema validation (e.g. add a permissive
+# `producer` enum value) and the vendored copies would pick it up without
+# scrutiny. Require human review on every schema change.
+
+/docs/contracts/                                  @spareilleux
+/docs/contracts/qa-verdict.schema.json            @spareilleux
+/docs/contracts/qa-verdict.contract.md            @spareilleux
+/docs/contracts/optick-sae-artifact.schema.json   @spareilleux
+/docs/contracts/optick-sae-artifact.contract.md   @spareilleux
+/docs/contracts/digest-schema.json                @spareilleux
+
+# ============================================================================
+# Cross-repo discipline plans
+# ============================================================================
+# Plan docs that lock cross-repo behaviour (deadlines, sign-off lists,
+# Phase 0 deliverables) — changes need explicit review so a stray edit
+# doesn't quietly re-open a closed sign-off.
+/docs/plans/2026-05-02-arch-qa-architect-tribunal-plan.md       @spareilleux
+/docs/plans/2026-05-14-arch-cherny-adoption-and-tribunal-ci-plan-v2.md @spareilleux

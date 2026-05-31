@@ -1,0 +1,204 @@
+name: Semantic Regression — Chatbot Goldens
+
+# Phase 2 harness #1 — closes the "did the chatbot's answer get better or
+# worse with this PR?" loop. Today state/quality/chatbot-qa/golden-traces/
+# stores per-prompt reference answers (median elapsed + agent + verified
+# date — surfaced as QA badges in /chatbot/#showcase). Trace-shape diffs
+# are already covered by Scripts/compare-trace-to-canonical.ps1, but
+# nothing automated catches semantic drift in the answer text itself.
+#
+# What this does on a PR touching the chatbot or LLM-routing code:
+#   1. Spins up GaChatbot.Api locally on the runner.
+#   2. Replays each golden-trace prompt that has a stored reference answer
+#      (presence of run-1.json with response.naturalLanguageAnswer).
+#   3. Embeds reference + new answer via OpenAI text-embedding-3-small.
+#   4. Computes cosine(ref, new); flags any prompt with cosine < 0.85.
+#   5. Posts a PR comment with the table and writes a JSON artifact to
+#      state/quality/chatbot-qa/semantic-regression/<sha>.json so the
+#      dashboard QA tab can ingest it.
+#
+# Embedding choice — documented per the harness contract:
+#   ga_generate_voicing_embedding is a 228-dim *voicing* encoder (raw
+#   pitch-class geometry). It is the canonical surface for music-theory
+#   *voicings*, not prose chatbot answers. Prose answers are paragraphs of
+#   English text with markdown structure; voicing-geometry vectors would
+#   collapse them. text-embedding-3-small is the project's standing
+#   prose embedder (already used by Apps/ga-server/GaApi/Services/
+#   VectorSearchService.cs and GaDataCLI). We commit to one encoder per
+#   run and record it in the artifact so the dashboard never compares
+#   across encoders.
+#
+# Failure semantics:
+#   - Drift (cosine < threshold) is REPORTED, not fatal. The artifact +
+#     PR comment is the deliverable; the user decides if it ships.
+#   - Hard failures (chatbot didn't start, embedding API down, no
+#     OPENAI_API_KEY) mark the workflow as failed — silence is worse
+#     than a loud red X for a regression gate.
+#   - "No baseline yet" prompts (no run-1.json) are skipped with a note,
+#     not counted as drift. Reference baselines arrive incrementally.
+#
+# Cost guardrail:
+#   ~45 prompts × ~4 KB avg answer × 2 embeddings ≈ 90k input tokens
+#   per run. text-embedding-3-small is $0.02 / 1M input tokens, so
+#   ~$0.0018 / PR run. If a single run exceeds 50k tokens the workflow
+#   warns and the user can switch to sampling. See SAMPLE_SIZE input.
+
+on:
+  # Dispatch-only (2026-05-31). This is a LIVE-MODEL integration check: it spins
+  # up GaChatbot.Api and replays golden prompts, which needs Ollama (llama3.2:3b
+  # + nomic-embed) for the chatbot to generate answers. GitHub-hosted runners
+  # have no Ollama, so on `pull_request` the chatbot never became ready
+  # ("Connection refused localhost:11434" in SemanticIntentRouter warmup) and
+  # the job failed on EVERY PR regardless of content — repo-wide red noise, not
+  # a real regression signal. Run it on demand where a model runner exists (a dev
+  # machine or a self-hosted runner with Ollama). The OPENAI_API_KEY secret powers
+  # only the diff-embedding step (text-embedding-3-small), not the chatbot itself
+  # — do NOT point the chatbot at OpenAI in CI, that would invalidate the diff
+  # against the llama3.2-generated golden traces. Re-add a `pull_request` trigger
+  # only once CI provisions a model runner (self-hosted + Ollama service).
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: 'Sample N of M prompts (0 = all). Cost guardrail override.'
+        required: false
+        default: '0'
+      cosine_threshold:
+        description: 'Drift threshold (cosine < this is flagged). Default 0.85.'
+        required: false
+        default: '0.85'
+
+permissions:
+  contents: read
+  pull-requests: write    # post the regression-table comment
+
+concurrency:
+  group: semantic-regression-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay-and-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      COSINE_THRESHOLD: ${{ github.event.inputs.cosine_threshold || '0.85' }}
+      SAMPLE_SIZE: ${{ github.event.inputs.sample_size || '0' }}
+      CHATBOT_PORT: '5252'
+      CHATBOT_URL: 'http://localhost:5252'
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+
+      - name: Guard — OPENAI_API_KEY present
+        shell: bash
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "::error::OPENAI_API_KEY secret is not configured. Cannot embed answers."
+            echo "Set it under Settings → Secrets → Actions, or skip this workflow until it is."
+            exit 1
+          fi
+          echo "OPENAI_API_KEY length: ${#OPENAI_API_KEY} (good)"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore + build chatbot
+        run: |
+          dotnet restore Apps/GaChatbot.Api/GaChatbot.Api.csproj
+          dotnet build  Apps/GaChatbot.Api/GaChatbot.Api.csproj -c Release --no-restore
+
+      - name: Start chatbot in background
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          nohup dotnet run \
+            --project Apps/GaChatbot.Api/GaChatbot.Api.csproj \
+            --configuration Release \
+            --no-build \
+            --urls "${CHATBOT_URL}" \
+            > artifacts/chatbot.log 2>&1 &
+          echo $! > artifacts/chatbot.pid
+          echo "Chatbot PID: $(cat artifacts/chatbot.pid)"
+
+      - name: Wait for chatbot ready
+        shell: bash
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf "${CHATBOT_URL}/health" >/dev/null 2>&1 \
+               || curl -sf "${CHATBOT_URL}/api/chatbot/health" >/dev/null 2>&1; then
+              echo "Chatbot up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Chatbot did not become ready within 60s. Log tail:"
+          tail -100 artifacts/chatbot.log || true
+          exit 1
+
+      - name: Replay goldens and diff
+        id: replay
+        shell: pwsh
+        run: |
+          pwsh Scripts/replay-chatbot-goldens.ps1 `
+            -ChatbotUrl   $env:CHATBOT_URL `
+            -Threshold    ([double]$env:COSINE_THRESHOLD) `
+            -SampleSize   ([int]$env:SAMPLE_SIZE) `
+            -HeadSha      "${{ github.event.pull_request.head.sha || github.sha }}" `
+            -OutputDir    "state/quality/chatbot-qa/semantic-regression" `
+            -EmitMarkdown "artifacts/regression-comment.md"
+
+      - name: Stop chatbot
+        if: always()
+        shell: bash
+        run: |
+          if [ -f artifacts/chatbot.pid ]; then
+            kill "$(cat artifacts/chatbot.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-regression-${{ github.run_id }}
+          path: |
+            state/quality/chatbot-qa/semantic-regression/
+            artifacts/chatbot.log
+            artifacts/regression-comment.md
+          retention-days: 30
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'artifacts/regression-comment.md';
+            if (!fs.existsSync(path)) {
+              core.info('No regression comment artifact emitted; skipping PR comment.');
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            // Replace any prior bot comment with the same marker so the PR
+            // doesn't accumulate one per push.
+            const marker = '<!-- semantic-regression-chatbot -->';
+            const comments = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100
+            });
+            const prior = comments.data.find(c =>
+              c.user.type === 'Bot' && c.body && c.body.includes(marker)
+            );
+            const finalBody = marker + '\n' + body;
+            if (prior) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: prior.id, body: finalBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body: finalBody
+              });
+            }
