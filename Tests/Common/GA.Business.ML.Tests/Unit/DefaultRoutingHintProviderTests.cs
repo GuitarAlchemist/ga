@@ -109,6 +109,43 @@ public class DefaultRoutingHintProviderTests
             $"Did NOT expect skill.modes boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
     }
 
+    // Common-tones hint — the comparison phrasing (share / shared / in-common
+    // / common|overlapping|pivot|mutual + notes|tones|pitches / intersection)
+    // is the discriminator. Added 2026-05-31 to close the 4 razor-thin misses
+    // in routing-eval-2026-05-30 (ct-3/7/8/10 lost by 0.001–0.022 to
+    // chordinfo / voiceleading / relativekey on chord-name-heavy queries).
+    [TestCase("what notes do Am7 and Dm7 share")]
+    [TestCase("which pitches do Dm and Bbmaj share")]
+    [TestCase("shared pitches in Cmaj and G7")]
+    [TestCase("common notes between F major and D minor")]
+    [TestCase("common tones between Cmaj7 and Am7")]
+    [TestCase("overlapping notes in Cmaj7 and Em7")]
+    [TestCase("pivot tones between Fmaj7 and Bb7")]
+    [TestCase("find the intersection of Em and Cmaj7")]
+    public void CommonTones_PositiveExamples_BoostCommonTonesIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.commontones"), Is.True,
+            $"Expected skill.commontones boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.commontones"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // False-positive guards — "notes/tones in <X>" without a comparison verb is
+    // a chordinfo / scaleinfo / modes query, NOT common-tones. These must abstain
+    // or the boost would steal single-entity chord/scale prompts.
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("spell a Bbdim chord")]
+    [TestCase("notes in C major scale")]
+    [TestCase("notes of D Dorian")]
+    [TestCase("tones in a Bb diminished seventh")]
+    public void CommonTones_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.commontones"), Is.False,
+            $"Common-tones rule should NOT fire for: \"{query}\" — false-positive guard. " +
+            $"Got deltas: {string.Join(", ", deltas.Select(kv => $"{kv.Key}={kv.Value}"))}");
+    }
+
     [Test]
     public void EmptyQuery_ReturnsNoDeltas()
     {

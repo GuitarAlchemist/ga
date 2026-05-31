@@ -161,6 +161,20 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.voiceleading"),
 
+        // Common tones — added 2026-05-31 to close a 0.71-F1 / 0.60-recall
+        // hole. The routing-eval-2026-05-30 baseline showed 4 common-tones
+        // prompts losing by razor-thin margins (0.001–0.022) to chordinfo /
+        // voiceleading / relativekey, because the queries are chord-name-heavy
+        // ("what notes do Am7 and Dm7 share") and those neighbors' centroids
+        // pull on the chord literals. The DISCRIMINATOR is the comparison
+        // phrasing — share / shared / in-common / common|overlapping|pivot|
+        // mutual + notes|tones|pitches / intersection of — which is the literal
+        // definition of a common-tones query and does NOT appear in chordinfo's
+        // "notes in <chord>" shape. +0.06 tips each thin tie reliably.
+        (new Regex(@"\b(?:common|shared|overlapping|pivot|mutual)\s+(?:notes?|tones?|pitches?)\b|\b(?:notes?|tones?|pitches?)\b[^.?!]{0,40}?\b(?:shared?|in\s+common)\b|\bintersection\s+of\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.commontones"),
+
         // Capo — added 2026-05-14 to close BACKLOG dealbreaker #3. Anchored on
         // the literal "capo" token (music-unambiguous — no English homonyms
         // that overlap meaningfully) plus a fret number or the "shape" keyword.
