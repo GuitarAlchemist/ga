@@ -40,7 +40,11 @@ public sealed class SemanticIntentRouter(
     // tops out around 0.58–0.62 for short queries against domain-backed
     // skills; 0.55 gives the hint provider room to land its win without
     // letting truly-unrelated queries grab an intent.
-    private const float DefaultMinConfidence = 0.55f;
+    // Public so evaluation harnesses pin to the SAME threshold production
+    // routes with — a hardcoded copy in RoutingEvalHarness drifted to 0.65
+    // after this dropped to 0.55 (2026-05-13), making the baseline measure a
+    // threshold prod never used. One source of truth prevents recurrence.
+    public const float DefaultMinConfidence = 0.55f;
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
