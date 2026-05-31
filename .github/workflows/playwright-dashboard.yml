@@ -152,9 +152,12 @@ jobs:
           npx playwright test --config=playwright.dashboard.config.ts
 
       - name: Build JSON snapshot
-        # Always runs (regardless of test pass/fail) so we get a per-run
-        # artifact even on failure.
-        if: always()
+        # Runs regardless of test pass/fail (so failures still produce an
+        # artifact) — but ONLY when the live URL was reachable. When the
+        # suite was skipped (deploy down) there's no dashboard-results.json,
+        # and committing a zero-test snapshot with an "error" field would
+        # pollute the quality trend as a fake failure rather than a skip.
+        if: always() && steps.reach.outputs.reachable == 'true'
         env:
           PW_OUTCOME: ${{ steps.pw.outcome }}
           GITHUB_SHA: ${{ github.sha }}
@@ -256,8 +259,10 @@ jobs:
 
       - name: Commit snapshot back to main
         # Only commit on push-to-main runs (not on PRs — PR runs are
-        # informational and shouldn't pollute git history).
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # informational and shouldn't pollute git history). Also gated on
+        # reachability: a skipped (deploy-down) run produces no snapshot, so
+        # there's nothing real to commit.
+        if: always() && steps.reach.outputs.reachable == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -e
           git config user.name  "github-actions[bot]"
