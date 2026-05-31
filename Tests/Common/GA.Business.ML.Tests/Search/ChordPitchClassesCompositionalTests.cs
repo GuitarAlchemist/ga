@@ -96,6 +96,13 @@ public class ChordPitchClassesCompositionalTests
     [TestCase("C13no11", new[] { 0, 2, 4, 7, 9, 10 })]
     [TestCase("C9no3", new[] { 0, 2, 7, 10 })]
     [TestCase("Cmaj7no5", new[] { 0, 4, 11 })]
+    // Accidental-additions (#376 octo P2): the additions pass must accept a sign,
+    // or "add#11" leaves "add" residue (the alteration pass eats "#11") → parse fails.
+    [TestCase("Cadd#11", new[] { 0, 4, 6, 7 })]
+    [TestCase("C(add#11)", new[] { 0, 4, 6, 7 })]
+    [TestCase("Caddb9", new[] { 0, 1, 4, 7 })]
+    [TestCase("Cadd#9", new[] { 0, 3, 4, 7 })]
+    [TestCase("Caddb13", new[] { 0, 4, 7, 8 })]
     public void ResolvesExactPitchClasses(string symbol, int[] expected)
     {
         Assert.That(ChordPitchClasses.TryParse(symbol, out var root, out var pcs), Is.True, $"{symbol} should parse");

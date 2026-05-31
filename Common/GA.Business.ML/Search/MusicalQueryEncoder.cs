@@ -297,13 +297,17 @@ public static class ChordPitchClasses
         int? sixth = null;
         int? seventh = null;
 
-        // additions: add2 add4 add6 add9 add11 add13
-        foreach (Match m in Regex.Matches(w, @"add(2|4|6|9|11|13)"))
+        // additions: add2 add4 add6 add9 add11 add13, AND accidental-additions
+        // add#11 / addb9 / add#9 / addb13 etc. The sign group is optional — must
+        // run BEFORE the alteration pass below, or "add#11" leaves "add" as residue
+        // (the alteration pass eats "#11") and the whole symbol fails to parse.
+        foreach (Match m in Regex.Matches(w, @"add(b|#)?(2|4|6|9|11|13)"))
         {
-            var d = int.Parse(m.Groups[1].Value);
-            explicitDegrees[d] = DegreeSemitone(d, '\0');
+            var sign = m.Groups[1].Value.Length > 0 ? m.Groups[1].Value[0] : '\0';
+            var d = int.Parse(m.Groups[2].Value);
+            explicitDegrees[d] = DegreeSemitone(d, sign);
         }
-        w = Regex.Replace(w, @"add(2|4|6|9|11|13)", "");
+        w = Regex.Replace(w, @"add(b|#)?(2|4|6|9|11|13)", "");
 
         // alterations: b5 #5 b6 b9 #9 #11 b13 … (sign + degree)
         foreach (Match m in Regex.Matches(w, @"(b|#)(5|6|9|11|13)"))
