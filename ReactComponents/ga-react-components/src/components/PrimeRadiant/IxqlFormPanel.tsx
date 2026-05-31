@@ -9,6 +9,7 @@ import type { FormFieldDef } from './IxqlControlParser';
 import { signalBus, useSignals } from './DashboardSignalBus';
 import { generateFormProof, publishRenderProof } from './RenderProof';
 import { isValidTransition, publishTransition, type HexavalentValue } from './HexavalentTemporal';
+import { HEXAVALENT_COLORS } from './types';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -19,17 +20,8 @@ export interface IxqlFormPanelProps {
 }
 
 // ---------------------------------------------------------------------------
-// Hexavalent colors
+// Hexavalent labels (colors imported from ./types for shared use)
 // ---------------------------------------------------------------------------
-
-const HEXAVALENT_COLORS: Record<string, string> = {
-  T: '#22c55e',
-  P: '#a3e635',
-  U: '#6b7280',
-  D: '#f97316',
-  F: '#ef4444',
-  C: '#d946ef',
-};
 
 const HEXAVALENT_LABELS: Record<string, string> = {
   T: 'True',
