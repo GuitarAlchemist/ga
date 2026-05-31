@@ -48,6 +48,7 @@ import ConstructionIcon from '@mui/icons-material/Construction';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import RuleIcon from '@mui/icons-material/Rule';
 import { HarnessTab } from '../components/Harness';
+import { deriveTileStatus, type QualitySnapshotLike } from '../utils/qualityStatus';
 import {
   SentruxHealthCard,
   SentruxRulesCard,
@@ -261,7 +262,6 @@ const QualityCard: React.FC = () => {
     const d = entry.data;
     const metricName = d.metric_name as string | undefined;
     const metricValue = d.metric_value as number | undefined;
-    const oracleStatus = d.oracle_status as string | undefined;
     const emittedAt = d.emitted_at as string | undefined;
     // Defensive narrowing: a few producers (notably readme-drift) keep a
     // structured `summary` object for back-compat with their own consumers
@@ -272,21 +272,38 @@ const QualityCard: React.FC = () => {
     const summary = typeof d.summary === 'string' ? d.summary : undefined;
     const problems = d.problems as unknown[] | undefined;
 
-    const statusColor = oracleStatus === 'ok' ? 'success' : oracleStatus === 'warn' ? 'warning' : oracleStatus ? 'error' : 'default';
+    // deriveTileStatus reads oracle_status when present and falls back to
+    // `degraded:true` + last_known_good_pass_pct so a hosted-runner degraded
+    // snapshot renders amber with the last-known-good context — not silently
+    // gray.
+    const tile = deriveTileStatus(d as QualitySnapshotLike);
 
     return (
-      <Box key={name} sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Box
+        key={name}
+        sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider' }}
+        data-testid={`qa-domain-row-${name}`}
+        data-tile-status={tile.label}
+      >
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{name}</Typography>
-          {oracleStatus && (
+          {tile.label !== 'unknown' && (
             <Chip
-              label={oracleStatus}
-              color={statusColor as 'success' | 'warning' | 'error' | 'default'}
+              label={tile.label}
+              color={tile.color}
               size="small"
               sx={{ fontSize: '0.7rem', height: 20 }}
             />
           )}
         </Stack>
+        {/* Degraded-state headline (envelope contract). Shown even when
+            metric_name is absent — that's the whole point: the producer was
+            honest about degradation, the dashboard must surface it. */}
+        {tile.label === 'degraded' && (
+          <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
+            {tile.headline} · {entry.source}
+          </Typography>
+        )}
         {metricName !== undefined && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
             {metricName}: <strong>{metricValue ?? '—'}</strong>
@@ -349,6 +366,18 @@ const QualityCard: React.FC = () => {
           </Typography>
         )}
       </Stack>
+      {/* Reconciliation note: ix-quality-trend currently skips snapshots with
+          a null pass_pct, so chatbot-qa rows here show n=0 / "—" on days
+          where the per-domain tile (above) shows "degraded · last good N%".
+          Surface the contradiction so an operator isn't confused. Remove this
+          note once ix-quality-trend learns to carry forward degraded days. */}
+      <Alert severity="info" sx={{ mb: 1, py: 0, fontSize: '0.75rem' }}>
+        Note: degraded days (null <code>pass_pct</code>) are excluded from the
+        trend rollup below — that's why <code>chatbot-qa</code> can show
+        <em> n=0</em> here while the per-domain tile above shows{' '}
+        <strong>degraded · last good N%</strong>. Carry-forward support
+        is tracked upstream in <code>ix-quality-trend</code>.
+      </Alert>
       <Box
         sx={{
           maxHeight: 720,
