@@ -2011,6 +2011,7 @@ function devDataPlugin(): Plugin {
                         sentrux_rules: '/dev-data/sentrux/rules',
                         sentrux_test_gaps: '/dev-data/sentrux/test-gaps',
                         sentrux_dsm: '/dev-data/sentrux/dsm',
+                        sentrux_next_steps: '/dev-data/sentrux/next-steps',
                         ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
                         // Action endpoints — CF-Access-gated in production
@@ -2597,6 +2598,90 @@ function sentruxPlugin(): Plugin {
             server.middlewares.use('/dev-data/sentrux/dsm', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 void cached('dsm', { format: 'stats' }).then((r) => writeJson(res, r));
+            });
+
+            // GET /dev-data/sentrux/next-steps — actionable refactor
+            // prescriptions written by the /sentrux-next-steps skill.
+            // Reads state/quality/sentrux-next-steps/latest.md and parses
+            // its YAML frontmatter so the card can render headline
+            // chips (quality_signal, cycles, coverage_pct) alongside the
+            // markdown body. Always returns 200 — an absent file yields
+            // { empty: true, hint: "..." } so the card renders an
+            // onboarding state instead of throwing.
+            server.middlewares.use('/dev-data/sentrux/next-steps', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const sourcePath = 'state/quality/sentrux-next-steps/latest.md';
+                const fullPath = path.join(repoRoot, sourcePath);
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                if (!existsSync(fullPath)) {
+                    res.end(JSON.stringify({
+                        empty: true,
+                        hint: "Run /sentrux-next-steps to generate recommendations.",
+                        source_path: sourcePath,
+                        fetched_at: new Date().toISOString(),
+                    }));
+                    return;
+                }
+                try {
+                    const raw = readFileSync(fullPath, 'utf-8');
+                    const stat = statSync(fullPath);
+                    // Cheap YAML-frontmatter parser tuned for the
+                    // sentrux-next-steps-v1 shape — depth-1 keys + a
+                    // nested `inputs:` object. We don't pull in a full
+                    // YAML lib; the schema is fixed.
+                    const fmMatch = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+                    let generatedAt: string | null = null;
+                    let generator: string | null = null;
+                    let schema: string | null = null;
+                    const inputs: Record<string, number | string> = {};
+                    let body = raw;
+                    if (fmMatch) {
+                        body = raw.slice(fmMatch[0].length);
+                        const lines = fmMatch[1].split(/\r?\n/);
+                        let inInputs = false;
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            const inputsHead = /^inputs:\s*$/.exec(line);
+                            if (inputsHead) { inInputs = true; continue; }
+                            const topKv = /^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
+                            const nestedKv = /^\s{2,}([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
+                            if (inInputs && nestedKv) {
+                                const k = nestedKv[1];
+                                const vStr = nestedKv[2].trim().replace(/^["']|["']$/g, '');
+                                const vNum = Number(vStr);
+                                inputs[k] = Number.isFinite(vNum) && vStr !== '' ? vNum : vStr;
+                                continue;
+                            }
+                            if (topKv) {
+                                inInputs = false;
+                                const k = topKv[1];
+                                const v = topKv[2].trim().replace(/^["']|["']$/g, '');
+                                if (k === 'generated_at') generatedAt = v;
+                                else if (k === 'generator') generator = v;
+                                else if (k === 'schema') schema = v;
+                            }
+                        }
+                    }
+                    res.end(JSON.stringify({
+                        empty: false,
+                        schema,
+                        generated_at: generatedAt,
+                        generator,
+                        inputs,
+                        markdown: body,
+                        source_path: sourcePath,
+                        source_mtime: stat.mtime.toISOString(),
+                        fetched_at: new Date().toISOString(),
+                    }));
+                } catch (e) {
+                    res.end(JSON.stringify({
+                        empty: true,
+                        error: String((e as Error)?.message ?? e),
+                        hint: "Failed to read latest.md. Re-run /sentrux-next-steps or check file permissions.",
+                        source_path: sourcePath,
+                        fetched_at: new Date().toISOString(),
+                    }));
+                }
             });
 
             // POST /actions/sentrux/rescan — local-only, drops the cache and

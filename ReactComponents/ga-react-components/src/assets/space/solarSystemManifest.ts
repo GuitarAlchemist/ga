@@ -1,6 +1,7 @@
 import type { CanonicalBodyId, TextureAssetSet } from './assetTypes';
 
 const solarSystemScopeUrl = 'https://www.solarsystemscope.com/textures/';
+const esoGigaGalaxyMilkyWayUrl = 'https://www.eso.org/public/images/eso0932a/';
 
 export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   sun: {
@@ -119,17 +120,17 @@ export const SOLAR_SYSTEM_MANIFEST: Record<CanonicalBodyId, TextureAssetSet> = {
   },
   'milky-way': {
     id: 'milky-way',
-    displayName: 'Milky Way Panorama',
-    source: 'Solar System Scope',
-    sourceUrl: solarSystemScopeUrl,
-    license: 'CC BY 4.0',
+    displayName: 'Milky Way 360 Panorama',
+    source: 'ESO',
+    sourceUrl: esoGigaGalaxyMilkyWayUrl,
+    license: 'Credit ESO/S. Brunier; NOAA/NASA fallback credit Axel Mellinger',
     textures: {
       stars: {
-        '2k': '/textures/milky-way-2k.jpg',
-        '8k': '/textures/milky-way-8k.jpg',
+        '2k': '/textures/milky-way-nasa-sos-2048.jpg',
+        '8k': '/textures/milky-way-eso-gigagalaxy-6000.jpg',
       },
     },
-    notes: 'Canonical photographic sky panorama used behind the star dome.',
+    notes: 'Prime Radiant prefers the 6000x3000 ESO GigaGalaxy panorama and falls back to the NOAA/NASA GSFC all-sky map.',
   },
   stars: {
     id: 'stars',

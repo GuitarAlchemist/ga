@@ -1,12 +1,13 @@
 .rootLayout {
-  min-height: 100vh;
-  min-height: 100dvh; /* dynamic viewport height — respects mobile address bar, notches */
+  height: 100vh;
+  height: 100dvh; /* dynamic viewport height — respects mobile address bar, notches */
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .mainContent {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
   /* Ensure content starts below breadcrumb on all devices */

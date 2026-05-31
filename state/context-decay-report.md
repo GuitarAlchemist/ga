@@ -1,7 +1,33 @@
 # Context decay report
 
-_Generated: 2026-05-24T08:59:18Z_
+_Generated: 2026-05-31T09:10:15Z_
 
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/chat`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/health`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot/`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/proxy/voxtral`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `<base>/state`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Apps/GaChatbot.Api/`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot:PathBase=/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot__PathBase=/chatbot`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Scripts/start-dev.ps1`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `ServiceCollectionExtensions.cs`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `[ApiController] [Route("api/chatbot/<verb>")]`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `api/chatbot/...`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com/chatbot/*`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/runbooks/chatbot-improvement-loop.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-process-wide-memory-store-leaks-into-anonymous-prompts.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-slot-build-stale-static-web-assets-manifest.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ollama-client-extraction-hot-alloc-fix.md`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `fetch('api/chatbot/chat')`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `index.html`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `vite.config.ts`
+- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `winget upgrade Ollama.Ollama`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `../../../docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
@@ -75,29 +101,3 @@ _Generated: 2026-05-24T08:59:18Z_
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `optimizeDeps.include`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/components/GAChatPanel/`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/pages/<Name>Test.tsx`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/chat`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/health`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/chatbot/`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/proxy/voxtral`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `<base>/state`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Apps/GaChatbot.Api/`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot:PathBase=/chatbot`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Chatbot__PathBase=/chatbot`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Scripts/start-dev.ps1`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `ServiceCollectionExtensions.cs`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `[ApiController] [Route("api/chatbot/<verb>")]`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `api/chatbot/...`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `demos.guitaralchemist.com/chatbot/*`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/runbooks/chatbot-improvement-loop.md`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-process-wide-memory-store-leaks-into-anonymous-prompts.md`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-slot-build-stale-static-web-assets-manifest.md`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ollama-client-extraction-hot-alloc-fix.md`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `fetch('api/chatbot/chat')`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `index.html`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `vite.config.ts`
-- `Apps/GaChatbot.Api/CONTEXT.md` → missing: `winget upgrade Ollama.Ollama`
