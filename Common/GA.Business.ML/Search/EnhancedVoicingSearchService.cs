@@ -195,7 +195,11 @@ public class EnhancedVoicingSearchService(
 
     private void EnsureInitialized()
     {
-        if (!IsInitialized)
+        // Only strategies that need a warmup (CPU/GPU in-memory) are gated. A self-contained
+        // strategy like OPTK (mmap loaded at construction) reports RequiresWarmup == false and
+        // serves immediately, so a query arriving before the background warmup finishes no
+        // longer throws "Service not initialized" (the cold-start race).
+        if (!IsInitialized && searchStrategy.RequiresWarmup)
         {
             throw new InvalidOperationException("Service not initialized. Call InitializeEmbeddingsAsync first.");
         }
