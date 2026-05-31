@@ -179,17 +179,24 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
     private static bool MatchesFilters(VoicingEmbedding voicing, VoicingSearchFilters filters)
     {
-        if (filters.Difficulty != null && !voicing.Difficulty.Equals(filters.Difficulty, StringComparison.OrdinalIgnoreCase)) return false;
-        if (filters.Position != null && !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase)) return false;
-        if (filters.VoicingType != null && !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase)) return false;
-        if (filters.Tags != null && filters.Tags.Any() && !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase))) return false;
+        // Null-safe: a corpus voicing that lacks the filtered attribute cannot
+        // satisfy a filter on it, so treat null as "does not match" (return
+        // false) — same convention as the StackingType guard below. Before this,
+        // a single voicing with a null VoicingType/ChordName/etc. threw a
+        // NullReferenceException inside the Parallel.ForEach, which collapsed the
+        // ENTIRE voicing search → orchestration error → "error-fallback" to the
+        // LLM for every "<chord> voicing on guitar" query. (Live trace 2026-05-30.)
+        if (filters.Difficulty != null && (voicing.Difficulty == null || !voicing.Difficulty.Equals(filters.Difficulty, StringComparison.OrdinalIgnoreCase))) return false;
+        if (filters.Position != null && (voicing.Position == null || !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase))) return false;
+        if (filters.VoicingType != null && (voicing.VoicingType == null || !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase))) return false;
+        if (filters.Tags != null && filters.Tags.Any() && (voicing.SemanticTags == null || !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
 
         if (filters.MinFret.HasValue && voicing.MinFret < filters.MinFret.Value) return false;
         if (filters.MaxFret.HasValue && voicing.MaxFret > filters.MaxFret.Value) return false;
         if (filters.RequireBarreChord.HasValue && voicing.BarreRequired != filters.RequireBarreChord.Value) return false;
 
         // Structured Filters
-        if (filters.ChordName != null && !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase)) return false;
+        if (filters.ChordName != null && (voicing.ChordName == null || !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase))) return false;
 
         if (filters.StackingType != null)
         {
@@ -206,7 +213,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.MinMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Min() < filters.MinMidiPitch.Value) return false;
         if (filters.MaxMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Max() > filters.MaxMidiPitch.Value) return false;
 
-        if (filters.SetClassId != null && !voicing.PrimeFormId.Contains(filters.SetClassId, StringComparison.OrdinalIgnoreCase)) return false;
+        if (filters.SetClassId != null && (voicing.PrimeFormId == null || !voicing.PrimeFormId.Contains(filters.SetClassId, StringComparison.OrdinalIgnoreCase))) return false;
 
         // PitchClassSet string looks like "{0,4,7}" or similar.
         if (filters.RahnPrimeForm != null && !voicing.PitchClassSet.Contains(filters.RahnPrimeForm, StringComparison.OrdinalIgnoreCase)) return false;
@@ -233,7 +240,8 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         if (filters.MinBrightness.HasValue && voicing.BrightnessScore < filters.MinBrightness.Value) return false;
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
         if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.OmittedTones != null && filters.OmittedTones.Any() && !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase))) return false;
+        if (filters.OmittedTones != null && filters.OmittedTones.Any() &&
+            (voicing.OmittedTones == null || !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
 
         // Melody Note Filter
         if (filters.TopPitchClass.HasValue && voicing.TopPitchClass != filters.TopPitchClass.Value) return false;

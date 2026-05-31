@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/state/quality/sentrux-next-steps/SCHEMA.json",
+  "title": "Sentrux Next Steps (frontmatter)",
+  "description": "YAML frontmatter for actionable refactor prescriptions produced by the /sentrux-next-steps skill. The body of the markdown file is freeform prose rendered by SentruxNextStepsCard via react-markdown.",
+  "type": "object",
+  "required": [
+    "schema",
+    "generated_at",
+    "generator",
+    "inputs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "sentrux-next-steps-v1",
+      "description": "Schema discriminator. Bump only on field removal/rename; additive changes do not need a bump."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp when the prescription was written."
+    },
+    "generator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Model / agent identifier that produced the artifact (e.g. 'claude-opus-4-7', 'hand-seed-2026-05-24')."
+    },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "quality_signal",
+        "cycles",
+        "coverage_pct"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "quality_signal": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Sentrux composite quality score at generation time."
+        },
+        "cycles": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cycle count reported by mcp__sentrux__dsm at generation time."
+        },
+        "coverage_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Test coverage percentage from mcp__sentrux__test_gaps at generation time."
+        },
+        "bottleneck": {
+          "type": "string",
+          "description": "Sentrux-reported bottleneck dimension (e.g. 'acyclicity', 'coverage', 'redundancy')."
+        },
+        "value_annotations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of @ai:business-value annotations consulted when ranking. 0 when the AI annotations endpoint returned empty."
+        },
+        "smell_annotations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of @ai:smell annotations consulted when ranking. 0 when the AI annotations endpoint returned empty."
+        }
+      }
+    }
+  }
+}

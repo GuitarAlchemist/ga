@@ -40,7 +40,11 @@ public sealed class SemanticIntentRouter(
     // tops out around 0.58–0.62 for short queries against domain-backed
     // skills; 0.55 gives the hint provider room to land its win without
     // letting truly-unrelated queries grab an intent.
-    private const float DefaultMinConfidence = 0.55f;
+    // Public so evaluation harnesses pin to the SAME threshold production
+    // routes with — a hardcoded copy in RoutingEvalHarness drifted to 0.65
+    // after this dropped to 0.55 (2026-05-13), making the baseline measure a
+    // threshold prod never used. One source of truth prevents recurrence.
+    public const float DefaultMinConfidence = 0.55f;
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
@@ -87,6 +91,10 @@ public sealed class SemanticIntentRouter(
         if (candidates.Count == 0) return null;
 
         await EnsureExamplesEmbeddedAsync(candidates, cancellationToken);
+
+        // Per-query routing latency starts AFTER the one-time example-embedding
+        // warmup (that cost belongs to the first request only, not every query).
+        var sw = System.Diagnostics.Stopwatch.StartNew();
 
         float[] queryVec;
         try
@@ -195,12 +203,34 @@ public sealed class SemanticIntentRouter(
                 ? $"{r.Intent.Id}={r.Score - r.Boost:F3}+{r.Boost:F3}={r.Score:F3} via {Trim(r.MatchedSource, 40)}"
                 : $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
 
+        // Routing-decision telemetry (append-only JSONL, error-swallowed). One line
+        // per scored query so an uncontaminated held-out eval set can be mined from
+        // live traffic — the regex hints are tuned against the fixed corpus, so the
+        // harness number is training accuracy; real generalization can only be
+        // measured on traffic the hints never saw. See RoutingTelemetryLog.
+        var telemetryCandidates = topK
+            .Select(r => new RoutingTelemetryCandidate(r.Intent.Id, r.Score - r.Boost, r.Boost, r.Score))
+            .ToList();
+        var margin = topK.Count >= 2 ? (double?)(topK[0].Score - topK[1].Score) : null;
+
         var top = withHints[0];
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(
                 "SemanticIntentRouter: top score {Score:F3} below threshold {Threshold:F2}; falling through",
                 top.Score, MinConfidence);
+            RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+            {
+                Timestamp   = DateTime.UtcNow.ToString("o"),
+                Query       = query,
+                Chosen      = null,
+                Confidence  = null,
+                Threshold   = MinConfidence,
+                FellThrough = true,
+                Margin      = margin,
+                Candidates  = telemetryCandidates,
+                LatencyMs   = sw.Elapsed.TotalMilliseconds,
+            });
             return null;
         }
 
@@ -218,6 +248,19 @@ public sealed class SemanticIntentRouter(
                 FinalScore:   r.Score,
                 MatchedSource: r.MatchedSource))
             .ToList();
+
+        RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+        {
+            Timestamp   = DateTime.UtcNow.ToString("o"),
+            Query       = query,
+            Chosen      = top.Intent.Id,
+            Confidence  = top.Score,
+            Threshold   = MinConfidence,
+            FellThrough = false,
+            Margin      = margin,
+            Candidates  = telemetryCandidates,
+            LatencyMs   = sw.Elapsed.TotalMilliseconds,
+        });
 
         return new IntentMatch(top.Intent, top.Score, top.MatchedSource)
         {

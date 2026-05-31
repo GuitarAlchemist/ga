@@ -272,4 +272,6 @@
     <Project Path="Demos/Advanced/InternetContentDemo/InternetContentDemo.csproj" />
     <Project Path="GA.Data.MongoDB/GA.Data.MongoDB.csproj" />
     <Project Path="GenerateNatData/GenerateNatData.csproj" />
+    <Project Path="GuitarAlchemist.Registry/GuitarAlchemist.Registry.csproj" />
+    <Project Path="GuitarAlchemist.Registry.Tests/GuitarAlchemist.Registry.Tests.csproj" />
 </Solution>

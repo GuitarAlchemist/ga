@@ -224,8 +224,12 @@ state/quality/chatbot-qa/golden-traces/**/_meta.json
 # /api/chatbot/qa-summary endpoint falls back to when no local _meta.json
 # is present (fresh checkouts + CI). Regenerable but stable enough to
 # commit. See ChatbotController.BuildQaSummary().
-# ix-ai-annotations extractor output (regenerated locally per session)
-state/quality/ai-annotations.jsonl
+# ix-ai-annotations extractor output — committed so the dashboard at
+# /test#dev/annotations always has data without requiring a local extractor
+# run. Regenerate via:
+#   cargo run --release -p ix-ai-annotations --manifest-path ../ix/Cargo.toml -- --workspace .
+# A future CI workflow will refresh this on PR merge.
+# state/quality/ai-annotations.jsonl  -- now tracked
 state/quality/ai-annotations-reconciliation.json
 # Note: _signature.json IS tracked — pruned to (name, status, agent.id)
 # per step, stable across runs, used as a CI test fixture by

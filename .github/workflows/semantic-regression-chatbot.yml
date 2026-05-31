@@ -44,14 +44,18 @@ name: Semantic Regression — Chatbot Goldens
 #   warns and the user can switch to sampling. See SAMPLE_SIZE input.
 
 on:
-  pull_request:
-    paths:
-      - 'Apps/GaChatbot.Api/**'
-      - 'Apps/ga-server/GaApi/**'
-      - 'Common/GA.Business.ML/**'
-      - 'state/quality/chatbot-qa/golden-traces/**'
-      - 'Scripts/replay-chatbot-goldens.ps1'
-      - '.github/workflows/semantic-regression-chatbot.yml'
+  # Dispatch-only (2026-05-31). This is a LIVE-MODEL integration check: it spins
+  # up GaChatbot.Api and replays golden prompts, which needs Ollama (llama3.2:3b
+  # + nomic-embed) for the chatbot to generate answers. GitHub-hosted runners
+  # have no Ollama, so on `pull_request` the chatbot never became ready
+  # ("Connection refused localhost:11434" in SemanticIntentRouter warmup) and
+  # the job failed on EVERY PR regardless of content — repo-wide red noise, not
+  # a real regression signal. Run it on demand where a model runner exists (a dev
+  # machine or a self-hosted runner with Ollama). The OPENAI_API_KEY secret powers
+  # only the diff-embedding step (text-embedding-3-small), not the chatbot itself
+  # — do NOT point the chatbot at OpenAI in CI, that would invalidate the diff
+  # against the llama3.2-generated golden traces. Re-add a `pull_request` trigger
+  # only once CI provisions a model runner (self-hosted + Ollama service).
   workflow_dispatch:
     inputs:
       sample_size:

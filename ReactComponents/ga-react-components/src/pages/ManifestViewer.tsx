@@ -26,6 +26,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { deriveTileStatus, type QualitySnapshotLike } from '../utils/qualityStatus';
 
 interface ServiceTopology {
   name: string;
@@ -143,22 +144,21 @@ export const ManifestViewer: React.FC = () => {
     const d = entry.data;
     const metricName = d.metric_name as string | undefined;
     const metricValue = d.metric_value as number | undefined;
-    const oracleStatus = d.oracle_status as string | undefined;
     const emittedAt = d.emitted_at as string | undefined;
     const summary = d.summary as string | undefined;
     const problems = d.problems as unknown[] | undefined;
-    const statusColor = oracleStatus === 'ok' ? 'success'
-      : oracleStatus === 'warn' ? 'warning'
-      : oracleStatus ? 'error' : 'default';
+    // deriveTileStatus normalises chatbot-qa's `degraded:true` snapshots to
+    // an amber tile with a last-known-good headline — see src/utils/qualityStatus.ts.
+    const tile = deriveTileStatus(d as QualitySnapshotLike);
 
     return (
-      <TableRow key={name}>
+      <TableRow key={name} data-tile-status={tile.label}>
         <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{name}</TableCell>
         <TableCell>
-          {oracleStatus && (
+          {tile.label !== 'unknown' && (
             <Chip
-              label={oracleStatus}
-              color={statusColor as 'success' | 'warning' | 'error' | 'default'}
+              label={tile.label}
+              color={tile.color}
               size="small"
               sx={{ fontSize: '0.7rem', height: 20 }}
             />
@@ -177,7 +177,10 @@ export const ManifestViewer: React.FC = () => {
           {entry.source}
         </TableCell>
         <TableCell sx={{ fontSize: '0.8rem', maxWidth: 280 }}>
-          {summary ?? '—'}
+          {/* Show the derived headline whenever the snapshot doesn't already
+              have its own summary — that's how degraded days surface their
+              last-known-good context. */}
+          {summary ?? (tile.label === 'degraded' ? tile.headline : '—')}
           {problems && problems.length > 0 && (
             <Typography variant="caption" color="warning.main" sx={{ display: 'block' }}>
               {problems.length} problem{problems.length === 1 ? '' : 's'} reported

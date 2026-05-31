@@ -29,6 +29,7 @@ import {
 } from '../components/Algedonic/AlgedonicCard';
 import { InFlightCard } from '../components/Summary/InFlightCard';
 import { MissionControl } from '../components/Summary/MissionControl';
+import { deriveTileStatus, type QualitySnapshotLike } from '../utils/qualityStatus';
 
 interface BacklogItem {
   text: string;
@@ -367,7 +368,10 @@ const CommitActivityChart: React.FC<{ data: ActivityByDay[] }> = ({ data }) => {
 const QualityStatusRow: React.FC<{ quality: QualityPayload }> = ({ quality }) => {
   const domains = Object.entries(quality.domains);
   if (domains.length === 0) return null;
-  const okCount = domains.filter(([, e]) => (e.data.oracle_status as string) === 'ok').length;
+  // Use the shared deriveTileStatus so a snapshot with `degraded:true` (but no
+  // explicit oracle_status) shows amber instead of gray. See
+  // src/utils/qualityStatus.ts for the precedence rules.
+  const okCount = domains.filter(([, e]) => deriveTileStatus(e.data as QualitySnapshotLike).label === 'ok').length;
   const totalCount = domains.length;
   return (
     <Paper sx={{ p: 2, height: '100%' }}>
@@ -384,16 +388,17 @@ const QualityStatusRow: React.FC<{ quality: QualityPayload }> = ({ quality }) =>
       )}
       <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
         {domains.map(([name, entry]) => {
-          const status = entry.data.oracle_status as string | undefined;
-          const color = status === 'ok' ? 'success' : status === 'warn' ? 'warning' : status ? 'error' : 'default';
+          const tile = deriveTileStatus(entry.data as QualitySnapshotLike);
           return (
-            <Tooltip key={name} title={`${name}: ${status ?? 'unknown'} (${entry.source})`}>
+            <Tooltip key={name} title={`${name}: ${tile.headline} (${entry.source})`}>
               <Chip
                 label={name}
-                color={color as 'success' | 'warning' | 'error' | 'default'}
+                color={tile.color}
                 size="small"
-                variant={status === 'ok' ? 'filled' : 'outlined'}
+                variant={tile.label === 'ok' ? 'filled' : 'outlined'}
                 sx={{ fontSize: '0.7rem' }}
+                data-testid={`qa-domain-chip-${name}`}
+                data-tile-status={tile.label}
               />
             </Tooltip>
           );
@@ -467,9 +472,11 @@ export const OverviewSection: React.FC = () => {
   const b = manifest.backlog;
   const byDay = manifest.activity_by_day && Array.isArray(manifest.activity_by_day) ? manifest.activity_by_day : [];
   const totalCommits30d = byDay.reduce((s, d) => s + d.count, 0);
-  // QA domain count: how many are explicitly oracle_status="ok"
+  // QA domain count: how many resolve to "ok" via deriveTileStatus (which
+  // honors oracle_status when set, but also recognises `degraded:true` as
+  // amber rather than mis-counting it as green).
   const qaDomains = manifest.quality?.domains ? Object.entries(manifest.quality.domains) : [];
-  const qaOk = qaDomains.filter(([, e]) => (e.data as Record<string, unknown>)?.oracle_status === 'ok').length;
+  const qaOk = qaDomains.filter(([, e]) => deriveTileStatus(e.data as QualitySnapshotLike).label === 'ok').length;
   const qaTotal = qaDomains.length;
   const regressionCount = manifest.quality?.regressions?.length ?? 0;
   // Most recent commit + relative time

@@ -653,6 +653,154 @@ internal static class Program
     }
 
     // ================================================================
+    // CANONICAL DASHBOARD ENVELOPE
+    // ================================================================
+    // Wraps an AuditReport with the canonical envelope consumed by
+    // ReactComponents/ga-react-components/vite.config.ts `gatherQuality`
+    // (rendered as the voicing-analysis tile on /test#dev/summary).
+    //
+    // Mapping (per task brief 2026-05-24):
+    //   all 4 metrics at 100% / 0 failures → "ok"
+    //   any failure / metric < 100%        → "warn"
+    //   catastrophic (metric == 0)         → "error"
+    //
+    // The 4 metrics tracked:
+    //   1. Forte coverage (Pct)            — should be 100
+    //   2. Cross-instrument consistency    — Consistent / SharedSets
+    //   3. Chord recognition completeness  — 100 - NullChordName.Pct
+    //   4. Invariant cleanliness           — 0 failures across all 4 invariants
+    //
+    // metric_value is the AVERAGE of these 4 pass-rates as a 0..1 ratio.
+    private sealed record EnvelopeReport(
+        // ─── Canonical dashboard envelope (additive — ALL existing
+        // AuditReport fields are preserved verbatim below) ───
+        string domain,
+        string emitted_at,
+        string metric_name,
+        double metric_value,
+        string oracle_status,
+        string summary,
+        List<EnvelopeProblem> problems,
+        // ─── Original AuditReport, unwrapped and embedded ───
+        string Timestamp,
+        CorpusSection Corpus,
+        ChordRecognitionSection ChordRecognition,
+        HarmonicFunctionSection HarmonicFunction,
+        ForteCoverageSection ForteCoverage,
+        Dictionary<string, int> DropVoicingDistribution,
+        ConsistencySection CrossInstrumentConsistency,
+        Dictionary<string, int> CardinalityDistribution,
+        int TwoNoteWithChordName,
+        InvariantFailureSection InvariantFailures,
+        List<AnalyzerException> AnalyzerExceptions,
+        PerformanceSection Performance,
+        IssueSamplesSection IssueSamples);
+
+    private sealed record EnvelopeProblem(string metric, string detail);
+
+    private static EnvelopeReport WrapWithEnvelope(AuditReport r)
+    {
+        // Metric 1: Forte coverage — already a percentage (0..100).
+        var fortePct = r.ForteCoverage.Pct;
+        // Metric 2: Cross-instrument consistency — guard against div-by-zero.
+        var consistencyPct = r.CrossInstrumentConsistency.SharedSets > 0
+            ? 100.0 * r.CrossInstrumentConsistency.Consistent / r.CrossInstrumentConsistency.SharedSets
+            : 100.0;
+        // Metric 3: Chord recognition completeness — null/unknown are bad.
+        var totalRecognized = r.Corpus.Total;
+        var unrecognized = r.ChordRecognition.NullChordName.Count + r.ChordRecognition.UnknownChordName.Count;
+        var recognitionPct = totalRecognized > 0
+            ? 100.0 * (totalRecognized - unrecognized) / totalRecognized
+            : 100.0;
+        // Metric 4: Invariant cleanliness — binary; 100% if all four counters
+        // are zero, else degrade by share of the corpus that tripped any check.
+        var invFails = r.InvariantFailures.MidiNotesMismatch
+                       + r.InvariantFailures.NullPitchClassSet
+                       + r.InvariantFailures.NegativePhysicalLayout
+                       + r.InvariantFailures.IntervalSpreadInvariant;
+        var invariantPct = totalRecognized > 0
+            ? Math.Max(0.0, 100.0 - 100.0 * invFails / totalRecognized)
+            : 100.0;
+
+        // Headline metric: simple unweighted average of the 4 pass-rates,
+        // normalised to 0..1. Documented in the PR body.
+        var avgPct = (fortePct + consistencyPct + recognitionPct + invariantPct) / 4.0;
+        var metricValue = Math.Round(avgPct / 100.0, 4);
+
+        // Status mapping. "catastrophic" = any single metric collapsed to 0,
+        // OR the analyzer itself threw exceptions on at least one voicing.
+        const double EPS = 1e-9;
+        var catastrophic = fortePct <= EPS || recognitionPct <= EPS
+                           || invariantPct <= EPS || r.AnalyzerExceptions.Count > 0;
+        var anyDegradation = fortePct < 100.0 || consistencyPct < 100.0
+                             || recognitionPct < 100.0 || invFails > 0;
+        var oracleStatus = catastrophic ? "error"
+            : anyDegradation ? "warn"
+            : "ok";
+
+        // problems[] — at most 50; only non-passing metrics.
+        var problems = new List<EnvelopeProblem>(4);
+        if (fortePct < 100.0)
+        {
+            problems.Add(new EnvelopeProblem(
+                "forte_coverage",
+                $"{r.ForteCoverage.Resolved}/{r.ForteCoverage.Total} resolved ({fortePct:N3}%)"));
+        }
+        if (r.CrossInstrumentConsistency.SharedSets > 0
+            && r.CrossInstrumentConsistency.Consistent < r.CrossInstrumentConsistency.SharedSets)
+        {
+            problems.Add(new EnvelopeProblem(
+                "cross_instrument_consistency",
+                $"{r.CrossInstrumentConsistency.Consistent}/{r.CrossInstrumentConsistency.SharedSets} sets consistent ({consistencyPct:N2}%)"));
+        }
+        if (unrecognized > 0)
+        {
+            problems.Add(new EnvelopeProblem(
+                "chord_recognition",
+                $"{unrecognized} unrecognized ({r.ChordRecognition.NullChordName.Count} null + {r.ChordRecognition.UnknownChordName.Count} \"Unknown\")"));
+        }
+        if (invFails > 0)
+        {
+            problems.Add(new EnvelopeProblem(
+                "invariant_failures",
+                $"midi_mismatch={r.InvariantFailures.MidiNotesMismatch} null_pcs={r.InvariantFailures.NullPitchClassSet} neg_physical={r.InvariantFailures.NegativePhysicalLayout} interval_spread={r.InvariantFailures.IntervalSpreadInvariant}"));
+        }
+        if (r.AnalyzerExceptions.Count > 0)
+        {
+            problems.Add(new EnvelopeProblem(
+                "analyzer_exceptions",
+                $"{r.AnalyzerExceptions.Count} voicings threw during analysis"));
+        }
+        if (problems.Count > 50) problems = problems.GetRange(0, 50);
+
+        var summary = oracleStatus == "ok"
+            ? $"All 4 voicing metrics at 100% across {r.Corpus.Total:N0} voicings."
+            : $"{problems.Count} metric(s) below target across {r.Corpus.Total:N0} voicings (avg={avgPct:N2}%).";
+
+        return new EnvelopeReport(
+            domain: "voicing-analysis",
+            emitted_at: DateTime.UtcNow.ToString("O"),
+            metric_name: "voicing_analysis_avg_pass_rate",
+            metric_value: metricValue,
+            oracle_status: oracleStatus,
+            summary: summary,
+            problems: problems,
+            Timestamp: r.Timestamp,
+            Corpus: r.Corpus,
+            ChordRecognition: r.ChordRecognition,
+            HarmonicFunction: r.HarmonicFunction,
+            ForteCoverage: r.ForteCoverage,
+            DropVoicingDistribution: r.DropVoicingDistribution,
+            CrossInstrumentConsistency: r.CrossInstrumentConsistency,
+            CardinalityDistribution: r.CardinalityDistribution,
+            TwoNoteWithChordName: r.TwoNoteWithChordName,
+            InvariantFailures: r.InvariantFailures,
+            AnalyzerExceptions: r.AnalyzerExceptions,
+            Performance: r.Performance,
+            IssueSamples: r.IssueSamples);
+    }
+
+    // ================================================================
     // STDOUT SUMMARY + JSON WRITER
     // ================================================================
     private static void PrintStdoutSummary(AuditReport report, string outputPath)
@@ -769,7 +917,12 @@ internal static class Program
             WriteIndented = true,
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
         };
-        File.WriteAllText(path, JsonSerializer.Serialize(report, options));
+        // Emit the canonical dashboard envelope at the top level (additive
+        // wrapper — every original AuditReport field is preserved verbatim
+        // inside the same JSON object). See WrapWithEnvelope for the
+        // oracle_status / metric_value derivation.
+        var envelope = WrapWithEnvelope(report);
+        File.WriteAllText(path, JsonSerializer.Serialize(envelope, options));
     }
 
     private static string Pad(string s, int w) => s.Length >= w ? s : s.PadRight(w);
