@@ -146,6 +146,53 @@ public class DefaultRoutingHintProviderTests
             $"Got deltas: {string.Join(", ", deltas.Select(kv => $"{kv.Key}={kv.Value}"))}");
     }
 
+    // Key-identification synonyms — "tonal center/centre" and "home key" were
+    // added 2026-05-31 to close ki-8 ("figure out the tonal center of E A B E"),
+    // which scaleinfo was stealing. The original what-key/key-is anchors miss them.
+    [TestCase("figure out the tonal center of E A B E")]
+    [TestCase("what is the tonal centre of this progression")]
+    [TestCase("what's the home key for F C G Am")]
+    [TestCase("what key is this progression")]
+    public void KeyIdentification_PositiveExamples_BoostKeyIdIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.keyidentification"), Is.True,
+            $"Expected skill.keyidentification boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
+    // Progression-mood (transform) — added 2026-05-31. progressionmood had no
+    // hint rule; mood-transform queries leaked to scaleinfo/others on the
+    // chord/key centroid. pm-9 ("lift the mood of D minor") is the target.
+    [TestCase("lift the mood of D minor")]
+    [TestCase("make C G Am F sound darker")]
+    [TestCase("brighten up a minor key tune")]
+    [TestCase("give this progression a sadder feel")]
+    [TestCase("make my chords feel more melancholy")]
+    [TestCase("make these chords sound more cinematic")]
+    [TestCase("techniques to add tension to a happy progression")]
+    [TestCase("darken a vi-IV-I-V progression")]
+    public void ProgressionMood_PositiveExamples_BoostMoodIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressionmood"), Is.True,
+            $"Expected skill.progressionmood boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.progressionmood"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // False-positive guards for the two new rules — descriptive scale/chord
+    // queries must NOT boost keyidentification or progressionmood.
+    [TestCase("notes in C major scale")]
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("diatonic chords in C major")]
+    public void KeyIdAndMood_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.keyidentification"), Is.False,
+            $"keyidentification should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas.ContainsKey("skill.progressionmood"), Is.False,
+            $"progressionmood should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
     [Test]
     public void EmptyQuery_ReturnsNoDeltas()
     {
