@@ -72,6 +72,128 @@ public class GovernanceController(
     }
 
     /// <summary>
+    ///     Get the IX temporal assumption graph adapted to the GovernanceGraph
+    ///     shape, for Prime Radiant. Reads the JSON-on-disk graph emitted by
+    ///     <c>ix-assumption-graph-report --prime-radiant-json</c> in the sibling
+    ///     ix repo (path via config <c>Governance:AssumptionGraphJson</c> or
+    ///     auto-detect). Verdict → healthStatus drives node color;
+    ///     <c>contradicts</c> edges render as red <c>lolli</c> beams.
+    /// </summary>
+    [HttpGet("/api/assumption")]
+    public ActionResult<GovernanceGraph> GetAssumptionGraph()
+    {
+        try
+        {
+            var ixPath = configuration["Governance:AssumptionGraphJson"] ?? FindAssumptionGraphJson();
+            if (ixPath == null || !System.IO.File.Exists(ixPath))
+            {
+                logger.LogWarning("Assumption graph JSON not found; serving empty graph");
+                return Ok(GovernanceGraph.Empty);
+            }
+
+            return Ok(AdaptAssumptionGraph(System.IO.File.ReadAllText(ixPath)));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to load assumption graph");
+            return StatusCode(500, new { error = "Failed to load assumption graph" });
+        }
+    }
+
+    private static string? FindAssumptionGraphJson()
+    {
+        var rel = Path.Combine("state", "assumptions", "prime-radiant.json");
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "ix", rel),
+            Path.Combine(Directory.GetCurrentDirectory(), "..", "ix", rel),
+            Path.Combine(@"C:\Users\spare\source\repos\ix", rel),
+        };
+        return candidates.FirstOrDefault(System.IO.File.Exists);
+    }
+
+    // Adapt IX's generic Prime-Radiant envelope ({nodes,edges}) into the
+    // GovernanceGraph shape the 3D renderer consumes. Mirrors the Vite
+    // /dev-data/assumption middleware so dev and prod render identically.
+    private static GovernanceGraph AdaptAssumptionGraph(string ixJson)
+    {
+        var verdictHealth = new Dictionary<string, string>
+        {
+            ["T"] = "healthy", ["P"] = "healthy", ["U"] = "unknown",
+            ["D"] = "warning", ["F"] = "error", ["C"] = "contradictory",
+        };
+        var healthColor = new Dictionary<string, string>
+        {
+            ["error"] = "#FF4444", ["warning"] = "#FFB300", ["healthy"] = "#33CC66",
+            ["unknown"] = "#888888", ["contradictory"] = "#FF44FF",
+        };
+
+        using var doc = JsonDocument.Parse(ixJson);
+        var root = doc.RootElement;
+        string Str(JsonElement el, string prop) =>
+            el.TryGetProperty(prop, out var v) ? v.GetString() ?? "" : "";
+
+        var nodes = new List<GovernanceNode>();
+        if (root.TryGetProperty("nodes", out var nodesEl) && nodesEl.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var n in nodesEl.EnumerateArray())
+            {
+                var tv = Str(n, "truth_value");
+                if (string.IsNullOrEmpty(tv)) tv = "U";
+                var hs = verdictHealth.GetValueOrDefault(tv, "unknown");
+                var claim = Str(n, "name");
+                nodes.Add(new GovernanceNode
+                {
+                    Id = Str(n, "id"),
+                    Name = claim.Length > 60 ? claim[..57] + "…" : claim,
+                    Type = "schema",
+                    Description = claim,
+                    Color = healthColor[hs],
+                    Domain = Str(n, "type"),
+                    HealthStatus = hs,
+                    FilePath = Str(n, "path"),
+                    Metadata = new Dictionary<string, object> { ["truth_value"] = tv, ["kind"] = Str(n, "kind") },
+                });
+            }
+        }
+
+        var edges = new List<GovernanceEdge>();
+        var contradicts = 0;
+        if (root.TryGetProperty("edges", out var edgesEl) && edgesEl.ValueKind == JsonValueKind.Array)
+        {
+            var i = 0;
+            foreach (var e in edgesEl.EnumerateArray())
+            {
+                var rel = Str(e, "relation");
+                var isC = rel == "contradicts";
+                if (isC) contradicts++;
+                edges.Add(new GovernanceEdge
+                {
+                    Id = $"e{i++}",
+                    Source = Str(e, "source"),
+                    Target = Str(e, "target"),
+                    Type = isC ? "lolli" : "policy-persona",
+                    Label = rel,
+                    Weight = isC ? 1.0 : 0.4,
+                });
+            }
+        }
+
+        var denom = nodes.Count == 0 ? 1 : nodes.Count;
+        return new GovernanceGraph
+        {
+            Nodes = nodes,
+            Edges = edges,
+            GlobalHealth = new HealthMetrics
+            {
+                ResilienceScore = Math.Max(0, 1.0 - (double)contradicts / denom),
+                LolliCount = contradicts,
+                ErgolCount = nodes.Count,
+            },
+        };
+    }
+
+    /// <summary>
     ///     Get Markov prediction data for governance health forecasting.
     /// </summary>
     [HttpGet("predictions")]
