@@ -62,7 +62,7 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
         var topCandidates = candidates.Where(c => c.MatchCount == topScore).ToList();
 
         var prompt       = BuildPrompt(message, chords, topCandidates, candidates);
-        var responseText = await ChatAsync(message, prompt, cancellationToken);
+        var responseText = await ChatAsync(message, prompt, cancellationToken).ConfigureAwait(false);
         var result       = ParseStructuredResponse(responseText, BuildFallback(chords, topCandidates));
 
         return result with

@@ -12,7 +12,20 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseContentRoot(TestPaths.RepositoryPath("Apps", "ga-server", "GaApi"));
+        var contentRoot = TestPaths.RepositoryPath("Apps", "ga-server", "GaApi");
+        builder.UseContentRoot(contentRoot);
+
+        // CI guard: the WebApplicationFactory auto-loads the static-web-assets manifest,
+        // which references obj/<Config>/net10.0/compressed/ as a ContentRoot. The Release
+        // build in CI does not always materialize that directory (only created when MSBuild
+        // has assets to compress), so PhysicalFileProvider throws DirectoryNotFoundException
+        // before any test method runs and the entire fixture flunks. Pre-create the dir for
+        // both build configurations — empty is fine, the manifest just needs the path to exist.
+        foreach (var config in new[] { "Debug", "Release" })
+        {
+            var compressedDir = Path.Combine(contentRoot, "obj", config, "net10.0", "compressed");
+            Directory.CreateDirectory(compressedDir);
+        }
 
         // Force the Ollama IChatClient path during tests. appsettings.Development.json
         // pins AI:ChatProvider=claude, which makes AddLlmServices eagerly construct

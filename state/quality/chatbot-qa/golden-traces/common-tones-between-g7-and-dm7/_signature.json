@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "common-tones-between-g7-and-dm7",
+  "prompt": "Common tones between G7 and Dm7",
+  "category": "operations",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "skill.commontones"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "skill.commontones"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "skill.commontones"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}

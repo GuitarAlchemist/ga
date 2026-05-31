@@ -7,8 +7,11 @@ using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Extensions;
+using GA.Business.ML.Search;
 using GA.Domain.Services.Atonal.Grothendieck;
+using Domain.Services.Fretboard.Voicings.Filtering;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -52,7 +55,17 @@ public class RoutingEvalHarness
         Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
     private static readonly string EmbeddingModel =
         Environment.GetEnvironmentVariable("GA_EMBED_MODEL") ?? "nomic-embed-text";
-    private const float  RouterMinConfidence = 0.65f;
+    // Pin to the SAME threshold production routes with — not a hardcoded copy.
+    // This was 0.65f while production sat at 0.55f (dropped 2026-05-13), so the
+    // last baseline measured a threshold prod never used. Sourcing the constant
+    // makes that drift impossible; RouterThresholdMatchesProduction guards it.
+    private const float RouterMinConfidence = SemanticIntentRouter.DefaultMinConfidence;
+
+    // Sentinel expectedIntentId for out-of-scope prompts: the router SHOULD
+    // decline these (return null) so the caller can refuse a non-music query
+    // instead of forcing it into the nearest skill. OOS-decline rate is the
+    // metric the report's two-step-OOS-gate recommendation needs a baseline for.
+    private const string OosSentinel = "__none__";
 
     private static readonly string DataPath =
         Path.Combine(AppContext.BaseDirectory, "Data", "routing-eval-prompts.json");
@@ -134,6 +147,23 @@ public class RoutingEvalHarness
         }
     }
 
+    /// <summary>
+    /// Guards the threshold-drift bug: the harness MUST measure the same
+    /// confidence threshold production routes with. Tautological today (the
+    /// const is sourced from <see cref="SemanticIntentRouter.DefaultMinConfidence"/>),
+    /// but fails loudly the moment someone re-hardcodes a literal — which is
+    /// exactly how the harness drifted to 0.65 while prod sat at 0.55. Fast,
+    /// no Ollama, runs in CI.
+    /// </summary>
+    [Test]
+    [Category("Fast")]
+    public void RouterThreshold_MatchesProductionDefault()
+    {
+        Assert.That(RouterMinConfidence, Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+            "Eval harness threshold drifted from SemanticIntentRouter.DefaultMinConfidence — " +
+            "any baseline it emits would measure a threshold production never uses.");
+    }
+
     [Test]
     [Explicit("Requires live Ollama embedding endpoint. Run manually for baselines.")]
     public async Task RunBaseline_EmitReport()
@@ -185,10 +215,24 @@ public class RoutingEvalHarness
         foreach (var p in labeledPrompts.Prompts)
         {
             var match = await router.RouteAsync(p.Prompt, services);
-            var chosenId  = match?.Intent.Id;
+            var chosenId   = match?.Intent.Id;
             var confidence = match?.Confidence ?? 0f;
-            var correct   = string.Equals(chosenId, p.ExpectedIntentId, StringComparison.Ordinal);
-            results.Add(new PromptResult(p.Id, p.Prompt, p.ExpectedIntentId, chosenId, confidence, correct, p.Tags));
+            var isOos      = string.Equals(p.ExpectedIntentId, OosSentinel, StringComparison.Ordinal);
+            // OOS ("__none__") prompts are CORRECT iff the router declines
+            // (returns null → caller falls through to the LLM / scope-decline
+            // path). In-scope prompts are correct iff routed to the expected
+            // intent. Without this split, a correctly-declined OOS query scored
+            // as a failure (null != "__none__") and the OOS dimension was unmeasurable.
+            var correct    = isOos ? chosenId is null
+                                   : string.Equals(chosenId, p.ExpectedIntentId, StringComparison.Ordinal);
+            // Top1−top2 margin — the escalate-on-ambiguity signal (route to the
+            // LLM only when the two best intents are within ~0.05). Null when the
+            // router declined (no winner) or only one candidate scored.
+            float? margin  = match is { Ranking.Count: >= 2 } m
+                ? m.Ranking[0].FinalScore - m.Ranking[1].FinalScore
+                : null;
+            results.Add(new PromptResult(
+                p.Id, p.Prompt, p.ExpectedIntentId, chosenId, confidence, margin, correct, isOos, p.Tags));
         }
 
         // Aggregate metrics
@@ -214,6 +258,11 @@ public class RoutingEvalHarness
 
         TestContext.WriteLine($"Eval report written: {outPath}");
         TestContext.WriteLine($"Overall: correct={overall.Correct}/{overall.Total} accuracy={overall.Accuracy:P1}");
+        TestContext.WriteLine(
+            $"  in-scope: {overall.InScopeCorrect}/{overall.InScopeTotal} ({overall.InScopeAccuracy:P1})" +
+            $"  ·  OOS-decline: {overall.OosCorrectlyDeclined}/{overall.OosTotal} ({overall.OosDeclineRate:P1})" +
+            $"  ·  mean top1−top2 margin: {(overall.MeanInScopeMargin is { } mg ? mg.ToString("F3") : "n/a")}" +
+            $"  ·  threshold: {RouterMinConfidence:F2}");
         foreach (var (intentId, m) in perIntent.OrderBy(kv => kv.Key))
         {
             if (m.Status == "no-prompts")
@@ -249,7 +298,9 @@ public class RoutingEvalHarness
         string Expected,
         string? Chosen,
         float Confidence,
+        float? Margin,
         bool Correct,
+        bool IsOos,
         string[]? Tags);
 
     private sealed record IntentMetrics(
@@ -262,7 +313,25 @@ public class RoutingEvalHarness
         double? F1,
         string Status);   // "measured" | "no-prompts" — disambiguates zero-support from real router failures (PR #162 review F-5)
 
-    private sealed record OverallMetrics(int Total, int Correct, int UnmatchedFallthrough, double Accuracy);
+    private sealed record OverallMetrics(
+        int Total,
+        int Correct,
+        int UnmatchedFallthrough,
+        double Accuracy,
+        // In-scope routing accuracy (excludes OOS prompts) — the number directly
+        // comparable to prior baselines, which had no OOS cases.
+        int InScopeTotal,
+        int InScopeCorrect,
+        double InScopeAccuracy,
+        // Out-of-scope decline dimension — of the OOS prompts, how many the router
+        // correctly declined (returned null). 1.0 = never forces a non-music query
+        // into a skill; lower = the over-firing the report flagged.
+        int OosTotal,
+        int OosCorrectlyDeclined,
+        double OosDeclineRate,
+        // Mean top1−top2 margin over in-scope prompts that produced a ranking.
+        // The escalate-on-ambiguity tuning signal; null if no in-scope prompt ranked.
+        double? MeanInScopeMargin);
 
     // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -403,6 +472,27 @@ public class RoutingEvalHarness
         sc.TryAddSingleton<IChatClientFactory>(_ => new StubChatClientFactory());
         sc.TryAddSingleton<IChatClient>(_ => new StubChatClient());
 
+        // Voicing-search stack — required by ChordVoicingsSkill (PR #251).
+        // Mirrors the OrchestratorTestHarness wiring; the router never
+        // exercises these, but the skill ctor demands them.
+        sc.AddMemoryCache();
+        sc.TryAddSingleton<VoicingIndexingService>();
+        sc.TryAddSingleton<IVoicingSearchStrategy, CpuVoicingSearchStrategy>();
+        sc.TryAddSingleton<EnhancedVoicingSearchService>();
+
+        // Musical-query extractor stack — required by ChordVoicingsSkill
+        // and ImprovisationSkill (PR #253). CompositeMusicalQueryExtractor
+        // sits on top of Typed + Llm; both must be registered.
+        // MusicalQueryEncoder depends on the four partition vector services
+        // — AddMusicalEmbeddings wires them up alongside the rest of the
+        // OPTIC-K embedding stack so future additions stay in lockstep with
+        // production.
+        sc.AddMusicalEmbeddings();
+        sc.TryAddSingleton<MusicalQueryEncoder>();
+        sc.TryAddSingleton<TypedMusicalQueryExtractor>();
+        sc.TryAddSingleton<LlmMusicalQueryExtractor>();
+        sc.TryAddSingleton<IMusicalQueryExtractor, CompositeMusicalQueryExtractor>();
+
         // Reflect-discover every concrete IOrchestratorSkill in the
         // GA.Business.ML assembly. (Skills implemented in host apps —
         // GaApi's VoicingComfortSkill, etc. — aren't covered by this scan
@@ -521,11 +611,26 @@ public class RoutingEvalHarness
         var total = results.Count;
         var correct = results.Count(r => r.Correct);
         var unmatched = results.Count(r => r.Chosen is null);
+
+        var inScope = results.Where(r => !r.IsOos).ToList();
+        var oos = results.Where(r => r.IsOos).ToList();
+        var inScopeCorrect = inScope.Count(r => r.Correct);
+        // For OOS prompts, "Correct" already means "declined" (see eval loop).
+        var oosDeclined = oos.Count(r => r.Correct);
+        var margins = inScope.Where(r => r.Margin.HasValue).Select(r => (double)r.Margin!.Value).ToList();
+
         return new OverallMetrics(
             Total: total,
             Correct: correct,
             UnmatchedFallthrough: unmatched,
-            Accuracy: total == 0 ? 0.0 : (double)correct / total);
+            Accuracy: total == 0 ? 0.0 : (double)correct / total,
+            InScopeTotal: inScope.Count,
+            InScopeCorrect: inScopeCorrect,
+            InScopeAccuracy: inScope.Count == 0 ? 0.0 : (double)inScopeCorrect / inScope.Count,
+            OosTotal: oos.Count,
+            OosCorrectlyDeclined: oosDeclined,
+            OosDeclineRate: oos.Count == 0 ? 0.0 : (double)oosDeclined / oos.Count,
+            MeanInScopeMargin: margins.Count == 0 ? null : margins.Average());
     }
 
     private static Dictionary<string, IntentMetrics> ComputePerIntent(

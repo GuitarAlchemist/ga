@@ -1,0 +1,32 @@
+{
+  "_schema": "pr-eta-baseline-v1",
+  "computed_at": "2026-05-24T03:54:47Z",
+  "window_days": 30,
+  "by_type": {
+    "chore": {
+      "sample_n": 25,
+      "median_minutes": 20,
+      "p90_minutes": 59
+    },
+    "feat": {
+      "sample_n": 114,
+      "median_minutes": 17,
+      "p90_minutes": 122
+    },
+    "fix": {
+      "sample_n": 65,
+      "median_minutes": 9,
+      "p90_minutes": 147
+    },
+    "docs": {
+      "sample_n": 23,
+      "median_minutes": 0,
+      "p90_minutes": 157
+    },
+    "other": {
+      "sample_n": 15,
+      "median_minutes": 16,
+      "p90_minutes": 80
+    }
+  }
+}

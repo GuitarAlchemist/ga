@@ -7,7 +7,7 @@
  * settle from a stiff "snap" into a smooth tween.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -31,6 +31,42 @@ const InverseKinematicsTest: React.FC = () => {
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
 
   const chord = CHORD_LIBRARY.find((c) => c.name === chordName) ?? CHORD_LIBRARY[0];
+
+  // MCP control surface: register chord/control setters on window.__gaIK
+  // so chrome-devtools / playwright MCP can drive the demo via
+  // evaluate_script. The InverseKinematics component contributes the
+  // scene-introspection half (getSceneState / validate).
+  useEffect(() => {
+    const w = window as unknown as { __gaIK?: Record<string, unknown> };
+    const ikApi = w.__gaIK ?? {};
+    ikApi.listChords = () => CHORD_LIBRARY.map((c) => c.name);
+    ikApi.getCurrentChord = () => chordName;
+    ikApi.setChord = (name: string) => {
+      const found = CHORD_LIBRARY.find((c) => c.name === name);
+      if (!found) return false;
+      setChordName(name);
+      return true;
+    };
+    ikApi.setControls = (opts: Partial<{
+      ikIterations: number;
+      ikDamping: number;
+      showTargets: boolean;
+      autoRotate: boolean;
+    }>) => {
+      if (typeof opts.ikIterations === 'number') setIkIterations(opts.ikIterations);
+      if (typeof opts.ikDamping === 'number') setIkDamping(opts.ikDamping);
+      if (typeof opts.showTargets === 'boolean') setShowTargets(opts.showTargets);
+      if (typeof opts.autoRotate === 'boolean') setAutoRotate(opts.autoRotate);
+      return true;
+    };
+    w.__gaIK = ikApi;
+    return () => {
+      delete ikApi.listChords;
+      delete ikApi.getCurrentChord;
+      delete ikApi.setChord;
+      delete ikApi.setControls;
+    };
+  }, [chordName]);
 
   const sliderSx = {
     color: '#ffd54f',

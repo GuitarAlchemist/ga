@@ -1,0 +1,308 @@
+name: Embeddings Snapshot
+
+# Daily snapshot producer for state/quality/embeddings/. Closes the second
+# half of #192 (cadence) — paired with state/quality/embeddings/baseline.json
+# (PR #248). The trend gap surfaced 2026-05-16 when ix-quality-trend showed
+# zero recent embeddings signal because the most recent snapshot was
+# 2026-04-17 and the existing 2026-04-17-postrefactor.json had a non-strict
+# filename that the loader silently skipped.
+#
+# Producer: ix sibling crate ix-embedding-diagnostics
+#   Binary:  baseline-diagnostics
+#   CLI:     --index <optick.index> --out-dir <dir>
+#   Writes:  embedding-diagnostics-YYYY-MM-DD.json + embedding-clusters-k50.json
+#
+# The producer name has a prefix; ix-quality-trend's snapshot loader at
+# ix/crates/ix-quality-trend/src/snapshot.rs:342 requires the stem to parse
+# as %Y-%m-%d (no prefix), so this workflow RENAMES the report to the
+# canonical state/quality/embeddings/${DATE}.json on commit.
+#
+# Schedule rationale: 07:00 UTC (one hour after chatbot-qa-snapshot at 06:00)
+# so a multi-domain trend run at ~08:00 sees both producers' fresh data.
+#
+# Failure semantics:
+#   - Preflight (index absent / stub) → skip-with-warn: write a canonical
+#     envelope with oracle_status="warn", degraded=true, last-known-good
+#     carryforward. Workflow exits 0 (the dashboard tile flips amber, not
+#     dead-silent red — `feedback_green_but_dead` rule).
+#   - Rust build failure → workflow fails AND emits an algedonic warn
+#     signal (closing the silent-rot loop; mirrors invariants-snapshot.yml).
+#   - Diagnostics run failure → workflow fails + algedonic warn.
+#   - Snapshot identical to existing day → quiet success (no empty commit).
+#
+# Background: 5 consecutive scheduled runs since 2026-05-20 hard-failed on
+# the missing `state/voicings/optick.index` (660 MB, not on hosted runners),
+# producing the GREEN-BUT-DEAD pattern flagged in the 2026-05-24 dashboard
+# triage. Preflight + canonical envelope close that gap. The producer
+# (ix-embedding-diagnostics, in the ix sibling repo) is unchanged in this
+# PR — the env-check has to live workflow-side because the producer can't
+# carry forward GA's last-known-good values without an upstream contract.
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # 07:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: embeddings-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout ga
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Preflight — check OPTIC-K index presence
+        id: preflight
+        shell: pwsh
+        # The hosted ubuntu-latest runner has no committed OPTIC-K index
+        # (state/voicings/optick.index is 660 MB and gitignored). When the
+        # index is absent we DO NOT build or run the Rust diagnostics binary
+        # — there is nothing to measure. Instead we let the
+        # `write-degraded-envelope` step emit a canonical warn snapshot with
+        # last-known-good carryforward, so the dashboard tile flips amber
+        # (honest "no data on runner") instead of staying dead-silent red.
+        #
+        # Stub-file guard: a < 100 MB file at the index path is almost
+        # certainly an LFS pointer or partial download. Treat it as absent.
+        run: |
+          $idx = 'state/voicings/optick.index'
+          $present = $false
+          $sizeMb  = 0
+          if (Test-Path $idx) {
+            $sizeBytes = (Get-Item $idx).Length
+            $sizeMb = [math]::Round($sizeBytes / 1MB, 1)
+            if ($sizeBytes -gt 100MB) { $present = $true }
+          }
+          "index_present=$($present.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "index_size_mb=$sizeMb" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          if ($present) {
+            Write-Host "Preflight OK — index at $idx is $sizeMb MB."
+          } else {
+            Write-Host "::warning::OPTIC-K index absent or stub at $idx (size=$sizeMb MB). Skipping diagnostics; writing degraded envelope."
+          }
+
+      - name: Checkout ix sibling
+        if: steps.preflight.outputs.index_present == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/ix
+          path: ix
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        if: steps.preflight.outputs.index_present == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        if: steps.preflight.outputs.index_present == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ix -> target
+
+      - name: Build baseline-diagnostics
+        if: steps.preflight.outputs.index_present == 'true'
+        working-directory: ix
+        run: cargo build --release -p ix-embedding-diagnostics --bin baseline-diagnostics
+
+      - name: Run diagnostics
+        if: steps.preflight.outputs.index_present == 'true'
+        run: |
+          mkdir -p tmp-baseline
+          ix/target/release/baseline-diagnostics \
+            --index state/voicings/optick.index \
+            --out-dir tmp-baseline \
+            --cluster-sample 5000
+
+      - name: Write degraded envelope (index absent)
+        if: steps.preflight.outputs.index_present != 'true'
+        id: stage_degraded
+        shell: pwsh
+        # Canonical dashboard envelope for the missing-index case. Mirrors
+        # the chatbot-qa preflight pattern: writes oracle_status="warn",
+        # degraded=true, and carries forward last_known_good_pass_pct
+        # (capped at 30-day search) from either a prior dated snapshot or
+        # the operator-pinned baseline.json. The dashboard tile renders
+        # amber + tooltip "OPTIC-K index absent on runner — last known
+        # good: <date>" so the operator sees the gap immediately.
+        env:
+          INDEX_SIZE_MB: ${{ steps.preflight.outputs.index_size_mb }}
+        run: |
+          $date  = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+          $stamp = (Get-Date).ToUniversalTime().ToString('o')
+          $dir   = 'state/quality/embeddings'
+          $dst   = "$dir/$date.json"
+          New-Item -ItemType Directory -Path $dir -Force | Out-Null
+
+          # Find last-known-good full_classifier_accuracy. Search the most
+          # recent 30 dated snapshots for one with degraded != true and a
+          # numeric leak_detection.full_classifier_accuracy. Fall back to
+          # the operator-pinned baseline.json (primary_baseline).
+          function _LastKnownGood {
+            param([string]$Dir, [string]$TodayStem)
+            if (-not (Test-Path $Dir)) { return $null }
+            $cutoff = (Get-Date).ToUniversalTime().AddDays(-30)
+            $dated = Get-ChildItem -Path $Dir -Filter '*.json' -File |
+                     Where-Object { $_.BaseName -match '^\d{4}-\d{2}-\d{2}$' -and $_.BaseName -ne $TodayStem } |
+                     Where-Object {
+                       try { [datetime]::ParseExact($_.BaseName, 'yyyy-MM-dd', $null) -ge $cutoff }
+                       catch { $false }
+                     } |
+                     Sort-Object BaseName -Descending
+            foreach ($f in $dated) {
+              try {
+                $obj = Get-Content -Raw -Path $f.FullName -Encoding UTF8 | ConvertFrom-Json
+                if ($obj.degraded -eq $true) { continue }
+                $acc = $obj.leak_detection.full_classifier_accuracy
+                if ($null -ne $acc) {
+                  return [pscustomobject]@{ value=[double]$acc; date=$f.BaseName; source='snapshot' }
+                }
+              } catch { continue }
+            }
+            $baselineFile = Join-Path $Dir 'baseline.json'
+            if (Test-Path $baselineFile) {
+              try {
+                $b = Get-Content -Raw -Path $baselineFile -Encoding UTF8 | ConvertFrom-Json
+                if ($null -ne $b.primary_baseline) {
+                  # ConvertFrom-Json auto-parses ISO-8601 strings into
+                  # [datetime] (and round-trips them via .ToString() in the
+                  # current locale, which is NOT ISO). Force ISO back.
+                  $bd = if ($b.established_at -is [datetime]) {
+                          $b.established_at.ToUniversalTime().ToString('o')
+                        } elseif ($b.established_at) {
+                          [string]$b.established_at
+                        } else { 'baseline.json' }
+                  return [pscustomobject]@{ value=[double]$b.primary_baseline; date=$bd; source='baseline' }
+                }
+              } catch {}
+            }
+            return $null
+          }
+
+          $lkg = _LastKnownGood -Dir $dir -TodayStem $date
+          $lkgValue = if ($lkg) { $lkg.value } else { $null }
+          $lkgDate  = if ($lkg) { $lkg.date  } else { $null }
+          $lkgSrc   = if ($lkg) { $lkg.source } else { $null }
+          $lkgSummary = if ($lkg) { "$($lkg.value) from $($lkg.date) ($($lkg.source))" } else { 'none' }
+
+          $envelope = [ordered]@{
+            domain        = 'embeddings'
+            emitted_at    = $stamp
+            timestamp     = $stamp   # ix-quality-trend reads `timestamp`
+            metric_name   = 'leak_detection_full_classifier_accuracy'
+            metric_value  = $lkgValue
+            oracle_status = 'warn'
+            summary       = "OPTIC-K index absent on runner — last known good: $lkgSummary"
+            degraded      = $true
+            degraded_reason = 'index_absent_on_runner'
+            last_known_good_pass_pct = $lkgValue
+            last_known_good_date     = $lkgDate
+            last_known_good_source   = $lkgSrc
+            problems = @(
+              [ordered]@{
+                code    = 'INDEX_ABSENT'
+                message = "state/voicings/optick.index not found or stub (size=${env:INDEX_SIZE_MB} MB; threshold>100MB). Producer skipped; rebuild via the optick-rebuild skill on a host with the index."
+              }
+            )
+          }
+
+          $envelope | ConvertTo-Json -Depth 6 | Set-Content -Path $dst -Encoding utf8NoBOM
+          Write-Host "Wrote degraded envelope to $dst (last_known_good=$lkgSummary)."
+          "snapshot_path=$dst" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "snapshot_date=$date" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Normalize filename and stage canonical snapshot
+        if: steps.preflight.outputs.index_present == 'true'
+        id: stage
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          SRC="tmp-baseline/embedding-diagnostics-${DATE}.json"
+          DST="state/quality/embeddings/${DATE}.json"
+          if [ ! -f "$SRC" ]; then
+            echo "Diagnostics did not produce $SRC — check the run logs." >&2
+            ls -la tmp-baseline || true
+            exit 1
+          fi
+          mkdir -p state/quality/embeddings
+          mv "$SRC" "$DST"
+          echo "snapshot_path=$DST" >> "$GITHUB_OUTPUT"
+          echo "snapshot_date=$DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Commit snapshot if new
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          # One of the two stage steps ran; the other's outputs are empty.
+          SNAP_REAL: ${{ steps.stage.outputs.snapshot_path }}
+          DATE_REAL: ${{ steps.stage.outputs.snapshot_date }}
+          SNAP_DEG: ${{ steps.stage_degraded.outputs.snapshot_path }}
+          DATE_DEG: ${{ steps.stage_degraded.outputs.snapshot_date }}
+        run: |
+          SNAP="${SNAP_REAL:-$SNAP_DEG}"
+          DATE="${DATE_REAL:-$DATE_DEG}"
+          if [ -z "$SNAP" ]; then
+            echo "Neither stage step produced a snapshot path — nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$SNAP"
+          if git diff --cached --quiet; then
+            echo "Snapshot identical to existing — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): embeddings snapshot ${DATE} [skip ci]"
+          git push
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embeddings-snapshot-${{ github.run_id }}
+          path: |
+            state/quality/embeddings/
+            tmp-baseline/
+          retention-days: 90
+
+      - name: Emit algedonic warn on failure
+        # Mirrors invariants-snapshot.yml. Fires only when a real step
+        # failed (build / diagnostics run / commit) — the skip-with-warn
+        # path above is intentionally exit-0 and won't trigger this.
+        if: failure()
+        shell: pwsh
+        env:
+          RUN_URL: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+        run: |
+          if (-not (Test-Path Scripts/algedonic-emit.ps1)) {
+            Write-Host "algedonic-emit.ps1 not present — skipping signal"
+            exit 0
+          }
+          pwsh Scripts/algedonic-emit.ps1 `
+            -Severity warn `
+            -Repo ga `
+            -Source embeddings-snapshot `
+            -Summary "Embeddings snapshot workflow failed — pipeline producing no data" `
+            -Details "The daily embeddings snapshot did not produce a new state/quality/embeddings/YYYY-MM-DD.json. The OPTIC-K embedding-quality trend will drift stale until the next successful run. See evidence_url for the failing job logs." `
+            -EvidenceUrl "$env:RUN_URL" `
+            -AffectedArtifacts state/quality/embeddings/
+
+      - name: Upload algedonic inbox on failure
+        # algedonic-emit appends to state/algedonic/inbox.jsonl on the
+        # runner. Without this artifact upload the signal would be
+        # discarded when the failure path skips the commit step —
+        # re-introducing the silent-rot risk this workflow is meant to
+        # close. Matches the invariants-snapshot pattern.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: algedonic-inbox-${{ github.run_id }}
+          path: state/algedonic/inbox.jsonl
+          if-no-files-found: warn
+          retention-days: 90

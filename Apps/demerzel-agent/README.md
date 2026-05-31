@@ -6,8 +6,8 @@ Demerzel as a standalone [Agent Communication Protocol (ACP)](https://agentcommu
 
 ```bash
 cd Apps/demerzel-agent
-pip install -e .
-uvicorn src.server:app --host 0.0.0.0 --port 8200
+uv sync
+uv run uvicorn src.server:app --host 0.0.0.0 --port 8200
 ```
 
 ## Agents

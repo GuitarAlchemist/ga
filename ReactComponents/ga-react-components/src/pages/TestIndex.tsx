@@ -12,10 +12,15 @@ import {
   Paper,
   Chip,
   Button,
-  Stack
+  Stack,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
+import BuildIcon from '@mui/icons-material/Build';
+import ScienceIcon from '@mui/icons-material/Science';
 import { useNavigate } from 'react-router-dom';
+import DevelopmentSection from './DevelopmentSection';
 
 interface TestPageInfo {
   id: string;
@@ -146,12 +151,12 @@ const testPages: TestPageInfo[] = [
     status: 'partial',
   },
   {
-    id: 'sunburst-3d',
-    title: 'Sunburst 3D',
-    description: '3D sunburst visualization with slope effect and LOD for hierarchical musical data exploration',
-    technology: 'Three.js + WebGL',
-    path: '/test/sunburst-3d',
-    features: ['3D Sunburst', 'Slope Effect', 'LOD System', 'Interactive Zoom', 'Breadcrumb Trail', 'Auto-Rotate'],
+    id: 'tonal-orbit',
+    title: 'Tonal Orbit',
+    description: 'Music theory as a planetary system — pitch classes orbit the tonic, chord families orbit pitches, scales drift in outer rings. Pinch / drag / tap to navigate. Performance tiers + Cast-friendly tour mode.',
+    technology: 'Three.js + WebGL + Web Audio',
+    path: '/test/tonal-orbit',
+    features: ['Pitch / Chord / Scale Orbits', 'Touch + Drag + Pinch', 'Web Audio Drone', 'Bloom Post-Processing', 'Tour Mode (?tour=auto)', 'perf=high/med/low'],
     status: 'complete',
   },
   {
@@ -173,21 +178,21 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
+    id: 'modal-meadow',
+    title: 'Modal Meadow',
+    description: 'Walk through a meadow split into seven musical mode-regions (Lydian → Locrian, modal-brightness order); ambient chord progression, grass color, sun, and wind shift as you cross between modes. v1.3 cinematic pass: EffectComposer + UnrealBloomPass on the sun + brightest motes, real PCF-soft directional shadows from the per-region sun (hills self-occlude), 3-band atmospheric sky with sun disc + halo + warmth bleed, volumetric god rays gated by dusk-mode weight, and a ?perf=high|medium|low URL toggle. v0.9 rewrites the synth (ADSR pad voices, spread voicings root −24/root/top +12, fake-reverb send). v1.2 ground-clamp samples terrain ahead so the camera rides approaching hills.',
+    technology: 'Three.js + Web Audio + FPS Controls',
+    path: '/test/modal-meadow',
+    features: ['First-Person', 'WASD Walker', 'Pointer Lock', 'Seven Modes', 'Auto-Walk Default', 'Hills + Ponds', 'ADSR Spread Voicings', 'Cinematic Bloom', 'Real Shadows', '3-Band Sky + Sun Disc', 'God Rays (Dusk)', 'perf=high/med/low'],
+    status: 'complete',
+  },
+  {
     id: 'ocean',
     title: 'Ocean Shader',
     description: 'Realistic ocean water simulation with Gerstner waves, reflections, and dynamic lighting',
     technology: 'Three.js + GLSL Shaders',
     path: '/test/ocean',
     features: ['Gerstner Waves', 'Fresnel Effect', 'Specular Highlights', 'Sky Gradient', 'Real-time Animation'],
-    status: 'complete',
-  },
-  {
-    id: 'chord-progression',
-    title: 'Chord Progression Visualizer',
-    description: '3D visualization of chord progressions with circle of fifths and animated chord transitions',
-    technology: 'Three.js + WebGL',
-    path: '/test/chord-progression',
-    features: ['Circle of Fifths', 'Color-Coded Chords', 'Auto-Progression', 'Stacked Notes', 'VSM Shadows', 'Interactive Camera'],
     status: 'complete',
   },
   {
@@ -227,15 +232,6 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
-    id: 'fractal-splat',
-    title: 'Fractal Splat',
-    description: 'Procedural Mandelbulb-style fractal rendered as soft Gaussian splats with bloom, palette controls, and animated morphing',
-    technology: 'Three.js + GLSL point sprites',
-    path: '/test/fractal-splat',
-    features: ['Gaussian Splats', 'Mandelbulb Boundary Cloud', 'Shader Point Sprites', 'Bloom', 'Palette Controls', 'Procedural Generation'],
-    status: 'complete',
-  },
-  {
     id: 'mandelbulb',
     title: 'Mandelbulb',
     description: 'True raymarched Mandelbulb fractal with distance estimation, orbit-trap coloring, soft shadows, and interactive power controls',
@@ -251,24 +247,6 @@ const testPages: TestPageInfo[] = [
     technology: 'Three.js + @mkkellogg/gaussian-splats-3d',
     path: '/test/gaussian-splat',
     features: ['3D Gaussian Splatting', 'Compressed PLY Streaming', 'Multi-Version CDN Resolver', 'CPU Worker Sort', 'SOG Format Detection', 'Custom Scene URL'],
-    status: 'complete',
-  },
-  {
-    id: 'sunflower-field',
-    title: 'Sunflower Field',
-    description: 'Hyper-real procedural sunflower rows with instanced flowers, canvas-textured heads, golden-hour light, and Gaussian pollen haze',
-    technology: 'Three.js + InstancedMesh + Gaussian point sprites',
-    path: '/test/sunflower-field',
-    features: ['Instanced Sunflowers', 'Procedural Textures', 'Golden Hour', 'Wind Sway', 'Gaussian Pollen', 'Bloom'],
-    status: 'complete',
-  },
-  {
-    id: 'maple-tree',
-    title: 'Maple Tree',
-    description: 'Hyper-real procedural maple tree with textured bark, recursive branches, instanced leaves, wind, and seasonal palettes',
-    technology: 'Three.js + InstancedMesh + Procedural Textures',
-    path: '/test/maple-tree',
-    features: ['Maple Leaves', 'Procedural Bark', 'Recursive Branches', 'Wind Flutter', 'Autumn Palette', 'Ground Litter'],
     status: 'complete',
   },
   {
@@ -397,6 +375,15 @@ const testPages: TestPageInfo[] = [
     features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
     status: 'partial',
   },
+  {
+    id: 'fleet',
+    title: 'Fleet Status',
+    description: 'Unified "what is happening across the 5 sibling repos right now" view — PRs, install-audit scores, active initiatives, blockers. Static page, baked by CI cron.',
+    technology: 'React + MUI + GitHub Actions cron + agent-blackbox install-audit',
+    path: '/test/fleet',
+    features: ['Active PRs', 'Install-audit scores', 'Active initiatives', 'Surface blockers', 'Markdown mirror', 'CI-baked'],
+    status: 'complete',
+  },
 ];
 
 const statusColors = {
@@ -413,6 +400,10 @@ const statusLabels = {
 
 export const TestIndex: React.FC = () => {
   const navigate = useNavigate();
+  // Development is the default landing surface — it's the live "behind the
+  // scenes" view (epic progress, QA, AI contributors, commit activity) and
+  // is publicly readable. Demos remains one click away.
+  const [tab, setTab] = React.useState<'dev' | 'demos'>('dev');
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -482,6 +473,29 @@ export const TestIndex: React.FC = () => {
         </Stack>
       </Paper>
 
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v as 'dev' | 'demos')} aria-label="Test index sections">
+          <Tab
+            value="dev"
+            label="Development"
+            icon={<BuildIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab
+            value="demos"
+            label={`Demos (${testPages.length})`}
+            icon={<ScienceIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+        </Tabs>
+      </Box>
+
+      {tab === 'dev' && <DevelopmentSection />}
+
+      {tab === 'demos' && (
+      <>
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" gutterBottom>
           🎸 Component Test Suite
@@ -576,6 +590,8 @@ export const TestIndex: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      </>
+      )}
     </Container>
   );
 };

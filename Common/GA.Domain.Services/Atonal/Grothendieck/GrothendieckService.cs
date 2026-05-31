@@ -3,6 +3,7 @@ namespace GA.Domain.Services.Atonal.Grothendieck;
 using GA.Domain.Core.Theory.Atonal;
 
 using System.Buffers;
+using System.Collections.Concurrent;
 
 /// <summary>
 ///     Service for Grothendieck group operations on pitch-class sets
@@ -10,6 +11,19 @@ using System.Buffers;
 [PublicAPI]
 public class GrothendieckService : IGrothendieckService
 {
+    // FindNearby is pure: (source, maxDistance) → list, deterministic and
+    // PitchClassSet.Items is static. The chatbot hits this from the hot
+    // path (IcvNeighborsSkill, ChordSubstitutionSkill, ICV-badge augmentation,
+    // FindShortestPath BFS) — typically 2^12 PitchClassSet enumerations
+    // per call. Cache the result keyed by source+distance. Realistic working
+    // set is ~50 distinct keys; cap at NearbyCacheCapacity to bound memory
+    // when an adversarial caller probes the whole space.
+    private const int NearbyCacheCapacity = 256;
+    private const int NearbyCacheEvictionBatch = 32;
+    private readonly ConcurrentDictionary<(PitchClassSet, int), IReadOnlyList<(PitchClassSet Set, GrothendieckDelta Delta, double Cost)>> _findNearbyCache = new();
+    private readonly Lock _findNearbyEvictionLock = new();
+    private long _findNearbyInsertSeq;
+    private readonly ConcurrentDictionary<(PitchClassSet, int), long> _findNearbyInsertOrder = new();
     /// <inheritdoc />
     public IntervalClassVector ComputeIcv(IEnumerable<int> pitchClasses)
     {
@@ -32,6 +46,12 @@ public class GrothendieckService : IGrothendieckService
         PitchClassSet source,
         int maxDistance)
     {
+        var key = (source, maxDistance);
+        if (_findNearbyCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
         var sourceIcv = source.IntervalClassVector;
         var results = new List<(PitchClassSet, GrothendieckDelta, double)>();
 
@@ -57,8 +77,40 @@ public class GrothendieckService : IGrothendieckService
             }
         }
 
-        // Sort by cost (ascending)
-        return results.OrderBy(r => r.Item3);
+        // Sort by cost (ascending), materialize so the cached value is stable
+        var sorted = results.OrderBy(r => r.Item3).ToList().AsReadOnly();
+
+        if (_findNearbyCache.TryAdd(key, sorted))
+        {
+            _findNearbyInsertOrder[key] = Interlocked.Increment(ref _findNearbyInsertSeq);
+            EvictFindNearbyIfOverCapacity();
+        }
+
+        return sorted;
+    }
+
+    private void EvictFindNearbyIfOverCapacity()
+    {
+        if (_findNearbyCache.Count <= NearbyCacheCapacity) return;
+
+        // Serialize eviction so two concurrent overflows don't double-prune.
+        // The capacity check above is racy by design — entering the lock revalidates.
+        lock (_findNearbyEvictionLock)
+        {
+            if (_findNearbyCache.Count <= NearbyCacheCapacity) return;
+
+            var victims = _findNearbyInsertOrder
+                .OrderBy(kvp => kvp.Value)
+                .Take(NearbyCacheEvictionBatch)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in victims)
+            {
+                _findNearbyCache.TryRemove(key, out _);
+                _findNearbyInsertOrder.TryRemove(key, out _);
+            }
+        }
     }
 
     /// <inheritdoc />

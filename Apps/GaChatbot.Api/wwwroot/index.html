@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GA Chatbot</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f7f9;
+      color: #172033;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 24px;
+      width: min(1400px, calc(100vw - 32px));
+      margin: 24px auto;
+    }
+    h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    h2 { margin: 0 0 12px; font-size: 16px; }
+    p { margin: 0; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 6px 10px;
+      border: 1px solid #d7dce5;
+      border-radius: 6px;
+      background: white;
+      font-size: 13px;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: #9ca3af; }
+    .dot.ready { background: #168a4a; }
+    .dot.down { background: #c2410c; }
+    .chat, aside {
+      border: 1px solid #d7dce5;
+      border-radius: 8px;
+      background: white;
+    }
+    .messages {
+      min-height: 420px;
+      max-height: calc(100vh - 210px);
+      overflow: auto;
+      padding: 16px;
+    }
+    .message {
+      width: fit-content;
+      max-width: 82%;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      margin-left: auto;
+      background: #1d4ed8;
+      color: white;
+    }
+    .message.assistant {
+      background: #eef2f7;
+      color: #172033;
+    }
+    .notation {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #d7dce5;
+      border-radius: 6px;
+      background: #fff;
+      overflow-x: auto;
+    }
+    .notation svg { display: block; max-width: none; }
+    .notation-error {
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid #f1b8a2;
+      border-radius: 6px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+    .meta { margin-top: 8px; color: #5b6575; font-size: 12px; }
+    .trace {
+      margin-top: 8px;
+      border-top: 1px solid #d7dce5;
+      padding-top: 8px;
+      color: #374151;
+      font-size: 12px;
+    }
+    .trace summary { cursor: pointer; font-weight: 650; }
+    .trace ol { margin: 8px 0 0 18px; padding: 0; }
+    .trace li { margin: 0 0 6px; }
+    .trace code {
+      display: block;
+      margin-top: 2px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #5b6575;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+    form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid #d7dce5;
+    }
+    textarea {
+      width: 100%;
+      min-height: 48px;
+      max-height: 160px;
+      resize: vertical;
+      border: 1px solid #c7ceda;
+      border-radius: 6px;
+      padding: 10px;
+      font: inherit;
+    }
+    button {
+      min-width: 88px;
+      border: 0;
+      border-radius: 6px;
+      background: #1f6feb;
+      color: white;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    button:disabled { background: #94a3b8; cursor: wait; }
+    aside { padding: 16px; height: fit-content; }
+    .examples { display: grid; gap: 8px; }
+    .example {
+      width: 100%;
+      min-height: 0;
+      padding: 8px;
+      border: 1px solid #d7dce5;
+      background: #f8fafc;
+      color: #172033;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .links {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+      font-size: 13px;
+    }
+    a { color: #1d4ed8; }
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; margin: 16px auto; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .messages { min-height: 360px; max-height: none; }
+    }
+    .showcase-button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: 0;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      margin-right: 10px;
+    }
+    .showcase-button:hover { filter: brightness(1.1); }
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: min(92%, 720px);
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 { font-size: 17px; font-weight: 600; margin: 0; }
+    .modal-close {
+      background: transparent;
+      border: 0;
+      color: white;
+      font-size: 26px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+    }
+    .modal-content { padding: 20px; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 10px 20px;
+      background: #f7f7fa;
+      font-size: 12px;
+      color: #666;
+      border-top: 1px solid #eaeaee;
+    }
+    .showcase-category { margin-bottom: 22px; }
+    .showcase-category:last-child { margin-bottom: 0; }
+    .showcase-category h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2a2a3a;
+      margin: 0 0 4px;
+    }
+    .showcase-category-description {
+      font-size: 12.5px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .showcase-prompt {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #f6f6fa;
+      border: 1px solid #e3e3eb;
+      color: #333;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+    .showcase-prompt:hover { background: #ecedf5; border-color: #667eea; }
+    .showcase-prompt-text { font-weight: 500; margin-bottom: 3px; color: #2a2a3a; }
+    .showcase-prompt-desc { font-size: 11.5px; color: #888; }
+    .showcase-qa {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 10.5px;
+      line-height: 1.2;
+    }
+    .qa-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .qa-badge.verified { background: #e3f5ea; color: #168a4a; border: 1px solid #c5e6d2; }
+    .qa-badge.warning  { background: #fff3e0; color: #b56a00; border: 1px solid #ffd9a5; }
+    .qa-badge.unverified { background: #f1f1f5; color: #777; border: 1px dashed #c8c8d0; }
+    .qa-meta { color: #888; }
+    .qa-meta strong { color: #555; font-weight: 600; }
+    .showcase-loading, .showcase-error {
+      text-align: center;
+      padding: 32px 12px;
+      color: #777;
+    }
+    .showcase-error { color: #b13a3a; }
+
+    /* Markdown rendering inside assistant messages */
+    .message.assistant { white-space: normal; }
+    .message.assistant .md-line { margin: 0 0 6px; }
+    .message.assistant .md-line:last-child { margin-bottom: 0; }
+    .message.assistant h3, .message.assistant h4 {
+      margin: 14px 0 6px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .message.assistant h3:first-child, .message.assistant h4:first-child { margin-top: 0; }
+    .message.assistant ul, .message.assistant ol {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+    }
+    .message.assistant li { margin: 0 0 4px; }
+    .message.assistant code:not(pre code) {
+      background: #d8dee8;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+    .message.assistant strong { font-weight: 650; }
+    .md-table {
+      border-collapse: collapse;
+      margin: 8px 0;
+      width: 100%;
+      font-size: 13px;
+    }
+    .md-table th, .md-table td {
+      border: 1px solid #c7ceda;
+      padding: 5px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .md-table th {
+      background: #e1e7f0;
+      font-weight: 650;
+    }
+    .md-table tbody tr:nth-child(even) { background: #f6f7f9; }
+    .message.user { white-space: pre-wrap; }
+
+    /* Right-panel trace */
+    .trace-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .trace-empty {
+      color: #94a3b8;
+      font-size: 13px;
+      padding: 12px 6px;
+      font-style: italic;
+    }
+    .trace-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e3e8ef;
+    }
+    .trace-header .trace-agent {
+      font-weight: 650;
+      color: #1d4ed8;
+    }
+    .trace-header .trace-route {
+      font-size: 11px;
+      color: #6b7280;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .trace-header .trace-conf {
+      font-size: 11px;
+      font-weight: 650;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: #e1e7f0;
+    }
+    .trace-header .trace-conf.high { background: #d6efe0; color: #1f7a4d; }
+    .trace-header .trace-conf.mid  { background: #fbeed1; color: #b27a00; }
+    .trace-header .trace-conf.low  { background: #f3d3d3; color: #a83232; }
+    .trace-step {
+      border: 1px solid #d7dce5;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fbfcfe;
+      font-size: 12.5px;
+    }
+    .trace-step.running { border-color: #93c5fd; background: #eff6ff; }
+    .trace-step.completed { border-color: #c7ceda; }
+    .trace-step.failed { border-color: #fca5a5; background: #fef2f2; }
+    .trace-step-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .trace-step-name {
+      font-weight: 650;
+      color: #172033;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11.5px;
+    }
+    .trace-step-elapsed {
+      font-size: 11px;
+      color: #6b7280;
+      font-variant-numeric: tabular-nums;
+    }
+    .trace-step-attrs {
+      display: none;
+      margin-top: 6px;
+      padding: 6px;
+      background: #f6f7f9;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #374151;
+    }
+    .trace-step.open .trace-step-attrs { display: block; }
+    .trace-ids {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 10.5px;
+      color: #94a3b8;
+      padding: 6px;
+      background: #f6f7f9;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .panel-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e3e8ef;
+    }
+    .panel-section summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      color: #374151;
+      padding: 2px 0;
+    }
+    .panel-section[open] summary { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <div class="toolbar">
+      <div>
+        <h1>GA Chatbot</h1>
+        <p>Ask grounded music theory questions through the local chatbot API.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" class="showcase-button" id="showcaseButton" onclick="openShowcase()">✨ Showcase</button>
+        <div class="status" aria-live="polite"><span id="statusDot" class="dot"></span><span id="statusText">Checking...</span></div>
+      </div>
+    </div>
+    <div class="chat">
+      <div id="messages" class="messages" aria-live="polite">
+        <div class="message assistant">Ready. Try a theory question or use one of the examples.</div>
+      </div>
+      <!--
+        WebMCP declarative-API annotations per W3C Community Group Draft +
+        Chrome 146 beta preview. Lets AI agents (Claude, ChatGPT, Gemini,
+        browser-native agents) discover and invoke the chat action without
+        DOM scraping. See docs/plans/2026-05-16-feat-webmcp-prep-plan.md.
+        Attributes are ignored by non-WebMCP browsers.
+      -->
+      <form id="chatForm"
+            toolname="ask-guitar-alchemist"
+            tooldescription="Ask the Guitar Alchemist chatbot a music-theory question. Returns a natural-language answer plus a structured agentic trace showing which skill answered (chord parsing, scale lookup, voice leading, set-class algebra, etc.)."
+            toolautosubmit="false">
+        <textarea id="messageInput"
+                  name="Message"
+                  toolparamdescription="The music-theory question to ask. Examples: 'What are the notes in C major?', 'Suggest substitutions for G7 in a ii-V-I', 'Show me a Cmaj9 chord', 'Are 0146 and 0137 z-related?'. Supports pitch-class set notation, chord symbols, and natural-language theory questions."
+                  placeholder="Ask about chords, scales, voice leading, or set-class algebra..." required>Are 0146 and 0137 z-related?</textarea>
+        <button id="sendButton" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+  <aside>
+    <h2>Agentic trace</h2>
+    <div id="tracePanel" class="trace-panel">
+      <div class="trace-empty">Send a message to see the agent's reasoning steps.</div>
+    </div>
+    <details class="panel-section">
+      <summary>Examples</summary>
+      <div id="examples" class="examples"></div>
+    </details>
+    <details class="panel-section">
+      <summary>Links</summary>
+      <div class="links">
+        <a href="api/chatbot/status">Status JSON</a>
+        <a href="api/chatbot/examples">Examples JSON</a>
+        <a href="api/chatbot/demo">Demo script JSON</a>
+        <a href="api">API metadata</a>
+      </div>
+    </details>
+  </aside>
+</main>
+<div class="modal-backdrop" id="showcaseModal" onclick="closeShowcaseOnBackdrop(event)">
+  <div class="modal" role="dialog" aria-labelledby="showcaseTitle">
+    <div class="modal-header">
+      <h2 id="showcaseTitle">✨ Showcase — What This Chatbot Can Do</h2>
+      <button class="modal-close" aria-label="Close" onclick="closeShowcase()">×</button>
+    </div>
+    <div class="modal-content" id="showcaseContent">
+      <div class="showcase-loading">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      Click any prompt to send it. Every prompt runs the real backend pipeline.
+    </div>
+  </div>
+</div>
+<script src="vendor/vexflow/vexflow.js"></script>
+<script>
+  const form = document.getElementById('chatForm');
+  const input = document.getElementById('messageInput');
+  const sendButton = document.getElementById('sendButton');
+  const messages = document.getElementById('messages');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const examples = document.getElementById('examples');
+  const tracePanel = document.getElementById('tracePanel');
+  const history = [];
+  const CHAT_CLIENT_TIMEOUT_MS = 190000;
+  let activeController = null;
+  let activeTimer = null;
+  let activeTimeout = null;
+  let activeStartedAt = 0;
+  const notationFencePattern = /```(?:vextab|vexflow|tab)\s*\n([\s\S]*?)```/gi;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function addMessage(role, text, meta) {
+    const node = document.createElement('div');
+    node.className = `message ${role}`;
+    renderMessageContent(node, text, role);
+    if (meta) {
+      const metaNode = document.createElement('div');
+      metaNode.className = 'meta';
+      metaNode.textContent = meta;
+      node.appendChild(metaNode);
+    }
+    messages.appendChild(node);
+    renderPendingNotation(node);
+    messages.scrollTop = messages.scrollHeight;
+    return node;
+  }
+
+  function renderMessageContent(node, text, role) {
+    notationFencePattern.lastIndex = 0;
+    let cursor = 0;
+    let match;
+    while ((match = notationFencePattern.exec(text)) !== null) {
+      appendSegment(node, text.slice(cursor, match.index), role);
+      const notationNode = document.createElement('div');
+      notationNode.className = 'notation';
+      notationNode.dataset.notation = match[1].trim();
+      node.appendChild(notationNode);
+      cursor = match.index + match[0].length;
+    }
+    appendSegment(node, text.slice(cursor), role);
+  }
+
+  function appendSegment(node, text, role) {
+    if (!text) return;
+    if (role === 'assistant') {
+      // Parse markdown for assistant responses (tables, headings, bold, etc.)
+      const html = renderMarkdown(text);
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      while (container.firstChild) node.appendChild(container.firstChild);
+    } else {
+      node.appendChild(document.createTextNode(text));
+    }
+  }
+
+  // ── Markdown rendering (safe: input is escaped before tag substitution) ────
+  function renderMarkdown(text) {
+    const lines = text.split('\n');
+    let html = '';
+    let i = 0;
+    let inList = false;
+    let inOrdered = false;
+
+    const closeList = () => {
+      if (inList) { html += inOrdered ? '</ol>' : '</ul>'; inList = false; inOrdered = false; }
+    };
+
+    while (i < lines.length) {
+      const line = lines[i];
+      // Markdown table: header row | --- | --- |
+      const isPipeRow = /^\s*\|.*\|\s*$/.test(line) || line.split('|').length >= 3;
+      const nextSep = i + 1 < lines.length && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$/.test(lines[i + 1]);
+      if (isPipeRow && nextSep) {
+        closeList();
+        const rows = [line];
+        i += 2;
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
+          rows.push(lines[i]);
+          i++;
+        }
+        html += renderMdTable(rows);
+        continue;
+      }
+      // Heading
+      const h = line.match(/^(#{1,4})\s+(.+)$/);
+      if (h) {
+        closeList();
+        const lvl = Math.min(6, h[1].length + 2);
+        html += `<h${lvl}>${applyInline(h[2])}</h${lvl}>`;
+        i++; continue;
+      }
+      // Ordered list item
+      const ol = line.match(/^\s*(\d+)\.\s+(.+)$/);
+      if (ol) {
+        if (!inList || !inOrdered) { closeList(); html += '<ol>'; inList = true; inOrdered = true; }
+        html += `<li>${applyInline(ol[2])}</li>`;
+        i++; continue;
+      }
+      // Unordered list item
+      const ul = line.match(/^\s*[-*]\s+(.+)$/);
+      if (ul) {
+        if (!inList || inOrdered) { closeList(); html += '<ul>'; inList = true; inOrdered = false; }
+        html += `<li>${applyInline(ul[1])}</li>`;
+        i++; continue;
+      }
+      // Blank line breaks lists
+      if (line.trim() === '') {
+        closeList();
+        html += '<div class="md-line">&nbsp;</div>';
+        i++; continue;
+      }
+      // Plain line
+      closeList();
+      html += `<div class="md-line">${applyInline(line)}</div>`;
+      i++;
+    }
+    closeList();
+    return html;
+  }
+
+  function applyInline(s) {
+    // Order matters: escape first, then bold/italic/code (the substitution
+    // only re-introduces controlled tags). Inline code first so its content
+    // doesn't get further transformed.
+    return escapeHtml(s)
+      .replace(/`([^`\n]+)`/g, (_, c) => `<code>${c}</code>`)
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(?:^|\W)\*([^*\n]+)\*(?=\W|$)/g, (m, c) => m.replace(`*${c}*`, `<em>${c}</em>`));
+  }
+
+  function renderMdTable(rows) {
+    const parsed = rows.map(r => {
+      const cells = r.split('|').map(c => c.trim());
+      if (cells.length && cells[0] === '') cells.shift();
+      if (cells.length && cells[cells.length - 1] === '') cells.pop();
+      return cells;
+    });
+    if (parsed.length === 0) return '';
+    let html = '<table class="md-table"><thead><tr>';
+    for (const cell of parsed[0]) html += `<th>${applyInline(cell)}</th>`;
+    html += '</tr></thead><tbody>';
+    for (const row of parsed.slice(1)) {
+      html += '<tr>';
+      for (const cell of row) html += `<td>${applyInline(cell)}</td>`;
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // ── Right-panel trace renderer ─────────────────────────────────────────────
+  function renderTracePanel(trace, agentId, routingMethod, confidence) {
+    if (!trace?.steps?.length) {
+      tracePanel.replaceChildren();
+      const empty = document.createElement('div');
+      empty.className = 'trace-empty';
+      empty.textContent = 'No trace available.';
+      tracePanel.appendChild(empty);
+      return;
+    }
+    tracePanel.replaceChildren();
+
+    const header = document.createElement('div');
+    header.className = 'trace-header';
+    const agent = document.createElement('span');
+    agent.className = 'trace-agent';
+    agent.textContent = agentId || 'unknown';
+    const route = document.createElement('span');
+    route.className = 'trace-route';
+    route.textContent = routingMethod || '';
+    const conf = document.createElement('span');
+    const c = typeof confidence === 'number' ? confidence : 0;
+    conf.className = `trace-conf ${c >= 0.8 ? 'high' : c >= 0.5 ? 'mid' : 'low'}`;
+    conf.textContent = `${(c * 100).toFixed(0)}%`;
+    header.appendChild(agent);
+    header.appendChild(route);
+    header.appendChild(conf);
+    tracePanel.appendChild(header);
+
+    for (const step of trace.steps) {
+      const stepEl = document.createElement('div');
+      stepEl.className = `trace-step ${step.status || 'completed'}`;
+      const head = document.createElement('div');
+      head.className = 'trace-step-head';
+      const name = document.createElement('span');
+      name.className = 'trace-step-name';
+      name.textContent = step.name;
+      const elapsed = document.createElement('span');
+      elapsed.className = 'trace-step-elapsed';
+      elapsed.textContent = `${step.elapsedMs}ms`;
+      head.appendChild(name);
+      head.appendChild(elapsed);
+      stepEl.appendChild(head);
+      if (step.attributes) {
+        const attrs = document.createElement('div');
+        attrs.className = 'trace-step-attrs';
+        attrs.textContent = JSON.stringify(step.attributes, null, 2);
+        stepEl.appendChild(attrs);
+      }
+      head.addEventListener('click', () => stepEl.classList.toggle('open'));
+      tracePanel.appendChild(stepEl);
+    }
+
+    const ids = document.createElement('div');
+    ids.className = 'trace-ids';
+    ids.textContent = `traceId=${trace.traceId}\nrunId=${trace.runId}\nprotocol=${trace.protocol}`;
+    tracePanel.appendChild(ids);
+  }
+
+  function clearTracePanel(placeholder) {
+    tracePanel.replaceChildren();
+    const empty = document.createElement('div');
+    empty.className = 'trace-empty';
+    empty.textContent = placeholder || 'Running…';
+    tracePanel.appendChild(empty);
+  }
+
+  // ── SSE consumer for /api/chatbot/chat/stream ──────────────────────────────
+  // Backend emits a single routing JSON event first (with the full trace),
+  // then text chunks, then `[DONE]`. We render the trace as soon as routing
+  // arrives so the right panel populates before the answer text streams in.
+  async function consumeSseStream(response, signal) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let routing = null;
+    let messageNode = null;
+    let answer = '';
+    let metaApplied = false;
+    const meta = (r) => `${r.agentId || 'unknown'} via ${r.routingMethod || 'unknown'}`;
+
+    while (true) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // Events are separated by a blank line (\n\n). Each event consists of
+      // one or more `data: <line>` lines which the spec joins by '\n'.
+      let sep;
+      while ((sep = buffer.indexOf('\n\n')) >= 0) {
+        const rawEvent = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        const dataLines = rawEvent.split('\n')
+          .filter(l => l.startsWith('data: '))
+          .map(l => l.slice(6));
+        if (dataLines.length === 0) continue;
+        const data = dataLines.join('\n');
+
+        if (data === '[DONE]') {
+          return { answer, routing };
+        }
+
+        // First event is routing JSON (begins with `{`). Subsequent events
+        // are text chunks. We only attempt JSON parsing for the first event
+        // to avoid mis-parsing a text chunk that happens to start with `{`.
+        if (!routing && data.startsWith('{') && data.includes('"type"')) {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'routing') {
+              routing = parsed;
+              renderTracePanel(parsed.trace, parsed.agentId, parsed.routingMethod, parsed.confidence);
+              continue;
+            }
+          } catch { /* fall through to text */ }
+        }
+
+        // Text chunk
+        if (!messageNode) {
+          messageNode = addMessage('assistant', '', routing ? meta(routing) : null);
+        }
+        answer += data;
+        // Re-render the whole message so markdown tables/headings/lists stay
+        // coherent as content accumulates. For short responses (<10kB) the
+        // cost is negligible; if it becomes a bottleneck we can switch to
+        // incremental rendering.
+        messageNode.replaceChildren();
+        renderMessageContent(messageNode, answer, 'assistant');
+        if (routing && !metaApplied) {
+          const m = document.createElement('div');
+          m.className = 'meta';
+          m.textContent = meta(routing);
+          messageNode.appendChild(m);
+          metaApplied = true;
+        }
+        renderPendingNotation(messageNode);
+        messages.scrollTop = messages.scrollHeight;
+      }
+    }
+    return { answer, routing };
+  }
+
+  function renderPendingNotation(root) {
+    const notationNodes = root.querySelectorAll('.notation[data-notation]');
+    for (const notationNode of notationNodes) {
+      try {
+        renderTabNotation(notationNode, notationNode.dataset.notation || '');
+      } catch (error) {
+        notationNode.replaceChildren();
+        const errorNode = document.createElement('div');
+        errorNode.className = 'notation-error';
+        errorNode.textContent = `Could not render notation: ${error.message}`;
+        notationNode.appendChild(errorNode);
+      }
+    }
+  }
+
+  function renderTabNotation(container, notation) {
+    if (!window.Vex?.Flow) {
+      throw new Error('VexFlow is not loaded');
+    }
+
+    const positions = parseTabPositions(notation);
+    if (positions.length === 0) {
+      throw new Error('No tab positions found');
+    }
+
+    container.replaceChildren();
+    const VF = window.Vex.Flow;
+    const width = Math.max(520, positions.length * 58);
+    const height = 150;
+    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+    renderer.resize(width, height);
+
+    const context = renderer.getContext();
+    const stave = new VF.TabStave(10, 36, width - 20);
+    stave.addClef('tab').setContext(context).draw();
+
+    const notes = positions.map(position => new VF.TabNote({
+      positions: [position],
+      duration: 'q'
+    }));
+
+    const voice = new VF.Voice({ num_beats: notes.length, beat_value: 4 });
+    voice.addTickables(notes);
+
+    const formatter = new VF.Formatter();
+    formatter.joinVoices([voice]);
+    formatter.format([voice], width - 90);
+    voice.draw(context, stave);
+  }
+
+  function parseTabPositions(notation) {
+    const tokenPattern = /(\d{1,2})\/(\d{1,2})/g;
+    const preferFretString = /\b(?:tabstave|notes)\b/i.test(notation);
+    const positions = [];
+    let match;
+
+    while ((match = tokenPattern.exec(notation)) !== null) {
+      const left = Number.parseInt(match[1], 10);
+      const right = Number.parseInt(match[2], 10);
+      const position = normalizeTabPosition(left, right, preferFretString);
+      if (position) {
+        positions.push(position);
+      }
+    }
+
+    return positions;
+  }
+
+  function normalizeTabPosition(left, right, preferFretString) {
+    const primary = preferFretString
+      ? { str: right, fret: left }
+      : { str: left, fret: right };
+    if (isValidTabPosition(primary)) {
+      return primary;
+    }
+
+    const fallback = preferFretString
+      ? { str: left, fret: right }
+      : { str: right, fret: left };
+    return isValidTabPosition(fallback) ? fallback : null;
+  }
+
+  function isValidTabPosition(position) {
+    return Number.isInteger(position.str)
+      && Number.isInteger(position.fret)
+      && position.str >= 1
+      && position.str <= 6
+      && position.fret >= 0
+      && position.fret <= 36;
+  }
+
+  async function refreshStatus() {
+    try {
+      const response = await fetch('api/chatbot/status');
+      const status = await response.json();
+      statusDot.className = `dot ${status.isAvailable ? 'ready' : 'down'}`;
+      statusText.textContent = status.message || (status.isAvailable ? 'Available' : 'Unavailable');
+    } catch {
+      statusDot.className = 'dot down';
+      statusText.textContent = 'API unavailable';
+    }
+  }
+
+  async function loadExamples() {
+    try {
+      const response = await fetch('api/chatbot/examples');
+      const items = await response.json();
+      examples.replaceChildren(...items.map(text => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'example';
+        button.textContent = text;
+        button.addEventListener('click', () => {
+          input.value = text;
+          input.focus();
+        });
+        return button;
+      }));
+    } catch {
+      examples.textContent = 'Examples unavailable.';
+    }
+  }
+
+  sendButton.addEventListener('click', event => {
+    if (!activeController) return;
+    event.preventDefault();
+    activeController.abort();
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (activeController) {
+      activeController.abort();
+      return;
+    }
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    input.value = '';
+    clearTracePanel('Running…');
+    activeController = new AbortController();
+    activeStartedAt = Date.now();
+    sendButton.disabled = false;
+    sendButton.textContent = 'Stop';
+    statusText.textContent = 'Running... 0s';
+    activeTimer = window.setInterval(() => {
+      const elapsedSeconds = Math.floor((Date.now() - activeStartedAt) / 1000);
+      statusText.textContent = `Running... ${elapsedSeconds}s`;
+    }, 1000);
+    activeTimeout = window.setTimeout(() => {
+      activeController?.abort();
+    }, CHAT_CLIENT_TIMEOUT_MS);
+
+    try {
+      const response = await fetch('api/chatbot/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, conversationHistory: history }),
+        signal: activeController.signal
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(body || `HTTP ${response.status}`);
+      }
+
+      const { answer, routing } = await consumeSseStream(response, activeController.signal);
+      const finalAnswer = answer || '(empty response)';
+      if (routing) {
+        renderTracePanel(routing.trace, routing.agentId, routing.routingMethod, routing.confidence);
+      }
+      history.push({ role: 'user', content: message }, { role: 'assistant', content: finalAnswer });
+    } catch (error) {
+      const elapsedMs = Date.now() - activeStartedAt;
+      const timedOut = elapsedMs >= CHAT_CLIENT_TIMEOUT_MS - 1000;
+      const failureMessage = error.name === 'AbortError'
+        ? (timedOut
+            ? `Request timed out after ${Math.round(CHAT_CLIENT_TIMEOUT_MS / 1000)}s.`
+            : 'Request cancelled.')
+        : `Request failed: ${error.message}`;
+      addMessage('assistant', failureMessage);
+    } finally {
+      window.clearInterval(activeTimer);
+      window.clearTimeout(activeTimeout);
+      activeController = null;
+      activeTimer = null;
+      activeTimeout = null;
+      sendButton.disabled = false;
+      sendButton.textContent = 'Send';
+      input.focus();
+      refreshStatus();
+    }
+  });
+
+  // Normalize prompt text to match server-side QA lookup key
+  // (trim + strip trailing .?! — server uses the same rule).
+  function normalizePromptKey(s) {
+    return (s || '').trim().replace(/[.?!]+$/, '');
+  }
+
+  function formatRelative(iso) {
+    if (!iso) return '';
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return '';
+    const days = Math.floor((Date.now() - then) / 86400000);
+    if (days < 1) return 'today';
+    if (days < 30) return `${days}d ago`;
+    if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+    return `${Math.floor(days / 365)}y ago`;
+  }
+
+  function renderQaBadge(qa) {
+    if (!qa) {
+      return '<div class="showcase-qa"><span class="qa-badge unverified">○ not yet QA-validated</span></div>';
+    }
+    const verified = qa.runCount > 0;
+    if (!verified) {
+      return '<div class="showcase-qa"><span class="qa-badge unverified">○ recorded, not yet measured</span></div>';
+    }
+    const badgeClass = qa.hasWarning ? 'warning' : 'verified';
+    const badgeIcon = qa.hasWarning ? '⚠' : '✓';
+    const badgeLabel = qa.hasWarning ? 'QA passed (slow)' : 'QA verified';
+    const median = qa.medianElapsedMs;
+    const medianStr = (median != null)
+      ? (median < 1000 ? `<strong>${Math.round(median)}ms</strong>` : `<strong>${(median / 1000).toFixed(1)}s</strong>`)
+      : '';
+    const parts = [
+      `<span class="qa-badge ${badgeClass}">${badgeIcon} ${escapeHtml(badgeLabel)}</span>`,
+      medianStr ? `<span class="qa-meta">median ${medianStr}</span>` : '',
+      qa.agentId ? `<span class="qa-meta">via <strong>${escapeHtml(qa.agentId.replace(/^skill\./, ''))}</strong></span>` : '',
+      qa.lastValidated ? `<span class="qa-meta">${escapeHtml(formatRelative(qa.lastValidated))}</span>` : '',
+    ].filter(Boolean);
+    return `<div class="showcase-qa">${parts.join('')}</div>`;
+  }
+
+  function renderShowcase(script, qaByPrompt) {
+    if (!script || !Array.isArray(script.categories) || script.categories.length === 0) {
+      return '<div class="showcase-loading">No showcase categories available.</div>';
+    }
+    return script.categories.map(cat => `
+      <div class="showcase-category">
+        <h3>${escapeHtml(cat.name)}</h3>
+        <div class="showcase-category-description">${escapeHtml(cat.description)}</div>
+        ${cat.prompts.map(p => {
+          const qa = qaByPrompt && qaByPrompt[normalizePromptKey(p.prompt)];
+          return `
+            <button class="showcase-prompt" data-prompt="${escapeHtml(p.prompt)}">
+              <div class="showcase-prompt-text">${escapeHtml(p.prompt)}</div>
+              <div class="showcase-prompt-desc">${escapeHtml(p.description)}</div>
+              ${renderQaBadge(qa)}
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+  }
+
+  async function openShowcase() {
+    const modal = document.getElementById('showcaseModal');
+    const content = document.getElementById('showcaseContent');
+    modal.classList.add('open');
+    content.innerHTML = '<div class="showcase-loading">Loading…</div>';
+    try {
+      // Fetch demo script + per-prompt QA summary in parallel. QA is
+      // best-effort — if it fails, we still render the showcase with
+      // "not yet QA-validated" badges instead of failing the whole modal.
+      const [demoResp, qaResp] = await Promise.all([
+        fetch('api/chatbot/demo'),
+        fetch('api/chatbot/qa-summary').catch(() => null),
+      ]);
+      if (!demoResp.ok) throw new Error(`HTTP ${demoResp.status}`);
+      const script = await demoResp.json();
+      let qaByPrompt = {};
+      if (qaResp && qaResp.ok) {
+        try {
+          const raw = await qaResp.json();
+          // Server returns keys already normalized (NormalizePromptKey on C# side).
+          qaByPrompt = Object.fromEntries(
+            Object.entries(raw).map(([k, v]) => [normalizePromptKey(k), v])
+          );
+        } catch { /* keep empty */ }
+      }
+      content.innerHTML = renderShowcase(script, qaByPrompt);
+      content.querySelectorAll('.showcase-prompt').forEach(btn => {
+        btn.addEventListener('click', () => sendShowcasePrompt(btn.dataset.prompt));
+      });
+    } catch (err) {
+      content.innerHTML = `<div class="showcase-error">Could not load showcase: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function closeShowcase() {
+    document.getElementById('showcaseModal').classList.remove('open');
+  }
+
+  function closeShowcaseOnBackdrop(event) {
+    if (event.target.id === 'showcaseModal') closeShowcase();
+  }
+
+  function sendShowcasePrompt(prompt) {
+    if (!prompt) return;
+    closeShowcase();
+    const input = document.getElementById('messageInput');
+    input.value = prompt;
+    document.getElementById('chatForm').requestSubmit();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeShowcase();
+  });
+
+  window.openShowcase = openShowcase;
+  window.closeShowcase = closeShowcase;
+  window.closeShowcaseOnBackdrop = closeShowcaseOnBackdrop;
+
+  refreshStatus();
+  loadExamples();
+
+  // Shareable showcase link: /chatbot/#showcase auto-opens the modal so
+  // friends can land directly on the curated demo prompts.
+  if (window.location.hash === '#showcase') {
+    setTimeout(() => openShowcase(), 100);
+  }
+</script>
+</body>
+</html>

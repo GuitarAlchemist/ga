@@ -34,7 +34,17 @@ public sealed class SemanticIntentRouter(
     IRoutingHintProvider hintProvider,
     ILogger<SemanticIntentRouter> logger)
 {
-    private const float DefaultMinConfidence = 0.65f;
+    // Lowered 2026-05-13 from 0.65 → 0.55 after corpus iter showed short-form
+    // queries like "What is dorian" failing to clear the threshold even with
+    // the +0.06 routing-hint boost for the mode-name pattern. The +0.06 boost
+    // tops out around 0.58–0.62 for short queries against domain-backed
+    // skills; 0.55 gives the hint provider room to land its win without
+    // letting truly-unrelated queries grab an intent.
+    // Public so evaluation harnesses pin to the SAME threshold production
+    // routes with — a hardcoded copy in RoutingEvalHarness drifted to 0.65
+    // after this dropped to 0.55 (2026-05-13), making the baseline measure a
+    // threshold prod never used. One source of truth prevents recurrence.
+    public const float DefaultMinConfidence = 0.55f;
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
@@ -82,6 +92,10 @@ public sealed class SemanticIntentRouter(
 
         await EnsureExamplesEmbeddedAsync(candidates, cancellationToken);
 
+        // Per-query routing latency starts AFTER the one-time example-embedding
+        // warmup (that cost belongs to the first request only, not every query).
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
         float[] queryVec;
         try
         {
@@ -89,7 +103,7 @@ public sealed class SemanticIntentRouter(
             timeoutCts.CancelAfter(EmbeddingTimeout);
 
             var queryEmbedding = await textEmbeddings.GenerateAsync(
-                [query], cancellationToken: timeoutCts.Token);
+                [NormalizeForEmbedding(query)], cancellationToken: timeoutCts.Token);
             queryVec = queryEmbedding[0].Vector.ToArray();
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -189,16 +203,69 @@ public sealed class SemanticIntentRouter(
                 ? $"{r.Intent.Id}={r.Score - r.Boost:F3}+{r.Boost:F3}={r.Score:F3} via {Trim(r.MatchedSource, 40)}"
                 : $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
 
+        // Routing-decision telemetry (append-only JSONL, error-swallowed). One line
+        // per scored query so an uncontaminated held-out eval set can be mined from
+        // live traffic — the regex hints are tuned against the fixed corpus, so the
+        // harness number is training accuracy; real generalization can only be
+        // measured on traffic the hints never saw. See RoutingTelemetryLog.
+        var telemetryCandidates = topK
+            .Select(r => new RoutingTelemetryCandidate(r.Intent.Id, r.Score - r.Boost, r.Boost, r.Score))
+            .ToList();
+        var margin = topK.Count >= 2 ? (double?)(topK[0].Score - topK[1].Score) : null;
+
         var top = withHints[0];
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(
                 "SemanticIntentRouter: top score {Score:F3} below threshold {Threshold:F2}; falling through",
                 top.Score, MinConfidence);
+            RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+            {
+                Timestamp   = DateTime.UtcNow.ToString("o"),
+                Query       = query,
+                Chosen      = null,
+                Confidence  = null,
+                Threshold   = MinConfidence,
+                FellThrough = true,
+                Margin      = margin,
+                Candidates  = telemetryCandidates,
+                LatencyMs   = sw.Elapsed.TotalMilliseconds,
+            });
             return null;
         }
 
-        return new IntentMatch(top.Intent, top.Score, top.MatchedSource);
+        // Capture the same top-3 we just logged so the orchestrator can
+        // emit a "routing.candidates" trace step. Without this the agentic
+        // trace shows only the winner and the user has no idea what came
+        // in second — surfaced 2026-05-13 when the user shipped a query
+        // that should have hit a different skill but the trace was a
+        // single black box.
+        var routingCandidates = topK
+            .Select(r => new RoutingCandidate(
+                IntentId:     r.Intent.Id,
+                BaseScore:    r.Score - r.Boost,
+                Boost:        r.Boost,
+                FinalScore:   r.Score,
+                MatchedSource: r.MatchedSource))
+            .ToList();
+
+        RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+        {
+            Timestamp   = DateTime.UtcNow.ToString("o"),
+            Query       = query,
+            Chosen      = top.Intent.Id,
+            Confidence  = top.Score,
+            Threshold   = MinConfidence,
+            FellThrough = false,
+            Margin      = margin,
+            Candidates  = telemetryCandidates,
+            LatencyMs   = sw.Elapsed.TotalMilliseconds,
+        });
+
+        return new IntentMatch(top.Intent, top.Score, top.MatchedSource)
+        {
+            Ranking = routingCandidates,
+        };
     }
 
     private static string Trim(string s, int max) =>
@@ -236,8 +303,14 @@ public sealed class SemanticIntentRouter(
 
             foreach (var intent in missing)
             {
-                var inputs = new List<string> { intent.Description };
-                inputs.AddRange(intent.ExamplePrompts);
+                // Lowercase BOTH description and examples before embedding to
+                // match the case-normalized query embedding (RouteAsync uses
+                // query.ToLowerInvariant() before calling GenerateAsync).
+                // Without paired normalization, "DIATONIC CHORDS IN G MAJOR"
+                // landed far from "diatonic chords in c major" and routed to
+                // skill.transpose. Caught 2026-05-13 via corpus case-variants.
+                var inputs = new List<string> { NormalizeForEmbedding(intent.Description) };
+                inputs.AddRange(intent.ExamplePrompts.Select(NormalizeForEmbedding));
 
                 var batch = await textEmbeddings!.GenerateAsync(inputs, cancellationToken: ct);
                 _intentEmbeddings[intent.Id] = batch.Select(e => e.Vector.ToArray()).ToArray();
@@ -261,6 +334,16 @@ public sealed class SemanticIntentRouter(
         }
     }
 
+    // Embedding-side normalization: lowercase + trim only. The embedding
+    // model (nomic-embed-text) tokenizes case-sensitively and produces
+    // measurably different vectors for "X" vs "x" — enough to flip
+    // routing winners on close calls. Applying the same normalization
+    // to both stored examples and the runtime query keeps comparisons
+    // case-invariant without losing semantic content. Skills still get
+    // the ORIGINAL message (case preserved) at execution time.
+    private static string NormalizeForEmbedding(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : text.Trim().ToLowerInvariant();
+
     private static float Cosine(float[] a, float[] b)
     {
         if (a.Length != b.Length) return 0f;
@@ -282,4 +365,28 @@ public sealed class SemanticIntentRouter(
 public readonly record struct IntentMatch(
     IIntent Intent,
     float Confidence,
-    string MatchedExample);
+    string MatchedExample)
+{
+    /// <summary>
+    /// Top-K (default 3) candidates considered during routing, ordered by
+    /// final score (highest first). Includes the selected winner at index 0.
+    /// Populated by <see cref="SemanticIntentRouter"/> so the orchestrator
+    /// can emit a "routing.candidates" trace step showing what competed and
+    /// what didn't fire — surfacing the routing decision instead of hiding
+    /// it inside the orchestrator's "orchestration.answer" black-box step.
+    /// </summary>
+    public IReadOnlyList<RoutingCandidate> Ranking { get; init; } = [];
+}
+
+/// <summary>
+/// One candidate in a routing trace. The fields let downstream consumers
+/// reconstruct exactly what happened: base cosine score, the boost that
+/// hint-rules added (if any), the final score that determined ranking, and
+/// the example string the candidate centroid matched against.
+/// </summary>
+public readonly record struct RoutingCandidate(
+    string IntentId,
+    float BaseScore,
+    float Boost,
+    float FinalScore,
+    string MatchedSource);

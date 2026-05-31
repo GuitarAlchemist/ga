@@ -8,7 +8,8 @@
   },
   "scripts": {
     "postinstall": "npx -y patch-package",
-    "dev": "vite",
+    "dev": "node -e \"console.error('\\n  Apps/ga-client is the LEGACY demo client.\\n  The canonical dev server is ReactComponents/ga-react-components (port 5176, tunneled at demos.guitaralchemist.com).\\n  Starting Vite here would compete for that port and break the public site.\\n\\n  To run the dashboard:    cd ../../ReactComponents/ga-react-components && npm run dev\\n  To intentionally run ga-client (rare): npm run dev:legacy\\n'); process.exit(1)\"",
+    "dev:legacy": "vite --port 5173 --strictPort",
     "build": "vite build",
     "build:with-types": "tsc -b && vite build",
     "lint": "eslint .",

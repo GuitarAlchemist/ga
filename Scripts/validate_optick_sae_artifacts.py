@@ -34,7 +34,7 @@ def main() -> int:
     try:
         import jsonschema
     except ImportError:
-        print("FAIL: jsonschema not installed. Install with `pip install jsonschema`.",
+        print("FAIL: jsonschema not installed. Install with `uv pip install jsonschema`.",
               file=sys.stderr)
         return 2
 

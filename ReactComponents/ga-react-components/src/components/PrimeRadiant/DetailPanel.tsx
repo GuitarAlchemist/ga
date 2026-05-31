@@ -2,10 +2,201 @@
 // React side panel showing selected governance node details
 
 import React, { useState, useCallback } from 'react';
-import type { GovernanceNode, GovernanceNodeType, FileTreeNode } from './types';
-import { HEALTH_COLORS, NODE_COLORS } from './types';
+import type { GovernanceNode, GovernanceNodeType, FileTreeNode, NodeAugmentation, HexavalentTruth } from './types';
+import { HEALTH_COLORS, NODE_COLORS, HEXAVALENT_COLORS } from './types';
 import { getHealthStatus } from './DataLoader';
 import type { GraphIndex } from './DataLoader';
+
+// ---------------------------------------------------------------------------
+// Dashboard channel sections — AI annotations / test coverage / algedonic
+// Collapsed <details> by default. Each gracefully handles missing
+// augmentation: shows "no data" inline when the channel is undefined.
+// ---------------------------------------------------------------------------
+
+const TRUTH_ORDER: HexavalentTruth[] = ['T', 'P', 'U', 'D', 'F', 'C'];
+
+const summaryStyle: React.CSSProperties = {
+  cursor: 'pointer',
+  fontSize: 11,
+  color: '#8b949e',
+  textTransform: 'uppercase',
+  letterSpacing: 0.4,
+  padding: '6px 0',
+  userSelect: 'none',
+};
+
+const sectionStyle: React.CSSProperties = {
+  borderTop: '1px solid #21262d',
+  paddingTop: 4,
+  marginTop: 8,
+};
+
+const AnnotationsSection: React.FC<{ augmentation?: NodeAugmentation }> = ({ augmentation }) => {
+  const ann = augmentation?.annotations;
+  const total = ann?.total ?? 0;
+  return (
+    <details style={sectionStyle}>
+      <summary style={summaryStyle}>AI Annotations ({total})</summary>
+      <div style={{ padding: '6px 0 10px' }}>
+        {!ann ? (
+          <div style={{ fontSize: 11, color: '#484f58' }}>No annotations for this node.</div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+              {TRUTH_ORDER.map(tv => {
+                const count = ann.by_truth_value[tv] ?? 0;
+                const color = HEXAVALENT_COLORS[tv];
+                const active = count > 0;
+                return (
+                  <span
+                    key={tv}
+                    title={`${tv}: ${count}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      background: active ? `${color}22` : 'transparent',
+                      color: active ? color : '#484f58',
+                      border: `1px solid ${active ? `${color}66` : '#21262d'}`,
+                      borderRadius: 4,
+                      padding: '2px 6px',
+                      opacity: active ? 1 : 0.5,
+                    }}
+                  >
+                    <span style={{ fontWeight: 'bold' }}>{tv}</span>
+                    <span>{count}</span>
+                  </span>
+                );
+              })}
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {ann.recent.map((a, i) => (
+                <li
+                  key={`${a.line_start}-${i}`}
+                  style={{
+                    fontSize: 11,
+                    padding: '4px 6px',
+                    marginBottom: 3,
+                    background: '#0d1117',
+                    border: `1px solid ${HEXAVALENT_COLORS[a.truth_value]}33`,
+                    borderLeft: `3px solid ${HEXAVALENT_COLORS[a.truth_value]}`,
+                    borderRadius: 3,
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: 6, fontSize: 9, color: '#8b949e', marginBottom: 2 }}>
+                    <span style={{ color: HEXAVALENT_COLORS[a.truth_value], fontWeight: 'bold' }}>{a.truth_value}</span>
+                    <span>{a.kind}</span>
+                    <span>conf:{a.certainty}</span>
+                    <span style={{ marginLeft: 'auto' }}>L{a.line_start}{a.line_start !== a.line_end ? `-${a.line_end}` : ''}</span>
+                  </div>
+                  <div style={{ color: '#e6edf3' }}>{a.claim}</div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </details>
+  );
+};
+
+const TestCoverageSection: React.FC<{ augmentation?: NodeAugmentation }> = ({ augmentation }) => {
+  const gap = augmentation?.testGap;
+  return (
+    <details style={sectionStyle}>
+      <summary style={summaryStyle}>Test Coverage</summary>
+      <div style={{ padding: '6px 0 10px' }}>
+        {!gap ? (
+          <div style={{ fontSize: 11, color: '#484f58' }}>No test-gap data for this node.</div>
+        ) : (() => {
+          const riskPct = Math.round(gap.risk_score * 100);
+          const barColor = riskPct < 33 ? '#33CC66' : riskPct < 66 ? '#FFB300' : '#FF4444';
+          return (
+            <>
+              <div style={{
+                height: 6,
+                background: '#161b22',
+                borderRadius: 3,
+                overflow: 'hidden',
+                marginBottom: 4,
+              }}>
+                <div style={{
+                  width: `${riskPct}%`,
+                  height: '100%',
+                  background: barColor,
+                  transition: 'width 0.3s ease',
+                }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8b949e' }}>
+                <span>risk <span style={{ color: barColor, fontWeight: 600 }}>{riskPct}%</span></span>
+                <span>churn <span style={{ color: '#e6edf3' }}>{gap.churn}</span></span>
+                <span>cx <span style={{ color: '#e6edf3' }}>{gap.complexity}</span></span>
+              </div>
+            </>
+          );
+        })()}
+      </div>
+    </details>
+  );
+};
+
+function formatAge(ts: string): string {
+  if (!ts) return '';
+  const ms = Date.now() - new Date(ts).getTime();
+  if (!isFinite(ms) || ms < 0) return '';
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+const RecentAlgedonicSection: React.FC<{ augmentation?: NodeAugmentation }> = ({ augmentation }) => {
+  const recent = augmentation?.algedonic?.recent ?? [];
+  return (
+    <details style={sectionStyle}>
+      <summary style={summaryStyle}>Recent Algedonic ({recent.length})</summary>
+      <div style={{ padding: '6px 0 10px' }}>
+        {recent.length === 0 ? (
+          <div style={{ fontSize: 11, color: '#484f58' }}>No recent signals.</div>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {recent.map(s => {
+              const sevColor =
+                s.severity === 'emergency' ? '#FF4444' :
+                s.severity === 'warning' ? '#FFB300' :
+                s.type === 'pleasure' ? '#FFD700' : '#8b949e';
+              return (
+                <li
+                  key={s.id || `${s.signal}-${s.timestamp}`}
+                  style={{
+                    fontSize: 11,
+                    padding: '4px 6px',
+                    marginBottom: 3,
+                    background: '#0d1117',
+                    borderLeft: `3px solid ${sevColor}`,
+                    borderRadius: 3,
+                    display: 'flex',
+                    gap: 6,
+                    alignItems: 'center',
+                  }}
+                >
+                  <span style={{ color: sevColor, fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase' }}>{s.severity}</span>
+                  <span style={{ color: '#e6edf3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.signal}</span>
+                  <span style={{ color: '#484f58', fontSize: 10 }}>{formatAge(s.timestamp)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </details>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Props
@@ -430,6 +621,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Dashboard channels — AI annotations / test coverage / algedonic */}
+            <AnnotationsSection augmentation={node.augmentation} />
+            <TestCoverageSection augmentation={node.augmentation} />
+            <RecentAlgedonicSection augmentation={node.augmentation} />
           </div>
         </>
       )}

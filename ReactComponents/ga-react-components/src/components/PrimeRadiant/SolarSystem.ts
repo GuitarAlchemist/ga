@@ -803,7 +803,7 @@ export function createSolarSystem(scale: number): THREE.Group {
   // 1.8x gives a clearly dominant sun without overlapping Mercury's orbit.
   const jupiterVisualRadius = keplerRadius(139_820); // ~1.316
   const sunVisualRadius = jupiterVisualRadius * 1.8;  // Sun ~1.8x Jupiter at overview
-  const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 48, 48);
+  const sunGeo = new THREE.SphereGeometry(sunVisualRadius * scale, 96, 64);
   const sunTex = loadCanonicalTexture('sun', 'albedo', '2k_sun.jpg')!;
 
   // Sun material — TSL MeshBasicNodeMaterial (fully self-luminous, no lighting response).
@@ -865,11 +865,70 @@ export function createSolarSystem(scale: number): THREE.Group {
   group.add(flareGroup);
   group.userData.flareGroup = flareGroup;
 
-  // Sun corona glow (subtle — bloom post-process amplifies this)
-  // Corona: just slightly larger than the Sun — subtle limb glow, not a giant halo
-  const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.08 * scale, 16, 16);
-  const coronaMat = createCoronaMaterialTSL();
-  group.add(new THREE.Mesh(coronaGeo, coronaMat));
+  // Sun atmosphere: compact chromosphere + soft outer corona. The shells are
+  // intentionally named so dynamic close-up scaling can keep all layers aligned.
+  const chromosphereGeo = new THREE.SphereGeometry(sunVisualRadius * 1.025 * scale, 64, 32);
+  const chromosphereMat = createCoronaMaterialTSL({
+    color: [1.0, 0.34, 0.08],
+    intensity: 0.24,
+    power: 5.2,
+  });
+  const chromosphere = new THREE.Mesh(chromosphereGeo, chromosphereMat);
+  chromosphere.name = 'sun-chromosphere';
+  group.add(chromosphere);
+
+  const coronaGeo = new THREE.SphereGeometry(sunVisualRadius * 1.16 * scale, 48, 24);
+  const coronaMat = createCoronaMaterialTSL({
+    color: [1.0, 0.76, 0.34],
+    intensity: 0.12,
+    power: 2.8,
+  });
+  const corona = new THREE.Mesh(coronaGeo, coronaMat);
+  corona.name = 'sun-corona';
+  group.add(corona);
+
+  const prominenceGroup = new THREE.Group();
+  prominenceGroup.name = 'sun-prominences';
+  function createProminenceTexture(): THREE.CanvasTexture {
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 64;
+    const cx = c.getContext('2d')!;
+    const g = cx.createRadialGradient(32, 32, 2, 42, 32, 56);
+    g.addColorStop(0, 'rgba(255,245,190,0.34)');
+    g.addColorStop(0.28, 'rgba(255,120,30,0.26)');
+    g.addColorStop(0.68, 'rgba(255,45,0,0.08)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, 128, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate = true;
+    return tex;
+  }
+  const prominenceTexture = createProminenceTexture();
+  for (let i = 0; i < 7; i++) {
+    const angle = (i / 7) * Math.PI * 2 + (i % 2) * 0.22;
+    const radius = sunVisualRadius * 1.08 * scale;
+    const mat = new THREE.SpriteMaterial({
+      map: prominenceTexture,
+      color: i % 3 === 0 ? 0xfff0b8 : 0xff7a24,
+      transparent: true,
+      opacity: 0.36,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.name = `sun-prominence-${i}`;
+    sprite.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
+    sprite.scale.set(0.9 * scale, 0.42 * scale, 1);
+    sprite.userData.baseScaleX = sprite.scale.x;
+    sprite.userData.baseScaleY = sprite.scale.y;
+    sprite.userData.seed = i * 1.618;
+    prominenceGroup.add(sprite);
+  }
+  group.add(prominenceGroup);
+  group.userData.sunAtmosphereGroup = prominenceGroup;
 
   // ── Planets + Moons ──
   const planetMeshes: { mesh: THREE.Mesh; orbit: THREE.Group; def: PlanetDef; clouds?: THREE.Mesh; cloudsHigh?: THREE.Mesh }[] = [];
@@ -1591,6 +1650,7 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
   const trails = group.userData.orbitTrails as Map<string, THREE.Line> | undefined;
 
   const scale = group.userData.scale as number ?? 0.15;
+  let sunVisualScale = 1;
 
   for (const { mesh, orbit, def, clouds, cloudsHigh } of planets) {
     // Elliptical orbit — position planet using Kepler's equation
@@ -1777,6 +1837,8 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
   if (camera) {
     const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
     if (sunMesh) {
+      sunMesh.rotation.y = time * 0.018;
+      sunMesh.rotation.x = Math.sin(time * 0.025) * 0.025;
       const camWorld = new THREE.Vector3();
       camera.getWorldPosition(camWorld);
       const camDist = camWorld.distanceTo(_sunWorldPos);
@@ -1790,11 +1852,35 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       // Smooth ease — lerp current scale toward target (tick-rate independent)
       const current = sunMesh.scale.x;
       const smoothed = current + (targetScale - current) * 0.12;
+      sunVisualScale = smoothed;
       sunMesh.scale.setScalar(smoothed);
-      // Shrink corona sphere + flare glow proportionally — they're cosmetic
-      // layers that should track sun visual size.
-      const corona = group.children.find(c => (c as THREE.Mesh).geometry?.type === 'SphereGeometry' && c !== sunMesh && c.name !== 'sun') as THREE.Mesh | undefined;
-      if (corona?.name === '') corona.scale.setScalar(smoothed);
+      // Shrink all solar atmosphere layers proportionally — they are cosmetic
+      // shells/sprites that should track sun visual size.
+      for (const layerName of ['sun-chromosphere', 'sun-corona', 'sun-prominences']) {
+        group.getObjectByName(layerName)?.scale.setScalar(smoothed);
+      }
+    }
+  } else {
+    const sunMesh = group.getObjectByName('sun') as THREE.Mesh | undefined;
+    if (sunMesh) {
+      sunMesh.rotation.y = time * 0.018;
+      sunMesh.rotation.x = Math.sin(time * 0.025) * 0.025;
+    }
+  }
+
+  const prominenceGroup = group.userData.sunAtmosphereGroup as THREE.Group | undefined;
+  if (prominenceGroup) {
+    prominenceGroup.rotation.z = time * 0.014;
+    prominenceGroup.rotation.y = Math.sin(time * 0.017) * 0.08;
+    for (const child of prominenceGroup.children) {
+      const sprite = child as THREE.Sprite;
+      const mat = sprite.material as THREE.SpriteMaterial | undefined;
+      const seed = sprite.userData.seed as number | undefined ?? 0;
+      const flicker = 0.84 + Math.sin(time * 0.9 + seed) * 0.1 + Math.sin(time * 2.3 + seed) * 0.04;
+      const baseX = sprite.userData.baseScaleX as number | undefined ?? sprite.scale.x;
+      const baseY = sprite.userData.baseScaleY as number | undefined ?? sprite.scale.y;
+      sprite.scale.set(baseX * flicker, baseY * (1.0 + (flicker - 1.0) * 1.8), 1);
+      if (mat) mat.opacity = THREE.MathUtils.clamp(0.28 * flicker, 0.14, 0.42);
     }
   }
 
@@ -1812,7 +1898,7 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
         flareGroup.children[i].visible = i === 0;
       }
       const mainGlow = flareGroup.children[0];
-      if (mainGlow) mainGlow.scale.setScalar(6 * scale);
+      if (mainGlow) mainGlow.scale.setScalar(6 * scale * sunVisualScale);
     } else {
       // High quality: glow + hot core (streak and ghosts removed)
       flareGroup.visible = true;
@@ -1824,15 +1910,21 @@ export function updateSolarSystem(group: THREE.Group, time: number, camera?: THR
       // Main glow — subtle pulsing
       const mainGlow = flareGroup.children[0];
       if (mainGlow) {
-        const s = 4 * scale * pulse * shimmer;
+        const s = 4 * scale * pulse * shimmer * sunVisualScale;
         mainGlow.scale.set(s, s, 1);
       }
 
       // Hot core — inverse shimmer for contrast
       const hotCore = flareGroup.children[1];
       if (hotCore) {
-        const s = 2.5 * scale * (2.0 - shimmer);
+        const s = 2.5 * scale * (2.0 - shimmer) * sunVisualScale;
         hotCore.scale.set(s, s, 1);
+      }
+
+      const outerAurora = flareGroup.children[2];
+      if (outerAurora) {
+        const s = 7.2 * scale * (1.0 + 0.08 * Math.sin(time * 0.22)) * sunVisualScale;
+        outerAurora.scale.set(s, s, 1);
       }
     }
   }

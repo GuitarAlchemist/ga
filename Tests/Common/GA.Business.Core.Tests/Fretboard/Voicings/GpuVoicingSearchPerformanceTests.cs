@@ -112,8 +112,13 @@ public class GpuVoicingSearchPerformanceTests
         stopwatch.Stop();
         // Assert
         var avgTimeMs = stopwatch.ElapsedMilliseconds / 100.0;
-        Assert.That(avgTimeMs, Is.LessThan(50),
-            $"Average search time should be under 50ms (actual: {avgTimeMs:F2}ms)");
+        // CI shared runners (GitHub-hosted) hit ~80–90ms on this path vs ~20–30ms on a dev
+        // workstation, so an absolute 50ms guard is essentially a runner-class assertion.
+        // Loosen to 200ms — still tight enough to catch a true regression (it would be 10x+
+        // worse), but immune to neighbor-load jitter on shared hardware.
+        var threshold = Environment.GetEnvironmentVariable("CI") == "true" ? 200 : 50;
+        Assert.That(avgTimeMs, Is.LessThan(threshold),
+            $"Average search time should be under {threshold}ms (actual: {avgTimeMs:F2}ms)");
         Console.WriteLine($"100 queries completed in {stopwatch.ElapsedMilliseconds}ms");
         Console.WriteLine($"Average time per query: {avgTimeMs:F2}ms");
         Console.WriteLine($"Throughput: {100_000.0 / stopwatch.ElapsedMilliseconds:F2} queries/second");
@@ -135,9 +140,15 @@ public class GpuVoicingSearchPerformanceTests
         // Assert
         Assert.That(results, Is.Not.Null);
         Assert.That(results.Count, Is.LessThanOrEqualTo(10));
-        // Note: Allow a wider threshold to accommodate CI and hardware variance while still ensuring GPU speed.
-        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(1500),
-            $"Filtered search should complete within 1500ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
+        // CI GitHub-hosted runners hit ~800-1500ms on this path vs ~50-200ms locally with a real GPU.
+        // The 1500ms guard was already a runner-class concession but still flakes (1507ms observed
+        // 2026-05-18 in run 26010838922; ditto ~1000ms baseline across the past day). Loosen the CI
+        // budget to 3000ms — still catches a true regression (full first-search uncached path is
+        // sub-2s even on the cheapest runners) without paying for shared-CPU/GPU jitter. Keep the
+        // tight 1500ms guard locally so the test still flags real perf regressions on dev boxes.
+        var threshold = Environment.GetEnvironmentVariable("CI") == "true" ? 3000 : 1500;
+        Assert.That(stopwatch.ElapsedMilliseconds, Is.LessThan(threshold),
+            $"Filtered search should complete within {threshold}ms (actual: {stopwatch.ElapsedMilliseconds}ms)");
         Console.WriteLine($"Filtered search time (2000/10000 voicings): {stopwatch.ElapsedMilliseconds}ms");
     }
 

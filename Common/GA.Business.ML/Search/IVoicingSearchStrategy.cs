@@ -49,6 +49,16 @@ public interface IVoicingSearchStrategy
     VoicingSearchPerformance Performance { get; }
 
     /// <summary>
+    ///     Whether this strategy needs <see cref="InitializeAsync"/> / the host warmup before
+    ///     it can serve queries. Strategies that load their corpus at construction (e.g. the
+    ///     OPTK mmap reader) are ready immediately and return <see langword="false"/>, so the
+    ///     service must NOT gate their queries behind a warmup that does nothing for them —
+    ///     that gating is the cold-start "Service not initialized" race. Defaults to true so
+    ///     existing in-memory strategies (CPU/GPU) keep their initialize-then-serve contract.
+    /// </summary>
+    bool RequiresWarmup => true;
+
+    /// <summary>
     ///     Initialize the strategy with voicing data
     /// </summary>
     Task InitializeAsync(IEnumerable<VoicingEmbedding> voicings);

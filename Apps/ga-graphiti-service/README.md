@@ -46,7 +46,7 @@ This service integrates [Graphiti](https://github.com/getzep/graphiti) temporal 
 
 ### Prerequisites
 
-1. **Python 3.11+** with pip or uv
+1. **Python 3.11+** with uv
 2. **Ollama** running locally with models:
    ```bash
    ollama pull qwen2.5-coder:1.5b-base
@@ -58,9 +58,8 @@ This service integrates [Graphiti](https://github.com/getzep/graphiti) temporal 
 
 1. **Install Dependencies**:
    ```bash
-   pip install -r requirements.txt
-   # or
-   uv sync
+   uv venv
+   uv pip install -r requirements.txt
    ```
 
 2. **Configure Environment**:
@@ -289,7 +288,7 @@ tail -f logs/graphiti-service.log
 
 ```bash
 # Install development dependencies
-pip install -r requirements-dev.txt
+uv pip install -r requirements-dev.txt
 
 # Run linting
 black . && flake8 .

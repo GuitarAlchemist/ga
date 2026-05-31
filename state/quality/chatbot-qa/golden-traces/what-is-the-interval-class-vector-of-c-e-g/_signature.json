@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "what-is-the-interval-class-vector-of-c-e-g",
+  "prompt": "What is the interval class vector of C E G",
+  "category": "atonal",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "skill.intervalclassvector"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "skill.intervalclassvector"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "skill.intervalclassvector"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}

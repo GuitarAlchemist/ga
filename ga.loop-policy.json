@@ -1,0 +1,35 @@
+{
+  "version": "0.1.0",
+  "description": "Edit scopes for the supervised autonomous loop on GA. Sibling to agent-blackbox.policy.json (which governs risk scoring). The loop skill must only edit paths matched by allow_edit and must never edit paths matched by protected_paths. Initial GA rollout is intentionally conservative — narrower than risk-policy. Widen with operator review only after several clean cycles.",
+  "schemaVersion": "0.1",
+  "domain": "ga-harness",
+  "allow_edit": [
+    "docs/**",
+    "Scripts/**",
+    "ReactComponents/ga-react-components/src/**",
+    "state/quality/**",
+    "state/governance/**",
+    ".claude/skills/**",
+    "BACKLOG.md",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "protected_paths": [
+    ".github/workflows/**",
+    "governance/demerzel/**",
+    "mcp-servers/**",
+    "Common/GA.Business.ML/Embeddings/**",
+    "Common/GA.Business.Core/**",
+    "docs/runbooks/chatbot-improvement-loop.md",
+    "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+    "docs/contracts/**",
+    "AllProjects.slnx",
+    "global.json",
+    "Directory.Packages.props",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "ga.loop-policy.json",
+    "agent-blackbox.policy.json"
+  ]
+}

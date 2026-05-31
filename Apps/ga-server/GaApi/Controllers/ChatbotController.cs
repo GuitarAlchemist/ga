@@ -23,6 +23,7 @@ using Services;
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
+// @ai:business-value SSE chatbot ingress — the demo flow every visitor sees on guitaralchemist.com; outage here = product invisible [T:manually-reviewed conf:0.95 src:product-owner@2026-05-24]
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatApplicationService chatService,
@@ -230,6 +231,81 @@ public class ChatbotController(
             "How do I improve my fingerpicking?",
             "What are some common chord progressions?"
         ]);
+
+    /// <summary>
+    ///     Return a categorized showcase script highlighting the chatbot's breadth.
+    ///     Every prompt has been hand-verified against /api/chatbot/chat to produce
+    ///     a real answer — no broken backend paths (e.g. unloaded OPTIC-K index),
+    ///     no SKILL.md preambles, no misroutes. See ChatbotShowcaseSmokeTests
+    ///     for the gate.
+    /// </summary>
+    /// <remarks>
+    ///     Version 1.1 (2026-05-12) — trimmed from 15 to 12 prompts after a live
+    ///     QA pass found 8 of 15 originals were broken (voicing prompts blocked
+    ///     by missing index, progression prompts blocked by chord-symbol parser
+    ///     scope, "barre chord" misrouted to practice-routine, etc.). Voicing
+    ///     category removed entirely; restore when the OPTIC-K index ships.
+    /// </remarks>
+    [HttpGet("demo")]
+    [ProducesResponseType(typeof(ChatbotDemoScript), StatusCodes.Status200OK)]
+    public ActionResult<ChatbotDemoScript> GetDemo() =>
+        Ok(new ChatbotDemoScript(
+            Version: "1.1",
+            Categories:
+            [
+                new ChatbotDemoCategory(
+                    Id: "theory",
+                    Name: "Music Theory",
+                    Icon: "music_note",
+                    Description: "Foundational questions about modes, keys, and the circle of fifths.",
+                    Prompts:
+                    [
+                        new("Explain the circle of fifths", "Key signatures, perfect-fifth relationships, and enharmonics."),
+                        new("What are the modes of the major scale", "Ionian through Locrian with formulas and character."),
+                        new("What is the difference between major and minor", "Quality contrast with audible examples.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "scales-keys",
+                    Name: "Scales & Keys",
+                    Icon: "queue_music",
+                    Description: "Notes, relative keys, and the diatonic chords of any major key.",
+                    Prompts:
+                    [
+                        new("Show me the notes in C major", "Seven scale notes plus the relative minor."),
+                        new("What is the relative minor of G major", "Relative-key pairing with shared key signature."),
+                        new("What are the diatonic chords in G major", "Seven diatonic chords with Roman-numeral quality.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "progressions",
+                    Name: "Progressions & Substitution",
+                    Icon: "timeline",
+                    Description: "Identify the key of a progression and reharmonize with substitutions.",
+                    Prompts:
+                    [
+                        new("Identify the key of Am F C G", "Key detection from a four-chord progression."),
+                        new("Suggest substitutions for G7 in a ii-V-I", "Harmonic substitutions ranked by ICV distance."),
+                        new("Substitutions for C major", "Relative-minor and parallel options with voice-leading cost.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "operations",
+                    Name: "Chord Operations",
+                    Icon: "code",
+                    Description: "Transposition and set-theory analysis on chords.",
+                    Prompts:
+                    [
+                        new("Transpose C E G to D", "Interval calculation plus resulting chord."),
+                        new("What are the common tones between Cmaj7 and Am7", "Pitch-class intersection with role-per-chord.")
+                    ]),
+                new ChatbotDemoCategory(
+                    Id: "getting-started",
+                    Name: "Getting Started",
+                    Icon: "guitar",
+                    Description: "Practical guitar starting points for new players.",
+                    Prompts:
+                    [
+                        new("Show me some easy beginner chords", "Open-position chords with frettings in low-to-high notation.")
+                    ])
+            ]));
 
     // ── helpers ──────────────────────────────────────────────────────────────
 

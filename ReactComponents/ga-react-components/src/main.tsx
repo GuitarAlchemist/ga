@@ -8,10 +8,15 @@ import App from './App';
 import GuitarFretboard, { FretboardPosition } from './components/GuitarFretboard';
 import RealisticFretboard from './components/RealisticFretboard';
 import { ThreeFretboard } from './components/ThreeFretboard';
-import { Container, Box, Typography, Stack } from '@mui/material';
+import { Container, Box, Typography, Stack, ThemeProvider, CssBaseline } from '@mui/material';
+// Generated MUI theme sourced from /DESIGN.md via scripts/gen-theme-from-design.mjs.
+// Edit DESIGN.md, then `npm run gen:theme`. See DESIGN.md Phase 2 in
+// docs/plans/2026-05-23-arch-design-md-adoption-plan.md.
+import { theme } from './theme';
 
 // Test pages
 import TestIndex from './pages/TestIndex';
+import ManifestViewer from './pages/ManifestViewer';
 import ThreeFretboardTest from './pages/ThreeFretboardTest';
 import ThreeHeadstockTest from './pages/ThreeHeadstockTest';
 import RealisticFretboardTest from './pages/RealisticFretboardTest';
@@ -27,8 +32,10 @@ import InstrumentIconsTest from './pages/InstrumentIconsTest';
 import BSPDoomExplorerTest from './pages/BSPDoomExplorerTest';
 import FretboardWithHandTest from './pages/FretboardWithHandTest';
 import Sunburst3DTest from './pages/Sunburst3DTest';
+import TonalOrbitTest from './pages/TonalOrbitTest';
 import ImmersiveMusicalWorldTest from './pages/ImmersiveMusicalWorldTest';
 import FluffyGrassTest from './pages/FluffyGrassTest';
+import ModalMeadowTest from './pages/ModalMeadowTest';
 import OceanTest from './pages/OceanTest';
 import SandDunesTest from './pages/SandDunesTest';
 import CheeseAvalancheTest from './pages/CheeseAvalancheTest';
@@ -55,6 +62,7 @@ import SunflowerFieldTest from './pages/SunflowerFieldTest';
 import MandelbulbTest from './pages/MandelbulbTest';
 import MapleTreeTest from './pages/MapleTreeTest';
 import GaussianSplatTest from './pages/GaussianSplatTest';
+import FleetStatusTest from './pages/FleetStatusTest';
 
 // Example component to demonstrate the library
 const DemoApp = () => {
@@ -406,10 +414,24 @@ const DiatonicPanel: React.FC = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {/*
+        basename uses Vite's BASE_URL. For the lib-mode dev server (current
+        cloudflared origin) BASE_URL is "/" and the router behaves exactly
+        as before. For the GitHub Pages SPA build (vite.config.demos.ts with
+        DEMOS_BASE_PATH=/ga/) BASE_URL is "/ga/", which makes routes resolve
+        under that sub-path. Trailing slash is stripped because react-router
+        expects the basename without it.
+      */}
+      <BrowserRouter
+        basename={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <Routes>
         {/* Test pages */}
         <Route path="/test" element={<App><TestIndex /></App>} />
+        <Route path="/test/manifest" element={<App><ManifestViewer /></App>} />
         <Route path="/test/minimal-three" element={<App><MinimalThreeTest /></App>} />
         <Route path="/test/music-theory" element={<App><MusicTheoryTest /></App>} />
         <Route path="/test/three-fretboard" element={<App><ThreeFretboardTest /></App>} />
@@ -427,8 +449,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/bsp-doom-explorer" element={<App><BSPDoomExplorerTest /></App>} />
         <Route path="/test/fretboard-with-hand" element={<App><FretboardWithHandTest /></App>} />
         <Route path="/test/sunburst-3d" element={<App><Sunburst3DTest /></App>} />
+        <Route path="/test/tonal-orbit" element={<App><TonalOrbitTest /></App>} />
         <Route path="/test/immersive-musical-world" element={<App><ImmersiveMusicalWorldTest /></App>} />
         <Route path="/test/fluffy-grass" element={<App><FluffyGrassTest /></App>} />
+        <Route path="/test/modal-meadow" element={<App><ModalMeadowTest /></App>} />
         <Route path="/test/ocean" element={<App><OceanTest /></App>} />
         <Route path="/test/sand-dunes" element={<App><SandDunesTest /></App>} />
         <Route path="/test/cheese-avalanche" element={<App><CheeseAvalancheTest /></App>} />
@@ -453,6 +477,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
         <Route path="/test/gaussian-splat" element={<App><GaussianSplatTest /></App>} />
         <Route path="/test/maple-tree" element={<App><MapleTreeTest /></App>} />
+        <Route path="/test/fleet" element={<App><FleetStatusTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
         <Route path="/test/ga-chat" element={<GAChatPanelPage />} />
@@ -468,7 +493,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         {/* Default route - redirect to test index */}
         <Route path="/" element={<Navigate to="/test" replace />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 

@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "e2e-dashboard-playwright",
+  "timestamp": "2026-05-24T16-31-53Z",
+  "git_sha": "a7d5c0b7e9a99b4607234aa2ad3eb090c65c4442",
+  "git_ref": "refs/heads/main",
+  "run_id": "26366546572",
+  "outcome": "failure",
+  "base_url": "https://demos.guitaralchemist.com",
+  "summary": {
+    "total": 17,
+    "passed": 5,
+    "failed": 4,
+    "skipped": 8
+  },
+  "tests": [
+    {
+      "title": "ai-annotations-tab.spec.ts › AI Annotations tab › renders card + filters + table",
+      "file": "ai-annotations-tab.spec.ts",
+      "status": "skipped",
+      "duration_ms": 894,
+      "error": null
+    },
+    {
+      "title": "auth-gate.spec.ts › CF Access auth gate › SkillActionButton disables + shows lock when /cdn-cgi/access/get-identity returns 401",
+      "file": "auth-gate.spec.ts",
+      "status": "skipped",
+      "duration_ms": 19011,
+      "error": null
+    },
+    {
+      "title": "auth-gate.spec.ts › CF Access auth gate › SkillActionButton enables and POSTs to /actions/* when identity returns 200",
+      "file": "auth-gate.spec.ts",
+      "status": "skipped",
+      "duration_ms": 20306,
+      "error": null
+    },
+    {
+      "title": "chatbot-showcase.spec.ts › Chatbot showcase › opens modal, clicks a prompt, response < 5s",
+      "file": "chatbot-showcase.spec.ts",
+      "status": "passed",
+      "duration_ms": 557,
+      "error": null
+    },
+    {
+      "title": "dashboard-loads.spec.ts › Dashboard loads › /test returns 200 and renders core chrome",
+      "file": "dashboard-loads.spec.ts",
+      "status": "passed",
+      "duration_ms": 4757,
+      "error": null
+    },
+    {
+      "title": "epic-drilldown.spec.ts › Epic drill-down › clicking an epic row reveals sub-sections and items",
+      "file": "epic-drilldown.spec.ts",
+      "status": "skipped",
+      "duration_ms": 4044,
+      "error": null
+    },
+    {
+      "title": "epic-drilldown.spec.ts › Epic drill-down › PR badge links to the correct GitHub PR URL",
+      "file": "epic-drilldown.spec.ts",
+      "status": "skipped",
+      "duration_ms": 3674,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › renders items + baseline tiles",
+      "file": "harness-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 4089,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › skill action button queues an invocation",
+      "file": "harness-tab.spec.ts",
+      "status": "skipped",
+      "duration_ms": 5,
+      "error": null
+    },
+    {
+      "title": "heartbeat-banner.spec.ts › Heartbeat banner › renders with healthy color + epic-shipped percentage",
+      "file": "heartbeat-banner.spec.ts",
+      "status": "passed",
+      "duration_ms": 4804,
+      "error": null
+    },
+    {
+      "title": "manifest-page.spec.ts › Manifest viewer › /test/manifest loads with copy-curl + schema_version",
+      "file": "manifest-page.spec.ts",
+      "status": "passed",
+      "duration_ms": 4098,
+      "error": null
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › tab visible in dev strip + four cards render",
+      "file": "sentrux-tab.spec.ts",
+      "status": "failed",
+      "duration_ms": 18238,
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('tab', { name: /sentrux/i })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('tab', { name: /sentrux/i })\u001b[22m\n"
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › health endpoint returns ok=true or graceful unreachable",
+      "file": "sentrux-tab.spec.ts",
+      "status": "failed",
+      "duration_ms": 520,
+      "error": "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › rescan button is rendered (auth-aware)",
+      "file": "sentrux-tab.spec.ts",
+      "status": "failed",
+      "duration_ms": 13077,
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /trigger rescan/i })\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /trigger rescan/i })\u001b[22m\n"
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › rescan POST is local-only",
+      "file": "sentrux-tab.spec.ts",
+      "status": "failed",
+      "duration_ms": 479,
+      "error": "Error: expected 200 or 403, got 404\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m"
+    },
+    {
+      "title": "test-plans-card.spec.ts › TestPlansCard (/test#dev/qa) › renders header + chatbot footer + empty-or-list state",
+      "file": "test-plans-card.spec.ts",
+      "status": "skipped",
+      "duration_ms": 23578,
+      "error": null
+    },
+    {
+      "title": "test-plans-card.spec.ts › TestPlansCard (/test#dev/qa) › Generate for chatbot button POSTs the queue line (local only)",
+      "file": "test-plans-card.spec.ts",
+      "status": "skipped",
+      "duration_ms": 10,
+      "error": null
+    }
+  ]
+}

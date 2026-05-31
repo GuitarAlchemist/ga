@@ -5,11 +5,6 @@
       "args": ["run", "--release", "-p", "ix-agent"],
       "cwd": "C:/Users/spare/source/repos/ix"
     },
-    "meshy-ai": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["mcp-servers/meshy-ai/dist/index.js"]
-    },
     "demerzel": {
       "type": "stdio",
       "command": "dotnet",
@@ -19,18 +14,35 @@
         "DEMERZEL_URL": "http://localhost:8200"
       }
     },
-    "paper-search": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["--from", "paper-search-mcp", "python", "-m", "paper_search_mcp.server"],
-      "env": {
-        "PAPER_SEARCH_MCP_UNPAYWALL_EMAIL": "spareilleux@gmail.com"
-      }
-    },
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "ga": {
+      "command": "dotnet",
+      "args": ["run", "--project", "C:/Users/spare/source/repos/ga/GaMcpServer/GaMcpServer.csproj", "--no-build", "--"]
+    },
+    "tars": {
+      "command": "C:/Users/spare/source/repos/tars/v2/src/Tars.Interface.Cli/bin/Release/net10.0/Tars.Interface.Cli.exe",
+      "args": ["mcp", "server"]
+    },
+    "notebooklm": {
+      "command": "npx",
+      "args": ["notebooklm-mcp@latest"]
+    },
+    "sentrux": {
+      "command": "C:/Users/spare/bin/sentrux.exe",
+      "args": ["mcp"]
+    },
+    "hari": {
+      "command": "C:/Users/spare/source/repos/hari/target/release/hari-mcp.exe",
+      "args": [],
+      "env": { "HARI_STATE_DIR": "C:/Users/spare/source/repos/hari/state/harness" }
     }
   }
 }

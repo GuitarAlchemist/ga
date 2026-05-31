@@ -2,7 +2,7 @@
 title: Chat & Agent Surfaces
 scope: All HTTP/SignalR/GraphQL chat endpoints and the orchestrator/agent stack behind them
 status: authoritative
-last_verified: 2026-05-12
+last_verified: 2026-05-13
 parent: docs/architecture/README.md
 ---
 
@@ -13,42 +13,23 @@ Authoritative map of every chat / agent entry point in the Guitar Alchemist solu
 Conventions used throughout:
 - Status tags: ✅ canonical, 🟡 parallel-to-canonical, 🪦 deprecated-candidate, ❓ unknown / unverified.
 
-## 0. Status update — 2026-05-07
+## 0. Status update — 2026-05-13
 
-The 2026-04-25 revision named `/api/nebula/chat` (in GaApi) the canonical chat path. That was correct **for the Harmonic Nebula UI**. It is no longer the only canonical chat entry point because the public demo introduced a second one. Two distinct canonicals coexist today:
+`GaChatbot.Api` (port 5252) is now the canonical deployable for `/chatbot/` and `/api/chatbot/*` — cloudflared (`~/.cloudflared/config.yml`) routes the prefixes accordingly. The chatbot HTML lives in `Apps/GaChatbot.Api/wwwroot/index.html` (single source of truth) and is served via `UseDefaultFiles` + `UseStaticFiles`. Two distinct canonicals coexist today:
 
 1. **Harmonic Nebula UI canonical** — `POST /api/nebula/chat` → `NebulaChatController` → `NebulaSidekickService` (Claude Haiku 4.5 / Ollama). Unchanged. Section 1 below.
-2. **Public demo chatbot canonical (de-facto)** — `https://demos.guitaralchemist.com/chatbot/` is served by **GaApi** (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`) and the SPA's only network call is `withUrl("/hubs/chatbot")` — i.e. GaApi's `ChatbotHub` (SignalR). The doc's earlier "ChatbotHub may be dead — no frontend consumer" claim was true on 2026-04-25 and is **false today**. Section 2 below.
+2. **Public demo chatbot canonical** — `https://demos.guitaralchemist.com/chatbot/` is served by **GaChatbot.Api** (`Apps/GaChatbot.Api/wwwroot/index.html`). Network calls: `POST /api/chatbot/chat` (REST, JSON in / JSON out with `trace.steps` for the agentic trace badge), `GET /api/chatbot/{status,examples,demo}`. The HTML uses **fetch + REST** — no SignalR. Section 2 below.
 
-The product-surface confusion flagged by the 2026-05-07 multi-LLM review is real: a *third* host now exists, **`Apps/GaChatbot.Api`**, with its own `ChatbotController` at `api/chatbot/{chat, chat/stream, agui/*, status}`. Its routes look identical to GaApi's `ChatbotController`, but the implementation is meaningfully different (thin `IChatApplicationService` + readiness gating + `Grounding` propagated to the JSON wire). See Section 5b for the deployment / decision question.
+GaApi's `wwwroot/chatbot/index.html` and `ChatbotHub` (SignalR) are now dead in the deployed flow — the cloudflared `/chatbot/*` ingress points to GaChatbot.Api, not GaApi. The GaApi `/api/chatbot/*` controller endpoints remain reachable only via direct `localhost:5232` (kept for tests + back-compat callers; not exercised by the demo).
 
-### Canonical surfaces matrix (post-2026-05-07)
+### Canonical surfaces matrix (post-2026-05-13)
 
-| Functional cluster | Canonical today | What's missing |
+| Functional cluster | Canonical today | Notes |
 |---|---|---|
-| Harmonic Nebula UI | `POST /api/nebula/chat` (GaApi) | nothing |
-| Public chatbot demo at `demos.guitaralchemist.com/chatbot/` | `SignalR /hubs/chatbot` on **GaApi** | the SPA does not call `GaChatbot.Api` at all — that host is currently unused in the deployed flow |
-| AG-UI streaming for Prime Radiant / ga-client | `POST /api/chatbot/agui/stream` on **GaApi** | duplicated route in `GaChatbot.Api` is not yet on a deployed origin |
-| In-process chat (CLI / console) | `IHarmonicChatOrchestrator` (`= ProductionOrchestrator`) via DI | nothing |
-
-### Current-state shortcut
-
-Read this section as current state; later sections preserve detailed inventory
-and historical context.
-
-| Keep current | Parallel / sync carefully | Frozen / cleanup candidate |
-|---|---|---|
-| `POST /api/nebula/chat` for Harmonic Nebula | `/api/chatbot/chat` and `/api/chatbot/chat/stream` REST/SSE siblings | `GA.AI.Service` |
-| `/hubs/chatbot` for deployed public `/chatbot/` demo | `GaChatbot.Api` reference host | `POST /api/chatbot/ask` dangling caller |
-| `/api/chatbot/agui/stream` for AG-UI surfaces | `ChatbotSessionOrchestrator.NormalizeHistory` helper | `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` |
-| `IChatApplicationService` + `ProductionOrchestrator` substrate | legacy startup scripts mentioning deleted/frozen chatbot names | stale Docker Compose chatbot references |
-
-### Decision pending
-
-Before declaring `GaChatbot.Api` the canonical deployable, one of three paths needs to be chosen — each has different blast radius (Section 5b enumerates).
-
-- Verified canonical Nebula path (used by `NebulaChat.tsx`): `NebulaChatController` → `NebulaSidekickService` → Anthropic Claude Haiku 4.5 (or Ollama).
-- Verified canonical demo path (used by `wwwroot/chatbot/index.html`): SPA → SignalR `/hubs/chatbot` → GaApi `ChatbotHub` → `ProductionOrchestrator`.
+| Harmonic Nebula UI | `POST /api/nebula/chat` (GaApi) | unchanged |
+| Public chatbot demo at `demos.guitaralchemist.com/chatbot/` | `POST /api/chatbot/chat` on **GaChatbot.Api** (5252) | HTML at `Apps/GaChatbot.Api/wwwroot/index.html`; trace badge fed by `result.trace` |
+| AG-UI streaming for Prime Radiant / ga-client | `POST /api/chatbot/agui/stream` on **GaApi** | also duplicated in GaChatbot.Api but ga-client still hits GaApi directly |
+| In-process chat (CLI / console) | `IHarmonicChatOrchestrator` (`= ProductionOrchestrator`) via DI | unchanged |
 
 ### Verification notes — 2026-05-12
 

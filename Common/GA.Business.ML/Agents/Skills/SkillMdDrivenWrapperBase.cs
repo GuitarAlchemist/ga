@@ -101,7 +101,7 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
 
         try
         {
-            var inner = await _inner.Value.ExecuteAsync(message, cancellationToken);
+            var inner = await _inner.Value.ExecuteAsync(message, cancellationToken).ConfigureAwait(false);
 
             // The inner skill records every tool call as a "tools.invoked: <name>"
             // entry in Evidence. Path B should always go through ga_dsl_eval —

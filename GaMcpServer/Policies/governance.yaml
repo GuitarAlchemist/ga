@@ -1,0 +1,57 @@
+# GaMcpServer governance policy
+#
+# Loaded by Microsoft.AgentGovernance.Extensions.ModelContextProtocol via
+# Program.cs (.WithGovernance(...)). Documents the per-call rules enforced
+# against every MCP tool invocation. See docs/runbooks/gamcp-governance.md
+# for the operator-facing runbook (live-reload, rule rationale, version checklist).
+#
+# Schema reference (governance.toolkit/v1):
+#   https://github.com/microsoft/agent-governance-toolkit/blob/main/agent-governance-dotnet/examples/Quickstart/policies/quickstart.yaml
+#
+# Condition language is limited to: field == 'value', field != 'value',
+# numeric comparisons, "field in list", boolean field, and compound and/or.
+# It does NOT support substring or regex matching. For prompt-poisoning,
+# credential probes, and other content-pattern attacks we rely on the
+# toolkit's built-in PromptInjectionDetector (EnablePromptInjectionDetection
+# is set to true in Program.cs) and the response-sanitization pass that
+# strips <system> tags and credential-shaped tokens before they leave the
+# server. Those defenses fire independently of the rules below.
+
+apiVersion: governance.toolkit/v1
+version: "1.0"
+name: gamcp-server-governance
+description: |
+  Per-tool policy for the GaMcpServer (.NET MCP server). Targets:
+    1. Rate-limit the high-fan-out voicing search tools so a runaway agent
+       can't saturate the OPTIC-K mmap index.
+    2. Block direct invocation of tools the policy considers privileged or
+       not yet ready for unattended use (none today — placeholder for
+       future deny rules layered on top of the prompt-injection defense).
+  Content-pattern attacks (credential probes, hidden instructions, system-tag
+  exfiltration) are caught by the toolkit's prompt-injection detector and
+  the response sanitizer, not by these rules.
+
+# When no rule matches, allow the call. The injection detector and the
+# response sanitizer run regardless of this default.
+default_action: allow
+
+rules:
+  # ── Rate limits ────────────────────────────────────────────────────────
+  # Voicing search hits an mmap index; an agent in a loop can hammer it.
+  # 60/minute leaves headroom for interactive use and CI smoke runs while
+  # capping pathological loops. Telemetry at state/telemetry/voicing-search/
+  # can tune this later — see project_optic_k_v18 memory note.
+
+  - name: rate-limit-voicing-search
+    condition: "tool_name == 'ga_search_voicings'"
+    action: rate_limit
+    limit: "60/minute"
+    priority: 50
+    description: Cap structured voicing search to 60/minute per agent.
+
+  - name: rate-limit-voicing-search-by-query
+    condition: "tool_name == 'ga_search_voicings_by_query'"
+    action: rate_limit
+    limit: "60/minute"
+    priority: 50
+    description: Cap natural-language voicing search to 60/minute per agent.

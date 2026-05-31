@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "domain": "ga-harness",
+  "purpose": "Repo-level harness baseline for Agent Blackbox readiness across GA.",
+  "established_at": "2026-05-16T22:20:00Z",
+  "established_by": "Agent Blackbox cross-repo harness rollout",
+  "metric": "harness_ready",
+  "metric_description": "1.0 when the repo-local overseer reports loop-eligible and Agent Blackbox harness-audit reaches 100.",
+  "primary_baseline": 1.0,
+  "primary_baseline_source": "Local harness rollout baseline.",
+  "_harness": {
+    "oracle_command": "dotnet build AllProjects.slnx -c Debug && dotnet test AllProjects.slnx",
+    "kill_switches": {
+      "global": "state/.loop-halted",
+      "per_domain": "state/quality/ga-harness/.STOP"
+    },
+    "lock_file": "state/quality/ga-harness/.lock",
+    "history_file": "state/quality/ga-harness/loop-history.jsonl"
+  },
+  "scope_boundary": {
+    "allow_edit": ["**"],
+    "protected_paths": [
+      ".env",
+      ".env.*",
+      "Directory.Packages.props",
+      "global.json"
+    ]
+  }
+}

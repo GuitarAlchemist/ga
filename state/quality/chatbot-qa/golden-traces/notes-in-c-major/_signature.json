@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "promptId": "notes-in-c-major",
+  "prompt": "notes in c major",
+  "category": "case-variants",
+  "steps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "agentId": "skill.scaleinfo"
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "agentId": "skill.scaleinfo"
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "agentId": "skill.scaleinfo"
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "agentId": null
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "agentId": null
+    }
+  ]
+}

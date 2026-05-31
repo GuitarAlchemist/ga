@@ -1,29 +1,111 @@
 /**
- * BSP DOOM Explorer Test Page
- * 
- * Test page for the DOOM-like BSP tree explorer component.
- * Navigate through the Binary Space Partitioning tree structure
- * in first-person view like exploring a DOOM level.
+ * BSP DOOM Explorer test page.
+ *
+ * Walks a guitarist through a curated 8-key world. Each room = a real
+ * key+mode; each partition = a real harmonic boundary; the HUD's
+ * "modulate to →" chips teleport between neighbouring keys.
+ *
+ * Earlier this page wore a retro DOOM-green theme with a 400px panel
+ * full of duplicated controls. That's been replaced with the GA dark
+ * palette (`#0d1117` / `#161b22` / `#30363d` / `#e6edf3`) and a single
+ * collapsible settings drawer; on mobile we serve a clean "best on
+ * desktop" landing card with a 2D map preview instead of forcing FPS
+ * controls onto a touch screen.
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Container,
   Box,
-  Typography,
-  Paper,
   Stack,
-  Button,
-  Divider,
-  Alert,
-  Chip,
+  Typography,
+  Drawer,
+  IconButton,
+  Slider,
   Switch,
   FormControlLabel,
-  Slider,
+  Divider,
+  Chip,
+  useMediaQuery,
+  Tooltip,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CloseIcon from '@mui/icons-material/Close';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import DesktopMacIcon from '@mui/icons-material/DesktopMac';
 import { BSPDoomExplorer } from '../components/BSP';
 import type { BSPRegion } from '../components/BSP/BSPApiService';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
+import { getAllKeys } from '../components/BSP/v2/musicalTree';
+
+const GA_BG = '#0d1117';
+const GA_PANEL = '#161b22';
+const GA_BORDER = '#30363d';
+const GA_TEXT = '#e6edf3';
+const GA_MUTED = '#8b949e';
+const GA_ACCENT = '#79c0ff';
+
+function MobileMapPreview() {
+  const keys = useMemo(() => getAllKeys(), []);
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        background: GA_BG,
+        color: GA_TEXT,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        p: 3,
+        gap: 2,
+        overflowY: 'auto',
+      }}
+    >
+      <DesktopMacIcon sx={{ fontSize: 48, color: GA_ACCENT }} />
+      <Typography variant="h6" sx={{ color: GA_TEXT, fontFamily: 'ui-monospace, monospace' }}>
+        Best on desktop
+      </Typography>
+      <Typography variant="body2" sx={{ color: GA_MUTED, textAlign: 'center', maxWidth: 360 }}>
+        The BSP DOOM Explorer is a first-person walk through eight musical
+        keys — it needs a mouse for look and WASD for movement. Here's a flat
+        preview of the eight rooms; open this page on a desktop for the full
+        experience.
+      </Typography>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 1,
+          mt: 2,
+          width: '100%',
+          maxWidth: 360,
+        }}
+      >
+        {keys.map((k) => (
+          <Box
+            key={k.key}
+            sx={{
+              background: GA_PANEL,
+              border: `1px solid ${GA_BORDER}`,
+              borderRadius: 1,
+              p: 1,
+              textAlign: 'center',
+              fontFamily: 'ui-monospace, monospace',
+            }}
+          >
+            <Typography sx={{ color: GA_ACCENT, fontSize: 11, fontWeight: 700 }}>
+              {k.shortName}
+            </Typography>
+            <Typography sx={{ color: GA_MUTED, fontSize: 9 }}>
+              {k.mode}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
 
 const BSPDoomExplorerTest: React.FC = () => {
   const [showHUD, setShowHUD] = useState(true);
@@ -31,308 +113,234 @@ const BSPDoomExplorerTest: React.FC = () => {
   const [moveSpeed, setMoveSpeed] = useState(5.0);
   const [lookSpeed, setLookSpeed] = useState(0.002);
   const [currentRegion, setCurrentRegion] = useState<BSPRegion | null>(null);
-  const [regionHistory, setRegionHistory] = useState<string[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [viewport, setViewport] = useState({ w: 1200, h: 800 });
 
-  const handleRegionChange = (region: BSPRegion) => {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
+  useEffect(() => {
+    function update() {
+      // Layout: full-bleed canvas, header takes ~48px.
+      setViewport({ w: window.innerWidth, h: Math.max(400, window.innerHeight - 96) });
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const handleRegionChange = useCallback((region: BSPRegion) => {
     setCurrentRegion(region);
-    setRegionHistory(prev => [...prev, region.name].slice(-10)); // Keep last 10
-  };
+  }, []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setShowHUD(true);
     setShowMinimap(true);
     setMoveSpeed(5.0);
     setLookSpeed(0.002);
-    setRegionHistory([]);
-  };
+  }, []);
 
   return (
     <DemoErrorBoundary demoName="BSP DOOM Explorer">
-    <Container maxWidth={false} disableGutters sx={{ height: 'calc(100vh - 48px)', overflow: 'hidden' }}>
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Paper
-          elevation={3}
+      <Box
+        sx={{
+          height: 'calc(100vh - 48px)',
+          display: 'flex',
+          flexDirection: 'column',
+          background: GA_BG,
+          color: GA_TEXT,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Toolbar — matches the EcosystemRoadmap toolbar pattern. */}
+        <Box
           sx={{
-            p: 2,
-            borderRadius: 0,
-            backgroundColor: '#1a1a1a',
-            color: '#0f0',
-            fontFamily: 'monospace',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            px: 2,
+            py: 1,
+            background: GA_PANEL,
+            borderBottom: `1px solid ${GA_BORDER}`,
+            minHeight: 48,
           }}
         >
-          <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography variant="h4" sx={{ fontFamily: 'monospace', color: '#0f0' }}>
-                🎮 BSP DOOM EXPLORER
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#888' }}>
-                First-person navigation through Binary Space Partitioning tree structure
-              </Typography>
-            </Box>
-            <Button
-              variant="outlined"
-              onClick={handleReset}
+          <Typography
+            variant="subtitle1"
+            sx={{ color: GA_TEXT, fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}
+          >
+            BSP DOOM Explorer
+          </Typography>
+          <Chip
+            label="Binary Space Partitioning of tonal regions"
+            size="small"
+            sx={{
+              background: 'transparent',
+              border: `1px solid ${GA_BORDER}`,
+              color: GA_MUTED,
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: 11,
+            }}
+          />
+          {currentRegion && (
+            <Chip
+              label={currentRegion.name}
+              size="small"
               sx={{
-                color: '#0f0',
-                borderColor: '#0f0',
-                '&:hover': {
-                  borderColor: '#0f0',
-                  backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                },
+                background: GA_PANEL,
+                border: `1px solid ${GA_ACCENT}`,
+                color: GA_ACCENT,
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 11,
               }}
+            />
+          )}
+          <Box sx={{ flexGrow: 1 }} />
+          <Tooltip title="Reset settings">
+            <IconButton
+              onClick={handleReset}
+              size="small"
+              sx={{ color: GA_MUTED, '&:hover': { color: GA_TEXT, background: '#21262d' } }}
             >
-              Reset Settings
-            </Button>
-          </Stack>
-        </Paper>
+              <RestartAltIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Settings">
+            <IconButton
+              onClick={() => setSettingsOpen(true)}
+              size="small"
+              sx={{ color: GA_MUTED, '&:hover': { color: GA_TEXT, background: '#21262d' } }}
+            >
+              <SettingsIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
-        {/* Main Content */}
-        <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Explorer */}
-          <Box sx={{ flex: 1, position: 'relative', backgroundColor: '#000' }}>
+        {/* Canvas / mobile fallback. */}
+        <Box sx={{ flex: 1, position: 'relative', background: GA_BG }}>
+          {isMobile ? (
+            <MobileMapPreview />
+          ) : (
             <BSPDoomExplorer
-              width={window.innerWidth - 400}
-              height={window.innerHeight - 148}
+              width={viewport.w}
+              height={viewport.h}
               moveSpeed={moveSpeed}
               lookSpeed={lookSpeed}
               showHUD={showHUD}
               showMinimap={showMinimap}
               onRegionChange={handleRegionChange}
             />
-          </Box>
-
-          {/* Side Panel */}
-          <Paper
-            sx={{
-              width: 400,
-              p: 3,
-              backgroundColor: '#1a1a1a',
-              color: '#0f0',
-              fontFamily: 'monospace',
-              overflowY: 'auto',
-              borderRadius: 0,
-            }}
-          >
-            <Stack spacing={3}>
-              {/* Info */}
-              <Box>
-                <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                  ℹ️ About
-                </Typography>
-                <Alert
-                  severity="info"
-                  sx={{
-                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                    color: '#0f0',
-                    '& .MuiAlert-icon': { color: '#0f0' },
-                  }}
-                >
-                  Navigate through the BSP tree structure like exploring a DOOM level.
-                  Each partition plane is a wall, and tonal regions are colored rooms.
-                </Alert>
-              </Box>
-
-              <Divider sx={{ borderColor: '#0f0' }} />
-
-              {/* Controls Info */}
-              <Box>
-                <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                  🎮 Controls
-                </Typography>
-                <Stack spacing={1}>
-                  <Typography variant="body2" sx={{ color: '#888' }}>
-                    <strong style={{ color: '#0f0' }}>WASD</strong> - Move forward/back/left/right
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#888' }}>
-                    <strong style={{ color: '#0f0' }}>Mouse</strong> - Look around (click to lock)
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#888' }}>
-                    <strong style={{ color: '#0f0' }}>Space</strong> - Move up
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#888' }}>
-                    <strong style={{ color: '#0f0' }}>Shift</strong> - Move down
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#888' }}>
-                    <strong style={{ color: '#0f0' }}>ESC</strong> - Release pointer lock
-                  </Typography>
-                </Stack>
-              </Box>
-
-              <Divider sx={{ borderColor: '#0f0' }} />
-
-              {/* Settings */}
-              <Box>
-                <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                  ⚙️ Settings
-                </Typography>
-                <Stack spacing={2}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={showHUD}
-                        onChange={(e) => setShowHUD(e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#0f0',
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#0f0',
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography sx={{ color: '#888' }}>Show HUD</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={showMinimap}
-                        onChange={(e) => setShowMinimap(e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#0f0',
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#0f0',
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography sx={{ color: '#888' }}>Show Minimap</Typography>}
-                  />
-
-                  <Box>
-                    <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
-                      Move Speed: {moveSpeed.toFixed(1)}
-                    </Typography>
-                    <Slider
-                      value={moveSpeed}
-                      onChange={(_, value) => setMoveSpeed(value as number)}
-                      min={1}
-                      max={20}
-                      step={0.5}
-                      sx={{
-                        color: '#0f0',
-                        '& .MuiSlider-thumb': {
-                          backgroundColor: '#0f0',
-                        },
-                        '& .MuiSlider-track': {
-                          backgroundColor: '#0f0',
-                        },
-                        '& .MuiSlider-rail': {
-                          backgroundColor: '#333',
-                        },
-                      }}
-                    />
-                  </Box>
-
-                  <Box>
-                    <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
-                      Look Speed: {(lookSpeed * 1000).toFixed(1)}
-                    </Typography>
-                    <Slider
-                      value={lookSpeed * 1000}
-                      onChange={(_, value) => setLookSpeed((value as number) / 1000)}
-                      min={0.5}
-                      max={5}
-                      step={0.1}
-                      sx={{
-                        color: '#0f0',
-                        '& .MuiSlider-thumb': {
-                          backgroundColor: '#0f0',
-                        },
-                        '& .MuiSlider-track': {
-                          backgroundColor: '#0f0',
-                        },
-                        '& .MuiSlider-rail': {
-                          backgroundColor: '#333',
-                        },
-                      }}
-                    />
-                  </Box>
-                </Stack>
-              </Box>
-
-              <Divider sx={{ borderColor: '#0f0' }} />
-
-              {/* Current Region */}
-              {currentRegion && (
-                <Box>
-                  <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                    📍 Current Region
-                  </Typography>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                      border: '1px solid #0f0',
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ color: '#0f0' }}>
-                      {currentRegion.name}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#888', mt: 1 }}>
-                      Type: {currentRegion.tonalityType}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#888' }}>
-                      Center: {currentRegion.tonalCenter}
-                    </Typography>
-                  </Paper>
-                </Box>
-              )}
-
-              {/* Region History */}
-              {regionHistory.length > 0 && (
-                <Box>
-                  <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                    📜 Region History
-                  </Typography>
-                  <Stack spacing={0.5}>
-                    {regionHistory.slice().reverse().map((region, index) => (
-                      <Chip
-                        key={index}
-                        label={region}
-                        size="small"
-                        sx={{
-                          backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                          color: '#0f0',
-                          borderColor: '#0f0',
-                          fontFamily: 'monospace',
-                        }}
-                        variant="outlined"
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              <Divider sx={{ borderColor: '#0f0' }} />
-
-              {/* Features */}
-              <Box>
-                <Typography variant="h6" sx={{ color: '#0f0', mb: 2 }}>
-                  ✨ Features
-                </Typography>
-                <Stack spacing={1}>
-                  <Chip label="First-Person Camera" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="WASD Movement" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="Mouse Look" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="BSP Partition Walls" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="Tonal Region Rooms" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="WebGPU Rendering" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="Real-time HUD" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                  <Chip label="Minimap" size="small" sx={{ backgroundColor: '#0f0', color: '#000' }} />
-                </Stack>
-              </Box>
-            </Stack>
-          </Paper>
+          )}
         </Box>
+
+        {/* Settings drawer. */}
+        <Drawer
+          anchor="right"
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          PaperProps={{
+            sx: {
+              width: 320,
+              background: GA_PANEL,
+              color: GA_TEXT,
+              borderLeft: `1px solid ${GA_BORDER}`,
+              fontFamily: 'ui-monospace, monospace',
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', p: 2, borderBottom: `1px solid ${GA_BORDER}` }}>
+            <Typography variant="subtitle1" sx={{ color: GA_TEXT, fontWeight: 600, flexGrow: 1 }}>
+              Settings
+            </Typography>
+            <IconButton size="small" onClick={() => setSettingsOpen(false)} sx={{ color: GA_MUTED }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+          <Stack spacing={2.5} sx={{ p: 2 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showHUD}
+                  onChange={(e) => setShowHUD(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={<Typography sx={{ color: GA_TEXT, fontSize: 13 }}>HUD</Typography>}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showMinimap}
+                  onChange={(e) => setShowMinimap(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={<Typography sx={{ color: GA_TEXT, fontSize: 13 }}>Minimap</Typography>}
+            />
+
+            <Box>
+              <Typography variant="caption" sx={{ color: GA_MUTED }}>
+                Move speed: {moveSpeed.toFixed(1)}
+              </Typography>
+              <Slider
+                value={moveSpeed}
+                onChange={(_, v) => setMoveSpeed(v as number)}
+                min={1}
+                max={20}
+                step={0.5}
+                size="small"
+                sx={{ color: GA_ACCENT }}
+              />
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: GA_MUTED }}>
+                Look sensitivity: {(lookSpeed * 1000).toFixed(1)}
+              </Typography>
+              <Slider
+                value={lookSpeed * 1000}
+                onChange={(_, v) => setLookSpeed((v as number) / 1000)}
+                min={0.5}
+                max={5}
+                step={0.1}
+                size="small"
+                sx={{ color: GA_ACCENT }}
+              />
+            </Box>
+
+            <Divider sx={{ borderColor: GA_BORDER }} />
+
+            <Box>
+              <Typography variant="caption" sx={{ color: GA_MUTED, display: 'block', mb: 1 }}>
+                Controls
+              </Typography>
+              <Typography sx={{ color: GA_TEXT, fontSize: 11.5, lineHeight: 1.7 }}>
+                <b>click canvas</b> · lock pointer<br />
+                <b>WASD</b> / arrows · move<br />
+                <b>space</b> / <b>shift</b> · up / down<br />
+                <b>esc</b> · release pointer<br />
+                click a <b>modulate to</b> chip · teleport
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: GA_MUTED, display: 'block', mb: 1 }}>
+                What you'll see
+              </Typography>
+              <Typography sx={{ color: GA_MUTED, fontSize: 11.5, lineHeight: 1.6 }}>
+                Eight rooms — each one a key+mode. Floor colour encodes
+                circle-of-fifths position. Walls are BSP partition planes
+                (harmonic boundaries). The HUD names the key you're in,
+                its scale, its diatonic chords with Roman numerals, and
+                the keys you can modulate to from here. Try the
+                <b style={{ color: GA_ACCENT }}> ii–V–I tour</b> at the
+                bottom of the canvas.
+              </Typography>
+            </Box>
+          </Stack>
+        </Drawer>
       </Box>
-    </Container>
     </DemoErrorBoundary>
   );
 };
 
 export default BSPDoomExplorerTest;
-

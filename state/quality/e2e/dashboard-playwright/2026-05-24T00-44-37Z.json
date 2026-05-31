@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "e2e-dashboard-playwright",
+  "timestamp": "2026-05-24T00-44-37Z",
+  "git_sha": "e36dbfa89824f64970888b9880863a2235299d5c",
+  "git_ref": "refs/heads/main",
+  "run_id": "26347713955",
+  "outcome": "failure",
+  "base_url": "https://demos.guitaralchemist.com",
+  "summary": {
+    "total": 5,
+    "passed": 4,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "chatbot-showcase.spec.ts › Chatbot showcase › opens modal, clicks a prompt, response < 5s",
+      "file": "chatbot-showcase.spec.ts",
+      "status": "passed",
+      "duration_ms": 773,
+      "error": null
+    },
+    {
+      "title": "dashboard-loads.spec.ts › Dashboard loads › /test returns 200 and renders core chrome",
+      "file": "dashboard-loads.spec.ts",
+      "status": "passed",
+      "duration_ms": 3324,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › renders 8 rollout items + baseline tiles",
+      "file": "harness-tab.spec.ts",
+      "status": "failed",
+      "duration_ms": 23266,
+      "error": "Error: Prioritized rollout heading should appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('text=/Prioritized rollout/i').first()\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Prioritized rollout heading should appear with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=/Prioritized rollout/i').first()\u001b[22m\n"
+    },
+    {
+      "title": "heartbeat-banner.spec.ts › Heartbeat banner › renders with healthy color + epic-shipped percentage",
+      "file": "heartbeat-banner.spec.ts",
+      "status": "passed",
+      "duration_ms": 5080,
+      "error": null
+    },
+    {
+      "title": "manifest-page.spec.ts › Manifest viewer › /test/manifest loads with copy-curl + schema_version",
+      "file": "manifest-page.spec.ts",
+      "status": "passed",
+      "duration_ms": 4170,
+      "error": null
+    }
+  ]
+}

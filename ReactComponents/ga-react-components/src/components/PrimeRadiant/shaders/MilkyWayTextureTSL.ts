@@ -2,9 +2,10 @@
 // Photographic Milky Way panorama — samples an equirectangular astrophotography
 // texture instead of procedurally generating the galactic band.
 //
-// Source: Solar System Scope (https://www.solarsystemscope.com/textures/)
-// Their Milky Way panoramas are composites of real ESO/NASA imagery,
-// CC-BY 4.0 licensed, standard 2:1 equirectangular format.
+// Source: canonical Prime Radiant space asset manifest. The preferred
+// high-quality asset is ESO's GigaGalaxy Milky Way panorama; the fallback
+// is the NOAA/NASA GSFC all-sky map. Both are standard 2:1 equirectangular
+// sky textures.
 //
 // Rendered on a BackSide sphere — we're inside it, looking out. SphereGeometry's
 // built-in UVs are equirectangular, so we sample with `uv()` directly.
@@ -23,6 +24,14 @@ export interface MilkyWayTextureOptions {
   saturation?: number;
   /** Flip horizontally — set true if texture appears mirrored on BackSide. */
   flipU?: boolean;
+  /** Repeat the source image horizontally; useful for non-panoramic deep fields. */
+  repeatU?: number;
+  /** Repeat the source image vertically; useful for non-panoramic deep fields. */
+  repeatV?: number;
+  /** Horizontal texture offset after repeat/flip mapping. */
+  offsetU?: number;
+  /** Vertical texture offset after repeat mapping. */
+  offsetV?: number;
 }
 
 /**
@@ -35,13 +44,21 @@ export function createMilkyWayTextureMaterial(
   tex: THREE.Texture,
   options: MilkyWayTextureOptions = {},
 ): MeshBasicNodeMaterial {
-  const { brightness = 0.7, saturation = 0.85, flipU = true } = options;
+  const {
+    brightness = 0.7,
+    saturation = 0.85,
+    flipU = true,
+    repeatU = 1,
+    repeatV = 1,
+    offsetU = 0.5,
+    offsetV = 0,
+  } = options;
 
   // Texture must use SRGB color space for correct brightness display
   tex.colorSpace = THREE.SRGBColorSpace;
   // Equirectangular skyboxes are seamless horizontally
   tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.wrapT = repeatV > 1 ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
 
   const material = new MeshBasicNodeMaterial();
   material.side = THREE.BackSide;
@@ -53,6 +70,10 @@ export function createMilkyWayTextureMaterial(
   const uTex = textureNode(tex);
   const uBright = uniform(brightness);
   const uSat = uniform(saturation);
+  const uRepeatU = uniform(repeatU);
+  const uRepeatV = uniform(repeatV);
+  const uOffsetU = uniform(offsetU);
+  const uOffsetV = uniform(offsetV);
 
   material.colorNode = Fn(() => {
     const baseUV = uv();
@@ -60,8 +81,11 @@ export function createMilkyWayTextureMaterial(
     // Offsetting u by 0.5 rotates the texture 180° — puts galactic center
     // (Sagittarius) behind the camera by default, like a real night sky.
     // Flip u too (1 - u) so galactic center reads correctly from inside.
-    const u = flipU ? float(1.0).sub(baseUV.x).add(0.5) : baseUV.x;
-    const sampled = uTex.sample(vec2(u, baseUV.y));
+    const u = flipU ? float(1.0).sub(baseUV.x) : baseUV.x;
+    const sampled = uTex.sample(vec2(
+      u.mul(uRepeatU).add(uOffsetU),
+      baseUV.y.mul(uRepeatV).add(uOffsetV),
+    ));
 
     // Desaturate toward luminance (space photography often looks over-saturated)
     const luma = dot(sampled.rgb, vec3(0.299, 0.587, 0.114));

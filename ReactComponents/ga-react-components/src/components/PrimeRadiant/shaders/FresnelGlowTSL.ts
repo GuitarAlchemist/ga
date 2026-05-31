@@ -16,14 +16,23 @@ import {
  * Subtle limb glow around the sun. Fresnel-based, additive blending, backside.
  * Replaces the inline GLSL corona ShaderMaterial in SolarSystem.ts.
  */
-export function createCoronaMaterialTSL(): MeshBasicNodeMaterial {
+export interface CoronaOptions {
+  color?: [number, number, number];
+  intensity?: number;
+  power?: number;
+}
+
+export function createCoronaMaterialTSL(options: CoronaOptions = {}): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial();
+  const color = options.color ?? [1.0, 0.7, 0.2];
+  const intensity = options.intensity ?? 0.15;
+  const power = options.power ?? 3.5;
 
   material.colorNode = Fn(() => {
     const viewDir = cameraPosition.sub(positionWorld).normalize();
     const f = float(1.0).sub(abs(normalWorld.dot(viewDir)));
-    const intensity = pow(f, float(3.5)).mul(0.15);
-    return vec3(intensity.mul(1.0), intensity.mul(0.7), intensity.mul(0.2));
+    const corona = pow(f, float(power)).mul(intensity);
+    return vec3(corona.mul(color[0]), corona.mul(color[1]), corona.mul(color[2]));
   })();
 
   material.transparent = true;
