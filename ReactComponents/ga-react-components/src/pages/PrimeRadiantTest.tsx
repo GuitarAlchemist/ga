@@ -32,23 +32,40 @@ const PrimeRadiantTest: React.FC = () => {
   return (
     <Container maxWidth={false} disableGutters sx={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
       <CastButton right={64} />
-      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 20, display: 'flex', gap: 8 }}>
+      {/* Source switcher — top-center, below the metrics HUD bar and clear of
+          the top-left breadcrumb / perf-info panel (which otherwise overlap and
+          intercept clicks). High z-index keeps it clickable above the canvas. */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 56,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          display: 'flex',
+          gap: 0,
+          borderRadius: 8,
+          overflow: 'hidden',
+          border: '1px solid rgba(255,215,0,0.6)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+        }}
+      >
         {(['governance', 'assumption'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setSource(s)}
             style={{
-              padding: '6px 12px',
-              borderRadius: 6,
+              padding: '6px 16px',
               cursor: 'pointer',
               fontFamily: 'monospace',
-              fontSize: 13,
-              background: source === s ? '#FFD700' : 'rgba(0,0,0,0.6)',
+              fontSize: 12,
+              letterSpacing: 0.5,
+              border: 'none',
+              background: source === s ? '#FFD700' : 'rgba(0,0,8,0.72)',
               color: source === s ? '#000' : '#FFD700',
-              border: '1px solid #FFD700',
             }}
           >
-            {s === 'governance' ? 'Governance' : 'Assumptions'}
+            {s === 'governance' ? 'GOVERNANCE' : 'ASSUMPTIONS'}
           </button>
         ))}
       </div>
