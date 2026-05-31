@@ -55,8 +55,11 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordsubstitution"),
 
-        // Key identification — "what key is X in", "key of <progression>"
-        (new Regex(@"\b(what\s+key|key\s+is|identify\s+the\s+key)\b",
+        // Key identification — "what key is X in", "key of <progression>".
+        // Added 2026-05-31: "tonal cent(er|re)" and "home key" — ki-8 ("figure
+        // out the tonal center of E A B E") was lost to scaleinfo because the
+        // original anchors miss those synonyms; "home key" reinforces ki-10.
+        (new Regex(@"\b(what\s+key|key\s+is|identify\s+the\s+key|tonal\s+cent(?:er|re)|home\s+key)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.keyidentification"),
 
@@ -174,6 +177,17 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
         (new Regex(@"\b(?:common|shared|overlapping|pivot|mutual)\s+(?:notes?|tones?|pitches?)\b|\b(?:notes?|tones?|pitches?)\b[^.?!]{0,40}?\b(?:shared?|in\s+common)\b|\bintersection\s+of\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.commontones"),
+
+        // Progression mood (transform) — added 2026-05-31. progressionmood had
+        // NO hint rule, so mood-transform queries like "lift the mood of D minor"
+        // (pm-9) were stolen by scaleinfo on the "D minor" centroid. The
+        // discriminator is the emotional-transform vocabulary (darken/brighten/
+        // sadder/melancholy/cinematic/"lift the mood"/"add tension") — this is a
+        // TRANSFORM intent ("make it sound X"), unambiguous in a music context and
+        // absent from descriptive scale/chord queries.
+        (new Regex(@"\b(?:dark(?:er|en\w*)|bright(?:er|en\w*)|sadder|happier|melanchol\w*|moodier|gloomier|cinematic)\b|\blift\s+the\s+mood\b|\badd\s+tension\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.progressionmood"),
 
         // Capo — added 2026-05-14 to close BACKLOG dealbreaker #3. Anchored on
         // the literal "capo" token (music-unambiguous — no English homonyms
