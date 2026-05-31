@@ -1474,6 +1474,69 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
             });
 
+            // ── /dev-data/assumption — IX temporal assumption graph ─────────
+            // Reads the Prime-Radiant-format graph emitted by
+            // `ix-assumption-graph-report --prime-radiant-json` (JSON-on-disk
+            // contract from the sibling ix repo) and adapts the generic
+            // {nodes,edges} envelope into the GovernanceGraph shape the 3D
+            // renderer consumes. Verdict → healthStatus drives node color;
+            // `contradicts` edges render as red `lolli` beams.
+            server.middlewares.use('/dev-data/assumption', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const ixRoot = process.env.IX_ROOT || path.resolve(repoRoot, '../ix')
+                const p = path.join(ixRoot, 'state/assumptions/prime-radiant.json')
+                if (!existsSync(p)) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: `assumption graph not found at ${p} — run: ix-assumption-graph-report . --prime-radiant-json state/assumptions/prime-radiant.json` }))
+                    return
+                }
+                try {
+                    const ix = JSON.parse(readFileSync(p, 'utf-8'))
+                    const VERDICT_HEALTH: Record<string, string> = { T: 'healthy', P: 'healthy', U: 'unknown', D: 'warning', F: 'error', C: 'contradictory' }
+                    const HEALTH_COLOR: Record<string, string> = { error: '#FF4444', warning: '#FFB300', healthy: '#33CC66', unknown: '#888888', contradictory: '#FF44FF' }
+                    let contradicts = 0
+                    const nodes = (ix.nodes ?? []).map((n: Record<string, unknown>) => {
+                        const tv = String(n.truth_value ?? 'U')
+                        const hs = VERDICT_HEALTH[tv] ?? 'unknown'
+                        const claim = String(n.name ?? '')
+                        return {
+                            id: n.id,
+                            name: claim.length > 60 ? claim.slice(0, 57) + '…' : claim,
+                            type: 'schema',
+                            description: claim,
+                            color: HEALTH_COLOR[hs],
+                            domain: n.type,            // ix node.type is the namespace facet
+                            healthStatus: hs,
+                            filePath: n.path ?? '',
+                            metadata: { truth_value: tv, kind: n.kind, domain: n.domain },
+                        }
+                    })
+                    const edges = (ix.edges ?? []).map((e: Record<string, unknown>, i: number) => {
+                        const isC = e.relation === 'contradicts'
+                        if (isC) contradicts++
+                        return {
+                            id: `e${i}`,
+                            source: e.source,
+                            target: e.target,
+                            type: isC ? 'lolli' : 'policy-persona',
+                            label: e.relation,
+                            weight: isC ? 1.0 : 0.4,
+                        }
+                    })
+                    const denom = nodes.length || 1
+                    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+                    res.end(JSON.stringify({
+                        nodes,
+                        edges,
+                        globalHealth: { resilienceScore: Math.max(0, 1 - contradicts / denom), lolliCount: contradicts, ergolCount: nodes.length, staleness: 0 },
+                        timestamp: new Date().toISOString(),
+                    }))
+                } catch (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: String(err) }))
+                }
+            });
+
             server.middlewares.use('/dev-data/agents', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });

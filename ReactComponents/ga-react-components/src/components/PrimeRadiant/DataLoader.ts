@@ -137,7 +137,11 @@ export function deriveGovernanceHealthStatus(node: GovernanceNode): GovernanceHe
 // ---------------------------------------------------------------------------
 export function applyHealthColors(graph: GovernanceGraph): GovernanceGraph {
   const coloredNodes = graph.nodes.map(node => {
-    const healthStatus = deriveGovernanceHealthStatus(node);
+    // Honor an explicit healthStatus when the source already set one — e.g.
+    // assumption-graph verdicts, including `contradictory`, which the
+    // metric-based derivation below cannot produce. Governance nodes carry no
+    // healthStatus, so they still derive from health metrics as before.
+    const healthStatus = node.healthStatus ?? deriveGovernanceHealthStatus(node);
     return {
       ...node,
       healthStatus,
