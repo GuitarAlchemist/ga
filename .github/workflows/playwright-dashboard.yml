@@ -18,9 +18,19 @@ name: Playwright Dashboard E2E
 #
 # Triggers:
 #   - on push to main (full coverage post-merge)
-#   - on PRs touching the React SPA or the chatbot API (catch dashboard
-#     regressions before merge; PRs hit the live URL — fine for v1 because
-#     PRs don't deploy yet)
+#   - workflow_dispatch (on-demand)
+#
+# NOT on pull_request (removed 2026-05-31). This suite hits a LIVE,
+# non-hermetic target: demos.guitaralchemist.com is a cloudflared tunnel
+# to a local Vite dev server. That means high, variable latency (tests
+# time out at 30s and pass only on retry) and dependence on the local
+# server being up + current. As a required PR check it produced flaky
+# reds uncorrelated with the PR's actual content (e.g. tests for a
+# just-merged feature fail until the local server is restarted). Same
+# class as the replay-and-diff check made dispatch-only in #388. Keep it
+# as a post-merge + on-demand signal until the SPA is built hermetically
+# in-CI (then a pull_request trigger can return). The reachability guard
+# below additionally skips the suite when the live target is fully down.
 #
 # Artifacts:
 #   - state/quality/e2e/dashboard-playwright/<timestamp>.json  (pass/fail per test)
@@ -30,11 +40,6 @@ name: Playwright Dashboard E2E
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'ReactComponents/ga-react-components/**'
-      - 'Apps/GaChatbot.Api/**'
-      - '.github/workflows/playwright-dashboard.yml'
-  pull_request:
     paths:
       - 'ReactComponents/ga-react-components/**'
       - 'Apps/GaChatbot.Api/**'
