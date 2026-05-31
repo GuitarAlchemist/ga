@@ -170,7 +170,7 @@ Demerzel's own equivalent: `governance/demerzel/schemas/capability-registry.json
 
 ---
 
-## Cross-repo follow-ups {#cross-repo-follow-ups}
+## Cross-repo follow-ups
 
 Concrete PRs that would consolidate the loops. Each lives in its own repo and can be authored independently — no flag-day required.
 
