@@ -7,6 +7,15 @@ name: Playwright Dashboard E2E
 # users actually see, with zero CI build burden. Future iteration could move
 # the SPA build in-CI for hermetic isolation.
 #
+# Reachability guard: the suite targets a LIVE deploy. If that deploy is down
+# (cloudflared tunnel off, GaApi stopped), every test fails for an infra
+# reason, not a regression — which used to redden every UI PR for no signal.
+# The "Check live URL reachability" step probes the site first and SKIPS the
+# suite gracefully (job stays green + emits a ::notice::) when it's
+# unreachable. A genuine dashboard regression only fails the job when the
+# site is actually up. Re-run after the deploy is back, or use
+# workflow_dispatch.
+#
 # Triggers:
 #   - on push to main (full coverage post-merge)
 #   - on PRs touching the React SPA or the chatbot API (catch dashboard
@@ -68,7 +77,32 @@ jobs:
           # requires the pnpm action and would change install semantics.
           # First run installs cold; future PR can wire pnpm caching.
 
+      - name: Check live URL reachability
+        id: reach
+        env:
+          PLAYWRIGHT_BASE_URL: https://demos.guitaralchemist.com
+        run: |
+          # The dashboard suite runs against the LIVE deploy (cloudflared
+          # tunnel + GaApi/SPA). When that deploy is down, every test fails
+          # for an infra reason — not a regression — which reddens every UI
+          # PR and the post-merge main run with zero quality signal. Probe
+          # the site first; if it's unreachable, skip the suite gracefully
+          # (green + notice) instead of running Playwright and failing.
+          # Retry a few times to tolerate a cold tunnel.
+          ok=false
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${PLAYWRIGHT_BASE_URL}/test" || echo "000")
+            echo "attempt $i: GET ${PLAYWRIGHT_BASE_URL}/test -> HTTP $code"
+            if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then ok=true; break; fi
+            sleep 5
+          done
+          echo "reachable=$ok" >> "$GITHUB_OUTPUT"
+          if [ "$ok" != "true" ]; then
+            echo "::notice::Live dashboard URL ${PLAYWRIGHT_BASE_URL} is unreachable — skipping the dashboard E2E suite (infra down, not a regression). Re-run once the deploy/tunnel is back up, or trigger via workflow_dispatch."
+          fi
+
       - name: Install Playwright (in isolated temp dir)
+        if: steps.reach.outputs.reachable == 'true'
         run: |
           # Read the @playwright/test version pinned by the React package.json
           # so CI uses the same Playwright as the local dev box.
@@ -83,6 +117,7 @@ jobs:
           npm install --no-audit --no-fund "@playwright/test@${PW_VERSION}"
 
       - name: Install Playwright browsers
+        if: steps.reach.outputs.reachable == 'true'
         run: cd tools/pw && npx playwright install --with-deps chromium
 
       - name: Symlink node_modules into React dir
@@ -92,12 +127,14 @@ jobs:
         # node_modules into ReactComponents/ga-react-components/ lets
         # Node's normal resolver find it without polluting npm state
         # (the symlink is in workspace tmpfs and never touched by git).
+        if: steps.reach.outputs.reachable == 'true'
         run: |
           ln -sfn "$GITHUB_WORKSPACE/tools/pw/node_modules" \
             "$GITHUB_WORKSPACE/ReactComponents/ga-react-components/node_modules"
 
       - name: Run Playwright dashboard suite
         id: pw
+        if: steps.reach.outputs.reachable == 'true'
         env:
           PLAYWRIGHT_BASE_URL: https://demos.guitaralchemist.com
           CI: 'true'
@@ -203,7 +240,7 @@ jobs:
         id: snapshot
 
       - name: Upload Playwright HTML report (on failure)
-        if: always() && steps.pw.outcome != 'success'
+        if: always() && steps.reach.outputs.reachable == 'true' && steps.pw.outcome != 'success'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-dashboard
@@ -234,8 +271,11 @@ jobs:
 
       - name: Fail the job if any tests failed
         # We continue-on-error'd the test step so the snapshot+commit could
-        # run regardless. Now re-surface the failure to mark the workflow red.
-        if: steps.pw.outcome != 'success'
+        # run regardless. Now re-surface the failure to mark the workflow red
+        # — but ONLY when the live URL was reachable. If it was unreachable
+        # the suite was skipped (infra down, not a regression), so the job
+        # stays green with the notice emitted by "Check live URL reachability".
+        if: steps.reach.outputs.reachable == 'true' && steps.pw.outcome != 'success'
         run: |
           echo "::error::Playwright dashboard suite did not pass — see snapshot + report artifacts"
           exit 1
