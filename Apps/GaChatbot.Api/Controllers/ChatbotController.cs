@@ -230,6 +230,12 @@ public sealed class ChatbotController(
     // skill agent handled them. Data source: state/quality/chatbot-qa/
     // golden-traces/<slug>/{_meta.json, run-*.json}.
     //
+    // Fallback: when _meta.json is absent (fresh checkouts + CI — the local
+    // recorder script is the only producer and its output is gitignored),
+    // synthesize the summary from _canonical.json, which IS committed to
+    // git as the curated baseline. Local recorder workflows that produce
+    // _meta.json still win — the canonical fallback only fills the gap.
+    //
     // Cached for 60s to avoid disk scans on every chatbot page load. Reads
     // are best-effort: malformed JSON or missing fields silently drop that
     // entry rather than returning an error.
@@ -272,11 +278,39 @@ public sealed class ChatbotController(
         foreach (var promptDir in Directory.EnumerateDirectories(goldenDir))
         {
             var metaPath = Path.Combine(promptDir, "_meta.json");
-            if (!System.IO.File.Exists(metaPath)) continue;
+            var canonicalPath = Path.Combine(promptDir, "_canonical.json");
 
-            ChatbotQaMeta? meta;
-            try { meta = JsonSerializer.Deserialize<ChatbotQaMeta>(System.IO.File.ReadAllText(metaPath), JsonOptions); }
-            catch { continue; }
+            ChatbotQaMeta? meta = null;
+            if (System.IO.File.Exists(metaPath))
+            {
+                try { meta = JsonSerializer.Deserialize<ChatbotQaMeta>(System.IO.File.ReadAllText(metaPath), JsonOptions); }
+                catch { meta = null; }
+            }
+
+            // Fallback to canonical.json (the committed baseline) when no
+            // local _meta.json is present. Canonical fields cover
+            // promptId/prompt/category/extractedAt; runCount comes from how
+            // many run-*.json files contributed to the baseline.
+            ChatbotCanonicalFallback? canonical = null;
+            if (meta is null && System.IO.File.Exists(canonicalPath))
+            {
+                try { canonical = JsonSerializer.Deserialize<ChatbotCanonicalFallback>(System.IO.File.ReadAllText(canonicalPath), JsonOptions); }
+                catch { canonical = null; }
+            }
+
+            if (meta is null && canonical is null) continue;
+
+            // When falling back to canonical, synthesize a meta shape so the
+            // rest of the loop reads identically.
+            if (meta is null && canonical is not null)
+            {
+                if (string.IsNullOrWhiteSpace(canonical.Prompt)) continue;
+                meta = new ChatbotQaMeta(
+                    PromptId: canonical.PromptId,
+                    Prompt: canonical.Prompt,
+                    Category: canonical.Category,
+                    FirstRecordedAt: canonical.ExtractedAt);
+            }
             if (meta is null || string.IsNullOrWhiteSpace(meta.Prompt)) continue;
 
             var elapsedMsSamples = new List<double>();
@@ -307,12 +341,24 @@ public sealed class ChatbotController(
                 median = elapsedMsSamples[elapsedMsSamples.Count / 2];
             }
 
+            // If no run-*.json files contributed (fresh checkout / canonical
+            // fallback path), derive runCount + agentId from the canonical
+            // baseline so the UI still renders "QA verified" instead of "○
+            // recorded, not yet measured." MedianElapsedMs stays null —
+            // canonical doesn't capture timing.
+            var effectiveRunCount = elapsedMsSamples.Count;
+            if (effectiveRunCount == 0 && canonical is not null)
+            {
+                effectiveRunCount = canonical.RunCount;
+                lastAgent ??= ExtractAgentIdFromCanonicalSteps(canonical.CanonicalSteps);
+            }
+
             var summary = new ChatbotQaSummary(
                 PromptId: meta.PromptId ?? Path.GetFileName(promptDir),
                 Prompt: meta.Prompt,
                 Category: meta.Category,
                 LastValidated: lastRunAt ?? meta.FirstRecordedAt,
-                RunCount: elapsedMsSamples.Count,
+                RunCount: effectiveRunCount,
                 MedianElapsedMs: median,
                 AgentId: lastAgent,
                 Confidence: lastConfidence,
@@ -323,6 +369,26 @@ public sealed class ChatbotController(
             result[NormalizePromptKey(meta.Prompt)] = summary;
         }
         return result;
+    }
+
+    // Walks canonicalSteps[*].invariantAttributes looking for an "agent.id"
+    // (orchestration.answer / orchestration.route / agent.semantic_result
+    // steps carry it). Returns the first match — the canonical pipeline
+    // produces one agent per prompt.
+    private static string? ExtractAgentIdFromCanonicalSteps(List<ChatbotCanonicalStep>? steps)
+    {
+        if (steps is null) return null;
+        foreach (var step in steps)
+        {
+            if (step.InvariantAttributes is null) continue;
+            if (step.InvariantAttributes.TryGetValue("agent.id", out var idElement)
+                && idElement.ValueKind == JsonValueKind.String)
+            {
+                var id = idElement.GetString();
+                if (!string.IsNullOrWhiteSpace(id)) return id;
+            }
+        }
+        return null;
     }
 
     private static string NormalizePromptKey(string prompt) =>
@@ -357,15 +423,19 @@ public sealed class ChatbotController(
     private static string? FindRepoRoot()
     {
         if (_cachedRepoRoot is not null) return _cachedRepoRoot;
-        // Walk up from ContentRootPath looking for .git. Falls back to
-        // Environment.CurrentDirectory which is where `dotnet run` was
-        // invoked (typically the repo root per the runbook).
+        // Walk up from ContentRootPath looking for .git. Accepts both a .git
+        // directory (normal checkout) and a .git file (git worktrees — see
+        // `git worktree add`, which writes a one-line "gitdir: ..." pointer
+        // file at the worktree root). Falls back to Environment.CurrentDirectory
+        // which is where `dotnet run` was invoked (typically the repo root
+        // per the runbook).
         foreach (var start in new[] { Environment.CurrentDirectory, AppContext.BaseDirectory })
         {
             var dir = new DirectoryInfo(start);
             while (dir is not null)
             {
-                if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+                var gitPath = Path.Combine(dir.FullName, ".git");
+                if (Directory.Exists(gitPath) || System.IO.File.Exists(gitPath))
                 {
                     _cachedRepoRoot = dir.FullName;
                     return _cachedRepoRoot;
@@ -439,6 +509,23 @@ internal sealed record ChatbotQaResponse(
     string? AgentId,
     double? Confidence,
     double? ElapsedMs);
+
+// Minimal projection of _canonical.json — only the fields BuildQaSummary
+// needs when _meta.json is absent. Canonical files always carry promptId,
+// prompt, category, runCount, extractedAt; canonicalSteps is mined for
+// agent.id. Schema source: Scripts/record-golden-traces.ps1.
+internal sealed record ChatbotCanonicalFallback(
+    string? PromptId,
+    string? Prompt,
+    string? Category,
+    int RunCount,
+    DateTimeOffset? ExtractedAt,
+    List<ChatbotCanonicalStep>? CanonicalSteps);
+
+internal sealed record ChatbotCanonicalStep(
+    string? Name,
+    string? Status,
+    Dictionary<string, JsonElement>? InvariantAttributes);
 
 public sealed class ChatRequest
 {

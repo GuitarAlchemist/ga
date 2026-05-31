@@ -217,7 +217,13 @@ state/quality/dsl-eval/[0-9]*-soak-results.json
 # baseline. Re-record locally when needed. Dominator analysis runs offline
 # against whatever's currently on disk.
 state/quality/chatbot-qa/golden-traces/**/run-*.json
-state/quality/chatbot-qa/golden-traces/**/_canonical.json
+# _meta.json is produced only by the local recorder script and would churn
+# on every recording run — keep it ignored so contributors don't fight it.
+state/quality/chatbot-qa/golden-traces/**/_meta.json
+# Note: _canonical.json IS tracked — it's the curated baseline that the
+# /api/chatbot/qa-summary endpoint falls back to when no local _meta.json
+# is present (fresh checkouts + CI). Regenerable but stable enough to
+# commit. See ChatbotController.BuildQaSummary().
 # ix-ai-annotations extractor output — committed so the dashboard at
 # /test#dev/annotations always has data without requiring a local extractor
 # run. Regenerate via:

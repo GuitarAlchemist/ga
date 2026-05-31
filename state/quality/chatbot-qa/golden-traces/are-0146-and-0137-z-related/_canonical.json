@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "promptId": "are-0146-and-0137-z-related",
+  "prompt": "Are 0146 and 0137 z-related",
+  "category": "operations",
+  "runCount": 1,
+  "extractedAt": "2026-05-16T05:15:05Z",
+  "canonicalSteps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "invariantAttributes": {
+        "chat.mode": "full",
+        "history.turn_count": 0,
+        "gen_ai.operation.name": "chat"
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "algebra",
+        "response.length": 99,
+        "grounding.source": "ix-compatible",
+        "routing.method": "ix-algebra",
+        "timeout.seconds": 180,
+        "routing.confidence": 0.9941786,
+        "candidate.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "algebra",
+        "routing.method": "ix-algebra",
+        "routing.confidence": 0.9941786
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "algebra",
+        "response.length": 99,
+        "voicing.diagram.count": 0,
+        "grounding.source": "ix-compatible",
+        "candidate.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "invariantAttributes": {
+        "notation.vextab.added_count": 0,
+        "notation.renderer": "vexflow",
+        "notation.format": "vextab",
+        "notation.diagram.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "invariantAttributes": {
+        "response.length": 99,
+        "response.has_vextab": false
+      },
+      "rangeAttributes": {}
+    }
+  ]
+}
