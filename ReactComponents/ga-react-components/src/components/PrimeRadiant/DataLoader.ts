@@ -502,7 +502,11 @@ interface AlgedonicRecord {
   source?: string;
   nodeId?: string;
 }
-type AlgedonicResponse = AlgedonicRecord[] | { signals?: AlgedonicRecord[] } | { data?: AlgedonicRecord[] };
+type AlgedonicResponse =
+  | AlgedonicRecord[]
+  | { signals?: AlgedonicRecord[] }
+  | { data?: AlgedonicRecord[] }
+  | { unacked?: AlgedonicRecord[]; top3?: AlgedonicRecord[] };
 
 // Path normalization — case-insensitive, forward-slash, no leading slash
 function normalizePath(p: string): string {
@@ -580,6 +584,11 @@ export async function enrichNodesWithDevData(graph: GovernanceGraph): Promise<Go
     if (Array.isArray(raw)) algedonicRecords = raw;
     else if ('signals' in raw && Array.isArray(raw.signals)) algedonicRecords = raw.signals;
     else if ('data' in raw && Array.isArray(raw.data)) algedonicRecords = raw.data;
+    // /dev-data/algedonic is projected by vite.config.ts projectAlgedonic() as
+    // { unacked, top3 } — use the full unacked list (the 24h filter below
+    // narrows it) so the algedonic channel populates from dev-data, not just
+    // from SignalR. Without this branch the channel silently stays empty.
+    else if ('unacked' in raw && Array.isArray(raw.unacked)) algedonicRecords = raw.unacked;
   }
   const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
   algedonicRecords = algedonicRecords.filter(s => {
