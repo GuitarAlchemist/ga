@@ -193,6 +193,66 @@ public class DefaultRoutingHintProviderTests
             $"progressionmood should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
     }
 
+    // Progression-completion (continuation) — added 2026-05-31. recall was 0.60;
+    // pc-3/7/9/10 were stolen by keyid/commontones/grothendieckparse/diatonic.
+    [TestCase("complete this: C Am F")]
+    [TestCase("next chord after Dm7 G7")]
+    [TestCase("what resolves Fmaj7 best")]
+    [TestCase("chord after V in a major key")]
+    [TestCase("what chord comes next after C Am F")]
+    [TestCase("suggest a chord to finish this progression")]
+    [TestCase("predict the next chord in I V vi")]
+    [TestCase("I have C G — what should follow")]
+    public void ProgressionCompletion_PositiveExamples_BoostCompletionIntent(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressioncompletion"), Is.True,
+            $"Expected skill.progressioncompletion boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+        Assert.That(deltas["skill.progressioncompletion"], Is.EqualTo(DefaultRoutingHintProvider.BoostMagnitude));
+    }
+
+    // Diatonic-chords hint + scaleinfo over-fire suppression — "harmonized A
+    // minor scale" (dc-8) must boost diatonicchords and must NOT boost scaleinfo
+    // (the harmonized-lookbehind guard), while plain scale queries still boost
+    // scaleinfo (regression guard).
+    [TestCase("harmonized A minor scale",        true)]
+    [TestCase("diatonic chords in C major",      true)]
+    [TestCase("diatonic seventh chords in E minor", true)]
+    public void Diatonic_PositiveExamples_BoostDiatonicIntent(string query, bool _)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.diatonicchords"), Is.True,
+            $"Expected skill.diatonicchords boost for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
+    [Test]
+    public void Scaleinfo_HarmonizedScale_DoesNotBoostScaleinfo_ButPlainScaleStillDoes()
+    {
+        // dc-8: "harmonized A minor scale" is a diatonic query — scaleinfo must
+        // NOT fire (suppressed by the harmonized-lookbehind), diatonic must.
+        var harm = _hints.GetDeltas("harmonized A minor scale");
+        Assert.That(harm.ContainsKey("skill.scaleinfo"), Is.False,
+            "scaleinfo must NOT fire on 'harmonized A minor scale' (over-fire guard).");
+        Assert.That(harm.ContainsKey("skill.diatonicchords"), Is.True,
+            "diatonicchords must fire on 'harmonized A minor scale'.");
+
+        // Regression guard: plain scale queries must still boost scaleinfo.
+        Assert.That(_hints.GetDeltas("notes in C major scale").ContainsKey("skill.scaleinfo"), Is.True);
+        Assert.That(_hints.GetDeltas("A minor scale notes").ContainsKey("skill.scaleinfo"), Is.True);
+    }
+
+    // False-positive guard — descriptive chord/scale prompts must not boost
+    // progressioncompletion.
+    [TestCase("what notes are in Cmaj7")]
+    [TestCase("diatonic chords in C major")]
+    [TestCase("notes in C major scale")]
+    public void ProgressionCompletion_FalsePositiveGuards_DoNotBoost(string query)
+    {
+        var deltas = _hints.GetDeltas(query);
+        Assert.That(deltas.ContainsKey("skill.progressioncompletion"), Is.False,
+            $"progressioncompletion should NOT fire for: \"{query}\". Got: {string.Join(", ", deltas.Keys)}");
+    }
+
     [Test]
     public void EmptyQuery_ReturnsNoDeltas()
     {

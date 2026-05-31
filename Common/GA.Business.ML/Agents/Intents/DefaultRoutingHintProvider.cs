@@ -77,7 +77,12 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
 
         // Scale info — "<key> scale" patterns. Avoids bare "scale" which
         // overlaps with modes / scaleinfo / circle-of-fifths.
-        (new Regex(@"\b(?:[A-G](?:#|b)?\s+(?:major|minor|natural\s+minor|melodic\s+minor|harmonic\s+minor)\s+scale|notes\s+in\s+(?:[A-G](?:#|b)?\s+)?(?:major|minor)\s+scale)\b",
+        // The `(?<!harmoni[sz]ed\s)` guard stops this firing on "harmonized A
+        // minor scale" (dc-8) — that's a diatonic-chords query that happens to
+        // contain the "A minor scale" substring; without the guard scaleinfo
+        // over-fired and stole it (added 2026-05-31, paired with the diatonic
+        // rule above).
+        (new Regex(@"\b(?:(?<!harmoni[sz]ed\s)[A-G](?:#|b)?\s+(?:major|minor|natural\s+minor|melodic\s+minor|harmonic\s+minor)\s+scale|notes\s+in\s+(?:[A-G](?:#|b)?\s+)?(?:major|minor)\s+scale)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.scaleinfo"),
 
@@ -188,6 +193,27 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
         (new Regex(@"\b(?:dark(?:er|en\w*)|bright(?:er|en\w*)|sadder|happier|melanchol\w*|moodier|gloomier|cinematic)\b|\blift\s+the\s+mood\b|\badd\s+tension\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.progressionmood"),
+
+        // Progression completion (continuation) — added 2026-05-31. recall was
+        // 0.60: 4 prompts stolen by keyidentification / commontones /
+        // grothendieckparse / diatonicchords on the chord-list centroid. The
+        // discriminator is the CONTINUATION vocabulary — "next chord", "chord
+        // comes next / after", "complete/finish this progression", "what
+        // resolves", "what comes/should follow", "predict the next" — a
+        // forward-motion ask absent from descriptive chord/key/scale queries.
+        (new Regex(@"\b(?:next\s+chord|chord\s+(?:comes?\s+next|after|to\s+(?:finish|follow))|comes?\s+next|complete\s+(?:this|the)\b|finish\s+(?:this\s+)?(?:progression|chord)|what\s+(?:comes?\s+(?:next|after)|should\s+(?:come|follow))|what\s+resolves?|predict\s+the\s+next)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.progressioncompletion"),
+
+        // Diatonic chords — added 2026-05-31. Anchored on "diatonic" and the
+        // "harmoniz(e|ed)" verb (harmonizing a scale = its diatonic chords).
+        // Recovers dc-8 "harmonized A minor scale", which scaleinfo was stealing
+        // (its hint fired on the "A minor scale" substring — now suppressed by a
+        // negative-lookbehind on the scaleinfo rule below). Both tokens are
+        // diatonic-specific; no English homonyms in a music context.
+        (new Regex(@"\b(?:diatonic|harmoni[sz]e[sd]?|harmoni[sz]ing)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.diatonicchords"),
 
         // Capo — added 2026-05-14 to close BACKLOG dealbreaker #3. Anchored on
         // the literal "capo" token (music-unambiguous — no English homonyms
