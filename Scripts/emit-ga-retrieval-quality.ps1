@@ -279,6 +279,7 @@ if ($Stdout) {
                 $extra.value_unknown    = $true
             }
             $ledgerArgs = @{
+                RepoRoot     = $repoRoot
                 Source       = 'ga-retrieval'
                 Domain       = 'chatbot'
                 Decision     = $ledgerDecision

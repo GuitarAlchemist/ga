@@ -1514,8 +1514,12 @@ function devDataPlugin(): Plugin {
                             filtered = filtered.filter(e => Date.parse(e.run_at) >= since);
                         }
                     }
-                    // Newest-first, then limit
-                    filtered.sort((a, b) => b.run_at.localeCompare(a.run_at));
+                    // Newest-first, then limit. Sort by parsed epoch (not
+                    // localeCompare on the raw string) so RFC3339 timestamps
+                    // with differing offsets (Z vs +02:00) order chronologically
+                    // rather than lexically — otherwise older rows can surface
+                    // as "newest" and hide recent ones before the slice.
+                    filtered.sort((a, b) => (Date.parse(b.run_at) || 0) - (Date.parse(a.run_at) || 0));
                     const top = filtered.slice(0, limit);
 
                     // Aggregate counts (over filtered, pre-limit so the
