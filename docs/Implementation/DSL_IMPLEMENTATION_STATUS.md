@@ -267,13 +267,13 @@ Created full Language Server Protocol implementation:
 
 ## 🔗 Related Documentation
 
-- [MUSIC_THEORY_DSL_PROPOSAL.md](MUSIC_THEORY_DSL_PROPOSAL.md) - Original proposal
-- [TARS_DSL_ANALYSIS_SUMMARY.md](TARS_DSL_ANALYSIS_SUMMARY.md) - TARS analysis
-- [DSL_QUICK_START.md](DSL_QUICK_START.md) - Quick start guide
-- [ChordProgression.ebnf](../Common/GA.MusicTheory.DSL/Grammars/ChordProgression.ebnf) - Chord progression grammar
-- [FretboardNavigation.ebnf](../Common/GA.MusicTheory.DSL/Grammars/FretboardNavigation.ebnf) - Fretboard navigation grammar
-- [ScaleTransformation.ebnf](../Common/GA.MusicTheory.DSL/Grammars/ScaleTransformation.ebnf) - Scale transformation grammar
-- [GrothendieckOperations.ebnf](../Common/GA.MusicTheory.DSL/Grammars/GrothendieckOperations.ebnf) - Grothendieck operations grammar
+- MUSIC_THEORY_DSL_PROPOSAL.md - Original proposal
+- TARS_DSL_ANALYSIS_SUMMARY.md - TARS analysis
+- DSL_QUICK_START.md - Quick start guide
+- ChordProgression.ebnf - Chord progression grammar
+- FretboardNavigation.ebnf - Fretboard navigation grammar
+- ScaleTransformation.ebnf - Scale transformation grammar
+- GrothendieckOperations.ebnf - Grothendieck operations grammar
 
 ---
 

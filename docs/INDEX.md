@@ -4,7 +4,7 @@ Welcome to the Guitar Alchemist documentation! This index helps you navigate all
 
 ## 📚 Documentation Structure
 
-### [Architecture](./Architecture/)
+### [Architecture](./architecture/)
 Core system design, modular architecture, and structural decisions.
 - **MODULAR_RESTRUCTURING_PLAN.md** - Layered architecture (5 layers)
 - **MODULAR_RESTRUCTURING_PROGRESS.md** - Current restructuring status
@@ -76,7 +76,7 @@ Testing strategies, coverage, and test documentation.
 - **API_INTEGRATION_TESTS_COMPLETE.md** - API test status
 - **HuggingFace-Testing-Summary.md** - HuggingFace testing
 
-### [Roadmap](./Roadmap/)
+### Roadmap
 Future plans, roadmaps, and upcoming features.
 - **GUITAR_ALCHEMIST_ROADMAP_EPICS_AND_STORIES.md** - ⭐ **NEW** - Comprehensive roadmap with 29 stories across 4 phases
 - **QUARTERLY_ROADMAP_2026.md** - ⭐ **NEW** - Detailed quarterly breakdown for 2026
@@ -93,7 +93,7 @@ Reference materials, specifications, and technical details.
 - **Foundations of diatonic theory.pdf** - Music theory reference
 - **TuningChart.pdf** - Guitar tuning reference
 
-### [Examples](./Examples/)
+### Examples
 Code examples, demos, and sample implementations.
 - **Html Examples/** - HTML/JavaScript examples
 - **Grammars/** - Grammar examples
@@ -104,7 +104,7 @@ Code examples, demos, and sample implementations.
 → Start with [QUICK_START_AFTER_RESTART.md](./Guides/QUICK_START_AFTER_RESTART.md)
 
 **Understanding Architecture?**
-→ Read [MODULAR_RESTRUCTURING_PLAN.md](./Architecture/MODULAR_RESTRUCTURING_PLAN.md)
+→ Read MODULAR_RESTRUCTURING_PLAN.md
 
 **Setting Up Locally?**
 → Follow [MongoDB-Local-Setup.md](./Configuration/MongoDB-Local-Setup.md)

@@ -296,9 +296,9 @@ Apps/
 
 ## Related Documentation
 
-- [DOMAIN_CONTEXT_PROPOSAL.md](DOMAIN_CONTEXT_PROPOSAL.md) - Original design proposal
+- DOMAIN_CONTEXT_PROPOSAL.md - Original design proposal
 - [DOMAIN_CONFIG_ARCHITECTURE.md](DOMAIN_CONFIG_ARCHITECTURE.md) - Domain vs Config layers
-- [DOMAIN_ARCHITECTURE_REVIEW.md](DOMAIN_ARCHITECTURE_REVIEW.md) - Overall domain review
+- DOMAIN_ARCHITECTURE_REVIEW.md - Overall domain review
 
 ---
 
