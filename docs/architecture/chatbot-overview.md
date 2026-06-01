@@ -18,7 +18,7 @@ docs and summarizes the current runtime shape.
 - Current execution roadmap:
   [../plans/2026-05-07-chatbot-roadmap.md](../plans/2026-05-07-chatbot-roadmap.md)
 - Skills / `ga_dsl_eval` / F# closure-registry design:
-  [../plans/2026-05-06-skills-orchestration-architecture.md](../plans/2026-05-06-skills-orchestration-architecture.md)
+  [../plans/2026-05-06-skills-orchestration-architecture.md](../plans/parked/2026-05-06-skills-orchestration-architecture.md)
 - Long-term OPTIC-K / wavelet / spectral-RAG vision:
   [../chatbot/Chatbot_Technical_Roadmap.md](../chatbot/Chatbot_Technical_Roadmap.md)
 

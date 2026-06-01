@@ -469,9 +469,9 @@ Transition Probabilities → Top K Next Shapes
 
 ## 📖 Related Documentation
 
-- **[ADVANCED_MATHEMATICS.md](../Common/GA.Business.Core/Fretboard/Shapes/ADVANCED_MATHEMATICS.md)** - Overview of all 9 techniques
+- **ADVANCED_MATHEMATICS.md** - Overview of all 9 techniques
 - **[INTELLIGENT_BSP_AND_AI_GUIDE.md](INTELLIGENT_BSP_AND_AI_GUIDE.md)** - Detailed BSP and AI guide
-- **[GPU_ACCELERATION_COMPLETE.md](GPU_ACCELERATION_COMPLETE.md)** - GPU acceleration guide
+- **GPU_ACCELERATION_COMPLETE.md** - GPU acceleration guide
 
 ---
 

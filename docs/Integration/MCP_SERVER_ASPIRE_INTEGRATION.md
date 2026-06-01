@@ -187,7 +187,7 @@ var anotherMcpServer = builder.AddProject("another-mcp-server", @"..\Path\To\Ser
 ## Related Documentation
 
 - [Aspire Documentation](https://learn.microsoft.com/en-us/dotnet/aspire/)
-- [MCP Server Documentation](../GaMcpServer/README_WEB_INTEGRATION.md)
-- [DevOps Guide](DEVOPS_COMPLETE.md)
-- [Developer Guide](DEVELOPER_GUIDE.md)
+- MCP Server Documentation
+- DevOps Guide
+- Developer Guide
 
