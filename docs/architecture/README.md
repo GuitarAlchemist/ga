@@ -2,24 +2,26 @@
 title: Guitar Alchemist — Architecture
 scope: Master index for the GA solution architecture. Links to subsystem detail docs and the latest audit.
 status: authoritative
-last_verified: 2026-05-12
+last_verified: 2026-05-31
 ---
 
 # Guitar Alchemist — Architecture
 
-Authoritative entry point for understanding what runs, what stores data, what serves chat, and what is wired into what. Detail lives in the six subsystem docs linked below; this file is an index, a status snapshot, and a small set of conventions.
+Authoritative entry point for understanding what runs, what stores data, what serves chat, and what is wired into what. This file is an index, a status snapshot, and a small set of conventions; detail lives in the topic docs under [Document index](#document-index).
 
-If a section here disagrees with a subsystem doc, the subsystem doc wins (it was verified more recently against the code). If a subsystem doc disagrees with the running code, the code wins — open an issue and update the doc.
+If a section here disagrees with a topic doc, the topic doc wins (it was verified more recently against the code). If a topic doc disagrees with the running code, the code wins — open an issue and update the doc.
+
+> **Index accuracy note (2026-05-31).** This index was reconciled against the files that actually exist in `docs/architecture/`. The earlier version linked to `data-storage.md`, `rag-pipeline.md`, `frontends.md`, and `llm-providers.md`, none of which were ever written — every link 404'd. They are now listed under [Planned docs](#planned-docs-not-yet-written) instead of as broken links. Until they exist, [audit-2026-04-25.md](audit-2026-04-25.md) is the fullest inventory of data stores, the RAG pipeline, frontends, and providers.
 
 ## How to use these docs
 
-- **New to the codebase?** Read this file top-to-bottom, then `apps-and-processes.md`, then whichever subsystem you're touching.
-- **Making a change?** Find the relevant subsystem doc and update the `last_verified` date if you confirm or correct anything.
-- **Adding a new subsystem doc?** Use kebab-case (`my-subsystem.md`), include the standard frontmatter, and add a row in the index below. Do not create new SCREAMING_SNAKE files at this level — the legacy ones are pending sweep (see audit).
+- **New to the codebase?** Read this file top-to-bottom, then [apps-and-processes.md](apps-and-processes.md) and [chatbot-overview.md](chatbot-overview.md), then whichever topic you're touching.
+- **Making a change?** Find the relevant topic doc and update its `last_verified` date if you confirm or correct anything.
+- **Adding a new doc?** Use kebab-case (`my-topic.md`), include the standard frontmatter (see [Conventions](#conventions)), add a row in the [Document index](#document-index), and verify the link resolves before committing. Do not create new SCREAMING_SNAKE files at this level — the legacy ones are pending sweep (see audit).
 
 ## Layered architecture (recap)
 
-Five-layer strict bottom-up dependency model, per `CLAUDE.md`:
+Five-layer strict bottom-up dependency model, per `CLAUDE.md` (full detail in [layers.md](layers.md)):
 
 1. **Core** — pure primitives (Note, Interval, Fretboard). `GA.Core`, `GA.Domain.Core`.
 2. **Domain** — logic, YAML, BSP. `GA.Business.Core`, `GA.Business.Config`, `GA.BSP.Core`.
@@ -27,20 +29,32 @@ Five-layer strict bottom-up dependency model, per `CLAUDE.md`:
 4. **AI/ML** — embeddings, vector search, RAG, OPTIC-K schema. `GA.Business.ML`.
 5. **Orchestration** — `GA.Business.Core.Orchestration`, `GA.Business.Assets`, `GA.Business.Intelligence`.
 
-Apps live in `Apps/`; AI code in layer 4; orchestration in layer 5; never in lower layers. Detail of who-uses-what is in `apps-and-processes.md`.
+Apps live in `Apps/`; AI code in layer 4; orchestration in layer 5; never in lower layers. Detail of who-uses-what is in [apps-and-processes.md](apps-and-processes.md).
 
-## Subsystem index
+## Document index
 
-| Doc | Scope | One-line state |
+These docs exist in `docs/architecture/` today (status reflects each doc's own frontmatter):
+
+| Doc | Scope | Status |
 |---|---|---|
-| [apps-and-processes.md](apps-and-processes.md) | Every runnable .NET app, frontend, microservice, external dep | 19 .NET apps, 4 frontends, 13 external services; many half-built or referenced-but-deleted |
-| [chatbot-overview.md](chatbot-overview.md) | Short onboarding map for the chatbot runtime, roadmap, and skill/DSL architecture | Current first read for engineers touching chatbot work |
-| [chatbot-claude-handoff.md](chatbot-claude-handoff.md) | Prompt-ready context for Claude Code / coding agents before chatbot changes | Use for agent handoffs and long-running chatbot tasks |
-| [chat-surfaces.md](chat-surfaces.md) | All chat/agent entry points (REST, SignalR, GraphQL, agents, IChatService) | Multiple live chat surfaces: Nebula canonical, public demo via GaApi SignalR, AG-UI/REST parallel surfaces |
-| [data-storage.md](data-storage.md) | OPTIC-K mmap, MongoDB collections, FalkorDB, Qdrant, config YAMLs | OPTK + 20 Mongo collections; 4 RAG collections registered but never populated; Qdrant orphaned |
-| [rag-pipeline.md](rag-pipeline.md) | Voicing-grounded chat, knowledge-grounded chat, partitioned RAG, agent grounding | One live RAG path (voicings via OPTK); knowledge-grounded path scaffolded but not wired |
-| [frontends.md](frontends.md) | React, Angular, Blazor (none, actually), CLIs, MCP servers | ga-client React is the only verified-live UI; "GaChatbot" is a console REPL, the Blazor app's source is gone |
-| [llm-providers.md](llm-providers.md) | IChatClient, IChatService, embeddings, TTS, selection rules | Three parallel chat abstractions in flight (MEAI IChatClient, legacy IChatService, raw HTTP in NebulaSidekick) |
+| [apps-and-processes.md](apps-and-processes.md) | Inventory of every runnable .NET app, frontend, microservice, external dep | authoritative (2026-04-25) |
+| [chatbot-overview.md](chatbot-overview.md) | Onboarding map for the chatbot runtime, roadmap, and skill/DSL architecture | authoritative (2026-05-12) |
+| [chatbot-claude-handoff.md](chatbot-claude-handoff.md) | Prompt-ready context for Claude Code / coding agents before chatbot changes | authoritative (2026-05-12) |
+| [chat-surfaces.md](chat-surfaces.md) | All chat/agent entry points (REST, SignalR, GraphQL, agents, IChatService) and the host that serves each | **authoritative (2026-05-13)** |
+| [layers.md](layers.md) | The five-layer dependency model in detail | living |
+| [cherny-loops-cross-repo.md](cherny-loops-cross-repo.md) | Cherny self-improvement loops across ga / ix / Demerzel / tars | living |
+| [audit-2026-04-25.md](audit-2026-04-25.md) | Keep/Consolidate/Delete decision table — apps, data stores, frontends, providers | draft |
+
+(`DOMAIN_SCHEMA.md` is a legacy SCREAMING_SNAKE file pending the rename sweep; not part of the canonical kebab-case set.)
+
+### Planned docs (not yet written)
+
+These per-subsystem deep-dives were intended but **do not exist yet** — do not link to these paths until the files exist. Until then, [audit-2026-04-25.md](audit-2026-04-25.md) and [apps-and-processes.md](apps-and-processes.md) cover this ground:
+
+- `data-storage.md` — OPTIC-K mmap, MongoDB collections, FalkorDB, Qdrant, config YAMLs.
+- `rag-pipeline.md` — voicing-grounded + knowledge-grounded chat, partitioned RAG, agent grounding.
+- `frontends.md` — React, Angular, CLIs, MCP servers.
+- `llm-providers.md` — IChatClient, IChatService, embeddings, TTS, selection rules.
 
 ## High-level process topology
 
@@ -85,20 +99,20 @@ flowchart LR
   api --> falkor
 ```
 
-## Status Snapshot (verified 2026-05-12)
+## Status snapshot
 
-What's actually running and answering requests today:
+For the authoritative, code-verified breakdown of which chat surface is served by which host, see **[chat-surfaces.md](chat-surfaces.md)** (verified 2026-05-13) — it supersedes any chat-host claim previously inlined here. In summary:
 
-- **LIVE and serving traffic**: `GaApi /api/nebula/chat` for Harmonic Nebula, `GaApi /hubs/chatbot` for the public `/chatbot/` demo, AG-UI `/api/chatbot/agui/stream` for ga-client / Prime Radiant surfaces, `ga-client`, MongoDB, Ollama, and OPTIC-K mmap loaded by GaApi.
+- **LIVE and serving traffic**: `ga-client`, `GaApi`, MongoDB, Ollama, and the OPTIC-K mmap loaded by GaApi. The chatbot surfaces (Harmonic Nebula, the public `/chatbot/` demo, AG-UI streaming) are enumerated with their exact hosts in [chat-surfaces.md](chat-surfaces.md).
 - **CANONICAL SUBSTRATE**: `IChatApplicationService` in `GA.Business.Core.Orchestration`, wrapped by trace/readiness/fallback decorators and backed by `ProductionOrchestrator`.
-- **PARALLEL / FROZEN**: `GaChatbot.Api` is compiled but not the deployed public chatbot host; `GA.AI.Service` is frozen and should not receive new code without a concrete deploy reason.
-- **DRIFT / CLEANUP CANDIDATES**: `POST /api/chatbot/ask` is still a dangling Prime Radiant caller with no server route; `ChatbotSessionOrchestrator.GetResponseAsync` / `StreamResponseAsync` remain registered but not on the canonical request path.
+- **PARALLEL / FROZEN**: `GA.AI.Service` is frozen and should not receive new code without a concrete deploy reason. The `GaApi` vs `GaChatbot.Api` host question is tracked in [chat-surfaces.md](chat-surfaces.md).
+- **DRIFT / CLEANUP CANDIDATES**: see the decision table in [audit-2026-04-25.md](audit-2026-04-25.md).
 
-A more granular Keep / Consolidate / Delete decision table lives in [audit-2026-04-25.md](audit-2026-04-25.md).
+> The public demo is fronted by `demos.guitaralchemist.com`, a cloudflared tunnel to local dev servers — not a hermetic deploy. Treat its availability as best-effort.
 
 ## Conventions
 
-**Filenames in this directory:** kebab-case for canonical docs (`apps-and-processes.md`). The remaining SCREAMING_SNAKE files in this folder are legacy and pending the sweep recommended in the audit.
+**Filenames in this directory:** kebab-case for canonical docs (`chat-surfaces.md`). The remaining SCREAMING_SNAKE files (e.g. `DOMAIN_SCHEMA.md`) are legacy and pending the sweep recommended in the audit.
 
 **Frontmatter on every doc:**
 ```yaml
@@ -115,15 +129,11 @@ parent: docs/architecture/README.md     # optional, for child docs
 
 **File paths in claims:** forward slashes, repo-relative (e.g. `Apps/ga-server/GaApi/Program.cs:42`).
 
-**Cross-doc references:** relative markdown links (`[chat-surfaces.md](chat-surfaces.md)`).
+**Cross-doc references:** relative markdown links (`[chat-surfaces.md](chat-surfaces.md)`) — and verify the target exists before committing (the previous index linked four files that were never written). `Scripts/audit-doc-links.py` scans the whole `docs/` tree for broken internal links.
 
-**No recommendations in subsystem docs.** Recommendations and decisions live in audit docs (dated `audit-YYYY-MM-DD.md`).
+**No recommendations in topic docs.** Recommendations and decisions live in audit docs (dated `audit-YYYY-MM-DD.md`).
 
-**Freshness check:** run `pwsh Scripts/check-architecture-docs.ps1` from the
-repo root to verify required frontmatter on canonical kebab-case architecture
-docs and flag docs older than 60 days unless marked stale. Legacy
-SCREAMING_SNAKE files are skipped until the architecture sweep retires or
-renames them.
+**Freshness check:** run `pwsh Scripts/check-architecture-docs.ps1` from the repo root to verify required frontmatter on canonical kebab-case architecture docs and flag docs older than 60 days unless marked stale. Legacy SCREAMING_SNAKE files are skipped.
 
 ## Out of scope for this index
 
@@ -135,5 +145,5 @@ renames them.
 ## See also
 
 - `CLAUDE.md` — project conventions, build commands, the layered architecture rule.
-- `docs/architecture/audit-2026-04-25.md` — current Keep/Consolidate/Delete decisions.
+- [audit-2026-04-25.md](audit-2026-04-25.md) — current Keep/Consolidate/Delete decisions and the fullest app/data/frontend/provider inventory.
 - `docs/methodology/` — invariants, methodologies that constrain architecture.
