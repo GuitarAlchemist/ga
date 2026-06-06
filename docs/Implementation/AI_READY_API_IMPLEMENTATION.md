@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** References 'GuitarAlchemistChatbot' app — current code uses 'GaChatbot' and 'GaChatbot.Api' (not 'GuitarAlchemistChatbot') Some specifics below no longer match the code.
+
 ﻿# AI-Ready API Implementation Guide
 
 ## Overview

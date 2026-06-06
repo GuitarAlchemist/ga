@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Optimization analysis dated 2025-11-01 with 23 opportunities. Claims GpuGrothendieckService exists at 'Apps/ga-server/GaApi/Services/' (WRONG PATH — should be Common/GA.Domain.Services/Atonal/Grothendieck/). Some specifics below no longer match the code.
+
 # 🚀 Advanced Optimization Opportunities
 
 **Comprehensive analysis of Channels, TPL Dataflow, Rx, Backpressure, and GC optimization opportunities**

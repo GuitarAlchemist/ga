@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Refs 'GA.Data.MongoDB' project — does NOT exist; only GA.Data.EntityFramework exists Some specifics below no longer match the code.
+
 ﻿# Data Layer Unification Strategy
 
 **Purpose**: Create clear boundaries between domain models, data models, and DTOs with mapping strategies to eliminate duplication and confusion.

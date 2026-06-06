@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Describes 'complete implementation' of BSP-style scene loading with server at 'http://localhost:5190' and client at 'http://localhost:3000' Verify against the current code before relying on this doc.
+
 # ✅ Three.js BSP Loader System - Complete Implementation
 
 A comprehensive **BSP-style scene loading system** for Three.js with **server-side scene generation**, **MongoDB persistence**, and **multi-platform support** (Three.js WebGPU + Godot 4).

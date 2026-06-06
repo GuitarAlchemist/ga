@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Line 2: 'Status: Production Ready' - claims operational state but no verification of working code Verify against the current code before relying on this doc.
+
 # Musical Session Context - Implementation Complete ✅
 
 **Date**: January 2026  
