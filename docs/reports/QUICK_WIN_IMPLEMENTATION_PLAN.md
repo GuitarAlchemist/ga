@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Comprehensive implementation plan for 5 quick wins referencing 'Apps/GuitarAlchemistChatbot' throughout (lines 18, 99, 232, 316) Some specifics below no longer match the code.
+
 ﻿# Quick Win Implementation Plan - Guitar Alchemist Chatbot
 
 Based on the codebase analysis, here are immediately implementable enhancements.

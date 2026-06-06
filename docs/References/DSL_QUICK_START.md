@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Refs 'GA.MusicTheory.DSL' project - confirmed present at Common/GA.Business.DSL (glob found matches, DLL in bin/) Verify against the current code before relying on this doc.
+
 # Music Theory DSL - Quick Start Guide
 
 **Status**: Proposal - Awaiting Approval  

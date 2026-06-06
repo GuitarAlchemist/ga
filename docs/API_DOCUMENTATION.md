@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** References endpoints like 'GET /api/chords', 'GET /api/scales', 'GET /api/fretboard/positions' — generic API contracts not verified as current Some specifics below no longer match the code.
+
 ﻿# API Documentation
 
 ## Overview

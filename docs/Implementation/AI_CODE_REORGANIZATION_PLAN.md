@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Refs GA.Business.Core.AI.Fretboard.SemanticIndexing — but current code shows GA.Business.AI exists with different structure (HandPose, HuggingFace subdirs, not SemanticIndexing) Some specifics below no longer match the code.
+
 ﻿# AI Code Reorganization Plan
 
 ## Problem Statement

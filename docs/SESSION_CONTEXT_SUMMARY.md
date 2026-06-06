@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Line 4: 'Status: ✅ COMPLETE & PRODUCTION READY' - contradicted by line 310 in SESSION_CONTEXT_IMPLEMENTATION.md: 'Build Status: In Progress' Verify against the current code before relying on this doc.
+
 # Musical Session Context - Feature Summary
 
 **Feature**: Musical Session Context for Chatbot Personalization  
