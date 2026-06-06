@@ -1,0 +1,56 @@
+name: Docs Health
+
+# Stops documentation rot from growing. Two gates on every PR that touches docs:
+#   1. Link gate  — NO broken internal links in any live (non-frozen) doc.
+#   2. Code-ref ratchet — docs the PR *touches* must not reference repo paths
+#      (Apps/..., Common/..., *.cs, ...) that don't exist. The pre-existing
+#      backlog in untouched docs is left to the scheduled content audit; this
+#      gate only stops NEW drift in what you edit.
+#
+# Frozen point-in-time records (docs/archive|plans|reports|solutions|history|
+# brainstorms) are exempt — their decayed references are expected history.
+#
+# See docs/methodology/docs-maintenance.md for the full maintenance system.
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'Scripts/audit-doc-links.py'
+      - 'Scripts/audit-doc-code-refs.py'
+      - '.github/workflows/docs-health.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need the base commit for the changed-docs diff
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Link gate — no broken links in live docs
+        run: python Scripts/audit-doc-links.py HEAD --ci
+
+      - name: Code-reference ratchet — changed docs must cite paths that exist
+        shell: bash
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE" ]; then echo "no base sha (dispatch run) — skipping ratchet"; exit 0; fi
+          CHANGED=$(git diff --name-only "$BASE"...HEAD -- 'docs/**/*.md' | tr '\n' ' ')
+          echo "Changed docs: ${CHANGED:-<none>}"
+          if [ -z "$CHANGED" ]; then echo "No changed docs — nothing to ratchet."; exit 0; fi
+          python Scripts/audit-doc-code-refs.py --files $CHANGED
