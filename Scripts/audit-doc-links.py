@@ -3,12 +3,18 @@
 
 Reports relative links whose target file does not exist in the tree.
 Reads file content from git (so it audits the ref, not the working copy).
-Usage: python Scripts/audit-doc-links.py [ref]   (default ref: origin/main)
+Usage: python Scripts/audit-doc-links.py [ref] [--ci]
+  ref   : git ref to audit (default: origin/main; in CI use HEAD)
+  --ci  : exit 1 if any LIVE (non-frozen) doc has a broken link (gate mode)
 """
 import subprocess, sys, re, posixpath
 from collections import defaultdict
 
-REF = sys.argv[1] if len(sys.argv) > 1 else "origin/main"
+CI = "--ci" in sys.argv
+_pos = [a for a in sys.argv[1:] if not a.startswith("--")]
+REF = _pos[0] if _pos else "origin/main"
+FROZEN = ("docs/archive/", "docs/plans/", "docs/reports/", "docs/solutions/",
+          "docs/history/", "docs/brainstorms/")
 
 def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8").stdout
@@ -59,3 +65,11 @@ for doc in sorted(broken):
     print(f"\n{doc}")
     for target, resolved in broken[doc]:
         print(f"    BROKEN  [{target}]  ->  {resolved}")
+
+if CI:
+    live_broken = [d for d in broken if not d.startswith(FROZEN)]
+    if live_broken:
+        print(f"\n::error::{sum(len(broken[d]) for d in live_broken)} broken link(s) in "
+              f"{len(live_broken)} live doc(s). Fix or delinkify before merge.")
+        sys.exit(1)
+    print("\nOK: no broken links in live docs.")
