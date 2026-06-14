@@ -67,8 +67,13 @@ public class RoutingEvalHarness
     // metric the report's two-step-OOS-gate recommendation needs a baseline for.
     private const string OosSentinel = "__none__";
 
+    // Override the labeled prompt set via GA_EVAL_DATA_PATH (absolute path) so the
+    // harness can be run against an independent held-out set (e.g. the Hermes
+    // Spike-A heldout-test) without clobbering the checked-in corpus. Mirrors the
+    // GA_EMBED_* / GA_EVAL_USE_STUB_REGISTRY override pattern.
     private static readonly string DataPath =
-        Path.Combine(AppContext.BaseDirectory, "Data", "routing-eval-prompts.json");
+        Environment.GetEnvironmentVariable("GA_EVAL_DATA_PATH")
+        ?? Path.Combine(AppContext.BaseDirectory, "Data", "routing-eval-prompts.json");
 
     /// <summary>
     /// Resolves &lt;repo&gt;/state/quality by walking up from the test bin dir
