@@ -197,6 +197,12 @@ todos/
 # OPTIC-K generated index (build artifact, ~660MB)
 **/state/voicings/optick.index
 
+# DuckDB quality analytics layer: the .duckdb is a generated binary materialized
+# from the committed JSON snapshots by analytics/build-views.sql — regenerable,
+# never committed. The build script and README are tracked.
+state/quality/analytics/*.duckdb
+state/quality/analytics/*.duckdb.wal
+
 # Baseline diagnostic artifacts (regenerable)
 state/baseline/embedding-clusters-*.json
 state/baseline-phaseE/embedding-clusters-*.json
