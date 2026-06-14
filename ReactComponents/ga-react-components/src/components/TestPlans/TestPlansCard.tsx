@@ -137,12 +137,16 @@ export const TestPlansCard: React.FC = () => {
       );
     }
     if (cb.degraded || cb.pass_pct == null) {
+      // last_known_good_pass_pct is emitted by run-prompt-corpus.ps1 as a
+      // 0..100 percent (it converts the 0..1 baseline.primary_baseline via
+      // *100 at the producer). Do NOT multiply by 100 here — pass_pct is the
+      // 0..1 fraction; last_known_good_pass_pct is already a percent.
       const lkg = cb.last_known_good_pass_pct;
       return (
         <Typography variant="caption" color="warning.main">
           <SmartToyIcon fontSize="inherit" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
           Chatbot loop: degraded ({cb.degraded_reason ?? 'environment unavailable'})
-          {lkg != null && <> · last known good: {(lkg * 100).toFixed(0)}%</>}
+          {lkg != null && <> · last known good: {lkg.toFixed(0)}%</>}
           {cb.last_run_at && <> · last run {timeAgo(cb.last_run_at)}</>}
         </Typography>
       );

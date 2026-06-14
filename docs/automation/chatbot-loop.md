@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Lines 61-67 (Iron Law): refs `Apps/ga-server/GaApi/Mcp/**` — directory does NOT exist Some specifics below no longer match the code.
+
 # Chatbot development automation — the L2 loop
 
 How Guitar Alchemist iterates on the chatbot using the Boris-Cherny-style

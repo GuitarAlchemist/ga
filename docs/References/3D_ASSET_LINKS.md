@@ -270,6 +270,6 @@ const gemMaterial = new THREE.MeshStandardMaterial({
 ## References
 
 - **ChatGPT Conversation**: "Free Blender models for BSP"
-- **Implementation Plan**: [IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md](IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md)
-- **Summary**: [SUMMARY_MCP_BLENDER_GROTHENDIECK.md](SUMMARY_MCP_BLENDER_GROTHENDIECK.md)
+- **Implementation Plan**: IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md
+- **Summary**: SUMMARY_MCP_BLENDER_GROTHENDIECK.md
 

@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Lines 28-49: References test file 'GA.Business.Core.Tests/Session/SessionContextTests.cs' - no evidence file exists from glob searches Verify against the current code before relying on this doc.
+
 # Regression Testing Strategy for Session Context
 
 ## Overview

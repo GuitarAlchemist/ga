@@ -155,7 +155,7 @@ Already tracked. Re-enables retrieval safely.
 
 Codex's "don't leave a third option dangling" called for either delete or wire-for-a-real-consumer. The full project is bigger than just `ChatController` (8+ controllers covering AI, search, benchmarks, notebooks, tab analysis), so wholesale delete carries reference-value cost. Decision: **firm freeze** with a `DEPRECATED.md` that lists every controller, points at the canonical replacement, and pins hard rules ("do not add new code", "do not re-enable AppHost registration", "do not add ProjectReferences"). `chat-surfaces.md` updated to reflect the freeze. Two named decision triggers tell the next reviewer when to revisit: (a) concrete deploy reason for an AI-workload split, (b) next architecture review concludes reference value has decayed below maintenance cost.
 
-## What this session shipped (8 commits, 2026-05-07)
+## What this session shipped (commit ledger, 2026-05-07 to 2026-05-08)
 
 | Commit | Scope |
 |---|---|

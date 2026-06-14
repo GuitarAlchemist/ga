@@ -11,7 +11,7 @@ permissions:
   checks: write
 
 env:
-  AGENT_BLACKBOX_REF: "v0.1.0-beta.1"
+  AGENT_BLACKBOX_REF: "v0.1.0-beta.2"
   DOTNET_VERSION: "10.0.1xx"
   VERIFY_COMMAND: >-
     dotnet test AllProjects.slnx

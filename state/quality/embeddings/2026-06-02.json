@@ -1,0 +1,20 @@
+{
+  "domain": "embeddings",
+  "emitted_at": "2026-06-02T08:37:47.7358333Z",
+  "timestamp": "2026-06-02T08:37:47.7358333Z",
+  "metric_name": "leak_detection_full_classifier_accuracy",
+  "metric_value": 0.7522,
+  "oracle_status": "warn",
+  "summary": "OPTIC-K index absent on runner — last known good: 0.7522 from 2026-05-16T22:30:00.0000000Z (baseline)",
+  "degraded": true,
+  "degraded_reason": "index_absent_on_runner",
+  "last_known_good_pass_pct": 0.7522,
+  "last_known_good_date": "2026-05-16T22:30:00.0000000Z",
+  "last_known_good_source": "baseline",
+  "problems": [
+    {
+      "code": "INDEX_ABSENT",
+      "message": "state/voicings/optick.index not found or stub (size=0 MB; threshold>100MB). Producer skipped; rebuild via the optick-rebuild skill on a host with the index."
+    }
+  ]
+}

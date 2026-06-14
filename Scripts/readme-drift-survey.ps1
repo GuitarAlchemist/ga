@@ -78,6 +78,10 @@ function Get-DriftStatus([int]$days) {
 }
 
 $now = Get-Date
+# Canonical dashboard envelope fields (oracle_status, metric_*, emitted_at,
+# problems) are added at the end of the survey once counts are known. They
+# are ADDITIVE — the existing `summary` object stays as-is because the
+# readme-drift-sensor.yml workflow reads `$report.summary.total` etc.
 $report = [pscustomobject]@{
     schema_version = 1
     domain         = 'readme-drift'
@@ -151,6 +155,49 @@ foreach ($repo in $Repos) {
         'very-stale' { $report.summary.very_stale++ }
     }
 }
+
+# ── Canonical dashboard envelope (additive; consumed by
+#    ReactComponents/ga-react-components/vite.config.ts `gatherQuality`
+#    and rendered as the readme-drift tile on /test#dev/summary).
+#
+#    Mapping:
+#      very_stale>0 || absent>0 → "error"
+#      stale>0 || borderline>0  → "warn"
+#      else                     → "ok"
+#
+#    `metric_value` is the freshness ratio ok/total (0.0–1.0). `absent`
+#    repos are NOT in the denominator because the survey already classifies
+#    them separately (missing checkout, not stale content).
+$oracleStatus =
+    if ($report.summary.very_stale -gt 0 -or $report.summary.absent -gt 0) { 'error' }
+    elseif ($report.summary.stale -gt 0 -or $report.summary.borderline -gt 0) { 'warn' }
+    else { 'ok' }
+
+$metricValue =
+    if ($report.summary.total -gt 0) {
+        [math]::Round($report.summary.ok / $report.summary.total, 4)
+    } else { 0.0 }
+
+# Build problems list (capped at 50) for any repo that isn't `ok`.
+$problems = @()
+foreach ($r in $report.repos) {
+    if ($r.status -ne 'ok') {
+        $problems += [pscustomobject]@{
+            path   = $r.repo
+            status = $r.status
+        }
+    }
+    if ($problems.Count -ge 50) { break }
+}
+
+# Attach envelope fields at the TOP level (Add-Member is the idiomatic
+# way to extend a pscustomobject without rebuilding it). Order in JSON
+# is insertion order, so they appear after the existing fields.
+$report | Add-Member -NotePropertyName 'emitted_at'   -NotePropertyValue $now.ToUniversalTime().ToString('o')
+$report | Add-Member -NotePropertyName 'metric_name'  -NotePropertyValue 'readme_freshness_ratio'
+$report | Add-Member -NotePropertyName 'metric_value' -NotePropertyValue $metricValue
+$report | Add-Member -NotePropertyName 'oracle_status' -NotePropertyValue $oracleStatus
+$report | Add-Member -NotePropertyName 'problems'     -NotePropertyValue $problems
 
 $json = $report | ConvertTo-Json -Depth 5
 $json

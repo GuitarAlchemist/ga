@@ -461,6 +461,50 @@ if ($Snapshot) {
     $snap | ConvertTo-Json -Depth 4 | Set-Content $snapshotPath -Encoding UTF8
     Write-Host ""
     Write-Host "Wrote trend snapshot to $snapshotPath" -ForegroundColor Cyan
+
+    # ── Unified Quality Gate Ledger (v1) — also emit a row ──
+    # See ix/docs/contracts/2026-05-24-quality-gate-ledger.contract.md.
+    # The per-domain snapshot file above stays as-is (it's the rich detail);
+    # this is the cross-cutting one-row-per-run substrate that
+    # ix_quality_gate_history + the dashboard tile read.
+    try {
+        $ledgerScript = Join-Path $PSScriptRoot 'gate-ledger-write-v1.ps1'
+        if (Test-Path $ledgerScript) {
+            $ledgerArgs = @{
+                Source       = 'chatbot-qa'
+                Domain       = 'chatbot'
+                MetricName   = 'pass_pct'
+                EvidenceKind = 'file'
+                EvidenceRef  = "state/quality/chatbot-qa/$date.json"
+                RepoRoot     = $repoRoot
+            }
+            if ($environmentDegraded) {
+                $ledgerArgs.Decision    = 'skip'
+                $ledgerArgs.MetricValue = if ($null -ne $snap.last_known_good_pass_pct) {
+                    [double]$snap.last_known_good_pass_pct
+                } else { 0.0 }
+                $extraObj = [ordered]@{
+                    value_unknown   = $true
+                    degraded_reason = $snap.degraded_reason
+                }
+                if ($null -ne $snap.last_known_good_pass_pct) {
+                    $extraObj.last_known_good_pass_pct = $snap.last_known_good_pass_pct
+                    $extraObj.last_known_good_date     = $snap.last_known_good_date
+                    $extraObj.last_known_good_source   = $snap.last_known_good_source
+                }
+                $ledgerArgs.ExtraJson = ($extraObj | ConvertTo-Json -Depth 4 -Compress)
+            } else {
+                # pass_pct is 0..100; a useful default threshold is 90.
+                $ledgerArgs.Decision        = if ($overallPassPct -ge 90) { 'pass' } else { 'fail' }
+                $ledgerArgs.MetricValue     = [double]$overallPassPct
+                $ledgerArgs.MetricThreshold = 90.0
+            }
+            & $ledgerScript @ledgerArgs | Out-Null
+        }
+    } catch {
+        Write-Warning "gate-ledger v1 emit failed (snapshot still written): $_"
+    }
+
     if ($environmentDegraded) {
         $lkgPctDisplay = if ($snap.last_known_good_pass_pct -ne $null) { "$($snap.last_known_good_pass_pct)% (from $($snap.last_known_good_date))" } else { "<none on disk>" }
         Write-Host "  DEGRADED: backend unavailable; pass_pct=null; last_known_good=$lkgPctDisplay" -ForegroundColor Yellow

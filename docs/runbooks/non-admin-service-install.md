@@ -44,7 +44,7 @@ Three independent services, each wrapping one process, all running under `NT AUT
 
 | Service | Working dir | Command | Port |
 |---|---|---|---|
-| `GA-Vite-5176` | `Apps/ga-react-components` | `pnpm dev --host --port 5176` | 5176 |
+| `GA-Vite-5176` | `ReactComponents/ga-react-components` | `pnpm dev --host --port 5176` | 5176 |
 | `GA-Api-5232` | `GaApi` | `dotnet run --project GaApi.csproj --no-build --urls http://0.0.0.0:5232` | 5232 |
 | `GA-Chatbot-5252` | `GaChatbot.Api` | `dotnet run --project GaChatbot.Api.csproj --no-build --urls http://0.0.0.0:5252` | 5252 |
 
@@ -63,7 +63,7 @@ Cloudflared is **not** wrapped — it ships its own native Windows service insta
 1. **NSSM installed.** `winget install nssm` (or download from <https://nssm.cc/>).
 2. **Admin PowerShell.** Service registration requires it; the post-install lifecycle does not.
 3. **`AllProjects.sln` built once.** `--no-build` is in the args so the service starts fast; this assumes a prior `dotnet build`.
-4. **pnpm install run once** in `Apps/ga-react-components/` so `node_modules` exists.
+4. **pnpm install run once** in `ReactComponents/ga-react-components/` so `node_modules` exists.
 5. **Cloudflared installed** if you want the public tunnel managed too: `winget install cloudflare.cloudflared`.
 
 ## Service account permissions

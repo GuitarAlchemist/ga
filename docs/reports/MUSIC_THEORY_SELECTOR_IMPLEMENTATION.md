@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Claims MusicTheoryController.cs created at 'Apps/ga-server/GaApi/Controllers/' (line 133) with 4 endpoints Some specifics below no longer match the code.
+
 # Music Theory Selector Implementation
 
 ## 📋 Overview

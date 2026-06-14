@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Refs CloudTextureProvider.tsx component at 'src/components/PrimeRadiant/CloudTextureProvider.tsx' — component does NOT exist; Grep search for 'CloudTextureProvider' and 'useCloudTexture' hooks returns no matches in ReactComponents source Treat as historical; see architecture/README.md (or the topic's current doc) for the up-to-date picture.
+
 # Live Weather Cloud Rendering System
 
 **Date:** 2026-03-27

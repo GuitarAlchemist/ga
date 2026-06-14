@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Dated '2025-01-11' - document is 5+ months old Treat as historical; see [architecture/README.md](architecture/README.md) (or the topic's current doc) for the up-to-date picture.
+
 ﻿# RAG Optimization Review: Fretboard Voicing Analysis
 
 **Date**: 2025-01-11  

@@ -3,38 +3,35 @@
 ## Project Structure & Module Organization
 
 - `AllProjects.slnx` is the umbrella entry point for restore, build, and test.
-- **Core libraries** in `Common/` organized by domain:
-    - `GA.Business.Core` - Core domain primitives (Note, Interval, PitchClass, etc.)
-    - `GA.Business.Core.Harmony` - Chords, scales, progressions, voice leading (NEW - in development)
-    - `GA.Business.Core.Fretboard` - Fretboard-specific logic and analysis (NEW - in development)
-    - `GA.Business.Core.Analysis` - Advanced music theory analysis (spectral, dynamical, topological) (NEW - in
-      development)
-    - `GA.Business.ML` - AI/ML functionality (semantic indexing, LLM, vector search, style learning)
-    - `GA.Business.Core.Orchestration` - High-level workflows (IntelligentBSPGenerator, progression optimization) (NEW -
-      in development)
-    - `GA.BSP.Core` - Low-level BSP algorithms and geometry
-    - `GA.MusicTheory.DSL` - Music theory DSL
-    - `GA.Business.Core.Generated` - Generated code
-    - `GA.Business.Core.Graphiti` - Graphiti visualization
-    - `GA.Business.Core.UI` - UI models and view models
-    - `GA.Business.Core.Web` - Web-specific models
-- **Data integrations**: `GA.Data.MongoDB`, `GA.Data.SemanticKernel.Embeddings`, `GA.Business.Querying`
-- **Runtime apps** in `Apps/`: `ga-server/GaApi`, `GuitarAlchemistChatbot`, `ga-client`
+- **Core libraries** in `Common/`. The authoritative, audited inventory of
+  projects and which app uses what lives in
+  [architecture/apps-and-processes.md](architecture/apps-and-processes.md);
+  the layered dependency model is in
+  [architecture/README.md](architecture/README.md) and
+  [architecture/layers.md](architecture/layers.md). Key projects:
+    - `GA.Business.Core` - core domain logic (chords, scales, voicings, fretboard analysis).
+    - `GA.Domain.Core` / `GA.Domain.Services` - domain primitives and services; harmony lives under `GA.Domain.Core/Theory/Harmony`, fretboard under `GA.Domain.Core/Instruments/Fretboard` and `GA.Domain.Services/Fretboard`.
+    - `GA.Business.ML` - AI/ML (semantic indexing, LLM, vector search, OPTIC-K).
+    - `GA.Business.AI` - AI service integration.
+    - `GA.Business.Core.Orchestration` - high-level chat/agent orchestration (`ProductionOrchestrator`).
+    - `GA.Business.Core.Analysis.Gpu` - GPU-accelerated analysis.
+    - `GA.Business.DSL` - music-theory DSL.
+    - `GA.Business.Graphiti`, `GA.Business.Intelligence`, `GA.Business.Personalization` - supporting domains.
+- **Runtime apps** in `Apps/`: `ga-server/GaApi` (main API + the deployed chatbot's SignalR/REST surfaces), `GaChatbot.Api` (chatbot host), `GaChatbotCli`, `ga-client` (production React bundle). See [architecture/chat-surfaces.md](architecture/chat-surfaces.md) for which host serves which chat surface.
 - **Orchestration**: `AllProjects.AppHost`, `GaCLI`, `GaMcpServer`, and experimental agents under `mcp-servers/`
 - **Frontend sources**: `ReactComponents/ga-react-components`; production bundle in `Apps/ga-client`
 - **Tests** mirror sources under `Tests/**`; supporting research and specs live in `docs/`, `Experiments/`, and `Specs/`
 
-### Modular Architecture (In Progress)
+### Layered Architecture
 
-The project is transitioning from a monolithic `GA.Business.Core` to a modular architecture:
+The codebase follows a five-layer bottom-up dependency model (Core → Domain →
+Analysis → AI/ML → Orchestration). The authoritative description — including
+which concrete projects sit in each layer — is maintained in
+[architecture/README.md](architecture/README.md#layered-architecture-recap)
+and [architecture/layers.md](architecture/layers.md). Defer to those rather
+than duplicating the layer→project mapping here (it drifts otherwise).
 
-- **Layer 1 (Core)**: `GA.Business.Core` - Pure domain models and primitives
-- **Layer 2 (Domain)**: `GA.Business.Core.Harmony`, `GA.Business.Core.Fretboard` - Domain-specific logic
-- **Layer 3 (Analysis)**: `GA.Business.Core.Analysis` - Advanced analysis and theory
-- **Layer 4 (AI)**: `GA.Business.ML` - AI/ML functionality
-- **Layer 5 (Orchestration)**: `GA.Business.Core.Orchestration` - High-level workflows
-
-**Dependency Rule**: Each layer can only depend on layers below it (bottom-up dependency graph).
+**Dependency Rule**: each layer may only depend on layers below it.
 
 **AI Code Location**: All AI-related code (semantic indexing, Ollama services, vector search, ML systems) belongs in
 `GA.Business.ML`, NOT in `GA.Business.Core`.

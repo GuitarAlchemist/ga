@@ -197,6 +197,12 @@ todos/
 # OPTIC-K generated index (build artifact, ~660MB)
 **/state/voicings/optick.index
 
+# DuckDB quality analytics layer: the .duckdb is a generated binary materialized
+# from the committed JSON snapshots by analytics/build-views.sql — regenerable,
+# never committed. The build script and README are tracked.
+state/quality/analytics/*.duckdb
+state/quality/analytics/*.duckdb.wal
+
 # Baseline diagnostic artifacts (regenerable)
 state/baseline/embedding-clusters-*.json
 state/baseline-phaseE/embedding-clusters-*.json
@@ -217,9 +223,19 @@ state/quality/dsl-eval/[0-9]*-soak-results.json
 # baseline. Re-record locally when needed. Dominator analysis runs offline
 # against whatever's currently on disk.
 state/quality/chatbot-qa/golden-traces/**/run-*.json
-state/quality/chatbot-qa/golden-traces/**/_canonical.json
-# ix-ai-annotations extractor output (regenerated locally per session)
-state/quality/ai-annotations.jsonl
+# _meta.json is produced only by the local recorder script and would churn
+# on every recording run — keep it ignored so contributors don't fight it.
+state/quality/chatbot-qa/golden-traces/**/_meta.json
+# Note: _canonical.json IS tracked — it's the curated baseline that the
+# /api/chatbot/qa-summary endpoint falls back to when no local _meta.json
+# is present (fresh checkouts + CI). Regenerable but stable enough to
+# commit. See ChatbotController.BuildQaSummary().
+# ix-ai-annotations extractor output — committed so the dashboard at
+# /test#dev/annotations always has data without requiring a local extractor
+# run. Regenerate via:
+#   cargo run --release -p ix-ai-annotations --manifest-path ../ix/Cargo.toml -- --workspace .
+# A future CI workflow will refresh this on PR merge.
+# state/quality/ai-annotations.jsonl  -- now tracked
 state/quality/ai-annotations-reconciliation.json
 # Note: _signature.json IS tracked — pruned to (name, status, agent.id)
 # per step, stable across runs, used as a CI test fixture by

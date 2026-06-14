@@ -1433,6 +1433,128 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), ...gatherQuality() }));
             });
 
+            // ── /dev-data/quality-gates — unified quality-gate ledger ──────
+            // Reads state/quality/gate-ledger.jsonl line-by-line. v1 entries
+            // (schema_version==1) parse into the dashboard payload; legacy v0
+            // rows (no schema_version) are surfaced under `legacy_rows` so
+            // the chatbot PR ledger doesn't disappear during the transition.
+            //
+            // Query params (all optional):
+            //   source=ix-quality-trend|sentrux|chatbot-qa|ga-retrieval|...
+            //   domain=structural|chatbot|tests|...
+            //   decision=pass|fail|warn|skip
+            //   since=2026-05-20T00:00:00Z   (RFC3339)
+            //   limit=50                     (default 100, max 500)
+            //
+            // Schema mirror: ix/docs/contracts/2026-05-24-quality-gate-ledger.contract.md
+            server.middlewares.use('/dev-data/quality-gates', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'quality-gates')) { return; }
+                try {
+                    const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
+                    const sourceFilter = url.searchParams.get('source') ?? undefined;
+                    const domainFilter = url.searchParams.get('domain') ?? undefined;
+                    const decisionFilter = url.searchParams.get('decision') ?? undefined;
+                    const sinceFilter = url.searchParams.get('since') ?? undefined;
+                    const limit = Math.max(1, Math.min(500, Number(url.searchParams.get('limit') ?? 100)));
+
+                    const ledgerPath = path.join(repoRoot, 'state/quality/gate-ledger.jsonl');
+                    if (!existsSync(ledgerPath)) {
+                        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                        res.end(JSON.stringify({
+                            generated_at: new Date().toISOString(),
+                            ledger_path: 'state/quality/gate-ledger.jsonl',
+                            v1_entries: [],
+                            legacy_rows: [],
+                            counts_by_source: {},
+                            counts_by_decision: {},
+                            note: 'ledger not yet present (no producer has emitted a row)',
+                        }));
+                        return;
+                    }
+
+                    interface V1Entry {
+                        schema_version: 1;
+                        schema: string;
+                        id: string;
+                        run_at: string;
+                        source: string;
+                        domain: string;
+                        decision: 'pass' | 'fail' | 'warn' | 'skip';
+                        metric: { name: string; value: number; threshold?: number; trend?: string };
+                        evidence?: { kind: string; ref: string };
+                        supersedes?: string[];
+                        operator_ack?: unknown;
+                        extra?: Record<string, unknown>;
+                    }
+
+                    const raw = readFileSync(ledgerPath, 'utf-8');
+                    const v1: V1Entry[] = [];
+                    const legacy: unknown[] = [];
+                    for (const line of raw.split(/\r?\n/)) {
+                        const t = line.trim();
+                        if (!t) continue;
+                        let obj: unknown;
+                        try { obj = JSON.parse(t); } catch { continue; }
+                        if (obj && typeof obj === 'object' && (obj as { schema_version?: unknown }).schema_version === 1) {
+                            v1.push(obj as V1Entry);
+                        } else {
+                            legacy.push(obj);
+                        }
+                    }
+
+                    // Filter v1
+                    let filtered = v1;
+                    if (sourceFilter)   filtered = filtered.filter(e => e.source === sourceFilter);
+                    if (domainFilter)   filtered = filtered.filter(e => e.domain === domainFilter);
+                    if (decisionFilter) filtered = filtered.filter(e => e.decision === decisionFilter);
+                    if (sinceFilter) {
+                        const since = Date.parse(sinceFilter);
+                        if (!Number.isNaN(since)) {
+                            filtered = filtered.filter(e => Date.parse(e.run_at) >= since);
+                        }
+                    }
+                    // Newest-first, then limit. Sort by parsed epoch (not
+                    // localeCompare on the raw string) so RFC3339 timestamps
+                    // with differing offsets (Z vs +02:00) order chronologically
+                    // rather than lexically — otherwise older rows can surface
+                    // as "newest" and hide recent ones before the slice.
+                    filtered.sort((a, b) => (Date.parse(b.run_at) || 0) - (Date.parse(a.run_at) || 0));
+                    const top = filtered.slice(0, limit);
+
+                    // Aggregate counts (over filtered, pre-limit so the
+                    // tile numbers don't shift with pagination).
+                    const countsBySource: Record<string, number> = {};
+                    const countsByDecision: Record<string, number> = { pass: 0, fail: 0, warn: 0, skip: 0 };
+                    for (const e of filtered) {
+                        countsBySource[e.source] = (countsBySource[e.source] ?? 0) + 1;
+                        countsByDecision[e.decision] = (countsByDecision[e.decision] ?? 0) + 1;
+                    }
+
+                    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                    res.end(JSON.stringify({
+                        generated_at: new Date().toISOString(),
+                        ledger_path: 'state/quality/gate-ledger.jsonl',
+                        filters: {
+                            source: sourceFilter ?? null,
+                            domain: domainFilter ?? null,
+                            decision: decisionFilter ?? null,
+                            since: sinceFilter ?? null,
+                            limit,
+                        },
+                        v1_total: v1.length,
+                        v1_after_filter: filtered.length,
+                        v1_entries: top,
+                        legacy_rows_count: legacy.length,
+                        counts_by_source: countsBySource,
+                        counts_by_decision: countsByDecision,
+                    }));
+                } catch (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'quality-gates middleware failed', detail: String(err) }));
+                }
+            });
+
             // Renders docs/quality/README.md (auto-generated by ix-quality-trend)
             // verbatim. The QA tab embeds it via react-markdown so the same
             // headline tables + sparklines + per-domain detail show inline,
@@ -1889,6 +2011,7 @@ function devDataPlugin(): Plugin {
                         sentrux_rules: '/dev-data/sentrux/rules',
                         sentrux_test_gaps: '/dev-data/sentrux/test-gaps',
                         sentrux_dsm: '/dev-data/sentrux/dsm',
+                        sentrux_next_steps: '/dev-data/sentrux/next-steps',
                         ai_annotations: '/dev-data/ai-annotations',
                         manifest: '/dev-data/manifest',
                         // Action endpoints — CF-Access-gated in production
@@ -2475,6 +2598,90 @@ function sentruxPlugin(): Plugin {
             server.middlewares.use('/dev-data/sentrux/dsm', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 void cached('dsm', { format: 'stats' }).then((r) => writeJson(res, r));
+            });
+
+            // GET /dev-data/sentrux/next-steps — actionable refactor
+            // prescriptions written by the /sentrux-next-steps skill.
+            // Reads state/quality/sentrux-next-steps/latest.md and parses
+            // its YAML frontmatter so the card can render headline
+            // chips (quality_signal, cycles, coverage_pct) alongside the
+            // markdown body. Always returns 200 — an absent file yields
+            // { empty: true, hint: "..." } so the card renders an
+            // onboarding state instead of throwing.
+            server.middlewares.use('/dev-data/sentrux/next-steps', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const sourcePath = 'state/quality/sentrux-next-steps/latest.md';
+                const fullPath = path.join(repoRoot, sourcePath);
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                if (!existsSync(fullPath)) {
+                    res.end(JSON.stringify({
+                        empty: true,
+                        hint: "Run /sentrux-next-steps to generate recommendations.",
+                        source_path: sourcePath,
+                        fetched_at: new Date().toISOString(),
+                    }));
+                    return;
+                }
+                try {
+                    const raw = readFileSync(fullPath, 'utf-8');
+                    const stat = statSync(fullPath);
+                    // Cheap YAML-frontmatter parser tuned for the
+                    // sentrux-next-steps-v1 shape — depth-1 keys + a
+                    // nested `inputs:` object. We don't pull in a full
+                    // YAML lib; the schema is fixed.
+                    const fmMatch = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+                    let generatedAt: string | null = null;
+                    let generator: string | null = null;
+                    let schema: string | null = null;
+                    const inputs: Record<string, number | string> = {};
+                    let body = raw;
+                    if (fmMatch) {
+                        body = raw.slice(fmMatch[0].length);
+                        const lines = fmMatch[1].split(/\r?\n/);
+                        let inInputs = false;
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            const inputsHead = /^inputs:\s*$/.exec(line);
+                            if (inputsHead) { inInputs = true; continue; }
+                            const topKv = /^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
+                            const nestedKv = /^\s{2,}([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/.exec(line);
+                            if (inInputs && nestedKv) {
+                                const k = nestedKv[1];
+                                const vStr = nestedKv[2].trim().replace(/^["']|["']$/g, '');
+                                const vNum = Number(vStr);
+                                inputs[k] = Number.isFinite(vNum) && vStr !== '' ? vNum : vStr;
+                                continue;
+                            }
+                            if (topKv) {
+                                inInputs = false;
+                                const k = topKv[1];
+                                const v = topKv[2].trim().replace(/^["']|["']$/g, '');
+                                if (k === 'generated_at') generatedAt = v;
+                                else if (k === 'generator') generator = v;
+                                else if (k === 'schema') schema = v;
+                            }
+                        }
+                    }
+                    res.end(JSON.stringify({
+                        empty: false,
+                        schema,
+                        generated_at: generatedAt,
+                        generator,
+                        inputs,
+                        markdown: body,
+                        source_path: sourcePath,
+                        source_mtime: stat.mtime.toISOString(),
+                        fetched_at: new Date().toISOString(),
+                    }));
+                } catch (e) {
+                    res.end(JSON.stringify({
+                        empty: true,
+                        error: String((e as Error)?.message ?? e),
+                        hint: "Failed to read latest.md. Re-run /sentrux-next-steps or check file permissions.",
+                        source_path: sourcePath,
+                        fetched_at: new Date().toISOString(),
+                    }));
+                }
             });
 
             // POST /actions/sentrux/rescan — local-only, drops the cache and

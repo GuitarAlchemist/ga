@@ -1,7 +1,7 @@
 ---
 title: Chatbot — entry point
 status: index
-last_updated: 2026-05-02
+last_updated: 2026-05-12
 ---
 
 # Chatbot — entry point
@@ -13,16 +13,28 @@ index is the consolidation.
 
 ## What is the chatbot?
 
-The user-facing chatbot is the **Harmonic Nebula React UI** backed by the
-**`POST /api/nebula/chat`** endpoint (`NebulaChatController` →
-`NebulaSidekickService` → Anthropic Claude Haiku 4.5 or local Ollama). Every
-other chat surface in the solution is parallel-to-canonical or deprecated.
+The chatbot is not a single endpoint anymore. Current GA has several live chat
+surfaces:
+
+- **Harmonic Nebula UI** — `POST /api/nebula/chat` →
+  `NebulaChatController` → `NebulaSidekickService`.
+- **Public `/chatbot/` demo** — static SPA served by GaApi, connected to
+  SignalR `/hubs/chatbot`.
+- **AG-UI / Prime Radiant / ga-client chat** — `POST
+  /api/chatbot/agui/stream` and related REST/SSE siblings.
+
+All of these converge on the same orchestration substrate where practical, but
+their wire contracts are not identical. For current endpoint status, trust
+`docs/architecture/chat-surfaces.md`.
 
 For the full live architecture — every endpoint, every orchestrator, every
 agent, with status flags — see:
 
-- **`docs/architecture/chat-surfaces.md`** ← authoritative, last verified
-  2026-04-25. Cross-referenced from `docs/architecture/README.md`.
+- **`docs/architecture/chatbot-overview.md`** ← short onboarding map for
+  runtime architecture, roadmap, and skill/DSL docs.
+- **`docs/architecture/chat-surfaces.md`** ← authoritative endpoint /
+  orchestrator inventory, last verified 2026-05-12. Cross-referenced from
+  `docs/architecture/README.md`.
 
 If `chat-surfaces.md` says one thing and any doc here says another, trust
 `chat-surfaces.md`.
@@ -59,9 +71,10 @@ These two were previously buried under
 
 | Surface | Status | Notes |
 |---|---|---|
-| `Apps/ga-server/GaApi/Controllers/NebulaChatController.cs` (+ `NebulaSidekickService`) | ✅ canonical | The user-facing path. |
-| `Apps/ga-server/GaApi/Controllers/AgUiChatController.cs` | 🟡 parallel-to-canonical | AG-UI bridge for ga-react-components. |
-| `Apps/ga-server/GaApi/Controllers/ChatbotController.cs` + `Hubs/ChatbotHub.cs` | 🟡 parallel-to-canonical | Pre-Nebula SSE + SignalR, still used by Prime Radiant ChatWidget. |
+| `Apps/ga-server/GaApi/Controllers/NebulaChatController.cs` (+ `NebulaSidekickService`) | ✅ canonical | Harmonic Nebula user-facing path. |
+| `Apps/ga-server/GaApi/Hubs/ChatbotHub.cs` | ✅ de-facto canonical | Public `/chatbot/` demo SignalR path. |
+| `Apps/ga-server/GaApi/Controllers/AgUiChatController.cs` | ✅ canonical for AG-UI | AG-UI bridge for ga-react-components / ga-client surfaces. |
+| `Apps/ga-server/GaApi/Controllers/ChatbotController.cs` | 🟡 parallel-to-canonical | REST/SSE sibling surface over the orchestrator; keep in sync with `ChatbotHub`. |
 | `Apps/GaChatbot/` (console) | ✅ secondary | Local-dev REPL; not started by Aspire. |
 | `Apps/GaChatbotCli/` | ✅ secondary | Production CLI; supports `--json` and `--interactive`. |
 | `GaMcpServer/Tools/ChatTool.cs` | ✅ live | MCP tool (`AskChatbot`) calling `/api/chatbot/agui/json`. |

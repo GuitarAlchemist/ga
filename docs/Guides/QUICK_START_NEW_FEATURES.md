@@ -71,7 +71,7 @@ var glbData = await assetService.DownloadGlbAsync(metadata.Id);
 
 ### Where to Get Assets
 
-See [3D_ASSET_LINKS.md](3D_ASSET_LINKS.md) for direct download links to free 3D models from:
+See 3D_ASSET_LINKS.md for direct download links to free 3D models from:
 - Sketchfab (CC Attribution)
 - CGTrader (Free models)
 - Free3D
@@ -259,13 +259,13 @@ The Grothendieck module integrates with:
 ## Documentation
 
 ### Comprehensive Guides
-- [Implementation Plan](IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md) - Full implementation details
-- [Implementation Status](IMPLEMENTATION_STATUS.md) - Current progress
-- [3D Asset Links](3D_ASSET_LINKS.md) - Free 3D model resources
+- Implementation Plan - Full implementation details
+- Implementation Status - Current progress
+- 3D Asset Links - Free 3D model resources
 
 ### API Documentation
-- [Asset Management README](../Common/GA.Business.Core/Assets/README.md)
-- [Grothendieck README](../Common/GA.Business.Core/Atonal/Grothendieck/README.md)
+- Asset Management README
+- Grothendieck README
 
 ### Theory
 - [Grothendieck Group (Wikipedia)](https://en.wikipedia.org/wiki/Grothendieck_group)
@@ -306,7 +306,7 @@ The Grothendieck module integrates with:
 
 ## Questions?
 
-- Check the [Developer Guide](DEVELOPER_GUIDE.md)
-- Review the [Implementation Plan](IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md)
-- See [Implementation Status](IMPLEMENTATION_STATUS.md) for current progress
+- Check the Developer Guide
+- Review the Implementation Plan
+- See Implementation Status for current progress
 

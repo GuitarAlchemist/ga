@@ -141,6 +141,22 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 **How to apply:** treat the modified-file system-reminder as a stomp signal, re-read, rewrite. Don't argue with the hook; fixing it is a separate concern.
 
+## Agent skills
+
+Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
+
+### Issue tracker
+
+GitHub Issues on `GuitarAlchemist/ga`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical defaults (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (codebase itself is the five-layer model). `/grill-with-docs` grows them lazily. See `docs/agents/domain.md`.
+
 ## Tracer-bullets + vertical slices (aihero delta, 2026-06-14)
 
 Adopted ecosystem-wide from aihero.dev. Counters AI's "build the whole thing at
@@ -154,8 +170,7 @@ once" failure mode:
   cutting through all integration layers (surfacing unknowns early), not a
   horizontal layer.
 
-Prefer existing planning/review/quality tooling over adding new skills — aihero's
-`/grill-me`, `/to-prd`, `/to-issues`, `/tdd`, `/improve-codebase-architecture`
-are already covered by this ecosystem's brainstorming, planning-doc, test, and
-structural-quality machinery. (The `/teach` skill IS adopted — see
-`.claude/skills/teach`.)
+The aihero skills themselves (`/grill-me`, `/to-prd`, `/to-issues`, `/tdd`,
+`/improve-codebase-architecture`, `/teach`) are installed project-scoped under
+`.claude/skills/` (see **Agent skills** above) and complement this ecosystem's
+existing brainstorming, planning-doc, test, and structural-quality machinery.
