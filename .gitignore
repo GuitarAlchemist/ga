@@ -316,3 +316,6 @@ state/governance/dev-process-overseer.json
 state/governance/supervised-loop-cycle.json
 state/quality/ga-harness/last.json
 .STOP
+
+# /teach generated courses (personal, regenerable)
+learning/

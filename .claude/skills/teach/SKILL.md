@@ -46,3 +46,6 @@ about *their* design/plan — that's `brainstorming` / the IDSD intent gate.
 - Resources must be real and verified — no invented citations (ecosystem rule).
 - Keep lessons tight; one concept at a time; check understanding before advancing.
 - Persist progress so a later session can resume from `learning-records/`.
+
+## Output hygiene
+Generated course state under `./learning/` is personal and regenerable — it is gitignored and must NOT be committed (add `learning/` to .gitignore on first use).
