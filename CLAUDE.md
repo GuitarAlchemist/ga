@@ -143,7 +143,7 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 ## Agent skills
 
-Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
+Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
 
 ### Issue tracker
 
@@ -156,3 +156,21 @@ Canonical defaults (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-f
 ### Domain docs
 
 Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (codebase itself is the five-layer model). `/grill-with-docs` grows them lazily. See `docs/agents/domain.md`.
+
+## Tracer-bullets + vertical slices (aihero delta, 2026-06-14)
+
+Adopted ecosystem-wide from aihero.dev. Counters AI's "build the whole thing at
+once" failure mode:
+
+- **Tracer-bullet first.** For any non-trivial feature, build the smallest
+  **end-to-end** slice that touches *every* layer, test it, get feedback, then
+  expand — never build layers in isolation. "Context-window constraints make the
+  discipline non-negotiable."
+- **Vertical, not horizontal, decomposition.** Each task/PR is a thin slice
+  cutting through all integration layers (surfacing unknowns early), not a
+  horizontal layer.
+
+The aihero skills themselves (`/grill-me`, `/to-prd`, `/to-issues`, `/tdd`,
+`/improve-codebase-architecture`, `/teach`) are installed project-scoped under
+`.claude/skills/` (see **Agent skills** above) and complement this ecosystem's
+existing brainstorming, planning-doc, test, and structural-quality machinery.
