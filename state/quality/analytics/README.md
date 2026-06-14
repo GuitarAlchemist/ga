@@ -29,6 +29,9 @@ duckdb analytics/quality.duckdb < analytics/build-views.sql
 - **`routing_eval`** — semantic intent router accuracy (`accuracy`, `in_scope_accuracy`,
   `oos_decline_rate`).
 - **`voicing_analysis`** — OPTIC-K corpus size + chord-recognition coverage.
+- **`optick_sae`** — OPTIC-K sparse-autoencoder training artifacts (the cross-repo
+  contract output ix produces, consumed here); flattened to mirror ix's columns for
+  producer/consumer parity (`reconstruction_r2`, `dead_features_pct`, `features_alive`).
 - **`pr_grades`** — post-merge grade cards (`/grade-last-pr`); empty until cards land
   (see the commented populate query in `build-views.sql`).
 - **`quality_latest`** (view) — latest value per source.

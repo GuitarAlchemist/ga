@@ -57,6 +57,36 @@ SELECT
 FROM read_json_auto('voicing-analysis/*.json', filename = true, union_by_name = true)
 ORDER BY day;
 
+-- optick-sae: OPTIC-K sparse-autoencoder training artifacts (the cross-repo
+-- contract output ix produces; consumed here). Flattened from the nested
+-- artifact so producer (ix) and consumer (GA) expose the same columns.
+-- Committed artifacts only — the gitignored *-local trainer runs are excluded.
+CREATE OR REPLACE TABLE optick_sae AS
+SELECT
+    regexp_extract(filename, '([0-9]{4}-[0-9]{2}-[0-9]{2})', 1)        AS day,
+    artifact_id,
+    schema_version,
+    trainer,
+    trainer_version,
+    input.optick_index_sha                                            AS input_optick_index_sha,
+    input.optick_dim                                                  AS input_optick_dim,
+    input.corpus_size                                                 AS input_corpus_size,
+    model.kind                                                        AS model_kind,
+    model.dict_size                                                   AS model_dict_size,
+    model.k_sparse                                                    AS model_k_sparse,
+    model.training.loss_final                                         AS model_loss_final,
+    metrics.reconstruction_mse                                        AS reconstruction_mse,
+    metrics.reconstruction_r2                                         AS reconstruction_r2,
+    metrics.dead_features_pct                                         AS dead_features_pct,
+    metrics.feature_partition_purity_mean                             AS purity_mean,
+    features_summary.total                                            AS features_total,
+    features_summary.alive                                            AS features_alive,
+    links.supersedes                                                  AS links_supersedes
+FROM read_json_auto('optick-sae/*/optick-sae-artifact.json',
+                    filename = true, union_by_name = true)
+WHERE filename NOT LIKE '%-local%'                                    -- exclude local trainer runs
+ORDER BY day;
+
 -- pr-grades: post-merge intent-vs-delivery grade cards (/grade-last-pr).
 -- No grade cards exist yet (only README.md + SCHEMA.json), so this starts as an
 -- explicit empty table. Once <merge-sha>.json cards land, replace the body with
@@ -83,4 +113,6 @@ SELECT 'chatbot_qa'       AS source, day, pass_pct          AS metric, 'pass_pct
 UNION ALL
 SELECT 'routing_eval'     AS source, day, accuracy          AS metric, 'accuracy'          AS metric_name FROM routing_eval     QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
-SELECT 'voicing_analysis' AS source, day, corpus_total      AS metric, 'corpus_total'      AS metric_name FROM voicing_analysis QUALIFY row_number() OVER (ORDER BY day DESC) = 1;
+SELECT 'voicing_analysis' AS source, day, corpus_total      AS metric, 'corpus_total'      AS metric_name FROM voicing_analysis QUALIFY row_number() OVER (ORDER BY day DESC) = 1
+UNION ALL
+SELECT 'optick_sae'       AS source, day, reconstruction_r2  AS metric, 'reconstruction_r2' AS metric_name FROM optick_sae       QUALIFY row_number() OVER (ORDER BY day DESC) = 1;
