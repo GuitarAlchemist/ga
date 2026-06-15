@@ -114,7 +114,7 @@ The executor then makes its stop decision by **querying its own ledger** (`plate
 **Feasible and low-risk to start, because the oracle and the store already exist.** This is *closing a loop*, not building one. Suggested phasing (each independently shippable, reversible):
 
 - **Phase 1 — Make the loop observable.** `/auto-optimize` writes `loop-history.jsonl` per iteration; add `loop_iteration` + `loop_convergence` to `build-views.sql`; surface on the dashboard. *No behavior change — just instrumentation.* This alone answers "are our improvement loops actually converging or spinning?".
-- **Phase 2 — Make the loop self-terminating.** Executor reads `loop_convergence` for its stop decision (plateau / oscillation / oracle-misfire), replacing fixed iteration counts. Enforce `couldnt_run ≠ passed`.
+- **Phase 2 — Make the loop self-terminating.** ✅ **DONE 2026-06-15.** `Scripts/loop-decide.ps1` reads the per-cycle ledger for the current run and returns `continue / stop-plateau / halt-oscillating / halt-misfire` (precedence: misfire > oscillating > plateau > continue). `/auto-optimize` Step 3.9 calls it instead of a fixed count, and escalates via `algedonic-emit.ps1` on a self-halt. `couldnt_run ≠ passed` is enforced (misfire checked first). Verified: `state/quality/_fixtures/verify-loop-decide.ps1` — all four decisions correct.
 - **Phase 3 — Ratchet in CI.** Wire the ix-duck flight-recorder gate (`--features duck`) as a required check; make routing-eval a gate once the live backend lands (PR #409). Now the outer loop's ratchet is mechanical.
 - **Phase 4 — Compound the process.** After each loop run, summarize learnings into `docs/solutions/` (the compound-engineering meta-loop) so the *next* run starts smarter.
 
