@@ -24,6 +24,19 @@ name: Chatbot QA Snapshot
 #     AND we emit an algedonic signal + tracking issue so the silent-rot
 #     pattern (8 days of null pass_pct under a green checkmark, surfaced
 #     2026-05-24 by /backlog-groom) cannot repeat unnoticed.
+#
+# Real-measurement activation (#1 — reachable backend):
+#   By default the hosted runner has no Ollama and no OPTIC-K index, so every
+#   snapshot degrades (pass_pct null). To make CI measure for real, set two repo
+#   secrets — the workflow then routes LLM calls to the remote backend and
+#   downloads the index. With the secrets UNSET, behaviour is unchanged (degrade).
+#     - OLLAMA_BASE_URL  — base URL of a reachable Ollama, e.g. https://ollama.example
+#                          SECURITY: Ollama has no native auth; do NOT expose it raw.
+#                          Front it with Cloudflare Access / a reverse proxy and use
+#                          OPTICK_INDEX_AUTH-style headers, or an allowlisted tunnel.
+#     - OPTICK_INDEX_URL — URL to fetch state/voicings/optick.index (176 MB), e.g. a
+#                          GitHub Release asset or object-store URL.
+#     - OPTICK_INDEX_AUTH (optional) — Authorization header value for that fetch.
 
 on:
   schedule:
@@ -47,6 +60,36 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
+      - name: Configure backend (real measurement when secrets are set)
+        shell: pwsh
+        env:
+          SECRET_OLLAMA: ${{ secrets.OLLAMA_BASE_URL }}
+          SECRET_INDEX_URL: ${{ secrets.OPTICK_INDEX_URL }}
+          SECRET_INDEX_AUTH: ${{ secrets.OPTICK_INDEX_AUTH }}
+        run: |
+          # Only exports env when the secrets are present. Unset => nothing
+          # exported => the app keeps its localhost defaults and the snapshot
+          # degrades gracefully exactly as before (NO behaviour change). We avoid
+          # setting the Ollama__* keys to an empty string, which would otherwise
+          # override the in-app localhost default with "".
+          if (-not [string]::IsNullOrWhiteSpace($env:SECRET_OLLAMA)) {
+            # One secret routes every LLM call: export BOTH config keys the
+            # chatbot reads (Ollama:BaseUrl in GA.Business.ML, Ollama:Endpoint in
+            # GaChatbot) plus OLLAMA_BASE_URL used by the preflight probe below.
+            "OLLAMA_BASE_URL=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            "Ollama__BaseUrl=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            "Ollama__Endpoint=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            Write-Host "Backend: remote Ollama configured via OLLAMA_BASE_URL secret."
+          } else {
+            Write-Host "Backend: no OLLAMA_BASE_URL secret set — degrade path (unchanged)."
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:SECRET_INDEX_URL)) {
+            "OPTICK_INDEX_URL=$($env:SECRET_INDEX_URL)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            if (-not [string]::IsNullOrWhiteSpace($env:SECRET_INDEX_AUTH)) {
+              "OPTICK_INDEX_AUTH=$($env:SECRET_INDEX_AUTH)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            }
+          }
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -57,6 +100,21 @@ jobs:
 
       - name: Build chatbot tests
         run: dotnet build Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj -c Debug --no-restore
+
+      - name: Fetch OPTIC-K index (when OPTICK_INDEX_URL secret is set)
+        if: ${{ env.OPTICK_INDEX_URL != '' }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force state/voicings | Out-Null
+          $headers = @{}
+          if (-not [string]::IsNullOrWhiteSpace($env:OPTICK_INDEX_AUTH)) {
+            $headers['Authorization'] = $env:OPTICK_INDEX_AUTH
+          }
+          Write-Host "Fetching OPTIC-K index from configured OPTICK_INDEX_URL ..."
+          Invoke-WebRequest -Uri $env:OPTICK_INDEX_URL -OutFile state/voicings/optick.index `
+            -Headers $headers -TimeoutSec 600 -UseBasicParsing
+          $mb = [math]::Round((Get-Item state/voicings/optick.index).Length / 1MB, 1)
+          Write-Host "OPTIC-K index downloaded ($mb MB)."
 
       - name: Backend preflight
         id: preflight
