@@ -15,14 +15,22 @@
 --   * The day is parsed from the filename, which is the canonical date key
 --     across the quality pipeline (the YYYY-MM-DD stem convention).
 
--- chatbot-qa: daily prompt-corpus pass rate (NULL when backend was degraded).
+-- chatbot-qa: daily prompt-corpus pass rate (NULL when the QA backend — Ollama /
+-- OPTIC-K index / chatbot deps — was unavailable, so no real measurement ran).
+-- Two snapshot formats coexist: the pre-2026-05-24 format recorded degradation
+-- only in free-text `note` (no structured flag); the newer one sets
+-- `degraded`/`degraded_reason`. We reconcile both so degraded days are never
+-- mislabelled "clean": a missing flag with an absent pass_pct IS a degraded day.
 CREATE OR REPLACE TABLE chatbot_qa AS
 SELECT
     regexp_extract(filename, '([0-9]{4}-[0-9]{2}-[0-9]{2})', 1)        AS day,
     total_prompts,
     TRY_CAST(pass_pct AS DOUBLE)                                       AS pass_pct,
-    COALESCE(degraded, false)                                          AS degraded,
-    degraded_reason,
+    COALESCE(degraded, pass_pct IS NULL)                               AS degraded,
+    COALESCE(
+        degraded_reason,
+        CASE WHEN pass_pct IS NULL AND note IS NOT NULL
+             THEN 'backend_unavailable' END)                          AS degraded_reason,
     TRY_CAST(last_known_good_pass_pct AS DOUBLE)                       AS last_known_good_pass_pct
 FROM read_json_auto('chatbot-qa/*.json', filename = true, union_by_name = true)
 WHERE regexp_full_match(
@@ -79,8 +87,50 @@ CREATE OR REPLACE TABLE pr_grades (
 -- Unified latest-value-per-source rollup. A view over the materialized tables,
 -- so it carries no JSON path dependency and is safe to query from anywhere.
 CREATE OR REPLACE VIEW quality_latest AS
-SELECT 'chatbot_qa'       AS source, day, pass_pct          AS metric, 'pass_pct'          AS metric_name FROM chatbot_qa       QUALIFY row_number() OVER (ORDER BY day DESC) = 1
+-- chatbot_qa falls back to last-known-good when the latest run was degraded, so
+-- the rollup shows the last real number with a staleness marker, not bare NULL.
+SELECT 'chatbot_qa'       AS source, day,
+       COALESCE(pass_pct, last_known_good_pass_pct)                                  AS metric,
+       CASE WHEN pass_pct IS NOT NULL                  THEN 'pass_pct'
+            WHEN last_known_good_pass_pct IS NOT NULL   THEN 'pass_pct (stale: last_known_good)'
+            ELSE 'pass_pct (no data)' END                                            AS metric_name
+FROM chatbot_qa       QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
 SELECT 'routing_eval'     AS source, day, accuracy          AS metric, 'accuracy'          AS metric_name FROM routing_eval     QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
 SELECT 'voicing_analysis' AS source, day, corpus_total      AS metric, 'corpus_total'      AS metric_name FROM voicing_analysis QUALIFY row_number() OVER (ORDER BY day DESC) = 1;
+
+-- loop_iteration / loop_convergence — per-cycle telemetry from the /auto-optimize
+-- loop, so "is this loop run improving / plateaued / oscillating / misfiring?" is a
+-- query, not a vibe. The loop appends one JSON line per cycle to
+-- loops/<domain>.iterations.jsonl (see .claude/skills/auto-optimize/SKILL.md Step 3).
+-- A committed sentinel (loops/__seed__.iterations.jsonl) keeps the glob non-empty
+-- before any loop has run — a zero-match glob is an error — and is filtered out below.
+CREATE OR REPLACE TABLE loop_iteration AS
+SELECT loop_id, domain, iteration, ts, oracle_status, metric_name,
+       TRY_CAST(metric_before AS DOUBLE) AS metric_before,
+       TRY_CAST(metric_after  AS DOUBLE) AS metric_after,
+       TRY_CAST(metric_delta  AS DOUBLE) AS metric_delta,
+       verdict, worst_item, artifact_edited, commit_sha, roundtrip_passed
+FROM read_json_auto('loops/*.iterations.jsonl', filename = true, union_by_name = true)
+WHERE loop_id <> '__seed__'
+ORDER BY loop_id, iteration;
+
+-- Per-run convergence rollup (one row per loop_id). `shape` is the operator's
+-- at-a-glance verdict; misfires are checked FIRST so an oracle that never ran can
+-- never read as 'improving' (the /auto-optimize fail-closed / paranoia rule).
+CREATE OR REPLACE VIEW loop_convergence AS
+SELECT loop_id, domain,
+       count(*)                                                    AS iterations,
+       max(metric_after) - min(metric_before)                     AS total_gain,
+       round(avg(metric_delta), 4)                                AS mean_delta,
+       sum(CASE WHEN abs(metric_delta) < 0.005 THEN 1 ELSE 0 END)  AS plateau_iters,
+       sum(CASE WHEN verdict = 'regressed'   THEN 1 ELSE 0 END)    AS regressions,
+       sum(CASE WHEN verdict = 'couldnt_run' THEN 1 ELSE 0 END)    AS oracle_misfires,
+       CASE
+         WHEN sum(CASE WHEN verdict = 'couldnt_run' THEN 1 ELSE 0 END) > 0  THEN 'misfiring'
+         WHEN sum(CASE WHEN verdict = 'regressed'  THEN 1 ELSE 0 END) >= 2  THEN 'oscillating'
+         WHEN max(metric_after) - min(metric_before) > 0.01                 THEN 'improving'
+         ELSE 'plateaued'
+       END                                                         AS shape
+FROM loop_iteration GROUP BY loop_id, domain;

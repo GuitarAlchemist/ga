@@ -140,6 +140,8 @@ Exclusive lock prevents two concurrent loop runs in the same domain
 from racing each other's commits.
 
 ```powershell
+# Stable run id so every per-cycle ledger row (Step 3) joins back to this run.
+$loop_id = "$domain-$((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))"
 $lock = "state/quality/$domain/.lock"
 if (Test-Path $lock) {
     $age = (Get-Date) - (Get-Item $lock).LastWriteTime
@@ -235,6 +237,37 @@ For each cycle (up to `max_iterations`):
    regression + continue.
 8. **Plateau check** — track last `plateau_window` cycles' rel. delta.
    If all are below `plateau_threshold`, exit with status `plateau`.
+9. **Append the cycle to the ledger** (observability — plan
+   `docs/plans/2026-06-15-feat-loop-observability-duckdb-ledger-plan.md`).
+   Write ONE JSON line per cycle to `state/quality/loops/$domain.iterations.jsonl`
+   on **every** outcome — improved, regressed, plateau, error, AND the
+   `couldnt_run` fail-closed branch in step 2 (record it *before* the
+   `aborted-oracle-unreliable` exit, so a misfire is never invisible). Set
+   `metric_after`/`metric_delta` to `$null` when the oracle couldn't run — a
+   misfire must never read as progress. This only persists what the cycle already
+   computed; it changes no decision.
+
+   ```powershell
+   @{
+       loop_id          = $loop_id
+       domain           = $domain
+       iteration        = $n
+       ts               = (Get-Date -AsUTC -Format o)
+       oracle_status    = $oracle_status      # ok | couldnt_run | error
+       metric_name      = $baseline.metric
+       metric_before    = $before
+       metric_after     = $after              # $null on couldnt_run
+       metric_delta     = $delta              # $null on couldnt_run
+       verdict          = $verdict            # improved|regressed|plateau|error|couldnt_run
+       worst_item       = $worst_item
+       artifact_edited  = $artifact
+       commit_sha       = $sha
+       roundtrip_passed = $roundtrip_ok
+   } | ConvertTo-Json -Compress | Add-Content "state/quality/loops/$domain.iterations.jsonl"
+   ```
+
+   The materialized `loop_convergence` view then answers "is this run improving /
+   plateaued / oscillating / misfiring?" — `SELECT * FROM loop_convergence`.
 
 ### Step 4: Open PR (NOT merge)
 
