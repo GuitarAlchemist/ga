@@ -34,13 +34,22 @@ test.describe('ValueScorecard (/test#dev/summary)', () => {
     test.skip(!appeared, 'ValueScorecard not yet on live deploy — skipping until #dev/summary rebuilds');
 
     await expect(card.getByText('Business Value', { exact: true })).toBeVisible();
-    // At least one star rating renders (the top demo row), unless the catalog
-    // is genuinely empty — in which case the empty-state copy shows instead.
+    // The card has three valid terminal states once mounted:
+    //   1. star rows render (the catalog has demos),
+    //   2. the empty-state copy ("No demo items…") when the catalog is empty,
+    //   3. the "Value catalog unavailable" hint when /dev-data/value 404s
+    //      because the sibling ix catalog is absent (the live deploy may have
+    //      no ix sibling — documented as acceptable graceful degrade).
     const stars = card.getByTestId('star-rating');
     const empty = card.getByText(/No demo items in the catalog yet/i);
+    const unavailable = card.getByText(/Value catalog unavailable/i);
     const hasStars = await stars.first().isVisible().catch(() => false);
     const isEmpty = await empty.isVisible().catch(() => false);
-    expect(hasStars || isEmpty, 'either star rows or the empty-state copy must render').toBe(true);
+    const isUnavailable = await unavailable.isVisible().catch(() => false);
+    expect(
+      hasStars || isEmpty || isUnavailable,
+      'stars, the empty-state copy, or the unavailable hint must render',
+    ).toBe(true);
   });
 
   test('the /dev-data/value endpoint responds with the catalog shape', async ({ page }) => {
