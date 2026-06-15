@@ -32,6 +32,7 @@
         <Project Path="Demos/Music Theory/FretboardChordTest/FretboardChordTest.csproj" />
         <Project Path="Tools/GA.TabConversion.Api/GA.TabConversion.Api.csproj" />
         <Project Path="Tools/GaDataCLI/GaDataCLI.csproj" />
+        <Project Path="Tools/GaDuckLens/GaDuckLens.csproj" />
         <Project Path="Apps/GaMusicTheoryLsp/GaMusicTheoryLsp.fsproj" />
         <Project Path="Demos/Performance/GpuBenchmark/GpuBenchmark.csproj" />
         <Project Path="Tools/LocalEmbedding/LocalEmbedding.csproj" />
