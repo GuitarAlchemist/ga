@@ -138,9 +138,18 @@ jobs:
           $ollamaUrl = if ($env:OLLAMA_BASE_URL) { $env:OLLAMA_BASE_URL } else { 'http://localhost:11434' }
           $opticIndex = 'state/voicings/optick.index'
 
+          # When the endpoint is fronted by Cloudflare Access, the probe must send
+          # the same service-token headers the chatbot uses — otherwise Access 403s
+          # the probe and we'd report a false-negative DEGRADED for a reachable backend.
+          $probeHeaders = @{}
+          if (-not [string]::IsNullOrWhiteSpace($env:Ollama__AccessClientId) -and -not [string]::IsNullOrWhiteSpace($env:Ollama__AccessClientSecret)) {
+            $probeHeaders['CF-Access-Client-Id']     = $env:Ollama__AccessClientId
+            $probeHeaders['CF-Access-Client-Secret'] = $env:Ollama__AccessClientSecret
+          }
+
           $ollamaOk = $false
           try {
-            $resp = Invoke-WebRequest -Uri "$ollamaUrl/api/version" -Method GET -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+            $resp = Invoke-WebRequest -Uri "$ollamaUrl/api/version" -Method GET -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop -Headers $probeHeaders
             if ($resp.StatusCode -eq 200) { $ollamaOk = $true }
           } catch {
             Write-Host "Ollama probe failed at ${ollamaUrl}: $($_.Exception.Message)" -ForegroundColor Yellow

@@ -53,6 +53,9 @@ public static class ChatbotOrchestrationExtensions
 
             client.BaseAddress = uri;
             client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            // Cloudflare Access service-token headers when the endpoint is gated (remote/CI);
+            // no-op for a header-less localhost Ollama. See OllamaProvider.TryAddAccessHeaders.
+            GA.Business.ML.Providers.OllamaProvider.TryAddAccessHeaders(client, configuration);
         });
 
         // Vector store — TryAdd so GaApi's FileBasedVectorIndex takes precedence if already registered

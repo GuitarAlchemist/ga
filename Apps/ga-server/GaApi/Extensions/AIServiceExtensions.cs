@@ -68,6 +68,9 @@ public static class AiServiceExtensions
             services.AddHttpClient("Ollama", client =>
             {
                 client.BaseAddress = new Uri(ollamaBaseUrl);
+                // Cloudflare Access service-token headers when the endpoint is gated
+                // (remote/CI); no-op for a header-less localhost Ollama.
+                OllamaProvider.TryAddAccessHeaders(client, configuration);
             });
 
             var dockerBaseUrl = configuration["DockerModelRunner:BaseUrl"] ?? "http://localhost:12434/v1";
