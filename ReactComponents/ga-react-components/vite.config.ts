@@ -5,7 +5,7 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
 import { execFileSync, spawn } from 'child_process'
 import type { Plugin } from 'vite'
-import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals } from './src/dev-data/parsers'
+import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals, parseValueCatalog } from './src/dev-data/parsers'
 import type { BacklogPayload, LoopsGoalsProjection } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
@@ -1594,6 +1594,33 @@ function devDataPlugin(): Plugin {
                 if (req.method !== 'GET') { next(); return; }
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ generated_at: new Date().toISOString(), docs: gatherArchitecture() }));
+            });
+
+            // ── /dev-data/value — business-value scorecard ──────────────────
+            // Reads the federated RICE→stars catalog emitted by the sibling ix
+            // repo's `ix-value` generator (JSON-on-disk contract). Returns the
+            // parsed records plus a precomputed split (demo leaderboard sorted
+            // by score, repo rollups) so the card stays dumb. Never 500s on a
+            // corrupt line — parseValueCatalog drops bad lines.
+            server.middlewares.use('/dev-data/value', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const ixRoot = process.env.IX_ROOT || path.resolve(repoRoot, '../ix')
+                const p = path.join(ixRoot, 'state/value/catalog.jsonl')
+                if (!existsSync(p)) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: `value catalog not found at ${p} — run: cargo run -p ix-value -- catalog` }))
+                    return
+                }
+                try {
+                    const records = parseValueCatalog(readFileSync(p, 'utf-8'))
+                    const demos = records.filter((r) => r.kind === 'demo').sort((a, b) => b.score01 - a.score01)
+                    const repos = records.filter((r) => r.kind === 'repo').sort((a, b) => b.score01 - a.score01)
+                    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+                    res.end(JSON.stringify({ generated_at: new Date().toISOString(), records, demos, repos }))
+                } catch (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: String(err) }))
+                }
             });
 
             server.middlewares.use('/dev-data/agents', (req, res, next) => {
