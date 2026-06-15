@@ -9,7 +9,11 @@
 .mainContent {
   flex: 1 1 0;
   min-height: 0;
-  overflow: hidden;
+  /* Scroll long document pages (e.g. /test#dev/summary) instead of clipping
+     them to the viewport. Full-bleed 3D demos size their root to height:100%
+     so they fill this pane exactly and never trigger a scrollbar; the
+     breadcrumb is a flex sibling above this pane, so it stays pinned. */
+  overflow: auto;
   /* Ensure content starts below breadcrumb on all devices */
   position: relative;
 }
