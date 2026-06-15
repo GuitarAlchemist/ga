@@ -15,14 +15,22 @@
 --   * The day is parsed from the filename, which is the canonical date key
 --     across the quality pipeline (the YYYY-MM-DD stem convention).
 
--- chatbot-qa: daily prompt-corpus pass rate (NULL when backend was degraded).
+-- chatbot-qa: daily prompt-corpus pass rate (NULL when the QA backend — Ollama /
+-- OPTIC-K index / chatbot deps — was unavailable, so no real measurement ran).
+-- Two snapshot formats coexist: the pre-2026-05-24 format recorded degradation
+-- only in free-text `note` (no structured flag); the newer one sets
+-- `degraded`/`degraded_reason`. We reconcile both so degraded days are never
+-- mislabelled "clean": a missing flag with an absent pass_pct IS a degraded day.
 CREATE OR REPLACE TABLE chatbot_qa AS
 SELECT
     regexp_extract(filename, '([0-9]{4}-[0-9]{2}-[0-9]{2})', 1)        AS day,
     total_prompts,
     TRY_CAST(pass_pct AS DOUBLE)                                       AS pass_pct,
-    COALESCE(degraded, false)                                          AS degraded,
-    degraded_reason,
+    COALESCE(degraded, pass_pct IS NULL)                               AS degraded,
+    COALESCE(
+        degraded_reason,
+        CASE WHEN pass_pct IS NULL AND note IS NOT NULL
+             THEN 'backend_unavailable' END)                          AS degraded_reason,
     TRY_CAST(last_known_good_pass_pct AS DOUBLE)                       AS last_known_good_pass_pct
 FROM read_json_auto('chatbot-qa/*.json', filename = true, union_by_name = true)
 WHERE regexp_full_match(
@@ -109,7 +117,14 @@ CREATE OR REPLACE TABLE pr_grades (
 -- Unified latest-value-per-source rollup. A view over the materialized tables,
 -- so it carries no JSON path dependency and is safe to query from anywhere.
 CREATE OR REPLACE VIEW quality_latest AS
-SELECT 'chatbot_qa'       AS source, day, pass_pct          AS metric, 'pass_pct'          AS metric_name FROM chatbot_qa       QUALIFY row_number() OVER (ORDER BY day DESC) = 1
+-- chatbot_qa falls back to last-known-good when the latest run was degraded, so
+-- the rollup shows the last real number with a staleness marker, not bare NULL.
+SELECT 'chatbot_qa'       AS source, day,
+       COALESCE(pass_pct, last_known_good_pass_pct)                                  AS metric,
+       CASE WHEN pass_pct IS NOT NULL                  THEN 'pass_pct'
+            WHEN last_known_good_pass_pct IS NOT NULL   THEN 'pass_pct (stale: last_known_good)'
+            ELSE 'pass_pct (no data)' END                                            AS metric_name
+FROM chatbot_qa       QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
 SELECT 'routing_eval'     AS source, day, accuracy          AS metric, 'accuracy'          AS metric_name FROM routing_eval     QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
