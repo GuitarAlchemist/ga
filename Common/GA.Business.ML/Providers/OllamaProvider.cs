@@ -46,14 +46,17 @@ public static class OllamaProvider
     public static IChatClient CreateChatClient(
         string? baseUrl = null,
         string? model = null,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        HttpClient? httpClient = null)
     {
         var uri = new Uri(baseUrl ?? DefaultBaseUrl);
         var modelId = model ?? DefaultChatModel;
 
         logger?.LogInformation("Creating Ollama chat client at {Uri} for model: {Model}", uri, modelId);
 
-        return new OllamaChatClient(uri, modelId);
+        return httpClient is null
+            ? new OllamaChatClient(uri, modelId)
+            : new OllamaChatClient(uri, modelId, httpClient);
     }
 
     /// <summary>
@@ -66,14 +69,17 @@ public static class OllamaProvider
     public static IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddingGenerator(
         string? baseUrl = null,
         string? model = null,
-        ILogger? logger = null)
+        ILogger? logger = null,
+        HttpClient? httpClient = null)
     {
         var uri = new Uri(baseUrl ?? DefaultBaseUrl);
         var modelId = model ?? DefaultEmbeddingModel;
 
         logger?.LogInformation("Creating Ollama embedding generator at {Uri} for model: {Model}", uri, modelId);
 
-        return new OllamaEmbeddingGenerator(uri, modelId);
+        return httpClient is null
+            ? new OllamaEmbeddingGenerator(uri, modelId)
+            : new OllamaEmbeddingGenerator(uri, modelId, httpClient);
     }
 
     /// <summary>
@@ -88,7 +94,7 @@ public static class OllamaProvider
     {
         var baseUrl = configuration.GetValue<string>("Ollama:BaseUrl") ?? DefaultBaseUrl;
         var model = configuration.GetValue<string>("Ollama:ChatModel") ?? DefaultChatModel;
-        return CreateChatClient(baseUrl, model, logger);
+        return CreateChatClient(baseUrl, model, logger, BuildAccessHttpClient(configuration));
     }
 
     /// <summary>
@@ -103,7 +109,28 @@ public static class OllamaProvider
     {
         var baseUrl = configuration.GetValue<string>("Ollama:BaseUrl") ?? DefaultBaseUrl;
         var model = configuration.GetValue<string>("Ollama:EmbeddingModel") ?? DefaultEmbeddingModel;
-        return CreateEmbeddingGenerator(baseUrl, model, logger);
+        return CreateEmbeddingGenerator(baseUrl, model, logger, BuildAccessHttpClient(configuration));
+    }
+
+    /// <summary>
+    ///     Builds an <see cref="HttpClient" /> carrying Cloudflare Access service-token
+    ///     headers when <c>Ollama:AccessClientId</c> / <c>Ollama:AccessClientSecret</c>
+    ///     are configured (e.g. when the CI snapshot job reaches a remote Ollama fronted
+    ///     by Cloudflare Access). Returns <c>null</c> when unset, so local/dev usage hits
+    ///     a header-less localhost Ollama exactly as before. See
+    ///     docs/runbooks/chatbot-qa-ollama-ci-endpoint.md.
+    /// </summary>
+    public static HttpClient? BuildAccessHttpClient(IConfiguration configuration)
+    {
+        var clientId = configuration.GetValue<string>("Ollama:AccessClientId");
+        var clientSecret = configuration.GetValue<string>("Ollama:AccessClientSecret");
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+            return null;
+
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Add("CF-Access-Client-Id", clientId);
+        httpClient.DefaultRequestHeaders.Add("CF-Access-Client-Secret", clientSecret);
+        return httpClient;
     }
 
     /// <summary>

@@ -39,6 +39,19 @@ public class QueryUnderstandingService(
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var client = httpClientFactory.CreateClient("ollama");
+            // When the Ollama endpoint is fronted by Cloudflare Access (remote/CI),
+            // attach the service-token headers; no-op for a header-less localhost
+            // Ollama. See docs/runbooks/chatbot-qa-ollama-ci-endpoint.md.
+            var accessClientId = configuration["Ollama:AccessClientId"];
+            var accessClientSecret = configuration["Ollama:AccessClientSecret"];
+            if (!string.IsNullOrWhiteSpace(accessClientId) && !string.IsNullOrWhiteSpace(accessClientSecret))
+            {
+                client.DefaultRequestHeaders.Remove("CF-Access-Client-Id");
+                client.DefaultRequestHeaders.Add("CF-Access-Client-Id", accessClientId);
+                client.DefaultRequestHeaders.Remove("CF-Access-Client-Secret");
+                client.DefaultRequestHeaders.Add("CF-Access-Client-Secret", accessClientSecret);
+            }
+
             var response = await client.PostAsync($"{OllamaBaseUrl}/api/generate", content);
             response.EnsureSuccessStatusCode();
 

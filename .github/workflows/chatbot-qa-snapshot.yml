@@ -66,6 +66,8 @@ jobs:
           SECRET_OLLAMA: ${{ secrets.OLLAMA_BASE_URL }}
           SECRET_INDEX_URL: ${{ secrets.OPTICK_INDEX_URL }}
           SECRET_INDEX_AUTH: ${{ secrets.OPTICK_INDEX_AUTH }}
+          SECRET_CF_ID: ${{ secrets.OLLAMA_CF_ACCESS_CLIENT_ID }}
+          SECRET_CF_SECRET: ${{ secrets.OLLAMA_CF_ACCESS_CLIENT_SECRET }}
         run: |
           # Only exports env when the secrets are present. Unset => nothing
           # exported => the app keeps its localhost defaults and the snapshot
@@ -79,7 +81,15 @@ jobs:
             "OLLAMA_BASE_URL=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             "Ollama__BaseUrl=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             "Ollama__Endpoint=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
-            Write-Host "Backend: remote Ollama configured via OLLAMA_BASE_URL secret."
+            # Cloudflare Access service-token headers, when the endpoint is gated
+            # (the chatbot attaches CF-Access-Client-Id/Secret from these keys).
+            if (-not [string]::IsNullOrWhiteSpace($env:SECRET_CF_ID) -and -not [string]::IsNullOrWhiteSpace($env:SECRET_CF_SECRET)) {
+              "Ollama__AccessClientId=$($env:SECRET_CF_ID)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+              "Ollama__AccessClientSecret=$($env:SECRET_CF_SECRET)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+              Write-Host "Backend: remote Ollama configured (with Cloudflare Access service token)."
+            } else {
+              Write-Host "Backend: remote Ollama configured via OLLAMA_BASE_URL secret (no CF Access headers)."
+            }
           } else {
             Write-Host "Backend: no OLLAMA_BASE_URL secret set — degrade path (unchanged)."
           }
