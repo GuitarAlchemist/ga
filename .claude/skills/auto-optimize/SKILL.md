@@ -316,14 +316,36 @@ Remove-Item $lock
 # Append to state/quality/$domain/loop-history.jsonl
 @{
     timestamp        = (Get-Date -AsUTC -Format o)
+    loop_id          = $loop_id
     domain           = $domain
     cycles_ran       = $n
     metric_before    = $before
     metric_after     = $after
-    exit_status      = "converged|plateau|max-iter|killed"
+    exit_status      = "converged|plateau|oscillating|misfire|max-iter|killed"  # from Step 3.9
     pr_url           = $prUrl
 } | ConvertTo-Json -Compress | Add-Content "state/quality/$domain/loop-history.jsonl"
 ```
+
+### Step 6: Compound — feed the next run (the meta-loop)
+
+A loop that doesn't learn repeats its mistakes. After exit, if the run did real
+work (commits landed, or it self-halted oscillating/misfiring), **compound the run
+into durable knowledge the next run reads first**:
+
+1. Pull the run's own trajectory:
+   `SELECT * FROM loop_convergence WHERE loop_id = '<loop_id>'` + the edited
+   artifacts and verdicts from `loop_iteration`.
+2. Invoke `/learnings` seeded with that summary → a `docs/solutions/<category>/`
+   entry recording what *worked* (which artifact moved which prompt) and what
+   *thrashed* (the oscillating fix pairs to NOT re-try). Frontmatter:
+   `module`, `tags`, `problem_type`.
+3. Invoke `/digest` so the next session inherits the cursor + the open question
+   (e.g. "plateau on intent X — needs human/next-layer work, not more loop cycles").
+
+This is the compound-engineering meta-loop: each run makes the next start smarter —
+what turns a one-shot fixer into *autonomous development*. Step 3.4 (propose a fix)
+MUST consult these solutions before editing, so the loop never re-walks a path the
+ledger already showed thrashes.
 
 ## Domains shipped today
 
