@@ -354,6 +354,28 @@ public sealed partial class IxAlgebraService(
             return results;
         }
 
+        // Comma/space-separated bare pitch-class lists WITHOUT brackets, e.g.
+        // "0,1,4,6" or "0 1 4 6". Without this, the bracketed pass misses and
+        // the contiguous pass below splits "0,1,4,6" into single rejected
+        // digits, so a perfectly well-formed set-theory question extracts
+        // nothing and the deterministic engine never runs (it fell through to
+        // the LLM and timed out). Require >= 3 tokens so prose like "bars 2, 4"
+        // or an interval "0, 7" can't be mistaken for a pc-set. This is data
+        // extraction, not query routing.
+        foreach (Match match in SeparatedSetRegex().Matches(query))
+        {
+            var candidate = string.Concat(TokenRegex().Matches(match.Value).Select(m => NormalizeToken(m.Value)));
+            if (TryParsePitchClassSet(candidate, out var set))
+            {
+                results.Add(set);
+            }
+        }
+
+        if (results.Count > 0)
+        {
+            return results;
+        }
+
         foreach (Match match in CompactSetRegex().Matches(query))
         {
             if (TryParsePitchClassSet(match.Value, out var set))
@@ -412,6 +434,13 @@ public sealed partial class IxAlgebraService(
 
     [GeneratedRegex(@"[\[\{][^\]\}]+[\]\}]", RegexOptions.CultureInvariant)]
     private static partial Regex BracketedSetRegex();
+
+    // A run of >= 3 pitch-class tokens separated by commas/spaces, e.g.
+    // "0,1,4,6" or "0 1 4 6 9". Used only to pull a set out of a query the
+    // router already classified as set-theory; the >= 3 floor avoids matching
+    // ordinary number pairs in prose.
+    [GeneratedRegex(@"\b(?:10|11|[0-9TEte])(?:\s*,\s*|\s+)(?:10|11|[0-9TEte])(?:(?:\s*,\s*|\s+)(?:10|11|[0-9TEte]))+\b", RegexOptions.CultureInvariant)]
+    private static partial Regex SeparatedSetRegex();
 
     [GeneratedRegex(@"\b(?:10|11|[0-9]|[TEAB])+\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CompactSetRegex();

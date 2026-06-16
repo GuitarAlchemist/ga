@@ -31,6 +31,20 @@ public sealed class AlgebraIntent(IIxAlgebraService algebraService) : IIntent
         "Are these Z-related: 0136 and 0146?",
         "Set class summary for [0,1,3,7]",
         "Interval-class vector of 014",
+        // Natural-language phrasings real users type. Added 2026-06-16: the
+        // short canonical examples above scored below the router threshold for
+        // verbose questions, so "is the pitch class set 0,1,4,6 z-related to
+        // another set class" fell through to the LLM path and timed out at 15s
+        // instead of reaching this deterministic engine. These are additional
+        // embedding anchors (the semantic-routing lever) — not keyword rules.
+        "Is the pitch class set 0,1,4,6 Z-related to another set class?",
+        "Does the set 0,1,4,6 have a Z-partner, and what is it?",
+        "Which set class has the same interval-class vector as 0,1,4,6?",
+        "Tell me the Forte label and Z-relation of the pitch-class set 0,1,3,7",
+        // NOTE: deliberately NOT adding "what is Forte number 4-Z29" — that is a
+        // reverse Forte-label→set LOOKUP the engine doesn't support yet; routing
+        // it here would extract {2,9} from "29" and answer the wrong question.
+        // Tracked as a missing feature (reverse ForteCatalog lookup).
     ];
 
     public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)
