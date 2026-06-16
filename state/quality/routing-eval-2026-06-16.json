@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1",
-  "generatedAt": "2026-06-16T14:33:23.3492554Z",
+  "generatedAt": "2026-06-16T15:07:30.3230560Z",
   "routerConfig": {
     "minConfidence": 0.55,
     "embedder": "nomic-embed-text"
@@ -17,7 +17,7 @@
     "OosTotal": 8,
     "OosCorrectlyDeclined": 7,
     "OosDeclineRate": 0.875,
-    "MeanInScopeMargin": 0.1770649561321879
+    "MeanInScopeMargin": 0.17616479673299446
   },
   "perIntent": {
     "skill.chordinfo": {
@@ -269,7 +269,7 @@
       "Expected": "skill.chordinfo",
       "Chosen": "skill.chordinfo",
       "Confidence": 1,
-      "Margin": 0.31383085,
+      "Margin": 0.33137363,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -613,7 +613,7 @@
       "Expected": "skill.interval",
       "Chosen": "skill.interval",
       "Confidence": 0.8111233,
-      "Margin": 0.16124982,
+      "Margin": 0.09727067,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -719,7 +719,7 @@
       "Expected": "skill.chordsubstitution",
       "Chosen": "skill.chordsubstitution",
       "Confidence": 0.9648559,
-      "Margin": 0.12822467,
+      "Margin": 0.0822255,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -758,7 +758,7 @@
       "Expected": "skill.chordsubstitution",
       "Chosen": "skill.chordsubstitution",
       "Confidence": 1,
-      "Margin": 0.109917104,
+      "Margin": 0.093756914,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1077,7 +1077,7 @@
       "Expected": "skill.progressionmood",
       "Chosen": "skill.progressionmood",
       "Confidence": 0.8585515,
-      "Margin": 0.2157507,
+      "Margin": 0.17641377,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1312,7 +1312,7 @@
       "Expected": "skill.practiceroutine",
       "Chosen": "skill.practiceroutine",
       "Confidence": 0.6878059,
-      "Margin": 0.12697887,
+      "Margin": 0.14369959,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1551,7 +1551,7 @@
       "Expected": "skill.whatcanyoudo",
       "Chosen": "skill.whatcanyoudo",
       "Confidence": 0.9426745,
-      "Margin": 0.47976533,
+      "Margin": 0.4688473,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1912,7 +1912,7 @@
       "Expected": "skill.diatonicchords",
       "Chosen": "skill.diatonicchords",
       "Confidence": 1,
-      "Margin": 0.13346863,
+      "Margin": 0.14157432,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1965,7 +1965,7 @@
       "Expected": "skill.diatonicchords",
       "Chosen": "skill.diatonicchords",
       "Confidence": 0.97218555,
-      "Margin": 0.21779007,
+      "Margin": 0.21228474,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -1978,7 +1978,7 @@
       "Expected": "skill.diatonicchords",
       "Chosen": "skill.diatonicchords",
       "Confidence": 0.88432574,
-      "Margin": 0.015668929,
+      "Margin": 0.015410423,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -2032,7 +2032,7 @@
       "Expected": "skill.diatonicchords",
       "Chosen": "skill.diatonicchords",
       "Confidence": 0.9629622,
-      "Margin": 0.2208978,
+      "Margin": 0.22025317,
       "Correct": true,
       "IsOos": false,
       "Tags": [
@@ -2281,9 +2281,9 @@
       "Id": "pc-9",
       "Prompt": "what resolves Fmaj7 best",
       "Expected": "skill.progressioncompletion",
-      "Chosen": "skill.icvneighbors",
-      "Confidence": 0.7682161,
-      "Margin": 0.010749936,
+      "Chosen": "skill.grothendieckparse",
+      "Confidence": 0.75746614,
+      "Margin": 0.0017561913,
       "Correct": false,
       "IsOos": false,
       "Tags": [
@@ -2394,7 +2394,7 @@
       "Expected": "__none__",
       "Chosen": "skill.practiceroutine",
       "Confidence": 0.55316716,
-      "Margin": 0.09767893,
+      "Margin": 0.10398975,
       "Correct": false,
       "IsOos": true,
       "Tags": [
