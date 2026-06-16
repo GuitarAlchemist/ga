@@ -214,6 +214,17 @@ public sealed class SemanticIntentRouter(
         var margin = topK.Count >= 2 ? (double?)(topK[0].Score - topK[1].Score) : null;
 
         var top = withHints[0];
+
+        // SHADOW (default OFF; never affects routing): when GA_ROUTER_SHADOW=1 and a
+        // learned head is configured, log the head's pick alongside production's on
+        // the SAME query embedding — for offline head-vs-prod comparison and
+        // real-traffic eval mining (Hermes Spike-A). Fully error-swallowed.
+        if (LearnedHeadShadow.Instance is { } shadow)
+        {
+            var prodChosenForShadow = top.Score >= MinConfidence ? top.Intent.Id : null;
+            shadow.LogShadow(query, queryVec, prodChosenForShadow);
+        }
+
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(
