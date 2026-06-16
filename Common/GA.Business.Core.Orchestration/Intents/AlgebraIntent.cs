@@ -41,10 +41,9 @@ public sealed class AlgebraIntent(IIxAlgebraService algebraService) : IIntent
         "Does the set 0,1,4,6 have a Z-partner, and what is it?",
         "Which set class has the same interval-class vector as 0,1,4,6?",
         "Tell me the Forte label and Z-relation of the pitch-class set 0,1,3,7",
-        // NOTE: deliberately NOT adding "what is Forte number 4-Z29" — that is a
-        // reverse Forte-label→set LOOKUP the engine doesn't support yet; routing
-        // it here would extract {2,9} from "29" and answer the wrong question.
-        // Tracked as a missing feature (reverse ForteCatalog lookup).
+        // Reverse Forte-label lookup (label → set class), e.g. "4-Z29".
+        "What is Forte number 4-Z29?",
+        "Which set class is Forte 3-11?",
     ];
 
     public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)

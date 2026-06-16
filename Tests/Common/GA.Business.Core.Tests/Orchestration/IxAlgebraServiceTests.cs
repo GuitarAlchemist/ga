@@ -87,6 +87,27 @@ public class IxAlgebraServiceTests
     }
 
     [Test]
+    public async Task ForteLabel_ReverseLookup_Returns_SetClass()
+    {
+        // Feature (2026-06-16): "what is Forte number 4-Z29" is a reverse lookup
+        // (label → set class). 4-Z29 is one of the two all-interval tetrachords;
+        // its prime form is [0,1,3,7]. Must NOT be mis-parsed as the set {2,9}.
+        var service = CreateService(new Dictionary<string, string?>
+        {
+            ["IX:Revision"] = "7b02a56",
+            ["IX:Source"] = "ix-compatible",
+            ["IX:External:Enabled"] = "false"
+        });
+
+        var answer = await service.TryAnswerAsync("What is Forte number 4-Z29?");
+
+        Assert.That(answer, Is.Not.Null);
+        Assert.That(answer!.QueryType, Is.EqualTo("forte-lookup"));
+        Assert.That(answer.Facts["primeForm"], Is.EqualTo("[0,1,3,7]"));
+        Assert.That(answer.NaturalLanguageAnswer, Does.Contain("[0,1,3,7]"));
+    }
+
+    [Test]
     public async Task SetClass_Query_Accepts_SpaceSeparated_Set()
     {
         var service = CreateService(new Dictionary<string, string?>
