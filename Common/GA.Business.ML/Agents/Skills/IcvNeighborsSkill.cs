@@ -47,18 +47,25 @@ public sealed class IcvNeighborsSkill(
         "cost for each. Use to answer 'what chord/scale is harmonically near " +
         "Cmaj7' or 'find ICV neighbors of Dm7'.";
 
+    // Routing anchors deliberately emphasise the user GOAL — "find similar /
+    // nearby chords" — and avoid the bare "ICV" framing, which is owned by
+    // IntervalClassVectorSkill (computing the vector of ONE chord). The
+    // routing-ambiguity diagnostic (2026-06-16) measured this skill at the
+    // worst silhouette (-0.05), colliding with intervalclassvector at 0.90
+    // cosine precisely on shared "ICV … <chord>" phrasings. Leaning on
+    // "similar/nearby/closest/neighbors" is the discriminator.
     public IReadOnlyList<string> ExamplePrompts =>
     [
         "what chords are harmonically close to Cmaj7",
-        "nearby pitch-class sets to C major",
-        "find ICV neighbors of Dm7",
-        "closest chord to G7 in ICV space",
-        "ICV neighbors of Cmaj7",
-        "what pitch-class sets are near Am",
+        "which chords are most similar to Dm7",
+        "nearby chords to C major",
+        "closest chords to G7 by interval content",
         "what's harmonically adjacent to F major",
-        "nearby chords for Gmaj7",
-        "what's close to E minor harmonically",
-        "harmonic neighbors of Bm7b5",
+        "find chords similar to Gmaj7",
+        "harmonic neighbors of E minor",
+        "chords with similar interval content to Bm7b5",
+        "give me chords close to Am",
+        "nearest chords to Fmaj7",
     ];
 
     public bool CanHandle(string message) => false;  // semantic-routing only
