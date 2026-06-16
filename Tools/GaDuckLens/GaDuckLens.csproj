@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- DuckDB.NET's table/scalar UDF registration is shipped behind the
+         experimental DuckDBNET001 diagnostic; opt in explicitly. -->
+    <NoWarn>$(NoWarn);DuckDBNET001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DuckDB.NET.Data.Full" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Layer 1 (Core domain). GaDuckLens is layer-5 tooling that projects
+         core entities into DuckDB; it calls *down* into the domain only. -->
+    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+  </ItemGroup>
+
+</Project>
