@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "date": "2026-06-16",
+  "metric": "session_pass_pct",
+  "sessions": 4,
+  "turns_total": 16,
+  "turns_passed": 13,
+  "session_pass_pct": 0.812,
+  "failures": [
+    "[beginner-onboarding/beginner-first-chords] turn 3: 'How do I switch between those chords smoothly without stoppi...'  ->  too short (70 < 80 chars)",
+    "[improv-scales-modes/improv-over-am-progression] turn 2: 'Cool. What arpeggio should I target when the F chord comes a...'  ->  too short (35 < 60 chars)",
+    "[jazz-advanced-harmony/jazz-ii-v-i-reharm] turn 2: 'Now substitute the V chord with its tritone substitution.'  ->  none of contains_any matched: [Db7, tritone, Db, substitut]"
+  ],
+  "degraded": false,
+  "source": "run-session-corpus"
+}
