@@ -211,6 +211,11 @@ state/baseline-phaseE/embedding-clusters-*.json
 # only reads the summary JSONs; cluster-label dumps stay local / regenerable)
 state/quality/**/embedding-clusters-*.json
 
+# Routing-ambiguity diagnostic: the raw anchor embedding dump is multi-MB and
+# fully regenerable from the harness — keep it local. The small report +
+# silhouette/confusable-pairs/pca sidecars ARE committed as the record.
+state/quality/routing-diagnostic/routing-anchors-*.json
+
 # Phase 3 DSL-eval soak: dated raw results are local artefacts — only
 # state/quality/dsl-eval/prompts.json and state/quality/dsl-eval/latest-*
 # (when the runner produces them) belong in git. PR #151 review arch-F8

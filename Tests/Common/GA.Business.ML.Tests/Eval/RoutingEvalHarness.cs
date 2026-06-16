@@ -284,6 +284,115 @@ public class RoutingEvalHarness
         Assert.That(overall.Total, Is.GreaterThan(0));
     }
 
+    /// <summary>
+    /// Dumps the router's EMBEDDING ANCHORS — every routed intent's
+    /// <see cref="IIntent.Description"/> + <see cref="IIntent.ExamplePrompts"/>,
+    /// embedded with the SAME embedder and SAME normalization
+    /// (<c>Trim().ToLowerInvariant()</c>) the production
+    /// <see cref="SemanticIntentRouter"/> uses — to
+    /// <c>state/quality/routing-diagnostic/routing-anchors-&lt;date&gt;.json</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this exists:</b> <see cref="RunBaseline_EmitReport"/> measures
+    /// routing <i>accuracy</i> (the symptom). It can't explain <i>why</i> a
+    /// prompt misroutes. The router classifies a query by max-cosine against
+    /// these anchors, so when two intents' anchor clouds overlap in embedding
+    /// space you get misroutes. This dump is the raw material for the IX
+    /// DuckDB diagnostic (<c>Scripts/routing-ambiguity-diagnostic.sql</c>):
+    /// <c>ix_silhouette</c> scores per-intent separability, a nearest-wrong-
+    /// neighbour cross-join names the confusable example-prompt PAIRS, and
+    /// <c>ix_pca_project</c> gives a 2-D scatter. The output tells you exactly
+    /// which example prompts to add/contrast to separate the clouds — the
+    /// semantic, no-keyword-rule lever for fixing the router.
+    /// </para>
+    /// <para>
+    /// <b>Why [Explicit]:</b> needs the live Ollama embedder, same as
+    /// <see cref="RunBaseline_EmitReport"/>. Run with:
+    /// <code>dotnet test --filter "FullyQualifiedName~DumpRoutingAnchors"</code>
+    /// </para>
+    /// </remarks>
+    [Test]
+    [Explicit("Requires live Ollama embedding endpoint. Emits the routing-anchor embedding dump.")]
+    public async Task DumpRoutingAnchors_ForAmbiguityDiagnostic()
+    {
+        var services = BuildProductionLikeIntentRegistry();
+
+        // Only intents with example prompts participate in semantic routing —
+        // mirror SemanticIntentRouter's `ExamplePrompts.Count > 0` candidate filter.
+        var intents = services.GetServices<IIntent>()
+            .Where(i => i.ExamplePrompts.Count > 0)
+            .OrderBy(i => i.Id, StringComparer.Ordinal)
+            .ToList();
+        Assert.That(intents, Is.Not.Empty, "No routed intents with example prompts found.");
+
+        IEmbeddingGenerator<string, Embedding<float>> embedder;
+        try
+        {
+            embedder = new OllamaEmbeddingGenerator(new Uri(EmbeddingEndpoint), EmbeddingModel);
+            var probe = await embedder.GenerateAsync(["probe"]);
+            Assert.That(probe, Is.Not.Null, "Embedder probe returned null.");
+        }
+        catch (Exception ex)
+        {
+            Assert.Inconclusive(
+                $"Live Ollama at {EmbeddingEndpoint} with model '{EmbeddingModel}' is required — " +
+                $"{ex.GetType().Name}: {ex.Message}");
+            return;
+        }
+
+        var anchors = new List<AnchorRow>();
+        var dimension = 0;
+        foreach (var intent in intents)
+        {
+            // Same anchor set + order the router builds: [description, ...examples],
+            // each normalized with Trim().ToLowerInvariant() (NormalizeForEmbedding).
+            var texts = new List<(string Kind, string Text)> { ("description", intent.Description) };
+            texts.AddRange(intent.ExamplePrompts.Select(p => ("example", p)));
+
+            var inputs = texts.Select(t => NormalizeForEmbeddingLocal(t.Text)).ToList();
+            var batch = await embedder.GenerateAsync(inputs);
+            for (var i = 0; i < texts.Count; i++)
+            {
+                var vec = batch[i].Vector.ToArray();
+                dimension = vec.Length;
+                anchors.Add(new AnchorRow(intent.Id, texts[i].Kind, texts[i].Text, vec));
+            }
+        }
+
+        var dump = new
+        {
+            schemaVersion = "0.1",
+            generatedAt   = DateTime.UtcNow.ToString("o"),
+            embedder      = EmbeddingModel,
+            dimension,
+            intentCount   = intents.Count,
+            anchorCount   = anchors.Count,
+            anchors,
+        };
+
+        var dir = Path.Combine(OutputDir, "routing-diagnostic");
+        Directory.CreateDirectory(dir);
+        var stamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var outPath = Path.Combine(dir, $"routing-anchors-{stamp}.json");
+        // Compact (not indented): the vectors are large; this file is consumed
+        // by DuckDB read_json, not read by humans.
+        File.WriteAllText(outPath, JsonSerializer.Serialize(dump));
+
+        TestContext.WriteLine($"Routing-anchor dump written: {outPath}");
+        TestContext.WriteLine($"  intents={intents.Count} anchors={anchors.Count} dim={dimension}");
+        Assert.That(anchors, Has.Count.GreaterThan(intents.Count),
+            "Expected more anchors than intents (each intent contributes a description + ≥1 example).");
+    }
+
+    // Local copy of SemanticIntentRouter.NormalizeForEmbedding (private there).
+    // MUST stay byte-identical so the dumped anchor vectors match the vectors
+    // the production router computes for the same text.
+    private static string NormalizeForEmbeddingLocal(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : text.Trim().ToLowerInvariant();
+
+    private sealed record AnchorRow(string IntentId, string Kind, string Text, float[] Vector);
+
     // ─── Data shapes ─────────────────────────────────────────────────────
 
     private sealed record LabeledPrompt(
