@@ -3,11 +3,11 @@
   "domain": "chatbot-qa-sessions",
   "purpose": "Setpoint contract for the MULTI-TURN session axis of the chatbot improvement loop. Mirrors state/quality/chatbot-qa/baseline.json (the single-turn axis) so /auto-optimize can target session_pass_pct the same way it targets pass_pct. Replayed by SessionCorpusTests.EverySession_SatisfiesItsInvariants over Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml; snapshot emitted by Scripts/run-session-corpus.ps1 -Snapshot.",
   "established_at": "2026-06-16",
-  "established_by": "session-corpus seed (4 guitarist journeys: beginner, songwriting, improv, jazz)",
+  "established_by": "session-corpus seed refocused on GA's differentiated domain — pitch-class set theory (SetClass: ICV, Z-relation, T/I equivalence, symmetric families) and the OPTIC-K voicing index (search, easier voicings, neighbors, voice leading) — alongside the music-theory journeys (beginner, songwriting, improv, jazz). Generic guitar-teacher journeys (gear/tuning, practice/metronome) deliberately excluded: not GA's value.",
   "metric": "session_pass_pct",
   "metric_description": "Fraction of session TURNS that pass all mechanical invariants when each session is replayed turn-by-turn with accumulating ConversationHistory. Mechanical axis only — routing, grounding presence, no-fallback, context retention (the `references` field), banned phrases, latency. Fuzzy answer-quality is NOT measured here; it stays human/Demerzel-tribunal-gated.",
-  "primary_baseline": 0.69,
-  "primary_baseline_source": "First seed replay 2026-06-16 against in-runner-comparable Ollama (llama3.2:3b + nomic-embed-text). Two runs observed 11/16 (68.8%) and 13/16 (81.2%) — multi-turn LLM variance is higher than single-turn, so the floor is pinned at the observed minimum, not the mean. The loop's job is to lift it and re-pin.",
+  "primary_baseline": 0.70,
+  "primary_baseline_source": "Seed replay 2026-06-16 (6 journeys, 24 turns) against in-runner-comparable Ollama (llama3.2:3b + nomic-embed-text): 18/24 (75.0%). GA-domain journeys are strong — OPTIC-K voicing search 4/4, pitch-class set theory 3/4 (only the Z-relation lookup missed). Floor pinned conservatively at 0.70 (below the observed 0.75) for multi-turn LLM variance; the loop's job is to lift it and re-pin. Known stable targets: Z-relation lookup (pc-set turn 2), jazz tritone-sub (Db7).",
   "_harness": {
     "runner": "Scripts/run-session-corpus.ps1",
     "oracle_test": "SessionCorpusTests.EverySession_SatisfiesItsInvariants",
@@ -37,9 +37,10 @@
     "protected_rationale": "The loop must not weaken the measure to pass it. It MAY ADD new sessions/turns (corpus growth is the point of the user request) but must not relax or delete existing invariants without an explicit [allow-protected: <path>] override and human sign-off."
   },
   "corpus_growth": {
-    "intent": "The loop/goal should GROW this corpus over time — adding new guitarist journeys and turns that real players would ask — so multi-turn coverage compounds. New sessions are additive and start as failing targets; lifting them is the loop's work.",
-    "seed_personas": ["beginner-onboarding", "songwriting-progressions", "improv-scales-modes", "jazz-advanced-harmony"],
-    "candidate_next": ["gear-and-tuning (capo, alternate tunings, transposing for a singer)", "technique-and-practice (routines, exercises, difficulty ramps)", "ear-training", "song-specific learning journeys"]
+    "intent": "The loop/goal should GROW this corpus over time toward GA's DIFFERENTIATED domain — pitch-class set theory (GA SetClass) and the OPTIC-K voicing index — rather than generic guitar advice. New sessions are additive and start as failing targets; lifting them is the loop's work.",
+    "focus": "GA domain classes (Note, Interval, Scale, Chord, Key, Fretboard, SetClass) + OPTIC-K voicing index. NOT practice routines, metronome, or gear (explicitly out of scope per user 2026-06-16).",
+    "seed_personas": ["pc-set-theory", "optick-voicing-search", "beginner-onboarding", "songwriting-progressions", "improv-scales-modes", "jazz-advanced-harmony"],
+    "candidate_next": ["more SetClass (Forte numbers, cardinality, modal set classes, prime form, complement)", "more OPTIC-K (by-query voicing search, ICV neighbors, generate-embedding, index-info, telemetry)", "Fretboard domain (positions, tunings as domain objects, fingerings)", "Interval/voice-leading domain (common tones as set-theory, voice-leading pairs)"]
   },
   "constraints": {
     "max_commits_per_session": 50,

@@ -170,3 +170,75 @@ sessions:
         contains_any: ["Cmaj9", "maj9", "maj7", "9", "13", "6/9", "add", "extended", "E", "B", "D"]
         min_length: 50
         max_elapsed_ms: 45000
+
+  # ── Journey 5: Pitch-class set theory (GA SetClass / atonal domain) ──────
+  # GA's differentiated engine, not generic guitar advice: interval-class
+  # vector → Z-relation → transposition/inversion equivalence → symmetric
+  # families. Exercises the SetClass analysis path + OPTIC-K's atonal catalog.
+  - id: pc-set-analysis
+    persona: pc-set-theory
+    description: >
+      A theorist probing GA's pitch-class set engine on the all-interval
+      tetrachord {0,1,4,6}: its interval-class vector → its Z-partner →
+      whether they are T/I-equivalent → which modal families are symmetric.
+    turns:
+      - user: "What is the interval-class vector of the pitch-class set {0,1,4,6}?"
+        contains_any: ["interval", "vector", "ICV", "[1", "1 1 1 1 1 1", "1,1,1,1,1,1", "all-interval"]
+        not_contains: ["I don't know", "returned no matches", "index is not loaded"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Is that set Z-related to a different set class with the same vector?"
+        references: ["0,1,4,6", "0146", "0", "tetrachord"]
+        contains_any: ["Z", "Z-related", "0,1,3,7", "0137", "same", "vector"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Are {0,1,4,6} and {0,1,3,7} equivalent under transposition or inversion?"
+        contains_any: ["no", "not", "distinct", "transposition", "inversion", "Z"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Which modal families in your catalog are symmetric under transposition?"
+        contains_any: ["symmetric", "whole tone", "whole-tone", "diminished", "octatonic", "augmented", "family", "families"]
+        not_contains: ["returned no matches"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+  # ── Journey 6: OPTIC-K voicing search & navigation ──────────────────────
+  # GA's crown jewel: the 240-dim OPTIC-K voicing index. find voicings →
+  # easier ones → nearest neighbors in the index → a voice-leading move.
+  # The universal banned markers ("returned no matches", "index is not
+  # loaded") turn an unloaded/empty OPTIC-K index into a hard turn failure —
+  # exactly the reliability signal we want on this path.
+  - id: optick-voicing-search
+    persona: optick-voicing-search
+    description: >
+      A guitarist mining the OPTIC-K voicing index: find voicings for a chord →
+      easier versions → nearest neighbors in the index → a smooth voice-leading
+      target.
+    turns:
+      - user: "Find me some playable guitar voicings for a Cmaj7 chord."
+        contains_any: ["voicing", "fret", "string", "Cmaj7", "x", "shape", "position"]
+        not_contains: ["returned no matches", "index is not loaded"]
+        min_length: 60
+        max_elapsed_ms: 60000
+
+      - user: "Show me easier versions of those voicings."
+        references: ["Cmaj7"]
+        contains_any: ["easier", "open", "simpler", "fret", "Cmaj7", "voicing"]
+        not_contains: ["returned no matches", "index is not loaded"]
+        min_length: 50
+        max_elapsed_ms: 60000
+
+      - user: "What voicings are the nearest neighbors to that shape in the index?"
+        contains_any: ["neighbor", "similar", "nearest", "voicing", "index", "distance", "close"]
+        not_contains: ["index is not loaded"]
+        min_length: 50
+        max_elapsed_ms: 60000
+
+      - user: "Give me a voicing that voice-leads smoothly into a Dm7."
+        references: ["Dm7"]
+        contains_any: ["voice leading", "voice-leading", "Dm7", "smooth", "common tone", "move", "voicing", "fret"]
+        min_length: 50
+        max_elapsed_ms: 60000

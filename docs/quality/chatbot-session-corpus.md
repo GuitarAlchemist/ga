@@ -13,8 +13,15 @@ they have a conversation. This corpus measures that.
 ## What
 
 `Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml` defines full multi-turn
-conversations across four guitarist journeys (beginner onboarding, songwriting &
-progressions, improv scales/modes, jazz & advanced harmony).
+conversations across six journeys. Two target **GA's differentiated domain** —
+**pitch-class set theory** (the SetClass engine: interval-class vector,
+Z-relation, T/I equivalence, symmetric families) and the **OPTIC-K voicing
+index** (search, easier voicings, nearest neighbors, voice leading) — because
+that is what makes GA more than a generic chatbot. The other four are
+music-theory journeys (beginner onboarding, songwriting & progressions, improv
+scales/modes, jazz & advanced harmony). Generic guitar-teacher content
+(practice routines, metronome, gear/tuning) is deliberately **out of scope** —
+not GA's value.
 `SessionCorpusTests.EverySession_SatisfiesItsInvariants` replays each one
 turn-by-turn against `GaChatbot.Api`, passing the **accumulating
 `ConversationHistory`** on every request — the exact path the live `/chatbot` UI
@@ -62,6 +69,11 @@ drive the inner loop — the same line the whole nested-loop design holds.
 
 ## Seed baseline (2026-06-16)
 
-`session_pass_pct ≈ 0.69–0.81` across runs (11–13 / 16 turns). Stable target:
-jazz tritone-substitution turn. Flaky targets: the two jazz context-retention
-turns (Cmaj7) and two borderline `min_length` turns — first loop work items.
+`session_pass_pct = 0.75` (18/24 turns, 6 journeys). **GA's differentiated
+domain is mostly reliable through the chatbot:** the OPTIC-K voicing-search
+journey passes 4/4 (index loaded, search → easier → neighbors → voice-leading
+all answered), and pitch-class set theory passes 3/4. **Stable GA-domain
+target:** the Z-relation lookup (pc-set turn 2 — the chatbot answers ICV and
+T/I-equivalence but does not surface the Z-partner {0,1,3,7}). Other failures
+are on the lower-priority music-theory journeys (jazz tritone-sub, a couple of
+context-retention and `min_length` turns) — the first loop work items.

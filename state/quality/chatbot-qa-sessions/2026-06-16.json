@@ -2,14 +2,17 @@
   "schema_version": 1,
   "date": "2026-06-16",
   "metric": "session_pass_pct",
-  "sessions": 4,
-  "turns_total": 16,
-  "turns_passed": 13,
-  "session_pass_pct": 0.812,
+  "sessions": 6,
+  "turns_total": 24,
+  "turns_passed": 18,
+  "session_pass_pct": 0.75,
   "failures": [
-    "[beginner-onboarding/beginner-first-chords] turn 3: 'How do I switch between those chords smoothly without stoppi...'  ->  too short (70 < 80 chars)",
+    "[beginner-onboarding/beginner-first-chords] turn 4: 'And what's an easy strumming pattern for that?'  ->  none of contains_any matched: [down, up, strum, pattern, D-D-U, downstroke, rhythm]",
     "[improv-scales-modes/improv-over-am-progression] turn 2: 'Cool. What arpeggio should I target when the F chord comes a...'  ->  too short (35 < 60 chars)",
-    "[jazz-advanced-harmony/jazz-ii-v-i-reharm] turn 2: 'Now substitute the V chord with its tritone substitution.'  ->  none of contains_any matched: [Db7, tritone, Db, substitut]"
+    "[jazz-advanced-harmony/jazz-ii-v-i-reharm] turn 2: 'Now substitute the V chord with its tritone substitution.'  ->  none of contains_any matched: [Db7, tritone, Db, substitut]",
+    "[jazz-advanced-harmony/jazz-ii-v-i-reharm] turn 3: 'How does the voice leading move from that sub chord into the...'  ->  lost conversation context: none of the prior-turn references appeared [Cmaj7]",
+    "[jazz-advanced-harmony/jazz-ii-v-i-reharm] turn 4: 'Give me a richer extended voicing for that Cmaj7 to finish o...'  ->  lost conversation context: none of the prior-turn references appeared [Cmaj7]",
+    "[pc-set-theory/pc-set-analysis] turn 2: 'Is that set Z-related to a different set class with the same...'  ->  none of contains_any matched: [Z, Z-related, 0,1,3,7, 0137, same, vector]"
   ],
   "degraded": false,
   "source": "run-session-corpus"
