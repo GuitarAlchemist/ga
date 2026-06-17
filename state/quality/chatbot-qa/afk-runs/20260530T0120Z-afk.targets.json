@@ -1,0 +1,30 @@
+{
+  "run_id": "20260530T0120Z-afk",
+  "deterministic_pass_pct": 1.0,
+  "deterministic_target": 0.97,
+  "target_met": true,
+  "semantic_pass_pct": 1.0,
+  "queued_targets": [
+    {
+      "id": "modes-characteristic-tags",
+      "prompt": "What are the modes of the major scale",
+      "finding": "Per-mode 'characteristic' degree tags are garbled (e.g. Ionian shows 2,3,6,7; should be empty for the reference mode).",
+      "root_cause": "ScaleModeSimpleInterval.IsCharacteristic / ScaleMode.RefMode in GA.Domain.Core return color-tones rather than degrees that differ from the parent major scale.",
+      "blast_radius": "domain-wide (every mode display) + existing domain tests",
+      "disposition": "DEFERRED — not a safe autonomous edit; needs scoped human review. Does NOT affect deterministic corpus (it checks mode names, not tags).",
+      "severity": "should_fix"
+    },
+    {
+      "id": "chordinfo-guitar-fingering",
+      "prompt": "What is a C major chord on guitar",
+      "finding": "Answer gives notes (C E G) only; 'on guitar' implies a fingering/voicing is expected.",
+      "root_cause": "chordinfo skill does not attach a fretboard voicing for instrument-qualified chord queries.",
+      "blast_radius": "chordinfo skill (feature add)",
+      "disposition": "DEFERRED — feature scope; candidate for next cycle.",
+      "severity": "nice_to_have"
+    }
+  ],
+  "perf_warnings": [
+    {"prompt": "What are the modes of the major scale", "elapsed_ms": 64342, "soft_budget_ms": 30000}
+  ]
+}

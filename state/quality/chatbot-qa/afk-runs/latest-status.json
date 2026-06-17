@@ -1,0 +1,21 @@
+{
+  "global_halt": "state/.loop-halted",
+  "updated_at": "2026-05-30T01:29:26Z",
+  "domain": "chatbot-qa",
+  "events_file": "afk-runs/20260530T0120Z-afk.jsonl",
+  "branch": "afk/chatbot-qa-20260530",
+  "phase": "exit",
+  "state": "done",
+  "killswitch": "state/quality/chatbot-qa/.STOP",
+  "started_at": "2026-05-30T01:22:00Z",
+  "target_metric": 0.97,
+  "last_event": "RUN COMPLETE: deterministic 100% (target 0.97 MET, 0 commits needed); 2 semantic targets queued (deferred, not risk-forced). 1 perf warn (modes 64s).",
+  "run_id": "20260530T0120Z-afk",
+  "blockers": [],
+  "schema_version": 1,
+  "iteration": 2,
+  "current": {
+    "semantic_pass_pct": 1.0,
+    "deterministic_pass_pct": 1.0
+  }
+}

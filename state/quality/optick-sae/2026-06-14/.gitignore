@@ -1,0 +1,6 @@
+# Large binary outputs from SAE training — not tracked in git.
+# Regenerate with the canonical trainer (sae-lens or Scripts/optick_sae_train.py).
+*.parquet
+*.safetensors
+*.pt
+*.log

@@ -1,0 +1,5 @@
+{"ts":"2026-05-30T01:11:01Z","run_id":"20260530T0055Z-afk-live-dryrun","kind":"phase","detail":"backend healthy on :5252 - live bounded dry-run (3 prompts, semantic panel only)"}
+{"ts":"2026-05-30T01:11:02Z","run_id":"20260530T0055Z-afk-live-dryrun","kind":"roundtrip","detail":"modes/major scale: consensus P (musical T, grounding P=garbled characteristic tags, completeness T)","iteration":1,"sem":1.0}
+{"ts":"2026-05-30T01:11:02Z","run_id":"20260530T0055Z-afk-live-dryrun","kind":"roundtrip","detail":"Lydian dominant: consensus T (all 3 lenses T)","iteration":2,"sem":1.0}
+{"ts":"2026-05-30T01:11:02Z","run_id":"20260530T0055Z-afk-live-dryrun","kind":"roundtrip","detail":"C major on guitar: consensus P (notes correct; fingering/voicing omitted)","iteration":3,"sem":1.0}
+{"ts":"2026-05-30T01:11:03Z","run_id":"20260530T0055Z-afk-live-dryrun","kind":"exit","detail":"live dry-run done: 3/3 semantic pass (T:1 P:2). Deterministic oracle not run in dry-run.","sem":1.0}
