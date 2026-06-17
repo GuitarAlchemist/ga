@@ -1,0 +1,2504 @@
+{
+  "schemaVersion": "0.1",
+  "generatedAt": "2026-06-17T02:21:27.1387807Z",
+  "routerConfig": {
+    "minConfidence": 0.64,
+    "embedder": "bge-large"
+  },
+  "totalPrompts": 174,
+  "overall": {
+    "Total": 174,
+    "Correct": 164,
+    "UnmatchedFallthrough": 7,
+    "Accuracy": 0.9425287356321839,
+    "InScopeTotal": 166,
+    "InScopeCorrect": 157,
+    "InScopeAccuracy": 0.9457831325301205,
+    "OosTotal": 8,
+    "OosCorrectlyDeclined": 7,
+    "OosDeclineRate": 0.875,
+    "MeanInScopeMargin": 0.1528593883456954
+  },
+  "perIntent": {
+    "skill.chordinfo": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.scaleinfo": {
+      "Support": 10,
+      "TruePositives": 7,
+      "FalsePositives": 0,
+      "FalseNegatives": 3,
+      "Precision": 1,
+      "Recall": 0.7,
+      "F1": 0.8235294117647058,
+      "Status": "measured"
+    },
+    "skill.modes": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 2,
+      "FalseNegatives": 0,
+      "Precision": 0.8333333333333334,
+      "Recall": 1,
+      "F1": 0.9090909090909091,
+      "Status": "measured"
+    },
+    "skill.interval": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.chordsubstitution": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 2,
+      "FalseNegatives": 0,
+      "Precision": 0.8333333333333334,
+      "Recall": 1,
+      "F1": 0.9090909090909091,
+      "Status": "measured"
+    },
+    "skill.beginnerchords": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.progressionmood": {
+      "Support": 14,
+      "TruePositives": 14,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.circleoffifths": {
+      "Support": 10,
+      "TruePositives": 9,
+      "FalsePositives": 0,
+      "FalseNegatives": 1,
+      "Precision": 1,
+      "Recall": 0.9,
+      "F1": 0.9473684210526316,
+      "Status": "measured"
+    },
+    "skill.practiceroutine": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.genreessentials": {
+      "Support": 10,
+      "TruePositives": 9,
+      "FalsePositives": 0,
+      "FalseNegatives": 1,
+      "Precision": 1,
+      "Recall": 0.9,
+      "F1": 0.9473684210526316,
+      "Status": "measured"
+    },
+    "skill.whatcanyoudo": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.transpose": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 1,
+      "FalseNegatives": 0,
+      "Precision": 0.9090909090909091,
+      "Recall": 1,
+      "F1": 0.9523809523809523,
+      "Status": "measured"
+    },
+    "skill.commontones": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 0,
+      "FalseNegatives": 0,
+      "Precision": 1,
+      "Recall": 1,
+      "F1": 1,
+      "Status": "measured"
+    },
+    "skill.diatonicchords": {
+      "Support": 12,
+      "TruePositives": 10,
+      "FalsePositives": 1,
+      "FalseNegatives": 2,
+      "Precision": 0.9090909090909091,
+      "Recall": 0.8333333333333334,
+      "F1": 0.8695652173913043,
+      "Status": "measured"
+    },
+    "skill.keyidentification": {
+      "Support": 10,
+      "TruePositives": 10,
+      "FalsePositives": 1,
+      "FalseNegatives": 0,
+      "Precision": 0.9090909090909091,
+      "Recall": 1,
+      "F1": 0.9523809523809523,
+      "Status": "measured"
+    },
+    "skill.progressioncompletion": {
+      "Support": 10,
+      "TruePositives": 8,
+      "FalsePositives": 0,
+      "FalseNegatives": 2,
+      "Precision": 1,
+      "Recall": 0.8,
+      "F1": 0.888888888888889,
+      "Status": "measured"
+    }
+  },
+  "prompts": [
+    {
+      "Id": "ci-1",
+      "Prompt": "what notes are in Cmaj7?",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 0.9935366,
+      "Margin": 0.09083927,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "ci-2",
+      "Prompt": "spell a Bbdim chord",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 0.8268928,
+      "Margin": 0.046836734,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "ci-3",
+      "Prompt": "tell me about Dm7",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.19911063,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ci-4",
+      "Prompt": "spell an Eb7#9 chord",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 0.8672564,
+      "Margin": 0.11910814,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "jargon"
+      ]
+    },
+    {
+      "Id": "ci-5",
+      "Prompt": "what makes a chord a major seventh",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.22674763,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "ci-6",
+      "Prompt": "give me the notes of an F#m7b5",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.15540081,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "jargon"
+      ]
+    },
+    {
+      "Id": "ci-7",
+      "Prompt": "what is a C add 9 chord",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.29025477,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ci-8",
+      "Prompt": "break down Gmaj13 for me",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.25763625,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "ci-9",
+      "Prompt": "tones in a Bb diminished seventh",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.20065671,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ci-10",
+      "Prompt": "anatomy of a D7sus4 chord",
+      "Expected": "skill.chordinfo",
+      "Chosen": "skill.chordinfo",
+      "Confidence": 1,
+      "Margin": 0.2544204,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "si-1",
+      "Prompt": "notes in the A natural minor scale",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 0.8575711,
+      "Margin": 0.055650353,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "si-2",
+      "Prompt": "notes of the harmonic minor scale",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.modes",
+      "Confidence": 0.87434,
+      "Margin": 0.04480499,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "si-3",
+      "Prompt": "scale tones for D melodic minor",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.modes",
+      "Confidence": 0.8157736,
+      "Margin": 0.005238831,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "si-4",
+      "Prompt": "what\u0027s in the G major scale",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 1,
+      "Margin": 0.1852628,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "si-5",
+      "Prompt": "spell out C natural minor",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.transpose",
+      "Confidence": 0.7587157,
+      "Margin": 0.0027033687,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "si-6",
+      "Prompt": "list the notes of Bb major",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 0.9859128,
+      "Margin": 0.14123344,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "si-7",
+      "Prompt": "give me the F# minor scale",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 1,
+      "Margin": 0.14904642,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "si-8",
+      "Prompt": "what\u0027s the formula for harmonic minor",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 1,
+      "Margin": 0.17592639,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "si-9",
+      "Prompt": "tones of E major scale please",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 0.91290367,
+      "Margin": 0.08793086,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "si-10",
+      "Prompt": "show me A major scale degrees",
+      "Expected": "skill.scaleinfo",
+      "Chosen": "skill.scaleinfo",
+      "Confidence": 0.9133979,
+      "Margin": 0.115554154,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "mo-1",
+      "Prompt": "what are the modes of the major scale",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 1,
+      "Margin": 0.2085554,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "mo-2",
+      "Prompt": "list the seven modes",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.85497403,
+      "Margin": 0.14634335,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "mo-3",
+      "Prompt": "what notes are in G mixolydian",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.785648,
+      "Margin": 0.025452971,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "modal-overlap",
+        "relabeled-v0.1.1"
+      ]
+    },
+    {
+      "Id": "mo-4",
+      "Prompt": "explain the Lydian mode",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.8618512,
+      "Margin": 0.1221087,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "mo-5",
+      "Prompt": "what is the third mode of major",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.83186615,
+      "Margin": 0.11501533,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "mo-6",
+      "Prompt": "describe Dorian and Phrygian",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.80965084,
+      "Margin": 0.09949541,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "mo-7",
+      "Prompt": "tell me about D Dorian",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.86718726,
+      "Margin": 0.12489593,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "mo-8",
+      "Prompt": "characteristics of Locrian",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 1,
+      "Margin": 0.42183828,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "mo-9",
+      "Prompt": "what makes Lydian unique",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 0.91289735,
+      "Margin": 0.22940159,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "mo-10",
+      "Prompt": "Mixolydian versus Ionian differences",
+      "Expected": "skill.modes",
+      "Chosen": "skill.modes",
+      "Confidence": 1,
+      "Margin": 0.26026738,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "in-1",
+      "Prompt": "interval between C and G",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.955409,
+      "Margin": 0.1732645,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "in-2",
+      "Prompt": "what\u0027s a perfect fifth",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 1,
+      "Margin": 0.20880783,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "in-3",
+      "Prompt": "interval from F to Bb",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.8504168,
+      "Margin": 0.072321296,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "in-4",
+      "Prompt": "what is a minor third up from D",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.98092276,
+      "Margin": 0.17011446,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "in-5",
+      "Prompt": "name the interval D to A",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.7960232,
+      "Margin": 0.06411952,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "in-6",
+      "Prompt": "what is a tritone",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.73042274,
+      "Margin": 0.029382408,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "in-7",
+      "Prompt": "augmented fourth definition",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 1,
+      "Margin": 0.37102616,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "in-8",
+      "Prompt": "semitones in a major sixth",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 1,
+      "Margin": 0.25355077,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "in-9",
+      "Prompt": "how far is it from C to F#",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.86917937,
+      "Margin": 0.138228,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "in-10",
+      "Prompt": "perfect octave above middle C",
+      "Expected": "skill.interval",
+      "Chosen": "skill.interval",
+      "Confidence": 0.9128776,
+      "Margin": 0.14800775,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "cs-1",
+      "Prompt": "what chord can substitute for G7",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.93356395,
+      "Margin": 0.063189685,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "cs-2",
+      "Prompt": "tritone substitution for D7",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.9997111,
+      "Margin": 0.19634396,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "jargon"
+      ]
+    },
+    {
+      "Id": "cs-3",
+      "Prompt": "good substitute for the V chord",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.7719806,
+      "Margin": 0.056081295,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "cs-4",
+      "Prompt": "alternative chord for Cmaj7",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 1,
+      "Margin": 0.09582609,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "cs-5",
+      "Prompt": "modal interchange substitutes for C major",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 1,
+      "Margin": 0.22379452,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "jargon"
+      ]
+    },
+    {
+      "Id": "cs-6",
+      "Prompt": "what can replace Dm7 in a ii-V-I",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.9031293,
+      "Margin": 0.17009258,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "cs-7",
+      "Prompt": "reharmonize this G7",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.89977,
+      "Margin": 0.102571666,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "cs-8",
+      "Prompt": "swap chord for Am7 with same function",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.8866757,
+      "Margin": 0.07578039,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "cs-9",
+      "Prompt": "secondary dominant for ii",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.76124007,
+      "Margin": 0.058998227,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "cs-10",
+      "Prompt": "borrowed chord options for F major",
+      "Expected": "skill.chordsubstitution",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.8780411,
+      "Margin": 0.061187446,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "bc-1",
+      "Prompt": "easy chords for beginners",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.9478822,
+      "Margin": 0.14050901,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "bc-2",
+      "Prompt": "first chords to learn on guitar",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.9246423,
+      "Margin": 0.13619262,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "bc-3",
+      "Prompt": "what chords should I learn first",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.9622841,
+      "Margin": 0.19519311,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "bc-4",
+      "Prompt": "simple chord shapes for a new guitarist",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.9123349,
+      "Margin": 0.13830924,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "bc-5",
+      "Prompt": "starter chords for an absolute beginner",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.8879095,
+      "Margin": 0.05553204,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "bc-6",
+      "Prompt": "open chords for a first-time guitarist",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.90631294,
+      "Margin": 0.11073446,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "bc-7",
+      "Prompt": "I\u0027m just starting out \u2014 which chords first",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.91127264,
+      "Margin": 0.15867281,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "bc-8",
+      "Prompt": "basic chord shapes for week one",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.79873383,
+      "Margin": 0.05301273,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "bc-9",
+      "Prompt": "what\u0027s a good first chord to learn",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.9180441,
+      "Margin": 0.19455409,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "bc-10",
+      "Prompt": "show me beginner-friendly guitar chords",
+      "Expected": "skill.beginnerchords",
+      "Chosen": "skill.beginnerchords",
+      "Confidence": 0.94227016,
+      "Margin": 0.13799345,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pm-1",
+      "Prompt": "how do I make this minor progression sound brighter",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.94513583,
+      "Margin": 0.16393167,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common",
+        "transform-semantics"
+      ]
+    },
+    {
+      "Id": "pm-2",
+      "Prompt": "make C G Am F sound darker",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.892486,
+      "Margin": 0.13560635,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "transform-semantics"
+      ]
+    },
+    {
+      "Id": "pm-3",
+      "Prompt": "darken a vi-IV-I-V progression",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.91744477,
+      "Margin": 0.13422519,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "pm-4",
+      "Prompt": "brighten up a minor key tune",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 1,
+      "Margin": 0.18763876,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pm-5",
+      "Prompt": "give this progression a sadder feel",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.91711605,
+      "Margin": 0.16304266,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pm-6",
+      "Prompt": "make my chords feel more melancholy",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.9764812,
+      "Margin": 0.22975993,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pm-7",
+      "Prompt": "techniques to add tension to a happy progression",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.87303203,
+      "Margin": 0.1754201,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pm-8",
+      "Prompt": "how do I make these chords sound more cinematic",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.8846185,
+      "Margin": 0.121489465,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "pm-9",
+      "Prompt": "lift the mood of D minor",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.9015962,
+      "Margin": 0.08289629,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pm-10",
+      "Prompt": "what borrowed chord makes things darker",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.8876023,
+      "Margin": 0.16912246,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "co-1",
+      "Prompt": "circle of fifths positions",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.8723389,
+      "Margin": 0.16040081,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "co-2",
+      "Prompt": "explain the circle of fifths",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 1,
+      "Margin": 0.22469437,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "co-3",
+      "Prompt": "show me the circle of fourths",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.9549091,
+      "Margin": 0.21658677,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "co-4",
+      "Prompt": "what key is across the circle from D",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.9895628,
+      "Margin": 0.14068896,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "co-5",
+      "Prompt": "neighboring keys on the circle of fifths",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.82770234,
+      "Margin": 0.09127259,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "co-6",
+      "Prompt": "how many sharps in B major",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.relativekey",
+      "Confidence": 0.85247445,
+      "Margin": 0.027373374,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "co-7",
+      "Prompt": "order of flats around the circle",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.71715355,
+      "Margin": 0.053857744,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "co-8",
+      "Prompt": "what key is opposite F on the circle",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.8259079,
+      "Margin": 0.009118795,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "co-9",
+      "Prompt": "key signature lookup for Eb",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.7444746,
+      "Margin": 0.037567914,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "co-10",
+      "Prompt": "modulate around the circle from C",
+      "Expected": "skill.circleoffifths",
+      "Chosen": "skill.circleoffifths",
+      "Confidence": 0.7724126,
+      "Margin": 0.07790351,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pr-1",
+      "Prompt": "give me a 20 minute practice routine",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 1,
+      "Margin": 0.32378548,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "pr-2",
+      "Prompt": "design a practice plan for me",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.80630463,
+      "Margin": 0.12880194,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pr-3",
+      "Prompt": "what should I practice today",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 1,
+      "Margin": 0.31576657,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pr-4",
+      "Prompt": "build a 30 minute practice schedule",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 1,
+      "Margin": 0.36302954,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pr-5",
+      "Prompt": "give me a daily practice outline",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.8869663,
+      "Margin": 0.20806038,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pr-6",
+      "Prompt": "structure my hour of practice",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.81101346,
+      "Margin": 0.14076942,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pr-7",
+      "Prompt": "weekly practice plan suggestions",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.8646068,
+      "Margin": 0.21555555,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pr-8",
+      "Prompt": "how should I split my practice time",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.7937189,
+      "Margin": 0.15194166,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "pr-9",
+      "Prompt": "warm-up routine for a 45 minute session",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.77125025,
+      "Margin": 0.15159392,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pr-10",
+      "Prompt": "balanced practice schedule for intermediate players",
+      "Expected": "skill.practiceroutine",
+      "Chosen": "skill.practiceroutine",
+      "Confidence": 0.7906636,
+      "Margin": 0.12657797,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ge-1",
+      "Prompt": "essential chords for blues guitar",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.18442512,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "ge-2",
+      "Prompt": "essential scales for jazz guitar",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.28741097,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ge-3",
+      "Prompt": "country guitar starter chords",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.18794274,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "starter-overlap"
+      ]
+    },
+    {
+      "Id": "ge-4",
+      "Prompt": "must-know progressions for rock",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.2793213,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ge-5",
+      "Prompt": "key chords in funk music",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.2616368,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ge-6",
+      "Prompt": "what defines blues harmony",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 1,
+      "Margin": 0.40902102,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "ge-7",
+      "Prompt": "essential progressions for bossa nova",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 0.75467616,
+      "Margin": 0.049990296,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ge-8",
+      "Prompt": "core chord vocabulary for soul music",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 0.7884049,
+      "Margin": 0.063872576,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ge-9",
+      "Prompt": "must-learn shapes for surf rock",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.genreessentials",
+      "Confidence": 0.73243105,
+      "Margin": 0.086533725,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ge-10",
+      "Prompt": "jazz harmony fundamentals",
+      "Expected": "skill.genreessentials",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.7817424,
+      "Margin": 0.021023989,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conceptual"
+      ]
+    },
+    {
+      "Id": "wc-1",
+      "Prompt": "what can you do",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.33162612,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-2",
+      "Prompt": "what are your capabilities",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.38810843,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-3",
+      "Prompt": "help me figure out what to ask",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.3681546,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-4",
+      "Prompt": "what features does this chatbot have",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 0.9186044,
+      "Margin": 0.34951663,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-5",
+      "Prompt": "show me what you know",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.36548895,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-6",
+      "Prompt": "list your skills",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.33459103,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-7",
+      "Prompt": "what kinds of questions can I ask",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 0.9302327,
+      "Margin": 0.3189665,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-8",
+      "Prompt": "give me a tour of your features",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.3645447,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "meta"
+      ]
+    },
+    {
+      "Id": "wc-9",
+      "Prompt": "I\u0027m new here \u2014 what can you help with",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.40035307,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "meta",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "wc-10",
+      "Prompt": "menu of available actions",
+      "Expected": "skill.whatcanyoudo",
+      "Chosen": "skill.whatcanyoudo",
+      "Confidence": 1,
+      "Margin": 0.32036412,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "meta"
+      ]
+    },
+    {
+      "Id": "tr-1",
+      "Prompt": "transpose C major up a perfect fifth",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 0.9116184,
+      "Margin": 0.033871412,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "tr-2",
+      "Prompt": "transpose this progression down a half step",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.21768284,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common",
+        "requires-context"
+      ]
+    },
+    {
+      "Id": "tr-3",
+      "Prompt": "transpose C-Am-F-G to G major",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.20954543,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "tr-4",
+      "Prompt": "shift this progression up a whole step",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.19317693,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "tr-5",
+      "Prompt": "bring D minor down to A minor",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.1839397,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "tr-6",
+      "Prompt": "transpose the verse up a minor third",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 0.8548343,
+      "Margin": 0.07356119,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "tr-7",
+      "Prompt": "move this riff to E major",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 0.84338826,
+      "Margin": 0.076547384,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "tr-8",
+      "Prompt": "transposing the chorus down a tone",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.258007,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "gerund"
+      ]
+    },
+    {
+      "Id": "tr-9",
+      "Prompt": "shift G-D-Em-C to A major",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 0.93229085,
+      "Margin": 0.14178175,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "tr-10",
+      "Prompt": "raise the key by two semitones",
+      "Expected": "skill.transpose",
+      "Chosen": "skill.transpose",
+      "Confidence": 1,
+      "Margin": 0.18763876,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ct-1",
+      "Prompt": "common tones between Cmaj7 and Am7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.9307959,
+      "Margin": 0.06101793,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "ct-2",
+      "Prompt": "shared notes between G7 and Cmaj7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.88447535,
+      "Margin": 0.08979261,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ct-3",
+      "Prompt": "which pitches do Dm and Bbmaj share",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.69502866,
+      "Margin": 0.07262826,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ct-4",
+      "Prompt": "common tones for F and G7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.9708563,
+      "Margin": 0.1192019,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ct-5",
+      "Prompt": "overlapping notes in Cmaj7 and Em7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 1,
+      "Margin": 0.1503151,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ct-6",
+      "Prompt": "pivot tones between Fmaj7 and Bb7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.98563313,
+      "Margin": 0.1543994,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ct-7",
+      "Prompt": "what notes do Am7 and Dm7 share",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.9728474,
+      "Margin": 0.06888825,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ct-8",
+      "Prompt": "shared pitches in Cmaj and G7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.82468444,
+      "Margin": 0.023991704,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ct-9",
+      "Prompt": "find the intersection of Em and Cmaj7",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.8792671,
+      "Margin": 0.06766003,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ct-10",
+      "Prompt": "common notes between F major and D minor",
+      "Expected": "skill.commontones",
+      "Chosen": "skill.commontones",
+      "Confidence": 0.8956085,
+      "Margin": 0.085217655,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "dc-1",
+      "Prompt": "diatonic chords in C major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 1,
+      "Margin": 0.21519196,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "dc-2",
+      "Prompt": "what chords are in the key of D",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.93293506,
+      "Margin": 0.10812014,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "dc-3",
+      "Prompt": "what is the IV chord in A major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 1,
+      "Margin": 0.24645013,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "dc-4",
+      "Prompt": "list the chords in G major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 1,
+      "Margin": 0.18481153,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "dc-5",
+      "Prompt": "diatonic seventh chords in E minor",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 1,
+      "Margin": 0.19448423,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "dc-6",
+      "Prompt": "chords that fit in F major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.chordsubstitution",
+      "Confidence": 0.8606904,
+      "Margin": 0.005541444,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "dc-7",
+      "Prompt": "what\u0027s the iii chord in D major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.822338,
+      "Margin": 0.07059389,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "dc-8",
+      "Prompt": "harmonized A minor scale",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.8054758,
+      "Margin": 0.0041734576,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "dc-9",
+      "Prompt": "I-IV-V chords in B major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.85217553,
+      "Margin": 0.052960753,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "dc-10",
+      "Prompt": "give me the seven chords of G major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.91139764,
+      "Margin": 0.062315345,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ki-1",
+      "Prompt": "what key is this progression in C G Am F",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.92158794,
+      "Margin": 0.10065985,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "ki-2",
+      "Prompt": "identify the key of Am F C G",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.9948865,
+      "Margin": 0.20047915,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "minor-tonic"
+      ]
+    },
+    {
+      "Id": "ki-3",
+      "Prompt": "what key is C F G C in",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.99512416,
+      "Margin": 0.19392902,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ki-4",
+      "Prompt": "tell me the key of Em Am D G",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.88311857,
+      "Margin": 0.09556848,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "minor-tonic"
+      ]
+    },
+    {
+      "Id": "ki-5",
+      "Prompt": "find the tonic of A E F#m D",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 1,
+      "Margin": 0.22745782,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "ki-6",
+      "Prompt": "what key are these chords D G A D",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.97400373,
+      "Margin": 0.10470122,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ki-7",
+      "Prompt": "which key does C Dm Em F belong to",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.8610166,
+      "Margin": 0.11908978,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ki-8",
+      "Prompt": "figure out the tonal center of E A B E",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.8479508,
+      "Margin": 0.07665938,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ki-9",
+      "Prompt": "key of these jazz chords Cmaj7 Am7 Dm7 G7",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.84666264,
+      "Margin": 0.052161455,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "ki-10",
+      "Prompt": "what\u0027s the home key for F C G Am",
+      "Expected": "skill.keyidentification",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.8968214,
+      "Margin": 0.17412925,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "pc-1",
+      "Prompt": "what chord comes next after C Am F",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 1,
+      "Margin": 0.17565799,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "pc-2",
+      "Prompt": "suggest a chord to finish this progression",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.881499,
+      "Margin": 0.10724807,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "common"
+      ]
+    },
+    {
+      "Id": "pc-3",
+      "Prompt": "complete this: C Am F",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.8355525,
+      "Margin": 0.11840761,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pc-4",
+      "Prompt": "what should come after G C in this song",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.87187755,
+      "Margin": 0.093095064,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed"
+      ]
+    },
+    {
+      "Id": "pc-5",
+      "Prompt": "predict the next chord in I V vi",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.77558494,
+      "Margin": 0.0054997206,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.3-seed",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "pc-6",
+      "Prompt": "I have C G \u2014 what should follow",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.91508824,
+      "Margin": 0.18166912,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "conversational"
+      ]
+    },
+    {
+      "Id": "pc-7",
+      "Prompt": "next chord after Dm7 G7",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.9317321,
+      "Margin": 0.098525405,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pc-8",
+      "Prompt": "finish this progression: Am F C",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.9362723,
+      "Margin": 0.16708034,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pc-9",
+      "Prompt": "what resolves Fmaj7 best",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.icvshortestpath",
+      "Confidence": 0.7717766,
+      "Margin": 0.00067794323,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase"
+      ]
+    },
+    {
+      "Id": "pc-10",
+      "Prompt": "chord after V in a major key",
+      "Expected": "skill.progressioncompletion",
+      "Chosen": "skill.progressioncompletion",
+      "Confidence": 0.8725361,
+      "Margin": 0.07196462,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.5-paraphrase",
+        "roman-numeral"
+      ]
+    },
+    {
+      "Id": "adv-1",
+      "Prompt": "borrow from Phrygian to darken C G F",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.8954178,
+      "Margin": 0.14228457,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-2",
+      "Prompt": "add a Lydian feel to this major progression",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.893774,
+      "Margin": 0.10939592,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-3",
+      "Prompt": "use Aeolian modal interchange to make it sound sadder",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 0.8440026,
+      "Margin": 0.12055254,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-4",
+      "Prompt": "how does Mixolydian flavor brighten rock progressions",
+      "Expected": "skill.progressionmood",
+      "Chosen": "skill.progressionmood",
+      "Confidence": 1,
+      "Margin": 0.18317991,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "mode-name-non-modes-context"
+      ]
+    },
+    {
+      "Id": "adv-5",
+      "Prompt": "what is the tonic chord in G major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.keyidentification",
+      "Confidence": 0.8497044,
+      "Margin": 0.034180462,
+      "Correct": false,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "tonic-overlap"
+      ]
+    },
+    {
+      "Id": "adv-6",
+      "Prompt": "name the I chord in A major",
+      "Expected": "skill.diatonicchords",
+      "Chosen": "skill.diatonicchords",
+      "Confidence": 0.8781545,
+      "Margin": 0.09439343,
+      "Correct": true,
+      "IsOos": false,
+      "Tags": [
+        "v0.4-adversarial",
+        "tonic-overlap"
+      ]
+    },
+    {
+      "Id": "oos-1",
+      "Prompt": "what\u0027s the weather in Paris today",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-2",
+      "Prompt": "write me a haiku about the ocean",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-3",
+      "Prompt": "how do I cook spaghetti carbonara",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-4",
+      "Prompt": "what is the capital of Australia",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-5",
+      "Prompt": "convert 50 US dollars to euros",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-6",
+      "Prompt": "summarize the plot of Hamlet",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-7",
+      "Prompt": "what time is it in Tokyo right now",
+      "Expected": "__none__",
+      "Chosen": "skill.intervalclassvector",
+      "Confidence": 0.6513852,
+      "Margin": 0.02977544,
+      "Correct": false,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    },
+    {
+      "Id": "oos-8",
+      "Prompt": "recommend a good science fiction novel",
+      "Expected": "__none__",
+      "Chosen": null,
+      "Confidence": 0,
+      "Margin": null,
+      "Correct": true,
+      "IsOos": true,
+      "Tags": [
+        "v0.6-oos",
+        "non-music"
+      ]
+    }
+  ]
+}
