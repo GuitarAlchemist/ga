@@ -1,0 +1,244 @@
+# GA Chatbot SESSION corpus — multi-turn invariant gate
+#
+# Where prompts.yaml asserts invariants on single one-shot answers, this file
+# asserts invariants across a *full conversation* a real guitarist would have.
+# Each session is replayed turn-by-turn against GaChatbot.Api with the
+# accumulating ConversationHistory passed on every request (the same path the
+# live /chatbot UI uses), so context-dependent turns ("those chords", "in that
+# key") actually carry state. SessionCorpusTests.cs is the canonical runner.
+#
+# DESIGN BOUNDARY (load-bearing): these invariants are MECHANICAL only —
+# routing, grounding presence, no-fallback, context retention, banned phrases,
+# latency. They are safe for the autonomous improvement loop to optimise
+# against. Fuzzy "was this a *good* lesson?" judgement stays human / Demerzel-
+# tribunal-gated; it is NOT encoded here.
+#
+# Per-turn fields (snake_case, UnderscoredNamingConvention):
+#   user                — the guitarist's message for this turn (required)
+#   routes_to           — expected agentId for this turn
+#   contains            — substrings that MUST appear (case-insensitive)
+#   contains_any        — at least one must appear
+#   not_contains        — substrings that must NOT appear
+#   references          — CONTEXT-RETENTION: substrings the answer must carry
+#                         BECAUSE a prior turn established them. A miss here
+#                         means the chatbot lost the thread — the multi-turn
+#                         failure single-turn corpora can't see.
+#   min_length          — minimum useful answer size (chars)
+#   max_elapsed_ms      — soft latency budget (warns, never fails)
+#   expected_grounding  — expected grounding.source ("ga.dsl", "ix-compatible", null)
+#   must_not_fallback   — fail if the trace visits orchestration.fallback
+#   forbidden_agent_ids — fail if any trace step routed to one of these
+#   min_routing_confidence — fail if the answer step's routing.confidence is below this
+#   retry               — additional attempts before declaring the turn failed (default 1)
+#
+# Universally-banned markers from PromptCorpusTests apply here too.
+
+sessions:
+
+  # ── Journey 1: Beginner onboarding ──────────────────────────────────────
+  # A brand-new guitarist: first chords → a progression using them → smooth
+  # changes → a strum. The most common real entry path.
+  - id: beginner-first-chords
+    persona: beginner-onboarding
+    description: >
+      Absolute beginner learns first open chords, then a progression with
+      them, then how to change between them, then a simple strum.
+    turns:
+      - user: "I just got my first guitar and I've never played before. What are the easiest chords I should learn first?"
+        routes_to: skill.beginnerchords
+        contains_any: ["Em", "E minor", "Am", "A minor", "G", "C", "D", "open chord"]
+        not_contains: ["I don't know", "cannot help"]
+        must_not_fallback: true
+        min_length: 120
+        max_elapsed_ms: 30000
+
+      - user: "Nice. Can you give me a simple song progression I can play using those beginner chords?"
+        # Context retention: the progression must reuse chords from turn 1.
+        references: ["G", "C", "D"]
+        contains_any: ["progression", "G", "C", "D", "Em", "Am", "verse", "I", "IV", "V"]
+        must_not_fallback: true
+        min_length: 80
+        max_elapsed_ms: 30000
+
+      - user: "How do I switch between those chords smoothly without stopping?"
+        contains_any: ["practice", "slow", "finger", "pivot", "anchor", "transition", "muscle memory", "metronome"]
+        not_contains: ["returned no matches"]
+        min_length: 80
+        max_elapsed_ms: 30000
+
+      - user: "And what's an easy strumming pattern for that?"
+        contains_any: ["down", "up", "strum", "pattern", "D-D-U", "downstroke", "rhythm"]
+        min_length: 60
+        max_elapsed_ms: 30000
+
+  # ── Journey 2: Songwriting & progressions ───────────────────────────────
+  # Writing a song in a key: diatonic chords → extend the progression → borrow
+  # a chord for colour → confirm the key.
+  - id: songwriting-in-g
+    persona: songwriting-progressions
+    description: >
+      Songwriter working in G major: diatonic palette → a 4-chord progression
+      → borrow a chord for colour → ask what key it implies.
+    turns:
+      - user: "I'm writing a song in G major. What chords are available to me in that key?"
+        routes_to: skill.diatonicchords
+        contains_any: ["G", "Am", "Bm", "C", "D", "Em", "F#dim", "F#"]
+        expected_grounding: ga.dsl
+        must_not_fallback: true
+        min_length: 100
+        max_elapsed_ms: 30000
+
+      - user: "Give me a catchy 4-chord progression from those that sounds happy."
+        references: ["G", "C", "D"]
+        contains_any: ["G", "C", "D", "Em", "I", "IV", "V", "vi", "progression"]
+        must_not_fallback: true
+        min_length: 60
+        max_elapsed_ms: 30000
+
+      - user: "Can I borrow a chord from outside the key to add some colour?"
+        contains_any: ["borrow", "borrowed", "modal", "minor", "parallel", "Cm", "Bb", "Eb", "secondary", "F"]
+        min_length: 80
+        max_elapsed_ms: 45000
+
+      - user: "If someone played that progression to me, what key would they guess?"
+        contains_any: ["G major", "G", "key of G"]
+        references: ["G"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+  # ── Journey 3: Improv — scales & modes applied ──────────────────────────
+  # Soloing over a progression: which scale → arpeggios → target tones → a mode
+  # for flavour. Applied theory, not academic.
+  - id: improv-over-am-progression
+    persona: improv-scales-modes
+    description: >
+      Improviser over an A-minor vamp: which scale fits → arpeggios per chord →
+      target/chord tones → a mode for a different colour.
+    turns:
+      - user: "I'm jamming over an Am - F - C - G loop. What scale can I solo with over the whole thing?"
+        contains_any: ["A minor", "Am", "pentatonic", "A minor pentatonic", "C major", "Aeolian", "natural minor"]
+        not_contains: ["I don't know"]
+        must_not_fallback: true
+        min_length: 100
+        max_elapsed_ms: 45000
+
+      - user: "Cool. What arpeggio should I target when the F chord comes around?"
+        references: ["F"]
+        contains_any: ["F", "A", "C", "arpeggio", "F major", "triad", "chord tone"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+      - user: "Which notes are the strongest to land on over that progression?"
+        contains_any: ["chord tone", "root", "third", "3rd", "fifth", "5th", "target", "A", "C", "E"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+      - user: "If I wanted a darker, more exotic sound over the Am, what mode could I try?"
+        references: ["A"]
+        contains_any: ["Phrygian", "Dorian", "harmonic minor", "Phrygian dominant", "mode"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+  # ── Journey 4: Jazz & advanced harmony ──────────────────────────────────
+  # ii-V-I in a key → tritone sub → voice leading → an extended/altered voicing.
+  - id: jazz-ii-v-i-reharm
+    persona: jazz-advanced-harmony
+    description: >
+      Jazz player on a ii-V-I in C: spell it → tritone-sub the V → smooth the
+      voice leading → ask for an extended voicing.
+    turns:
+      - user: "Give me a ii-V-I progression in C major with seventh chords."
+        contains_any: ["Dm7", "G7", "Cmaj7", "ii", "V", "I"]
+        must_not_fallback: true
+        min_length: 60
+        max_elapsed_ms: 45000
+
+      - user: "Now substitute the V chord with its tritone substitution."
+        references: ["G7", "Db7"]
+        contains_any: ["Db7", "tritone", "Db", "substitut"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+      - user: "How does the voice leading move from that sub chord into the Cmaj7?"
+        references: ["Cmaj7"]
+        contains_any: ["voice leading", "semitone", "half step", "chromatic", "resolve", "F", "B", "Db", "C"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+      - user: "Give me a richer extended voicing for that Cmaj7 to finish on."
+        references: ["Cmaj7"]
+        contains_any: ["Cmaj9", "maj9", "maj7", "9", "13", "6/9", "add", "extended", "E", "B", "D"]
+        min_length: 50
+        max_elapsed_ms: 45000
+
+  # ── Journey 5: Pitch-class set theory (GA SetClass / atonal domain) ──────
+  # GA's differentiated engine, not generic guitar advice: interval-class
+  # vector → Z-relation → transposition/inversion equivalence → symmetric
+  # families. Exercises the SetClass analysis path + OPTIC-K's atonal catalog.
+  - id: pc-set-analysis
+    persona: pc-set-theory
+    description: >
+      A theorist probing GA's pitch-class set engine on the all-interval
+      tetrachord {0,1,4,6}: its interval-class vector → its Z-partner →
+      whether they are T/I-equivalent → which modal families are symmetric.
+    turns:
+      - user: "What is the interval-class vector of the pitch-class set {0,1,4,6}?"
+        contains_any: ["interval", "vector", "ICV", "[1", "1 1 1 1 1 1", "1,1,1,1,1,1", "all-interval"]
+        not_contains: ["I don't know", "returned no matches", "index is not loaded"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Is that set Z-related to a different set class with the same vector?"
+        references: ["0,1,4,6", "0146", "0", "tetrachord"]
+        contains_any: ["Z", "Z-related", "0,1,3,7", "0137", "same", "vector"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Are {0,1,4,6} and {0,1,3,7} equivalent under transposition or inversion?"
+        contains_any: ["no", "not", "distinct", "transposition", "inversion", "Z"]
+        min_length: 40
+        max_elapsed_ms: 45000
+
+      - user: "Which modal families in your catalog are symmetric under transposition?"
+        contains_any: ["symmetric", "whole tone", "whole-tone", "diminished", "octatonic", "augmented", "family", "families"]
+        not_contains: ["returned no matches"]
+        min_length: 60
+        max_elapsed_ms: 45000
+
+  # ── Journey 6: OPTIC-K voicing search & navigation ──────────────────────
+  # GA's crown jewel: the 240-dim OPTIC-K voicing index. find voicings →
+  # easier ones → nearest neighbors in the index → a voice-leading move.
+  # The universal banned markers ("returned no matches", "index is not
+  # loaded") turn an unloaded/empty OPTIC-K index into a hard turn failure —
+  # exactly the reliability signal we want on this path.
+  - id: optick-voicing-search
+    persona: optick-voicing-search
+    description: >
+      A guitarist mining the OPTIC-K voicing index: find voicings for a chord →
+      easier versions → nearest neighbors in the index → a smooth voice-leading
+      target.
+    turns:
+      - user: "Find me some playable guitar voicings for a Cmaj7 chord."
+        contains_any: ["voicing", "fret", "string", "Cmaj7", "x", "shape", "position"]
+        not_contains: ["returned no matches", "index is not loaded"]
+        min_length: 60
+        max_elapsed_ms: 60000
+
+      - user: "Show me easier versions of those voicings."
+        references: ["Cmaj7"]
+        contains_any: ["easier", "open", "simpler", "fret", "Cmaj7", "voicing"]
+        not_contains: ["returned no matches", "index is not loaded"]
+        min_length: 50
+        max_elapsed_ms: 60000
+
+      - user: "What voicings are the nearest neighbors to that shape in the index?"
+        contains_any: ["neighbor", "similar", "nearest", "voicing", "index", "distance", "close"]
+        not_contains: ["index is not loaded"]
+        min_length: 50
+        max_elapsed_ms: 60000
+
+      - user: "Give me a voicing that voice-leads smoothly into a Dm7."
+        references: ["Dm7"]
+        contains_any: ["voice leading", "voice-leading", "Dm7", "smooth", "common tone", "move", "voicing", "fret"]
+        min_length: 50
+        max_elapsed_ms: 60000

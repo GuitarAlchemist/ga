@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "domain": "chatbot-qa-sessions",
+  "purpose": "Setpoint contract for the MULTI-TURN session axis of the chatbot improvement loop. Mirrors state/quality/chatbot-qa/baseline.json (the single-turn axis) so /auto-optimize can target session_pass_pct the same way it targets pass_pct. Replayed by SessionCorpusTests.EverySession_SatisfiesItsInvariants over Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml; snapshot emitted by Scripts/run-session-corpus.ps1 -Snapshot.",
+  "established_at": "2026-06-16",
+  "established_by": "session-corpus seed refocused on GA's differentiated domain — pitch-class set theory (SetClass: ICV, Z-relation, T/I equivalence, symmetric families) and the OPTIC-K voicing index (search, easier voicings, neighbors, voice leading) — alongside the music-theory journeys (beginner, songwriting, improv, jazz). Generic guitar-teacher journeys (gear/tuning, practice/metronome) deliberately excluded: not GA's value.",
+  "metric": "session_pass_pct",
+  "metric_description": "Fraction of session TURNS that pass all mechanical invariants when each session is replayed turn-by-turn with accumulating ConversationHistory. Mechanical axis only — routing, grounding presence, no-fallback, context retention (the `references` field), banned phrases, latency. Fuzzy answer-quality is NOT measured here; it stays human/Demerzel-tribunal-gated.",
+  "primary_baseline": 0.70,
+  "primary_baseline_source": "Seed replay 2026-06-16 (6 journeys, 24 turns) against in-runner-comparable Ollama (llama3.2:3b + nomic-embed-text): 18/24 (75.0%). GA-domain journeys are strong — OPTIC-K voicing search 4/4, pitch-class set theory 3/4 (only the Z-relation lookup missed). Floor pinned conservatively at 0.70 (below the observed 0.75) for multi-turn LLM variance; the loop's job is to lift it and re-pin. Known stable targets: Z-relation lookup (pc-set turn 2), jazz tritone-sub (Db7).",
+  "_harness": {
+    "runner": "Scripts/run-session-corpus.ps1",
+    "oracle_test": "SessionCorpusTests.EverySession_SatisfiesItsInvariants",
+    "snapshot_glob": "state/quality/chatbot-qa-sessions/YYYY-MM-DD.json",
+    "reject_on_loss": true,
+    "reject_on_regression": true,
+    "regression_threshold": 0.06,
+    "regression_threshold_rationale": "Wider than the single-turn 0.02 because a 16-turn corpus has coarse granularity (one turn = 6.25%) and higher run-to-run LLM variance. Tighten as the corpus grows."
+  },
+  "kill_switches": {
+    "global": "state/.loop-halted",
+    "per_domain": "state/quality/chatbot-qa-sessions/.STOP"
+  },
+  "scope_boundary": {
+    "allow_edit": [
+      "Common/GA.Business.ML/Agents/**",
+      "Common/GA.Business.ML/Skills/**",
+      "Common/GA.Business.Core.Orchestration/**",
+      "Apps/GaChatbot.Api/Services/**"
+    ],
+    "allow_edit_rationale": "The loop fixes the chatbot's behaviour — skills, agents, orchestration, narration — to make failing session turns pass.",
+    "protected": [
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/sessions.yaml",
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/SessionCorpusTests.cs",
+      "state/quality/chatbot-qa-sessions/baseline.json"
+    ],
+    "protected_rationale": "The loop must not weaken the measure to pass it. It MAY ADD new sessions/turns (corpus growth is the point of the user request) but must not relax or delete existing invariants without an explicit [allow-protected: <path>] override and human sign-off."
+  },
+  "corpus_growth": {
+    "intent": "The loop/goal should GROW this corpus over time toward GA's DIFFERENTIATED domain — pitch-class set theory (GA SetClass) and the OPTIC-K voicing index — rather than generic guitar advice. New sessions are additive and start as failing targets; lifting them is the loop's work.",
+    "focus": "GA domain classes (Note, Interval, Scale, Chord, Key, Fretboard, SetClass) + OPTIC-K voicing index. NOT practice routines, metronome, or gear (explicitly out of scope per user 2026-06-16).",
+    "seed_personas": ["pc-set-theory", "optick-voicing-search", "beginner-onboarding", "songwriting-progressions", "improv-scales-modes", "jazz-advanced-harmony"],
+    "candidate_next": ["more SetClass (Forte numbers, cardinality, modal set classes, prime form, complement)", "more OPTIC-K (by-query voicing search, ICV neighbors, generate-embedding, index-info, telemetry)", "Fretboard domain (positions, tunings as domain objects, fingerings)", "Interval/voice-leading domain (common tones as set-theory, voice-leading pairs)"]
+  },
+  "constraints": {
+    "max_commits_per_session": 50,
+    "max_wall_clock_minutes": 480,
+    "plateau_window": 5,
+    "plateau_threshold": 0.005
+  },
+  "design_boundary": "Mechanical axis only — this corpus is safe for the autonomous loop to optimise against. Multi-turn answer HELPFULNESS/TONE is fuzzy and stays human/Demerzel-tribunal-gated; never let an LLM-judge of session quality drive the inner loop."
+}
