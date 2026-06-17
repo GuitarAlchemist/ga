@@ -123,10 +123,12 @@ sweep on every embedder swap — the cosine scale shifts each time.
 
 > **Status (2026-06-16):** Phase 0 done (PR #421) — `bge-large` wins (+6.1pt CV,
 > +37% silhouette, 238ms p95). Phase 2 validation done (PR #421) — `bge-large` @
-> T≈0.64 clears the gate (in-scope 0.946, OOS-decline 1.000). Remaining: Phase 1
-> purpose factory (the code change that makes the swap routing-only) + wire the
-> recalibrated threshold + the #412 ratchet check. Caveat: 8 OOS prompts is
-> coarse; confirm on a larger OOS set as the corpus/shadow data grows.
+> T≈0.64 clears the gate (in-scope 0.946, OOS-decline 1.000). **Phase 1 done
+> (PR #422)** — `IEmbeddingGeneratorFactory` decouples the routing embedder;
+> behaviour unchanged until `AI:Embedding:routing:Model` is set. Remaining: Phase 2
+> proper — set the routing override to `bge-large`, recalibrate `MinConfidence` to
+> ~0.64 (+ the harness guard), confirm against the #412 ratchet. Caveat: 8 OOS
+> prompts is coarse; confirm on a larger OOS set as the corpus/shadow data grows.
 
 ### Phase 3 — Optional global swap / re-embed (only if Phase 0 shows store gains)
 If the winner also improves memory/RAG retrieval enough to justify it:
