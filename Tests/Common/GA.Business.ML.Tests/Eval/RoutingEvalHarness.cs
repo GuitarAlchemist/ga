@@ -55,11 +55,31 @@ public class RoutingEvalHarness
         Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
     private static readonly string EmbeddingModel =
         Environment.GetEnvironmentVariable("GA_EMBED_MODEL") ?? "nomic-embed-text";
-    // Pin to the SAME threshold production routes with — not a hardcoded copy.
-    // This was 0.65f while production sat at 0.55f (dropped 2026-05-13), so the
-    // last baseline measured a threshold prod never used. Sourcing the constant
-    // makes that drift impossible; RouterThresholdMatchesProduction guards it.
-    private const float RouterMinConfidence = SemanticIntentRouter.DefaultMinConfidence;
+    // The SAME threshold production routes with. Defaults to the production const
+    // (not a hardcoded literal) — this was 0.65f while production sat at 0.55f
+    // (dropped 2026-05-13), so the last baseline measured a threshold prod never
+    // used. Sourcing the const makes that drift impossible by default;
+    // RouterThreshold_DefaultMatchesProductionDefault guards it.
+    //
+    // GA_ROUTER_MIN_CONFIDENCE overrides it because the threshold is embedder-
+    // SPECIFIC (plan #420 Phase 2): a stronger embedder scores higher, so the
+    // bge-large baseline must be measured at its recalibrated threshold (~0.64),
+    // mirroring AI:Routing:MinConfidence in production appsettings. The ratchet
+    // sets GA_EMBED_MODEL + GA_ROUTER_MIN_CONFIDENCE together so the gate measures
+    // the embedder/threshold pair production actually deploys.
+    private static readonly float RouterMinConfidence =
+        ResolveRouterMinConfidence(Environment.GetEnvironmentVariable("GA_ROUTER_MIN_CONFIDENCE"));
+
+    /// <summary>
+    /// Parses an explicit threshold override, falling back to the production
+    /// const for null/blank/garbage/out-of-range input. Pure + testable so the
+    /// drift guard can assert the default path without touching process env.
+    /// </summary>
+    internal static float ResolveRouterMinConfidence(string? raw) =>
+        float.TryParse(raw, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) && v is > 0f and <= 1f
+            ? v
+            : SemanticIntentRouter.DefaultMinConfidence;
 
     // Sentinel expectedIntentId for out-of-scope prompts: the router SHOULD
     // decline these (return null) so the caller can refuse a non-music query
@@ -153,20 +173,29 @@ public class RoutingEvalHarness
     }
 
     /// <summary>
-    /// Guards the threshold-drift bug: the harness MUST measure the same
-    /// confidence threshold production routes with. Tautological today (the
-    /// const is sourced from <see cref="SemanticIntentRouter.DefaultMinConfidence"/>),
-    /// but fails loudly the moment someone re-hardcodes a literal — which is
-    /// exactly how the harness drifted to 0.65 while prod sat at 0.55. Fast,
-    /// no Ollama, runs in CI.
+    /// Guards the threshold-drift bug: absent an explicit override, the harness
+    /// MUST measure the same confidence threshold production routes with. Asserts
+    /// the resolver's DEFAULT path (null/blank/garbage → the const) rather than the
+    /// env-driven field, so it stays green when the ratchet sets an explicit
+    /// GA_ROUTER_MIN_CONFIDENCE for a recalibrated embedder. Fails loudly the moment
+    /// someone re-hardcodes a literal default — exactly how the harness drifted to
+    /// 0.65 while prod sat at 0.55. Fast, no Ollama, runs in CI.
     /// </summary>
     [Test]
     [Category("Fast")]
-    public void RouterThreshold_MatchesProductionDefault()
+    public void RouterThreshold_DefaultMatchesProductionDefault()
     {
-        Assert.That(RouterMinConfidence, Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-            "Eval harness threshold drifted from SemanticIntentRouter.DefaultMinConfidence — " +
-            "any baseline it emits would measure a threshold production never uses.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(ResolveRouterMinConfidence(null), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "no override → harness must measure production's default threshold.");
+            Assert.That(ResolveRouterMinConfidence(""), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "blank override → production default.");
+            Assert.That(ResolveRouterMinConfidence("not-a-number"), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "garbage override must fall back to the const, never silently route at 0.");
+            Assert.That(ResolveRouterMinConfidence("0.64"), Is.EqualTo(0.64f).Within(1e-6f),
+                "a valid override is honoured (the bge-large recalibration path).");
+        });
     }
 
     [Test]
