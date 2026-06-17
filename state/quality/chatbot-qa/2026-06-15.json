@@ -1,11 +1,52 @@
 {
-  "timestamp": "2026-06-15T07:49:11.2786939+00:00",
+  "timestamp": "2026-06-15T19:19:52.7757466+00:00",
   "total_prompts": 52,
-  "pass_pct": null,
-  "degraded": true,
-  "degraded_reason": "backend_unavailable",
-  "note": "Environment degraded: 51/51 failures were HTTP 5xx / network errors. pass_pct omitted — backend (Ollama / OPTIC-K index / deps) was unavailable, not the chatbot itself failing.",
-  "last_known_good_pass_pct": 94.0,
-  "last_known_good_date": "05/16/2026 05:30:00",
-  "last_known_good_source": "carryforward"
+  "pass_pct": 75.0,
+  "degraded": false,
+  "by_category": {
+    "atonal": {
+      "pass_pct": 100.0,
+      "total": 4
+    },
+    "case-variants": {
+      "pass_pct": 50.0,
+      "total": 2
+    },
+    "chord-from-notes": {
+      "pass_pct": 100.0,
+      "total": 4
+    },
+    "extended-chords": {
+      "pass_pct": 100.0,
+      "total": 2
+    },
+    "getting-started": {
+      "pass_pct": 100.0,
+      "total": 1
+    },
+    "modes": {
+      "pass_pct": 100.0,
+      "total": 13
+    },
+    "operations": {
+      "pass_pct": 28.57,
+      "total": 7
+    },
+    "progressions": {
+      "pass_pct": 60.0,
+      "total": 5
+    },
+    "scales-keys": {
+      "pass_pct": 50.0,
+      "total": 8
+    },
+    "theory": {
+      "pass_pct": 100.0,
+      "total": 2
+    },
+    "typo-tolerance": {
+      "pass_pct": 75.0,
+      "total": 4
+    }
+  }
 }

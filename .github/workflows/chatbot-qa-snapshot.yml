@@ -53,7 +53,7 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60   # in-runner Ollama: model pull + ~50 CPU-inference prompts
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,6 +89,34 @@ jobs:
               "OPTICK_INDEX_AUTH=$($env:SECRET_INDEX_AUTH)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             }
           }
+
+      # Default backend: run Ollama ON the runner — no secret, no tunnel, no
+      # Cloudflare. Only runs when the remote OLLAMA_BASE_URL secret did NOT set
+      # a backend above, so a remote override still wins if one is ever configured.
+      # Pulls the exact models the chatbot config declares (Apps/GaChatbot.Api/
+      # appsettings.json: ChatModel llama3.2:3b, EmbeddingModel nomic-embed-text) so
+      # the measured pass_pct is comparable to the local baseline (0.94, llama3.2:3b).
+      - name: Install + warm in-runner Ollama (default backend)
+        if: ${{ env.OLLAMA_BASE_URL == '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:11434/api/version >/dev/null; then echo "ollama up"; break; fi
+            sleep 1
+          done
+          curl -sf http://localhost:11434/api/version || { echo "ollama did not start:"; cat /tmp/ollama.log; exit 1; }
+          ollama pull nomic-embed-text
+          ollama pull llama3.2:3b
+          ollama list
+          {
+            echo "OLLAMA_BASE_URL=http://localhost:11434"
+            echo "Ollama__BaseUrl=http://localhost:11434"
+            echo "Ollama__Endpoint=http://localhost:11434"
+          } >> "$GITHUB_ENV"
+          echo "Backend: in-runner Ollama warmed (nomic-embed-text + llama3.2:3b)."
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
