@@ -208,6 +208,16 @@ public static class AiServiceExtensions
                 throw new ArgumentException($"Unknown embedding provider: {provider}", nameof(provider));
         }
 
+        // Purpose-aware factory (plan #420 Phase 1): lets routing use a different
+        // embedding model from the persisted memory store. Captures `configuration`
+        // so it works without IConfiguration in DI; no override → the default
+        // generator above, so behaviour is unchanged until AI:Embedding:*:Model is set.
+        services.TryAddSingleton<IEmbeddingGeneratorFactory>(sp =>
+            new DefaultEmbeddingGeneratorFactory(
+                configuration,
+                sp.GetService<IEmbeddingGenerator<string, Embedding<float>>>(),
+                sp.GetService<ILoggerFactory>()?.CreateLogger<DefaultEmbeddingGeneratorFactory>()));
+
         return services;
     }
 
