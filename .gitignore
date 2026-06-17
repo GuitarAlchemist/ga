@@ -322,3 +322,6 @@ state/governance/dev-process-overseer.json
 state/governance/supervised-loop-cycle.json
 state/quality/ga-harness/last.json
 .STOP
+
+# Third-party MCP server clone (self-managed git repo: pasie15/meshy-ai-mcp-server)
+mcp-servers/meshy-ai/
