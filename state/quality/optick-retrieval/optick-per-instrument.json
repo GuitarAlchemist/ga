@@ -1,0 +1,5 @@
+[
+	{"instrument":"ukulele","mean_kdist":0.36424,"mean_silhouette":0.01672},
+	{"instrument":"bass","mean_kdist":0.37414,"mean_silhouette":0.01675},
+	{"instrument":"guitar","mean_kdist":0.34438,"mean_silhouette":0.02571}
+]
