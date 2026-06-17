@@ -53,6 +53,12 @@ public sealed class SemanticIntentRouter(
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private volatile bool _embeddingsReady;
 
+    // Embedder model id for the query-embedding sink (Contract B). Resolved once
+    // from the live generator's metadata so the persisted rows record the ACTUAL
+    // model (e.g. bge-large), never a hardcoded guess. Cached: metadata is static.
+    private string? _embedderModelId;
+    private bool _embedderResolved;
+
     /// <summary>Cosine-similarity threshold above which an intent claims the query.</summary>
     public float MinConfidence { get; init; } = DefaultMinConfidence;
 
@@ -225,6 +231,25 @@ public sealed class SemanticIntentRouter(
             shadow.LogShadow(query, queryVec, prodChosenForShadow);
         }
 
+        // Query-embedding sink (Contract B for ix-duck's out-of-domain lens): persist
+        // the EXACT vector the router scored with — not a re-embed — plus the decision
+        // it drove, so the OOD lens can flag queries far from the in-domain reference
+        // set. One row per routed query, covering both the routed and declined paths.
+        // Error-swallowed + env-gated like the telemetry above; never affects routing.
+        var routed = top.Score >= MinConfidence;
+        QueryEmbeddingLog.Append(new QueryEmbeddingRecord
+        {
+            QueryId         = Guid.NewGuid().ToString("n"),
+            Timestamp       = DateTime.UtcNow.ToString("o"),
+            QueryText       = query,
+            Intent          = routed ? top.Intent.Id : null,
+            RouteMethod     = routed ? "embedding" : "fallback",
+            RouteConfidence = top.Score,
+            Embedder        = ResolveEmbedderModelId(),
+            Dim             = queryVec.Length,
+            Embedding       = queryVec,
+        });
+
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(
@@ -277,6 +302,25 @@ public sealed class SemanticIntentRouter(
         {
             Ranking = routingCandidates,
         };
+    }
+
+    // Best-effort embedder model id from the generator metadata (M.E.AI exposes it
+    // via GetService<EmbeddingGeneratorMetadata>). Falls back to "unknown" if the
+    // provider doesn't surface a model id — never throws into the routing path.
+    private string ResolveEmbedderModelId()
+    {
+        if (_embedderResolved) return _embedderModelId ?? "unknown";
+        _embedderResolved = true;
+        try
+        {
+            var meta = textEmbeddings?.GetService(typeof(EmbeddingGeneratorMetadata)) as EmbeddingGeneratorMetadata;
+            _embedderModelId = meta?.DefaultModelId;
+        }
+        catch
+        {
+            // metadata resolution is best-effort; leave null → "unknown"
+        }
+        return _embedderModelId ?? "unknown";
     }
 
     private static string Trim(string s, int max) =>
