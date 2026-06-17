@@ -76,18 +76,31 @@ Candidates (local Ollama, pull required — only `nomic-embed-text` is present t
 | `mxbai-embed-large` | 1024 | strong MTEB, Ollama-native |
 | `bge-large` (`bge-large-en-v1.5`) | 1024 | strong retrieval baseline |
 | `snowflake-arctic-embed2` | 1024 | newer, multilingual |
-| *(optional)* OpenAI `text-embedding-3-large` / Voyage `voyage-3` | 3072 / 1024 | API — cost + sends queries off-box; only if on-prem isn't required |
+| **Voyage `voyage-3`** | 1024 | **API — included per decision #1**; needs `VOYAGE_API_KEY`. Strong MTEB retrieval; queries go off-box (acceptable for the routing corpus, which is non-sensitive music-theory text) |
 
 Deliverable: a one-shot `Scripts/embedder-bakeoff.ps1` that loops candidates and
 writes `state/quality/embedder-bakeoff/<date>.md` (accuracy / silhouette /
-latency table). **Decision gate:** does any candidate beat 0.934 by a clear margin?
+latency table). Voyage is reached via its HTTP API (not Ollama) — the bake-off
+abstracts the embed call so local + API candidates share the harness.
+**Decision gate:** does any candidate beat 0.934 by a clear margin?
+
+**Latency budget (decision #2): Phase 0 establishes it.** There is no documented
+per-route embed budget today, so Phase 0 measures the nomic baseline (p50/p95 of a
+single query embed) and sets the budget from it — a candidate is only eligible if
+its p95 stays within ~1.5× the nomic baseline (API round-trips for Voyage
+included). The chosen number is recorded in the bake-off report and becomes the
+guardrail for Phase 2.
 
 ### Phase 1 — Decouple the routing embedder (enabling; reversible; ~1 day)
-Introduce an embedding **purpose** factory mirroring `IChatClientFactory`:
+**Built eagerly (decision #3)** — proceed regardless of the Phase 0 winner; the
+purpose factory is worthwhile on its own (it removes the routing↔memory embedder
+coupling and unblocks any future per-purpose tuning). Introduce an embedding
+**purpose** factory mirroring `IChatClientFactory`:
 `IEmbeddingGeneratorFactory.Create("routing" | "memory" | …)`. Register a
 "routing" instance (config: `AI:Embedding:Routing:Model`) and keep "memory"/default
 on nomic-768. Point `SemanticIntentRouter` at the "routing" purpose. No persisted
-store changes; default behaviour unchanged when both purposes = nomic.
+store changes; default behaviour unchanged when both purposes = nomic. Phases 0
+and 1 are independent and can run in parallel.
 
 ### Phase 2 — Swap routing to the bake-off winner (reversible; ~½ day)
 Set the "routing" purpose to the winner. Routing re-embeds anchors at startup
@@ -119,10 +132,10 @@ embedder swap is the data-free win to take first.
 - **Not a one-way door** for routing (anchors re-embedded fresh). The only one-way-door-adjacent surface is OPTIC-K — explicitly **out of scope**.
 - **Dependency:** Phase 0 needs the candidate models pulled (`ollama pull …`) + ~GB disk each.
 
-## Open decisions (need owner input)
-1. On-prem only (local Ollama) or are API embedders (OpenAI/Voyage) acceptable for routing?
-2. Is the latency budget for a single routing embed call documented anywhere, or should Phase 0 establish it?
-3. Build the purpose-factory (Phase 1) eagerly, or only if Phase 0 picks a winner that differs from the memory-store embedder?
+## Decisions (resolved 2026-06-16)
+1. **API embedders allowed** — include Voyage `voyage-3` in the bake-off (the routing corpus is non-sensitive music-theory text). Needs `VOYAGE_API_KEY`.
+2. **Phase 0 establishes the latency budget** — no documented per-route budget exists; measure the nomic baseline and gate candidates at ~1.5× its p95.
+3. **Build the purpose-factory eagerly** — Phase 1 proceeds regardless of the Phase 0 winner; Phases 0 and 1 run in parallel.
 
 ## Backlog
 Add under an H2 epic in `BACKLOG.md`: "Text-embedder evaluation (routing ceiling)".
