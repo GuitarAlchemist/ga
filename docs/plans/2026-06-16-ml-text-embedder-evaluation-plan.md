@@ -121,14 +121,20 @@ emitted per-prompt routing-eval report (no re-runs), and set
 `RouterThreshold_MatchesProductionDefault` guard pins their parity). Re-do this
 sweep on every embedder swap — the cosine scale shifts each time.
 
-> **Status (2026-06-16):** Phase 0 done (PR #421) — `bge-large` wins (+6.1pt CV,
+> **Status (2026-06-17):** Phase 0 done (PR #421) — `bge-large` wins (+6.1pt CV,
 > +37% silhouette, 238ms p95). Phase 2 validation done (PR #421) — `bge-large` @
-> T≈0.64 clears the gate (in-scope 0.946, OOS-decline 1.000). **Phase 1 done
-> (PR #422)** — `IEmbeddingGeneratorFactory` decouples the routing embedder;
-> behaviour unchanged until `AI:Embedding:routing:Model` is set. Remaining: Phase 2
-> proper — set the routing override to `bge-large`, recalibrate `MinConfidence` to
-> ~0.64 (+ the harness guard), confirm against the #412 ratchet. Caveat: 8 OOS
-> prompts is coarse; confirm on a larger OOS set as the corpus/shadow data grows.
+> T≈0.64 clears the gate (in-scope 0.946, OOS-decline 1.000). Phase 1 done
+> (PR #422) — `IEmbeddingGeneratorFactory` decouples the routing embedder.
+> **Phase 2 SHIPPED (PR #423)** — routing now runs `bge-large` @ 0.64 via
+> GaChatbot.Api appsettings; threshold bound from `AI:Routing:MinConfidence`
+> (const stays 0.55, nomic-safe). Local re-run reproduced in-scope 0.9458
+> (157/166, +1.2pt) / OOS-decline 0.875 (7/8) — both clear the #412 ratchet floor;
+> the ratchet workflow + a fresh bge-large baseline (`routing-eval-2026-06-17.json`)
+> now measure the deployed pair. Roll back = revert the two appsettings values.
+> Caveat: 8 OOS prompts is coarse (local OOS 7/8 vs the 8/8 validation run);
+> confirm on a larger OOS set as the corpus/shadow data grows. Remaining: Phase 3
+> (optional global swap, only if store gains justify) + Phase 4 (data-gated
+> fine-tune) — both deferred, not scheduled.
 
 ### Phase 3 — Optional global swap / re-embed (only if Phase 0 shows store gains)
 If the winner also improves memory/RAG retrieval enough to justify it:
