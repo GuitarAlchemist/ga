@@ -340,3 +340,6 @@ state/quality/ga-harness/last.json
 
 # /teach generated courses (personal, regenerable)
 learning/
+
+# Router-head trainer embedding cache (regenerable)
+state/quality/router-head/.emb-cache.json
