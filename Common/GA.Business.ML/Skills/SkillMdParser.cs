@@ -127,13 +127,22 @@ public static class SkillMdParser
             .ToList()
             ?? [];
 
+        // Allowed tools are matched against AIFunction.Name downstream (the match
+        // there is case-insensitive). Keep the author's exact casing, drop blanks.
+        var allowedTools = frontmatter.AllowedTools?
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => t.Trim())
+            .ToList()
+            ?? [];
+
         return new SkillMd
         {
-            Name        = frontmatter.Name.Trim(),
-            Description = frontmatter.Description?.Trim() ?? string.Empty,
-            Triggers    = sanitizedTriggers,
-            Body        = body,
-            FilePath    = filePath,
+            Name         = frontmatter.Name.Trim(),
+            Description  = frontmatter.Description?.Trim() ?? string.Empty,
+            Triggers     = sanitizedTriggers,
+            AllowedTools = allowedTools,
+            Body         = body,
+            FilePath     = filePath,
         };
     }
 
@@ -172,9 +181,10 @@ public static class SkillMdParser
 
         return new SkillMdFrontmatter
         {
-            Name        = name,
-            Description = FirstNonEmpty(pascal?.Description, camel?.Description),
-            Triggers    = FirstNonEmptyList(pascal?.Triggers, camel?.Triggers),
+            Name         = name,
+            Description  = FirstNonEmpty(pascal?.Description, camel?.Description),
+            Triggers     = FirstNonEmptyList(pascal?.Triggers, camel?.Triggers),
+            AllowedTools = FirstNonEmptyList(pascal?.AllowedTools, camel?.AllowedTools),
         };
     }
 
@@ -197,5 +207,15 @@ public static class SkillMdParser
         public string?       Name        { get; set; }
         public string?       Description { get; set; }
         public List<string>? Triggers    { get; set; }  // List<T> for YamlDotNet compatibility
+
+        // `allowed-tools` is kebab-case — neither the PascalCase nor camelCase
+        // naming convention maps to it, so pin the exact YAML key with an alias.
+        // ApplyNamingConventions=false is REQUIRED: otherwise YamlDotNet runs the
+        // active naming convention over the alias too (mangling "allowed-tools"
+        // into "Allowedtools"/"allowedtools"), and the key never matches. This is
+        // the Anthropic Claude Code convention already present in every tool-driven
+        // SKILL.md in this repo.
+        [YamlMember(Alias = "allowed-tools", ApplyNamingConventions = false)]
+        public List<string>? AllowedTools { get; set; }
     }
 }

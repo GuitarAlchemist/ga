@@ -64,10 +64,65 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
         return _skillMd.Triggers.Any(t => lower.Contains(t.ToLowerInvariant()));
     }
 
+    /// <summary>
+    /// Builds the <see cref="ChatOptions"/> for a skill invocation. When the
+    /// SKILL.md declares <c>allowed-tools</c> (every deterministic GA skill does —
+    /// e.g. <c>[ga_dsl_eval]</c>), the visible tool set is scoped to those tools
+    /// and the tool choice is FORCED, so a weak model (e.g. <c>llama3.2:3b</c> in
+    /// CI) cannot narrate a plausible answer from training instead of running the
+    /// deterministic engine. Conversational skills declare no allowed-tools and
+    /// keep the full tool set with a free <see cref="ChatToolMode.Auto"/> choice.
+    /// </summary>
+    /// <remarks>
+    /// Forcing is loop-safe: <c>FunctionInvokingChatClient</c> resets a required
+    /// <see cref="ChatToolMode"/> to <see langword="null"/> after the first
+    /// iteration (M.E.AI 10.x <c>UpdateOptionsForNextIteration</c>), so the model
+    /// is compelled to call on turn 1 and then synthesizes freely from the real
+    /// tool result rather than being forced to call forever. If the declared
+    /// tool(s) are absent from the provider set (renamed / not wired), we fall
+    /// back to the full set with <see cref="ChatToolMode.Auto"/> rather than
+    /// forcing a nonexistent tool — which would error the call.
+    /// </remarks>
+    private ChatOptions BuildChatOptions(IReadOnlyList<AIFunction> tools)
+    {
+        if (_skillMd.AllowedTools.Count == 0)
+        {
+            return new ChatOptions { Tools = [.. tools] };
+        }
+
+        var allow = new HashSet<string>(_skillMd.AllowedTools, StringComparer.OrdinalIgnoreCase);
+        var scoped = tools.Where(t => allow.Contains(t.Name)).ToList();
+
+        if (scoped.Count == 0)
+        {
+            _logger.LogWarning(
+                "SkillMdDrivenSkill [{Skill}] declares allowed-tools [{Allowed}] but none are present " +
+                "in the provider tool set ({ToolCount} tools); leaving ToolMode=Auto over the full set.",
+                _skillMd.Name, string.Join(", ", _skillMd.AllowedTools), tools.Count);
+            return new ChatOptions { Tools = [.. tools] };
+        }
+
+        var toolMode = scoped.Count == 1
+            ? ChatToolMode.RequireSpecific(scoped[0].Name)
+            : ChatToolMode.RequireAny;
+
+        _logger.LogDebug(
+            "SkillMdDrivenSkill [{Skill}] → forcing tool invocation: mode={Mode}, scoped tools={Scoped}",
+            _skillMd.Name,
+            scoped.Count == 1 ? $"RequireSpecific({scoped[0].Name})" : "RequireAny",
+            string.Join(", ", scoped.Select(t => t.Name)));
+
+        return new ChatOptions
+        {
+            Tools    = [.. scoped],
+            ToolMode = toolMode,
+        };
+    }
+
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken ct = default)
     {
         var tools = await _toolsProvider.GetToolsAsync(ct).ConfigureAwait(false);
-        var options = new ChatOptions { Tools = [.. tools] };
+        var options = BuildChatOptions(tools);
 
         ChatMessage[] messages =
         [
