@@ -37,18 +37,23 @@ public sealed class GrothendieckDeltaSkill(
         "or 'what is the ICV difference between Cmaj7 and G7'. Calls into " +
         "the GrothendieckService directly — no LLM, no backend HTTP hop.";
 
+    // This skill answers "how harmonically FAR is X from Y" (a distance between
+    // TWO chords). Anchors emphasise distance/gap/cost between a pair, and drop
+    // the "compare the ICVs" / "ICV difference" framings that collided with
+    // IntervalClassVectorSkill (single-set ICV) in the 2026-06-16 routing-
+    // ambiguity diagnostic.
     public IReadOnlyList<string> ExamplePrompts =>
     [
-        "harmonic distance from Cmaj7 to G7",
-        "Grothendieck delta C to F",
         "how harmonically far is Am from D7",
-        "delta between Cmaj7 and Dm7",
-        "compare the ICVs of Cmaj7 and Dm7",
-        "what's the L1 distance from C to G",
-        "ICV difference between C major and F major",
-        "Grothendieck distance Am to Em",
+        "harmonic distance from Cmaj7 to G7",
+        "how far apart are Cmaj7 and Dm7 harmonically",
+        "harmonic cost to move from C to G",
+        "how different are C major and F major harmonically",
+        "harmonic distance between Am and Em",
         "how close are Cmaj7 and Fmaj7 harmonically",
-        "delta from Gmaj7 to Bm7b5",
+        "L1 distance from Gmaj7 to Bm7b5",
+        "Grothendieck delta from C to F",
+        "measure the harmonic gap between Dm7 and G7",
     ];
 
     public bool CanHandle(string message) => false;  // semantic-routing only
