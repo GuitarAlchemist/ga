@@ -8,9 +8,12 @@ using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
+using GA.Business.ML.Extensions;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -102,7 +105,16 @@ public static class ChatbotOrchestrationExtensions
         // Codex CLI 2026-05-08 design call.
         services.TryAddSingleton<IRoutingHintProvider, DefaultRoutingHintProvider>();
 
-        services.AddSingleton<SemanticIntentRouter>();
+        // Routing embedder resolved via the purpose factory (plan #420 Phase 1)
+        // so the routing model can be swapped (AI:Embedding:routing:Model) without
+        // touching the persisted memory store's embedder. Create("routing") returns
+        // the configured override or the global default; the `??` is a safety net
+        // if the factory itself isn't registered.
+        services.AddSingleton<SemanticIntentRouter>(sp => new SemanticIntentRouter(
+            sp.GetService<IEmbeddingGeneratorFactory>()?.Create("routing")
+                ?? sp.GetService<IEmbeddingGenerator<string, Embedding<float>>>(),
+            sp.GetRequiredService<IRoutingHintProvider>(),
+            sp.GetRequiredService<ILogger<SemanticIntentRouter>>()));
         services.AddHostedService<IntentEmbeddingWarmupService>();
         services.AddHostedService<ClosureRegistryStartupCheck>();
         services.AddScoped<TabAnalysisOrchestrationService>();
