@@ -105,16 +105,40 @@ its PR step, do NOT delegate — drive the cycle inline instead (pick worst prom
 fix → `/chatbot-qa-roundtrip-validate` → `git commit` on branch / revert).
 
 ### Step 2 — Improvement cycles (the AFK loop)
+A stable id for THIS harness run so the AFK outer-loop rows (sub-step 4) cluster
+together and stay distinct from the inner `/auto-optimize` per-cycle rows:
+`$afk_loop_id = "chatbot-qa-afk-$((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))"`.
+
 Repeat until `det >= target_metric` (fractions, per the SCALE note),
 `max_iterations` reached, plateau (baseline `plateau_threshold`), caps hit, or a
 killswitch appears:
 1. Run `/auto-optimize domain=chatbot-qa oracle_script_path=Scripts/run-prompt-corpus.ps1 baseline_path=state/quality/chatbot-qa/baseline.json max_iterations=<batch_size>` **with the no-PR instruction from Step 2.0**.
    This does the real work: picks the worst prompt, proposes a fix, runs
    `/chatbot-qa-roundtrip-validate`, and commits on the branch or reverts.
+   *(The delegated `/auto-optimize` already appends inner per-cycle rows to
+   `state/quality/loops/chatbot-qa.iterations.jsonl` via its Step 3.8 — those
+   carry the deterministic `pass_pct` trajectory; do not duplicate them here.)*
 2. After each batch, re-read `pass_pct` and **normalize `det = pass_pct / 100`**; emit one status update per outcome (always pass fractions to `-DetPct`):
    - accepted → `-Kind commit -Iteration <n> -Commits <c> -DetPct <x> -Event "accepted fix for <prompt-id> (<+Δpp>)"`
    - reverted → `-Kind revert -Iteration <n> -Event "reverted <prompt-id>: <reject reason>"`
 3. Re-check killswitch/halt each iteration (Law C of auto-optimize). If set → emit `state=killed`, STOP.
+4. **Append the AFK outer-loop row to the loop ledger** — the harness's
+   value-add over the inner loop is the **semantic** signal, so record THAT
+   (when `semantic=true`) so the ix-duck loop lens can see semantic vs
+   deterministic divergence across batches. One row per batch:
+
+   ```powershell
+   # $sem_before/$sem_after are the semantic fractions from /ga-chatbot-qa-panel
+   # this batch vs last; $worst is the worst-scoring prompt the panel flagged.
+   # $verdict ∈ improved|regressed|plateau ; oracle couldn't run → couldnt_run.
+   pwsh Scripts/loop-record.ps1 -LoopId $afk_loop_id -Domain chatbot-qa `
+       -Iteration $n -MetricName semantic_pass_pct `
+       -MetricBefore $sem_before -MetricAfter $sem_after `
+       -Verdict $verdict -OracleStatus $oracle_status `
+       -WorstItem $worst -CommitSha $sha
+   ```
+   Skip this row when `semantic=false` (the deterministic trajectory is already
+   covered by the inner `/auto-optimize` rows — don't duplicate it).
 
 ### Step 3 — Final snapshot + exit
 1. Re-run the deterministic oracle and (if enabled) `/ga-chatbot-qa-panel`.
