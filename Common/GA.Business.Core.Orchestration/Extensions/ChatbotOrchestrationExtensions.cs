@@ -8,9 +8,12 @@ using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
+using GA.Business.ML.Extensions;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -102,7 +105,32 @@ public static class ChatbotOrchestrationExtensions
         // Codex CLI 2026-05-08 design call.
         services.TryAddSingleton<IRoutingHintProvider, DefaultRoutingHintProvider>();
 
-        services.AddSingleton<SemanticIntentRouter>();
+        // Routing embedder resolved via the purpose factory (plan #420 Phase 1)
+        // so the routing model can be swapped (AI:Embedding:routing:Model) without
+        // touching the persisted memory store's embedder. Create("routing") returns
+        // the configured override or the global default; the `??` is a safety net
+        // if the factory itself isn't registered.
+        //
+        // The MinConfidence threshold is embedder-SPECIFIC (plan #420 Phase 2
+        // validation): a stronger embedder scores higher, so nomic's 0.55 would
+        // force-route out-of-scope prompts on bge-large. Bind it from config so the
+        // model override and its recalibrated threshold land together as one atomic,
+        // reversible change. Absent AI:Routing:MinConfidence the const default (0.55,
+        // nomic-tuned) is used — zero behaviour change when no override is set.
+        services.AddSingleton<SemanticIntentRouter>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var minConfidence = configuration.GetValue<float?>("AI:Routing:MinConfidence")
+                ?? SemanticIntentRouter.DefaultMinConfidence;
+            return new SemanticIntentRouter(
+                sp.GetService<IEmbeddingGeneratorFactory>()?.Create("routing")
+                    ?? sp.GetService<IEmbeddingGenerator<string, Embedding<float>>>(),
+                sp.GetRequiredService<IRoutingHintProvider>(),
+                sp.GetRequiredService<ILogger<SemanticIntentRouter>>())
+            {
+                MinConfidence = minConfidence
+            };
+        });
         services.AddHostedService<IntentEmbeddingWarmupService>();
         services.AddHostedService<ClosureRegistryStartupCheck>();
         services.AddScoped<TabAnalysisOrchestrationService>();

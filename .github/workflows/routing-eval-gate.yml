@@ -1,0 +1,100 @@
+name: Routing-Eval Ratchet
+
+# Phase 3 CI ratchet (mechanical axis only).
+#
+# Runs the semantic-intent RoutingEvalHarness against an in-runner Ollama
+# embedder (bge-large @ minConfidence 0.64 — the production routing pair set in
+# GaChatbot.Api appsettings, plan #420 Phase 2) and FAILS the PR if in-scope
+# routing accuracy or out-of-scope decline rate regressed beyond tolerance vs
+# the newest committed state/quality/routing-eval-*.json baseline measured with
+# that same pair.
+#
+# This is the "every passing eval is a one-way door" gate: once the loop
+# lifts routing accuracy and a fresh baseline is committed, no later change
+# may quietly drop it back. Fuzzy answer-quality stays human/tribunal-gated;
+# this gate touches only the deterministic routing-correctness axis.
+#
+# Self-contained: no secrets, no Cloudflare — the embedder runs on the runner.
+
+on:
+  pull_request:
+    paths:
+      - 'Common/GA.Business.ML/Agents/**'
+      - 'Common/GA.Business.ML/Skills/**'
+      - 'Tests/Common/GA.Business.ML.Tests/Eval/**'
+      - 'Tests/Common/GA.Business.ML.Tests/Data/routing-eval-prompts.json'
+      - 'Scripts/routing-eval-gate.ps1'
+      - '.github/workflows/routing-eval-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: routing-eval-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  routing-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install + warm in-runner Ollama (embedder only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:11434/api/version >/dev/null; then echo "ollama up"; break; fi
+            sleep 1
+          done
+          curl -sf http://localhost:11434/api/version || { echo "ollama did not start:"; cat /tmp/ollama.log; exit 1; }
+          # The routing harness only embeds prompts — no chat model needed.
+          # bge-large is the production routing embedder (plan #420 Phase 2);
+          # the gate must measure the SAME embedder + threshold production deploys.
+          ollama pull bge-large
+          ollama list
+
+      - name: Restore + build routing-eval test project
+        run: |
+          dotnet restore Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj
+          dotnet build   Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj \
+            --configuration Release --no-restore
+
+      - name: Run RoutingEvalHarness baseline (emits routing-eval-<date>.json)
+        env:
+          GA_EMBED_ENDPOINT: http://localhost:11434
+          # Production routing pair (GaChatbot.Api appsettings): bge-large @ 0.64.
+          # The threshold is embedder-specific — measuring bge-large at nomic's 0.55
+          # would force-route out-of-scope prompts (validated, plan #420 Phase 2).
+          GA_EMBED_MODEL: bge-large
+          GA_ROUTER_MIN_CONFIDENCE: "0.64"
+        run: |
+          dotnet test Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj \
+            --configuration Release --no-build \
+            --filter "FullyQualifiedName~RoutingEvalHarness.RunBaseline_EmitReport" \
+            --logger "console;verbosity=normal"
+
+      - name: Ratchet — fail PR if routing regressed vs committed baseline
+        shell: pwsh
+        run: |
+          $stamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+          $report = "state/quality/routing-eval-$stamp.json"
+          ./Scripts/routing-eval-gate.ps1 -NewReport $report -Tolerance 0.02
+
+      - name: Upload routing-eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-eval-report
+          path: state/quality/routing-eval-*.json
+          if-no-files-found: warn

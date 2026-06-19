@@ -55,8 +55,11 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.chordsubstitution"),
 
-        // Key identification — "what key is X in", "key of <progression>"
-        (new Regex(@"\b(what\s+key|key\s+is|identify\s+the\s+key)\b",
+        // Key identification — "what key is X in", "key of <progression>".
+        // Added 2026-05-31: "tonal cent(er|re)" and "home key" — ki-8 ("figure
+        // out the tonal center of E A B E") was lost to scaleinfo because the
+        // original anchors miss those synonyms; "home key" reinforces ki-10.
+        (new Regex(@"\b(what\s+key|key\s+is|identify\s+the\s+key|tonal\s+cent(?:er|re)|home\s+key)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.keyidentification"),
 
@@ -74,7 +77,12 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
 
         // Scale info — "<key> scale" patterns. Avoids bare "scale" which
         // overlaps with modes / scaleinfo / circle-of-fifths.
-        (new Regex(@"\b(?:[A-G](?:#|b)?\s+(?:major|minor|natural\s+minor|melodic\s+minor|harmonic\s+minor)\s+scale|notes\s+in\s+(?:[A-G](?:#|b)?\s+)?(?:major|minor)\s+scale)\b",
+        // The `(?<!harmoni[sz]ed\s)` guard stops this firing on "harmonized A
+        // minor scale" (dc-8) — that's a diatonic-chords query that happens to
+        // contain the "A minor scale" substring; without the guard scaleinfo
+        // over-fired and stole it (added 2026-05-31, paired with the diatonic
+        // rule above).
+        (new Regex(@"\b(?:(?<!harmoni[sz]ed\s)[A-G](?:#|b)?\s+(?:major|minor|natural\s+minor|melodic\s+minor|harmonic\s+minor)\s+scale|notes\s+in\s+(?:[A-G](?:#|b)?\s+)?(?:major|minor)\s+scale)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.scaleinfo"),
 
@@ -160,6 +168,52 @@ public sealed class DefaultRoutingHintProvider : IRoutingHintProvider
         (new Regex(@"\bvoice[\s-]*lead\w*\b|\bsmooth(?:est)?\s+voic\w*\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
             "skill.voiceleading"),
+
+        // Common tones — added 2026-05-31 to close a 0.71-F1 / 0.60-recall
+        // hole. The routing-eval-2026-05-30 baseline showed 4 common-tones
+        // prompts losing by razor-thin margins (0.001–0.022) to chordinfo /
+        // voiceleading / relativekey, because the queries are chord-name-heavy
+        // ("what notes do Am7 and Dm7 share") and those neighbors' centroids
+        // pull on the chord literals. The DISCRIMINATOR is the comparison
+        // phrasing — share / shared / in-common / common|overlapping|pivot|
+        // mutual + notes|tones|pitches / intersection of — which is the literal
+        // definition of a common-tones query and does NOT appear in chordinfo's
+        // "notes in <chord>" shape. +0.06 tips each thin tie reliably.
+        (new Regex(@"\b(?:common|shared|overlapping|pivot|mutual)\s+(?:notes?|tones?|pitches?)\b|\b(?:notes?|tones?|pitches?)\b[^.?!]{0,40}?\b(?:shared?|in\s+common)\b|\bintersection\s+of\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.commontones"),
+
+        // Progression mood (transform) — added 2026-05-31. progressionmood had
+        // NO hint rule, so mood-transform queries like "lift the mood of D minor"
+        // (pm-9) were stolen by scaleinfo on the "D minor" centroid. The
+        // discriminator is the emotional-transform vocabulary (darken/brighten/
+        // sadder/melancholy/cinematic/"lift the mood"/"add tension") — this is a
+        // TRANSFORM intent ("make it sound X"), unambiguous in a music context and
+        // absent from descriptive scale/chord queries.
+        (new Regex(@"\b(?:dark(?:er|en\w*)|bright(?:er|en\w*)|sadder|happier|melanchol\w*|moodier|gloomier|cinematic)\b|\blift\s+the\s+mood\b|\badd\s+tension\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.progressionmood"),
+
+        // Progression completion (continuation) — added 2026-05-31. recall was
+        // 0.60: 4 prompts stolen by keyidentification / commontones /
+        // grothendieckparse / diatonicchords on the chord-list centroid. The
+        // discriminator is the CONTINUATION vocabulary — "next chord", "chord
+        // comes next / after", "complete/finish this progression", "what
+        // resolves", "what comes/should follow", "predict the next" — a
+        // forward-motion ask absent from descriptive chord/key/scale queries.
+        (new Regex(@"\b(?:next\s+chord|chord\s+(?:comes?\s+next|after|to\s+(?:finish|follow))|comes?\s+next|complete\s+(?:this|the)\b|finish\s+(?:this\s+)?(?:progression|chord)|what\s+(?:comes?\s+(?:next|after)|should\s+(?:come|follow))|what\s+resolves?|predict\s+the\s+next)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.progressioncompletion"),
+
+        // Diatonic chords — added 2026-05-31. Anchored on "diatonic" and the
+        // "harmoniz(e|ed)" verb (harmonizing a scale = its diatonic chords).
+        // Recovers dc-8 "harmonized A minor scale", which scaleinfo was stealing
+        // (its hint fired on the "A minor scale" substring — now suppressed by a
+        // negative-lookbehind on the scaleinfo rule below). Both tokens are
+        // diatonic-specific; no English homonyms in a music context.
+        (new Regex(@"\b(?:diatonic|harmoni[sz]e[sd]?|harmoni[sz]ing)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            "skill.diatonicchords"),
 
         // Capo — added 2026-05-14 to close BACKLOG dealbreaker #3. Anchored on
         // the literal "capo" token (music-unambiguous — no English homonyms

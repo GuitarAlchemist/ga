@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Details FloorManager test fixes (27 tests) at 'Tests/FloorManager.Tests.Playwright' (line 6) Some specifics below no longer match the code.
+
 ﻿# FloorManager Playwright Test Fixes - Comprehensive Summary
 
 ## Test Execution Summary

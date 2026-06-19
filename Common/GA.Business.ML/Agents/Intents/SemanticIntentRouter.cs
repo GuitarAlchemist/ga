@@ -40,7 +40,11 @@ public sealed class SemanticIntentRouter(
     // tops out around 0.58–0.62 for short queries against domain-backed
     // skills; 0.55 gives the hint provider room to land its win without
     // letting truly-unrelated queries grab an intent.
-    private const float DefaultMinConfidence = 0.55f;
+    // Public so evaluation harnesses pin to the SAME threshold production
+    // routes with — a hardcoded copy in RoutingEvalHarness drifted to 0.65
+    // after this dropped to 0.55 (2026-05-13), making the baseline measure a
+    // threshold prod never used. One source of truth prevents recurrence.
+    public const float DefaultMinConfidence = 0.55f;
     private static readonly TimeSpan DefaultEmbeddingTimeout = TimeSpan.FromSeconds(15);
 
     // Process-wide cache so intent vectors persist across requests. Keyed by
@@ -48,6 +52,12 @@ public sealed class SemanticIntentRouter(
     private readonly Dictionary<string, float[][]> _intentEmbeddings = [];
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private volatile bool _embeddingsReady;
+
+    // Embedder model id for the query-embedding sink (Contract B). Resolved once
+    // from the live generator's metadata so the persisted rows record the ACTUAL
+    // model (e.g. bge-large), never a hardcoded guess. Cached: metadata is static.
+    private string? _embedderModelId;
+    private bool _embedderResolved;
 
     /// <summary>Cosine-similarity threshold above which an intent claims the query.</summary>
     public float MinConfidence { get; init; } = DefaultMinConfidence;
@@ -87,6 +97,10 @@ public sealed class SemanticIntentRouter(
         if (candidates.Count == 0) return null;
 
         await EnsureExamplesEmbeddedAsync(candidates, cancellationToken);
+
+        // Per-query routing latency starts AFTER the one-time example-embedding
+        // warmup (that cost belongs to the first request only, not every query).
+        var sw = System.Diagnostics.Stopwatch.StartNew();
 
         float[] queryVec;
         try
@@ -195,12 +209,64 @@ public sealed class SemanticIntentRouter(
                 ? $"{r.Intent.Id}={r.Score - r.Boost:F3}+{r.Boost:F3}={r.Score:F3} via {Trim(r.MatchedSource, 40)}"
                 : $"{r.Intent.Id}={r.Score:F3} via {Trim(r.MatchedSource, 40)}")));
 
+        // Routing-decision telemetry (append-only JSONL, error-swallowed). One line
+        // per scored query so an uncontaminated held-out eval set can be mined from
+        // live traffic — the regex hints are tuned against the fixed corpus, so the
+        // harness number is training accuracy; real generalization can only be
+        // measured on traffic the hints never saw. See RoutingTelemetryLog.
+        var telemetryCandidates = topK
+            .Select(r => new RoutingTelemetryCandidate(r.Intent.Id, r.Score - r.Boost, r.Boost, r.Score))
+            .ToList();
+        var margin = topK.Count >= 2 ? (double?)(topK[0].Score - topK[1].Score) : null;
+
         var top = withHints[0];
+
+        // SHADOW (default OFF; never affects routing): when GA_ROUTER_SHADOW=1 and a
+        // learned head is configured, log the head's pick alongside production's on
+        // the SAME query embedding — for offline head-vs-prod comparison and
+        // real-traffic eval mining (Hermes Spike-A). Fully error-swallowed.
+        if (LearnedHeadShadow.Instance is { } shadow)
+        {
+            var prodChosenForShadow = top.Score >= MinConfidence ? top.Intent.Id : null;
+            shadow.LogShadow(query, queryVec, prodChosenForShadow);
+        }
+
+        // Query-embedding sink (Contract B for ix-duck's out-of-domain lens): persist
+        // the EXACT vector the router scored with — not a re-embed — plus the decision
+        // it drove, so the OOD lens can flag queries far from the in-domain reference
+        // set. One row per routed query, covering both the routed and declined paths.
+        // Error-swallowed + env-gated like the telemetry above; never affects routing.
+        var routed = top.Score >= MinConfidence;
+        QueryEmbeddingLog.Append(new QueryEmbeddingRecord
+        {
+            QueryId         = Guid.NewGuid().ToString("n"),
+            Timestamp       = DateTime.UtcNow.ToString("o"),
+            QueryText       = query,
+            Intent          = routed ? top.Intent.Id : null,
+            RouteMethod     = routed ? "embedding" : "fallback",
+            RouteConfidence = top.Score,
+            Embedder        = ResolveEmbedderModelId(),
+            Dim             = queryVec.Length,
+            Embedding       = queryVec,
+        });
+
         if (top.Score < MinConfidence)
         {
             logger.LogDebug(
                 "SemanticIntentRouter: top score {Score:F3} below threshold {Threshold:F2}; falling through",
                 top.Score, MinConfidence);
+            RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+            {
+                Timestamp   = DateTime.UtcNow.ToString("o"),
+                Query       = query,
+                Chosen      = null,
+                Confidence  = null,
+                Threshold   = MinConfidence,
+                FellThrough = true,
+                Margin      = margin,
+                Candidates  = telemetryCandidates,
+                LatencyMs   = sw.Elapsed.TotalMilliseconds,
+            });
             return null;
         }
 
@@ -219,10 +285,42 @@ public sealed class SemanticIntentRouter(
                 MatchedSource: r.MatchedSource))
             .ToList();
 
+        RoutingTelemetryLog.Append(new RoutingTelemetryRecord
+        {
+            Timestamp   = DateTime.UtcNow.ToString("o"),
+            Query       = query,
+            Chosen      = top.Intent.Id,
+            Confidence  = top.Score,
+            Threshold   = MinConfidence,
+            FellThrough = false,
+            Margin      = margin,
+            Candidates  = telemetryCandidates,
+            LatencyMs   = sw.Elapsed.TotalMilliseconds,
+        });
+
         return new IntentMatch(top.Intent, top.Score, top.MatchedSource)
         {
             Ranking = routingCandidates,
         };
+    }
+
+    // Best-effort embedder model id from the generator metadata (M.E.AI exposes it
+    // via GetService<EmbeddingGeneratorMetadata>). Falls back to "unknown" if the
+    // provider doesn't surface a model id — never throws into the routing path.
+    private string ResolveEmbedderModelId()
+    {
+        if (_embedderResolved) return _embedderModelId ?? "unknown";
+        _embedderResolved = true;
+        try
+        {
+            var meta = textEmbeddings?.GetService(typeof(EmbeddingGeneratorMetadata)) as EmbeddingGeneratorMetadata;
+            _embedderModelId = meta?.DefaultModelId;
+        }
+        catch
+        {
+            // metadata resolution is best-effort; leave null → "unknown"
+        }
+        return _embedderModelId ?? "unknown";
     }
 
     private static string Trim(string s, int max) =>

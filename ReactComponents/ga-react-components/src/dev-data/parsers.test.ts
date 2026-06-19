@@ -12,6 +12,7 @@ import {
     projectLoopsGoals,
     extractPrRefs,
     extractDocRefs,
+    parseValueCatalog,
 } from './parsers';
 
 describe('categorize', () => {
@@ -474,5 +475,35 @@ describe('projectLoopsGoals', () => {
         const p = projectLoopsGoals([paused], now);
         expect(p.active_goals.length).toBe(1);
         expect(p.active_goals[0].status).toBe('paused');
+    });
+});
+
+describe('parseValueCatalog', () => {
+    const sample = [
+        '{"schema_version":"0.1.0","id":"crate/ix-agent","repo":"ix","kind":"demo","title":"ix-agent","reach":4,"impact":4,"confidence":3,"stars":4,"score01":0.7268,"rationale":"r"}',
+        '{"schema_version":"0.1.0","id":"ix","repo":"ix","kind":"repo","title":"ix","reach":4,"impact":5,"confidence":3,"stars":4,"score01":0.78}',
+    ].join('\n');
+
+    it('parses one record per non-empty line', () => {
+        const recs = parseValueCatalog(sample);
+        expect(recs).toHaveLength(2);
+        expect(recs[0].id).toBe('crate/ix-agent');
+        expect(recs[0].stars).toBe(4);
+        expect(recs[1].kind).toBe('repo');
+    });
+
+    it('ignores blank lines and trailing newline', () => {
+        expect(parseValueCatalog(`\n${sample}\n\n`)).toHaveLength(2);
+    });
+
+    it('skips malformed lines without throwing (one bad line ≠ blank scorecard)', () => {
+        const withGarbage = `${sample}\n{ this is not json\n{"id":"x"}`; // last is valid JSON but missing kind/stars
+        const recs = parseValueCatalog(withGarbage);
+        expect(recs).toHaveLength(2); // the two good records survive
+        expect(recs.every((r) => typeof r.stars === 'number')).toBe(true);
+    });
+
+    it('returns empty array for empty input', () => {
+        expect(parseValueCatalog('')).toEqual([]);
     });
 });

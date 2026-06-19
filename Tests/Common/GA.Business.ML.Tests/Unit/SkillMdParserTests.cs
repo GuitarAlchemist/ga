@@ -477,4 +477,90 @@ public class SkillMdParserTests
         Assert.That(result!.Triggers, Is.Empty,
             "if all triggers are short, the survivor list is empty (downstream filter handles registration)");
     }
+
+    // ── allowed-tools (kebab-case, Claude Code convention) ────────────────────
+
+    [Test]
+    public void TryParseContent_AllowedTools_ParsedFromKebabCaseKey()
+    {
+        // Every deterministic GA SKILL.md declares `allowed-tools` (kebab-case).
+        // Neither the PascalCase nor camelCase naming convention maps to that key,
+        // so the parser pins it with an explicit YamlMember alias.
+        const string content = """
+            ---
+            name: "transpose"
+            description: "Transpose a chord"
+            triggers:
+              - "transpose"
+            allowed-tools:
+              - ga_dsl_eval
+            ---
+            Call ga_dsl_eval.
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.AllowedTools, Is.EqualTo(new[] { "ga_dsl_eval" }));
+    }
+
+    [Test]
+    public void TryParseContent_AllowedTools_MultipleEntriesPreserved()
+    {
+        const string content = """
+            ---
+            name: "chord-substitution"
+            triggers:
+              - "substitute"
+            allowed-tools:
+              - ga_chord_substitutions
+              - ga_chord_compare
+            ---
+            body
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result!.AllowedTools, Is.EqualTo(new[] { "ga_chord_substitutions", "ga_chord_compare" }));
+    }
+
+    [Test]
+    public void TryParseContent_NoAllowedTools_DefaultsToEmpty()
+    {
+        // Conversational skills declare no allowed-tools — must surface as an
+        // empty list (not null), so downstream callers can branch on Count.
+        const string content = """
+            ---
+            name: "what-can-you-do"
+            triggers:
+              - "what can you do"
+            ---
+            body
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result!.AllowedTools, Is.Not.Null);
+        Assert.That(result.AllowedTools, Is.Empty);
+    }
+
+    [Test]
+    public void TryParseContent_AllowedTools_BlankEntriesDropped()
+    {
+        const string content = """
+            ---
+            name: "x"
+            triggers:
+              - "xyz"
+            allowed-tools:
+              - ga_dsl_eval
+              - ""
+            ---
+            body
+            """;
+
+        var result = SkillMdParser.TryParseContent(content);
+
+        Assert.That(result!.AllowedTools, Is.EqualTo(new[] { "ga_dsl_eval" }));
+    }
 }

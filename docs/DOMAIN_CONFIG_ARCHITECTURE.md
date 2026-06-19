@@ -243,6 +243,6 @@ This architecture ensures that the mathematical foundation (domain) remains clea
 
 ## Related Documents
 
-- [DOMAIN_ARCHITECTURE_REVIEW.md](DOMAIN_ARCHITECTURE_REVIEW.md) - Comprehensive domain model review
+- DOMAIN_ARCHITECTURE_REVIEW.md - Comprehensive domain model review
 - [GA.Business.Config/README.md](../Common/GA.Business.Config/README.md) - Configuration layer overview
 - [GA.Domain.Core/README.md](../Common/GA.Domain.Core/README.md) - Pure domain layer overview

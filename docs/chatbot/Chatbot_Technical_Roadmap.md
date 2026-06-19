@@ -342,7 +342,7 @@ A chatbot that can:
 
 ## References
 
-- [OPTIC-K_Applications.md](OPTIC-K_Applications.md) — Practical applications
-- [Spectral_RAG_Implementation_Plan.md](Spectral_RAG_Implementation_Plan.md) — DWT integration
-- [MathFoundations/Math_Foundations_DFT.md](MathFoundations/Math_Foundations_DFT.md) — DFT theory
-- [MathFoundations/Math_Foundations_DWT.md](MathFoundations/Math_Foundations_DWT.md) — DWT theory
+- OPTIC-K_Applications.md — Practical applications
+- Spectral_RAG_Implementation_Plan.md — DWT integration
+- MathFoundations/Math_Foundations_DFT.md — DFT theory
+- MathFoundations/Math_Foundations_DWT.md — DWT theory
