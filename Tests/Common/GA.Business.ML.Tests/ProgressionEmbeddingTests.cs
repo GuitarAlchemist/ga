@@ -2,9 +2,9 @@ namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
 using System.Linq;
-using Rag.Models;
 using GA.Business.ML.Wavelets;
 using NUnit.Framework;
+using Rag.Models;
 
 [TestFixture]
 public class ProgressionEmbeddingTests

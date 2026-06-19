@@ -34,8 +34,5 @@ public class SetClassSyncService(ILogger<SetClassSyncService> logger, MongoDbSer
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.SetClasses.CountDocumentsAsync(Builders<SetClassDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.SetClasses.CountDocumentsAsync(Builders<SetClassDocument>.Filter.Empty);
 }

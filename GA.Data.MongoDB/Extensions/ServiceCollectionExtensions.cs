@@ -1,9 +1,9 @@
 namespace GA.Data.MongoDB.Extensions;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using GA.Data.MongoDB.Services;
 using GA.Data.MongoDB.Services.DocumentServices.Rag;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 public static class ServiceCollectionExtensions
 {

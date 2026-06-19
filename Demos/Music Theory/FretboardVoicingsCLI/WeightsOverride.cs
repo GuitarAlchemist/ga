@@ -49,10 +49,7 @@ public sealed class WeightsOverride
     /// </summary>
     private readonly Dictionary<string, float> _byName;
 
-    private WeightsOverride(Dictionary<string, float> byName)
-    {
-        _byName = byName;
-    }
+    private WeightsOverride(Dictionary<string, float> byName) => _byName = byName;
 
     /// <summary>
     ///     True iff <paramref name="partitionName"/> has an override; the

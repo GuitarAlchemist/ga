@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using JetBrains.Annotations;
 using GA.Domain.Core.Instruments.Fingering;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Primitives.Intervals;
@@ -14,6 +13,7 @@ using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
 using GA.Domain.Core.Theory.Tonal.Scales;
+using JetBrains.Annotations;
 
 [PublicAPI]
 public static class AssetCatalog

@@ -1,7 +1,7 @@
 namespace GA.Fretboard.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
 using AllProjects.ServiceDefaults;
+using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
 

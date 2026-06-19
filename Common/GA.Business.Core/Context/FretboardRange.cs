@@ -1,8 +1,8 @@
 namespace GA.Business.Core.Context;
 
 using System.Collections.Immutable;
-using JetBrains.Annotations;
 using GA.Domain.Core.Design.Attributes;
+using JetBrains.Annotations;
 
 /// <summary>
 /// Defines a fretboard range constraint for voicing searches and visualizations

@@ -7,8 +7,5 @@ public abstract record RagDocumentBase : DocumentBase
 
     public abstract string ToEmbeddingString();
 
-    public void GenerateSearchText()
-    {
-        SearchText = ToEmbeddingString();
-    }
+    public void GenerateSearchText() => SearchText = ToEmbeddingString();
 }

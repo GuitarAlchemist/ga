@@ -1,9 +1,9 @@
 namespace GA.Business.ML.Agents.Memory;
 
+using System.ComponentModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
-using System.ComponentModel;
 
 /// <summary>
 /// MCP tools for reading/writing persistent agent memory.

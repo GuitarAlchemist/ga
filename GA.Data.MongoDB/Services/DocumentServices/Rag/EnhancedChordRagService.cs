@@ -1,14 +1,14 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
+using Embeddings;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
-using GA.Domain.Core.Primitives.Extensions;
-using Embeddings;
+using global::MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
 using Models.References;
 using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
-using global::MongoDB.Driver;
 
 /// <summary>
 /// Enhanced chord RAG service with multi-stage processing
@@ -82,10 +82,7 @@ public class EnhancedChordRagService(
         return documents;
     }
 
-    protected override IMongoCollection<ChordRagEmbedding> GetCollection()
-    {
-        return MongoDb.ChordsRag;
-    }
+    protected override IMongoCollection<ChordRagEmbedding> GetCollection() => MongoDb.ChordsRag;
 
     /// <summary>
     /// Sync all chords using the multi-stage pipeline
@@ -140,12 +137,10 @@ public class EnhancedChordRagService(
         return "Other";
     }
 
-    private static List<ScaleReference> GetRelatedScales(ChordTemplate template)
-    {
+    private static List<ScaleReference> GetRelatedScales(ChordTemplate template) =>
         // Simplified - in production, this would query a scale database
         // or use music theory rules to find compatible scales
         // ScaleReference(string Name, string Category, List<string> Notes)
-        return
         [
             new ScaleReference(
                 $"{template.PitchClassSet.Notes.First()} Major",
@@ -158,13 +153,10 @@ public class EnhancedChordRagService(
                 []
             )
         ];
-    }
 
-    private static List<ProgressionReference> GetCommonProgressions(ChordTemplate template)
-    {
+    private static List<ProgressionReference> GetCommonProgressions(ChordTemplate template) =>
         // Simplified - in production, this would analyze progression databases
         // ProgressionReference(string Name, List<string> Chords)
-        return
         [
             new ProgressionReference(
                 "ii-V-I",
@@ -175,13 +167,10 @@ public class EnhancedChordRagService(
                 ["I", "IV", "V"]
             )
         ];
-    }
 
-    private static List<VoicingReference> GetCommonVoicings(ChordTemplate template)
-    {
+    private static List<VoicingReference> GetCommonVoicings(ChordTemplate template) =>
         // Simplified - in production, this would query voicing databases
         // VoicingReference(string Name, List<string> Notes, string Instrument)
-        return
         [
             new VoicingReference(
                 "Root Position",
@@ -194,7 +183,6 @@ public class EnhancedChordRagService(
                 "Guitar"
             )
         ];
-    }
 
     #endregion
 }

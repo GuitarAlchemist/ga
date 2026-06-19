@@ -1,10 +1,10 @@
 namespace GA.Business.AI.Interpretation;
 
+using System.Collections.Generic;
+using System.Linq;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Atonal;
 using JetBrains.Annotations;
-using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// Interpretive music analysis service providing natural language-friendly insights.

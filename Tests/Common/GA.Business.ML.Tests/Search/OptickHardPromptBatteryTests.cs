@@ -59,53 +59,43 @@ public class OptickHardPromptBatteryTests
 
     // ─── Probe 1: STRUCTURE partition — baseline structural match ─────────────
     [Test]
-    public async Task P1_Cmaj7_BaselineStructuralMatch()
-    {
+    public async Task P1_Cmaj7_BaselineStructuralMatch() =>
         // Why: Cmaj7 = {C,E,G,B} = {0,4,7,11}. A good OPTIC-K index should rank voicings
         // containing these pitch classes at the top, with scores well above noise.
         await RunAndDump("Cmaj7", 5);
-    }
 
     // ─── Probe 2: T-invariance — Cmaj7 vs Dmaj7 parallel ──────────────────────
     [Test]
-    public async Task P2_Dmaj7_TransposedParallel_ShouldDifferInDiagramsNotScores()
-    {
+    public async Task P2_Dmaj7_TransposedParallel_ShouldDifferInDiagramsNotScores() =>
         // Why: STRUCTURE partition encodes chroma + ICV; rotating the root should yield
         // different diagrams but similar *shape* of score distribution (same ICV => same
         // STRUCTURE subspace cosine profile). Under old text-embedding this wasn't true.
         await RunAndDump("Dmaj7", 5);
-    }
 
     // ─── Probe 3: Dissonant-quality discrimination ────────────────────────────
     [Test]
-    public async Task P3_FSharpM7b5_DissonantChord()
-    {
+    public async Task P3_FSharpM7b5_DissonantChord() =>
         // Why: F#m7b5 = half-diminished. PC set {6,9,0,4}. Tonal-ness dim (26-29 of
         // STRUCTURE) should read lower than a major7. Test: top scores should be similar
         // magnitude to consonant chords (the cosine doesn't penalize absolute consonance —
         // it matches similarity), but the RESULTS should contain m7b5-pattern voicings.
         await RunAndDump("F#m7b5", 5);
-    }
 
     // ─── Probe 4: MODAL partition — mode-only query ───────────────────────────
     [Test]
-    public async Task P4_FSharpLydian_ModeOnly()
-    {
+    public async Task P4_FSharpLydian_ModeOnly() =>
         // Why: no chord = STRUCTURE stays zero (no PC-set seed). MODAL partition (40 dim,
         // weight 0.10) does the entire ranking. Spread should be narrower than chord-based
         // queries because only one of 5 similarity partitions is active.
         await RunAndDump("F# Lydian", 5);
-    }
 
     // ─── Probe 5: Multi-partition hit (STRUCTURE + SYMBOLIC + MODAL implicit) ─
     [Test]
-    public async Task P5_Cmaj7_Drop2_Jazz_TriplePartition()
-    {
+    public async Task P5_Cmaj7_Drop2_Jazz_TriplePartition() =>
         // Why: chord seeds STRUCTURE; "drop2" + "jazz" seed SYMBOLIC; PC set also seeds
         // MODAL scoring vs every mode. Should rank HIGHER than bare "Cmaj7" if corpus has
         // drop2-jazz-tagged voicings containing Cmaj7 PC set.
         await RunAndDump("Cmaj7 drop2 jazz", 5);
-    }
 
     // ─── Probe 6: Instrument filter ───────────────────────────────────────────
     [Test]

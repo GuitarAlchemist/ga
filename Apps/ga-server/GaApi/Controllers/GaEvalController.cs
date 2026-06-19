@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 using Microsoft.FSharp.Control;
 using Microsoft.FSharp.Core;
 using static GA.Business.DSL.Interpreter.GaFsiSessionPool;
+using GaClosure           = GA.Business.DSL.Closures.GaClosureRegistry.GaClosure;
 using GaClosureCategory = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
 using GaClosureRegistry  = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
-using GaClosure           = GA.Business.DSL.Closures.GaClosureRegistry.GaClosure;
 
 /// <summary>
 /// REST API for evaluating GA Language scripts and introspecting the closure registry.

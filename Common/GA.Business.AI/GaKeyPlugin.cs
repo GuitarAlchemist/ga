@@ -38,24 +38,15 @@ public class GaKeyPlugin
     [KernelFunction("get_keys")]
     [Description("get all musical keys")]
     [return: Description("An array of musical keys")]
-    public static Task<List<Key>> GetKeys()
-    {
-        return Task.FromResult(Key.Items.ToList());
-    }
+    public static Task<List<Key>> GetKeys() => Task.FromResult(Key.Items.ToList());
 
     [KernelFunction("getAccidentedNotesInKeySignature")]
     [Description("get accidentals in a given key signature")]
     public static string GetAccidentedNotesInKeySignature(
         [Description("The key signature to get the accidented notes from")]
-        KeySignature keySignature)
-    {
-        return keySignature.AccidentedNotes.ToString();
-    }
+        KeySignature keySignature) => keySignature.AccidentedNotes.ToString();
 
     [KernelFunction("getAccidentedNotesInKey")]
     [Description("get accidentals in a given key")]
-    public static string GetAccidentedNotesInKey([Description("The key to get the accidentals from")] Key key)
-    {
-        return key.KeySignature.AccidentedNotes.ToString();
-    }
+    public static string GetAccidentedNotesInKey([Description("The key to get the accidentals from")] Key key) => key.KeySignature.AccidentedNotes.ToString();
 }

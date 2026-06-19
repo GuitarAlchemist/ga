@@ -44,20 +44,17 @@ public class CachingService(
 
     public async Task RemoveAsync(string key) => await cache.RemoveAsync(key);
 
-    public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory)
-    {
-        return await cache.GetOrCreateAsync(
-            key, 
-            async cancel => 
+    public async Task<T> GetOrCreateSemanticAsync<T>(string key, Func<Task<T>> factory) => await cache.GetOrCreateAsync(
+            key,
+            async cancel =>
             {
                 _logger.LogDebug("Semantic cache MISS for key: {Key}", key);
                 return await factory();
             },
-            options: new HybridCacheEntryOptions 
-            { 
+            options: new HybridCacheEntryOptions
+            {
                 Expiration = TimeSpan.FromMinutes(5),
                 LocalCacheExpiration = TimeSpan.FromMinutes(2)
             }
         );
-    }
 }

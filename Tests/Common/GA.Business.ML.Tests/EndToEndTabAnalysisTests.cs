@@ -2,8 +2,8 @@ namespace GA.Business.ML.Tests;
 
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Business.ML.Tabs;
 using Embeddings;
+using GA.Business.ML.Tabs;
 using GA.Business.ML.Wavelets;
 using NUnit.Framework;
 

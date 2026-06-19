@@ -1,8 +1,8 @@
 namespace GaApi.Services;
 
 using System.Text;
-using GA.Business.ML.Search;
 using GA.Business.ML.Rag.Models;
+using GA.Business.ML.Search;
 
 /// <summary>
 ///     Implementation that bridges EnhancedVoicingSearchService to the chatbot.

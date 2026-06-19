@@ -368,7 +368,7 @@ public sealed class SemanticIntentRouter(
                 inputs.AddRange(intent.ExamplePrompts.Select(NormalizeForEmbedding));
 
                 var batch = await textEmbeddings!.GenerateAsync(inputs, cancellationToken: ct);
-                _intentEmbeddings[intent.Id] = batch.Select(e => e.Vector.ToArray()).ToArray();
+                _intentEmbeddings[intent.Id] = [.. batch.Select(e => e.Vector.ToArray())];
             }
 
             _embeddingsReady = true;

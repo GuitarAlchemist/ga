@@ -70,7 +70,7 @@ public sealed partial class FretSpanMcpTools
         return new FretSpanResult
         {
             Diagram          = normalized,
-            Frets            = frets.ToArray(),
+            Frets            = [.. frets],
             MinFret          = minFret,
             MaxFret          = maxFret,
             Span             = span,
@@ -89,16 +89,14 @@ public sealed partial class FretSpanMcpTools
         var dash = DashDiagramRegex().Match(message);
         if (dash.Success)
         {
-            return Enumerable.Range(1, 6)
-                .Select(i => ParseFretToken(dash.Groups[i].Value))
-                .ToList();
+            return [.. Enumerable.Range(1, 6).Select(i => ParseFretToken(dash.Groups[i].Value))];
         }
 
         var compact = CompactDiagramRegex().Match(message);
         if (!compact.Success) return null;
 
         var val = compact.Value;
-        return val.Select(c => c is 'x' or 'X' ? -1 : c - '0').ToList();
+        return [.. val.Select(c => c is 'x' or 'X' ? -1 : c - '0')];
     }
 
     private static int ParseFretToken(string s) =>

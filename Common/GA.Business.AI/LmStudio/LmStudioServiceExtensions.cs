@@ -10,15 +10,13 @@ public static class LmStudioServiceExtensions
         /// <summary>
         ///     Adds LM Studio integration services to the service collection
         /// </summary>
-        public IServiceCollection AddLmStudioIntegration()
-        {
+        public IServiceCollection AddLmStudioIntegration() =>
             // Add MongoDB services if not already added
             //services.AddMongoDbServices();
 
             // Add LM Studio integration services
             // services.AddScoped<LmStudioIntegrationService>(); // Temporarily disabled
 
-            return services;
-        }
+            services;
     }
 }

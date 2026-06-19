@@ -24,10 +24,7 @@ public class DslEvalMcpToolsTests
     /// function. Idempotent — re-running just overwrites entries with the
     /// same name in the underlying ConcurrentDictionary.
     /// </summary>
-    private static void EnsureClosuresRegistered()
-    {
-        GA.Business.DSL.Closures.BuiltinClosures.DomainClosures.register();
-    }
+    private static void EnsureClosuresRegistered() => GA.Business.DSL.Closures.BuiltinClosures.DomainClosures.register();
 
     [OneTimeSetUp]
     public void OneTimeSetUp() => EnsureClosuresRegistered();

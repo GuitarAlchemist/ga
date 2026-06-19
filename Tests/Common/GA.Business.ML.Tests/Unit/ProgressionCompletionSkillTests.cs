@@ -1,9 +1,9 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Skills;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Microsoft.Extensions.AI;
 
 /// <summary>
 /// Tests for <see cref="ProgressionCompletionSkill"/>.
@@ -76,11 +76,9 @@ public sealed class ProgressionCompletionSkillTests
     // ── No collision with KeyIdentificationSkill ──────────────────────────────
 
     [Test]
-    public void CanHandle_DoesNotFireOnKeyIdentificationQuery()
-    {
+    public void CanHandle_DoesNotFireOnKeyIdentificationQuery() =>
         // "what key" alone should not trigger ProgressionCompletionSkill
         Assert.That(_skill.CanHandle("Am F C G — what key am I in?"), Is.False);
-    }
 
     // ── ExecuteAsync ──────────────────────────────────────────────────────────
 

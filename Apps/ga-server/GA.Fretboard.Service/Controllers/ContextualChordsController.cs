@@ -1,19 +1,19 @@
 namespace GA.Fretboard.Service.Controllers;
 
+using AllProjects.ServiceDefaults;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Theory.Tonal.Modes;
 using GA.Domain.Core.Theory.Tonal.Modes.Diatonic;
 using GA.Domain.Core.Theory.Tonal.Primitives.Diatonic;
-using Microsoft.AspNetCore.Mvc;
 using GA.Domain.Services.Chords;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Models;
 using Services;
-using AllProjects.ServiceDefaults;
-using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using ChordExtension = Models.ChordExtension;
 using ChordStackingType = Models.ChordStackingType;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 /// <summary>
 ///     API controller for contextual chord queries

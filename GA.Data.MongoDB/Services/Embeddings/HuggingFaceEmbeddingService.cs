@@ -10,9 +10,7 @@ public class HuggingFaceEmbeddingService(
     private readonly HttpClient _client = client;
     private readonly string _model = model;
 
-    public Task<List<float>> GenerateEmbeddingAsync(string text)
-    {
+    public Task<List<float>> GenerateEmbeddingAsync(string text) =>
         // Implementation for Hugging Face API
         throw new NotImplementedException();
-    }
 }

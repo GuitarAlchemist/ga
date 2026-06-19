@@ -188,7 +188,7 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
             // trusting static "via ga_dsl_eval" string tags.
             var evidence = toolCalls.Count == 0
                 ? new List<string> { "tools.invoked: <none>" }
-                : toolCalls.Select(name => $"tools.invoked: {name}").ToList();
+                : [.. toolCalls.Select(name => $"tools.invoked: {name}")];
 
             return new AgentResponse
             {

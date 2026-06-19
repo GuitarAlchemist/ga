@@ -1,12 +1,12 @@
 namespace GA.Data.MongoDB.Services.DocumentServices;
 
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
-using GA.Domain.Core.Primitives.Extensions;
 using Microsoft.Extensions.Logging;
 using Models;
-using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 using Models.References;
+using ChordTemplate = GA.Domain.Core.Theory.Harmony.ChordTemplate;
 
 [UsedImplicitly]
 public class ChordSyncService(
@@ -43,10 +43,7 @@ public class ChordSyncService(
         }
     }
 
-    public virtual async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Chords.CountDocumentsAsync(Builders<ChordDocument>.Filter.Empty);
-    }
+    public virtual async Task<long> GetCountAsync() => await mongoDb.Chords.CountDocumentsAsync(Builders<ChordDocument>.Filter.Empty);
 
     protected static string DetermineQuality(ChordTemplate template)
     {
@@ -79,13 +76,11 @@ public class ChordSyncService(
             };
     }
 
-    protected static List<ScaleReference> GetRelatedScales(ChordTemplate template)
-    {
+    protected static List<ScaleReference> GetRelatedScales(ChordTemplate template) =>
         // The previous implementation relied on an 'AssociatedScales' property that no longer exists.
         // To keep synchronization working and the project compiling, we return an empty list for now.
         // This can be enhanced later by inferring related scales from the chord's pitch class set.
-        return new List<ScaleReference>();
-    }
+        new List<ScaleReference>();
 
     protected static List<ProgressionReference> GetCommonProgressions(ChordTemplate template)
     {

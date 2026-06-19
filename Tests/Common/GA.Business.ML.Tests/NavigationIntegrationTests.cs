@@ -2,9 +2,9 @@ namespace GA.Business.ML.Tests;
 
 using Domain.Services.Fretboard.Analysis;
 using Embeddings;
+using Rag.Models;
 using Retrieval;
 using TestInfrastructure;
-using Rag.Models;
 
 [TestFixture]
 public class NavigationIntegrationTests

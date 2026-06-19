@@ -1,8 +1,8 @@
 namespace GA.Business.ML.Search;
 
+using Domain.Services.Fretboard.Voicings.Filtering;
 using GA.Domain.Services.Fretboard.Voicings.Core;
 using Rag.Models;
-using Domain.Services.Fretboard.Voicings.Filtering;
 
 /// <summary>
 ///     Enhanced voicing search service with support for multiple search strategies

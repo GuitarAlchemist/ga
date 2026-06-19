@@ -1,11 +1,11 @@
 namespace GA.Business.ML.Tests;
 
-using ML.Tabs;
-using TestInfrastructure;
-using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Theory.Atonal;
 using Core.Analysis.Voicings;
 using Domain.Services.Fretboard.Voicings.Analysis;
+using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Theory.Atonal;
+using ML.Tabs;
+using TestInfrastructure;
 
 [TestFixture]
 public class RefactoringImplementationTests

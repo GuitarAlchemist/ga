@@ -97,53 +97,38 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// <summary>
     ///     Get analytics for all invariants
     /// </summary>
-    public virtual List<InvariantAnalytics> GetAllAnalytics()
-    {
-        return [.. _metrics.Values.Select(CreateAnalytics).OrderByDescending(a => a.FailureRate)];
-    }
+    public virtual List<InvariantAnalytics> GetAllAnalytics() => [.. _metrics.Values.Select(CreateAnalytics).OrderByDescending(a => a.FailureRate)];
 
     /// <summary>
     ///     Get analytics for a specific concept type
     /// </summary>
-    public virtual List<InvariantAnalytics> GetAnalyticsByConceptType(string conceptType)
-    {
-        return [.. _metrics.Values
+    public virtual List<InvariantAnalytics> GetAnalyticsByConceptType(string conceptType) => [.. _metrics.Values
             .Where(m => m.ConceptType.Equals(conceptType, StringComparison.OrdinalIgnoreCase))
             .Select(CreateAnalytics)
             .OrderByDescending(a => a.FailureRate)];
-    }
 
     /// <summary>
     ///     Get top failing invariants
     /// </summary>
-    public List<InvariantAnalytics> GetTopFailingInvariants(int count = 10)
-    {
-        return [.. _metrics.Values
+    public List<InvariantAnalytics> GetTopFailingInvariants(int count = 10) => [.. _metrics.Values
             .Select(CreateAnalytics)
             .Where(a => a.FailedValidations > 0)
             .OrderByDescending(a => a.FailureRate)
             .ThenByDescending(a => a.FailedValidations)
             .Take(count)];
-    }
 
     /// <summary>
     ///     Get slowest invariants
     /// </summary>
-    public List<InvariantAnalytics> GetSlowestInvariants(int count = 10)
-    {
-        return [.. _metrics.Values
+    public List<InvariantAnalytics> GetSlowestInvariants(int count = 10) => [.. _metrics.Values
             .Select(CreateAnalytics)
             .OrderByDescending(a => a.AverageExecutionTime)
             .Take(count)];
-    }
 
     /// <summary>
     ///     Get recent violation events
     /// </summary>
-    public virtual List<ViolationEvent> GetRecentViolations(int count = 100)
-    {
-        return [.. _violationEvents.TakeLast(count).OrderByDescending(v => v.Timestamp)];
-    }
+    public virtual List<ViolationEvent> GetRecentViolations(int count = 100) => [.. _violationEvents.TakeLast(count).OrderByDescending(v => v.Timestamp)];
 
     /// <summary>
     ///     Get violation trends over time
@@ -299,41 +284,35 @@ public class InvariantAnalyticsService(ILogger<InvariantAnalyticsService> logger
     /// <summary>
     ///     Export analytics data
     /// </summary>
-    public AnalyticsExport ExportAnalytics()
+    public AnalyticsExport ExportAnalytics() => new AnalyticsExport
     {
-        return new AnalyticsExport
-        {
-            ExportedAt = DateTime.UtcNow,
-            Metrics = GetAllAnalytics(),
-            ViolationEvents = GetRecentViolations(1000),
-            PerformanceInsights = GetPerformanceInsights(),
-            Recommendations = GetRecommendations()
-        };
-    }
+        ExportedAt = DateTime.UtcNow,
+        Metrics = GetAllAnalytics(),
+        ViolationEvents = GetRecentViolations(1000),
+        PerformanceInsights = GetPerformanceInsights(),
+        Recommendations = GetRecommendations()
+    };
 
-    private static InvariantAnalytics CreateAnalytics(InvariantMetrics metrics)
+    private static InvariantAnalytics CreateAnalytics(InvariantMetrics metrics) => new InvariantAnalytics
     {
-        return new InvariantAnalytics
-        {
-            InvariantName = metrics.InvariantName,
-            ConceptType = metrics.ConceptType,
-            TotalValidations = metrics.TotalValidations,
-            SuccessfulValidations = metrics.SuccessfulValidations,
-            FailedValidations = metrics.FailedValidations,
-            SuccessRate = metrics.TotalValidations > 0
+        InvariantName = metrics.InvariantName,
+        ConceptType = metrics.ConceptType,
+        TotalValidations = metrics.TotalValidations,
+        SuccessfulValidations = metrics.SuccessfulValidations,
+        FailedValidations = metrics.FailedValidations,
+        SuccessRate = metrics.TotalValidations > 0
                 ? (double)metrics.SuccessfulValidations / metrics.TotalValidations
                 : 0,
-            FailureRate = metrics.TotalValidations > 0
+        FailureRate = metrics.TotalValidations > 0
                 ? (double)metrics.FailedValidations / metrics.TotalValidations
                 : 0,
-            AverageExecutionTime = metrics.TotalValidations > 0
+        AverageExecutionTime = metrics.TotalValidations > 0
                 ? TimeSpan.FromTicks(metrics.TotalExecutionTime.Ticks / metrics.TotalValidations)
                 : TimeSpan.Zero,
-            MinExecutionTime = metrics.MinExecutionTime,
-            MaxExecutionTime = metrics.MaxExecutionTime,
-            LastValidated = metrics.LastValidated
-        };
-    }
+        MinExecutionTime = metrics.MinExecutionTime,
+        MaxExecutionTime = metrics.MaxExecutionTime,
+        LastValidated = metrics.LastValidated
+    };
 }
 
 /// <summary>

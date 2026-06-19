@@ -5,6 +5,8 @@ using AI.Benchmarks;
 using Configuration;
 using Embeddings;
 using Embeddings.Services;
+using GA.Business.ML.Naturalness;
+using GA.Domain.Services.Fretboard.Analysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -17,8 +19,6 @@ using Text.HuggingFace;
 using Text.Ollama;
 using Text.Onnx;
 using Wavelets;
-using GA.Domain.Services.Fretboard.Analysis;
-using GA.Business.ML.Naturalness;
 
 /// <summary>
 ///     Extension methods for configuring AI services in the dependency injection container

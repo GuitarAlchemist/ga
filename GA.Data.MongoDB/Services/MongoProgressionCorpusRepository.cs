@@ -3,9 +3,9 @@ namespace GA.Data.MongoDB.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GA.Domain.Repositories;
-using GA.Domain.Core.Theory.Harmony.Progressions;
 using GA.Data.MongoDB.Models;
+using GA.Domain.Core.Theory.Harmony.Progressions;
+using GA.Domain.Repositories;
 using global::MongoDB.Bson;
 using global::MongoDB.Driver;
 
@@ -13,10 +13,7 @@ public class MongoProgressionCorpusRepository : IProgressionCorpusRepository
 {
     private readonly MongoDbService _db;
 
-    public MongoProgressionCorpusRepository(MongoDbService db)
-    {
-        _db = db;
-    }
+    public MongoProgressionCorpusRepository(MongoDbService db) => _db = db;
 
     public async Task SaveAsync(ProgressionCorpusItem item)
     {

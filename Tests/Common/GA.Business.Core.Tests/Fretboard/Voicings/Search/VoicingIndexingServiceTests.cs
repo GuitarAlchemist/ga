@@ -1,10 +1,10 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
+using GA.Business.ML.Search;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Services.Fretboard.Voicings.Generation;
-using GA.Business.ML.Search;
 
 [TestFixture]
 public class VoicingIndexingServiceTests

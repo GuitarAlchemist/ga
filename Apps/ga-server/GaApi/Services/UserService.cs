@@ -90,10 +90,7 @@ public class UserService
         return user;
     }
 
-    public async Task<User?> GetByIdAsync(ObjectId id, CancellationToken ct = default)
-    {
-        return await _mongo.Users.Find(Builders<User>.Filter.Eq(u => u.Id, id)).FirstOrDefaultAsync(ct);
-    }
+    public async Task<User?> GetByIdAsync(ObjectId id, CancellationToken ct = default) => await _mongo.Users.Find(Builders<User>.Filter.Eq(u => u.Id, id)).FirstOrDefaultAsync(ct);
 
     /// <summary>Hash a refresh token with SHA256 (hex-encoded).</summary>
     public static string HashToken(string raw)

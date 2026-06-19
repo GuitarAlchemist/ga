@@ -6,9 +6,9 @@ using Domain.Core.Instruments.Primitives;
 using Domain.Core.Primitives.Notes;
 using Domain.Services.Fretboard.Analysis;
 using Embeddings;
-using Rag.Models;
 using ML.Tabs;
 using Moq;
+using Rag.Models;
 using Retrieval;
 
 [TestFixture]

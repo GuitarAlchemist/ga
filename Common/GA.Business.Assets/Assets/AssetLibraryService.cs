@@ -282,8 +282,7 @@ public class AssetLibraryService : IAssetLibraryService
 
     private static Task<(int PolyCount, BoundingBox? Bounds)> ExtractGlbMetadataAsync(
         byte[] glbData,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) =>
         // TODO: Parse GLB file to extract:
         // - Polygon count
         // - Bounding box
@@ -291,6 +290,5 @@ public class AssetLibraryService : IAssetLibraryService
         // - Texture count
 
         // For now, return placeholder values
-        return Task.FromResult<(int, BoundingBox?)>((1000, null));
-    }
+        Task.FromResult<(int, BoundingBox?)>((1000, null));
 }

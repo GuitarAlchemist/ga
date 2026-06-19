@@ -1,9 +1,9 @@
 namespace GA.Business.ML.Tests;
 
 using System.Collections.Generic;
-using Rag.Models;
 using Musical.Enrichment;
 using NUnit.Framework;
+using Rag.Models;
 
 [TestFixture]
 public class CoverAllModesIntegrationTests

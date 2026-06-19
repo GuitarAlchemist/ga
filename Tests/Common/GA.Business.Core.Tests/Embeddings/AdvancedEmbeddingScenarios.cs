@@ -1,8 +1,8 @@
 namespace GA.Business.Core.Tests.Embeddings;
 
+using GA.Business.ML.Rag.Models;
 using ML.Embeddings;
 using ML.Embeddings.Services;
-using GA.Business.ML.Rag.Models;
 
 [TestFixture]
 public class AdvancedEmbeddingScenarios

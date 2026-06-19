@@ -4,14 +4,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.DSL.Closures;
-using GaClosure         = GA.Business.DSL.Closures.GaClosureRegistry.GaClosure;
-using GaClosureCategory = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
-using GaClosureRegistry = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
-using GaError           = GA.Business.DSL.Closures.GaAsync.GaError;
 using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Control;
 using Microsoft.FSharp.Core;
 using ModelContextProtocol.Server;
+using GaClosure         = GA.Business.DSL.Closures.GaClosureRegistry.GaClosure;
+using GaClosureCategory = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureCategory;
+using GaClosureRegistry = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
+using GaError           = GA.Business.DSL.Closures.GaAsync.GaError;
 
 /// <summary>
 /// MCP bridge from the chatbot's in-process tool registry to the F# closure

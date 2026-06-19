@@ -121,10 +121,7 @@ public class ChordPitchClassesCompositionalTests
     [TestCase("Age")]
     [TestCase("Effect")]
     [TestCase("Garbage")]
-    public void RejectsOrdinaryWords(string word)
-    {
-        Assert.That(ChordPitchClasses.TryParse(word, out _, out _), Is.False, $"{word} should NOT parse as a chord");
-    }
+    public void RejectsOrdinaryWords(string word) => Assert.That(ChordPitchClasses.TryParse(word, out _, out _), Is.False, $"{word} should NOT parse as a chord");
 
     [Test]
     public void SlashBass_IsDroppedFromPitchClasses()

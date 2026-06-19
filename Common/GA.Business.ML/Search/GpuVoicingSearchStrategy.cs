@@ -2,15 +2,15 @@
 
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Rag.Models;
-using GA.Domain.Services.Fretboard.Voicings.Core;
+using Domain.Services.Fretboard.Biomechanics;
 using GA.Domain.Core.Instruments.Biomechanics;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Primitives.Notes;
-using Domain.Services.Fretboard.Biomechanics;
+using GA.Domain.Services.Fretboard.Voicings.Core;
 using ILGPU;
 using ILGPU.Runtime;
+using Rag.Models;
 
 /// <summary>
 ///     GPU-accelerated voicing search strategy for high-performance similarity calculations.

@@ -33,10 +33,7 @@ public class PitchClassSyncService(ILogger<PitchClassSyncService> logger, MongoD
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.PitchClasses.CountDocumentsAsync(Builders<PitchClassDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.PitchClasses.CountDocumentsAsync(Builders<PitchClassDocument>.Filter.Empty);
 }
 
 

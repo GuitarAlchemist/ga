@@ -6,18 +6,16 @@ using static CanonicalSignatureChecker;
 [TestFixture]
 public class CanonicalSignatureCheckerTests
 {
-    [TestCase("What is Locrian",                "what-is-locrian")]
-    [TestCase("What chord is C E G",            "what-chord-is-c-e-g")]
-    [TestCase("WHAT IS MIXOLYDIAN",             "what-is-mixolydian")]
-    [TestCase("modes of melodi minor",          "modes-of-melodi-minor")]
-    [TestCase("---hello---",                    "hello")]
-    [TestCase("a/b\\c.d?e!",                    "a-b-c-d-e")]
-    public void ToSlug_MatchesPowershellRecorder(string input, string expected)
-    {
+    [TestCase("What is Locrian", "what-is-locrian")]
+    [TestCase("What chord is C E G", "what-chord-is-c-e-g")]
+    [TestCase("WHAT IS MIXOLYDIAN", "what-is-mixolydian")]
+    [TestCase("modes of melodi minor", "modes-of-melodi-minor")]
+    [TestCase("---hello---", "hello")]
+    [TestCase("a/b\\c.d?e!", "a-b-c-d-e")]
+    public void ToSlug_MatchesPowershellRecorder(string input, string expected) =>
         // Round-trips with ConvertTo-Slug in record-golden-traces.ps1.
         // If you change either, change both.
         Assert.That(ToSlug(input), Is.EqualTo(expected));
-    }
 
     [Test]
     public void ToSlug_TruncatesAt64Chars()

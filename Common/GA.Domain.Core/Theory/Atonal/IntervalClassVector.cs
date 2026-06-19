@@ -1,8 +1,8 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using GA.Core.Collections.Abstractions;
 using Design.Attributes;
 using Design.Schema;
+using GA.Core.Collections.Abstractions;
 
 /// <summary>
 ///     Represents ordered occurence for each interval class, (e.g. Major Scale => 2, 5, 4, 3, 6, 1)

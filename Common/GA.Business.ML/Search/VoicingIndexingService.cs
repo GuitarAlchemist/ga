@@ -6,13 +6,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
-using Rag.Models;
-using Rag;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
 using Domain.Services.Fretboard.Voicings.Filtering;
 using Domain.Services.Fretboard.Voicings.Generation;
+using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
+using GA.Domain.Core.Instruments.Positions;
+using GA.Domain.Core.Instruments.Primitives;
+using Rag;
+using Rag.Models;
 using Analysis = Domain.Services.Fretboard.Voicings.Analysis;
 
 /// <summary>

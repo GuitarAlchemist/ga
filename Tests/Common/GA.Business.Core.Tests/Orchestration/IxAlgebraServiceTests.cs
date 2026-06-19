@@ -11,10 +11,7 @@ public class IxAlgebraServiceTests
     private IAlgebraPromptClassifier _classifier = null!;
 
     [SetUp]
-    public void Setup()
-    {
-        _classifier = new KeywordAlgebraPromptClassifier();
-    }
+    public void Setup() => _classifier = new KeywordAlgebraPromptClassifier();
 
     [Test]
     public void Classifier_Recognizes_AlgebraPrompt()

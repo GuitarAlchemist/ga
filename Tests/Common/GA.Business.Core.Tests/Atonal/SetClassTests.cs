@@ -1,8 +1,8 @@
 ﻿namespace GA.Business.Core.Tests.Atonal;
 
 using Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Theory.Extensions;
 using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Core.Theory.Extensions;
 
  [TestFixture]
 public class SetClassTests

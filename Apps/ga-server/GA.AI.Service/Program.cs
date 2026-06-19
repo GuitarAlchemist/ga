@@ -1,24 +1,24 @@
 #pragma warning disable SKEXP0001
 using System.Reflection;
-using Hellang.Middleware.ProblemDetails;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+using AllProjects.ServiceDefaults;
 using GA.AI.Service.Models;
 using GA.AI.Service.Services;
 using GA.Business.ML.AI.Benchmarks;
-using AllProjects.ServiceDefaults;
-using GA.Business.ML.Extensions;
 using GA.Business.ML.Embeddings;
-using GA.Business.ML.Tabs;
+using GA.Business.ML.Extensions;
 using GA.Business.ML.Musical.Enrichment;
 using GA.Business.ML.Musical.Explanation;
 using GA.Business.ML.Naturalness;
 using GA.Business.ML.Retrieval;
+using GA.Business.ML.Tabs;
 using GA.Business.ML.Wavelets;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Services.AI.Benchmarks;
 using GA.Domain.Services.Fretboard.Analysis;
 using GA.Domain.Services.Fretboard.Shapes;
+using Hellang.Middleware.ProblemDetails;
 
 var builder = WebApplication.CreateBuilder(args);
 

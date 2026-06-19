@@ -239,10 +239,7 @@ public class MemoryHookAuditChannelTests
 
         public void Log<TState>(
             LogLevel logLevel, EventId eventId, TState state,
-            Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-            Entries.Enqueue(new LogEntry(logLevel, formatter(state, exception)));
-        }
+            Exception? exception, Func<TState, Exception?, string> formatter) => Entries.Enqueue(new LogEntry(logLevel, formatter(state, exception)));
     }
 
     private sealed record LogEntry(LogLevel Level, string Message);

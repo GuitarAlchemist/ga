@@ -1,7 +1,7 @@
 namespace GA.Data.MongoDB.Models;
 
-using References;
 using Rag;
+using References;
 
 [PublicAPI]
 public sealed record ChordDocument : RagDocumentBase

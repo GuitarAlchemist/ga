@@ -2,13 +2,13 @@
 
 using Business.Config;
 using GA.Domain.Core.Primitives;
-using GA.Domain.Core.Primitives.Intervals;
-using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Primitives.Notes;
 using GA.Domain.Core.Theory.Tonal.Scales;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -73,8 +73,5 @@ public class ScaleSyncService(ILogger<ScaleSyncService> logger, MongoDbService m
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Scales.CountDocumentsAsync(Builders<ScaleDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Scales.CountDocumentsAsync(Builders<ScaleDocument>.Filter.Empty);
 }

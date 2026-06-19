@@ -4,10 +4,10 @@ using AgUi;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.AgUi;
 using GA.Business.Core.Orchestration.Models;
-using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatRequest;
 using GA.Business.ML.Agents;
 using Helpers;
 using Services;
+using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatRequest;
 
 /// <summary>
 /// AG-UI protocol endpoint for Guitar Alchemist.

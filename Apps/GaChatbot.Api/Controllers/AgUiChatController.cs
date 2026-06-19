@@ -154,10 +154,9 @@ public sealed class AgUiChatController(
     private static List<ConversationTurn> ToConversationTurns(
         IReadOnlyList<AgUiMessage> messages,
         int currentUserMessageIndex) =>
-        messages
+        [.. messages
             .Where((message, index) => index != currentUserMessageIndex && !string.IsNullOrWhiteSpace(message.Content))
-            .Select(message => new ConversationTurn(message.Role, message.Content!, DateTimeOffset.UtcNow))
-            .ToList();
+            .Select(message => new ConversationTurn(message.Role, message.Content!, DateTimeOffset.UtcNow))];
 }
 
 public sealed record RunAgentInput(

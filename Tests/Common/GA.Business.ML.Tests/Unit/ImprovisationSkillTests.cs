@@ -167,10 +167,7 @@ public class ImprovisationSkillTests
     [TestCase("", "C")] // empty fallback
     [TestCase("7", "C")] // pathological parser output → safe fallback
     [TestCase("#G", "C")] // accidental-prefix → fallback
-    public void ExtractRoot_HandlesValidAndPathological(string chord, string expected)
-    {
-        Assert.That(ImprovisationSkill.ExtractRoot(chord), Is.EqualTo(expected));
-    }
+    public void ExtractRoot_HandlesValidAndPathological(string chord, string expected) => Assert.That(ImprovisationSkill.ExtractRoot(chord), Is.EqualTo(expected));
 
     [Test]
     public void InferQuality_OnPathologicalSymbol_ReturnsUnknown()

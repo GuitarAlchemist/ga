@@ -33,17 +33,15 @@ public static class CanonicalChordPatternCatalog
     /// </summary>
     public static readonly IReadOnlyDictionary<int, IReadOnlyList<ChordIntervalPattern>> ByCardinality
         = All.GroupBy(p => p.Cardinality)
-             .ToDictionary(g => g.Key, g => (IReadOnlyList<ChordIntervalPattern>)g.ToArray());
+             .ToDictionary(g => g.Key, g => (IReadOnlyList<ChordIntervalPattern>)[.. g]);
 
-    private static IReadOnlyList<ChordIntervalPattern> BuildCatalog()
-    {
+    private static IReadOnlyList<ChordIntervalPattern> BuildCatalog() =>
         // NOTE on interval conventions:
         //   - Intervals are mod 12, sorted ascending, root=0 always present.
         //   - Alterations listed in "short form": "b5", "#5", "b9", "#9", "#11", "b13".
         //   - Sus chords have no 3rd by definition (2nd or 4th replaces).
         //   - Add chords have no 7th by definition (9, 11, or 6 added to triad).
 
-        return
         [
             // ===== TRIADS (priority 0-9) =====
             new("major-triad",         "major",      "triad",  [],          [0, 4, 7],    0),
@@ -135,7 +133,6 @@ public static class CanonicalChordPatternCatalog
             new("shell-major-7",       "shell", "7th", [],    [0, 4, 11], 91),
             new("shell-minor-7",       "shell", "7th", [],    [0, 3, 10], 91),
         ];
-    }
 
     /// <summary>
     ///     Finds all patterns whose interval set is consistent with the given intervals-from-root.

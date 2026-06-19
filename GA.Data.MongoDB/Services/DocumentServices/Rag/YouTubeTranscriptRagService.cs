@@ -1,11 +1,11 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
+using System.Text.RegularExpressions;
 using Embeddings;
+using global::MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
 using Models.References;
-using global::MongoDB.Driver;
-using System.Text.RegularExpressions;
 
 /// <summary>
 /// Multi-stage RAG service for YouTube transcripts

@@ -21,10 +21,7 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     private long _totalSearchTicks;
     private int _findSimilarWarned;
 
-    public OptickSearchStrategy(string indexPath)
-    {
-        _reader = new OptickIndexReader(indexPath);
-    }
+    public OptickSearchStrategy(string indexPath) => _reader = new OptickIndexReader(indexPath);
 
     public string Name => "OPTK-mmap";
     public bool IsAvailable => true;
@@ -201,7 +198,7 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     {
         var pitchClasses = meta.MidiNotes.Length > 0
             ? meta.MidiNotes.Select(n => ((n % 12) + 12) % 12).Distinct().OrderBy(p => p).ToArray()
-            : Array.Empty<int>();
+            : [];
 
         var document = new ChordVoicingRagDocument
         {

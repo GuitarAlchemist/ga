@@ -1,13 +1,13 @@
 namespace GA.Business.ML.Text.Gpu;
 
-using Abstractions;
-using Ollama;
-using Microsoft.Extensions.Logging;
 using System.Buffers;
 using System.Net.Http.Json;
+using Abstractions;
 using ILGPU;
-using ILGPU.Runtime;
 using ILGPU.Algorithms;
+using ILGPU.Runtime;
+using Microsoft.Extensions.Logging;
+using Ollama;
 
 /// <summary>
 /// REAL GPU-accelerated embedding service using ILGPU with CUDA/OpenCL
@@ -353,7 +353,7 @@ public class GPUAcceleratedEmbeddingService : ITextEmbeddingService, IBatchTextE
     /// </summary>
     public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
     {
-        var embeddings = await GenerateBatchEmbeddingsAsync(new[] { text }, cancellationToken);
+        var embeddings = await GenerateBatchEmbeddingsAsync([text], cancellationToken);
         return embeddings[0];
     }
 
@@ -363,7 +363,7 @@ public class GPUAcceleratedEmbeddingService : ITextEmbeddingService, IBatchTextE
     public async Task<float[][]> GenerateBatchEmbeddingsAsync(string[] texts, CancellationToken cancellationToken = default)
     {
         if (texts.Length == 0)
-            return Array.Empty<float[]>();
+            return [];
 
         // For now, use a simple implementation
         // In production, this would use actual GPU acceleration

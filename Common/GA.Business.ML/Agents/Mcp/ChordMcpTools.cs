@@ -77,7 +77,7 @@ public sealed partial class ChordMcpTools
             Root      = root,
             Quality   = formula.DisplayName,
             Notes     = notes,
-            Intervals = formula.IntervalNames.ToArray(),
+            Intervals = [.. formula.IntervalNames],
         };
     }
 

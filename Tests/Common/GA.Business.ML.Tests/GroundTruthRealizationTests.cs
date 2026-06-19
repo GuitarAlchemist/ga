@@ -5,15 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Domain.Core.Primitives.Notes;
+using Domain.Services.Fretboard.Analysis;
+using Embeddings;
+using GA.Business.ML.Tabs;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Theory.Atonal;
-using Domain.Services.Fretboard.Analysis;
-using GA.Business.ML.Tabs;
-using TestInfrastructure;
-using Embeddings;
-using Rag.Models;
 using NUnit.Framework;
+using Rag.Models;
+using TestInfrastructure;
 
 [TestFixture]
 public class GroundTruthRealizationTests

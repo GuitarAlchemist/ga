@@ -1,11 +1,11 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using GA.Business.Assets;
+using GA.Domain;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
-using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
 
@@ -73,10 +73,7 @@ public class NoteSyncService(ILogger<NoteSyncService> logger, MongoDbService mon
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Notes.CountDocumentsAsync(Builders<NoteDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Notes.CountDocumentsAsync(Builders<NoteDocument>.Filter.Empty);
 }
 
 

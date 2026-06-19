@@ -1,12 +1,12 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
-using GA.Domain.Core.Theory.Harmony;
+using GA.Domain;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
+using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
-using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
 
@@ -40,8 +40,5 @@ public class ArpeggioSyncService(ILogger<ArpeggioSyncService> logger, MongoDbSer
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Arpeggios.CountDocumentsAsync(Builders<ArpeggioDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Arpeggios.CountDocumentsAsync(Builders<ArpeggioDocument>.Filter.Empty);
 }

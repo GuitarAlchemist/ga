@@ -1,9 +1,9 @@
 namespace GA.AI.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Rag.Models;
 using GA.Core.Functional;
+using Microsoft.AspNetCore.Mvc;
 
 #pragma warning disable SKEXP0001
 

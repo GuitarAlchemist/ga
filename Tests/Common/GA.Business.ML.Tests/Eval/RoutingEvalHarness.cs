@@ -2,6 +2,7 @@ namespace GA.Business.ML.Tests.Eval;
 
 using System.Reflection;
 using System.Text.Json;
+using Domain.Services.Fretboard.Voicings.Filtering;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
@@ -9,7 +10,6 @@ using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Extensions;
 using GA.Business.ML.Search;
 using GA.Domain.Services.Atonal.Grothendieck;
-using Domain.Services.Fretboard.Voicings.Filtering;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -183,20 +183,17 @@ public class RoutingEvalHarness
     /// </summary>
     [Test]
     [Category("Fast")]
-    public void RouterThreshold_DefaultMatchesProductionDefault()
-    {
-        Assert.Multiple(() =>
-        {
-            Assert.That(ResolveRouterMinConfidence(null), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                "no override → harness must measure production's default threshold.");
-            Assert.That(ResolveRouterMinConfidence(""), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                "blank override → production default.");
-            Assert.That(ResolveRouterMinConfidence("not-a-number"), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                "garbage override must fall back to the const, never silently route at 0.");
-            Assert.That(ResolveRouterMinConfidence("0.64"), Is.EqualTo(0.64f).Within(1e-6f),
-                "a valid override is honoured (the bge-large recalibration path).");
-        });
-    }
+    public void RouterThreshold_DefaultMatchesProductionDefault() => Assert.Multiple(() =>
+                                                                          {
+                                                                              Assert.That(ResolveRouterMinConfidence(null), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                                                                                  "no override → harness must measure production's default threshold.");
+                                                                              Assert.That(ResolveRouterMinConfidence(""), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                                                                                  "blank override → production default.");
+                                                                              Assert.That(ResolveRouterMinConfidence("not-a-number"), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                                                                                  "garbage override must fall back to the const, never silently route at 0.");
+                                                                              Assert.That(ResolveRouterMinConfidence("0.64"), Is.EqualTo(0.64f).Within(1e-6f),
+                                                                                  "a valid override is honoured (the bge-large recalibration path).");
+                                                                          });
 
     [Test]
     [Explicit("Requires live Ollama embedding endpoint. Run manually for baselines.")]
@@ -519,51 +516,48 @@ public class RoutingEvalHarness
     {
         var sc = new ServiceCollection();
         AddStubIntent(sc, "skill.chordinfo", "Chord info — notes, intervals, quality.",
-            new[] { "what notes are in Cmaj7", "spell a chord", "notes of a Dm7", "what is a chord" });
+            ["what notes are in Cmaj7", "spell a chord", "notes of a Dm7", "what is a chord"]);
         AddStubIntent(sc, "skill.scaleinfo", "Scale info — notes of a named scale.",
-            new[] { "notes of a scale", "notes in the major scale", "what notes are in A minor" });
+            ["notes of a scale", "notes in the major scale", "what notes are in A minor"]);
         AddStubIntent(sc, "skill.modes", "Modes of the major scale — list and discuss.",
-            new[] { "modes of the major scale", "list the modes", "what are the seven modes",
-                    "what is Lydian mode", "what notes are in G mixolydian" });
+            [ "modes of the major scale", "list the modes", "what are the seven modes",
+                    "what is Lydian mode", "what notes are in G mixolydian" ]);
         AddStubIntent(sc, "skill.interval", "Interval between two notes / interval naming.",
-            new[] { "interval between two notes", "what is a perfect fifth", "interval from C to G" });
+            ["interval between two notes", "what is a perfect fifth", "interval from C to G"]);
         // skill.fretspan EXCLUDED — see remarks above (regex-routed in production).
         AddStubIntent(sc, "skill.chordsubstitution", "Chord substitution suggestions for a given chord.",
-            new[] { "chord substitution", "substitute for a chord", "tritone sub", "what can substitute for" });
+            ["chord substitution", "substitute for a chord", "tritone sub", "what can substitute for"]);
         AddStubIntent(sc, "skill.beginnerchords", "Beginner chord suggestions.",
-            new[] { "easy chords for beginners", "first chords to learn", "beginner guitar chords" });
+            ["easy chords for beginners", "first chords to learn", "beginner guitar chords"]);
         // Per PR #162 review F-2 — production's ProgressionMoodSkill is a
         // TRANSFORM skill ("make this progression sound darker/brighter"),
         // not a DESCRIPTIVE skill. Stub now reflects that semantics.
         AddStubIntent(sc, "skill.progressionmood",
             "Darken or brighten a chord progression via parallel-minor swaps, modal interchange, or borrowed chords.",
-            new[] { "make this progression sound darker", "how do I make my song brighter",
-                    "darken a major progression", "brighten this minor progression" });
+            [ "make this progression sound darker", "how do I make my song brighter",
+                    "darken a major progression", "brighten this minor progression" ]);
         AddStubIntent(sc, "skill.circleoffifths", "Circle of fifths — positions, relationships.",
-            new[] { "circle of fifths", "circle of fourths", "fifths circle" });
+            ["circle of fifths", "circle of fourths", "fifths circle"]);
         AddStubIntent(sc, "skill.practiceroutine", "Practice routine suggestions.",
-            new[] { "practice routine", "give me a practice plan", "20 minute practice" });
+            ["practice routine", "give me a practice plan", "20 minute practice"]);
         AddStubIntent(sc, "skill.genreessentials", "Essential chords / scales for a genre.",
-            new[] { "essential chords for blues", "jazz essentials", "country guitar basics" });
+            ["essential chords for blues", "jazz essentials", "country guitar basics"]);
         AddStubIntent(sc, "skill.whatcanyoudo", "Meta — what the assistant can do.",
-            new[] { "what can you do", "what are your capabilities", "help me", "what do you know" });
+            ["what can you do", "what are your capabilities", "help me", "what do you know"]);
         AddStubIntent(sc, "skill.transpose", "Transpose a chord or progression by an interval.",
-            new[] { "transpose to a different key", "transpose down a half step", "transpose up a fifth" });
+            ["transpose to a different key", "transpose down a half step", "transpose up a fifth"]);
         AddStubIntent(sc, "skill.commontones", "Common tones between two chords.",
-            new[] { "common tones between two chords", "what notes do these chords share" });
+            ["common tones between two chords", "what notes do these chords share"]);
         AddStubIntent(sc, "skill.diatonicchords", "Diatonic chords in a key.",
-            new[] { "diatonic chords in a key", "chords in the key of C", "what chords are in D major" });
+            ["diatonic chords in a key", "chords in the key of C", "what chords are in D major"]);
         AddStubIntent(sc, "skill.keyidentification", "Identify the key of a chord progression.",
-            new[] { "what key is this progression", "identify the key", "key of a progression" });
+            ["what key is this progression", "identify the key", "key of a progression"]);
         AddStubIntent(sc, "skill.progressioncompletion", "Suggest the next chord in a progression.",
-            new[] { "what chord comes next", "complete this progression", "suggest a chord to finish" });
+            ["what chord comes next", "complete this progression", "suggest a chord to finish"]);
         return sc.BuildServiceProvider();
     }
 
-    private static void AddStubIntent(IServiceCollection sc, string id, string description, string[] examples)
-    {
-        sc.AddSingleton<IIntent>(new StubIntent(id, description, examples));
-    }
+    private static void AddStubIntent(IServiceCollection sc, string id, string description, string[] examples) => sc.AddSingleton<IIntent>(new StubIntent(id, description, examples));
 
     /// <summary>
     /// v0.2 (task #105) — reflect-loads every concrete

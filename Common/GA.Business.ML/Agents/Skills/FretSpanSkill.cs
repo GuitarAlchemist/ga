@@ -97,9 +97,7 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
         var dash = DashDiagram.Match(message);
         if (dash.Success)
         {
-            return Enumerable.Range(1, 6)
-                .Select(i => ParseFret(dash.Groups[i].Value))
-                .ToList();
+            return [.. Enumerable.Range(1, 6).Select(i => ParseFret(dash.Groups[i].Value))];
         }
 
         // Try compact (e.g. x32010)
@@ -107,7 +105,7 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
         if (!compact.Success) return null;
 
         var val = compact.Value;
-        return val.Select(c => c is 'x' or 'X' ? -1 : c - '0').ToList();
+        return [.. val.Select(c => c is 'x' or 'X' ? -1 : c - '0')];
     }
 
     private static int ParseFret(string s) =>

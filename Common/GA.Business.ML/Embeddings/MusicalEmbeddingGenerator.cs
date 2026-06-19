@@ -72,10 +72,7 @@ public class MusicalEmbeddingGenerator(
     ///     <c>Array.Copy(Array.ConvertAll(...), 0, combined, offset, length)</c> semantics
     ///     byte-for-byte while routing the offset through the typed partition registry.
     /// </summary>
-    private static void CopyIntoPartition(float[] target, double[] source, EmbeddingPartition partition)
-    {
-        Array.Copy(Array.ConvertAll(source, x => (float)x), 0, target, partition.Start, source.Length);
-    }
+    private static void CopyIntoPartition(float[] target, double[] source, EmbeddingPartition partition) => Array.Copy(Array.ConvertAll(source, x => (float)x), 0, target, partition.Start, source.Length);
 
     /// <summary>
     /// Generates a high-dimensional embedding for a voicing document.

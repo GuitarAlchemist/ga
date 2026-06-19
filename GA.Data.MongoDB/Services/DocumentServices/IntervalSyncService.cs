@@ -1,10 +1,10 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using GA.Business.Assets;
+using GA.Domain;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
-using GA.Domain;
 using Microsoft.Extensions.Logging;
 using Models;
 
@@ -53,10 +53,7 @@ public class IntervalSyncService(ILogger<IntervalSyncService> logger, MongoDbSer
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Intervals.CountDocumentsAsync(Builders<IntervalDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Intervals.CountDocumentsAsync(Builders<IntervalDocument>.Filter.Empty);
 }
 
 

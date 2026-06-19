@@ -419,7 +419,7 @@ public class MemoryStoreSearchHybridTests
             var embeddings = values
                 .Select(text => new Embedding<float>(new float[8]))
                 .ToArray();
-            return new GeneratedEmbeddings<Embedding<float>>(embeddings);
+            return [.. embeddings];
         }
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;

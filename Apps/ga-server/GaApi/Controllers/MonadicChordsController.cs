@@ -1,15 +1,15 @@
 namespace GaApi.Controllers;
 
+using AllProjects.ServiceDefaults;
 using GA.Fretboard.Service.Models;
-using GaApi.Services;
 using GaApi.Models;
-using Chord = GaApi.Models.Chord;
-using ChordStatistics = GaApi.Models.ChordStatistics;
-using ChordError = GaApi.Services.ChordError;
-using ChordErrorType = GaApi.Services.ChordErrorType;
+using GaApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using AllProjects.ServiceDefaults;
+using Chord = GaApi.Models.Chord;
+using ChordError = GaApi.Services.ChordError;
+using ChordErrorType = GaApi.Services.ChordErrorType;
+using ChordStatistics = GaApi.Models.ChordStatistics;
 
 /// <summary>
 ///     Controller demonstrating monadic service integration with type-safe error handling

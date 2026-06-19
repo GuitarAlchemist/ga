@@ -1,8 +1,8 @@
 namespace GaApi.Services;
 
+using GA.Core.Functional;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using GA.Core.Functional;
 using Models;
 
 /// <summary>

@@ -1,13 +1,13 @@
 namespace GA.Business.Core.Context;
 
 using System.Collections.Immutable;
-using JetBrains.Annotations;
 using GA.Domain.Core.Design.Attributes;
 using GA.Domain.Core.Design.Schema;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Theory.Tonal.Scales;
+using JetBrains.Annotations;
 
 /// <summary>
 /// Represents the current musical context for a user session
@@ -76,7 +76,7 @@ public sealed record MusicalSessionContext
     /// <summary>
     /// Techniques the user has mastered
     /// </summary>
-    public ImmutableHashSet<string> MasteredTechniques { get; init; } = ImmutableHashSet<string>.Empty;
+    public ImmutableHashSet<string> MasteredTechniques { get; init; } = [];
     
     // ===== Style Context =====
     

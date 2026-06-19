@@ -1,10 +1,10 @@
 namespace GA.Business.ML.Tests.TestInfrastructure;
 
+using Domain.Services.Fretboard.Analysis;
 using Embeddings;
 using Embeddings.Services;
 using GA.Business.ML.Tabs;
 using Musical.Analysis;
-using Domain.Services.Fretboard.Analysis;
 
 public static class TestServices
 {

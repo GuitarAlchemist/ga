@@ -6,9 +6,7 @@ public class AzureOpenAiEmbeddingService(string endpoint, string apiKey, string 
     private readonly string _deploymentName = deploymentName;
     private readonly string _endpoint = endpoint;
 
-    public Task<List<float>> GenerateEmbeddingAsync(string text)
-    {
+    public Task<List<float>> GenerateEmbeddingAsync(string text) =>
         // Implementation for Azure OpenAI API
         throw new NotImplementedException();
-    }
 }

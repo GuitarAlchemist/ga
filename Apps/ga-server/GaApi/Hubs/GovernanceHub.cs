@@ -1,8 +1,8 @@
 namespace GaApi.Hubs;
 
 using System.Collections.Concurrent;
-using Microsoft.AspNetCore.SignalR;
 using Controllers;
+using Microsoft.AspNetCore.SignalR;
 using Models;
 using Services;
 
@@ -220,15 +220,18 @@ public sealed class GovernanceHub(
     ///     Used in presentation mode so a "leader" tab drives the camera on all
     ///     connected clients (e.g. a TV opened on the Prime Radiant URL).
     /// </summary>
-    public async Task SyncCamera(double px, double py, double pz, double lx, double ly, double lz)
-    {
+    public async Task SyncCamera(double px, double py, double pz, double lx, double ly, double lz) =>
         // Relay to all governance clients except the sender
         await Clients.OthersInGroup("governance").SendAsync("CameraSync", new
         {
-            px, py, pz, lx, ly, lz,
+            px,
+            py,
+            pz,
+            lx,
+            ly,
+            lz,
             sender = Context.ConnectionId,
         });
-    }
 
     // ─── Scene control (remote navigation) ───
 

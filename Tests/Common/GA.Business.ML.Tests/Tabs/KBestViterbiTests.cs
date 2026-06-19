@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Abstractions;
 using Core.Context;
 using Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Instruments;
+using Domain.Services.Fretboard.Analysis;
 using Embeddings;
-using Rag.Models;
-using Retrieval;
 using GA.Business.ML.Tabs;
+using GA.Domain.Core.Instruments;
 using Moq;
 using NUnit.Framework;
-using Domain.Services.Fretboard.Analysis;
+using Rag.Models;
+using Retrieval;
 
 [TestFixture]
 public class KBestViterbiTests

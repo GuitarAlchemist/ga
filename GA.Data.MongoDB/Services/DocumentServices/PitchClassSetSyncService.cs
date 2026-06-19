@@ -41,8 +41,5 @@ public class PitchClassSetSyncService(ILogger<PitchClassSetSyncService> logger, 
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.PitchClassSets.CountDocumentsAsync(Builders<PitchClassSetDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.PitchClassSets.CountDocumentsAsync(Builders<PitchClassSetDocument>.Filter.Empty);
 }

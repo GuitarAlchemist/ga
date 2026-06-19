@@ -91,7 +91,7 @@ public sealed class MemoryWriteHook(
                 key:       req.Key,
                 type:      req.Type,
                 content:   req.Content,
-                tags:      req.Tags.ToArray());
+                tags: [.. req.Tags]);
 
             logger.LogInformation(
                 "MemoryWriteHook: persisted {Type} entry '{Key}' for session {SessionId} " +

@@ -1,8 +1,8 @@
 namespace GA.Domain.Core.Primitives.Intervals;
 
+using Extensions;
 using GA.Core.Collections;
 using GA.Core.Extensions;
-using Extensions;
 using Theory.Atonal;
 using ChromaticInterval = Interval.Chromatic;
 

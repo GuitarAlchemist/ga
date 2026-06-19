@@ -60,7 +60,7 @@ public sealed class VoicingSearchWarmupService(
                 musicalEmbeddingGenerator: async doc =>
                 {
                     var embedding = await embeddingGenerator.GenerateEmbeddingAsync(ToEmbeddingDoc(doc));
-                    return embedding.Select(x => (double)x).ToArray();
+                    return [.. embedding.Select(x => (double)x)];
                 },
                 cancellationToken: stoppingToken);
 

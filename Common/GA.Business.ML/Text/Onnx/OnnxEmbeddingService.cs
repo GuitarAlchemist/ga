@@ -1,7 +1,5 @@
 namespace GA.Business.ML.Text.Onnx;
 
-using Abstractions;
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.ML.OnnxRuntime;
@@ -167,8 +166,8 @@ public sealed class OnnxEmbeddingService(
             inputIds[i] = PadTokenId;
         }
 
-        var inputTensor = new DenseTensor<long>(inputIds, new[] { 1, _maxTokens });
-        var attentionTensor = new DenseTensor<long>(attentionMask, new[] { 1, _maxTokens });
+        var inputTensor = new DenseTensor<long>(inputIds, [1, _maxTokens]);
+        var attentionTensor = new DenseTensor<long>(attentionMask, [1, _maxTokens]);
 
         return (inputTensor, attentionTensor, attentionMask);
     }

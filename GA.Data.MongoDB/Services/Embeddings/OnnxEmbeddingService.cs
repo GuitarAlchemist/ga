@@ -145,8 +145,8 @@ public sealed class OnnxEmbeddingService : IEmbeddingService, IDisposable
             inputIds[i] = _padTokenId;
         }
 
-        var inputTensor = new DenseTensor<long>(inputIds, new[] { 1, _maxTokens });
-        var attentionTensor = new DenseTensor<long>(attentionMask, new[] { 1, _maxTokens });
+        var inputTensor = new DenseTensor<long>(inputIds, [1, _maxTokens]);
+        var attentionTensor = new DenseTensor<long>(attentionMask, [1, _maxTokens]);
 
         return (inputTensor, attentionTensor, attentionMask);
     }

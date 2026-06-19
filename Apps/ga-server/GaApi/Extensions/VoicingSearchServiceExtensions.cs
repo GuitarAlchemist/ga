@@ -1,8 +1,8 @@
 namespace GaApi.Extensions;
 
 using GA.Business.ML.Search;
-using Services;
 using GA.Business.ML.Text.Internal; // Assuming this is needed, keeping original usings except the bad one
+using Services;
 
 /// <summary>
 ///     Extension helpers for registering the voicing search stack.

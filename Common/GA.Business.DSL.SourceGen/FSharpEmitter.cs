@@ -211,11 +211,9 @@ public sealed class FSharpEmitter
         return char.ToLower(pascal[0]) + pascal[1..];
     }
 
-    private static string SanitizeLiteral(string s)
-    {
+    private static string SanitizeLiteral(string s) =>
         // Produce a valid F# identifier fragment from a literal value
-        return new string(s.Where(char.IsLetterOrDigit).ToArray());
-    }
+        new string([.. s.Where(char.IsLetterOrDigit)]);
 
     private static string EscapeFSharp(string s) =>
         s.Replace("\\", "\\\\").Replace("\"", "\\\"");
