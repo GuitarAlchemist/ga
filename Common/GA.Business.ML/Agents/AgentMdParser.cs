@@ -5,7 +5,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 /// <summary>
 /// Parses declarative agent <c>.md</c> files into <see cref="AgentMd"/> records.
-/// Follows the same YAML frontmatter + markdown body pattern as <see cref="Skills.SkillMdParser"/>,
+/// Follows the same YAML frontmatter + markdown body pattern as <see cref="GA.Business.ML.Skills.SkillMdParser"/>,
 /// with extended fields for agent-specific metadata (capabilities, routing keywords, delegation).
 /// </summary>
 public static class AgentMdParser

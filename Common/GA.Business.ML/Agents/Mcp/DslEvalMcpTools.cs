@@ -179,7 +179,7 @@ public sealed class DslEvalMcpTools
         }
 
         // Argument coercion per v0.1 contract (§3).
-        var coerceResult = CoerceArgs(closure, args ?? new Dictionary<string, string>());
+        var coerceResult = CoerceArgs(closure, args ?? []);
         if (coerceResult.Error is not null)
         {
             return DslEvalResult.Failure(
@@ -383,7 +383,7 @@ public sealed record ClosureSchemaResult
     public string Description { get; init; } = string.Empty;
     public string Category    { get; init; } = string.Empty;
     public string[] Tags      { get; init; } = [];
-    public Dictionary<string, string> InputSchema { get; init; } = new();
+    public Dictionary<string, string> InputSchema { get; init; } = [];
     public string OutputType  { get; init; } = string.Empty;
     public string? Error { get; init; }
 

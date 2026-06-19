@@ -15,8 +15,7 @@ using Services;
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class DiscordController(
-    IDiscordBridgeService discordService,
-    ILogger<DiscordController> logger) : ControllerBase
+    IDiscordBridgeService discordService) : ControllerBase
 {
     /// <summary>
     ///     List currently online Discord members.

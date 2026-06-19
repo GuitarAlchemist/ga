@@ -39,12 +39,12 @@ public class SemanticQueryResult
     public int ResultCount { get; set; }
     public double AverageRelevanceScore { get; set; }
     public string LlmInterpretation { get; set; } = string.Empty;
-    public List<SemanticSearchResult> SearchResults { get; set; } = new();
+    public List<SemanticSearchResult> SearchResults { get; set; } = [];
 }
 
 public class SemanticSearchResult
 {
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
     public double Score { get; set; }
 }
 
@@ -52,7 +52,7 @@ public class IndexStatistics
 {
     public int TotalDocuments { get; set; }
     public int EmbeddingDimension { get; set; }
-    public Dictionary<string, int> DocumentsByCategory { get; set; } = new();
+    public Dictionary<string, int> DocumentsByCategory { get; set; } = [];
 }
 
 public class IndexingProgress

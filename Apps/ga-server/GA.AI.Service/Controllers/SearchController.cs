@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 [Produces("application/json")]
 public class SearchController(
     ISpectralRetrievalService retrievalService,
-    GA.Business.ML.Abstractions.IEmbeddingGenerator embeddingGenerator,
     ILogger<SearchController> logger) : ControllerBase
 {
     /// <summary>

@@ -433,7 +433,7 @@ public class MemoryStoreSearchHybridTests
     /// </summary>
     private sealed class RecordingEmbedder : IEmbeddingGenerator<string, Embedding<float>>
     {
-        private readonly List<string> _all = new();
+        private readonly List<string> _all = [];
         public IReadOnlyList<string> AllRecordedTexts => _all;
 
         public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(

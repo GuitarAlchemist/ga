@@ -51,7 +51,7 @@ public sealed record AssetDocument : DocumentBase
     /// <summary>
     ///     Tags for searching and filtering
     /// </summary>
-    public Dictionary<string, string> Tags { get; init; } = new();
+    public Dictionary<string, string> Tags { get; init; } = [];
 
     /// <summary>
     ///     Axis-aligned bounding box (min/max coordinates)

@@ -25,7 +25,7 @@ using Microsoft.Extensions.Logging;
 /// <c>SetAccessControl</c>: Windows DACL changes do not revoke already
 /// open handles. The current implementation closes that window by
 /// creating the file already-protected — on Windows via
-/// <see cref="FileSystemAclExtensions.Create(FileSecurity, string, FileMode, FileSystemRights, FileShare, int, FileOptions)"/>
+/// <see cref="FileSystemAclExtensions.Create(FileInfo, FileMode, FileSystemRights, FileShare, int, FileOptions, FileSecurity)"/>
 /// and on Unix via <see cref="FileStreamOptions.UnixCreateMode"/>.
 /// </para>
 /// <para>

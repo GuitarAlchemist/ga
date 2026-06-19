@@ -80,7 +80,7 @@ public class ChordSyncService(
         // The previous implementation relied on an 'AssociatedScales' property that no longer exists.
         // To keep synchronization working and the project compiling, we return an empty list for now.
         // This can be enhanced later by inferring related scales from the chord's pitch class set.
-        new List<ScaleReference>();
+        [];
 
     protected static List<ProgressionReference> GetCommonProgressions(ChordTemplate template)
     {

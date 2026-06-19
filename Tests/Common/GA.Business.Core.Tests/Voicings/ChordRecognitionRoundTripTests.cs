@@ -42,13 +42,13 @@ public class ChordRecognitionRoundTripTests
     //   9-sus4 and dominant-11 literally share [0,2,5,7,10]
     //   dominant-7-sharp-5 [0,4,8,10] is T4-symmetric — multiple roots, same set
     // AxisE (below) covers these as "same-PC-set equivalence" assertions instead.
-    private static readonly HashSet<string> AmbiguousRoundTripPatterns = new()
-    {
+    private static readonly HashSet<string> AmbiguousRoundTripPatterns =
+    [
         "major-6", "minor-6", "6-9", "minor-6-9", "minor-add-11",
         "major-13", "9-sus4", "13-sus4",
         "dominant-11", "dominant-7-sharp-5", "dominant-13-b9",
         "quartal-3", "quartal-4", "quartal-5",
-    };
+    ];
 
     public static IEnumerable<TestCaseData> AllPatternsSource() =>
         CanonicalChordPatternCatalog.All

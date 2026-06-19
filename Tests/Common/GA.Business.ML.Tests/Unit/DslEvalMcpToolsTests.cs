@@ -238,7 +238,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.nonexistent.2026-05-06", new Dictionary<string, string>());
+        var result = tool.EvalClosure("domain.nonexistent.2026-05-06", []);
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.Code, Is.EqualTo("closure-not-found"));

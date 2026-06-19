@@ -27,7 +27,7 @@ public class User
     [BsonElement("providerUserId")] public string ProviderUserId { get; set; } = string.Empty;
 
     /// <summary>Role claims — "admin" granted to OwnerEmails, "viewer" otherwise.</summary>
-    [BsonElement("roles")] public List<string> Roles { get; set; } = new();
+    [BsonElement("roles")] public List<string> Roles { get; set; } = [];
 
     [BsonElement("createdAt")] public DateTime CreatedAt { get; set; }
 

@@ -419,7 +419,7 @@ public class ChordProgressionsController(
                 diversity,
                 stabilityScore,
                 dynamicsData?.IsStable ?? true,
-                suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? new List<string>(),
+                suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? [],
                 new List<AttractorInfoDto>
                 {
                     new(
@@ -554,7 +554,7 @@ public class ChordProgressionsController(
                 diversity,
                 stabilityScore,
                 dynamicsData2?.IsStable ?? true,
-                suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? new List<string>(),
+                suggestions?.Select(s => s?.ToString() ?? "unknown").ToList() ?? [],
                 new List<AttractorInfoDto>
                 {
                     new(

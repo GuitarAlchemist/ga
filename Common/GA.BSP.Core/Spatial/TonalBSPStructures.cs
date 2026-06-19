@@ -114,7 +114,7 @@ public record TonalPartitionPlane
     public double ReferencePoint { get; init; }
     public Vector3 Normal { get; init; }
     public double Threshold { get; init; }
-    public Dictionary<string, object> Parameters { get; init; } = new();
+    public Dictionary<string, object> Parameters { get; init; } = [];
 
     /// <summary>
     ///     Evaluate which side of the partition a tonal element falls on

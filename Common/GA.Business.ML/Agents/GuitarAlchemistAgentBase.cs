@@ -173,6 +173,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     /// </summary>
     /// <param name="userMessage">The user's message.</param>
     /// <param name="systemPrompt">Optional system prompt override; defaults to <see cref="BuildSystemPrompt"/>.</param>
+    /// <param name="conversationHistory">Optional prior turns prepended to the request so the LLM has dialogue context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable that yields each text token as it arrives from the LLM.</returns>
     public async IAsyncEnumerable<string> ProcessStreamingAsync(

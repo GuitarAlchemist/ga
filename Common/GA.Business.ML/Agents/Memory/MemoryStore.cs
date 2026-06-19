@@ -22,6 +22,11 @@ using Microsoft.Extensions.Logging;
 /// Backward compat: entries written before this field existed deserialise
 /// with SessionId=null and are treated as global.
 /// </param>
+/// <param name="Embedding">
+/// Optional per-entry embedding vector for hybrid BM25 + cosine retrieval.
+/// Lazily populated on first <c>SearchHybridAsync()</c> call; <c>null</c> for
+/// pre-v0.4 entries, which fall back to pure BM25.
+/// </param>
 public sealed record MemoryEntry(
     string Key,
     string Type,

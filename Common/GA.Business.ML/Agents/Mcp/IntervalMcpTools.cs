@@ -23,8 +23,6 @@ public sealed class IntervalMcpTools
     /// <summary>
     /// Computes the simple interval between two notes (e.g. C → G is a perfect fifth).
     /// </summary>
-    /// <param name="lowerNote">The lower note (e.g. <c>"C"</c>, <c>"F#"</c>, <c>"Bb"</c>).</param>
-    /// <param name="upperNote">The upper note (same notation).</param>
     /// <returns>
     /// An <see cref="IntervalResult"/> with name (e.g. "P5"), quality and size in
     /// long form, and the semitone count. On parse error, the result has

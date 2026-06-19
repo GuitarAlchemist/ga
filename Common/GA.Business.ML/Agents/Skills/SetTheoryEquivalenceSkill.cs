@@ -23,7 +23,7 @@ using GA.Domain.Core.Theory.Atonal;
 /// of the question ("under transposition", "under inversion", "under
 /// transposition or inversion").
 /// </remarks>
-public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill> logger) : IOrchestratorSkill
+public sealed class SetTheoryEquivalenceSkill : IOrchestratorSkill
 {
     public string Name => "SetTheoryEquivalence";
     public string Description =>

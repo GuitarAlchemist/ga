@@ -249,7 +249,7 @@ public class TonalBspQueryResult
     }
 
     public TonalRegion Region { get; init; } = new();
-    public List<ITonalElement> Elements { get; init; } = new();
+    public List<ITonalElement> Elements { get; init; } = [];
     public double Confidence { get; init; }
     public TimeSpan QueryTime { get; init; }
 }

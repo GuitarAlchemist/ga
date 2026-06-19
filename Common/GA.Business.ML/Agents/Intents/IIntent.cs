@@ -76,6 +76,9 @@ public sealed record IntentGroundingEvidence(
 /// <param name="Grounding">Optional grounding evidence. <c>null</c> when the
 /// intent didn't produce a deterministic-compute result; the orchestrator
 /// maps this to <c>GroundingMetadata</c> at its layer boundary.</param>
+/// <param name="Data">Optional structured payload propagated from the wrapped
+/// skill's <c>AgentResponse.Data</c> so <c>OnResponseSent</c> hooks can
+/// pattern-match (e.g. a <c>MemoryWriteRequest</c>); <c>null</c> by default.</param>
 public sealed record IntentResult(
     string Answer,
     float Confidence = 1.0f,

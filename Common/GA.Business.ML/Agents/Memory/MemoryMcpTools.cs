@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 
 /// <summary>
 /// MCP tools for reading/writing persistent agent memory.
-/// Discovered by <see cref="Plugins.ChatPluginHost"/> via <see cref="GaPlugin.McpToolTypes"/>.
+/// Discovered by <see cref="Plugins.ChatPluginHost"/> via <see cref="Plugins.IChatPlugin.McpToolTypes"/>.
 /// </summary>
 /// <remarks>
 /// <para>

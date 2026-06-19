@@ -44,7 +44,7 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
 
     /// <summary>
     /// Closure name that the SKILL.md body teaches the LLM to dispatch
-    /// via <c>ga_dsl_eval</c> — used in <see cref="EvidenceTags"/> below.
+    /// via <c>ga_dsl_eval</c> — used in <see cref="StaticEvidenceTags"/> below.
     /// </summary>
     protected abstract string ClosureName { get; }
 
@@ -79,7 +79,7 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
 
     /// <inheritdoc />
     /// <remarks>
-    /// Tool-driven skills only route via the <see cref="SemanticIntentRouter"/>;
+    /// Tool-driven skills only route via the <see cref="Intents.SemanticIntentRouter"/>;
     /// the legacy <c>CanHandle</c> regex shadow is intentionally disabled.
     /// </remarks>
     public bool CanHandle(string message) => false;
