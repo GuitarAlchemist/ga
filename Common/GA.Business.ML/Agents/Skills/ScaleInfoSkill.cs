@@ -49,6 +49,16 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "What's the formula for harmonic minor",
         "Formula for melodic minor scale",
         "Degrees of the A major scale",
+        // "Show me the notes in [key]" family — bare key, no "scale"/"chord"
+        // word. "Show me the notes in C major" was losing to ChordInfoSkill
+        // because "notes in" + "C major" sat closer to the chord examples
+        // ("What notes are in a Cmaj7?") than to any scaleinfo anchor, which
+        // all carried either "scale" or the "What notes are in…?" framing.
+        // Added 2026-06-19 to close the scales-keys misroute surfaced by the
+        // /auto-optimize loop (skill.scaleinfo expected, skill.chordinfo seen).
+        "Show me the notes in C major",
+        "Show me the notes in A minor",
+        "Show me the notes in G major",
     ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.
