@@ -397,7 +397,7 @@ if (!string.IsNullOrWhiteSpace(publicHost))
     forwardedHeadersOptions.AllowedHosts.Add(publicHost);
 }
 // Cloudflare can connect from any IP — clear the default localhost-only allowlist.
-forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
