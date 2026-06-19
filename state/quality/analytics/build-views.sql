@@ -131,3 +131,38 @@ UNION ALL
 SELECT 'voicing_analysis' AS source, day, corpus_total      AS metric, 'corpus_total'      AS metric_name FROM voicing_analysis QUALIFY row_number() OVER (ORDER BY day DESC) = 1
 UNION ALL
 SELECT 'optick_sae'       AS source, day, reconstruction_r2  AS metric, 'reconstruction_r2' AS metric_name FROM optick_sae       QUALIFY row_number() OVER (ORDER BY day DESC) = 1;
+
+-- loop_iteration / loop_convergence — per-cycle telemetry from the /auto-optimize
+-- loop, so "is this loop run improving / plateaued / oscillating / misfiring?" is a
+-- query, not a vibe. The loop appends one JSON line per cycle to
+-- loops/<domain>.iterations.jsonl (see .claude/skills/auto-optimize/SKILL.md Step 3).
+-- A committed sentinel (loops/__seed__.iterations.jsonl) keeps the glob non-empty
+-- before any loop has run — a zero-match glob is an error — and is filtered out below.
+CREATE OR REPLACE TABLE loop_iteration AS
+SELECT loop_id, domain, iteration, ts, oracle_status, metric_name,
+       TRY_CAST(metric_before AS DOUBLE) AS metric_before,
+       TRY_CAST(metric_after  AS DOUBLE) AS metric_after,
+       TRY_CAST(metric_delta  AS DOUBLE) AS metric_delta,
+       verdict, worst_item, artifact_edited, commit_sha, roundtrip_passed
+FROM read_json_auto('loops/*.iterations.jsonl', filename = true, union_by_name = true)
+WHERE loop_id <> '__seed__'
+ORDER BY loop_id, iteration;
+
+-- Per-run convergence rollup (one row per loop_id). `shape` is the operator's
+-- at-a-glance verdict; misfires are checked FIRST so an oracle that never ran can
+-- never read as 'improving' (the /auto-optimize fail-closed / paranoia rule).
+CREATE OR REPLACE VIEW loop_convergence AS
+SELECT loop_id, domain,
+       count(*)                                                    AS iterations,
+       max(metric_after) - min(metric_before)                     AS total_gain,
+       round(avg(metric_delta), 4)                                AS mean_delta,
+       sum(CASE WHEN abs(metric_delta) < 0.005 THEN 1 ELSE 0 END)  AS plateau_iters,
+       sum(CASE WHEN verdict = 'regressed'   THEN 1 ELSE 0 END)    AS regressions,
+       sum(CASE WHEN verdict = 'couldnt_run' THEN 1 ELSE 0 END)    AS oracle_misfires,
+       CASE
+         WHEN sum(CASE WHEN verdict = 'couldnt_run' THEN 1 ELSE 0 END) > 0  THEN 'misfiring'
+         WHEN sum(CASE WHEN verdict = 'regressed'  THEN 1 ELSE 0 END) >= 2  THEN 'oscillating'
+         WHEN max(metric_after) - min(metric_before) > 0.01                 THEN 'improving'
+         ELSE 'plateaued'
+       END                                                         AS shape
+FROM loop_iteration GROUP BY loop_id, domain;

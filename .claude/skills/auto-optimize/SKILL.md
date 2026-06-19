@@ -50,9 +50,11 @@ error**; see Step 0.
 4. ALWAYS release the .lock on exit (success, failure, or kill).
 5. ALWAYS check state/.loop-halted and the per-domain .STOP marker
    BEFORE every iteration, not just at start.
-6. AUTO-EXIT when the last `plateau_window` cycles all improved the
-   metric by less than `plateau_threshold` (rel. to prior). Plateau
-   exit is not failure — it's the loop's job to know when to stop.
+6. SELF-GOVERN from the ledger via `Scripts/loop-decide.ps1` (Step 3.9):
+   `stop-plateau` → exit; `halt-oscillating` / `halt-misfire` → halt AND
+   emit an algedonic signal (escalate, never silent). The loop decides when
+   to stop from the durable trajectory — not a fixed count, not its own
+   optimism. Stopping at the right time IS the job; it is not failure.
 ```
 
 Memory notes worth honoring (read at session start):
@@ -258,8 +260,31 @@ For each cycle (up to `max_iterations`):
    ```
    Do NOT hand-build the JSON — the writer pins the field set + order to the
    fixture and derives `metric_delta`, so the schema can't drift.
-9. **Plateau check** — track last `plateau_window` cycles' rel. delta.
-   If all are below `plateau_threshold`, exit with status `plateau`.
+9. **Govern from the ledger (self-termination).** Instead of a fixed iteration
+   count or an in-memory plateau guess, ask the controller — it decides from the
+   durable trajectory the cycle just appended in sub-step 8:
+
+   ```powershell
+   $d = (pwsh Scripts/loop-decide.ps1 -Domain $domain -LoopId $loop_id `
+         -PlateauWindow $plateau_window -PlateauThreshold $plateau_threshold) | ConvertFrom-Json
+   switch ($d.decision) {
+     'continue'         { }                                  # → next iteration
+     'stop-plateau'     { $exit_status = 'plateau';     break }
+     'halt-oscillating' { $exit_status = 'oscillating'; break }   # escalate (below)
+     'halt-misfire'     { $exit_status = 'misfire';     break }   # escalate (below)
+   }
+   ```
+
+   On `halt-oscillating` / `halt-misfire`, **escalate, don't exit silently** — emit
+   an algedonic signal so the operator is told the loop stopped itself and why:
+   ```powershell
+   pwsh Scripts/algedonic-emit.ps1 -Severity warn -Repo ga -Source auto-optimize `
+     -Summary "loop($domain) self-halted: $($d.decision)" -Details $d.reason
+   ```
+   `halt-misfire` is the same fail-closed condition as sub-step 2 — the controller
+   just makes it a first-class, ledger-driven decision instead of an ad-hoc exit. The
+   `loop_convergence` view (`SELECT * FROM loop_convergence`) is the post-hoc audit
+   of the same trajectory the controller decided on live.
 
 ### Step 4: Open PR (NOT merge)
 
