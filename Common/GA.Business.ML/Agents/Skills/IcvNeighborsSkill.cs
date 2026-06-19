@@ -47,18 +47,27 @@ public sealed class IcvNeighborsSkill(
         "cost for each. Use to answer 'what chord/scale is harmonically near " +
         "Cmaj7' or 'find ICV neighbors of Dm7'.";
 
+    // Routing anchors emphasise the user GOAL — "find OTHER chords SIMILAR to
+    // one chord" — using resemble/similar/most-like/interval-profile. Two
+    // curation passes (routing-ambiguity diagnostic, 2026-06-16):
+    //  1. dropped the bare "ICV" framing (owned by IntervalClassVectorSkill,
+    //     the single-chord ICV intent): -0.05 -> +0.036 silhouette.
+    //  2. dropped "close/nearby/adjacent" (collided with GrothendieckDeltaSkill's
+    //     "how close are X and Y") and "chords to C major" (collided with
+    //     ChordInfoSkill's "what is a C major chord"). "other … resemble/similar"
+    //     keeps the find-similar goal while shedding both neighbours' vocabulary.
     public IReadOnlyList<string> ExamplePrompts =>
     [
-        "what chords are harmonically close to Cmaj7",
-        "nearby pitch-class sets to C major",
-        "find ICV neighbors of Dm7",
-        "closest chord to G7 in ICV space",
-        "ICV neighbors of Cmaj7",
-        "what pitch-class sets are near Am",
-        "what's harmonically adjacent to F major",
-        "nearby chords for Gmaj7",
-        "what's close to E minor harmonically",
-        "harmonic neighbors of Bm7b5",
+        "which chords are most similar to Dm7",
+        "what other chords resemble Cmaj7",
+        "find chords with a similar sound to G7",
+        "chords related to F major by interval content",
+        "what chords share Gmaj7's interval profile",
+        "list chords most like E minor",
+        "chords with similar interval content to Bm7b5",
+        "what voicings are most similar to Am",
+        "which chords are closest in interval content to Fmaj7",
+        "chords that resemble Cmaj7 harmonically",
     ];
 
     public bool CanHandle(string message) => false;  // semantic-routing only

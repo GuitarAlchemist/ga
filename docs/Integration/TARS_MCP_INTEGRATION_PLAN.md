@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Proposes integration of TARS MCP diagnostics into GA. References GpuGrothendieckService.cs with incorrect path (Common/GA.Business.Core vs. actual Common/GA.Domain.Services). Treat as historical; see architecture/README.md (or the topic's current doc) for the up-to-date picture.
+
 ﻿# TARS MCP Integration Plan for Guitar Alchemist 🎸🤖
 
 **How TARS MCP can enhance Guitar Alchemist development**

@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Status: Active, dated 2026-04-17 — BUT references 'Phase-A/D fix' (line 44) for invariant #21 (triad template) as if it's SHIPPED Verify against the current code before relying on this doc.
+
 # Invariants Catalog — GA + IX Ecosystem
 
 **Status:** Active

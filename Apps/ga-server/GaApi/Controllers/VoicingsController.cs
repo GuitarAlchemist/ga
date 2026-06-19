@@ -11,6 +11,7 @@ using Services;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+// @ai:business-value primary public surface for voicing retrieval — Prime Radiant, MCP tools, and external clients all enter here [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 public class VoicingsController(
     ILogger<VoicingsController> logger,
     ISemanticKnowledgeSource semanticKnowledge)

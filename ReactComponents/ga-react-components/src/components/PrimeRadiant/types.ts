@@ -53,6 +53,53 @@ export interface FileTreeNode {
 }
 
 // ---------------------------------------------------------------------------
+// Hexavalent truth-value palette — shared between IxqlFormPanel and the
+// node-level "truth-value rim" channel on the Prime Radiant 3D viz.
+// Matches Demerzel/hexavalent-distribution.schema.json.
+// ---------------------------------------------------------------------------
+export type HexavalentTruth = 'T' | 'P' | 'U' | 'D' | 'F' | 'C';
+
+export const HEXAVALENT_COLORS: Record<HexavalentTruth, string> = {
+  T: '#22c55e',  // True — green
+  P: '#a3e635',  // Probable — lime
+  U: '#6b7280',  // Unknown — gray
+  D: '#f97316',  // Doubtful — orange
+  F: '#ef4444',  // False — red
+  C: '#d946ef',  // Contradictory — magenta
+};
+
+// ---------------------------------------------------------------------------
+// Dashboard augmentation — joined from dev-data endpoints
+// (AI annotations, sentrux test-gaps, algedonic signals) and merged onto
+// governance nodes by suffix-matching filePath. All fields are optional;
+// any failing fetch leaves its channel undefined on every node.
+// ---------------------------------------------------------------------------
+export interface NodeAugmentation {
+  annotations?: {
+    total: number;
+    by_truth_value: Partial<Record<HexavalentTruth, number>>;
+    dominant: HexavalentTruth | null;   // most frequent (ties → C if any, else worst of F/D/U/P/T)
+    recent: Array<{
+      claim: string;
+      kind: string;
+      certainty: string;
+      truth_value: HexavalentTruth;
+      line_start: number;
+      line_end: number;
+    }>;
+  };
+  testGap?: {
+    risk_score: number;       // 0..1
+    churn: number;
+    complexity: number;
+  };
+  algedonic?: {
+    recent: Array<{ id: string; signal: string; type: 'pain' | 'pleasure'; severity: string; timestamp: string }>;
+    pulseUntil?: number;      // unix ms — when the visual pulse should end
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Graph data structures
 // ---------------------------------------------------------------------------
 export interface GovernanceNode {
@@ -72,6 +119,7 @@ export interface GovernanceNode {
   scale?: number;                // LOD depth — 0=root, 1=constitution-articles, 2=clauses...
   metadata?: Record<string, unknown>;
   fileTree?: FileTreeNode[];
+  augmentation?: NodeAugmentation; // dev-dashboard channels (annotations / test-gaps / algedonic)
 }
 
 export interface GovernanceEdge {

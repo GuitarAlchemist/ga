@@ -163,8 +163,8 @@ const _MILKY_WAY_FRAGMENT = `
  * Create a Milky Way band mesh.
  *
  * Two paths:
- *  - Texture mode (default): photographic panorama from Solar System Scope
- *    (composite of real ESO/NASA imagery). Loaded from /textures/milky-way-8k.jpg.
+ *  - Texture mode (default): real visible-light 360 Milky Way panorama
+ *    from the canonical space asset manifest.
  *  - Procedural fallback: the original TSL shader with spiral arms, HII regions,
  *    dust lanes. Used if texture loading fails.
  *

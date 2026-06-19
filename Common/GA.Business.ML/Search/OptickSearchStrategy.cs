@@ -30,6 +30,10 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     public bool IsAvailable => true;
     public QueryVectorSpace QuerySpace => QueryVectorSpace.OpticCompact112;
 
+    /// <summary>The OPTK index is mmap-loaded in the constructor, so it serves queries
+    /// immediately — no host warmup gating (avoids the cold-start "Service not initialized" race).</summary>
+    public bool RequiresWarmup => false;
+
     public VoicingSearchPerformance Performance => new(
         TimeSpan.FromMilliseconds(20),
         MemoryUsageMb: 0,          // mmap — OS handles paging

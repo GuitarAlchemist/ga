@@ -4,7 +4,7 @@
 import React, { Component, useCallback, useEffect, useRef, useState } from 'react';
 import type { GovernanceGraph, GovernanceNode, PrimeRadiantProps } from './types';
 import { NODE_COLORS, HEALTH_COLORS } from './types';
-import { loadGovernanceData, buildGraphIndex, searchNodes, getHealthStatus } from './DataLoader';
+import { loadGovernanceData, buildGraphIndex, searchNodes, getHealthStatus, enrichNodesWithDevData } from './DataLoader';
 import type { GraphIndex } from './DataLoader';
 import { RadiantEngine } from './RadiantEngine';
 import { DetailPanel } from './DetailPanel';
@@ -144,6 +144,15 @@ export const PrimeRadiant: React.FC<PrimeRadiantProps> = ({
       const graph = loadGovernanceData(data);
       setGraphData(graph);
       setGraphIndex(buildGraphIndex(graph));
+
+      // Augment with dev-dashboard channels (annotations / test-gaps / algedonic).
+      // Fault-tolerant: any failure is logged and the base graph stays rendered.
+      enrichNodesWithDevData(graph)
+        .then(enriched => {
+          setGraphData(enriched);
+          setGraphIndex(buildGraphIndex(enriched));
+        })
+        .catch(err => console.warn('[PrimeRadiant] Dev-data enrichment failed:', err));
 
       const handleNodeSelect = (node: GovernanceNode | null) => {
         setSelectedNode(node);

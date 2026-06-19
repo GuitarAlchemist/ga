@@ -14,6 +14,8 @@ reversibility: layered — Phase 0 is mostly two-way; Phase 1 hook + skill rollo
 revisit_trigger: end of Phase 2 (loops running in 3 of 4 repos for 2 sprints with measurable hill-climb) → review whether to tighten the discipline gates or relax them
 ---
 
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Frontmatter status=superseded, superseded_by=docs/plans/2026-05-14-arch-cherny-adoption-and-tribunal-ci-plan-v2.md — explicit pointer to replacement. Treat as historical; see [architecture/README.md](architecture/README.md) (or the topic's current doc) for the up-to-date picture.
+
 # Cherny Adoption + QA Tribunal CI Integration — Cross-Repo Plan
 
 ## North Star

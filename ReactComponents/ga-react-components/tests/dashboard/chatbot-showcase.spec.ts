@@ -34,10 +34,25 @@ test.describe('Chatbot showcase', () => {
     const firstPrompt = page.locator('.showcase-prompt').first();
     await expect(firstPrompt, 'at least one showcase prompt should render').toBeVisible({ timeout: 15_000 });
 
-    // At least one QA badge should exist (verified/warning/unverified).
-    // We don't require a specific verdict — just that the QA wiring works.
-    const qaBadgeCount = await page.locator('.qa-badge').count();
-    expect(qaBadgeCount, 'at least one QA badge should render on showcase prompts').toBeGreaterThan(0);
+    // Most prompts should show a *validated* badge (verified/warning class),
+    // not just an unverified placeholder. Badge classes come from
+    // wwwroot/index.html#renderQaBadge: `.qa-badge.verified` (passed) or
+    // `.qa-badge.warning` (passed but slow) → validated;
+    // `.qa-badge.unverified` → no data.
+    //
+    // Threshold: 35. The committed canonical baseline covers 45 prompts;
+    // 35 leaves headroom for partial-recording days and any showcase entries
+    // that haven't been canonicalized yet. Catching "0 validated" was the
+    // whole point of this assertion — pre-fix, every prompt rendered the
+    // unverified state because BuildQaSummary required _meta.json which is
+    // gitignored.
+    const validatedBadgeCount = await page
+      .locator('.qa-badge.verified, .qa-badge.warning')
+      .count();
+    expect(
+      validatedBadgeCount,
+      'expected ≥35 validated QA badges (verified or warning) — fewer means the qa-summary fallback or the canonical baseline is broken',
+    ).toBeGreaterThanOrEqual(35);
 
     // Click the first prompt → modal closes, prompt is sent.
     // The chat form posts and renders a `.message.assistant` (or the existing

@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Doc references 'GA.TabConversion.Api project' and 'REST API endpoints' (POST /api/TabConversion/convert) — NOT FOUND in current codebase; only test project exists (GA.TabConversion.Api.Tests) Treat as historical; see architecture/README.md (or the topic's current doc) for the up-to-date picture.
+
 # Guitar Tab Conversion System - Complete Roadmap
 
 **Last Updated:** 2025-11-01

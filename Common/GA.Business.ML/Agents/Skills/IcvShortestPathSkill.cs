@@ -51,18 +51,30 @@ public sealed class IcvShortestPathSkill(
         "to F major in small harmonic steps'. Pure BFS over the PC-set " +
         "graph — no LLM call.";
 
+    // This skill returns the SEQUENCE of intermediate chords connecting two
+    // chords. Anchors emphasise path/route/connect/chain/stepping-stones (the
+    // discriminator vs GrothendieckDeltaSkill, which returns a single distance
+    // NUMBER between the same pair), and drop "BFS"/"ICV path" jargon —
+    // per the 2026-06-16 routing-ambiguity diagnostic.
+    // This skill returns the SEQUENCE of chords connecting two chords. The
+    // distinctive signal is "SHORTEST PATH/ROUTE" — that is what separates it
+    // from GrothendieckDeltaSkill (a single distance NUMBER over the same pair).
+    // The 2026-06-16 curation first tried "connect/chain/voice-leading" framings
+    // and REGRESSED this skill (it collided with skill.voiceleading and read as
+    // find-chords); leaning hard on "shortest … path/route" is the fix. "BFS"/
+    // "ICV path" jargon stays dropped.
     public IReadOnlyList<string> ExamplePrompts =>
     [
         "shortest harmonic path from Cmaj7 to G7",
-        "path from C major to F major",
-        "how do I get from Am to D7 harmonically",
+        "shortest path from C major to F major",
+        "shortest harmonic route from Am to D7",
         "shortest path from Cmaj7 to Bm7b5",
-        "harmonic path C to G",
-        "BFS path from Dm7 to Gmaj7",
-        "step-by-step harmonic route from C to F",
-        "what's the shortest PC-set path from Am to Em",
-        "find the harmonic route from Cmaj7 to Fmaj7",
-        "shortest ICV path from C to A minor",
+        "step-by-step harmonic route from C to G",
+        "shortest chord path from Dm7 to Gmaj7",
+        "shortest route from C to A minor",
+        "harmonic stepping stones from Cmaj7 to Fmaj7",
+        "shortest path from Gmaj7 to Em",
+        "shortest harmonic path of chords from C to F",
     ];
 
     public bool CanHandle(string message) => false;  // semantic-routing only

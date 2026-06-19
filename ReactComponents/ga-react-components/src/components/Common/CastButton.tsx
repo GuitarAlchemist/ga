@@ -46,9 +46,11 @@ export interface CastButtonProps {
   url?: string;
   /** Override label text. Defaults to "Cast" / "Casting". */
   label?: string;
+  /** Absolute offset from the right edge. */
+  right?: number | string;
 }
 
-const CastButton: React.FC<CastButtonProps> = ({ url, label }) => {
+const CastButton: React.FC<CastButtonProps> = ({ url, label, right = 16 }) => {
   const [casting, setCasting] = useState<boolean>(false);
   const [hint, setHint] = useState<string | null>(null);
 
@@ -89,7 +91,7 @@ const CastButton: React.FC<CastButtonProps> = ({ url, label }) => {
   const accent = casting ? '#4caf50' : '#9be38a';
 
   return (
-    <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+    <Box sx={{ position: 'absolute', top: 16, right, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
       <Box
         role="button"
         aria-label={casting ? 'Casting to Chromecast' : 'Cast to Chromecast'}

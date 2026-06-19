@@ -71,16 +71,22 @@ export function createSunMaterialTSL(options: SunMaterialOptions): MeshBasicNode
     col.assign(mix(col, warmOrange, penumbra.mul(0.4)));
     col.assign(mix(col, faculaeBright, faculae.mul(0.25)));
 
-    // Fresnel
+    // View angle: 1.0 at disc center, 0.0 at limb.
     const viewDir = cameraPosition.sub(positionWorld).normalize();
-    const edgeFresnel = float(1.0).sub(abs(normalWorld.dot(viewDir)));
+    const discCenter = abs(normalWorld.dot(viewDir));
+    const edgeFresnel = float(1.0).sub(discCenter);
+
+    // Limb darkening gives the disc a solar, spherical read instead of a flat
+    // emissive coin. Corona/prominences still brighten the edge afterward.
+    const limbDarkening = float(0.72).add(pow(discCenter, float(0.55)).mul(0.36));
+    col.mulAssign(limbDarkening);
 
     // Edge glow (all tiers)
-    col.addAssign(vec3(1.0, 0.4, 0.08).mul(pow(edgeFresnel, float(4.0)).mul(0.2)));
+    col.addAssign(vec3(1.0, 0.48, 0.12).mul(pow(edgeFresnel, float(3.2)).mul(0.26)));
 
     // Center boost (all tiers)
-    const centerBoost = pow(float(1.0).sub(edgeFresnel), float(2.0));
-    col.mulAssign(float(0.9).add(centerBoost.mul(0.15)));
+    const centerBoost = pow(discCenter, float(2.0));
+    col.mulAssign(float(0.96).add(centerBoost.mul(0.08)));
 
     // Medium+: prominences + magnetic field
     if (quality !== 'low') {

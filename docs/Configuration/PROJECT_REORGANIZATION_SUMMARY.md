@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Doc claims renames COMPLETED: 'GA.Business.Core.AI → GA.Business.AI' PARTIALLY TRUE (GA.Business.AI exists, but GA.Business.Core.* still exist) Some specifics below no longer match the code.
+
 # Project Reorganization Summary
 
 ## Overview

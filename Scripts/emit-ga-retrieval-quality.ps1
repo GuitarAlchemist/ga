@@ -253,6 +253,50 @@ if ($Stdout) {
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
     }
     $json | Set-Content $Output -Encoding UTF8
+
+    # ── Unified Quality Gate Ledger (v1) — also emit a row ──
+    # See ix/docs/contracts/2026-05-24-quality-gate-ledger.contract.md.
+    try {
+        $ledgerScript = Join-Path $PSScriptRoot 'gate-ledger-write-v1.ps1'
+        if (Test-Path $ledgerScript) {
+            $ledgerDecision = switch ($verdict) {
+                'pass' { 'pass' }
+                'warn' { 'warn' }
+                'fail' { 'fail' }
+                default { 'skip' }
+            }
+            # Headline metric is grounded count; threshold is grounded baseline.
+            $ledgerValue = if ($null -ne $currentBlock.grounded) { [double]$currentBlock.grounded } else { 0.0 }
+            $ledgerThreshold = if ($null -ne $baseCounters.grounded) { [double]$baseCounters.grounded } else { $null }
+            $extra = [ordered]@{
+                verdict             = $verdict
+                unsupported         = $currentBlock.unsupported
+                corpus_misses       = $currentBlock.corpus_misses
+                injection_refusals  = $currentBlock.injection_refusals
+            }
+            if ($current.degraded) {
+                $extra.degraded         = $true
+                $extra.value_unknown    = $true
+            }
+            $ledgerArgs = @{
+                RepoRoot     = $repoRoot
+                Source       = 'ga-retrieval'
+                Domain       = 'chatbot'
+                Decision     = $ledgerDecision
+                MetricName   = 'grounded_count'
+                MetricValue  = $ledgerValue
+                EvidenceKind = 'file'
+                EvidenceRef  = $Output
+                ExtraJson    = ($extra | ConvertTo-Json -Depth 4 -Compress)
+            }
+            if ($null -ne $ledgerThreshold) {
+                $ledgerArgs.MetricThreshold = $ledgerThreshold
+            }
+            & $ledgerScript @ledgerArgs | Out-Null
+        }
+    } catch {
+        Write-Warning "gate-ledger v1 emit failed (artifact still written): $_"
+    }
 }
 
 if (-not $Stdout) {

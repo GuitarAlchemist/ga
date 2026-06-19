@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Line 2: 'Status: Production Ready' - claims operational state but no verification of working code Verify against the current code before relying on this doc.
+
 # Musical Session Context - Implementation Complete ✅
 
 **Date**: January 2026  
@@ -296,9 +298,9 @@ Apps/
 
 ## Related Documentation
 
-- [DOMAIN_CONTEXT_PROPOSAL.md](DOMAIN_CONTEXT_PROPOSAL.md) - Original design proposal
+- DOMAIN_CONTEXT_PROPOSAL.md - Original design proposal
 - [DOMAIN_CONFIG_ARCHITECTURE.md](DOMAIN_CONFIG_ARCHITECTURE.md) - Domain vs Config layers
-- [DOMAIN_ARCHITECTURE_REVIEW.md](DOMAIN_ARCHITECTURE_REVIEW.md) - Overall domain review
+- DOMAIN_ARCHITECTURE_REVIEW.md - Overall domain review
 
 ---
 

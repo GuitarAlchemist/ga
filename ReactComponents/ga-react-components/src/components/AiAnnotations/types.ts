@@ -11,7 +11,10 @@ export type AnnotationKind =
   | 'contract'
   | 'smell'
   | 'decision'
-  | 'hint';
+  | 'hint'
+  // Schema v2 (2026-05-24) — additive kinds for the value × complexity heatmap.
+  | 'business-value'
+  | 'hot-path';
 
 export type Certainty =
   | 'test'

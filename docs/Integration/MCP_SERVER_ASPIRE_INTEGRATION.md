@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** References GaMcpServer project integration with Aspire. Searched codebase: GaMcpServer exists at /GaMcpServer/GaMcpServer.csproj (confirmed), but NO reference to AllProjects.AppHost integration found. Aspire orchestration setup described in doc not verified in actual code. Verify against the current code before relying on this doc.
+
 # MCP Server Aspire Integration
 
 ## Overview
@@ -187,7 +189,7 @@ var anotherMcpServer = builder.AddProject("another-mcp-server", @"..\Path\To\Ser
 ## Related Documentation
 
 - [Aspire Documentation](https://learn.microsoft.com/en-us/dotnet/aspire/)
-- [MCP Server Documentation](../GaMcpServer/README_WEB_INTEGRATION.md)
-- [DevOps Guide](DEVOPS_COMPLETE.md)
-- [Developer Guide](DEVELOPER_GUIDE.md)
+- MCP Server Documentation
+- DevOps Guide
+- Developer Guide
 

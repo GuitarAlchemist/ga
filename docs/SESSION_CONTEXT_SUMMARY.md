@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Line 4: 'Status: ✅ COMPLETE & PRODUCTION READY' - contradicted by line 310 in SESSION_CONTEXT_IMPLEMENTATION.md: 'Build Status: In Progress' Verify against the current code before relying on this doc.
+
 # Musical Session Context - Feature Summary
 
 **Feature**: Musical Session Context for Chatbot Personalization  
@@ -320,7 +322,7 @@ Apps → Business.Core → Domain.Core
 1. [SESSION_CONTEXT_IMPLEMENTATION.md](SESSION_CONTEXT_IMPLEMENTATION.md) - Implementation details
 2. [SESSION_CONTEXT_TESTING.md](SESSION_CONTEXT_TESTING.md) - Test scenarios
 3. [SESSION_CONTEXT_REGRESSION_TESTING.md](SESSION_CONTEXT_REGRESSION_TESTING.md) - Regression strategy
-4. [DOMAIN_CONTEXT_PROPOSAL.md](DOMAIN_CONTEXT_PROPOSAL.md) - Original design
+4. DOMAIN_CONTEXT_PROPOSAL.md - Original design
 5. [DOMAIN_CONFIG_ARCHITECTURE.md](DOMAIN_CONFIG_ARCHITECTURE.md) - Architecture overview
 
 ---

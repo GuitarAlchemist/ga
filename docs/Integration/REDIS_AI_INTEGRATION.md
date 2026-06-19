@@ -1,3 +1,5 @@
+> ⚠️ **PARTIALLY STALE (audited 2026-05-31).** Proposes Redis for AI with vector search, caching, semantic search. Assumes Redis Stack is planned/available. No evidence in codebase that Redis Stack upgrade or vector indexing has been implemented. Some specifics below no longer match the code.
+
 # Redis for AI Integration Plan
 
 ## Overview

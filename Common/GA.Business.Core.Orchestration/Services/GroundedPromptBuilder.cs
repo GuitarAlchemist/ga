@@ -39,6 +39,21 @@ public class GroundedPromptBuilder
         var sb = new StringBuilder();
 
         sb.AppendLine("SYSTEM: You are the Guitar Alchemist Assistant, an expert in harmonic geometry.");
+        // Out-of-scope gate (2026-05-31). This RAG narrator is the production
+        // responder for queries that fall through routing (Chatbot:Mode=full,
+        // fallback disabled) — so a non-music query like "what's the weather"
+        // reaches here with an empty manifest and the small model otherwise
+        // answers it off-topic. The guardrail is deliberately scoped to
+        // CLEARLY-unrelated queries and explicitly permits in-scope music
+        // questions that happen to have no manifest data, so it declines
+        // "what's the weather" without false-declining "what is the Dorian mode".
+        sb.AppendLine(
+            "SCOPE: You only assist with guitar, music theory, chords, scales, voicings, " +
+            "progressions, and related musical topics. If the user's request is clearly " +
+            "unrelated to music or guitar, do not attempt to answer it: politely decline in " +
+            "one sentence and state what you can help with instead. For any music-related " +
+            "question, proceed normally — answer from the manifest when it has data, and " +
+            "otherwise from general music knowledge.");
 
         var q = safeQuery.ToLowerInvariant();
         if (q.Contains("jazz") || q.Contains("fusion") || q.Contains("neo-soul") || q.Contains("substitution") || q.Contains("shell") || q.Contains("extension"))

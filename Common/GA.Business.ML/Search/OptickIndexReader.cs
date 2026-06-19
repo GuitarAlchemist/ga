@@ -18,6 +18,7 @@ using Embeddings;
 ///         are responsible for ordering.
 ///     </para>
 /// </summary>
+// @ai:business-value mmap-backed 313k-voicing similarity index — every Prime Radiant 3D chord search and AG-UI side-effect query hits this reader; replacement cost is weeks [T:manually-reviewed conf:0.95 src:product-owner@2026-05-24]
 public sealed unsafe class OptickIndexReader : IDisposable
 {
     /// <summary>

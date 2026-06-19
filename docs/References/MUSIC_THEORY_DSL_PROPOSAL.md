@@ -1,3 +1,5 @@
+> ⚠️ **STALE — pending re-verification (audited 2026-05-31).** Line 176-179: References 'TARS fractal grammar system' at C:/Users/spare/source/repos/tars - repo exists at stated path (verified) Verify against the current code before relying on this doc.
+
 # Music Theory DSL Proposal for Guitar Alchemist
 
 **Date**: 2025-11-01  

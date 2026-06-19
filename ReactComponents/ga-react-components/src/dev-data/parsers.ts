@@ -375,3 +375,51 @@ export function projectLoopsGoals(
         total_records: totalRecords,
     };
 }
+
+// ── Business-value scorecard ────────────────────────────────────────────
+// Parses the federated value catalog (state/value/catalog.jsonl, emitted by
+// the sibling ix repo's `ix-value` generator — a RICE→stars rollup across
+// repos). One JSON object per line; malformed lines are skipped, never fatal
+// (mirrors the tolerant ingest on the ix side). See:
+//   ix/crates/ix-value, ix/docs/contracts/business-value.contract.md
+
+export interface ValueRecord {
+    schema_version: string;
+    /** Item id (authored) or repo name (for rollup rows). */
+    id: string;
+    repo: string;
+    /** 'demo' / 'epic' for items; 'repo' for the generated rollup row. */
+    kind: 'demo' | 'repo' | 'epic';
+    title: string;
+    reach: number;
+    impact: number;
+    confidence: number;
+    /** round(geomean(R,I,C)) clamped to 1..=5. */
+    stars: number;
+    /** geomean(R,I,C) / 5 ∈ (0,1] — the sortable continuous score. */
+    score01: number;
+    rationale?: string;
+}
+
+/**
+ * Parse the value catalog JSONL into records. Tolerant: blank lines are
+ * ignored and a line that is not a well-formed record (bad JSON, or missing
+ * the load-bearing `kind`/`stars` fields) is dropped rather than throwing —
+ * a single corrupt line must not blank the whole scorecard.
+ */
+export function parseValueCatalog(content: string): ValueRecord[] {
+    const out: ValueRecord[] = [];
+    for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+            const r = JSON.parse(trimmed) as Partial<ValueRecord>;
+            if (typeof r.id !== 'string' || typeof r.kind !== 'string') continue;
+            if (typeof r.stars !== 'number' || typeof r.score01 !== 'number') continue;
+            out.push(r as ValueRecord);
+        } catch {
+            // skip malformed line
+        }
+    }
+    return out;
+}

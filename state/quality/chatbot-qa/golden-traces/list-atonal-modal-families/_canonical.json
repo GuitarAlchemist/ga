@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "promptId": "list-atonal-modal-families",
+  "prompt": "List atonal modal families",
+  "category": "atonal",
+  "runCount": 1,
+  "extractedAt": "2026-05-16T05:15:05Z",
+  "canonicalSteps": [
+    {
+      "name": "chat.request",
+      "status": "completed",
+      "invariantAttributes": {
+        "chat.mode": "full",
+        "history.turn_count": 0,
+        "gen_ai.operation.name": "chat"
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "orchestration.answer",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "skill.modes",
+        "response.length": 529,
+        "routing.method": "orchestrator-skill-semantic",
+        "timeout.seconds": 180,
+        "routing.confidence": 1,
+        "candidate.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "orchestration.route",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "skill.modes",
+        "routing.method": "orchestrator-skill-semantic",
+        "routing.confidence": 1
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "agent.semantic_result",
+      "status": "completed",
+      "invariantAttributes": {
+        "agent.id": "skill.modes",
+        "response.length": 529,
+        "voicing.diagram.count": 0,
+        "candidate.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "notation.vextab",
+      "status": "completed",
+      "invariantAttributes": {
+        "notation.vextab.added_count": 0,
+        "notation.renderer": "vexflow",
+        "notation.format": "vextab",
+        "notation.diagram.count": 0
+      },
+      "rangeAttributes": {}
+    },
+    {
+      "name": "response.emit",
+      "status": "completed",
+      "invariantAttributes": {
+        "response.length": 529,
+        "response.has_vextab": false
+      },
+      "rangeAttributes": {}
+    }
+  ]
+}
