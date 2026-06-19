@@ -88,7 +88,7 @@ public class VoicingEntity
     public string? ForteCode { get; set; }
 
     /// <summary>
-    /// Interval class vector (e.g., "<254361>")
+    /// Interval class vector in ToString form, e.g. "&lt;2 5 4 3 6 1&gt;" (space-separated counts)
     /// </summary>
     [BsonElement("intervalClassVector")]
     public string? IntervalClassVector { get; set; }

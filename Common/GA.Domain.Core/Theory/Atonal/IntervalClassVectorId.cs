@@ -4,7 +4,14 @@ namespace GA.Domain.Core.Theory.Atonal;
 ///     Uniquely identifies an Interval Class Vector as a base-12 integer
 /// </summary>
 /// <remarks>
-///     e.g. &lt;2, 5, 4, 3, 6, 1&gt; Interval Class Vector (From major scale or its modes) => 254361
+///     e.g. the &lt;2 5 4 3 6 1&gt; interval-class vector (major scale or its modes) packs
+///     base-12 to Value = 608761 (2·12⁵ + 5·12⁴ + 4·12³ + 3·12² + 6·12 + 1). Base-12 (not
+///     base-10) is used so each count digit holds 0–11 — base-10 corrupts any count ≥ 10,
+///     which occurs for sets of cardinality ≥ 11.
+///     KNOWN LIMITATION: a single count of exactly 12 still overflows a base-12 digit, so the
+///     full chromatic aggregate &lt;12 12 12 12 12 6&gt; does NOT round-trip (decodes to
+///     &lt;1 1 1 1 0 6&gt;). Every set of cardinality ≤ 11 is safe; revisit (base-13 or a
+///     6-field record) only if the 12-note aggregate ever needs a faithful id.
 /// </remarks>
 /// <param name="Value">The base-12 <see cref="int" /> value</param>
 public readonly record struct IntervalClassVectorId(int Value) : IComparable<IntervalClassVectorId>
@@ -61,7 +68,8 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     {
         // Normalize: ensure all interval classes [1..6] are present with default value 0
         // Accumulate weights starting from IC6 (least significant digit) up to IC1 (most significant)
-        // to match GetVector() decomposition and the documented encoding (e.g., 254361).
+        // to match GetVector() decomposition and the documented encoding (major scale
+        // <2 5 4 3 6 1> => 608761 in base 12).
         var value = 0;
         var weight = 1;
 
