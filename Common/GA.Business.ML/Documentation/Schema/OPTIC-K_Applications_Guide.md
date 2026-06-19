@@ -1160,7 +1160,7 @@ $$v_i = \theta(\hat{S}(X_i), \hat{S}(X_{i+1}))$$
 Specifically:
 
 - Transposition acts as **rotation** on SPECTRAL phases
-- STRUCTURE and MORPHOLOGY are **invariant**
+- STRUCTURE's **ICV/cardinality sub-dims** and MORPHOLOGY are **invariant** under transposition (the full STRUCTURE partition is **not** — its pitch-class chroma is T-variant; a chord vs its transposition has STRUCTURE cosine ≈0.5–0.8. See `Tools/GaStructureInvariance`.)
 - The embedding **respects harmonic symmetry**
 
 **Why this matters for AI:**

@@ -87,12 +87,12 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 1: IDENTITY (0-5)
         // ═══════════════════════════════════════════════════════════════════════
-        var identityVector = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Voicing);
+        var identityVector = IdentityVectorService.ComputeEmbedding(IdentityVectorService.ObjectKind.Voicing);
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 2: STRUCTURE (6-29)
         // ═══════════════════════════════════════════════════════════════════════
-        var structureVector = theoryService.ComputeEmbedding(
+        var structureVector = TheoryVectorService.ComputeEmbedding(
             pitchClasses: doc.PitchClasses,
             rootPitchClass: doc.RootPitchClass,
             intervalClassVector: doc.IntervalClassVector,
@@ -105,7 +105,7 @@ public class MusicalEmbeddingGenerator(
         // PARTITION 3: MORPHOLOGY (30-53)
         // ═══════════════════════════════════════════════════════════════════════
         var melodyPc = doc.MidiNotes.Length > 0 ? doc.MidiNotes.Max() % EmbeddingSchema.PitchClassCount : (int?)null;
-        var morphologyVector = morphologyService.ComputeEmbedding(
+        var morphologyVector = MorphologyVectorService.ComputeEmbedding(
             bassPitchClass: doc.MidiBassNote >= 0 ? doc.MidiBassNote : null,
             melodyPitchClass: melodyPc,
             normalizedSpan: doc.HandStretch / (double)EmbeddingSchema.PitchClassCount,
@@ -118,7 +118,7 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 4: CONTEXT (54-65)
         // ═══════════════════════════════════════════════════════════════════════
-        var contextVector = contextService.ComputeEmbedding(
+        var contextVector = ContextVectorService.ComputeEmbedding(
             harmonicFunction: doc.HarmonicFunction,
             stabilityDelta: 0.0,
             tension: 1.0 - doc.Consonance,
@@ -134,7 +134,7 @@ public class MusicalEmbeddingGenerator(
             var shapeTag = $"{doc.CagedShape.ToLowerInvariant()}-shape";
             tags.Add(shapeTag);
         }
-        var symbolicVector = symbolicService.ComputeEmbedding(tags);
+        var symbolicVector = SymbolicVectorService.ComputeEmbedding(tags);
 
         // ═══════════════════════════════════════════════════════════════════════
         // COMBINE BASE PARTITIONS
@@ -179,11 +179,13 @@ public class MusicalEmbeddingGenerator(
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 11: ROOT (228-239) — Root pitch-class one-hot (v1.8)
-        // Root identity lives HERE, not in STRUCTURE. Schema's T-invariance claim
-        // for STRUCTURE is now honored. Low weight (0.05) so root match contributes
+        // Root identity lives HERE, not in STRUCTURE — so two voicings of the SAME
+        // pitch-class set match regardless of root (invariant #25). NB: STRUCTURE is
+        // still NOT transposition-invariant — its pitch-class chroma is T-variant; only
+        // the ICV/cardinality sub-dims are. Low weight (0.05) so root match contributes
         // a small discrimination signal on top of set-class match via STRUCTURE.
         // ═══════════════════════════════════════════════════════════════════════
-        var rootVector = rootService.ComputeEmbedding(doc.RootPitchClass);
+        var rootVector = RootVectorService.ComputeEmbedding(doc.RootPitchClass);
         CopyIntoPartition(combined, rootVector, GetPartition("ROOT"));
 
         return Task.FromResult(combined);
@@ -194,8 +196,8 @@ public class MusicalEmbeddingGenerator(
         if (doc.PitchClasses.Length == 0) return;
 
         // 1. Compute weighted spectral vector using PhaseSphereService
-        var spec = phaseSphereService.ComputeWeightedSpectralVector(doc.MidiNotes);
-        var normalized = phaseSphereService.NormalizeToSphere(spec);
+        var spec = PhaseSphereService.ComputeWeightedSpectralVector(doc.MidiNotes);
+        var normalized = PhaseSphereService.NormalizeToSphere(spec);
 
         // 2. Map to embedding slots
         var magnitudeIndices = new[] {
