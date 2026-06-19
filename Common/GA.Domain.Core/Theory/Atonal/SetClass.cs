@@ -74,7 +74,16 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     #endregion
 
     /// <inheritdoc />
-    public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}]";
+    /// <remarks>
+    ///     Includes the prime-form id so the label is a UNIQUE identifier. Cardinality +
+    ///     interval-class vector alone are NOT unique: the 23 Z-related set-class pairs in
+    ///     12-TET (e.g. the all-interval tetrachords [0 1 4 6] and [0 1 3 7]) share both, so
+    ///     a label without the prime form silently conflated 46 distinct set classes into 23
+    ///     strings. <see cref="Equals(SetClass)"/> already keys on <see cref="PrimeForm"/>;
+    ///     this brings the string representation in line with object identity. (Surfaced by
+    ///     the DuckDB domain-invariants sweep, state/quality/domain-invariants/.)
+    /// </remarks>
+    public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}/{PrimeForm.Id.Value}]";
 
     public PitchClassSet GetSpectralPrimeForm() =>
         PrimeForm.Cardinality.Value > 0
