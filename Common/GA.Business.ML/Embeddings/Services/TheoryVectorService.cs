@@ -24,7 +24,7 @@ public class TheoryVectorService
     ///     replacements (dims 20-21) are derived from the ICV to preserve octave invariance.
     ///     See <see cref="IcvConsonance"/> and <see cref="IcvBrightness"/>.
     /// </remarks>
-    public double[] ComputeEmbedding(
+    public static double[] ComputeEmbedding(
         IEnumerable<int> pitchClasses,
         int? rootPitchClass = null,
         string? intervalClassVector = null,
@@ -48,11 +48,19 @@ public class TheoryVectorService
         }
 
         // Root-boost REMOVED 2026-04-19 (schema v1.8). Previously `v[rootPitchClass] += 1.0`
-        // privileged the root bit, which broke STRUCTURE's T-invariance claim and caused
-        // 91% of same-PC-set cross-instrument voicings to fail invariant #25. Root identity
-        // now lives in the dedicated ROOT similarity partition (EmbeddingSchema.Partitions
-        // entry "ROOT", weight 0.05). STRUCTURE is now genuinely O+P+T+I-invariant per the
-        // schema contract.
+        // privileged the root bit, so two voicings of the SAME pitch-class set could differ
+        // by root and fail invariant #25 (91% of same-PC-set cross-instrument voicings). Root
+        // identity now lives in the dedicated ROOT similarity partition (weight 0.05), so
+        // STRUCTURE is invariant across re-voicings of the SAME pitch-class set (octave /
+        // permutation / instrument — invariants #25, #32).
+        //
+        // NOTE (measured, GaStructureInvariance Tier-2 sweep 2026-06-19): STRUCTURE is NOT
+        // transposition- or inversion-invariant. The pitch-class chroma below (v[pc]=1.0,
+        // dims 6-17 of the partition) encodes the literal pitch classes, so a set and its
+        // transposition differ — cosine ~0.51-0.78 over the 222 set classes (major triad
+        // ~0.66). T/I-invariant signal lives ONLY in the ICV + cardinality sub-dims, not the
+        // whole partition. If true T-invariant *shape* retrieval is required, the chroma
+        // would need its own partition (like ROOT) — a coordinated re-index (one-way door).
         _ = rootPitchClass;
 
         // 12: Cardinality (C) - High weight for structural identity

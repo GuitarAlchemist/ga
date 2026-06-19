@@ -34,7 +34,26 @@ cd state/quality/domain-invariants ; duckdb < build-invariants.sql
   `Tests/.../Atonal/SetClassToStringTests.cs`.
 - **Confirmed** the `IntervalClassVector` base-12 limitation affects exactly 1 of 4096 sets.
 
+## Tier 2 — STRUCTURE transposition-invariance (BUILT)
+`Tools/GaStructureInvariance` runs the real `TheoryVectorService.ComputeEmbedding` over every
+set class at all 12 transpositions; `build-structure-invariance.sql` measures
+`list_cosine_similarity(t0, tk)`.
+
+**Finding (significant):** STRUCTURE is **NOT transposition-invariant**, contradicting the
+inline claim in `TheoryVectorService`, CLAUDE.md's OPTIC-K section, and the teaching course.
+- 1 of 222 set classes is T-invariant (only the chromatic aggregate); **221 are not**.
+- mean min-cosine across transpositions **0.88**, worst **0.51**; a major triad sits at
+  **0.66–0.78** vs its transpositions (1.0 would mean invariant).
+- Root cause: the pitch-class **chroma** (`v[pc]=1.0`, dims 6–17 — half of STRUCTURE) encodes
+  the literal pitch classes. The v1.8 ROOT split fixed *same-pitch-class-set* invariance
+  (invariant #25), which is what the chroma provides; it never made STRUCTURE *transposition*-
+  invariant.
+
+**Disposition:** corrected the false code comment + flagged the docs. Did NOT change the
+embedding — whether the chroma belongs in STRUCTURE (same-PC matching, intended) or should
+move to its own partition for true T-invariant *shape* retrieval is a one-way-door design
+call for the schema owner. T/I-invariant signal already exists in the ICV + cardinality dims.
+
 ## Next tiers (not yet built)
-- **Tier 2** — IX UDFs over OPTIC-K: T-invariance sweep (`ix_cosine` over the 12 transpositions
-  of each set class; STRUCTURE must be cosine-identical), silhouette/pca vs the Forte taxonomy,
-  C#↔Rust ICV diff over the full universe.
+- silhouette/pca vs the Forte taxonomy; C#↔Rust ICV diff over the full universe; loading the
+  `ix.duckdb_extension` (`ix_cosine`/`ix_euclidean`) in place of the built-in `list_cosine_similarity`.
