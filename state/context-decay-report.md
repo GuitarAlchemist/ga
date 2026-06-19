@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-06-14T09:13:48Z_
+_Generated: 2026-06-19T09:42:21Z_
 
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
@@ -67,6 +67,12 @@ _Generated: 2026-06-14T09:13:48Z_
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `index.html`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `vite.config.ts`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `winget upgrade Ollama.Ollama`
+- `CONTEXT.md` → missing: `/dev-data/*`
+- `CONTEXT.md` → missing: `/diagnose`
+- `CONTEXT.md` → missing: `/grill-with-docs`
+- `CONTEXT.md` → missing: `/improve-codebase-architecture`
+- `CONTEXT.md` → missing: `/tdd`
+- `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`

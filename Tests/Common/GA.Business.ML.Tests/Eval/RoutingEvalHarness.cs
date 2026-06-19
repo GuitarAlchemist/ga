@@ -55,11 +55,31 @@ public class RoutingEvalHarness
         Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
     private static readonly string EmbeddingModel =
         Environment.GetEnvironmentVariable("GA_EMBED_MODEL") ?? "nomic-embed-text";
-    // Pin to the SAME threshold production routes with — not a hardcoded copy.
-    // This was 0.65f while production sat at 0.55f (dropped 2026-05-13), so the
-    // last baseline measured a threshold prod never used. Sourcing the constant
-    // makes that drift impossible; RouterThresholdMatchesProduction guards it.
-    private const float RouterMinConfidence = SemanticIntentRouter.DefaultMinConfidence;
+    // The SAME threshold production routes with. Defaults to the production const
+    // (not a hardcoded literal) — this was 0.65f while production sat at 0.55f
+    // (dropped 2026-05-13), so the last baseline measured a threshold prod never
+    // used. Sourcing the const makes that drift impossible by default;
+    // RouterThreshold_DefaultMatchesProductionDefault guards it.
+    //
+    // GA_ROUTER_MIN_CONFIDENCE overrides it because the threshold is embedder-
+    // SPECIFIC (plan #420 Phase 2): a stronger embedder scores higher, so the
+    // bge-large baseline must be measured at its recalibrated threshold (~0.64),
+    // mirroring AI:Routing:MinConfidence in production appsettings. The ratchet
+    // sets GA_EMBED_MODEL + GA_ROUTER_MIN_CONFIDENCE together so the gate measures
+    // the embedder/threshold pair production actually deploys.
+    private static readonly float RouterMinConfidence =
+        ResolveRouterMinConfidence(Environment.GetEnvironmentVariable("GA_ROUTER_MIN_CONFIDENCE"));
+
+    /// <summary>
+    /// Parses an explicit threshold override, falling back to the production
+    /// const for null/blank/garbage/out-of-range input. Pure + testable so the
+    /// drift guard can assert the default path without touching process env.
+    /// </summary>
+    internal static float ResolveRouterMinConfidence(string? raw) =>
+        float.TryParse(raw, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) && v is > 0f and <= 1f
+            ? v
+            : SemanticIntentRouter.DefaultMinConfidence;
 
     // Sentinel expectedIntentId for out-of-scope prompts: the router SHOULD
     // decline these (return null) so the caller can refuse a non-music query
@@ -153,20 +173,29 @@ public class RoutingEvalHarness
     }
 
     /// <summary>
-    /// Guards the threshold-drift bug: the harness MUST measure the same
-    /// confidence threshold production routes with. Tautological today (the
-    /// const is sourced from <see cref="SemanticIntentRouter.DefaultMinConfidence"/>),
-    /// but fails loudly the moment someone re-hardcodes a literal — which is
-    /// exactly how the harness drifted to 0.65 while prod sat at 0.55. Fast,
-    /// no Ollama, runs in CI.
+    /// Guards the threshold-drift bug: absent an explicit override, the harness
+    /// MUST measure the same confidence threshold production routes with. Asserts
+    /// the resolver's DEFAULT path (null/blank/garbage → the const) rather than the
+    /// env-driven field, so it stays green when the ratchet sets an explicit
+    /// GA_ROUTER_MIN_CONFIDENCE for a recalibrated embedder. Fails loudly the moment
+    /// someone re-hardcodes a literal default — exactly how the harness drifted to
+    /// 0.65 while prod sat at 0.55. Fast, no Ollama, runs in CI.
     /// </summary>
     [Test]
     [Category("Fast")]
-    public void RouterThreshold_MatchesProductionDefault()
+    public void RouterThreshold_DefaultMatchesProductionDefault()
     {
-        Assert.That(RouterMinConfidence, Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-            "Eval harness threshold drifted from SemanticIntentRouter.DefaultMinConfidence — " +
-            "any baseline it emits would measure a threshold production never uses.");
+        Assert.Multiple(() =>
+        {
+            Assert.That(ResolveRouterMinConfidence(null), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "no override → harness must measure production's default threshold.");
+            Assert.That(ResolveRouterMinConfidence(""), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "blank override → production default.");
+            Assert.That(ResolveRouterMinConfidence("not-a-number"), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "garbage override must fall back to the const, never silently route at 0.");
+            Assert.That(ResolveRouterMinConfidence("0.64"), Is.EqualTo(0.64f).Within(1e-6f),
+                "a valid override is honoured (the bge-large recalibration path).");
+        });
     }
 
     [Test]
@@ -283,6 +312,115 @@ public class RoutingEvalHarness
         // RECORD. Future runs can gate on regression against this baseline.
         Assert.That(overall.Total, Is.GreaterThan(0));
     }
+
+    /// <summary>
+    /// Dumps the router's EMBEDDING ANCHORS — every routed intent's
+    /// <see cref="IIntent.Description"/> + <see cref="IIntent.ExamplePrompts"/>,
+    /// embedded with the SAME embedder and SAME normalization
+    /// (<c>Trim().ToLowerInvariant()</c>) the production
+    /// <see cref="SemanticIntentRouter"/> uses — to
+    /// <c>state/quality/routing-diagnostic/routing-anchors-&lt;date&gt;.json</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Why this exists:</b> <see cref="RunBaseline_EmitReport"/> measures
+    /// routing <i>accuracy</i> (the symptom). It can't explain <i>why</i> a
+    /// prompt misroutes. The router classifies a query by max-cosine against
+    /// these anchors, so when two intents' anchor clouds overlap in embedding
+    /// space you get misroutes. This dump is the raw material for the IX
+    /// DuckDB diagnostic (<c>Scripts/routing-ambiguity-diagnostic.sql</c>):
+    /// <c>ix_silhouette</c> scores per-intent separability, a nearest-wrong-
+    /// neighbour cross-join names the confusable example-prompt PAIRS, and
+    /// <c>ix_pca_project</c> gives a 2-D scatter. The output tells you exactly
+    /// which example prompts to add/contrast to separate the clouds — the
+    /// semantic, no-keyword-rule lever for fixing the router.
+    /// </para>
+    /// <para>
+    /// <b>Why [Explicit]:</b> needs the live Ollama embedder, same as
+    /// <see cref="RunBaseline_EmitReport"/>. Run with:
+    /// <code>dotnet test --filter "FullyQualifiedName~DumpRoutingAnchors"</code>
+    /// </para>
+    /// </remarks>
+    [Test]
+    [Explicit("Requires live Ollama embedding endpoint. Emits the routing-anchor embedding dump.")]
+    public async Task DumpRoutingAnchors_ForAmbiguityDiagnostic()
+    {
+        var services = BuildProductionLikeIntentRegistry();
+
+        // Only intents with example prompts participate in semantic routing —
+        // mirror SemanticIntentRouter's `ExamplePrompts.Count > 0` candidate filter.
+        var intents = services.GetServices<IIntent>()
+            .Where(i => i.ExamplePrompts.Count > 0)
+            .OrderBy(i => i.Id, StringComparer.Ordinal)
+            .ToList();
+        Assert.That(intents, Is.Not.Empty, "No routed intents with example prompts found.");
+
+        IEmbeddingGenerator<string, Embedding<float>> embedder;
+        try
+        {
+            embedder = new OllamaEmbeddingGenerator(new Uri(EmbeddingEndpoint), EmbeddingModel);
+            var probe = await embedder.GenerateAsync(["probe"]);
+            Assert.That(probe, Is.Not.Null, "Embedder probe returned null.");
+        }
+        catch (Exception ex)
+        {
+            Assert.Inconclusive(
+                $"Live Ollama at {EmbeddingEndpoint} with model '{EmbeddingModel}' is required — " +
+                $"{ex.GetType().Name}: {ex.Message}");
+            return;
+        }
+
+        var anchors = new List<AnchorRow>();
+        var dimension = 0;
+        foreach (var intent in intents)
+        {
+            // Same anchor set + order the router builds: [description, ...examples],
+            // each normalized with Trim().ToLowerInvariant() (NormalizeForEmbedding).
+            var texts = new List<(string Kind, string Text)> { ("description", intent.Description) };
+            texts.AddRange(intent.ExamplePrompts.Select(p => ("example", p)));
+
+            var inputs = texts.Select(t => NormalizeForEmbeddingLocal(t.Text)).ToList();
+            var batch = await embedder.GenerateAsync(inputs);
+            for (var i = 0; i < texts.Count; i++)
+            {
+                var vec = batch[i].Vector.ToArray();
+                dimension = vec.Length;
+                anchors.Add(new AnchorRow(intent.Id, texts[i].Kind, texts[i].Text, vec));
+            }
+        }
+
+        var dump = new
+        {
+            schemaVersion = "0.1",
+            generatedAt   = DateTime.UtcNow.ToString("o"),
+            embedder      = EmbeddingModel,
+            dimension,
+            intentCount   = intents.Count,
+            anchorCount   = anchors.Count,
+            anchors,
+        };
+
+        var dir = Path.Combine(OutputDir, "routing-diagnostic");
+        Directory.CreateDirectory(dir);
+        var stamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var outPath = Path.Combine(dir, $"routing-anchors-{stamp}.json");
+        // Compact (not indented): the vectors are large; this file is consumed
+        // by DuckDB read_json, not read by humans.
+        File.WriteAllText(outPath, JsonSerializer.Serialize(dump));
+
+        TestContext.WriteLine($"Routing-anchor dump written: {outPath}");
+        TestContext.WriteLine($"  intents={intents.Count} anchors={anchors.Count} dim={dimension}");
+        Assert.That(anchors, Has.Count.GreaterThan(intents.Count),
+            "Expected more anchors than intents (each intent contributes a description + ≥1 example).");
+    }
+
+    // Local copy of SemanticIntentRouter.NormalizeForEmbedding (private there).
+    // MUST stay byte-identical so the dumped anchor vectors match the vectors
+    // the production router computes for the same text.
+    private static string NormalizeForEmbeddingLocal(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : text.Trim().ToLowerInvariant();
+
+    private sealed record AnchorRow(string IntentId, string Kind, string Text, float[] Vector);
 
     // ─── Data shapes ─────────────────────────────────────────────────────
 

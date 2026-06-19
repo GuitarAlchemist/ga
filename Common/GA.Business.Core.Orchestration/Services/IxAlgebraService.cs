@@ -152,13 +152,25 @@ public sealed partial class IxAlgebraService(
 
     private IxAlgebraAnswer? TryAnswerInternally(string query)
     {
+        var normalized = query.ToLowerInvariant();
+
+        // Reverse Forte-label lookup: "what is Forte number 4-Z29" → prime form.
+        // Must run BEFORE set extraction, otherwise "4-Z29" gets mis-parsed as a
+        // pitch-class set ("29" → {2,9}) and answered as the wrong question.
+        if (normalized.Contains("forte"))
+        {
+            var reverse = TryAnswerForteLookup(query);
+            if (reverse is not null)
+            {
+                return reverse;
+            }
+        }
+
         var sets = ExtractPitchClassSets(query);
         if (sets.Count == 0)
         {
             return null;
         }
-
-        var normalized = query.ToLowerInvariant();
 
         if (normalized.Contains("z-related") || normalized.Contains("z relation") || normalized.Contains("z-pair"))
         {
@@ -235,6 +247,35 @@ public sealed partial class IxAlgebraService(
                 ? $"The Forte label for {FormatSet(set)} is {forteText}."
                 : $"I could compute the prime form for {FormatSet(set)}, but no Forte label was available.",
             "forte",
+            facts);
+    }
+
+    // Reverse direction of AnswerForte: a canonical Forte label (e.g. "4-Z29")
+    // → the set class it names, using Allen Forte's 1973 numbering
+    // (CanonicalForteCatalog) — NOT GA's internal Rahn ordering, because a user
+    // typing "4-Z29" means the canonical [0,1,3,7], not Rahn index 29. Returns
+    // null when the query carries no Forte-label token or the label isn't in the
+    // canonical catalog, so the caller falls through to the set-extraction path.
+    private IxAlgebraAnswer? TryAnswerForteLookup(string query)
+    {
+        var match = ForteLabelRegex().Match(query);
+        if (!match.Success || !CanonicalForteCatalog.TryGetPrimeForm(match.Value, out var primeForm))
+        {
+            return null;
+        }
+
+        var facts = new Dictionary<string, string>
+        {
+            ["forte"] = match.Value,
+            ["primeForm"] = FormatSet(primeForm),
+            ["intervalClassVector"] = primeForm.IntervalClassVector.ToString(),
+            ["catalog"] = "forte-1973"
+        };
+
+        return CreateAnswer(
+            $"Forte {match.Value} is the set class with prime form {FormatSet(primeForm)} " +
+            $"(interval-class vector {primeForm.IntervalClassVector}).",
+            "forte-lookup",
             facts);
     }
 
@@ -354,6 +395,28 @@ public sealed partial class IxAlgebraService(
             return results;
         }
 
+        // Comma/space-separated bare pitch-class lists WITHOUT brackets, e.g.
+        // "0,1,4,6" or "0 1 4 6". Without this, the bracketed pass misses and
+        // the contiguous pass below splits "0,1,4,6" into single rejected
+        // digits, so a perfectly well-formed set-theory question extracts
+        // nothing and the deterministic engine never runs (it fell through to
+        // the LLM and timed out). Require >= 3 tokens so prose like "bars 2, 4"
+        // or an interval "0, 7" can't be mistaken for a pc-set. This is data
+        // extraction, not query routing.
+        foreach (Match match in SeparatedSetRegex().Matches(query))
+        {
+            var candidate = string.Concat(TokenRegex().Matches(match.Value).Select(m => NormalizeToken(m.Value)));
+            if (TryParsePitchClassSet(candidate, out var set))
+            {
+                results.Add(set);
+            }
+        }
+
+        if (results.Count > 0)
+        {
+            return results;
+        }
+
         foreach (Match match in CompactSetRegex().Matches(query))
         {
             if (TryParsePitchClassSet(match.Value, out var set))
@@ -412,6 +475,18 @@ public sealed partial class IxAlgebraService(
 
     [GeneratedRegex(@"[\[\{][^\]\}]+[\]\}]", RegexOptions.CultureInvariant)]
     private static partial Regex BracketedSetRegex();
+
+    // A Forte label: cardinality-index with an optional Z marker on the index,
+    // e.g. "4-Z29", "4-z15", "3-11". Used for reverse lookup (label → set).
+    [GeneratedRegex(@"\b\d{1,2}-Z?\d{1,2}\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ForteLabelRegex();
+
+    // A run of >= 3 pitch-class tokens separated by commas/spaces, e.g.
+    // "0,1,4,6" or "0 1 4 6 9". Used only to pull a set out of a query the
+    // router already classified as set-theory; the >= 3 floor avoids matching
+    // ordinary number pairs in prose.
+    [GeneratedRegex(@"\b(?:10|11|[0-9TEte])(?:\s*,\s*|\s+)(?:10|11|[0-9TEte])(?:(?:\s*,\s*|\s+)(?:10|11|[0-9TEte]))+\b", RegexOptions.CultureInvariant)]
+    private static partial Regex SeparatedSetRegex();
 
     [GeneratedRegex(@"\b(?:10|11|[0-9]|[TEAB])+\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex CompactSetRegex();

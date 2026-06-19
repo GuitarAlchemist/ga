@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <None Update="Corpus\prompts.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Corpus\sessions.yaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

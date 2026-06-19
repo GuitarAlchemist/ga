@@ -12,17 +12,17 @@
     {
       "name": "orchestration.answer",
       "status": "completed",
-      "agentId": "skill.modes"
+      "agentId": "algebra"
     },
     {
       "name": "orchestration.route",
       "status": "completed",
-      "agentId": "skill.modes"
+      "agentId": "algebra"
     },
     {
       "name": "agent.semantic_result",
       "status": "completed",
-      "agentId": "skill.modes"
+      "agentId": "algebra"
     },
     {
       "name": "notation.vextab",

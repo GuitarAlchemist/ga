@@ -15,14 +15,16 @@ public class SkillMdDrivenSkillTests
         string name = "Test Skill",
         string description = "Test description",
         string[]? triggers = null,
-        string body = "You are a helpful assistant.") =>
+        string body = "You are a helpful assistant.",
+        string[]? allowedTools = null) =>
         new()
         {
-            Name        = name,
-            Description = description,
-            Triggers    = triggers ?? ["test-trigger"],
-            Body        = body,
-            FilePath    = "<test>",
+            Name         = name,
+            Description  = description,
+            Triggers     = triggers ?? ["test-trigger"],
+            Body         = body,
+            AllowedTools = allowedTools ?? [],
+            FilePath     = "<test>",
         };
 
     private static IMcpToolsProvider EmptyToolsProvider()
@@ -30,6 +32,39 @@ public class SkillMdDrivenSkillTests
         var mock = new Mock<IMcpToolsProvider>();
         mock.Setup(p => p.GetToolsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
+        return mock.Object;
+    }
+
+    /// <summary>
+    /// A real <see cref="AIFunction"/> with a concrete <see cref="AIFunction.Name"/> —
+    /// AIFunctionFactory gives a name we can assert against (a Moq'd AIFunction can't
+    /// set the non-virtual Name reliably).
+    /// </summary>
+    private static AIFunction NamedTool(string name) =>
+        AIFunctionFactory.Create(() => "ok", name);
+
+    private static IMcpToolsProvider ToolsProvider(params AIFunction[] tools)
+    {
+        var mock = new Mock<IMcpToolsProvider>();
+        mock.Setup(p => p.GetToolsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tools);
+        return mock.Object;
+    }
+
+    /// <summary>
+    /// An <see cref="IChatClient"/> that records the <see cref="ChatOptions"/> it was
+    /// called with via <paramref name="captured"/>, so tests can assert tool scoping
+    /// and forced tool choice.
+    /// </summary>
+    private static IChatClient CapturingClient(Action<ChatOptions?> captured)
+    {
+        var mock = new Mock<IChatClient>();
+        mock.Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken>((_, o, _) => captured(o))
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
         return mock.Object;
     }
 
@@ -362,5 +397,121 @@ public class SkillMdDrivenSkillTests
 
         factoryMock.Verify(f => f.Create("skill-md"), Times.Once);
         factoryMock.Verify(f => f.Create(It.IsNotIn("skill-md")), Times.Never);
+    }
+
+    // ── allowed-tools → forced, scoped tool invocation ────────────────────────
+    //
+    // The whole point of these tests: a weak model (llama3.2:3b in CI) tends to
+    // narrate a plausible answer from training instead of calling the deterministic
+    // GA tool, which drops content + grounding. When a SKILL.md declares
+    // `allowed-tools`, the skill must (a) scope the visible tool set to those tools
+    // and (b) FORCE the tool choice, so the model can't skip the deterministic path.
+
+    [Test]
+    public async Task ExecuteAsync_NoAllowedTools_LeavesToolChoiceFree_OverFullSet()
+    {
+        ChatOptions? captured = null;
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(allowedTools: null),
+            ToolsProvider(NamedTool("ga_dsl_eval"), NamedTool("ga_chord_info")),
+            FactoryFor(CapturingClient(o => captured = o)),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("test");
+
+        Assert.That(captured, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            // Conversational skills declare no allowed-tools: full set, free choice.
+            Assert.That(captured!.Tools!, Has.Count.EqualTo(2));
+            Assert.That(captured.ToolMode, Is.Null, "no allowed-tools → ToolMode must stay unset (Auto)");
+        });
+    }
+
+    [Test]
+    public async Task ExecuteAsync_SingleAllowedTool_ForcesRequireSpecific_AndScopesToIt()
+    {
+        ChatOptions? captured = null;
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(allowedTools: ["ga_dsl_eval"]),
+            ToolsProvider(NamedTool("ga_dsl_eval"), NamedTool("ga_chord_info"), NamedTool("ga_scale_get_notes")),
+            FactoryFor(CapturingClient(o => captured = o)),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("transpose Cmaj7 up a fourth");
+
+        Assert.That(captured, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(captured!.Tools!, Has.Count.EqualTo(1), "tool set must be scoped to the single allowed tool");
+            Assert.That(captured.Tools![0].Name, Is.EqualTo("ga_dsl_eval"));
+            Assert.That(captured.ToolMode, Is.InstanceOf<RequiredChatToolMode>());
+            Assert.That(((RequiredChatToolMode)captured.ToolMode!).RequiredFunctionName,
+                Is.EqualTo("ga_dsl_eval"), "must force the specific deterministic tool");
+        });
+    }
+
+    [Test]
+    public async Task ExecuteAsync_AllowedToolMatch_IsCaseInsensitive()
+    {
+        ChatOptions? captured = null;
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(allowedTools: ["GA_DSL_EVAL"]),
+            ToolsProvider(NamedTool("ga_dsl_eval"), NamedTool("ga_chord_info")),
+            FactoryFor(CapturingClient(o => captured = o)),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("test");
+
+        Assert.That(captured!.Tools!, Has.Count.EqualTo(1));
+        Assert.That(((RequiredChatToolMode)captured.ToolMode!).RequiredFunctionName, Is.EqualTo("ga_dsl_eval"));
+    }
+
+    [Test]
+    public async Task ExecuteAsync_MultipleAllowedTools_ForcesRequireAny_AndScopesToThem()
+    {
+        ChatOptions? captured = null;
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(allowedTools: ["ga_chord_substitutions", "ga_chord_compare"]),
+            ToolsProvider(
+                NamedTool("ga_chord_substitutions"),
+                NamedTool("ga_chord_compare"),
+                NamedTool("ga_dsl_eval")),
+            FactoryFor(CapturingClient(o => captured = o)),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("substitutes for Cmaj7");
+
+        Assert.That(captured, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(captured!.Tools!, Has.Count.EqualTo(2), "scoped to the two allowed tools");
+            Assert.That(captured.ToolMode, Is.InstanceOf<RequiredChatToolMode>());
+            // RequireAny forces *some* tool call but names none.
+            Assert.That(((RequiredChatToolMode)captured.ToolMode!).RequiredFunctionName, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task ExecuteAsync_AllowedToolAbsentFromProvider_FallsBackToFreeChoice_FullSet()
+    {
+        // Declared tool renamed / not wired in the provider set: forcing
+        // RequireSpecific on a nonexistent tool would error the call, so the
+        // skill must degrade to the full set with a free tool choice.
+        ChatOptions? captured = null;
+        var skill = new SkillMdDrivenSkill(
+            MakeSkillMd(allowedTools: ["ga_does_not_exist"]),
+            ToolsProvider(NamedTool("ga_dsl_eval"), NamedTool("ga_chord_info")),
+            FactoryFor(CapturingClient(o => captured = o)),
+            NullLogger<SkillMdDrivenSkill>.Instance);
+
+        await skill.ExecuteAsync("test");
+
+        Assert.That(captured, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(captured!.Tools!, Has.Count.EqualTo(2), "fall back to the full provider set");
+            Assert.That(captured.ToolMode, Is.Null, "absent tool → do NOT force; leave ToolMode unset");
+        });
     }
 }

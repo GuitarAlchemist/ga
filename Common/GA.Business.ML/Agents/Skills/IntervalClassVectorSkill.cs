@@ -39,18 +39,23 @@ public sealed class IntervalClassVectorSkill(
         "interpretation. Use to answer 'what is the ICV of Cmaj7' or " +
         "'compute the interval-class vector for {0,2,4,5,7,9,11}'.";
 
+    // This skill OWNS the "ICV / interval-class vector OF a single set" intent,
+    // so anchors keep the ICV vocabulary (the discriminator vs the neighbors /
+    // delta / path skills, which were de-ICV'd in the 2026-06-16 routing-
+    // ambiguity curation). Dropped the terse bare "ICV of X" duplicates that
+    // collided most with IcvNeighborsSkill.
     public IReadOnlyList<string> ExamplePrompts =>
     [
-        "what is the ICV of Cmaj7",
+        "what is the interval-class vector of Cmaj7",
         "interval class vector of Dm7",
-        "compute ICV for the major scale",
-        "ICV of Cmaj7",
+        "compute the ICV of the major scale",
         "interval-class vector of {0,2,4,5,7,9,11}",
         "what's the interval vector for G7",
-        "ICV for Am",
+        "how many tritones does Cmaj7 contain",
         "compute the interval-class vector of Fmaj7",
         "ICV of the dorian mode",
         "interval class vector for {0,1,4,8}",
+        "what's the interval content of Am",
     ];
 
     public bool CanHandle(string message) => false;  // semantic-routing only

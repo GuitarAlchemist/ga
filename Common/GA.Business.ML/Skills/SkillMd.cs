@@ -19,6 +19,17 @@ public sealed record SkillMd
     public IReadOnlyList<string> Triggers { get; init; } = [];
 
     /// <summary>
+    /// Tool names this skill is permitted to use (from the <c>allowed-tools:</c>
+    /// frontmatter field). For GA's deterministic skills this is the closure/MCP
+    /// tool the skill MUST call (e.g. <c>[ga_dsl_eval]</c>), so <c>SkillMdDrivenSkill</c>
+    /// scopes the visible tool set to these and forces invocation — preventing a
+    /// weak model from narrating a plausible answer from training instead of
+    /// running the deterministic engine. Empty for conversational skills (which
+    /// keep the full tool set and a free <c>Auto</c> tool choice).
+    /// </summary>
+    public IReadOnlyList<string> AllowedTools { get; init; } = [];
+
+    /// <summary>
     /// The markdown body of the SKILL.md file — injected verbatim as the Claude system prompt.
     /// </summary>
     public required string Body { get; init; }

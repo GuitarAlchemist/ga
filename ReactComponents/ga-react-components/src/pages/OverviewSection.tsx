@@ -29,6 +29,7 @@ import {
 } from '../components/Algedonic/AlgedonicCard';
 import { InFlightCard } from '../components/Summary/InFlightCard';
 import { MissionControl } from '../components/Summary/MissionControl';
+import { ValueScorecard } from '../components/Summary/ValueScorecard';
 import { deriveTileStatus, type QualitySnapshotLike } from '../utils/qualityStatus';
 
 interface BacklogItem {
@@ -543,6 +544,11 @@ export const OverviewSection: React.FC = () => {
           Sits right after Heartbeat because operators' first question is "what's
           happening right now," not "what's the trend." */}
       <InFlightCard />
+
+      {/* Business Value — RICE→stars scorecard across demos + repos, federated
+          from the sibling ix repo (ix-value). Answers "what's worth the most"
+          right after "what's in flight." */}
+      <ValueScorecard />
 
       {/* Top stat tiles */}
       <Grid container spacing={2}>
