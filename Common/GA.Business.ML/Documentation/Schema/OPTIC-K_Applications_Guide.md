@@ -1026,7 +1026,7 @@ $$F_k(X + t) = e^{-2\pi i k t / 12} \cdot F_k(X)$$
 
 **This is the theoretical backbone of OPTIC-K:**
 
-- STRUCTURE (ICV) and SPECTRAL magnitudes are **transposition-invariant**
+- STRUCTURE's **ICV + cardinality sub-dims** and SPECTRAL magnitudes are **transposition-invariant** (the STRUCTURE partition *as a whole* is **not** — it also carries a pitch-class chroma that is T-variant; measured cosine ≈0.5–0.8 for a chord vs its transposition. See `TheoryVectorService` / `Tools/GaStructureInvariance`.)
 - SPECTRAL phases encode **where on the circle of fifths**
 - Keys and modulation are **just rotations**
 - Z-relations preserve **magnitude** but flip **direction**

@@ -128,8 +128,11 @@ public static class EmbeddingSchema
         new("ATONAL_MODAL", 164, 227, 0.00f, PartitionRole.Info),
         // v1.8 (2026-04-19): ROOT is a 12-dim one-hot over pitch classes 0-11.
         // Lives as a separate similarity partition with low weight (0.05) so set-class
-        // retrieval (STRUCTURE) remains T-invariant while root-specific queries still
-        // get a discriminating signal. Replaces the deprecated STRUCTURE root-boost.
+        // retrieval keeps the T-invariant STRUCTURE sub-dims (ICV + cardinality) dominant
+        // while root-specific queries still get a discriminating signal. Replaces the
+        // deprecated STRUCTURE root-boost. NB: STRUCTURE as a whole is NOT transposition-
+        // invariant — it also carries a pitch-class chroma that is T-variant (see
+        // TheoryVectorService / Tools/GaStructureInvariance).
         new("ROOT",         228, 239, 0.05f, PartitionRole.Similarity),
     ];
 
@@ -163,8 +166,10 @@ public static class EmbeddingSchema
         // - v4 (original):   global L2 normalization; root-boost in STRUCTURE.
         // - v4-pp:           per-partition L2 normalization (closed partition bleed).
         // - v4-pp-r (NEW):   adds ROOT similarity partition (12 dims, weight 0.05);
-        //                    STRUCTURE root-boost removed so STRUCTURE is now truly
-        //                    T-invariant per the O+P+T+I schema claim.
+        //                    STRUCTURE root-boost removed so STRUCTURE is invariant across
+        //                    re-voicings of the SAME pitch-class set (octave/voicing/instrument,
+        //                    invariant #25). It is NOT transposition-invariant — the pitch-class
+        //                    chroma is T-variant; only the ICV/cardinality sub-dims are.
         // Compact dim shifts 112 → 124 with the added ROOT slot. Hash bump is mandatory;
         // old indexes are rejected by the reader.
         var sb = new StringBuilder("optk-v4-pp-r:");
