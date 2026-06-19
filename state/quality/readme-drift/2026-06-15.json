@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "domain": "readme-drift",
+  "snapshot_date": "2026-06-15",
+  "snapshot_at": "2026-06-15T10:12:03.8783140Z",
+  "thresholds_days": {
+    "borderline": 14,
+    "stale": 30,
+    "very_stale": 60
+  },
+  "repos": [
+    {
+      "repo": "ga",
+      "status": "stale",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-06-15",
+      "drift_days": 30
+    },
+    {
+      "repo": "ix",
+      "status": "borderline",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-06-14",
+      "drift_days": 28
+    },
+    {
+      "repo": "Demerzel",
+      "status": "borderline",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-06-14",
+      "drift_days": 29
+    },
+    {
+      "repo": "tars",
+      "status": "borderline",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-06-14",
+      "drift_days": 29
+    },
+    {
+      "repo": "guitaralchemist.github.io",
+      "status": "ok",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-16",
+      "drift_days": 0
+    },
+    {
+      "repo": "mergerisk",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/mergerisk"
+    },
+    {
+      "repo": "agent-blackbox",
+      "status": "borderline",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-06-14",
+      "drift_days": 28
+    },
+    {
+      "repo": "demerzel-bot",
+      "status": "stale",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-05-15",
+      "drift_days": 40
+    },
+    {
+      "repo": "devto-mcp",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/devto-mcp"
+    },
+    {
+      "repo": "fin",
+      "status": "absent",
+      "reason": "Repo directory not found at /home/runner/work/ga/ga/fin"
+    },
+    {
+      "repo": "ga-godot",
+      "status": "stale",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-05-15",
+      "drift_days": 40
+    },
+    {
+      "repo": "hari",
+      "status": "stale",
+      "readme_mtime": "2026-06-15",
+      "readme_touch": "2026-05-01",
+      "head_date": "2026-06-14",
+      "drift_days": 44
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "ok": 1,
+    "borderline": 4,
+    "stale": 4,
+    "very_stale": 0,
+    "absent": 3
+  },
+  "emitted_at": "2026-06-15T10:12:03.8783140Z",
+  "metric_name": "readme_freshness_ratio",
+  "metric_value": 0.1111,
+  "oracle_status": "error",
+  "problems": [
+    {
+      "path": "ga",
+      "status": "stale"
+    },
+    {
+      "path": "ix",
+      "status": "borderline"
+    },
+    {
+      "path": "Demerzel",
+      "status": "borderline"
+    },
+    {
+      "path": "tars",
+      "status": "borderline"
+    },
+    {
+      "path": "mergerisk",
+      "status": "absent"
+    },
+    {
+      "path": "agent-blackbox",
+      "status": "borderline"
+    },
+    {
+      "path": "demerzel-bot",
+      "status": "stale"
+    },
+    {
+      "path": "devto-mcp",
+      "status": "absent"
+    },
+    {
+      "path": "fin",
+      "status": "absent"
+    },
+    {
+      "path": "ga-godot",
+      "status": "stale"
+    },
+    {
+      "path": "hari",
+      "status": "stale"
+    }
+  ]
+}

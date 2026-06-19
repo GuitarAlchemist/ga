@@ -248,9 +248,8 @@ dotnet restore AllProjects.slnx
 ## Next Steps
 
 - Read [AGENTS.md](./AGENTS.md) for repository guidelines
-- Check [ARCHITECTURE.md](./ARCHITECTURE.md) for system design
+- Check [architecture/README.md](./architecture/README.md) for system design (the authoritative architecture index)
 - Review [BUILD_STATUS_2025.md](./BUILD_STATUS_2025.md) for build info
-- Explore [MODULAR_RESTRUCTURING_PLAN.md](./MODULAR_RESTRUCTURING_PLAN.md) for architecture details
 
 ## Getting Help
 

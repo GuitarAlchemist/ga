@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** References 'KnowledgeGapAnalyzer.cs', 'YouTubeSearchService.cs', 'AutonomousCurationOrchestrator.cs' at Services/ — NONE FOUND in codebase Treat as historical; see [architecture/README.md](architecture/README.md) (or the topic's current doc) for the up-to-date picture.
+
 ﻿# Graphiti-Powered Autonomous Retroaction Loop
 
 ## Overview

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-10T07:22:47.4410375+00:00",
+  "total_prompts": 52,
+  "pass_pct": null,
+  "degraded": true,
+  "degraded_reason": "backend_unavailable",
+  "note": "Environment degraded: 51/51 failures were HTTP 5xx / network errors. pass_pct omitted — backend (Ollama / OPTIC-K index / deps) was unavailable, not the chatbot itself failing.",
+  "last_known_good_pass_pct": 94.0,
+  "last_known_good_date": "05/16/2026 05:30:00",
+  "last_known_good_source": "carryforward"
+}

@@ -9,7 +9,7 @@
 - ✅ Documentation complete (3,000 LOC)
 - ✅ CI/CD integration ready
 
-See [ALL_TASKS_COMPLETE_SUMMARY.md](ALL_TASKS_COMPLETE_SUMMARY.md) for comprehensive summary.
+See ALL_TASKS_COMPLETE_SUMMARY.md for comprehensive summary.
 
 ## Overview
 
@@ -423,9 +423,9 @@ builder.Services.AddSingleton<MarkovWalker>();
 ## References
 
 - [Implementation Plan](IMPLEMENTATION_PLAN_BLENDER_GROTHENDIECK.md)
-- [Summary](SUMMARY_MCP_BLENDER_GROTHENDIECK.md)
-- [3D Asset Links](3D_ASSET_LINKS.md)
-- [Developer Guide](DEVELOPER_GUIDE.md)
+- Summary
+- 3D Asset Links
+- Developer Guide
 - [Harmonious App - Equivalence Groups](https://harmoniousapp.net/p/ec/Equivalence-Groups)
 - [Ian Ring's Scale Website](https://ianring.com/musictheory/scales/)
 

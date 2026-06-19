@@ -188,6 +188,39 @@ prompts:
     min_length: 100
     max_elapsed_ms: 60000
 
+  # Routing regression (fix/chatbot-progression-routing, 2026-05-30): the verbose
+  # "give me a <Roman-numeral> progression in <key>" phrasing misrouted to tab.optimize
+  # (whose example "make this progression smoother to play" was the cosine attractor),
+  # which then replied "I need a tab in the message". Must route to the diatonic-chords
+  # skill and spell the chords. routes_to + forbidden_agent_ids + not_contains lock the
+  # exact prior failure; the terse "ii-V-I in Bb" guards that the new examples did not
+  # regress the form that already worked.
+  - prompt: "give me a ii-V-I progression in Bb"
+    category: progressions
+    routes_to: skill.diatonicchords
+    # Progression-SHAPE assertion (SKILL.md progression-selection section): the
+    # ii-V-I in Bb is Cm - F - Bb. A correct answer contains Cm + Bb and must NOT
+    # dump the full diatonic set — Dm (iii) and Gm (vi) appear only if the skill
+    # listed all seven chords instead of extracting the requested degrees. This
+    # is the regression that caught the original gap (#377 routed correctly but
+    # returned the full key inventory).
+    contains: ["Cm", "Bb"]
+    not_contains: ["I need a tab", "paste a tab", "Dm", "Gm"]
+    forbidden_agent_ids: ["tab.optimize", "tab.analyze"]
+    must_not_fallback: true
+    min_length: 30                    # a terse 3-chord progression answer is fine
+    max_elapsed_ms: 45000
+    retry: 1                          # routing is deterministic; the progression FORMATTING is LLM — one retry absorbs wording variance
+
+  - prompt: "ii-V-I in Bb"
+    category: progressions
+    routes_to: skill.diatonicchords
+    contains: ["Cm", "Bb"]
+    forbidden_agent_ids: ["tab.optimize"]
+    min_length: 50
+    max_elapsed_ms: 45000
+    retry: 0
+
   # ── beginner / getting started ──────────────────────────────────────────
   - prompt: "Show me some easy beginner chords"
     category: getting-started

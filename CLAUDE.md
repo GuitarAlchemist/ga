@@ -140,3 +140,37 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 **Why:** observed twice 2026-05-16 (merge drive + supervised `/auto-optimize` cycle). Each stomp reverts `session_id` to `stop-finalize` and bodies to a four-line stub. Family pattern at `docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md`.
 
 **How to apply:** treat the modified-file system-reminder as a stomp signal, re-read, rewrite. Don't argue with the hook; fixing it is a separate concern.
+
+## Agent skills
+
+Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
+
+### Issue tracker
+
+GitHub Issues on `GuitarAlchemist/ga`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical defaults (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (codebase itself is the five-layer model). `/grill-with-docs` grows them lazily. See `docs/agents/domain.md`.
+
+## Tracer-bullets + vertical slices (aihero delta, 2026-06-14)
+
+Adopted ecosystem-wide from aihero.dev. Counters AI's "build the whole thing at
+once" failure mode:
+
+- **Tracer-bullet first.** For any non-trivial feature, build the smallest
+  **end-to-end** slice that touches *every* layer, test it, get feedback, then
+  expand — never build layers in isolation. "Context-window constraints make the
+  discipline non-negotiable."
+- **Vertical, not horizontal, decomposition.** Each task/PR is a thin slice
+  cutting through all integration layers (surfacing unknowns early), not a
+  horizontal layer.
+
+The aihero skills themselves (`/grill-me`, `/to-prd`, `/to-issues`, `/tdd`,
+`/improve-codebase-architecture`, `/teach`) are installed project-scoped under
+`.claude/skills/` (see **Agent skills** above) and complement this ecosystem's
+existing brainstorming, planning-doc, test, and structural-quality machinery.

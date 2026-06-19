@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1.0",
+  "repo": "ga",
+  "items": [
+    {
+      "id": "demo/ecosystem-roadmap",
+      "kind": "demo",
+      "title": "Ecosystem Roadmap",
+      "reach": 3,
+      "impact": 3,
+      "confidence": 3,
+      "rationale": "Dev-facing overview of ecosystem direction; useful for steering, modest external reach."
+    },
+    {
+      "id": "demo/prime-radiant",
+      "kind": "demo",
+      "title": "Prime Radiant",
+      "reach": 4,
+      "impact": 5,
+      "confidence": 3,
+      "rationale": "Flagship governance/assumption-graph 3D viz; high impact, no usage telemetry yet."
+    },
+    {
+      "id": "demo/ga-chat",
+      "kind": "demo",
+      "title": "GA Chat (music-theory chatbot)",
+      "reach": 5,
+      "impact": 4,
+      "confidence": 3,
+      "rationale": "Broadest user-facing surface (grounded music-theory Q&A); reach high, quality still stabilizing."
+    },
+    {
+      "id": "demo/grothendieck-dsl",
+      "kind": "demo",
+      "title": "Grothendieck DSL",
+      "reach": 2,
+      "impact": 4,
+      "confidence": 2,
+      "rationale": "Powerful categorical composition DSL; niche audience and speculative adoption."
+    }
+  ],
+  "repo_score": {
+    "reach": 4,
+    "impact": 4,
+    "confidence": 3,
+    "rationale": "Music-theory engine + demos are the ecosystem's user-facing front door; reach high, value mostly declared not yet measured."
+  }
+}

@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (audited 2026-05-31).** Doc proposes MusicRoomService refactoring with Redis, MusicDataController endpoints, distributed caching (§Phase 1-4) Treat as historical; see [architecture/README.md](architecture/README.md) (or the topic's current doc) for the up-to-date picture.
+
 ﻿# Music Room Generation Microservice Architecture
 
 ## Overview

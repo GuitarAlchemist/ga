@@ -197,6 +197,12 @@ todos/
 # OPTIC-K generated index (build artifact, ~660MB)
 **/state/voicings/optick.index
 
+# DuckDB quality analytics layer: the .duckdb is a generated binary materialized
+# from the committed JSON snapshots by analytics/build-views.sql — regenerable,
+# never committed. The build script and README are tracked.
+state/quality/analytics/*.duckdb
+state/quality/analytics/*.duckdb.wal
+
 # Baseline diagnostic artifacts (regenerable)
 state/baseline/embedding-clusters-*.json
 state/baseline-phaseE/embedding-clusters-*.json
@@ -204,6 +210,11 @@ state/baseline-phaseE/embedding-clusters-*.json
 # Quality-snapshot by-products that are too large for git (the trend tool
 # only reads the summary JSONs; cluster-label dumps stay local / regenerable)
 state/quality/**/embedding-clusters-*.json
+
+# Routing-ambiguity diagnostic: the raw anchor embedding dump is multi-MB and
+# fully regenerable from the harness — keep it local. The small report +
+# silhouette/confusable-pairs/pca sidecars ARE committed as the record.
+state/quality/routing-diagnostic/routing-anchors-*.json
 
 # Phase 3 DSL-eval soak: dated raw results are local artefacts — only
 # state/quality/dsl-eval/prompts.json and state/quality/dsl-eval/latest-*
@@ -217,9 +228,19 @@ state/quality/dsl-eval/[0-9]*-soak-results.json
 # baseline. Re-record locally when needed. Dominator analysis runs offline
 # against whatever's currently on disk.
 state/quality/chatbot-qa/golden-traces/**/run-*.json
-state/quality/chatbot-qa/golden-traces/**/_canonical.json
-# ix-ai-annotations extractor output (regenerated locally per session)
-state/quality/ai-annotations.jsonl
+# _meta.json is produced only by the local recorder script and would churn
+# on every recording run — keep it ignored so contributors don't fight it.
+state/quality/chatbot-qa/golden-traces/**/_meta.json
+# Note: _canonical.json IS tracked — it's the curated baseline that the
+# /api/chatbot/qa-summary endpoint falls back to when no local _meta.json
+# is present (fresh checkouts + CI). Regenerable but stable enough to
+# commit. See ChatbotController.BuildQaSummary().
+# ix-ai-annotations extractor output — committed so the dashboard at
+# /test#dev/annotations always has data without requiring a local extractor
+# run. Regenerate via:
+#   cargo run --release -p ix-ai-annotations --manifest-path ../ix/Cargo.toml -- --workspace .
+# A future CI workflow will refresh this on PR merge.
+# state/quality/ai-annotations.jsonl  -- now tracked
 state/quality/ai-annotations-reconciliation.json
 # Note: _signature.json IS tracked — pruned to (name, status, agent.id)
 # per step, stable across runs, used as a CI test fixture by
@@ -244,6 +265,11 @@ state/quality/memory-curator/
 # stderr captures. Both are runtime artifacts: telemetry is what the next
 # baseline sweep reads, stdout/stderr is debugging-only.
 state/telemetry/
+
+# Per-query embedding sink (Contract B → ix-duck OOD lens). One row per routed
+# query with the full vector (~12KB/row) — bulky runtime telemetry, not a
+# committed artifact. ix-duck reads the working tree cross-repo; no commit needed.
+state/quality/query-embeddings/
 
 # AI-surface handoff notes — working memory between Antigravity native, Claude
 # Code, and remote agents. Notes ARE ignored; the README explaining the
@@ -316,3 +342,9 @@ state/governance/dev-process-overseer.json
 state/governance/supervised-loop-cycle.json
 state/quality/ga-harness/last.json
 .STOP
+
+# /teach generated courses (personal, regenerable)
+learning/
+
+# Router-head trainer embedding cache (regenerable)
+state/quality/router-head/.emb-cache.json

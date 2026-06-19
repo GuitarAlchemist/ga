@@ -433,8 +433,8 @@ Console.WriteLine($"Entropy: {stats.Entropy:F2}");
 
 ## 🔗 **Related Documentation**
 
-- [GPU_ACCELERATION_COMPLETE.md](GPU_ACCELERATION_COMPLETE.md) - GPU acceleration guide
-- [ADVANCED_TECHNIQUES_GUIDE.md](ADVANCED_TECHNIQUES_GUIDE.md) - Advanced mathematics guide
-- [INTELLIGENT_BSP_AND_AI_GUIDE.md](INTELLIGENT_BSP_AND_AI_GUIDE.md) - BSP and AI guide
-- [ALL_FEATURES_COMPLETE.md](ALL_FEATURES_COMPLETE.md) - Complete feature summary
+- GPU_ACCELERATION_COMPLETE.md - GPU acceleration guide
+- ADVANCED_TECHNIQUES_GUIDE.md - Advanced mathematics guide
+- INTELLIGENT_BSP_AND_AI_GUIDE.md - BSP and AI guide
+- ALL_FEATURES_COMPLETE.md - Complete feature summary
 

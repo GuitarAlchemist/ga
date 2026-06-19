@@ -152,6 +152,9 @@ if (Test-Path $lock) {
     }
 }
 $env:PID | Set-Content $lock
+# Stable run id so every per-cycle ledger row (Step 3.8) joins back to THIS run.
+# The loop lens (ix-duck) clusters failure signatures within a loop_id.
+$loop_id = "$domain-$((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))"
 try {
     # ... main loop body ...
 } finally {
@@ -206,7 +209,9 @@ For each cycle (up to `max_iterations`):
    oracle_status}`. **Fail-closed contract**: if `metric_value` is
    `null` OR `oracle_status` is anything other than `"ok"`, the loop
    MUST refuse to use the file as a baseline and exit
-   `aborted-oracle-unreliable`. A green report from an oracle that
+   `aborted-oracle-unreliable` — but FIRST append a ledger row (sub-step 8)
+   with `-OracleStatus couldnt_run` so the misfire is durable + queryable,
+   never silently dropped. A green report from an oracle that
    never ran is the worst possible failure mode (see
    `docs/solutions/tooling/2026-05-16-auto-optimize-oracle-silent-success-build-failure.md`
    for the chatbot-qa incident that motivated this contract).
@@ -233,7 +238,27 @@ For each cycle (up to `max_iterations`):
 7. **Re-run oracle** to confirm. If the metric *regressed* (the fix
    broke something else), `git revert HEAD --no-edit` + record the
    regression + continue.
-8. **Plateau check** — track last `plateau_window` cycles' rel. delta.
+8. **Append the cycle to the loop ledger** via the shared writer — one
+   append-only row per cycle to `state/quality/loops/$domain.iterations.jsonl`
+   (the cross-repo loop lens ix-duck reads). Call it on **every** outcome:
+   improved, regressed, plateau, error, AND the `couldnt_run` fail-closed
+   branch in sub-step 2 (record the misfire *before* the
+   `aborted-oracle-unreliable` exit, so a non-run is never invisible).
+
+   ```powershell
+   # $verdict ∈ improved|regressed|plateau|error|couldnt_run
+   # $oracle_status ∈ ok|couldnt_run|error ; on couldnt_run the writer
+   # forces metric_after/metric_delta = null (a misfire is never progress).
+   pwsh Scripts/loop-record.ps1 -LoopId $loop_id -Domain $domain `
+       -Iteration $n -MetricName $baseline.metric `
+       -MetricBefore $before -MetricAfter $after `
+       -Verdict $verdict -OracleStatus $oracle_status `
+       -WorstItem $worst_item -ArtifactEdited $artifact `
+       -CommitSha $sha -RoundtripPassed:$roundtrip_ok
+   ```
+   Do NOT hand-build the JSON — the writer pins the field set + order to the
+   fixture and derives `metric_delta`, so the schema can't drift.
+9. **Plateau check** — track last `plateau_window` cycles' rel. delta.
    If all are below `plateau_threshold`, exit with status `plateau`.
 
 ### Step 4: Open PR (NOT merge)

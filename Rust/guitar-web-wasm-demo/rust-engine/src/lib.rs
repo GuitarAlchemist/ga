@@ -481,15 +481,19 @@ impl Engine {
             let wet = self.process_reverb(dry);
             let mut out_sample = dry * (1.0 - mix) + wet * mix;
 
-            // Very simple soft clip safeguard
-            let limit = 0.95;
+            // Soft-clip knee, then a HARD bound to guarantee valid [-1, 1] PCM.
+            // The knee alone (slope 0.2 above the limit) can still exceed 1.0 on
+            // the loudest transient — measured output peaks reached ~1.11 across
+            // the open strings — so the final clamp is the actual safety net
+            // against output-side clipping.
+            let limit = 0.90;
             if out_sample > limit {
                 out_sample = limit + (out_sample - limit) * 0.2;
             } else if out_sample < -limit {
                 out_sample = -limit + (out_sample + limit) * 0.2;
             }
 
-            *s = out_sample;
+            *s = out_sample.clamp(-1.0, 1.0);
         }
     }
 }
