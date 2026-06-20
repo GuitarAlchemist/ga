@@ -110,7 +110,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
                     // boost voicings that have those bits set.
                     if (filters.SymbolicBitIndices != null && filters.SymbolicBitIndices.Length > 0)
                     {
-                        const int symbolicOffset = 66; // From EmbeddingSchema
+                        const int symbolicOffset = EmbeddingSchema.SymbolicOffset;
                         var matches = 0;
 
                         foreach (var bit in filters.SymbolicBitIndices)

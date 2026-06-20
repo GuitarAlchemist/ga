@@ -40,6 +40,22 @@ public class SkillRoutingTests
         Assert.That(response.Result, Is.EqualTo(expected));
     }
 
+    // Regression: the skill used to lowercase the whole quality token before matching, so an
+    // uppercase "M" (major) folded to "m" (minor) and "CM" silently spelled C minor. The PR #80 fix
+    // lived only in ChordMcpTools until the shared ChordVocabulary seam (architecture-review #3) gave
+    // both adapters one case-sensitive NormalizeQuality. These pin the skill side of that contract.
+    [TestCase("What is a CM chord?", "C major chord contains C, E, and G.")]
+    [TestCase("What is a CM7 chord?", "C major 7 chord contains C, E, G, and B.")]
+    public async Task ChordInfoSkill_UppercaseMQualifier_ResolvesToMajor(string prompt, string expected)
+    {
+        var skill = new ChordInfoSkill(NullLogger<ChordInfoSkill>.Instance);
+
+        var response = await skill.ExecuteAsync(prompt);
+
+        Assert.That(response.Result, Is.EqualTo(expected),
+            $"'{prompt}' must resolve to major, NOT minor (skill side of the PR #80 case-sensitivity fix)");
+    }
+
     [Test]
     public async Task ChordInfoSkill_Identifies_ChordFromNoteSet()
     {
