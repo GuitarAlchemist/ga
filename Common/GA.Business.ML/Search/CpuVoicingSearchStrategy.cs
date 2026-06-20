@@ -98,7 +98,11 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
         await Task.Run(() => {
             Parallel.ForEach(voicingList, voicing => {
-                if (VoicingFilterEngine.Matches(voicing, filters))
+                // Metadata predicate + comfort predicate cross the SAME shared seams the GPU strategy
+                // uses (VoicingFilterEngine / VoicingComfortFilter), so the two paths admit the same set.
+                // Comfort was previously GPU-only — a silent CPU-fallback gap (ADR-0002).
+                if (VoicingFilterEngine.Matches(voicing, filters) &&
+                    VoicingComfortFilter.Matches(voicing.Diagram, filters))
                 {
                     // If target has text embedding, use it for semantic alignment
                     // otherwise fall back to musical embedding
