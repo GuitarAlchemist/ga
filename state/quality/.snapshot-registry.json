@@ -7,7 +7,8 @@
     { "domain": "embeddings",       "dir": "state/quality/embeddings",       "snapshot_glob": "20??-??-??.json" },
     { "domain": "invariants",       "dir": "state/quality/invariants",       "snapshot_glob": "20??-??-??.json" },
     { "domain": "readme-drift",     "dir": "state/quality/readme-drift",     "snapshot_glob": "20??-??-??.json" },
-    { "domain": "voicing-analysis", "dir": "state/quality/voicing-analysis", "snapshot_glob": "20??-??-??.json" }
+    { "domain": "voicing-analysis", "dir": "state/quality/voicing-analysis", "snapshot_glob": "20??-??-??.json" },
+    { "domain": "maintain-gate",    "dir": "state/quality/maintain-gate",    "snapshot_glob": "20??-??-??.json", "contract": "docs/contracts/maintain-gate-snapshot.schema.json", "advisory": true, "producer": "ix ix_maintain_snapshot (federated, ix#146)" }
   ],
   "excluded_by_design": [
     "*/baseline.json and *-baseline-*.json — policy contracts, not envelopes (different shape)",
