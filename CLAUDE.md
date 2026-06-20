@@ -90,6 +90,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 
 | Doing | Look here |
 |---|---|
+| Deciding *how* to direct AI on a non-trivial change | `docs/methodology/agentic-engineering.md` (harness > model; strategic over tactical; DX≈AX; procedures vs abilities; queues not loops) |
 | Implementing a non-trivial feature | `docs/plans/YYYY-MM-DD-<type>-<name>-plan.md` (in flight) → `docs/archive/` (shipped) |
 | Debugging a known class of bug | `docs/solutions/<category>/<date>-<topic>.md` (compounded fixes, frontmatter: `module / tags / problem_type`) |
 | Touching the layered architecture | `docs/architecture/layers.md` (the 5-layer rule), `docs/architecture/audit-YYYY-MM-DD.md` (latest decisions) |
