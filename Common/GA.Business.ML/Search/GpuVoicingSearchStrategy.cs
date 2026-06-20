@@ -242,8 +242,10 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
             {
                 // Metadata predicate + comfort predicate both cross shared seams (VoicingFilterEngine /
                 // VoicingComfortFilter) — the SAME ones the CPU strategy uses — so the two paths agree on
-                // which voicings survive. Comfort moved out of this adapter (it never needed the GPU: the
-                // BiomechanicalAnalyzer is pure C# over the diagram). See ADR-0002.
+                // which voicings PASS THE FILTER (predicate parity). The returned top-K may still differ
+                // under truncation (they score differently), so this is not result-set parity. Comfort
+                // moved out of this adapter (it never needed the GPU: the BiomechanicalAnalyzer is pure
+                // C# over the diagram). See ADR-0002.
                 var filteredVoicings = _voicings.Values
                     .Where(v => VoicingFilterEngine.Matches(v, filters))
                     .Where(v => VoicingComfortFilter.Matches(v.Diagram, filters));

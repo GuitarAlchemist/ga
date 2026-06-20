@@ -50,14 +50,17 @@ at layer 4, orchestration at 5; never in lower layers.
   Three exist: **OPTK-mmap** (`OptickSearchStrategy`) is the **production default** whenever the index
   file is present; **CPU-Parallel** and **GPU** (ILGPU) are the fallback / explicit-opt-in pair. They
   are *not* equivalent — see *metadata-filter parity*.
-- **Metadata-filter parity** — the invariant that the **CPU and GPU** strategies admit or reject the
-  *same set* of voicings for a given `VoicingSearchFilters` (the metadata *predicate* agrees); scoring
-  and ranking may legitimately differ (`TextEmbedding` vs `Embedding`, symbolic boosting). Owned by the
-  shared `VoicingFilterEngine`, the single metadata predicate both cross. **Scoped to CPU↔GPU by
-  design:** OPTK-mmap honors only the filters its index actually carries (chord-quality, instrument,
-  MIDI range) and is *excluded* from parity — its reduced filter set is **index-bound, not a bug**. A
-  strategy declares what it cannot honor via `IVoicingSearchStrategy` so the gap is observable
-  (telemetry `dropped`), never silent. See `docs/adr/0002-voicing-filter-parity-cpu-gpu-only.md`.
+- **Metadata-filter parity** — the invariant that the **CPU and GPU** strategies apply the *same
+  filter predicate*, so the same voicings **pass the filter** for a given `VoicingSearchFilters`. Owned
+  by the shared `VoicingFilterEngine`, the single metadata predicate both cross. **Predicate parity, not
+  result-set parity:** the strategies *score* differently (`TextEmbedding ?? Embedding` + symbolic
+  boosting on CPU; musical `Embedding` on GPU), so a score-ordered `Take(limit)` returns different
+  top-K subsets once survivors exceed `limit`. The guarantee is "same candidates pass the filter," not
+  "same voicings returned." **Scoped to CPU↔GPU by design:** OPTK-mmap honors only the filters its index
+  carries (chord-quality, instrument, MIDI range) and is *excluded* from parity — its reduced filter set
+  is **index-bound, not a bug**. A strategy declares what it cannot honor via `IVoicingSearchStrategy` so
+  the gap is observable (telemetry `dropped`), never silent. See
+  `docs/adr/0002-voicing-filter-parity-cpu-gpu-only.md`.
 - **Metadata filter vs comfort filter** — two filter seams with **opposite unknown-bias**, deliberately.
   A **metadata filter** reads a stored attribute and is *strict*: a voicing missing the attribute
   **fails** the filter (`VoicingFilterEngine`). A **comfort filter** (`MinComfortScore`,

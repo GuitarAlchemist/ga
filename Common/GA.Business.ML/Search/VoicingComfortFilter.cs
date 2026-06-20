@@ -86,7 +86,14 @@ public static class VoicingComfortFilter
             {
                 positions.Add(new Position.Muted(str));
             }
-            else if (int.TryParse(part, out var fretValue))
+            // Range-guard the fret BEFORE constructing Fret/MidiNote: both throw on out-of-range input
+            // (Fret outside [-1,36], MidiNote outside [0,127]), and int.TryParse accepts multi-digit /
+            // negative dash-format tokens. A throw here would fault the whole HybridSearchAsync task
+            // (it runs inside Parallel.ForEach / the kernel filter), collapsing the entire query — the
+            // exact failure class VoicingFilterEngine's 2026-05-30 null-safety fix exists to prevent.
+            // An out-of-range token is instead skipped → at worst the diagram yields zero positions,
+            // which Matches() treats leniently (keep). 0..24 covers any real fretted guitar voicing.
+            else if (int.TryParse(part, out var fretValue) && fretValue is >= 0 and <= 24)
             {
                 var location = new PositionLocation(str, new Fret(fretValue));
                 var midiNoteValue = i < openMidiNotes.Length ? openMidiNotes[i] + fretValue : 60 + fretValue;

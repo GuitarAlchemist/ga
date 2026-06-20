@@ -4,12 +4,23 @@ using GA.Business.ML.Search;
 using GA.Domain.Services.Fretboard.Voicings.Core;
 
 /// <summary>
-///     The metadata-filter parity tripwire (ADR-0002). The CPU and GPU strategies must admit/reject the
-///     SAME set of voicings for a given filter set, because both now cross the same shared seams
-///     (<see cref="VoicingFilterEngine"/> + <see cref="VoicingComfortFilter"/>). This guards against a
-///     strategy re-growing a private, drifted filter copy — the original sin this refactor killed. We
-///     assert the surviving voicing-ID SET only, not ranking/score (invariant A: scoring may legitimately
-///     differ — CPU scores TextEmbedding-or-Embedding with symbolic boosting, GPU scores Embedding).
+///     The metadata-filter <b>predicate</b> parity tripwire (ADR-0002). The CPU and GPU strategies must
+///     admit/reject the same voicings <i>at the filter step</i>, because both now cross the same shared
+///     seams (<see cref="VoicingFilterEngine"/> + <see cref="VoicingComfortFilter"/>). This guards against
+///     a strategy re-growing a private, drifted filter copy — the original sin this refactor killed.
+///     <para>
+///         <b>Scope — what this does NOT test, by design.</b> This is <i>predicate</i> parity, not
+///         result-set parity. The strategies <i>score</i> differently (CPU: <c>TextEmbedding ?? Embedding</c>
+///         + symbolic boosting; GPU: musical <c>Embedding</c>), so a score-ordered <c>Take(limit)</c>
+///         returns different top-K subsets once survivors exceed <c>limit</c>. We therefore run at
+///         <c>limit ≥ corpus</c> so truncation never bites, and assert the <b>filter-pass set</b> — not
+///         ranking, scoring, or truncation (asserting result-set parity under truncation would assert
+///         behaviour that does not hold). Filtering also happens in managed C# <i>before</i> the ILGPU
+///         kernel, so kernel-vs-host scoring divergence is irrelevant here and out of scope (on CPU-only
+///         CI the GPU strategy falls back to a managed loop anyway).
+///     </para>
+///     We assert both strategies equal an <i>independently computed</i> expected set (not just each other),
+///     so the tripwire also catches both paths drifting together.
 /// </summary>
 [TestFixture]
 public class CpuGpuFilterParityTests
@@ -41,14 +52,29 @@ public class CpuGpuFilterParityTests
         var cpuSet = await SurvivorsAsync(cpu, filters);
         var gpuSet = await SurvivorsAsync(gpu, filters);
 
-        Assert.That(gpuSet, Is.EquivalentTo(cpuSet),
-            "CPU and GPU disagreed on the surviving set — a strategy has re-grown a private filter that " +
-            "bypasses the shared seam (ADR-0002).");
+        // Independently computed expectation: a voicing passes iff the shared metadata predicate AND the
+        // shared comfort predicate accept it. Asserting against this (not just CPU==GPU) catches both
+        // strategies drifting together, and pins the seam each is supposed to route through.
+        var expected = Corpus()
+            .Where(v => VoicingFilterEngine.Matches(v, filters) && VoicingComfortFilter.Matches(v.Diagram, filters))
+            .Select(v => v.Id)
+            .ToHashSet();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(cpuSet, Is.EquivalentTo(expected),
+                "CPU filter-pass set diverged from the shared VoicingFilterEngine + VoicingComfortFilter predicate.");
+            Assert.That(gpuSet, Is.EquivalentTo(expected),
+                "GPU filter-pass set diverged from the shared predicate — a strategy has re-grown a private " +
+                "filter that bypasses the shared seam (ADR-0002).");
+        });
     }
 
     private static async Task<HashSet<string>> SurvivorsAsync(IVoicingSearchStrategy strategy, VoicingSearchFilters filters)
     {
         await strategy.InitializeAsync(Corpus());
+        // limit deliberately >= corpus size so the score-ordered Take never truncates — this is a
+        // predicate test; truncation/scoring divergence is out of scope (see class doc + ADR-0002).
         var results = await strategy.HybridSearchAsync(new double[EmbeddingDim], filters, limit: 100);
         return results.Select(r => r.Document.Id).ToHashSet();
     }
