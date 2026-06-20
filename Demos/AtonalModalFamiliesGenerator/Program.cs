@@ -180,7 +180,7 @@ internal static class Program
         var forteNumbers = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var mode in family.Modes)
         {
-            var forte = ProgrammaticForteCatalog.GetForteNumber(mode);
+            var forte = ForteCatalog.GetForteNumber(mode);
             if (forte.HasValue) forteNumbers.Add(forte.Value.ToString());
         }
 
@@ -410,7 +410,7 @@ internal static class Program
         sb.Append("# cross-referenced against GA.Business.Config/Modes.yaml for tonal analogs.\n");
         sb.Append("#\n");
         sb.Append("# - Families are keyed by IntervalClassVector (atonal invariant).\n");
-        sb.Append("# - Forte numbers come from ProgrammaticForteCatalog (Rahn ordering).\n");
+        sb.Append("# - Forte numbers come from ForteCatalog (canonical Allen Forte 1973; e.g. major triad = 3-11).\n");
         sb.Append("# - Tonal analogs are imported from Modes.yaml via PitchClassSetId matching\n");
         sb.Append("#   (resilient to ICV string drift in the curated data).\n");
         sb.Append("# - Unnamed families use positional modes (no coined names).\n");
