@@ -32,6 +32,15 @@ at layer 4, orchestration at 5; never in lower layers.
 - **dev-data middleware** — the `/dev-data/*` Vite endpoints powering the dashboard
   (`demos.guitaralchemist.com/test#dev/...`); dev-server-only (stripped by `vite build`).
 - **Prime Radiant** — the 3D governance/assumption-graph visualization.
+- **Governance gate** — the single authority answering "may this loop/skill/overseer
+  act right now?", owned by `Scripts/Governance.psm1` (`Test-GovernanceGate`). Folds the
+  cross-repo HALT-ALL marker (`~/.demerzel/HALT-ALL`) and the per-repo
+  `state/.loop-halted` kill switch into one fail-closed verdict, honoring every
+  obligation in the overseer-halt-marker contract (unknown `schema_version` →
+  halt; expired → fall through; `exempt_agents`; `scope`). Built on **`Test-Contract`**
+  (same module) — the reusable "validate JSON against `docs/contracts/*.schema.json`"
+  primitive. Consumers (the loop skills, `dev-process-overseer.ps1`) cross this seam
+  rather than re-parsing the marker.
 - **Weighted partition cosine** — the OPTIC-K similarity score: `Σ weight[p]·cosine(a[p], b[p])`
   over the similarity partitions of two **raw** vectors. Owned by `EmbeddingSchema`
   (`WeightedPartitionCosine`); equals the dot product of the two **compact** vectors
@@ -45,6 +54,16 @@ at layer 4, orchestration at 5; never in lower layers.
   *separate* idea — canonicalize by interval-span compactness, which can pick a different rotation than
   minimal id. The elementary id ops (complement, inverse, M5/M7, transpose) also live on
   `PitchClassSetId` — it is the single canonicalization authority; the value types delegate.
+
+- **Quality snapshot envelope** — the canonical dashboard tile shape
+  (`domain`, `emitted_at`, `metric_name`, `metric_value`, `oracle_status`, `summary`;
+  `docs/contracts/quality-snapshot.schema.json`, owned by ix, vendored here). Producers
+  MAY add domain-specific fields. **Snapshot registry**
+  (`state/quality/.snapshot-registry.json`) is the **opt-in** seam declaring which
+  `state/quality/<domain>/` dirs emit envelopes; `Scripts/validate-quality-snapshots.ps1`
+  validates only those (via `Test-Contract`), so baselines, `SCHEMA.json`, SAE artifacts,
+  and lens sidecars are excluded by design rather than false-failing. A `FAIL` is a real
+  producer gap (not yet emitting the envelope), not noise.
 
 ## Conventions
 
