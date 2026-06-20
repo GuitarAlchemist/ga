@@ -90,7 +90,7 @@ public sealed class VoiceLeadingSpace(int voices, bool octaveEquivalence, bool p
         return minDistance;
     }
 
-    private double ComputeOctaveInvariantDistance(double[] a, double[] b, VoiceLeadingOptions options)
+    private static double ComputeOctaveInvariantDistance(double[] a, double[] b, VoiceLeadingOptions options)
     {
         double sum = 0;
         for (var i = 0; i < a.Length; i++)

@@ -205,7 +205,7 @@ public class EnhancedVoicingSearchService(
         }
     }
 
-    private int? GetTopPitchClass(ChordVoicingRagDocument doc)
+    private static int? GetTopPitchClass(ChordVoicingRagDocument doc)
     {
         // 1. Prefer explicit property
         if (doc.TopPitchClass.HasValue)

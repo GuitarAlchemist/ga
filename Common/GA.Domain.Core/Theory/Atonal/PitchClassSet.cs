@@ -333,6 +333,16 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// </summary>
     public PitchClassSet Inverse => FromId(Id.Inverse);
 
+    /// <summary>
+    ///     Gets the M5 transform (multiply pitch classes by 5 mod 12 — the circle-of-fourths transform).
+    /// </summary>
+    public PitchClassSet M5 => FromId(Id.M5);
+
+    /// <summary>
+    ///     Gets the M7 transform (multiply pitch classes by 7 mod 12).
+    /// </summary>
+    public PitchClassSet M7 => FromId(Id.M7);
+
     public Uri? ScaleVideoUrl => ScaleVideoUrlById.Get(Id);
     public Uri ScalePageUrl => new($"https://ianring.com/musictheory/scales/{Id.Value}");
 
@@ -488,7 +498,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return result;
     }
 
-    private Note.Accidented FindClosestDiatonicNoteWithAccidental(bool isModal,
+    private static Note.Accidented FindClosestDiatonicNoteWithAccidental(bool isModal,
         HashSet<NaturalNote> usedNaturalNotes,
         PitchClass target,
         IReadOnlyCollection<Note.KeyNote> keyNotes)
@@ -603,7 +613,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return closestKey ?? Key.Major.C;
     }
 
-    private Key? IdentifyClosestKey(
+    private static Key? IdentifyClosestKey(
         PitchClassSet normalForm,
         IReadOnlyDictionary<Key, IReadOnlyCollection<PitchClass>> items,
         KeyMode expectedKeyMode)

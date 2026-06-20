@@ -32,6 +32,11 @@ at layer 4, orchestration at 5; never in lower layers.
 - **dev-data middleware** — the `/dev-data/*` Vite endpoints powering the dashboard
   (`demos.guitaralchemist.com/test#dev/...`); dev-server-only (stripped by `vite build`).
 - **Prime Radiant** — the 3D governance/assumption-graph visualization.
+- **Weighted partition cosine** — the OPTIC-K similarity score: `Σ weight[p]·cosine(a[p], b[p])`
+  over the similarity partitions of two **raw** vectors. Owned by `EmbeddingSchema`
+  (`WeightedPartitionCosine`); equals the dot product of the two **compact** vectors
+  (`ExtractCompact`, per-partition L2 × √weight) by construction — corpus build, query encode,
+  and the CPU/GPU scorers all cross these layout operations rather than re-deriving offsets/weights.
 
 ## Conventions
 

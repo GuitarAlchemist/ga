@@ -23,7 +23,7 @@ public class RootVectorService
     ///     to 1.0. Returns the zero vector if <paramref name="rootPitchClass"/> is null
     ///     (rootless voicings, no-root-specified queries).
     /// </summary>
-    public double[] ComputeEmbedding(int? rootPitchClass)
+    public static double[] ComputeEmbedding(int? rootPitchClass)
     {
         var v = new double[Dimension];
         if (!rootPitchClass.HasValue) return v;

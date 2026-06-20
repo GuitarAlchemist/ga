@@ -5,8 +5,6 @@ using GA.Business.ML.Agents.Mcp;
 [TestFixture]
 public class KeyIdentificationMcpToolsTests
 {
-    private static KeyIdentificationMcpTools MakeTool() => new();
-
     // ── Common-key progressions ───────────────────────────────────────────────
 
     [Test]
@@ -16,7 +14,7 @@ public class KeyIdentificationMcpToolsTests
         // set (relative pair), so they tie at the top score. This is exactly
         // the kind of ambiguity the LLM-phrasing layer in the SKILL.md is
         // meant to disambiguate.
-        var result = MakeTool().IdentifyKey("C Am F G");
+        var result = KeyIdentificationMcpTools.IdentifyKey("C Am F G");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.RecognizedChords, Is.EqualTo(new[] { "C", "Am", "F", "G" }));
@@ -37,7 +35,7 @@ public class KeyIdentificationMcpToolsTests
     {
         // ii V I in C major (or iv VII III in A minor). All three diatonic
         // in both relative-pair keys.
-        var result = MakeTool().IdentifyKey("Dm G C");
+        var result = KeyIdentificationMcpTools.IdentifyKey("Dm G C");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.TopCandidates.Select(c => c.Key), Has.Some.Contain("C major"));
@@ -48,7 +46,7 @@ public class KeyIdentificationMcpToolsTests
     {
         // The LLM phrases its answer using the DiatonicSet — verify the tool
         // exposes a 7-element ordered list (I, ii, iii, IV, V, vi, vii°).
-        var result = MakeTool().IdentifyKey("C F G");
+        var result = KeyIdentificationMcpTools.IdentifyKey("C F G");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.TopCandidates, Is.Not.Empty);
@@ -65,7 +63,7 @@ public class KeyIdentificationMcpToolsTests
     {
         // The LLM may pass the user's whole question rather than just the
         // chord list — the tool must extract chords correctly either way.
-        var result = MakeTool().IdentifyKey("what key is C Am F G in?");
+        var result = KeyIdentificationMcpTools.IdentifyKey("what key is C Am F G in?");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.RecognizedChords, Is.EqualTo(new[] { "C", "Am", "F", "G" }),
@@ -75,7 +73,7 @@ public class KeyIdentificationMcpToolsTests
     [Test]
     public void IdentifyKey_AcceptsCommaSeparatedChords()
     {
-        var result = MakeTool().IdentifyKey("Tell me the key of: G, D, Em, C");
+        var result = KeyIdentificationMcpTools.IdentifyKey("Tell me the key of: G, D, Em, C");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.RecognizedChords.Length, Is.EqualTo(4));
@@ -88,7 +86,7 @@ public class KeyIdentificationMcpToolsTests
     {
         // Whatever progression we pass, PartialMatches must never exceed
         // MaxPartialCandidates = 3. The tool's responsibility, not the LLM's.
-        var result = MakeTool().IdentifyKey("C Am F G");
+        var result = KeyIdentificationMcpTools.IdentifyKey("C Am F G");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.PartialMatches, Has.Length.LessThanOrEqualTo(3));
@@ -100,7 +98,7 @@ public class KeyIdentificationMcpToolsTests
         // The SKILL.md instructs the LLM to "optionally mention 1-2 partial
         // matches" — that's only useful if they're ordered best-first. Pin
         // the contract so a future refactor can't silently flip the order.
-        var result = MakeTool().IdentifyKey("C Am F G");
+        var result = KeyIdentificationMcpTools.IdentifyKey("C Am F G");
 
         Assert.That(result.Error, Is.Null);
         for (var i = 1; i < result.PartialMatches.Length; i++)
@@ -123,7 +121,7 @@ public class KeyIdentificationMcpToolsTests
         //
         // The result-level TotalChords MUST equal candidate-level — otherwise
         // the LLM payload contains two contradictory totals.
-        var result = MakeTool().IdentifyKey("C Am F# Gb");
+        var result = KeyIdentificationMcpTools.IdentifyKey("C Am F# Gb");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.TopCandidates, Is.Not.Empty);
@@ -136,7 +134,7 @@ public class KeyIdentificationMcpToolsTests
     [Test]
     public void IdentifyKey_NoChords_ReturnsErrorAboutSymbols()
     {
-        var result = MakeTool().IdentifyKey("what key is this in?");
+        var result = KeyIdentificationMcpTools.IdentifyKey("what key is this in?");
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error, Does.Contain("chord").IgnoreCase
@@ -148,8 +146,8 @@ public class KeyIdentificationMcpToolsTests
     [Test]
     public void IdentifyKey_EmptyOrNullInput_ReturnsError()
     {
-        Assert.That(MakeTool().IdentifyKey("").Error,    Is.Not.Null);
-        Assert.That(MakeTool().IdentifyKey(null!).Error, Is.Not.Null);
+        Assert.That(KeyIdentificationMcpTools.IdentifyKey("").Error,    Is.Not.Null);
+        Assert.That(KeyIdentificationMcpTools.IdentifyKey(null!).Error, Is.Not.Null);
     }
 
     [Test]
@@ -158,7 +156,7 @@ public class KeyIdentificationMcpToolsTests
         var huge = new string('C', 10_000);
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var result = MakeTool().IdentifyKey(huge);
+        var result = KeyIdentificationMcpTools.IdentifyKey(huge);
         sw.Stop();
 
         Assert.That(result.Error, Is.Not.Null);
@@ -171,7 +169,7 @@ public class KeyIdentificationMcpToolsTests
     {
         var esc      = (char)0x1B;
         var injected = "Q\n\r" + esc + "[31m";
-        var result   = MakeTool().IdentifyKey(injected);
+        var result   = KeyIdentificationMcpTools.IdentifyKey(injected);
 
         // Either the input is too short to extract chords (Error about chord
         // symbols) or it triggers the long-input length guard. Both paths use

@@ -28,7 +28,7 @@ public class StyleClassifierService(ProgressionEmbeddingService embeddingService
         return new(style, confidence, new() { { style, confidence } });
     }
 
-    private (string Style, double Confidence) PerformHeuristicInference(double[] features)
+    private static (string Style, double Confidence) PerformHeuristicInference(double[] features)
     {
         // Simple heuristic: 
         // Tension Variance (Feature index 1?) and Velocity Mean

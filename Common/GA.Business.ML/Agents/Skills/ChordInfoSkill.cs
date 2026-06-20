@@ -7,34 +7,11 @@ using System.Text.RegularExpressions;
 /// </summary>
 public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOrchestratorSkill
 {
-    private static readonly IReadOnlyDictionary<string, int> PitchClasses = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-    {
-        ["C"] = 0,
-        ["C#"] = 1,
-        ["Db"] = 1,
-        ["D"] = 2,
-        ["D#"] = 3,
-        ["Eb"] = 3,
-        ["E"] = 4,
-        ["F"] = 5,
-        ["F#"] = 6,
-        ["Gb"] = 6,
-        ["G"] = 7,
-        ["G#"] = 8,
-        ["Ab"] = 8,
-        ["A"] = 9,
-        ["A#"] = 10,
-        ["Bb"] = 10,
-        ["B"] = 11,
-        ["B#"] = 0,
-        ["Cb"] = 11,
-        ["E#"] = 5,
-        ["Fb"] = 4,
-    };
-
-    // NaturalLetters / NaturalPitchClasses moved to ChordSpelling (PR #102).
-    // Spell() below also delegates so this skill and ChordMcpTools share
-    // a single source of truth for enharmonic accounting.
+    // Root map, root/quality normalization, and the interval formula table live in the shared
+    // ChordVocabulary seam (architecture-review candidate #3) — same source as ChordMcpTools, so the
+    // two can't drift on quality parsing (e.g. the "CM" → C-major case-sensitivity fix).
+    // NaturalLetters / NaturalPitchClasses moved to ChordSpelling (PR #102). Spell() below also
+    // delegates so this skill and ChordMcpTools share a single source of truth for enharmonic accounting.
 
     public string Name => "ChordInfo";
 
@@ -114,31 +91,32 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         }
 
         var (root, quality) = parsed.Value;
-        if (!PitchClasses.TryGetValue(root, out var rootPc))
+        if (!ChordVocabulary.TryGetPitchClass(root, out var rootPc))
         {
             return Task.FromResult(AgentResponse.CannotHelp(AgentIds.Theory, $"I do not recognise \"{root}\" as a chord root."));
         }
 
-        var formula = GetFormula(quality);
-        var noteNames = formula.Intervals
+        var formula     = ChordVocabulary.GetFormula(quality);
+        var displayName = QualityDisplayName(formula.Quality);
+        var noteNames   = formula.Intervals
             .Zip(formula.LetterSteps, (interval, letterSteps) => Spell(root, rootPc + interval, letterSteps))
             .ToList();
 
         logger.LogDebug(
             "ChordInfoSkill: resolved {Root} {Quality} -> [{Notes}]",
             root,
-            formula.DisplayName,
+            displayName,
             string.Join(", ", noteNames));
 
         return Task.FromResult(new AgentResponse
         {
             AgentId = AgentIds.Theory,
-            Result = $"{root} {formula.DisplayName} contains {JoinNotes(noteNames)}.",
+            Result = $"{root} {displayName} contains {JoinNotes(noteNames)}.",
             Confidence = 1.0f,
             Evidence =
             [
                 $"Root: {root}",
-                $"Quality: {formula.DisplayName}",
+                $"Quality: {displayName}",
                 $"Intervals: {string.Join(", ", formula.IntervalNames)}",
                 $"Notes: {string.Join(", ", noteNames)}"
             ],
@@ -151,13 +129,13 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         var chordQuestion = ChordQuestionRegex().Match(message);
         if (chordQuestion.Success)
         {
-            return (NormalizeRoot(chordQuestion.Groups["root"].Value), NormalizeQuality(chordQuestion.Groups["quality"].Value));
+            return (ChordVocabulary.NormalizeRoot(chordQuestion.Groups["root"].Value), ChordVocabulary.NormalizeQuality(chordQuestion.Groups["quality"].Value));
         }
 
         var compact = CompactChordRegex().Match(message);
         if (compact.Success)
         {
-            return (NormalizeRoot(compact.Groups["root"].Value), NormalizeQuality(compact.Groups["quality"].Value));
+            return (ChordVocabulary.NormalizeRoot(compact.Groups["root"].Value), ChordVocabulary.NormalizeQuality(compact.Groups["quality"].Value));
         }
 
         return null;
@@ -172,8 +150,8 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
         var notes = NoteTokenRegex()
             .Matches(message)
-            .Select(match => NormalizeRoot(match.Groups["note"].Value))
-            .Where(PitchClasses.ContainsKey)
+            .Select(match => ChordVocabulary.NormalizeRoot(match.Groups["note"].Value))
+            .Where(ChordVocabulary.PitchClasses.ContainsKey)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -188,13 +166,13 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         }
 
         var pitchClasses = notes
-            .Select(note => PitchClasses[note])
+            .Select(note => ChordVocabulary.PitchClasses[note])
             .Order()
             .ToArray();
 
         foreach (var root in notes)
         {
-            var rootPc = PitchClasses[root];
+            var rootPc = ChordVocabulary.PitchClasses[root];
             foreach (var (quality, formula) in CandidateFormulas())
             {
                 if (formula.Intervals.Count != pitchClasses.Length)
@@ -217,93 +195,16 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         return null;
     }
 
-    private static string NormalizeRoot(string value)
+    // Presentation only: expand a terse canonical quality from ChordVocabulary to this skill's prose
+    // label. Most are "{quality} chord"; the four with parenthetical aliases keep their exact wording.
+    private static string QualityDisplayName(string quality) => quality switch
     {
-        var trimmed = value.Trim();
-        return trimmed.Length == 1
-            ? trimmed.ToUpperInvariant()
-            : char.ToUpperInvariant(trimmed[0]) + trimmed[1..];
-    }
-
-    private static string NormalizeQuality(string value)
-    {
-        // Strip whitespace + lowercase; the parser writes the canonical form
-        // that NormalizeQuality returns into Quality, and GetFormula keys on
-        // that form. Adding a new chord = entry here + entry in GetFormula +
-        // entry in CandidateFormulas.
-        var normalized = value.Trim().ToLowerInvariant();
-        return normalized switch
-        {
-            "" => "major",
-            "maj" or "major" => "major",
-            "m" or "min" or "minor" => "minor",
-            "dim" or "diminished" => "diminished",
-            "aug" or "augmented" or "+" => "augmented",
-            "5" or "no3" or "power" => "power",
-            // Triad extensions
-            "sus2" => "sus2",
-            "sus4" or "sus" => "sus4",
-            "add9" => "add9",
-            "6" or "maj6" or "major 6" => "major 6",
-            "m6" or "min6" or "minor 6" => "minor 6",
-            // 7th family
-            "7" or "dominant" or "dominant 7" => "dominant 7",
-            "maj7" or "major 7" or "ma7" or "Δ7" => "major 7",
-            "m7" or "min7" or "minor 7" or "-7" => "minor 7",
-            "dim7" or "°7" => "diminished 7",
-            "m7b5" or "ø" or "ø7" or "half-diminished" or "half diminished" or "minor 7 flat 5" => "half-diminished",
-            "7b5" or "dominant 7 flat 5" => "dominant 7 flat 5",
-            "7#5" or "7+5" or "dominant 7 sharp 5" => "dominant 7 sharp 5",
-            "7b9" or "dominant 7 flat 9" => "dominant 7 flat 9",
-            "7#9" or "dominant 7 sharp 9" => "dominant 7 sharp 9",
-            "7alt" or "alt" or "altered" or "altered dominant" => "altered dominant",
-            // 9 / 11 / 13 extensions
-            "9" or "dominant 9" => "dominant 9",
-            "maj9" or "major 9" => "major 9",
-            "m9" or "min9" or "minor 9" => "minor 9",
-            "11" or "dominant 11" => "dominant 11",
-            "maj11" or "major 11" => "major 11",
-            "m11" or "min11" or "minor 11" => "minor 11",
-            "13" or "dominant 13" => "dominant 13",
-            "maj13" or "major 13" => "major 13",
-            "m13" or "min13" or "minor 13" => "minor 13",
-            _ => normalized
-        };
-    }
-
-    private static ChordFormula GetFormula(string quality) =>
-        quality switch
-        {
-            "minor" => new ChordFormula("minor chord", [0, 3, 7], [0, 2, 4], ["root", "minor third", "perfect fifth"]),
-            "diminished" => new ChordFormula("diminished chord", [0, 3, 6], [0, 2, 4], ["root", "minor third", "diminished fifth"]),
-            "augmented" => new ChordFormula("augmented chord", [0, 4, 8], [0, 2, 4], ["root", "major third", "augmented fifth"]),
-            "power" => new ChordFormula("power chord", [0, 7], [0, 4], ["root", "perfect fifth"]),
-            "sus2" => new ChordFormula("sus2 chord", [0, 2, 7], [0, 1, 4], ["root", "major second", "perfect fifth"]),
-            "sus4" => new ChordFormula("sus4 chord", [0, 5, 7], [0, 3, 4], ["root", "perfect fourth", "perfect fifth"]),
-            "add9" => new ChordFormula("add9 chord", [0, 4, 7, 14], [0, 2, 4, 8], ["root", "major third", "perfect fifth", "ninth"]),
-            "major 6" => new ChordFormula("major 6 chord", [0, 4, 7, 9], [0, 2, 4, 5], ["root", "major third", "perfect fifth", "major sixth"]),
-            "minor 6" => new ChordFormula("minor 6 chord", [0, 3, 7, 9], [0, 2, 4, 5], ["root", "minor third", "perfect fifth", "major sixth"]),
-            "dominant 7" => new ChordFormula("dominant 7 chord", [0, 4, 7, 10], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "minor seventh"]),
-            "major 7" => new ChordFormula("major 7 chord", [0, 4, 7, 11], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "major seventh"]),
-            "minor 7" => new ChordFormula("minor 7 chord", [0, 3, 7, 10], [0, 2, 4, 6], ["root", "minor third", "perfect fifth", "minor seventh"]),
-            "diminished 7" => new ChordFormula("diminished 7 chord", [0, 3, 6, 9], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "diminished seventh"]),
-            "half-diminished" => new ChordFormula("half-diminished chord (m7b5)", [0, 3, 6, 10], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "minor seventh"]),
-            "dominant 7 flat 5" => new ChordFormula("dominant 7 flat 5 chord", [0, 4, 6, 10], [0, 2, 4, 6], ["root", "major third", "diminished fifth", "minor seventh"]),
-            "dominant 7 sharp 5" => new ChordFormula("dominant 7 sharp 5 chord (augmented dominant)", [0, 4, 8, 10], [0, 2, 4, 6], ["root", "major third", "augmented fifth", "minor seventh"]),
-            "dominant 7 flat 9" => new ChordFormula("dominant 7 flat 9 chord", [0, 4, 7, 10, 13], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "minor ninth"]),
-            "dominant 7 sharp 9" => new ChordFormula("dominant 7 sharp 9 chord (\"Hendrix chord\")", [0, 4, 7, 10, 15], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "augmented ninth"]),
-            "altered dominant" => new ChordFormula("altered dominant chord (7alt)", [0, 4, 6, 8, 10, 13, 15], [0, 2, 3, 4, 6, 8, 8], ["root", "major third", "flat fifth", "sharp fifth", "minor seventh", "flat ninth", "sharp ninth"]),
-            "dominant 9" => new ChordFormula("dominant 9 chord", [0, 4, 7, 10, 14], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "minor seventh", "major ninth"]),
-            "major 9" => new ChordFormula("major 9 chord", [0, 4, 7, 11, 14], [0, 2, 4, 6, 8], ["root", "major third", "perfect fifth", "major seventh", "major ninth"]),
-            "minor 9" => new ChordFormula("minor 9 chord", [0, 3, 7, 10, 14], [0, 2, 4, 6, 8], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth"]),
-            "dominant 11" => new ChordFormula("dominant 11 chord", [0, 4, 7, 10, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "major third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh"]),
-            "major 11" => new ChordFormula("major 11 chord", [0, 4, 7, 11, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "major third", "perfect fifth", "major seventh", "major ninth", "perfect eleventh"]),
-            "minor 11" => new ChordFormula("minor 11 chord", [0, 3, 7, 10, 14, 17], [0, 2, 4, 6, 8, 10], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh"]),
-            "dominant 13" => new ChordFormula("dominant 13 chord", [0, 4, 7, 10, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "major third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
-            "major 13" => new ChordFormula("major 13 chord", [0, 4, 7, 11, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "major third", "perfect fifth", "major seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
-            "minor 13" => new ChordFormula("minor 13 chord", [0, 3, 7, 10, 14, 17, 21], [0, 2, 4, 6, 8, 10, 12], ["root", "minor third", "perfect fifth", "minor seventh", "major ninth", "perfect eleventh", "major thirteenth"]),
-            _ => new ChordFormula("major chord", [0, 4, 7], [0, 2, 4], ["root", "major third", "perfect fifth"])
-        };
+        "half-diminished"    => "half-diminished chord (m7b5)",
+        "dominant 7 sharp 5" => "dominant 7 sharp 5 chord (augmented dominant)",
+        "dominant 7 sharp 9" => "dominant 7 sharp 9 chord (\"Hendrix chord\")",
+        "altered dominant"   => "altered dominant chord (7alt)",
+        _                    => $"{quality} chord",
+    };
 
     private static IEnumerable<(string Quality, ChordFormula Formula)> CandidateFormulas()
     {
@@ -311,29 +212,29 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         // matches when the given pitch classes equal a formula's transposed
         // intervals. Order doesn't affect correctness; keep simple triads
         // first so basic chord identification is fast.
-        yield return ("major", GetFormula("major"));
-        yield return ("minor", GetFormula("minor"));
-        yield return ("diminished", GetFormula("diminished"));
-        yield return ("augmented", GetFormula("augmented"));
-        yield return ("sus2", GetFormula("sus2"));
-        yield return ("sus4", GetFormula("sus4"));
-        yield return ("major 6", GetFormula("major 6"));
-        yield return ("minor 6", GetFormula("minor 6"));
-        yield return ("dominant 7", GetFormula("dominant 7"));
-        yield return ("major 7", GetFormula("major 7"));
-        yield return ("minor 7", GetFormula("minor 7"));
-        yield return ("diminished 7", GetFormula("diminished 7"));
-        yield return ("half-diminished", GetFormula("half-diminished"));
+        yield return ("major", ChordVocabulary.GetFormula("major"));
+        yield return ("minor", ChordVocabulary.GetFormula("minor"));
+        yield return ("diminished", ChordVocabulary.GetFormula("diminished"));
+        yield return ("augmented", ChordVocabulary.GetFormula("augmented"));
+        yield return ("sus2", ChordVocabulary.GetFormula("sus2"));
+        yield return ("sus4", ChordVocabulary.GetFormula("sus4"));
+        yield return ("major 6", ChordVocabulary.GetFormula("major 6"));
+        yield return ("minor 6", ChordVocabulary.GetFormula("minor 6"));
+        yield return ("dominant 7", ChordVocabulary.GetFormula("dominant 7"));
+        yield return ("major 7", ChordVocabulary.GetFormula("major 7"));
+        yield return ("minor 7", ChordVocabulary.GetFormula("minor 7"));
+        yield return ("diminished 7", ChordVocabulary.GetFormula("diminished 7"));
+        yield return ("half-diminished", ChordVocabulary.GetFormula("half-diminished"));
         // 4-note add-9 and 5-note 9th-family for note-set identification.
         // BACKLOG dealbreaker #5 — "what chord is C E G Bb D" → "C9".
-        yield return ("add9", GetFormula("add9"));
-        yield return ("dominant 9", GetFormula("dominant 9"));
-        yield return ("major 9", GetFormula("major 9"));
-        yield return ("minor 9", GetFormula("minor 9"));
+        yield return ("add9", ChordVocabulary.GetFormula("add9"));
+        yield return ("dominant 9", ChordVocabulary.GetFormula("dominant 9"));
+        yield return ("major 9", ChordVocabulary.GetFormula("major 9"));
+        yield return ("minor 9", ChordVocabulary.GetFormula("minor 9"));
         // 7-with-altered-fifth covers e.g. Cmaj7 with #5 in voicings;
         // common enough in jazz that "what chord is C E G# B" should ID.
-        yield return ("dominant 7 flat 5", GetFormula("dominant 7 flat 5"));
-        yield return ("dominant 7 sharp 5", GetFormula("dominant 7 sharp 5"));
+        yield return ("dominant 7 flat 5", ChordVocabulary.GetFormula("dominant 7 flat 5"));
+        yield return ("dominant 7 sharp 5", ChordVocabulary.GetFormula("dominant 7 sharp 5"));
     }
 
     private static bool HasChordIntent(string message)
@@ -396,10 +297,4 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
 
     [GeneratedRegex(@"(?<![A-Za-z])(?<note>[A-Ga-g][#b]?)(?![A-Za-z])", RegexOptions.CultureInvariant)]
     private static partial Regex NoteTokenRegex();
-
-    private sealed record ChordFormula(
-        string DisplayName,
-        IReadOnlyList<int> Intervals,
-        IReadOnlyList<int> LetterSteps,
-        IReadOnlyList<string> IntervalNames);
 }

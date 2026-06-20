@@ -49,7 +49,7 @@ public class FretboardPositionMapper(Tuning tuning, int maxFret = 24)
         return GenerateCombinations(optionsPerNote);
     }
 
-    private IEnumerable<List<FretboardPosition>> GenerateCombinations(List<List<FretboardPosition>> options) =>
+    private static IEnumerable<List<FretboardPosition>> GenerateCombinations(List<List<FretboardPosition>> options) =>
         // Recursively generate all possible ways to play the chord
         // Filter out shapes that use the same string for multiple notes
         CartesianProduct(options)

@@ -29,31 +29,29 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     private const int MusicalEmbeddingDim = 109; // v1.3.1
     private const int LegacyMusicalEmbeddingDim = 96; // v1.2.1
 
-    // Partition Offsets and Dimensions — must mirror EmbeddingSchema.Partitions.
-    private const int StructureOffset  = 6;
-    private const int StructureDim     = 24;
-    private const int MorphologyOffset = 30;
-    private const int MorphologyDim    = 24;
-    private const int ContextOffset    = 54;
-    private const int ContextDim       = 12;
-    private const int SymbolicOffset   = 66;
-    private const int SymbolicDim      = 12;
-    // MODAL (v1.6+, slots 109-148, 40 dims). Conditionally included so
-    // legacy/v1.3.1 vectors don't index past their length.
-    private const int ModalOffset      = 109;
-    private const int ModalDim         = 40;
-    // ROOT (v1.8 only, slots 228-239, 12 dims).
-    private const int RootOffset       = 228;
-    private const int RootDim          = 12;
+    // Partition offsets, dims, and weights ALIAS the authoritative EmbeddingSchema
+    // consts (compile-time, so the ILGPU kernel still bakes them) — the kernel can't
+    // call host code or iterate the registry, so this is how it crosses the layout seam.
+    // SchemaLayoutContractTests guards that these match EmbeddingSchema.Partitions.
+    private const int StructureOffset  = EmbeddingSchema.StructureOffset;
+    private const int StructureDim     = EmbeddingSchema.StructureDim;
+    private const int MorphologyOffset = EmbeddingSchema.MorphologyOffset;
+    private const int MorphologyDim    = EmbeddingSchema.MorphologyDim;
+    private const int ContextOffset    = EmbeddingSchema.ContextOffset;
+    private const int ContextDim       = EmbeddingSchema.ContextDim;
+    private const int SymbolicOffset   = EmbeddingSchema.SymbolicOffset;
+    private const int SymbolicDim      = EmbeddingSchema.SymbolicDim;
+    private const int ModalOffset      = EmbeddingSchema.ModalOffset;
+    private const int ModalDim         = EmbeddingSchema.ModalDim;
+    private const int RootOffset       = EmbeddingSchema.RootOffset;
+    private const int RootDim          = EmbeddingSchema.RootDim;
 
-    // Similarity Weights — sum is 1.15 (not 1.0) when MODAL+ROOT both fire.
-    // Intentional: residual mass beyond 1.0 is the v1.8 discrimination signal.
-    private const double StructureWeight  = 0.45;
-    private const double MorphologyWeight = 0.25;
-    private const double ContextWeight    = 0.20;
-    private const double SymbolicWeight   = 0.10;
-    private const double ModalWeight      = 0.10;
-    private const double RootWeight       = 0.05;
+    private const double StructureWeight  = EmbeddingSchema.StructureWeight;
+    private const double MorphologyWeight = EmbeddingSchema.MorphologyWeight;
+    private const double ContextWeight    = EmbeddingSchema.ContextWeight;
+    private const double SymbolicWeight   = EmbeddingSchema.SymbolicWeight;
+    private const double ModalWeight      = EmbeddingSchema.ModalWeight;
+    private const double RootWeight       = EmbeddingSchema.RootWeight;
     private readonly Lock _initLock = new();
     private readonly Dictionary<string, VoicingEmbedding> _voicings = [];
     private Accelerator? _accelerator;
@@ -744,7 +742,10 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         // Use weighted partition similarity for musical embeddings (v1.7, v1.6, v1.3.1, v1.2.1)
         if (_embeddingDimensions == OpticKv18Dim || _embeddingDimensions == OpticKv17Dim || _embeddingDimensions == OpticKv16Dim || _embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
         {
-            return CalculateMusicalSimilarity(queryEmbedding, _hostEmbeddings, embeddingStartIdx);
+            // Route through the layout op so the host fallback scores ALL similarity partitions
+            // (incl. MODAL + ROOT, which the old hand-rolled CalculateMusicalSimilarity dropped).
+            return EmbeddingSchema.WeightedPartitionCosine(
+                queryEmbedding, _hostEmbeddings.AsSpan(embeddingStartIdx, _embeddingDimensions));
         }
 
         double dotProduct = 0.0, queryNorm = 0.0, voicingNorm = 0.0;
@@ -758,45 +759,6 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         }
 
         return dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm) + 1e-10);
-    }
-
-    private static double CalculateMusicalSimilarity(double[] query, double[] database, int dbStartIdx)
-    {
-        double score = 0;
-
-        // STRUCTURE
-        score += StructureWeight * ComputePartitionCosine(
-            query, StructureOffset, database, dbStartIdx + StructureOffset, StructureDim);
-
-        // MORPHOLOGY
-        score += MorphologyWeight * ComputePartitionCosine(
-            query, MorphologyOffset, database, dbStartIdx + MorphologyOffset, MorphologyDim);
-
-        // CONTEXT
-        score += ContextWeight * ComputePartitionCosine(
-            query, ContextOffset, database, dbStartIdx + ContextOffset, ContextDim);
-
-        // SYMBOLIC
-        score += SymbolicWeight * ComputePartitionCosine(
-            query, SymbolicOffset, database, dbStartIdx + SymbolicOffset, SymbolicDim);
-
-        return score;
-    }
-
-    private static double ComputePartitionCosine(double[] v1, int offset1, double[] v2, int offset2, int dim)
-    {
-        double dot = 0, n1 = 0, n2 = 0;
-        for (var i = 0; i < dim; i++)
-        {
-            var a = v1[offset1 + i];
-            var b = v2[offset2 + i];
-            dot += a * b;
-            n1 += a * a;
-            n2 += b * b;
-        }
-
-        var mag = Math.Sqrt(n1) * Math.Sqrt(n2);
-        return mag > 1e-10 ? dot / mag : 0;
     }
 
     private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)
@@ -957,7 +919,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     /// <summary>
     ///     Apply musical characteristic filters (Quick Win 3)
     /// </summary>
-    private IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
+    private static IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
         IEnumerable<VoicingEmbedding> voicings,
         VoicingSearchFilters filters) =>
         voicings.Where(v =>
@@ -1091,7 +1053,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     /// <summary>
     ///     Parse voicing diagram to Position list for biomechanical analysis
     /// </summary>
-    private ImmutableList<Position> ParseDiagramToPositions(string diagram)
+    private static ImmutableList<Position> ParseDiagramToPositions(string diagram)
     {
         // Diagram format: "x-3-2-0-1-0" or "3-2-0-1-0-3"
         var parts = diagram.Split('-');

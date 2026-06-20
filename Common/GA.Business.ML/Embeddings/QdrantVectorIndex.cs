@@ -78,7 +78,7 @@ public class QdrantVectorIndex : IVectorIndex
         }
     }
 
-    private ChordVoicingRagDocument? MapToDocument(RetrievedPoint point)
+    private static ChordVoicingRagDocument? MapToDocument(RetrievedPoint point)
     {
          if (point.Payload.TryGetValue("json", out var jsonVal))
          {

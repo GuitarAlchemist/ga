@@ -164,7 +164,7 @@ public class ExhaustiveCoverageTests
         }
     }
 
-    private bool IsStandardMode(string name)
+    private static bool IsStandardMode(string name)
     {
         var standard = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {

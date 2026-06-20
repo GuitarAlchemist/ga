@@ -88,7 +88,7 @@ public class GeneticAlgorithm(
     }
 
     // Calculate voice leading distance between two voicings
-    private double CalculateVoiceLeadingDistance(int[] voicingA, int[] voicingB)
+    private static double CalculateVoiceLeadingDistance(int[] voicingA, int[] voicingB)
     {
         double distance = 0;
 
@@ -123,7 +123,7 @@ public class GeneticAlgorithm(
     }
 
     // Crossover (Uniform Crossover)
-    private List<Individual> Crossover(List<Individual> parents)
+    private static List<Individual> Crossover(List<Individual> parents)
     {
         var offspring = new List<Individual>();
 

@@ -147,7 +147,7 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
         };
     }
 
-    private AgentResponse SamePair(string label) => new()
+    private static AgentResponse SamePair(string label) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"You asked to compare {label} to itself — there's no difference. Try comparing {label} to its opposite (major↔minor) or to a specific mode (e.g. \"{label} vs dorian\").",
@@ -155,7 +155,7 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
         Evidence   = ["TheoryComparisonSkill: same-token pair"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = string.Empty,

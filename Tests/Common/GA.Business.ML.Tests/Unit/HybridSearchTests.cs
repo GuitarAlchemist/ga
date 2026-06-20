@@ -110,7 +110,7 @@ public class HybridSearchTests
         Assert.That(results.First().Doc.ChordName, Is.EqualTo("Seventh"));
     }
 
-    private ChordVoicingRagDocument CreateDoc(
+    private static ChordVoicingRagDocument CreateDoc(
         string id,
         string name,
         string diagram,

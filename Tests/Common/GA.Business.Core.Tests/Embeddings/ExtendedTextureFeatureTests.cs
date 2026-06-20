@@ -293,7 +293,7 @@ public class ExtendedTextureFeatureTests
         Assert.That(roughness, Is.GreaterThan(0.5), "Low cluster should have high roughness");
     }
 
-    private ChordVoicingRagDocument CreateTestDocument(
+    private static ChordVoicingRagDocument CreateTestDocument(
         int[] midiNotes,
         int[]? pitchClasses = null,
         int? rootPitchClass = null,

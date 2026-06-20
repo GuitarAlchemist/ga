@@ -17,7 +17,7 @@ public class TabToPitchConverter
     // String 5 (High e)= 64 (E4)
     private static readonly int[] StandardTuningOffsets = [40, 45, 50, 55, 59, 64];
 
-    public List<int> GetMidiNotes(TabSlice slice)
+    public static List<int> GetMidiNotes(TabSlice slice)
     {
         var midiNotes = new List<int>();
         if (slice.IsEmpty || slice.IsBarLine)

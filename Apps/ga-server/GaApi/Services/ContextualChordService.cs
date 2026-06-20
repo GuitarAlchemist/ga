@@ -120,7 +120,7 @@ public class ContextualChordService
 
     // ── Private helpers ──────────────────────────────────────────────────────────
 
-    private async Task<IEnumerable<ChordInContext>> GenerateChordsForModeAsync(
+    private static async Task<IEnumerable<ChordInContext>> GenerateChordsForModeAsync(
         ScaleMode baseMode, Note.Accidented root)
     {
         var templates = ChordTemplateFactory.CreateModalChords(baseMode).ToList();
@@ -171,7 +171,7 @@ public class ContextualChordService
 
     private enum ScaleType { Major, Minor }
 
-    private Result<(Note.Accidented Root, ScaleType Scale), string> ParseKey(string keyName)
+    private static Result<(Note.Accidented Root, ScaleType Scale), string> ParseKey(string keyName)
     {
         var parts   = keyName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var rootStr = parts[0];

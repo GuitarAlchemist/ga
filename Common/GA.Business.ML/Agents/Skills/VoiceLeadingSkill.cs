@@ -276,7 +276,7 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
         };
     }
 
-    private AgentResponse CannotParse(string chord) => new()
+    private static AgentResponse CannotParse(string chord) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't parse '{chord}' as a chord. Try a chord-symbol like C, Am, G7, Cmaj7, Dm7, F#m7b5, or B°.",
@@ -284,7 +284,7 @@ public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrch
         Evidence   = [$"VoiceLeadingSkill: unparseable chord token '{chord}'"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask about voice leading between two chords, e.g. \"voice leading from C to F\" or \"smoothest voicing G7 to Cmaj7\".",

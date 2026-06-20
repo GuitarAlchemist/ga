@@ -27,6 +27,16 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     public PitchClassSetId Inverse => new(MirrorValue(Value));
 
+    /// <summary>
+    ///     Gets the M5 transform — multiply every pitch class by 5 (mod 12), the circle-of-fourths transform.
+    /// </summary>
+    public PitchClassSetId M5 => new(MultiplyValue(Value, 5));
+
+    /// <summary>
+    ///     Gets the M7 transform — multiply every pitch class by 7 (mod 12). Equal to M5 of the inversion.
+    /// </summary>
+    public PitchClassSetId M7 => new(MultiplyValue(Value, 7));
+
     public string BinaryValue => Convert.ToString(Value, 2).PadLeft(12, '0');
 
     public bool IsClusterFree
@@ -81,6 +91,26 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         {
             yield return Rotate(i);
         }
+    }
+
+    /// <summary>
+    ///     Multiplies every pitch class by <paramref name="multiplier" /> (mod 12). A bijection only when the
+    ///     multiplier is coprime to 12 (1, 5, 7, 11): 5 and 7 give the M5 / M7 transforms and 11 is the inversion.
+    /// </summary>
+    public PitchClassSetId Multiply(int multiplier) => new(MultiplyValue(Value, multiplier));
+
+    private static int MultiplyValue(int value, int multiplier)
+    {
+        var result = 0;
+        for (var pc = 0; pc < 12; pc++)
+        {
+            if ((value & (1 << pc)) != 0)
+            {
+                result |= 1 << ((pc * multiplier % 12 + 12) % 12);
+            }
+        }
+
+        return result;
     }
 
     private static int MirrorValue(int value)

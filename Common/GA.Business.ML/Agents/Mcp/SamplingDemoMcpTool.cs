@@ -39,7 +39,7 @@ public sealed class SamplingDemoMcpTool
         "open an LLM connection; the client's LLM does the reasoning and returns the text. " +
         "Spike for the chatbot ↔ Claude Code parity plan — proves a Guitar Alchemist " +
         "tool can use the caller's LLM without provisioning its own.")]
-    public async Task<SamplingDemoResult> SampleAsync(
+    public static async Task<SamplingDemoResult> SampleAsync(
         McpServer server,
         [Description("The question to send to the connected client's LLM. Max 1,000 chars.")]
         string question,

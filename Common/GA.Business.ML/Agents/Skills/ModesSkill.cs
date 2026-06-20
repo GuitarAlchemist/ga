@@ -624,7 +624,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         return null;
     }
 
-    private AgentResponse FormatAtonalFamily(AtonalModalFamiliesConfig.AtonalModalFamily family)
+    private static AgentResponse FormatAtonalFamily(AtonalModalFamiliesConfig.AtonalModalFamily family)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"**{family.FamilyName}** — ICV `{family.IntervalClassVector}`, {family.NoteCount}-note set, {family.DistinctModeCount} distinct mode{(family.DistinctModeCount == 1 ? "" : "s")}{(family.IsSymmetric ? " (symmetric — modes of limited transposition)" : "")}.");
@@ -663,7 +663,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         };
     }
 
-    private AgentResponse FormatAtonalForteResults(string forte, IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> families)
+    private static AgentResponse FormatAtonalForteResults(string forte, IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> families)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"Forte number **{forte}** matches {families.Count} famil{(families.Count == 1 ? "y" : "ies")}:");
@@ -683,7 +683,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         };
     }
 
-    private AgentResponse FormatAtonalSymmetricListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> symmetric)
+    private static AgentResponse FormatAtonalSymmetricListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> symmetric)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"**{symmetric.Count} symmetric / modes-of-limited-transposition families** in the atonal catalog:");
@@ -703,7 +703,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         };
     }
 
-    private AgentResponse FormatAtonalUnnamedListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> unnamed, int total)
+    private static AgentResponse FormatAtonalUnnamedListing(IReadOnlyList<AtonalModalFamiliesConfig.AtonalModalFamily> unnamed, int total)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"**{total} modal families have no traditional name** in the atonal catalog — they're labelled `Family-{{ForteNumber}}` and indexed by interval class vector. First {unnamed.Count}:");
@@ -721,7 +721,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         };
     }
 
-    private AgentResponse FormatAtonalSummary(int total, int named, int symmetric)
+    private static AgentResponse FormatAtonalSummary(int total, int named, int symmetric)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"The **atonal modal-families catalog** has **{total} families** indexed by interval class vector (ICV):");

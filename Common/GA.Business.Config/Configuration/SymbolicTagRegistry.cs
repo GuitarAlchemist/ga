@@ -22,7 +22,7 @@ public class SymbolicTagRegistry
 
     public static SymbolicTagRegistry Instance => _instance.Value;
 
-    private string FindConfigDir()
+    private static string FindConfigDir()
     {
         var possiblePaths = new[]
         {
