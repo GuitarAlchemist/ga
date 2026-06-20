@@ -14,7 +14,7 @@ public sealed class ChatClientGroundedNarrator(
 {
     public async Task<string> NarrateAsync(string query, IReadOnlyList<CandidateVoicing> candidates)
     {
-        var systemPrompt = promptBuilder.Build(query, candidates);
+        var systemPrompt = GroundedPromptBuilder.Build(query, candidates);
         List<ChatMessage> messages =
         [
             new(ChatRole.System, systemPrompt),

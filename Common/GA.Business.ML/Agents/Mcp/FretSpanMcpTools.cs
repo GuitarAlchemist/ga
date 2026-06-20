@@ -36,7 +36,7 @@ public sealed partial class FretSpanMcpTools
         "Accepts either dash-separated (e.g. 'x-3-2-0-1-0') or compact form starting with x (e.g. 'x32010'). " +
         "Tokens are listed low-to-high (E A D G B e); 'x' = muted, '0' = open, otherwise the fret number. " +
         "Use this whenever a user asks about a chord's stretch / reach / playability / difficulty.")]
-    public FretSpanResult ComputeSpan(
+    public static FretSpanResult ComputeSpan(
         [Description("The chord diagram. Examples: 'x-3-2-0-1-0' (C major), 'x32010', '0-2-2-1-0-0' (E major). Six positions, low-to-high.")]
         string diagram)
     {

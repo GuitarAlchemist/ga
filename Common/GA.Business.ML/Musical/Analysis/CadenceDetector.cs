@@ -86,7 +86,7 @@ public class CadenceDetector
         return true;
     }
 
-    private bool IsQualityCompatible(ChordQuality input, ChordQuality pattern)
+    private static bool IsQualityCompatible(ChordQuality input, ChordQuality pattern)
     {
         if (input == pattern) return true;
         
@@ -135,7 +135,7 @@ public class CadenceDetector
             foreach (var chordName in def.Chords)
             {
                 // Use Parser
-                var root = _parser.ParseRoot(chordName);
+                var root = CadenceChordParser.ParseRoot(chordName);
                 var qual = _parser.ParseQuality(chordName);
                 
                 relativeRoots.Add(root); 

@@ -17,7 +17,7 @@ public class MusicalMotionScenariosTests
 
     private ProgressionSignalService _signalService;
 
-    private ChordVoicingRagDocument CreateChord(string name, int[] pitchClasses, double consonance = 1.0) =>
+    private static ChordVoicingRagDocument CreateChord(string name, int[] pitchClasses, double consonance = 1.0) =>
         new()
         {
             Id = name,
@@ -185,7 +185,7 @@ public class MusicalMotionScenariosTests
         return [.. intervals.Select(i => (root + i) % 12)];
     }
 
-    private int ParseRoot(string s) =>
+    private static int ParseRoot(string s) =>
         s switch
         {
             "C" => 0, "C#" => 1, "Db" => 1,

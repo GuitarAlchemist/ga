@@ -20,7 +20,7 @@ public class WaveletMotionTests
     private WaveletTransformService _waveletService;
     private ProgressionEmbeddingService _embeddingService;
 
-    private ChordVoicingRagDocument MockVoicing(int[] pcs, double consonance = 0.5, double entropy = 0.5)
+    private static ChordVoicingRagDocument MockVoicing(int[] pcs, double consonance = 0.5, double entropy = 0.5)
     {
         var emb = new float[216];
         if (emb.Length > EmbeddingSchema.SpectralEntropy)

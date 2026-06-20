@@ -11,7 +11,7 @@ public class DomainMetadataPrompter(SchemaDiscoveryService schemaService)
 {
     public string BuildSystemPrompt()
     {
-        var voc = schemaService.GetDomainVocabulary();
+        var voc = SchemaDiscoveryService.GetDomainVocabulary();
         var sb = new StringBuilder();
 
         sb.AppendLine("SYSTEM: You are a query understanding engine for the Guitar Alchemist Hybrid Search system.");

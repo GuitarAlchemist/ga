@@ -90,7 +90,7 @@ public class NaturalnessTrainingDataGenerator(ITabCorpusRepository repository)
         return rows;
     }
 
-    private List<FretboardPosition> ConvertSlice(TabSlice slice)
+    private static List<FretboardPosition> ConvertSlice(TabSlice slice)
     {
         var list = new List<FretboardPosition>();
         foreach (var note in slice.Notes)
@@ -117,7 +117,7 @@ public class NaturalnessTrainingDataGenerator(ITabCorpusRepository repository)
         return list;
     }
 
-    private List<FretboardPosition> Perturb(List<FretboardPosition> original)
+    private static List<FretboardPosition> Perturb(List<FretboardPosition> original)
     {
         // Simple perturbation: Add random offset to frets, ignoring musical validity for "Bad Fingering" simulation?
         // No, that's too easy to distinguish.
@@ -131,7 +131,7 @@ public class NaturalnessTrainingDataGenerator(ITabCorpusRepository repository)
         return shifted;
     }
 
-    private string ComputeFeatures(List<FretboardPosition> a, List<FretboardPosition> b)
+    private static string ComputeFeatures(List<FretboardPosition> a, List<FretboardPosition> b)
     {
         var avgA = a.Average(p => p.Fret);
         var avgB = b.Average(p => p.Fret);

@@ -280,13 +280,13 @@ public class ChordNamingTests
     }
 
     // Helper methods to create test chord templates
-    private ChordTemplate CreateMajorTriadTemplate()
+    private static ChordTemplate CreateMajorTriadTemplate()
     {
         var formula = CommonChordFormulas.Major;
         return ChordTemplate.Analytical.FromSetTheory(formula, "Test");
     }
 
-    private ChordTemplate CreateQuartalChordTemplate()
+    private static ChordTemplate CreateQuartalChordTemplate()
     {
         var intervals = new List<ChordFormulaInterval>
         {
@@ -297,7 +297,7 @@ public class ChordNamingTests
         return ChordTemplate.Analytical.FromSetTheory(formula, "Test");
     }
 
-    private ChordTemplate CreatePerfectFourthsTemplate()
+    private static ChordTemplate CreatePerfectFourthsTemplate()
     {
         // C-F-Bb (perfect fourths: 5 + 5 semitones)
         var intervals = new List<ChordFormulaInterval>
@@ -309,7 +309,7 @@ public class ChordNamingTests
         return ChordTemplate.Analytical.FromSetTheory(formula, "Perfect Fourths");
     }
 
-    private ChordTemplate CreateAugmentedFourthsTemplate()
+    private static ChordTemplate CreateAugmentedFourthsTemplate()
     {
         // C-F#-C (augmented fourths: 6 + 6 semitones)
         var intervals = new List<ChordFormulaInterval>

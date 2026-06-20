@@ -53,7 +53,7 @@ public class State
     }
 
     // Calculate the voice leading distance between two chords
-    public double CalculateVoiceLeadingDistance(MusicalElement chordA, MusicalElement chordB)
+    public static double CalculateVoiceLeadingDistance(MusicalElement chordA, MusicalElement chordB)
     {
         var voicingA = chordA.Voicings.First();
         var voicingB = chordB.Voicings.First();

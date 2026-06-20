@@ -12,7 +12,7 @@ public class SymbolicVectorService
 {
     public const int Dimension = 12;
 
-    public double[] ComputeEmbedding(IEnumerable<string> tags)
+    public static double[] ComputeEmbedding(IEnumerable<string> tags)
     {
         var v = new double[Dimension];
 

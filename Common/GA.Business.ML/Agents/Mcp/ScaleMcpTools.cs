@@ -38,7 +38,7 @@ public sealed class ScaleMcpTools
         "Get the 7 notes of a major or minor key (e.g. root='C', mode='major' returns C D E F G A B). " +
         "Use this whenever a user asks 'what are the notes in X major/minor', 'show me the X scale', etc. " +
         "Accepts standard root names with optional accidentals (C, F#, Bb) and mode names 'major'/'minor' (or 'maj'/'min').")]
-    public ScaleResult GetKeyNotes(
+    public static ScaleResult GetKeyNotes(
         [Description("The root note (e.g. 'C', 'F#', 'Bb'). Case-insensitive.")] string root,
         [Description("The mode — 'major' or 'minor' (also accepts 'maj' / 'min').")] string mode)
     {

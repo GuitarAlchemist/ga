@@ -40,7 +40,7 @@ public sealed class IntervalMcpTools
         "Compute the simple interval between two notes (e.g. lowerNote='C', upperNote='G' returns a perfect fifth). " +
         "Use this whenever a user asks for the interval, distance, or semitone count between two named pitches. " +
         "Accepts standard note names with optional accidentals: C, F#, Bb, etc.")]
-    public IntervalResult IntervalCompute(
+    public static IntervalResult IntervalCompute(
         [Description("The lower note name (e.g. 'C', 'F#', 'Bb').")] string lowerNote,
         [Description("The upper note name (e.g. 'G', 'A#', 'Eb').")] string upperNote)
     {

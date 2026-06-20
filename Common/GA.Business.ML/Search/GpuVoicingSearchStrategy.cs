@@ -957,7 +957,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     /// <summary>
     ///     Apply musical characteristic filters (Quick Win 3)
     /// </summary>
-    private IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
+    private static IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
         IEnumerable<VoicingEmbedding> voicings,
         VoicingSearchFilters filters) =>
         voicings.Where(v =>
@@ -1091,7 +1091,7 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     /// <summary>
     ///     Parse voicing diagram to Position list for biomechanical analysis
     /// </summary>
-    private ImmutableList<Position> ParseDiagramToPositions(string diagram)
+    private static ImmutableList<Position> ParseDiagramToPositions(string diagram)
     {
         // Diagram format: "x-3-2-0-1-0" or "3-2-0-1-0-3"
         var parts = diagram.Split('-');

@@ -35,7 +35,7 @@ public sealed class SkillMdPlugin : IChatPlugin
     /// tests so they can register against an isolated temp directory rather
     /// than mutating process env vars or the repo's real <c>skills/</c> tree.
     /// </summary>
-    internal void Register(IServiceCollection services, string path)
+    internal static void Register(IServiceCollection services, string path)
     {
         if (!Directory.Exists(path))
         {

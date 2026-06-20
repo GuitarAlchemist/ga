@@ -56,7 +56,7 @@ public sealed class MusicalQueryEncoder(
             // a real query-side ICV signal cosines against the still-misparsed corpus
             // ICV slice and skews top-K away from exact PC-set matches (see acceptance
             // criterion: OptickIntegrationTests.cs:118 — "score should rise, not fall").
-            var structure = theory.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
+            var structure = TheoryVectorService.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
             Array.Copy(structure, 0, raw, EmbeddingSchema.StructureOffset, structure.Length);
         }
 
@@ -88,7 +88,7 @@ public sealed class MusicalQueryEncoder(
         // SYMBOLIC — technique/style tags
         if (q.Tags is { Count: > 0 })
         {
-            var symbolicVec = symbolic.ComputeEmbedding(q.Tags);
+            var symbolicVec = SymbolicVectorService.ComputeEmbedding(q.Tags);
             Array.Copy(symbolicVec, 0, raw, EmbeddingSchema.SymbolicOffset, symbolicVec.Length);
         }
 
@@ -97,7 +97,7 @@ public sealed class MusicalQueryEncoder(
         // root match adds a small discriminating boost on top of set-class-level STRUCTURE.
         if (root2.HasValue)
         {
-            var rootVec = rootService.ComputeEmbedding(root2);
+            var rootVec = RootVectorService.ComputeEmbedding(root2);
             var rootPartition = EmbeddingSchema.Partitions.First(p => p.Name == "ROOT");
             Array.Copy(rootVec, 0, raw, rootPartition.Start, rootVec.Length);
         }

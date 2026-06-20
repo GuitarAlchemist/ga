@@ -201,7 +201,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         };
     }
 
-    private AgentResponse CannotParse(string key) => new()
+    private static AgentResponse CannotParse(string key) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't identify '{key}' as a key or chord shape. Try a single pitch letter optionally followed by # or b (e.g. C, G, F#, Bb) — and `m` for minor shapes (e.g. Em).",
@@ -209,7 +209,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         Evidence   = [$"CapoSkill: unparseable root token '{key}'"],
     };
 
-    private AgentResponse CannotParseFret(int fret) => new()
+    private static AgentResponse CannotParseFret(int fret) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"A capo fret of {fret} isn't valid — try a fret number between 0 (open) and 12 (octave).",
@@ -217,7 +217,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
         Evidence   = [$"CapoSkill: out-of-range fret {fret}"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask about a capo + sounding key (\"what shape do I play in E with capo 4\") or a capo + played shape (\"I play a C shape with capo 3, what does it sound like\").",

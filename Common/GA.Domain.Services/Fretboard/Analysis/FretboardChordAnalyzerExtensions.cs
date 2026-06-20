@@ -16,7 +16,7 @@ public static class FretboardChordAnalyzerExtensions
         /// <param name="maxFret">Maximum fret to consider</param>
         /// <param name="includeBiomechanicalAnalysis">Whether to include biomechanical analysis</param>
         /// <returns>Enumerable of chord analyses</returns>
-        public IEnumerable<FretboardChordAnalyzer.FretboardChordAnalysis> GenerateAllFiveFretSpanChords(
+        public static IEnumerable<FretboardChordAnalyzer.FretboardChordAnalysis> GenerateAllFiveFretSpanChords(
             int maxFret,
             bool includeBiomechanicalAnalysis = true)
         {

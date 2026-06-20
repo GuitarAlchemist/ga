@@ -270,7 +270,7 @@ public class GpuVoicingSearchPerformanceTests
         return voicings;
     }
 
-    private double[] GenerateRandomEmbedding(Random? random = null)
+    private static double[] GenerateRandomEmbedding(Random? random = null)
     {
         random ??= new();
         var embedding = new double[384]; // Standard embedding dimension
@@ -292,7 +292,7 @@ public class GpuVoicingSearchPerformanceTests
         return embedding;
     }
 
-    private VoicingEmbedding CreateVoicing(string id, double[] embedding)
+    private static VoicingEmbedding CreateVoicing(string id, double[] embedding)
     {
         // Pad to 384 dimensions if needed
         var paddedEmbedding = new double[384];

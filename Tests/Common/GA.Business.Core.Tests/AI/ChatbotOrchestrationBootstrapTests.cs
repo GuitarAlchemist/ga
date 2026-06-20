@@ -90,7 +90,7 @@ public class ChatbotOrchestrationBootstrapTests
         BuildServiceCollection();
 
         var tool = new DslEvalMcpTools();
-        var visible = tool.ListClosures().Closures.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
+        var visible = DslEvalMcpTools.ListClosures().Closures.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
 
         Assert.Multiple(() =>
         {

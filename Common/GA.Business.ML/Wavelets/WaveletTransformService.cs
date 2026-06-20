@@ -84,7 +84,7 @@ public class WaveletTransformService
         return [.. features];
     }
 
-    private (double[] Approximation, double[] Detail) Step(double[] signal, double[] h, double[] g)
+    private static (double[] Approximation, double[] Detail) Step(double[] signal, double[] h, double[] g)
     {
         var n = signal.Length;
         var filterLen = h.Length;
@@ -113,7 +113,7 @@ public class WaveletTransformService
         return (apx, det);
     }
 
-    private (double[] h, double[] g) GetFilters(WaveletFamily family) => family switch
+    private static (double[] h, double[] g) GetFilters(WaveletFamily family) => family switch
     {
         WaveletFamily.Haar => (
             [0.7071067811865476, 0.7071067811865476],
@@ -126,7 +126,7 @@ public class WaveletTransformService
         _ => throw new NotSupportedException()
     };
 
-    private double[] ComputeStats(double[] data)
+    private static double[] ComputeStats(double[] data)
     {
         if (data.Length == 0) return [0.0, 0.0, 0.0, 0.0];
 

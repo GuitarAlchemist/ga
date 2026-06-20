@@ -35,7 +35,7 @@ E|---3---|
         var noteSlice = block.Slices.FirstOrDefault(s => s.Notes.Count > 0);
         var lowE = noteSlice?.Notes.FirstOrDefault(n => n.StringIndex == 0);
         var highE = noteSlice?.Notes.FirstOrDefault(n => n.StringIndex == 5);
-        var midi = noteSlice != null ? _converter.GetMidiNotes(noteSlice) : [];
+        var midi = noteSlice != null ? TabToPitchConverter.GetMidiNotes(noteSlice) : [];
 
         // Assert
         TestContext.WriteLine($"Tokenized Tab:\n{tab}");

@@ -268,7 +268,7 @@ public class MonadicChordService(
         }, "GetAvailableStackingTypes");
 
     // Validation helpers
-    private Validation<(string, int), ValidationError> ValidateQualityParameter(
+    private static Validation<(string, int), ValidationError> ValidateQualityParameter(
         string quality, int limit)
     {
         var errors = new List<ValidationError>();
@@ -299,7 +299,7 @@ public class MonadicChordService(
             : Validation.Success<(string, int), ValidationError>((quality, limit));
     }
 
-    private Validation<(string, int), ValidationError> ValidateExtensionParameter(
+    private static Validation<(string, int), ValidationError> ValidateExtensionParameter(
         string extension, int limit)
     {
         var errors = new List<ValidationError>();
@@ -329,7 +329,7 @@ public class MonadicChordService(
             : Validation.Success<(string, int), ValidationError>((extension, limit));
     }
 
-    private Validation<(string, int), ValidationError> ValidateStackingTypeParameter(
+    private static Validation<(string, int), ValidationError> ValidateStackingTypeParameter(
         string stackingType, int limit)
     {
         var errors = new List<ValidationError>();

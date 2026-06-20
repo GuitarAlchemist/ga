@@ -49,7 +49,7 @@ public sealed partial class ChordMcpTools
         "Use this whenever a user asks for the notes / intervals / construction of a named chord. " +
         "Supports major, minor (m/min), diminished (dim), augmented (aug), dominant 7 (just '7'), " +
         "major 7 (maj7/M7), minor 7 (m7/min7), diminished 7 (dim7), and half-diminished (m7b5).")]
-    public ChordResult GetChordInfo(
+    public static ChordResult GetChordInfo(
         [Description("The chord symbol — root note plus optional quality suffix. Examples: 'C', 'Cm', 'Cmaj7', 'F#dim', 'Bbm7', 'Aaug', 'Cdim7', 'Bm7b5'.")]
         string chordSymbol)
     {

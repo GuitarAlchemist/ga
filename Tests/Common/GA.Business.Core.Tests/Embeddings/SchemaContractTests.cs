@@ -221,8 +221,8 @@ public class SchemaContractTests
         // Arrange
         var identityService = new IdentityVectorService();
         // Act
-        var voicingIdentity = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Voicing);
-        var scaleIdentity = identityService.ComputeEmbedding(IdentityVectorService.ObjectKind.Scale);
+        var voicingIdentity = IdentityVectorService.ComputeEmbedding(IdentityVectorService.ObjectKind.Voicing);
+        var scaleIdentity = IdentityVectorService.ComputeEmbedding(IdentityVectorService.ObjectKind.Scale);
         // Assert
         TestContext.WriteLine($"Voicing Identity: [{string.Join(", ", voicingIdentity.Select(x => x.ToString("F1")))}]");
         TestContext.WriteLine($"Scale Identity: [{string.Join(", ", scaleIdentity.Select(x => x.ToString("F1")))}]");

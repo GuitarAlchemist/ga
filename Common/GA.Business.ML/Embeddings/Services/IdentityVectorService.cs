@@ -20,7 +20,7 @@ public class IdentityVectorService
 
     public const int Dimension = 6;
 
-    public double[] ComputeEmbedding(ObjectKind kind)
+    public static double[] ComputeEmbedding(ObjectKind kind)
     {
         var v = new double[Dimension];
 
