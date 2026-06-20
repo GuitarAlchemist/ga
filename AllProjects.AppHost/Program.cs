@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Initialize ILGPU for GPU acceleration
@@ -19,12 +21,6 @@ var redis = builder.AddRedis("redis")
     .WithRedisCommander()
     .WithDataVolume("ga-redis-data");
 
-// Add FalkorDB (Redis-compatible graph database for Graphiti)
-// Changed port from 6379 to 6380 to avoid conflict with Docker/WSL
-var falkordb = builder.AddContainer("falkordb", "falkordb/falkordb", "edge")
-    .WithHttpEndpoint(6380, 6379, "tcp")
-    .WithBindMount("ga-falkordb-data", "/data");
-
 // Add MongoDB with MongoExpress UI
 var mongodb = builder.AddMongoDB("mongodb")
     .WithMongoExpress()
@@ -32,19 +28,36 @@ var mongodb = builder.AddMongoDB("mongodb")
 
 var mongoDatabase = mongodb.AddDatabase("guitar-alchemist");
 
-// Add Graphiti Service (Python-based temporal knowledge graph)
-// Must be added before GaApi so it can be referenced
-builder.AddContainer("graphiti-service", "ga-graphiti-service")
-    .WithDockerfile("../Apps/ga-graphiti-service")
-    .WithHttpEndpoint(8000, 8000, "http")
-    .WithEnvironment("API_HOST", "0.0.0.0")
-    .WithEnvironment("API_PORT", "8000")
-    .WithEnvironment("DEBUG", "false")
-    .WithEnvironment("MONGODB_URI", mongoDatabase)
-    .WithEnvironment("FALKORDB_HOST", "falkordb")
-    .WithEnvironment("FALKORDB_PORT", "6380")
-    .WithEnvironment("FALKORDB_DATABASE", "graphiti")
-    .WithExternalHttpEndpoints();
+// Graphiti temporal knowledge graph (FalkorDB + Python service).
+// Fenced off behind Features:Graphiti (default false): as of 2026-06 this stack
+// has NO runtime consumer — GA.Business.Graphiti is referenced by zero .csproj
+// files, is never DI-registered, and the GaApi /api/graphiti YARP route is an
+// unused passthrough. The Python backend is a stub returning hardcoded values and
+// has had no feature work since 2025-11. Booting two containers (FalkorDB +
+// graphiti-service, the latter also needing Ollama) on every start-all for nobody
+// reads as live infra when it isn't. Flip the flag to true only when a real
+// learning-analytics / personalization consumer exists. Audit: assistant 2026-06-19.
+if (builder.Configuration.GetValue<bool>("Features:Graphiti"))
+{
+    // FalkorDB (Redis-compatible graph database for Graphiti).
+    // Port 6380 instead of 6379 to avoid conflict with Docker/WSL.
+    builder.AddContainer("falkordb", "falkordb/falkordb", "edge")
+        .WithHttpEndpoint(6380, 6379, "tcp")
+        .WithBindMount("ga-falkordb-data", "/data");
+
+    // Graphiti Service (Python-based temporal knowledge graph).
+    builder.AddContainer("graphiti-service", "ga-graphiti-service")
+        .WithDockerfile("../Apps/ga-graphiti-service")
+        .WithHttpEndpoint(8000, 8000, "http")
+        .WithEnvironment("API_HOST", "0.0.0.0")
+        .WithEnvironment("API_PORT", "8000")
+        .WithEnvironment("DEBUG", "false")
+        .WithEnvironment("MONGODB_URI", mongoDatabase)
+        .WithEnvironment("FALKORDB_HOST", "falkordb")
+        .WithEnvironment("FALKORDB_PORT", "6380")
+        .WithEnvironment("FALKORDB_DATABASE", "graphiti")
+        .WithExternalHttpEndpoints();
+}
 
 // Add HandPoseService (Python-based hand pose detection using MediaPipe)
 builder.AddContainer("hand-pose-service", "hand-pose-service")
