@@ -94,35 +94,18 @@ if (Test-Path "state/quality/$domain/.STOP") {
     exit 0
 }
 
-# 3. Cross-repo HALT-ALL marker (overseer Phase 1).
-# Opportunistic check: if ~/.demerzel/HALT-ALL exists, every loop in every
-# sibling repo MUST pause. See docs/contracts/2026-05-16-overseer-halt-marker.contract.md
-# for the schema. If the file is unreadable / dir is missing / agent is in
-# exempt_agents, fall through silently — per-repo .loop-halted above is the
-# authoritative offline fallback (D-offline-fallback in the strategic plan).
-$haltMarker = Join-Path $env:USERPROFILE '.demerzel\HALT-ALL'
-if (-not $env:USERPROFILE) { $haltMarker = Join-Path $env:HOME '.demerzel/HALT-ALL' }
-if (Test-Path $haltMarker) {
-    try {
-        $halt = Get-Content $haltMarker -Raw | ConvertFrom-Json
-        $expired = $halt.expires_at -and ([datetime]::Parse($halt.expires_at) -lt (Get-Date).ToUniversalTime())
-        $exempt  = $halt.exempt_agents -and ($halt.exempt_agents -contains 'auto-optimize')
-        $unknownVersion = $halt.schema_version -ne 1
-        if ($unknownVersion) {
-            Write-Host "Cross-repo HALT-ALL marker has unknown schema_version=$($halt.schema_version) — failing closed" -ForegroundColor Red
-            exit 0
-        }
-        if (-not $expired -and -not $exempt -and ($halt.scope -in @($null, 'loops-only', 'loops-and-batch', 'global'))) {
-            Write-Host "Halted by overseer at $($halt.halted_at):" -ForegroundColor Red
-            Write-Host "  reason: $($halt.reason)" -ForegroundColor DarkYellow
-            Write-Host "  halted_by: $($halt.halted_by)" -ForegroundColor DarkYellow
-            Write-Host "  To resume: delete $haltMarker (or wait for expires_at)" -ForegroundColor DarkYellow
-            exit 0
-        }
-    } catch {
-        # Unreadable / unparseable marker → fall through to per-repo halt
-        Write-Host "Cross-repo HALT-ALL marker unreadable; falling back to per-repo killswitch" -ForegroundColor DarkGray
-    }
+# 3. Cross-repo HALT-ALL marker (overseer Phase 1) + per-repo kill switch, via the
+# ONE governance gate. The fail-closed contract parse (schema_version / expires_at /
+# exempt_agents / scope) lives in Scripts/Governance.psm1 — tested in
+# Scripts/Governance.test.ps1 — not copy-pasted here. See
+# docs/contracts/2026-05-16-overseer-halt-marker.contract.md for the obligations.
+Import-Module ./Scripts/Governance.psm1 -Force
+$gate = Test-GovernanceGate -AgentId 'auto-optimize'
+if ($gate.Halted) {
+    Write-Host "Halted ($($gate.Source)): $($gate.Reason)" -ForegroundColor Red
+    if ($gate.HaltedBy) { Write-Host "  halted_by: $($gate.HaltedBy)" -ForegroundColor DarkYellow }
+    Write-Host "  To resume: clear state/.loop-halted or ~/.demerzel/HALT-ALL (or wait for expires_at)" -ForegroundColor DarkYellow
+    exit 0
 }
 
 # 4. Demerzel governance check (only if mcp__demerzel server is wired)

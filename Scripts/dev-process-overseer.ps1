@@ -20,6 +20,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# The governance gate (HALT-ALL + local kill switch, fail-closed). Single authority —
+# this script previously checked ONLY the local switch and silently ignored a
+# cross-repo HALT-ALL (the divergence the contract flagged as a deferred follow-up).
+Import-Module (Join-Path $PSScriptRoot 'Governance.psm1') -Force
+
 function Add-Finding {
     param(
         [System.Collections.Generic.List[object]]$Findings,
@@ -128,17 +133,25 @@ function Get-DomainFromBaselinePath {
 $findings = [System.Collections.Generic.List[object]]::new()
 $statusEntries = @(Get-GitStatusEntries -RepoRoot $RepoRoot)
 $baselineFiles = @(Get-BaselineFiles -RepoRoot $RepoRoot -Domain $Domain)
-$loopHaltedPath = Join-Path $RepoRoot 'state/.loop-halted'
-
 $branch = ''
 $headSha = ''
 try { $branch = (& git -C $RepoRoot branch --show-current 2>$null) } catch { }
 try { $headSha = (& git -C $RepoRoot rev-parse --short HEAD 2>$null) } catch { }
 
-if (Test-Path -LiteralPath $loopHaltedPath) {
-    Add-Finding $findings 'block' 'global-loop-halted' `
-        'The global loop kill switch is active.' `
-        'Do not start /loop or /goal automation until state/.loop-halted is intentionally cleared.'
+# Cross-repo HALT-ALL + per-repo kill switch, via the one governance gate.
+$gate = Test-GovernanceGate -AgentId 'dev-process-overseer' -RepoRoot $RepoRoot
+if ($gate.Halted) {
+    if ($gate.Source -in @('halt-all', 'unknown-version')) {
+        $detail = if ($gate.Reason) { ": $($gate.Reason)" } else { '' }
+        $who    = if ($gate.HaltedBy) { " (by $($gate.HaltedBy))" } else { '' }
+        Add-Finding $findings 'block' 'overseer-halt-all' `
+            "Cross-repo HALT-ALL is active$detail$who." `
+            'Every loop in every sibling repo must pause until ~/.demerzel/HALT-ALL is cleared (or expires).'
+    } else {
+        Add-Finding $findings 'block' 'global-loop-halted' `
+            'The global loop kill switch is active.' `
+            'Do not start /loop or /goal automation until state/.loop-halted is intentionally cleared.'
+    }
 }
 
 if (-not $baselineFiles) {
