@@ -1,8 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System.Diagnostics;
-using static PitchClassSetIdEquivalences.Relationship;
-
 public sealed class PitchClassSetIdEquivalences
 {
     public enum RelationshipKind
@@ -12,71 +9,17 @@ public sealed class PitchClassSetIdEquivalences
         Rotation
     }
 
-    private static readonly Lazy<PitchClassSetIdEquivalences> _lazyInstance = new(Create);
+    private static readonly Lazy<PitchClassSetIdEquivalences> _lazyInstance = new(() => new PitchClassSetIdEquivalences());
     public static PitchClassSetIdEquivalences Instance => _lazyInstance.Value;
 
-    private static PitchClassSetIdEquivalences Create()
-    {
-        var idsByIntervalClassVectorId =
-            PitchClassSetId.Items.ToLookup(id => id.ToPitchClassSet().IntervalClassVector.Id, id => id);
-
-        var aaa = PitchClassSetId.Items.Where(id => id.ToPitchClassSet().IntervalClassVector.Id == 271296)
-            .ToImmutableList();
-
-        var primeFormIds = ImmutableSortedSet.CreateBuilder<PitchClassSetId>();
-        foreach (var grouping in idsByIntervalClassVectorId)
-        {
-            var primeForm = grouping.Order().First();
-            primeFormIds.Add(primeForm);
-        }
-
-        foreach (var grouping in idsByIntervalClassVectorId)
-        {
-            if (grouping.Key == 271296)
-            {
-                Debugger.Break();
-            }
-
-            var relationships = new HashSet<Relationship>();
-            foreach (var id in grouping)
-            {
-                // Complement relationship
-                relationships.Add(new Complement(new(id, id.Complement)));
-
-                // Inversion relationship
-                relationships.Add(new Inversion(new(id, id.Inverse)));
-
-                // Rotation relationship (1:*)
-                var idRotations = id.GetRotations().ToImmutableSortedSet();
-                var rotationIndex = 0;
-                foreach (var rotationId in idRotations)
-                {
-                    if (!id.Equals(rotationId))
-                    {
-                        relationships.Add(new Rotation(new(id, rotationId), rotationIndex));
-                    }
-
-                    rotationIndex++;
-                }
-            }
-
-            var relationshipsByKind = relationships.ToLookup(relationship => relationship.Kind);
-            var complements = relationshipsByKind[RelationshipKind.Complement].ToImmutableSortedSet();
-            var inversions = relationshipsByKind[RelationshipKind.Inversion].ToImmutableSortedSet();
-            var rotations = relationshipsByKind[RelationshipKind.Rotation].ToImmutableSortedSet();
-
-            var complementsById = complements.ToDictionary(relationship => relationship.Key.Id1.ToPitchClassSet(),
-                relationship => relationship.Key.Id2.ToPitchClassSet());
-            var inversionsById = inversions.ToDictionary(relationship => relationship.Key.Id1.ToPitchClassSet(),
-                relationship => relationship.Key.Id2.ToPitchClassSet());
-            var rotationsById = rotations.ToLookup(relationship => relationship.Key.Id1.ToPitchClassSet(),
-                relationship => relationship.Key.Id2.ToPitchClassSet());
-        }
-
-        // TODO: Finish implementation
-
-        return new();
-    }
+    /// <summary>
+    ///     Gets the complement / inversion / rotation relationships for a pitch-class-set id.
+    /// </summary>
+    /// <remarks>
+    ///     The id-level view of the equivalence relations. For the OPTIC-K (complement) grouping over
+    ///     set classes, see <see cref="OpticKClass" />.
+    /// </remarks>
+    public SetClassFeatures GetFeatures(PitchClassSetId id) => new(id);
 
     public sealed class SetClassFeatures(PitchClassSetId id)
     {

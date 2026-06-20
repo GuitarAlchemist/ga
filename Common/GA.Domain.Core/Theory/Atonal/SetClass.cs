@@ -29,6 +29,7 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     private Complex[]? _fourierCoefficients;
     private double[]? _magnitudeSpectrum;
     private double? _spectralCentroid;
+    private SetClass? _complement;
 
     /// <summary>
     ///     Gets all modal set classes
@@ -51,6 +52,18 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     public PitchClassSet PrimeForm { get; } = pitchClassSet.PrimeForm ??
                                               throw new ArgumentException("Invalid pitch class set",
                                                   nameof(pitchClassSet));
+
+    /// <summary>
+    ///     Gets the complement <see cref="SetClass" /> — OPTIC-K's K operation (complementation).
+    /// </summary>
+    /// <remarks>
+    ///     K (complementation) is the top rung of the Callender–Quinn–Tymoczko OPTIC hierarchy
+    ///     (<see href="https://harmoniousapp.net/p/ec/Equivalence-Groups" />). For a cardinality-k set class
+    ///     this returns a cardinality-(12−k) set class; a self-complementary hexachord returns an equal set
+    ///     class. Complementation is an involution: <c>sc.Complement.Complement == sc</c>. The grouping of
+    ///     set classes with their complements is materialised by <see cref="OpticKClass" />.
+    /// </remarks>
+    public SetClass Complement => _complement ??= new SetClass(PrimeForm.Complement.PrimeForm!);
 
     /// <summary>
     ///     Gets the <see cref="ModalFamily" /> of the set class, if it exists
