@@ -46,6 +46,27 @@ at layer 4, orchestration at 5; never in lower layers.
   (`WeightedPartitionCosine`); equals the dot product of the two **compact** vectors
   (`ExtractCompact`, per-partition L2 × √weight) by construction — corpus build, query encode,
   and the CPU/GPU scorers all cross these layout operations rather than re-deriving offsets/weights.
+- **Voicing search strategy** — an interchangeable retrieval backend behind `IVoicingSearchStrategy`.
+  Three exist: **OPTK-mmap** (`OptickSearchStrategy`) is the **production default** whenever the index
+  file is present; **CPU-Parallel** and **GPU** (ILGPU) are the fallback / explicit-opt-in pair. They
+  are *not* equivalent — see *metadata-filter parity*.
+- **Metadata-filter parity** — the invariant that the **CPU and GPU** strategies apply the *same
+  filter predicate*, so the same voicings **pass the filter** for a given `VoicingSearchFilters`. Owned
+  by the shared `VoicingFilterEngine`, the single metadata predicate both cross. **Predicate parity, not
+  result-set parity:** the strategies *score* differently (`TextEmbedding ?? Embedding` + symbolic
+  boosting on CPU; musical `Embedding` on GPU), so a score-ordered `Take(limit)` returns different
+  top-K subsets once survivors exceed `limit`. The guarantee is "same candidates pass the filter," not
+  "same voicings returned." **Scoped to CPU↔GPU by design:** OPTK-mmap honors only the filters its index
+  carries (chord-quality, instrument, MIDI range) and is *excluded* from parity — its reduced filter set
+  is **index-bound, not a bug**. A strategy declares what it cannot honor via `IVoicingSearchStrategy` so
+  the gap is observable (telemetry `dropped`), never silent. See
+  `docs/adr/0002-voicing-filter-parity-cpu-gpu-only.md`.
+- **Metadata filter vs comfort filter** — two filter seams with **opposite unknown-bias**, deliberately.
+  A **metadata filter** reads a stored attribute and is *strict*: a voicing missing the attribute
+  **fails** the filter (`VoicingFilterEngine`). A **comfort filter** (`MinComfortScore`,
+  `MustBeErgonomic`) is *analysis-derived* from the diagram via the biomechanical analyzer and is
+  *lenient*: a voicing whose diagram can't be parsed **passes** (don't punish what we couldn't
+  analyze). The comfort predicate is a shared seam every strategy crosses, not a GPU-only step.
 - **Prime form vs normal form (atonal)** — two different canonicalizations, often confused. **Prime
   form** = the minimal-packed-id representative, owned by `PitchClassSetId`: `PrimeForm` folds in
   transposition *and* inversion (the OPTIC / set-class representative, what `PitchClassSet.PrimeForm`

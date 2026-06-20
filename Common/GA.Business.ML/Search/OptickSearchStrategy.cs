@@ -65,7 +65,14 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
             };
             var poolSize = Math.Max(limit * 10, 100);
             var pool = SearchInternal(queryEmbedding, poolSize, instrument, "hybrid search", cancellationToken);
-            return ApplyFilters(pool, filters).Take(limit).ToList();
+            // Index-bound metadata filters (ApplyFilters) + the shared comfort seam. Comfort is the one
+            // rich filter OPTK *can* honor without a reindex — it only needs the diagram, which the index
+            // carries. The ~30 metadata filters it can't back are surfaced via UnsupportedPopulatedFilters
+            // (telemetry `dropped`) rather than silently ignored. See ADR-0002.
+            return ApplyFilters(pool, filters)
+                .Where(r => VoicingComfortFilter.Matches(r.Document.Diagram, filters))
+                .Take(limit)
+                .ToList();
         }, cancellationToken);
 
     public Task<List<VoicingSearchResult>> FindSimilarVoicingsAsync(
@@ -91,6 +98,66 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     {
         var avg = _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTicks / _totalSearches) : TimeSpan.Zero;
         return new VoicingSearchStats(_reader.Count, 0, avg, _totalSearches);
+    }
+
+    /// <summary>
+    ///     The populated filters OPTK structurally cannot honor — its mmap index carries only diagram,
+    ///     inferred quality, instrument, and MIDI notes (ADR-0002). It honors: <c>ChordName</c>,
+    ///     <c>MinMidiPitch</c>/<c>MaxMidiPitch</c>, <c>VoicingType</c> <i>only</i> as an instrument route
+    ///     (guitar/bass/ukulele), and the diagram-derived comfort filters
+    ///     (<c>MinComfortScore</c>/<c>MustBeErgonomic</c>/<c>HandSize</c>). Everything else, if populated,
+    ///     is dropped — listed here so the caller-side telemetry can record it instead of dropping silently.
+    ///     (<c>SymbolicBitIndices</c> is a ranking signal, not a filter, so it is out of scope.)
+    /// </summary>
+    public IReadOnlyList<string> UnsupportedPopulatedFilters(VoicingSearchFilters f) =>
+        ComputeUnsupportedFilters(f);
+
+    /// <summary>
+    ///     Pure (index-independent) drop-list logic, factored out so it is unit-testable without an
+    ///     on-disk OPTK index. See <see cref="UnsupportedPopulatedFilters"/>.
+    /// </summary>
+    internal static IReadOnlyList<string> ComputeUnsupportedFilters(VoicingSearchFilters f)
+    {
+        var dropped = new List<string>();
+
+        // VoicingType is honored ONLY as an instrument route; any other value (drop2, shell, …) is dropped.
+        if (f.VoicingType is { Length: > 0 } vt &&
+            vt.ToLowerInvariant() is not ("guitar" or "bass" or "ukulele"))
+        {
+            dropped.Add(nameof(f.VoicingType));
+        }
+
+        if (f.Difficulty is not null) dropped.Add(nameof(f.Difficulty));
+        if (f.Position is not null) dropped.Add(nameof(f.Position));
+        if (f.ModeName is not null) dropped.Add(nameof(f.ModeName));
+        if (f.Tags is { Length: > 0 }) dropped.Add(nameof(f.Tags));
+        if (f.MinFret.HasValue) dropped.Add(nameof(f.MinFret));
+        if (f.MaxFret.HasValue) dropped.Add(nameof(f.MaxFret));
+        if (f.RequireBarreChord.HasValue) dropped.Add(nameof(f.RequireBarreChord));
+        if (f.MaxFingerStretch.HasValue) dropped.Add(nameof(f.MaxFingerStretch));
+        if (f.IsOpenVoicing.HasValue) dropped.Add(nameof(f.IsOpenVoicing));
+        if (f.IsRootless.HasValue) dropped.Add(nameof(f.IsRootless));
+        if (f.DropVoicing is { Length: > 0 }) dropped.Add(nameof(f.DropVoicing));
+        if (f.CagedShape is { Length: > 0 }) dropped.Add(nameof(f.CagedShape));
+        if (f.StackingType is not null) dropped.Add(nameof(f.StackingType));
+        if (f.IsSlashChord.HasValue) dropped.Add(nameof(f.IsSlashChord));
+        if (f.FingerCount.HasValue) dropped.Add(nameof(f.FingerCount));
+        if (f.SetClassId is not null) dropped.Add(nameof(f.SetClassId));
+        if (f.RahnPrimeForm is not null) dropped.Add(nameof(f.RahnPrimeForm));
+        if (f.HarmonicFunction is not null) dropped.Add(nameof(f.HarmonicFunction));
+        if (f.IsNaturallyOccurring.HasValue) dropped.Add(nameof(f.IsNaturallyOccurring));
+        if (f.HasGuideTones.HasValue) dropped.Add(nameof(f.HasGuideTones));
+        if (f.Inversion.HasValue) dropped.Add(nameof(f.Inversion));
+        if (f.MinConsonance.HasValue) dropped.Add(nameof(f.MinConsonance));
+        if (f.MinBrightness.HasValue) dropped.Add(nameof(f.MinBrightness));
+        if (f.MaxBrightness.HasValue) dropped.Add(nameof(f.MaxBrightness));
+        if (f.OmittedTones is { Length: > 0 }) dropped.Add(nameof(f.OmittedTones));
+        if (f.TopPitchClass.HasValue) dropped.Add(nameof(f.TopPitchClass));
+        if (f.TexturalDescriptionContains is not null) dropped.Add(nameof(f.TexturalDescriptionContains));
+        if (f.DoubledTonesContain is { Length: > 0 }) dropped.Add(nameof(f.DoubledTonesContain));
+        if (f.AlternateNameMatch is not null) dropped.Add(nameof(f.AlternateNameMatch));
+
+        return dropped;
     }
 
     public void Dispose() => _reader.Dispose();

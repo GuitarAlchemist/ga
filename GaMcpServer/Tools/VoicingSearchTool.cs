@@ -184,9 +184,11 @@ public static class VoicingSearchTool
         // Filter by instrument via hybrid search path so the mmap's per-instrument
         // slice is used when requested.
         List<GA.Business.ML.Search.VoicingSearchResult> hits;
+        IReadOnlyList<string>? dropped = null;
         if (!string.IsNullOrWhiteSpace(effectiveInstrument))
         {
             var filters = new GA.Business.ML.Search.VoicingSearchFilters(VoicingType: effectiveInstrument);
+            dropped = Strategy.Value.UnsupportedPopulatedFilters(filters) is { Count: > 0 } d ? d : null;
             hits = await Strategy.Value.HybridSearchAsync(queryVector, filters, limit);
         }
         else
@@ -206,7 +208,8 @@ public static class VoicingSearchTool
             ResultCount = hits.Count,
             TopScore = hits.Count > 0 ? Math.Round(hits[0].Score, 4) : null,
             InstrumentFilter = effectiveInstrument,
-            LatencyMs = stopwatch.Elapsed.TotalMilliseconds
+            LatencyMs = stopwatch.Elapsed.TotalMilliseconds,
+            Dropped = dropped
         });
 
         return JsonSerializer.Serialize(new

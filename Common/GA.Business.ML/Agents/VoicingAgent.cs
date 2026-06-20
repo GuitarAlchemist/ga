@@ -1,5 +1,6 @@
 namespace GA.Business.ML.Agents;
 
+using System.Diagnostics;
 using System.Text;
 using GA.Business.ML.Search;
 using Microsoft.Extensions.AI;
@@ -80,6 +81,7 @@ public sealed class VoicingAgent(
         var filters = BuildSearchFilters(structured);
 
         Task<double[]> Generator(string _) => Task.FromResult(queryVector);
+        var searchSw = Stopwatch.StartNew();
         var results = await voicingSearch.SearchAsync(
             request.Query, Generator, limit, filters, cancellationToken);
 
@@ -96,6 +98,31 @@ public sealed class VoicingAgent(
             results = await voicingSearch.SearchAsync(
                 request.Query, Generator, limit, filters with { ChordName = null }, cancellationToken);
         }
+        searchSw.Stop();
+
+        // One telemetry record per voicing query — the rich-filter chatbot path, previously
+        // untelemetered. `dropped` records which requested filters the active strategy could not
+        // honor (e.g. ModeName/Tags on the index-bound OPTK production path), the evidence that
+        // scopes the index-enrichment reindex (ADR-0002). It reflects the ORIGINAL filters the user
+        // asked for, not the geometric-fallback retry. Logged before the empty-result early return
+        // so zero-result queries — the highest-value signal — are captured too.
+        VoicingTelemetryLog.Append(new VoicingTelemetryRecord
+        {
+            Timestamp = DateTime.UtcNow.ToString("o"),
+            Source = "chatbot",
+            Query = request.Query,
+            Chord = structured.ChordSymbol,
+            Mode = structured.ModeName,
+            Tags = structured.Tags,
+            ResultCount = results.Count,
+            TopScore = results.Count > 0 ? Math.Round(results[0].Score, 4) : null,
+            InstrumentFilter = structured.Instrument,
+            LatencyMs = searchSw.Elapsed.TotalMilliseconds,
+            Dropped = filters is not null
+                      && voicingSearch.UnsupportedPopulatedFilters(filters) is { Count: > 0 } drop
+                ? drop
+                : null,
+        });
 
         if (results.Count == 0)
         {

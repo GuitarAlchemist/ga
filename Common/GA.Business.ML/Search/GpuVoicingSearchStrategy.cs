@@ -1,14 +1,8 @@
 ﻿namespace GA.Business.ML.Search;
 
-using System.Collections.Immutable;
 using System.Diagnostics;
 using Rag.Models;
 using GA.Domain.Services.Fretboard.Voicings.Core;
-using GA.Domain.Core.Instruments.Biomechanics;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives.Notes;
-using Domain.Services.Fretboard.Biomechanics;
 using ILGPU;
 using ILGPU.Runtime;
 
@@ -246,18 +240,15 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
             try
             {
-                // All metadata filters cross the shared VoicingFilterEngine — the SAME predicate the CPU
-                // strategy uses — so the two paths can't disagree (architecture review #2; previously this
-                // adapter had its own drifted copy: Tags ANY vs ALL, VoicingType == vs Contains, not
-                // null-safe/case-insensitive, and it silently skipped SetClassId/FingerCount/ChordName/…).
-                var filteredVoicings = _voicings.Values.Where(v => VoicingFilterEngine.Matches(v, filters));
-
-                // Comfort / ergonomic filters need the BiomechanicalAnalyzer service, so they stay layered
-                // here. (The metadata HandStretch/MaxFingerStretch fast path moved into the engine.)
-                if (filters.MinComfortScore.HasValue || (filters.MustBeErgonomic ?? false))
-                {
-                    filteredVoicings = ApplyComfortFilters(filteredVoicings, filters);
-                }
+                // Metadata predicate + comfort predicate both cross shared seams (VoicingFilterEngine /
+                // VoicingComfortFilter) — the SAME ones the CPU strategy uses — so the two paths agree on
+                // which voicings PASS THE FILTER (predicate parity). The returned top-K may still differ
+                // under truncation (they score differently), so this is not result-set parity. Comfort
+                // moved out of this adapter (it never needed the GPU: the BiomechanicalAnalyzer is pure
+                // C# over the diagram). See ADR-0002.
+                var filteredVoicings = _voicings.Values
+                    .Where(v => VoicingFilterEngine.Matches(v, filters))
+                    .Where(v => VoicingComfortFilter.Matches(v.Diagram, filters));
 
                 var filteredIds = filteredVoicings.Select(v => v.Id).ToList();
                 var similarities = CalculateFilteredSimilaritiesIlgpu(queryEmbedding, filteredIds);
@@ -796,82 +787,5 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         {
             _totalSearchTime = _totalSearchTime.Add(elapsed);
         }
-    }
-
-    /// <summary>
-    ///     Apply biomechanical filters to voicings (Quick Win 1)
-    /// </summary>
-    // Comfort / ergonomic filters need the full BiomechanicalAnalyzer (the metadata HandStretch /
-    // MaxFingerStretch fast path now lives in VoicingFilterEngine). Called only when MinComfortScore or
-    // MustBeErgonomic is set. All other filters — including the musical-characteristic ones that used to
-    // live in ApplyMusicalFilters — are handled by the shared engine, so CPU and GPU agree.
-    private IEnumerable<VoicingEmbedding> ApplyComfortFilters(
-        IEnumerable<VoicingEmbedding> voicings,
-        VoicingSearchFilters filters)
-    {
-        var analyzer = new BiomechanicalAnalyzer(filters.HandSize ?? HandSize.Medium);
-
-        return voicings.Where(v =>
-        {
-            var positions = ParseDiagramToPositions(v.Diagram);
-            if (positions.Count == 0)
-            {
-                return true; // keep voicings we can't analyze
-            }
-
-            var analysis = analyzer.AnalyzeChordPlayability(positions);
-
-            if (filters.MinComfortScore.HasValue && analysis.Comfort < filters.MinComfortScore.Value)
-            {
-                return false;
-            }
-
-            if (filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value &&
-                analysis.WristPostureAnalysis != null && !analysis.WristPostureAnalysis.IsErgonomic)
-            {
-                return false;
-            }
-
-            return true;
-        });
-    }
-
-    /// <summary>
-    ///     Parse voicing diagram to Position list for biomechanical analysis
-    /// </summary>
-    private static ImmutableList<Position> ParseDiagramToPositions(string diagram)
-    {
-        // Diagram format: "x-3-2-0-1-0" or "3-2-0-1-0-3"
-        var parts = diagram.Split('-');
-        var positions = new List<Position>();
-
-        for (var i = 0; i < parts.Length && i < 6; i++)
-        {
-            var part = parts[i].Trim();
-            var str = new Str(i + 1); // Str is 1-based (strings 1-6)
-
-            if (part == "x" || part == "X")
-            {
-                // Muted string
-                positions.Add(new Position.Muted(str));
-            }
-            else if (int.TryParse(part, out var fretValue))
-            {
-                var fret = new Fret(fretValue);
-                var location = new PositionLocation(str, fret);
-
-                // Create a played position with estimated MIDI note
-                // Standard tuning: E2(40), A2(45), D3(50), G3(55), B3(59), E4(64)
-                var openMidiNotes = new[] { 64, 59, 55, 50, 45, 40 }; // High E to Low E
-                var midiNoteValue = i < openMidiNotes.Length
-                    ? openMidiNotes[i] + fretValue
-                    : 60 + fretValue; // Fallback
-                var midiNote = new MidiNote(midiNoteValue);
-
-                positions.Add(new Position.Played(location, midiNote));
-            }
-        }
-
-        return [.. positions];
     }
 }
