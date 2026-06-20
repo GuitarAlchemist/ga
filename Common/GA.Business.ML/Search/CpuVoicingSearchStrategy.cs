@@ -98,7 +98,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
         await Task.Run(() => {
             Parallel.ForEach(voicingList, voicing => {
-                if (MatchesFilters(voicing, filters))
+                if (VoicingFilterEngine.Matches(voicing, filters))
                 {
                     // If target has text embedding, use it for semantic alignment
                     // otherwise fall back to musical embedding
@@ -149,88 +149,6 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             CalculateMemoryUsage(),
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
             _totalSearches);
-
-    private static bool MatchesFilters(VoicingEmbedding voicing, VoicingSearchFilters filters)
-    {
-        // Null-safe: a corpus voicing that lacks the filtered attribute cannot
-        // satisfy a filter on it, so treat null as "does not match" (return
-        // false) — same convention as the StackingType guard below. Before this,
-        // a single voicing with a null VoicingType/ChordName/etc. threw a
-        // NullReferenceException inside the Parallel.ForEach, which collapsed the
-        // ENTIRE voicing search → orchestration error → "error-fallback" to the
-        // LLM for every "<chord> voicing on guitar" query. (Live trace 2026-05-30.)
-        if (filters.Difficulty != null && (voicing.Difficulty == null || !voicing.Difficulty.Equals(filters.Difficulty, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.Position != null && (voicing.Position == null || !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.VoicingType != null && (voicing.VoicingType == null || !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.Tags != null && filters.Tags.Any() && (voicing.SemanticTags == null || !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        if (filters.MinFret.HasValue && voicing.MinFret < filters.MinFret.Value) return false;
-        if (filters.MaxFret.HasValue && voicing.MaxFret > filters.MaxFret.Value) return false;
-        if (filters.RequireBarreChord.HasValue && voicing.BarreRequired != filters.RequireBarreChord.Value) return false;
-
-        // Structured Filters
-        if (filters.ChordName != null && (voicing.ChordName == null || !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase))) return false;
-
-        if (filters.StackingType != null)
-        {
-            // Null check on voicing.StackingType because it's nullable
-            if (voicing.StackingType == null || !voicing.StackingType.Equals(filters.StackingType, StringComparison.OrdinalIgnoreCase)) return false;
-        }
-
-        if (filters.IsSlashChord.HasValue)
-        {
-            var isSlash = (voicing.MidiBassNote % 12) != voicing.RootPitchClass;
-            if (filters.IsSlashChord.Value != isSlash) return false;
-        }
-
-        if (filters.MinMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Min() < filters.MinMidiPitch.Value) return false;
-        if (filters.MaxMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Max() > filters.MaxMidiPitch.Value) return false;
-
-        if (filters.SetClassId != null && (voicing.PrimeFormId == null || !voicing.PrimeFormId.Contains(filters.SetClassId, StringComparison.OrdinalIgnoreCase))) return false;
-
-        // PitchClassSet string looks like "{0,4,7}" or similar.
-        if (filters.RahnPrimeForm != null && !voicing.PitchClassSet.Contains(filters.RahnPrimeForm, StringComparison.OrdinalIgnoreCase)) return false;
-
-        if (filters.FingerCount.HasValue)
-        {
-            // Heuristic: Count non-open, non-muted strings.
-            // Perfect finger count requires fingering analysis which is not in the search index yet.
-            var parts = voicing.Diagram.Contains('-') ? voicing.Diagram.Split('-') : [.. voicing.Diagram.Select(c => c.ToString())];
-            var active = parts.Count(p => p != "x" && p != "m" && p != "0");
-
-            // Adjust for barre: if barre is required, typically reduces finger count by count of barred notes - 1
-            // But without exact data, we test against active strings for now as a proxy.
-            if (active != filters.FingerCount.Value) return false;
-        }
-
-        // Phase 3 Extended Filters
-        if (filters.HarmonicFunction != null && !string.Equals(voicing.HarmonicFunction, filters.HarmonicFunction, StringComparison.OrdinalIgnoreCase)) return false;
-        if (filters.IsNaturallyOccurring.HasValue && voicing.IsNaturallyOccurring != filters.IsNaturallyOccurring.Value) return false;
-        if (filters.IsRootless.HasValue && voicing.IsRootless != filters.IsRootless.Value) return false;
-        if (filters.HasGuideTones.HasValue && voicing.HasGuideTones != filters.HasGuideTones.Value) return false;
-        if (filters.Inversion.HasValue && voicing.Inversion != filters.Inversion.Value) return false;
-        if (filters.MinConsonance.HasValue && voicing.ConsonanceScore < filters.MinConsonance.Value) return false;
-        if (filters.MinBrightness.HasValue && voicing.BrightnessScore < filters.MinBrightness.Value) return false;
-        if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.OmittedTones != null && filters.OmittedTones.Any() &&
-            (voicing.OmittedTones == null || !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        // Melody Note Filter
-        if (filters.TopPitchClass.HasValue && voicing.TopPitchClass != filters.TopPitchClass.Value) return false;
-
-        // AI Agent Metadata Filters (Phase 4)
-        if (filters.TexturalDescriptionContains != null &&
-            (voicing.TexturalDescription == null || !voicing.TexturalDescription.Contains(filters.TexturalDescriptionContains, StringComparison.OrdinalIgnoreCase))) return false;
-
-        if (filters.DoubledTonesContain != null && filters.DoubledTonesContain.Any() &&
-            (voicing.DoubledTones == null || !filters.DoubledTonesContain.All(t => voicing.DoubledTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        if (filters.AlternateNameMatch != null &&
-            (voicing.AlternateNames == null || !voicing.AlternateNames.Any(n => n.Contains(filters.AlternateNameMatch, StringComparison.OrdinalIgnoreCase)))) return false;
-
-        return true;
-    }
 
     private static double CosineSimilarity(double[] v1, double[] v2)
     {
