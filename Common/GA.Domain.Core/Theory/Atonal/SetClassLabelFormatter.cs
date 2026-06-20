@@ -1,15 +1,17 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
-///     Display-only label formatter for set-class notation (Forte/Rahn).
-///     Uses the programmatic ForteCatalog for complete coverage.
+///     Display-only label formatter for set-class notation. <see cref="SetClassNotation.Forte"/>
+///     yields the canonical Allen Forte 1973 number (via <see cref="ForteCatalog"/> /
+///     <see cref="CanonicalForteCatalog"/>); <see cref="SetClassNotation.Rahn"/> yields GA's
+///     internal Rahn-ordered ordinal (via <see cref="ProgrammaticForteCatalog"/>).
 /// </summary>
 [PublicAPI]
 public static class SetClassLabelFormatter
 {
     /// <summary>
     ///     Computes a display label for the given <see cref="SetClass"/> in the requested notation.
-    ///     Both Forte and Rahn use the programmatic catalog (Rahn ordering).
+    ///     Forte → canonical 1973 catalog (e.g. major triad "3-11"); Rahn → GA's Rahn ordinal.
     /// </summary>
     public static string ToLabel(SetClass setClass, SetClassNotation notation)
     {
@@ -18,15 +20,22 @@ public static class SetClassLabelFormatter
         switch (notation)
         {
             case SetClassNotation.Forte:
-            case SetClassNotation.Rahn:
             {
-                // Use programmatic catalog for both Forte and Rahn
-                // (Note: This uses Rahn ordering for both, which is mathematically consistent)
+                // Canonical Allen Forte 1973 number, e.g. the major triad is "3-11".
                 if (ForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var forte))
                 {
                     return forte.ToString();
                 }
-                // Fallback: use ICV-based heuristic
+                return $"{n}-{setClass.IntervalClassVector.Id.Value % 100}";
+            }
+
+            case SetClassNotation.Rahn:
+            {
+                // GA's internal Rahn ordering (lexicographic by ICV, then prime-form id).
+                if (ProgrammaticForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var rahn))
+                {
+                    return rahn.ToString();
+                }
                 return $"{n}-{setClass.IntervalClassVector.Id.Value % 100}";
             }
 
@@ -36,12 +45,9 @@ public static class SetClassLabelFormatter
     }
 
     /// <summary>
-    ///     Returns both Forte and Rahn labels for convenience (display-only).
-    ///     Note: Both return the same value since we use a unified ordering.
+    ///     Returns both the canonical Forte label and the Rahn-ordinal label (display-only).
+    ///     These now differ for most set classes (only the Forte label is the standard catalog number).
     /// </summary>
     public static (string forte, string rahn) ToDualLabel(SetClass setClass)
-    {
-        var label = ToLabel(setClass, SetClassNotation.Forte);
-        return (label, label);
-    }
+        => (ToLabel(setClass, SetClassNotation.Forte), ToLabel(setClass, SetClassNotation.Rahn));
 }

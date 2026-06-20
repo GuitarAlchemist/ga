@@ -63,14 +63,20 @@ public class ExhaustiveCoverageTests
 
     public static IEnumerable<TestCaseData> GetForteTestCases()
     {
+        // AutoTagging emits the CANONICAL Forte label (ForteCatalog → CanonicalForteCatalog),
+        // so the expected tag is the canonical number, not the programmatic Rahn ordinal.
+        // Enumerate every prime form GA knows and pair it with its canonical label.
         foreach (var kvp in ProgrammaticForteCatalog.ForteByPrimeFormId)
         {
-            var forteNumber = kvp.Value.ToString();
             var pcs = ProgrammaticForteCatalog.PrimeFormByForte[kvp.Value];
-            var pcArray = pcs.Select(p => p.Value).ToArray();
+            if (!CanonicalForteCatalog.TryGetForteLabel(pcs.PrimeForm ?? pcs, out var canonical) || canonical is null)
+            {
+                continue;
+            }
 
-            yield return new TestCaseData(kvp.Key.ToString(), forteNumber, pcArray)
-                .SetName($"Forte_{forteNumber}");
+            var pcArray = pcs.Select(p => p.Value).ToArray();
+            yield return new TestCaseData(kvp.Key.ToString(), canonical, pcArray)
+                .SetName($"Forte_{canonical}");
         }
     }
 
