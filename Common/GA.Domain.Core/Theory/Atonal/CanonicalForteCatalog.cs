@@ -201,6 +201,19 @@ public static class CanonicalForteCatalog
         // index part (may carry a leading Z), e.g. "Z29" or "11".
         var indexPart = label[(dash + 1)..];
 
+        // The trivial classes use synthetic labels (matching TryGetForteLabel): the empty
+        // set is 0-1 and the chromatic aggregate is 12-1. Keep forward/reverse symmetric.
+        if (cardinality == 0)
+        {
+            primeForm = new PitchClassSet(Enumerable.Empty<PitchClass>());
+            return indexPart == "1";
+        }
+        if (cardinality == 12)
+        {
+            primeForm = new PitchClassSet(Enumerable.Range(0, 12).Select(PitchClass.FromValue));
+            return indexPart == "1";
+        }
+
         if (cardinality <= 6)
         {
             return CoreByLabel.TryGetValue(label, out primeForm!);

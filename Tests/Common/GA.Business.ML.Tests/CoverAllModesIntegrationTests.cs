@@ -82,7 +82,7 @@ public class CoverAllModesIntegrationTests
             "C Major (Ionian)",
             new[] { 0, 2, 4, 5, 7, 9, 11 },
             0,
-            new[] { "Set:7-1", "Flavor:Ionian" },
+            new[] { "Set:7-35", "Flavor:Ionian" }, // 7-35 = canonical Forte for the diatonic collection
             new[] { "Flavor:Lydian" }
         );
 
@@ -90,7 +90,7 @@ public class CoverAllModesIntegrationTests
             "C Altered (Super Locrian)",
             new[] { 0, 1, 3, 4, 6, 8, 10 },
             0,
-            new[] { "Set:7-2", "Flavor:Altered" },
+            new[] { "Set:7-34", "Flavor:Altered" }, // 7-34 = canonical Forte (melodic-minor collection)
             null
         );
 
@@ -98,7 +98,7 @@ public class CoverAllModesIntegrationTests
             "Whole Tone",
             new[] { 0, 2, 4, 6, 8, 10 },
             0,
-            new[] { "Set:6-1", "Flavor:Whole-tone" },
+            new[] { "Set:6-35", "Flavor:Whole-tone" }, // 6-35 = canonical Forte for the whole-tone scale
             null
         );
 
@@ -106,7 +106,7 @@ public class CoverAllModesIntegrationTests
             "Vienna Trichord",
             new[] { 0, 1, 6 },
             0,
-            new[] { "Set:3-8" },
+            new[] { "Set:3-5" }, // {0,1,6} Viennese trichord = canonical Forte 3-5
             new[] { "Flavor:Ionian", "Flavor:Major" }
         );
 
@@ -122,7 +122,7 @@ public class CoverAllModesIntegrationTests
             "Chromatic Cluster",
             new[] { 0, 1, 2 },
             0,
-            new[] { "Set:3-12" },
+            new[] { "Set:3-1" }, // {0,1,2} chromatic cluster = canonical Forte 3-1
             new[] { "Flavor:Ionian", "Flavor:Major", "Flavor:Dorian" }
         );
 
@@ -130,7 +130,7 @@ public class CoverAllModesIntegrationTests
             "Pentatonic Major",
             new[] { 0, 2, 4, 7, 9 },
             0,
-            new[] { "Set:5-1" },
+            new[] { "Set:5-35" }, // {0,2,4,7,9} major pentatonic = canonical Forte 5-35
             null // Accepts both Pentatonic Major and Ionian
         );
 
@@ -138,7 +138,7 @@ public class CoverAllModesIntegrationTests
             "Power Chord (Sparse)",
             new[] { 0, 7 },
             0,
-            new[] { "Power Chord", "Set:2-2" },
+            new[] { "Power Chord", "Set:2-5" }, // {0,7}→prime {0,5} = canonical Forte 2-5
             new[] { "Flavor:Altered", "Flavor:Locrian" }
         );
     }
