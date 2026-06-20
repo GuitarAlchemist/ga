@@ -149,12 +149,16 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     }
 
     /// <summary>
-    ///     Gets the <see cref="Nullable{PitchClassSet}" />
+    ///     Gets the transposition/inversion prime form (the OPTIC / set-class representative).
     /// </summary>
     /// <remarks>
-    ///     By definition, the prime form is the <see cref="PitchClassSet" /> with the most compact representation
+    ///     The canonical member of <see cref="TranspositionsAndInversions" /> — the one with the smallest
+    ///     packed id. Owned by <see cref="PitchClassSetId.PrimeForm" /> (pure id arithmetic); this property
+    ///     just lifts it back to a <see cref="PitchClassSet" />. <b>Not</b> the same as
+    ///     <see cref="ToNormalForm" />, which canonicalises by interval-span compactness rather than minimal
+    ///     id and can return a different rotation.
     /// </remarks>
-    public PitchClassSet? PrimeForm => TranspositionsAndInversions.MinBy(pitchClassSet => pitchClassSet.Id.Value);
+    public PitchClassSet? PrimeForm => Id.PrimeForm.ToPitchClassSet();
 
     /// <summary>
     ///     Gets a flag that indicates whether this pitch class set is it prime form
