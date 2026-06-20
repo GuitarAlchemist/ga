@@ -18,7 +18,9 @@ using Design.Schema;
 ///     <br />
 ///     Modes from a scale share the same Interval Class Vector - Example:<br />
 ///     <bt />
-///     Major scale => 254361 | Dorian mode => 254361 | etc...
+///     Major scale => &lt;2 5 4 3 6 1&gt; | Dorian mode => &lt;2 5 4 3 6 1&gt; | etc...<br />
+///     (the counts are packed base-12 into the <see cref="IntervalClassVectorId" />,
+///     so the major scale's id is 608761 — NOT the decimal-looking 254361.)
 /// </remarks>
 [PublicAPI]
 [DomainInvariant("Must contain exactly 6 interval class counts", "Count == 6")]
@@ -31,7 +33,19 @@ public sealed class IntervalClassVector(IntervalClassVectorId id) :
     IComparable<IntervalClassVector>,
     IEquatable<IntervalClassVector>
 {
-    public static readonly IntervalClassVector Major = new(new IntervalClassVectorId(254361));
+    // Derived from the canonical major-scale interval-class counts <2 5 4 3 6 1> via the
+    // counts ctor — NOT a hardcoded id — so it stays consistent with the base-12
+    // IntervalClassVectorId encoding. A prior base-10 literal (254361) silently decoded to
+    // <1 0 3 2 4 9> once the id encoding moved to base-12. See IntervalClassVectorId.ToValue.
+    public static readonly IntervalClassVector Major = new(new Dictionary<IntervalClass, int>
+    {
+        [IntervalClass.FromValue(1)] = 2,
+        [IntervalClass.FromValue(2)] = 5,
+        [IntervalClass.FromValue(3)] = 4,
+        [IntervalClass.FromValue(4)] = 3,
+        [IntervalClass.FromValue(5)] = 6,
+        [IntervalClass.FromValue(6)] = 1,
+    });
 
     /// <summary>
     ///     Constructs an Interval Class Vector from the number of occurrences for each Interval Class
