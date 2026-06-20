@@ -124,4 +124,56 @@ public class VoicingFilterEngineTests
         Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { MinFret = 3, MaxFret = 5 }), Is.True);
         Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { MaxFret = 4 }), Is.False, "voicing reaches fret 5");
     }
+
+    // ── Filters migrated from the GPU adapter (the GPU-reconciliation slice). These were GPU-only and
+    //    now live in the engine so both strategies apply them identically. ──
+
+    [Test]
+    public void ModeName_Matches_CaseInsensitively_And_NullSafe()
+    {
+        var voicing = Voicing() with { ModeName = "Dorian" };
+        Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { ModeName = "dorian" }), Is.True);
+        Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { ModeName = "Lydian" }), Is.False);
+        // null ModeName on the voicing must not throw and must not match.
+        var nullMode = Voicing() with { ModeName = null };
+        Assert.That(() => VoicingFilterEngine.Matches(nullMode, Empty() with { ModeName = "Dorian" }), Throws.Nothing);
+        Assert.That(VoicingFilterEngine.Matches(nullMode, Empty() with { ModeName = "Dorian" }), Is.False);
+    }
+
+    [Test]
+    public void MaxFingerStretch_Filters_On_HandStretch()
+    {
+        var voicing = Voicing(); // HandStretch = 2
+        Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { MaxFingerStretch = 3 }), Is.True);
+        Assert.That(VoicingFilterEngine.Matches(voicing, Empty() with { MaxFingerStretch = 1 }), Is.False, "stretch 2 exceeds max 1");
+    }
+
+    [Test]
+    public void IsOpenVoicing_Derives_From_VoicingType()
+    {
+        Assert.That(VoicingFilterEngine.Matches(Voicing(), Empty() with { IsOpenVoicing = false }), Is.True, "baseline is 'drop2 closed' — not open");
+        Assert.That(VoicingFilterEngine.Matches(Voicing(), Empty() with { IsOpenVoicing = true }), Is.False);
+
+        var open = Voicing() with { VoicingType = "open triad" };
+        Assert.That(VoicingFilterEngine.Matches(open, Empty() with { IsOpenVoicing = true }), Is.True);
+    }
+
+    [Test]
+    public void DropVoicing_Matches_VoicingType_Substring()
+    {
+        Assert.That(VoicingFilterEngine.Matches(Voicing(), Empty() with { DropVoicing = "drop2" }), Is.True, "baseline VoicingType is 'drop2 closed'");
+        Assert.That(VoicingFilterEngine.Matches(Voicing(), Empty() with { DropVoicing = "drop3" }), Is.False);
+    }
+
+    [Test]
+    public void CagedShape_Matches_SemanticTags()
+    {
+        Assert.That(VoicingFilterEngine.Matches(Voicing(), Empty() with { CagedShape = "C" }), Is.False, "baseline has no CAGED tag");
+
+        var caged = Voicing() with { SemanticTags = ["CAGED-C", "jazz"] };
+        Assert.That(VoicingFilterEngine.Matches(caged, Empty() with { CagedShape = "C" }), Is.True);
+
+        var cagedAlt = Voicing() with { SemanticTags = ["A shape", "blues"] };
+        Assert.That(VoicingFilterEngine.Matches(cagedAlt, Empty() with { CagedShape = "A" }), Is.True);
+    }
 }
