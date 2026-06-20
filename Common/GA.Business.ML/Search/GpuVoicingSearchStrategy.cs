@@ -246,67 +246,17 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
             try
             {
-                var filteredVoicings = _voicings.Values.AsEnumerable();
+                // All metadata filters cross the shared VoicingFilterEngine — the SAME predicate the CPU
+                // strategy uses — so the two paths can't disagree (architecture review #2; previously this
+                // adapter had its own drifted copy: Tags ANY vs ALL, VoicingType == vs Contains, not
+                // null-safe/case-insensitive, and it silently skipped SetClassId/FingerCount/ChordName/…).
+                var filteredVoicings = _voicings.Values.Where(v => VoicingFilterEngine.Matches(v, filters));
 
-                // Basic filters
-                if (!string.IsNullOrEmpty(filters.Difficulty))
+                // Comfort / ergonomic filters need the BiomechanicalAnalyzer service, so they stay layered
+                // here. (The metadata HandStretch/MaxFingerStretch fast path moved into the engine.)
+                if (filters.MinComfortScore.HasValue || (filters.MustBeErgonomic ?? false))
                 {
-                    filteredVoicings = filteredVoicings.Where(v => v.Difficulty == filters.Difficulty);
-                }
-
-                if (!string.IsNullOrEmpty(filters.Position))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.Position == filters.Position);
-                }
-
-                if (!string.IsNullOrEmpty(filters.VoicingType))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.VoicingType == filters.VoicingType);
-                }
-
-                if (!string.IsNullOrEmpty(filters.ModeName))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.ModeName == filters.ModeName);
-                }
-
-                if (filters.MinFret.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.MinFret >= filters.MinFret.Value);
-                }
-
-                if (filters.MaxFret.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.MaxFret <= filters.MaxFret.Value);
-                }
-
-                if (filters.RequireBarreChord.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.BarreRequired == filters.RequireBarreChord.Value);
-                }
-
-                if (filters.Tags != null && filters.Tags.Length > 0)
-                {
-                    filteredVoicings = filteredVoicings.Where(v =>
-                        filters.Tags.Any(tag => Enumerable.Contains(v.SemanticTags, tag)));
-                }
-
-                // Biomechanical filters (Quick Win 1)
-                if (filters.HandSize.HasValue || filters.MaxFingerStretch.HasValue ||
-                    filters.MinComfortScore.HasValue || filters.MustBeErgonomic.HasValue)
-                {
-                    filteredVoicings = ApplyBiomechanicalFilters(filteredVoicings, filters);
-                }
-
-                // Musical characteristic filters (Quick Win 3) and Extended Filters (Phase 3)
-                if (filters.IsOpenVoicing.HasValue || filters.IsRootless.HasValue ||
-                    !string.IsNullOrEmpty(filters.DropVoicing) || !string.IsNullOrEmpty(filters.CagedShape) ||
-                    !string.IsNullOrEmpty(filters.HarmonicFunction) || filters.IsNaturallyOccurring.HasValue ||
-                    filters.HasGuideTones.HasValue || filters.Inversion.HasValue ||
-                    filters.MinConsonance.HasValue || filters.MinBrightness.HasValue ||
-                    filters.MaxBrightness.HasValue ||
-                    (filters.OmittedTones != null && filters.OmittedTones.Length > 0))
-                {
-                    filteredVoicings = ApplyMusicalFilters(filteredVoicings, filters);
+                    filteredVoicings = ApplyComfortFilters(filteredVoicings, filters);
                 }
 
                 var filteredIds = filteredVoicings.Select(v => v.Id).ToList();
@@ -851,63 +801,33 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     /// <summary>
     ///     Apply biomechanical filters to voicings (Quick Win 1)
     /// </summary>
-    private IEnumerable<VoicingEmbedding> ApplyBiomechanicalFilters(
+    // Comfort / ergonomic filters need the full BiomechanicalAnalyzer (the metadata HandStretch /
+    // MaxFingerStretch fast path now lives in VoicingFilterEngine). Called only when MinComfortScore or
+    // MustBeErgonomic is set. All other filters — including the musical-characteristic ones that used to
+    // live in ApplyMusicalFilters — are handled by the shared engine, so CPU and GPU agree.
+    private IEnumerable<VoicingEmbedding> ApplyComfortFilters(
         IEnumerable<VoicingEmbedding> voicings,
         VoicingSearchFilters filters)
     {
-        // Use pre-computed HandStretch field for fast filtering
-        // Only do full biomechanical analysis if comfort/ergonomic filters are specified
-        var needsFullAnalysis = filters.MinComfortScore.HasValue ||
-                                (filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value);
-
-        if (!needsFullAnalysis)
-        {
-            // Fast path: use pre-computed HandStretch field
-            return voicings.Where(v =>
-            {
-                if (filters.MaxFingerStretch.HasValue && v.HandStretch > filters.MaxFingerStretch.Value)
-                {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
-        // Slow path: full biomechanical analysis (only for comfort/ergonomic filters)
-        var analyzer = new BiomechanicalAnalyzer(
-            filters.HandSize ?? HandSize.Medium);
+        var analyzer = new BiomechanicalAnalyzer(filters.HandSize ?? HandSize.Medium);
 
         return voicings.Where(v =>
         {
-            // First check HandStretch (fast)
-            if (filters.MaxFingerStretch.HasValue && v.HandStretch > filters.MaxFingerStretch.Value)
-            {
-                return false;
-            }
-
-            // Parse diagram to positions
             var positions = ParseDiagramToPositions(v.Diagram);
             if (positions.Count == 0)
             {
-                return true; // Keep voicings we can't analyze
+                return true; // keep voicings we can't analyze
             }
 
-            // Analyze biomechanical playability
             var analysis = analyzer.AnalyzeChordPlayability(positions);
 
-            // Apply comfort filter
-            if (filters.MinComfortScore.HasValue &&
-                analysis.Comfort < filters.MinComfortScore.Value)
+            if (filters.MinComfortScore.HasValue && analysis.Comfort < filters.MinComfortScore.Value)
             {
                 return false;
             }
 
-            // Apply ergonomic filter
-            if (filters.MustBeErgonomic.HasValue &&
-                filters.MustBeErgonomic.Value &&
-                analysis.WristPostureAnalysis != null &&
-                !analysis.WristPostureAnalysis.IsErgonomic)
+            if (filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value &&
+                analysis.WristPostureAnalysis != null && !analysis.WristPostureAnalysis.IsErgonomic)
             {
                 return false;
             }
@@ -915,140 +835,6 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
             return true;
         });
     }
-
-    /// <summary>
-    ///     Apply musical characteristic filters (Quick Win 3)
-    /// </summary>
-    private static IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
-        IEnumerable<VoicingEmbedding> voicings,
-        VoicingSearchFilters filters) =>
-        voicings.Where(v =>
-        {
-            // Filter by open/closed voicing
-            if (filters.IsOpenVoicing.HasValue)
-            {
-                var isOpen = v.VoicingType?.Contains("open", StringComparison.OrdinalIgnoreCase) ?? false;
-                if (isOpen != filters.IsOpenVoicing.Value)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by rootless
-            if (filters.IsRootless.HasValue)
-            {
-                if (v.IsRootless != filters.IsRootless.Value)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by drop voicing
-            if (!string.IsNullOrEmpty(filters.DropVoicing))
-            {
-                var hasDropVoicing = v.VoicingType?.Contains(filters.DropVoicing, StringComparison.OrdinalIgnoreCase) ??
-                                     false;
-                if (!hasDropVoicing)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by CAGED shape
-            if (!string.IsNullOrEmpty(filters.CagedShape))
-            {
-                var hasCagedShape = v.SemanticTags.Any(tag =>
-                    tag.Contains($"CAGED-{filters.CagedShape}", StringComparison.OrdinalIgnoreCase) ||
-                    tag.Contains($"{filters.CagedShape} shape", StringComparison.OrdinalIgnoreCase));
-                if (!hasCagedShape)
-                {
-                    return false;
-                }
-            }
-
-            // Phase 3 Filters
-
-            if (!string.IsNullOrEmpty(filters.HarmonicFunction))
-            {
-                if (!string.Equals(v.HarmonicFunction, filters.HarmonicFunction, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-            }
-
-            if (filters.IsNaturallyOccurring.HasValue)
-            {
-                if (v.IsNaturallyOccurring != filters.IsNaturallyOccurring.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.HasGuideTones.HasValue)
-            {
-                if (v.HasGuideTones != filters.HasGuideTones.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.Inversion.HasValue)
-            {
-                if (v.Inversion != filters.Inversion.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MinConsonance.HasValue)
-            {
-                if (v.ConsonanceScore < filters.MinConsonance.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MinBrightness.HasValue)
-            {
-                if (v.BrightnessScore < filters.MinBrightness.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MaxBrightness.HasValue)
-            {
-                if (v.BrightnessScore > filters.MaxBrightness.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.TopPitchClass.HasValue)
-            {
-                if (v.TopPitchClass != filters.TopPitchClass.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.OmittedTones != null && filters.OmittedTones.Length > 0)
-            {
-                // Check if ALL requested omissions are present in voicing's OmittedTones
-                // Or maybe just ANY? Usually filters are restrictive (Must omit X).
-                // Let's assume MUST omit all specified.
-                foreach (var omission in filters.OmittedTones)
-                {
-                    if (v.OmittedTones == null ||
-                        !Enumerable.Contains(v.OmittedTones, omission, StringComparer.OrdinalIgnoreCase))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        });
 
     /// <summary>
     ///     Parse voicing diagram to Position list for biomechanical analysis

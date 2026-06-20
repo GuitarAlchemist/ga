@@ -33,12 +33,38 @@ public static class VoicingFilterEngine
     {
         if (filters.Difficulty != null && (voicing.Difficulty == null || !voicing.Difficulty.Equals(filters.Difficulty, StringComparison.OrdinalIgnoreCase))) return false;
         if (filters.Position != null && (voicing.Position == null || !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase))) return false;
+        if (filters.ModeName != null && (voicing.ModeName == null || !voicing.ModeName.Equals(filters.ModeName, StringComparison.OrdinalIgnoreCase))) return false;
         if (filters.VoicingType != null && (voicing.VoicingType == null || !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase))) return false;
         if (filters.Tags != null && filters.Tags.Any() && (voicing.SemanticTags == null || !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
 
         if (filters.MinFret.HasValue && voicing.MinFret < filters.MinFret.Value) return false;
         if (filters.MaxFret.HasValue && voicing.MaxFret > filters.MaxFret.Value) return false;
         if (filters.RequireBarreChord.HasValue && voicing.BarreRequired != filters.RequireBarreChord.Value) return false;
+
+        // Hand stretch — pure-metadata fast path (the comfort/ergonomic filters that need the
+        // biomechanical analyzer service stay layered in the GPU adapter, not here).
+        if (filters.MaxFingerStretch.HasValue && voicing.HandStretch > filters.MaxFingerStretch.Value) return false;
+
+        // Musical-characteristic filters the GPU adapter used to apply on its own (ApplyMusicalFilters).
+        if (filters.IsOpenVoicing.HasValue)
+        {
+            var isOpen = voicing.VoicingType?.Contains("open", StringComparison.OrdinalIgnoreCase) ?? false;
+            if (isOpen != filters.IsOpenVoicing.Value) return false;
+        }
+
+        if (!string.IsNullOrEmpty(filters.DropVoicing))
+        {
+            var hasDrop = voicing.VoicingType?.Contains(filters.DropVoicing, StringComparison.OrdinalIgnoreCase) ?? false;
+            if (!hasDrop) return false;
+        }
+
+        if (!string.IsNullOrEmpty(filters.CagedShape))
+        {
+            var hasCaged = voicing.SemanticTags != null && voicing.SemanticTags.Any(tag =>
+                tag.Contains($"CAGED-{filters.CagedShape}", StringComparison.OrdinalIgnoreCase) ||
+                tag.Contains($"{filters.CagedShape} shape", StringComparison.OrdinalIgnoreCase));
+            if (!hasCaged) return false;
+        }
 
         // Structured filters
         if (filters.ChordName != null && (voicing.ChordName == null || !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase))) return false;
