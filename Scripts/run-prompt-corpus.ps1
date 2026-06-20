@@ -224,14 +224,19 @@ if ($Json) {
             $oracleStatus = 'ok'
             $metricValue  = [math]::Round((($totalActive - $failures.Count) / $totalActive), 4)
         }
-        $worst = if ($failures.Count -gt 0) { $failures[0] } else { $null }
+        # rel-007: renamed from $worst — case-insensitive collision with the
+        # [int]$Worst parameter (line 24) coerced this failure STRING to Int32
+        # and crashed the -Json write whenever a prompt failed (the one moment
+        # the oracle must emit a metric). Same bug class as the rel-006 $matches
+        # rename above. Keep this name distinct from the $Worst param.
+        $worstItem = if ($failures.Count -gt 0) { $failures[0] } else { $null }
 
         $summary = [ordered]@{
             timestamp             = (Get-Date -Format "o")
             oracle_status         = $oracleStatus
             metric_value          = $metricValue
-            worst_item            = $worst
-            worst_item_diagnostic = $worst
+            worst_item            = $worstItem
+            worst_item_diagnostic = $worstItem
             totalActivePrompts    = $totalActive
             totalTestsRan         = $totalTestsRan
             totalFailures         = $failures.Count
