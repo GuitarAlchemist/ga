@@ -21,7 +21,7 @@ public sealed class TranspositionClass : IEquatable<TranspositionClass>
     public TranspositionClass(PitchClassSet pitchClassSet)
     {
         ArgumentNullException.ThrowIfNull(pitchClassSet);
-        PrimeForm = TranspositionPrimeForm(pitchClassSet);
+        PrimeForm = pitchClassSet.Id.TranspositionPrimeForm.ToPitchClassSet();
     }
 
     /// <summary>
@@ -50,28 +50,12 @@ public sealed class TranspositionClass : IEquatable<TranspositionClass>
     ///     triad) pair with a distinct inverted transposition class inside the same <see cref="SetClass" />.
     /// </summary>
     public bool IsInversionallySymmetric =>
-        PrimeForm.Id.Value == TranspositionPrimeForm(PrimeForm.Inverse).Id.Value;
+        PrimeForm.Id.Value == PrimeForm.Inverse.Id.TranspositionPrimeForm.Value;
 
     /// <summary>
     ///     Gets all transposition classes, ordered by prime-form id.
     /// </summary>
     public static IReadOnlyList<TranspositionClass> Items => _lazyItems.Value;
-
-    private static PitchClassSet TranspositionPrimeForm(PitchClassSet pitchClassSet)
-    {
-        var id = pitchClassSet.Id;
-        var min = id.Value;
-        for (var i = 1; i < 12; i++)
-        {
-            var rotated = id.Transpose(i).Value;
-            if (rotated < min)
-            {
-                min = rotated;
-            }
-        }
-
-        return ((PitchClassSetId)min).ToPitchClassSet();
-    }
 
     private static IReadOnlyList<TranspositionClass> Build()
     {

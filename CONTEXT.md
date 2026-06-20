@@ -37,6 +37,14 @@ at layer 4, orchestration at 5; never in lower layers.
   (`WeightedPartitionCosine`); equals the dot product of the two **compact** vectors
   (`ExtractCompact`, per-partition L2 × √weight) by construction — corpus build, query encode,
   and the CPU/GPU scorers all cross these layout operations rather than re-deriving offsets/weights.
+- **Prime form vs normal form (atonal)** — two different canonicalizations, often confused. **Prime
+  form** = the minimal-packed-id representative, owned by `PitchClassSetId`: `PrimeForm` folds in
+  transposition *and* inversion (the OPTIC / set-class representative, what `PitchClassSet.PrimeForm`
+  and `SetClass` use); `TranspositionPrimeForm` folds in transposition only (the OPTC / "Tn-type"
+  representative, what `TranspositionClass` uses). **Normal form** (`PitchClassSet.ToNormalForm`) is a
+  *separate* idea — canonicalize by interval-span compactness, which can pick a different rotation than
+  minimal id. The elementary id ops (complement, inverse, M5/M7, transpose) also live on
+  `PitchClassSetId` — it is the single canonicalization authority; the value types delegate.
 
 ## Conventions
 

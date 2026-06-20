@@ -94,6 +94,68 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     }
 
     /// <summary>
+    ///     The transposition-only prime form (the OPTC / "Tn-type" representative): the smallest id among
+    ///     the twelve transpositions. Folds in transposition only, so a major triad and a minor triad have
+    ///     <em>different</em> transposition prime forms but the same <see cref="PrimeForm" />.
+    /// </summary>
+    /// <remarks>
+    ///     The canonicalization authority for <see cref="TranspositionClass" />. Pure id arithmetic — no
+    ///     <see cref="PitchClassSet" /> allocation.
+    /// </remarks>
+    public PitchClassSetId TranspositionPrimeForm
+    {
+        get
+        {
+            var min = Value;
+            for (var i = 1; i < 12; i++)
+            {
+                var t = Transpose(i).Value;
+                if (t < min)
+                {
+                    min = t;
+                }
+            }
+
+            return new(min);
+        }
+    }
+
+    /// <summary>
+    ///     The transposition/inversion prime form (the OPTIC / set-class representative): the smallest id
+    ///     among the twenty-four transposition and inversion forms.
+    /// </summary>
+    /// <remarks>
+    ///     The canonicalization authority that <see cref="PitchClassSet.PrimeForm" /> and
+    ///     <see cref="SetClass" /> are built on. Defined by <b>minimal packed id</b> — this is distinct
+    ///     from <see cref="PitchClassSet.ToNormalForm" />, which canonicalises by interval-span
+    ///     <em>compactness</em>, not minimal id, and can pick a different rotation.
+    /// </remarks>
+    public PitchClassSetId PrimeForm
+    {
+        get
+        {
+            var min = Value;
+            var inverse = Inverse;
+            for (var i = 0; i < 12; i++)
+            {
+                var t = Transpose(i).Value;
+                if (t < min)
+                {
+                    min = t;
+                }
+
+                var ti = inverse.Transpose(i).Value;
+                if (ti < min)
+                {
+                    min = ti;
+                }
+            }
+
+            return new(min);
+        }
+    }
+
+    /// <summary>
     ///     Multiplies every pitch class by <paramref name="multiplier" /> (mod 12). A bijection only when the
     ///     multiplier is coprime to 12 (1, 5, 7, 11): 5 and 7 give the M5 / M7 transforms and 11 is the inversion.
     /// </summary>
