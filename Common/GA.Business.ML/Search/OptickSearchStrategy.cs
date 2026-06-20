@@ -109,7 +109,14 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     ///     is dropped — listed here so the caller-side telemetry can record it instead of dropping silently.
     ///     (<c>SymbolicBitIndices</c> is a ranking signal, not a filter, so it is out of scope.)
     /// </summary>
-    public IReadOnlyList<string> UnsupportedPopulatedFilters(VoicingSearchFilters f)
+    public IReadOnlyList<string> UnsupportedPopulatedFilters(VoicingSearchFilters f) =>
+        ComputeUnsupportedFilters(f);
+
+    /// <summary>
+    ///     Pure (index-independent) drop-list logic, factored out so it is unit-testable without an
+    ///     on-disk OPTK index. See <see cref="UnsupportedPopulatedFilters"/>.
+    /// </summary>
+    internal static IReadOnlyList<string> ComputeUnsupportedFilters(VoicingSearchFilters f)
     {
         var dropped = new List<string>();
 

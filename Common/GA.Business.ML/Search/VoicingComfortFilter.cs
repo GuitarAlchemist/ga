@@ -66,7 +66,7 @@ public static class VoicingComfortFilter
     ///     old GPU-private parser split on <c>'-'</c> only, so it silently produced zero positions for the
     ///     compact format → comfort filtering became a no-op for those voicings.
     /// </summary>
-    private static ImmutableList<Position> ParseDiagramToPositions(string diagram)
+    internal static ImmutableList<Position> ParseDiagramToPositions(string diagram)
     {
         var parts = diagram.Contains('-')
             ? diagram.Split('-')
