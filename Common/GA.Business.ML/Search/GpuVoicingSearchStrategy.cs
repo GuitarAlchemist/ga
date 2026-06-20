@@ -29,31 +29,29 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     private const int MusicalEmbeddingDim = 109; // v1.3.1
     private const int LegacyMusicalEmbeddingDim = 96; // v1.2.1
 
-    // Partition Offsets and Dimensions — must mirror EmbeddingSchema.Partitions.
-    private const int StructureOffset  = 6;
-    private const int StructureDim     = 24;
-    private const int MorphologyOffset = 30;
-    private const int MorphologyDim    = 24;
-    private const int ContextOffset    = 54;
-    private const int ContextDim       = 12;
-    private const int SymbolicOffset   = 66;
-    private const int SymbolicDim      = 12;
-    // MODAL (v1.6+, slots 109-148, 40 dims). Conditionally included so
-    // legacy/v1.3.1 vectors don't index past their length.
-    private const int ModalOffset      = 109;
-    private const int ModalDim         = 40;
-    // ROOT (v1.8 only, slots 228-239, 12 dims).
-    private const int RootOffset       = 228;
-    private const int RootDim          = 12;
+    // Partition offsets, dims, and weights ALIAS the authoritative EmbeddingSchema
+    // consts (compile-time, so the ILGPU kernel still bakes them) — the kernel can't
+    // call host code or iterate the registry, so this is how it crosses the layout seam.
+    // SchemaLayoutContractTests guards that these match EmbeddingSchema.Partitions.
+    private const int StructureOffset  = EmbeddingSchema.StructureOffset;
+    private const int StructureDim     = EmbeddingSchema.StructureDim;
+    private const int MorphologyOffset = EmbeddingSchema.MorphologyOffset;
+    private const int MorphologyDim    = EmbeddingSchema.MorphologyDim;
+    private const int ContextOffset    = EmbeddingSchema.ContextOffset;
+    private const int ContextDim       = EmbeddingSchema.ContextDim;
+    private const int SymbolicOffset   = EmbeddingSchema.SymbolicOffset;
+    private const int SymbolicDim      = EmbeddingSchema.SymbolicDim;
+    private const int ModalOffset      = EmbeddingSchema.ModalOffset;
+    private const int ModalDim         = EmbeddingSchema.ModalDim;
+    private const int RootOffset       = EmbeddingSchema.RootOffset;
+    private const int RootDim          = EmbeddingSchema.RootDim;
 
-    // Similarity Weights — sum is 1.15 (not 1.0) when MODAL+ROOT both fire.
-    // Intentional: residual mass beyond 1.0 is the v1.8 discrimination signal.
-    private const double StructureWeight  = 0.45;
-    private const double MorphologyWeight = 0.25;
-    private const double ContextWeight    = 0.20;
-    private const double SymbolicWeight   = 0.10;
-    private const double ModalWeight      = 0.10;
-    private const double RootWeight       = 0.05;
+    private const double StructureWeight  = EmbeddingSchema.StructureWeight;
+    private const double MorphologyWeight = EmbeddingSchema.MorphologyWeight;
+    private const double ContextWeight    = EmbeddingSchema.ContextWeight;
+    private const double SymbolicWeight   = EmbeddingSchema.SymbolicWeight;
+    private const double ModalWeight      = EmbeddingSchema.ModalWeight;
+    private const double RootWeight       = EmbeddingSchema.RootWeight;
     private readonly Lock _initLock = new();
     private readonly Dictionary<string, VoicingEmbedding> _voicings = [];
     private Accelerator? _accelerator;

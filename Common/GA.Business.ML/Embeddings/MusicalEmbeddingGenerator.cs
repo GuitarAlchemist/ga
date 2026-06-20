@@ -57,27 +57,6 @@ public class MusicalEmbeddingGenerator(
     public int Dimension => EmbeddingSchema.TotalDimension;
 
     /// <summary>
-    ///     Looks up a partition from the authoritative <see cref="EmbeddingSchema.Partitions"/>
-    ///     registry by name. Replaces hardcoded <c>*Offset</c>/<c>*Dim</c> constants so the
-    ///     writer cannot silently drift from the registry consumed by the OPTK index and readers.
-    /// </summary>
-    /// <param name="name">Partition name (e.g. <c>"STRUCTURE"</c>).</param>
-    /// <returns>The <see cref="EmbeddingPartition"/> record for <paramref name="name"/>.</returns>
-    private static EmbeddingPartition GetPartition(string name) =>
-        EmbeddingSchema.Partitions.First(p => p.Name == name);
-
-    /// <summary>
-    ///     Copies <paramref name="source"/> into <paramref name="target"/> at the partition's
-    ///     start offset, converting <c>double</c> to <c>float</c>. Preserves the original
-    ///     <c>Array.Copy(Array.ConvertAll(...), 0, combined, offset, length)</c> semantics
-    ///     byte-for-byte while routing the offset through the typed partition registry.
-    /// </summary>
-    private static void CopyIntoPartition(float[] target, double[] source, EmbeddingPartition partition)
-    {
-        Array.Copy(Array.ConvertAll(source, x => (float)x), 0, target, partition.Start, source.Length);
-    }
-
-    /// <summary>
     /// Generates a high-dimensional embedding for a voicing document.
     /// </summary>
     /// <param name="doc">The voicing document containing pitch data and metadata.</param>
@@ -143,11 +122,11 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         var combined = new float[Dimension];
 
-        CopyIntoPartition(combined, identityVector,   GetPartition("IDENTITY"));
-        CopyIntoPartition(combined, structureVector,  GetPartition("STRUCTURE"));
-        CopyIntoPartition(combined, morphologyVector, GetPartition("MORPHOLOGY"));
-        CopyIntoPartition(combined, contextVector,    GetPartition("CONTEXT"));
-        CopyIntoPartition(combined, symbolicVector,   GetPartition("SYMBOLIC"));
+        EmbeddingSchema.WriteInto(combined, "IDENTITY",   identityVector);
+        EmbeddingSchema.WriteInto(combined, "STRUCTURE",  structureVector);
+        EmbeddingSchema.WriteInto(combined, "MORPHOLOGY", morphologyVector);
+        EmbeddingSchema.WriteInto(combined, "CONTEXT",    contextVector);
+        EmbeddingSchema.WriteInto(combined, "SYMBOLIC",   symbolicVector);
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 6: EXTENSIONS (78-95)
@@ -163,7 +142,7 @@ public class MusicalEmbeddingGenerator(
         // PARTITION 8: MODAL (109-127) — Modal Flavors
         // ═══════════════════════════════════════════════════════════════════════
         var modalVector = modalService.ComputeEmbedding(doc);
-        CopyIntoPartition(combined, modalVector, GetPartition("MODAL"));
+        EmbeddingSchema.WriteInto(combined, "MODAL", modalVector);
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 9: HIERARCHY (149-163) — Complexity
@@ -175,7 +154,7 @@ public class MusicalEmbeddingGenerator(
         // PARTITION 10: ATONAL MODAL (164-227) — Universal Mapping
         // ═══════════════════════════════════════════════════════════════════════
         var atonalModalVector = modalService.ComputeAtonalModalEmbedding(doc);
-        CopyIntoPartition(combined, atonalModalVector, GetPartition("ATONAL_MODAL"));
+        EmbeddingSchema.WriteInto(combined, "ATONAL_MODAL", atonalModalVector);
 
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 11: ROOT (228-239) — Root pitch-class one-hot (v1.8)
@@ -186,7 +165,7 @@ public class MusicalEmbeddingGenerator(
         // a small discrimination signal on top of set-class match via STRUCTURE.
         // ═══════════════════════════════════════════════════════════════════════
         var rootVector = RootVectorService.ComputeEmbedding(doc.RootPitchClass);
-        CopyIntoPartition(combined, rootVector, GetPartition("ROOT"));
+        EmbeddingSchema.WriteInto(combined, "ROOT", rootVector);
 
         return Task.FromResult(combined);
     }

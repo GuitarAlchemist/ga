@@ -187,6 +187,124 @@ public static class EmbeddingSchema
 
     #endregion
 
+    #region Layout operations
+
+    // The layout owns its read / write / score. Corpus build, query encode, the index
+    // writer, and the in-memory scorers all cross these three operations instead of
+    // re-deriving offsets, weights, and per-partition math against the registry above.
+    // Deepening landed via /improve-codebase-architecture (candidate #1): see CONTEXT.md
+    // "weighted partition cosine".
+
+    /// <summary>
+    ///     Looks up a partition by name from the authoritative <see cref="Partitions"/> registry.
+    /// </summary>
+    /// <exception cref="ArgumentException">No partition has the given name.</exception>
+    public static EmbeddingPartition GetPartition(string name)
+    {
+        foreach (var p in Partitions)
+        {
+            if (p.Name == name)
+            {
+                return p;
+            }
+        }
+
+        throw new ArgumentException($"Unknown partition '{name}'", nameof(name));
+    }
+
+    /// <summary>
+    ///     Writes a partition-sized <paramref name="slice"/> into its raw-vector offset.
+    ///     The single place the layout's offsets are applied on the write side.
+    /// </summary>
+    public static void WriteInto<T>(Span<T> raw, string partitionName, ReadOnlySpan<T> slice) =>
+        slice.CopyTo(raw.Slice(GetPartition(partitionName).Start, slice.Length));
+
+    /// <summary>
+    ///     Writes a <c>double</c> partition slice into a <c>float</c> raw vector (corpus side),
+    ///     converting element-wise. Preserves the prior <c>Array.ConvertAll</c> semantics.
+    /// </summary>
+    public static void WriteInto(Span<float> raw, string partitionName, ReadOnlySpan<double> slice)
+    {
+        var start = GetPartition(partitionName).Start;
+        for (var i = 0; i < slice.Length; i++)
+        {
+            raw[start + i] = (float)slice[i];
+        }
+    }
+
+    /// <summary>
+    ///     Extracts the compact similarity vector from a raw vector: the similarity
+    ///     partitions packed contiguously, each per-partition L2-normalized then scaled by
+    ///     sqrt(weight). By construction the dot product of two compact vectors equals
+    ///     <see cref="WeightedPartitionCosine"/> of their raws — the on-disk v4-pp convention.
+    /// </summary>
+    public static double[] ExtractCompact(ReadOnlySpan<double> raw)
+    {
+        var compact = new double[CompactDimension];
+        var cStart = 0;
+        foreach (var p in SimilarityPartitions)
+        {
+            var sumSq = 0.0;
+            for (var j = 0; j < p.Dim; j++)
+            {
+                var v = raw[p.Start + j];
+                sumSq += v * v;
+            }
+
+            if (sumSq > double.Epsilon)
+            {
+                var norm = Math.Sqrt(sumSq);
+                for (var j = 0; j < p.Dim; j++)
+                {
+                    compact[cStart + j] = raw[p.Start + j] / norm * p.SqrtWeight;
+                }
+            }
+
+            cStart += p.Dim;
+        }
+
+        return compact;
+    }
+
+    /// <summary>
+    ///     Weighted partition cosine over two RAW vectors:
+    ///     <c>Σ weight[p] · cosine(a[p], b[p])</c> across similarity partitions.
+    ///     Length-tolerant (skips partitions past either vector's length, so legacy/shorter
+    ///     vectors score on the partitions they have) and NaN-safe (an all-zero partition
+    ///     contributes zero). The in-memory scoring regime; equals
+    ///     <c>dot(ExtractCompact(a), ExtractCompact(b))</c> up to weight precision.
+    /// </summary>
+    public static double WeightedPartitionCosine(ReadOnlySpan<double> a, ReadOnlySpan<double> b)
+    {
+        var minLen = Math.Min(a.Length, b.Length);
+        var score = 0.0;
+        foreach (var p in SimilarityPartitions)
+        {
+            if (p.Start + p.Dim > minLen)
+            {
+                continue;
+            }
+
+            var cos = System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(
+                a.Slice(p.Start, p.Dim), b.Slice(p.Start, p.Dim));
+            if (!double.IsNaN(cos))
+            {
+                // Weight is the float SimilarityWeight ON PURPOSE: the on-disk compact vectors are
+                // scaled by the float SqrtWeight, so a float weight here makes raw scoring match the
+                // disk/compact path exactly (dot(ExtractCompact(a),ExtractCompact(b)) == this score).
+                // The prior CPU scorer used double 0.45 consts and so was itself ~1e-8 off the disk —
+                // a difference far below any reachable cosine tie. (GPU still aliases double consts;
+                // a residual ~1e-8 CPU/GPU gap, dwarfed by its pre-existing host-fallback MODAL/ROOT
+                // omission tracked separately.)
+                score += p.SimilarityWeight * cos;
+            }
+        }
+
+        return score;
+    }
+
+    #endregion
+
     #region Partition Offsets and Dimensions
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -655,6 +773,18 @@ public static class EmbeddingSchema
 
     /// <summary>End of MODAL partition (exclusive).</summary>
     public const int ModalEnd = ModalOffset + ModalDim;
+
+    /// <summary>Similarity weight for the MODAL partition (0.10). Mirrors <see cref="Partitions"/>.</summary>
+    public const double ModalWeight = 0.10;
+
+    /// <summary>Starting index of the ROOT partition (v1.8 — 12-dim pitch-class one-hot).</summary>
+    public const int RootOffset = 228;
+
+    /// <summary>Number of dimensions in the ROOT partition.</summary>
+    public const int RootDim = 12;
+
+    /// <summary>Similarity weight for the ROOT partition (0.05). Mirrors <see cref="Partitions"/>.</summary>
+    public const double RootWeight = 0.05;
 
     // === Major Scale Modes (109-115) ===
     public const int ModalIonian = 109;
