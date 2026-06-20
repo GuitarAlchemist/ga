@@ -742,7 +742,10 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         // Use weighted partition similarity for musical embeddings (v1.7, v1.6, v1.3.1, v1.2.1)
         if (_embeddingDimensions == OpticKv18Dim || _embeddingDimensions == OpticKv17Dim || _embeddingDimensions == OpticKv16Dim || _embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
         {
-            return CalculateMusicalSimilarity(queryEmbedding, _hostEmbeddings, embeddingStartIdx);
+            // Route through the layout op so the host fallback scores ALL similarity partitions
+            // (incl. MODAL + ROOT, which the old hand-rolled CalculateMusicalSimilarity dropped).
+            return EmbeddingSchema.WeightedPartitionCosine(
+                queryEmbedding, _hostEmbeddings.AsSpan(embeddingStartIdx, _embeddingDimensions));
         }
 
         double dotProduct = 0.0, queryNorm = 0.0, voicingNorm = 0.0;
@@ -756,45 +759,6 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         }
 
         return dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm) + 1e-10);
-    }
-
-    private static double CalculateMusicalSimilarity(double[] query, double[] database, int dbStartIdx)
-    {
-        double score = 0;
-
-        // STRUCTURE
-        score += StructureWeight * ComputePartitionCosine(
-            query, StructureOffset, database, dbStartIdx + StructureOffset, StructureDim);
-
-        // MORPHOLOGY
-        score += MorphologyWeight * ComputePartitionCosine(
-            query, MorphologyOffset, database, dbStartIdx + MorphologyOffset, MorphologyDim);
-
-        // CONTEXT
-        score += ContextWeight * ComputePartitionCosine(
-            query, ContextOffset, database, dbStartIdx + ContextOffset, ContextDim);
-
-        // SYMBOLIC
-        score += SymbolicWeight * ComputePartitionCosine(
-            query, SymbolicOffset, database, dbStartIdx + SymbolicOffset, SymbolicDim);
-
-        return score;
-    }
-
-    private static double ComputePartitionCosine(double[] v1, int offset1, double[] v2, int offset2, int dim)
-    {
-        double dot = 0, n1 = 0, n2 = 0;
-        for (var i = 0; i < dim; i++)
-        {
-            var a = v1[offset1 + i];
-            var b = v2[offset2 + i];
-            dot += a * b;
-            n1 += a * a;
-            n2 += b * b;
-        }
-
-        var mag = Math.Sqrt(n1) * Math.Sqrt(n2);
-        return mag > 1e-10 ? dot / mag : 0;
     }
 
     private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)
