@@ -64,6 +64,14 @@ public readonly record struct ForteNumber :
     /// </summary>
     public int Index { get; }
 
+    /// <summary>
+    ///     True when this set class is Z-related — its canonical Forte label carries
+    ///     a "Z" marker (e.g. "4-Z29"). Z-related set classes share an interval-class
+    ///     vector with a different set class. Defaults to <c>false</c> (the Rahn-ordered
+    ///     <see cref="ProgrammaticForteCatalog"/> does not model the Z marker).
+    /// </summary>
+    public bool IsZRelated { get; init; }
+
     #region IStaticReadonlyCollection Members
 
     /// <summary>
@@ -75,7 +83,7 @@ public readonly record struct ForteNumber :
     #endregion
 
     /// <inheritdoc />
-    public override string ToString() => $"{Cardinality.Value}-{Index}";
+    public override string ToString() => $"{Cardinality.Value}-{(IsZRelated ? "Z" : "")}{Index}";
 
     #region Innner Classes
 
@@ -132,13 +140,26 @@ public readonly record struct ForteNumber :
         }
 
         var parts = s.Split('-');
-        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality) || !int.TryParse(parts[1], out var index))
+        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality))
+        {
+            return false; // Failure
+        }
+
+        // The index may carry a leading "Z" marker for Z-related set classes, e.g. "4-Z29".
+        var indexPart = parts[1];
+        var isZRelated = indexPart.StartsWith("Z", StringComparison.OrdinalIgnoreCase);
+        if (isZRelated)
+        {
+            indexPart = indexPart[1..];
+        }
+
+        if (!int.TryParse(indexPart, out var index))
         {
             return false; // Failure
         }
 
         // Success
-        result = new(cardinality, index);
+        result = new ForteNumber(cardinality, index) { IsZRelated = isZRelated };
         return true;
     }
 

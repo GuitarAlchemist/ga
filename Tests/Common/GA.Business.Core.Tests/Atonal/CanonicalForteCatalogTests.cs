@@ -110,4 +110,54 @@ public class CanonicalForteCatalogTests
         Assert.That((set.PrimeForm ?? set).Cardinality.Value, Is.EqualTo(8));
         Assert.That(set.IsZRelated, Is.True);
     }
+
+    // ── Forward lookup (prime form → canonical Forte label) ─────────────────────
+
+    [TestCase("047", "3-11")]    // major triad
+    [TestCase("037", "3-11")]    // minor triad — same set class
+    [TestCase("07", "2-5")]      // perfect-fifth dyad (the {0,7} → 2-5 case GA got wrong)
+    [TestCase("048", "3-12")]    // augmented triad
+    [TestCase("0137", "4-Z29")]  // all-interval tetrachord (Z marker preserved)
+    [TestCase("0146", "4-Z15")]  // all-interval tetrachord
+    [TestCase("0158", "4-20")]   // major-seventh chord set class
+    public void ForwardLookup_Returns_Canonical_Forte(string pcs, string expected)
+    {
+        Assert.That(PitchClassSet.TryParse(pcs, null, out var set), Is.True);
+        var prime = set.PrimeForm ?? set;
+
+        Assert.That(CanonicalForteCatalog.TryGetForteLabel(prime, out var label), Is.True);
+        Assert.That(label, Is.EqualTo(expected));
+
+        // The public facade must agree (this is what every consumer calls).
+        Assert.That(ForteCatalog.GetForteNumber(set)?.ToString(), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ForwardLookup_Derives_Complement_Cardinality_7()
+    {
+        // 7-35 (the diatonic collection) is the complement of 5-35; exercises the 7–11 path.
+        Assert.That(CanonicalForteCatalog.TryGetPrimeForm("7-35", out var diatonic), Is.True);
+        Assert.That(CanonicalForteCatalog.TryGetForteLabel(diatonic.PrimeForm ?? diatonic, out var label), Is.True);
+        Assert.That(label, Is.EqualTo("7-35"));
+    }
+
+    [Test]
+    public void Forward_Then_Reverse_RoundTrips_For_Every_GA_SetClass()
+    {
+        // The strong invariant: for every set class GA knows (cardinalities 1–11),
+        // prime-form → canonical label → prime-form returns the same prime form.
+        foreach (var sc in SetClass.Items)
+        {
+            var prime = sc.PrimeForm;
+            var card = prime.Cardinality.Value;
+            if (card is 0 or 12) continue; // trivial classes use synthetic "0-1"/"12-1" labels
+
+            Assert.That(CanonicalForteCatalog.TryGetForteLabel(prime, out var label), Is.True,
+                $"no canonical label for prime form {prime} (card {card})");
+            Assert.That(CanonicalForteCatalog.TryGetPrimeForm(label, out var back), Is.True,
+                $"canonical label {label} did not resolve back to a prime form");
+            Assert.That((back.PrimeForm ?? back).Id, Is.EqualTo(prime.Id),
+                $"round-trip mismatch: {prime} → {label} → {back}");
+        }
+    }
 }
