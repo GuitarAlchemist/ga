@@ -30,6 +30,7 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     private double[]? _magnitudeSpectrum;
     private double? _spectralCentroid;
     private SetClass? _complement;
+    private SetClass? _mRelated;
 
     /// <summary>
     ///     Gets all modal set classes
@@ -64,6 +65,24 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     ///     set classes with their complements is materialised by <see cref="OpticKClass" />.
     /// </remarks>
     public SetClass Complement => _complement ??= new SetClass(PrimeForm.Complement.PrimeForm!);
+
+    /// <summary>
+    ///     Gets the M-related <see cref="SetClass" /> — the set class of this one's M5 transform
+    ///     (multiply pitch classes by 5 mod 12, the circle-of-fourths transform).
+    /// </summary>
+    /// <remarks>
+    ///     The M operation (with T and I) generates the affine group on ℤ₁₂. M5 commutes with both
+    ///     transposition and inversion, so it is well defined on set classes. The M-relation pairs sets
+    ///     built from semitones/major-sevenths with sets built from fourths/fifths; a set class may be
+    ///     M-self-related (<see cref="IsMSelfRelated" />). Not part of the OPTIC hierarchy — a separate
+    ///     equivalence — but the natural completion of the T / I operations already on the type.
+    /// </remarks>
+    public SetClass MRelated => _mRelated ??= new SetClass(PrimeForm.M5);
+
+    /// <summary>
+    ///     Gets a flag indicating whether this set class is its own M-related set class.
+    /// </summary>
+    public bool IsMSelfRelated => Equals(MRelated);
 
     /// <summary>
     ///     Gets the <see cref="ModalFamily" /> of the set class, if it exists
