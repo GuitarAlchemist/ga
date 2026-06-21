@@ -40,8 +40,6 @@ public sealed class Chord : IEquatable<Chord>
         Notes = new(notes);
         PitchClassSet = Notes.ToPitchClassSet();
 
-        Quality = DetermineQuality();
-        Extension = DetermineExtension();
         Symbol = symbol ?? GenerateSymbol();
     }
 
@@ -61,8 +59,6 @@ public sealed class Chord : IEquatable<Chord>
 
         // Analyze the chord to determine formula
         Formula = AnalyzeChordFormula();
-        Quality = DetermineQuality();
-        Extension = DetermineExtension();
         Symbol = GenerateSymbol();
     }
 
@@ -165,14 +161,16 @@ public sealed class Chord : IEquatable<Chord>
     public string Symbol { get; }
 
     /// <summary>
-    ///     Gets the chord quality (major, minor, diminished, etc.)
+    ///     Gets the chord quality (major, minor, dominant, suspended, etc.).
+    ///     Delegates to <see cref="Formula" /> so a chord and its formula never disagree — e.g. a
+    ///     dominant-7th chord reports Dominant (not Major) and a sus chord reports Suspended.
     /// </summary>
-    public ChordQuality Quality { get; }
+    public ChordQuality Quality => Formula.Quality;
 
     /// <summary>
-    ///     Gets the chord extension (7th, 9th, 11th, 13th)
+    ///     Gets the chord extension (7th, 9th, 11th, 13th, sus, 6, …). Delegates to <see cref="Formula" />.
     /// </summary>
-    public ChordExtension Extension { get; }
+    public ChordExtension Extension => Formula.Extension;
 
     /// <summary>
     ///     Gets the pitch class set representation of the chord
@@ -259,74 +257,6 @@ public sealed class Chord : IEquatable<Chord>
         }
 
         return new($"Analyzed_{Root}", intervals);
-    }
-
-
-    private ChordQuality DetermineQuality()
-    {
-        // Grounded in standard chord-quality definitions (triad quality by 3rd and 5th).
-        // https://en.wikipedia.org/wiki/Chord_(music)#Chord_quality
-        var hasMinorThird = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 3);
-        var hasMajorThird = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 4);
-        var hasDiminishedFifth = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 6);
-        var hasAugmentedFifth = Formula.Intervals.Any(i => i.Interval.Semitones.Value == 8);
-
-        if (hasDiminishedFifth && hasMinorThird)
-        {
-            return ChordQuality.Diminished;
-        }
-
-        if (hasAugmentedFifth && hasMajorThird)
-        {
-            return ChordQuality.Augmented;
-        }
-
-        if (hasMinorThird)
-        {
-            return ChordQuality.Minor;
-        }
-
-        if (hasMajorThird)
-        {
-            return ChordQuality.Major;
-        }
-
-        return ChordQuality.Other;
-    }
-
-    private ChordExtension DetermineExtension()
-    {
-        var hasSeventh = Formula.Intervals.Any(i => i.Interval.Semitones.Value is 10 or 11);
-        var hasNinth = Formula.Intervals.Any(i => i.Interval.Semitones.Value is 2 or 14);
-        var hasEleventh = Formula.Intervals.Any(i => i.Interval.Semitones.Value is 5 or 17);
-        var hasThirteenth = Formula.Intervals.Any(i => i.Interval.Semitones.Value is 9 or 21);
-
-        if (hasThirteenth)
-        {
-            return ChordExtension.Thirteenth;
-        }
-
-        if (hasEleventh)
-        {
-            return ChordExtension.Eleventh;
-        }
-
-        if (hasNinth && hasSeventh)
-        {
-            return ChordExtension.Ninth;
-        }
-
-        if (hasNinth && !hasSeventh)
-        {
-            return ChordExtension.Add9;
-        }
-
-        if (hasSeventh)
-        {
-            return ChordExtension.Seventh;
-        }
-
-        return ChordExtension.Triad;
     }
 
     private string GenerateSymbol()
