@@ -15,7 +15,7 @@ public static class VoicingDocumentFactory
         string? primeFormId = null,
         int translationOffset = 0)
     {
-        var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+        var diagram = voicing.Diagram;
         var distinctId = $"{tuningId.ToLower()}_{capo}_{diagram.Replace("-", "_").Replace("x", "m")}";
         var id = $"voicing_{distinctId}";
 

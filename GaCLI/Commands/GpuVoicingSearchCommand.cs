@@ -892,10 +892,10 @@ public class GpuVoicingSearchCommand
         // Convert to VoicingEmbedding format (take first maxCount)
         foreach (var voicing in realVoicings.Take(maxCount))
         {
-            var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
-            var fretSpan = VoicingExtensions.GetFretSpan(voicing.Positions);
-            var minFret = VoicingExtensions.GetMinFret(voicing.Positions);
-            var maxFret = VoicingExtensions.GetMaxFret(voicing.Positions);
+            var diagram = voicing.Diagram;
+            var fretSpan = voicing.FretSpan;
+            var minFret = voicing.MinFret;
+            var maxFret = voicing.MaxFret;
 
             // Check if voicing has open strings
             var hasOpenStrings = voicing.Positions
@@ -943,7 +943,7 @@ public class GpuVoicingSearchCommand
                 IntervalClassVector: "",
                 MinFret: minFret ?? 0,
                 MaxFret: maxFret ?? 0,
-                BarreRequired: VoicingExtensions.HasBarre(voicing.Positions),
+                BarreRequired: voicing.HasBarre(),
                 HandStretch: fretSpan,
                 StackingType: null,
                 RootPitchClass: 0,

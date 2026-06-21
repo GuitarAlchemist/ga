@@ -59,8 +59,8 @@ public static class VoicingEnumerator
 
         // Sort for reproducibility: same constraints → same byte-identical file
         voicings.Sort((a, b) => string.Compare(
-            VoicingExtensions.GetPositionDiagram(a.Positions),
-            VoicingExtensions.GetPositionDiagram(b.Positions),
+            a.Diagram,
+            b.Diagram,
             StringComparison.Ordinal));
 
         Directory.CreateDirectory(Path.GetDirectoryName(scratchPath)!);

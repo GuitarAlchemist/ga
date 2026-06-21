@@ -109,7 +109,7 @@ internal class Program
         var first20 = allVoicings.Take(20).ToList();
         foreach (var voicing in first20)
         {
-            AnsiConsole.MarkupLine($"  {VoicingExtensions.GetPositionDiagram(voicing.Positions)}");
+            AnsiConsole.MarkupLine($"  {voicing.Diagram}");
         }
 
         // Decompose voicings using the core library
@@ -167,7 +167,7 @@ internal class Program
 
         foreach (var (voicing, analysis) in samples)
         {
-            var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+            var diagram = voicing.Diagram;
             var midiNotes = string.Join(", ", analysis.MidiNotes);
 
             // Fix: handle int[] midi notes conversion to note names
@@ -583,7 +583,7 @@ internal class Program
             {
                 instrument = options.Tuning.ToString().ToLowerInvariant(),
                 stringCount = fretboard.StringCount,
-                diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions),
+                diagram = voicing.Diagram,
                 frets = voicing.Positions.Select(p => p switch
                 {
                     Position.Muted => "x",
@@ -591,9 +591,9 @@ internal class Program
                     _ => "?"
                 }).ToArray(),
                 midiNotes = voicing.Notes.Select(n => (int)n).ToArray(),
-                minFret = VoicingExtensions.GetMinFret(voicing.Positions),
-                maxFret = VoicingExtensions.GetMaxFret(voicing.Positions),
-                fretSpan = VoicingExtensions.GetFretSpan(voicing.Positions)
+                minFret = voicing.MinFret,
+                maxFret = voicing.MaxFret,
+                fretSpan = voicing.FretSpan
             };
 
             Console.WriteLine(JsonSerializer.Serialize(dto));
@@ -831,7 +831,7 @@ internal class Program
                 var embedding = await generator.GenerateEmbeddingAsync(doc);
 
                 // Build the entry for the binary index
-                var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+                var diagram = voicing.Diagram;
                 var midiNotes = voicing.Notes.Select(n => n.Value).ToArray();
                 var chordName = analysis.ChordId.ChordName;
 

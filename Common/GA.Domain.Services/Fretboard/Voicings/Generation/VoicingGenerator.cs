@@ -237,7 +237,7 @@ public static class VoicingGenerator
             {
                 foreach (var voicing in result.Voicings)
                 {
-                    var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+                    var diagram = voicing.Diagram;
                     if (seenDiagrams.TryAdd(diagram, 0))
                     {
                         yield return voicing;
@@ -268,7 +268,7 @@ public static class VoicingGenerator
 
                 foreach (var voicing in voicings)
                 {
-                    var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+                    var diagram = voicing.Diagram;
                     if (seenDiagrams.Add(diagram))
                     {
                         yield return voicing;
