@@ -130,4 +130,13 @@ jobs:
           fi
 
           git commit -m "chore(fleet): fleet-status snapshot $(date -u +%Y-%m-%d) [skip ci]"
-          git push origin HEAD:main
+          # Retry on a non-fast-forward race: other [skip ci] chore workflows commit to main concurrently.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "::warning::push failed (attempt ${attempt}); rebasing on origin/main and retrying."
+            git pull --rebase origin main || true
+          done
+          echo "::error::Could not push fleet-status after 3 attempts."
+          exit 1
