@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guitaralchemist.com/contracts/ga-tars-claim.schema.json",
+  "title": "GA → TARS Claim",
+  "description": "A single typed music-theory fact asserted by the GA chatbot, ingested by TARS for self-consistency (not truth) checking. See docs/contracts/2026-06-20-ga-tars-claim.contract.md and docs/adr/0003.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ts",
+    "session_id",
+    "source",
+    "predicate",
+    "subject",
+    "key",
+    "asserted_value"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Contract schema version. Unknown value → consumer halts (fail-closed)."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of the response that made the claim."
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Conversation id — scopes same-session vs cross-session contradiction."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["chatbot", "mcp"],
+      "description": "Retrieval surface that emitted the claim."
+    },
+    "predicate": {
+      "type": "string",
+      "enum": ["pitch_classes"],
+      "description": "Registered functional predicate (v1: pitch_classes only). Additive — new predicates extend this enum without a schema_version bump."
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Entity the claim is about, as the chatbot named it (e.g. 'Cmaj7')."
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "description": "GA-canonicalized 'predicate:subject' — the contradiction-grouping key. The only place GA's domain core is consulted."
+    },
+    "asserted_value": {
+      "description": "Value the chatbot's prose asserted, parsed by GA recognizers, stored verbatim (no ground-truth correction). Type depends on predicate; for pitch_classes a sorted array of pitch classes 0-11.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 11 },
+          "uniqueItems": true,
+          "description": "pitch_classes value."
+        }
+      ]
+    },
+    "trace_value": {
+      "description": "Value the agent's own co-emitted tool call computed in the same turn, when present. Enables the intra-response contradiction check. Same type as asserted_value.",
+      "type": ["array", "null"],
+      "items": { "type": "integer", "minimum": 0, "maximum": 11 },
+      "uniqueItems": true
+    },
+    "prose_span": {
+      "type": "string",
+      "description": "Source sentence the assertion was extracted from — for triage/audit."
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Agent that answered (router target)."
+    },
+    "model": {
+      "type": "string",
+      "description": "LLM that produced the prose — attributes drift to a model."
+    }
+  }
+}
