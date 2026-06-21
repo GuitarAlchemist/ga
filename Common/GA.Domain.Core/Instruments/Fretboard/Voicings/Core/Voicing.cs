@@ -13,9 +13,29 @@ using Primitives;
 public sealed record Voicing(Position[] Positions, MidiNote[] Notes)
 {
     /// <summary>
-    ///     Gets the position diagram for this voicing (e.g., "0-0-x-x-x-x")
+    ///     Position diagram for this voicing (e.g., "0-0-x-x-x-x"). Voicing equality is based on this.
     /// </summary>
-    private string PositionDiagram => VoicingExtensions.GetPositionDiagram(Positions);
+    public string Diagram => VoicingExtensions.GetPositionDiagram(Positions);
+
+    /// <summary>Fret span across fretted notes (0 if none).</summary>
+    public int FretSpan => VoicingExtensions.GetFretSpan(Positions);
+
+    /// <summary>Lowest fretted fret, or null if no fretted notes.</summary>
+    public int? MinFret => VoicingExtensions.GetMinFret(Positions);
+
+    /// <summary>Highest played fret, or null if no played notes.</summary>
+    public int? MaxFret => VoicingExtensions.GetMaxFret(Positions);
+
+    /// <summary>Number of played (non-muted) notes.</summary>
+    public int PlayedNoteCount => VoicingExtensions.GetPlayedNoteCount(Positions);
+
+    /// <summary>
+    ///     True if 3+ notes share a fret (grouping semantics, not adjacency).
+    ///     NOTE: a separate adjacency-aware barre check lives in
+    ///     VoicingPhysicalAnalyzer.DetectBarreRequirement; unifying the two is a
+    ///     deliberate follow-up (changes indexed BarreRequired — see PR #456).
+    /// </summary>
+    public bool HasBarre() => VoicingExtensions.HasBarre(Positions);
 
     /// <summary>
     ///     Equality is based on the position diagram, not the array references
@@ -33,11 +53,11 @@ public sealed record Voicing(Position[] Positions, MidiNote[] Notes)
         }
 
         // Compare by position diagram for semantic equality
-        return PositionDiagram == other.PositionDiagram;
+        return Diagram == other.Diagram;
     }
 
     /// <summary>
     ///     Hash code based on position diagram for consistent hashing
     /// </summary>
-    public override int GetHashCode() => PositionDiagram.GetHashCode();
+    public override int GetHashCode() => Diagram.GetHashCode();
 }
