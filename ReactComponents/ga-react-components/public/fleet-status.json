@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "9f1fba9c0b8ff963d473855bd0711c94f39e9ea0",
-    "generatedAt": "2026-06-21T18:30:58.008308+00:00",
+    "commitSha": "51b5856ca4bb86e61de0f64e07adad7721e6704d",
+    "generatedAt": "2026-06-21T18:38:52.959159+00:00",
     "repoCount": 5,
-    "totalPRs": 26
+    "totalPRs": 27
   },
   "repos": [
     {
@@ -390,8 +390,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 7,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:31:04Z",
+          "failingChecks": 3,
+          "headRef": "feat/ml-feedback-tracer-bullet",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 373,
+          "title": "feat(ml-feedback): bounded self-improvement loop \u2014 calibration + staleness legs (live)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/373"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
