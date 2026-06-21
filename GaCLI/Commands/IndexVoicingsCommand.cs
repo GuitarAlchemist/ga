@@ -94,7 +94,7 @@ public class IndexVoicingsCommand
                 // Just generate enough to satisfy limit (simple list approach)
                 var all = VoicingGenerator.GenerateAllVoicings(fretboard, windowSize, minPlayedNotes);
                 voicingsList = all
-                    .DistinctBy(v => VoicingExtensions.GetPositionDiagram(v.Positions))
+                    .DistinctBy(v => v.Diagram)
                     .Take(limit)
                     .ToList();
                 AnsiConsole.MarkupLine($"[green]Generated {voicingsList.Count:N0} voicings in {stopwatch.Elapsed.TotalSeconds:F1}s[/]");
@@ -460,7 +460,7 @@ public class IndexVoicingsCommand
 
     private static VoicingEntity MapToEntity(Voicing voicing, GA.Domain.Services.Fretboard.Voicings.Analysis.MusicalVoicingAnalysis analysis)
     {
-        var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+        var diagram = voicing.Diagram;
         var id = $"voicing_{diagram.Replace("-", "_").Replace("x", "m")}";
 
         return new VoicingEntity

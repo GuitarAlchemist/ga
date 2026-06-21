@@ -42,7 +42,7 @@ public class VoicingIndexingServiceTests
         var voicings = VoicingGenerator.GenerateAllVoicings(fretboard, 4, 3);
         var openC = voicings.FirstOrDefault(v =>
         {
-            var diagram = VoicingExtensions.GetPositionDiagram(v.Positions);
+            var diagram = v.Diagram;
             return diagram.Contains("3") && diagram.Contains("1") && diagram.Contains("0");
         });
         if (openC == null)
