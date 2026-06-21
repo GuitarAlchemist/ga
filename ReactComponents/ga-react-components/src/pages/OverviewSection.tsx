@@ -30,6 +30,7 @@ import {
 import { InFlightCard } from '../components/Summary/InFlightCard';
 import { MissionControl } from '../components/Summary/MissionControl';
 import { ValueScorecard } from '../components/Summary/ValueScorecard';
+import { MaintainGateCard } from '../components/Summary/MaintainGateCard';
 import { deriveTileStatus, type QualitySnapshotLike } from '../utils/qualityStatus';
 
 interface BacklogItem {
@@ -549,6 +550,11 @@ export const OverviewSection: React.FC = () => {
           from the sibling ix repo (ix-value). Answers "what's worth the most"
           right after "what's in flight." */}
       <ValueScorecard />
+
+      {/* Maintain Gate — IX's fused cross-signal hexavalent maintain verdict
+          (advisory / non-binding until IX Phase-3b). The single fused verdict
+          GA's per-axis gates individually lack. Federated daily from ix. */}
+      <MaintainGateCard />
 
       {/* Top stat tiles */}
       <Grid container spacing={2}>
