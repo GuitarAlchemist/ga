@@ -258,6 +258,7 @@
         <Project Path="Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj" />
         <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
         <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
+        <Project Path="Tests/GA.Domain.Core.Tests/GA.Domain.Core.Tests.csproj" />
         <Project Path="Tests/Common/GA.InteractiveExtension/GA.InteractiveExtension.Tests.csproj" />
         <Project Path="Tests/Common/GA.Business.DSL.Tests/GA.Business.DSL.Tests.csproj" />
         <Project Path="Tests/Apps/GA.MusicTheory.Service.Tests/GA.MusicTheory.Service.Tests.csproj" />

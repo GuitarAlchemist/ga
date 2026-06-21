@@ -72,12 +72,21 @@ public class ShapeGraphBuilder(
         ShapeGraphBuildOptions options)
     {
         // Generate all shapes
-        var allShapes = new List<FretboardShape>();
+        var generated = new List<FretboardShape>();
         foreach (var pcs in pitchClassSets)
         {
             var shapes = GenerateShapes(tuning, pcs, options);
-            allShapes.AddRange(shapes);
+            generated.AddRange(shapes);
         }
+
+        // Deduplicate by Id. A shape's Id is a hash of (tuning, positions), so an identical Id means an
+        // identical physical fingering — the same shape can legitimately be produced from several base
+        // frets or satisfy more than one requested pitch-class set. Keep the first occurrence rather than
+        // throwing on the duplicate key.
+        var allShapes = generated
+            .GroupBy(s => s.Id)
+            .Select(g => g.First())
+            .ToList();
 
         // Build shape dictionary
         var shapesDict = allShapes.ToImmutableDictionary(s => s.Id);

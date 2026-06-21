@@ -1,5 +1,6 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
+using System.Text.RegularExpressions;
 using Atonal;
 using Design.Attributes;
 using Design.Schema;
@@ -63,6 +64,84 @@ public sealed class Chord : IEquatable<Chord>
         Quality = DetermineQuality();
         Extension = DetermineExtension();
         Symbol = GenerateSymbol();
+    }
+
+    // Splits a chord symbol into root (A-G with optional #/b) and a suffix describing quality/extension.
+    private static readonly Regex _symbolRegex =
+        new("^([A-G][#b]?)(.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    ///     Parses a chord symbol (e.g. "C", "Cm", "Cmaj7", "F#m7b5") into a <see cref="Chord" />.
+    /// </summary>
+    /// <param name="symbol">The chord symbol. The root is A-G with an optional # or b; the remainder is the quality/extension suffix.</param>
+    /// <returns>The parsed <see cref="Chord" />.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="symbol" /> is null/blank or not a recognizable chord symbol.</exception>
+    public static Chord FromSymbol(string symbol)
+    {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            throw new ArgumentException("Chord symbol cannot be null or empty", nameof(symbol));
+        }
+
+        var match = _symbolRegex.Match(symbol.Trim());
+        if (!match.Success)
+        {
+            throw new ArgumentException($"Invalid chord symbol: {symbol}", nameof(symbol));
+        }
+
+        var root = Note.Accidented.Parse(match.Groups[1].Value, null);
+        var formula = ParseSuffix(match.Groups[2].Value);
+        return new(root, formula, symbol);
+    }
+
+    /// <summary>
+    ///     Attempts to parse a chord symbol into a <see cref="Chord" /> without throwing.
+    /// </summary>
+    public static bool TryFromSymbol(string symbol, out Chord? chord)
+    {
+        try
+        {
+            chord = FromSymbol(symbol);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            chord = null;
+            return false;
+        }
+    }
+
+    private static ChordFormula ParseSuffix(string suffix)
+    {
+        var s = suffix.Trim().ToLowerInvariant().Replace(" ", "");
+        return s switch
+        {
+            "" or "maj" or "major" => ChordFormula.Major,
+            "m" or "min" or "minor" or "-" => ChordFormula.Minor,
+            "dim" or "°" => ChordFormula.Diminished,
+            "aug" or "+" => ChordFormula.Augmented,
+            "sus2" => ChordFormula.FromSemitones("Sus2", 2, 7),
+            "sus" or "sus4" => ChordFormula.FromSemitones("Sus4", 5, 7),
+            "6" => ChordFormula.FromSemitones("Sixth", 4, 7, 9),
+            "m6" or "min6" => ChordFormula.FromSemitones("Minor Sixth", 3, 7, 9),
+            "7" => ChordFormula.Dominant7,
+            "maj7" or "△7" => ChordFormula.Major7,
+            "m7" or "min7" or "-7" => ChordFormula.Minor7,
+            "dim7" or "°7" => ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9),
+            "m7b5" or "ø7" => ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10),
+            "9" => ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14),
+            "maj9" or "△9" => ChordFormula.FromSemitones("Major 9th", 4, 7, 11, 14),
+            "m9" or "min9" or "-9" => ChordFormula.FromSemitones("Minor 9th", 3, 7, 10, 14),
+            "11" => ChordFormula.FromSemitones("Dominant 11th", 4, 7, 10, 14, 17),
+            "maj11" or "△11" => ChordFormula.FromSemitones("Major 11th", 4, 7, 11, 14, 17),
+            "m11" or "min11" or "-11" => ChordFormula.FromSemitones("Minor 11th", 3, 7, 10, 14, 17),
+            "13" => ChordFormula.FromSemitones("Dominant 13th", 4, 7, 10, 14, 17, 21),
+            "maj13" or "△13" => ChordFormula.FromSemitones("Major 13th", 4, 7, 11, 14, 17, 21),
+            "m13" or "min13" or "-13" => ChordFormula.FromSemitones("Minor 13th", 3, 7, 10, 14, 17, 21),
+            "add9" => ChordFormula.FromSemitones("Add9", 4, 7, 14),
+            "6/9" or "69" => ChordFormula.FromSemitones("6/9", 4, 7, 9, 14),
+            _ => throw new ArgumentException($"Unrecognized chord suffix: '{suffix}'", nameof(suffix))
+        };
     }
 
     /// <summary>
