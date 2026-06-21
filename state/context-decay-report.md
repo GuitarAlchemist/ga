@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-06-20T09:11:43Z_
+_Generated: 2026-06-21T09:23:47Z_
 
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
@@ -72,7 +72,13 @@ _Generated: 2026-06-20T09:11:43Z_
 - `CONTEXT.md` → missing: `/grill-with-docs`
 - `CONTEXT.md` → missing: `/improve-codebase-architecture`
 - `CONTEXT.md` → missing: `/tdd`
+- `CONTEXT.md` → missing: `SCHEMA.json`
 - `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
+- `CONTEXT.md` → missing: `dev-process-overseer.ps1`
+- `CONTEXT.md` → missing: `docs/contracts/*.schema.json`
+- `CONTEXT.md` → missing: `state/.loop-halted`
+- `CONTEXT.md` → missing: `state/quality/<domain>/`
+- `CONTEXT.md` → missing: `~/.demerzel/HALT-ALL`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`
