@@ -45,7 +45,7 @@ public sealed class KeyIdentificationMcpTools
         "Pass either a bare chord list ('C Am F G') or the user's full question ('what key is C Am F G in?') — " +
         "the tool extracts the chord symbols and returns the ranked candidate keys with their diatonic sets. " +
         "Use whenever a user asks 'what key is X' / 'identify the key of X' / 'what key does X sound like'.")]
-    public KeyIdentificationResult IdentifyKey(
+    public static KeyIdentificationResult IdentifyKey(
         [Description("The user's question or a bare chord list. Examples: 'C Am F G', 'what key is Dm G C in?'.")]
         string query)
     {

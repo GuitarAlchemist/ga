@@ -56,8 +56,8 @@ public sealed class MusicalQueryEncoder(
             // a real query-side ICV signal cosines against the still-misparsed corpus
             // ICV slice and skews top-K away from exact PC-set matches (see acceptance
             // criterion: OptickIntegrationTests.cs:118 — "score should rise, not fall").
-            var structure = theory.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
-            Array.Copy(structure, 0, raw, EmbeddingSchema.StructureOffset, structure.Length);
+            var structure = TheoryVectorService.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
+            EmbeddingSchema.WriteInto(raw, "STRUCTURE", structure);
         }
 
         // MODAL — requires a minimal ChordVoicingRagDocument stub (PitchClasses + RootPitchClass are enough)
@@ -82,14 +82,14 @@ public sealed class MusicalQueryEncoder(
                 PossibleKeys = [],
             };
             var modalVec = modal.ComputeEmbedding(stubDoc);
-            Array.Copy(modalVec, 0, raw, EmbeddingSchema.ModalOffset, modalVec.Length);
+            EmbeddingSchema.WriteInto(raw, "MODAL", modalVec);
         }
 
         // SYMBOLIC — technique/style tags
         if (q.Tags is { Count: > 0 })
         {
-            var symbolicVec = symbolic.ComputeEmbedding(q.Tags);
-            Array.Copy(symbolicVec, 0, raw, EmbeddingSchema.SymbolicOffset, symbolicVec.Length);
+            var symbolicVec = SymbolicVectorService.ComputeEmbedding(q.Tags);
+            EmbeddingSchema.WriteInto(raw, "SYMBOLIC", symbolicVec);
         }
 
         // ROOT — 12-dim one-hot (v1.8). Query carries root signal IF the chord symbol
@@ -97,9 +97,8 @@ public sealed class MusicalQueryEncoder(
         // root match adds a small discriminating boost on top of set-class-level STRUCTURE.
         if (root2.HasValue)
         {
-            var rootVec = rootService.ComputeEmbedding(root2);
-            var rootPartition = EmbeddingSchema.Partitions.First(p => p.Name == "ROOT");
-            Array.Copy(rootVec, 0, raw, rootPartition.Start, rootVec.Length);
+            var rootVec = RootVectorService.ComputeEmbedding(root2);
+            EmbeddingSchema.WriteInto(raw, "ROOT", rootVec);
         }
 
         // MORPHOLOGY (24 dim) and CONTEXT (12 dim) remain zero — a text query carries no
@@ -146,33 +145,7 @@ public sealed class MusicalQueryEncoder(
     ///         partition cosine directly. No global renormalization.
     ///     </para>
     /// </summary>
-    internal static double[] ExtractCompactAndNormalize(double[] raw)
-    {
-        var compact = new double[OptickIndexReader.Dimension];
-        var cStart = 0;
-        foreach (var p in EmbeddingSchema.SimilarityPartitions)
-        {
-            // Per-partition L2 norm over raw slice.
-            var partitionSumSq = 0.0;
-            for (var j = 0; j < p.Dim; j++)
-            {
-                var v = raw[p.Start + j];
-                partitionSumSq += v * v;
-            }
-
-            if (partitionSumSq > double.Epsilon)
-            {
-                var norm = Math.Sqrt(partitionSumSq);
-                for (var j = 0; j < p.Dim; j++)
-                {
-                    compact[cStart + j] = raw[p.Start + j] / norm * p.SqrtWeight;
-                }
-            }
-            // else: zero slice stays zero
-            cStart += p.Dim;
-        }
-        return compact;
-    }
+    internal static double[] ExtractCompactAndNormalize(double[] raw) => EmbeddingSchema.ExtractCompact(raw);
 }
 
 /// <summary>

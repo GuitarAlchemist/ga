@@ -49,7 +49,7 @@ internal class Program
             .Start("Analyzing chord voicings...", ctx =>
             {
                 var count = 0;
-                foreach (var analysis in fretboard.GenerateAllFiveFretSpanChords(3))
+                foreach (var analysis in Fretboard.GenerateAllFiveFretSpanChords(3))
                 {
                     var noteCount = analysis.Voicing.Length;
                     if (noteCount >= 3 && noteCount <= 4 && analysis.Ergonomics.IsPlayable)
@@ -81,7 +81,7 @@ internal class Program
             .Start("Analyzing chord voicings...", ctx =>
             {
                 var count = 0;
-                foreach (var analysis in fretboard.GenerateAllFiveFretSpanChords(7))
+                foreach (var analysis in Fretboard.GenerateAllFiveFretSpanChords(7))
                 {
                     var noteCount = analysis.Voicing.Length;
                     if (noteCount >= 3 && noteCount <= 5 && analysis.Ergonomics.IsPlayable)
@@ -114,7 +114,7 @@ internal class Program
             .Start("Analyzing chord voicings...", ctx =>
             {
                 var count = 0;
-                foreach (var analysis in fretboard.GenerateAllFiveFretSpanChords(24))
+                foreach (var analysis in Fretboard.GenerateAllFiveFretSpanChords(24))
                 {
                     var noteCount = analysis.Voicing.Length;
                     if (noteCount >= 3 && noteCount <= 6 && analysis.Ergonomics.IsPlayable)
@@ -152,7 +152,7 @@ internal class Program
             .Start("Analyzing chord voicings...", ctx =>
             {
                 var count = 0;
-                foreach (var analysis in fretboard.GenerateAllFiveFretSpanChords(endFret))
+                foreach (var analysis in Fretboard.GenerateAllFiveFretSpanChords(endFret))
                 {
                     var lowestFret = analysis.Voicing.Min(p => p.Location.Fret.Value);
                     var highestFret = analysis.Voicing.Max(p => p.Location.Fret.Value);

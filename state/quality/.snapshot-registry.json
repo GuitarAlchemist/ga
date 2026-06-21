@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "envelope_schema": "docs/contracts/quality-snapshot.schema.json",
+  "description": "Opt-IN registry of dashboard-envelope snapshot producers. ONLY the dirs listed under `domains` are validated against the envelope schema, and only their dated `snapshot_glob` files (so baseline.json / _*.json inside a registered dir are NOT validated). Every other *.json under state/quality/ — baselines, SCHEMA.json, *-artifact.json (own contract), lens sidecars, analysis dirs, loose one-off files — is excluded BY DESIGN. This replaces the opt-OUT (`_`-prefix-only) selection that false-failed 134 of 165 files in PR #370. Add a domain here when it starts emitting the canonical dashboard envelope; do not list sidecar/lens dirs.",
+  "domains": [
+    { "domain": "chatbot-qa",       "dir": "state/quality/chatbot-qa",       "snapshot_glob": "20??-??-??.json" },
+    { "domain": "embeddings",       "dir": "state/quality/embeddings",       "snapshot_glob": "20??-??-??.json" },
+    { "domain": "invariants",       "dir": "state/quality/invariants",       "snapshot_glob": "20??-??-??.json" },
+    { "domain": "readme-drift",     "dir": "state/quality/readme-drift",     "snapshot_glob": "20??-??-??.json" },
+    { "domain": "voicing-analysis", "dir": "state/quality/voicing-analysis", "snapshot_glob": "20??-??-??.json" },
+    { "domain": "maintain-gate",    "dir": "state/quality/maintain-gate",    "snapshot_glob": "20??-??-??.json", "contract": "docs/contracts/maintain-gate-snapshot.schema.json", "advisory": true, "producer": "ix ix_maintain_snapshot (federated, ix#146)" }
+  ],
+  "excluded_by_design": [
+    "*/baseline.json and *-baseline-*.json — policy contracts, not envelopes (different shape)",
+    "**/SCHEMA.json, _schema.json, _fixtures/** — schema definitions / fixtures",
+    "optick-sae/** — own contract (optick-sae-artifact.schema.json), not the dashboard envelope",
+    "optick-retrieval/, routing-diagnostic/, ga-ix-settheory/, domain-invariants/, query-embeddings/ — lens sidecars (plain arrays / per-row data)",
+    "ai-costs/, council/, test-plans/, sentrux-next-steps/ — config / schema dirs",
+    "loose state/quality/*-2026-*.json one-offs and routing-eval-*.json — not dashboard tiles"
+  ]
+}

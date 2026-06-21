@@ -70,7 +70,7 @@ public class RagEvaluationService(
     /// <summary>
     /// Validates the quality of a specific query based on expected keywords in results.
     /// </summary>
-    public float CalculateRetrievalQuality(RagQueryEvaluation evaluation, IEnumerable<string> expectedKeywords)
+    public static float CalculateRetrievalQuality(RagQueryEvaluation evaluation, IEnumerable<string> expectedKeywords)
     {
         if (!evaluation.Results.Any()) return 0f;
 

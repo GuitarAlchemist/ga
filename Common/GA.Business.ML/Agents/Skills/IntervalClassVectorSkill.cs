@@ -227,7 +227,7 @@ public sealed class IntervalClassVectorSkill(
         };
     }
 
-    private AgentResponse CannotParse(string chord) => new()
+    private static AgentResponse CannotParse(string chord) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't parse '{chord}' as a chord. Try C, Am, G7, Cmaj7, Dm7, F#m7b5, B°, sus2/sus4, m9/maj9, etc.",
@@ -235,7 +235,7 @@ public sealed class IntervalClassVectorSkill(
         Evidence   = [$"IntervalClassVectorSkill: unparseable chord token '{chord}'"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask for an ICV of a chord, scale, or explicit pitch-class set, e.g. \"ICV of Cmaj7\", \"interval-class vector of {0,2,4,5,7,9,11}\", \"ICV of the dorian mode\".",

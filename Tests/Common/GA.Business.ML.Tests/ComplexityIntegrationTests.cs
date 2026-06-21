@@ -34,7 +34,7 @@ public class ComplexityIntegrationTests
         Assert.That(scoreExt, Is.GreaterThan(scoreTriad));
     }
 
-    private ChordVoicingRagDocument CreateDoc(int[] pcs) =>
+    private static ChordVoicingRagDocument CreateDoc(int[] pcs) =>
         new()
         {
             Id = "test",

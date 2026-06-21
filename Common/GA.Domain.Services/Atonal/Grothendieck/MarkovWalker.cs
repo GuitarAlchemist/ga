@@ -129,7 +129,7 @@ public class MarkovWalker
         return graph.Shapes[validTransitions.First().ToId];
     }
 
-    private List<(ShapeTransition transition, double probability)> ComputeTransitionProbabilities(
+    private static List<(ShapeTransition transition, double probability)> ComputeTransitionProbabilities(
         ShapeGraph graph,
         IEnumerable<ShapeTransition> transitions,
         WalkOptions options)

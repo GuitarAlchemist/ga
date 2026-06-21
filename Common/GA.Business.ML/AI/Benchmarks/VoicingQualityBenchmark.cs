@@ -58,7 +58,7 @@ public class VoicingQualityBenchmark(MongoDbService mongoDbService) : IBenchmark
         return result;
     }
 
-    private List<(string Diagram, string ExpectedName, string Description)> GetGroundTruth() =>
+    private static List<(string Diagram, string ExpectedName, string Description)> GetGroundTruth() =>
     [
         ("x-3-2-0-1-0", "C", "Standard open C major"),
         ("x-0-2-2-2-0", "A", "Standard open A major"),

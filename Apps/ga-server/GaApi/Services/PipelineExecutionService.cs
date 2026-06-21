@@ -283,7 +283,7 @@ public sealed class PipelineExecutionService(
         return stdout.ToString().Trim();
     }
 
-    private async Task<string> RunOllamaAsync(string baseUrl, string prompt, CancellationToken ct)
+    private static async Task<string> RunOllamaAsync(string baseUrl, string prompt, CancellationToken ct)
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
         var body = JsonSerializer.Serialize(new { model = "llama3.2", prompt, stream = false });

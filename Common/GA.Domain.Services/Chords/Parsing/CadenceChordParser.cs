@@ -47,7 +47,7 @@ public class CadenceChordParser
         return ChordQuality.Major;
     }
 
-    public int ParseRoot(string chordName)
+    public static int ParseRoot(string chordName)
     {
         var s = chordName.Trim();
         if (string.IsNullOrEmpty(s)) return 0;

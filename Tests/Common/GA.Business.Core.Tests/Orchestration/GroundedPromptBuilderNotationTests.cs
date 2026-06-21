@@ -18,7 +18,7 @@ public sealed class GroundedPromptBuilderNotationTests
             new VoicingExplanationDto("Open C shape.", [], [], [], null),
             "Open C shape.");
 
-        var prompt = builder.Build("Show me C major", [candidate]);
+        var prompt = GroundedPromptBuilder.Build("Show me C major", [candidate]);
 
         Assert.Multiple(() =>
         {
@@ -40,7 +40,7 @@ public sealed class GroundedPromptBuilderNotationTests
         var builder = new GroundedPromptBuilder();
         // Empty candidate list is the OOS path; the guardrail must be present
         // regardless of whether the manifest has data.
-        var prompt = builder.Build(query, []);
+        var prompt = GroundedPromptBuilder.Build(query, []);
 
         Assert.Multiple(() =>
         {

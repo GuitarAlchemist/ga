@@ -10,7 +10,7 @@ public class StructuredSearchTests
     private static EnhancedVoicingSearchService SearchService => SemanticSearchTestFixture.SearchService;
 
     // Helper to run search and assert
-    private async Task<VoicingSearchResult?> SearchSingle(string query, VoicingSearchFilters filters)
+    private static async Task<VoicingSearchResult?> SearchSingle(string query, VoicingSearchFilters filters)
     {
         // Use MockEmbed to get a vector, though structured filters might not need it if we used separate method,
         // but HybridSearchAsync requires a query vector.

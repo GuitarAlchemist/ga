@@ -44,7 +44,7 @@ public class PartitionedRagServiceTests
     public void ParseStructuredQuery_ExtractsChordsAndScales()
     {
         var query = "How to play Cmaj7 extensions with G Mixolydian?";
-        var structured = _service.ParseStructuredQuery(query);
+        var structured = PartitionedRagService.ParseStructuredQuery(query);
 
         Assert.That(structured.Chords, Contains.Item("Cmaj7"));
         Assert.That(structured.Scales, Contains.Item("G Mixolydian"));
@@ -55,7 +55,7 @@ public class PartitionedRagServiceTests
     public void ParseStructuredQuery_DetectsTechniques()
     {
         var query = "Sweep picking exercises for fusion";
-        var structured = _service.ParseStructuredQuery(query);
+        var structured = PartitionedRagService.ParseStructuredQuery(query);
 
         Assert.That(structured.Techniques, Contains.Item("Sweep"));
         Assert.That(structured.RecommendedPartitions, Contains.Item(KnowledgeType.Technique));

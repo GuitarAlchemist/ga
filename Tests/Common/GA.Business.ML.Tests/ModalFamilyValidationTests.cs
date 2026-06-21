@@ -63,7 +63,7 @@ public class ModalFamilyValidationTests
         Assert.That(score, Is.GreaterThan(0.9));
     }
 
-    private ChordVoicingRagDocument CreateDoc(int root, int[] pcs) =>
+    private static ChordVoicingRagDocument CreateDoc(int root, int[] pcs) =>
         new()
         {
             Id = "test",

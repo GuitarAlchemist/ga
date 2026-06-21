@@ -41,7 +41,7 @@ public class OnnxEmbeddingServiceTests
         await harness.Service.GenerateEmbeddingAsync("mystery");
         var session = harness.SessionFactory.LastSession!;
         Assert.That(session.LastInputIds, Is.Not.Null, "Input IDs were not captured");
-        Assert.That(session.LastInputIds![1], Is.EqualTo(harness.UnknownTokenId));
+        Assert.That(session.LastInputIds![1], Is.EqualTo(OnnxServiceTestHarness.UnknownTokenId));
     }
 
     private static double[] ComputeMeanVector(long[] attentionMask, int hiddenSize)
@@ -127,7 +127,7 @@ public class OnnxEmbeddingServiceTests
 
         public string ModelPath { get; }
         public string VocabularyPath { get; }
-        public long UnknownTokenId => 3;
+        public static long UnknownTokenId => 3;
         public OnnxEmbeddingService Service { get; }
         public FakeOnnxSessionFactory SessionFactory { get; }
 

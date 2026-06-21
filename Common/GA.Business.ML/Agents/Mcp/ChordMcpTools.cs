@@ -25,17 +25,8 @@ public sealed partial class ChordMcpTools
     // Cap at 12 to admit edge cases without inviting MB-sized abuse.
     private const int MaxChordSymbolLength = 12;
 
-    private static readonly IReadOnlyDictionary<string, int> PitchClasses =
-        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["C"] = 0,  ["C#"] = 1, ["Db"] = 1,
-            ["D"] = 2,  ["D#"] = 3, ["Eb"] = 3,
-            ["E"] = 4,  ["F"] = 5,  ["F#"] = 6, ["Gb"] = 6,
-            ["G"] = 7,  ["G#"] = 8, ["Ab"] = 8,
-            ["A"] = 9,  ["A#"] = 10, ["Bb"] = 10,
-            ["B"] = 11, ["B#"] = 0, ["Cb"] = 11, ["E#"] = 5, ["Fb"] = 4,
-        };
-
+    // Root map, root/quality normalization, and the interval formula table live in the shared
+    // ChordVocabulary seam (PR #102 / architecture-review candidate #3) — same source as ChordInfoSkill.
     // NaturalLetters / NaturalPitchClasses live in ChordSpelling (PR #102).
 
     /// <summary>
@@ -49,7 +40,7 @@ public sealed partial class ChordMcpTools
         "Use this whenever a user asks for the notes / intervals / construction of a named chord. " +
         "Supports major, minor (m/min), diminished (dim), augmented (aug), dominant 7 (just '7'), " +
         "major 7 (maj7/M7), minor 7 (m7/min7), diminished 7 (dim7), and half-diminished (m7b5).")]
-    public ChordResult GetChordInfo(
+    public static ChordResult GetChordInfo(
         [Description("The chord symbol — root note plus optional quality suffix. Examples: 'C', 'Cm', 'Cmaj7', 'F#dim', 'Bbm7', 'Aaug', 'Cdim7', 'Bm7b5'.")]
         string chordSymbol)
     {
@@ -60,13 +51,13 @@ public sealed partial class ChordMcpTools
         if (!match.Success)
             return ChordResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(chordSymbol)}' as a chord symbol. Try C, Cm, Cmaj7, F#dim, Bbm7, etc.");
 
-        var root    = NormalizeRoot(match.Groups["root"].Value);
-        var quality = NormalizeQuality(match.Groups["quality"].Value);
+        var root    = ChordVocabulary.NormalizeRoot(match.Groups["root"].Value);
+        var quality = ChordVocabulary.NormalizeQuality(match.Groups["quality"].Value);
 
-        if (!PitchClasses.TryGetValue(root, out var rootPc))
+        if (!ChordVocabulary.TryGetPitchClass(root, out var rootPc))
             return ChordResult.Failure($"'{McpEchoSanitizer.SanitizeEcho(root)}' is not a recognised chord root. Try C, F#, Bb, etc.");
 
-        var formula = GetFormula(quality);
+        var formula = ChordVocabulary.GetFormula(quality);
         var notes   = formula.Intervals
             .Zip(formula.LetterSteps, (interval, letterSteps) => ChordSpelling.Spell(root, rootPc + interval, letterSteps))
             .ToArray();
@@ -75,71 +66,11 @@ public sealed partial class ChordMcpTools
         {
             Symbol    = chordSymbol.Trim(),
             Root      = root,
-            Quality   = formula.DisplayName,
+            Quality   = formula.Quality,
             Notes     = notes,
             Intervals = formula.IntervalNames.ToArray(),
         };
     }
-
-    private static string NormalizeRoot(string raw)
-    {
-        var trimmed = raw.Trim();
-        return trimmed.Length switch
-        {
-            0 => string.Empty,
-            1 => trimmed.ToUpperInvariant(),
-            _ => char.ToUpperInvariant(trimmed[0]) + trimmed[1..].ToLowerInvariant(),
-        };
-    }
-
-    private static string NormalizeQuality(string raw)
-    {
-        var trimmed = raw.Trim();
-        // Case-sensitive arms FIRST — uppercase "M" and "M7" mean major and
-        // major 7 respectively in chord notation, and they cannot be folded
-        // through ToLowerInvariant because "M".ToLowerInvariant() == "m"
-        // which is the minor abbreviation. Lower-case fallbacks come AFTER.
-        // Bug fix from PR #80 review: previously `CM` and `CM7` silently
-        // resolved to C minor / C minor 7 because the lowercase arms ran first.
-        return trimmed switch
-        {
-            "M"  => "major",
-            "M7" => "major 7",
-            _    => trimmed.ToLowerInvariant() switch
-            {
-                ""                                          => "major",
-                "maj" or "major"                            => "major",
-                "m" or "min" or "minor"                     => "minor",
-                "dim" or "diminished"                       => "diminished",
-                "aug" or "augmented"                        => "augmented",
-                "7" or "dominant" or "dom7"                 => "dominant 7",
-                "maj7" or "major 7"                         => "major 7",
-                "m7" or "min7" or "minor 7"                 => "minor 7",
-                "dim7" or "diminished 7" or "diminished7"   => "diminished 7",
-                "m7b5" or "min7b5" or "half-diminished"     => "half-diminished",
-                var other                                   => other,
-            },
-        };
-    }
-
-    private static ChordFormula GetFormula(string quality) => quality switch
-    {
-        "minor"            => new("minor",            [0, 3, 7],     [0, 2, 4],    ["root", "minor third", "perfect fifth"]),
-        "diminished"       => new("diminished",       [0, 3, 6],     [0, 2, 4],    ["root", "minor third", "diminished fifth"]),
-        "augmented"        => new("augmented",        [0, 4, 8],     [0, 2, 4],    ["root", "major third", "augmented fifth"]),
-        "dominant 7"       => new("dominant 7",       [0, 4, 7, 10], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "minor seventh"]),
-        "major 7"          => new("major 7",          [0, 4, 7, 11], [0, 2, 4, 6], ["root", "major third", "perfect fifth", "major seventh"]),
-        "minor 7"          => new("minor 7",          [0, 3, 7, 10], [0, 2, 4, 6], ["root", "minor third", "perfect fifth", "minor seventh"]),
-        // Diminished seventh: stacked minor thirds. Cdim7 = C Eb Gb Bbb (the
-        // seventh is enharmonically a major sixth, but the letter-step math
-        // forces the double-flat spelling). Letter steps 0,2,4,6 keep all four
-        // notes on consecutive odd letters from the root.
-        "diminished 7"     => new("diminished 7",     [0, 3, 6, 9],  [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "diminished seventh"]),
-        // Half-diminished (m7b5): minor seventh with a flat fifth. Bm7b5 = B D F A.
-        // The classic ii° in a minor key (e.g. Bm7b5 in A minor).
-        "half-diminished"  => new("half-diminished",  [0, 3, 6, 10], [0, 2, 4, 6], ["root", "minor third", "diminished fifth", "minor seventh"]),
-        _                  => new("major",            [0, 4, 7],     [0, 2, 4],    ["root", "major third", "perfect fifth"]),
-    };
 
     // Spell() delegates to the shared helper (PR #102) — see ChordSpelling.
 
@@ -150,12 +81,6 @@ public sealed partial class ChordMcpTools
     [GeneratedRegex(@"^(?<root>[A-Ga-g][#b]?)(?<quality>maj7|min7b5|min7|m7b5|m7|maj|min|m|dim7|dim|aug|7|M7|M)?$",
         RegexOptions.CultureInvariant)]
     private static partial Regex ChordSymbolRegex();
-
-    private sealed record ChordFormula(
-        string DisplayName,
-        IReadOnlyList<int> Intervals,
-        IReadOnlyList<int> LetterSteps,
-        IReadOnlyList<string> IntervalNames);
 }
 
 /// <summary>

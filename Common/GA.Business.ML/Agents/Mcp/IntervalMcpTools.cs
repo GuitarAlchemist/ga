@@ -30,85 +30,30 @@ public sealed class IntervalMcpTools
     /// long form, and the semitone count. On parse error, the result has
     /// <see cref="IntervalResult.Error"/> populated.
     /// </returns>
-    // Realistic note tokens are 1–3 chars (C, F#, Bbb, C##). Cap inputs at 4
-    // to defend against pathological ~MB strings — Note.{Sharp,Flat}.TryParse
-    // calls Trim().ToUpperInvariant().Replace(...), each of which allocates
-    // proportional to input length before the validation predicate runs.
-    private const int MaxNoteTokenLength = 4;
-
     [McpServerTool(Name = "ga_interval_compute"), Description(
         "Compute the simple interval between two notes (e.g. lowerNote='C', upperNote='G' returns a perfect fifth). " +
         "Use this whenever a user asks for the interval, distance, or semitone count between two named pitches. " +
         "Accepts standard note names with optional accidentals: C, F#, Bb, etc.")]
-    public IntervalResult IntervalCompute(
+    public static IntervalResult IntervalCompute(
         [Description("The lower note name (e.g. 'C', 'F#', 'Bb').")] string lowerNote,
         [Description("The upper note name (e.g. 'G', 'A#', 'Eb').")] string upperNote)
     {
-        if (!TryParseNote(lowerNote, out var note1))
+        if (!IntervalNaming.TryParseNote(lowerNote, out var note1))
             return IntervalResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(lowerNote)}' as a note name. Try C, F#, Bb, etc.");
-        if (!TryParseNote(upperNote, out var note2))
+        if (!IntervalNaming.TryParseNote(upperNote, out var note2))
             return IntervalResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(upperNote)}' as a note name. Try C, F#, Bb, etc.");
 
         var interval = note1.GetInterval(note2);
         return new IntervalResult
         {
-            LowerNote   = FormatNote(lowerNote),
-            UpperNote   = FormatNote(upperNote),
+            LowerNote   = IntervalNaming.FormatNote(lowerNote),
+            UpperNote   = IntervalNaming.FormatNote(upperNote),
             Name        = interval.Name,
-            Quality     = QualityLongName(interval.Quality.ToString()),
-            Size        = SizeOrdinalName(interval.Size.Value),
+            Quality     = IntervalNaming.QualityLongName(interval.Quality.ToString()),
+            Size        = IntervalNaming.SizeOrdinalName(interval.Size.Value),
             Semitones   = interval.Semitones.Value,
         };
     }
-
-    private static bool TryParseNote(string? token, out Note.Accidented note)
-    {
-        // Length / null guard — bail before TryParse so a 10MB string can't
-        // allocate proportional intermediate buffers in Note.{Sharp,Flat}.TryParse.
-        if (string.IsNullOrEmpty(token) || token.Length > MaxNoteTokenLength)
-        {
-            note = default!;
-            return false;
-        }
-
-        if (Note.Sharp.TryParse(token, null, out var sharp))      { note = sharp.ToAccidented();    return true; }
-        if (Note.Flat.TryParse(token, null, out var flat))        { note = flat.ToAccidented();     return true; }
-        if (Note.Accidented.TryParse(token, null, out var acc))   { note = acc;                    return true; }
-        note = default!;
-        return false;
-    }
-
-
-    private static string FormatNote(string raw)
-    {
-        var trimmed = raw.Trim();
-        if (trimmed.Length == 0) return raw;
-        var head = char.ToUpperInvariant(trimmed[0]).ToString();
-        return trimmed.Length == 1 ? head : head + trimmed[1..].ToLowerInvariant();
-    }
-
-    private static string QualityLongName(string shortQuality) => shortQuality switch
-    {
-        "P" => "perfect",
-        "M" => "major",
-        "m" => "minor",
-        "A" => "augmented",
-        "d" => "diminished",
-        _   => shortQuality,
-    };
-
-    private static string SizeOrdinalName(int size) => size switch
-    {
-        1 => "unison",
-        2 => "second",
-        3 => "third",
-        4 => "fourth",
-        5 => "fifth",
-        6 => "sixth",
-        7 => "seventh",
-        8 => "octave",
-        _ => $"{size}th",
-    };
 }
 
 /// <summary>

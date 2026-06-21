@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ix/contracts/quality-snapshot-v1.json",
+  "title": "Quality Snapshot — Dashboard Envelope",
+  "description": "Canonical envelope for snapshot JSON files written to `state/quality/<domain>/*.json`. The GA dev dashboard (`/test#dev/summary`) reads these required top-level fields to render the per-domain tile. Producers MAY include any number of additional domain-specific fields (e.g. `exemplars`, `fired`, `summary.total`, `repos`); those are passed through unchanged. Established additively in ix#65 (ix-invariant-coverage) and ga#367/#368/#369 (readme-drift-survey, VoicingAnalysisAudit, embeddings-snapshot) on 2026-05-24 after three producers landed without these fields and silently degraded the dashboard. Cross-field rule: when `degraded` is `true`, `degraded_reason` MUST be present (encoded as a draft 2020-12 `if`/`then`/`required` clause below).",
+  "type": "object",
+  "required": [
+    "domain",
+    "emitted_at",
+    "metric_name",
+    "metric_value",
+    "oracle_status",
+    "summary"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Slug identifying the producer (e.g. `ga-harness`, `invariants`, `readme-drift`). Lower-kebab-case."
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp of when the snapshot was emitted."
+    },
+    "metric_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short identifier of the headline metric (e.g. `invariant_pass_ratio`, `harness_ready`, `drift_days_p95`)."
+    },
+    "metric_value": {
+      "type": ["number", "null"],
+      "description": "Headline metric value. `null` is permitted only when the producer ran in degraded mode (`degraded: true`) and no last-known-good value is available."
+    },
+    "oracle_status": {
+      "type": "string",
+      "enum": ["ok", "warn", "error"],
+      "description": "Traffic-light state for the dashboard tile."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line human-readable summary suitable for display under the metric value."
+    },
+    "degraded": {
+      "type": "boolean",
+      "description": "True when the producer ran in degraded mode (e.g. missing dependency, partial corpus, network unavailable). Pairs with `degraded_reason`."
+    },
+    "degraded_reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required when `degraded` is `true`. Short machine-friendly reason code or human sentence."
+    },
+    "last_known_good_pass_pct": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Last-known-good pass percentage carried forward when the producer is degraded."
+    },
+    "last_known_good_source": {
+      "type": "string",
+      "description": "Provenance for `last_known_good_pass_pct` (e.g. `\"baseline\"`, ISO date, snapshot path)."
+    },
+    "last_known_good_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 UTC timestamp of when the last-known-good value was originally captured."
+    },
+    "problems": {
+      "type": "array",
+      "maxItems": 50,
+      "description": "Per-problem detail surfaced to the dashboard. Capped at 50 entries to keep snapshots small.",
+      "items": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Stable machine-readable identifier (e.g. `invariant-18`, `orphan`, `missing-readme`)."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable explanation."
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true,
+  "if": {
+    "properties": {
+      "degraded": { "const": true }
+    },
+    "required": ["degraded"]
+  },
+  "then": {
+    "required": ["degraded_reason"]
+  }
+}

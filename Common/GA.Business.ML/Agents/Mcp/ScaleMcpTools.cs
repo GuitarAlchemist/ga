@@ -38,7 +38,7 @@ public sealed class ScaleMcpTools
         "Get the 7 notes of a major or minor key (e.g. root='C', mode='major' returns C D E F G A B). " +
         "Use this whenever a user asks 'what are the notes in X major/minor', 'show me the X scale', etc. " +
         "Accepts standard root names with optional accidentals (C, F#, Bb) and mode names 'major'/'minor' (or 'maj'/'min').")]
-    public ScaleResult GetKeyNotes(
+    public static ScaleResult GetKeyNotes(
         [Description("The root note (e.g. 'C', 'F#', 'Bb'). Case-insensitive.")] string root,
         [Description("The mode — 'major' or 'minor' (also accepts 'maj' / 'min').")] string mode)
     {
@@ -47,15 +47,10 @@ public sealed class ScaleMcpTools
         if (string.IsNullOrEmpty(mode) || mode.Length > MaxModeTokenLength)
             return ScaleResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(mode)}' as a mode. Use 'major' or 'minor'.");
 
-        var modeNorm = mode.Trim().ToLowerInvariant();
-        var isMinor  = modeNorm is "minor" or "min";
-        var isMajor  = modeNorm is "major" or "maj";
-        if (!isMinor && !isMajor)
+        if (!KeyNaming.TryNormalizeMode(mode, out var isMinor))
             return ScaleResult.Failure($"Unknown mode '{McpEchoSanitizer.SanitizeEcho(mode)}'. Use 'major' or 'minor'.");
 
-        var key = Key.Items.FirstOrDefault(k =>
-            k.KeyMode == (isMinor ? KeyMode.Minor : KeyMode.Major) &&
-            string.Equals(k.Root.ToString(), root.Trim(), StringComparison.OrdinalIgnoreCase));
+        var key = KeyNaming.ResolveKey(root, isMinor);
 
         if (key is null)
             return ScaleResult.Failure(
@@ -68,32 +63,9 @@ public sealed class ScaleMcpTools
             Root         = key.Root.ToString(),
             Mode         = isMinor ? "minor" : "major",
             Notes        = notes,
-            KeySignature = DescribeKeySignature(key),
-            RelativeKey  = GetRelativeKeyName(key),
+            KeySignature = KeyNaming.DescribeKeySignature(key),
+            RelativeKey  = KeyNaming.RelativeKeyName(key),
         };
-    }
-
-    private static string DescribeKeySignature(Key key)
-    {
-        var count = key.KeySignature.AccidentalCount;
-        if (count == 0) return "no sharps or flats";
-        var kind  = key.KeySignature.AccidentalKind == AccidentalKind.Sharp ? "sharp" : "flat";
-        return $"{count} {kind}{(count > 1 ? "s" : "")}";
-    }
-
-    private static string GetRelativeKeyName(Key key)
-    {
-        // Relative pair shares the same pitch-class set — find by PC mask. Same
-        // arithmetic the C# ScaleInfoSkill uses; lifted verbatim so behavior
-        // matches.
-        var mask = key.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value));
-        var sibling = Key.Items.FirstOrDefault(k =>
-            k.KeyMode != key.KeyMode &&
-            k.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value)) == mask);
-
-        return sibling is null
-            ? "none"
-            : $"{sibling.Root} {(sibling.KeyMode == KeyMode.Major ? "major" : "minor")}";
     }
 }
 

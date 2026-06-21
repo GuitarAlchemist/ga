@@ -62,10 +62,10 @@ public class ProgressionSignalService(PhaseSphereService phaseSphereService)
             // 5. Tonal Drift (Phase distance on the Circle of Fifths from Barycenter)
             // Use k=5 (index 4) for Fifth Cycle.
             var spec = phaseSphereService.ComputeSpectralVector(doc.PitchClasses);
-            var normSpec = phaseSphereService.NormalizeToSphere(spec);
+            var normSpec = PhaseSphereService.NormalizeToSphere(spec);
 
             // Relative phase angle at k=5
-            var relPhases = phaseSphereService.ComputeRelativePhases(normSpec, barycenter);
+            var relPhases = PhaseSphereService.ComputeRelativePhases(normSpec, barycenter);
 
             // Unwrapped phase or absolute distance?
             // Absolute distance from center (0 to PI).
@@ -83,7 +83,7 @@ public class ProgressionSignalService(PhaseSphereService phaseSphereService)
         };
     }
 
-    private double CalculateDistance(float[]? a, float[]? b)
+    private static double CalculateDistance(float[]? a, float[]? b)
     {
         if (a == null || b == null || a.Length != b.Length)
         {

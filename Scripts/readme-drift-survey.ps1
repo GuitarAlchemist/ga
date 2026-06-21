@@ -53,11 +53,8 @@ $Repos = @(
     'Demerzel',
     'tars',
     'guitaralchemist.github.io',
-    'mergerisk',
     'agent-blackbox',
     'demerzel-bot',
-    'devto-mcp',
-    'fin',
     'ga-godot',
     'hari'
 )

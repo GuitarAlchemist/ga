@@ -216,7 +216,7 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
         }
     }
 
-    private Position.Played CreatePlayedPosition(int stringNumber, int fret)
+    private static Position.Played CreatePlayedPosition(int stringNumber, int fret)
     {
         var str = Str.FromValue(stringNumber);
         var fretValue = Fret.FromValue(fret);
@@ -226,7 +226,7 @@ public class BiomechanicsController(ILogger<BiomechanicsController> logger) : Co
         return new(location, midiNote);
     }
 
-    private HandPoseVisualizationDto? CreateVisualizationDto(BiomechanicalPlayabilityAnalysis analysis)
+    private static HandPoseVisualizationDto? CreateVisualizationDto(BiomechanicalPlayabilityAnalysis analysis)
     {
         if (analysis.BestPose == null)
         {

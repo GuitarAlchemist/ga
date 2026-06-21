@@ -64,6 +64,14 @@ public readonly record struct ForteNumber :
     /// </summary>
     public int Index { get; }
 
+    /// <summary>
+    ///     True when this set class is Z-related — its canonical Forte label carries
+    ///     a "Z" marker (e.g. "4-Z29"). Z-related set classes share an interval-class
+    ///     vector with a different set class. Defaults to <c>false</c> (the Rahn-ordered
+    ///     <see cref="ProgrammaticForteCatalog"/> does not model the Z marker).
+    /// </summary>
+    public bool IsZRelated { get; init; }
+
     #region IStaticReadonlyCollection Members
 
     /// <summary>
@@ -75,7 +83,7 @@ public readonly record struct ForteNumber :
     #endregion
 
     /// <inheritdoc />
-    public override string ToString() => $"{Cardinality.Value}-{Index}";
+    public override string ToString() => $"{Cardinality.Value}-{(IsZRelated ? "Z" : "")}{Index}";
 
     #region Innner Classes
 
@@ -89,32 +97,34 @@ public readonly record struct ForteNumber :
 
         private static IEnumerable<ForteNumber> Collection()
         {
-            var setClassesByCardinality = SetClass.Items
-                .GroupBy(sc => sc.Cardinality)
-                .ToImmutableDictionary(g => g.Key, g => g.Count());
+            // Canonical Forte numbers (Z markers included) for every set class, so display
+            // surfaces such as the GraphQL Forte-number hierarchy render "4-Z29", not the
+            // bare "4-29". Distinct because T/I-equivalent sets share one Forte number.
+            var result = new List<ForteNumber>();
+            var seen = new HashSet<(int Card, int Index, bool Z)>();
 
-            return Enumerable.Range(0, 13)
-                .SelectMany(cardinality =>
-                {
-                    var count = GetIndexCount(cardinality, setClassesByCardinality);
-                    // If there are no set classes for this cardinality, yield none instead of throwing
-                    return count == 0
-                        ? []
-                        : Enumerable.Range(1, count).Select(index => new ForteNumber(cardinality, index));
-                });
-
-            static int GetIndexCount(int cardinality, IReadOnlyDictionary<Cardinality, int> setClassesByCardinality)
+            void TryAdd(ForteNumber f)
             {
-                return cardinality switch
+                if (seen.Add((f.Cardinality.Value, f.Index, f.IsZRelated)))
                 {
-                    // For the empty set, the singleton set, and the full chromatic set we have a single class
-                    0 or 1 or 12 => 1,
-                    // For other cardinalities (2..11), use the number of distinct set classes if available
-                    _ when setClassesByCardinality.TryGetValue(cardinality, out var count) => count,
-                    // If not available, return 0 to avoid blowing up static initialization in test environments
-                    _ => 0
-                };
+                    result.Add(f);
+                }
             }
+
+            foreach (var setClass in SetClass.Items)
+            {
+                if (ForteCatalog.TryGetForteNumber(setClass.PrimeForm, out var forte))
+                {
+                    TryAdd(forte);
+                }
+            }
+
+            // Ensure the trivial classes are present even if SetClass.Items omits them.
+            if (TryParse("0-1", null, out var empty)) TryAdd(empty);
+            if (TryParse("12-1", null, out var chromatic)) TryAdd(chromatic);
+
+            result.Sort();
+            return result;
         }
     }
 
@@ -132,13 +142,26 @@ public readonly record struct ForteNumber :
         }
 
         var parts = s.Split('-');
-        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality) || !int.TryParse(parts[1], out var index))
+        if (parts.Length != 2 || !int.TryParse(parts[0], out var cardinality))
+        {
+            return false; // Failure
+        }
+
+        // The index may carry a leading "Z" marker for Z-related set classes, e.g. "4-Z29".
+        var indexPart = parts[1];
+        var isZRelated = indexPart.StartsWith("Z", StringComparison.OrdinalIgnoreCase);
+        if (isZRelated)
+        {
+            indexPart = indexPart[1..];
+        }
+
+        if (!int.TryParse(indexPart, out var index))
         {
             return false; // Failure
         }
 
         // Success
-        result = new(cardinality, index);
+        result = new ForteNumber(cardinality, index) { IsZRelated = isZRelated };
         return true;
     }
 

@@ -141,7 +141,7 @@ public class AdvancedEmbeddingScenarios
             "Different physical forms of the same chord should have lower morphology similarity.");
     }
 
-    private ChordVoicingRagDocument CreateDummyDocument(
+    private static ChordVoicingRagDocument CreateDummyDocument(
         string diagram,
         string chordName,
         int[] pcs,
@@ -180,16 +180,16 @@ public class AdvancedEmbeddingScenarios
             BarreRequired = barre
         };
 
-    private float[] GetSubspace(float[] full, int offset, int dim)
+    private static float[] GetSubspace(float[] full, int offset, int dim)
     {
         var slice = new float[dim];
         Array.Copy(full, offset, slice, 0, dim);
         return slice;
     }
 
-    private double GetNorm(float[] v) => Math.Sqrt(v.Sum(x => (double)x * x));
+    private static double GetNorm(float[] v) => Math.Sqrt(v.Sum(x => (double)x * x));
 
-    private double CosineSimilarity(float[] v1, float[] v2)
+    private static double CosineSimilarity(float[] v1, float[] v2)
     {
         if (v1.Length != v2.Length)
         {

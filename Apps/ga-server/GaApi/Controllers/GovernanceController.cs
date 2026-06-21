@@ -634,7 +634,7 @@ public class GovernanceController(
     }
 
     // ─── Build the graph from filesystem ───
-    private GovernanceGraph BuildGovernanceGraph(string root)
+    private static GovernanceGraph BuildGovernanceGraph(string root)
     {
         var nodes = new List<GovernanceNode>();
         var edges = new List<GovernanceEdge>();

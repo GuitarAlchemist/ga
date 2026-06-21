@@ -68,7 +68,7 @@ public sealed class DslEvalMcpTools
         "Returns name, description, category, and tags for each visible closure. " +
         "Call this first to discover what closures exist before constructing an EvalClosure call. " +
         "Only Domain-category closures are exposed; Pipeline/Io/Agent are excluded.")]
-    public ClosureListResult ListClosures()
+    public static ClosureListResult ListClosures()
     {
         var visible = GaClosureRegistry.Global
             .List(FSharpOption<GaClosureCategory>.Some(GaClosureCategory.Domain))
@@ -93,7 +93,7 @@ public sealed class DslEvalMcpTools
         "valid arguments before invoking ga_dsl_eval. Closure names are case-insensitive. " +
         "Errors with closure-not-found if the name is unknown, or closure-not-exposed if the " +
         "closure exists but isn't in the visible (Domain) category.")]
-    public ClosureSchemaResult GetClosureSchema(
+    public static ClosureSchemaResult GetClosureSchema(
         [Description("The closure name, e.g. 'domain.transposeChord'. Case-insensitive.")]
         string closureName)
     {
@@ -136,7 +136,7 @@ public sealed class DslEvalMcpTools
         "Argument values are strings; they're coerced to the closure's declared input types " +
         "(string/int/bool/double) per the v0.1 contract. " +
         "Returns the closure's output as a string and as JSON, or a structured Error.")]
-    public DslEvalResult EvalClosure(
+    public static DslEvalResult EvalClosure(
         [Description("The closure name, e.g. 'domain.transposeChord'. Case-insensitive.")]
         string closureName,
         [Description("Flat key-value map of arguments. All values are strings; type coercion happens server-side per the closure's InputSchema.")]

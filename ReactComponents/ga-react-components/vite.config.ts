@@ -5,7 +5,7 @@ import * as path from 'path'
 import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
 import { execFileSync, spawn } from 'child_process'
 import type { Plugin } from 'vite'
-import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals, parseValueCatalog } from './src/dev-data/parsers'
+import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals, parseValueCatalog, parseMaintainGate, maintainAgeHours, isMaintainStale } from './src/dev-data/parsers'
 import type { BacklogPayload, LoopsGoalsProjection } from './src/dev-data/parsers'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
@@ -1623,6 +1623,44 @@ function devDataPlugin(): Plugin {
                 }
             });
 
+            // ── /dev-data/maintain-gate — fused advisory maintain verdict ───
+            // Reads the federated maintain-verdict snapshot IX emits in
+            // scorecard shape (state/quality/maintain-gate/last.json; producer
+            // ix ix_maintain_snapshot, federation ix#146, schema ga#445). It is
+            // ADVISORY / non-binding until IX Phase-3b. The server computes
+            // freshness (age_hours / stale) so the tile can never render a
+            // missing-or-old snapshot as a fake green (green-but-dead guard,
+            // ga#446). Falls back to a dev-data fixture when no live snapshot is
+            // present so the tile renders before the first federation run.
+            server.middlewares.use('/dev-data/maintain-gate', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const live = path.join(repoRoot, 'state/quality/maintain-gate/last.json')
+                const fixture = path.join(repoRoot, 'ReactComponents/ga-react-components/src/dev-data/fixtures/maintain-gate.last.json')
+                const usingFixture = !existsSync(live)
+                const p = usingFixture ? fixture : live
+                if (!existsSync(p)) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: `maintain-gate snapshot not found at ${live} — federated by ix#146 (ix_maintain_snapshot)` }))
+                    return
+                }
+                try {
+                    const snapshot = parseMaintainGate(readFileSync(p, 'utf-8'))
+                    if (!snapshot) {
+                        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+                        res.end(JSON.stringify({ generated_at: new Date().toISOString(), snapshot: null, source: usingFixture ? 'fixture' : 'live', age_hours: null, stale: true, note: 'snapshot present but unparseable / missing contract fields' }))
+                        return
+                    }
+                    const age_hours = maintainAgeHours(snapshot.emitted_at)
+                    // A fixture is always advisory/stale context — never let it read fresh.
+                    const stale = usingFixture || isMaintainStale(age_hours)
+                    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+                    res.end(JSON.stringify({ generated_at: new Date().toISOString(), snapshot, source: usingFixture ? 'fixture' : 'live', age_hours, stale }))
+                } catch (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify({ error: String(err) }))
+                }
+            });
+
             server.middlewares.use('/dev-data/agents', (req, res, next) => {
                 if (req.method !== 'GET') { next(); return; }
                 res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
@@ -2062,6 +2100,7 @@ function devDataPlugin(): Plugin {
                         test_plans: '/dev-data/test-plans',
                         in_flight: '/dev-data/in-flight',
                         recent_events: '/dev-data/recent-events',
+                        maintain_gate: '/dev-data/maintain-gate',
                         runtime_loops_goals: '/dev-data/runtime-loops-goals',
                         sentrux_health: '/dev-data/sentrux/health',
                         sentrux_rules: '/dev-data/sentrux/rules',

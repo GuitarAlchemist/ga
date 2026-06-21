@@ -29,6 +29,8 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     private Complex[]? _fourierCoefficients;
     private double[]? _magnitudeSpectrum;
     private double? _spectralCentroid;
+    private SetClass? _complement;
+    private SetClass? _mRelated;
 
     /// <summary>
     ///     Gets all modal set classes
@@ -53,6 +55,36 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
                                                   nameof(pitchClassSet));
 
     /// <summary>
+    ///     Gets the complement <see cref="SetClass" /> — OPTIC-K's K operation (complementation).
+    /// </summary>
+    /// <remarks>
+    ///     K (complementation) is the top rung of the Callender–Quinn–Tymoczko OPTIC hierarchy
+    ///     (<see href="https://harmoniousapp.net/p/ec/Equivalence-Groups" />). For a cardinality-k set class
+    ///     this returns a cardinality-(12−k) set class; a self-complementary hexachord returns an equal set
+    ///     class. Complementation is an involution: <c>sc.Complement.Complement == sc</c>. The grouping of
+    ///     set classes with their complements is materialised by <see cref="OpticKClass" />.
+    /// </remarks>
+    public SetClass Complement => _complement ??= new SetClass(PrimeForm.Complement.PrimeForm!);
+
+    /// <summary>
+    ///     Gets the M-related <see cref="SetClass" /> — the set class of this one's M5 transform
+    ///     (multiply pitch classes by 5 mod 12, the circle-of-fourths transform).
+    /// </summary>
+    /// <remarks>
+    ///     The M operation (with T and I) generates the affine group on ℤ₁₂. M5 commutes with both
+    ///     transposition and inversion, so it is well defined on set classes. The M-relation pairs sets
+    ///     built from semitones/major-sevenths with sets built from fourths/fifths; a set class may be
+    ///     M-self-related (<see cref="IsMSelfRelated" />). Not part of the OPTIC hierarchy — a separate
+    ///     equivalence — but the natural completion of the T / I operations already on the type.
+    /// </remarks>
+    public SetClass MRelated => _mRelated ??= new SetClass(PrimeForm.M5);
+
+    /// <summary>
+    ///     Gets a flag indicating whether this set class is its own M-related set class.
+    /// </summary>
+    public bool IsMSelfRelated => Equals(MRelated);
+
+    /// <summary>
     ///     Gets the <see cref="ModalFamily" /> of the set class, if it exists
     /// </summary>
     public ModalFamily? ModalFamily =>
@@ -74,7 +106,16 @@ public sealed class SetClass(PitchClassSet pitchClassSet) : IEquatable<SetClass>
     #endregion
 
     /// <inheritdoc />
-    public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}]";
+    /// <remarks>
+    ///     Includes the prime-form id so the label is a UNIQUE identifier. Cardinality +
+    ///     interval-class vector alone are NOT unique: the 23 Z-related set-class pairs in
+    ///     12-TET (e.g. the all-interval tetrachords [0 1 4 6] and [0 1 3 7]) share both, so
+    ///     a label without the prime form silently conflated 46 distinct set classes into 23
+    ///     strings. <see cref="Equals(SetClass)"/> already keys on <see cref="PrimeForm"/>;
+    ///     this brings the string representation in line with object identity. (Surfaced by
+    ///     the DuckDB domain-invariants sweep, state/quality/domain-invariants/.)
+    /// </remarks>
+    public override string ToString() => $"SetClass[{Cardinality}-{IntervalClassVector.Id}/{PrimeForm.Id.Value}]";
 
     public PitchClassSet GetSpectralPrimeForm() =>
         PrimeForm.Cardinality.Value > 0
