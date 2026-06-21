@@ -175,3 +175,9 @@ The aihero skills themselves (`/grill-me`, `/to-prd`, `/to-issues`, `/tdd`,
 `/improve-codebase-architecture`, `/teach`) are installed project-scoped under
 `.claude/skills/` (see **Agent skills** above) and complement this ecosystem's
 existing brainstorming, planning-doc, test, and structural-quality machinery.
+
+**AI-coding vocabulary (shared ecosystem reference):**
+<https://github.com/mattpocock/dictionary-of-ai-coding> — the plain-English
+glossary behind this methodology (smart-zone, tracer-bullets, context windows,
+handoffs, failure modes). Referenced, not vendored, so it tracks upstream. The
+`/ask-matt` skill links its *smart-zone* page directly.
