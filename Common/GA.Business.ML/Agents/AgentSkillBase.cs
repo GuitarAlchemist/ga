@@ -82,30 +82,7 @@ public abstract class AgentSkillBase(string agentId, IChatClient chatClient, ILo
     {
         try
         {
-            var json = responseText;
-
-            // Strip code fences first.
-            if (json.Contains("```json"))
-                json = json.Split("```json")[1].Split("```")[0].Trim();
-            else if (json.Contains("```"))
-                json = json.Split("```")[1].Split("```")[0].Trim();
-
-            // Models often emit a JSON object followed by extra prose
-            // ("To distinguish these keys, listen for…"). The strict
-            // deserializer rejects the trailing text and falls all the
-            // way through to `Result = responseText` — which leaks raw
-            // JSON into the user-facing answer (the "Identify the key
-            // of Am F C G" showcase regression on 2026-05-16).
-            // Extract just the first top-level {...} block.
-            var firstBrace = json.IndexOf('{');
-            if (firstBrace >= 0)
-            {
-                var lastBrace = FindMatchingBrace(json, firstBrace);
-                if (lastBrace > firstBrace)
-                {
-                    json = json.Substring(firstBrace, lastBrace - firstBrace + 1);
-                }
-            }
+            var json = AgentResponseParser.ExtractJsonCandidate(responseText);
 
             var structured = JsonSerializer.Deserialize<StructuredAgentResponse>(json, JsonOptions);
             if (structured != null)
@@ -132,37 +109,5 @@ public abstract class AgentSkillBase(string agentId, IChatClient chatClient, ILo
             Evidence = ["Fallback used — JSON parse failed"],
             Assumptions = ["Response was not in expected JSON format"]
         };
-    }
-
-    /// <summary>
-    /// Returns the index of the `}` that closes the `{` at <paramref name="openIndex"/>,
-    /// respecting string literals and nested braces. Returns -1 if no balanced match.
-    /// </summary>
-    private static int FindMatchingBrace(string s, int openIndex)
-    {
-        var depth = 0;
-        var inString = false;
-        var escape = false;
-        for (var i = openIndex; i < s.Length; i++)
-        {
-            var ch = s[i];
-            if (inString)
-            {
-                if (escape) { escape = false; }
-                else if (ch == '\\') { escape = true; }
-                else if (ch == '"') { inString = false; }
-                continue;
-            }
-            switch (ch)
-            {
-                case '"': inString = true; break;
-                case '{': depth++; break;
-                case '}':
-                    depth--;
-                    if (depth == 0) return i;
-                    break;
-            }
-        }
-        return -1;
     }
 }
