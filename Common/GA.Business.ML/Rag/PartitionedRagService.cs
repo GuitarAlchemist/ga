@@ -48,7 +48,7 @@ public class PartitionedRagService(
     /// Parses a raw query into a structured form, identifying musical entities
     /// to better route to specific partitions.
     /// </summary>
-    public StructuredMusicalQuery ParseStructuredQuery(string rawQuery)
+    public static StructuredMusicalQuery ParseStructuredQuery(string rawQuery)
     {
         var chords = new List<string>();
         var scales = new List<string>();

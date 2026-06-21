@@ -5,8 +5,6 @@ using GA.Business.ML.Agents.Mcp;
 [TestFixture]
 public class FretSpanMcpToolsTests
 {
-    private static FretSpanMcpTools MakeTool() => new();
-
     // The eight first-position open chords every beginner learns. The skill
     // computes Min/Max/Span over PRESSED frets only (excludes open strings = 0
     // and muted = -1), which is what matters for hand stretch.
@@ -22,7 +20,7 @@ public class FretSpanMcpToolsTests
         string diagram, int expectedMin, int expectedMax, int expectedSpan,
         int expectedScore, string expectedDifficultyKeyword)
     {
-        var result = MakeTool().ComputeSpan(diagram);
+        var result = FretSpanMcpTools.ComputeSpan(diagram);
 
         Assert.That(result.Error,            Is.Null,                  $"valid diagram must not produce an Error for {diagram}");
         Assert.That(result.MinFret,          Is.EqualTo(expectedMin),  $"MinFret mismatch for {diagram}");
@@ -36,8 +34,8 @@ public class FretSpanMcpToolsTests
     public void ComputeSpan_AcceptsCompactForm()
     {
         // x32010 is the compact form of x-3-2-0-1-0 (C major).
-        var compact = MakeTool().ComputeSpan("x32010");
-        var dashed  = MakeTool().ComputeSpan("x-3-2-0-1-0");
+        var compact = FretSpanMcpTools.ComputeSpan("x32010");
+        var dashed  = FretSpanMcpTools.ComputeSpan("x-3-2-0-1-0");
 
         Assert.That(compact.Error, Is.Null);
         Assert.That(compact.Diagram,          Is.EqualTo(dashed.Diagram),
@@ -56,7 +54,7 @@ public class FretSpanMcpToolsTests
         // leading 'x' for compact form, silently rejecting common voicings.
         // The fixed regex accepts any combination of digits and x's in any
         // of the 6 positions.
-        var result = MakeTool().ComputeSpan(diagram);
+        var result = FretSpanMcpTools.ComputeSpan(diagram);
 
         Assert.That(result.Error, Is.Null,
             $"compact diagram '{diagram}' must parse — was a regression in the original C# regex");
@@ -70,7 +68,7 @@ public class FretSpanMcpToolsTests
         string diagram, int expectedMin, int expectedMax, int expectedSpan,
         int expectedScore, string expectedDifficultyKeyword)
     {
-        var result = MakeTool().ComputeSpan(diagram);
+        var result = FretSpanMcpTools.ComputeSpan(diagram);
 
         Assert.That(result.Error,            Is.Null,                  $"valid diagram must not produce an Error for {diagram}");
         Assert.That(result.MinFret,          Is.EqualTo(expectedMin));
@@ -87,7 +85,7 @@ public class FretSpanMcpToolsTests
         // skill's difficulty switch maps span=4 to "challenging".
         // x-3-2-x-3-7: pressed [3,2,3,7] → span 5 (very wide).
         // x-3-2-x-3-6: pressed [3,2,3,6] → span 4 (challenging).
-        var result = MakeTool().ComputeSpan("x-3-2-x-3-6");
+        var result = FretSpanMcpTools.ComputeSpan("x-3-2-x-3-6");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.Span, Is.EqualTo(4));
@@ -100,7 +98,7 @@ public class FretSpanMcpToolsTests
     {
         // 5+ fret span goes into the catch-all "very wide" branch.
         // x-3-x-2-3-9: pressed [3,2,3,9] → span 7.
-        var result = MakeTool().ComputeSpan("x-3-x-2-3-9");
+        var result = FretSpanMcpTools.ComputeSpan("x-3-x-2-3-9");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.Span, Is.EqualTo(7));
@@ -112,7 +110,7 @@ public class FretSpanMcpToolsTests
     public void ComputeSpan_MutedAndOpenOnly_ReturnsError()
     {
         // Diagram has no fretted notes — span is undefined.
-        var result = MakeTool().ComputeSpan("x-0-0-0-0-x");
+        var result = FretSpanMcpTools.ComputeSpan("x-0-0-0-0-x");
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error, Does.Contain("open").Or.Contain("muted"));
@@ -124,7 +122,7 @@ public class FretSpanMcpToolsTests
     [TestCase("x-y-2-0-1-0")]    // invalid token 'y'
     public void ComputeSpan_InvalidInputs_ReturnFailureResult(string diagram)
     {
-        var result = MakeTool().ComputeSpan(diagram);
+        var result = FretSpanMcpTools.ComputeSpan(diagram);
 
         Assert.That(result.Error, Is.Not.Null,
             $"invalid input '{diagram}' must populate Error rather than throw");
@@ -134,8 +132,8 @@ public class FretSpanMcpToolsTests
     [Test]
     public void ComputeSpan_DoesNotThrowOnNullArgument()
     {
-        Assert.That(() => MakeTool().ComputeSpan(null!), Throws.Nothing);
-        var result = MakeTool().ComputeSpan(null!);
+        Assert.That(() => FretSpanMcpTools.ComputeSpan(null!), Throws.Nothing);
+        var result = FretSpanMcpTools.ComputeSpan(null!);
         Assert.That(result.Error, Is.Not.Null);
     }
 
@@ -145,7 +143,7 @@ public class FretSpanMcpToolsTests
         var huge = new string('3', 10_000);
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var result = MakeTool().ComputeSpan(huge);
+        var result = FretSpanMcpTools.ComputeSpan(huge);
         sw.Stop();
 
         Assert.That(result.Error, Is.Not.Null);
@@ -158,7 +156,7 @@ public class FretSpanMcpToolsTests
     {
         var esc      = (char)0x1B;
         var injected = "Q\n\r" + esc + "[31m";
-        var result   = MakeTool().ComputeSpan(injected);
+        var result   = FretSpanMcpTools.ComputeSpan(injected);
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.IndexOf('\n'), Is.EqualTo(-1));
@@ -171,7 +169,7 @@ public class FretSpanMcpToolsTests
     public void ComputeSpan_NormalizesDiagram_WithMutedTokensAsLowercaseX()
     {
         // The skill emits the canonical 'x' (lowercase) regardless of input case.
-        var result = MakeTool().ComputeSpan("X-3-2-0-1-0");
+        var result = FretSpanMcpTools.ComputeSpan("X-3-2-0-1-0");
 
         Assert.That(result.Error,   Is.Null);
         Assert.That(result.Diagram, Does.StartWith("x-"),

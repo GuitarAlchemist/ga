@@ -95,7 +95,7 @@ public class ChordSymbolParser
         };
     }
 
-    private ChordFormula ParseComplexSuffix(string suffix)
+    private static ChordFormula ParseComplexSuffix(string suffix)
     {
         // Handle more complex chord symbols
         // This is a simplified implementation - a full parser would be much more complex

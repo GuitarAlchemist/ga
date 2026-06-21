@@ -52,7 +52,7 @@ public class ModalFlavorService
         // Debug: Console.WriteLine($"[ModalFlavorService] Loaded {_flavors.Count} modal flavors from domain model.");
     }
 
-    private int GetModePriority(string name)
+    private static int GetModePriority(string name)
     {
         // High Priority: Church Modes + Common Variations
         var standard = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

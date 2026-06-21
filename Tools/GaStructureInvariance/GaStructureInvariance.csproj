@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- TheoryVectorService.ComputeEmbedding is flagged [Experimental] (SKEXP0001);
+         this lens calls it deliberately to measure the STRUCTURE T-invariance claim. -->
+    <NoWarn>$(NoWarn);SKEXP0001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Tier-2 lens: exercises the REAL OPTIC-K STRUCTURE filler (layer 4) over every
+         set class at all 12 transpositions, so the T-invariance claim is measured, not
+         assumed. References layer-4 ML because the embedding lives there. -->
+    <ProjectReference Include="..\..\Common\GA.Business.ML\GA.Business.ML.csproj" />
+  </ItemGroup>
+
+</Project>

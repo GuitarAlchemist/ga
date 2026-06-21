@@ -64,7 +64,7 @@ public sealed class ProgressionMoodSkill(ILogger<ProgressionMoodSkill> logger) :
             : DarkenAnswer());
     }
 
-    private AgentResponse DarkenAnswer()
+    private static AgentResponse DarkenAnswer()
     {
         var sb = new StringBuilder();
         sb.AppendLine("Here are five reliable ways to darken a progression. Pick one or stack them — each shifts the harmonic mood without abandoning the underlying key.");
@@ -94,7 +94,7 @@ public sealed class ProgressionMoodSkill(ILogger<ProgressionMoodSkill> logger) :
         };
     }
 
-    private AgentResponse BrightenAnswer()
+    private static AgentResponse BrightenAnswer()
     {
         var sb = new StringBuilder();
         sb.AppendLine("Here are four reliable ways to brighten a progression that feels too dark or static.");

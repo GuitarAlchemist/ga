@@ -115,7 +115,7 @@ public class ShapeGraphBuilder(
         return Task.FromResult(result);
     }
 
-    private List<PositionLocation> GeneratePositionsForPitchClassSet(
+    private static List<PositionLocation> GeneratePositionsForPitchClassSet(
         Fretboard fretboard,
         PitchClassSet pitchClassSet,
         int baseFret,
@@ -174,7 +174,7 @@ public class ShapeGraphBuilder(
         };
     }
 
-    private double ComputeErgonomics(List<PositionLocation> positions, int span)
+    private static double ComputeErgonomics(List<PositionLocation> positions, int span)
     {
         if (!positions.Any())
         {

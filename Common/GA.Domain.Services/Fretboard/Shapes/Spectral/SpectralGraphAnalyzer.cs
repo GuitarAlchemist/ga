@@ -135,7 +135,7 @@ public class SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
         return Matrix<double>.Build.Dense(size, size, (i, j) => i == j ? degrees[i] : -adjacency[i, j]);
     }
 
-    private Matrix<double> ComputeWeightMatrix(ShapeGraph graph)
+    private static Matrix<double> ComputeWeightMatrix(ShapeGraph graph)
     {
         var size = graph.ShapeCount;
         var matrix = Matrix<double>.Build.Dense(size, size, 0.0);
@@ -159,7 +159,7 @@ public class SpectralGraphAnalyzer(ILogger<SpectralGraphAnalyzer> logger)
         return matrix;
     }
 
-    private int[] SimpleKMeans(Matrix<double> data, int k)
+    private static int[] SimpleKMeans(Matrix<double> data, int k)
     {
         int n = data.RowCount;
         int d = data.ColumnCount;

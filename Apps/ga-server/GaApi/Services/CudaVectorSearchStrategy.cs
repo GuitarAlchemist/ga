@@ -253,7 +253,7 @@ public class CudaVectorSearchStrategy : IVectorSearchStrategy
         }
     }
 
-    private bool IsCudaRuntimeAvailable()
+    private static bool IsCudaRuntimeAvailable()
     {
         // This would check for:
         // 1. NVIDIA GPU presence

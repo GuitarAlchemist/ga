@@ -1,7 +1,6 @@
 namespace GA.Business.ML.Agents.Mcp;
 
 using System.ComponentModel;
-using System.Text.RegularExpressions;
 using ModelContextProtocol.Server;
 
 /// <summary>
@@ -20,7 +19,7 @@ using ModelContextProtocol.Server;
 /// result with Error-branch invariant.
 /// </remarks>
 [McpServerToolType]
-public sealed partial class FretSpanMcpTools
+public sealed class FretSpanMcpTools
 {
     // Realistic chord diagrams: 6 tokens of 1-2 chars each + 5 separators =
     // up to 17 chars. Compact form ("x02230") is 6 chars. Cap at 20 to admit
@@ -36,14 +35,14 @@ public sealed partial class FretSpanMcpTools
         "Accepts either dash-separated (e.g. 'x-3-2-0-1-0') or compact form starting with x (e.g. 'x32010'). " +
         "Tokens are listed low-to-high (E A D G B e); 'x' = muted, '0' = open, otherwise the fret number. " +
         "Use this whenever a user asks about a chord's stretch / reach / playability / difficulty.")]
-    public FretSpanResult ComputeSpan(
+    public static FretSpanResult ComputeSpan(
         [Description("The chord diagram. Examples: 'x-3-2-0-1-0' (C major), 'x32010', '0-2-2-1-0-0' (E major). Six positions, low-to-high.")]
         string diagram)
     {
         if (string.IsNullOrEmpty(diagram) || diagram.Length > MaxDiagramLength)
             return FretSpanResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(diagram)}' as a chord diagram. Try 'x-3-2-0-1-0' or 'x32010'.");
 
-        var frets = TryParseFrets(diagram);
+        var frets = FretDiagram.TryParseFrets(diagram);
         if (frets is null)
             return FretSpanResult.Failure($"Could not parse '{McpEchoSanitizer.SanitizeEcho(diagram)}' as a chord diagram. Use 6 positions low-to-high (E A D G B e); 'x' = mute, '0' = open.");
 
@@ -79,44 +78,6 @@ public sealed partial class FretSpanMcpTools
         };
     }
 
-    /// <summary>
-    /// Returns 6 fret values (-1 = muted, 0 = open, &gt;0 = fret number) or
-    /// null if the input doesn't match a known diagram form. Lifted from
-    /// <c>FretSpanSkill.TryParseFrets</c>.
-    /// </summary>
-    private static List<int>? TryParseFrets(string message)
-    {
-        var dash = DashDiagramRegex().Match(message);
-        if (dash.Success)
-        {
-            return Enumerable.Range(1, 6)
-                .Select(i => ParseFretToken(dash.Groups[i].Value))
-                .ToList();
-        }
-
-        var compact = CompactDiagramRegex().Match(message);
-        if (!compact.Success) return null;
-
-        var val = compact.Value;
-        return val.Select(c => c is 'x' or 'X' ? -1 : c - '0').ToList();
-    }
-
-    private static int ParseFretToken(string s) =>
-        s.Equals("x", StringComparison.OrdinalIgnoreCase) ? -1 : int.Parse(s);
-
-    [GeneratedRegex(
-        @"\b([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})\b",
-        RegexOptions.CultureInvariant)]
-    private static partial Regex DashDiagramRegex();
-
-    // Compact form is 6 characters, each being a fret digit (0-9), 'x', or 'X'.
-    // The C# FretSpanSkill regex required a leading 'x' which silently rejected
-    // very common voicings: 032010 (G major), 355463 (Ab barre), 577655 (B
-    // major barre), 133211 (F major barre). Fixed here per PR #83 review.
-    // Two-digit frets (e.g. position 12) are not expressible in compact form —
-    // those must use the dash-separated diagram instead.
-    [GeneratedRegex(@"\b[xX0-9]{6}\b", RegexOptions.CultureInvariant)]
-    private static partial Regex CompactDiagramRegex();
 }
 
 /// <summary>

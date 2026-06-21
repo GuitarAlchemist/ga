@@ -60,7 +60,7 @@ public class PhaseSphereService
     /// </summary>
     /// <param name="weightedChroma">Array of 12 double weights.</param>
     /// <returns>Complex spectral vector with 6 components.</returns>
-    public Complex[] ComputeSpectralVector(double[] weightedChroma)
+    public static Complex[] ComputeSpectralVector(double[] weightedChroma)
     {
         ArgumentNullException.ThrowIfNull(weightedChroma);
         if (weightedChroma.Length != N)
@@ -94,7 +94,7 @@ public class PhaseSphereService
     /// </summary>
     /// <param name="midiNotes">Array of MIDI note numbers.</param>
     /// <returns>Weighted complex spectral vector.</returns>
-    public Complex[] ComputeWeightedSpectralVector(int[] midiNotes)
+    public static Complex[] ComputeWeightedSpectralVector(int[] midiNotes)
     {
         ArgumentNullException.ThrowIfNull(midiNotes);
         if (midiNotes.Length == 0)
@@ -162,7 +162,7 @@ public class PhaseSphereService
     /// </summary>
     /// <param name="spectralVector">Unnormalized spectral vector.</param>
     /// <returns>Unit-length spectral vector.</returns>
-    public Complex[] NormalizeToSphere(Complex[] spectralVector)
+    public static Complex[] NormalizeToSphere(Complex[] spectralVector)
     {
         ArgumentNullException.ThrowIfNull(spectralVector);
 
@@ -193,7 +193,7 @@ public class PhaseSphereService
     /// <summary>
     ///     Computes spectral distance from pre-computed normalized vectors.
     /// </summary>
-    public double SpectralDistanceFromVectors(Complex[] normalizedA, Complex[] normalizedB)
+    public static double SpectralDistanceFromVectors(Complex[] normalizedA, Complex[] normalizedB)
     {
         if (normalizedA.Length != normalizedB.Length)
         {
@@ -486,7 +486,7 @@ public class PhaseSphereService
     ///     Transposes a spectral vector by t semitones (Rotation).
     ///     Uses theorem: F_k(X+t) = F_k(X) * e^(-i * 2 * pi * k * t / 12)
     /// </summary>
-    public Complex[] RotateSpectralVector(Complex[] vector, int semitones)
+    public static Complex[] RotateSpectralVector(Complex[] vector, int semitones)
     {
         var rotated = new Complex[vector.Length];
 
@@ -506,7 +506,7 @@ public class PhaseSphereService
     ///     Computes Relative Phase (phi_k) with respect to a reference vector (e.g., Barycenter).
     ///     Essential for functional harmony (distance from tonic).
     /// </summary>
-    public double[] ComputeRelativePhases(Complex[] target, Complex[] reference)
+    public static double[] ComputeRelativePhases(Complex[] target, Complex[] reference)
     {
         if (target.Length != reference.Length)
         {

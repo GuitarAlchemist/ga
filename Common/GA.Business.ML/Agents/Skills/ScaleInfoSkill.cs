@@ -49,6 +49,16 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "What's the formula for harmonic minor",
         "Formula for melodic minor scale",
         "Degrees of the A major scale",
+        // "Show me the notes in [key]" family — bare key, no "scale"/"chord"
+        // word. "Show me the notes in C major" was losing to ChordInfoSkill
+        // because "notes in" + "C major" sat closer to the chord examples
+        // ("What notes are in a Cmaj7?") than to any scaleinfo anchor, which
+        // all carried either "scale" or the "What notes are in…?" framing.
+        // Added 2026-06-19 to close the scales-keys misroute surfaced by the
+        // /auto-optimize loop (skill.scaleinfo expected, skill.chordinfo seen).
+        "Show me the notes in C major",
+        "Show me the notes in A minor",
+        "Show me the notes in G major",
     ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.
@@ -83,9 +93,7 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         var isMinor  = modeStr is "minor" or "min";
 
         // Find the matching domain key
-        var key = Key.Items.FirstOrDefault(k =>
-            k.KeyMode == (isMinor ? KeyMode.Minor : KeyMode.Major) &&
-            string.Equals(k.Root.ToString(), rootStr, StringComparison.OrdinalIgnoreCase));
+        var key = KeyNaming.ResolveKey(rootStr, isMinor);
 
         if (key is null)
             return Task.FromResult(CannotHelp(
@@ -96,8 +104,8 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         var noteNames   = notes.Select(n => n.ToString()).ToList();
         var keyName     = $"{key.Root} {(isMinor ? "minor" : "major")}";
         var relativeKey = key.KeyMode == KeyMode.Major
-            ? $"Relative minor: {GetRelativeName(key)}"
-            : $"Relative major: {GetRelativeName(key)}";
+            ? $"Relative minor: {KeyNaming.RelativeKeyName(key)}"
+            : $"Relative major: {KeyNaming.RelativeKeyName(key)}";
 
         logger.LogDebug("ScaleInfoSkill: resolved {Key} → [{Notes}]", keyName, string.Join(", ", noteNames));
 
@@ -110,7 +118,7 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
             [
                 $"Key: {keyName}",
                 $"Notes: {string.Join(", ", noteNames)}",
-                $"Key signature: {DescribeKeySignature(key)}",
+                $"Key signature: {KeyNaming.DescribeKeySignature(key)}",
                 relativeKey
             ],
             Assumptions = []
@@ -118,25 +126,6 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private static string GetRelativeName(Key key)
-    {
-        // Relative pair shares the same pitch-class set — find by PC mask
-        var mask    = key.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value));
-        var sibling = Key.Items.FirstOrDefault(k =>
-            k.KeyMode != key.KeyMode &&
-            k.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value)) == mask);
-
-        return sibling is null ? "none" : $"{sibling.Root} {(sibling.KeyMode == KeyMode.Major ? "major" : "minor")}";
-    }
-
-    private static string DescribeKeySignature(Key key)
-    {
-        var count = key.KeySignature.AccidentalCount;
-        if (count == 0) return "no sharps or flats";
-        var kind  = key.KeySignature.AccidentalKind == AccidentalKind.Sharp ? "sharp" : "flat";
-        return $"{count} {kind}{(count > 1 ? "s" : "")}";
-    }
 
     private static AgentResponse CannotHelp(string reason) => new()
     {

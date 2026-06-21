@@ -149,12 +149,16 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     }
 
     /// <summary>
-    ///     Gets the <see cref="Nullable{PitchClassSet}" />
+    ///     Gets the transposition/inversion prime form (the OPTIC / set-class representative).
     /// </summary>
     /// <remarks>
-    ///     By definition, the prime form is the <see cref="PitchClassSet" /> with the most compact representation
+    ///     The canonical member of <see cref="TranspositionsAndInversions" /> — the one with the smallest
+    ///     packed id. Owned by <see cref="PitchClassSetId.PrimeForm" /> (pure id arithmetic); this property
+    ///     just lifts it back to a <see cref="PitchClassSet" />. <b>Not</b> the same as
+    ///     <see cref="ToNormalForm" />, which canonicalises by interval-span compactness rather than minimal
+    ///     id and can return a different rotation.
     /// </remarks>
-    public PitchClassSet? PrimeForm => TranspositionsAndInversions.MinBy(pitchClassSet => pitchClassSet.Id.Value);
+    public PitchClassSet? PrimeForm => Id.PrimeForm.ToPitchClassSet();
 
     /// <summary>
     ///     Gets a flag that indicates whether this pitch class set is it prime form
@@ -333,6 +337,16 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// </summary>
     public PitchClassSet Inverse => FromId(Id.Inverse);
 
+    /// <summary>
+    ///     Gets the M5 transform (multiply pitch classes by 5 mod 12 — the circle-of-fourths transform).
+    /// </summary>
+    public PitchClassSet M5 => FromId(Id.M5);
+
+    /// <summary>
+    ///     Gets the M7 transform (multiply pitch classes by 7 mod 12).
+    /// </summary>
+    public PitchClassSet M7 => FromId(Id.M7);
+
     public Uri? ScaleVideoUrl => ScaleVideoUrlById.Get(Id);
     public Uri ScalePageUrl => new($"https://ianring.com/musictheory/scales/{Id.Value}");
 
@@ -488,7 +502,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return result;
     }
 
-    private Note.Accidented FindClosestDiatonicNoteWithAccidental(bool isModal,
+    private static Note.Accidented FindClosestDiatonicNoteWithAccidental(bool isModal,
         HashSet<NaturalNote> usedNaturalNotes,
         PitchClass target,
         IReadOnlyCollection<Note.KeyNote> keyNotes)
@@ -603,7 +617,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return closestKey ?? Key.Major.C;
     }
 
-    private Key? IdentifyClosestKey(
+    private static Key? IdentifyClosestKey(
         PitchClassSet normalForm,
         IReadOnlyDictionary<Key, IReadOnlyCollection<PitchClass>> items,
         KeyMode expectedKeyMode)

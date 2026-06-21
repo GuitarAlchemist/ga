@@ -27,7 +27,7 @@ public class SchemaDiscoveryTests
     [Test]
     public void GetTypeSchema_PitchClassSet_ShouldHaveCorrectRelationships()
     {
-        var info = _service.GetTypeSchema(typeof(PitchClassSet));
+        var info = SchemaDiscoveryService.GetTypeSchema(typeof(PitchClassSet));
         Assert.That(info.Relationships.Any(r =>
             r.TargetType == typeof(IntervalClassVector) && r.Type == RelationshipType.IsChildOf));
         Assert.That(info.Relationships.Any(r =>
@@ -37,7 +37,7 @@ public class SchemaDiscoveryTests
     [Test]
     public void GetTypeSchema_Chord_ShouldHaveInvariants()
     {
-        var info = _service.GetTypeSchema(typeof(Chord));
+        var info = SchemaDiscoveryService.GetTypeSchema(typeof(Chord));
         Assert.That(info.Invariants.Any(i => i.Description.Contains("root note")), "Chord invariant missing");
     }
 }

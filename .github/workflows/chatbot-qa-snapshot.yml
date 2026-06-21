@@ -66,6 +66,8 @@ jobs:
           SECRET_OLLAMA: ${{ secrets.OLLAMA_BASE_URL }}
           SECRET_INDEX_URL: ${{ secrets.OPTICK_INDEX_URL }}
           SECRET_INDEX_AUTH: ${{ secrets.OPTICK_INDEX_AUTH }}
+          SECRET_CF_ID: ${{ secrets.OLLAMA_CF_ACCESS_CLIENT_ID }}
+          SECRET_CF_SECRET: ${{ secrets.OLLAMA_CF_ACCESS_CLIENT_SECRET }}
         run: |
           # Only exports env when the secrets are present. Unset => nothing
           # exported => the app keeps its localhost defaults and the snapshot
@@ -79,7 +81,15 @@ jobs:
             "OLLAMA_BASE_URL=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             "Ollama__BaseUrl=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             "Ollama__Endpoint=$($env:SECRET_OLLAMA)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
-            Write-Host "Backend: remote Ollama configured via OLLAMA_BASE_URL secret."
+            # Cloudflare Access service-token headers, when the endpoint is gated
+            # (the chatbot attaches CF-Access-Client-Id/Secret from these keys).
+            if (-not [string]::IsNullOrWhiteSpace($env:SECRET_CF_ID) -and -not [string]::IsNullOrWhiteSpace($env:SECRET_CF_SECRET)) {
+              "Ollama__AccessClientId=$($env:SECRET_CF_ID)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+              "Ollama__AccessClientSecret=$($env:SECRET_CF_SECRET)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+              Write-Host "Backend: remote Ollama configured (with Cloudflare Access service token)."
+            } else {
+              Write-Host "Backend: remote Ollama configured via OLLAMA_BASE_URL secret (no CF Access headers)."
+            }
           } else {
             Write-Host "Backend: no OLLAMA_BASE_URL secret set — degrade path (unchanged)."
           }
@@ -156,9 +166,18 @@ jobs:
           $ollamaUrl = if ($env:OLLAMA_BASE_URL) { $env:OLLAMA_BASE_URL } else { 'http://localhost:11434' }
           $opticIndex = 'state/voicings/optick.index'
 
+          # When the endpoint is fronted by Cloudflare Access, the probe must send
+          # the same service-token headers the chatbot uses — otherwise Access 403s
+          # the probe and we'd report a false-negative DEGRADED for a reachable backend.
+          $probeHeaders = @{}
+          if (-not [string]::IsNullOrWhiteSpace($env:Ollama__AccessClientId) -and -not [string]::IsNullOrWhiteSpace($env:Ollama__AccessClientSecret)) {
+            $probeHeaders['CF-Access-Client-Id']     = $env:Ollama__AccessClientId
+            $probeHeaders['CF-Access-Client-Secret'] = $env:Ollama__AccessClientSecret
+          }
+
           $ollamaOk = $false
           try {
-            $resp = Invoke-WebRequest -Uri "$ollamaUrl/api/version" -Method GET -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+            $resp = Invoke-WebRequest -Uri "$ollamaUrl/api/version" -Method GET -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop -Headers $probeHeaders
             if ($resp.StatusCode -eq 200) { $ollamaOk = $true }
           } catch {
             Write-Host "Ollama probe failed at ${ollamaUrl}: $($_.Exception.Message)" -ForegroundColor Yellow

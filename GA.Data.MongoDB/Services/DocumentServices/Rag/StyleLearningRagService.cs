@@ -170,7 +170,7 @@ public class StyleLearningRagService(
 
     // Extraction methods (simple pattern matching - can be enhanced with LLM)
     
-    private List<string> ExtractProgressions(string content)
+    private static List<string> ExtractProgressions(string content)
     {
         var progressions = new List<string>();
         
@@ -187,7 +187,7 @@ public class StyleLearningRagService(
         return [.. progressions.Distinct()];
     }
 
-    private List<string> ExtractVoicings(string content)
+    private static List<string> ExtractVoicings(string content)
     {
         var voicings = new List<string>();
         
@@ -204,7 +204,7 @@ public class StyleLearningRagService(
         return [.. voicings.Distinct()];
     }
 
-    private List<string> ExtractMelodicPatterns(string content)
+    private static List<string> ExtractMelodicPatterns(string content)
     {
         var patterns = new List<string>();
         
@@ -221,7 +221,7 @@ public class StyleLearningRagService(
         return [.. patterns.Distinct()];
     }
 
-    private List<string> ExtractRhythmicCharacteristics(string content)
+    private static List<string> ExtractRhythmicCharacteristics(string content)
     {
         var characteristics = new List<string>();
         
@@ -238,7 +238,7 @@ public class StyleLearningRagService(
         return [.. characteristics.Distinct()];
     }
 
-    private List<string> ExtractHarmonicTechniques(string content)
+    private static List<string> ExtractHarmonicTechniques(string content)
     {
         var techniques = new List<string>();
         
@@ -255,7 +255,7 @@ public class StyleLearningRagService(
         return [.. techniques.Distinct()];
     }
 
-    private List<string> ExtractPlayingTechniques(string content)
+    private static List<string> ExtractPlayingTechniques(string content)
     {
         var techniques = new List<string>();
         
@@ -272,7 +272,7 @@ public class StyleLearningRagService(
         return [.. techniques.Distinct()];
     }
 
-    private List<string> ExtractTonalPreferences(string content)
+    private static List<string> ExtractTonalPreferences(string content)
     {
         var preferences = new List<string>();
         
@@ -289,7 +289,7 @@ public class StyleLearningRagService(
         return [.. preferences.Distinct()];
     }
 
-    private List<string> ExtractStylisticInfluences(string content)
+    private static List<string> ExtractStylisticInfluences(string content)
     {
         var influences = new List<string>();
         

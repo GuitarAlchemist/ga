@@ -412,7 +412,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
         };
     }
 
-    private BspNodeDto ConvertNodeToDto(TonalBspNode node, int depth, ref int nodeCount, ref int maxDepth,
+    private static BspNodeDto ConvertNodeToDto(TonalBspNode node, int depth, ref int nodeCount, ref int maxDepth,
         ref int regionCount, ref int partitionCount)
     {
         nodeCount++;
@@ -472,7 +472,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
         return nodeDto;
     }
 
-    private PitchClassSet? ParsePitchClasses(string pitchClassesStr)
+    private static PitchClassSet? ParsePitchClasses(string pitchClassesStr)
     {
         try
         {
@@ -502,7 +502,7 @@ public class BspController(TonalBspService bspService, ILogger<BspController> lo
         }
     }
 
-    private double CalculateSpatialDistance(PitchClassSet set1, PitchClassSet set2)
+    private static double CalculateSpatialDistance(PitchClassSet set1, PitchClassSet set2)
     {
         var intersection = set1.Intersect(set2).Count();
         var union = set1.Union(set2).Count();

@@ -1,0 +1,27 @@
+{
+  "schema_version": "maintain-verdict-snapshot.v0.1",
+  "domain": "maintain-gate",
+  "emitted_at": "2026-06-20T22:28:18Z",
+  "metric_name": "maintain_yield_delta",
+  "metric_value": 0.0,
+  "oracle_status": "warn",
+  "summary": "metric evidence missing — cannot decide",
+  "advisory": true,
+  "status": "U",
+  "decision": "escalate",
+  "signals": [
+    { "lens": "metric", "status": "unknown", "detail": "no externally-derived metric evidence" },
+    { "lens": "guardrail", "status": "bad", "detail": "chatbot gate: regression (1 regression(s))" },
+    { "lens": "convergence", "status": "ok", "detail": "loops converging (no oscillation)" },
+    { "lens": "drift", "status": "ok", "detail": "queries in-distribution" }
+  ],
+  "maintain_trend": {
+    "total": 0,
+    "accepts": 0,
+    "rejects": 0,
+    "escalates": 0,
+    "reward_hacks": 0,
+    "by_status": [],
+    "latest_status": null
+  }
+}

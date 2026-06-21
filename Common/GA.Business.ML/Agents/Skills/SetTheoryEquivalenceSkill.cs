@@ -79,7 +79,7 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
         return Task.FromResult(Answer(setA, bText: bText, aText: aText, setB: setB, relation: relation));
     }
 
-    private AgentResponse Answer(PitchClassSet setA, PitchClassSet setB, string aText, string bText, string relation)
+    private static AgentResponse Answer(PitchClassSet setA, PitchClassSet setB, string aText, string bText, string relation)
     {
         // Always compute set-class (TI-equivalence) for the explanation tail.
         var classA = new SetClass(setA);
@@ -244,7 +244,7 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
     private static string Format(PitchClassSet set) =>
         "{" + string.Join(",", set.Select(pc => ((int)pc).ToString())) + "}";
 
-    private AgentResponse CannotParse(string a, string b) => new()
+    private static AgentResponse CannotParse(string a, string b) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't parse two pitch-class sets from your question. Try a form like 'are pitch classes 0,1,4 and 0,1,6 equivalent under inversion' or 'do 0146 and 0137 belong to the same set class'. Saw: '{a}' / '{b}'.",
@@ -252,7 +252,7 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
         Evidence   = ["SetTheoryEquivalenceSkill: PC-set parse failed"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask whether two pitch-class sets are equivalent under transposition, inversion, or both.",

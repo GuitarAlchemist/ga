@@ -1,0 +1,86 @@
+# Self-improving review loop — Matt Pocock's "buy a lock".
+#
+# A cheap, scheduled review that sweeps ONE rotating slice of the repo for real bugs /
+# security issues and files them as `needs-triage` issues — feeding the triage→explore→
+# implement→merge queue rather than waiting for a smarter model to stumble on them.
+# See docs/methodology/agentic-engineering.md ("Build self-improving systems").
+#
+# COST / OPT-IN: this spends Claude credits every time it runs. It ships **manual-only**
+# (workflow_dispatch). To make it self-running, uncomment the `schedule:` block below — it's
+# deliberately weekly + one slice to keep spend trivial. Disable by re-commenting it.
+name: Scheduled Self-Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      slice:
+        description: "Path(s) to review (blank = auto-rotate by week)"
+        required: false
+        default: ""
+  # ── Uncomment to enable the self-improving loop (weekly, one rotating slice) ──
+  # schedule:
+  #   - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  issues: write          # so the reviewer can file findings as issues
+  id-token: write
+
+concurrency:
+  group: scheduled-self-review
+  cancel-in-progress: false
+
+jobs:
+  review-slice:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Pick the rotating slice
+        id: slice
+        shell: bash
+        run: |
+          # Five slices, one per layer of the architecture; rotate by ISO week so each
+          # gets reviewed roughly every 5 weeks. A manual run can override via the input.
+          SLICES=(
+            "Common/GA.Core Common/GA.Domain.Core"
+            "Common/GA.Business.Core"
+            "Common/GA.Business.ML"
+            "Apps/ga-server/GaApi"
+            "ReactComponents/ga-react-components/src"
+          )
+          if [ -n "${{ github.event.inputs.slice }}" ]; then
+            SEL="${{ github.event.inputs.slice }}"
+          else
+            IDX=$(( 10#$(date +%V) % ${#SLICES[@]} ))
+            SEL="${SLICES[$IDX]}"
+          fi
+          echo "Selected slice: $SEL"
+          echo "slice=$SEL" >> "$GITHUB_OUTPUT"
+
+      - name: Review the slice
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are a conservative, high-precision code reviewer running a SCHEDULED sweep of
+            one slice of this repository. The slice to review is: ${{ steps.slice.outputs.slice }}
+
+            Goal: surface REAL, high-confidence bugs and security issues only — the kind a human
+            would thank you for. This is a recurring job, so noise is expensive: NO style nits, NO
+            speculative "consider refactoring", NO duplicate of an already-open issue (check first
+            with `gh issue list --search`).
+
+            For each genuine finding (aim for at most 3, only if they clear a high bar):
+              - Open a GitHub issue with `gh issue create`:
+                  title: "[self-review] <file>: <one-line problem>"
+                  body:  the file:line, what's wrong, why it matters, and a suggested fix
+                  label: needs-triage   (the canonical triage label; see docs/agents/triage-labels.md)
+              - Skip anything you are not confident is a real defect.
+
+            If you find nothing that clears the bar, do nothing and say so. Do not open an issue
+            just to have output. Prefer precision over recall — this loop runs forever.
+          claude_args: '--allowed-tools "Bash(gh issue list:*),Bash(gh issue create:*),Read,Grep,Glob"'

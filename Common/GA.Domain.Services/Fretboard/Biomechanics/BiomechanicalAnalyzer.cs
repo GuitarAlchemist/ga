@@ -76,7 +76,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         );
     }
 
-    private List<(int String, int Fret)> ExtractFretPositions(ImmutableList<Position> positions)
+    private static List<(int String, int Fret)> ExtractFretPositions(ImmutableList<Position> positions)
     {
         var fretPositions = new List<(int String, int Fret)>();
 
@@ -91,7 +91,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         return fretPositions;
     }
 
-    private StretchAnalysis AnalyzeStretch(List<(int String, int Fret)> fretPositions)
+    private static StretchAnalysis AnalyzeStretch(List<(int String, int Fret)> fretPositions)
     {
         if (fretPositions.Count == 0)
         {
@@ -127,7 +127,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         );
     }
 
-    private FingeringEfficiencyAnalysis? AnalyzeFingeringEfficiency(List<(int String, int Fret)> fretPositions)
+    private static FingeringEfficiencyAnalysis? AnalyzeFingeringEfficiency(List<(int String, int Fret)> fretPositions)
     {
         if (fretPositions.Count == 0)
         {
@@ -185,7 +185,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         );
     }
 
-    private WristPostureAnalysis AnalyzeWristPosture(List<(int String, int Fret)> fretPositions)
+    private static WristPostureAnalysis AnalyzeWristPosture(List<(int String, int Fret)> fretPositions)
     {
         if (fretPositions.Count == 0)
         {
@@ -235,19 +235,19 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
         return new(wristAngle, postureType, isErgonomic);
     }
 
-    private MutingAnalysis? AnalyzeMuting(List<(int String, int Fret)> fretPositions) =>
+    private static MutingAnalysis? AnalyzeMuting(List<(int String, int Fret)> fretPositions) =>
         // Stub implementation
         null;
 
-    private SlideLegatoAnalysis? AnalyzeSlideLegato(List<(int String, int Fret)> fretPositions) =>
+    private static SlideLegatoAnalysis? AnalyzeSlideLegato(List<(int String, int Fret)> fretPositions) =>
         // Stub implementation
         null;
 
-    private HandPose? ComputeBestHandPose(List<(int String, int Fret)> fretPositions) =>
+    private static HandPose? ComputeBestHandPose(List<(int String, int Fret)> fretPositions) =>
         // Stub implementation - would use IK solver
         null;
 
-    private double CalculateReachability(StretchAnalysis stretchAnalysis) =>
+    private static double CalculateReachability(StretchAnalysis stretchAnalysis) =>
         stretchAnalysis.MaxFretSpan switch
         {
             0 => 1.0,
@@ -258,14 +258,14 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             _ => 0.3
         };
 
-    private double CalculateComfort(StretchAnalysis stretchAnalysis, WristPostureAnalysis wristAnalysis)
+    private static double CalculateComfort(StretchAnalysis stretchAnalysis, WristPostureAnalysis wristAnalysis)
     {
         var stretchComfort = 1.0 - stretchAnalysis.MaxFretSpan / 10.0;
         var wristComfort = wristAnalysis.IsErgonomic ? 1.0 : 0.5;
         return (stretchComfort + wristComfort) / 2.0;
     }
 
-    private double CalculateNaturalness(WristPostureAnalysis wristAnalysis) =>
+    private static double CalculateNaturalness(WristPostureAnalysis wristAnalysis) =>
         wristAnalysis.PostureType switch
         {
             PostureType.Neutral => 1.0,
@@ -276,14 +276,14 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             _ => 0.5
         };
 
-    private double CalculateStability(List<(int String, int Fret)> fretPositions)
+    private static double CalculateStability(List<(int String, int Fret)> fretPositions)
     {
         // More notes generally means more stability
         var noteCount = fretPositions.Count;
         return Math.Min(1.0, noteCount / 6.0);
     }
 
-    private string DetermineDifficulty(double overallScore) =>
+    private static string DetermineDifficulty(double overallScore) =>
         overallScore switch
         {
             >= 0.9 => "Very Easy",
@@ -293,7 +293,7 @@ public class BiomechanicalAnalyzer(HandSize handSize = HandSize.Medium)
             _ => "Very Difficult"
         };
 
-    private BiomechanicalPlayabilityAnalysis CreateEmptyAnalysis() =>
+    private static BiomechanicalPlayabilityAnalysis CreateEmptyAnalysis() =>
         new(
             0,
             "N/A",

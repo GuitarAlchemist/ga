@@ -60,7 +60,7 @@ public class TabRenderer
         return result.ToString();
     }
 
-    private string GetStringName(int stringIdx) => stringIdx switch
+    private static string GetStringName(int stringIdx) => stringIdx switch
     {
         0 => "E",
         1 => "A",

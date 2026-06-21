@@ -211,7 +211,7 @@ public sealed class IcvShortestPathSkill(
         };
     }
 
-    private AgentResponse CannotParse(string chord) => new()
+    private static AgentResponse CannotParse(string chord) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't parse '{chord}' as a chord. Try C, Am, G7, Cmaj7, Dm7, F#m7b5, B°, sus2/sus4, m9/maj9, etc.",
@@ -219,7 +219,7 @@ public sealed class IcvShortestPathSkill(
         Evidence   = [$"IcvShortestPathSkill: unparseable chord token '{chord}'"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask for the shortest harmonic path between two chords, e.g. \"shortest path from Cmaj7 to G7\" or \"how do I get from C to F harmonically\".",

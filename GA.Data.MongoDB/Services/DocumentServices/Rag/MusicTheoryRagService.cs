@@ -142,7 +142,7 @@ public class MusicTheoryRagService(
 
     // Extraction methods (simple pattern matching - can be enhanced with LLM)
     
-    private List<string> ExtractChordScaleRelationships(string content)
+    private static List<string> ExtractChordScaleRelationships(string content)
     {
         var relationships = new List<string>();
         
@@ -169,7 +169,7 @@ public class MusicTheoryRagService(
         return [.. relationships.Distinct()];
     }
 
-    private List<string> ExtractVoiceLeadingRules(string content)
+    private static List<string> ExtractVoiceLeadingRules(string content)
     {
         var rules = new List<string>();
         
@@ -186,7 +186,7 @@ public class MusicTheoryRagService(
         return [.. rules.Distinct()];
     }
 
-    private List<string> ExtractHarmonicProgressions(string content)
+    private static List<string> ExtractHarmonicProgressions(string content)
     {
         var progressions = new List<string>();
         
@@ -203,7 +203,7 @@ public class MusicTheoryRagService(
         return [.. progressions.Distinct()];
     }
 
-    private List<string> ExtractChordSubstitutions(string content)
+    private static List<string> ExtractChordSubstitutions(string content)
     {
         var substitutions = new List<string>();
         
@@ -220,7 +220,7 @@ public class MusicTheoryRagService(
         return [.. substitutions.Distinct()];
     }
 
-    private List<string> ExtractModalTheory(string content)
+    private static List<string> ExtractModalTheory(string content)
     {
         var modes = new List<string>();
         
@@ -237,7 +237,7 @@ public class MusicTheoryRagService(
         return [.. modes.Distinct()];
     }
 
-    private List<string> ExtractJazzHarmonyConcepts(string content)
+    private static List<string> ExtractJazzHarmonyConcepts(string content)
     {
         var concepts = new List<string>();
         
@@ -254,7 +254,7 @@ public class MusicTheoryRagService(
         return [.. concepts.Distinct()];
     }
 
-    private List<string> ExtractFunctionalHarmony(string content)
+    private static List<string> ExtractFunctionalHarmony(string content)
     {
         var functions = new List<string>();
         
@@ -271,7 +271,7 @@ public class MusicTheoryRagService(
         return [.. functions.Distinct()];
     }
 
-    private List<string> ExtractTheoreticalConcepts(string content)
+    private static List<string> ExtractTheoreticalConcepts(string content)
     {
         var concepts = new List<string>();
         

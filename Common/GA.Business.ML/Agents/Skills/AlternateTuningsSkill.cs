@@ -264,7 +264,7 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
         };
     }
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask about a named alternate tuning (DADGAD, drop-D, open-G, open-D, double-drop-D, DGCGCD, half-step-down, whole-step-down), or give 6 notes low→high.",

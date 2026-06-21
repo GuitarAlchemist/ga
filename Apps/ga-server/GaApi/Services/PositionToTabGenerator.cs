@@ -50,7 +50,7 @@ public class PositionToTabGenerator(ILogger<PositionToTabGenerator> logger)
         return sb.ToString();
     }
 
-    private List<ChordEvent> GroupByTimeProximity(IReadOnlyList<TimestampedGuitarPosition> positions)
+    private static List<ChordEvent> GroupByTimeProximity(IReadOnlyList<TimestampedGuitarPosition> positions)
     {
         var sorted = positions.OrderBy(p => p.TimestampSeconds).ToList();
         var events = new List<ChordEvent>();

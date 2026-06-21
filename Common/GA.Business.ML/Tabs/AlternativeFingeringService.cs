@@ -81,19 +81,19 @@ public class AlternativeFingeringService(AdvancedTabSolver solver)
         return options;
     }
 
-    private double CalculateOpenStringScore(List<List<FretboardPosition>> path)
+    private static double CalculateOpenStringScore(List<List<FretboardPosition>> path)
     {
         var openCount = path.Sum(chord => chord.Count(n => n.Fret == 0));
         return openCount;
     }
 
-    private double CalculateAverageFret(List<List<FretboardPosition>> path)
+    private static double CalculateAverageFret(List<List<FretboardPosition>> path)
     {
         var frets = path.SelectMany(c => c.Select(n => n.Fret)).Where(f => f > 0).ToList();
         return frets.Count > 0 ? frets.Average() : 0;
     }
 
-    private double CalculateStandardDeviationFret(List<List<FretboardPosition>> path)
+    private static double CalculateStandardDeviationFret(List<List<FretboardPosition>> path)
     {
         var frets = path.SelectMany(c => c.Select(n => n.Fret)).Where(f => f > 0).ToList();
         if (frets.Count < 2)
@@ -106,7 +106,7 @@ public class AlternativeFingeringService(AdvancedTabSolver solver)
         return Math.Sqrt(sum / (frets.Count - 1));
     }
 
-    private double CalculateDifficulty(List<List<FretboardPosition>> path) =>
+    private static double CalculateDifficulty(List<List<FretboardPosition>> path) =>
         // Placeholder for correct PhysicalCost usage
         0.5;
 

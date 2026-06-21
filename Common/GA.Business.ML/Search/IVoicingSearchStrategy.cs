@@ -92,4 +92,16 @@ public interface IVoicingSearchStrategy
     ///     Get memory usage statistics
     /// </summary>
     VoicingSearchStats GetStats();
+
+    /// <summary>
+    ///     The filter fields populated on <paramref name="filters"/> that this strategy structurally
+    ///     <b>cannot</b> honor — its corpus lacks the backing metadata, so it will silently ignore them.
+    ///     Returns field names (e.g. <c>"Difficulty"</c>, <c>"Tags"</c>). Empty for the CPU/GPU
+    ///     strategies, which load the full <see cref="VoicingEmbedding"/> and cross
+    ///     <see cref="VoicingFilterEngine"/> (every metadata field) plus the shared comfort seam.
+    ///     OPTK-mmap overrides this to return its index-bound complement. Consumed by the caller-side
+    ///     telemetry writer (the <c>dropped</c> field) so the reduced filter set is observable rather
+    ///     than silent — see <c>docs/adr/0002-voicing-filter-parity-cpu-gpu-only.md</c>.
+    /// </summary>
+    IReadOnlyList<string> UnsupportedPopulatedFilters(VoicingSearchFilters filters) => [];
 }

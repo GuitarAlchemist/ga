@@ -201,6 +201,19 @@ public static class CanonicalForteCatalog
         // index part (may carry a leading Z), e.g. "Z29" or "11".
         var indexPart = label[(dash + 1)..];
 
+        // The trivial classes use synthetic labels (matching TryGetForteLabel): the empty
+        // set is 0-1 and the chromatic aggregate is 12-1. Keep forward/reverse symmetric.
+        if (cardinality == 0)
+        {
+            primeForm = new PitchClassSet(Enumerable.Empty<PitchClass>());
+            return indexPart == "1";
+        }
+        if (cardinality == 12)
+        {
+            primeForm = new PitchClassSet(Enumerable.Range(0, 12).Select(PitchClass.FromValue));
+            return indexPart == "1";
+        }
+
         if (cardinality <= 6)
         {
             return CoreByLabel.TryGetValue(label, out primeForm!);
@@ -212,5 +225,68 @@ public static class CanonicalForteCatalog
 
         primeForm = complementSet.Complement.PrimeForm ?? complementSet.Complement;
         return true;
+    }
+
+    private static readonly Lazy<IReadOnlyDictionary<PitchClassSetId, string>> _labelByPrimeId =
+        new(BuildReverse, LazyThreadSafetyMode.ExecutionAndPublication);
+
+    private static IReadOnlyDictionary<PitchClassSetId, string> BuildReverse()
+    {
+        var map = new Dictionary<PitchClassSetId, string>();
+        foreach (var (label, set) in CoreByLabel)
+        {
+            // Key on GA's own prime-form id so callers passing any orbit member resolve.
+            map[(set.PrimeForm ?? set).Id] = label;
+        }
+        return map;
+    }
+
+    /// <summary>
+    ///     Inverse of <see cref="TryGetPrimeForm"/>: resolves a prime form to its
+    ///     canonical Forte label — e.g. {0,3,7} → "3-11", {0,1,3,7} → "4-Z29".
+    ///     Cardinalities 7–11 are derived via the complement rule (same index + Z as
+    ///     the complement); the empty set and chromatic aggregate map to "0-1" / "12-1".
+    ///     Returns false for any input that is not a recognized set class.
+    /// </summary>
+    public static bool TryGetForteLabel(PitchClassSet primeForm, out string? label)
+    {
+        label = null;
+        if (primeForm is null) return false;
+
+        var n = primeForm.Count;
+        if (n == 0) { label = "0-1"; return true; }
+        if (n == 12) { label = "12-1"; return true; }
+
+        var pf = primeForm.PrimeForm ?? primeForm;
+        if (n <= 6)
+        {
+            return _labelByPrimeId.Value.TryGetValue(pf.Id, out label);
+        }
+
+        // Cardinalities 7–11: the set class n-k is the complement of (12−n)-k and
+        // shares its index and Z-status, so look up the complement's label and swap
+        // the cardinality prefix.
+        var complement = pf.Complement;
+        var complementPrime = complement.PrimeForm ?? complement;
+        if (!_labelByPrimeId.Value.TryGetValue(complementPrime.Id, out var complementLabel))
+        {
+            return false;
+        }
+
+        var dash = complementLabel!.IndexOf('-');
+        label = $"{n}-{complementLabel[(dash + 1)..]}";
+        return true;
+    }
+
+    /// <summary>
+    ///     Inverse lookup returning a <see cref="ForteNumber"/> (with its
+    ///     <see cref="ForteNumber.IsZRelated"/> flag set) rather than a string.
+    ///     See <see cref="TryGetForteLabel"/>.
+    /// </summary>
+    public static bool TryGetForteNumber(PitchClassSet primeForm, out ForteNumber forte)
+    {
+        forte = default;
+        return TryGetForteLabel(primeForm, out var label)
+               && ForteNumber.TryParse(label, null, out forte);
     }
 }

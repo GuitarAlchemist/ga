@@ -165,7 +165,7 @@ public class SkillMdPluginResolverTests
         Trace.Listeners.Add(traceListener);
         try
         {
-            new SkillMdPlugin().Register(new ServiceCollection(), canonical);
+            SkillMdPlugin.Register(new ServiceCollection(), canonical);
         }
         finally
         {

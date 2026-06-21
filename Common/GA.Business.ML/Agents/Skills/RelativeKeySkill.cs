@@ -241,7 +241,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         };
     }
 
-    private AgentResponse CannotParse(string key) => new()
+    private static AgentResponse CannotParse(string key) => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = $"I couldn't identify '{key}' as a key. Try a single pitch letter optionally followed by # or b (e.g. C, G, F#, Bb).",
@@ -249,7 +249,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         Evidence   = [$"RelativeKeySkill: unparseable key token '{key}'"],
     };
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask about the relative or parallel key of a given major/minor key, or how many sharps/flats a key has.",

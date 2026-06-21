@@ -1,0 +1,146 @@
+name: Maintain-Gate Snapshot
+
+# Phase B federation (ix#146): land IX's fused hexavalent maintain verdict in
+# state/quality/maintain-gate/ so the GA health-scorecard / ecosystem manifest
+# can surface it. REUSES the existing ix→ga quality federation channel — the same
+# GA-pull pattern as embeddings-snapshot.yml / invariants-snapshot.yml: check out
+# the ix sibling, build + run the ix producer against the live GA corpus, and
+# commit the snapshot here. NO new cross-repo mechanism; no ix→ga push.
+#
+# Producer: ix sibling crate ix-duck
+#   Example: ix_maintain_snapshot (cargo --features duck)
+#   Reads:   GA_ROOT/state/quality/{chatbot-qa,loops,query-embeddings} (guardrail/
+#            convergence/drift lenses over LIVE GA telemetry). The yield metric
+#            (ix-local hits.jsonl) is absent in CI → the producer self-degrades to
+#            a U/warn verdict rather than failing (advisory until IX Phase-3b).
+#   Writes:  the GA dashboard envelope (registered in .snapshot-registry.json,
+#            contract docs/contracts/maintain-gate-snapshot.schema.json).
+#
+# Failure semantics:
+#   - GA corpus present but a lens read errors → the producer fail-closes (nonzero)
+#     → this workflow fails + emits an algedonic warn (no fake snapshot committed).
+#   - GA corpus absent → the producer skips (exit 0, no write); the commit step is
+#     guarded on the file existing, so nothing fake lands.
+#   - Snapshot identical to today's → quiet success (no empty commit).
+#
+# Schedule: 07:30 UTC (after embeddings at 07:00) so a multi-domain manifest run
+# at ~08:00 sees the fresh maintain-gate entry.
+
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maintain-gate-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout ga
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Checkout ix sibling
+        uses: actions/checkout@v4
+        with:
+          repository: GuitarAlchemist/ix
+          path: ix
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ix -> target
+          shared-key: ix-duck-duck
+
+      - name: Build maintain producer (duck feature, bundled engine)
+        working-directory: ix
+        run: cargo build --release -p ix-duck --features duck --example ix_maintain_snapshot
+
+      - name: Produce verdict snapshot over live GA telemetry
+        id: produce
+        # GA_ROOT points the producer at this ga checkout (the workspace root).
+        # absent-ga → exit 0, no write; ga present + lens read error → fail-closed.
+        env:
+          GA_ROOT: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          DATE="$(date -u +%F)"
+          DST="state/quality/maintain-gate/${DATE}.json"
+          mkdir -p state/quality/maintain-gate
+          ix/target/release/examples/ix_maintain_snapshot "${DST}"
+          if [ ! -f "${DST}" ]; then
+            echo "::warning::No GA corpus → producer skipped; nothing to federate (no fake entry)."
+            echo "produced=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # last.json = the latest-verdict pointer (mirrors chatbot-qa/last.json).
+          cp "${DST}" state/quality/maintain-gate/last.json
+          echo "snapshot_path=${DST}" >> "$GITHUB_OUTPUT"
+          echo "snapshot_date=${DATE}" >> "$GITHUB_OUTPUT"
+          echo "produced=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit snapshot if new
+        if: steps.produce.outputs.produced == 'true'
+        env:
+          DATE: ${{ steps.produce.outputs.snapshot_date }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/quality/maintain-gate/
+          if git diff --cached --quiet; then
+            echo "Snapshot identical to existing — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(quality): maintain-gate snapshot ${DATE} [skip ci]"
+          git push
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintain-gate-snapshot-${{ github.run_id }}
+          path: state/quality/maintain-gate/
+          retention-days: 90
+
+      - name: Emit algedonic warn on failure
+        # Fires only when a real step failed (build / producer fail-closed / commit).
+        # The absent-ga skip path is exit-0 and won't trigger this. Mirrors
+        # embeddings-snapshot.yml / invariants-snapshot.yml.
+        if: failure()
+        shell: pwsh
+        env:
+          RUN_URL: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+        run: |
+          if (-not (Test-Path Scripts/algedonic-emit.ps1)) {
+            Write-Host "algedonic-emit.ps1 not present — skipping signal"
+            exit 0
+          }
+          pwsh Scripts/algedonic-emit.ps1 `
+            -Severity warn `
+            -Repo ga `
+            -Source maintain-gate-snapshot `
+            -Summary "Maintain-gate snapshot workflow failed — fused verdict producing no data" `
+            -Details "The daily maintain-gate snapshot did not produce a new state/quality/maintain-gate/YYYY-MM-DD.json. The fused RSI verdict tile will drift stale until the next successful run. See evidence_url for the failing job logs." `
+            -EvidenceUrl "$env:RUN_URL" `
+            -AffectedArtifacts state/quality/maintain-gate/
+
+      - name: Upload algedonic inbox on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: algedonic-inbox-${{ github.run_id }}
+          path: state/algedonic/inbox.jsonl
+          if-no-files-found: warn
+          retention-days: 90

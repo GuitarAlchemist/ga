@@ -288,7 +288,7 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
         };
     }
 
-    private AgentResponse CannotHandle() => new()
+    private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
         Result     = "Ask me to parse a Grothendieck-DSL expression, e.g. \"parse C ⊗ G\", \"what does Transpose(C ⊗ G) mean\", or \"parse pullback(Cmaj7, Transpose, Gmaj7)\".",

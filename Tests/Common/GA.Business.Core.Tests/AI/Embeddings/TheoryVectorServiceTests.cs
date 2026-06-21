@@ -5,16 +5,11 @@ using ML.Embeddings.Services;
 [TestFixture]
 public class TheoryVectorServiceTests
 {
-    [SetUp]
-    public void Setup() => _service = new();
-
-    private TheoryVectorService _service;
-
     [Test]
     public void ComputeEmbedding_CalculatesPCP()
     {
         var pcs = new[] { 0, 4, 7 }; // C Major
-        var vector = _service.ComputeEmbedding(pcs);
+        var vector = TheoryVectorService.ComputeEmbedding(pcs);
         Assert.That(vector[0], Is.EqualTo(1.0)); // C
         Assert.That(vector[4], Is.EqualTo(1.0)); // E
         Assert.That(vector[7], Is.EqualTo(1.0)); // G
@@ -22,11 +17,15 @@ public class TheoryVectorServiceTests
     }
 
     [Test]
-    public void ComputeEmbedding_BoostsRoot()
+    public void ComputeEmbedding_RootArg_DoesNotBoostStructurePcp()
     {
+        // v1.8 removed the STRUCTURE root-boost: the root pitch class now lives in the dedicated ROOT
+        // partition, so passing a root must leave the STRUCTURE pitch-class chroma (slots 0-11) unchanged.
         var pcs = new[] { 0, 4, 7 };
-        var vector = _service.ComputeEmbedding(pcs, 0);
-        Assert.That(vector[0], Is.EqualTo(1.0)); // Root boost moved to the dedicated ROOT partition in v1.8.
+        var withRoot = TheoryVectorService.ComputeEmbedding(pcs, 0);
+        var withoutRoot = TheoryVectorService.ComputeEmbedding(pcs);
+        Assert.That(withRoot[0], Is.EqualTo(1.0));
+        Assert.That(withRoot[..12], Is.EqualTo(withoutRoot[..12]));
     }
 
     [Test]
@@ -34,7 +33,7 @@ public class TheoryVectorServiceTests
     {
         // C Major Triad (3 notes)
         var pcs = new[] { 0, 4, 7, 0 }; // Duplicate 0 should be ignored for cardinality
-        var vector = _service.ComputeEmbedding(pcs);
+        var vector = TheoryVectorService.ComputeEmbedding(pcs);
         // Dim 12: Cardinality / 12.0 * 2.0 in the Structure subspace (which is Index 18 of full vector)
         // (3 / 12.0) * 2.0 = 0.5
         Assert.That(vector[12], Is.EqualTo(0.5).Within(0.001));
@@ -44,11 +43,11 @@ public class TheoryVectorServiceTests
     public void ComputeEmbedding_SetsTonalStability()
     {
         // With Root -> Stability 1.0
-        var v1 = _service.ComputeEmbedding(new[] { 0, 4, 7 }, 0);
+        var v1 = TheoryVectorService.ComputeEmbedding(new[] { 0, 4, 7 }, 0);
         // Index 22 is Tonal Stability in the Structure subspace
         Assert.That(v1[22], Is.EqualTo(1.0));
         // Without Root -> Stability 0.0
-        var v2 = _service.ComputeEmbedding(new[] { 0, 4, 7 });
+        var v2 = TheoryVectorService.ComputeEmbedding(new[] { 0, 4, 7 });
         Assert.That(v2[22], Is.EqualTo(0.0));
     }
 }

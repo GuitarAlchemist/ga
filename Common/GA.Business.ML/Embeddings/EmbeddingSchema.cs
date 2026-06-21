@@ -128,8 +128,11 @@ public static class EmbeddingSchema
         new("ATONAL_MODAL", 164, 227, 0.00f, PartitionRole.Info),
         // v1.8 (2026-04-19): ROOT is a 12-dim one-hot over pitch classes 0-11.
         // Lives as a separate similarity partition with low weight (0.05) so set-class
-        // retrieval (STRUCTURE) remains T-invariant while root-specific queries still
-        // get a discriminating signal. Replaces the deprecated STRUCTURE root-boost.
+        // retrieval keeps the T-invariant STRUCTURE sub-dims (ICV + cardinality) dominant
+        // while root-specific queries still get a discriminating signal. Replaces the
+        // deprecated STRUCTURE root-boost. NB: STRUCTURE as a whole is NOT transposition-
+        // invariant — it also carries a pitch-class chroma that is T-variant (see
+        // TheoryVectorService / Tools/GaStructureInvariance).
         new("ROOT",         228, 239, 0.05f, PartitionRole.Similarity),
     ];
 
@@ -163,8 +166,10 @@ public static class EmbeddingSchema
         // - v4 (original):   global L2 normalization; root-boost in STRUCTURE.
         // - v4-pp:           per-partition L2 normalization (closed partition bleed).
         // - v4-pp-r (NEW):   adds ROOT similarity partition (12 dims, weight 0.05);
-        //                    STRUCTURE root-boost removed so STRUCTURE is now truly
-        //                    T-invariant per the O+P+T+I schema claim.
+        //                    STRUCTURE root-boost removed so STRUCTURE is invariant across
+        //                    re-voicings of the SAME pitch-class set (octave/voicing/instrument,
+        //                    invariant #25). It is NOT transposition-invariant — the pitch-class
+        //                    chroma is T-variant; only the ICV/cardinality sub-dims are.
         // Compact dim shifts 112 → 124 with the added ROOT slot. Hash bump is mandatory;
         // old indexes are rejected by the reader.
         var sb = new StringBuilder("optk-v4-pp-r:");
@@ -178,6 +183,124 @@ public static class EmbeddingSchema
             first = false;
         }
         return sb.ToString();
+    }
+
+    #endregion
+
+    #region Layout operations
+
+    // The layout owns its read / write / score. Corpus build, query encode, the index
+    // writer, and the in-memory scorers all cross these three operations instead of
+    // re-deriving offsets, weights, and per-partition math against the registry above.
+    // Deepening landed via /improve-codebase-architecture (candidate #1): see CONTEXT.md
+    // "weighted partition cosine".
+
+    /// <summary>
+    ///     Looks up a partition by name from the authoritative <see cref="Partitions"/> registry.
+    /// </summary>
+    /// <exception cref="ArgumentException">No partition has the given name.</exception>
+    public static EmbeddingPartition GetPartition(string name)
+    {
+        foreach (var p in Partitions)
+        {
+            if (p.Name == name)
+            {
+                return p;
+            }
+        }
+
+        throw new ArgumentException($"Unknown partition '{name}'", nameof(name));
+    }
+
+    /// <summary>
+    ///     Writes a partition-sized <paramref name="slice"/> into its raw-vector offset.
+    ///     The single place the layout's offsets are applied on the write side.
+    /// </summary>
+    public static void WriteInto<T>(Span<T> raw, string partitionName, ReadOnlySpan<T> slice) =>
+        slice.CopyTo(raw.Slice(GetPartition(partitionName).Start, slice.Length));
+
+    /// <summary>
+    ///     Writes a <c>double</c> partition slice into a <c>float</c> raw vector (corpus side),
+    ///     converting element-wise. Preserves the prior <c>Array.ConvertAll</c> semantics.
+    /// </summary>
+    public static void WriteInto(Span<float> raw, string partitionName, ReadOnlySpan<double> slice)
+    {
+        var start = GetPartition(partitionName).Start;
+        for (var i = 0; i < slice.Length; i++)
+        {
+            raw[start + i] = (float)slice[i];
+        }
+    }
+
+    /// <summary>
+    ///     Extracts the compact similarity vector from a raw vector: the similarity
+    ///     partitions packed contiguously, each per-partition L2-normalized then scaled by
+    ///     sqrt(weight). By construction the dot product of two compact vectors equals
+    ///     <see cref="WeightedPartitionCosine"/> of their raws — the on-disk v4-pp convention.
+    /// </summary>
+    public static double[] ExtractCompact(ReadOnlySpan<double> raw)
+    {
+        var compact = new double[CompactDimension];
+        var cStart = 0;
+        foreach (var p in SimilarityPartitions)
+        {
+            var sumSq = 0.0;
+            for (var j = 0; j < p.Dim; j++)
+            {
+                var v = raw[p.Start + j];
+                sumSq += v * v;
+            }
+
+            if (sumSq > double.Epsilon)
+            {
+                var norm = Math.Sqrt(sumSq);
+                for (var j = 0; j < p.Dim; j++)
+                {
+                    compact[cStart + j] = raw[p.Start + j] / norm * p.SqrtWeight;
+                }
+            }
+
+            cStart += p.Dim;
+        }
+
+        return compact;
+    }
+
+    /// <summary>
+    ///     Weighted partition cosine over two RAW vectors:
+    ///     <c>Σ weight[p] · cosine(a[p], b[p])</c> across similarity partitions.
+    ///     Length-tolerant (skips partitions past either vector's length, so legacy/shorter
+    ///     vectors score on the partitions they have) and NaN-safe (an all-zero partition
+    ///     contributes zero). The in-memory scoring regime; equals
+    ///     <c>dot(ExtractCompact(a), ExtractCompact(b))</c> up to weight precision.
+    /// </summary>
+    public static double WeightedPartitionCosine(ReadOnlySpan<double> a, ReadOnlySpan<double> b)
+    {
+        var minLen = Math.Min(a.Length, b.Length);
+        var score = 0.0;
+        foreach (var p in SimilarityPartitions)
+        {
+            if (p.Start + p.Dim > minLen)
+            {
+                continue;
+            }
+
+            var cos = System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(
+                a.Slice(p.Start, p.Dim), b.Slice(p.Start, p.Dim));
+            if (!double.IsNaN(cos))
+            {
+                // Weight is the float SimilarityWeight ON PURPOSE: the on-disk compact vectors are
+                // scaled by the float SqrtWeight, so a float weight here makes raw scoring match the
+                // disk/compact path exactly (dot(ExtractCompact(a),ExtractCompact(b)) == this score).
+                // The prior CPU scorer used double 0.45 consts and so was itself ~1e-8 off the disk —
+                // a difference far below any reachable cosine tie. (GPU still aliases double consts;
+                // a residual ~1e-8 CPU/GPU gap, dwarfed by its pre-existing host-fallback MODAL/ROOT
+                // omission tracked separately.)
+                score += p.SimilarityWeight * cos;
+            }
+        }
+
+        return score;
     }
 
     #endregion
@@ -650,6 +773,18 @@ public static class EmbeddingSchema
 
     /// <summary>End of MODAL partition (exclusive).</summary>
     public const int ModalEnd = ModalOffset + ModalDim;
+
+    /// <summary>Similarity weight for the MODAL partition (0.10). Mirrors <see cref="Partitions"/>.</summary>
+    public const double ModalWeight = 0.10;
+
+    /// <summary>Starting index of the ROOT partition (v1.8 — 12-dim pitch-class one-hot).</summary>
+    public const int RootOffset = 228;
+
+    /// <summary>Number of dimensions in the ROOT partition.</summary>
+    public const int RootDim = 12;
+
+    /// <summary>Similarity weight for the ROOT partition (0.05). Mirrors <see cref="Partitions"/>.</summary>
+    public const double RootWeight = 0.05;
 
     // === Major Scale Modes (109-115) ===
     public const int ModalIonian = 109;

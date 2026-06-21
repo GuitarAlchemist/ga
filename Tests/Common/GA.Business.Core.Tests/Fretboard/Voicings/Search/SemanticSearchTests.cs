@@ -6,7 +6,7 @@ using GA.Business.ML.Rag.Models;
 [TestFixture]
 public class SemanticSearchTests
 {
-    private EnhancedVoicingSearchService SearchService => SemanticSearchTestFixture.SearchService;
+    private static EnhancedVoicingSearchService SearchService => SemanticSearchTestFixture.SearchService;
 
     private async Task<IEnumerable<VoicingSearchResult>> SearchAndLog(string query)
     {

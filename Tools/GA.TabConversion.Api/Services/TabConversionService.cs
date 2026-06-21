@@ -497,7 +497,7 @@ public class TabConversionService(ILogger<TabConversionService> logger) : ITabCo
     /// <summary>
     ///     Check if a format is supported by the service
     /// </summary>
-    private bool IsFormatSupported(string format)
+    private static bool IsFormatSupported(string format)
     {
         var normalizedFormat = NormalizeFormat(format);
         return _supportedFormats.Any(f => f.Id.Equals(normalizedFormat, StringComparison.OrdinalIgnoreCase));

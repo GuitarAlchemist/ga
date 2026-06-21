@@ -115,7 +115,7 @@ public class FretboardChordsGenerator(FretboardClass fretboard)
         }
     }
 
-    private IEnumerable<List<Position>> Recurse(int stringIndex, List<Position>[] locations)
+    private static IEnumerable<List<Position>> Recurse(int stringIndex, List<Position>[] locations)
     {
         if (stringIndex >= locations.Length)
         {
