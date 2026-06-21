@@ -261,7 +261,6 @@ public class ShapeGraphBuilderTests
             Assert.That(shapes, Is.Not.Empty);
         }
         [Test]
-        [Ignore("Shape ID generation produces duplicates - needs fix in shape generation logic")]
         public async Task ShouldBuildGraph_InLessThan5Seconds()
         {
             // Arrange: 10 pitch-class sets

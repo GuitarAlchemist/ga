@@ -57,11 +57,12 @@ public sealed class Fretboard(Tuning tuning, int fretCount)
             throw new ArgumentOutOfRangeException(nameof(fret));
         }
 
-        // Get the open string pitch and add the fret offset
+        // Get the open string pitch and add the fret offset (each fret raises the pitch one semitone).
         var openStringPitch = Tuning[new(stringIndex + 1)]; // Tuning uses 1-based string indexing
         var resultMidiNote = openStringPitch.MidiNote + fret; // Add semitones for fret position
-        var resultPitch = Pitch.Chromatic.FromPitch(openStringPitch).Note.PitchClass
-            .ToChromaticPitch(resultMidiNote.Octave);
+        // Derive the result from the FRETTED midi note's pitch class — not the open string's — so the
+        // fret changes the pitch class, not just the octave.
+        var resultPitch = resultMidiNote.PitchClass.ToChromaticPitch(resultMidiNote.Octave);
 
         return resultPitch.Note;
     }
