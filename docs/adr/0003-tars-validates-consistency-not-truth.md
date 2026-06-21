@@ -28,6 +28,30 @@ buggy-era #414 (set-theory comma-extraction) traces. See the GA→TARS claim con
    GA is circular; an independent LLM is redundant with existing cross-model checkers and adds a fallible
    model to the trust chain.
 
+## Correction (2026-06-20, same day) — the keystone was wrong
+
+Reading the TARS source (`../tars/v2/src/Tars.Core/BeliefGraph.fs` `findContradictions`,
+`TemporalReasoning.fs` `detectContradictions`) **before** writing any producer code revealed that
+**TARS does not *detect* contradictions — it *stores and queries* them.** Both tools filter for
+relationships already typed `ContradictedBy` / `Contradicts`; neither compares assertion *content*. So the
+original premise — "ingest claims and TARS flags same-key-different-value" — is false: the detection must
+happen **before** TARS and be asserted into the graph as an edge.
+
+**Corrected architecture:**
+
+- The contradiction **detection** (same `key`, different `asserted_value`) is trivial — a dictionary
+  keyed by `key`, flag on mismatch — and lives in **GA**, not TARS.
+- The load-bearing, **TARS-independent** component is a GA-side **claim consistency checker**:
+  claim-store → detect → emit to `state/quality/consistency/`. Fully buildable/testable with no TARS dep.
+- **TARS is demoted to an *optional* downstream ledger**: if/when reachable, GA asserts the
+  already-detected contradiction as a `ContradictedBy` edge for cross-repo/temporal persistence + Demerzel
+  visibility. Not required for the core value; GA's quality surface + DuckDB already cover most of it.
+- Separately, TARS's MCP output layer is **currently broken** (tools return un-awaited `Task` objects,
+  e.g. `health_check` → `System.Threading.Tasks.Task\`1[System.Boolean]`) — a `../tars/` fix tracked
+  outside GA. Another reason the core design must not depend on it.
+
+The consistency-vs-truth decision above **still holds**; only the *who-detects* assumption changed.
+
 ## Consequences
 
 - TARS contradiction output is a **source the existing `qa-verdict` may cite**, not a parallel tribunal.

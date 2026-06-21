@@ -2,9 +2,16 @@
 
 **Version:** 0.1.0 (draft, pending sign-off)
 **Schema version:** 1
-**Status:** Draft (design grilled 2026-06-20; tracer-bullet predicate = `pitch_classes`). NOT frozen.
-**Producers:** GA chatbot retrieval/answer path — `Common/GA.Business.ML/Agents/*` (claim extraction from prose + co-emitted tool trace)
-**Consumers:** TARS `ingest_chatbot_claims` → `graph_find_contradictions` / `temporal_detect_contradictions` (`../tars/`)
+**Status:** Draft (design grilled 2026-06-20; tracer-bullet predicate = `pitch_classes`). NOT frozen. **Keystone corrected 2026-06-20 — see banner below.**
+**Producers:** GA chatbot retrieval/answer path — `Common/GA.Business.ML/Agents/*` (claim extraction + **GA-side contradiction detection**)
+**Consumers:** GA claim consistency checker (detection + `state/quality/consistency/` output). **Optional** downstream: TARS as a contradiction *ledger* (`../tars/`).
+
+> **⚠ Keystone correction (2026-06-20):** Reading the TARS source showed `graph_find_contradictions` /
+> `temporal_detect_contradictions` only **return pre-asserted `ContradictedBy` edges** — TARS *stores*
+> contradictions, it does **not detect** them from content (ADR-0003 § Correction). So **GA detects** the
+> same-`key`-different-`asserted_value` contradiction (a trivial dictionary compare) and emits it to the
+> quality surface; TARS is an **optional** sink GA asserts edges into *after* detecting. This contract's
+> claim shape is unchanged and still correct — only the consumer role moved from "detector" to "ledger".
 **Companion artifacts:** `docs/adr/0003-tars-validates-consistency-not-truth.md`; output envelope `state/quality/consistency/<date>.json` (per `docs/contracts/quality-snapshot.schema.json`)
 **Schema file:** [`ga-tars-claim.schema.json`](./ga-tars-claim.schema.json)
 
