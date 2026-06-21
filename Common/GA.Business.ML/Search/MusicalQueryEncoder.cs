@@ -34,12 +34,12 @@ public sealed record StructuredQuery(
 ///     The encoder produces a vector already pre-scaled by sqrt(partition weight) and
 ///     L2-normalized, matching the on-disk convention so dot product = cosine similarity.
 /// </summary>
-public sealed class MusicalQueryEncoder(
-    TheoryVectorService theory,
-    ModalVectorService modal,
-    SymbolicVectorService symbolic,
-    RootVectorService rootService)
+public sealed class MusicalQueryEncoder(ModalVectorService modal)
 {
+    // STRUCTURE, SYMBOLIC, and ROOT partitions are produced via the static
+    // TheoryVectorService / SymbolicVectorService / RootVectorService overloads;
+    // only MODAL is computed through an injected instance. The encoder therefore
+    // takes the one dependency it actually uses.
     public double[] Encode(StructuredQuery q)
     {
         var raw = new double[EmbeddingSchema.TotalDimension];

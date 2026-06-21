@@ -84,10 +84,7 @@ public static class VoicingSearchTool
 
     private static readonly Lazy<MusicalQueryEncoder> Encoder = new(() =>
         new MusicalQueryEncoder(
-            new TheoryVectorService(),
-            new ModalVectorService(),
-            new SymbolicVectorService(),
-            new RootVectorService()));
+            new ModalVectorService()));
 
     private static readonly Lazy<TypedMusicalQueryExtractor> Extractor = new(() =>
         new TypedMusicalQueryExtractor());
