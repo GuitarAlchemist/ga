@@ -49,12 +49,17 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Non-fatal: agent-blackbox is a separate repo the default GITHUB_TOKEN can't reach (private /
+      # cross-repo scope). The install-audit step below already tolerates its absence (every call is
+      # guarded with `|| true`), so a failed checkout must not fail the whole snapshot job.
       - name: Checkout agent-blackbox (for install-audit CLI)
         uses: actions/checkout@v4
+        continue-on-error: true
         with:
           repository: GuitarAlchemist/agent-blackbox
           ref: main
           path: agent-blackbox
+          token: ${{ secrets.AGENT_BLACKBOX_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
