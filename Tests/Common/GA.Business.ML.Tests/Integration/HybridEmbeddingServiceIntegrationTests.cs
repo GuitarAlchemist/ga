@@ -167,7 +167,7 @@ public class HybridEmbeddingServiceIntegrationTests
     /// </summary>
     private class MockTextEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>
     {
-        public EmbeddingGeneratorMetadata Metadata => new("Mock", null, "mock-v1");
+        public static EmbeddingGeneratorMetadata Metadata => new("Mock", null, "mock-v1");
 
         public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
             IEnumerable<string> values,

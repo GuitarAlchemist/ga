@@ -5,8 +5,6 @@ using GA.Business.ML.Agents.Mcp;
 [TestFixture]
 public class IntervalMcpToolsTests
 {
-    private static IntervalMcpTools MakeTool() => new();
-
     // Canonical pairs from any first-year theory text — these are the cases an
     // LLM is most likely to call the tool for, so getting them right is the
     // load-bearing acceptance criterion.
@@ -20,7 +18,7 @@ public class IntervalMcpToolsTests
         string lower, string upper, string expectedName,
         string expectedQuality, string expectedSize, int expectedSemitones)
     {
-        var result = MakeTool().IntervalCompute(lower, upper);
+        var result = IntervalMcpTools.IntervalCompute(lower, upper);
 
         Assert.That(result.Error, Is.Null, "valid input must not produce an Error");
         Assert.That(result.Name,      Is.EqualTo(expectedName),       $"name mismatch for {lower}→{upper}");
@@ -34,7 +32,7 @@ public class IntervalMcpToolsTests
     {
         // The LLM may emit lowercase or mixed case — the tool must be
         // case-insensitive and echo back canonical forms.
-        var result = MakeTool().IntervalCompute("c", "g");
+        var result = IntervalMcpTools.IntervalCompute("c", "g");
 
         Assert.That(result.Error,     Is.Null);
         Assert.That(result.LowerNote, Is.EqualTo("C"));
@@ -48,7 +46,7 @@ public class IntervalMcpToolsTests
         // F# → D is two cases that often confuse: enharmonic-aware naming
         // (F# rather than Gb) and crossing the octave (the canonical
         // "minor sixth" answer rather than "augmented fifth").
-        var result = MakeTool().IntervalCompute("F#", "D");
+        var result = IntervalMcpTools.IntervalCompute("F#", "D");
 
         Assert.That(result.Error,    Is.Null);
         Assert.That(result.Quality,  Is.EqualTo("minor"));
@@ -63,7 +61,7 @@ public class IntervalMcpToolsTests
     [TestCase("notanote",  "G")]
     public void IntervalCompute_InvalidInputs_ReturnFailureResult(string lower, string upper)
     {
-        var result = MakeTool().IntervalCompute(lower, upper);
+        var result = IntervalMcpTools.IntervalCompute(lower, upper);
 
         Assert.That(result.Error, Is.Not.Null,
             $"invalid input ('{lower}', '{upper}') must populate Error rather than throw");
@@ -77,10 +75,10 @@ public class IntervalMcpToolsTests
     {
         // Cancellation-safe: tools must convert bad input into structured Error,
         // never throw — an exception would crash the agent's tool-call loop.
-        Assert.That(() => MakeTool().IntervalCompute(null!, "G"), Throws.Nothing);
-        Assert.That(() => MakeTool().IntervalCompute("C", null!), Throws.Nothing);
+        Assert.That(() => IntervalMcpTools.IntervalCompute(null!, "G"), Throws.Nothing);
+        Assert.That(() => IntervalMcpTools.IntervalCompute("C", null!), Throws.Nothing);
 
-        var nullLower = MakeTool().IntervalCompute(null!, "G");
+        var nullLower = IntervalMcpTools.IntervalCompute(null!, "G");
         Assert.That(nullLower.Error, Is.Not.Null);
     }
 
@@ -91,7 +89,7 @@ public class IntervalMcpToolsTests
         // the LLM gets the order wrong the tool must still return a sensible
         // simple interval rather than throwing or returning negative semitones.
         // G → C is a perfect fourth (5 semitones) when read as a simple interval.
-        var result = MakeTool().IntervalCompute("G", "C");
+        var result = IntervalMcpTools.IntervalCompute("G", "C");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.Quality,   Is.EqualTo("perfect"));
@@ -106,8 +104,8 @@ public class IntervalMcpToolsTests
         // semitone count (3) but different theoretical spelling. The tool must
         // honour whichever spelling the LLM passes — the worst failure mode here
         // is silently normalising one to the other.
-        var augmented = MakeTool().IntervalCompute("C", "D#");
-        var minor     = MakeTool().IntervalCompute("C", "Eb");
+        var augmented = IntervalMcpTools.IntervalCompute("C", "D#");
+        var minor     = IntervalMcpTools.IntervalCompute("C", "Eb");
 
         Assert.That(augmented.Error, Is.Null);
         Assert.That(minor.Error,     Is.Null);
@@ -127,7 +125,7 @@ public class IntervalMcpToolsTests
         var huge = new string('C', 10_000);
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var result = MakeTool().IntervalCompute(huge, "G");
+        var result = IntervalMcpTools.IntervalCompute(huge, "G");
         sw.Stop();
 
         Assert.That(result.Error, Is.Not.Null);
@@ -146,7 +144,7 @@ public class IntervalMcpToolsTests
         // them in the structured response.
         var esc      = (char)0x1B;
         var injected = "Q\n\r" + esc + "[31mFAKE LOG";
-        var result   = MakeTool().IntervalCompute(injected, "G");
+        var result   = IntervalMcpTools.IntervalCompute(injected, "G");
 
         Assert.That(result.Error, Is.Not.Null);
         // Check for individual control bytes via char predicates rather than

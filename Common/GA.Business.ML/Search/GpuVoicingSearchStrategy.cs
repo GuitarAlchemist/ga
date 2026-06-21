@@ -1,16 +1,10 @@
 ﻿namespace GA.Business.ML.Search;
 
-using System.Collections.Immutable;
 using System.Diagnostics;
-using Domain.Services.Fretboard.Biomechanics;
-using GA.Domain.Core.Instruments.Biomechanics;
-using GA.Domain.Core.Instruments.Positions;
-using GA.Domain.Core.Instruments.Primitives;
-using GA.Domain.Core.Primitives.Notes;
+using Rag.Models;
 using GA.Domain.Services.Fretboard.Voicings.Core;
 using ILGPU;
 using ILGPU.Runtime;
-using Rag.Models;
 
 /// <summary>
 ///     GPU-accelerated voicing search strategy for high-performance similarity calculations.
@@ -29,31 +23,29 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
     private const int MusicalEmbeddingDim = 109; // v1.3.1
     private const int LegacyMusicalEmbeddingDim = 96; // v1.2.1
 
-    // Partition Offsets and Dimensions — must mirror EmbeddingSchema.Partitions.
-    private const int StructureOffset  = 6;
-    private const int StructureDim     = 24;
-    private const int MorphologyOffset = 30;
-    private const int MorphologyDim    = 24;
-    private const int ContextOffset    = 54;
-    private const int ContextDim       = 12;
-    private const int SymbolicOffset   = 66;
-    private const int SymbolicDim      = 12;
-    // MODAL (v1.6+, slots 109-148, 40 dims). Conditionally included so
-    // legacy/v1.3.1 vectors don't index past their length.
-    private const int ModalOffset      = 109;
-    private const int ModalDim         = 40;
-    // ROOT (v1.8 only, slots 228-239, 12 dims).
-    private const int RootOffset       = 228;
-    private const int RootDim          = 12;
+    // Partition offsets, dims, and weights ALIAS the authoritative EmbeddingSchema
+    // consts (compile-time, so the ILGPU kernel still bakes them) — the kernel can't
+    // call host code or iterate the registry, so this is how it crosses the layout seam.
+    // SchemaLayoutContractTests guards that these match EmbeddingSchema.Partitions.
+    private const int StructureOffset  = EmbeddingSchema.StructureOffset;
+    private const int StructureDim     = EmbeddingSchema.StructureDim;
+    private const int MorphologyOffset = EmbeddingSchema.MorphologyOffset;
+    private const int MorphologyDim    = EmbeddingSchema.MorphologyDim;
+    private const int ContextOffset    = EmbeddingSchema.ContextOffset;
+    private const int ContextDim       = EmbeddingSchema.ContextDim;
+    private const int SymbolicOffset   = EmbeddingSchema.SymbolicOffset;
+    private const int SymbolicDim      = EmbeddingSchema.SymbolicDim;
+    private const int ModalOffset      = EmbeddingSchema.ModalOffset;
+    private const int ModalDim         = EmbeddingSchema.ModalDim;
+    private const int RootOffset       = EmbeddingSchema.RootOffset;
+    private const int RootDim          = EmbeddingSchema.RootDim;
 
-    // Similarity Weights — sum is 1.15 (not 1.0) when MODAL+ROOT both fire.
-    // Intentional: residual mass beyond 1.0 is the v1.8 discrimination signal.
-    private const double StructureWeight  = 0.45;
-    private const double MorphologyWeight = 0.25;
-    private const double ContextWeight    = 0.20;
-    private const double SymbolicWeight   = 0.10;
-    private const double ModalWeight      = 0.10;
-    private const double RootWeight       = 0.05;
+    private const double StructureWeight  = EmbeddingSchema.StructureWeight;
+    private const double MorphologyWeight = EmbeddingSchema.MorphologyWeight;
+    private const double ContextWeight    = EmbeddingSchema.ContextWeight;
+    private const double SymbolicWeight   = EmbeddingSchema.SymbolicWeight;
+    private const double ModalWeight      = EmbeddingSchema.ModalWeight;
+    private const double RootWeight       = EmbeddingSchema.RootWeight;
     private readonly Lock _initLock = new();
     private readonly Dictionary<string, VoicingEmbedding> _voicings = [];
     private Accelerator? _accelerator;
@@ -248,68 +240,15 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
 
             try
             {
-                var filteredVoicings = _voicings.Values.AsEnumerable();
-
-                // Basic filters
-                if (!string.IsNullOrEmpty(filters.Difficulty))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.Difficulty == filters.Difficulty);
-                }
-
-                if (!string.IsNullOrEmpty(filters.Position))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.Position == filters.Position);
-                }
-
-                if (!string.IsNullOrEmpty(filters.VoicingType))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.VoicingType == filters.VoicingType);
-                }
-
-                if (!string.IsNullOrEmpty(filters.ModeName))
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.ModeName == filters.ModeName);
-                }
-
-                if (filters.MinFret.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.MinFret >= filters.MinFret.Value);
-                }
-
-                if (filters.MaxFret.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.MaxFret <= filters.MaxFret.Value);
-                }
-
-                if (filters.RequireBarreChord.HasValue)
-                {
-                    filteredVoicings = filteredVoicings.Where(v => v.BarreRequired == filters.RequireBarreChord.Value);
-                }
-
-                if (filters.Tags != null && filters.Tags.Length > 0)
-                {
-                    filteredVoicings = filteredVoicings.Where(v =>
-                        filters.Tags.Any(tag => Enumerable.Contains(v.SemanticTags, tag)));
-                }
-
-                // Biomechanical filters (Quick Win 1)
-                if (filters.HandSize.HasValue || filters.MaxFingerStretch.HasValue ||
-                    filters.MinComfortScore.HasValue || filters.MustBeErgonomic.HasValue)
-                {
-                    filteredVoicings = ApplyBiomechanicalFilters(filteredVoicings, filters);
-                }
-
-                // Musical characteristic filters (Quick Win 3) and Extended Filters (Phase 3)
-                if (filters.IsOpenVoicing.HasValue || filters.IsRootless.HasValue ||
-                    !string.IsNullOrEmpty(filters.DropVoicing) || !string.IsNullOrEmpty(filters.CagedShape) ||
-                    !string.IsNullOrEmpty(filters.HarmonicFunction) || filters.IsNaturallyOccurring.HasValue ||
-                    filters.HasGuideTones.HasValue || filters.Inversion.HasValue ||
-                    filters.MinConsonance.HasValue || filters.MinBrightness.HasValue ||
-                    filters.MaxBrightness.HasValue ||
-                    (filters.OmittedTones != null && filters.OmittedTones.Length > 0))
-                {
-                    filteredVoicings = ApplyMusicalFilters(filteredVoicings, filters);
-                }
+                // Metadata predicate + comfort predicate both cross shared seams (VoicingFilterEngine /
+                // VoicingComfortFilter) — the SAME ones the CPU strategy uses — so the two paths agree on
+                // which voicings PASS THE FILTER (predicate parity). The returned top-K may still differ
+                // under truncation (they score differently), so this is not result-set parity. Comfort
+                // moved out of this adapter (it never needed the GPU: the BiomechanicalAnalyzer is pure
+                // C# over the diagram). See ADR-0002.
+                var filteredVoicings = _voicings.Values
+                    .Where(v => VoicingFilterEngine.Matches(v, filters))
+                    .Where(v => VoicingComfortFilter.Matches(v.Diagram, filters));
 
                 var filteredIds = filteredVoicings.Select(v => v.Id).ToList();
                 var similarities = CalculateFilteredSimilaritiesIlgpu(queryEmbedding, filteredIds);
@@ -744,7 +683,10 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         // Use weighted partition similarity for musical embeddings (v1.7, v1.6, v1.3.1, v1.2.1)
         if (_embeddingDimensions == OpticKv18Dim || _embeddingDimensions == OpticKv17Dim || _embeddingDimensions == OpticKv16Dim || _embeddingDimensions == MusicalEmbeddingDim || _embeddingDimensions == LegacyMusicalEmbeddingDim)
         {
-            return CalculateMusicalSimilarity(queryEmbedding, _hostEmbeddings, embeddingStartIdx);
+            // Route through the layout op so the host fallback scores ALL similarity partitions
+            // (incl. MODAL + ROOT, which the old hand-rolled CalculateMusicalSimilarity dropped).
+            return EmbeddingSchema.WeightedPartitionCosine(
+                queryEmbedding, _hostEmbeddings.AsSpan(embeddingStartIdx, _embeddingDimensions));
         }
 
         double dotProduct = 0.0, queryNorm = 0.0, voicingNorm = 0.0;
@@ -760,103 +702,8 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         return dotProduct / (Math.Sqrt(queryNorm) * Math.Sqrt(voicingNorm) + 1e-10);
     }
 
-    private static double CalculateMusicalSimilarity(double[] query, double[] database, int dbStartIdx)
-    {
-        double score = 0;
-
-        // STRUCTURE
-        score += StructureWeight * ComputePartitionCosine(
-            query, StructureOffset, database, dbStartIdx + StructureOffset, StructureDim);
-
-        // MORPHOLOGY
-        score += MorphologyWeight * ComputePartitionCosine(
-            query, MorphologyOffset, database, dbStartIdx + MorphologyOffset, MorphologyDim);
-
-        // CONTEXT
-        score += ContextWeight * ComputePartitionCosine(
-            query, ContextOffset, database, dbStartIdx + ContextOffset, ContextDim);
-
-        // SYMBOLIC
-        score += SymbolicWeight * ComputePartitionCosine(
-            query, SymbolicOffset, database, dbStartIdx + SymbolicOffset, SymbolicDim);
-
-        return score;
-    }
-
-    private static double ComputePartitionCosine(double[] v1, int offset1, double[] v2, int offset2, int dim)
-    {
-        double dot = 0, n1 = 0, n2 = 0;
-        for (var i = 0; i < dim; i++)
-        {
-            var a = v1[offset1 + i];
-            var b = v2[offset2 + i];
-            dot += a * b;
-            n1 += a * a;
-            n2 += b * b;
-        }
-
-        var mag = Math.Sqrt(n1) * Math.Sqrt(n2);
-        return mag > 1e-10 ? dot / mag : 0;
-    }
-
-    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)
-    {
-        var document = new ChordVoicingRagDocument
-        {
-            Id = voicing.Id,
-            SearchableText = voicing.Description,
-            ChordName = voicing.ChordName,
-            VoicingType = voicing.VoicingType,
-            Position = voicing.Position,
-            Difficulty = voicing.Difficulty,
-            ModeName = voicing.ModeName,
-            ModalFamily = voicing.ModalFamily,
-            SemanticTags = voicing.SemanticTags,
-            PossibleKeys = voicing.PossibleKeys,
-            PrimeFormId = voicing.PrimeFormId,
-            TranslationOffset = voicing.TranslationOffset,
-            YamlAnalysis = voicing.Description, // Using description as YAML for now
-            Diagram = voicing.Diagram,
-            MidiNotes = voicing.MidiNotes,
-            PitchClasses = [.. voicing.MidiNotes.Select(n => n % 12).Distinct().OrderBy(p => p)],
-            PitchClassSet = voicing.PitchClassSet,
-            IntervalClassVector = voicing.IntervalClassVector,
-            MinFret = voicing.MinFret,
-            MaxFret = voicing.MaxFret,
-            BarreRequired = voicing.BarreRequired,
-            HandStretch = voicing.HandStretch,
-
-            // New fields populated with defaults/derived values
-            AnalysisEngine = "GpuVoicingSearchStrategy",
-            AnalysisVersion = "1.0.0",
-            Jobs = [],
-            TuningId = "Standard",
-            PitchClassSetId = voicing.PrimeFormId,
-            StackingType = voicing.StackingType,
-            RootPitchClass = voicing.RootPitchClass,
-            MidiBassNote = voicing.MidiBassNote,
-            DifficultyScore = voicing.Difficulty == "Beginner" ? 1.0 : voicing.Difficulty == "Intermediate" ? 2.0 : 3.0,
-
-            // Phase 3 Mapping
-            HarmonicFunction = voicing.HarmonicFunction,
-            IsNaturallyOccurring = voicing.IsNaturallyOccurring,
-            HasGuideTones = voicing.HasGuideTones,
-            IsRootless = voicing.IsRootless,
-            Inversion = voicing.Inversion,
-            TopPitchClass = voicing.TopPitchClass, // Added for Chord Melody support
-            Consonance = voicing.ConsonanceScore,
-            Brightness = voicing.BrightnessScore,
-            Roughness = 1.0 - voicing.ConsonanceScore, // Rough approximation if needed
-            OmittedTones = voicing.OmittedTones,
-
-            // AI Agent Metadata
-            TexturalDescription = voicing.TexturalDescription,
-            DoubledTones = voicing.DoubledTones,
-            AlternateNames = voicing.AlternateNames
-        };
-
-        return new(document, score, query);
-    }
+    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query) =>
+        VoicingSearchResultMapper.FromVoicingEmbedding(voicing, score, query, "GpuVoicingSearchStrategy");
 
     private void EnsureInitialized()
     {
@@ -884,246 +731,5 @@ public class GpuVoicingSearchStrategy : IVoicingSearchStrategy, IDisposable
         {
             _totalSearchTime = _totalSearchTime.Add(elapsed);
         }
-    }
-
-    /// <summary>
-    ///     Apply biomechanical filters to voicings (Quick Win 1)
-    /// </summary>
-    private IEnumerable<VoicingEmbedding> ApplyBiomechanicalFilters(
-        IEnumerable<VoicingEmbedding> voicings,
-        VoicingSearchFilters filters)
-    {
-        // Use pre-computed HandStretch field for fast filtering
-        // Only do full biomechanical analysis if comfort/ergonomic filters are specified
-        var needsFullAnalysis = filters.MinComfortScore.HasValue ||
-                                (filters.MustBeErgonomic.HasValue && filters.MustBeErgonomic.Value);
-
-        if (!needsFullAnalysis)
-        {
-            // Fast path: use pre-computed HandStretch field
-            return voicings.Where(v =>
-            {
-                if (filters.MaxFingerStretch.HasValue && v.HandStretch > filters.MaxFingerStretch.Value)
-                {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
-        // Slow path: full biomechanical analysis (only for comfort/ergonomic filters)
-        var analyzer = new BiomechanicalAnalyzer(
-            filters.HandSize ?? HandSize.Medium);
-
-        return voicings.Where(v =>
-        {
-            // First check HandStretch (fast)
-            if (filters.MaxFingerStretch.HasValue && v.HandStretch > filters.MaxFingerStretch.Value)
-            {
-                return false;
-            }
-
-            // Parse diagram to positions
-            var positions = ParseDiagramToPositions(v.Diagram);
-            if (positions.Count == 0)
-            {
-                return true; // Keep voicings we can't analyze
-            }
-
-            // Analyze biomechanical playability
-            var analysis = analyzer.AnalyzeChordPlayability(positions);
-
-            // Apply comfort filter
-            if (filters.MinComfortScore.HasValue &&
-                analysis.Comfort < filters.MinComfortScore.Value)
-            {
-                return false;
-            }
-
-            // Apply ergonomic filter
-            if (filters.MustBeErgonomic.HasValue &&
-                filters.MustBeErgonomic.Value &&
-                analysis.WristPostureAnalysis != null &&
-                !analysis.WristPostureAnalysis.IsErgonomic)
-            {
-                return false;
-            }
-
-            return true;
-        });
-    }
-
-    /// <summary>
-    ///     Apply musical characteristic filters (Quick Win 3)
-    /// </summary>
-    private IEnumerable<VoicingEmbedding> ApplyMusicalFilters(
-        IEnumerable<VoicingEmbedding> voicings,
-        VoicingSearchFilters filters) =>
-        voicings.Where(v =>
-        {
-            // Filter by open/closed voicing
-            if (filters.IsOpenVoicing.HasValue)
-            {
-                var isOpen = v.VoicingType?.Contains("open", StringComparison.OrdinalIgnoreCase) ?? false;
-                if (isOpen != filters.IsOpenVoicing.Value)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by rootless
-            if (filters.IsRootless.HasValue)
-            {
-                if (v.IsRootless != filters.IsRootless.Value)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by drop voicing
-            if (!string.IsNullOrEmpty(filters.DropVoicing))
-            {
-                var hasDropVoicing = v.VoicingType?.Contains(filters.DropVoicing, StringComparison.OrdinalIgnoreCase) ??
-                                     false;
-                if (!hasDropVoicing)
-                {
-                    return false;
-                }
-            }
-
-            // Filter by CAGED shape
-            if (!string.IsNullOrEmpty(filters.CagedShape))
-            {
-                var hasCagedShape = v.SemanticTags.Any(tag =>
-                    tag.Contains($"CAGED-{filters.CagedShape}", StringComparison.OrdinalIgnoreCase) ||
-                    tag.Contains($"{filters.CagedShape} shape", StringComparison.OrdinalIgnoreCase));
-                if (!hasCagedShape)
-                {
-                    return false;
-                }
-            }
-
-            // Phase 3 Filters
-
-            if (!string.IsNullOrEmpty(filters.HarmonicFunction))
-            {
-                if (!string.Equals(v.HarmonicFunction, filters.HarmonicFunction, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-            }
-
-            if (filters.IsNaturallyOccurring.HasValue)
-            {
-                if (v.IsNaturallyOccurring != filters.IsNaturallyOccurring.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.HasGuideTones.HasValue)
-            {
-                if (v.HasGuideTones != filters.HasGuideTones.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.Inversion.HasValue)
-            {
-                if (v.Inversion != filters.Inversion.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MinConsonance.HasValue)
-            {
-                if (v.ConsonanceScore < filters.MinConsonance.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MinBrightness.HasValue)
-            {
-                if (v.BrightnessScore < filters.MinBrightness.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.MaxBrightness.HasValue)
-            {
-                if (v.BrightnessScore > filters.MaxBrightness.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.TopPitchClass.HasValue)
-            {
-                if (v.TopPitchClass != filters.TopPitchClass.Value)
-                {
-                    return false;
-                }
-            }
-
-            if (filters.OmittedTones != null && filters.OmittedTones.Length > 0)
-            {
-                // Check if ALL requested omissions are present in voicing's OmittedTones
-                // Or maybe just ANY? Usually filters are restrictive (Must omit X).
-                // Let's assume MUST omit all specified.
-                foreach (var omission in filters.OmittedTones)
-                {
-                    if (v.OmittedTones == null ||
-                        !Enumerable.Contains(v.OmittedTones, omission, StringComparer.OrdinalIgnoreCase))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        });
-
-    /// <summary>
-    ///     Parse voicing diagram to Position list for biomechanical analysis
-    /// </summary>
-    private ImmutableList<Position> ParseDiagramToPositions(string diagram)
-    {
-        // Diagram format: "x-3-2-0-1-0" or "3-2-0-1-0-3"
-        var parts = diagram.Split('-');
-        var positions = new List<Position>();
-
-        for (var i = 0; i < parts.Length && i < 6; i++)
-        {
-            var part = parts[i].Trim();
-            var str = new Str(i + 1); // Str is 1-based (strings 1-6)
-
-            if (part == "x" || part == "X")
-            {
-                // Muted string
-                positions.Add(new Position.Muted(str));
-            }
-            else if (int.TryParse(part, out var fretValue))
-            {
-                var fret = new Fret(fretValue);
-                var location = new PositionLocation(str, fret);
-
-                // Create a played position with estimated MIDI note
-                // Standard tuning: E2(40), A2(45), D3(50), G3(55), B3(59), E4(64)
-                var openMidiNotes = new[] { 64, 59, 55, 50, 45, 40 }; // High E to Low E
-                var midiNoteValue = i < openMidiNotes.Length
-                    ? openMidiNotes[i] + fretValue
-                    : 60 + fretValue; // Fallback
-                var midiNote = new MidiNote(midiNoteValue);
-
-                positions.Add(new Position.Played(location, midiNote));
-            }
-        }
-
-        return [.. positions];
     }
 }

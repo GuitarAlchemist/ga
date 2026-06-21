@@ -1,7 +1,6 @@
 namespace GA.Business.ML.Agents.Skills;
 
 using System.Text;
-using System.Text.RegularExpressions;
 
 /// <summary>
 /// Computes fret span and playability for a chord diagram — zero LLM calls, pure arithmetic.
@@ -16,19 +15,9 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
     public string Name        => "FretSpan";
     public string Description => "Computes fret span and playability rating from a chord diagram";
 
-    // Dash-separated: x-3-2-0-1-0  or  0-2-2-1-0-0
-    private static readonly Regex DashDiagram =
-        new(@"\b([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})-([xX]|\d{1,2})\b",
-            RegexOptions.Compiled);
-
-    // Compact starting with x: x32010, x02120, etc.
-    private static readonly Regex CompactDiagram =
-        new(@"\b[xX]\d{5}\b", RegexOptions.Compiled);
-
     public bool CanHandle(string message)
     {
-        var hasDiagram = DashDiagram.IsMatch(message) || CompactDiagram.IsMatch(message);
-        if (!hasDiagram) return false;
+        if (!FretDiagram.Contains(message)) return false;
 
         var q = message.ToLowerInvariant();
         return q.Contains("span")      || q.Contains("stretch") || q.Contains("reach") ||
@@ -38,7 +27,7 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
 
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
-        var frets = TryParseFrets(message);
+        var frets = FretDiagram.TryParseFrets(message);
         if (frets is null)
             return Task.FromResult(CannotHelp("Could not parse a chord diagram from your message."));
 
@@ -89,27 +78,6 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /// <summary>Returns 6 fret values (-1 = muted) or null if no diagram found.</summary>
-    private static List<int>? TryParseFrets(string message)
-    {
-        // Try dash-separated first
-        var dash = DashDiagram.Match(message);
-        if (dash.Success)
-        {
-            return [.. Enumerable.Range(1, 6).Select(i => ParseFret(dash.Groups[i].Value))];
-        }
-
-        // Try compact (e.g. x32010)
-        var compact = CompactDiagram.Match(message);
-        if (!compact.Success) return null;
-
-        var val = compact.Value;
-        return [.. val.Select(c => c is 'x' or 'X' ? -1 : c - '0')];
-    }
-
-    private static int ParseFret(string s) =>
-        s.Equals("x", StringComparison.OrdinalIgnoreCase) ? -1 : int.Parse(s);
 
     private static AgentResponse CannotHelp(string reason) => new()
     {

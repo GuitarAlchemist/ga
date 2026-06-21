@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/contracts/maintain-gate-snapshot-v0.1.json",
+  "title": "Maintain-Gate Verdict Snapshot — GA-readable contract surface",
+  "description": "The fused cross-signal maintain verdict IX emits in scorecard shape, federated into state/quality/maintain-gate/ (producer: ix ix_maintain_snapshot, federation ix#146). It is the canonical GA dashboard envelope (allOf: quality-snapshot.schema.json) PLUS the maintain-specific LOCKED fields below. ADVISORY / non-binding until IX Phase-3b (`advisory: true`); GA surfaces it as the fused verdict GA's per-axis gates (CanonicalSignatureChecker / semantic-regression) individually lack — not another gate. One-way door: the `status` enum and the `signals[].lens` sub-signal keys are the agreed cross-repo contract surface; changing them needs IX+GA coordination once the GovernanceMetricsDashboard tile (ga#446) depends on them. The validator (Scripts/validate-quality-snapshots.ps1) checks registered snapshots against the shared envelope (quality-snapshot.schema.json, additionalProperties:true) — this file documents + tightens the maintain-specific surface that rides along.",
+  "allOf": [
+    { "$ref": "./quality-snapshot.schema.json" }
+  ],
+  "type": "object",
+  "required": [
+    "domain",
+    "emitted_at",
+    "metric_name",
+    "metric_value",
+    "oracle_status",
+    "summary",
+    "advisory",
+    "status",
+    "decision",
+    "signals"
+  ],
+  "properties": {
+    "domain": { "const": "maintain-gate" },
+    "metric_name": { "const": "maintain_yield_delta" },
+    "advisory": {
+      "type": "boolean",
+      "description": "Non-binding marker. `true` until IX Phase-3b makes the verdict gating. GA MUST present the verdict as advisory while this is true."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["T", "P", "U", "D", "F", "C"],
+      "description": "LOCKED. Hexavalent fused verdict: T accept | P accept-with-flags | U escalate (no signal / unverifiable) | D escalate (disputed — oscillating) | F reject | C reject+alarm (reward-hack: metric up while a held capability regressed)."
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["accept", "reject", "escalate"],
+      "description": "Coarse routing of `status`: T/P→accept, F/C→reject, U/D→escalate."
+    },
+    "signals": {
+      "type": "array",
+      "description": "LOCKED sub-signal keys. Per-lens verdict from the maintain fusion. The cross-signal contract surface GA reads.",
+      "items": {
+        "type": "object",
+        "required": ["lens", "status"],
+        "properties": {
+          "lens": {
+            "type": "string",
+            "enum": ["metric", "guardrail", "convergence", "drift", "provenance"],
+            "description": "metric = externally-derived yield delta · guardrail = chatbot held-capability regression gate · convergence = loop-oscillation lens · drift = OOD lens · provenance = iteration commit-verification (present only when scoped to an iteration)."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "bad", "unknown"],
+            "description": "ok = lens held · bad = lens failed · unknown = no signal (caps the fused verdict at U; never read as green)."
+          },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "maintain_trend": {
+      "type": "object",
+      "description": "Convergence rollup over IX's append-only verdict ledger (read side). Advisory trend context for the tile.",
+      "properties": {
+        "total": { "type": "integer" },
+        "accepts": { "type": "integer" },
+        "rejects": { "type": "integer" },
+        "escalates": { "type": "integer" },
+        "reward_hacks": { "type": "integer" },
+        "latest_status": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

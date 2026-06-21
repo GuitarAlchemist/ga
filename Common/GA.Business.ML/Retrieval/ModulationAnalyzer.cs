@@ -45,7 +45,7 @@ public class ModulationAnalyzer(MusicalEmbeddingGenerator generator)
         ];
     }
 
-    private float[] CalculateBarycenter(List<ChordVoicingRagDocument> progression)
+    private static float[] CalculateBarycenter(List<ChordVoicingRagDocument> progression)
     {
         var dim = EmbeddingSchema.TotalDimension;
         var barycenter = new float[dim];

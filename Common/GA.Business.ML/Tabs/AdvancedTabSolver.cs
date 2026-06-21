@@ -188,7 +188,7 @@ public class AdvancedTabSolver(
         return Backtrack(states, dp, k);
     }
 
-    private List<List<List<FretboardPosition>>> Backtrack(
+    private static List<List<List<FretboardPosition>>> Backtrack(
         List<List<CandidateState>> states,
         List<(double Cost, int PrevStateIndex, int PrevRank)>[][] dp,
         int k)
@@ -239,14 +239,14 @@ public class AdvancedTabSolver(
         return result;
     }
 
-    private int GetHandPosition(List<FretboardPosition> shape)
+    private static int GetHandPosition(List<FretboardPosition> shape)
     {
         // Simplification: index finger usually at min fret (if not open)
         var nonZero = shape.Where(p => p.Fret > 0).Select(p => p.Fret).ToList();
         return nonZero.Count > 0 ? nonZero.Min() : 0;
     }
 
-    private ChordVoicingRagDocument CreateTempDoc(List<FretboardPosition> shape)
+    private static ChordVoicingRagDocument CreateTempDoc(List<FretboardPosition> shape)
     {
         var pcs = shape.Select(p => p.Pitch.PitchClass.Value).ToArray();
         var midi = shape.Select(p => p.Pitch.MidiNote.Value).ToArray();

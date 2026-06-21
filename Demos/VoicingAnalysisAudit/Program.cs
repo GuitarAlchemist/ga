@@ -227,7 +227,7 @@ internal static class Program
             {
                 _analyzerExceptions.Add(new AnalyzerException(
                     instrument,
-                    VoicingExtensions.GetPositionDiagram(voicing.Positions),
+                    voicing.Diagram,
                     ex.GetType().Name,
                     Truncate(ex.Message, 200)));
             }
@@ -239,7 +239,7 @@ internal static class Program
 
             var chordId = analysis.ChordId;
             var chordName = chordId?.ChordName;
-            var diagram = VoicingExtensions.GetPositionDiagram(voicing.Positions);
+            var diagram = voicing.Diagram;
 
             // --- B. Chord name recognition ---
             if (chordName == null)
@@ -520,7 +520,7 @@ internal static class Program
             string issue) =>
             new(
                 instrument,
-                VoicingExtensions.GetPositionDiagram(voicing.Positions),
+                voicing.Diagram,
                 analysis.MidiNotes,
                 analysis.PitchClassSet == null
                     ? "<null>"

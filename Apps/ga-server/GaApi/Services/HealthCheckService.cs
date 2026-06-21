@@ -154,7 +154,7 @@ public class HealthCheckService(
         return health;
     }
 
-    private string GetApiVersion()
+    private static string GetApiVersion()
     {
         try
         {

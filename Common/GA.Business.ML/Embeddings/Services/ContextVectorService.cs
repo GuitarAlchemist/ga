@@ -16,7 +16,7 @@ public class ContextVectorService
     ///     Note: For static indexing of voicings, this may be largely zero or generic,
     ///     but for Query/Progression logic, it is fully populated.
     /// </summary>
-    public double[] ComputeEmbedding(
+    public static double[] ComputeEmbedding(
         string? harmonicFunction = null, // Tonic, Subdominant, Dominant
         double stabilityDelta = 0.0, // Change in stability from previous
         double tension = 0.0, // Harmonic tension

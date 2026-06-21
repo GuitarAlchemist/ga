@@ -79,8 +79,8 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
         if (!match.Success)
             return Task.FromResult(CannotHelp("Could not parse two note names from your question."));
 
-        if (!TryParseNote(match.Groups[1].Value, out var note1) ||
-            !TryParseNote(match.Groups[2].Value, out var note2))
+        if (!IntervalNaming.TryParseNote(match.Groups[1].Value, out var note1) ||
+            !IntervalNaming.TryParseNote(match.Groups[2].Value, out var note2))
         {
             return Task.FromResult(CannotHelp(
                 $"I don't recognise \"{match.Groups[1].Value}\" or \"{match.Groups[2].Value}\" as a standard note name. " +
@@ -89,10 +89,10 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
 
         // Note.Accidented.GetInterval is the canonical interval-between-two-notes API.
         var interval = note1.GetInterval(note2);
-        var name1    = FormatNote(match.Groups[1].Value);
-        var name2    = FormatNote(match.Groups[2].Value);
-        var qualName = QualityLongName(interval.Quality.ToString());
-        var sizeName = SizeOrdinalName(interval.Size.Value);
+        var name1    = IntervalNaming.FormatNote(match.Groups[1].Value);
+        var name2    = IntervalNaming.FormatNote(match.Groups[2].Value);
+        var qualName = IntervalNaming.QualityLongName(interval.Quality.ToString());
+        var sizeName = IntervalNaming.SizeOrdinalName(interval.Size.Value);
         var direction = note1.PitchClass.Value <= note2.PitchClass.Value ? "above" : "below or above";
 
         logger.LogDebug(
@@ -114,65 +114,6 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
             Assumptions = [],
         });
     }
-
-    private static bool TryParseNote(string token, out Note.Accidented note)
-    {
-        // Try Sharp first, then Flat — both convert cleanly to Accidented.
-        if (Note.Sharp.TryParse(token, null, out var sharp))
-        {
-            note = sharp.ToAccidented();
-            return true;
-        }
-
-        if (Note.Flat.TryParse(token, null, out var flat))
-        {
-            note = flat.ToAccidented();
-            return true;
-        }
-
-        if (Note.Accidented.TryParse(token, null, out var accidented))
-        {
-            note = accidented;
-            return true;
-        }
-
-        note = default!;
-        return false;
-    }
-
-    private static string FormatNote(string raw)
-    {
-        // Normalise display: "c#" -> "C#", "bB" -> "Bb".
-        var trimmed = raw.Trim();
-        if (trimmed.Length == 0) return raw;
-        var head = char.ToUpperInvariant(trimmed[0]).ToString();
-        if (trimmed.Length == 1) return head;
-        var tail = trimmed[1..].ToLowerInvariant().Replace("b", "b").Replace("#", "#");
-        return head + tail;
-    }
-
-    private static string QualityLongName(string shortQuality) => shortQuality switch
-    {
-        "P" => "perfect",
-        "M" => "major",
-        "m" => "minor",
-        "A" => "augmented",
-        "d" => "diminished",
-        _   => shortQuality,
-    };
-
-    private static string SizeOrdinalName(int size) => size switch
-    {
-        1 => "unison",
-        2 => "second",
-        3 => "third",
-        4 => "fourth",
-        5 => "fifth",
-        6 => "sixth",
-        7 => "seventh",
-        8 => "octave",
-        _ => $"{size}th",
-    };
 
     private static AgentResponse CannotHelp(string reason) => new()
     {

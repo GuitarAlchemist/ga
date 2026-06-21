@@ -67,7 +67,7 @@ E|---------------|
         var blocks = _tokenizer.Tokenize(bluesRiff);
         var slices = blocks.SelectMany(b => b.Slices).Where(s => s.Notes.Count > 0).ToList();
         var score = slices.Select(s => {
-            var mNotes = _pitchConverter.GetMidiNotes(s);
+            var mNotes = TabToPitchConverter.GetMidiNotes(s);
             return mNotes.Select(m => {
                 var octave = Octave.FromValue((m / 12) - 1);
                 var pc = PitchClass.FromValue(m % 12);
@@ -94,7 +94,7 @@ E|---------------|
             ).ToList();
             
             // Re-fetch expected pitches correctly
-            var mNotes = _pitchConverter.GetMidiNotes(slices[i]);
+            var mNotes = TabToPitchConverter.GetMidiNotes(slices[i]);
             var expectedWithPitches = new List<FretboardPosition>();
             var sortedOrigNotes = slices[i].Notes.OrderByDescending(n => n.StringIndex).ToList();
             for(var k=0; k<sortedOrigNotes.Count; k++) {
@@ -165,7 +165,7 @@ E|---------------|
         var slices = blocks.SelectMany(b => b.Slices).Where(s => s.Notes.Count > 0).ToList();
         
         var score = slices.Select(s => {
-            var mNotes = _pitchConverter.GetMidiNotes(s);
+            var mNotes = TabToPitchConverter.GetMidiNotes(s);
             return mNotes.Select(m => {
                 var octaveValue = (m / 12) - 1;
                 var octave = Octave.FromValue(octaveValue);

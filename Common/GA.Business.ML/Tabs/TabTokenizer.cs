@@ -86,7 +86,7 @@ public class TabTokenizer
         return blocks;
     }
 
-    private void ProcessBlock(List<string> lines, List<TabBlock> blocks)
+    private static void ProcessBlock(List<string> lines, List<TabBlock> blocks)
     {
         // Heuristic: Allow single string (bass line/riff) to 8 strings.
         if (lines.Count < 1 || lines.Count > 8)

@@ -176,6 +176,15 @@ public class EnhancedVoicingSearchService(
     public QueryVectorSpace QuerySpace => searchStrategy.QuerySpace;
 
     /// <summary>
+    ///     The populated filters the active strategy cannot honor (ADR-0002) — passthrough to
+    ///     <see cref="IVoicingSearchStrategy.UnsupportedPopulatedFilters"/> so callers that hold this
+    ///     service (e.g. <c>VoicingAgent</c>) rather than the raw strategy can record the gap as
+    ///     <c>dropped</c> telemetry.
+    /// </summary>
+    public IReadOnlyList<string> UnsupportedPopulatedFilters(VoicingSearchFilters filters) =>
+        searchStrategy.UnsupportedPopulatedFilters(filters);
+
+    /// <summary>
     ///     Find voicings similar to a given voicing
     /// </summary>
     public async Task<List<VoicingSearchResult>> FindSimilarAsync(
@@ -205,7 +214,7 @@ public class EnhancedVoicingSearchService(
         }
     }
 
-    private int? GetTopPitchClass(ChordVoicingRagDocument doc)
+    private static int? GetTopPitchClass(ChordVoicingRagDocument doc)
     {
         // 1. Prefer explicit property
         if (doc.TopPitchClass.HasValue)

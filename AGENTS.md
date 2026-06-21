@@ -40,7 +40,7 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 
 ## OPTIC-K
 
-240-dim musical embedding (`OPTIC-K-v1.8`). Canonical schema: `Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs` — read `TotalDimension` and `Version` constants, do not hardcode. v1.8 (2026-04-19) added a 12-dim `ROOT` partition at slots 228–239 to carry root pitch class outside `STRUCTURE`, closing the T-invariance gap that 91% of same-PC-set cross-instrument voicings exposed in invariant test #25. **One-way door: never change dimension without coordinated re-index.**
+240-dim musical embedding (`OPTIC-K-v1.8`). Canonical schema: `Common/GA.Business.ML/Embeddings/EmbeddingSchema.cs` — read `TotalDimension` and `Version` constants, do not hardcode. v1.8 (2026-04-19) added a 12-dim `ROOT` partition at slots 228–239 to carry root pitch class outside `STRUCTURE`, fixing invariant test #25 (91% of **same-pitch-class-set** cross-instrument voicings differed only by root). That is **same-PC-set** invariance (octave/voicing/instrument), **not** transposition invariance: `STRUCTURE` also carries a 12-dim pitch-class chroma, so a chord and its transposition have STRUCTURE cosine ≈0.5–0.8 (measured by `Tools/GaStructureInvariance`; only the ICV + cardinality sub-dims are T-invariant). Transposition-agnostic "same-shape" similarity uses the ICV path (`IcvNeighborsSkill` / Grothendieck), not the embedding. **One-way door: never change dimension without coordinated re-index.**
 
 ## Planning & commits
 
@@ -90,6 +90,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 
 | Doing | Look here |
 |---|---|
+| Deciding *how* to direct AI on a non-trivial change | `docs/methodology/agentic-engineering.md` (harness > model; strategic over tactical; DX≈AX; procedures vs abilities; queues not loops) |
 | Implementing a non-trivial feature | `docs/plans/YYYY-MM-DD-<type>-<name>-plan.md` (in flight) → `docs/archive/` (shipped) |
 | Debugging a known class of bug | `docs/solutions/<category>/<date>-<topic>.md` (compounded fixes, frontmatter: `module / tags / problem_type`) |
 | Touching the layered architecture | `docs/architecture/layers.md` (the 5-layer rule), `docs/architecture/audit-YYYY-MM-DD.md` (latest decisions) |

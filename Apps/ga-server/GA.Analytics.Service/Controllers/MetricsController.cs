@@ -71,7 +71,7 @@ public class MetricsController(PerformanceMetricsService metrics, ILogger<Metric
         }
     }
 
-    private string GetCacheRecommendation(CacheStatistics stats)
+    private static string GetCacheRecommendation(CacheStatistics stats)
     {
         if (stats.TotalHitRate > 0.8)
         {
@@ -91,7 +91,7 @@ public class MetricsController(PerformanceMetricsService metrics, ILogger<Metric
         return "CACHE: Very low hit rate (<20%), caching may not be effective for current workload";
     }
 
-    private string GetMemoryRecommendation()
+    private static string GetMemoryRecommendation()
     {
         var totalMemoryMb = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
         var gen2Collections = GC.CollectionCount(2);

@@ -338,7 +338,7 @@ public class ContextualChordsController(
         }
     }
 
-    private Key? ParseKeyName(string keyName)
+    private static Key? ParseKeyName(string keyName)
     {
         // Expected format: "C Major", "A Minor", etc.
         var parts = keyName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -369,7 +369,7 @@ public class ContextualChordsController(
         return null;
     }
 
-    private ScaleMode? ParseScaleName(string scaleName) =>
+    private static ScaleMode? ParseScaleName(string scaleName) =>
         // Simple parsing - can be enhanced
         // Map common scale/mode names to ScaleMode instances
         scaleName.ToLower() switch
@@ -384,7 +384,7 @@ public class ContextualChordsController(
             _ => null
         };
 
-    private (ChordTemplate? template, PitchClass root) ParseChordName(string chordName)
+    private static (ChordTemplate? template, PitchClass root) ParseChordName(string chordName)
     {
         // Simplified chord name parsing
         // This should be enhanced with proper chord name parsing from GA.Domain.Core

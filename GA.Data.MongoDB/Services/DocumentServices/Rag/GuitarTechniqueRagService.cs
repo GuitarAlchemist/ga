@@ -141,7 +141,7 @@ public class GuitarTechniqueRagService(
 
     // Extraction methods (simple pattern matching - can be enhanced with LLM)
 
-    private List<string> ExtractFingeringPatterns(string content)
+    private static List<string> ExtractFingeringPatterns(string content)
     {
         var patterns = new List<string>();
 
@@ -159,7 +159,7 @@ public class GuitarTechniqueRagService(
         return [.. patterns.Distinct()];
     }
 
-    private List<string> ExtractExercises(string content)
+    private static List<string> ExtractExercises(string content)
     {
         var exercises = new List<string>();
 
@@ -181,7 +181,7 @@ public class GuitarTechniqueRagService(
         return [.. exercises.Distinct()];
     }
 
-    private List<string> ExtractChordVoicings(string content)
+    private static List<string> ExtractChordVoicings(string content)
     {
         var voicings = new List<string>();
 
@@ -203,7 +203,7 @@ public class GuitarTechniqueRagService(
         return [.. voicings.Distinct()];
     }
 
-    private List<string> ExtractTechniques(string content)
+    private static List<string> ExtractTechniques(string content)
     {
         var techniques = new List<string>();
 
@@ -227,7 +227,7 @@ public class GuitarTechniqueRagService(
         return [.. techniques.Distinct()];
     }
 
-    private List<string> ExtractProgressions(string content)
+    private static List<string> ExtractProgressions(string content)
     {
         var progressions = new List<string>();
 
@@ -244,7 +244,7 @@ public class GuitarTechniqueRagService(
         return [.. progressions.Distinct()];
     }
 
-    private List<string> ExtractStyles(string content)
+    private static List<string> ExtractStyles(string content)
     {
         var styles = new List<string>();
 
@@ -267,7 +267,7 @@ public class GuitarTechniqueRagService(
         return [.. styles.Distinct()];
     }
 
-    private List<string> ExtractFretboardPositions(string content)
+    private static List<string> ExtractFretboardPositions(string content)
     {
         var positions = new List<string>();
 

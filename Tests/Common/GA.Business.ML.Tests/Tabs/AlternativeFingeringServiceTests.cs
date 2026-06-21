@@ -88,7 +88,7 @@ public class AlternativeFingeringServiceTests
         });
     }
 
-    private List<FretboardPosition> CreateChord(int[] frets)
+    private static List<FretboardPosition> CreateChord(int[] frets)
     {
         var list = new List<FretboardPosition>();
         for (var i = 0; i < frets.Length; i++)
@@ -99,7 +99,7 @@ public class AlternativeFingeringServiceTests
         return list;
     }
 
-    private ChordVoicingRagDocument CreateDummyDoc(int midiNote) =>
+    private static ChordVoicingRagDocument CreateDummyDoc(int midiNote) =>
         new()
         {
             Id = Guid.NewGuid().ToString(),

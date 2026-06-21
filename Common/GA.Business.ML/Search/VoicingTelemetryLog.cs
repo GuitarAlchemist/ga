@@ -163,6 +163,16 @@ public sealed record VoicingTelemetryRecord
     [JsonPropertyName("ms")]
     public double LatencyMs { get; init; }
 
+    /// <summary>
+    ///     Filter fields the active strategy structurally could not honor — its corpus lacks the
+    ///     backing metadata, so they were silently ignored (from
+    ///     <c>IVoicingSearchStrategy.UnsupportedPopulatedFilters</c>). Omitted when nothing was dropped.
+    ///     The evidence stream that scopes the OPTK index enrichment (ADR-0002): which rich filters
+    ///     callers actually request that the production path can't serve.
+    /// </summary>
+    [JsonPropertyName("dropped")]
+    public IReadOnlyList<string>? Dropped { get; init; }
+
     /// <summary>True if the call produced zero results — the highest-value signal.</summary>
     [JsonPropertyName("empty")]
     public bool Empty => ResultCount == 0;

@@ -18,7 +18,7 @@ public class OllamaGroundedNarrator(
 {
     public async Task<string> NarrateAsync(string query, IReadOnlyList<CandidateVoicing> candidates)
     {
-        string prompt = promptBuilder.Build(query, candidates);
+        string prompt = GroundedPromptBuilder.Build(query, candidates);
 
         try
         {

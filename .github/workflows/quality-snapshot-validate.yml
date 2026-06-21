@@ -1,0 +1,54 @@
+name: Quality Snapshot Validate
+
+# Validates dashboard-envelope snapshots under state/quality/ against the canonical
+# envelope schema — OPT-IN via state/quality/.snapshot-registry.json, NOT every *.json.
+#
+# Reworked (PR #370): the original walked every JSON via the ix-quality-validate
+# binary and false-failed on baselines / SAE artifacts / lens sidecars that were never
+# dashboard envelopes. This now calls the registry-aware Scripts/validate-quality-snapshots.ps1
+# (Test-Contract over the vendored docs/contracts/quality-snapshot.schema.json) — no ix
+# checkout, no rust build. A FAIL is a REAL conformance gap, not noise.
+#
+# ADVISORY for now: 87 registered snapshots (chatbot-qa, voicing-analysis, invariants, …)
+# don't yet emit the envelope, so this reports gaps without blocking merges. Drop
+# `-Advisory` to flip it to a hard merge gate once those producers conform.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'state/quality/**'
+      - 'Scripts/validate-quality-snapshots.ps1'
+      - 'Scripts/Governance.psm1'
+      - 'docs/contracts/quality-snapshot.schema.json'
+      - '.github/workflows/quality-snapshot-validate.yml'
+  pull_request:
+    paths:
+      - 'state/quality/**'
+      - 'Scripts/validate-quality-snapshots.ps1'
+      - 'Scripts/Governance.psm1'
+      - 'docs/contracts/quality-snapshot.schema.json'
+      - '.github/workflows/quality-snapshot-validate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-snapshot-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate state/quality snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate registered dashboard-envelope snapshots
+        shell: pwsh
+        run: ./Scripts/validate-quality-snapshots.ps1 -Advisory

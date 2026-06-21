@@ -105,7 +105,7 @@ public sealed class FSharpEmitter
         }
     }
 
-    private void EmitDuCase(StringBuilder sb, string ruleName, EbnfExpr expr, IReadOnlyList<EbnfRule> allRules, string indent)
+    private static void EmitDuCase(StringBuilder sb, string ruleName, EbnfExpr expr, IReadOnlyList<EbnfRule> allRules, string indent)
     {
         var caseName = ExprToCaseName(ruleName, expr);
         var payload  = ExprToPayload(expr);
@@ -128,7 +128,7 @@ public sealed class FSharpEmitter
 
     // ── Parser emission ──────────────────────────────────────────────────────
 
-    private void EmitParser(StringBuilder sb, EbnfExpr expr, string wrapType, IReadOnlyList<EbnfRule> allRules, string indent)
+    private static void EmitParser(StringBuilder sb, EbnfExpr expr, string wrapType, IReadOnlyList<EbnfRule> allRules, string indent)
     {
         switch (expr)
         {

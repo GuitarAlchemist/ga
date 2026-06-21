@@ -52,7 +52,7 @@ jobs:
         run: |
           set -e
           # Sibling list mirrors baseline.json tracked_repos. Update both together.
-          for repo in ix Demerzel tars guitaralchemist.github.io mergerisk agent-blackbox demerzel-bot devto-mcp fin ga-godot hari; do
+          for repo in ix Demerzel tars guitaralchemist.github.io agent-blackbox demerzel-bot ga-godot hari; do
             echo "Cloning $repo..."
             if gh repo clone "GuitarAlchemist/$repo" "$repo" -- --depth=50 --no-tags 2>/dev/null; then
               echo "  ok"

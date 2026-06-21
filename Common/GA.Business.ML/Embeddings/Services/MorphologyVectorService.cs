@@ -12,7 +12,7 @@ public class MorphologyVectorService
     /// <summary>
     ///     Computes the Morphology portion of the embedding.
     /// </summary>
-    public double[] ComputeEmbedding(
+    public static double[] ComputeEmbedding(
         int? bassPitchClass = null,
         int? melodyPitchClass = null,
         double normalizedSpan = 0.0,

@@ -65,7 +65,7 @@ public class MlNaturalnessRanker : IMlNaturalnessRanker, IDisposable
         }
     }
 
-    private float[] ExtractFeatures(List<FretboardPosition> a, List<FretboardPosition> b)
+    private static float[] ExtractFeatures(List<FretboardPosition> a, List<FretboardPosition> b)
     {
         if (a.Count == 0 || b.Count == 0)
         {

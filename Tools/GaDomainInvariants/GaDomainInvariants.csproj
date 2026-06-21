@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Layer-5 tooling that projects layer-1 domain universes into JSONL for the
+         DuckDB invariant sweep. Calls *down* into the pure domain only. -->
+    <ProjectReference Include="..\..\Common\GA.Domain.Core\GA.Domain.Core.csproj" />
+  </ItemGroup>
+
+</Project>

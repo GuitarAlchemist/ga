@@ -14,7 +14,7 @@ public sealed class OnnxEmbeddingGenerator(string modelPath, string vocabPath) :
     });
 
     // Typical dimension for MiniLM-L6-v2 is 384
-    public int Dimension => 384;
+    public static int Dimension => 384;
 
     public void Dispose() => _service.Dispose();
 

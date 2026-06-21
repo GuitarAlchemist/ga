@@ -254,5 +254,5 @@ public sealed class ChatbotHub(
     }
 
     private static IEnumerable<string> SplitIntoChunks(string text) =>
-        Helpers.SseChunker.SplitIntoChunks(text);
+        GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);
 }

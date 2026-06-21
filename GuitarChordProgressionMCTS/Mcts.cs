@@ -38,7 +38,7 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Expansion phase: Expand the tree by adding a child node with the next possible chord
-    private Node? Expansion(Node? node)
+    private static Node? Expansion(Node? node)
     {
         var possibleStates = node.State.GetPossibleNextStates();
 
@@ -59,7 +59,7 @@ public class Mcts(State initialState, int maxIterations)
 
 
     // Simulation (rollout) phase with GA optimization
-    private double Simulation(Node? node)
+    private static double Simulation(Node? node)
     {
         var tempState = new State(node.State.Sequence, node.State.MaxLength, node.State.Key, node.State.MelodyNotes);
 
@@ -95,7 +95,7 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Backpropagation phase
-    private void Backpropagation(Node? node, double reward)
+    private static void Backpropagation(Node? node, double reward)
     {
         while (node != null)
         {
@@ -106,7 +106,7 @@ public class Mcts(State initialState, int maxIterations)
     }
 
     // Get the best child node based on UCT value
-    private Node? GetBestChild(Node? node, double explorationParam)
+    private static Node? GetBestChild(Node? node, double explorationParam)
     {
         Node? bestChild = null;
         var bestValue = double.MinValue;

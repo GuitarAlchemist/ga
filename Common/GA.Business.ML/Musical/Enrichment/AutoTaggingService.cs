@@ -29,7 +29,7 @@ public class AutoTaggingService(ModalFlavorService modalFlavorService)
         return [.. tags];
     }
 
-    private void AnalyzeAtonalStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
+    private static void AnalyzeAtonalStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         if (doc.PitchClasses == null || doc.PitchClasses.Length == 0) return;
 
@@ -59,7 +59,7 @@ public class AutoTaggingService(ModalFlavorService modalFlavorService)
         // So this method is slightly misleading, functionality sits in GenerateTags.
     }
 
-    private void AnalyzePlayability(ChordVoicingRagDocument doc, HashSet<string> tags)
+    private static void AnalyzePlayability(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         var shape = doc.Diagram; // e.g., "x-3-2-0-1-0"
         if (string.IsNullOrEmpty(shape)) return;
@@ -94,7 +94,7 @@ public class AutoTaggingService(ModalFlavorService modalFlavorService)
         }
     }
 
-    private void AnalyzeHarmonicStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
+    private static void AnalyzeHarmonicStructure(ChordVoicingRagDocument doc, HashSet<string> tags)
     {
         // 1. Rootless (Pre-calculated by Analyzer)
         if (doc.IsRootless)

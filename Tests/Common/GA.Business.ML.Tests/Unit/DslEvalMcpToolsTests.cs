@@ -24,7 +24,10 @@ public class DslEvalMcpToolsTests
     /// function. Idempotent — re-running just overwrites entries with the
     /// same name in the underlying ConcurrentDictionary.
     /// </summary>
-    private static void EnsureClosuresRegistered() => GA.Business.DSL.Closures.BuiltinClosures.DomainClosures.register();
+    private static void EnsureClosuresRegistered()
+    {
+        GA.Business.DSL.Closures.BuiltinClosures.DomainClosures.register();
+    }
 
     [OneTimeSetUp]
     public void OneTimeSetUp() => EnsureClosuresRegistered();
@@ -36,7 +39,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.ListClosures();
+        var result = DslEvalMcpTools.ListClosures();
 
         Assert.That(result.Closures, Is.Not.Empty,
             "DomainClosures should have registered at least one closure");
@@ -54,7 +57,7 @@ public class DslEvalMcpToolsTests
         GA.Business.DSL.Closures.BuiltinClosures.AgentClosures.register();
 
         var tool = MakeTool();
-        var result = tool.ListClosures();
+        var result = DslEvalMcpTools.ListClosures();
 
         Assert.That(result.Closures.Any(c => c.Category != "Domain"), Is.False,
             "Agent / Pipeline / Io closures must not appear in the visible set");
@@ -77,7 +80,7 @@ public class DslEvalMcpToolsTests
         GA.Business.DSL.Closures.BuiltinClosures.TabClosures.register();
 
         var tool = MakeTool();
-        var visible = tool.ListClosures().Closures.Select(c => c.Name).ToHashSet();
+        var visible = DslEvalMcpTools.ListClosures().Closures.Select(c => c.Name).ToHashSet();
 
         Assert.Multiple(() =>
         {
@@ -97,7 +100,7 @@ public class DslEvalMcpToolsTests
         GA.Business.DSL.Closures.BuiltinClosures.TabClosures.register();
 
         var tool = MakeTool();
-        var result = tool.EvalClosure("tab.fetchUrl", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("tab.fetchUrl", new Dictionary<string, string>
         {
             ["url"] = "http://169.254.169.254/latest/meta-data/"
         });
@@ -116,7 +119,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.GetClosureSchema("domain.parseChord");
+        var result = DslEvalMcpTools.GetClosureSchema("domain.parseChord");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.Name, Is.EqualTo("domain.parseChord"));
@@ -130,8 +133,8 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var lower = tool.GetClosureSchema("domain.parseChord");
-        var upper = tool.GetClosureSchema("DOMAIN.PARSECHORD");
+        var lower = DslEvalMcpTools.GetClosureSchema("domain.parseChord");
+        var upper = DslEvalMcpTools.GetClosureSchema("DOMAIN.PARSECHORD");
 
         Assert.That(lower.Error, Is.Null);
         Assert.That(upper.Error, Is.Null);
@@ -143,7 +146,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.GetClosureSchema("does.not.exist.2026-05-06");
+        var result = DslEvalMcpTools.GetClosureSchema("does.not.exist.2026-05-06");
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error, Does.Contain("closure-not-found"));
@@ -156,7 +159,7 @@ public class DslEvalMcpToolsTests
 
         // 65 chars — over the MaxClosureNameLength cap.
         var overlong = new string('x', 65);
-        var result = tool.GetClosureSchema(overlong);
+        var result = DslEvalMcpTools.GetClosureSchema(overlong);
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error, Does.Contain("closure-not-found"));
@@ -169,7 +172,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.parseChord", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("domain.parseChord", new Dictionary<string, string>
         {
             ["symbol"] = "Cmaj7",
         });
@@ -189,7 +192,7 @@ public class DslEvalMcpToolsTests
 
         // domain.transposeChord declares semitones: int. The arg value comes
         // in as a string and must coerce server-side.
-        var result = tool.EvalClosure("domain.transposeChord", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("domain.transposeChord", new Dictionary<string, string>
         {
             ["symbol"] = "C",
             ["semitones"] = "3",
@@ -206,7 +209,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.transposeChord", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("domain.transposeChord", new Dictionary<string, string>
         {
             ["symbol"] = "C",
             ["semitones"] = "high",   // not parseable as int
@@ -222,7 +225,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.transposeChord", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("domain.transposeChord", new Dictionary<string, string>
         {
             ["symbol"] = "C",
             // missing 'semitones'
@@ -238,7 +241,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.nonexistent.2026-05-06", []);
+        var result = DslEvalMcpTools.EvalClosure("domain.nonexistent.2026-05-06", new Dictionary<string, string>());
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.Code, Is.EqualTo("closure-not-found"));
@@ -250,7 +253,7 @@ public class DslEvalMcpToolsTests
         var tool = MakeTool();
 
         // domain.parseChord requires 'symbol' — null args dict means missing.
-        var result = tool.EvalClosure("domain.parseChord", args: null);
+        var result = DslEvalMcpTools.EvalClosure("domain.parseChord", args: null);
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.Code, Is.EqualTo("missing-required-arg"));
@@ -261,7 +264,7 @@ public class DslEvalMcpToolsTests
     {
         var tool = MakeTool();
 
-        var result = tool.EvalClosure("domain.parseChord", new Dictionary<string, string>
+        var result = DslEvalMcpTools.EvalClosure("domain.parseChord", new Dictionary<string, string>
         {
             ["symbol"] = "Cm",
         });

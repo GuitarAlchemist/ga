@@ -33,37 +33,10 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
     private const int OpticKv131Dim = 109;
     private const int LegacyDim     = 96;
 
-    // Partition Config — must mirror EmbeddingSchema.Partitions exactly.
-    // SimilarityPartitions there mark which contribute to score; the
-    // similarity-role partitions are pulled in here with the same weights.
-    private const int StructureOffset  = 6;
-    private const int StructureDim     = 24;
-    private const int MorphologyOffset = 30;
-    private const int MorphologyDim    = 24;
-    private const int ContextOffset    = 54;
-    private const int ContextDim       = 12;
-    private const int SymbolicOffset   = 66;
-    private const int SymbolicDim      = 12;
-    // MODAL: introduced in OPTIC-K v1.6 (216-dim) — slots 109-148. Skipped on
-    // legacy / v1.3.1 vectors that don't have these slots.
-    private const int ModalOffset      = 109;
-    private const int ModalDim         = 40;
-    // ROOT: v1.8 only (240-dim) — slots 228-239. Pitch-class one-hot that
-    // closes the T-invariance gap STRUCTURE was over-loading in older
-    // schemas. Skipped on shorter vectors.
-    private const int RootOffset       = 228;
-    private const int RootDim          = 12;
-
-    // Weights — mirror EmbeddingSchema.Partitions. Sum is 1.15 (not 1.0)
-    // when MODAL + ROOT both contribute; that's intentional. The score is
-    // monotonic for ranking and the residual mass beyond 1.0 is the v1.8
-    // discrimination signal that older schemas couldn't express.
-    private const double StructureWeight  = 0.45;
-    private const double MorphologyWeight = 0.25;
-    private const double ContextWeight    = 0.20;
-    private const double SymbolicWeight   = 0.10;
-    private const double ModalWeight      = 0.10;
-    private const double RootWeight       = 0.05;
+    // Partition offsets, dims, and weights are NOT duplicated here: the weighted
+    // partition cosine reads them from the authoritative EmbeddingSchema registry via
+    // EmbeddingSchema.WeightedPartitionCosine. (The OpticKv*Dim consts above stay — they
+    // gate which length regime counts as an OPTIC-K vector, not the partition layout.)
 
     public string Name => "CPU-Parallel";
     public bool IsAvailable => true;
@@ -125,7 +98,13 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
 
         await Task.Run(() => {
             Parallel.ForEach(voicingList, voicing => {
-                if (MatchesFilters(voicing, filters))
+                // Metadata predicate + comfort predicate cross the SAME shared seams the GPU strategy
+                // uses (VoicingFilterEngine / VoicingComfortFilter), so the two paths admit the same
+                // CANDIDATES (predicate parity). The returned top-K may still differ under truncation —
+                // the strategies score differently — so this is not result-set parity (ADR-0002).
+                // Comfort was previously GPU-only — a silent CPU-fallback gap (ADR-0002).
+                if (VoicingFilterEngine.Matches(voicing, filters) &&
+                    VoicingComfortFilter.Matches(voicing.Diagram, filters))
                 {
                     // If target has text embedding, use it for semantic alignment
                     // otherwise fall back to musical embedding
@@ -137,7 +116,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
                     // boost voicings that have those bits set.
                     if (filters.SymbolicBitIndices != null && filters.SymbolicBitIndices.Length > 0)
                     {
-                        const int symbolicOffset = 66; // From EmbeddingSchema
+                        const int symbolicOffset = EmbeddingSchema.SymbolicOffset;
                         var matches = 0;
 
                         foreach (var bit in filters.SymbolicBitIndices)
@@ -177,88 +156,6 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
             _totalSearches > 0 ? TimeSpan.FromTicks(_totalSearchTime.Ticks / _totalSearches) : TimeSpan.Zero,
             _totalSearches);
 
-    private static bool MatchesFilters(VoicingEmbedding voicing, VoicingSearchFilters filters)
-    {
-        // Null-safe: a corpus voicing that lacks the filtered attribute cannot
-        // satisfy a filter on it, so treat null as "does not match" (return
-        // false) — same convention as the StackingType guard below. Before this,
-        // a single voicing with a null VoicingType/ChordName/etc. threw a
-        // NullReferenceException inside the Parallel.ForEach, which collapsed the
-        // ENTIRE voicing search → orchestration error → "error-fallback" to the
-        // LLM for every "<chord> voicing on guitar" query. (Live trace 2026-05-30.)
-        if (filters.Difficulty != null && (voicing.Difficulty == null || !voicing.Difficulty.Equals(filters.Difficulty, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.Position != null && (voicing.Position == null || !voicing.Position.Equals(filters.Position, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.VoicingType != null && (voicing.VoicingType == null || !voicing.VoicingType.Contains(filters.VoicingType, StringComparison.OrdinalIgnoreCase))) return false;
-        if (filters.Tags != null && filters.Tags.Any() && (voicing.SemanticTags == null || !filters.Tags.All(t => voicing.SemanticTags.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        if (filters.MinFret.HasValue && voicing.MinFret < filters.MinFret.Value) return false;
-        if (filters.MaxFret.HasValue && voicing.MaxFret > filters.MaxFret.Value) return false;
-        if (filters.RequireBarreChord.HasValue && voicing.BarreRequired != filters.RequireBarreChord.Value) return false;
-
-        // Structured Filters
-        if (filters.ChordName != null && (voicing.ChordName == null || !voicing.ChordName.Contains(filters.ChordName, StringComparison.OrdinalIgnoreCase))) return false;
-
-        if (filters.StackingType != null)
-        {
-            // Null check on voicing.StackingType because it's nullable
-            if (voicing.StackingType == null || !voicing.StackingType.Equals(filters.StackingType, StringComparison.OrdinalIgnoreCase)) return false;
-        }
-
-        if (filters.IsSlashChord.HasValue)
-        {
-            var isSlash = (voicing.MidiBassNote % 12) != voicing.RootPitchClass;
-            if (filters.IsSlashChord.Value != isSlash) return false;
-        }
-
-        if (filters.MinMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Min() < filters.MinMidiPitch.Value) return false;
-        if (filters.MaxMidiPitch.HasValue && voicing.MidiNotes.Length > 0 && voicing.MidiNotes.Max() > filters.MaxMidiPitch.Value) return false;
-
-        if (filters.SetClassId != null && (voicing.PrimeFormId == null || !voicing.PrimeFormId.Contains(filters.SetClassId, StringComparison.OrdinalIgnoreCase))) return false;
-
-        // PitchClassSet string looks like "{0,4,7}" or similar.
-        if (filters.RahnPrimeForm != null && !voicing.PitchClassSet.Contains(filters.RahnPrimeForm, StringComparison.OrdinalIgnoreCase)) return false;
-
-        if (filters.FingerCount.HasValue)
-        {
-            // Heuristic: Count non-open, non-muted strings.
-            // Perfect finger count requires fingering analysis which is not in the search index yet.
-            var parts = voicing.Diagram.Contains('-') ? voicing.Diagram.Split('-') : [.. voicing.Diagram.Select(c => c.ToString())];
-            var active = parts.Count(p => p != "x" && p != "m" && p != "0");
-
-            // Adjust for barre: if barre is required, typically reduces finger count by count of barred notes - 1
-            // But without exact data, we test against active strings for now as a proxy.
-            if (active != filters.FingerCount.Value) return false;
-        }
-
-        // Phase 3 Extended Filters
-        if (filters.HarmonicFunction != null && !string.Equals(voicing.HarmonicFunction, filters.HarmonicFunction, StringComparison.OrdinalIgnoreCase)) return false;
-        if (filters.IsNaturallyOccurring.HasValue && voicing.IsNaturallyOccurring != filters.IsNaturallyOccurring.Value) return false;
-        if (filters.IsRootless.HasValue && voicing.IsRootless != filters.IsRootless.Value) return false;
-        if (filters.HasGuideTones.HasValue && voicing.HasGuideTones != filters.HasGuideTones.Value) return false;
-        if (filters.Inversion.HasValue && voicing.Inversion != filters.Inversion.Value) return false;
-        if (filters.MinConsonance.HasValue && voicing.ConsonanceScore < filters.MinConsonance.Value) return false;
-        if (filters.MinBrightness.HasValue && voicing.BrightnessScore < filters.MinBrightness.Value) return false;
-        if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.MaxBrightness.HasValue && voicing.BrightnessScore > filters.MaxBrightness.Value) return false;
-        if (filters.OmittedTones != null && filters.OmittedTones.Any() &&
-            (voicing.OmittedTones == null || !filters.OmittedTones.All(t => voicing.OmittedTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        // Melody Note Filter
-        if (filters.TopPitchClass.HasValue && voicing.TopPitchClass != filters.TopPitchClass.Value) return false;
-
-        // AI Agent Metadata Filters (Phase 4)
-        if (filters.TexturalDescriptionContains != null &&
-            (voicing.TexturalDescription == null || !voicing.TexturalDescription.Contains(filters.TexturalDescriptionContains, StringComparison.OrdinalIgnoreCase))) return false;
-
-        if (filters.DoubledTonesContain != null && filters.DoubledTonesContain.Any() &&
-            (voicing.DoubledTones == null || !filters.DoubledTonesContain.All(t => voicing.DoubledTones.Contains(t, StringComparer.OrdinalIgnoreCase)))) return false;
-
-        if (filters.AlternateNameMatch != null &&
-            (voicing.AlternateNames == null || !voicing.AlternateNames.Any(n => n.Contains(filters.AlternateNameMatch, StringComparison.OrdinalIgnoreCase)))) return false;
-
-        return true;
-    }
-
     private static double CosineSimilarity(double[] v1, double[] v2)
     {
         var v1Musical = IsKnownOpticKDim(v1.Length);
@@ -272,7 +169,7 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         // at 0.000" bug after the schema bumped to v1.8 (240) while older indexed
         // voicings remained at v1.7 (228).
         if (v1Musical && v2Musical)
-            return CalculateMusicalSimilarity(v1, v2);
+            return EmbeddingSchema.WeightedPartitionCosine(v1, v2);
 
         // Outside OPTIC-K: standard cosine, but require equal dim (no safe
         // cross-dimension semantics for non-musical vectors).
@@ -284,108 +181,8 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         n == OpticKv18Dim || n == OpticKv17Dim || n == OpticKv16Dim
         || n == OpticKv131Dim || n == LegacyDim;
 
-    private static double CalculateMusicalSimilarity(double[] query, double[] target)
-    {
-        double score = 0;
-
-        // Partitions present in OPTIC-K v1.2.1 and later (slots 6-77).
-        score += StructureWeight  * ComputePartitionCosine(query, target, StructureOffset,  StructureDim);
-        score += MorphologyWeight * ComputePartitionCosine(query, target, MorphologyOffset, MorphologyDim);
-        score += ContextWeight    * ComputePartitionCosine(query, target, ContextOffset,    ContextDim);
-        score += SymbolicWeight   * ComputePartitionCosine(query, target, SymbolicOffset,   SymbolicDim);
-
-        // MODAL partition: requires v1.6 (216-dim) or higher. Conditionally
-        // included so legacy/v1.3.1 vectors don't index past their length.
-        // Pre-fix (PR #99) silently dropped this even when both vectors had
-        // the slots — a real correctness gap that affected modal-flavor
-        // discrimination.
-        var minDim = Math.Min(query.Length, target.Length);
-        if (minDim >= ModalOffset + ModalDim)
-        {
-            score += ModalWeight * ComputePartitionCosine(query, target, ModalOffset, ModalDim);
-        }
-
-        // ROOT partition: v1.8 only (240-dim). Closes the T-invariance gap
-        // STRUCTURE was over-loading in older schemas. Pre-fix (PR #99)
-        // silently dropped this even on v1.8×v1.8 — meaning v1.8's whole
-        // point didn't reach scoring.
-        if (minDim >= RootOffset + RootDim)
-        {
-            score += RootWeight * ComputePartitionCosine(query, target, RootOffset, RootDim);
-        }
-
-        return score;
-    }
-
-    private static double ComputePartitionCosine(double[] v1, double[] v2, int offset, int dim)
-    {
-        var span1 = new ReadOnlySpan<double>(v1, offset, dim);
-        var span2 = new ReadOnlySpan<double>(v2, offset, dim);
-        var raw = System.Numerics.Tensors.TensorPrimitives.CosineSimilarity(span1, span2);
-        // NaN protection: TensorPrimitives.CosineSimilarity returns NaN when
-        // one or both spans are all-zero (0/0 in the normalization). Treat
-        // that as "this partition contributes no signal" → score 0. Without
-        // this guard, the addition of MODAL/ROOT in PR #99 would propagate
-        // NaN through the total whenever those partitions were unpopulated.
-        return double.IsNaN(raw) ? 0.0 : raw;
-    }
-
-    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)
-    {
-        var document = new ChordVoicingRagDocument
-        {
-            Id = voicing.Id,
-            SearchableText = voicing.Description,
-            ChordName = voicing.ChordName,
-            VoicingType = voicing.VoicingType,
-            Position = voicing.Position,
-            Difficulty = voicing.Difficulty,
-            ModeName = voicing.ModeName,
-            ModalFamily = voicing.ModalFamily,
-            SemanticTags = voicing.SemanticTags,
-            PossibleKeys = voicing.PossibleKeys,
-            PrimeFormId = voicing.PrimeFormId,
-            TranslationOffset = voicing.TranslationOffset,
-            YamlAnalysis = voicing.Description,
-            Diagram = voicing.Diagram,
-            MidiNotes = voicing.MidiNotes,
-            PitchClasses = [.. voicing.MidiNotes.Select(n => n % 12).Distinct().OrderBy(p => p)],
-            PitchClassSet = voicing.PitchClassSet,
-            IntervalClassVector = voicing.IntervalClassVector,
-            MinFret = voicing.MinFret,
-            MaxFret = voicing.MaxFret,
-            BarreRequired = voicing.BarreRequired,
-            HandStretch = voicing.HandStretch,
-
-            AnalysisEngine = "CpuVoicingSearchStrategy",
-            AnalysisVersion = "1.0.0",
-            Jobs = [],
-            TuningId = "Standard",
-            PitchClassSetId = voicing.PrimeFormId,
-            StackingType = voicing.StackingType,
-            RootPitchClass = voicing.RootPitchClass,
-            MidiBassNote = voicing.MidiBassNote,
-            HarmonicFunction = voicing.HarmonicFunction,
-            IsNaturallyOccurring = voicing.IsNaturallyOccurring,
-            Consonance = voicing.ConsonanceScore,
-            Brightness = voicing.BrightnessScore,
-            IsRootless = voicing.IsRootless,
-            HasGuideTones = voicing.HasGuideTones,
-            Inversion = voicing.Inversion,
-            TopPitchClass = voicing.TopPitchClass, // Added for Chord Melody support
-            OmittedTones = voicing.OmittedTones,
-
-            // AI Agent Metadata
-            TexturalDescription = voicing.TexturalDescription,
-            DoubledTones = voicing.DoubledTones,
-            AlternateNames = voicing.AlternateNames,
-            CagedShape = voicing.CagedShape, // Map CAGED shape
-
-            DifficultyScore = 1.0 // Simple default
-        };
-
-        return new(document, score, query);
-    }
+    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query) =>
+        VoicingSearchResultMapper.FromVoicingEmbedding(voicing, score, query, "CpuVoicingSearchStrategy");
 
     private long CalculateMemoryUsage()
     {

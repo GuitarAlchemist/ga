@@ -5,8 +5,6 @@ using GA.Business.ML.Agents.Mcp;
 [TestFixture]
 public class ScaleMcpToolsTests
 {
-    private static ScaleMcpTools MakeTool() => new();
-
     // Canonical major and minor scales — what an LLM is most likely to call
     // the tool for. Wrong notes here would be the worst-case failure mode.
     [TestCase("C",  "major",  new[] { "C", "D", "E", "F", "G", "A", "B" },              "no sharps or flats", "A minor")]
@@ -21,7 +19,7 @@ public class ScaleMcpToolsTests
         string root, string mode, string[] expectedNotes,
         string expectedSignature, string expectedRelativeKey)
     {
-        var result = MakeTool().GetKeyNotes(root, mode);
+        var result = ScaleMcpTools.GetKeyNotes(root, mode);
 
         Assert.That(result.Error,        Is.Null,                    $"valid input must not produce an Error for {root} {mode}");
         Assert.That(result.Notes,        Is.EqualTo(expectedNotes),  $"notes mismatch for {root} {mode}");
@@ -39,7 +37,7 @@ public class ScaleMcpToolsTests
     [TestCase("MIN",   "minor")]
     public void GetKeyNotes_AcceptsModeShortAndLongFormCaseInsensitive(string input, string expectedNorm)
     {
-        var result = MakeTool().GetKeyNotes("C", input);
+        var result = ScaleMcpTools.GetKeyNotes("C", input);
 
         Assert.That(result.Error, Is.Null,
             $"mode '{input}' must be accepted (normalized to '{expectedNorm}')");
@@ -54,7 +52,7 @@ public class ScaleMcpToolsTests
     [TestCase("notakey",  "major")]
     public void GetKeyNotes_InvalidInputs_ReturnFailureResult(string root, string mode)
     {
-        var result = MakeTool().GetKeyNotes(root, mode);
+        var result = ScaleMcpTools.GetKeyNotes(root, mode);
 
         Assert.That(result.Error, Is.Not.Null,
             $"invalid input ('{root}', '{mode}') must populate Error rather than throw");
@@ -73,7 +71,7 @@ public class ScaleMcpToolsTests
         // What "is a standard key" means here = whatever Key.Items contains.
         // If a future schema change adds those keys, the test will need to
         // move them out of the failure list.
-        var result = MakeTool().GetKeyNotes("A#", "minor");
+        var result = ScaleMcpTools.GetKeyNotes("A#", "minor");
 
         if (result.Error is not null)
         {
@@ -91,10 +89,10 @@ public class ScaleMcpToolsTests
     [Test]
     public void GetKeyNotes_DoesNotThrowOnNullArguments()
     {
-        Assert.That(() => MakeTool().GetKeyNotes(null!, "major"), Throws.Nothing);
-        Assert.That(() => MakeTool().GetKeyNotes("C",   null!),   Throws.Nothing);
+        Assert.That(() => ScaleMcpTools.GetKeyNotes(null!, "major"), Throws.Nothing);
+        Assert.That(() => ScaleMcpTools.GetKeyNotes("C",   null!),   Throws.Nothing);
 
-        var nullRoot = MakeTool().GetKeyNotes(null!, "major");
+        var nullRoot = ScaleMcpTools.GetKeyNotes(null!, "major");
         Assert.That(nullRoot.Error, Is.Not.Null);
     }
 
@@ -106,7 +104,7 @@ public class ScaleMcpToolsTests
         var hugeRoot = new string('C', 10_000);
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var result = MakeTool().GetKeyNotes(hugeRoot, "major");
+        var result = ScaleMcpTools.GetKeyNotes(hugeRoot, "major");
         sw.Stop();
 
         Assert.That(result.Error, Is.Not.Null);
@@ -121,7 +119,7 @@ public class ScaleMcpToolsTests
         // contract as IntervalMcpTools.
         var esc      = (char)0x1B;
         var injected = "Q\n\r" + esc + "[31mFAKE";
-        var result   = MakeTool().GetKeyNotes(injected, "major");
+        var result   = ScaleMcpTools.GetKeyNotes(injected, "major");
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.IndexOf('\n'), Is.EqualTo(-1));

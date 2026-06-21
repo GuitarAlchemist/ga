@@ -45,7 +45,7 @@ public class DomainValidator
         return result;
     }
 
-    private bool ValidateProperty(object? value, DomainInvariantAttribute invariant)
+    private static bool ValidateProperty(object? value, DomainInvariantAttribute invariant)
     {
         // Placeholder for expression evaluation
         // If expression is empty, we assume manual validation or just metadata

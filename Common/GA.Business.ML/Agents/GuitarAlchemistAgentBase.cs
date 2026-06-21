@@ -217,32 +217,7 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     {
         try
         {
-            // Extract JSON if it's wrapped in markdown code blocks
-            var json = responseText;
-            if (json.Contains("```json"))
-            {
-                json = json.Split("```json")[1].Split("```")[0].Trim();
-            }
-            else if (json.Contains("```"))
-            {
-                json = json.Split("```")[1].Split("```")[0].Trim();
-            }
-
-            // Trim trailing prose after the first complete JSON object — kept
-            // in sync with AgentSkillBase.ParseStructuredResponse. Without
-            // this, models that append "To distinguish these keys, listen for…"
-            // after the JSON cause the strict deserializer to throw and the
-            // raw response (including JSON braces) leaks into the user-facing
-            // answer.
-            var firstBrace = json.IndexOf('{');
-            if (firstBrace >= 0)
-            {
-                var lastBrace = FindMatchingBrace(json, firstBrace);
-                if (lastBrace > firstBrace)
-                {
-                    json = json.Substring(firstBrace, lastBrace - firstBrace + 1);
-                }
-            }
+            var json = AgentResponseParser.ExtractJsonCandidate(responseText);
 
             var structured = JsonSerializer.Deserialize<StructuredAgentResponse>(json, new JsonSerializerOptions
             {
@@ -275,38 +250,6 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             Evidence = ["Fallback logic used due to parsing failure"],
             Assumptions = ["The agent response was not in the expected JSON format"]
         };
-    }
-
-    /// <summary>
-    /// Returns the index of the `}` that closes the `{` at <paramref name="openIndex"/>,
-    /// respecting string literals and nested braces. Returns -1 if no balanced match.
-    /// </summary>
-    private static int FindMatchingBrace(string s, int openIndex)
-    {
-        var depth = 0;
-        var inString = false;
-        var escape = false;
-        for (var i = openIndex; i < s.Length; i++)
-        {
-            var ch = s[i];
-            if (inString)
-            {
-                if (escape) { escape = false; }
-                else if (ch == '\\') { escape = true; }
-                else if (ch == '"') { inString = false; }
-                continue;
-            }
-            switch (ch)
-            {
-                case '"': inString = true; break;
-                case '{': depth++; break;
-                case '}':
-                    depth--;
-                    if (depth == 0) return i;
-                    break;
-            }
-        }
-        return -1;
     }
 
     /// <inheritdoc />

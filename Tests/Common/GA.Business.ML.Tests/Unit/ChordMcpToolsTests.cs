@@ -5,8 +5,6 @@ using GA.Business.ML.Agents.Mcp;
 [TestFixture]
 public class ChordMcpToolsTests
 {
-    private static ChordMcpTools MakeTool() => new();
-
     // Canonical triads — what an LLM is most likely to call the tool for.
     [TestCase("C",      "C", "major",      new[] { "C", "E",  "G"  })]
     [TestCase("Cm",     "C", "minor",      new[] { "C", "Eb", "G"  })]
@@ -17,7 +15,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_KnownTriads_ReturnsCorrectNotes(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
         Assert.That(result.Root,    Is.EqualTo(expectedRoot));
@@ -33,7 +31,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_SeventhChords_ReturnsCorrectNotes(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error,   Is.Null);
         Assert.That(result.Root,    Is.EqualTo(expectedRoot));
@@ -47,7 +45,7 @@ public class ChordMcpToolsTests
         // C minor must spell as C-Eb-G, NOT C-D#-G. The pitch classes are
         // identical but the letter-steps math forces the right enharmonic
         // (D# would be a doubled letter — root is C, third must be E-letter).
-        var result = MakeTool().GetChordInfo("Cm");
+        var result = ChordMcpTools.GetChordInfo("Cm");
 
         Assert.That(result.Notes[1], Is.EqualTo("Eb"),
             "minor third of C must spell as Eb (E with flat), not D# — letter-steps math drives enharmonics");
@@ -58,7 +56,7 @@ public class ChordMcpToolsTests
     {
         // Bdim → B-D-F is the textbook spelling. The diminished fifth is F,
         // not E# (same pitch class but wrong letter step).
-        var result = MakeTool().GetChordInfo("Bdim");
+        var result = ChordMcpTools.GetChordInfo("Bdim");
 
         Assert.That(result.Error, Is.Null);
         Assert.That(result.Notes, Is.EqualTo(new[] { "B", "D", "F" }));
@@ -68,7 +66,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_NormalizesSymbolCasing()
     {
         // Lowercase root and short minor — common LLM emission patterns.
-        var result = MakeTool().GetChordInfo("cm7");
+        var result = ChordMcpTools.GetChordInfo("cm7");
 
         Assert.That(result.Error,   Is.Null);
         Assert.That(result.Root,    Is.EqualTo("C"));
@@ -82,7 +80,7 @@ public class ChordMcpToolsTests
     [TestCase("not a chord")]
     public void GetChordInfo_InvalidInputs_ReturnFailureResult(string symbol)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error, Is.Not.Null,
             $"invalid input '{symbol}' must populate Error rather than throw");
@@ -92,8 +90,8 @@ public class ChordMcpToolsTests
     [Test]
     public void GetChordInfo_DoesNotThrowOnNullArgument()
     {
-        Assert.That(() => MakeTool().GetChordInfo(null!), Throws.Nothing);
-        var result = MakeTool().GetChordInfo(null!);
+        Assert.That(() => ChordMcpTools.GetChordInfo(null!), Throws.Nothing);
+        var result = ChordMcpTools.GetChordInfo(null!);
         Assert.That(result.Error, Is.Not.Null);
     }
 
@@ -104,7 +102,7 @@ public class ChordMcpToolsTests
         var huge = new string('C', 10_000);
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var result = MakeTool().GetChordInfo(huge);
+        var result = ChordMcpTools.GetChordInfo(huge);
         sw.Stop();
 
         Assert.That(result.Error, Is.Not.Null);
@@ -117,7 +115,7 @@ public class ChordMcpToolsTests
     {
         var esc      = (char)0x1B;
         var injected = "Q\n\r" + esc + "[31mFAKE";
-        var result   = MakeTool().GetChordInfo(injected);
+        var result   = ChordMcpTools.GetChordInfo(injected);
 
         Assert.That(result.Error, Is.Not.Null);
         Assert.That(result.Error!.IndexOf('\n'), Is.EqualTo(-1));
@@ -131,7 +129,7 @@ public class ChordMcpToolsTests
     {
         // Bare "C" without any quality suffix should yield C major. This is
         // the most common shorthand and the LLM will emit it constantly.
-        var result = MakeTool().GetChordInfo("C");
+        var result = ChordMcpTools.GetChordInfo("C");
 
         Assert.That(result.Error,   Is.Null);
         Assert.That(result.Quality, Is.EqualTo("major"));
@@ -150,7 +148,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_UppercaseMQualifier_ResolvesToMajor(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
         Assert.That(result.Root,    Is.EqualTo(expectedRoot));
@@ -168,7 +166,7 @@ public class ChordMcpToolsTests
         // SKILL.md explicitly declines extended / altered / sus / slash chords.
         // Tool must reject cleanly rather than fabricating notes — this is the
         // failure mode the LLM is most likely to expose.
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error, Is.Not.Null,
             $"out-of-scope chord symbol '{symbol}' must populate Error rather than return fabricated notes");
@@ -180,7 +178,7 @@ public class ChordMcpToolsTests
     {
         // Major chord intervals are the load-bearing label — root, major 3rd,
         // perfect 5th — these are what the LLM phrases the answer with.
-        var result = MakeTool().GetChordInfo("C");
+        var result = ChordMcpTools.GetChordInfo("C");
 
         Assert.That(result.Intervals, Is.EqualTo(new[] { "root", "major third", "perfect fifth" }));
     }
@@ -196,7 +194,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_DiminishedSeventh_ReturnsCorrectNotes(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
         Assert.That(result.Root,    Is.EqualTo(expectedRoot));
@@ -214,7 +212,7 @@ public class ChordMcpToolsTests
     public void GetChordInfo_HalfDiminished_ReturnsCorrectNotes(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
-        var result = MakeTool().GetChordInfo(symbol);
+        var result = ChordMcpTools.GetChordInfo(symbol);
 
         Assert.That(result.Error,   Is.Null,                 $"valid input must not produce an Error for {symbol}");
         Assert.That(result.Root,    Is.EqualTo(expectedRoot));
@@ -230,7 +228,7 @@ public class ChordMcpToolsTests
         // `diminished7` is NOT in the regex on purpose — `dim7` is the only
         // canonical short form for the regex; the NormalizeQuality switch
         // accepts the full word as defensive code if the regex ever expands.
-        var result = MakeTool().GetChordInfo("C" + suffix);
+        var result = ChordMcpTools.GetChordInfo("C" + suffix);
 
         Assert.That(result.Error,   Is.Null);
         Assert.That(result.Quality, Is.EqualTo(expectedCanonical));

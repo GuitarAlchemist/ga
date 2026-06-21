@@ -27,7 +27,7 @@ public class SchemaDiscoveryService
     /// <summary>
     ///     Gets schema information for a specific type.
     /// </summary>
-    public TypeSchemaInfo GetTypeSchema(Type type)
+    public static TypeSchemaInfo GetTypeSchema(Type type)
     {
         var relationships = type.GetCustomAttributes<DomainRelationshipAttribute>()
             .Select(a => new RelationshipInfo(a.TargetType, a.Type, a.Description));
@@ -50,7 +50,7 @@ public class SchemaDiscoveryService
     /// <summary>
     ///     Gets the controlled vocabulary for domain concepts (Qualities, Extensions, etc.)
     /// </summary>
-    public DomainVocabulary GetDomainVocabulary()
+    public static DomainVocabulary GetDomainVocabulary()
     {
         // 1. Discover Chord Qualities from ChordFormula or static lists? 
         // For now, we'll hardcode common ones to match the Vector Index patterns, 

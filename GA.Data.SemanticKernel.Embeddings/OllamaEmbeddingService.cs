@@ -6,7 +6,7 @@ public class OllamaEmbeddingService(ITextEmbeddingGenerationService embeddingSer
 {
     private readonly ITextEmbeddingGenerationService _embeddingService = embeddingService;
 
-    public int EmbeddingDimension => 384; // For nomic-embed-text
+    public static int EmbeddingDimension => 384; // For nomic-embed-text
 
     public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken cancellationToken = default)
     {

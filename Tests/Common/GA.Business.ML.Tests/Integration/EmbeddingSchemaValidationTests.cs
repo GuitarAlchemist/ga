@@ -49,7 +49,7 @@ public class EmbeddingSchemaValidationTests
         var embedding = await GenerateEmbeddingAsync(doc);
 
         // Act
-        var breakdown = _index.ComputeSimilarityBreakdown(embedding, embedding);
+        var breakdown = PartitionAwareRagIndex.ComputeSimilarityBreakdown(embedding, embedding);
 
         // Assert
         Assert.That(breakdown.WeightedOverall, Is.EqualTo(1.0).Within(0.001));
@@ -71,7 +71,7 @@ public class EmbeddingSchemaValidationTests
         var embBarre = await GenerateEmbeddingAsync(cMajorBarre);
 
         // Act
-        var breakdown = _index.ComputeSimilarityBreakdown(embOpen, embBarre);
+        var breakdown = PartitionAwareRagIndex.ComputeSimilarityBreakdown(embOpen, embBarre);
 
         // Assert - Structure (pitch classes) should be very similar
         var structureSim = breakdown.PartitionScores["Structure"];
@@ -91,7 +91,7 @@ public class EmbeddingSchemaValidationTests
         var embBarre = await GenerateEmbeddingAsync(cMajorBarre);
 
         // Act
-        var breakdown = _index.ComputeSimilarityBreakdown(embOpen, embBarre);
+        var breakdown = PartitionAwareRagIndex.ComputeSimilarityBreakdown(embOpen, embBarre);
 
         // Assert - Morphology should differ (different positions)
         var morphologySim = breakdown.PartitionScores["Morphology"];
@@ -173,7 +173,7 @@ public class EmbeddingSchemaValidationTests
         var embDim = await GenerateEmbeddingAsync(bDim);
 
         // Act
-        var breakdown = _index.ComputeSimilarityBreakdown(embMajor, embDim);
+        var breakdown = PartitionAwareRagIndex.ComputeSimilarityBreakdown(embMajor, embDim);
 
         // Assert
         var structureSim = breakdown.PartitionScores["Structure"];

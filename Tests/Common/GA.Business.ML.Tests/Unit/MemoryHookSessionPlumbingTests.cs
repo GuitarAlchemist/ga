@@ -188,7 +188,7 @@ public class MemoryHookSessionPlumbingTests
 
     // ─── Helpers ───────────────────────────────────────────────────────
 
-    private ChatHookContext MakeCtx(string sessionId, string question, string answer) =>
+    private static ChatHookContext MakeCtx(string sessionId, string question, string answer) =>
         new()
         {
             OriginalMessage  = question,

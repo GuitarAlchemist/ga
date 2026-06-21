@@ -302,9 +302,11 @@ public static class AtonalChordAnalysisService
     /// </summary>
     private static string AnalyzeConsonance(IntervalClassVector icv)
     {
-        // Simplified consonance analysis based on interval class vector
-        var icvString = icv.ToString();
-        var dissonantIntervals = icvString.Take(4).Sum(c => c - '0'); // IC 1,2,6 are most dissonant
+        // Dissonant interval classes are IC1 (semitone), IC2 (whole tone), IC6 (tritone).
+        // Read them through the typed indexer — the previous code parsed the *formatted*
+        // ICV string ("<2 5 4 3 6 1>") as ASCII digits, summing '<','2',' ','5' into
+        // garbage and misclassifying every chord's consonance.
+        var dissonantIntervals = icv[IntervalClass.Hemitone] + icv[IntervalClass.Tone] + icv[IntervalClass.Tritone];
 
         return dissonantIntervals switch
         {

@@ -24,7 +24,7 @@ public class SwaggerExampleOperationFilter : IOperationFilter
         AddResponseExamples(operation, context);
     }
 
-    private void AddParameterExamples(OpenApiParameter parameter)
+    private static void AddParameterExamples(OpenApiParameter parameter)
     {
         switch (parameter.Name.ToLowerInvariant())
         {
@@ -66,7 +66,7 @@ public class SwaggerExampleOperationFilter : IOperationFilter
         }
     }
 
-    private void AddResponseExamples(OpenApiOperation operation, OperationFilterContext context)
+    private static void AddResponseExamples(OpenApiOperation operation, OperationFilterContext context)
     {
         // This could be expanded to add specific response examples
         // based on the operation and return types

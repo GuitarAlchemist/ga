@@ -47,7 +47,7 @@ public class ChordNamingQuery
         return new ComprehensiveName(best, new[] { $"{best} (Alt)" });
     }
 
-    private void ValidateInput(int root, int? bass, int[] intervals)
+    private static void ValidateInput(int root, int? bass, int[] intervals)
     {
         if (root < 0 || root > 11)
             throw new GraphQLException("root must be a pitch class in the range 0..11");

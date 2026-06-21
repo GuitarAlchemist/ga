@@ -33,7 +33,7 @@ public class GroundedPromptBuilder
             ? string.Empty
             : InjectionPattern.Replace(raw.Normalize(System.Text.NormalizationForm.FormKD), string.Empty).Trim();
 
-    public string Build(string userQuery, IReadOnlyList<CandidateVoicing> candidates)
+    public static string Build(string userQuery, IReadOnlyList<CandidateVoicing> candidates)
     {
         var safeQuery = SanitizeQuery(userQuery);
         var sb = new StringBuilder();

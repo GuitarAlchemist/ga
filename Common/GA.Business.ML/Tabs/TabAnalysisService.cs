@@ -96,7 +96,7 @@ public class TabAnalysisService(
                     continue;
                 }
 
-                var midiNotes = _converter.GetMidiNotes(slice);
+                var midiNotes = TabToPitchConverter.GetMidiNotes(slice);
                 if (midiNotes.Count == 0)
                 {
                     continue;
@@ -174,7 +174,7 @@ public class TabAnalysisService(
         return new() { Events = events, DetectedCadence = cadenceString };
     }
 
-    private string FormatDiagram(TabSlice slice)
+    private static string FormatDiagram(TabSlice slice)
     {
         // Infer string count from the block or slice
         // TabSlice doesn't check string count, but Notes has StringIndex.

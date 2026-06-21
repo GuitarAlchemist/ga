@@ -167,7 +167,7 @@ public class GrothendieckService : IGrothendieckService
     /// </summary>
     /// <param name="pitchClasses">Pitch classes (0-11) as span</param>
     /// <returns>Interval-class vector</returns>
-    public IntervalClassVector ComputeIcv(ReadOnlySpan<int> pitchClasses)
+    public static IntervalClassVector ComputeIcv(ReadOnlySpan<int> pitchClasses)
     {
         // Use ArrayPool for temporary storage to avoid allocation
         var pool = ArrayPool<PitchClass>.Shared;

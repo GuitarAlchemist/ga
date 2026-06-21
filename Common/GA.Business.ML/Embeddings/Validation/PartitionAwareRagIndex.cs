@@ -118,7 +118,7 @@ public class PartitionAwareRagIndex
     /// <summary>
     ///     Computes similarity breakdown by partition between two embeddings.
     /// </summary>
-    public PartitionSimilarityBreakdown ComputeSimilarityBreakdown(float[] a, float[] b)
+    public static PartitionSimilarityBreakdown ComputeSimilarityBreakdown(float[] a, float[] b)
     {
         var scores = new Dictionary<string, double>();
         double weightedTotal = 0;

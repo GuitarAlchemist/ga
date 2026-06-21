@@ -50,7 +50,7 @@ public class ProgressionEmbeddingTests
         });
     }
 
-    private ChordVoicingRagDocument CreateDummyDoc(string name, double consonance, float[] embedding)
+    private static ChordVoicingRagDocument CreateDummyDoc(string name, double consonance, float[] embedding)
     {
         // Set entropy (index 108) manually for test
         embedding[108] = 0.5f;

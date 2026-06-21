@@ -319,5 +319,5 @@ public class ChatbotController(
         WriteSseLineAsync(JsonSerializer.Serialize(new { error = errorMessage }), ct);
 
     private static IEnumerable<string> SplitIntoChunks(string text) =>
-        Helpers.SseChunker.SplitIntoChunks(text);
+        GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);
 }

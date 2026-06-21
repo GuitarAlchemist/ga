@@ -195,7 +195,7 @@ public sealed class OnnxEmbeddingService(
         return tokens;
     }
 
-    private IEnumerable<string> BasicTokenize(string text)
+    private static IEnumerable<string> BasicTokenize(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
