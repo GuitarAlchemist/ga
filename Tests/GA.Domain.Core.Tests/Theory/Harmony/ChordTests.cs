@@ -204,19 +204,29 @@ public class ChordTests
     }
 
     [Test]
-    public void SuspendedFormulas_AreNotDetectedAsSuspended_KnownBug()
+    public void SuspendedFormulas_AreDetectedAsSuspended()
     {
-        // LATENT BUG (characterized, not fixed here): ChordFormula.IsSuspended requires an interval
-        // whose Function == Third with 2 or 5 semitones, but ChordFunctionExtensions.FromSemitones maps
-        // 2 -> Ninth and 5 -> Eleventh (never Third). So the built-in Suspended2/Suspended4 formulas are
-        // never recognized as suspended, and their Quality falls back to Other. This test pins the actual
-        // behaviour; fixing the detection should flip these expectations deliberately.
+        // A suspended chord replaces the third with a 2nd (sus2) or 4th (sus4).
         Assert.Multiple(() =>
         {
-            Assert.That(ChordFormula.Suspended2.IsSuspended, Is.False);
-            Assert.That(ChordFormula.Suspended4.IsSuspended, Is.False);
-            Assert.That(ChordFormula.Suspended2.Quality, Is.EqualTo(ChordQuality.Other));
+            Assert.That(ChordFormula.Suspended2.IsSuspended, Is.True);
+            Assert.That(ChordFormula.Suspended4.IsSuspended, Is.True);
+            Assert.That(ChordFormula.Suspended2.Quality, Is.EqualTo(ChordQuality.Suspended));
+            Assert.That(ChordFormula.Suspended4.Quality, Is.EqualTo(ChordQuality.Suspended));
+            Assert.That(ChordFormula.Suspended2.Extension, Is.EqualTo(ChordExtension.Sus2));
+            Assert.That(ChordFormula.Suspended4.Extension, Is.EqualTo(ChordExtension.Sus4));
+        });
+    }
+
+    [Test]
+    public void NonSuspendedFormulas_AreNotSuspended()
+    {
+        // Chords that contain a third (major or minor) are never suspended.
+        Assert.Multiple(() =>
+        {
             Assert.That(ChordFormula.Major.IsSuspended, Is.False);
+            Assert.That(ChordFormula.Minor.IsSuspended, Is.False);
+            Assert.That(ChordFormula.Dominant7.IsSuspended, Is.False);
         });
     }
 

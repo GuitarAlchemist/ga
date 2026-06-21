@@ -74,10 +74,18 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
     public ChordStackingType StackingType { get; }
 
     /// <summary>
-    ///     Gets whether this formula represents a suspended chord
+    ///     Gets whether this formula represents a suspended chord — the third is replaced by a major
+    ///     second (sus2) or perfect fourth (sus4).
     /// </summary>
-    public bool IsSuspended => Intervals.Any(i =>
-        i is { Function: ChordFunction.Third, Interval.Semitones.Value: 2 or 5 });
+    /// <remarks>
+    ///     Defined as "no third, plus a 2nd or 4th in its place". The previous definition required an
+    ///     interval whose <see cref="ChordFunction" /> was <see cref="ChordFunction.Third" /> with 2 or 5
+    ///     semitones, which never matched because <see cref="ChordFunctionExtensions.FromSemitones" /> maps
+    ///     2 -> Ninth and 5 -> Eleventh, so sus2/sus4 formulas were never recognized as suspended.
+    /// </remarks>
+    public bool IsSuspended =>
+        !Intervals.Any(i => i.Interval.Semitones.Value is 3 or 4) &&
+        Intervals.Any(i => i.Interval.Semitones.Value is 2 or 5);
 
     /// <summary>
     ///     Gets the essential intervals (cannot be omitted)
