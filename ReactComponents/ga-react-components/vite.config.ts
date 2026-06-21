@@ -1826,6 +1826,35 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(gatherAiAnnotations()));
             });
 
+            // ── /dev-data/voicing-cloud.ply — Gaussian-splat backdrop for Prime Radiant ──
+            // Emitted by ix#68 (`cargo run --release -p ix-voicings --bin fit-splats`).
+            // Resolution order: sibling ix clone (../ix/state/viz/) → in-repo cache
+            // (state/viz/) → 404 with a hint. Binary stream; no caching in dev.
+            server.middlewares.use('/dev-data/voicing-cloud.ply', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const candidates = [
+                    path.join(repoRoot, '..', 'ix', 'state', 'viz', 'voicing-cloud.ply'),
+                    path.join(repoRoot, 'state', 'viz', 'voicing-cloud.ply'),
+                ];
+                const plyPath = candidates.find(p => existsSync(p));
+                if (!plyPath) {
+                    res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                    res.end(JSON.stringify({
+                        error: 'voicing-cloud.ply not found',
+                        hint: 'run `cargo run --release -p ix-voicings --bin fit-splats` in the ix repo',
+                        searched: candidates,
+                    }));
+                    return;
+                }
+                const stat = statSync(plyPath);
+                res.writeHead(200, {
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Length': String(stat.size),
+                    'Cache-Control': 'no-store',
+                });
+                createReadStream(plyPath).pipe(res);
+            });
+
             // ── /dev-data/runtime-loops-goals — read latest projection ──
             // Returns active /loop + /goal invocations across all Claude
             // sessions on this machine, with age + last-activity decoration.
