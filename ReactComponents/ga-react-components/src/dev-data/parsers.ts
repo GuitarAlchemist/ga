@@ -423,3 +423,107 @@ export function parseValueCatalog(content: string): ValueRecord[] {
     }
     return out;
 }
+
+// ── Maintain-gate advisory verdict (ga#446 / Phase C) ───────────────────
+// Parses the fused cross-signal maintain verdict IX emits in scorecard shape,
+// federated into state/quality/maintain-gate/last.json (producer ix
+// ix_maintain_snapshot; federation ix#146; schema ga#445). It is ADVISORY /
+// non-binding until IX Phase-3b (`advisory:true`) — GA surfaces it as the
+// fused verdict our per-axis gates individually lack, NOT another gate. See:
+//   docs/contracts/maintain-gate-snapshot.schema.json (allOf quality-snapshot)
+
+/** Hexavalent fused verdict. LOCKED enum (cross-repo contract surface). */
+export type MaintainStatus = 'T' | 'P' | 'U' | 'D' | 'F' | 'C';
+/** Coarse routing of `status`. */
+export type MaintainDecision = 'accept' | 'reject' | 'escalate';
+/** Traffic-light oracle status (shared quality-snapshot envelope). */
+export type MaintainOracleStatus = 'ok' | 'warn' | 'error';
+/** Per-lens sub-signal verdict. */
+export type MaintainSignalStatus = 'ok' | 'bad' | 'unknown';
+/** LOCKED sub-signal keys. */
+export type MaintainLens = 'metric' | 'guardrail' | 'convergence' | 'drift' | 'provenance';
+
+export interface MaintainSignal {
+    lens: MaintainLens;
+    status: MaintainSignalStatus;
+    detail?: string;
+}
+
+export interface MaintainTrend {
+    total?: number;
+    accepts?: number;
+    rejects?: number;
+    escalates?: number;
+    reward_hacks?: number;
+    latest_status?: string | null;
+}
+
+export interface MaintainVerdictSnapshot {
+    schema_version?: string;
+    domain: string;
+    emitted_at: string;
+    metric_name: string;
+    metric_value: number;
+    oracle_status: MaintainOracleStatus | string;
+    summary: string;
+    advisory: boolean;
+    status: MaintainStatus | string;
+    decision: MaintainDecision | string;
+    signals: MaintainSignal[];
+    maintain_trend?: MaintainTrend;
+}
+
+/**
+ * Parse the maintain-gate snapshot JSON. Tolerant: returns null on bad JSON or
+ * when the load-bearing contract fields are absent, so the tile renders an
+ * honest "no data" / "stale" state rather than throwing or faking green.
+ */
+export function parseMaintainGate(content: string): MaintainVerdictSnapshot | null {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        return null;
+    }
+    if (!parsed || typeof parsed !== 'object') return null;
+    const r = parsed as Partial<MaintainVerdictSnapshot>;
+    if (typeof r.status !== 'string' || typeof r.emitted_at !== 'string') return null;
+    if (typeof r.oracle_status !== 'string') return null;
+    return {
+        schema_version: r.schema_version,
+        domain: r.domain ?? 'maintain-gate',
+        emitted_at: r.emitted_at,
+        metric_name: r.metric_name ?? 'maintain_yield_delta',
+        metric_value: typeof r.metric_value === 'number' ? r.metric_value : Number.NaN,
+        oracle_status: r.oracle_status,
+        summary: r.summary ?? '',
+        advisory: r.advisory !== false, // default to advisory (fail-safe to non-binding)
+        status: r.status,
+        decision: r.decision ?? 'escalate',
+        signals: Array.isArray(r.signals) ? (r.signals as MaintainSignal[]) : [],
+        maintain_trend: r.maintain_trend,
+    };
+}
+
+/**
+ * Hours elapsed since `emitted_at`. Returns null when the timestamp is absent
+ * or unparseable (so the caller treats "unknown freshness" as stale, never as
+ * fresh). `now` injected for testability.
+ */
+export function maintainAgeHours(emittedAt: string | null | undefined, now: Date = new Date()): number | null {
+    if (!emittedAt) return null;
+    const t = Date.parse(emittedAt);
+    if (Number.isNaN(t)) return null;
+    return Math.max(0, (now.getTime() - t) / 3_600_000);
+}
+
+/**
+ * A snapshot is stale once it is older than `maxAgeHours` (default 36h — a
+ * daily-federated artifact that hasn't refreshed in >1.5 days is no longer
+ * "today"). Unknown freshness (null age) is treated as stale: the green-but-
+ * dead guard the issue asks for — a missing/old snapshot must NOT read fresh.
+ */
+export function isMaintainStale(ageHours: number | null, maxAgeHours = 36): boolean {
+    if (ageHours == null) return true;
+    return ageHours > maxAgeHours;
+}
