@@ -512,6 +512,7 @@ app.MapMcp("/mcp");
 app.MapHub<ChatbotHub>("/hubs/chatbot");
 app.MapHub<GovernanceHub>("/hubs/governance");
 app.MapHub<PipelineHub>("/hubs/pipeline");
+app.MapHub<DevDashboardHub>("/hubs/dev-dashboard");
 
 // Map Aspire default endpoints (health checks, liveness)
 app.MapDefaultEndpoints();
