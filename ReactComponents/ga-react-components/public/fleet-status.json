@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "26741447d17ebcd430a218efc275673cf89c8dae",
-    "generatedAt": "2026-06-21T18:10:47.312939+00:00",
+    "commitSha": "9f1fba9c0b8ff963d473855bd0711c94f39e9ea0",
+    "generatedAt": "2026-06-21T18:30:58.008308+00:00",
     "repoCount": 5,
-    "totalPRs": 21
+    "totalPRs": 26
   },
   "repos": [
     {
@@ -128,8 +128,68 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 3,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:30:43Z",
+          "failingChecks": 0,
+          "headRef": "feat/ml-feedback-producers",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 168,
+          "title": "feat(scripts): ML-feedback producers (confidence_calibrator + staleness_predictor)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/168"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:28:36Z",
+          "failingChecks": 1,
+          "headRef": "feat/ix-mesh-correlate",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 167,
+          "title": "feat(ix-duck): ADR-0004 pipeline-mesh correlation substrate + ix_pearson (DRAFT \u2014 merge last)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/167"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:27:57Z",
+          "failingChecks": 0,
+          "headRef": "feat/ix-math-inference",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 166,
+          "title": "feat(ix-math,ix-duck): statistical-inference layer \u2014 two-sample tests, divergences, moments (#160)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/166"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:27:56Z",
+          "failingChecks": 0,
+          "headRef": "feat/ix-graph-components",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 165,
+          "title": "feat(ix-graph,ix-duck): components + centrality + Viterbi UDFs (#161)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/165"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T18:27:37Z",
+          "failingChecks": 1,
+          "headRef": "feat/ix-duck-ml-surface",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 164,
+          "title": "feat(ix-duck): ML-surface UDFs \u2014 distances, t-SNE/MDS, signal, supervised (#157/#158/#159/#162)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/164"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -279,7 +339,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 27,
+          "ageDays": 28,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
