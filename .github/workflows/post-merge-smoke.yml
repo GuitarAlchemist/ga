@@ -77,9 +77,12 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: |
           set -u
-          RUN_AT_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          RUN_AT_FS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
-          OUT="state/quality/e2e/${RUN_AT_FS}.json"
+          # export (not just assign) so the python3 child process in this same step inherits these via
+          # os.environ. Writing to $GITHUB_ENV alone only exposes them to *subsequent* steps, which is why
+          # the in-step aggregator below previously died with KeyError: 'RUN_AT_ISO'.
+          export RUN_AT_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export RUN_AT_FS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
+          export OUT="state/quality/e2e/${RUN_AT_FS}.json"
           echo "OUT=${OUT}" >> "$GITHUB_ENV"
           echo "RUN_AT_ISO=${RUN_AT_ISO}" >> "$GITHUB_ENV"
 
