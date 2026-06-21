@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T01:13:34.936034+00:00",
+  "generatedAt": "2026-06-21T18:10:44.747066+00:00",
   "recommendations": [
     "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
   ],
@@ -41,7 +41,7 @@
         },
         {
           "evidence": [
-            "AGENT_BLACKBOX_REF=v0.1.0-beta.1"
+            "AGENT_BLACKBOX_REF=v0.1.0-beta.2"
           ],
           "id": "pinning",
           "maxScore": 10,
@@ -76,20 +76,18 @@
         {
           "evidence": [
             "response-quality documented in docs/harness-observability.md",
-            "state/governance/dev-process-overseer.json",
             "state/quality/demerzel-harness/baseline.json"
           ],
           "id": "observability",
           "maxScore": 15,
           "name": "Harness and quality observability",
           "recommendation": "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence.",
-          "score": 10,
+          "score": 7,
           "status": "warn"
         },
         {
           "evidence": [
             "scripts/supervised-loop-preflight.ps1",
-            "Scripts/supervised-loop-preflight.ps1",
             ".claude/skills/supervised-loop/SKILL.md",
             "state/quality/demerzel-harness/baseline.json"
           ],
@@ -129,8 +127,8 @@
       "recommendations": [
         "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
       ],
-      "root": "C:/Users/spare/source/repos/Demerzel",
-      "score": 105,
+      "root": "/home/runner/work/ga/ga/siblings/Demerzel",
+      "score": 102,
       "verdict": "warn"
     }
   ],

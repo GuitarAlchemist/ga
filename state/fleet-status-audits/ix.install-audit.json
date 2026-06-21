@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T01:13:34.629513+00:00",
+  "generatedAt": "2026-06-21T18:10:44.536346+00:00",
   "recommendations": [
     "All audited repos have Agent Blackbox installed with required enforcement and observability."
   ],
@@ -41,7 +41,7 @@
         },
         {
           "evidence": [
-            "AGENT_BLACKBOX_REF=942f808d3290441ab7d47e78a6b05e0e5587441d"
+            "AGENT_BLACKBOX_REF=90ed651c73a296c13c9b4953754a2f4898ac4114"
           ],
           "id": "pinning",
           "maxScore": 10,
@@ -91,7 +91,6 @@
           "evidence": [
             "agent-blackbox.loop-policy.json",
             "scripts/supervised-loop-preflight.ps1",
-            "Scripts/supervised-loop-preflight.ps1",
             "state/quality/ix-harness/baseline.json"
           ],
           "id": "loop-controls",
@@ -123,7 +122,7 @@
       "recommendations": [
         "Agent Blackbox install is ready for PR risk reporting behind normal review gates."
       ],
-      "root": "C:/Users/spare/source/repos/ix",
+      "root": "/home/runner/work/ga/ga/siblings/ix",
       "score": 110,
       "verdict": "pass"
     }

@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "54177164b380fa17e1fce4f5eeb03f4512ec18c0",
-    "generatedAt": "2026-05-18T01:19:36.776366+00:00",
+    "commitSha": "26741447d17ebcd430a218efc275673cf89c8dae",
+    "generatedAt": "2026-06-21T18:10:47.312939+00:00",
     "repoCount": 5,
-    "totalPRs": 11
+    "totalPRs": 21
   },
   "repos": [
     {
@@ -87,28 +87,17 @@
       "installAudit": {
         "available": true,
         "checkCount": 9,
-        "failingChecks": [],
+        "failingChecks": [
+          "observability"
+        ],
         "maxScore": 110,
-        "readiness": "installed",
-        "score": 110,
-        "verdict": "pass"
+        "readiness": "partial",
+        "score": 107,
+        "verdict": "warn"
       },
       "name": "agent-blackbox",
-      "prCount": 1,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-05-17T16:25:25Z",
-          "failingChecks": 0,
-          "headRef": "feat/ai-implementation-branch-creation",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 19,
-          "title": "[cycle-1] feat(cli): implementation-branch spec module (Phase 5)",
-          "url": "https://github.com/GuitarAlchemist/agent-blackbox/pull/19"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/ga",
@@ -124,93 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 7,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-05-18T01:14:00Z",
-          "failingChecks": 0,
-          "headRef": "feat/ga-retrieval-quality-w2",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 268,
-          "title": "feat(quality): GA retrieval quality producer (Workflow 2 Phase 1)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/268"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-05-16T18:22:49Z",
-          "failingChecks": 0,
-          "headRef": "feat/distillation-plan-only",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 238,
-          "title": "docs(plan): recover Nardien distillation plan (was held in closed #230)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/238"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-05-15T13:08:42Z",
-          "failingChecks": 5,
-          "headRef": "feat/install-agent-blackbox",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 211,
-          "title": "feat: install agent-blackbox PR risk-report workflow + policy",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/211"
-        },
-        {
-          "ageDays": 4,
-          "author": "spareilleux",
-          "createdAt": "2026-05-13T02:28:43Z",
-          "failingChecks": 4,
-          "headRef": "docs/cherny-loops-cross-repo",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 209,
-          "title": "docs(architecture): consolidate Cherny loops across ga/ix/Demerzel/tars",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/209"
-        },
-        {
-          "ageDays": 4,
-          "author": "spareilleux",
-          "createdAt": "2026-05-13T02:23:33Z",
-          "failingChecks": 4,
-          "headRef": "feat/inception-subagent-integration-2026-05-13",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 208,
-          "title": "feat(subagent): Inception Mercury 2 integration behind two-flag opt-in",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/208"
-        },
-        {
-          "ageDays": 4,
-          "author": "spareilleux",
-          "createdAt": "2026-05-13T02:12:16Z",
-          "failingChecks": 4,
-          "headRef": "docs/mercury-subagent-eval-2026-05-13",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 207,
-          "title": "docs(plans): Mercury 2 subagent evaluation \u00e2\u20ac\u201d benchmark + design + tuned prompt",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/207"
-        },
-        {
-          "ageDays": 5,
-          "author": "spareilleux",
-          "createdAt": "2026-05-13T00:44:21Z",
-          "failingChecks": 2,
-          "headRef": "fix/ci-include-static-web-assets-artifact",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 201,
-          "title": "fix(ci): include obj/Release/**/compressed + staticwebassets in artifact",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/201"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -224,31 +128,43 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-05-18T01:11:18Z",
-          "failingChecks": 1,
-          "headRef": "chore/cargo-fmt-cleanup",
+          "createdAt": "2026-06-21T16:38:56Z",
+          "failingChecks": 2,
+          "headRef": "chore/carried-over-docs",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 48,
-          "title": "chore: cargo fmt --all (close chronic risk-report fmt drift)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/48"
+          "number": 156,
+          "title": "docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_repl example",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 4,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-05-13T04:22:12Z",
-          "failingChecks": 1,
-          "headRef": "chore/register-hari-mcp-2026-05-13",
+          "createdAt": "2026-06-21T16:21:38Z",
+          "failingChecks": 2,
+          "headRef": "feat/architecture-deepenings",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 35,
-          "title": "chore(federation): register hari MCP peer",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/35"
+          "number": 155,
+          "title": "refactor: three architecture deepenings (hexavalent / convergence / tool-schema dedup)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/155"
+        },
+        {
+          "ageDays": 33,
+          "author": "spareilleux",
+          "createdAt": "2026-05-19T09:18:15Z",
+          "failingChecks": 1,
+          "headRef": "feat/optick-sae-phase1-rerun",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 50,
+          "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/50"
         }
       ]
     },
@@ -257,25 +173,137 @@
       "installAudit": {
         "available": true,
         "checkCount": 9,
-        "failingChecks": [
-          "instructions",
-          "workflow",
-          "pinning",
-          "enforcement",
-          "observability",
-          "loop-controls",
-          "review-independence"
-        ],
+        "failingChecks": [],
         "maxScore": 110,
-        "readiness": "missing",
-        "score": 56,
-        "verdict": "fail"
+        "readiness": "installed",
+        "score": 110,
+        "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 1,
+      "prCount": 11,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T05:03:56Z",
+          "failingChecks": 0,
+          "headRef": "refactor/reason-feedback-seam",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 53,
+          "title": "refactor(wot): IReasonFeedback seam over a pure reducer (PR5)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/53"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T04:45:46Z",
+          "failingChecks": 0,
+          "headRef": "refactor/tool-invocation-seam",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 52,
+          "title": "refactor(tools): IToolInvoker \u2192 ToolOutcome, resilience in one place (PR2)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/52"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T03:48:30Z",
+          "failingChecks": 3,
+          "headRef": "refactor/llm-backend-seam",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 46,
+          "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/46"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T02:37:16Z",
+          "failingChecks": 3,
+          "headRef": "refactor/tars-runtime-seam",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 45,
+          "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/45"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-20T20:01:00Z",
+          "failingChecks": 2,
+          "headRef": "docs/agentic-engineering-methodology",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 40,
+          "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/40"
+        },
+        {
+          "ageDays": 27,
+          "author": "spareilleux",
+          "createdAt": "2026-05-24T21:13:39Z",
+          "failingChecks": 1,
+          "headRef": "feat/fsharp-registry",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 34,
+          "title": "feat(registry): F# capability-registry project mirroring ix pattern",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/34"
+        },
+        {
+          "ageDays": 27,
+          "author": "spareilleux",
+          "createdAt": "2026-05-24T21:12:23Z",
+          "failingChecks": 2,
+          "headRef": "feat/local-verification-hooks",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 33,
+          "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/33"
+        },
+        {
+          "ageDays": 27,
+          "author": "spareilleux",
+          "createdAt": "2026-05-24T18:42:41Z",
+          "failingChecks": 2,
+          "headRef": "chore/untrack-vendored-trees",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 32,
+          "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/32"
+        },
+        {
+          "ageDays": 27,
+          "author": "spareilleux",
+          "createdAt": "2026-05-24T18:12:55Z",
+          "failingChecks": 1,
+          "headRef": "feat/sentrux-rules",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 31,
+          "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/31"
+        },
+        {
+          "ageDays": 28,
+          "author": "spareilleux",
+          "createdAt": "2026-05-24T14:58:30Z",
+          "failingChecks": 1,
+          "headRef": "feat/cherny-hook-enhancements",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 30,
+          "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/30"
+        },
+        {
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
@@ -298,12 +326,97 @@
         ],
         "maxScore": 110,
         "readiness": "partial",
-        "score": 105,
+        "score": 102,
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 0,
-      "prs": []
+      "prCount": 7,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:56:12Z",
+          "failingChecks": 3,
+          "headRef": "feat/post-discussion-integration",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 368,
+          "title": "feat(ci): wire post_discussion.sh across all workflows (integrates #365 + #366)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/368"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:11:00Z",
+          "failingChecks": 1,
+          "headRef": "feat/confidence-thresholds-single-source",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 367,
+          "title": "feat(governance): single-source confidence thresholds via ref:confidence tokens",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/367"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:10:58Z",
+          "failingChecks": 1,
+          "headRef": "feat/ci-script-seams",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 366,
+          "title": "feat(ci): extract testable llm_call.sh + post_discussion.sh seams",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/366"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:10:56Z",
+          "failingChecks": 1,
+          "headRef": "feat/ecosystem-registry-action",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 365,
+          "title": "feat(ci): ecosystem facts action \u2014 single source for repo/category ids + counts",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/365"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:10:35Z",
+          "failingChecks": 1,
+          "headRef": "refactor/collapse-hexavalent-schema",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 364,
+          "title": "refactor(schemas): collapse byte-identical hexavalent-distribution into fuzzy",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/364"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:10:34Z",
+          "failingChecks": 0,
+          "headRef": "fix/halt-schema-parity",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 363,
+          "title": "fix(halt): jsonschema-with-stdlib-fallback validation parity (ADR-0003)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/363"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-21T16:10:32Z",
+          "failingChecks": 1,
+          "headRef": "feat/digeststate-deep-module",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 362,
+          "title": "feat(hooks): DigestState deep module behind the session-digest hooks",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/362"
+        }
+      ]
     }
   ],
   "schemaVersion": "0.1"

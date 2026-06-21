@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T01:13:25.847659+00:00",
+  "generatedAt": "2026-06-21T18:10:44.321850+00:00",
   "recommendations": [
     "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
   ],
@@ -41,7 +41,7 @@
         },
         {
           "evidence": [
-            "AGENT_BLACKBOX_REF=v0.1.0-beta.1"
+            "AGENT_BLACKBOX_REF=v0.1.0-beta.2"
           ],
           "id": "pinning",
           "maxScore": 10,
@@ -76,7 +76,7 @@
         {
           "evidence": [
             "response-quality documented in docs/harness-observability.md",
-            "state/quality/chatbot-qa/baseline.json",
+            "state/quality/chatbot-qa-sessions/baseline.json",
             "state/quality/embeddings/baseline.json",
             "state/quality/ga-harness/baseline.json"
           ],
@@ -89,10 +89,9 @@
         },
         {
           "evidence": [
-            "scripts/supervised-loop-preflight.ps1",
             "Scripts/supervised-loop-preflight.ps1",
             ".claude/skills/supervised-loop/SKILL.md",
-            "state/quality/chatbot-qa/baseline.json",
+            "state/quality/chatbot-qa-sessions/baseline.json",
             "state/quality/embeddings/baseline.json",
             "state/quality/ga-harness/baseline.json"
           ],
@@ -127,12 +126,12 @@
         }
       ],
       "maxScore": 110,
-      "name": "ga-fleet-status",
+      "name": "ga",
       "readiness": "partial",
       "recommendations": [
         "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
       ],
-      "root": "C:/tmp/ga-fleet-status",
+      "root": "/home/runner/work/ga/ga/ga",
       "score": 102,
       "verdict": "warn"
     }
