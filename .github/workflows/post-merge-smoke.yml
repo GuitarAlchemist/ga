@@ -135,6 +135,7 @@ jobs:
                       body = bf.read()
                   marker_found = marker.encode('utf-8') in body
               unreachable = (status == 0)
+              gateway_error = status in (502, 503, 504)
               if unreachable:
                   unreachable_count += 1
               ok = (status == 200 and size_bytes > 0 and marker_found)
@@ -142,6 +143,7 @@ jobs:
                   failures.append({
                       'url': url, 'status': status,
                       'marker_found': marker_found, 'unreachable': unreachable,
+                      'gateway_error': gateway_error,
                   })
               checks.append({
                   'url': url,
@@ -152,10 +154,18 @@ jobs:
                   'content_marker': marker,
                   'content_marker_found': marker_found,
                   'unreachable': unreachable,
+                  'gateway_error': gateway_error,
               })
 
-          tunnel_down = unreachable_count >= 2
+          # "Infra down" (kept under the name tunnel_down so the YAML step conditions don't change):
+          # every failure is either unreachable (connection refused / timeout) or a gateway error
+          # (502/503/504 = Cloudflare is up but the operator's origin is offline). That is the operator's
+          # workstation/tunnel being down, not a code regression — log it and exit 0, don't page. A real
+          # per-URL regression (e.g. HTTP 200 but the content marker is missing, or a 404) still pages.
+          infra_failures = [f for f in failures if f['unreachable'] or f['gateway_error']]
+          real_failures  = [f for f in failures if not (f['unreachable'] or f['gateway_error'])]
           all_passed  = len(failures) == 0
+          tunnel_down = len(real_failures) == 0 and len(infra_failures) >= 2
 
           doc = {
               'schema': 'post-merge-smoke-v1',
