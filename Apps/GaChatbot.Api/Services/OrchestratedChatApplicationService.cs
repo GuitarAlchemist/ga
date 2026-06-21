@@ -131,7 +131,7 @@ public sealed class OrchestratedChatApplicationService(
         var result = await ChatAsync(request, cancellationToken);
         yield return new ChatStreamUpdate(Routing: result.Routing, Grounding: result.Grounding, Trace: result.Trace);
 
-        foreach (var chunk in Helpers.SseChunker.SplitIntoChunks(result.NaturalLanguageAnswer))
+        foreach (var chunk in GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(result.NaturalLanguageAnswer))
         {
             yield return new ChatStreamUpdate(Chunk: chunk);
         }
