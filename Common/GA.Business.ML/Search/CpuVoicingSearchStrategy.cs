@@ -181,62 +181,8 @@ public class CpuVoicingSearchStrategy : IVoicingSearchStrategy
         n == OpticKv18Dim || n == OpticKv17Dim || n == OpticKv16Dim
         || n == OpticKv131Dim || n == LegacyDim;
 
-    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query)
-    {
-        var document = new ChordVoicingRagDocument
-        {
-            Id = voicing.Id,
-            SearchableText = voicing.Description,
-            ChordName = voicing.ChordName,
-            VoicingType = voicing.VoicingType,
-            Position = voicing.Position,
-            Difficulty = voicing.Difficulty,
-            ModeName = voicing.ModeName,
-            ModalFamily = voicing.ModalFamily,
-            SemanticTags = voicing.SemanticTags,
-            PossibleKeys = voicing.PossibleKeys,
-            PrimeFormId = voicing.PrimeFormId,
-            TranslationOffset = voicing.TranslationOffset,
-            YamlAnalysis = voicing.Description,
-            Diagram = voicing.Diagram,
-            MidiNotes = voicing.MidiNotes,
-            PitchClasses = [.. voicing.MidiNotes.Select(n => n % 12).Distinct().OrderBy(p => p)],
-            PitchClassSet = voicing.PitchClassSet,
-            IntervalClassVector = voicing.IntervalClassVector,
-            MinFret = voicing.MinFret,
-            MaxFret = voicing.MaxFret,
-            BarreRequired = voicing.BarreRequired,
-            HandStretch = voicing.HandStretch,
-
-            AnalysisEngine = "CpuVoicingSearchStrategy",
-            AnalysisVersion = "1.0.0",
-            Jobs = [],
-            TuningId = "Standard",
-            PitchClassSetId = voicing.PrimeFormId,
-            StackingType = voicing.StackingType,
-            RootPitchClass = voicing.RootPitchClass,
-            MidiBassNote = voicing.MidiBassNote,
-            HarmonicFunction = voicing.HarmonicFunction,
-            IsNaturallyOccurring = voicing.IsNaturallyOccurring,
-            Consonance = voicing.ConsonanceScore,
-            Brightness = voicing.BrightnessScore,
-            IsRootless = voicing.IsRootless,
-            HasGuideTones = voicing.HasGuideTones,
-            Inversion = voicing.Inversion,
-            TopPitchClass = voicing.TopPitchClass, // Added for Chord Melody support
-            OmittedTones = voicing.OmittedTones,
-
-            // AI Agent Metadata
-            TexturalDescription = voicing.TexturalDescription,
-            DoubledTones = voicing.DoubledTones,
-            AlternateNames = voicing.AlternateNames,
-            CagedShape = voicing.CagedShape, // Map CAGED shape
-
-            DifficultyScore = 1.0 // Simple default
-        };
-
-        return new(document, score, query);
-    }
+    private static VoicingSearchResult MapToSearchResult(VoicingEmbedding voicing, double score, string query) =>
+        VoicingSearchResultMapper.FromVoicingEmbedding(voicing, score, query, "CpuVoicingSearchStrategy");
 
     private long CalculateMemoryUsage()
     {
