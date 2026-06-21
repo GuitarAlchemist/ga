@@ -1,9 +1,8 @@
 namespace GA.Business.AI.HuggingFace;
 
-using GA.Domain.Core.Instruments;
-
 using System.Security.Cryptography;
 using System.Text.Json;
+using GA.Domain.Core.Instruments;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -224,7 +223,7 @@ public class MusicGenService
 
             await File.WriteAllBytesAsync(cachePath, response.AudioData);
 
-            var metaJson = JsonSerializer.Serialize(response with { AudioData = Array.Empty<byte>() });
+            var metaJson = JsonSerializer.Serialize(response with { AudioData = [] });
             await File.WriteAllTextAsync(metaPath, metaJson);
 
             _logger.LogDebug("Cached audio: {CacheKey}", cacheKey);
@@ -248,15 +247,12 @@ public class MusicGenService
     /// <summary>
     ///     Extract audio format from content type
     /// </summary>
-    private static string GetFormatFromContentType(string contentType)
+    private static string GetFormatFromContentType(string contentType) => contentType switch
     {
-        return contentType switch
-        {
-            "audio/wav" => "wav",
-            "audio/mpeg" => "mp3",
-            "audio/flac" => "flac",
-            "audio/ogg" => "ogg",
-            _ => "wav"
-        };
-    }
+        "audio/wav" => "wav",
+        "audio/mpeg" => "mp3",
+        "audio/flac" => "flac",
+        "audio/ogg" => "ogg",
+        _ => "wav"
+    };
 }

@@ -1,8 +1,8 @@
 namespace GA.Business.AI.Interpretation;
 
-using GA.Business.Core.Analysis.Voicings;
 using System.Collections.Generic;
 using System.Linq;
+using GA.Business.Core.Analysis.Voicings;
 
 /// <summary>
 /// Service for generating semantic tags and contextual insights for musical objects.
@@ -104,6 +104,6 @@ public static class InterpretationService
             if (modeInfo.ModeName.Contains("Phrygian")) tags.Add(InterpretationTags.Genre.Flamenco);
         }
 
-        return tags.ToList();
+        return [.. tags];
     }
 }

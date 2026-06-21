@@ -44,7 +44,7 @@ public sealed class EbnfParser
         // Alternation: split on top-level '|'
         var alts = SplitTopLevel(s, '|');
         if (alts.Count > 1)
-            return new EbnfAlt(alts.Select(ParseSeq).ToList());
+            return new EbnfAlt([.. alts.Select(ParseSeq)]);
         return ParseSeq(s);
     }
 
@@ -53,7 +53,7 @@ public sealed class EbnfParser
         s = s.Trim();
         var parts = SplitTopLevel(s, ',');
         if (parts.Count > 1)
-            return new EbnfSeq(parts.Select(ParseAtom).ToList());
+            return new EbnfSeq([.. parts.Select(ParseAtom)]);
         return ParseAtom(s);
     }
 
@@ -111,7 +111,7 @@ public sealed class EbnfParser
             }
         }
         result.Add(s[start..].Trim());
-        return result.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        return [.. result.Where(x => !string.IsNullOrWhiteSpace(x))];
     }
 }
 

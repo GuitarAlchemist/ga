@@ -126,7 +126,7 @@ public class TabAnalysisService(
                     MidiNotes = [.. midiNotes],
                     PitchClasses = [.. pitchClasses],
                     PitchClassSet = string.Join(",", pitchClasses),
-                    SemanticTags = Array.Empty<string>(), // Will be populated by AutoTaggingService
+                    SemanticTags = [], // Will be populated by AutoTaggingService
                     Diagram = FormatDiagram(slice),
 
                     // Richer Metadata from Analyzer
@@ -146,7 +146,7 @@ public class TabAnalysisService(
                     YamlAnalysis = "{}",
                     AnalysisEngine = AnalysisConstants.TabAnalysisEngine,
                     AnalysisVersion = "1.1",
-                    Jobs = Array.Empty<string>(),
+                    Jobs = [],
                     TuningId = AnalysisConstants.DefaultTuning,
                     PitchClassSetId = pcsSet.Id.ToString(),
                     ForteCode = forteCode

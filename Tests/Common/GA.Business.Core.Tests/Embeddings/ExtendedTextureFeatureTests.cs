@@ -1,8 +1,8 @@
 namespace GA.Business.Core.Tests.Embeddings;
 
+using GA.Business.ML.Rag.Models;
 using ML.Embeddings;
 using ML.Embeddings.Services;
-using GA.Business.ML.Rag.Models;
 
 /// <summary>
 ///     Tests for v1.2.1 Extended Texture Features (indices 78-95).

@@ -1,12 +1,12 @@
 namespace GaApi.Controllers;
 
-using Models;
+using GA.Core.Functional;
 using GaApi.Models;
 using GaApi.Services;
-using GA.Core.Functional;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Models;
 
 /// <summary>
 ///     Controller demonstrating monadic health check service integration

@@ -1,9 +1,9 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
-using GA.Data.MongoDB.Models.Rag;
 using Embeddings;
-using Microsoft.Extensions.Logging;
+using GA.Data.MongoDB.Models.Rag;
 using global::MongoDB.Driver;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Multi-stage RAG service for music theory knowledge base

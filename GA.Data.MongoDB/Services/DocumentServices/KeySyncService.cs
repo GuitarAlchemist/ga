@@ -35,10 +35,7 @@ public class KeySyncService(ILogger<KeySyncService> logger, MongoDbService mongo
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Keys.CountDocumentsAsync(Builders<KeyDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Keys.CountDocumentsAsync(Builders<KeyDocument>.Filter.Empty);
 }
 
 

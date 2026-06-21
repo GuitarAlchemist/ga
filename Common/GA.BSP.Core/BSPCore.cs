@@ -26,10 +26,7 @@ public enum BspPitchClass
 /// </summary>
 public class BspPitchClassSet(IEnumerable<BspPitchClass> pitchClasses) : HashSet<BspPitchClass>(pitchClasses)
 {
-    public override string ToString()
-    {
-        return string.Join(", ", this.OrderBy(pc => (int)pc));
-    }
+    public override string ToString() => string.Join(", ", this.OrderBy(pc => (int)pc));
 }
 
 /// <summary>
@@ -81,10 +78,7 @@ public class TonalRegion
     /// <summary>
     ///     Check if this region contains the given pitch class set
     /// </summary>
-    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
-        return pitchClassSet.All(pc => PitchClassSet.Contains((BspPitchClass)pc.Value));
-    }
+    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) => pitchClassSet.All(pc => PitchClassSet.Contains((BspPitchClass)pc.Value));
 }
 
 /// <summary>
@@ -96,10 +90,7 @@ public class TonalBspNode
     {
     }
 
-    public TonalBspNode(TonalRegion region)
-    {
-        Region = region;
-    }
+    public TonalBspNode(TonalRegion region) => Region = region;
 
     public TonalRegion Region { get; init; } = new();
     public TonalBspNode? Left { get; set; }
@@ -152,10 +143,7 @@ public class TonalBspTree
     /// <summary>
     ///     Find the best tonal region for a given pitch class set
     /// </summary>
-    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
-        return FindTonalRegionRecursive(Root, pitchClassSet);
-    }
+    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) => FindTonalRegionRecursive(Root, pitchClassSet);
 
     private TonalRegion FindTonalRegionRecursive(TonalBspNode node, GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
     {
@@ -181,10 +169,7 @@ public class TonalBspTree
         return node.Region;
     }
 
-    private int CalculateFit(TonalRegion region, GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
-        return pitchClassSet.Count(pc => region.PitchClassSet.Contains((BspPitchClass)pc.Value));
-    }
+    private int CalculateFit(TonalRegion region, GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) => pitchClassSet.Count(pc => region.PitchClassSet.Contains((BspPitchClass)pc.Value));
 }
 
 /// <summary>
@@ -264,7 +249,7 @@ public class TonalBspQueryResult
     }
 
     public TonalRegion Region { get; init; } = new();
-    public List<ITonalElement> Elements { get; init; } = new();
+    public List<ITonalElement> Elements { get; init; } = [];
     public double Confidence { get; init; }
     public TimeSpan QueryTime { get; init; }
 }

@@ -114,47 +114,36 @@ public class AssetService
     /// </summary>
     public async Task<AssetDocument?> GetAssetByIdAsync(
         ObjectId id,
-        CancellationToken cancellationToken = default)
-    {
-        return await _collection.Find(d => d.Id == id)
+        CancellationToken cancellationToken = default) => await _collection.Find(d => d.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
-    }
 
     /// <summary>
     ///     Get asset by custom asset ID (hash)
     /// </summary>
     public async Task<AssetDocument?> GetAssetByCustomIdAsync(
         string customId,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) =>
         // Search by GlbPath which contains the custom ID
-        return await _collection.Find(d => d.GlbPath != null && d.GlbPath.Contains(customId))
+        await _collection.Find(d => d.GlbPath != null && d.GlbPath.Contains(customId))
             .FirstOrDefaultAsync(cancellationToken);
-    }
 
     /// <summary>
     ///     Get all assets by category
     /// </summary>
     public async Task<List<AssetDocument>> GetAssetsByCategoryAsync(
         AssetCategory category,
-        CancellationToken cancellationToken = default)
-    {
-        return await _collection.Find(d => d.Category == category)
+        CancellationToken cancellationToken = default) => await _collection.Find(d => d.Category == category)
             .SortBy(d => d.Name)
             .ToListAsync(cancellationToken);
-    }
 
     /// <summary>
     ///     Get all assets
     /// </summary>
     public async Task<List<AssetDocument>> GetAllAssetsAsync(
-        CancellationToken cancellationToken = default)
-    {
-        return await _collection.Find(_ => true)
+        CancellationToken cancellationToken = default) => await _collection.Find(_ => true)
             .SortBy(d => d.Category)
             .ThenBy(d => d.Name)
             .ToListAsync(cancellationToken);
-    }
 
     /// <summary>
     ///     Search assets by tags
@@ -258,23 +247,20 @@ public class AssetService
     /// <summary>
     ///     Convert AssetDocument to AssetMetadata
     /// </summary>
-    public static AssetMetadata ToMetadata(AssetDocument document)
+    public static AssetMetadata ToMetadata(AssetDocument document) => new AssetMetadata
     {
-        return new AssetMetadata
-        {
-            Id = document.Id.ToString(),
-            Name = document.Name,
-            Category = document.Category,
-            GlbPath = document.GlbPath ?? string.Empty,
-            PolyCount = document.PolyCount,
-            License = document.License,
-            Source = document.Source,
-            Author = document.Author,
-            Tags = document.Tags,
-            Bounds = document.Bounds?.ToBoundingBox(),
-            FileSizeBytes = document.FileSizeBytes,
-            IsOptimized = document.IsOptimized,
-            ImportedBy = document.ImportedBy
-        };
-    }
+        Id = document.Id.ToString(),
+        Name = document.Name,
+        Category = document.Category,
+        GlbPath = document.GlbPath ?? string.Empty,
+        PolyCount = document.PolyCount,
+        License = document.License,
+        Source = document.Source,
+        Author = document.Author,
+        Tags = document.Tags,
+        Bounds = document.Bounds?.ToBoundingBox(),
+        FileSizeBytes = document.FileSizeBytes,
+        IsOptimized = document.IsOptimized,
+        ImportedBy = document.ImportedBy
+    };
 }

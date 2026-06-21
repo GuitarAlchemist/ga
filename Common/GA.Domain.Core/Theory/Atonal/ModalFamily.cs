@@ -2,9 +2,9 @@ namespace GA.Domain.Core.Theory.Atonal;
 
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
-using GA.Core.Collections.Abstractions;
 using Design.Attributes;
 using Design.Schema;
+using GA.Core.Collections.Abstractions;
 
 /// <summary>
 ///     Group of pitch class sets representing a scale that share the same interval vector

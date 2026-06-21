@@ -37,14 +37,14 @@ public readonly record struct Validation<TValue, TError>
     private Validation(TValue value)
     {
         _value = value;
-        _errors = ImmutableList<TError>.Empty;
+        _errors = [];
         _isValid = true;
     }
 
     private Validation(IEnumerable<TError> errors)
     {
         _value = default;
-        _errors = errors.ToImmutableList();
+        _errors = [.. errors];
         _isValid = false;
     }
 

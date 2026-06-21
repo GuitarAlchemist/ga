@@ -9,28 +9,19 @@ using GA.Domain.Core.Theory.Atonal;
 /// </summary>
 public class TonalBspTree
 {
-    public TonalBspTree()
-    {
-        Root = BuildTonalHierarchy();
-    }
+    public TonalBspTree() => Root = BuildTonalHierarchy();
 
     public TonalBspNode Root { get; }
 
     /// <summary>
     ///     Find the most appropriate tonal region for a given musical element
     /// </summary>
-    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
-        return FindRegionRecursive(Root, pitchClassSet);
-    }
+    public TonalRegion FindTonalRegion(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) => FindRegionRecursive(Root, pitchClassSet);
 
     /// <summary>
     ///     Get all musical elements within a specific tonal region
     /// </summary>
-    public IEnumerable<ITonalElement> QueryRegion(TonalRegion region)
-    {
-        return QueryRegionRecursive(Root, region);
-    }
+    public IEnumerable<ITonalElement> QueryRegion(TonalRegion region) => QueryRegionRecursive(Root, region);
 
     private TonalRegion FindRegionRecursive(TonalBspNode node, PitchClassSet pitchClassSet)
     {
@@ -159,48 +150,45 @@ public class TonalBspTree
         return bestPartition;
     }
 
-    private TonalPartitionPlane CreatePartitionPlane(TonalRegion region, TonalPartitionStrategy strategy)
+    private TonalPartitionPlane CreatePartitionPlane(TonalRegion region, TonalPartitionStrategy strategy) => strategy switch
     {
-        return strategy switch
+        TonalPartitionStrategy.CircleOfFifths => new TonalPartitionPlane
         {
-            TonalPartitionStrategy.CircleOfFifths => new TonalPartitionPlane
-            {
-                Strategy = strategy,
-                ReferencePoint = region.TonalCenter,
-                Normal = CalculateCircleOfFifthsNormal(region.TonalCenter),
-                Threshold = 0.5
-            },
-            TonalPartitionStrategy.ChromaticDistance => new TonalPartitionPlane
-            {
-                Strategy = strategy,
-                ReferencePoint = region.TonalCenter,
-                Normal = Vector3.UnitX, // Chromatic axis
-                Threshold = 6.0 // Tritone
-            },
-            TonalPartitionStrategy.HarmonicSeries => new TonalPartitionPlane
-            {
-                Strategy = strategy,
-                ReferencePoint = region.TonalCenter,
-                Normal = CalculateHarmonicSeriesNormal(region.TonalCenter),
-                Threshold = 0.618 // Golden ratio
-            },
-            TonalPartitionStrategy.ModalBrightness => new TonalPartitionPlane
-            {
-                Strategy = strategy,
-                ReferencePoint = region.TonalCenter,
-                Normal = Vector3.UnitY, // Brightness axis
-                Threshold = 0.0 // Neutral brightness
-            },
-            TonalPartitionStrategy.TonalStability => new TonalPartitionPlane
-            {
-                Strategy = strategy,
-                ReferencePoint = region.TonalCenter,
-                Normal = Vector3.UnitZ, // Stability axis
-                Threshold = 0.7 // High stability threshold
-            },
-            _ => throw new ArgumentException($"Unknown partition strategy: {strategy}")
-        };
-    }
+            Strategy = strategy,
+            ReferencePoint = region.TonalCenter,
+            Normal = CalculateCircleOfFifthsNormal(region.TonalCenter),
+            Threshold = 0.5
+        },
+        TonalPartitionStrategy.ChromaticDistance => new TonalPartitionPlane
+        {
+            Strategy = strategy,
+            ReferencePoint = region.TonalCenter,
+            Normal = Vector3.UnitX, // Chromatic axis
+            Threshold = 6.0 // Tritone
+        },
+        TonalPartitionStrategy.HarmonicSeries => new TonalPartitionPlane
+        {
+            Strategy = strategy,
+            ReferencePoint = region.TonalCenter,
+            Normal = CalculateHarmonicSeriesNormal(region.TonalCenter),
+            Threshold = 0.618 // Golden ratio
+        },
+        TonalPartitionStrategy.ModalBrightness => new TonalPartitionPlane
+        {
+            Strategy = strategy,
+            ReferencePoint = region.TonalCenter,
+            Normal = Vector3.UnitY, // Brightness axis
+            Threshold = 0.0 // Neutral brightness
+        },
+        TonalPartitionStrategy.TonalStability => new TonalPartitionPlane
+        {
+            Strategy = strategy,
+            ReferencePoint = region.TonalCenter,
+            Normal = Vector3.UnitZ, // Stability axis
+            Threshold = 0.7 // High stability threshold
+        },
+        _ => throw new ArgumentException($"Unknown partition strategy: {strategy}")
+    };
 
     private Vector3 CalculateCircleOfFifthsNormal(double tonalCenter)
     {
@@ -283,11 +271,9 @@ public class TonalBspTree
         return Math.Sqrt(variance) / 6.0; // Normalize to [0,1]
     }
 
-    private double CalculateBrightness(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
+    private double CalculateBrightness(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) =>
         // Higher pitch classes are "brighter"
-        return pitchClassSet.Select(pc => (int)pc).Average() / 11.0; // Normalize to [0,1]
-    }
+        pitchClassSet.Select(pc => (int)pc).Average() / 11.0; // Normalize to [0,1]
 
     private List<ITonalElement> GetAllTonalElements()
     {
@@ -333,53 +319,23 @@ public class TonalBspTree
 
     // Additional helper methods would be implemented here...
     private (List<ITonalElement>, List<ITonalElement>) SplitElementsByTonalPartition(
-        List<ITonalElement> elements, TonalPartitionPlane partition)
-    {
-        return ([], []);
-    }
+        List<ITonalElement> elements, TonalPartitionPlane partition) => ([], []);
 
-    private TonalRegion CreateChildRegion(TonalRegion parent, TonalPartitionPlane partition, bool isLeft)
-    {
-        return parent;
-    }
+    private TonalRegion CreateChildRegion(TonalRegion parent, TonalPartitionPlane partition, bool isLeft) => parent;
 
-    private double CalculateTonalCoherence(List<ITonalElement> elements)
-    {
-        return 1.0;
-    }
+    private double CalculateTonalCoherence(List<ITonalElement> elements) => 1.0;
 
-    private double CalculateTonalSeparation(List<ITonalElement> left, List<ITonalElement> right)
-    {
-        return 1.0;
-    }
+    private double CalculateTonalSeparation(List<ITonalElement> left, List<ITonalElement> right) => 1.0;
 
-    private bool RegionIntersects(TonalRegion a, TonalRegion b)
-    {
-        return true;
-    }
+    private bool RegionIntersects(TonalRegion a, TonalRegion b) => true;
 
-    private double CalculateCircleOfFifthsDistance(Vector3 coords, TonalPartitionPlane plane)
-    {
-        return 0.0;
-    }
+    private double CalculateCircleOfFifthsDistance(Vector3 coords, TonalPartitionPlane plane) => 0.0;
 
-    private double CalculateChromaticDistance(Vector3 coords, TonalPartitionPlane plane)
-    {
-        return 0.0;
-    }
+    private double CalculateChromaticDistance(Vector3 coords, TonalPartitionPlane plane) => 0.0;
 
-    private double CalculateHarmonicDistance(Vector3 coords, TonalPartitionPlane plane)
-    {
-        return 0.0;
-    }
+    private double CalculateHarmonicDistance(Vector3 coords, TonalPartitionPlane plane) => 0.0;
 
-    private double CalculateModalBrightnessDistance(Vector3 coords, TonalPartitionPlane plane)
-    {
-        return 0.0;
-    }
+    private double CalculateModalBrightnessDistance(Vector3 coords, TonalPartitionPlane plane) => 0.0;
 
-    private double CalculateTonalStabilityDistance(Vector3 coords, TonalPartitionPlane plane)
-    {
-        return 0.0;
-    }
+    private double CalculateTonalStabilityDistance(Vector3 coords, TonalPartitionPlane plane) => 0.0;
 }

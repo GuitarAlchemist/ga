@@ -1,9 +1,9 @@
 namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
+using Embeddings;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Theory.Harmony;
 using GA.Domain.Services.Chords;
-using GA.Domain.Core.Primitives.Extensions;
-using Embeddings;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
 
@@ -58,8 +58,5 @@ public sealed class ChordRagSyncService(
         }
     }
 
-    public override async Task<long> GetCountAsync()
-    {
-        return await _mongoDb.ChordsRag.CountDocumentsAsync(Builders<ChordRagEmbedding>.Filter.Empty);
-    }
+    public override async Task<long> GetCountAsync() => await _mongoDb.ChordsRag.CountDocumentsAsync(Builders<ChordRagEmbedding>.Filter.Empty);
 }

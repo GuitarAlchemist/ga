@@ -1,8 +1,8 @@
 namespace GA.Data.MongoDB.Services;
 
-using GA.Domain.Repositories;
-using GA.Domain.Core.Theory.Tabs;
 using GA.Data.MongoDB.Models;
+using GA.Domain.Core.Theory.Tabs;
+using GA.Domain.Repositories;
 using global::MongoDB.Bson;
 using global::MongoDB.Driver;
 using global::System.Collections.Generic;
@@ -13,10 +13,7 @@ public class MongoTabCorpusRepository : ITabCorpusRepository
 {
     private readonly MongoDbService _db;
 
-    public MongoTabCorpusRepository(MongoDbService db)
-    {
-        _db = db;
-    }
+    public MongoTabCorpusRepository(MongoDbService db) => _db = db;
 
     public async Task SaveAsync(TabCorpusItem item)
     {
@@ -66,15 +63,9 @@ public class MongoTabCorpusRepository : ITabCorpusRepository
         return entities.Select(MapToItem);
     }
 
-    public async Task<bool> ExistsAsync(string id)
-    {
-        return await _db.Tabs.Find(x => x.Id == id).AnyAsync();
-    }
+    public async Task<bool> ExistsAsync(string id) => await _db.Tabs.Find(x => x.Id == id).AnyAsync();
 
-    public async Task<long> CountAsync()
-    {
-        return await _db.Tabs.CountDocumentsAsync(_ => true);
-    }
+    public async Task<long> CountAsync() => await _db.Tabs.CountDocumentsAsync(_ => true);
 
     private TabCorpusItem MapToItem(TabCorpusDocument entity)
     {

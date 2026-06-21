@@ -1,8 +1,8 @@
 namespace GA.Domain.Core.Theory.Extensions;
 
-using Primitives.Intervals;
 using Atonal;
 using Atonal.Abstractions;
+using Primitives.Intervals;
 using Structures;
 
 public static class PitchClassExtensions

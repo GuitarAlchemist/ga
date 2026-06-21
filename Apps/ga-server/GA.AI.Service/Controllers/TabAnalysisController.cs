@@ -1,10 +1,10 @@
 #pragma warning disable SKEXP0001
 namespace GA.AI.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Rag.Models;
 using GA.Business.ML.Tabs;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api")]

@@ -289,73 +289,34 @@ public class TonalBspAnalyzer(TonalBspService bspService, ILogger<TonalBspAnalyz
     }
 
     // Helper methods with simplified implementations
-    private TonalityType DetermineChordTonality(ChordTemplate chord)
-    {
-        return TonalityType.Major;
-    }
+    private TonalityType DetermineChordTonality(ChordTemplate chord) => TonalityType.Major;
 
-    private ChordSubstitution AnalyzeSubstitution(ChordTemplate original, TonalChord substitute, TonalRegion context)
-    {
-        return new ChordSubstitution();
-    }
+    private ChordSubstitution AnalyzeSubstitution(ChordTemplate original, TonalChord substitute, TonalRegion context) => new ChordSubstitution();
 
-    private double CalculateModulationStrength(TonalRegion from, TonalRegion to)
-    {
-        return 0.5;
-    }
+    private double CalculateModulationStrength(TonalRegion from, TonalRegion to) => 0.5;
 
-    private List<PivotChord> FindPivotChords(TonalRegion from, TonalRegion to)
-    {
-        return [];
-    }
+    private List<PivotChord> FindPivotChords(TonalRegion from, TonalRegion to) => [];
 
     private List<ModulationSuggestion> GenerateModulationSuggestions(TonalRegion from, TonalRegion to,
-        List<ModulationStep> path)
-    {
-        return [];
-    }
+        List<ModulationStep> path) => [];
 
-    private KeyStabilityAnalysis AnalyzeKeyStability(List<TonalBspQueryResult> contexts)
-    {
-        return new KeyStabilityAnalysis();
-    }
+    private KeyStabilityAnalysis AnalyzeKeyStability(List<TonalBspQueryResult> contexts) => new KeyStabilityAnalysis();
 
-    private ModalInterchangeAnalysis DetectModalInterchange(List<TonalBspQueryResult> contexts)
-    {
-        return new ModalInterchangeAnalysis();
-    }
+    private ModalInterchangeAnalysis DetectModalInterchange(List<TonalBspQueryResult> contexts) => new ModalInterchangeAnalysis();
 
     private List<ProgressionRecommendation> GenerateRecommendations(List<TonalBspQueryResult> contexts,
-        List<TonalRegion> journey)
-    {
-        return [];
-    }
+        List<TonalRegion> journey) => [];
 
-    private double CalculateOverallSmoothness(List<VoiceLeadingPath> paths)
-    {
-        return 0.8;
-    }
+    private double CalculateOverallSmoothness(List<VoiceLeadingPath> paths) => 0.8;
 
-    private List<VoiceLeadingOptimization> GenerateVoiceLeadingOptimizations(List<VoiceLeadingPath> paths)
-    {
-        return [];
-    }
+    private List<VoiceLeadingOptimization> GenerateVoiceLeadingOptimizations(List<VoiceLeadingPath> paths) => [];
 
-    private string AnalyzeDirectionalTendency(List<TonalRegion> journey)
-    {
-        return "Ascending";
-    }
+    private string AnalyzeDirectionalTendency(List<TonalRegion> journey) => "Ascending";
 
     private string GenerateOptimalVoicing((ChordTemplate, PitchClass) current, (ChordTemplate, PitchClass) next,
-        double distance)
-    {
-        return "Close";
-    }
+        double distance) => "Close";
 
-    private TonalRegion FindIntermediateRegion(TonalRegion from, TonalRegion to)
-    {
-        return from;
-    }
+    private TonalRegion FindIntermediateRegion(TonalRegion from, TonalRegion to) => from;
 }
 
 // Supporting data structures for analysis results

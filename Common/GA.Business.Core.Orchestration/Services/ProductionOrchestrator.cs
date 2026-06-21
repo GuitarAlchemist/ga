@@ -21,13 +21,6 @@ using GA.Business.ML.Tabs;
 // @ai:business-value top-level chat orchestrator — fan-out point for tab analysis, voicings, suggestions, modulation; behaviour change here ripples to every chatbot answer [T:manually-reviewed conf:0.9 src:product-owner@2026-05-24]
 public class ProductionOrchestrator(
     TabAwareOrchestrator tabOrchestrator,
-    TabAnalysisService tabAnalyzer,
-    NextChordSuggestionService suggestionService,
-    ModulationAnalyzer modulationAnalyzer,
-    TabPresentationService presenter,
-    MusicalEmbeddingGenerator embeddingGenerator,
-    AdvancedTabSolver tabSolver,
-    AlternativeFingeringService altService,
     SemanticRouter router,
     QueryUnderstandingService queryUnderstandingService,
     IAlgebraPromptClassifier algebraPromptClassifier,

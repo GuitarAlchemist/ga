@@ -24,8 +24,5 @@ public sealed class TelemetrySuppressionSetUpFixture
     }
 
     [OneTimeTearDown]
-    public void RestoreRoutingTelemetry()
-    {
-        Environment.SetEnvironmentVariable("GA_ROUTING_NO_TELEMETRY", _prior);
-    }
+    public void RestoreRoutingTelemetry() => Environment.SetEnvironmentVariable("GA_ROUTING_NO_TELEMETRY", _prior);
 }

@@ -17,10 +17,7 @@ public class TypedMusicalQueryExtractorTests
     private TypedMusicalQueryExtractor _typed = null!;
 
     [SetUp]
-    public void SetUp()
-    {
-        _typed = new TypedMusicalQueryExtractor();
-    }
+    public void SetUp() => _typed = new TypedMusicalQueryExtractor();
 
     [Test]
     public async Task Extract_ChordOnly_ReturnsParsedChord()

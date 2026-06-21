@@ -2,9 +2,9 @@ namespace GA.Business.Core.Tests.Fretboard.Shapes.Spectral;
 
 using Domain.Core.Instruments;
 using Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Atonal.Grothendieck;
 using GA.Domain.Services.Fretboard.Shapes;
 using GA.Domain.Services.Fretboard.Shapes.Spectral;
-using GA.Domain.Services.Atonal.Grothendieck;
 using Moq;
 
 // For PitchClassSet

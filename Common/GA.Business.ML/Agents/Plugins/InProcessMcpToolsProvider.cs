@@ -14,7 +14,7 @@ using ModelContextProtocol.Server;
 /// that path tripped over the
 /// <c>WithTools(Type)</c> / <c>WithTools(IEnumerable&lt;Type&gt;)</c>
 /// overload-resolution gotcha and left the server with no
-/// <c>tools/list</c> handler — every <see cref="SkillMdDrivenSkill"/> call
+/// <c>tools/list</c> handler — every <see cref="Skills.SkillMdDrivenSkill"/> call
 /// 500'd with <c>Method 'tools/list' is not available</c>.
 /// </summary>
 /// <remarks>

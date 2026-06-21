@@ -1,37 +1,27 @@
 ﻿namespace GA.Business.Intelligence.SemanticIndexing;
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using GA.Domain.Core.Instruments;
-
+using GA.Domain.Core.Instruments.Fretboard;
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
-using GA.Domain.Core.Instruments.Fretboard;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
 
 public class SemanticFretboardService
 {
     public Task<SemanticIndexResult> IndexFretboardVoicingsAsync(
-        Tuning tuning, 
-        string instrumentName, 
-        int maxFret, 
-        bool includeBiomechanicalAnalysis, 
-        IProgress<IndexingProgress> progress)
-    {
-        return Task.FromResult(new SemanticIndexResult());
-    }
+        Tuning tuning,
+        string instrumentName,
+        int maxFret,
+        bool includeBiomechanicalAnalysis,
+        IProgress<IndexingProgress> progress) => Task.FromResult(new SemanticIndexResult());
 
-    public Task<SemanticQueryResult> ProcessNaturalLanguageQueryAsync(string query)
-    {
-        return Task.FromResult(new SemanticQueryResult());
-    }
+    public Task<SemanticQueryResult> ProcessNaturalLanguageQueryAsync(string query) => Task.FromResult(new SemanticQueryResult());
 
-    public IndexStatistics GetIndexStatistics()
-    {
-        return new IndexStatistics();
-    }
+    public IndexStatistics GetIndexStatistics() => new IndexStatistics();
 }
 
 public class SemanticIndexResult 
@@ -49,12 +39,12 @@ public class SemanticQueryResult
     public int ResultCount { get; set; }
     public double AverageRelevanceScore { get; set; }
     public string LlmInterpretation { get; set; } = string.Empty;
-    public List<SemanticSearchResult> SearchResults { get; set; } = new();
+    public List<SemanticSearchResult> SearchResults { get; set; } = [];
 }
 
 public class SemanticSearchResult
 {
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = [];
     public double Score { get; set; }
 }
 
@@ -62,7 +52,7 @@ public class IndexStatistics
 {
     public int TotalDocuments { get; set; }
     public int EmbeddingDimension { get; set; }
-    public Dictionary<string, int> DocumentsByCategory { get; set; } = new();
+    public Dictionary<string, int> DocumentsByCategory { get; set; } = [];
 }
 
 public class IndexingProgress
@@ -75,8 +65,5 @@ public class IndexingProgress
 
 public class SemanticSearchService
 {
-    public Task<List<SemanticSearchResult>> SearchAsync(string text, int limit)
-    {
-        return Task.FromResult(new List<SemanticSearchResult>());
-    }
+    public Task<List<SemanticSearchResult>> SearchAsync(string text, int limit) => Task.FromResult(new List<SemanticSearchResult>());
 }

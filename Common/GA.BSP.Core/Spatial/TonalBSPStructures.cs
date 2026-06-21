@@ -83,35 +83,26 @@ public record TonalRegion
     /// <summary>
     ///     Check if this region contains a given pitch class set
     /// </summary>
-    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
+    public bool Contains(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) => TonalityType switch
     {
-        return TonalityType switch
-        {
-            TonalityType.Major => ContainsMajorTonality(pitchClassSet),
-            TonalityType.Minor => ContainsMinorTonality(pitchClassSet),
-            TonalityType.Modal => ContainsModalTonality(pitchClassSet),
-            TonalityType.Atonal => true, // Atonal regions contain everything
-            _ => false
-        };
-    }
+        TonalityType.Major => ContainsMajorTonality(pitchClassSet),
+        TonalityType.Minor => ContainsMinorTonality(pitchClassSet),
+        TonalityType.Modal => ContainsModalTonality(pitchClassSet),
+        TonalityType.Atonal => true, // Atonal regions contain everything
+        _ => false
+    };
 
-    private bool ContainsMajorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
+    private bool ContainsMajorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) =>
         // Check if the pitch class set fits within major tonality
-        return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
-    }
+        PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
 
-    private bool ContainsMinorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
+    private bool ContainsMinorTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) =>
         // Check if the pitch class set fits within minor tonality
-        return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
-    }
+        PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
 
-    private bool ContainsModalTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet)
-    {
+    private bool ContainsModalTonality(GA.Domain.Core.Theory.Atonal.PitchClassSet pitchClassSet) =>
         // Check if the pitch class set fits within modal tonality
-        return PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
-    }
+        PitchClassSet.IsSubsetOf(pitchClassSet) || pitchClassSet.IsSubsetOf(PitchClassSet);
 }
 
 /// <summary>
@@ -123,7 +114,7 @@ public record TonalPartitionPlane
     public double ReferencePoint { get; init; }
     public Vector3 Normal { get; init; }
     public double Threshold { get; init; }
-    public Dictionary<string, object> Parameters { get; init; } = new();
+    public Dictionary<string, object> Parameters { get; init; } = [];
 
     /// <summary>
     ///     Evaluate which side of the partition a tonal element falls on
@@ -134,18 +125,15 @@ public record TonalPartitionPlane
         return distance <= Threshold ? -1 : 1; // -1 for left, 1 for right
     }
 
-    private double CalculateDistance(ITonalElement element)
+    private double CalculateDistance(ITonalElement element) => Strategy switch
     {
-        return Strategy switch
-        {
-            TonalPartitionStrategy.CircleOfFifths => CalculateCircleOfFifthsDistance(element),
-            TonalPartitionStrategy.ChromaticDistance => CalculateChromaticDistance(element),
-            TonalPartitionStrategy.HarmonicSeries => CalculateHarmonicDistance(element),
-            TonalPartitionStrategy.ModalBrightness => CalculateModalBrightnessDistance(element),
-            TonalPartitionStrategy.TonalStability => CalculateTonalStabilityDistance(element),
-            _ => 0.0
-        };
-    }
+        TonalPartitionStrategy.CircleOfFifths => CalculateCircleOfFifthsDistance(element),
+        TonalPartitionStrategy.ChromaticDistance => CalculateChromaticDistance(element),
+        TonalPartitionStrategy.HarmonicSeries => CalculateHarmonicDistance(element),
+        TonalPartitionStrategy.ModalBrightness => CalculateModalBrightnessDistance(element),
+        TonalPartitionStrategy.TonalStability => CalculateTonalStabilityDistance(element),
+        _ => 0.0
+    };
 
     private double CalculateCircleOfFifthsDistance(ITonalElement element)
     {

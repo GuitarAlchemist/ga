@@ -23,7 +23,7 @@ using GA.Domain.Core.Theory.Atonal;
 /// of the question ("under transposition", "under inversion", "under
 /// transposition or inversion").
 /// </remarks>
-public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill> logger) : IOrchestratorSkill
+public sealed class SetTheoryEquivalenceSkill : IOrchestratorSkill
 {
     public string Name => "SetTheoryEquivalence";
     public string Description =>
@@ -227,7 +227,7 @@ public sealed class SetTheoryEquivalenceSkill(ILogger<SetTheoryEquivalenceSkill>
         // digits — standard atonal-theory shorthand.
         if (tokens.Count == 1 && tokens[0].Length > 1 && tokens[0].All(char.IsDigit))
         {
-            tokens = tokens[0].Select(c => c.ToString()).ToList();
+            tokens = [.. tokens[0].Select(c => c.ToString())];
         }
 
         var pcs = new List<PitchClass>();

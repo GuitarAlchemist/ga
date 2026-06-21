@@ -119,7 +119,7 @@ public static class RememberThisParser
     private static string GenerateKey(string type, string content)
     {
         var slugWords = content
-            .Split(new[] { ' ', '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split([' ', '\t', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Take(4)
             .Select(static w => new string([.. w.ToLowerInvariant().Where(char.IsLetterOrDigit)]))
             .Where(w => w.Length > 0)

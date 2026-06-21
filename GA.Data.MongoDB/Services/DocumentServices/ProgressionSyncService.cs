@@ -558,8 +558,5 @@ public class ProgressionSyncService(ILogger<ProgressionSyncService> logger, Mong
         }
     }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Progressions.CountDocumentsAsync(Builders<ProgressionDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Progressions.CountDocumentsAsync(Builders<ProgressionDocument>.Filter.Empty);
 }

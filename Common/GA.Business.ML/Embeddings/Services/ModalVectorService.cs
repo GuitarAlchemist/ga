@@ -1,8 +1,8 @@
 namespace GA.Business.ML.Embeddings.Services;
 
 using Domain.Core.Theory.Atonal;
-using Rag.Models;
 using Musical.Enrichment;
+using Rag.Models;
 
 /// <summary>
 ///     Generates the MODAL partition of the musical embedding (Mode/Scale characteristic flavors).

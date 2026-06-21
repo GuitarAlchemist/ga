@@ -1,9 +1,9 @@
 namespace GA.AI.Service.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Rag.Models;
 using GA.Core.Functional;
+using Microsoft.AspNetCore.Mvc;
 
 #pragma warning disable SKEXP0001
 
@@ -15,7 +15,6 @@ using GA.Core.Functional;
 [Produces("application/json")]
 public class SearchController(
     ISpectralRetrievalService retrievalService,
-    GA.Business.ML.Abstractions.IEmbeddingGenerator embeddingGenerator,
     ILogger<SearchController> logger) : ControllerBase
 {
     /// <summary>

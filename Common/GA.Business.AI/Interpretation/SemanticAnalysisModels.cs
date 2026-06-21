@@ -1,7 +1,7 @@
 namespace GA.Business.AI.Interpretation;
 
-using GA.Domain.Core.Theory.Atonal;
 using System.Collections.Generic;
+using GA.Domain.Core.Theory.Atonal;
 
 /// <summary>
 /// Analysis results for Neo-Riemannian operations.

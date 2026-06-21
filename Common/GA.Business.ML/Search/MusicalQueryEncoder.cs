@@ -223,7 +223,7 @@ public static class ChordPitchClasses
         if (!TryComputeChordOffsets(qualityStr, out var offsets)) return false;
 
         root = r;
-        pitchClasses = offsets.Select(o => (r + o) % 12).Distinct().OrderBy(x => x).ToArray();
+        pitchClasses = [.. offsets.Select(o => (r + o) % 12).Distinct().OrderBy(x => x)];
         return true;
     }
 
@@ -346,7 +346,7 @@ public static class ChordPitchClasses
         foreach (var kv in explicitDegrees)                      // adds + altered degrees, regardless of spine
             if (!omit.Contains(kv.Key)) set.Add(kv.Value);
 
-        offsets = set.Select(x => x % 12).Distinct().OrderBy(x => x).ToArray();
+        offsets = [.. set.Select(x => x % 12).Distinct().OrderBy(x => x)];
         return true;
     }
 

@@ -1,15 +1,14 @@
 namespace GaApi.Services;
 
 using System.Diagnostics;
+using GA.Business.ML.Rag.Models;
+using GA.Business.ML.Search;
 using GA.Data.SemanticKernel.Embeddings;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Services.Fretboard.Voicings.Filtering;
 using GA.Domain.Services.Fretboard.Voicings.Generation;
-
-using GA.Business.ML.Rag.Models;
-using GA.Business.ML.Search;
 using Path = System.IO.Path;
 
 #pragma warning disable SKEXP0001 // Type is for evaluation purposes only

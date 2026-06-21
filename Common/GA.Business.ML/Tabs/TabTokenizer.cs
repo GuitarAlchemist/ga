@@ -97,7 +97,7 @@ public class TabTokenizer
         var block = new TabBlock
         {
             StringCount = lines.Count,
-            RawLines = new(lines)
+            RawLines = [.. lines]
         };
 
         // Normalize line lengths

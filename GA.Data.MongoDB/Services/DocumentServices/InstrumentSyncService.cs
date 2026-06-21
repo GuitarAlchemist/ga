@@ -1,9 +1,9 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices;
 
 using GA.Domain.Core.Primitives;
+using GA.Domain.Core.Primitives.Extensions;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
-using GA.Domain.Core.Primitives.Extensions;
 // using EntityFramework.Data.Instruments;
 using Models;
 
@@ -11,10 +11,7 @@ using Models;
 public sealed class InstrumentSyncService(MongoDbService mongoDb)
     : ISyncService<InstrumentDocument>
 {
-    public async Task<bool> SyncAsync()
-    {
-         throw new NotImplementedException();
-         /*
+    public async Task<bool> SyncAsync() => throw new NotImplementedException();/*
         try
         {
            // ... commented out ...
@@ -26,10 +23,6 @@ public sealed class InstrumentSyncService(MongoDbService mongoDb)
             return false;
         }
         */
-    }
 
-    public async Task<long> GetCountAsync()
-    {
-        return await mongoDb.Instruments.CountDocumentsAsync(Builders<InstrumentDocument>.Filter.Empty);
-    }
+    public async Task<long> GetCountAsync() => await mongoDb.Instruments.CountDocumentsAsync(Builders<InstrumentDocument>.Filter.Empty);
 }

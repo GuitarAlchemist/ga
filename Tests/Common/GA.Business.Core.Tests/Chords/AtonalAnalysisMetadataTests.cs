@@ -1,8 +1,8 @@
 namespace GA.Business.Core.Tests.Chords;
 
 using Domain.Core.Theory.Atonal;
-using Domain.Core.Theory.Tonal.Scales;
 using Domain.Core.Theory.Harmony;
+using Domain.Core.Theory.Tonal.Scales;
 using Domain.Services.Chords.Analysis.Atonal;
 
 [TestFixture]

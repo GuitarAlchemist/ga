@@ -1,8 +1,8 @@
 namespace GaApi.GraphQL.Queries;
 
-using HotChocolate.Types;
-using GA.Domain.Core.Theory.Atonal;
 using GA.Business.Config;
+using GA.Domain.Core.Theory.Atonal;
+using HotChocolate.Types;
 using Microsoft.FSharp.Core;
 
 // ── GraphQL DTOs ─────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ public class MusicHierarchyQuery
                     Level: MusicHierarchyLevel.SetClass,
                     Category: $"cardinality-{sc.Cardinality.Value}",
                     Description: $"Set class of cardinality {sc.Cardinality.Value}",
-                    Tags: sc.IsModal ? new[] { "modal" } : Array.Empty<string>(),
+                    Tags: sc.IsModal ? ["modal"] : Array.Empty<string>(),
                     Metadata: new Dictionary<string, string>
                     {
                         ["primeFormId"] = sc.PrimeForm.Id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -175,7 +175,7 @@ public class MusicHierarchyQuery
                         Level: MusicHierarchyLevel.PrimeForm,
                         Category: $"cardinality-{p.Count}",
                         Description: forteLabel.Length > 0 ? $"Prime form for Forte {forteLabel}" : "Prime form",
-                        Tags: forteLabel.Length > 0 ? new[] { forteLabel } : Array.Empty<string>(),
+                        Tags: forteLabel.Length > 0 ? [forteLabel] : Array.Empty<string>(),
                         Metadata: new Dictionary<string, string>
                         {
                             ["id"]    = p.Id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),

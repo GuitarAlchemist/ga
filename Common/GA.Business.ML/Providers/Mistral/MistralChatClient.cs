@@ -164,11 +164,11 @@ public sealed class MistralChatClient : IChatClient
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         using var reader = new StreamReader(stream, Encoding.UTF8);
 
-        while (!reader.EndOfStream)
+        string? line;
+        while ((line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false)) is not null)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrEmpty(line)) continue;
             if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
 

@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Theory.Atonal;
+using GA.Domain.Services.Atonal.Grothendieck;
 using GA.Domain.Services.Fretboard.Shapes;
 using GA.Domain.Services.Fretboard.Shapes.Spectral;
-using GA.Domain.Services.Atonal.Grothendieck;
 using NUnit.Framework;
 
 [TestFixture]

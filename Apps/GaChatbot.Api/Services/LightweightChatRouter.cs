@@ -1,7 +1,7 @@
 namespace GaChatbot.Api.Services;
 
-using GA.Business.Core.Orchestration.Models;
 using System.Text.RegularExpressions;
+using GA.Business.Core.Orchestration.Models;
 
 public sealed class LightweightChatRouter
 {

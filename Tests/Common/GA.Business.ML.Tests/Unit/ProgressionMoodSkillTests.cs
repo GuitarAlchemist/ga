@@ -1,12 +1,11 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Skills;
-using Microsoft.Extensions.Logging.Abstractions;
 
 [TestFixture]
 public class ProgressionMoodSkillTests
 {
-    private static ProgressionMoodSkill MakeSkill() => new(NullLogger<ProgressionMoodSkill>.Instance);
+    private static ProgressionMoodSkill MakeSkill() => new();
 
     [Test]
     public void Metadata_ExposesExamplePrompts()

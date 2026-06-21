@@ -1,12 +1,12 @@
 using System.Threading.RateLimiting;
 using AllProjects.ServiceDefaults;
-using Microsoft.AspNetCore.HttpOverrides;
 using GA.Business.Core.Session;
-using GaApi.Extensions;
-using GaApi.Hubs;
 using GaApi.Controllers;
-using GaApi.Services;
+using GaApi.Extensions;
 using GaApi.GraphQL.Queries;
+using GaApi.Hubs;
+using GaApi.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using MudBlazor;
 using MudBlazor.Services;
@@ -397,7 +397,7 @@ if (!string.IsNullOrWhiteSpace(publicHost))
     forwardedHeadersOptions.AllowedHosts.Add(publicHost);
 }
 // Cloudflare can connect from any IP — clear the default localhost-only allowlist.
-forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 

@@ -40,9 +40,7 @@ public class RememberOverVoicingPriorityTests
     [TestCase("note: I always use rootless voicings for ballads")]
     [TestCase("don't forget I'm working on barre chord fingerings this month")]
     [TestCase("please remember that drop 2 voicings of Cmaj7 are my go-to")]
-    public void RememberRequestsWithVoicingKeywords_MustBeDetectedAsRemember(string message)
-    {
-        Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.True,
+    public void RememberRequestsWithVoicingKeywords_MustBeDetectedAsRemember(string message) => Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.True,
             $"Message must parse as a remember-request: \"{message}\". " +
             "If this fails, ProductionOrchestrator.TrySelectDeterministicAgent " +
             "will fall through to IsExplicitVoicingRequest, match a voicing " +
@@ -50,7 +48,6 @@ public class RememberOverVoicingPriorityTests
             "gets voicings back instead of a memory write. RememberThisParser " +
             "must keep matching the canonical remember/save/note/don't-forget " +
             "lead phrases regardless of trailing content.");
-    }
 
     // Pure voicing requests (no remember-phrasing) MUST NOT be detected as
     // remember-requests — otherwise legitimate voicing queries would lose
@@ -60,9 +57,7 @@ public class RememberOverVoicingPriorityTests
     [TestCase("rootless voicings for ii-V-I in C")]
     [TestCase("chord shapes for the blues")]
     [TestCase("drop 3 voicings on the top four strings")]
-    public void VoicingRequests_WithoutRememberPhrasing_MustNotBeDetectedAsRemember(string message)
-    {
-        Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.False,
+    public void VoicingRequests_WithoutRememberPhrasing_MustNotBeDetectedAsRemember(string message) => Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.False,
             $"Message must NOT parse as a remember-request: \"{message}\". " +
             "If this fires true on a pure voicing query, the orchestrator's " +
             "voicing fast-path will be bypassed and the message will fall " +
@@ -70,7 +65,6 @@ public class RememberOverVoicingPriorityTests
             "diagnosis) voicing queries can misroute to the modes intent at " +
             "~0.71 cosine. The remember-parser's role is to gate on EXPLICIT " +
             "remember phrasing only.");
-    }
 
     // PR #192 correctness review false-positive guards. The verbs
     // save/note/store have non-memory senses (save to library, note as a
@@ -82,15 +76,12 @@ public class RememberOverVoicingPriorityTests
     [TestCase("note these chord shapes for ii-V-I")]
     [TestCase("note the fingering for Drop 3 Cmaj7")]
     [TestCase("store the drop-2 voicing in my library")]
-    public void SaveOrNoteOrStore_WithoutMemorableReferent_MustNotMatch(string message)
-    {
-        Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.False,
+    public void SaveOrNoteOrStore_WithoutMemorableReferent_MustNotMatch(string message) => Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.False,
             $"\"{message}\" — save/note/store followed by 'these'/'the'/etc. " +
             "is a domain operation (save to library, note as pitch, store as " +
             "data), NOT a memory write. The parser must NOT match unless the " +
             "verb is followed by an explicit memorable referent (\\s+this | " +
             "\\s+that | : | ,).");
-    }
 
     // Positive cases that documented save/note/store usages MUST still match
     // after the tightening — these are direct copies of the example prompts
@@ -101,15 +92,12 @@ public class RememberOverVoicingPriorityTests
     [TestCase("store this fact: my main guitar is a Telecaster")]
     [TestCase("save that I prefer drop-2 voicings")]
     [TestCase("note this drop-2 fingering is my favorite")]
-    public void SaveOrNoteOrStore_WithMemorableReferent_StillMatch(string message)
-    {
-        Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.True,
+    public void SaveOrNoteOrStore_WithMemorableReferent_StillMatch(string message) => Assert.That(RememberThisParser.LooksLikeRememberRequest(message), Is.True,
             $"\"{message}\" — save/note/store with explicit memorable " +
             "referent (this/that/colon/comma) MUST still parse as a " +
             "remember-request. These are the documented example prompts in " +
             "RememberThisSkill.ExamplePrompts; regressing them breaks the " +
             "canonical chatbot UX.");
-    }
 
     // Pin the orchestrator's call ordering: TrySelectDeterministicAgent
     // must call LooksLikeRememberRequest BEFORE IsExplicitVoicingRequest.

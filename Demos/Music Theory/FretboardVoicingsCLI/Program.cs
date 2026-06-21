@@ -791,7 +791,7 @@ internal class Program
 
             var selected = options.NoDedup
                 ? flatList
-                : survivors.Values.Select(c => c.Voicing).ToList();
+                : [.. survivors.Values.Select(c => c.Voicing)];
             phase1Sw.Stop();
 
             if (options.NoDedup)

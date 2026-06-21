@@ -1,8 +1,8 @@
 namespace GaApi.GraphQL.Queries;
 
-using HotChocolate.Types;
-using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Theory.Tonal;
+using HotChocolate.Types;
 
 // ── GraphQL DTOs ─────────────────────────────────────────────────────────────
 

@@ -1,9 +1,9 @@
 ﻿namespace GA.Business.ML.Tabs;
 
-using Domain.Core.Primitives.Notes;
 using Abstractions;
-using GA.Business.ML.Rag.Models;
+using Domain.Core.Primitives.Notes;
 using Domain.Services.Fretboard.Analysis;
+using GA.Business.ML.Rag.Models;
 using Retrieval;
 
 /// <summary>

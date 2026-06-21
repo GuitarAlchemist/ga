@@ -66,10 +66,7 @@ public class MistralProviderTests
     }
 
     [Test]
-    public void IsAvailable_ReturnsFalse_WhenNeitherKeySource()
-    {
-        Assert.That(MistralProvider.IsAvailable(Config(new Dictionary<string, string?>())), Is.False);
-    }
+    public void IsAvailable_ReturnsFalse_WhenNeitherKeySource() => Assert.That(MistralProvider.IsAvailable(Config(new Dictionary<string, string?>())), Is.False);
 
     [Test]
     public void IsAvailable_ReturnsTrue_WhenConfigPresent()

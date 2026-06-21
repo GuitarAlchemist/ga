@@ -1,12 +1,12 @@
 namespace GA.Business.Core.Tests.Fretboard.Shapes;
 
+using System.Diagnostics;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Core.Instruments.Positions;
 using GA.Domain.Core.Instruments.Primitives;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Services.Atonal.Grothendieck;
 using GA.Domain.Services.Fretboard.Shapes;
-using System.Diagnostics;
 using Moq;
 
 [TestFixture]

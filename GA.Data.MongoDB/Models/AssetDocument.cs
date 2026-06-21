@@ -51,7 +51,7 @@ public sealed record AssetDocument : DocumentBase
     /// <summary>
     ///     Tags for searching and filtering
     /// </summary>
-    public Dictionary<string, string> Tags { get; init; } = new();
+    public Dictionary<string, string> Tags { get; init; } = [];
 
     /// <summary>
     ///     Axis-aligned bounding box (min/max coordinates)
@@ -88,23 +88,17 @@ public sealed record BoundingBoxData
     public required Vector3Data Min { get; init; }
     public required Vector3Data Max { get; init; }
 
-    public static BoundingBoxData FromBoundingBox(BoundingBox box)
+    public static BoundingBoxData FromBoundingBox(BoundingBox box) => new BoundingBoxData
     {
-        return new BoundingBoxData
-        {
-            Min = Vector3Data.FromVector3(box.Min),
-            Max = Vector3Data.FromVector3(box.Max)
-        };
-    }
+        Min = Vector3Data.FromVector3(box.Min),
+        Max = Vector3Data.FromVector3(box.Max)
+    };
 
-    public BoundingBox ToBoundingBox()
+    public BoundingBox ToBoundingBox() => new BoundingBox
     {
-        return new BoundingBox
-        {
-            Min = Min.ToVector3(),
-            Max = Max.ToVector3()
-        };
-    }
+        Min = Min.ToVector3(),
+        Max = Max.ToVector3()
+    };
 }
 
 /// <summary>
@@ -117,18 +111,12 @@ public sealed record Vector3Data
     public required float Y { get; init; }
     public required float Z { get; init; }
 
-    public static Vector3Data FromVector3(Vector3 v)
+    public static Vector3Data FromVector3(Vector3 v) => new Vector3Data
     {
-        return new Vector3Data
-        {
-            X = v.X,
-            Y = v.Y,
-            Z = v.Z
-        };
-    }
+        X = v.X,
+        Y = v.Y,
+        Z = v.Z
+    };
 
-    public Vector3 ToVector3()
-    {
-        return new Vector3(X, Y, Z);
-    }
+    public Vector3 ToVector3() => new Vector3(X, Y, Z);
 }

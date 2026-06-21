@@ -20,7 +20,7 @@ public class AssetLibraryService : IAssetLibraryService
     public AssetLibraryService(ILogger<AssetLibraryService> logger)
     {
         _logger = logger;
-        _metadataCache = new Dictionary<string, AssetMetadata>();
+        _metadataCache = [];
 
         // Default storage path - can be configured via appsettings
         _assetStoragePath = Path.Combine(
@@ -103,7 +103,7 @@ public class AssetLibraryService : IAssetLibraryService
             License = metadata?.License ?? "Unknown",
             Source = metadata?.Source ?? "Local Import",
             Author = metadata?.Author,
-            Tags = metadata?.Tags ?? new Dictionary<string, string>(),
+            Tags = metadata?.Tags ?? [],
             Bounds = extractedMetadata.Bounds,
             FileSizeBytes = fileInfo.Length,
             IsOptimized = false,
@@ -282,8 +282,7 @@ public class AssetLibraryService : IAssetLibraryService
 
     private static Task<(int PolyCount, BoundingBox? Bounds)> ExtractGlbMetadataAsync(
         byte[] glbData,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) =>
         // TODO: Parse GLB file to extract:
         // - Polygon count
         // - Bounding box
@@ -291,6 +290,5 @@ public class AssetLibraryService : IAssetLibraryService
         // - Texture count
 
         // For now, return placeholder values
-        return Task.FromResult<(int, BoundingBox?)>((1000, null));
-    }
+        Task.FromResult<(int, BoundingBox?)>((1000, null));
 }

@@ -14,7 +14,7 @@ using System.Text;
 /// on a specific progression — that level of analysis would need the LLM
 /// path. The deterministic answer is grounded music-theory pedagogy.
 /// </remarks>
-public sealed class ProgressionMoodSkill(ILogger<ProgressionMoodSkill> logger) : IOrchestratorSkill
+public sealed class ProgressionMoodSkill : IOrchestratorSkill
 {
     public string Name        => "ProgressionMood";
     public string Description =>

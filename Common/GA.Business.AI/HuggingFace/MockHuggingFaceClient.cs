@@ -111,12 +111,12 @@ public class MockHuggingFaceClient(
         int dataSize)
     {
         // RIFF header
-        writer.Write(new[] { 'R', 'I', 'F', 'F' });
+        writer.Write(['R', 'I', 'F', 'F']);
         writer.Write(fileSize - 8);
-        writer.Write(new[] { 'W', 'A', 'V', 'E' });
+        writer.Write(['W', 'A', 'V', 'E']);
 
         // fmt chunk
-        writer.Write(new[] { 'f', 'm', 't', ' ' });
+        writer.Write(['f', 'm', 't', ' ']);
         writer.Write(16); // Chunk size
         writer.Write((short)1); // Audio format (1 = PCM)
         writer.Write((short)channels);
@@ -126,7 +126,7 @@ public class MockHuggingFaceClient(
         writer.Write((short)bitsPerSample);
 
         // data chunk
-        writer.Write(new[] { 'd', 'a', 't', 'a' });
+        writer.Write(['d', 'a', 't', 'a']);
         writer.Write(dataSize);
     }
 

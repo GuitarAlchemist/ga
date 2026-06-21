@@ -321,11 +321,8 @@ public class FileBasedSkillsProviderReloadTests
     }
 
     [Test]
-    public void MultiDir_Constructor_RejectsAllNullOrWhitespace()
-    {
-        Assert.Throws<ArgumentException>(
+    public void MultiDir_Constructor_RejectsAllNullOrWhitespace() => Assert.Throws<ArgumentException>(
             () => new FileBasedSkillsProvider(new[] { "", "   ", null! }, watchForChanges: false));
-    }
 
     private void WritePascalCaseSkill(string name, string trigger)
     {

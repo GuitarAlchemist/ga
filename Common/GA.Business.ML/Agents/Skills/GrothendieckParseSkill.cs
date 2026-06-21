@@ -227,12 +227,10 @@ public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logge
     /// don't need to fully destructure every case — the category name carries
     /// the educational payload and the user can open the demo for full AST.
     /// </summary>
-    private static string DescribeOperationCategory(GrammarTypes.GrothendieckOperation op)
-    {
+    private static string DescribeOperationCategory(GrammarTypes.GrothendieckOperation op) =>
         // F# DU instances expose their case via Tag/GetType().Name.
         // Use the type-name approach since it's stable across F# versions.
-        return op.GetType().Name.Replace("GrothendieckOperation+", "");
-    }
+        op.GetType().Name.Replace("GrothendieckOperation+", "");
 
     /// <summary>
     /// Gloss per actual F# DU case name from

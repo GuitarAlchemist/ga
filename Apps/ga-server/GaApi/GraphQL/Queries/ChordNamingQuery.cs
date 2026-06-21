@@ -2,10 +2,10 @@ namespace GaApi.GraphQL.Queries;
 
 using System.Collections.Generic;
 using System.Linq;
-using HotChocolate;
-using HotChocolate.Types;
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Services.Fretboard.Voicings.Analysis;
+using HotChocolate;
+using HotChocolate.Types;
 
 [ExtendObjectType("Query")]
 public class ChordNamingQuery

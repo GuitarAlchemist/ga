@@ -1,8 +1,8 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
+using GA.Business.ML.Rag.Models;
 using GA.Business.ML.Search;
 using GA.Domain.Services.Fretboard.Voicings.Filtering;
-using GA.Business.ML.Rag.Models;
 
 [TestFixture]
 public class StructuredSearchTests

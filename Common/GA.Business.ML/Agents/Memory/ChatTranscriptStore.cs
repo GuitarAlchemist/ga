@@ -111,6 +111,9 @@ public sealed class ChatTranscriptStore : IOperatorTranscriptReader
     /// — rejecting unknown values closes a prompt-injection vector flagged
     /// by the PR #173 security review (Sec-M1).
     /// </summary>
+    /// <param name="sessionId">Identifies the conversation the turn belongs to.</param>
+    /// <param name="role">Speaker role; must be one of <see cref="AllowedRoles"/>.</param>
+    /// <param name="content">The turn's text content.</param>
     /// <param name="correlationId">Optional request-correlation id. PR #174
     /// review (Sec-M) restored the forensic linkage to the chat request
     /// log; nullable for callers that don't have one.</param>

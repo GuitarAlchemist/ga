@@ -17,23 +17,17 @@ public sealed class InMemorySessionContextProvider : ISessionContextProvider
 {
     private readonly object _lock = new();
     private MusicalSessionContext _currentContext;
-    
+
     /// <summary>
     /// Creates a new in-memory session context provider with default context
     /// </summary>
-    public InMemorySessionContextProvider()
-    {
-        _currentContext = MusicalSessionContext.Default();
-    }
-    
+    public InMemorySessionContextProvider() => _currentContext = MusicalSessionContext.Default();
+
     /// <summary>
     /// Creates a new in-memory session context provider with specified initial context
     /// </summary>
-    public InMemorySessionContextProvider(MusicalSessionContext initialContext)
-    {
-        _currentContext = initialContext ?? throw new ArgumentNullException(nameof(initialContext));
-    }
-    
+    public InMemorySessionContextProvider(MusicalSessionContext initialContext) => _currentContext = initialContext ?? throw new ArgumentNullException(nameof(initialContext));
+
     /// <inheritdoc />
     public event EventHandler<MusicalSessionContext>? ContextChanged;
     

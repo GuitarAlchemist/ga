@@ -1,7 +1,7 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings.Search;
 
-using GA.Business.ML.Search;
 using GA.Business.ML.Rag.Models;
+using GA.Business.ML.Search;
 
 [TestFixture]
 public class SemanticSearchTests

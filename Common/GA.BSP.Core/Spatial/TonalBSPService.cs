@@ -322,51 +322,24 @@ public class TonalBspService
     }
 
     // Additional helper methods...
-    private double CalculateProgressionCoherence(List<ITonalElement> chords, TonalRegion region)
-    {
-        return 0.8;
-    }
+    private double CalculateProgressionCoherence(List<ITonalElement> chords, TonalRegion region) => 0.8;
 
-    private int CalculateQueryDepth(TonalRegion region)
-    {
-        return 1;
-    }
+    private int CalculateQueryDepth(TonalRegion region) => 1;
 
-    private double CalculateSpatialConfidence(GA.Domain.Core.Theory.Atonal.PitchClassSet center, List<ITonalElement> results, double radius)
-    {
-        return 0.9;
-    }
+    private double CalculateSpatialConfidence(GA.Domain.Core.Theory.Atonal.PitchClassSet center, List<ITonalElement> results, double radius) => 0.9;
 
     private double CalculateTonalDistanceByStrategy(GA.Domain.Core.Theory.Atonal.PitchClassSet set1, PitchClassSet set2,
-        TonalPartitionStrategy strategy)
-    {
-        return 0.5;
-    }
+        TonalPartitionStrategy strategy) => 0.5;
 
-    private double CalculateRegionDistance(GA.Domain.Core.Theory.Atonal.PitchClassSet center, TonalRegion region, TonalPartitionStrategy strategy)
-    {
-        return 0.3;
-    }
+    private double CalculateRegionDistance(GA.Domain.Core.Theory.Atonal.PitchClassSet center, TonalRegion region, TonalPartitionStrategy strategy) => 0.3;
 
-    private TonalRelationship AnalyzeRelationship(ITonalElement element1, ITonalElement element2)
-    {
-        return new TonalRelationship();
-    }
+    private TonalRelationship AnalyzeRelationship(ITonalElement element1, ITonalElement element2) => new TonalRelationship();
 
-    private double CalculateOverallCoherence(List<TonalRelationship> relationships)
-    {
-        return 0.8;
-    }
+    private double CalculateOverallCoherence(List<TonalRelationship> relationships) => 0.8;
 
-    private TonalityType DetermineDominantTonality(List<ITonalElement> elements)
-    {
-        return TonalityType.Major;
-    }
+    private TonalityType DetermineDominantTonality(List<ITonalElement> elements) => TonalityType.Major;
 
-    private List<TonalCluster> IdentifyTonalClusters(List<ITonalElement> elements)
-    {
-        return [];
-    }
+    private List<TonalCluster> IdentifyTonalClusters(List<ITonalElement> elements) => [];
 }
 
 /// <summary>

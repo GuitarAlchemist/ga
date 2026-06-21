@@ -20,12 +20,12 @@ using SystemThreadingTimer = System.Threading.Timer;
 ///   <item>On construction, scans the supplied directory for <c>SKILL.md</c>
 ///         files and loads them via <see cref="SkillMdLoader"/>. Files without
 ///         <c>triggers</c> frontmatter are silently skipped.</item>
-///   <item>On each <see cref="InvokingAsync"/> call, inspects the most recent
+///   <item>On each <see cref="AIContextProvider.InvokingAsync"/> call, inspects the most recent
 ///         user message: if any loaded skill's trigger keywords match, returns
 ///         an <see cref="AIContext"/> with the matching skill's body as
 ///         additional <c>Instructions</c>. Multiple matches are concatenated in
 ///         load order so the agent sees a deterministic context.</item>
-///   <item>Returns <see cref="AIContext.Empty"/> when no triggers match — the
+///   <item>Returns <c>AIContext.Empty</c> when no triggers match — the
 ///         agent then proceeds without any skill-supplied context, exactly as
 ///         it would have without this provider.</item>
 ///   <item>Read-only: this provider never executes scripts, never writes to
@@ -241,14 +241,14 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
     /// context, and source stamping — overriding this method is the
     /// recommended path per the Agent Framework docs.
     /// </summary>
-    protected override ValueTask<AIContext?> ProvideAIContextAsync(
+    protected override ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         if (_skills.Count == 0)
-            return ValueTask.FromResult<AIContext?>(new AIContext());
+            return ValueTask.FromResult<AIContext>(new AIContext());
 
         // Inspect the latest user-authored message in the input context —
         // that's what the agent is about to respond to. Earlier messages
@@ -258,7 +258,7 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
             .Text;
 
         if (string.IsNullOrWhiteSpace(latestUserText))
-            return ValueTask.FromResult<AIContext?>(new AIContext());
+            return ValueTask.FromResult<AIContext>(new AIContext());
 
         var lower = latestUserText.ToLowerInvariant();
         var matches = _skills
@@ -267,7 +267,7 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
             .ToList();
 
         if (matches.Count == 0)
-            return ValueTask.FromResult<AIContext?>(new AIContext());
+            return ValueTask.FromResult<AIContext>(new AIContext());
 
         var instructions = new StringBuilder();
         for (var i = 0; i < matches.Count; i++)
@@ -277,6 +277,6 @@ public sealed class FileBasedSkillsProvider : AIContextProvider, IDisposable
             instructions.Append(matches[i].Body);
         }
 
-        return ValueTask.FromResult<AIContext?>(new AIContext { Instructions = instructions.ToString() });
+        return ValueTask.FromResult<AIContext>(new AIContext { Instructions = instructions.ToString() });
     }
 }

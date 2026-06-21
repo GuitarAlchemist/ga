@@ -1,8 +1,8 @@
 namespace GaApi.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using Services;
 using Models;
+using Services;
 
 [ApiController]
 [Route("api/contextual-chords")]

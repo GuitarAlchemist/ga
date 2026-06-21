@@ -1,9 +1,9 @@
 namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
-using GA.Business.ML.Search;
 using GA.Business.ML.Rag.Models;
-using GA.Domain.Services.Fretboard.Voicings.Filtering;
+using GA.Business.ML.Search;
 using GA.Domain.Services.Fretboard.Voicings.Core; // If needed for legacy Core types, otherwise remove or verify
+using GA.Domain.Services.Fretboard.Voicings.Filtering;
 // Actually VoicingEmbedding is in Rag.Models now.
 // VoicingSearchFilters likely in filtering.
 

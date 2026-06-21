@@ -2,11 +2,11 @@ namespace GA.Business.ML.Tests.Naturalness;
 
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
 using Business.ML.Naturalness;
-using Domain.Core.Primitives.Notes;
 using Domain.Core.Instruments.Primitives;
+using Domain.Core.Primitives.Notes;
 using Domain.Services.Fretboard.Analysis;
+using NUnit.Framework;
 
 [TestFixture]
 [Category("RequiresModel")]

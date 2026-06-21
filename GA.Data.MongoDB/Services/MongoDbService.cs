@@ -193,9 +193,7 @@ public class MongoDbService
             new CreateIndexModel<ChordRagEmbedding>(indexKeysDefinition));
     }
 
-    public async Task CreateRagIndexesAsync()
-    {
-        await ChordsRag.Indexes.CreateManyAsync([
+    public async Task CreateRagIndexesAsync() => await ChordsRag.Indexes.CreateManyAsync([
             new CreateIndexModel<ChordRagEmbedding>(
                 Builders<ChordRagEmbedding>.IndexKeys
                     .Ascending(x => x.Name)
@@ -215,5 +213,4 @@ public class MongoDbService
                     .Ascending("CommonProgressions.Name")
             )
         ]);
-    }
 }

@@ -1,16 +1,15 @@
 namespace GA.Business.ML.Extensions;
 
-using Rag;
-using Rag.Models;
+using Embeddings;
+using Embeddings.Services;
+using GA.Data.MongoDB.Extensions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Embeddings.Services;
-using Embeddings;
-using GA.Data.MongoDB.Extensions;
-
+using Rag;
+using Rag.Models;
 // Alias to disambiguate from our domain's IEmbeddingGenerator
 using MEAIEmbeddingGenerator = Microsoft.Extensions.AI.IEmbeddingGenerator<
     ChordVoicingRagDocument,

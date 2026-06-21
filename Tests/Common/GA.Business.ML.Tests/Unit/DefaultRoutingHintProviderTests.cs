@@ -261,12 +261,10 @@ public class DefaultRoutingHintProviderTests
     }
 
     [Test]
-    public void BoostMagnitude_IsStable()
-    {
+    public void BoostMagnitude_IsStable() =>
         // Pin the magnitude so a change is a deliberate edit, not a
         // typo. Codex 2026-05-08 specifically blessed +0.06 — if this
         // changes, expect the routing baseline F1 to shift across many
         // intents at once and re-eval before merging.
         Assert.That(DefaultRoutingHintProvider.BoostMagnitude, Is.EqualTo(0.06f));
-    }
 }

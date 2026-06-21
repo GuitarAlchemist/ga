@@ -203,15 +203,12 @@ public class AuthController : ControllerBase
         _ => null,
     };
 
-    private void SetRefreshCookie(string raw)
+    private void SetRefreshCookie(string raw) => Response.Cookies.Append(RefreshCookieName, raw, new CookieOptions
     {
-        Response.Cookies.Append(RefreshCookieName, raw, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Path = "/api/auth",
-            Expires = DateTimeOffset.UtcNow.Add(RefreshCookieTtl),
-        });
-    }
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/api/auth",
+        Expires = DateTimeOffset.UtcNow.Add(RefreshCookieTtl),
+    });
 }

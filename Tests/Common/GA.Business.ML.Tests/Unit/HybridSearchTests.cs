@@ -1,8 +1,8 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using Embeddings;
-using Rag.Models;
 using Moq;
+using Rag.Models;
 
 [TestFixture]
 public class HybridSearchTests

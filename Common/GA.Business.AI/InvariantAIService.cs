@@ -213,9 +213,7 @@ public class InvariantAiService(
     }
 
     private string CreateAnalysisPrompt(List<InvariantAnalytics> analytics, List<ViolationEvent> violations,
-        PerformanceInsights insights)
-    {
-        return $@"
+        PerformanceInsights insights) => $@"
 Analyze the following invariant validation data and provide recommendations:
 
 PERFORMANCE INSIGHTS:
@@ -226,38 +224,32 @@ PERFORMANCE INSIGHTS:
 
 TOP FAILING INVARIANTS:
 {string.Join("\n", analytics.Where(a => a.FailureRate > 0).Take(5).Select(a =>
-    $"- {a.InvariantName} ({a.ConceptType}): {a.FailureRate:P} failure rate, {a.FailedValidations} failures"))}
+                                          $"- {a.InvariantName} ({a.ConceptType}): {a.FailureRate:P} failure rate, {a.FailedValidations} failures"))}
 
 RECENT VIOLATION PATTERNS:
 {string.Join("\n", violations.Take(10).Select(v =>
-    $"- {v.InvariantName}: {v.ErrorMessage}"))}
+                                          $"- {v.InvariantName}: {v.ErrorMessage}"))}
 
 Please provide specific, actionable recommendations for improving data quality and validation performance.
 ";
-    }
 
     private string CreateDataQualityPrompt(string conceptType, List<InvariantAnalytics> analytics,
-        List<ViolationEvent> violations)
-    {
-        return $@"
+        List<ViolationEvent> violations) => $@"
 Analyze data quality for {conceptType} based on validation results:
 
 INVARIANT PERFORMANCE:
 {string.Join("\n", analytics.Select(a =>
-    $"- {a.InvariantName}: {a.SuccessRate:P} success rate, {a.TotalValidations} validations"))}
+                                             $"- {a.InvariantName}: {a.SuccessRate:P} success rate, {a.TotalValidations} validations"))}
 
 COMMON VIOLATIONS:
 {string.Join("\n", violations.GroupBy(v => v.ErrorMessage).Take(5).Select(g =>
-    $"- {g.Key}: {g.Count()} occurrences"))}
+                                             $"- {g.Key}: {g.Count()} occurrences"))}
 
 Provide a data quality assessment and specific improvement recommendations.
 ";
-    }
 
     private string CreateInvariantSuggestionPrompt(string conceptType, List<InvariantAnalytics> analytics,
-        Dictionary<string, int> patterns)
-    {
-        return $@"
+        Dictionary<string, int> patterns) => $@"
 Suggest new invariants for {conceptType} based on current validation patterns:
 
 EXISTING INVARIANTS:
@@ -268,7 +260,6 @@ VIOLATION PATTERNS:
 
 Suggest 3-5 new invariants that could improve data quality for {conceptType}.
 ";
-    }
 
     private async Task<string> CallAiServiceAsync(string prompt)
     {
@@ -364,12 +355,9 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
         return suggestions;
     }
 
-    private static Dictionary<string, int> AnalyzeViolationPatterns(List<ViolationEvent> violations)
-    {
-        return violations
+    private static Dictionary<string, int> AnalyzeViolationPatterns(List<ViolationEvent> violations) => violations
             .GroupBy(v => v.ErrorMessage)
             .ToDictionary(g => g.Key, g => g.Count());
-    }
 
     private static double CalculateRiskScore(InvariantAnalytics analytic, ViolationTrends trends)
     {
@@ -381,11 +369,8 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
         return Math.Min(baseRisk * trendMultiplier * performanceMultiplier, 1.0);
     }
 
-    private static double CalculateConfidence(InvariantAnalytics analytic)
-    {
-        return analytic.TotalValidations > 100 ? 0.9 :
+    private static double CalculateConfidence(InvariantAnalytics analytic) => analytic.TotalValidations > 100 ? 0.9 :
             analytic.TotalValidations > 50 ? 0.7 : 0.5;
-    }
 
     private static List<string> GenerateRecommendedActions(InvariantAnalytics analytic, double riskScore)
     {
@@ -405,19 +390,13 @@ Suggest 3-5 new invariants that could improve data quality for {conceptType}.
         return actions;
     }
 
-    private static List<string> ExtractIssues(string text)
-    {
-        return [.. text.Split('\n')
+    private static List<string> ExtractIssues(string text) => [.. text.Split('\n')
             .Where(line => line.ToLowerInvariant().Contains("issue") || line.ToLowerInvariant().Contains("problem"))
             .Take(5)];
-    }
 
-    private static List<string> ExtractRecommendations(string text)
-    {
-        return [.. text.Split('\n')
+    private static List<string> ExtractRecommendations(string text) => [.. text.Split('\n')
             .Where(line => line.ToLowerInvariant().Contains("recommend") || line.ToLowerInvariant().Contains("suggest"))
             .Take(5)];
-    }
 
     private static string ExtractInvariantName(string line)
     {

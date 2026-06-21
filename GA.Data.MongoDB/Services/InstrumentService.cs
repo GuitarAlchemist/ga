@@ -1,7 +1,7 @@
 namespace GA.Data.MongoDB.Services;
 
-using GA.Domain.Core.Instruments;
 using GA.Business.Config;
+using GA.Domain.Core.Instruments;
 // using EntityFramework.Data.Instruments;
 using Models;
 
@@ -23,19 +23,13 @@ public class InstrumentService : IInstrumentService
     }
     */
 
-    public async Task<InstrumentDocument?> GetInstrumentAsync(string name)
-    {
-        return await _instruments
+    public async Task<InstrumentDocument?> GetInstrumentAsync(string name) => await _instruments
             .Find(i => i.Name == name)
             .FirstOrDefaultAsync();
-    }
 
-    public async Task<List<InstrumentDocument>> GetAllInstrumentsAsync()
-    {
-        return await _instruments
+    public async Task<List<InstrumentDocument>> GetAllInstrumentsAsync() => await _instruments
             .Find(Builders<InstrumentDocument>.Filter.Empty)
             .ToListAsync();
-    }
 
     /*
     public async Task<bool> UpdateInstrumentAsync(string name, InstrumentsRepository.InstrumentInfo instrumentInfo)
@@ -61,12 +55,9 @@ public class InstrumentService : IInstrumentService
             .ToListAsync();
     }
 
-    public async Task<bool> ExistsAsync(string name)
-    {
-        return await _instruments
+    public async Task<bool> ExistsAsync(string name) => await _instruments
             .Find(i => i.Name == name)
             .AnyAsync();
-    }
 
     private void CreateIndexes()
     {
@@ -112,32 +103,26 @@ public class InstrumentService : IInstrumentService
         return result.ModifiedCount > 0;
     }
 
-    private static string DetermineInstrumentCategory(string instrumentName)
+    private static string DetermineInstrumentCategory(string instrumentName) => instrumentName.ToLowerInvariant() switch
     {
-        return instrumentName.ToLowerInvariant() switch
-        {
-            var name when name.Contains("guitar") => "Guitar",
-            var name when name.Contains("bass") => "Bass",
-            var name when name.Contains("ukulele") => "Ukulele",
-            var name when name.Contains("banjo") => "Banjo",
-            _ => "Other"
-        };
-    }
+        var name when name.Contains("guitar") => "Guitar",
+        var name when name.Contains("bass") => "Bass",
+        var name when name.Contains("ukulele") => "Ukulele",
+        var name when name.Contains("banjo") => "Banjo",
+        _ => "Other"
+    };
 
-    private static string DetermineInstrumentFamily(string instrumentName)
+    private static string DetermineInstrumentFamily(string instrumentName) => instrumentName.ToLowerInvariant() switch
     {
-        return instrumentName.ToLowerInvariant() switch
-        {
-            var name when name.Contains("guitar") || name.Contains("bass") || name.Contains("ukulele") ||
-                          name.Contains("banjo")
-                => "String",
-            var name when name.Contains("saxophone") || name.Contains("flute") || name.Contains("clarinet")
-                => "Wind",
-            var name when name.Contains("drum") || name.Contains("percussion")
-                => "Percussion",
-            _ => "Other"
-        };
-    }
+        var name when name.Contains("guitar") || name.Contains("bass") || name.Contains("ukulele") ||
+                      name.Contains("banjo")
+            => "String",
+        var name when name.Contains("saxophone") || name.Contains("flute") || name.Contains("clarinet")
+            => "Wind",
+        var name when name.Contains("drum") || name.Contains("percussion")
+            => "Percussion",
+        _ => "Other"
+    };
 
     /*
     private static int GetStringCount(InstrumentsRepository.InstrumentInfo instrument)

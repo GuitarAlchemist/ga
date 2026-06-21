@@ -103,7 +103,9 @@ public class MemoryFileWriterTests
         var path = Path.Combine(_tempDir, "memory.json");
         MemoryFileWriter.WriteAtomic(path, "x");
 
+#pragma warning disable CA1416 // Guarded by [Platform("Linux,Unix,MacOSX")] — never executes on Windows
         var mode = File.GetUnixFileMode(path);
+#pragma warning restore CA1416
         Assert.That(mode, Is.EqualTo(UnixFileMode.UserRead | UnixFileMode.UserWrite),
             $"Expected 0600 (UserRead | UserWrite); got {mode}. Group / other " +
             "permissions are a defense-in-depth gap on shared hosts.");

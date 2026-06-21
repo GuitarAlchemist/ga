@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 /// <remarks>
 /// Mirrors Claude Code's plugin concept: a plugin is a cohesive unit of functionality
 /// (e.g., "GA", "SkillMd") that contributes <see cref="IOrchestratorSkill"/> instances,
-/// <see cref="IChatHook"/> implementations, and/or in-process MCP tool types.
+/// <see cref="Hooks.IChatHook"/> implementations, and/or in-process MCP tool types.
 /// <para>
 /// Implementations must also carry <see cref="ChatPluginAttribute"/> to be auto-discovered.
 /// </para>

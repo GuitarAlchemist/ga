@@ -374,7 +374,7 @@ static IReadOnlyList<MemoryEntry> LoadEntries(string storePath)
     var json = File.ReadAllText(storePath);
     var entries = JsonSerializer.Deserialize<List<MemoryEntry>>(json,
         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-    return entries ?? new List<MemoryEntry>();
+    return entries ?? [];
 }
 
 static void PrintDiffSummary(CurationDiff diff)

@@ -1,9 +1,9 @@
 ﻿namespace GA.Data.MongoDB.Services.DocumentServices.Rag;
 
 using Embeddings;
+using global::MongoDB.Driver;
 using Microsoft.Extensions.Logging;
 using Models.Rag;
-using global::MongoDB.Driver;
 
 /// <summary>
 /// Multi-stage RAG service implementing the NotebookLM pattern:
@@ -226,7 +226,7 @@ public abstract class MultiStageRagService<TDocument>(
     public async Task<List<TDocument>> SearchBySimilarityAsync(string query, int limit = 10)
     {
         var results = await SearchWithScoresAsync(query, limit);
-        return results.Select(r => r.Document).ToList();
+        return [.. results.Select(r => r.Document)];
     }
 
     /// <summary>
