@@ -158,17 +158,20 @@ public class ChordTests
     }
 
     [Test]
-    public void Dominant7_FormulaQualityIsDominant_ButChordQualityFallsBackToMajor()
+    public void Chord_Quality_AgreesWithFormula()
     {
-        // Characterizes a real divergence: ChordFormula.DetermineQuality knows "Dominant"
-        // (major 3rd + minor 7th), but Chord.DetermineQuality only classifies the triad
-        // (3rd + 5th) and therefore reports Major for a dominant-7th chord. Pinned here so
-        // the inconsistency is visible and a future fix would deliberately update this test.
-        var chord = CChord(ChordFormula.Dominant7);
+        // Chord.Quality/Extension delegate to Formula, so a chord and its formula never disagree.
+        // A dominant-7th chord reports Dominant (not the old triad-only fallback of Major).
+        var dom = CChord(ChordFormula.Dominant7);
+        var sus = CChord(ChordFormula.Suspended2);
         Assert.Multiple(() =>
         {
-            Assert.That(chord.Formula.Quality, Is.EqualTo(ChordQuality.Dominant));
-            Assert.That(chord.Quality, Is.EqualTo(ChordQuality.Major));
+            Assert.That(dom.Quality, Is.EqualTo(ChordQuality.Dominant));
+            Assert.That(dom.Quality, Is.EqualTo(dom.Formula.Quality));
+            Assert.That(sus.Quality, Is.EqualTo(ChordQuality.Suspended));
+            Assert.That(sus.Quality, Is.EqualTo(sus.Formula.Quality));
+            Assert.That(sus.Extension, Is.EqualTo(ChordExtension.Sus2));
+            Assert.That(sus.Extension, Is.EqualTo(sus.Formula.Extension));
         });
     }
 
