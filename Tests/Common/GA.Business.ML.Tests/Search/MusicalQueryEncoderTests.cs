@@ -16,10 +16,7 @@ public class MusicalQueryEncoderTests
 
     [SetUp]
     public void SetUp() => _encoder = new MusicalQueryEncoder(
-            new TheoryVectorService(),
-            new ModalVectorService(),
-            new SymbolicVectorService(),
-            new RootVectorService());
+            new ModalVectorService());
 
     // ─── ChordPitchClasses.TryParse ────────────────────────────────────────
 

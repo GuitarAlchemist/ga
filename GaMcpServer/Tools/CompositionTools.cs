@@ -273,10 +273,7 @@ public static class CompositionTools
 
     private static readonly Lazy<MusicalQueryEncoder> EncoderShared = new(() =>
         new MusicalQueryEncoder(
-            new GA.Business.ML.Embeddings.Services.TheoryVectorService(),
-            new GA.Business.ML.Embeddings.Services.ModalVectorService(),
-            new GA.Business.ML.Embeddings.Services.SymbolicVectorService(),
-            new GA.Business.ML.Embeddings.Services.RootVectorService()));
+            new GA.Business.ML.Embeddings.Services.ModalVectorService()));
 
     private static async Task<SearchOutcome> SearchByChordAsync(
         string chordSymbol, int limit, string? instrument, CancellationToken ct)

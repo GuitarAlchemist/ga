@@ -2,23 +2,14 @@ namespace GA.Business.ML.Agents.Skills;
 
 /// <summary>
 /// Explains the harmonic, melodic, rhythmic, and timbral signatures of common
-/// genres (blues, jazz, pop, folk, modal, country, rock). Pure catalog skill,
-/// zero LLM calls. Body is loaded from
-/// <c>skills/genre-essentials/SKILL.md</c> so the markdown stays the single
-/// source of truth.
+/// genres (blues, jazz, pop, folk, modal, country, rock). Catalog skill (see
+/// <see cref="CatalogSkillBase"/>): body is loaded from
+/// <c>skills/genre-essentials/SKILL.md</c>, zero LLM calls.
 /// </summary>
-public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) : IOrchestratorSkill
+public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) : CatalogSkillBase(logger)
 {
-    private const string SkillFolderName = "genre-essentials";
-
-    private static readonly Lazy<string> _bodyCache = new(
-        () => CatalogSkillMdLoader.LoadBodyOrFallback(
-            SkillFolderName,
-            "Genres are defined by harmony, melody, rhythm, and timbre. Blues uses 12-bar I7-IV7-V7 forms; jazz uses extended chords and ii-V-I cadences; pop favours diatonic 4-chord loops like I-V-vi-IV; modal music vamps on one chord with characteristic intervals."),
-        LazyThreadSafetyMode.ExecutionAndPublication);
-
-    public string Name        => "GenreEssentials";
-    public string Description =>
+    public override string Name        => "GenreEssentials";
+    public override string Description =>
         "Returns harmonic / melodic / rhythmic / timbral signatures for blues, " +
         "jazz, pop, folk, modal, country, and rock. Catalog answer; the user " +
         "learns what makes a genre sound like itself. No LLM call.";
@@ -32,7 +23,7 @@ public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) :
     //   - the "essential / must-know / starter / key chords" surface,
     //   - the genre token (blues, jazz, country, rock, funk, pop, folk),
     //   - the "for / in" preposition that the labeled corpus uses.
-    public IReadOnlyList<string> ExamplePrompts =>
+    public override IReadOnlyList<string> ExamplePrompts =>
     [
         "essential chords for blues guitar",
         "essential scales for jazz guitar",
@@ -44,19 +35,7 @@ public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) :
         "common chords in folk music",
     ];
 
-    public bool CanHandle(string message) => false; // semantic-routing only
-
-    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
-    {
-        var body = _bodyCache.Value;
-        logger.LogDebug("GenreEssentialsSkill: returned {Length} chars", body.Length);
-
-        return Task.FromResult(new AgentResponse
-        {
-            AgentId    = AgentIds.Theory,
-            Result     = body,
-            Confidence = 1.0f,
-            Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md"],
-        });
-    }
+    protected override string FolderName => "genre-essentials";
+    protected override string Fallback   =>
+        "Genres are defined by harmony, melody, rhythm, and timbre. Blues uses 12-bar I7-IV7-V7 forms; jazz uses extended chords and ii-V-I cadences; pop favours diatonic 4-chord loops like I-V-vi-IV; modal music vamps on one chord with characteristic intervals.";
 }

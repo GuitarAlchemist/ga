@@ -44,15 +44,14 @@ using Services;
 /// Initializes a new instance of the <see cref="MusicalEmbeddingGenerator"/> class.
 /// </remarks>
 public class MusicalEmbeddingGenerator(
-    IdentityVectorService identityService,
-    TheoryVectorService theoryService,
-    MorphologyVectorService morphologyService,
-    ContextVectorService contextService,
-    SymbolicVectorService symbolicService,
     ModalVectorService modalService,
-    PhaseSphereService phaseSphereService,
-    RootVectorService rootService) : IEmbeddingGenerator
+    PhaseSphereService phaseSphereService) : IEmbeddingGenerator
 {
+    // IDENTITY / STRUCTURE / MORPHOLOGY / CONTEXT / SYMBOLIC / ROOT and the
+    // spectral vector are produced via the static *VectorService.ComputeEmbedding
+    // overloads; only MODAL (modalService) and the spectral entropy term
+    // (phaseSphereService) are computed through injected instances. The generator
+    // therefore takes only the two dependencies it actually uses.
     /// <summary>Returns the total embedding dimension (216 for v1.4/v1.5).</summary>
     public int Dimension => EmbeddingSchema.TotalDimension;
 

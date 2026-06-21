@@ -2,23 +2,14 @@ namespace GA.Business.ML.Agents.Skills;
 
 /// <summary>
 /// Suggests a structured practice routine for a stated goal — jazz comping,
-/// soloing, ear training, fingerstyle technique, etc. Pure catalog skill,
-/// zero LLM calls. Body is loaded from
-/// <c>skills/practice-routine/SKILL.md</c> so the markdown stays the single
-/// source of truth.
+/// soloing, ear training, fingerstyle technique, etc. Catalog skill (see
+/// <see cref="CatalogSkillBase"/>): body is loaded from
+/// <c>skills/practice-routine/SKILL.md</c>, zero LLM calls.
 /// </summary>
-public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) : IOrchestratorSkill
+public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) : CatalogSkillBase(logger)
 {
-    private const string SkillFolderName = "practice-routine";
-
-    private static readonly Lazy<string> _bodyCache = new(
-        () => CatalogSkillMdLoader.LoadBodyOrFallback(
-            SkillFolderName,
-            "Practice routines should match your goal: jazz comping, improvisation, ear training, fingerstyle, repertoire, or technique. Pick a 15-30 minute daily slot you can sustain rather than the time you'd ideally like."),
-        LazyThreadSafetyMode.ExecutionAndPublication);
-
-    public string Name        => "PracticeRoutine";
-    public string Description =>
+    public override string Name        => "PracticeRoutine";
+    public override string Description =>
         "Returns a structured practice plan for guitar/piano goals — jazz " +
         "comping, soloing, ear training, fingerstyle, repertoire, barre " +
         "technique. Templates with daily timings and drills. No LLM call.";
@@ -30,7 +21,7 @@ public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) :
     // practice routine" / "30 minute practice schedule" / "daily practice
     // outline" don't share enough lexical signal with the previous
     // "routine / plan / drill / exercises" wording.
-    public IReadOnlyList<string> ExamplePrompts =>
+    public override IReadOnlyList<string> ExamplePrompts =>
     [
         "give me a 20 minute practice routine",
         "build a 30 minute practice schedule",
@@ -46,19 +37,7 @@ public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) :
         "exercises for soloing over changes",
     ];
 
-    public bool CanHandle(string message) => false; // semantic-routing only
-
-    public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
-    {
-        var body = _bodyCache.Value;
-        logger.LogDebug("PracticeRoutineSkill: returned {Length} chars", body.Length);
-
-        return Task.FromResult(new AgentResponse
-        {
-            AgentId    = AgentIds.Theory,
-            Result     = body,
-            Confidence = 1.0f,
-            Evidence   = [$"Source: skills/{SkillFolderName}/SKILL.md"],
-        });
-    }
+    protected override string FolderName => "practice-routine";
+    protected override string Fallback   =>
+        "Practice routines should match your goal: jazz comping, improvisation, ear training, fingerstyle, repertoire, or technique. Pick a 15-30 minute daily slot you can sustain rather than the time you'd ideally like.";
 }

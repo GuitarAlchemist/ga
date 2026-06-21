@@ -23,10 +23,7 @@ public class OptickHardPromptBatteryTests
     {
         // These are index-independent and used by tests that don't touch the mmap.
         _encoder = new MusicalQueryEncoder(
-            new TheoryVectorService(),
-            new ModalVectorService(),
-            new SymbolicVectorService(),
-            new RootVectorService());
+            new ModalVectorService());
         _extractor = new TypedMusicalQueryExtractor();
 
         _indexPath = FindIndex();

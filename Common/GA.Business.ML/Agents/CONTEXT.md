@@ -23,6 +23,7 @@ The chatbot's deterministic-first skill surface. Each `IOrchestratorSkill` is a 
 - `Skills/ChordVoicingsSkill.cs` — canonical "domain-retrieval skill" template (2026-05-16). Parser → encoder → vector search → response. Read this first.
 - `Skills/ImprovisationSkill.cs` — canonical "domain-classifier skill" template (2026-05-16, #219). Pure switch over quality enum, no I/O. Read second.
 - `Skills/SkillMdDrivenSkill.cs` + `SkillMdDrivenWrapperBase.cs` — Path B (LLM-in-the-loop) wrapper for DSL-eval-backed skills (`TransposeSkill`, `CommonTonesSkill`, `DiatonicChordsSkill`).
+- `Skills/CatalogSkillBase.cs` — canonical "catalog skill" template (deep base, 2026-06-21). Owns the markdown loader, the `CanHandle⇒false` (semantic-routing-only) convention, and the high-confidence `AgentResponse` shape. Subclasses (`CircleOfFifthsSkill`, `PracticeRoutineSkill`, `GenreEssentialsSkill`, `WhatCanYouDoSkill`) declare only metadata: `Name`, `Description`, `ExamplePrompts`, `FolderName`, `Fallback`. Use for any zero-LLM "load a SKILL.md body and return it" skill.
 - `SemanticRouter.cs` — embedding-based agent router. Caches agent embeddings + a 256-entry query embedding cache.
 - `Intents/SemanticIntentRouter.cs` — the corresponding skill router (lives one layer up at the IIntent surface).
 - `AgentConstants.cs` — agent IDs (`tab`, `theory`, `voicing`, `qa-architect`, …). Magic-string-free.

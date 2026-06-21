@@ -10,14 +10,8 @@ public class AdvancedEmbeddingScenarios
     [SetUp]
     public void SetUp() =>
         _generator = new MusicalEmbeddingGenerator(
-            new IdentityVectorService(),
-            new TheoryVectorService(),
-            new MorphologyVectorService(),
-            new ContextVectorService(),
-            new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService(),
-            new RootVectorService()
+            new PhaseSphereService()
         );
 
     private MusicalEmbeddingGenerator _generator;

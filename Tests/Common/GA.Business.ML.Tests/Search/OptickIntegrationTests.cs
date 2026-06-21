@@ -85,10 +85,7 @@ public class OptickIntegrationTests
         SkipIfNoIndex();
 
         var encoder = new MusicalQueryEncoder(
-            new TheoryVectorService(),
-            new ModalVectorService(),
-            new SymbolicVectorService(),
-            new RootVectorService());
+            new ModalVectorService());
 
         using var strategy = new OptickSearchStrategy(_indexPath!);
         var query = encoder.Encode(new StructuredQuery(
@@ -146,10 +143,7 @@ public class OptickIntegrationTests
         SkipIfNoIndex();
 
         var encoder = new MusicalQueryEncoder(
-            new TheoryVectorService(),
-            new ModalVectorService(),
-            new SymbolicVectorService(),
-            new RootVectorService());
+            new ModalVectorService());
 
         using var strategy = new OptickSearchStrategy(_indexPath!);
 

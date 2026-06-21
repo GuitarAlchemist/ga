@@ -24,14 +24,8 @@ public class DatasetExportTests
     {
         // 1. Initialize Embedding Generator
         _generator = new MusicalEmbeddingGenerator(
-            new IdentityVectorService(),
-            new TheoryVectorService(),
-            new MorphologyVectorService(),
-            new ContextVectorService(),
-            new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService(),
-            new RootVectorService()
+            new PhaseSphereService()
         );
 
         // 2. Build Chord Template Lookup (Reverse Index)

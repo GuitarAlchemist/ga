@@ -17,14 +17,8 @@ public static class VoicingEmbeddingTool
 {
     private static readonly Lazy<MusicalEmbeddingGenerator> Generator = new(() =>
         new MusicalEmbeddingGenerator(
-            new IdentityVectorService(),
-            new TheoryVectorService(),
-            new MorphologyVectorService(),
-            new ContextVectorService(),
-            new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService(),
-            new RootVectorService()));
+            new PhaseSphereService()));
 
     /// <summary>
     ///     HttpClient for calling GaApi's voicing-retrieve endpoint. Base address is read from

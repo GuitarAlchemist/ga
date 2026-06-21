@@ -10,14 +10,8 @@ public static class TestServices
 {
     public static MusicalEmbeddingGenerator CreateGenerator() =>
         new MusicalEmbeddingGenerator(
-            new IdentityVectorService(),
-            new TheoryVectorService(),
-            new MorphologyVectorService(),
-            new ContextVectorService(),
-            new SymbolicVectorService(),
             new ModalVectorService(),
-            new PhaseSphereService(),
-            new RootVectorService());
+            new PhaseSphereService());
 
     public static TabAnalysisService CreateTabAnalysisService()
     {
