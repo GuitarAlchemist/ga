@@ -81,9 +81,7 @@ public static class VoicingHarmonicAnalyzer
             HarmonicFunction: AnalysisConstants.FunctionalHarmony,
             IsNaturallyOccurring: result.IsNaturallyOccurring,
             FunctionalDescription: AnalysisConstants.FunctionalHarmony,
-            Quality: result.Quality,
-            SlashChordInfo: null,
-            ExtensionInfo: null)
+            Quality: result.Quality)
         {
             CanonicalName = result.CanonicalName,
             SlashSuffix = result.SlashSuffix,
