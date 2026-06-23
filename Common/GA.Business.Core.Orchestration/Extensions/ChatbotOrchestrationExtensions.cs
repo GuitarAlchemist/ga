@@ -223,6 +223,19 @@ public static class ChatbotOrchestrationExtensions
             return new ReadinessGatedChatApplicationService(fallback, probe, capture);
         });
 
+        // Shared LLM concurrency gate — one process-wide owner so every chat
+        // transport (REST, SignalR, AG-UI) draws from the same 3-slot pool and no
+        // single surface can saturate the model backend. Moved out of GaApi's
+        // Program.cs into the seam's layer (campaign slice #1) because the chat
+        // intake seam owns gating.
+        services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
+
+        // Chat intake seam (#1) — the single host-neutral entry that concentrates
+        // validate → gate → orchestrate. Scoped because it composes the Scoped
+        // IChatApplicationService decorator stack. Transports adapt to it
+        // (ChatbotController first; hub + AG-UI follow), framing the typed result.
+        services.AddScoped<IChatIntake, ChatIntake>();
+
         return services;
     }
 }

@@ -1,16 +1,6 @@
-namespace GaApi.Services;
+namespace GA.Business.Core.Orchestration.Services;
 
-/// <summary>
-/// Shared concurrency gate for LLM calls. Applied to both the SignalR hub and the REST controller
-/// so that they draw from the same pool and cannot independently saturate Ollama.
-/// </summary>
-public interface ILlmConcurrencyGate
-{
-    /// <summary>Attempt to enter the gate. Returns false immediately if all slots are taken.</summary>
-    ValueTask<bool> TryEnterAsync(CancellationToken cancellationToken = default);
-
-    void Release();
-}
+using GA.Business.Core.Orchestration.Abstractions;
 
 /// <summary>SemaphoreSlim-backed implementation (3 concurrent LLM calls).</summary>
 public sealed class LlmConcurrencyGate : ILlmConcurrencyGate, IDisposable

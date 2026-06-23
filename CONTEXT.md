@@ -29,6 +29,19 @@ at layer 4, orchestration at 5; never in lower layers.
   suffix, never in the ranking.
 - **Chatbot routing** — **embedding-first** (15s query-embed timeout); don't tune
   skill keyword gates to fix routing.
+- **Chat intake seam** — the single host-neutral entry (`IChatIntake`, layer 5
+  `GA.Business.Core.Orchestration`) every GaApi chat transport crosses. Owns
+  *validate → concurrency-gate → history-normalize → orchestrate* on an **opaque
+  session id** and returns a typed result (`Ok | Rejected | Busy`). What it does
+  **not** own is the giveaway: session-id *resolution* (HTTP signed cookie, or
+  SignalR `ConnectionId`), history *storage*, and response *framing* stay in the
+  per-transport **thin adapter** — the seam never touches `HttpContext` nor emits
+  an SSE byte. The plumbing it dedupes (validate, gate) was genuinely copy-pasted;
+  **session handling was divergent, not duplicated** (cookie vs ConnectionId vs
+  none), so the seam normalizes it to the opaque-id *contract* rather than unifying
+  the mechanics. Canonical host is **GaApi**; `GaChatbot.Api` and `GA.AI.Service`
+  are retired (`docs/adr/0005-gaapi-single-canonical-chat-host.md`). Supersedes
+  GaApi's thin `IChatApplicationService`/`HarmonicChatApplicationService` wrapper.
 - **dev-data middleware** — the `/dev-data/*` Vite endpoints powering the dashboard
   (`demos.guitaralchemist.com/test#dev/...`); dev-server-only (stripped by `vite build`).
 - **Prime Radiant** — the 3D governance/assumption-graph visualization.

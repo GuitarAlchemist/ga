@@ -65,8 +65,8 @@ builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
 builder.Services.AddSingleton<ContextualChordService>();
 builder.Services.AddSingleton<VoicingFilterService>();
 
-// Shared LLM concurrency gate (3 parallel calls) — applied to both hub and REST controller
-builder.Services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
+// ILlmConcurrencyGate is registered by AddChatbotOrchestration() (it moved into the
+// orchestration layer with the chat intake seam, campaign slice #1).
 
 // Add session context provider (scoped = one per HTTP request)
 builder.Services.AddSessionContextScoped();
