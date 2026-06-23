@@ -349,3 +349,6 @@ learning/
 # Router-head trainer embedding cache (regenerable)
 state/quality/router-head/.emb-cache.json
 state/quality/domain-invariants/*.jsonl
+
+# git-bash/msys crash dumps
+*.stackdump
