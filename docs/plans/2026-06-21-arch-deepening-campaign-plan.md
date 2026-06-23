@@ -40,7 +40,7 @@ The **domain-core candidates (#2, #3, #5, #7, #9) remain independent** and can p
 |---|---|---|---|---|---|
 | 1 | **#6** Delete `GA.AI.Service` | Strong (delete) | low — no refs | — | CI build |
 | 2 | **#8b** Delete dead `ChatbotSessionOrchestrator` methods | Worth | low — no callers | — | CI build (zero-warnings) |
-| 3 | **#1** Chat intake seam (keystone) | Strong | med — 4 transports | — | dev stack down + tests |
+| 3 | **#1** Chat intake seam (keystone) | Strong | med — 3 GaApi transports | — | dev stack down + tests |
 | 4 | **#4** Shared readiness/fallback seam | Strong | med | #1 | tests |
 | 5 | **#8a** One SSE-framing seam (fixes CRLF bug) | Worth | low-med | #1 | tests |
 | 6 | **#2** Agent prompt/parse engine | Strong | med — tribunal gate | — | tests + Demerzel tribunal |
@@ -70,10 +70,40 @@ deps (zero-warnings). Optionally relocate `NormalizeHistory` to a static util an
 hub's constructor.
 
 ### #1 — chat intake seam (keystone)
-Concentrate validate → concurrency-gate → session-cookie → orchestrate behind one module;
-transports (GaApi REST/SSE, SignalR hub, AG-UI, GaChatbot REST) become thin adapters that
-only frame the result. Tracer-bullet: route ONE transport through the seam end-to-end, test,
-then migrate the rest. Grounded by `docs/architecture/chat-surfaces.md` (canonical vs dead).
+Concentrate validate → concurrency-gate → history-normalize → orchestrate behind one module;
+GaApi's **three** transports (REST `ChatbotController`, SignalR `ChatbotHub`, AG-UI
+`AgUiChatController`) become thin adapters that only frame the result. `GaChatbot.Api` is
+**delete-not-adapt** — it stays the deployed demo unchanged until cloudflared re-points
+(ADR-0005 step 5), then is deleted (step 6); it never routes through the seam. Grounded by
+`docs/architecture/chat-surfaces.md` (canonical vs dead) and ADR-0005.
+
+**Resolved design (grilling, 2026-06-22):**
+- **Premise correction.** Validate + gate *were* copy-pasted; **session handling is
+  divergent, not duplicated** (HTTP cookie for REST/AG-UI, `Context.ConnectionId` for
+  SignalR, `null` for GaChatbot). The seam therefore *normalizes to an opaque session-id
+  contract*, it does not unify cookie/ConnectionId mechanics.
+- **Boundary.** Seam = `IChatIntake` in `Common/GA.Business.Core.Orchestration`. It takes a
+  `ChatIntakeRequest { Message, SessionId (opaque), History, Streaming }` and returns
+  `ChatIntakeResult = Ok(payload) | Rejected(validation) | Busy`. It **never** touches
+  `HttpContext` or emits an SSE byte. `ILlmConcurrencyGate` **moves into Common** (one owner,
+  not re-defined per host). The orphaned `NormalizeHistory` (#8b) **relocates here**.
+- **Adapter keeps** (transport-coupled, stays in GaApi): session-id resolution (cookie /
+  ConnectionId), history *storage* (REST client-supplied, SignalR server dict — unchanged
+  this slice), response framing, and busy/error framing (503 / SSE-error / `RUN_ERROR` /
+  SignalR `Error`).
+- **Streaming.** Seam exposes `IntakeAsync` + `IntakeStreamingAsync`; AG-UI stops bypassing
+  the app service (closes the `AgUiChatController.cs` P1 follow-up).
+- **Validation.** Unify empty-check + **max length 4000** (the deployed hub value; REST's
+  2000 model-attr was arbitrary). **Rate-limiting stays adapter-side** (SignalR-specific;
+  HTTP path already has `PartitionedRateLimiter`) — never a seam concern.
+- **Behavior-preserving.** #1 ships today's behavior only. The readiness probe / fallback
+  (#4) and the CRLF SSE fix (#8a) are decorators *on* the seam, added in their own slices.
+- **Tracer-bullet order.** (1) `POST /api/chatbot/chat` non-streaming — simplest, no SSE/hub
+  lifecycle — prove the seam with existing tests green; then (2) SignalR hub; (3) AG-UI
+  stream; (4) REST `/chat/stream`. Each is its own commit/PR-able step.
+- **Cleanup.** Once all three route through `IChatIntake`, remove GaApi's thin
+  `IChatApplicationService`/`HarmonicChatApplicationService` wrapper. Glossary term added to
+  `CONTEXT.md` (**Chat intake seam**).
 
 ### #4 — shared readiness/fallback seam
 Move `OrchestratedChatApplicationService`'s readiness-probe + bounded-timeout +
