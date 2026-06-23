@@ -1,22 +1,24 @@
 namespace GaApi.Services;
 
-using System.Runtime.CompilerServices;
-using System.Text;
 using Configuration;
-using GA.Business.Core.Session;
 using Microsoft.Extensions.Options;
 
 /// <summary>
-///     Coordinates semantic enrichment, prompt construction, and conversations
-///     before delegating to the underlying large language model.
-///     Inspired by Spring Boot service orchestration patterns.
+///     Normalizes conversation history for the chatbot pipeline: drops empty/non
+///     user-or-assistant messages, trims content, and caps the kept history at
+///     <see cref="ChatbotOptions.HistoryLimit" />. Consumed by
+///     <c>ChatbotHub</c> before per-connection storage.
 /// </summary>
+/// <remarks>
+///     The prompt-construction and LLM-delegation methods this type used to own
+///     (<c>GetResponseAsync</c>, <c>StreamResponseAsync</c>, and their private
+///     helpers) had no callers — every GaApi chat surface routes through
+///     <c>IChatApplicationService</c> — and were removed in the architecture
+///     deepening campaign (slice #8b). The remaining responsibility is narrow
+///     enough that it could later fold into a static util; see the campaign plan.
+/// </remarks>
 public sealed class ChatbotSessionOrchestrator(
-    IChatService chatClient,
-    ISemanticKnowledgeSource semanticKnowledge,
-    ISessionContextProvider sessionContext,
-    IOptionsSnapshot<ChatbotOptions> options,
-    ILogger<ChatbotSessionOrchestrator> logger)
+    IOptionsSnapshot<ChatbotOptions> options)
 {
     private readonly ChatbotOptions _options = options.Value;
 
@@ -40,164 +42,5 @@ public sealed class ChatbotSessionOrchestrator(
         }
 
         return normalized;
-    }
-
-    public Task<string> GetResponseAsync(ChatSessionRequest request, CancellationToken cancellationToken)
-    {
-        if (request is null || string.IsNullOrWhiteSpace(request.Message))
-            return Task.FromResult(string.Empty);
-        var normalizedHistory = NormalizeHistory(request.ConversationHistory);
-        return GetResponseInternalAsync(request.Message, normalizedHistory, request.UseSemanticSearch,
-            cancellationToken);
-    }
-
-    public async IAsyncEnumerable<string> StreamResponseAsync(
-        ChatSessionRequest request,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var normalizedHistory = NormalizeHistory(request.ConversationHistory);
-        var systemPrompt = await BuildSystemPromptAsync(request.Message, request.UseSemanticSearch, cancellationToken);
-
-        await foreach (var chunk in chatClient.ChatStreamAsync(
-                           request.Message,
-                           normalizedHistory,
-                           systemPrompt,
-                           cancellationToken))
-        {
-            yield return chunk;
-        }
-    }
-
-    public async Task<string> BuildSystemPromptAsync(
-        string message,
-        bool useSemanticSearch,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        string? context = null;
-        if (useSemanticSearch && _options.EnableSemanticSearch)
-        {
-            context = await BuildSemanticContextAsync(message, cancellationToken);
-        }
-
-        return BuildSystemPrompt(context);
-    }
-
-    private async Task<string> GetResponseInternalAsync(
-        string message,
-        List<ChatMessage> history,
-        bool useSemanticSearch,
-        CancellationToken cancellationToken)
-    {
-        var systemPrompt = await BuildSystemPromptAsync(message, useSemanticSearch, cancellationToken);
-
-        return await chatClient.ChatAsync(
-            message,
-            history,
-            systemPrompt,
-            cancellationToken);
-    }
-
-    private async Task<string?> BuildSemanticContextAsync(string message, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var results = await semanticKnowledge.SearchAsync(
-                message,
-                Math.Max(1, _options.SemanticSearchLimit),
-                cancellationToken);
-
-            if (results.Count == 0)
-            {
-                return null;
-            }
-
-            var builder = new StringBuilder();
-            builder.AppendLine("Relevant guitar knowledge:");
-
-            foreach (var result in results
-                         .Where(r => !string.IsNullOrWhiteSpace(r.Content))
-                         .Take(Math.Max(1, _options.SemanticContextDocuments)))
-            {
-                builder.AppendLine()
-                    .AppendLine(result.Content.Trim());
-            }
-
-            return builder.ToString();
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Semantic enrichment failed. Continuing without additional context.");
-            return null;
-        }
-    }
-
-    private string BuildSystemPrompt(string? context)
-    {
-        var prompt = new StringBuilder();
-        prompt.AppendLine("You are Guitar Alchemist, an expert guitar teacher and music theory assistant.");
-        prompt.AppendLine("You help guitarists learn chords, scales, techniques, and music theory.");
-        prompt.AppendLine("Provide clear, practical advice with specific fretboard examples where useful.");
-        prompt.AppendLine("Explain complex concepts in simple terms, tailored to guitarists.");
-        prompt.AppendLine();
-
-        // Add session context if available
-        var sessionCtx = sessionContext.GetContext();
-        if (sessionCtx != null)
-        {
-            prompt.AppendLine("CURRENT SESSION CONTEXT:");
-            prompt.AppendLine($"- Tuning: {sessionCtx.Tuning}");
-
-            if (sessionCtx.CurrentKey != null)
-            {
-                prompt.AppendLine($"- Current Key: {sessionCtx.CurrentKey}");
-            }
-
-            if (sessionCtx.CurrentScale != null)
-            {
-                prompt.AppendLine($"- Current Scale: {sessionCtx.CurrentScale}");
-            }
-
-            if (sessionCtx.SkillLevel.HasValue)
-            {
-                prompt.AppendLine($"- Skill Level: {sessionCtx.SkillLevel.Value}");
-            }
-
-            if (sessionCtx.CurrentGenre.HasValue)
-            {
-                prompt.AppendLine($"- Musical Genre: {sessionCtx.CurrentGenre.Value}");
-            }
-
-            if (sessionCtx.ActiveRange != null)
-            {
-                prompt.AppendLine(
-                    $"- Fretboard Range: Frets {sessionCtx.ActiveRange.MinFret}-{sessionCtx.ActiveRange.MaxFret}");
-            }
-
-            prompt.AppendLine();
-            prompt.AppendLine("Use this session context to provide more relevant and personalized responses.");
-            prompt.AppendLine(
-                "When suggesting chords or scales, consider the current key, skill level, and preferences.");
-            prompt.AppendLine();
-        }
-
-        if (!string.IsNullOrWhiteSpace(context))
-        {
-            prompt.AppendLine("Use the following knowledge to help answer the user's question:");
-            prompt.AppendLine(context.Trim());
-            prompt.AppendLine();
-        }
-
-        prompt.AppendLine("Be concise but thorough. Use markdown formatting when helpful.");
-        prompt.AppendLine("If you do not know something, say so honestly.");
-
-        return prompt.ToString();
     }
 }
