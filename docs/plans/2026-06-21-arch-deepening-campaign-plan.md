@@ -13,24 +13,26 @@
 ## Dropped (do not re-suggest)
 - Facade over `MusicalVoicingAnalysis` — **ADR-0004 (2026-06-21)** decided it stays wide. Re-suggesting a same-day decision is out of bounds.
 
-## ⚠ Correction after diligence (2026-06-21)
+## ✅ Gating decision RESOLVED (2026-06-22) → ADR-0005
 
-The "safe quick deletions" are **not** independent. Reading the targets surfaced that
-**five candidates (#1, #4, #6, #8a, #8b) all depend on one unresolved decision**:
-*is GaApi the single **canonical chat host**?*
+The chat cluster (#1, #4, #6, #8a, #8b) was gated on one question — *is GaApi the single
+**canonical chat host**?* **Resolved: yes (Option C).** See
+[`docs/adr/0005-gaapi-single-canonical-chat-host.md`](../adr/0005-gaapi-single-canonical-chat-host.md).
+GaChatbot.Api and GA.AI.Service are retired; their richer shapes (Grounding / Trace /
+readiness) + the CRLF SSE fix fold into GaApi via the shared seam (#1).
 
-- `GA.AI.Service/DEPRECATED.md` (frozen 2026-05-07 per a Codex CLI review) says **do not
-  delete yet** — deletion is coupled to the GaChatbot.Api freeze-flip ("removed in the same
-  pass"), and there are extra refs (`appsettings.ReverseProxy.json` `ai-service` route,
-  several `Scripts/*.ps1`). So **#6 is gated**, not safe.
-- `ChatbotSessionOrchestrator` dead methods (#8b): `chat-surfaces.md:363` leaves "remove vs
-  keep for an upcoming surface?" **open**; `audit-2026-04-25.md:69` says **CONSOLIDATE**, not
-  delete. So **#8b is gated** on the same decision.
+**Migration ordering is load-bearing — cloudflared serves the public demo from GaChatbot.Api
+today, so it is deleted *last*:**
 
-**Resolve the canonical-host decision first** (grill → ADR). It collapses the whole chat
-cluster: #1 becomes the implementation of "GaApi canonical," #6/#8b become the cleanup pass
-the freeze docs are waiting for, #4/#8a fall out of #1. The **domain-core candidates
-(#2, #3, #5, #7, #9) are independent** of this and can proceed any time.
+1. **#6** delete `GA.AI.Service` — now unambiguously safe. Also strip the orphaned
+   `ai-cluster`/`ai-service` routes in `appsettings.ReverseProxy.json:114-134,350-356`.
+2. **#8b** delete dead `ChatbotSessionOrchestrator` methods (keep `NormalizeHistory`).
+3. **#1** chat intake seam in `Common/…Orchestration`; route GaApi through it (tracer-bullet).
+4. **#4 + #8a** fold GaChatbot's readiness/fallback + CRLF SSE fix into the seam (GaApi parity).
+5. **Re-point cloudflared** `/chatbot/` + `/api/chatbot/*` → GaApi; verify the live demo.
+6. **Retire GaChatbot.Api** — only after 3–5 are verified in deployment.
+
+The **domain-core candidates (#2, #3, #5, #7, #9) remain independent** and can proceed any time.
 
 ## Sequence (revised — chat cluster gated)
 

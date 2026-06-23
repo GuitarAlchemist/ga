@@ -210,7 +210,9 @@ The two controllers are **not feature-equivalent**:
 2. **Readiness gating** — `OrchestratedChatApplicationService` has a probe + fallback path that protects against the "chat returns garbage when Ollama isn't ready" symptom. GaApi has no equivalent.
 3. **Trace contract** — `Trace` (`AgenticTrace`) is only emitted by `GaChatbot.Api`. Multi-LLM observability work assumes this contract.
 
-### Canonical-deployable decision (open)
+### Canonical-deployable decision (RESOLVED 2026-06-22 → Option C, see ADR-0005)
+
+> **Resolved:** **GaApi is the single canonical chat host** ([ADR-0005](../adr/0005-gaapi-single-canonical-chat-host.md)). This is **Option C** below. `GaChatbot.Api` and `GA.AI.Service` are retired; their richer shapes (Grounding / Trace / readiness probe) and the CRLF SSE fix are folded into GaApi via the shared chat-intake seam in `Common/…Orchestration`. **Migration ordering is load-bearing** — cloudflared serves the public demo from `GaChatbot.Api` today, so that host is deleted *last*, only after GaApi reaches parity and cloudflared is re-pointed. The three-path table below is kept for historical context.
 
 The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hubs/chatbot` (SignalR on GaApi). To make `GaChatbot.Api` the canonical deployable for the public chatbot, one of these three paths has to be chosen:
 
@@ -220,7 +222,7 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 | **B. Move `ChatbotHub` into `GaChatbot.Api`** | Keep the SignalR contract, just relocate the hub. SPA changes from `/hubs/chatbot → GaApi` to `/hubs/chatbot → GaChatbot.Api`. AppHost adds the new project; tunnel routes `^/hubs/chatbot$` and `^/chatbot(/.*)?$` to `GaChatbot.Api`. | Medium — the hub's deps (`ProductionOrchestrator`, `LlmConcurrencyGate`, `ConversationHistoryStore`, etc.) all live in `GA.Business.Core.Orchestration`, so they cross the host boundary cleanly via DI. | Recommended if you want minimum frontend change. |
 | **C. Cut `GaChatbot.Api`** | Treat `GaChatbot.Api` as exploratory; keep its `Grounding`/`Trace`/readiness improvements but port them into `GaApi.ChatbotController` and `GaApi.ChatbotHub`. Delete `Apps/GaChatbot.Api`. | Lowest external — no deployable changes. Highest internal — refactor of GaApi controllers. | Recommended only if the multi-host story has no near-term need (independent scaling, public-vs-internal separation, etc.). |
 
-**Until a path is picked**, treat both `GaChatbot.Api` AND `GaApi.ChatbotController` as 🟡 parallel-to-canonical for the public chatbot REST surface, and treat `GaApi.ChatbotHub` as the de-facto canonical for the deployed demo. Don't add features to one without the other.
+~~**Until a path is picked**, treat both `GaChatbot.Api` AND `GaApi.ChatbotController` as 🟡 parallel-to-canonical…~~ **Path picked (2026-06-22): Option C / ADR-0005.** GaApi is canonical; do not add features to `GaChatbot.Api` — port any improvement into GaApi's controllers/hub via the shared seam.
 
 ---
 
