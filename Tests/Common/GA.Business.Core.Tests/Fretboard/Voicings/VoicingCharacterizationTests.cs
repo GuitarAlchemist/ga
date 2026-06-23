@@ -1,4 +1,4 @@
-﻿namespace GA.Business.Core.Tests.Fretboard.Voicings;
+namespace GA.Business.Core.Tests.Fretboard.Voicings;
 
 using Domain.Core.Instruments.Fretboard.Voicings.Core;
 using Domain.Core.Instruments.Positions;
@@ -25,10 +25,10 @@ public class VoicingCharacterizationTests
         var midiValues = new[] { 59, 64, 67, 71, 74 };
         var voicing = BuildVoicingFromMidiValues(midiValues);
         var analysis = VoicingAnalyzer.Analyze(voicing);
-        var slashInfo = analysis.ChordId.SlashChordInfo;
+        var slashInfo = analysis.ChordId.SlashSuffix;
         if (slashInfo != null)
         {
-            Assert.That(slashInfo.ToString(), Does.Contain("/"));
+            Assert.That(slashInfo, Does.Contain("/"));
         }
 
         Assert.That(analysis.ChordId.ChordName, Is.Not.Null.Or.Empty);

@@ -1,4 +1,4 @@
-﻿namespace FretboardVoicingsCLI;
+namespace FretboardVoicingsCLI;
 
 using System.Diagnostics;
 using System.Text;
@@ -216,10 +216,10 @@ internal class Program
                 }
             }
 
-            if (analysis.ChordId.SlashChordInfo != null)
+            if (analysis.ChordId.SlashSuffix != null)
             {
                 Console.WriteLine("      slash_chord:");
-                Console.WriteLine($"        info: \"{analysis.ChordId.SlashChordInfo}\"");
+                Console.WriteLine($"        info: \"{analysis.ChordId.SlashSuffix}\"");
             }
 
             Console.WriteLine($"      key_function: \"{keyFunction}\"");
@@ -691,6 +691,7 @@ internal class Program
     ///     Runs export-embeddings mode: generates OPTIC-K v4 binary index with 112-dim compact embeddings
     ///     for all voicings across one or all instruments.
     /// </summary>
+    [Obsolete]
     private static async Task<int> RunExportEmbeddingsAsync(ExportEmbeddingsOptions options)
     {
         var sw = Stopwatch.StartNew();

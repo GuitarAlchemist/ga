@@ -22,8 +22,6 @@ public record ChordIdentification(
     bool IsNaturallyOccurring,
     string FunctionalDescription,
     string Quality,
-    object? SlashChordInfo,
-    object? ExtensionInfo,
     string? ClosestKey = null)
 {
     /// <summary>Alternate name for the same chord (e.g. enharmonic respelling).</summary>
@@ -87,13 +85,6 @@ public record ChordIdentification(
             : SlashSuffix is null
                 ? CanonicalName
                 : $"{CanonicalName}{SlashSuffix}";
-
-    /// <summary>
-    ///     True when the structured Phase C fields are populated (i.e. the
-    ///     <see cref="CanonicalChordRecognizer" /> was used to produce this
-    ///     identity). Existing consumers can branch on this to opt in.
-    /// </summary>
-    public bool HasCanonicalIdentity => CanonicalName is not null;
 
     /// <summary>
     ///     True when <see cref="Extension" /> is a seventh-or-beyond label
