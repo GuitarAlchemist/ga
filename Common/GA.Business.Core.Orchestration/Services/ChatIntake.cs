@@ -42,7 +42,7 @@ public sealed class ChatIntake(
         try
         {
             var response = await chatService.ChatAsync(
-                new ChatRequest(message, SessionId: request.SessionId),
+                new ChatRequest(message, SessionId: request.SessionId, History: request.History),
                 cancellationToken);
             return Result<ChatResponse, ChatIntakeError>.Success(response);
         }
