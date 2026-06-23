@@ -83,9 +83,18 @@ public class ChordRecognitionRoundTripTests
         var resolvedRootName = result.Root;
         var rootPc = resolvedRootName switch
         {
-            "C" => 0, "C#" or "Db" => 1, "D" => 2, "D#" or "Eb" => 3, "E" => 4,
-            "F" => 5, "F#" or "Gb" => 6, "G" => 7, "G#" or "Ab" => 8, "A" => 9,
-            "A#" or "Bb" => 10, "B" or "Cb" => 11,
+            "C" => 0,
+            "C#" or "Db" => 1,
+            "D" => 2,
+            "D#" or "Eb" => 3,
+            "E" => 4,
+            "F" => 5,
+            "F#" or "Gb" => 6,
+            "G" => 7,
+            "G#" or "Ab" => 8,
+            "A" => 9,
+            "A#" or "Bb" => 10,
+            "B" or "Cb" => 11,
             _ => -1,
         };
         var resolvedPcs = resolved.Intervals
@@ -178,7 +187,7 @@ public class ChordRecognitionRoundTripTests
             Assert.That(identification.Extension, Is.EqualTo(expectedExtension),
                 $"Diagram '{diagram}' ({instrument}): expected Extension='{expectedExtension}' " +
                 $"but got '{identification.Extension}'");
-            Assert.That(identification.HasCanonicalIdentity, Is.True,
+            Assert.That(identification.CanonicalName, Is.Not.Null.And.Not.Empty,
                 $"Diagram '{diagram}' ({instrument}): should have canonical identity populated");
         });
     }
