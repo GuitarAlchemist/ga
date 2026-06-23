@@ -103,7 +103,7 @@ if ($affectedProjects.Count -eq 0) {
 # ============================================
 Write-Host "`n▶ Checking for naked throws in service files..." -ForegroundColor Blue
 
-$stagedServiceFiles = git diff --cached --name-only 2>/dev/null |
+$stagedServiceFiles = git diff --cached --name-only 2>$null |
     Where-Object { $_ -match "Services/[^/]+\.cs$" -and (Test-Path $_) }
 
 $ropViolations = @()
@@ -152,7 +152,7 @@ if ($ropViolations.Count -gt 0) {
 # making this fatal would gate every commit. Promote to fatal once the
 # baseline reaches zero — see docs/plans/2026-05-23-arch-harness-engineering-
 # adoption-plan.md item #2.
-$stagedTsFiles = git diff --cached --name-only 2>/dev/null |
+$stagedTsFiles = git diff --cached --name-only 2>$null |
     Where-Object { $_ -match "^ReactComponents/ga-react-components/.*\.(ts|tsx)$" }
 if ($stagedTsFiles.Count -gt 0) {
     Write-Host "`n▶ Running frontend typecheck (warning-only)..." -ForegroundColor Blue
