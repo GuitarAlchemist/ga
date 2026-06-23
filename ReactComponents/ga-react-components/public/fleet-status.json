@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "230529c22bd4335271766e4f003a0235a72bda4b",
-    "generatedAt": "2026-06-23T22:44:07.040962+00:00",
+    "commitSha": "4bf23eb5e91083230ac8db8085de5780674353cc",
+    "generatedAt": "2026-06-23T22:45:09.689215+00:00",
     "repoCount": 5,
     "totalPRs": 24
   },
@@ -118,6 +118,18 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-06-23T22:44:54Z",
+          "failingChecks": 0,
+          "headRef": "feat/chat-intake-seam-hub",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 470,
+          "title": "refactor(chat): route SignalR ChatbotHub through the seam (slice #1, PR B)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/470"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-06-23T20:40:38Z",
           "failingChecks": 5,
           "headRef": "feat/chat-intake-seam",
@@ -138,18 +150,6 @@
           "number": 467,
           "title": "chore(arch): delete dead GA.AI.Service microservice (slice #6)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/467"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-06-22T22:40:21Z",
-          "failingChecks": 0,
-          "headRef": "arch/seal-chord-identity-dual-mode",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 466,
-          "title": "fix(chords): seal chord-identity dual-mode (slice 3) + repair pre-commit hook + ADR-0005",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/466"
         },
         {
           "ageDays": 2,
@@ -388,7 +388,7 @@
           "failingChecks": 1,
           "headRef": "feat/post-discussion-integration",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 368,
           "title": "feat(ci): wire post_discussion.sh across all workflows (integrates #365 + #366)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/368"
@@ -400,7 +400,7 @@
           "failingChecks": 1,
           "headRef": "feat/confidence-thresholds-single-source",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 367,
           "title": "feat(governance): single-source confidence thresholds via ref:confidence tokens",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/367"
@@ -412,7 +412,7 @@
           "failingChecks": 1,
           "headRef": "feat/ci-script-seams",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 366,
           "title": "feat(ci): extract testable llm_call.sh + post_discussion.sh seams",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/366"
@@ -424,7 +424,7 @@
           "failingChecks": 1,
           "headRef": "feat/ecosystem-registry-action",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 365,
           "title": "feat(ci): ecosystem facts action \u2014 single source for repo/category ids + counts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/365"
@@ -436,7 +436,7 @@
           "failingChecks": 1,
           "headRef": "refactor/collapse-hexavalent-schema",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 364,
           "title": "refactor(schemas): collapse byte-identical hexavalent-distribution into fuzzy",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/364"
@@ -448,7 +448,7 @@
           "failingChecks": 1,
           "headRef": "feat/digeststate-deep-module",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 362,
           "title": "feat(hooks): DigestState deep module behind the session-digest hooks",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/362"

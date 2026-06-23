@@ -18,9 +18,9 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#470](https://github.com/GuitarAlchemist/ga/pull/470) | refactor(chat): route SignalR ChatbotHub through the seam (slice #1, P | 0d | MERGEABLE | 0 | spareilleux |
 | [#469](https://github.com/GuitarAlchemist/ga/pull/469) | refactor(chat): chat intake seam — IChatIntake + route /api/chatbot/ch | 0d | UNKNOWN | 5 | spareilleux |
 | [#467](https://github.com/GuitarAlchemist/ga/pull/467) | chore(arch): delete dead GA.AI.Service microservice (slice #6) | 0d | UNKNOWN | 3 | spareilleux |
-| [#466](https://github.com/GuitarAlchemist/ga/pull/466) | fix(chords): seal chord-identity dual-mode (slice 3) + repair pre-comm | 1d | UNKNOWN | 0 | spareilleux |
 | [#465](https://github.com/GuitarAlchemist/ga/pull/465) | chore(repo): ignore *.stackdump + drop obsolete hook installer | 2d | UNKNOWN | 0 | spareilleux |
 
 ### ix (3 open)
@@ -51,12 +51,12 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#368](https://github.com/GuitarAlchemist/Demerzel/pull/368) | feat(ci): wire post_discussion.sh across all workflows (integrates #36 | 2d | UNKNOWN | 1 | spareilleux |
-| [#367](https://github.com/GuitarAlchemist/Demerzel/pull/367) | feat(governance): single-source confidence thresholds via ref:confiden | 2d | UNKNOWN | 1 | spareilleux |
-| [#366](https://github.com/GuitarAlchemist/Demerzel/pull/366) | feat(ci): extract testable llm_call.sh + post_discussion.sh seams | 2d | UNKNOWN | 1 | spareilleux |
-| [#365](https://github.com/GuitarAlchemist/Demerzel/pull/365) | feat(ci): ecosystem facts action — single source for repo/category ids | 2d | UNKNOWN | 1 | spareilleux |
-| [#364](https://github.com/GuitarAlchemist/Demerzel/pull/364) | refactor(schemas): collapse byte-identical hexavalent-distribution int | 2d | UNKNOWN | 1 | spareilleux |
-| [#362](https://github.com/GuitarAlchemist/Demerzel/pull/362) | feat(hooks): DigestState deep module behind the session-digest hooks | 2d | UNKNOWN | 1 | spareilleux |
+| [#368](https://github.com/GuitarAlchemist/Demerzel/pull/368) | feat(ci): wire post_discussion.sh across all workflows (integrates #36 | 2d | MERGEABLE | 1 | spareilleux |
+| [#367](https://github.com/GuitarAlchemist/Demerzel/pull/367) | feat(governance): single-source confidence thresholds via ref:confiden | 2d | MERGEABLE | 1 | spareilleux |
+| [#366](https://github.com/GuitarAlchemist/Demerzel/pull/366) | feat(ci): extract testable llm_call.sh + post_discussion.sh seams | 2d | MERGEABLE | 1 | spareilleux |
+| [#365](https://github.com/GuitarAlchemist/Demerzel/pull/365) | feat(ci): ecosystem facts action — single source for repo/category ids | 2d | MERGEABLE | 1 | spareilleux |
+| [#364](https://github.com/GuitarAlchemist/Demerzel/pull/364) | refactor(schemas): collapse byte-identical hexavalent-distribution int | 2d | MERGEABLE | 1 | spareilleux |
+| [#362](https://github.com/GuitarAlchemist/Demerzel/pull/362) | feat(hooks): DigestState deep module behind the session-digest hooks | 2d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -90,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-06-23T22:44:07.040962+00:00 UTC_
+_Generated: 2026-06-23T22:45:09.689215+00:00 UTC_
 
-_Commit: `230529c22bd4`_
+_Commit: `4bf23eb5e910`_
