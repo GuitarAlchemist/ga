@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "4b29c82e2b4b384c2359b394af5a7fa763682a49",
-    "generatedAt": "2026-06-22T07:51:57.052842+00:00",
+    "commitSha": "8fc249d16aaac58cb1df76063b0b4d9754f6e948",
+    "generatedAt": "2026-06-23T07:09:11.348892+00:00",
     "repoCount": 5,
     "totalPRs": 24
   },
@@ -113,10 +113,46 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-23T03:39:27Z",
+          "failingChecks": 0,
+          "headRef": "refactor/trim-dead-chatbot-orchestrator",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 468,
+          "title": "refactor(chatbot): remove dead ChatbotSessionOrchestrator methods (slice #8b)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/468"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-23T03:35:32Z",
+          "failingChecks": 3,
+          "headRef": "chore/delete-ga-ai-service",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 467,
+          "title": "chore(arch): delete dead GA.AI.Service microservice (slice #6)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/467"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-22T22:40:21Z",
+          "failingChecks": 0,
+          "headRef": "arch/seal-chord-identity-dual-mode",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 466,
+          "title": "fix(chords): seal chord-identity dual-mode (slice 3) + repair pre-commit hook + ADR-0005",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/466"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T20:38:14Z",
           "failingChecks": 0,
@@ -124,7 +160,7 @@
           "isDraft": false,
           "mergeable": "MERGEABLE",
           "number": 465,
-          "title": "fix(hooks): revive .githooks/pre-commit (three stacked breaks)",
+          "title": "chore(repo): ignore *.stackdump + drop obsolete hook installer",
           "url": "https://github.com/GuitarAlchemist/ga/pull/465"
         }
       ]
@@ -141,22 +177,10 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T21:16:03Z",
-          "failingChecks": 0,
-          "headRef": "feat/ix-voicing-mesh-demo",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 171,
-          "title": "feat(ix-duck): ix_voicing_mesh \u2014 100+ node pipeline-mesh demo over the voicing corpus",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/171"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:38:56Z",
           "failingChecks": 2,
@@ -168,7 +192,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:21:38Z",
           "failingChecks": 2,
@@ -180,7 +204,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -208,7 +232,7 @@
       "prCount": 11,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -220,7 +244,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
@@ -232,109 +256,109 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/52"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-21T03:48:30Z",
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-21T02:37:16Z",
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-20T20:01:00Z",
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
         },
         {
-          "ageDays": 28,
+          "ageDays": 29,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:13:39Z",
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
         },
         {
-          "ageDays": 28,
+          "ageDays": 29,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:12:23Z",
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
         },
         {
-          "ageDays": 28,
+          "ageDays": 29,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:42:41Z",
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 28,
+          "ageDays": 29,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
         },
         {
-          "ageDays": 28,
+          "ageDays": 29,
           "author": "spareilleux",
           "createdAt": "2026-05-24T14:58:30Z",
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
         },
         {
-          "ageDays": 37,
+          "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
@@ -355,34 +379,22 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 8,
+      "prCount": 6,
       "prs": [
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T20:42:39Z",
-          "failingChecks": 0,
-          "headRef": "chore/compound-ml-feedback-evolution",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 376,
-          "title": "chore(evolution): compound \u2014 record ml-feedback-loop capability",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/376"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:56:12Z",
-          "failingChecks": 3,
+          "failingChecks": 1,
           "headRef": "feat/post-discussion-integration",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 368,
           "title": "feat(ci): wire post_discussion.sh across all workflows (integrates #365 + #366)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/368"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:11:00Z",
           "failingChecks": 1,
@@ -394,19 +406,19 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/367"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:10:58Z",
           "failingChecks": 1,
           "headRef": "feat/ci-script-seams",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 366,
           "title": "feat(ci): extract testable llm_call.sh + post_discussion.sh seams",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/366"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:10:56Z",
           "failingChecks": 1,
@@ -418,37 +430,25 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/365"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:10:35Z",
           "failingChecks": 1,
           "headRef": "refactor/collapse-hexavalent-schema",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 364,
           "title": "refactor(schemas): collapse byte-identical hexavalent-distribution into fuzzy",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/364"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:10:34Z",
-          "failingChecks": 0,
-          "headRef": "fix/halt-schema-parity",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 363,
-          "title": "fix(halt): jsonschema-with-stdlib-fallback validation parity (ADR-0003)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/363"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:10:32Z",
           "failingChecks": 1,
           "headRef": "feat/digeststate-deep-module",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 362,
           "title": "feat(hooks): DigestState deep module behind the session-digest hooks",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/362"

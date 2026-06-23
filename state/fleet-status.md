@@ -14,49 +14,49 @@ _24 open PR(s) across 5 repos._
 
 _No open PRs._
 
-### ga (1 open)
+### ga (4 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#465](https://github.com/GuitarAlchemist/ga/pull/465) | fix(hooks): revive .githooks/pre-commit (three stacked breaks) | 0d | MERGEABLE | 0 | spareilleux |
+| [#468](https://github.com/GuitarAlchemist/ga/pull/468) | refactor(chatbot): remove dead ChatbotSessionOrchestrator methods (sli | 0d | MERGEABLE | 0 | spareilleux |
+| [#467](https://github.com/GuitarAlchemist/ga/pull/467) | chore(arch): delete dead GA.AI.Service microservice (slice #6) | 0d | MERGEABLE | 3 | spareilleux |
+| [#466](https://github.com/GuitarAlchemist/ga/pull/466) | fix(chords): seal chord-identity dual-mode (slice 3) + repair pre-comm | 0d | MERGEABLE | 0 | spareilleux |
+| [#465](https://github.com/GuitarAlchemist/ga/pull/465) | chore(repo): ignore *.stackdump + drop obsolete hook installer | 1d | MERGEABLE | 0 | spareilleux |
 
-### ix (4 open)
+### ix (3 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#171](https://github.com/GuitarAlchemist/ix/pull/171) | feat(ix-duck): ix_voicing_mesh — 100+ node pipeline-mesh demo over the | 0d | MERGEABLE | 0 | spareilleux |
-| [#156](https://github.com/GuitarAlchemist/ix/pull/156) | docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_rep | 0d | UNKNOWN | 2 | spareilleux |
-| [#155](https://github.com/GuitarAlchemist/ix/pull/155) | refactor: three architecture deepenings (hexavalent / convergence / to | 0d | UNKNOWN | 2 | spareilleux |
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 33d | UNKNOWN | 1 | spareilleux |
+| [#156](https://github.com/GuitarAlchemist/ix/pull/156) | docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_rep | 1d | UNKNOWN | 2 | spareilleux |
+| [#155](https://github.com/GuitarAlchemist/ix/pull/155) | refactor: three architecture deepenings (hexavalent / convergence / to | 1d | UNKNOWN | 2 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 34d | UNKNOWN | 1 | spareilleux |
 
 ### tars (11 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 1d | MERGEABLE | 0 | spareilleux |
-| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 1d | MERGEABLE | 0 | spareilleux |
-| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 1d | UNKNOWN | 3 | spareilleux |
-| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 1d | UNKNOWN | 3 | spareilleux |
-| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 1d | UNKNOWN | 2 | spareilleux |
-| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 28d | UNKNOWN | 1 | spareilleux |
-| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 28d | UNKNOWN | 2 | spareilleux |
-| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 28d | UNKNOWN | 2 | spareilleux |
-| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 28d | UNKNOWN | 1 | spareilleux |
-| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 28d | UNKNOWN | 1 | spareilleux |
-| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 37d | UNKNOWN | 5 | spareilleux |
+| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 2d | MERGEABLE | 0 | spareilleux |
+| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 2d | MERGEABLE | 0 | spareilleux |
+| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 2d | CONFLICTING | 3 | spareilleux |
+| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 2d | CONFLICTING | 3 | spareilleux |
+| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 2d | MERGEABLE | 2 | spareilleux |
+| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 29d | MERGEABLE | 1 | spareilleux |
+| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 29d | MERGEABLE | 2 | spareilleux |
+| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 29d | CONFLICTING | 2 | spareilleux |
+| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 29d | MERGEABLE | 1 | spareilleux |
+| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 29d | MERGEABLE | 1 | spareilleux |
+| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 38d | MERGEABLE | 5 | spareilleux |
 
-### Demerzel (8 open)
+### Demerzel (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#376](https://github.com/GuitarAlchemist/Demerzel/pull/376) | chore(evolution): compound — record ml-feedback-loop capability | 0d | MERGEABLE | 0 | spareilleux |
-| [#368](https://github.com/GuitarAlchemist/Demerzel/pull/368) | feat(ci): wire post_discussion.sh across all workflows (integrates #36 | 0d | UNKNOWN | 3 | spareilleux |
-| [#367](https://github.com/GuitarAlchemist/Demerzel/pull/367) | feat(governance): single-source confidence thresholds via ref:confiden | 0d | UNKNOWN | 1 | spareilleux |
-| [#366](https://github.com/GuitarAlchemist/Demerzel/pull/366) | feat(ci): extract testable llm_call.sh + post_discussion.sh seams | 0d | UNKNOWN | 1 | spareilleux |
-| [#365](https://github.com/GuitarAlchemist/Demerzel/pull/365) | feat(ci): ecosystem facts action — single source for repo/category ids | 0d | UNKNOWN | 1 | spareilleux |
-| [#364](https://github.com/GuitarAlchemist/Demerzel/pull/364) | refactor(schemas): collapse byte-identical hexavalent-distribution int | 0d | UNKNOWN | 1 | spareilleux |
-| [#363](https://github.com/GuitarAlchemist/Demerzel/pull/363) | fix(halt): jsonschema-with-stdlib-fallback validation parity (ADR-0003 | 0d | UNKNOWN | 0 | spareilleux |
-| [#362](https://github.com/GuitarAlchemist/Demerzel/pull/362) | feat(hooks): DigestState deep module behind the session-digest hooks | 0d | UNKNOWN | 1 | spareilleux |
+| [#368](https://github.com/GuitarAlchemist/Demerzel/pull/368) | feat(ci): wire post_discussion.sh across all workflows (integrates #36 | 1d | MERGEABLE | 1 | spareilleux |
+| [#367](https://github.com/GuitarAlchemist/Demerzel/pull/367) | feat(governance): single-source confidence thresholds via ref:confiden | 1d | UNKNOWN | 1 | spareilleux |
+| [#366](https://github.com/GuitarAlchemist/Demerzel/pull/366) | feat(ci): extract testable llm_call.sh + post_discussion.sh seams | 1d | MERGEABLE | 1 | spareilleux |
+| [#365](https://github.com/GuitarAlchemist/Demerzel/pull/365) | feat(ci): ecosystem facts action — single source for repo/category ids | 1d | UNKNOWN | 1 | spareilleux |
+| [#364](https://github.com/GuitarAlchemist/Demerzel/pull/364) | refactor(schemas): collapse byte-identical hexavalent-distribution int | 1d | MERGEABLE | 1 | spareilleux |
+| [#362](https://github.com/GuitarAlchemist/Demerzel/pull/362) | feat(hooks): DigestState deep module behind the session-digest hooks | 1d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -90,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-06-22T07:51:57.052842+00:00 UTC_
+_Generated: 2026-06-23T07:09:11.348892+00:00 UTC_
 
-_Commit: `4b29c82e2b4b`_
+_Commit: `8fc249d16aaa`_
