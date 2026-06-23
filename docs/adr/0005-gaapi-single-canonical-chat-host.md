@@ -37,7 +37,7 @@ Current deployed state at decision time:
 **GaApi is the single canonical chat host.** GaChatbot.Api and GA.AI.Service are
 retired. The shared chat plumbing (validate → concurrency-gate → session-cookie
 → orchestrate, plus readiness probe + bounded-timeout + low-confidence fallback +
-SSE framing) lives in `Common/…Orchestration` behind one seam (#1), and GaApi's
+SSE framing) lives in `Common/GA.Business.Core.Orchestration` behind one seam (#1), and GaApi's
 transports become thin adapters.
 
 ## Why (the trade-off)
@@ -64,7 +64,7 @@ cloudflared serves the **public demo** from GaChatbot.Api today. Therefore
    `Apps/ga-server/GaApi/appsettings.ReverseProxy.json:114-134,350-356`. CI build.
 2. **#8b delete dead `ChatbotSessionOrchestrator` methods** — `GetResponseAsync` /
    `StreamResponseAsync` have no callers; keep `NormalizeHistory`. CI build.
-3. **#1 chat intake seam** in `Common/…Orchestration`; route GaApi through it
+3. **#1 chat intake seam** in `Common/GA.Business.Core.Orchestration`; route GaApi through it
    (tracer-bullet: one transport end-to-end, then the rest).
 4. **#4 + #8a** — fold GaChatbot's readiness/fallback + CRLF SSE fix into the
    seam, so GaApi *gains parity* (incl. the markdown-table-truncation fix).
