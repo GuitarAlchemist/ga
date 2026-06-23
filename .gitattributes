@@ -22,3 +22,9 @@
 # The path matches where the existing 2k_earth_* textures already live
 # in ReactComponents/ga-react-components/public/textures/planets/.
 ReactComponents/ga-react-components/public/textures/planets/bathymetry_*.png filter=lfs diff=lfs merge=lfs -text
+
+# Git hook scripts MUST stay LF. core.autocrlf=true on Windows clones would
+# otherwise convert the `#!/usr/bin/env pwsh` shebang to `pwsh\r`, which the
+# kernel cannot spawn ("cannot spawn .githooks/pre-commit: No such file or
+# directory"). This is exactly how pre-commit got bricked once already.
+.githooks/** text eol=lf
