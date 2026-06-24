@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4841964e45f02d2c705ec5b534173672e10de82d",
-    "generatedAt": "2026-06-24T00:51:42.495540+00:00",
+    "commitSha": "5142933282e8e346b39758722a961e2b3b6dcd1b",
+    "generatedAt": "2026-06-24T00:55:04.760592+00:00",
     "repoCount": 5,
-    "totalPRs": 25
+    "totalPRs": 23
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-24T00:33:56Z",
-          "failingChecks": 0,
-          "headRef": "feat/chat-intake-seam-stream",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 472,
-          "title": "refactor(chat): route /chat/stream through the seam + drop wrapper deps (slice #1, PR D)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/472"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -138,18 +126,6 @@
           "number": 467,
           "title": "chore(arch): delete dead GA.AI.Service microservice (slice #6)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/467"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T20:38:14Z",
-          "failingChecks": 0,
-          "headRef": "fix/githooks-pre-commit-revival",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 465,
-          "title": "chore(repo): ignore *.stackdump + drop obsolete hook installer",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/465"
         }
       ]
     },
