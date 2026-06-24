@@ -95,13 +95,6 @@ var musicTheoryService = builder.AddProject("music-theory-service", @"..\Apps\ga
 //     .WithReference(redis)
 //     .WithExternalHttpEndpoints();
 
-// Add GA.AI.Service (Port 7003)
-// TODO: Uncomment when service implementation is complete
-// var aiService = builder.AddProject("ai-service", @"..\Apps\ga-server\GA.AI.Service\GA.AI.Service.csproj")
-//     .WithReference(mongoDatabase)
-//     .WithReference(redis)
-//     .WithExternalHttpEndpoints();
-
 // Add GA.Knowledge.Service (Port 7004)
 // TODO: Uncomment when service implementation is complete
 // var knowledgeService = builder.AddProject("knowledge-service", @"..\Apps\ga-server\GA.Knowledge.Service\GA.Knowledge.Service.csproj")
@@ -134,8 +127,6 @@ builder.AddProject("gaapi", @"..\Apps\ga-server\GaApi\GaApi.csproj")
     .WithReference(musicTheoryService)
     // TODO: Uncomment when service implementation is complete
     // .WithReference(bspService)
-    // TODO: Uncomment when service implementation is complete
-    // .WithReference(aiService)
     // TODO: Uncomment when service implementation is complete
     // .WithReference(knowledgeService)
     // TODO: Uncomment when service implementation is complete

@@ -17,7 +17,6 @@
     </Folder>
     <Folder Name="/Backend/Applications/ga-server/" />
     <Folder Name="/Backend/Microservices/">
-        <Project Path="Apps/ga-server/GA.AI.Service/GA.AI.Service.csproj" />
         <Project Path="Apps/ga-server/GA.Analytics.Service/GA.Analytics.Service.csproj" />
         <Project Path="Apps/ga-server/GA.BSP.Service/GA.BSP.Service.csproj" />
         <Project Path="Apps/ga-server/GA.Fretboard.Service/GA.Fretboard.Service.csproj" />
