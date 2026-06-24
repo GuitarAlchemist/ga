@@ -26,11 +26,9 @@ using Services;
 // @ai:business-value SSE chatbot ingress — the demo flow every visitor sees on guitaralchemist.com; outage here = product invisible [T:manually-reviewed conf:0.95 src:product-owner@2026-05-24]
 public class ChatbotController(
     ILogger<ChatbotController> logger,
-    IChatApplicationService chatService,
     IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
-    IChatService statusService,
-    ILlmConcurrencyGate concurrencyGate)
+    IChatService statusService)
     : ControllerBase
 {
     private static readonly JsonSerializerOptions _jsonOptions =
@@ -93,17 +91,28 @@ public class ChatbotController(
         // the orchestrator finishes generating a response.
         await Response.StartAsync(cancellationToken);
 
-        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
-        {
-            await WriteSseErrorAsync("Service is busy. Please try again in a few seconds.", cancellationToken);
-            return;
-        }
-
         try
         {
-            var response = await chatService.ChatAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(message, SessionId: sessionId),
+            // Cross the chat intake seam (#1): validation + gating + dispatch live
+            // there. Busy/Validation become SSE error frames (the wire never returns
+            // 503 after StartAsync); Ok streams the routing frame + chunks + [DONE].
+            var result = await chatIntake.IntakeAsync(
+                new ChatIntakeRequest(message, sessionId),
                 cancellationToken);
+
+            if (result.IsFailure)
+            {
+                var errorMessage = result.GetErrorOrThrow() switch
+                {
+                    ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
+                    ChatIntakeError.Validation v => v.Reason,
+                    _ => "Failed to process message. Please try again."
+                };
+                await WriteSseErrorAsync(errorMessage, cancellationToken);
+                return;
+            }
+
+            var response = result.GetValueOrThrow();
 
             // 1. Emit routing metadata event (first, before text). Trace and
             // grounding are included on this frame to match the JSON wire's
@@ -140,10 +149,6 @@ public class ChatbotController(
             // Headers already committed — cannot change status code.
             // Signal the error via an SSE error event so the client can react.
             await WriteSseErrorAsync("Failed to process message. Please try again.", cancellationToken);
-        }
-        finally
-        {
-            concurrencyGate.Release();
         }
     }
 
