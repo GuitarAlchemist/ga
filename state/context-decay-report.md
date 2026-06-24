@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-06-23T09:18:01Z_
+_Generated: 2026-06-24T09:16:08Z_
 
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
@@ -72,6 +72,8 @@ _Generated: 2026-06-23T09:18:01Z_
 - `CONTEXT.md` → missing: `/grill-with-docs`
 - `CONTEXT.md` → missing: `/improve-codebase-architecture`
 - `CONTEXT.md` → missing: `/tdd`
+- `CONTEXT.md` → missing: `GA.AI.Service`
+- `CONTEXT.md` → missing: `GaChatbot.Api`
 - `CONTEXT.md` → missing: `SCHEMA.json`
 - `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
 - `CONTEXT.md` → missing: `dev-process-overseer.ps1`
