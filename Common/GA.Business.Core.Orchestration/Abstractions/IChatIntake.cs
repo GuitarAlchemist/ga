@@ -34,9 +34,13 @@ public interface IChatIntake
 /// <summary>
 /// Transport-neutral chat request handed to <see cref="IChatIntake"/>. <paramref name="SessionId"/>
 /// is opaque: the adapter resolves it (HTTP cookie / SignalR ConnectionId) and the seam
-/// only forwards it.
+/// only forwards it. <paramref name="History"/> is the prior conversation turns the transport
+/// supplies (AG-UI carries them in the request body); the seam forwards them to the orchestrator.
 /// </summary>
-public sealed record ChatIntakeRequest(string Message, string? SessionId = null);
+public sealed record ChatIntakeRequest(
+    string Message,
+    string? SessionId = null,
+    IReadOnlyList<ConversationTurn>? History = null);
 
 /// <summary>
 /// Closed outcome of a rejected intake. The adapter maps each case to its wire shape

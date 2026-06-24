@@ -97,6 +97,26 @@ public class ChatIntakeTests
     }
 
     [Test]
+    public async Task IntakeAsync_ForwardsConversationHistory()
+    {
+        var (intake, service, _) = MakeIntake();
+        ChatRequest? dispatched = null;
+        service.Setup(s => s.ChatAsync(It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<ChatRequest, CancellationToken>((req, _) => dispatched = req)
+            .ReturnsAsync(SampleResponse());
+        var history = new List<ConversationTurn>
+        {
+            new("user", "earlier question", DateTimeOffset.UnixEpoch),
+            new("assistant", "earlier answer", DateTimeOffset.UnixEpoch),
+        };
+
+        await intake.IntakeAsync(new ChatIntakeRequest("follow-up", "sess-7", history));
+
+        Assert.That(dispatched, Is.Not.Null);
+        Assert.That(dispatched!.History, Is.EqualTo(history), "conversation history must reach the orchestrator");
+    }
+
+    [Test]
     public void IntakeAsync_DispatchThrows_StillReleasesGate()
     {
         var (intake, service, gate) = MakeIntake();

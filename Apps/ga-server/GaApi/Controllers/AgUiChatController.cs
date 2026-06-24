@@ -27,7 +27,7 @@ using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatReques
 [Route("api/chatbot")]
 public class AgUiChatController(
     ILogger<AgUiChatController> logger,
-    IChatApplicationService chatService,
+    IChatIntake chatIntake,
     IHarmonicChatOrchestrator orchestrator,
     ContextualChordService contextualChordService,
     ILlmConcurrencyGate concurrencyGate) : ControllerBase
@@ -59,44 +59,39 @@ public class AgUiChatController(
         if (string.IsNullOrWhiteSpace(userMessage))
             return BadRequest("No user message found in the request.");
 
-        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is busy. Please try again.");
+        var history = input.Messages
+            .Where(m => m.Content is not null)
+            .Select(m => new GA.Business.Core.Orchestration.Models.ConversationTurn(
+                m.Role, m.Content!, DateTimeOffset.UtcNow))
+            .ToList();
 
-        try
-        {
-            var history = input.Messages
-                .Where(m => m.Content is not null)
-                .Select(m => new GA.Business.Core.Orchestration.Models.ConversationTurn(
-                    m.Role, m.Content!, DateTimeOffset.UtcNow))
-                .ToList();
+        // Phase C P1 (task #107 INFO-003) — server-issued cookie is the SessionId
+        // source. ThreadId is a client-controlled AG-UI state primitive, NOT a
+        // server-side memory partition key (using it would be session fixation, the
+        // VULN-001 shape). The seam takes SessionId as opaque; it owns gating +
+        // dispatch and frames nothing — this thin adapter frames the typed result.
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
 
-            // Phase C P1 (task #107 INFO-003) — server-issued cookie is the
-            // SessionId source. Previously this site passed input.ThreadId
-            // directly as SessionId, which is client-controlled and would
-            // have allowed session fixation once Memory:EnrichOnRetrieve=true
-            // ships (same threat shape as VULN-001 closed for /api/chatbot/chat).
-            // ThreadId remains a client-side state-management primitive for
-            // the AG-UI protocol; it is NOT a server-side memory partition key.
-            // Issued AFTER the concurrency-gate check so 503 paths don't mint
-            // orphan cookies (VULN-004).
-            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
-            var response = await chatService.ChatAsync(
-                new OrchestratorChatRequest(userMessage, sessionId, History: history),
-                cancellationToken);
+        var result = await chatIntake.IntakeAsync(
+            new ChatIntakeRequest(userMessage, sessionId, history),
+            cancellationToken);
 
-            return Ok(new
+        return result.Match<IActionResult>(
+            response => Ok(new
             {
                 answer      = response.NaturalLanguageAnswer,
                 routing     = response.Routing,
                 candidates  = response.Candidates,
                 filters     = response.QueryFilters,
                 progression = response.Progression,
+            }),
+            error => error switch
+            {
+                ChatIntakeError.Busy => StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    "Service is busy. Please try again."),
+                ChatIntakeError.Validation v => BadRequest(v.Reason),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, "Unexpected error.")
             });
-        }
-        finally
-        {
-            concurrencyGate.Release();
-        }
     }
 
     /// <summary>
