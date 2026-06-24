@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4bf23eb5e91083230ac8db8085de5780674353cc",
-    "generatedAt": "2026-06-23T22:45:09.689215+00:00",
+    "commitSha": "56f0213561bbb463e24fc06db55a331f16a1aa29",
+    "generatedAt": "2026-06-24T00:49:21.412824+00:00",
     "repoCount": 5,
-    "totalPRs": 24
+    "totalPRs": 27
   },
   "repos": [
     {
@@ -113,8 +113,32 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 5,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-24T00:33:56Z",
+          "failingChecks": 0,
+          "headRef": "feat/chat-intake-seam-stream",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 472,
+          "title": "refactor(chat): route /chat/stream through the seam + drop wrapper deps (slice #1, PR D)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/472"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-23T23:22:38Z",
+          "failingChecks": 0,
+          "headRef": "feat/chat-intake-seam-agui-json",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 471,
+          "title": "refactor(chat): route AG-UI JSON through the seam + history support (slice #1, PR C)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/471"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -130,20 +154,8 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-23T20:40:38Z",
-          "failingChecks": 5,
-          "headRef": "feat/chat-intake-seam",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 469,
-          "title": "refactor(chat): chat intake seam \u2014 IChatIntake + route /api/chatbot/chat (slice #1, PR A)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/469"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
           "createdAt": "2026-06-23T03:35:32Z",
-          "failingChecks": 3,
+          "failingChecks": 1,
           "headRef": "chore/delete-ga-ai-service",
           "isDraft": false,
           "mergeable": "UNKNOWN",
@@ -379,8 +391,32 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-24T00:37:17Z",
+          "failingChecks": 0,
+          "headRef": "fix/self-merge-live-fixes",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 392,
+          "title": "fix(afk): live-proof bugs \u2014 PR labeling seam + stale council model id",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/392"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-24T00:30:19Z",
+          "failingChecks": 0,
+          "headRef": "agent/issue-389",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 391,
+          "title": "AFK: AFK smoke #2: add a dated 'self-merge proven' line to docs/agents/afk-agent.md (#389)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/391"
+        },
         {
           "ageDays": 2,
           "author": "spareilleux",
@@ -388,7 +424,7 @@
           "failingChecks": 1,
           "headRef": "feat/post-discussion-integration",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 368,
           "title": "feat(ci): wire post_discussion.sh across all workflows (integrates #365 + #366)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/368"
@@ -400,7 +436,7 @@
           "failingChecks": 1,
           "headRef": "feat/confidence-thresholds-single-source",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 367,
           "title": "feat(governance): single-source confidence thresholds via ref:confidence tokens",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/367"
@@ -412,7 +448,7 @@
           "failingChecks": 1,
           "headRef": "feat/ci-script-seams",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 366,
           "title": "feat(ci): extract testable llm_call.sh + post_discussion.sh seams",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/366"
@@ -424,7 +460,7 @@
           "failingChecks": 1,
           "headRef": "feat/ecosystem-registry-action",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 365,
           "title": "feat(ci): ecosystem facts action \u2014 single source for repo/category ids + counts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/365"
@@ -436,7 +472,7 @@
           "failingChecks": 1,
           "headRef": "refactor/collapse-hexavalent-schema",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 364,
           "title": "refactor(schemas): collapse byte-identical hexavalent-distribution into fuzzy",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/364"
@@ -448,7 +484,7 @@
           "failingChecks": 1,
           "headRef": "feat/digeststate-deep-module",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 362,
           "title": "feat(hooks): DigestState deep module behind the session-digest hooks",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/362"
