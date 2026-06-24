@@ -24,7 +24,11 @@ public static class ServiceCollectionExtensions
         var embeddingProvider = configuration.GetValue<string>("AI:EmbeddingProvider") ?? "ollama";
         var usesOrchestration = chatbotMode is "full" or "orchestrated";
 
-        services.AddSingleton<ILlmConcurrencyGate, LlmConcurrencyGate>();
+        // Fully qualified to disambiguate from the orchestration gate
+        // (GA.Business.Core.Orchestration.{Abstractions.ILlmConcurrencyGate,
+        // Services.LlmConcurrencyGate}) added by the IChatIntake seam. The host
+        // controllers inject GaChatbot.Api's own gate; keep them on it.
+        services.AddSingleton<GaChatbot.Api.Services.ILlmConcurrencyGate, GaChatbot.Api.Services.LlmConcurrencyGate>();
         services.TryAddSingleton<ConversationHistoryStore>();
         services.TryAddSingleton<RoutingContextEnricher>();
         services.AddSingleton<IChatProviderReadinessProbe, ChatProviderReadinessProbe>();

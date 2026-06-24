@@ -27,6 +27,7 @@ using Services;
 public class ChatbotController(
     ILogger<ChatbotController> logger,
     IChatApplicationService chatService,
+    IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
     IChatService statusService,
     ILlmConcurrencyGate concurrencyGate)
@@ -158,40 +159,40 @@ public class ChatbotController(
         [FromBody] ChatRequest request,
         CancellationToken cancellationToken)
     {
-        var message = request.Message?.Trim();
-        if (string.IsNullOrWhiteSpace(message))
-            return BadRequest(new { error = "Message cannot be empty." });
+        // Thin adapter over the chat intake seam (#1): validate + gate + dispatch
+        // live in IChatIntake. This method only resolves the transport-specific
+        // session id (HTTP cookie — Phase C plumbing, see ChatStream above) and
+        // frames the typed result. The seam takes an opaque SessionId; it never
+        // touches HttpContext.
+        var sw = Stopwatch.StartNew();
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+        var result = await chatIntake.IntakeAsync(
+            new ChatIntakeRequest(request.Message, sessionId),
+            cancellationToken);
+        sw.Stop();
 
-        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
-            return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { error = "Service is busy. Please try again in a few seconds." });
-
-        try
-        {
-            var sw = Stopwatch.StartNew();
-            // Phase C plumbing — see ChatStream above.
-            var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
-            var response = await chatService.ChatAsync(
-                new GA.Business.Core.Orchestration.Models.ChatRequest(message, SessionId: sessionId),
-                cancellationToken);
-            sw.Stop();
-
-            var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
-            var traceId = Activity.Current?.TraceId.ToString();
-            return Ok(new ChatJsonResponse(
-                NaturalLanguageAnswer: response.NaturalLanguageAnswer ?? string.Empty,
-                routing.AgentId,
-                routing.Confidence,
-                routing.RoutingMethod,
-                Grounding: response.Grounding,
-                ElapsedMs: sw.ElapsedMilliseconds,
-                TraceId: traceId,
-                Trace: traceCapture.Build()));
-        }
-        finally
-        {
-            concurrencyGate.Release();
-        }
+        return result.Match<ActionResult<ChatJsonResponse>>(
+            response =>
+            {
+                var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
+                return Ok(new ChatJsonResponse(
+                    NaturalLanguageAnswer: response.NaturalLanguageAnswer ?? string.Empty,
+                    routing.AgentId,
+                    routing.Confidence,
+                    routing.RoutingMethod,
+                    Grounding: response.Grounding,
+                    ElapsedMs: sw.ElapsedMilliseconds,
+                    TraceId: Activity.Current?.TraceId.ToString(),
+                    Trace: traceCapture.Build()));
+            },
+            error => error switch
+            {
+                ChatIntakeError.Busy => StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    new { error = "Service is busy. Please try again in a few seconds." }),
+                ChatIntakeError.Validation v => BadRequest(new { error = v.Reason }),
+                _ => StatusCode(StatusCodes.Status500InternalServerError,
+                    new { error = "Unexpected error." })
+            });
     }
 
     /// <summary>
