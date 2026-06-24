@@ -21,11 +21,10 @@ using Services;
 [AllowAnonymous]
 public sealed class ChatbotHub(
     ILogger<ChatbotHub> logger,
-    IChatApplicationService chatService,
+    IChatIntake chatIntake,
     IAgenticTraceCapture traceCapture,
     ChatbotSessionOrchestrator sessionOrchestrator,
-    ISemanticKnowledgeSource semanticKnowledge,
-    ILlmConcurrencyGate concurrencyGate)
+    ISemanticKnowledgeSource semanticKnowledge)
     : Hub
 {
     private static readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
@@ -104,32 +103,36 @@ public sealed class ChatbotHub(
         var history = _conversations.GetOrAdd(connectionId, _ => []);
         var connectionAborted = Context.ConnectionAborted;
 
-        if (!await concurrencyGate.TryEnterAsync(connectionAborted))
-        {
-            await Clients.Caller.SendAsync("Error", "Service is busy. Please try again in a few seconds.");
-            return;
-        }
-
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(connectionAborted);
         cts.CancelAfter(_pipelineBudget);
         var cancellationToken = cts.Token;
 
         try
         {
-            // SessionId = Context.ConnectionId — the anonymous demo doesn't
-            // have an authenticated user identity, but SignalR's server-issued
-            // ConnectionId IS a 128-bit cryptographically-random per-tab handle
-            // (per Microsoft.AspNetCore.SignalR's default IConnectionIdGenerator).
-            // That's exactly what MemoryHook needs to scope retrieval per
-            // conversation rather than across every anonymous tab — see PR
-            // #157 Phase A (storage layer) for the leak this closes.
-            //
-            // After this Phase B change ships AND Memory:EnrichOnRetrieve=true
-            // is flipped in config, MemoryHook will scope reads/writes to
-            // (sessionId=connectionId) instead of skipping retrieval entirely.
-            var response = await chatService.ChatAsync(
-                new ChatRequest(trimmedMessage, SessionId: connectionId),
+            // Cross the chat intake seam (#1): it owns validation + gating + dispatch.
+            // SessionId = Context.ConnectionId — SignalR's server-issued ConnectionId is a
+            // 128-bit cryptographically-random per-tab handle (default
+            // IConnectionIdGenerator), exactly what MemoryHook needs to scope retrieval per
+            // conversation rather than across every anonymous tab (PR #157 Phase A). The
+            // seam takes it as an opaque id. Rate-limit + length cap stay here above
+            // (SignalR-specific: the HTTP limiter only fires on the WS upgrade).
+            var result = await chatIntake.IntakeAsync(
+                new ChatIntakeRequest(trimmedMessage, connectionId),
                 cancellationToken);
+
+            if (result.IsFailure)
+            {
+                var errorMessage = result.GetErrorOrThrow() switch
+                {
+                    ChatIntakeError.Busy => "Service is busy. Please try again in a few seconds.",
+                    ChatIntakeError.Validation v => v.Reason,
+                    _ => "Failed to process message. Please try again."
+                };
+                await Clients.Caller.SendAsync("Error", errorMessage, cancellationToken);
+                return;
+            }
+
+            var response = result.GetValueOrThrow();
 
             // Emit routing metadata to client. Grounding is included when the
             // intent that handled the request was deterministic-compute-backed
@@ -183,10 +186,6 @@ public sealed class ChatbotHub(
         {
             logger.LogError(ex, "Error processing message from {ConnectionId}", connectionId);
             await Clients.Caller.SendAsync("Error", "Failed to process message. Please try again.");
-        }
-        finally
-        {
-            concurrencyGate.Release();
         }
     }
 
