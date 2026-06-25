@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-06-24T09:16:08Z_
+_Generated: 2026-06-25T09:15:02Z_
 
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
@@ -73,6 +73,7 @@ _Generated: 2026-06-24T09:16:08Z_
 - `CONTEXT.md` → missing: `/improve-codebase-architecture`
 - `CONTEXT.md` → missing: `/tdd`
 - `CONTEXT.md` → missing: `GA.AI.Service`
+- `CONTEXT.md` → missing: `GA.Domain.Services`
 - `CONTEXT.md` → missing: `GaChatbot.Api`
 - `CONTEXT.md` → missing: `SCHEMA.json`
 - `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
@@ -80,6 +81,7 @@ _Generated: 2026-06-24T09:16:08Z_
 - `CONTEXT.md` → missing: `docs/contracts/*.schema.json`
 - `CONTEXT.md` → missing: `state/.loop-halted`
 - `CONTEXT.md` → missing: `state/quality/<domain>/`
+- `CONTEXT.md` → missing: `wide/close-voicing`
 - `CONTEXT.md` → missing: `~/.demerzel/HALT-ALL`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
