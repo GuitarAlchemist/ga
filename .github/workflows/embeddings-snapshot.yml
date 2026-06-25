@@ -142,6 +142,25 @@ jobs:
           $dst   = "$dir/$date.json"
           New-Item -ItemType Directory -Path $dir -Force | Out-Null
 
+          # Never downgrade a REAL measurement to amber. A real snapshot for
+          # today only lands when an operator ran ix-embedding-diagnostics
+          # locally against the on-disk index (Scripts/refresh-embeddings-snapshot.ps1,
+          # wired into the optic-k-rebuild skill). If such a snapshot already
+          # exists for $date and is not degraded, preserve it and exit without
+          # writing/committing — otherwise this cron would clobber the only real
+          # data point the dashboard ever gets.
+          if (Test-Path $dst) {
+            try {
+              $existing = Get-Content -Raw -Path $dst -Encoding UTF8 | ConvertFrom-Json
+              if ($existing.degraded -ne $true) {
+                Write-Host "Real (non-degraded) snapshot already exists at $dst — preserving it, not downgrading to amber."
+                exit 0
+              }
+            } catch {
+              Write-Host "::warning::Could not parse existing $dst; proceeding to overwrite with degraded envelope."
+            }
+          }
+
           # Find last-known-good full_classifier_accuracy. Search the most
           # recent 30 dated snapshots for one with degraded != true and a
           # numeric leak_detection.full_classifier_accuracy. Fall back to

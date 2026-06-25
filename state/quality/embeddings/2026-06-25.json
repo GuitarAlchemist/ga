@@ -1,0 +1,227 @@
+{
+  "timestamp": "2026-06-25T03:22:29.348368300+00:00",
+  "tool": "ix-embedding-diagnostics 0.1.0",
+  "seed": 42,
+  "corpus": {
+    "file": "state/voicings/optick.index",
+    "count": 313047,
+    "dims": 124,
+    "instruments": {
+      "bass": 7795,
+      "guitar": 297910,
+      "ukulele": 7342
+    }
+  },
+  "leak_detection": {
+    "sample_size": 12000,
+    "per_class": {
+      "bass": 4000,
+      "guitar": 4000,
+      "ukulele": 4000
+    },
+    "n_folds": 5,
+    "classifier": "RandomForest(n_trees=30, max_depth=10)",
+    "full_classifier_accuracy": 0.8310833333333333,
+    "baseline_random": 0.3333333333333333,
+    "by_partition": [
+      {
+        "partition": "STRUCTURE",
+        "start": 0,
+        "end": 24,
+        "dims": 24,
+        "accuracy_mean": 0.502,
+        "accuracy_std": 0.011047247017545418,
+        "per_fold": [
+          0.49333333333333335,
+          0.5025,
+          0.5145833333333333,
+          0.5133333333333333,
+          0.48625
+        ],
+        "leak_hypothesis": "likely_leak",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "MORPHOLOGY",
+        "start": 24,
+        "end": 48,
+        "dims": 24,
+        "accuracy_mean": 0.9031666666666667,
+        "accuracy_std": 0.004920196473041838,
+        "per_fold": [
+          0.9058333333333334,
+          0.9020833333333333,
+          0.9083333333333333,
+          0.9054166666666666,
+          0.8941666666666667
+        ],
+        "leak_hypothesis": "by_design",
+        "leak_confirmed": false
+      },
+      {
+        "partition": "CONTEXT",
+        "start": 48,
+        "end": 60,
+        "dims": 12,
+        "accuracy_mean": 0.3333333333333333,
+        "accuracy_std": 0.0,
+        "per_fold": [
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333
+        ],
+        "leak_hypothesis": "possible",
+        "leak_confirmed": false
+      },
+      {
+        "partition": "SYMBOLIC",
+        "start": 60,
+        "end": 72,
+        "dims": 12,
+        "accuracy_mean": 0.5374166666666668,
+        "accuracy_std": 0.008938058451861271,
+        "per_fold": [
+          0.5379166666666667,
+          0.54875,
+          0.5395833333333333,
+          0.5395833333333333,
+          0.52125
+        ],
+        "leak_hypothesis": "likely_leak",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "MODAL",
+        "start": 72,
+        "end": 112,
+        "dims": 40,
+        "accuracy_mean": 0.487,
+        "accuracy_std": 0.005859465277082317,
+        "per_fold": [
+          0.4979166666666667,
+          0.48625,
+          0.48625,
+          0.4841666666666667,
+          0.48041666666666666
+        ],
+        "leak_hypothesis": "possible",
+        "leak_confirmed": true
+      },
+      {
+        "partition": "ROOT",
+        "start": 112,
+        "end": 124,
+        "dims": 12,
+        "accuracy_mean": 0.34983333333333333,
+        "accuracy_std": 0.0045384162680633475,
+        "per_fold": [
+          0.35291666666666666,
+          0.3466666666666667,
+          0.3545833333333333,
+          0.3525,
+          0.3425
+        ],
+        "leak_hypothesis": "by_design",
+        "leak_confirmed": false
+      }
+    ]
+  },
+  "retrieval_consistency": {
+    "queries_tested": 50,
+    "top_k": 10,
+    "avg_pc_set_match_pct": 1.0,
+    "per_query_match_pct": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "note": "A STRUCTURE-only query should return voicings sharing the query's pitch-class set. A low match rate indicates the STRUCTURE partition is not cleanly encoding PC-set."
+  },
+  "cluster_baseline": {
+    "k": 50,
+    "n_voicings": 5000,
+    "sampled_from": 313047,
+    "iterations_ran": 30,
+    "file": "tmp-baseline\\embedding-clusters-k50.json"
+  },
+  "topology": {
+    "guitar": {
+      "sample_size": 1000,
+      "beta_0": 642,
+      "beta_1": 193,
+      "filtration_radius": 0.3500739602285053,
+      "avg_pairwise_distance": 0.8751849005712632
+    },
+    "bass": {
+      "sample_size": 1000,
+      "beta_0": 695,
+      "beta_1": 85,
+      "filtration_radius": 0.3998380789371856,
+      "avg_pairwise_distance": 0.9995951973429639
+    },
+    "ukulele": {
+      "sample_size": 1000,
+      "beta_0": 699,
+      "beta_1": 67,
+      "filtration_radius": 0.4056615859523934,
+      "avg_pairwise_distance": 1.0141539648809834
+    },
+    "cross_instrument_match": "beta0_range=57, beta1_range=126 (larger = more instrument-specific topology)"
+  },
+  "notes": [
+    "LogisticRegression in ix-supervised is binary-only; RandomForest used instead for 3-class",
+    "ix-topo has no native Adjusted Rand Index; post-refactor comparison will add one",
+    "Rips complex is O(n²) in edges — topology sampled at 1000 points per instrument",
+    "Leak confirmed criterion: mean accuracy > 0.40 on balanced 3-class problem (baseline=0.333)"
+  ],
+  "runtime_seconds": 23.7894199
+}
