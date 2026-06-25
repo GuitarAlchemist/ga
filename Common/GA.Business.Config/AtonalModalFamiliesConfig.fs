@@ -75,28 +75,7 @@ module AtonalModalFamiliesConfig =
 
     // ── Config discovery ─────────────────────────────────────────────────────
 
-    let private findConfigPath () =
-        let configName = "AtonalModalFamilies.yaml"
-
-        let possiblePaths =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", configName)
-              Path.Combine(Environment.CurrentDirectory, configName)
-              Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", configName)
-              // Test runners often live at bin/<Config>/<tfm>/
-              Path.Combine(
-                  AppDomain.CurrentDomain.BaseDirectory,
-                  "..",
-                  "..",
-                  "..",
-                  "..",
-                  "Common",
-                  "GA.Business.Config",
-                  configName
-              )
-              Path.Combine(__SOURCE_DIRECTORY__, configName) ]
-
-        possiblePaths |> List.tryFind File.Exists
+    let private findConfigPath () = ConfigFileLocator.findFile "AtonalModalFamilies.yaml"
 
     // ── Lazy-loaded, cached catalog ──────────────────────────────────────────
 

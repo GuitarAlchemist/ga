@@ -40,17 +40,7 @@ module ModesConfig =
     type ModesYaml =
         { ModalFamilies: ResizeArray<ModalFamily> }
 
-    let getConfigPath () =
-        let configName = "Modes.yaml"
-
-        let possiblePaths =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", configName)
-              Path.Combine(Environment.CurrentDirectory, configName)
-              Path.Combine(Environment.CurrentDirectory, "config", configName)
-              Path.Combine(__SOURCE_DIRECTORY__, configName) ]
-
-        possiblePaths |> List.tryFind File.Exists
+    let getConfigPath () = ConfigFileLocator.findFile "Modes.yaml"
 
     let mutable private configPath =
         match getConfigPath () with

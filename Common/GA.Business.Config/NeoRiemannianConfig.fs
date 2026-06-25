@@ -58,27 +58,7 @@ module NeoRiemannianConfig =
 
     // ── Config discovery ──────────────────────────────────────────────────────
 
-    let private findConfigPath () =
-        let configName = "NeoRiemannian.yaml"
-
-        let possiblePaths =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", configName)
-              Path.Combine(Environment.CurrentDirectory, configName)
-              Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", configName)
-              // For test runners running from bin/<Config>/<tfm>/
-              Path.Combine(
-                  AppDomain.CurrentDomain.BaseDirectory,
-                  "..",
-                  "..",
-                  "..",
-                  "..",
-                  "Common",
-                  "GA.Business.Config",
-                  configName
-              ) ]
-
-        possiblePaths |> List.tryFind File.Exists
+    let private findConfigPath () = ConfigFileLocator.findFile "NeoRiemannian.yaml"
 
     // ── Lazy-loaded, cached catalog ───────────────────────────────────────────
 

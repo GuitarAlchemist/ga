@@ -28,29 +28,7 @@ module InstrumentsConfig =
 
     let private loadInstrumentsData () =
         try
-            let configName = "Instruments.yaml"
-
-            let possiblePaths =
-                [ // Typical bin/ working dir locations
-                  Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-                  Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", configName)
-                  Path.Combine(Environment.CurrentDirectory, configName)
-                  Path.Combine(Environment.CurrentDirectory, "config", configName)
-                  // Repo-root relative (when running tests from solution root)
-                  Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", configName)
-                  // Bin→repo relative hop for test runners
-                  Path.Combine(
-                      AppDomain.CurrentDomain.BaseDirectory,
-                      "..",
-                      "..",
-                      "..",
-                      "..",
-                      "Common",
-                      "GA.Business.Config",
-                      configName
-                  ) ]
-
-            match possiblePaths |> List.tryFind File.Exists with
+            match ConfigFileLocator.findFile "Instruments.yaml" with
             | Some path ->
                 let deserializer =
                     DeserializerBuilder().WithNamingConvention(PascalCaseNamingConvention.Instance).Build()

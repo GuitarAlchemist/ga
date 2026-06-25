@@ -75,14 +75,7 @@ module ExtendedScalesConfig =
 
     // ── YAML loading ───────────────────────────────────────────────────────
 
-    let private findYaml () =
-        let name = "ExtendedScales.yaml"
-        [ AppDomain.CurrentDomain.BaseDirectory
-          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config")
-          Environment.CurrentDirectory
-          Path.Combine(Environment.CurrentDirectory, "config") ]
-        |> List.map (fun d -> Path.Combine(d, name))
-        |> List.tryFind File.Exists
+    let private findYaml () = ConfigFileLocator.findFile "ExtendedScales.yaml"
 
     // Lazy caches — populated on first access, rebuilt on ReloadConfig.
     let mutable private cachedScales: ImmutableList<ExtendedScaleInfo> option = None
