@@ -99,6 +99,21 @@ at layer 4, orchestration at 5; never in lower layers.
   and lens sidecars are excluded by design rather than false-failing. A `FAIL` is a real
   producer gap (not yet emitting the envelope), not noise.
 
+- **Chord classification engine** — the single layer-3 authority (`GA.Domain.Services`,
+  `ChordClassificationEngine.Classify(ChordClassificationContext) → IReadOnlyList<string>`) for
+  **mood / style / genre / flavour** tags. Replaces three divergent taggers that disagreed on the
+  *same chord* — `VoicingTagEnricher` and `VoicingHarmonicAnalyzer.GenerateSemanticTags` (runtime)
+  and `InterpretationService.GenerateSemanticTags` (corpus, layer 4). Canonical basis = the
+  register-aware `VoicingTagEnricher` rules, **one rule per tag** (e.g. `melancholy = minor &&
+  midiMean<60`, not the conflicting `consonance>0.6` / name-substring variants), ≤2 mood tags, plus
+  the name/quality long-tail the metric rules can't express (iconic chords, `dim`→tense, modal
+  flavour). Emits **only `SymbolicTagRegistry`-known names** (asserted via `GetBitIndex`), so a typo
+  can't silently produce a tag that fires no SYMBOLIC bit — the gap the 2026-04-18 diagnostic found.
+  **Structural** tags (`wide/close-voicing`, `register:*`, shell, drop2/3) are *not* its job — they
+  stay with `VoicingPhysicalAnalyzer`. Staged: slice 1 unifies the two runtime taggers (layer-3, no
+  re-index); slice 2 repoints the corpus tagger (OPTIC-K re-index, instrument SYMBOLIC density).
+  Campaign-2 slice C2-#2; grilling resolved 2026-06-24.
+
 ## Conventions
 
 See `CLAUDE.md` for authoritative build/convention rules and the layer model.
