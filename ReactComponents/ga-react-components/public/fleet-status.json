@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "12548b828a74604e61cf2ab51cda18acde8ce801",
-    "generatedAt": "2026-06-25T03:33:04.121409+00:00",
+    "commitSha": "2e64e6faa9e666301a62e1c39cc4ed81010cbb04",
+    "generatedAt": "2026-06-25T03:41:13.836442+00:00",
     "repoCount": 5,
-    "totalPRs": 17
+    "totalPRs": 16
   },
   "repos": [
     {
@@ -113,21 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 1,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T02:05:42Z",
-          "failingChecks": 0,
-          "headRef": "feat/chord-classification-engine",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 475,
-          "title": "feat(analysis): ChordClassificationEngine \u2014 single mood/style tag authority (C2-#2 slice 1)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/475"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/ix",
