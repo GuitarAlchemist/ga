@@ -76,27 +76,7 @@ module WorldScalesConfig =
 
     // ── Directory discovery ───────────────────────────────────────────────────
 
-    let private findWorldScalesDir () =
-        let dirName = "WorldScales"
-
-        let candidates =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dirName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", dirName)
-              Path.Combine(Environment.CurrentDirectory, dirName)
-              Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", dirName)
-              // Test runners running from bin/<Config>/<tfm>/
-              Path.Combine(
-                  AppDomain.CurrentDomain.BaseDirectory,
-                  "..",
-                  "..",
-                  "..",
-                  "..",
-                  "Common",
-                  "GA.Business.Config",
-                  dirName
-              ) ]
-
-        candidates |> List.tryFind Directory.Exists
+    let private findWorldScalesDir () = ConfigFileLocator.findDir "WorldScales"
 
     // ── Catalog loading ───────────────────────────────────────────────────────
 

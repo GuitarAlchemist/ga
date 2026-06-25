@@ -19,27 +19,7 @@ module TabSourcesConfig =
     [<CLIMutable>]
     type TabSourcesYaml = { Datasets: ResizeArray<TabSource> }
 
-    let private findConfigPath () =
-        let configName = "TabSources.yaml"
-
-        let possiblePaths =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config", configName)
-              Path.Combine(Environment.CurrentDirectory, configName)
-              Path.Combine(Environment.CurrentDirectory, "Common", "GA.Business.Config", configName)
-              // For test runners
-              Path.Combine(
-                  AppDomain.CurrentDomain.BaseDirectory,
-                  "..",
-                  "..",
-                  "..",
-                  "..",
-                  "Common",
-                  "GA.Business.Config",
-                  configName
-              ) ]
-
-        possiblePaths |> List.tryFind File.Exists
+    let private findConfigPath () = ConfigFileLocator.findFile "TabSources.yaml"
 
     let Load () : TabSource list =
         match findConfigPath () with

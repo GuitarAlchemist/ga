@@ -120,12 +120,8 @@ module YamlKnowledgeLoader =
     // ── Directory discovery ───────────────────────────────────────────────────
 
     let private findYamlDirectory () : string option =
-        let sentinel = "Scales.yaml" // always present after build
-        [ AppDomain.CurrentDomain.BaseDirectory
-          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config")
-          Environment.CurrentDirectory
-          Path.Combine(Environment.CurrentDirectory, "config") ]
-        |> List.tryFind (fun dir -> File.Exists(Path.Combine(dir, sentinel)))
+        // Resolve the directory containing the always-present sentinel via the shared locator.
+        ConfigFileLocator.findFile "Scales.yaml" |> Option.map Path.GetDirectoryName
 
     // ── Public API ────────────────────────────────────────────────────────────
 

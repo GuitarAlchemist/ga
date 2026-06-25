@@ -27,17 +27,7 @@ module SemanticConfig =
     type SemanticYaml =
         { Categories: ResizeArray<SemanticCategory> }
 
-    let getConfigPath () =
-        let configName = "SemanticNomenclature.yaml"
-
-        let possiblePaths =
-            [ Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configName)
-              Path.Combine(Environment.CurrentDirectory, configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "Debug", "net10.0", configName)
-              Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "Release", "net10.0", configName)
-              Path.Combine(__SOURCE_DIRECTORY__, configName) ]
-
-        possiblePaths |> List.tryFind File.Exists
+    let getConfigPath () = ConfigFileLocator.findFile "SemanticNomenclature.yaml"
 
     let mutable private configData: SemanticYaml option = None
 

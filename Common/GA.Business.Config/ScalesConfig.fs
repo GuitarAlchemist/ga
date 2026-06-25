@@ -76,14 +76,7 @@ module ScalesConfig =
 
     // ── YAML loading ──────────────────────────────────────────────────────────
 
-    let private findYaml () =
-        let name = "Scales.yaml"
-        [ AppDomain.CurrentDomain.BaseDirectory
-          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config")
-          Environment.CurrentDirectory
-          Path.Combine(Environment.CurrentDirectory, "config") ]
-        |> List.map (fun d -> Path.Combine(d, name))
-        |> List.tryFind File.Exists
+    let private findYaml () = ConfigFileLocator.findFile "Scales.yaml"
 
     let mutable private cachedScales: ImmutableList<ScaleInfo> option = None
     let mutable private byIanRingId: IReadOnlyDictionary<int, ScaleInfo> = Dictionary() :> _
