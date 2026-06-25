@@ -18,7 +18,7 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#480](https://github.com/GuitarAlchemist/ga/pull/480) | chore(governance): knowledge package — supervised-drive autonomy calib | 0d | UNKNOWN | 1 | spareilleux |
+| [#480](https://github.com/GuitarAlchemist/ga/pull/480) | chore(governance): knowledge package — supervised-drive autonomy calib | 0d | MERGEABLE | 1 | spareilleux |
 
 ### ix (3 open)
 
@@ -33,8 +33,8 @@ _No open PRs._
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#60](https://github.com/GuitarAlchemist/tars/pull/60) | Document AFK auto-delegate loop in README.md | 0d | UNKNOWN | 0 | spareilleux |
-| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 3d | MERGEABLE | 0 | spareilleux |
-| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 3d | MERGEABLE | 0 | spareilleux |
+| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 4d | MERGEABLE | 0 | spareilleux |
+| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 4d | MERGEABLE | 0 | spareilleux |
 | [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 4d | UNKNOWN | 3 | spareilleux |
 | [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 4d | UNKNOWN | 3 | spareilleux |
 | [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 4d | UNKNOWN | 2 | spareilleux |
@@ -81,6 +81,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-06-25T03:59:37.465175+00:00 UTC_
+_Generated: 2026-06-25T07:06:14.376010+00:00 UTC_
 
-_Commit: `74490261f58a`_
+_Commit: `f273e8778bac`_

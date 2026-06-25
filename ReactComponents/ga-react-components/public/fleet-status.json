@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "74490261f58a673e0224a3626fcde6433a7ec21b",
-    "generatedAt": "2026-06-25T03:59:37.465175+00:00",
+    "commitSha": "f273e8778bacd0257608fe48062dc58c9c603102",
+    "generatedAt": "2026-06-25T07:06:14.376010+00:00",
     "repoCount": 5,
     "totalPRs": 16
   },
@@ -122,7 +122,7 @@
           "failingChecks": 1,
           "headRef": "chore/demerzel-knowledge-supervised-drive-calibration",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 480,
           "title": "chore(governance): knowledge package \u2014 supervised-drive autonomy calibration",
           "url": "https://github.com/GuitarAlchemist/ga/pull/480"
@@ -208,7 +208,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/60"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -220,7 +220,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
