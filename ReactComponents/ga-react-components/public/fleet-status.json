@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "1e7b2ac2be398a20c83d7483abf051655451f174",
-    "generatedAt": "2026-06-25T03:30:12.013276+00:00",
+    "commitSha": "12548b828a74604e61cf2ab51cda18acde8ce801",
+    "generatedAt": "2026-06-25T03:33:04.121409+00:00",
     "repoCount": 5,
-    "totalPRs": 18
+    "totalPRs": 17
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T02:22:50Z",
-          "failingChecks": 0,
-          "headRef": "feat/config-file-locator",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 476,
-          "title": "refactor(config): ConfigFileLocator \u2014 one path-probe seam for all F# config modules (C2-#3 slice A)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/476"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -134,7 +122,7 @@
           "failingChecks": 0,
           "headRef": "feat/chord-classification-engine",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 475,
           "title": "feat(analysis): ChordClassificationEngine \u2014 single mood/style tag authority (C2-#2 slice 1)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/475"
@@ -162,7 +150,7 @@
           "failingChecks": 2,
           "headRef": "chore/carried-over-docs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 156,
           "title": "docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_repl example",
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
@@ -174,7 +162,7 @@
           "failingChecks": 2,
           "headRef": "feat/architecture-deepenings",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 155,
           "title": "refactor: three architecture deepenings (hexavalent / convergence / tool-schema dedup)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
@@ -186,7 +174,7 @@
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -226,7 +214,7 @@
           "failingChecks": 0,
           "headRef": "update-readme-jules-auto-delegate-13697225367105033759",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 60,
           "title": "Document AFK auto-delegate loop in README.md",
           "url": "https://github.com/GuitarAlchemist/tars/pull/60"
@@ -262,7 +250,7 @@
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
@@ -274,7 +262,7 @@
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
@@ -286,7 +274,7 @@
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
@@ -298,7 +286,7 @@
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
@@ -310,7 +298,7 @@
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
@@ -322,7 +310,7 @@
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
@@ -334,7 +322,7 @@
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
@@ -346,7 +334,7 @@
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
@@ -358,7 +346,7 @@
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
