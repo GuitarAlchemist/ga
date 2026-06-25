@@ -121,6 +121,27 @@ Key numbers to watch (post v4-pp, pre-enrichment baseline was):
 - CONTEXT/SYMBOLIC/MODAL leak acc: 0.522 / 0.614 / 0.498 (target: drop).
 - Retrieval PC-set match: **92.8%** (target: hold or improve).
 
+### 1b. Refresh the dashboard embeddings tile (canonical snapshot)
+
+Step 1 writes a raw report to `state/baseline/<date>/` for the known-good table
+above — but the **dashboard / ix-quality-trend** read a *different* path:
+`state/quality/embeddings/<UTC-date>.json`. The daily `embeddings-snapshot.yml`
+cron can only ever write an amber "index absent on runner" carryforward there
+(the 175 MB index is gitignored, never on hosted CI). So after every local
+rebuild, emit the **real** canonical snapshot so the tile goes green instead of
+stale-amber:
+
+```bash
+pwsh "C:/Users/spare/source/repos/ga/Scripts/refresh-embeddings-snapshot.ps1"
+git add "state/quality/embeddings/$(date -u +%Y-%m-%d).json"
+git commit -m "chore(quality): real embeddings snapshot $(date -u +%Y-%m-%d)"
+```
+
+The cron's degraded path guards on the existing file's `degraded` flag, so it
+will **not** overwrite this real measurement. (Without this step the embeddings
+tile silently re-rots to amber the day after any rebuild — the gap that left it
+dark from 2026-05-16 to 2026-06-25.)
+
 ### 2. Invariant coverage
 
 ```bash
