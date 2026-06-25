@@ -186,19 +186,20 @@ public static class VoicingHarmonicAnalyzer
             quality = chordId.Quality.ToLowerInvariant();
             tags.Add(quality);
             
-            // 4. Genre Mapping (Heuristic)
-            if (quality.Contains("maj7") || quality.Contains("maj9") || quality.Contains("13") || quality.Contains("dominant"))
-                tags.Add("jazz");
+            // Genre/mood tags jazz, melancholy and bright are owned by
+            // ChordClassificationEngine — added via VoicingTagEnricher in
+            // VoicingAnalyzer.AnalyzeEnhanced — with register-aware, one-rule-per-tag logic
+            // that supersedes the divergent name-substring heuristics that used to live here
+            // (Campaign-2 slice C2-#2). The remaining pop/tension/dark/balanced tags are not
+            // registry-canonical (fire no SYMBOLIC bit) and are a separate dead-tag cleanup
+            // pending a downstream-consumption trace — deliberately left untouched this slice.
             if (quality.Contains("sus2") || quality.Contains("sus4") || quality.Contains("add9"))
                 tags.Add("pop");
-            if (quality.Contains("minor") && consonance > 0.6)
-                tags.Add("melancholy");
             if (quality.Contains("diminished") || quality.Contains("augmented") || quality.Contains("alt"))
                 tags.Add("tension");
         }
 
-        // 5. Functional Moods
-        if (consonance > 0.8 && quality != null && quality.Contains("major")) tags.Add("bright");
+        // 5. Functional Moods (mood 'bright' now owned by ChordClassificationEngine)
         if (consonance < 0.4) tags.Add("dark");
         if (intervalSpread > 12 && intervalSpread < 24) tags.Add("balanced");
 
