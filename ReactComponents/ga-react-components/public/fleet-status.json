@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "b316c8698b54a8aa58a66c18701bdc55a13aae31",
-    "generatedAt": "2026-06-25T03:08:39.773731+00:00",
+    "commitSha": "1e7b2ac2be398a20c83d7483abf051655451f174",
+    "generatedAt": "2026-06-25T03:30:12.013276+00:00",
     "repoCount": 5,
-    "totalPRs": 21
+    "totalPRs": 18
   },
   "repos": [
     {
@@ -153,20 +153,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T01:56:39Z",
-          "failingChecks": 0,
-          "headRef": "chore/refresh-assumption-drift-baseline",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 182,
-          "title": "chore(assumption-graph): refresh @ai: drift baseline 47 \u2192 144 claims",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/182"
-        },
         {
           "ageDays": 3,
           "author": "spareilleux",
@@ -186,7 +174,7 @@
           "failingChecks": 2,
           "headRef": "feat/architecture-deepenings",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 155,
           "title": "refactor: three architecture deepenings (hexavalent / convergence / tool-schema dedup)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
@@ -217,19 +205,31 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 12,
+      "prCount": 13,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-25T02:49:26Z",
-          "failingChecks": 1,
-          "headRef": "feat/afk-governance-halt",
+          "createdAt": "2026-06-25T03:27:16Z",
+          "failingChecks": 0,
+          "headRef": "docs/loop-engineering-prd",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 59,
-          "title": "feat(governance): make the AFK delegation loop haltable by Demerzel",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/59"
+          "number": 62,
+          "title": "docs(plans): PRD \u2014 loop-engineering AFK improvements",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/62"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-25T03:10:26Z",
+          "failingChecks": 0,
+          "headRef": "update-readme-jules-auto-delegate-13697225367105033759",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 60,
+          "title": "Document AFK auto-delegate loop in README.md",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/60"
         },
         {
           "ageDays": 3,
@@ -379,45 +379,8 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 3,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T03:03:58Z",
-          "failingChecks": 0,
-          "headRef": "agent/issue-407",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 420,
-          "title": "AFK: Migrate run_afk_cycle onto demerzel_kit (#407)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/420"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T03:02:37Z",
-          "failingChecks": 0,
-          "headRef": "agent/issue-408",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 419,
-          "title": "AFK: Migrate apply_ml_feedback onto demerzel_kit (#408)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/419"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T03:00:26Z",
-          "failingChecks": 0,
-          "headRef": "agent/issue-411",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 418,
-          "title": "AFK: Migrate demerzel_halt onto demerzel_kit (remove the donated duplicates) (#411)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/418"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     }
   ],
   "schemaVersion": "0.1"
