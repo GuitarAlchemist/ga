@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "2e64e6faa9e666301a62e1c39cc4ed81010cbb04",
-    "generatedAt": "2026-06-25T03:41:13.836442+00:00",
+    "commitSha": "74490261f58a673e0224a3626fcde6433a7ec21b",
+    "generatedAt": "2026-06-25T03:59:37.465175+00:00",
     "repoCount": 5,
     "totalPRs": 16
   },
@@ -113,8 +113,21 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-25T03:47:52Z",
+          "failingChecks": 1,
+          "headRef": "chore/demerzel-knowledge-supervised-drive-calibration",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 480,
+          "title": "chore(governance): knowledge package \u2014 supervised-drive autonomy calibration",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/480"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -180,20 +193,8 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 13,
+      "prCount": 12,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-25T03:27:16Z",
-          "failingChecks": 0,
-          "headRef": "docs/loop-engineering-prd",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 62,
-          "title": "docs(plans): PRD \u2014 loop-engineering AFK improvements",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/62"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -201,7 +202,7 @@
           "failingChecks": 0,
           "headRef": "update-readme-jules-auto-delegate-13697225367105033759",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 60,
           "title": "Document AFK auto-delegate loop in README.md",
           "url": "https://github.com/GuitarAlchemist/tars/pull/60"
@@ -231,13 +232,13 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/52"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-21T03:48:30Z",
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
@@ -249,7 +250,7 @@
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
@@ -261,7 +262,7 @@
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
@@ -273,7 +274,7 @@
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
@@ -285,7 +286,7 @@
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
@@ -297,7 +298,7 @@
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
@@ -309,7 +310,7 @@
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
@@ -321,7 +322,7 @@
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
@@ -333,7 +334,7 @@
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
