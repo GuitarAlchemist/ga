@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "0362459e802ed447c3cbed60e2c14020bb74a2a0",
-    "generatedAt": "2026-06-24T07:06:06.118103+00:00",
+    "commitSha": "b316c8698b54a8aa58a66c18701bdc55a13aae31",
+    "generatedAt": "2026-06-25T03:08:39.773731+00:00",
     "repoCount": 5,
     "totalPRs": 21
   },
@@ -113,8 +113,33 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 0,
-      "prs": []
+      "prCount": 2,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-25T02:22:50Z",
+          "failingChecks": 0,
+          "headRef": "feat/config-file-locator",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 476,
+          "title": "refactor(config): ConfigFileLocator \u2014 one path-probe seam for all F# config modules (C2-#3 slice A)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/476"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-25T02:05:42Z",
+          "failingChecks": 0,
+          "headRef": "feat/chord-classification-engine",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 475,
+          "title": "feat(analysis): ChordClassificationEngine \u2014 single mood/style tag authority (C2-#2 slice 1)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/475"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -133,29 +158,29 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-24T03:43:29Z",
-          "failingChecks": 5,
-          "headRef": "feat/ix-duck-hexavalent-udfs",
+          "createdAt": "2026-06-25T01:56:39Z",
+          "failingChecks": 0,
+          "headRef": "chore/refresh-assumption-drift-baseline",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 180,
-          "title": "feat(ix-duck): Epistemic SQL \u2014 hexavalent-logic UDFs over ix-types::Hexavalent",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/180"
+          "number": 182,
+          "title": "chore(assumption-graph): refresh @ai: drift baseline 47 \u2192 144 claims",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/182"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:38:56Z",
           "failingChecks": 2,
           "headRef": "chore/carried-over-docs",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 156,
           "title": "docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_repl example",
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:21:38Z",
           "failingChecks": 2,
@@ -167,13 +192,13 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
         },
         {
-          "ageDays": 35,
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -192,8 +217,20 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 11,
+      "prCount": 12,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-25T02:49:26Z",
+          "failingChecks": 1,
+          "headRef": "feat/afk-governance-halt",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 59,
+          "title": "feat(governance): make the AFK delegation loop haltable by Demerzel",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/59"
+        },
         {
           "ageDays": 3,
           "author": "spareilleux",
@@ -225,103 +262,103 @@
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-21T02:37:16Z",
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-20T20:01:00Z",
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
         },
         {
-          "ageDays": 30,
+          "ageDays": 31,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:13:39Z",
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
         },
         {
-          "ageDays": 30,
+          "ageDays": 31,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:12:23Z",
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
         },
         {
-          "ageDays": 30,
+          "ageDays": 31,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:42:41Z",
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 30,
+          "ageDays": 31,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
         },
         {
-          "ageDays": 30,
+          "ageDays": 31,
           "author": "spareilleux",
           "createdAt": "2026-05-24T14:58:30Z",
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
         },
         {
-          "ageDays": 39,
+          "ageDays": 40,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
@@ -342,79 +379,43 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 3,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-21T16:56:12Z",
-          "failingChecks": 1,
-          "headRef": "feat/post-discussion-integration",
+          "createdAt": "2026-06-25T03:03:58Z",
+          "failingChecks": 0,
+          "headRef": "agent/issue-407",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 368,
-          "title": "feat(ci): wire post_discussion.sh across all workflows (integrates #365 + #366)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/368"
+          "number": 420,
+          "title": "AFK: Migrate run_afk_cycle onto demerzel_kit (#407)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/420"
         },
         {
-          "ageDays": 2,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-21T16:11:00Z",
-          "failingChecks": 1,
-          "headRef": "feat/confidence-thresholds-single-source",
+          "createdAt": "2026-06-25T03:02:37Z",
+          "failingChecks": 0,
+          "headRef": "agent/issue-408",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 367,
-          "title": "feat(governance): single-source confidence thresholds via ref:confidence tokens",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/367"
+          "number": 419,
+          "title": "AFK: Migrate apply_ml_feedback onto demerzel_kit (#408)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/419"
         },
         {
-          "ageDays": 2,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-21T16:10:58Z",
-          "failingChecks": 2,
-          "headRef": "feat/ci-script-seams",
+          "createdAt": "2026-06-25T03:00:26Z",
+          "failingChecks": 0,
+          "headRef": "agent/issue-411",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 366,
-          "title": "feat(ci): extract testable llm_call.sh + post_discussion.sh seams",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/366"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:10:56Z",
-          "failingChecks": 1,
-          "headRef": "feat/ecosystem-registry-action",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 365,
-          "title": "feat(ci): ecosystem facts action \u2014 single source for repo/category ids + counts",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/365"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:10:35Z",
-          "failingChecks": 1,
-          "headRef": "refactor/collapse-hexavalent-schema",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 364,
-          "title": "refactor(schemas): collapse byte-identical hexavalent-distribution into fuzzy",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/364"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:10:32Z",
-          "failingChecks": 1,
-          "headRef": "feat/digeststate-deep-module",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 362,
-          "title": "feat(hooks): DigestState deep module behind the session-digest hooks",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/362"
+          "number": 418,
+          "title": "AFK: Migrate demerzel_halt onto demerzel_kit (remove the donated duplicates) (#411)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/418"
         }
       ]
     }
