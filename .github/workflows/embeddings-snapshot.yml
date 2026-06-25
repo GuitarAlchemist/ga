@@ -21,10 +21,16 @@ name: Embeddings Snapshot
 # so a multi-domain trend run at ~08:00 sees both producers' fresh data.
 #
 # Failure semantics:
-#   - Preflight (index absent / stub) → skip-with-warn: write a canonical
-#     envelope with oracle_status="warn", degraded=true, last-known-good
-#     carryforward. Workflow exits 0 (the dashboard tile flips amber, not
-#     dead-silent red — `feedback_green_but_dead` rule).
+#   - Preflight (index absent / stub) → skip-the-producer, then EITHER:
+#       * carry forward a real dated snapshot < 30 days old as oracle_status=
+#         "ok", degraded=false (the producer is seed=42 deterministic and
+#         optick.index is static between rebuilds, so a real measurement stays
+#         valid until the next rebuild — honest green, not green-but-dead); OR
+#       * if no real snapshot within 30 days (cold start / baseline-only),
+#         write oracle_status="warn", degraded=true (dashboard tile flips
+#         amber, not dead-silent red — `feedback_green_but_dead` rule).
+#     A same-day REAL snapshot (operator ran refresh-embeddings-snapshot.ps1)
+#     is preserved and never overwritten. Workflow exits 0 in all these cases.
 #   - Rust build failure → workflow fails AND emits an algedonic warn
 #     signal (closing the silent-rot loop; mirrors invariants-snapshot.yml).
 #   - Diagnostics run failure → workflow fails + algedonic warn.
@@ -212,29 +218,63 @@ jobs:
           $lkgSrc   = if ($lkg) { $lkg.source } else { $null }
           $lkgSummary = if ($lkg) { "$($lkg.value) from $($lkg.date) ($($lkg.source))" } else { 'none' }
 
-          $envelope = [ordered]@{
-            domain        = 'embeddings'
-            emitted_at    = $stamp
-            timestamp     = $stamp   # ix-quality-trend reads `timestamp`
-            metric_name   = 'leak_detection_full_classifier_accuracy'
-            metric_value  = $lkgValue
-            oracle_status = 'warn'
-            summary       = "OPTIC-K index absent on runner — last known good: $lkgSummary"
-            degraded      = $true
-            degraded_reason = 'index_absent_on_runner'
-            last_known_good_pass_pct = $lkgValue
-            last_known_good_date     = $lkgDate
-            last_known_good_source   = $lkgSrc
-            problems = @(
-              [ordered]@{
-                code    = 'INDEX_ABSENT'
-                message = "state/voicings/optick.index not found or stub (size=${env:INDEX_SIZE_MB} MB; threshold>100MB). Producer skipped; rebuild via the optick-rebuild skill on a host with the index."
-              }
-            )
+          # Determinism makes carry-forward HONEST, not a green-but-dead fake:
+          # ix-embedding-diagnostics is seeded (seed=42) and optick.index is
+          # immutable between OPTIC-K rebuilds, so a real measurement stays valid
+          # until the next rebuild. When _LastKnownGood found a genuine dated
+          # snapshot (source='snapshot' — it searches only 30 days and keys on the
+          # nested leak_detection field that ONLY the real producer emits, so it
+          # re-anchors past prior carry-forward envelopes), carry it forward as
+          # GREEN. Amber (degraded) is reserved for true cold-start: no real
+          # snapshot within 30 days, or only the operator-pinned baseline.json.
+          # This is what keeps the tile green day-over-day without a real run on
+          # every cron tick — the producer can NEVER run on hosted CI (no index).
+          $isFreshReal = $lkg -and $lkg.source -eq 'snapshot'
+
+          if ($isFreshReal) {
+            $envelope = [ordered]@{
+              domain        = 'embeddings'
+              emitted_at    = $stamp
+              timestamp     = $stamp   # ix-quality-trend reads `timestamp`
+              metric_name   = 'leak_detection_full_classifier_accuracy'
+              metric_value  = $lkgValue
+              oracle_status = 'ok'
+              summary       = "Real measurement carried forward from $lkgDate — deterministic index unchanged (producer can't run on hosted CI)."
+              degraded      = $false
+              carried_forward = $true
+              carried_forward_from = $lkgDate
+              last_known_good_pass_pct = $lkgValue
+              last_known_good_date     = $lkgDate
+              last_known_good_source   = $lkgSrc
+              notes = "seed=42 deterministic + static optick.index => this value holds until the next OPTIC-K rebuild. Refresh on rebuild via Scripts/refresh-embeddings-snapshot.ps1 (optic-k-rebuild skill step 1b). Flips amber if no real snapshot within 30 days."
+            }
+            Write-Host "Carrying forward REAL snapshot from $lkgDate as green (value=$lkgValue)."
+          } else {
+            $envelope = [ordered]@{
+              domain        = 'embeddings'
+              emitted_at    = $stamp
+              timestamp     = $stamp   # ix-quality-trend reads `timestamp`
+              metric_name   = 'leak_detection_full_classifier_accuracy'
+              metric_value  = $lkgValue
+              oracle_status = 'warn'
+              summary       = "OPTIC-K index absent on runner — no real snapshot within 30d; last known good: $lkgSummary"
+              degraded      = $true
+              degraded_reason = 'index_absent_on_runner'
+              last_known_good_pass_pct = $lkgValue
+              last_known_good_date     = $lkgDate
+              last_known_good_source   = $lkgSrc
+              problems = @(
+                [ordered]@{
+                  code    = 'INDEX_ABSENT'
+                  message = "state/voicings/optick.index not found or stub (size=${env:INDEX_SIZE_MB} MB; threshold>100MB). Producer skipped; rebuild via the optick-rebuild skill on a host with the index, then run Scripts/refresh-embeddings-snapshot.ps1."
+                }
+              )
+            }
+            Write-Host "::warning::No fresh real snapshot — writing amber envelope (last known good: $lkgSummary)."
           }
 
           $envelope | ConvertTo-Json -Depth 6 | Set-Content -Path $dst -Encoding utf8NoBOM
-          Write-Host "Wrote degraded envelope to $dst (last_known_good=$lkgSummary)."
+          Write-Host "Wrote envelope to $dst (oracle_status=$($envelope.oracle_status), last_known_good=$lkgSummary)."
           "snapshot_path=$dst" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "snapshot_date=$date" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
