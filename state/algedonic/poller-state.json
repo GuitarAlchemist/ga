@@ -1,8 +1,7 @@
 {
   "ix": {
-    "consecutive_failures": 0,
-    "last_status": "ok",
-    "blocked_prs": 0
+    "consecutive_failures": 1,
+    "last_status": "fail"
   },
   "tars": {
     "consecutive_failures": 0,
