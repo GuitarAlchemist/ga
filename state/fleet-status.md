@@ -18,33 +18,33 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#480](https://github.com/GuitarAlchemist/ga/pull/480) | chore(governance): knowledge package — supervised-drive autonomy calib | 1d | MERGEABLE | 1 | spareilleux |
+| [#480](https://github.com/GuitarAlchemist/ga/pull/480) | chore(governance): knowledge package — supervised-drive autonomy calib | 2d | UNKNOWN | 1 | spareilleux |
 
 ### ix (3 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#156](https://github.com/GuitarAlchemist/ix/pull/156) | docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_rep | 4d | MERGEABLE | 2 | spareilleux |
-| [#155](https://github.com/GuitarAlchemist/ix/pull/155) | refactor: three architecture deepenings (hexavalent / convergence / to | 4d | MERGEABLE | 2 | spareilleux |
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 37d | MERGEABLE | 1 | spareilleux |
+| [#156](https://github.com/GuitarAlchemist/ix/pull/156) | docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_rep | 5d | MERGEABLE | 2 | spareilleux |
+| [#155](https://github.com/GuitarAlchemist/ix/pull/155) | refactor: three architecture deepenings (hexavalent / convergence / to | 5d | MERGEABLE | 2 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 38d | MERGEABLE | 1 | spareilleux |
 
 ### tars (13 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#68](https://github.com/GuitarAlchemist/tars/pull/68) | Document AFK halt marker in README.md | 0d | MERGEABLE | 0 | spareilleux |
-| [#67](https://github.com/GuitarAlchemist/tars/pull/67) | docs: add AFK delegation halt marker to README | 0d | MERGEABLE | 0 | spareilleux |
-| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 5d | MERGEABLE | 0 | spareilleux |
-| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 5d | MERGEABLE | 0 | spareilleux |
-| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 5d | CONFLICTING | 3 | spareilleux |
-| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 5d | CONFLICTING | 3 | spareilleux |
-| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 5d | MERGEABLE | 2 | spareilleux |
-| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 32d | MERGEABLE | 1 | spareilleux |
-| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 32d | MERGEABLE | 2 | spareilleux |
-| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 32d | CONFLICTING | 2 | spareilleux |
-| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 32d | MERGEABLE | 1 | spareilleux |
-| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 32d | MERGEABLE | 1 | spareilleux |
-| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 41d | MERGEABLE | 5 | spareilleux |
+| [#68](https://github.com/GuitarAlchemist/tars/pull/68) | Document AFK halt marker in README.md | 1d | MERGEABLE | 0 | spareilleux |
+| [#67](https://github.com/GuitarAlchemist/tars/pull/67) | docs: add AFK delegation halt marker to README | 1d | MERGEABLE | 0 | spareilleux |
+| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 6d | MERGEABLE | 0 | spareilleux |
+| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 6d | MERGEABLE | 0 | spareilleux |
+| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 6d | CONFLICTING | 3 | spareilleux |
+| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 6d | CONFLICTING | 3 | spareilleux |
+| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 6d | MERGEABLE | 2 | spareilleux |
+| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 33d | MERGEABLE | 1 | spareilleux |
+| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 33d | MERGEABLE | 2 | spareilleux |
+| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 33d | CONFLICTING | 2 | spareilleux |
+| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 33d | MERGEABLE | 1 | spareilleux |
+| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 33d | MERGEABLE | 1 | spareilleux |
+| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 42d | MERGEABLE | 5 | spareilleux |
 
 ### Demerzel
 
@@ -82,6 +82,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-06-26T07:12:25.208532+00:00 UTC_
+_Generated: 2026-06-27T07:00:23.447088+00:00 UTC_
 
-_Commit: `4a743c65a5dc`_
+_Commit: `4fb0388c440f`_

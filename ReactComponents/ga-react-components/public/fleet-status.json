@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "4a743c65a5dc3ff3d4ae801725ffb7af5e29a244",
-    "generatedAt": "2026-06-26T07:12:25.208532+00:00",
+    "commitSha": "4fb0388c440f07c1fa4a19a9ea897dea103fd19e",
+    "generatedAt": "2026-06-27T07:00:23.447088+00:00",
     "repoCount": 5,
     "totalPRs": 17
   },
@@ -116,13 +116,13 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-25T03:47:52Z",
           "failingChecks": 1,
           "headRef": "chore/demerzel-knowledge-supervised-drive-calibration",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 480,
           "title": "chore(governance): knowledge package \u2014 supervised-drive autonomy calibration",
           "url": "https://github.com/GuitarAlchemist/ga/pull/480"
@@ -144,7 +144,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:38:56Z",
           "failingChecks": 2,
@@ -156,7 +156,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:21:38Z",
           "failingChecks": 2,
@@ -168,7 +168,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
         },
         {
-          "ageDays": 37,
+          "ageDays": 38,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -196,7 +196,7 @@
       "prCount": 13,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:32:40Z",
           "failingChecks": 0,
@@ -208,7 +208,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/68"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:29:00Z",
           "failingChecks": 0,
@@ -220,7 +220,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/67"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -232,7 +232,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
@@ -244,7 +244,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/52"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T03:48:30Z",
           "failingChecks": 3,
@@ -256,7 +256,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T02:37:16Z",
           "failingChecks": 3,
@@ -268,7 +268,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-20T20:01:00Z",
           "failingChecks": 2,
@@ -280,7 +280,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
         },
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:13:39Z",
           "failingChecks": 1,
@@ -292,7 +292,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
         },
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:12:23Z",
           "failingChecks": 2,
@@ -304,7 +304,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
         },
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:42:41Z",
           "failingChecks": 2,
@@ -316,7 +316,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
@@ -328,7 +328,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
         },
         {
-          "ageDays": 32,
+          "ageDays": 33,
           "author": "spareilleux",
           "createdAt": "2026-05-24T14:58:30Z",
           "failingChecks": 1,
@@ -340,7 +340,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
         },
         {
-          "ageDays": 41,
+          "ageDays": 42,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
