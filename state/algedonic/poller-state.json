@@ -5,8 +5,9 @@
     "blocked_prs": 0
   },
   "tars": {
-    "consecutive_failures": 1,
-    "last_status": "fail"
+    "consecutive_failures": 0,
+    "last_status": "ok",
+    "blocked_prs": 0
   },
   "Demerzel": {
     "consecutive_failures": 0,
