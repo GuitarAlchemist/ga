@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4fb0388c440f07c1fa4a19a9ea897dea103fd19e",
-    "generatedAt": "2026-06-27T07:00:23.447088+00:00",
+    "commitSha": "faeaf21d6157a965d0e3c01213e7a380d03684c6",
+    "generatedAt": "2026-06-28T02:00:26.852573+00:00",
     "repoCount": 5,
-    "totalPRs": 17
+    "totalPRs": 19
   },
   "repos": [
     {
@@ -144,7 +144,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:38:56Z",
           "failingChecks": 2,
@@ -156,7 +156,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:21:38Z",
           "failingChecks": 2,
@@ -168,7 +168,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
         },
         {
-          "ageDays": 38,
+          "ageDays": 39,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -193,10 +193,34 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 13,
+      "prCount": 15,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-27T22:04:02Z",
+          "failingChecks": 0,
+          "headRef": "research/second-brain-patterns-9138470591287246633",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 106,
+          "title": "Benchmark External Second-Brain Patterns against TARS Harness",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/106"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-27T21:59:04Z",
+          "failingChecks": 0,
+          "headRef": "docs/benchmark-second-brain-patterns-4743846957659355869",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 105,
+          "title": "docs: benchmark external second-brain patterns against TARS harness model",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/105"
+        },
+        {
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:32:40Z",
           "failingChecks": 0,
@@ -208,7 +232,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/68"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:29:00Z",
           "failingChecks": 0,
@@ -268,7 +292,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-20T20:01:00Z",
           "failingChecks": 2,
@@ -280,7 +304,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:13:39Z",
           "failingChecks": 1,
@@ -292,7 +316,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:12:23Z",
           "failingChecks": 2,
@@ -304,7 +328,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:42:41Z",
           "failingChecks": 2,
@@ -316,7 +340,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
@@ -328,7 +352,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
         },
         {
-          "ageDays": 33,
+          "ageDays": 34,
           "author": "spareilleux",
           "createdAt": "2026-05-24T14:58:30Z",
           "failingChecks": 1,
@@ -340,7 +364,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
         },
         {
-          "ageDays": 42,
+          "ageDays": 43,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
