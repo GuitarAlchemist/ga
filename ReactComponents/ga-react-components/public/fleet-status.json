@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4b9034dbcce9075434004e0aeab8916bd9d3e55f",
-    "generatedAt": "2026-06-28T02:37:49.432608+00:00",
+    "commitSha": "a4b2da267b624e424024b3bb661cfe802a52ed0b",
+    "generatedAt": "2026-06-28T02:51:57.733935+00:00",
     "repoCount": 5,
-    "totalPRs": 21
+    "totalPRs": 20
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T02:23:48Z",
-          "failingChecks": 0,
-          "headRef": "claude/issue-145-playwright-selectors",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 486,
-          "title": "fix: align ChatbotTestBase selectors with chatbot-demo.html (#145)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/486"
-        },
         {
           "ageDays": 2,
           "author": "spareilleux",
