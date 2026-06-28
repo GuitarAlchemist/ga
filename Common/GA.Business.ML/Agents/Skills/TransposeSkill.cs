@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 /// handling, and Evidence stamping; this class only declares routing
 /// metadata + the closure target.
 /// </summary>
+[GuitarAlchemist.Registry.GaSkill("TransposeSkill", "theory")]
 public sealed class TransposeSkill(
     IMcpToolsProvider toolsProvider,
     IChatClientFactory chatClientFactory,

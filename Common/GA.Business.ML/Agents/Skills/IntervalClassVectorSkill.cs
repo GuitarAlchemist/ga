@@ -27,6 +27,7 @@ using GA.Domain.Services.Atonal.Grothendieck;
 /// output; this skill surfaces it conversationally with named interval-class
 /// glosses (ic1 = semitone, ic2 = whole tone, ...).
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("IntervalClassVectorSkill", "atonal")]
 public sealed class IntervalClassVectorSkill(
     IGrothendieckService grothendieck,
     ILogger<IntervalClassVectorSkill> logger) : IOrchestratorSkill

@@ -14,6 +14,7 @@ using GA.Domain.Core.Primitives.Notes;
 /// Registered at the orchestrator level. Returns the interval name (e.g. "P5"),
 /// expanded form ("perfect fifth"), and semitone count as evidence.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("IntervalSkill", "interval")]
 public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Interval";

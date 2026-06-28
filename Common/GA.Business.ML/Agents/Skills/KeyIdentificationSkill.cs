@@ -12,6 +12,7 @@ using Microsoft.Extensions.AI;
 /// call is needed. The LLM is used only to explain the pre-computed domain result in
 /// guitarist-friendly language; it never influences the key calculation itself.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("KeyIdentificationSkill", "key")]
 public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyIdentificationSkill> logger)
     : AgentSkillBase(AgentIds.Theory, chatClient, logger), IOrchestratorSkill
 {

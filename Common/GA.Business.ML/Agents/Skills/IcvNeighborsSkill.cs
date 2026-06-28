@@ -34,6 +34,7 @@ using GA.Domain.Services.Atonal.Grothendieck;
 /// and surface the top <see cref="MaxNeighborsToShow"/> = 8 by cost.
 /// </para>
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("IcvNeighborsSkill", "atonal")]
 public sealed class IcvNeighborsSkill(
     IGrothendieckService grothendieck,
     ILogger<IcvNeighborsSkill> logger) : IOrchestratorSkill

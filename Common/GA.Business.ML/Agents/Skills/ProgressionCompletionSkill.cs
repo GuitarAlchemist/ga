@@ -12,6 +12,7 @@ using Microsoft.Extensions.AI;
 /// deterministically; the LLM selects and explains cadence candidates from that pre-computed set.
 /// Emits an AG-UI <c>ga:completion-suggestions</c> event in <see cref="AgentResponse.Data"/>.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("ProgressionCompletionSkill", "progression")]
 public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<ProgressionCompletionSkill> logger)
     : AgentSkillBase(AgentIds.Theory, chatClient, logger), IOrchestratorSkill
 {

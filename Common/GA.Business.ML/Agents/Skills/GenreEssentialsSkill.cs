@@ -6,6 +6,7 @@ namespace GA.Business.ML.Agents.Skills;
 /// <see cref="CatalogSkillBase"/>): body is loaded from
 /// <c>skills/genre-essentials/SKILL.md</c>, zero LLM calls.
 /// </summary>
+[GuitarAlchemist.Registry.GaSkill("GenreEssentialsSkill", "catalog")]
 public sealed class GenreEssentialsSkill(ILogger<GenreEssentialsSkill> logger) : CatalogSkillBase(logger)
 {
     public override string Name        => "GenreEssentials";
