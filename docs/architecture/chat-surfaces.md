@@ -224,6 +224,33 @@ The deployed `https://demos.guitaralchemist.com/chatbot/` static SPA calls `/hub
 
 ---
 
+## 6b. Legacy REST/SSE route support status — `/api/chatbot/chat` & `/chat/stream` (#204)
+
+`GaApi`'s `POST /api/chatbot/chat` (`ChatbotController.Chat`) and `POST /api/chatbot/chat/stream` (`ChatbotController.ChatStream`) are the **pre-AG-UI** REST/SSE surfaces. AG-UI (`/api/chatbot/agui/*`) and SignalR (`/hubs/chatbot`) are the active public paths, so #204 asked for an explicit support decision rather than leaving these as ambiguous parallels.
+
+**Decision: SUPPORTED (not deprecated) — `🟡 parallel-to-canonical`, kept for back-compat.** They are *not* dead: they still have first-party runtime callers (inventory below). Retiring them is gated on migrating those callers to AG-UI first, which is out of scope here. This is the conservative, non-breaking choice; it resolves the open question at §9 ("can the legacy SSE endpoints be retired?") as **not yet**.
+
+### Caller inventory (runtime, first-party)
+
+| Route | Backend | Active callers |
+|---|---|---|
+| `POST /api/chatbot/chat` | `GaApi ChatbotController.Chat` → `ProductionOrchestrator` | `<ChatWidget>` (`ReactComponents/ga-react-components/src/components/PrimeRadiant/ChatWidget.tsx:917`, non-streaming, Prime Radiant operator console); `ChatApiService.sendMessage` (`Apps/ga-client/src/services/chatApi.ts:179`) |
+| `POST /api/chatbot/chat/stream` | `GaApi ChatbotController.ChatStream` → `ProductionOrchestrator` | `ChatApiService.streamChat` (`Apps/ga-client/src/services/chatApi.ts:85`); `sendChatMessageStream` (`Apps/ga-client/src/services/chatService.ts:94`) |
+
+(Test suites, `Scripts/*.ps1`, and the `GaChatbot.Api` same-path siblings in §5b are excluded — they don't determine support status. The `GaChatbot.Api` host is governed by the separate §5b canonical-deployable decision.)
+
+### Wire-parity expectations (the cost of keeping them)
+
+While supported, both routes MUST stay wire-equivalent with the canonical orchestrator output wherever the public demo or shared tooling depends on common metadata:
+
+- Both back onto the same `ProductionOrchestrator`, so routing (`agentId`, `confidence`, `routingMethod`) and answer text stay consistent across REST/SSE/SignalR/AG-UI by construction — don't fork the orchestrator call.
+- The GaApi `ChatJsonResponse` intentionally omits `Grounding` and `Trace` (those live only on the `GaChatbot.Api` sibling, §5b). That asymmetry is documented, not a bug — don't "fix" one surface in isolation; change the shared contract or neither.
+- `/chat/stream`'s SSE shape (`routing` frame → sentence chunks → `data: [DONE]`) is a distinct protocol from AG-UI. Callers above depend on it; don't alter frame shapes without updating `chatApi.ts` / `chatService.ts` in the same change.
+
+### Revisit trigger
+
+Reclassify to `🪦 deprecated-candidate` once `chatApi.ts`, `chatService.ts`, and `<ChatWidget>` have all migrated to the AG-UI surface (`/api/chatbot/agui/{stream,json}`). At that point these two routes have zero first-party callers and can be retired in one cleanup PR.
+
 ## 7. Canonical-vs-redundant analysis
 
 | Functional cluster | Canonical path | Parallels / redundancies |
@@ -356,7 +383,7 @@ flowchart LR
 ## 9. Open questions (unverified claims)
 
 - Is `Apps/GaChatbot` (console REPL) still reachable in the Aspire `start-all` flow? `AllProjects.AppHost/Program.cs:135` adds a different project (`GuitarAlchemistChatbot.csproj`); the `Apps/GaChatbot` project appears to be a separate console host that is never started by Aspire.
-- Does `AgUiChatController` have any active frontend consumer beyond `<GAChatPanel>` and the ga-client `chatAtoms`? Confirm whether the legacy SSE endpoints (`/chat/stream`, `/chat`) can be retired.
+- Does `AgUiChatController` have any active frontend consumer beyond `<GAChatPanel>` and the ga-client `chatAtoms`? ~~Confirm whether the legacy SSE endpoints (`/chat/stream`, `/chat`) can be retired.~~ **Resolved (#204):** not yet — both still have first-party callers; see §6b for the support decision + revisit trigger.
 - Are there any `ChatbotHub` consumers besides the deployed public `/chatbot/` static SPA (`Apps/ga-server/GaApi/wwwroot/chatbot/index.html`)? Confirm before relocating or retiring the hub.
 - `POST /api/chatbot/ask` is called by `TriageDropZone` but no controller action implements it — does this fail silently or is it served by a route fallback elsewhere?
 - Is `GA.AI.Service` (whose `ChatController` shadows `ProductionOrchestrator` directly) ever launched in CI/dev? AppHost registration is commented out (`AllProjects.AppHost/Program.cs:87`); confirm no other entry point spins it up.
