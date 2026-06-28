@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "fa95bd15717626d337bb48ef35fc494a12e028de",
-    "generatedAt": "2026-06-28T04:15:20.425591+00:00",
+    "commitSha": "b95cb723d7cd3c5770a46eac9bd0533abef22492",
+    "generatedAt": "2026-06-28T07:16:41.488226+00:00",
     "repoCount": 5,
-    "totalPRs": 25
+    "totalPRs": 31
   },
   "repos": [
     {
@@ -193,31 +193,103 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 15,
+      "prCount": 21,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-27T22:04:02Z",
+          "createdAt": "2026-06-28T06:19:25Z",
           "failingChecks": 0,
-          "headRef": "research/second-brain-patterns-9138470591287246633",
+          "headRef": "feat/jules-auto-delegate-skills-16589699950471634802",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 106,
-          "title": "Benchmark External Second-Brain Patterns against TARS Harness",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/106"
+          "mergeable": "CONFLICTING",
+          "number": 131,
+          "title": "feat(afk): inject declared agent skills into Jules prompts",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/131"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-27T21:59:04Z",
+          "createdAt": "2026-06-28T06:19:17Z",
           "failingChecks": 0,
-          "headRef": "docs/benchmark-second-brain-patterns-4743846957659355869",
+          "headRef": "add-cloud-agent-skill-library-3332843540915973631",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 130,
+          "title": "Add repo-readable cloud-agent skills for AFK delegation",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/130"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T06:17:57Z",
+          "failingChecks": 0,
+          "headRef": "jules-afk-agent-skills-12666155328391937160",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 129,
+          "title": "feat(afk): Inject declared cloud-agent skills into Jules prompt",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/129"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T06:16:02Z",
+          "failingChecks": 0,
+          "headRef": "design-codex-dispatch-10556833386076903853",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 128,
+          "title": "docs: design governed Codex dispatch seam (#116)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/128"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T06:11:39Z",
+          "failingChecks": 0,
+          "headRef": "feat/second-brain-mcp-a2a-exposure-6704763220124139882",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 125,
+          "title": "[Story][TARS-V2][P1] Expose second-brain memory safely through MCP resources and A2A artifacts",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/125"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T06:07:35Z",
+          "failingChecks": 0,
+          "headRef": "feature/92-replayable-harness-loop-design-13595540883336233988",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 105,
-          "title": "docs: benchmark external second-brain patterns against TARS harness model",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/105"
+          "number": 119,
+          "title": "Design replayable harness loop for closure runs and memory updates",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/119"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T05:36:22Z",
+          "failingChecks": 0,
+          "headRef": "feat/tars-v2-second-brain-evidence-bundle-design-7229427448536904912",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 113,
+          "title": "docs(second-brain): design source-grounded synthesis & evidence bundle contracts",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/113"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T05:18:06Z",
+          "failingChecks": 0,
+          "headRef": "feature/tars-v2-memory-contracts-14724467816195251988",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 109,
+          "title": "Define TARS V2 second-brain memory object contracts and provenance model",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/109"
         },
         {
           "ageDays": 2,
@@ -226,7 +298,7 @@
           "failingChecks": 0,
           "headRef": "docs/afk-halt-marker-readme-4421301305715265213",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 68,
           "title": "Document AFK halt marker in README.md",
           "url": "https://github.com/GuitarAlchemist/tars/pull/68"
@@ -238,13 +310,13 @@
           "failingChecks": 0,
           "headRef": "doc-afk-integration-halt-1381979756652838667",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 67,
           "title": "docs: add AFK delegation halt marker to README",
           "url": "https://github.com/GuitarAlchemist/tars/pull/67"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -256,7 +328,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
@@ -274,7 +346,7 @@
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
@@ -286,7 +358,7 @@
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
@@ -298,7 +370,7 @@
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
@@ -310,7 +382,7 @@
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
@@ -322,7 +394,7 @@
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
@@ -334,7 +406,7 @@
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
@@ -346,7 +418,7 @@
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
@@ -358,7 +430,7 @@
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
@@ -370,7 +442,7 @@
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
@@ -397,10 +469,10 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-06-28T04:08:27Z",
-          "failingChecks": 3,
+          "failingChecks": 1,
           "headRef": "feat/github-intelligence-pipeline-arch-6008969315729997440",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 514,
           "title": "GitHub Intelligence Pipeline Architecture and Schemas",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/514"
