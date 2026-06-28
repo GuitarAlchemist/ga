@@ -58,7 +58,9 @@ public sealed partial class ImprovisationSkill(
     {
         if (string.IsNullOrWhiteSpace(message)) return false;
         var q = message.ToLowerInvariant();
-        var hasImprovIntent = ImprovKeywords.Any(k => q.Contains(k, StringComparison.Ordinal));
+        // Whole-word match so a keyword embedded in an unrelated word doesn't
+        // fire (e.g. "solo" inside "Solomon" — see ga#261).
+        var hasImprovIntent = ImprovKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
         if (!hasImprovIntent) return false;
         // Require a real chord token (uppercase root + accidental/quality/digit).
         // Without IgnoreCase, bare lowercase "a"/"e" articles never trigger.
@@ -278,11 +280,13 @@ public sealed partial class ImprovisationSkill(
 
     // -------------------------------------------------------------------
     // Same regex pair as ChordVoicingsSkill (PR #251). Case-sensitive root,
-    // accidental/quality/digit required (strict) or " major/minor/dim/aug/sus"
-    // word-form (spaced).
+    // accidental/quality or a valid chord-extension digit (5,6,7,9,11,13)
+    // required (strict) or " major/minor/dim/aug/sus" word-form (spaced).
+    // The bare-digit branch is restricted to real extensions so non-chord
+    // letter+number tokens like "B12" / "A4" no longer parse as chords (ga#261).
     // -------------------------------------------------------------------
 
-    [GeneratedRegex(@"\b[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|\d)\w*\b")]
+    [GeneratedRegex(@"\b[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|11|13|5|6|7|9)\w*\b")]
     private static partial Regex ChordSuffixRegex();
 
     [GeneratedRegex(@"\b[A-G][#b]?\s+(?:[Mm]ajor|[Mm]inor|[Mm]aj|[Mm]in|[Dd]im|[Aa]ug|[Ss]us)\b")]

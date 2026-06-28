@@ -35,6 +35,11 @@ public class ChordVoicingsSkillTests
     [TestCase("show me a shape for G7")]
     [TestCase("Cmaj9 voicings on guitar")]
     [TestCase("F#m fingering")]
+    // Valid bare-extension chords must still route after the ga#261 regex
+    // tightening (power chord, 6th, 13th — all real chord-extension digits).
+    [TestCase("voicings for E5")]
+    [TestCase("shapes for C6")]
+    [TestCase("G13 voicings")]
     public void CanHandle_True_OnRealVoicingQueries(string message)
     {
         var skill = MakeSkill();
@@ -82,6 +87,25 @@ public class ChordVoicingsSkillTests
         var skill = MakeSkill();
         Assert.That(skill.CanHandle(message), Is.False,
             $"English word starting with A-G uppercase shouldn't be parsed as a chord root: {message}");
+    }
+
+    // ga#261: letter+digit tokens that are NOT chords (vitamin, paper size,
+    // battery, PowerShell version) collided with the old bare-`\d` regex branch.
+    // "what shape is the B12 molecule" is the worst case — it carries a real
+    // voicing keyword ("shape") AND a chord-LOOKING token ("B12"), so only
+    // tightening the token regex (12/4 aren't valid chord extensions) rejects
+    // it. The rest are guarded by the keyword gate but pinned here as
+    // regression cases so a future regex loosening can't silently reintroduce them.
+    [TestCase("what shape is the B12 molecule")]
+    [TestCase("I need 8 hours of focus on G7 problems")]
+    [TestCase("buy some D5 batteries")]
+    [TestCase("that's an A4 paper-size question")]
+    [TestCase("the E5 PowerShell module")]
+    public void CanHandle_False_OnNonChordLetterDigitTokens(string message)
+    {
+        var skill = MakeSkill();
+        Assert.That(skill.CanHandle(message), Is.False,
+            $"letter+digit token is not a chord and should not be routed here: {message}");
     }
 
     [Test]

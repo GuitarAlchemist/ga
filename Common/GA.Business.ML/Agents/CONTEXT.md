@@ -32,7 +32,7 @@ The chatbot's deterministic-first skill surface. Each `IOrchestratorSkill` is a 
 
 ## How to add a new chatbot skill
 
-1. **Create the C# file** under `Skills/<Name>Skill.cs`. Implement `IOrchestratorSkill`. Use `ChordVoicingsSkill` (retrieval) or `ImprovisationSkill` (classifier) as your template — match their case-sensitive chord regex pair `[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|\d)\w*` + the spaced-quality form.
+1. **Create the C# file** under `Skills/<Name>Skill.cs`. Implement `IOrchestratorSkill`. Use `ChordVoicingsSkill` (retrieval) or `ImprovisationSkill` (classifier) as your template — match their case-sensitive chord regex pair `[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|11|13|5|6|7|9)\w*` + the spaced-quality form (the bare-digit branch is restricted to real chord extensions so tokens like `B12`/`A4` don't misroute — ga#261).
 2. **Write 6-12 `ExamplePrompts`** that span phrasings real users will type. The embedding router scores against these — too few examples = misroutes.
 3. **`CanHandle` is the keyword-fallback gate.** Intent keyword + chord-shaped token. Never lowercase-match a bare letter.
 4. **Register in `Common/GA.Business.Core.Orchestration/Plugins/GaPlugin.cs`** via `services.AddOrchestratorSkillIntent<YourSkill>()`. Pass `ServiceLifetime.Scoped` only if your ctor takes `IChatClient`.
