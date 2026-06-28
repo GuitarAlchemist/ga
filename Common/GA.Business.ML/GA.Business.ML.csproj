@@ -38,6 +38,10 @@
     <ProjectReference Include="..\GA.Business.DSL\GA.Business.DSL.fsproj" />
     <ProjectReference Include="..\..\GA.Data.MongoDB\GA.Data.MongoDB.csproj" />
     <ProjectReference Include="..\GA.Providers.Anthropic\GA.Providers.Anthropic.csproj" />
+    <!-- Capability registry (issue #46) — the [GaSkill] attribute + Registry the
+         skill ModuleInitializer pushes descriptors into. Leaf project (no GA
+         ProjectReferences of its own), so no layering cycle. -->
+    <ProjectReference Include="..\..\GuitarAlchemist.Registry\GuitarAlchemist.Registry.csproj" />
   </ItemGroup>
 
   <ItemGroup>

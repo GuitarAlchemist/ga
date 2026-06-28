@@ -1,31 +1,139 @@
 namespace GuitarAlchemist.Registry;
 
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json.Nodes;
 
 /// <summary>
-/// Discovers and indexes <see cref="GaSkillAttribute"/>-tagged methods across
-/// all loaded assemblies. The result is cached on first access.
+/// Discovers and indexes <see cref="GaSkillAttribute"/>-tagged skills across all
+/// loaded assemblies, and accepts explicit registrations pushed in by
+/// <c>[ModuleInitializer]</c> hooks at assembly load.
 /// </summary>
 /// <remarks>
-/// Discovery scans <c>AppDomain.CurrentDomain.GetAssemblies()</c> for public
-/// static methods marked with <see cref="GaSkillAttribute"/>. For each match
-/// it builds a <see cref="GaSkill"/> with a delegate Handler bound to the
-/// method. Schema resolution: if a sibling method named
-/// <c>{MethodName}Schema</c> exists with the signature <c>() =&gt; JsonObject</c>,
-/// it is used; otherwise an empty <see cref="JsonObject"/> is returned.
+/// Two registration paths, both surfaced through the same <see cref="All"/> /
+/// <see cref="ByName"/> API:
+/// <list type="number">
+///   <item>
+///     <b>Reflection discovery</b> (original path, unchanged): scans
+///     <c>AppDomain.CurrentDomain.GetAssemblies()</c> for public static methods
+///     marked with <see cref="GaSkillAttribute"/>. For each match it builds a
+///     <see cref="GaSkill"/> with a delegate Handler bound to the method.
+///     Schema resolution: if a sibling method named <c>{MethodName}Schema</c>
+///     exists with the signature <c>() =&gt; JsonObject</c>, it is used;
+///     otherwise an empty <see cref="JsonObject"/> is returned.
+///   </item>
+///   <item>
+///     <b>Explicit registration</b> (added for issue #46): callers — typically a
+///     <c>[ModuleInitializer]</c> in a skill-bearing assembly, mirroring ix's
+///     <c>#[ix_skill]</c> + <c>linkme::distributed_slice</c> link-time
+///     collection — push descriptors via <see cref="RegisterSkill(GaSkill)"/>.
+///     This is the path used for instance skills (e.g. DI-constructed
+///     <c>IOrchestratorSkill</c> implementations) that cannot be modelled as a
+///     static <c>JsonNode (JsonNode)</c> method.
+///   </item>
+/// </list>
+/// Explicitly registered skills take precedence over reflection-discovered ones
+/// with the same <see cref="GaSkill.Name"/>. The explicit store is a
+/// <see cref="ConcurrentDictionary{TKey,TValue}"/>, so <see cref="RegisterSkill(GaSkill)"/>
+/// is safe to call from multiple module initializers concurrently.
 /// </remarks>
 public static class Registry
 {
-    private static readonly Lazy<IReadOnlyDictionary<string, GaSkill>> Index =
+    /// <summary>
+    /// Explicitly registered skills, keyed by name. Populated at assembly load by
+    /// <c>[ModuleInitializer]</c> hooks. Thread-safe.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, GaSkill> Registered =
+        new(StringComparer.Ordinal);
+
+    private static readonly Lazy<IReadOnlyDictionary<string, GaSkill>> DiscoveredIndex =
         new(BuildIndex);
 
-    /// <summary>All discovered skills, keyed by name.</summary>
-    public static IEnumerable<GaSkill> All => Index.Value.Values;
+    /// <summary>
+    /// All skills, keyed by name — explicit registrations merged over reflection
+    /// discovery (explicit wins on name collision).
+    /// </summary>
+    public static IEnumerable<GaSkill> All => Snapshot().Values;
 
     /// <summary>Look up a skill by name; returns null when absent.</summary>
     public static GaSkill? ByName(string name) =>
-        Index.Value.TryGetValue(name, out var skill) ? skill : null;
+        Registered.TryGetValue(name, out var explicitSkill)
+            ? explicitSkill
+            : DiscoveredIndex.Value.TryGetValue(name, out var discovered) ? discovered : null;
+
+    /// <summary>
+    /// Explicitly register (or replace) a skill by name. Thread-safe; intended to
+    /// be called from a <c>[ModuleInitializer]</c> at assembly load. Returns the
+    /// stored descriptor. Idempotent on identical input.
+    /// </summary>
+    /// <remarks>
+    /// <b>Duplicate-name precedence (last-write-wins):</b>
+    /// <list type="number">
+    ///   <item>
+    ///     <b>Explicit vs. explicit</b> — backed by a
+    ///     <see cref="ConcurrentDictionary{TKey,TValue}"/> indexer assignment, so
+    ///     registering the same <see cref="GaSkill.Name"/> twice keeps the
+    ///     <i>most recent</i> descriptor; the earlier one is overwritten.
+    ///   </item>
+    ///   <item>
+    ///     <b>Explicit vs. reflection-discovered</b> — an explicit registration
+    ///     <i>always wins</i> over a reflection-discovered skill of the same name,
+    ///     in both <see cref="ByName"/> (checks the explicit store first) and
+    ///     <see cref="All"/> (overlays explicit registrations over discovery last).
+    ///   </item>
+    /// </list>
+    /// Names are compared with <see cref="StringComparer.Ordinal"/> (case-sensitive).
+    /// </remarks>
+    public static GaSkill RegisterSkill(GaSkill skill)
+    {
+        ArgumentNullException.ThrowIfNull(skill);
+        Registered[skill.Name] = skill;
+        return skill;
+    }
+
+    /// <summary>
+    /// Convenience overload — builds a descriptor-only <see cref="GaSkill"/> (no
+    /// executable handler) and registers it. Used for instance skills whose body
+    /// runs through their own pipeline (e.g. <c>IOrchestratorSkill.ExecuteAsync</c>)
+    /// rather than the static <c>JsonNode (JsonNode)</c> handler. The default
+    /// handler throws if invoked, signalling "descriptor only — dispatch through
+    /// the owning pipeline, not the registry handler."
+    /// </summary>
+    public static GaSkill RegisterSkill(
+        string name,
+        string domain,
+        string description = "",
+        IReadOnlyList<string>? governanceTags = null) =>
+        RegisterSkill(new GaSkill(
+            Name: name,
+            Domain: domain,
+            Description: description,
+            Handler: DescriptorOnlyHandler(name),
+            Schema: static () => [],
+            GovernanceTags: governanceTags ?? []));
+
+    /// <summary>Skills contributed only by explicit registration. Thread-safe snapshot.</summary>
+    public static IEnumerable<GaSkill> Registrations => Registered.Values.ToArray();
+
+    private static IReadOnlyDictionary<string, GaSkill> Snapshot()
+    {
+        // Start from reflection discovery, then overlay explicit registrations.
+        Dictionary<string, GaSkill> merged = new(StringComparer.Ordinal);
+        foreach (var (name, skill) in DiscoveredIndex.Value)
+        {
+            merged[name] = skill;
+        }
+        foreach (var (name, skill) in Registered)
+        {
+            merged[name] = skill;
+        }
+        return merged;
+    }
+
+    private static Func<JsonNode, JsonNode> DescriptorOnlyHandler(string name) =>
+        _ => throw new InvalidOperationException(
+            $"Skill '{name}' is registered as a descriptor only; invoke it through " +
+            "its owning pipeline (e.g. IOrchestratorSkill.ExecuteAsync), not the registry Handler.");
 
     private static IReadOnlyDictionary<string, GaSkill> BuildIndex()
     {

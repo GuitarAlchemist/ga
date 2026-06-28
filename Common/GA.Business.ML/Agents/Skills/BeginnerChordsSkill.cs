@@ -14,6 +14,7 @@ using System.Text;
 /// x = muted). The eight chords here are the standard "first eight" most
 /// guitar curricula start with.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("BeginnerChords", "catalog")]
 public sealed class BeginnerChordsSkill(ILogger<BeginnerChordsSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "BeginnerChords";

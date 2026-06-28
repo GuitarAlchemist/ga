@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 /// <c>"What is the parallel minor of C major" → missing required substring "C minor"</c>.
 /// Tier 1 candidate per <c>docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md</c>.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("RelativeKey", "key")]
 public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrchestratorSkill
 {
     public string Name => "RelativeKey";

@@ -23,6 +23,7 @@ using GA.Domain.Core.Theory.Atonal;
 /// of the question ("under transposition", "under inversion", "under
 /// transposition or inversion").
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("SetTheoryEquivalence", "atonal")]
 public sealed class SetTheoryEquivalenceSkill : IOrchestratorSkill
 {
     public string Name => "SetTheoryEquivalence";

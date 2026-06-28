@@ -26,6 +26,7 @@ using GA.Business.DSL.Types;
 /// Built 2026-05-14, stolen-from-demo per user request. References
 /// <c>GA.Business.DSL</c> (already a transitive dep via Skills wiring).
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("GrothendieckParse", "atonal")]
 public sealed class GrothendieckParseSkill(ILogger<GrothendieckParseSkill> logger) : IOrchestratorSkill
 {
     // Verbose parser errors are great in dev (you want to see Expecting:

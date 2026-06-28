@@ -38,6 +38,7 @@ using GA.Domain.Services.Atonal.Grothendieck;
 /// is supplied.</item>
 /// </list>
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("IcvShortestPath", "atonal")]
 public sealed class IcvShortestPathSkill(
     IGrothendieckService grothendieck,
     ILogger<IcvShortestPathSkill> logger) : IOrchestratorSkill

@@ -6,6 +6,7 @@ namespace GA.Business.ML.Agents.Skills;
 /// <see cref="CatalogSkillBase"/>): body is loaded from
 /// <c>skills/practice-routine/SKILL.md</c>, zero LLM calls.
 /// </summary>
+[GuitarAlchemist.Registry.GaSkill("PracticeRoutine", "catalog")]
 public sealed class PracticeRoutineSkill(ILogger<PracticeRoutineSkill> logger) : CatalogSkillBase(logger)
 {
     public override string Name        => "PracticeRoutine";

@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 /// Open-ended "explain X" goes through the LLM.
 /// </para>
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("TheoryComparison", "theory")]
 public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger) : IOrchestratorSkill
 {
     public string Name => "TheoryComparison";

@@ -10,6 +10,7 @@ using System.Text;
 /// dash-separated or compact chord diagram (e.g. <c>x-3-2-0-1-0</c> or <c>x32010</c>)
 /// together with a question about stretch, reach, or playability.
 /// </remarks>
+[GuitarAlchemist.Registry.GaSkill("FretSpan", "fretboard")]
 public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "FretSpan";

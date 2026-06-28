@@ -6,6 +6,7 @@ namespace GA.Business.ML.Agents.Skills;
 /// navigation between keys. Catalog skill (see <see cref="CatalogSkillBase"/>):
 /// body is loaded from <c>skills/circle-of-fifths/SKILL.md</c>, zero LLM calls.
 /// </summary>
+[GuitarAlchemist.Registry.GaSkill("CircleOfFifths", "catalog")]
 public sealed class CircleOfFifthsSkill(ILogger<CircleOfFifthsSkill> logger) : CatalogSkillBase(logger)
 {
     public override string Name        => "CircleOfFifths";
