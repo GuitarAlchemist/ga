@@ -39,7 +39,7 @@ using Microsoft.Extensions.Logging;
 /// user sees only the confirmation message.
 /// </para>
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("RememberThisSkill", "memory")]
+[GuitarAlchemist.Registry.GaSkill("RememberThis", "memory")]
 public sealed class RememberThisSkill(ILogger<RememberThisSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "RememberThis";

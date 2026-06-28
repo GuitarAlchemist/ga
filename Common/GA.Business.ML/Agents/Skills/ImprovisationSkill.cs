@@ -12,7 +12,7 @@ using GA.Business.ML.Search;
 /// layer. Single-chord queries only in v1 — progression handling (ii-V-I,
 /// minor blues, etc.) is documented as v2 scope.
 /// </summary>
-[GuitarAlchemist.Registry.GaSkill("ImprovisationSkill", "scale")]
+[GuitarAlchemist.Registry.GaSkill("Improvisation", "scale")]
 public sealed partial class ImprovisationSkill(
     ILogger<ImprovisationSkill> logger,
     IMusicalQueryExtractor extractor) : IOrchestratorSkill

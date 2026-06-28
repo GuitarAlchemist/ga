@@ -22,7 +22,7 @@ using System.Text.RegularExpressions;
 /// Built 2026-05-14 to close BACKLOG dealbreaker #4. Tier-1 deterministic per
 /// <c>docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md</c>.
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("VoiceLeadingSkill", "progression")]
+[GuitarAlchemist.Registry.GaSkill("VoiceLeading", "progression")]
 public sealed class VoiceLeadingSkill(ILogger<VoiceLeadingSkill> logger) : IOrchestratorSkill
 {
     public string Name => "VoiceLeading";

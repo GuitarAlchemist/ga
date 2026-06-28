@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 /// <c>docs/plans/2026-05-13-skills-domain-backed-refactor-plan.md</c>.
 /// String ordering follows guitarist convention: <b>low → high</b> (6th → 1st).
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("AlternateTuningsSkill", "tuning")]
+[GuitarAlchemist.Registry.GaSkill("AlternateTunings", "tuning")]
 public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger) : IOrchestratorSkill
 {
     public string Name => "AlternateTunings";

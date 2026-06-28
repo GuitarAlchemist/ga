@@ -19,7 +19,7 @@ using GA.Domain.Services.Atonal.Grothendieck;
 /// </list>
 /// Both modes are pure pitch-class arithmetic — <c>Confidence = 1.0</c>.
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("ChordSubstitutionSkill", "chord")]
+[GuitarAlchemist.Registry.GaSkill("ChordSubstitution", "chord")]
 public sealed class ChordSubstitutionSkill(
     IGrothendieckService grothendieck,
     ILogger<ChordSubstitutionSkill> logger) : IOrchestratorSkill

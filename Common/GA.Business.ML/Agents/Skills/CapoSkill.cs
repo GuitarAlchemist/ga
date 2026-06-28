@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 /// Spelling preference: pick the enharmonic that matches the user's input
 /// side (sharps stay sharp, flats stay flat) — see <see cref="SpellPc"/>.
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("CapoSkill", "fretboard")]
+[GuitarAlchemist.Registry.GaSkill("Capo", "fretboard")]
 public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
 {
     public string Name => "Capo";

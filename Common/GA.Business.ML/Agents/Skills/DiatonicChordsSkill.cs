@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 /// plumbing, exception handling, and Evidence stamping; this class
 /// only declares routing metadata + the closure target.
 /// </summary>
-[GuitarAlchemist.Registry.GaSkill("DiatonicChordsSkill", "chord")]
+[GuitarAlchemist.Registry.GaSkill("DiatonicChords", "chord")]
 public sealed class DiatonicChordsSkill(
     IMcpToolsProvider toolsProvider,
     IChatClientFactory chatClientFactory,

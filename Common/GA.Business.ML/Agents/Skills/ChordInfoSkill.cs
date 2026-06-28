@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// Answers basic chord-note questions from deterministic interval formulas.
 /// </summary>
-[GuitarAlchemist.Registry.GaSkill("ChordInfoSkill", "chord")]
+[GuitarAlchemist.Registry.GaSkill("ChordInfo", "chord")]
 public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOrchestratorSkill
 {
     // Root map, root/quality normalization, and the interval formula table live in the shared

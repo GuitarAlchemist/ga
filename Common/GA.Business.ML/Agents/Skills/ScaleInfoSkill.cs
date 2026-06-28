@@ -12,7 +12,7 @@ using GA.Domain.Core.Theory.Tonal;
 /// Registered at the <b>orchestrator level</b>. Returns the 7 scale notes and the
 /// relative key as structured evidence without touching the LLM pipeline.
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("ScaleInfoSkill", "scale")]
+[GuitarAlchemist.Registry.GaSkill("ScaleInfo", "scale")]
 public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "ScaleInfo";

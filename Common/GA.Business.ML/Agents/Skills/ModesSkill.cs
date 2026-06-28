@@ -30,7 +30,7 @@ using Microsoft.FSharp.Core;
 /// by the YAML config, not by what the skill author happened to write.
 /// </para>
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("ModesSkill", "scale")]
+[GuitarAlchemist.Registry.GaSkill("Modes", "scale")]
 public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestratorSkill
 {
     public string Name        => "Modes";

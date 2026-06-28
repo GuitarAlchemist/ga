@@ -75,9 +75,12 @@ public class SkillRegistryParityTests
     public void Registry_ByName_ResolvesAnnotatedSkill()
     {
         // Spot-check a stable, deterministic skill resolves through the unified API.
-        var skill = Registry.ByName("ChordInfoSkill");
+        // Descriptor name MUST equal the skill's runtime IOrchestratorSkill.Name
+        // (ChordInfoSkill.Name => "ChordInfo"), not the class name, so registry
+        // descriptors correlate with the orchestrator's intent IDs (skill.{name}).
+        var skill = Registry.ByName("ChordInfo");
         Assert.That(skill, Is.Not.Null,
-            "ChordInfoSkill descriptor must be discoverable via Registry.ByName");
+            "ChordInfo descriptor must be discoverable via Registry.ByName");
         Assert.That(skill!.Domain, Is.EqualTo("chord"));
     }
 }

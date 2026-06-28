@@ -12,7 +12,7 @@ using GA.Business.ML.Search;
 /// "no intent" response otherwise (no LLM fallback at the skill layer).
 /// </summary>
 // @ai:business-value top-1 chatbot skill by traffic — voicing lookup is the canonical chord-question flow we sell the product on [T:manually-reviewed conf:0.92 src:product-owner@2026-05-24]
-[GuitarAlchemist.Registry.GaSkill("ChordVoicingsSkill", "voicing")]
+[GuitarAlchemist.Registry.GaSkill("ChordVoicings", "voicing")]
 public sealed partial class ChordVoicingsSkill(
     ILogger<ChordVoicingsSkill> logger,
     EnhancedVoicingSearchService voicingSearch,

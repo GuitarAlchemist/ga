@@ -25,7 +25,7 @@ using GA.Domain.Services.Atonal.Grothendieck;
 /// <c>GrothendieckService</c> the <c>/test/grothendieck-dsl</c> demo uses,
 /// but exposes it through the chatbot's conversational surface.
 /// </remarks>
-[GuitarAlchemist.Registry.GaSkill("GrothendieckDeltaSkill", "atonal")]
+[GuitarAlchemist.Registry.GaSkill("GrothendieckDelta", "atonal")]
 public sealed class GrothendieckDeltaSkill(
     IGrothendieckService grothendieck,
     ILogger<GrothendieckDeltaSkill> logger) : IOrchestratorSkill

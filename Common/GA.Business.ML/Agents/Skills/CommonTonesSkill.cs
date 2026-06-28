@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 /// exception handling, and Evidence stamping; this class only declares
 /// routing metadata + the closure target.
 /// </summary>
-[GuitarAlchemist.Registry.GaSkill("CommonTonesSkill", "theory")]
+[GuitarAlchemist.Registry.GaSkill("CommonTones", "theory")]
 public sealed class CommonTonesSkill(
     IMcpToolsProvider toolsProvider,
     IChatClientFactory chatClientFactory,

@@ -6,7 +6,7 @@ namespace GA.Business.ML.Agents.Skills;
 /// etc.) with one-line examples. Catalog skill (see <see cref="CatalogSkillBase"/>):
 /// body is loaded from <c>skills/what-can-you-do/SKILL.md</c>, zero LLM calls.
 /// </summary>
-[GuitarAlchemist.Registry.GaSkill("WhatCanYouDoSkill", "catalog")]
+[GuitarAlchemist.Registry.GaSkill("WhatCanYouDo", "catalog")]
 public sealed class WhatCanYouDoSkill(ILogger<WhatCanYouDoSkill> logger) : CatalogSkillBase(logger)
 {
     public override string Name        => "WhatCanYouDo";
