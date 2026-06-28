@@ -48,7 +48,10 @@
   <ItemGroup>
     <!-- GPU/CUDA code requires CUDA runtime — excluded from standard builds -->
     <Compile Remove="CUDA/**/*.cs" />
-    <!-- Parked controllers/services live in _Parked/ — excluded wholesale -->
+    <!-- Parked controllers/services live in _Parked/ — excluded wholesale.
+         AdaptiveAIController was unparked (issue #48) and now lives in Controllers/,
+         compiled normally behind IAdaptiveAIService. AdvancedAI / VectorSearch /
+         SemanticSearch / EnhancedPersonalization remain parked. -->
     <Compile Remove="_Parked\**" />
     <!-- These types are now in AllProjects.ServiceDefaults — exclude local duplicates -->
     <Compile Remove="Models/ApiResponse.cs" />
