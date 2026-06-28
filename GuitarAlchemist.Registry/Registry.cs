@@ -66,6 +66,24 @@ public static class Registry
     /// be called from a <c>[ModuleInitializer]</c> at assembly load. Returns the
     /// stored descriptor. Idempotent on identical input.
     /// </summary>
+    /// <remarks>
+    /// <b>Duplicate-name precedence (last-write-wins):</b>
+    /// <list type="number">
+    ///   <item>
+    ///     <b>Explicit vs. explicit</b> — backed by a
+    ///     <see cref="ConcurrentDictionary{TKey,TValue}"/> indexer assignment, so
+    ///     registering the same <see cref="GaSkill.Name"/> twice keeps the
+    ///     <i>most recent</i> descriptor; the earlier one is overwritten.
+    ///   </item>
+    ///   <item>
+    ///     <b>Explicit vs. reflection-discovered</b> — an explicit registration
+    ///     <i>always wins</i> over a reflection-discovered skill of the same name,
+    ///     in both <see cref="ByName"/> (checks the explicit store first) and
+    ///     <see cref="All"/> (overlays explicit registrations over discovery last).
+    ///   </item>
+    /// </list>
+    /// Names are compared with <see cref="StringComparer.Ordinal"/> (case-sensitive).
+    /// </remarks>
     public static GaSkill RegisterSkill(GaSkill skill)
     {
         ArgumentNullException.ThrowIfNull(skill);
