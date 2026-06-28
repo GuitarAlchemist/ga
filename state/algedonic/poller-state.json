@@ -15,7 +15,7 @@
     "blocked_prs": 0
   },
   "hari": {
-    "consecutive_failures": 5,
+    "consecutive_failures": 6,
     "last_status": "fail"
   }
 }
