@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a4b2da267b624e424024b3bb661cfe802a52ed0b",
-    "generatedAt": "2026-06-28T02:51:57.733935+00:00",
+    "commitSha": "7ab81207dd3477a3fb52fef8161d242f6462326a",
+    "generatedAt": "2026-06-28T03:31:39.597349+00:00",
     "repoCount": 5,
-    "totalPRs": 20
+    "totalPRs": 23
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 1,
+      "prCount": 2,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T03:17:00Z",
+          "failingChecks": 1,
+          "headRef": "claude/issue-46-registry-moduleinit",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 488,
+          "title": "feat: ModuleInitializer skill registry + parity test (#46)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/488"
+        },
         {
           "ageDays": 2,
           "author": "spareilleux",
@@ -391,8 +403,32 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 1,
+      "prCount": 3,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T03:23:03Z",
+          "failingChecks": 0,
+          "headRef": "feature/capability-based-routing-design-8190508807820004752",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 489,
+          "title": "Define capability-based routing and evaluate AI workers",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/489"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T03:13:49Z",
+          "failingChecks": 0,
+          "headRef": "adopt-hdd-methodology-17611891013549647685",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 484,
+          "title": "Adopt Harness-Driven Development (HDD) Methodology",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/484"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -400,7 +436,7 @@
           "failingChecks": 0,
           "headRef": "research/openclaw-hermes-benchmark-8063418258253471661",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 481,
           "title": "Research: Benchmark OpenClaw and Hermes patterns for GA Harness",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/481"

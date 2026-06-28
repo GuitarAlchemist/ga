@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using AllProjects.ServiceDefaults;
+using GA.Business.Core.Orchestration.Extensions;
 using GA.Business.Core.Session;
 using GaApi.Controllers;
 using GaApi.Extensions;
@@ -57,6 +58,10 @@ builder.Services.AddCachingServices(builder.Configuration);
 // Register monadic services (health check, chords)
 builder.Services.AddMonadicHealthCheckService();
 builder.Services.AddMonadicChordService();
+
+// Register the Adaptive-AI service (issue #48 proof slice): difficulty-curve
+// capability behind IAdaptiveAIService (layer 4) → AdaptiveAIService (layer 5).
+builder.Services.AddAdaptiveAIService();
 
 // Register standard health check service (used by HealthController)
 builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
