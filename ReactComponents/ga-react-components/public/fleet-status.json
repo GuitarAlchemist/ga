@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "b95cb723d7cd3c5770a46eac9bd0533abef22492",
-    "generatedAt": "2026-06-28T07:16:41.488226+00:00",
+    "commitSha": "fcac13559c0d480a027e99da408fc86c9441a502",
+    "generatedAt": "2026-06-28T14:44:23.169927+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 26
   },
   "repos": [
     {
@@ -168,7 +168,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
         },
         {
-          "ageDays": 39,
+          "ageDays": 40,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -193,31 +193,31 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 21,
+      "prCount": 16,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-28T06:19:25Z",
+          "createdAt": "2026-06-28T14:01:56Z",
           "failingChecks": 0,
-          "headRef": "feat/jules-auto-delegate-skills-16589699950471634802",
+          "headRef": "add-jules-pr-watchdog-11166123619573723481",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 131,
-          "title": "feat(afk): inject declared agent skills into Jules prompts",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/131"
+          "mergeable": "MERGEABLE",
+          "number": 134,
+          "title": "feat(agents): Add Jules PR watchdog design and workflow draft",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/134"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-28T06:19:17Z",
-          "failingChecks": 0,
-          "headRef": "add-cloud-agent-skill-library-3332843540915973631",
+          "createdAt": "2026-06-28T13:49:22Z",
+          "failingChecks": 1,
+          "headRef": "feat/jules-pr-watchdog",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 130,
-          "title": "Add repo-readable cloud-agent skills for AFK delegation",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/130"
+          "mergeable": "MERGEABLE",
+          "number": 133,
+          "title": "docs(agents): add Jules PR watchdog notes",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/133"
         },
         {
           "ageDays": 0,
@@ -232,85 +232,25 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/129"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T06:16:02Z",
-          "failingChecks": 0,
-          "headRef": "design-codex-dispatch-10556833386076903853",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 128,
-          "title": "docs: design governed Codex dispatch seam (#116)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/128"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T06:11:39Z",
-          "failingChecks": 0,
-          "headRef": "feat/second-brain-mcp-a2a-exposure-6704763220124139882",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 125,
-          "title": "[Story][TARS-V2][P1] Expose second-brain memory safely through MCP resources and A2A artifacts",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/125"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T06:07:35Z",
-          "failingChecks": 0,
-          "headRef": "feature/92-replayable-harness-loop-design-13595540883336233988",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 119,
-          "title": "Design replayable harness loop for closure runs and memory updates",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/119"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T05:36:22Z",
-          "failingChecks": 0,
-          "headRef": "feat/tars-v2-second-brain-evidence-bundle-design-7229427448536904912",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 113,
-          "title": "docs(second-brain): design source-grounded synthesis & evidence bundle contracts",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/113"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T05:18:06Z",
-          "failingChecks": 0,
-          "headRef": "feature/tars-v2-memory-contracts-14724467816195251988",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 109,
-          "title": "Define TARS V2 second-brain memory object contracts and provenance model",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/109"
-        },
-        {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:32:40Z",
           "failingChecks": 0,
           "headRef": "docs/afk-halt-marker-readme-4421301305715265213",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 68,
           "title": "Document AFK halt marker in README.md",
           "url": "https://github.com/GuitarAlchemist/tars/pull/68"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-25T13:29:00Z",
           "failingChecks": 0,
           "headRef": "doc-afk-integration-halt-1381979756652838667",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 67,
           "title": "docs: add AFK delegation halt marker to README",
           "url": "https://github.com/GuitarAlchemist/tars/pull/67"
@@ -484,7 +424,7 @@
           "failingChecks": 3,
           "headRef": "feat/seldon-intelligence-platform-12410827756528989481",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 509,
           "title": "Establish Seldon Engineering Intelligence Platform",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/509"
@@ -496,7 +436,7 @@
           "failingChecks": 1,
           "headRef": "feature/streeling-observability-9703913218032856063",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 494,
           "title": "feat: Streeling Engineering Observability Platform Foundation",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/494"
@@ -508,7 +448,7 @@
           "failingChecks": 0,
           "headRef": "feature/capability-based-routing-design-8190508807820004752",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 489,
           "title": "Define capability-based routing and evaluate AI workers",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/489"
@@ -520,7 +460,7 @@
           "failingChecks": 0,
           "headRef": "adopt-hdd-methodology-17611891013549647685",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 484,
           "title": "Adopt Harness-Driven Development (HDD) Methodology",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/484"
@@ -532,7 +472,7 @@
           "failingChecks": 0,
           "headRef": "research/openclaw-hermes-benchmark-8063418258253471661",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 481,
           "title": "Research: Benchmark OpenClaw and Hermes patterns for GA Harness",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/481"
