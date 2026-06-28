@@ -41,8 +41,12 @@ public class ImprovisationSkillTests
     [TestCase("chord-scale for G7")]
     [TestCase("which mode works over Am7")]
     [TestCase("chord scale options for D7")]
-    // Valid bare-extension chord must still route after the ga#261 tightening.
+    // Valid bare-extension chords must still route after the ga#261 tightening.
+    // D5 is pinned alongside G13 so we confirm the extension-set acceptance is
+    // not root-specific (ga#261 self-review: "D5 batteries" is rejected by the
+    // keyword gate, not because D5 is an invalid chord token).
     [TestCase("what scale over G13")]
+    [TestCase("what scale over D5")]
     public void CanHandle_True_OnRealImprovQueries(string message)
     {
         var skill = MakeSkill();

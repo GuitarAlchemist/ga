@@ -37,7 +37,11 @@ public class ChordVoicingsSkillTests
     [TestCase("F#m fingering")]
     // Valid bare-extension chords must still route after the ga#261 regex
     // tightening (power chord, 6th, 13th — all real chord-extension digits).
+    // D5 is pinned alongside E5 to confirm the acceptance is not root-specific
+    // (ga#261 self-review: rejection of "D5 batteries" is keyword-gate driven,
+    // not regex-driven — D5 is a valid chord token in musical context).
     [TestCase("voicings for E5")]
+    [TestCase("voicings for D5")]
     [TestCase("shapes for C6")]
     [TestCase("G13 voicings")]
     public void CanHandle_True_OnRealVoicingQueries(string message)
