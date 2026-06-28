@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7ab81207dd3477a3fb52fef8161d242f6462326a",
-    "generatedAt": "2026-06-28T03:31:39.597349+00:00",
+    "commitSha": "fa95bd15717626d337bb48ef35fc494a12e028de",
+    "generatedAt": "2026-06-28T04:15:20.425591+00:00",
     "repoCount": 5,
-    "totalPRs": 23
+    "totalPRs": 25
   },
   "repos": [
     {
@@ -113,22 +113,10 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T03:17:00Z",
-          "failingChecks": 1,
-          "headRef": "claude/issue-46-registry-moduleinit",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 488,
-          "title": "feat: ModuleInitializer skill registry + parity test (#46)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/488"
-        },
-        {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-25T03:47:52Z",
           "failingChecks": 1,
@@ -280,7 +268,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/52"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-21T03:48:30Z",
           "failingChecks": 3,
@@ -403,8 +391,44 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 3,
+      "prCount": 6,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T04:08:27Z",
+          "failingChecks": 3,
+          "headRef": "feat/github-intelligence-pipeline-arch-6008969315729997440",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 514,
+          "title": "GitHub Intelligence Pipeline Architecture and Schemas",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/514"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T04:04:41Z",
+          "failingChecks": 3,
+          "headRef": "feat/seldon-intelligence-platform-12410827756528989481",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 509,
+          "title": "Establish Seldon Engineering Intelligence Platform",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/509"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T03:51:38Z",
+          "failingChecks": 1,
+          "headRef": "feature/streeling-observability-9703913218032856063",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 494,
+          "title": "feat: Streeling Engineering Observability Platform Foundation",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/494"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -412,7 +436,7 @@
           "failingChecks": 0,
           "headRef": "feature/capability-based-routing-design-8190508807820004752",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 489,
           "title": "Define capability-based routing and evaluate AI workers",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/489"
