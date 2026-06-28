@@ -5,15 +5,16 @@
     "blocked_prs": 0
   },
   "tars": {
-    "consecutive_failures": 2,
+    "consecutive_failures": 3,
     "last_status": "fail"
   },
   "Demerzel": {
-    "consecutive_failures": 4,
-    "last_status": "fail"
+    "consecutive_failures": 0,
+    "last_status": "ok",
+    "blocked_prs": 0
   },
   "hari": {
-    "consecutive_failures": 2,
+    "consecutive_failures": 3,
     "last_status": "fail"
   }
 }
