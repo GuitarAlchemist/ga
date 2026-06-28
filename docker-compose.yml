@@ -63,7 +63,9 @@ services:
   gaapi:
     build:
       context: .
-      dockerfile: Apps/ga-server/GA.AI.Service/Dockerfile
+      # Repointed from the deleted Apps/ga-server/GA.AI.Service/Dockerfile
+      # (removed in #467) to the actual main-API project. See #474.
+      dockerfile: Apps/ga-server/GaApi/Dockerfile
     container_name: ga-api
     restart: unless-stopped
     ports:
