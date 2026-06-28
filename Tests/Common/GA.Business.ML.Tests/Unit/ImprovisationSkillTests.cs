@@ -41,6 +41,8 @@ public class ImprovisationSkillTests
     [TestCase("chord-scale for G7")]
     [TestCase("which mode works over Am7")]
     [TestCase("chord scale options for D7")]
+    // Valid bare-extension chord must still route after the ga#261 tightening.
+    [TestCase("what scale over G13")]
     public void CanHandle_True_OnRealImprovQueries(string message)
     {
         var skill = MakeSkill();
@@ -87,6 +89,23 @@ public class ImprovisationSkillTests
         var skill = MakeSkill();
         Assert.That(skill.CanHandle(message), Is.False,
             $"no chord token present, should not claim: {message}");
+    }
+
+    // ga#261: letter+digit tokens that are NOT chords must not route here.
+    // "solo over the B12 molecule" / "solo for 8 hours on G7 highway" carry a
+    // real improv keyword AND a chord-LOOKING token, so the token regex itself
+    // has to reject the non-extension digits (12/4). The keyword-less variants
+    // are guarded by the intent gate but pinned as regression cases.
+    [TestCase("solo over the B12 molecule")]
+    [TestCase("I want to solo for 8 hours on the A4 highway")]
+    [TestCase("buy some D5 batteries")]
+    [TestCase("that's an A4 paper-size question")]
+    [TestCase("the E5 PowerShell module")]
+    public void CanHandle_False_OnNonChordLetterDigitTokens(string message)
+    {
+        var skill = MakeSkill();
+        Assert.That(skill.CanHandle(message), Is.False,
+            $"letter+digit token is not a chord and should not be routed here: {message}");
     }
 
     [Test]

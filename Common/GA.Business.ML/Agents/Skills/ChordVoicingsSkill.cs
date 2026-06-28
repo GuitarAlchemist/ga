@@ -57,7 +57,9 @@ public sealed partial class ChordVoicingsSkill(
     {
         if (string.IsNullOrWhiteSpace(message)) return false;
         var q = message.ToLowerInvariant();
-        var hasVoicingIntent = VoicingKeywords.Any(k => q.Contains(k, StringComparison.Ordinal));
+        // Whole-word match so a keyword embedded in an unrelated word doesn't
+        // fire (e.g. "shell" inside "PowerShell" — see ga#261).
+        var hasVoicingIntent = VoicingKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
         if (!hasVoicingIntent) return false;
         // Require a real chord token. The two regexes are case-sensitive on the
         // root so bare lowercase "a"/"e" in normal English ("show me a shape")
@@ -164,10 +166,15 @@ public sealed partial class ChordVoicingsSkill(
     }
 
     // Chord-shape detector: uppercase root (no IgnoreCase) followed by an
-    // accidental/quality/digit immediately. Matches "Cmaj7", "G7", "F#m",
-    // "Calt", "C7b9". Case-sensitive root prevents false positives on bare
-    // lowercase "a" / "e" in normal English ("show me a beginner shape").
-    [GeneratedRegex(@"\b[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|\d)\w*\b")]
+    // accidental/quality immediately, or a *valid chord-extension digit*
+    // (5,6,7,9,11,13). Matches "Cmaj7", "G7", "F#m", "Calt", "C7b9", "E5".
+    // Case-sensitive root prevents false positives on bare lowercase "a" / "e"
+    // in normal English ("show me a beginner shape"). Restricting the bare-digit
+    // branch to real extensions (rather than any \d) rejects non-chord
+    // letter+number tokens like "B12" (vitamin) and "A4" (paper size) that the
+    // old \d branch matched — see ga#261. 4 (needs sus/add) and stray multi-digit
+    // numbers no longer parse as chords.
+    [GeneratedRegex(@"\b[A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|alt|°|Δ|11|13|5|6|7|9)\w*\b")]
     private static partial Regex ChordSuffixRegex();
 
     // Spaced quality form: "C major", "Bb minor", "F# augmented". Quality word
