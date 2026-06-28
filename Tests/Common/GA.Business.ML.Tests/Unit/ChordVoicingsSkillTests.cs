@@ -38,6 +38,7 @@ public class ChordVoicingsSkillTests
     // Valid bare-extension chords must still route after the ga#261 regex
     // tightening (power chord, 6th, 13th — all real chord-extension digits).
     [TestCase("voicings for E5")]
+    [TestCase("voicings for D5")] // power chord in music context — mirror of the "D5 batteries" negative
     [TestCase("shapes for C6")]
     [TestCase("G13 voicings")]
     public void CanHandle_True_OnRealVoicingQueries(string message)
