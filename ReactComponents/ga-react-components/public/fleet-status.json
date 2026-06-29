@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "02cfb776d86ddcf8fd925108b46e08457aca745d",
-    "generatedAt": "2026-06-28T15:26:43.514242+00:00",
+    "commitSha": "5acf970c9116c53bf747a701336f9378566d926c",
+    "generatedAt": "2026-06-29T07:34:18.022623+00:00",
     "repoCount": 5,
-    "totalPRs": 28
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -116,7 +116,7 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-06-25T03:47:52Z",
           "failingChecks": 1,
@@ -144,7 +144,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:38:56Z",
           "failingChecks": 2,
@@ -156,7 +156,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/156"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-06-21T16:21:38Z",
           "failingChecks": 2,
@@ -193,8 +193,44 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 18,
+      "prCount": 21,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T16:38:18Z",
+          "failingChecks": 0,
+          "headRef": "feat/anti-ball-of-mud-skill-12036814925263852410",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 142,
+          "title": "feat(agents): Add anti-ball-of-mud skill for AFK agents",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/142"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T15:32:38Z",
+          "failingChecks": 0,
+          "headRef": "jules/issue-80-map-v1-traces-14348475315115475320",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 141,
+          "title": "Map V1 AgenticTraceCapture fields to AIW episode artifacts",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/141"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-28T15:30:29Z",
+          "failingChecks": 0,
+          "headRef": "evaluate-ax-compound-engineering-12588072405027439842",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 140,
+          "title": "Evaluate AX as the compound-engineering experience layer",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/140"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -244,7 +280,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/133"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T06:17:57Z",
           "failingChecks": 0,
@@ -280,7 +316,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/67"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -292,7 +328,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
@@ -304,7 +340,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/52"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-06-21T03:48:30Z",
           "failingChecks": 3,
@@ -316,7 +352,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-06-21T02:37:16Z",
           "failingChecks": 3,
@@ -328,7 +364,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-06-20T20:01:00Z",
           "failingChecks": 2,
@@ -340,7 +376,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
         },
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:13:39Z",
           "failingChecks": 1,
@@ -352,7 +388,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
         },
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-05-24T21:12:23Z",
           "failingChecks": 2,
@@ -364,7 +400,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
         },
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:42:41Z",
           "failingChecks": 2,
@@ -376,7 +412,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
         },
         {
-          "ageDays": 34,
+          "ageDays": 35,
           "author": "spareilleux",
           "createdAt": "2026-05-24T18:12:55Z",
           "failingChecks": 1,
@@ -400,7 +436,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
         },
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-05-16T01:24:40Z",
           "failingChecks": 5,
@@ -427,76 +463,88 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-06-29T03:06:08Z",
+          "failingChecks": 0,
+          "headRef": "aiw-prompt-harness-461",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 559,
+          "title": "Add AIW prompt and harness engineering artifacts",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/559"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T04:08:27Z",
           "failingChecks": 1,
           "headRef": "feat/github-intelligence-pipeline-arch-6008969315729997440",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 514,
           "title": "GitHub Intelligence Pipeline Architecture and Schemas",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/514"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T04:04:41Z",
           "failingChecks": 3,
           "headRef": "feat/seldon-intelligence-platform-12410827756528989481",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 509,
           "title": "Establish Seldon Engineering Intelligence Platform",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/509"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T03:51:38Z",
           "failingChecks": 1,
           "headRef": "feature/streeling-observability-9703913218032856063",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 494,
           "title": "feat: Streeling Engineering Observability Platform Foundation",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/494"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T03:23:03Z",
           "failingChecks": 0,
           "headRef": "feature/capability-based-routing-design-8190508807820004752",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 489,
           "title": "Define capability-based routing and evaluate AI workers",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/489"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T03:13:49Z",
           "failingChecks": 0,
           "headRef": "adopt-hdd-methodology-17611891013549647685",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 484,
           "title": "Adopt Harness-Driven Development (HDD) Methodology",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/484"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-28T02:32:55Z",
           "failingChecks": 0,
           "headRef": "research/openclaw-hermes-benchmark-8063418258253471661",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 481,
           "title": "Research: Benchmark OpenClaw and Hermes patterns for GA Harness",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/481"
