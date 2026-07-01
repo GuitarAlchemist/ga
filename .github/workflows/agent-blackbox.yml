@@ -11,12 +11,15 @@ permissions:
   checks: write
 
 env:
-  AGENT_BLACKBOX_REF: "v0.1.0-beta.2"
+  # Pinned SHA (explicit imports > implicit inheritance) — same ref tars runs;
+  # brings the harness-audit command and --trace evidence support.
+  AGENT_BLACKBOX_REF: "90ed651c73a296c13c9b4953754a2f4898ac4114"
   DOTNET_VERSION: "10.0.1xx"
   VERIFY_COMMAND: >-
     dotnet test AllProjects.slnx
     --filter "TestCategory!=Integration&TestCategory!=RequiresModel"
     --logger "console;verbosity=normal"
+  HARNESS_AUDIT_FAIL_BELOW: "60"
 
 jobs:
   risk-report:
@@ -38,7 +41,7 @@ jobs:
           repository: GuitarAlchemist/agent-blackbox
           ref: ${{ env.AGENT_BLACKBOX_REF }}
           path: .agent-blackbox
-          token: ${{ secrets.AGENT_BLACKBOX_TOKEN }}
+          token: ${{ secrets.AGENT_BLACKBOX_TOKEN || github.token }}
 
       - name: Collect PR evidence
         shell: bash
@@ -51,8 +54,45 @@ jobs:
           verify_exit=$?
           set -e
           echo "verify_exit=$verify_exit" >> "$GITHUB_ENV"
+          export AGENT_BLACKBOX_VERIFY_EXIT="$verify_exit"
           echo "verify command exited with code $verify_exit" >> dist/test-output.txt
           cat dist/test-output.txt
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          def event(**kwargs):
+              payload = {
+                  "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                  **kwargs,
+              }
+              return json.dumps(payload, sort_keys=True)
+
+          changed_files = [
+              line.strip()
+              for line in Path("dist/changed-files.txt").read_text(encoding="utf-8").splitlines()
+              if line.strip()
+          ]
+          verify_exit = int(os.environ.get("AGENT_BLACKBOX_VERIFY_EXIT", "0"))
+          lines = [
+              event(
+                  event="workflow_evidence",
+                  tool="git.diff",
+                  status="ok",
+                  path="dist/changed-files.txt",
+                  data={"changed_file_count": len(changed_files)},
+              ),
+              event(
+                  event="verification",
+                  tool="shell.exec",
+                  command=os.environ.get("VERIFY_COMMAND", ""),
+                  status="ok" if verify_exit == 0 else "failed",
+              ),
+          ]
+          Path("dist/agent-trace.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
 
       - name: Generate risk report
         shell: bash
@@ -62,7 +102,16 @@ jobs:
             --changed-files dist/changed-files.txt \
             --diff dist/diff.patch \
             --test-output dist/test-output.txt \
+            --trace dist/agent-trace.jsonl \
             --out-dir dist
+
+      - name: Generate harness audit
+        shell: bash
+        run: |
+          PYTHONPATH=.agent-blackbox python -m cli.agent_blackbox harness-audit \
+            --repo . \
+            --out-dir dist \
+            --fail-below "${HARNESS_AUDIT_FAIL_BELOW}"
 
       - name: Comment risk report
         uses: actions/github-script@v7
@@ -70,7 +119,10 @@ jobs:
           script: |
             const fs = require('fs');
             const marker = '<!-- agent-blackbox-risk-report -->';
-            const body = marker + '\n' + fs.readFileSync('dist/risk-report.md', 'utf8');
+            let body = marker + '\n' + fs.readFileSync('dist/risk-report.md', 'utf8');
+            if (fs.existsSync('dist/harness-audit.md')) {
+              body += '\n\n---\n\n' + fs.readFileSync('dist/harness-audit.md', 'utf8');
+            }
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
             const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
