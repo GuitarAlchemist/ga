@@ -1,0 +1,18 @@
+{
+  "id": "kp-supervised-drive-calibration",
+  "layer": "experiential",
+  "concept": "Calibrating autonomy claims — 'unattended CI was unblocked' is not 'the autonomous loop is working'",
+  "delivery_mode": "structured",
+  "content": "LESSON (Article 1 Truthfulness + Article 9 Bounded Autonomy): when reporting on an autonomous drive, separate the capability that was genuinely restored from the capability that was merely exercised under supervision. A session on 2026-06-24/25 (ga, Architecture Deepening Campaign 2) restored a load-bearing piece of infrastructure AND shipped reviewable code — but neither fact licenses the claim 'the AFK loop is working'.\n\nVERIFIED CLAIMS (evidence-bound):\n1. Runner persistence was unblocked. The self-hosted GitHub Actions runner (AW-STEF) could not start as a service because NETWORK SERVICE cannot traverse the C:/Users/spare profile path. Fix: a logon Scheduled Task 'GitHubActionsRunner-AW-STEF' that runs as the user — no service account, no stored password, survives reboot. Net effect: unattended CI now actually runs. Evidence: ga reference_github_runner_network_service_profile (RESOLVED 2026-06-24).\n2. Two deepening slices shipped as reviewable PRs under a SUPERVISED drive: ga#475 ChordClassificationEngine (one mood/style tag authority behind a small Classify(ctx) interface; collapsed divergent classifiers across VoicingTagEnricher / VoicingHarmonicAnalyzer) and ga#476 ConfigFileLocator (one path-probe seam for 10 F# config modules). Both green on CI; #475 was merged by the human (the harness classifier correctly refused agent self-merge of its own PR). Evidence: docs/plans/2026-06-23-arch-deepening-campaign-2-plan.md; merges 2026-06-25T03Z.\n\nWHAT IS NOT YET TRUE (do not claim):\n- The loop is NOT unattended end-to-end. Every merge of the agent's own PR required a human hand on the trigger; 'manage it all' / 'ok do it' did NOT clear the self-merge boundary — only a direct 'merge it' or a human-added 'Bash(gh pr merge:*)' settings rule does.\n- Fuzzy-quality gates remain human/tribunal-gated by design. Only the binary oracle (CI green/red) ran autonomously.\n\nGENERALIZABLE RULE: gate any 'autonomy is working' signal on (a) which oracle actually ran (binary CI vs fuzzy quality), and (b) whether a human was in the merge/approval path. Report the restored capability and the supervised capability as two separate facts. Inflating supervised throughput into autonomous capability is a confidence-inflation failure mode the estimator pairing exists to catch.",
+  "source": {
+    "artifact": "docs/plans/2026-06-23-arch-deepening-campaign-2-plan.md",
+    "reconnaissance": "ga#475, ga#476, ga#477 merged 2026-06-25T03Z; runner fix RESOLVED 2026-06-24"
+  },
+  "target_learner": {
+    "type": "agent",
+    "identifier": "skeptical-auditor"
+  },
+  "taught_by": "seldon",
+  "created_at": "2026-06-25T03:42:36Z",
+  "channel": "crisp"
+}
