@@ -31,6 +31,12 @@ name: Auto-delegate to AFK agent
 on:
   issues:
     types: [labeled]
+  # Dead-letter sweep: issues labeled ready-for-agent before this workflow
+  # existed (or while it was broken) never produce a `labeled` event again.
+  # The daily sweep (and manual dispatch) re-routes them.
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * *'
 
 permissions:
   contents: read
@@ -40,7 +46,7 @@ jobs:
   delegate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: ${{ github.event.label.name == 'ready-for-agent' }}
+    if: ${{ github.event_name == 'issues' && github.event.label.name == 'ready-for-agent' }}
     steps:
       - name: Checkout (read the governance halt marker)
         uses: actions/checkout@v4
@@ -104,6 +110,11 @@ jobs:
         run: |
           case "$AGENT" in
             jules)
+              # Self-heal: the label must exist before gh can apply it (run #2
+              # failed with "'jules' not found"); --force also repairs
+              # color/description if the label was auto-created bare.
+              gh label create jules --repo "$REPO" --color 1A73E8 \
+                --description "Delegate this issue to Google Jules" --force
               gh issue edit "$ISSUE" --repo "$REPO" --add-label jules
               echo "Delegated issue #${ISSUE} to Jules (\`jules\` label, PAT-attributed)." ;;
             codex)
@@ -115,3 +126,63 @@ jobs:
             *)
               echo "::error::unknown agent '$AGENT'"; exit 1 ;;
           esac
+
+  # Dead-letter sweep: re-route open ready-for-agent issues that never got
+  # delegated. Only the Jules default lane is swept (detectable by the absence
+  # of the `jules` label); worker:codex / worker:claude lanes are comment-
+  # triggered and are skipped to avoid duplicate @-mentions — re-apply the
+  # ready-for-agent label on those to re-trigger them manually.
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout (read the governance halt marker)
+        uses: actions/checkout@v4
+
+      - name: Governance halt-gate + preflight
+        id: gate
+        env:
+          HAS_PAT: ${{ secrets.PAT_TOKEN != '' }}
+        run: |
+          MARKER="governance/state/afk-halt.json"
+          if [ -f "$MARKER" ]; then
+            EXPIRES=$(jq -r '.expires_at // empty' "$MARKER" 2>/dev/null || true)
+            HALTED=true
+            if [ -n "$EXPIRES" ]; then
+              NOW=$(date -u +%s)
+              EXP=$(date -u -d "$EXPIRES" +%s 2>/dev/null || echo 0)
+              if [ "$EXP" -gt 0 ] && [ "$NOW" -ge "$EXP" ]; then
+                HALTED=false
+              fi
+            fi
+            if [ "$HALTED" = "true" ]; then
+              echo "::notice::AFK delegation halted by governance marker — skipping sweep"
+              echo "proceed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          if [ "$HAS_PAT" != "true" ]; then
+            echo "::warning::PAT_TOKEN not configured — skipping sweep"
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Sweep undelegated ready-for-agent issues (PAT-attributed)
+        if: steps.gate.outputs.proceed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh label create jules --repo "$REPO" --color 1A73E8 \
+            --description "Delegate this issue to Google Jules" --force
+          SWEPT=0
+          for ISSUE in $(gh issue list --repo "$REPO" --state open \
+              --label ready-for-agent --json number,labels \
+              --jq '.[] | select([.labels[].name] | any(. == "jules" or . == "worker:codex" or . == "worker:claude") | not) | .number'); do
+            gh issue edit "$ISSUE" --repo "$REPO" --add-label jules
+            echo "::notice::Swept issue #${ISSUE} to Jules (dead-letter re-route)"
+            SWEPT=$((SWEPT+1))
+          done
+          echo "::notice::Sweep complete — ${SWEPT} issue(s) re-routed"
