@@ -2,7 +2,8 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+    # Cost-safe: drop `synchronize` so review fires once per PR, not once per push.
+    types: [opened, reopened, ready_for_review]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -10,8 +11,15 @@ on:
     #   - "src/**/*.js"
     #   - "src/**/*.jsx"
 
+# Cost-safe: at most one review run per PR at a time; new events cancel the in-flight one.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   claude-review:
+    # Cost-safe: skip draft PRs — review runs when the PR is marked ready_for_review.
+    if: github.event.pull_request.draft == false
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
