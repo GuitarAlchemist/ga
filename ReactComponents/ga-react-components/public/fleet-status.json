@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "47faf08446e983efec461ae139b397d16d05ec70",
-    "generatedAt": "2026-07-01T04:33:00.169340+00:00",
+    "commitSha": "c989c9fb3a72a7963eefd7b22483c9f7b5490b61",
+    "generatedAt": "2026-07-01T07:24:29.943757+00:00",
     "repoCount": 5,
     "totalPRs": 45
   },
@@ -202,7 +202,7 @@
           "failingChecks": 0,
           "headRef": "jules-skill-injection-11596243919361197344",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 151,
           "title": "Inject declared cloud-agent skills into Jules AFK prompts",
           "url": "https://github.com/GuitarAlchemist/tars/pull/151"
@@ -214,7 +214,7 @@
           "failingChecks": 1,
           "headRef": "feat/jules-pr-watchdog-9291180033134018378",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 149,
           "title": "Add Jules PR watchdog for cloud-agent observability",
           "url": "https://github.com/GuitarAlchemist/tars/pull/149"
@@ -226,7 +226,7 @@
           "failingChecks": 0,
           "headRef": "feat/anti-ball-of-mud-skill-12036814925263852410",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 142,
           "title": "feat(agents): Add anti-ball-of-mud skill for AFK agents",
           "url": "https://github.com/GuitarAlchemist/tars/pull/142"
@@ -238,7 +238,7 @@
           "failingChecks": 0,
           "headRef": "add-jules-pr-watchdog-11166123619573723481",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 134,
           "title": "feat(agents): Add Jules PR watchdog design and workflow draft",
           "url": "https://github.com/GuitarAlchemist/tars/pull/134"
@@ -250,19 +250,19 @@
           "failingChecks": 1,
           "headRef": "feat/jules-pr-watchdog",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 133,
           "title": "docs(agents): add Jules PR watchdog notes",
           "url": "https://github.com/GuitarAlchemist/tars/pull/133"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-06-28T06:17:57Z",
           "failingChecks": 0,
           "headRef": "jules-afk-agent-skills-12666155328391937160",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 129,
           "title": "feat(afk): Inject declared cloud-agent skills into Jules prompt",
           "url": "https://github.com/GuitarAlchemist/tars/pull/129"
@@ -274,7 +274,7 @@
           "failingChecks": 0,
           "headRef": "docs/afk-halt-marker-readme-4421301305715265213",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 68,
           "title": "Document AFK halt marker in README.md",
           "url": "https://github.com/GuitarAlchemist/tars/pull/68"
@@ -286,13 +286,13 @@
           "failingChecks": 0,
           "headRef": "doc-afk-integration-halt-1381979756652838667",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 67,
           "title": "docs: add AFK delegation halt marker to README",
           "url": "https://github.com/GuitarAlchemist/tars/pull/67"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-06-21T05:03:56Z",
           "failingChecks": 0,
@@ -304,7 +304,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/53"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-06-21T04:45:46Z",
           "failingChecks": 0,
@@ -322,7 +322,7 @@
           "failingChecks": 3,
           "headRef": "refactor/llm-backend-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 46,
           "title": "refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model pool (PR1+PR4)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/46"
@@ -334,7 +334,7 @@
           "failingChecks": 3,
           "headRef": "refactor/tars-runtime-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 45,
           "title": "refactor(cli): introduce ITarsRuntime composition root (PR1)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/45"
@@ -346,7 +346,7 @@
           "failingChecks": 2,
           "headRef": "docs/agentic-engineering-methodology",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 40,
           "title": "docs(methodology): mirror agentic-engineering.md (the harness is the work)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/40"
@@ -358,7 +358,7 @@
           "failingChecks": 1,
           "headRef": "feat/fsharp-registry",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 34,
           "title": "feat(registry): F# capability-registry project mirroring ix pattern",
           "url": "https://github.com/GuitarAlchemist/tars/pull/34"
@@ -370,7 +370,7 @@
           "failingChecks": 2,
           "headRef": "feat/local-verification-hooks",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 33,
           "title": "feat(hooks): local F# verification gate \u2014 catch type errors before CI",
           "url": "https://github.com/GuitarAlchemist/tars/pull/33"
@@ -382,7 +382,7 @@
           "failingChecks": 2,
           "headRef": "chore/untrack-vendored-trees",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 32,
           "title": "chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv + tighten sentrux rules",
           "url": "https://github.com/GuitarAlchemist/tars/pull/32"
@@ -394,7 +394,7 @@
           "failingChecks": 1,
           "headRef": "feat/sentrux-rules",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 31,
           "title": "feat(sentrux): rules.toml \u2014 initial architectural constraints",
           "url": "https://github.com/GuitarAlchemist/tars/pull/31"
@@ -406,7 +406,7 @@
           "failingChecks": 1,
           "headRef": "feat/cherny-hook-enhancements",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 30,
           "title": "feat(hooks): periodic mid-session digest + auto /correct + PR rationale capture",
           "url": "https://github.com/GuitarAlchemist/tars/pull/30"
@@ -418,7 +418,7 @@
           "failingChecks": 5,
           "headRef": "chore/auto-compact-threshold",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 23,
           "title": "chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE=40)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/23"
@@ -454,7 +454,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/616"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-30T07:01:57Z",
           "failingChecks": 0,
@@ -466,7 +466,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/611"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-06-30T05:39:16Z",
           "failingChecks": 0,
@@ -676,7 +676,7 @@
           "failingChecks": 0,
           "headRef": "feature/capability-based-routing-design-8190508807820004752",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 489,
           "title": "Define capability-based routing and evaluate AI workers",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/489"
@@ -688,7 +688,7 @@
           "failingChecks": 0,
           "headRef": "adopt-hdd-methodology-17611891013549647685",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 484,
           "title": "Adopt Harness-Driven Development (HDD) Methodology",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/484"
@@ -700,7 +700,7 @@
           "failingChecks": 0,
           "headRef": "research/openclaw-hermes-benchmark-8063418258253471661",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 481,
           "title": "Research: Benchmark OpenClaw and Hermes patterns for GA Harness",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/481"

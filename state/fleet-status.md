@@ -32,33 +32,33 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#151](https://github.com/GuitarAlchemist/tars/pull/151) | Inject declared cloud-agent skills into Jules AFK prompts (draft) | 0d | UNKNOWN | 0 | spareilleux |
-| [#149](https://github.com/GuitarAlchemist/tars/pull/149) | Add Jules PR watchdog for cloud-agent observability (draft) | 0d | UNKNOWN | 1 | spareilleux |
-| [#142](https://github.com/GuitarAlchemist/tars/pull/142) | feat(agents): Add anti-ball-of-mud skill for AFK agents (draft) | 2d | UNKNOWN | 0 | spareilleux |
-| [#134](https://github.com/GuitarAlchemist/tars/pull/134) | feat(agents): Add Jules PR watchdog design and workflow draft | 2d | UNKNOWN | 0 | spareilleux |
-| [#133](https://github.com/GuitarAlchemist/tars/pull/133) | docs(agents): add Jules PR watchdog notes | 2d | UNKNOWN | 1 | spareilleux |
-| [#129](https://github.com/GuitarAlchemist/tars/pull/129) | feat(afk): Inject declared cloud-agent skills into Jules prompt | 2d | UNKNOWN | 0 | spareilleux |
-| [#68](https://github.com/GuitarAlchemist/tars/pull/68) | Document AFK halt marker in README.md | 5d | UNKNOWN | 0 | spareilleux |
-| [#67](https://github.com/GuitarAlchemist/tars/pull/67) | docs: add AFK delegation halt marker to README | 5d | UNKNOWN | 0 | spareilleux |
-| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 9d | MERGEABLE | 0 | spareilleux |
-| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 9d | MERGEABLE | 0 | spareilleux |
-| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 10d | UNKNOWN | 3 | spareilleux |
-| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 10d | UNKNOWN | 3 | spareilleux |
-| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 10d | UNKNOWN | 2 | spareilleux |
-| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 37d | UNKNOWN | 1 | spareilleux |
-| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 37d | UNKNOWN | 2 | spareilleux |
-| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 37d | UNKNOWN | 2 | spareilleux |
-| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 37d | UNKNOWN | 1 | spareilleux |
-| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 37d | UNKNOWN | 1 | spareilleux |
-| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 46d | UNKNOWN | 5 | spareilleux |
+| [#151](https://github.com/GuitarAlchemist/tars/pull/151) | Inject declared cloud-agent skills into Jules AFK prompts (draft) | 0d | CONFLICTING | 0 | spareilleux |
+| [#149](https://github.com/GuitarAlchemist/tars/pull/149) | Add Jules PR watchdog for cloud-agent observability (draft) | 0d | MERGEABLE | 1 | spareilleux |
+| [#142](https://github.com/GuitarAlchemist/tars/pull/142) | feat(agents): Add anti-ball-of-mud skill for AFK agents (draft) | 2d | CONFLICTING | 0 | spareilleux |
+| [#134](https://github.com/GuitarAlchemist/tars/pull/134) | feat(agents): Add Jules PR watchdog design and workflow draft | 2d | MERGEABLE | 0 | spareilleux |
+| [#133](https://github.com/GuitarAlchemist/tars/pull/133) | docs(agents): add Jules PR watchdog notes | 2d | MERGEABLE | 1 | spareilleux |
+| [#129](https://github.com/GuitarAlchemist/tars/pull/129) | feat(afk): Inject declared cloud-agent skills into Jules prompt | 3d | CONFLICTING | 0 | spareilleux |
+| [#68](https://github.com/GuitarAlchemist/tars/pull/68) | Document AFK halt marker in README.md | 5d | MERGEABLE | 0 | spareilleux |
+| [#67](https://github.com/GuitarAlchemist/tars/pull/67) | docs: add AFK delegation halt marker to README | 5d | MERGEABLE | 0 | spareilleux |
+| [#53](https://github.com/GuitarAlchemist/tars/pull/53) | refactor(wot): IReasonFeedback seam over a pure reducer (PR5) | 10d | MERGEABLE | 0 | spareilleux |
+| [#52](https://github.com/GuitarAlchemist/tars/pull/52) | refactor(tools): IToolInvoker → ToolOutcome, resilience in one place ( | 10d | MERGEABLE | 0 | spareilleux |
+| [#46](https://github.com/GuitarAlchemist/tars/pull/46) | refactor(llm): ILlmBackend seam + typed routing + LlamaSharp model poo | 10d | CONFLICTING | 3 | spareilleux |
+| [#45](https://github.com/GuitarAlchemist/tars/pull/45) | refactor(cli): introduce ITarsRuntime composition root (PR1) | 10d | CONFLICTING | 3 | spareilleux |
+| [#40](https://github.com/GuitarAlchemist/tars/pull/40) | docs(methodology): mirror agentic-engineering.md (the harness is the w | 10d | MERGEABLE | 2 | spareilleux |
+| [#34](https://github.com/GuitarAlchemist/tars/pull/34) | feat(registry): F# capability-registry project mirroring ix pattern | 37d | MERGEABLE | 1 | spareilleux |
+| [#33](https://github.com/GuitarAlchemist/tars/pull/33) | feat(hooks): local F# verification gate — catch type errors before CI | 37d | MERGEABLE | 2 | spareilleux |
+| [#32](https://github.com/GuitarAlchemist/tars/pull/32) | chore(repo-hygiene): archive legacy + untrack node_modules/tts-venv +  | 37d | CONFLICTING | 2 | spareilleux |
+| [#31](https://github.com/GuitarAlchemist/tars/pull/31) | feat(sentrux): rules.toml — initial architectural constraints | 37d | MERGEABLE | 1 | spareilleux |
+| [#30](https://github.com/GuitarAlchemist/tars/pull/30) | feat(hooks): periodic mid-session digest + auto /correct + PR rational | 37d | MERGEABLE | 1 | spareilleux |
+| [#23](https://github.com/GuitarAlchemist/tars/pull/23) | chore: lower auto-compact threshold to 40% (CLAUDE_CODE_AUTOCOMPACT_PC | 46d | MERGEABLE | 5 | spareilleux |
 
 ### Demerzel (22 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#616](https://github.com/GuitarAlchemist/Demerzel/pull/616) | Verify Mission Control status page after PR #608 (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#611](https://github.com/GuitarAlchemist/Demerzel/pull/611) | Research OpenClaw and Hermes patterns for the GA Harness (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#610](https://github.com/GuitarAlchemist/Demerzel/pull/610) | docs(planner): add issue grooming gate design (draft) | 0d | MERGEABLE | 0 | spareilleux |
+| [#611](https://github.com/GuitarAlchemist/Demerzel/pull/611) | Research OpenClaw and Hermes patterns for the GA Harness (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#610](https://github.com/GuitarAlchemist/Demerzel/pull/610) | docs(planner): add issue grooming gate design (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#609](https://github.com/GuitarAlchemist/Demerzel/pull/609) | [Process] Define AI/human delivery ceremonies and cadences (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#607](https://github.com/GuitarAlchemist/Demerzel/pull/607) | Epic [P0]: Add Demerzel policy engine and lifecycle state machines (draft) | 1d | CONFLICTING | 1 | spareilleux |
 | [#606](https://github.com/GuitarAlchemist/Demerzel/pull/606) | docs: define AIW lifecycle state machines (draft) | 1d | MERGEABLE | 0 | spareilleux |
@@ -75,9 +75,9 @@ _No open PRs._
 | [#514](https://github.com/GuitarAlchemist/Demerzel/pull/514) | GitHub Intelligence Pipeline Architecture and Schemas | 3d | CONFLICTING | 1 | spareilleux |
 | [#509](https://github.com/GuitarAlchemist/Demerzel/pull/509) | Establish Seldon Engineering Intelligence Platform | 3d | MERGEABLE | 3 | spareilleux |
 | [#494](https://github.com/GuitarAlchemist/Demerzel/pull/494) | feat: Streeling Engineering Observability Platform Foundation | 3d | CONFLICTING | 1 | spareilleux |
-| [#489](https://github.com/GuitarAlchemist/Demerzel/pull/489) | Define capability-based routing and evaluate AI workers | 3d | UNKNOWN | 0 | spareilleux |
-| [#484](https://github.com/GuitarAlchemist/Demerzel/pull/484) | Adopt Harness-Driven Development (HDD) Methodology | 3d | UNKNOWN | 0 | spareilleux |
-| [#481](https://github.com/GuitarAlchemist/Demerzel/pull/481) | Research: Benchmark OpenClaw and Hermes patterns for GA Harness | 3d | UNKNOWN | 0 | spareilleux |
+| [#489](https://github.com/GuitarAlchemist/Demerzel/pull/489) | Define capability-based routing and evaluate AI workers | 3d | MERGEABLE | 0 | spareilleux |
+| [#484](https://github.com/GuitarAlchemist/Demerzel/pull/484) | Adopt Harness-Driven Development (HDD) Methodology | 3d | MERGEABLE | 0 | spareilleux |
+| [#481](https://github.com/GuitarAlchemist/Demerzel/pull/481) | Research: Benchmark OpenClaw and Hermes patterns for GA Harness | 3d | MERGEABLE | 0 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -111,6 +111,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-01T04:33:00.169340+00:00 UTC_
+_Generated: 2026-07-01T07:24:29.943757+00:00 UTC_
 
-_Commit: `47faf08446e9`_
+_Commit: `c989c9fb3a72`_
