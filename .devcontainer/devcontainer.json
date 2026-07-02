@@ -1,0 +1,24 @@
+{
+  "name": "Guitar Alchemist",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/powershell:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  // Vite dev server (ga-client / dev-data manifest middleware)
+  "forwardPorts": [5176],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ionide.ionide-fsharp",
+        "anthropic.claude-code"
+      ]
+    }
+  },
+  // Keep create fast; restore on demand. Full build/test:
+  //   dotnet build AllProjects.slnx -c Debug && dotnet test AllProjects.slnx
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code"
+}
