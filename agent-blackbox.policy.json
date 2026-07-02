@@ -5,6 +5,7 @@
     "warn": 0.6
   },
   "blocked_paths": [
+    "agent-blackbox.policy.json",
     ".github/workflows/**",
     "infra/production/**",
     "billing/**",
