@@ -27,7 +27,7 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>? logger = null)
 {
-    public const string DefaultModelId = "claude-sonnet-4-6";
+    public const string DefaultModelId = "claude-sonnet-5";
 
     /// <summary>
     /// Output-token budget for the curator's single LLM call. See the

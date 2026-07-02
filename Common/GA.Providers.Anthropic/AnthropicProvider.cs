@@ -25,7 +25,7 @@ using Microsoft.Extensions.Configuration;
 /// </remarks>
 public static class AnthropicProvider
 {
-    public const string DefaultModel = "claude-sonnet-4-6";
+    public const string DefaultModel = "claude-sonnet-5";
 
     /// <summary>
     /// Returns true if an Anthropic API key is reachable from configuration or
@@ -40,7 +40,7 @@ public static class AnthropicProvider
     /// </summary>
     /// <param name="configuration">Application configuration; resolves the API key
     /// from <c>Anthropic:ApiKey</c> first, then <c>ANTHROPIC_API_KEY</c>.</param>
-    /// <param name="model">Anthropic model name (e.g. <c>claude-sonnet-4-6</c>).
+    /// <param name="model">Anthropic model name (e.g. <c>claude-sonnet-5</c>).
     /// Falls back to <see cref="DefaultModel"/> when null/empty.</param>
     /// <param name="timeout">HTTP timeout for chat requests. Default is 100s
     /// (Anthropic SDK default). Long-output tasks (curator, summarizer with

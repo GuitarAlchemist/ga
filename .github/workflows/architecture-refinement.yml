@@ -212,7 +212,7 @@ jobs:
                Check `gh issue list --search "[arch-refinement] ${{ needs.gate.outputs.slug }}"`
                first and do NOT file a duplicate if an open one already covers
                the same candidates.
-          claude_args: '--allowed-tools "Agent,Read,Grep,Glob,Write,Bash(gh issue list:*),Bash(gh issue create:*),Bash(date:*)"'
+          claude_args: '--model claude-sonnet-5 --allowed-tools "Agent,Read,Grep,Glob,Write,Bash(gh issue list:*),Bash(gh issue create:*),Bash(date:*)"'
 
       - name: Commit the report
         shell: bash
