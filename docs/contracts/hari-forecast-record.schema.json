@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GuitarAlchemist/ga/docs/contracts/hari-forecast-record.schema.json",
+  "title": "hari forecast record (Jarvis Track J2)",
+  "description": "One testable expectation emitted by a hari belief, plus (once resolved) the matched outcome and score. DRAFT v0.1.0 — hari-side review required before any implementation; see 2026-07-02-hari-forecast-record.contract.md.",
+  "type": "object",
+  "required": [
+    "schema",
+    "forecast_id",
+    "belief_id",
+    "emitted_at",
+    "observable",
+    "prediction",
+    "horizon"
+  ],
+  "properties": {
+    "schema": { "const": "hari-forecast-record-v0.1.0" },
+    "forecast_id": {
+      "type": "string",
+      "description": "UUIDv7 — sortable by emission time, same convention as algedonic signal ids.",
+      "minLength": 8
+    },
+    "belief_id": {
+      "type": "string",
+      "description": "The hari belief this forecast operationalizes. When contradictory beliefs coexist, EACH emits its own forecast — resolution is driven by which keeps winning.",
+      "minLength": 1
+    },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "observable": {
+      "type": "object",
+      "description": "WHERE the outcome will be read from, pinned at emission time so scoring is mechanical, not interpretive.",
+      "required": ["source", "field", "predicate"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Repo-relative artifact path in the producing repo (e.g. ga:state/fleet/presence.json).",
+          "minLength": 1
+        },
+        "field": {
+          "type": "string",
+          "description": "JSON-pointer-ish path within the artifact (e.g. /limbs/id=sensor:quality-snapshot/status).",
+          "minLength": 1
+        },
+        "predicate": {
+          "type": "string",
+          "description": "The claim being forecast, as an equality/inequality over the field (e.g. == green).",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "prediction": {
+      "type": "object",
+      "required": ["probability"],
+      "properties": {
+        "probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "P(predicate holds at horizon). 0.5 is an honest 'no idea' — never omit a forecast because the belief is uncertain."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Optional one-liner tying the number back to the belief state."
+        }
+      },
+      "additionalProperties": false
+    },
+    "horizon": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the observable is to be read. One forecast, one resolution — no rolling windows in v0.1."
+    },
+    "resolution": {
+      "type": "object",
+      "description": "Written by the scorer once the horizon passes. Absent = pending. A forecast whose observable is unreadable at horizon resolves as 'void', never silently dropped.",
+      "required": ["resolved_at", "outcome"],
+      "properties": {
+        "resolved_at": { "type": "string", "format": "date-time" },
+        "outcome": { "enum": ["true", "false", "void"] },
+        "observed_value": { "type": "string" },
+        "brier": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "(probability - outcome)^2 with outcome in {0,1}; null/absent for void."
+        }
+      },
+      "additionalProperties": false
+    },
+    "links": {
+      "type": "object",
+      "properties": {
+        "supersedes": {
+          "type": "string",
+          "description": "forecast_id this record replaces (belief updated before horizon). Same non-breaking-shift pattern as optick-sae-artifact."
+        }
+      }
+    }
+  }
+}

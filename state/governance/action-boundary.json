@@ -1,0 +1,99 @@
+{
+  "schema": "action-boundary-v0.1.0",
+  "generated_at": "2026-07-02T15:22:47.769722Z",
+  "generated_by": "Scripts/action-boundary-aggregate.py",
+  "repo": "GuitarAlchemist/ga",
+  "sources": {
+    "risk_policy": "agent-blackbox.policy.json",
+    "loop_policy": "ga.loop-policy.json",
+    "halt_semantics": "Scripts/Governance.psm1",
+    "cost_doctrine": "docs/solutions/tooling/2026-07-02-afk-delegation-chain-failures.md"
+  },
+  "capabilities": {
+    "allow_edit": [
+      "docs/**",
+      "Scripts/**",
+      "ReactComponents/ga-react-components/src/**",
+      "state/quality/**",
+      "state/governance/**",
+      ".claude/skills/**",
+      "BACKLOG.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md"
+    ],
+    "protected_paths": [
+      ".github/workflows/**",
+      "governance/demerzel/**",
+      "mcp-servers/**",
+      "Common/GA.Business.ML/Embeddings/**",
+      "Common/GA.Business.Core/**",
+      "docs/runbooks/chatbot-improvement-loop.md",
+      "Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml",
+      "docs/contracts/**",
+      "AllProjects.slnx",
+      "global.json",
+      "Directory.Packages.props",
+      "Directory.Build.props",
+      "Directory.Build.targets",
+      "ga.loop-policy.json",
+      "agent-blackbox.policy.json"
+    ],
+    "blocked_paths": [
+      "agent-blackbox.policy.json",
+      ".github/workflows/**",
+      "infra/production/**",
+      "billing/**",
+      "legal/**",
+      "security/**",
+      "Directory.Packages.props",
+      "global.json"
+    ],
+    "one_way_door_paths": [
+      "schemas/**",
+      "contracts/**",
+      "migrations/**",
+      "**/*.sln",
+      "**/*.slnx",
+      "**/*.csproj",
+      "**/*.fsproj",
+      "Directory.Build.props",
+      "Directory.Build.targets"
+    ]
+  },
+  "risk_thresholds": {
+    "pass": 0.25,
+    "warn": 0.6
+  },
+  "required_evidence": [
+    "changed_files",
+    "test_output",
+    "risk_report"
+  ],
+  "halt": {
+    "halt_all_marker": "$HOME/.demerzel/HALT-ALL",
+    "local_killswitch": "state/.loop-halted",
+    "stop_marker": ".STOP",
+    "semantics": "fail-closed: an unreadable or unknown-schema marker means halted (Scripts/Governance.psm1 is the single gate implementation)"
+  },
+  "cost_lanes": {
+    "subscription_only": [
+      "scheduled",
+      "per-pr-review"
+    ],
+    "api_fallback_allowed": [
+      "mention-triggered"
+    ],
+    "rule": "API-key fallback ONLY on human-initiated, bounded lanes; never wire pay-per-use into anything that fires per-PR or on a schedule"
+  },
+  "one_way_doors": [
+    "OPTIC-K embedding dimensions (coordinated re-index required)",
+    "docs/contracts/** schema locked fields (cross-repo coordination required)",
+    "public APIs",
+    "pricing / anything metered"
+  ],
+  "audit": {
+    "expectation": "every autonomous action is attributable: actor, capability invoked, boundary version, verdict",
+    "status": "aspirational-v0.1 \u2014 logging surface not yet unified"
+  }
+}
