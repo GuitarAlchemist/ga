@@ -1,0 +1,317 @@
+export const meta = {
+  name: 'deep-research-frugal',
+  description: 'Cost-tiered deep research: haiku search/fetch/extract, sonnet escalating verify, session-model synthesis',
+  whenToUse: 'Fact-checked research reports when cost matters. Pass the question as args (string or {question}). Targets ~10-20x cheaper than the bundled deep-research via hard fanout caps, model tiering, 1-vote verification with escalation, and an on-disk source cache. BACKLOG.md "In-house frugal deep-research workflow" is the design record.',
+  phases: [
+    { title: 'Scope', detail: 'decompose the question into at most 4 search angles', model: 'haiku' },
+    { title: 'Search', detail: 'one web searcher per angle', model: 'haiku' },
+    { title: 'Extract', detail: 'cached fetch + falsifiable-claim extraction', model: 'haiku' },
+    { title: 'Verify', detail: '1 skeptic vote per claim; 3-vote panel only on contest or load-bearing claims', model: 'sonnet' },
+    { title: 'Synthesize', detail: 'merge, rank, cite — session model, single agent' },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Hard caps — the cost contract of this workflow. Raising these is a deliberate
+// spend decision; announce the estimated cost to the user first (CLAUDE.md
+// session-learned rule, 2026-07-02).
+// ---------------------------------------------------------------------------
+const MAX_ANGLES = 4
+const MAX_RESULTS_PER_ANGLE = 6
+const MAX_SOURCES = 10
+const MAX_CLAIMS = 25
+const MIN_BUDGET_FOR_STAGE = 30_000 // tokens; below this, degrade instead of fanning out
+
+const QUESTION = typeof args === 'string' ? args : args && args.question
+if (!QUESTION) throw new Error('Pass the research question as args (string or {question: "..."}).')
+
+// Cache lives in the ga repo so re-runs and follow-up questions skip re-fetching.
+const CACHE_NOTE = [
+  'SOURCE CACHE PROTOCOL: the cache directory is state/research-cache/ under the ga repo root',
+  '(if your cwd is the workspace parent, that is ga/state/research-cache/; create it if missing).',
+  'Cache key: sha256 of the URL — bash: echo -n "<url>" | sha256sum | cut -d" " -f1.',
+  'BEFORE fetching, Read <cache-dir>/<key>.md; if it exists, use it and do NOT fetch.',
+  'AFTER a successful fetch, Write the extracted plain text (first line: the URL) to <cache-dir>/<key>.md.',
+].join(' ')
+
+const stats = { agents: { haiku: 0, sonnet: 0, session: 0 }, cacheHits: 0, escalations: 0, dropped: [] }
+const spent = (tier) => { stats.agents[tier] += 1 }
+
+const guard = (stage) => {
+  if (budget.total && budget.remaining() < MIN_BUDGET_FOR_STAGE) {
+    log(`budget: skipping ${stage} — ${Math.round(budget.remaining() / 1000)}k tokens remaining`)
+    stats.dropped.push(`${stage} (budget)`)
+    return false
+  }
+  return true
+}
+
+// --------------------------------------------------------------------- Scope
+phase('Scope')
+const ANGLES_SCHEMA = {
+  type: 'object',
+  required: ['angles'],
+  properties: {
+    angles: {
+      type: 'array',
+      minItems: 2,
+      maxItems: MAX_ANGLES,
+      items: {
+        type: 'object',
+        required: ['key', 'query'],
+        properties: {
+          key: { type: 'string' },
+          query: { type: 'string' },
+          rationale: { type: 'string' },
+        },
+      },
+    },
+  },
+}
+spent('haiku')
+const scope = await agent(
+  `Decompose this research question into at most ${MAX_ANGLES} DISTINCT web-search angles ` +
+    `(different sub-questions or source types, not rephrasings). Prefer angles whose answers are ` +
+    `verifiable facts. Question:\n\n${QUESTION}`,
+  { label: 'scope', phase: 'Scope', schema: ANGLES_SCHEMA, model: 'haiku', effort: 'low' }
+)
+const angles = (scope && scope.angles ? scope.angles : []).slice(0, MAX_ANGLES)
+if (!angles.length) throw new Error('Scoping produced no angles.')
+log(`Scope: ${angles.length} angles — ${angles.map((a) => a.key).join(', ')}`)
+
+// -------------------------------------------------------------------- Search
+// Barrier justified: source selection dedupes across ALL angles (cross-angle
+// hits are the strongest quality signal) before the capped Extract fanout.
+phase('Search')
+const SEARCH_SCHEMA = {
+  type: 'object',
+  required: ['results'],
+  properties: {
+    results: {
+      type: 'array',
+      maxItems: MAX_RESULTS_PER_ANGLE,
+      items: {
+        type: 'object',
+        required: ['url', 'title'],
+        properties: {
+          url: { type: 'string' },
+          title: { type: 'string' },
+          why: { type: 'string' },
+          quality: { type: 'string', enum: ['primary', 'secondary', 'blog', 'unreliable'] },
+        },
+      },
+    },
+  },
+}
+const searches = (
+  await parallel(
+    angles.map((a) => () => {
+      spent('haiku')
+      return agent(
+        `Web-search this angle of a research question and return the ${MAX_RESULTS_PER_ANGLE} most ` +
+          `load-bearing sources (prefer primary sources: official announcements, papers, first-party ` +
+          `data; mark quality). Angle "${a.key}": ${a.query}\n\nOverall question for context: ${QUESTION}`,
+        { label: `search:${a.key}`, phase: 'Search', schema: SEARCH_SCHEMA, model: 'haiku', effort: 'low' }
+      )
+    })
+  )
+).filter(Boolean)
+
+const byUrl = new Map()
+for (const s of searches) {
+  for (const r of s.results || []) {
+    const key = (r.url || '').replace(/[#?].*$/, '').replace(/\/+$/, '').toLowerCase()
+    if (!key) continue
+    const prev = byUrl.get(key)
+    if (prev) prev.hits += 1
+    else byUrl.set(key, { ...r, hits: 1 })
+  }
+}
+const qualityRank = { primary: 0, secondary: 1, blog: 2, unreliable: 3 }
+const sources = [...byUrl.values()]
+  .sort((x, y) => y.hits - x.hits || (qualityRank[x.quality] ?? 2) - (qualityRank[y.quality] ?? 2))
+  .slice(0, MAX_SOURCES)
+if (byUrl.size > MAX_SOURCES) {
+  stats.dropped.push(`${byUrl.size - MAX_SOURCES} sources beyond MAX_SOURCES=${MAX_SOURCES}`)
+  log(`Search: ${byUrl.size} unique sources, keeping top ${MAX_SOURCES}`)
+}
+
+// ------------------------------------------------------------------- Extract
+phase('Extract')
+const CLAIMS_SCHEMA = {
+  type: 'object',
+  required: ['claims'],
+  properties: {
+    cacheHit: { type: 'boolean' },
+    claims: {
+      type: 'array',
+      maxItems: 5,
+      items: {
+        type: 'object',
+        required: ['claim', 'importance'],
+        properties: {
+          claim: { type: 'string' },
+          quote: { type: 'string' },
+          importance: { type: 'string', enum: ['load-bearing', 'supporting', 'minor'] },
+        },
+      },
+    },
+  },
+}
+let claims = []
+if (guard('Extract')) {
+  const extractions = await pipeline(sources, (src, _item, i) => {
+    spent('haiku')
+    return agent(
+      `${CACHE_NOTE}\n\nFetch (cache-first) this source and extract up to 5 FALSIFIABLE claims relevant ` +
+        `to the research question — concrete numbers, dates, named facts; skip opinions and marketing. ` +
+        `Quote the supporting sentence verbatim. Set cacheHit=true if the cache file already existed.\n\n` +
+        `Source: ${src.url} (${src.title})\nQuestion: ${QUESTION}`,
+      { label: `extract:${i}`, phase: 'Extract', schema: CLAIMS_SCHEMA, model: 'haiku', effort: 'low' }
+    ).then((r) => {
+      if (r && r.cacheHit) stats.cacheHits += 1
+      return (r && r.claims ? r.claims : []).map((c) => ({ ...c, url: src.url, quality: src.quality }))
+    })
+  })
+  claims = extractions.filter(Boolean).flat()
+  // Crude cross-source dedupe; the synthesis agent does the semantic merge.
+  const seen = new Set()
+  claims = claims.filter((c) => {
+    const k = c.claim.toLowerCase().replace(/\W+/g, ' ').trim().slice(0, 90)
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
+  const rank = { 'load-bearing': 0, supporting: 1, minor: 2 }
+  claims.sort((a, b) => (rank[a.importance] ?? 1) - (rank[b.importance] ?? 1))
+  if (claims.length > MAX_CLAIMS) {
+    stats.dropped.push(`${claims.length - MAX_CLAIMS} claims beyond MAX_CLAIMS=${MAX_CLAIMS}`)
+    claims = claims.slice(0, MAX_CLAIMS)
+  }
+  log(`Extract: ${claims.length} claims kept (${stats.cacheHits} cache hits)`)
+}
+
+// -------------------------------------------------------------------- Verify
+// Escalating verification: one skeptic vote per claim; only contested or
+// load-bearing claims get the full 3-vote panel (majority refutes -> killed).
+phase('Verify')
+const VOTE_SCHEMA = {
+  type: 'object',
+  required: ['refuted'],
+  properties: {
+    refuted: { type: 'boolean' },
+    reasoning: { type: 'string' },
+  },
+}
+const refutePrompt = (c) =>
+  `Adversarially verify this claim: try to REFUTE it (fetch the source and at least one independent ` +
+  `check; the ${CACHE_NOTE}). Default to refuted=true if the evidence does not support it as stated.\n\n` +
+  `Claim: ${c.claim}\nQuoted support: ${c.quote || '(none)'}\nSource: ${c.url}`
+
+let verified = []
+if (claims.length && guard('Verify')) {
+  verified = (
+    await pipeline(
+      claims,
+      (c, _i, idx) => {
+        spent('sonnet')
+        return agent(refutePrompt(c), {
+          label: `verify:${idx}`,
+          phase: 'Verify',
+          schema: VOTE_SCHEMA,
+          model: 'sonnet',
+          effort: 'low',
+        })
+      },
+      async (v1, c, idx) => {
+        if (!v1) return null
+        const contested = v1.refuted || c.importance === 'load-bearing'
+        if (!contested) return { ...c, verdict: 'confirmed', votes: '1-0' }
+        if (!guard(`Verify-escalation:${idx}`)) {
+          return { ...c, verdict: v1.refuted ? 'refuted' : 'confirmed', votes: v1.refuted ? '0-1' : '1-0' }
+        }
+        stats.escalations += 1
+        const extra = (
+          await parallel(
+            ['independent evidence', 'source reliability'].map((lens) => () => {
+              spent('sonnet')
+              return agent(`${refutePrompt(c)}\n\nLens for this vote: ${lens}.`, {
+                label: `verify:${idx}:${lens.split(' ')[0]}`,
+                phase: 'Verify',
+                schema: VOTE_SCHEMA,
+                model: 'sonnet',
+                effort: 'low',
+              })
+            })
+          )
+        ).filter(Boolean)
+        const votes = [v1, ...extra]
+        const refutes = votes.filter((v) => v.refuted).length
+        return {
+          ...c,
+          verdict: refutes >= 2 ? 'refuted' : 'confirmed',
+          votes: `${votes.length - refutes}-${refutes}`,
+          reasoning: votes.map((v) => v.reasoning).filter(Boolean).join(' | '),
+        }
+      }
+    )
+  ).filter(Boolean)
+} else if (claims.length) {
+  verified = claims.map((c) => ({ ...c, verdict: 'unverified', votes: 'n/a' }))
+}
+const confirmed = verified.filter((c) => c.verdict === 'confirmed')
+const refuted = verified.filter((c) => c.verdict === 'refuted')
+log(`Verify: ${confirmed.length} confirmed, ${refuted.length} refuted, ${stats.escalations} escalations`)
+
+// ---------------------------------------------------------------- Synthesize
+phase('Synthesize')
+const REPORT_SCHEMA = {
+  type: 'object',
+  required: ['summary', 'findings'],
+  properties: {
+    summary: { type: 'string' },
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['claim', 'confidence', 'sources'],
+        properties: {
+          claim: { type: 'string' },
+          confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+          evidence: { type: 'string' },
+          sources: { type: 'array', items: { type: 'string' } },
+        },
+      },
+    },
+    caveats: { type: 'string' },
+    openQuestions: { type: 'array', items: { type: 'string' } },
+  },
+}
+spent('session')
+const report = await agent(
+  `Synthesize a research report. Merge semantically duplicate claims, rank by confidence ` +
+    `(confirmed by escalated panel + primary source = high), keep every citation, and be explicit ` +
+    `about coverage gaps (dropped items, unverified claims, angles that produced nothing).\n\n` +
+    `Question: ${QUESTION}\n\nCONFIRMED CLAIMS:\n${JSON.stringify(confirmed, null, 1)}\n\n` +
+    `REFUTED (do not use except to warn):\n${JSON.stringify(refuted.map(({ claim, votes, url }) => ({ claim, votes, url })), null, 1)}\n\n` +
+    `DROPPED/CAPS: ${stats.dropped.join('; ') || 'none'}`,
+  { label: 'synthesize', phase: 'Synthesize', schema: REPORT_SCHEMA }
+)
+
+return {
+  question: QUESTION,
+  ...report,
+  refuted: refuted.map(({ claim, votes, url }) => ({ claim, votes, url })),
+  sources: sources.map(({ url, quality, hits }) => ({ url, quality, hits })),
+  stats: {
+    angles: angles.length,
+    sources: sources.length,
+    claimsExtracted: claims.length,
+    confirmed: confirmed.length,
+    refuted: refuted.length,
+    escalations: stats.escalations,
+    cacheHits: stats.cacheHits,
+    agents: stats.agents,
+    dropped: stats.dropped,
+  },
+}

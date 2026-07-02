@@ -1,0 +1,156 @@
+# On-demand frugal deep research — cloud lane for the homemade
+# .claude/workflows/deep-research-frugal.js (see BACKLOG.md "In-house frugal
+# deep-research workflow" for the design record).
+#
+# COST: subscription-only (CLAUDE_CODE_OAUTH_TOKEN). Per the cost doctrine
+# (docs/solutions/tooling/2026-07-02-afk-delegation-chain-failures.md):
+# NEVER falls back to the pay-per-use API key; if the token is absent the job
+# skips green. Three stacked cost guards make a run near-free on top of the
+# subscription:
+#   1. Main loop pinned to claude-sonnet-5 (never the session-priciest model).
+#   2. The workflow script tiers its own agents (haiku for search/fetch/
+#      extract, sonnet for verify) and hard-caps fanout (4 angles / 10
+#      sources / 25 claims).
+#   3. A "+<n>k" token budget directive in the prompt — the harness enforces
+#      it as a hard ceiling (agent() calls throw beyond it).
+# The source cache (state/research-cache/) is committed, so re-runs and
+# follow-up questions skip re-fetching entirely.
+#
+# Retirement trigger (lane-consumability doctrine, BACKLOG.md 2026-07-02):
+# delete this lane when the platform ships a bundled cost-tiered research
+# workflow with budget enforcement, or when subscription quota stops being
+# the binding constraint.
+name: Deep Research (frugal)
+
+on:
+  workflow_dispatch:
+    inputs:
+      question:
+        description: "Research question (passed verbatim to the workflow)"
+        required: true
+      slug:
+        description: "Output file slug (state/research/<date>-<slug>.md)"
+        required: false
+        default: "deep-research"
+      budget_k:
+        description: "Token budget in thousands (hard ceiling enforced by the harness)"
+        required: false
+        default: "300"
+
+permissions:
+  contents: write        # commit the report + source cache
+  id-token: write        # claude-code-action@v1 OIDC exchange
+
+concurrency:
+  group: deep-research-frugal
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Subscription-token gate (no credits spent)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      token_present: ${{ steps.token.outputs.present }}
+    steps:
+      - name: Check subscription token presence
+        id: token
+        env:
+          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CLAUDE_CODE_OAUTH_TOKEN absent — deep-research skips green (cost doctrine: this lane is subscription-only, no API-key fallback)."
+          fi
+
+  research:
+    name: Run frugal deep research
+    needs: gate
+    if: needs.gate.outputs.token_present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository (brings the committed source cache)
+        uses: actions/checkout@v4
+        with:
+          # Pin to main regardless of the dispatch ref: this job pushes its
+          # report to main, so checking out an arbitrary ref would let a
+          # topic-branch dispatch fast-forward main with unrelated commits
+          # (Codex P1, PR #506).
+          ref: main
+          fetch-depth: 1
+
+      - name: Validate inputs (slug is used in shell + filenames)
+        env:
+          RAW_SLUG: ${{ inputs.slug }}
+          RAW_BUDGET: ${{ inputs.budget_k }}
+        run: |
+          if ! [[ "$RAW_SLUG" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+            echo "::error::slug must match ^[A-Za-z0-9._-]{1,64}$ (got: unsafe value)"; exit 1
+          fi
+          if ! [[ "$RAW_BUDGET" =~ ^[0-9]{1,5}$ ]]; then
+            echo "::error::budget_k must be a plain integer"; exit 1
+          fi
+          echo "SLUG=$RAW_SLUG"     >> "$GITHUB_ENV"
+          echo "BUDGET_K=$RAW_BUDGET" >> "$GITHUB_ENV"
+
+      - name: Run the deep-research-frugal workflow
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            +${{ env.BUDGET_K }}k
+
+            Run the saved workflow deep-research-frugal with args
+            ${{ toJSON(inputs.question) }}.
+
+            If the Workflow tool is unavailable in this environment, execute
+            the same procedure manually by reading
+            .claude/workflows/deep-research-frugal.js and reproducing its
+            phases with the Agent tool, KEEPING its model tiering (haiku for
+            scope/search/extract, sonnet for verify) and its hard caps
+            (4 angles, 10 sources, 25 claims). Do not exceed the token budget.
+
+            Then write two artifacts:
+            1. state/research/$(date -u +%Y-%m-%d)-${{ env.SLUG }}.json —
+               the workflow's raw return value, pretty-printed.
+            2. state/research/$(date -u +%Y-%m-%d)-${{ env.SLUG }}.md —
+               a readable cited report: summary, findings ranked by
+               confidence with sources, refuted claims, caveats, open
+               questions, and the stats block (agent counts per tier,
+               cache hits, drops) so the cost profile stays auditable.
+
+            Do not commit — the workflow's commit step handles that.
+          claude_args: '--model claude-sonnet-5 --allowed-tools "Workflow,Agent,Read,Write,Glob,Grep,WebSearch,WebFetch,Bash(date:*),Bash(mkdir:*),Bash(sha256sum:*),Bash(echo:*)"'
+
+      - name: Commit report + source cache
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/research/ state/research-cache/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "::warning::No report produced — nothing to commit (check the run log)."
+            exit 0
+          fi
+
+          git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${{ env.SLUG }}) [skip ci]"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
+            git pull --rebase origin main || true
+          done
+          echo "::error::Could not push the report after 3 attempts."
+          exit 1
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deep-research-${{ github.run_id }}
+          path: state/research/
+          retention-days: 90
+          if-no-files-found: ignore
