@@ -135,7 +135,8 @@ jobs:
                       body = bf.read()
                   marker_found = marker.encode('utf-8') in body
               unreachable = (status == 0)
-              gateway_error = status in (502, 503, 504)
+              # 52x/530 are Cloudflare origin-down codes (530 = tunnel down, error 1033)
+              gateway_error = status in (502, 503, 504) or 520 <= status <= 530
               if unreachable:
                   unreachable_count += 1
               ok = (status == 200 and size_bytes > 0 and marker_found)
