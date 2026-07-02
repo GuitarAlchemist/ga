@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "a6cd5797ea4a66759f55df0574267f334eea9dea",
-    "generatedAt": "2026-07-02T18:22:24.884485+00:00",
+    "commitSha": "24384636b507aae41b4d1a9b1af1a2458800f1cf",
+    "generatedAt": "2026-07-02T20:01:12.105873+00:00",
     "repoCount": 5,
     "totalPRs": 10
   },
@@ -165,7 +165,7 @@
           "failingChecks": 0,
           "headRef": "refactor/llm-prompt-module-2964725408912808828",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 187,
           "title": "Deepen LLM call seam: a Prompt module (builder + executor)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/187"
@@ -177,7 +177,7 @@
           "failingChecks": 0,
           "headRef": "close-pattern-selector-seam-10759519578910092631",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 186,
           "title": "Close the pattern-selector seam: RecordOutcome on IPatternSelector",
           "url": "https://github.com/GuitarAlchemist/tars/pull/186"
@@ -189,7 +189,7 @@
           "failingChecks": 0,
           "headRef": "port-ix-registry-pattern-7896678019787150836",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 185,
           "title": "Port ix capability registry pattern to F#",
           "url": "https://github.com/GuitarAlchemist/tars/pull/185"
@@ -243,7 +243,7 @@
           "failingChecks": 0,
           "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 646,
           "title": "Enrich AIW doctrine with broader expert practices",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
@@ -255,7 +255,7 @@
           "failingChecks": 0,
           "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 645,
           "title": "Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
@@ -267,7 +267,7 @@
           "failingChecks": 1,
           "headRef": "jules-migrate-qa-tribunal-emit-6028966670826188021",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 644,
           "title": "Migrate qa_tribunal_emit onto demerzel_kit",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
@@ -279,7 +279,7 @@
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
