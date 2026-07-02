@@ -27,13 +27,18 @@ using Microsoft.Extensions.Logging;
 /// </remarks>
 public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>? logger = null)
 {
-    public const string DefaultModelId = "claude-sonnet-4-6";
+    public const string DefaultModelId = "claude-sonnet-5";
 
     /// <summary>
     /// Output-token budget for the curator's single LLM call. See the
-    /// CurateAsync XML doc for why this needs to be generous.
+    /// CurateAsync XML doc for why this needs to be generous. Sized for
+    /// claude-sonnet-5: max_tokens covers thinking PLUS response text
+    /// (adaptive thinking is on by default when the request omits the
+    /// thinking parameter), and the Sonnet 5 tokenizer produces ~30% more
+    /// tokens than Sonnet 4.6 for the same text — the previous 32_768 cap,
+    /// sufficient for ≤300 entries on 4.6, could truncate equivalent output.
     /// </summary>
-    public const int MaxOutputTokens = 32_768;
+    public const int MaxOutputTokens = 65_536;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -65,9 +70,11 @@ public sealed class MemoryCurator(IChatClient chatClient, ILogger<MemoryCurator>
         // smoke run (86 entries → truncated mid-Timestamp at byte ~2940
         // under the provider default cap of ~4096 tokens). The curator
         // produces ONE entry per kept/merged/new output × ~150 tokens for
-        // the JSON shape, plus per-input rationales in the diff. 32k is
-        // safely over Sonnet 4.6's typical sufficiency for ≤300 input
-        // entries; bump if you see truncation again.
+        // the JSON shape, plus per-input rationales in the diff. 32k was
+        // sized for ≤300 entries on Sonnet 4.6; 64k covers the same batch
+        // on claude-sonnet-5, whose max_tokens also absorbs default-on
+        // adaptive thinking and a ~30% heavier tokenizer. Bump if you see
+        // truncation again.
         var options = new ChatOptions { MaxOutputTokens = MaxOutputTokens };
 
         var response = await chatClient.GetResponseAsync(messages, options, cancellationToken);

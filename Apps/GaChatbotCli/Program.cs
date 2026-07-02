@@ -74,7 +74,7 @@ var anthropicKeyForCli = builder.Configuration["Anthropic:ApiKey"]
 builder.Services.TryAddSingleton<IChatClient>(_ =>
     !string.IsNullOrWhiteSpace(anthropicKeyForCli)
         ? new AnthropicClient { ApiKey = anthropicKeyForCli }
-              .AsIChatClient("claude-sonnet-4-6")
+              .AsIChatClient("claude-sonnet-5")
               .AsBuilder()
               .UseFunctionInvocation()
               .Build()
