@@ -31,9 +31,9 @@ Epoch AI (mars 2025) : le prix pour atteindre un score de benchmark donné chute
 
 ### 2. Commoditisation same-day de la capacité agentique — confiance haute
 
-Claude Sonnet 5 est arrivé en GA dans GitHub Copilot **le jour même de sa sortie** (2026-06-30), sur tous les plans, IDE et CLI. GitHub souligne les performances sur les tâches type CLI/terminal et l'excellente utilisation du prompt cache.
+Claude Sonnet 5 est arrivé en GA dans GitHub Copilot **le jour même de sa sortie** (2026-06-30), sur les plans payants (Pro, Pro+, Max, Business, Enterprise — pas Free), IDE et CLI, avec un déploiement progressif et une facturation à l'usage possible selon la configuration du fournisseur. GitHub souligne les performances sur les tâches type CLI/terminal et l'excellente utilisation du prompt cache.
 
-**Implication** : les nouveaux modèles sont réglés pour les charges de travail harness-agentiques et la réduction de coût par cache. Le harness réutilisable et le context engineering composent ; le tuning par modèle se déprécie. Le passage de l'écosystème à `claude-sonnet-5` (fait hier soir) était le bon réflexe — et sa réversibilité en une ligne par fichier illustre le principe.
+**Implication** : les nouveaux modèles sont réglés pour les charges de travail harness-agentiques et la réduction de coût par cache. Le harness réutilisable et le context engineering composent ; le tuning par modèle se déprécie. Le passage de l'écosystème à `claude-sonnet-5` (fait hier soir) était le bon réflexe — et sa réversibilité en une ligne par fichier illustre le principe. Attention à ne pas confondre les deux canaux : la disponibilité first-party Anthropic (celle sur laquelle repose la cost doctrine subscription-only de l'écosystème) et la disponibilité/facturation Copilot sont des offres distinctes — ne pas planifier de lane Copilot en supposant une couverture abonnement identique.
 
 > Sources : [github.blog changelog 2026-06-30](https://github.blog/changelog/2026-06-30-claude-sonnet-5-is-generally-available-for-github-copilot/), [anthropic.com/news/claude-sonnet-5](https://www.anthropic.com/news/claude-sonnet-5)
 
