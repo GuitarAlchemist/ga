@@ -193,6 +193,69 @@ Status legend: **ready** = unblocked, can pick today. **blocked** = waiting on l
 
 ---
 
+## Jarvis Track — the auditable butler (epics captured 2026-07-02)
+
+A Jarvis is three things, and two and a half of them already exist in this ecosystem:
+
+1. **Continuous presence** — the AFK harness + router + watchdog sweeps (`jules-auto-delegate.yml`, `claude.yml`, `fleet-status.yml`, `post-merge-smoke.yml`, dead-letter sweeps from the 2026-07-02 delegation-chain hardening) are an embryo of an always-on daemon.
+2. **A world model** — **hari** (`../hari/`, Rust, `hari-mcp` in `.mcp.json`) is literally that: a persistent belief state, contradictions preserved, updated by observations. It is missing exactly one half: **prediction**.
+3. **A safe action boundary** — **Demerzel** + the guardrails hardened on 2026-07-01/02 (cost doctrine, killswitches, `agent-blackbox.policy.json` blocked paths, tribunal gates). See `docs/solutions/tooling/2026-07-02-afk-delegation-chain-failures.md`.
+
+The missing research piece is the **learned** world model — Dreamer/JEPA-class: simulate consequences *before* acting instead of reacting to events. The day **ix** runs a predictive model whose epistemic memory is hari and whose superego is Demerzel, this stops being a metaphor. The plumbing shipped so far (delegate without watching every move) is the existence condition for a Jarvis that isn't a HAL: auditable, bounded, interruptible.
+
+Epics below follow tracer-bullet discipline — each starts with the smallest end-to-end slice, never a layer in isolation. J1–J3 are engineering; J4 is research; J5 is the integration slice and only starts once J1–J4 tracer bullets exist.
+
+### J1 — Continuous presence: from event-reactive workflows to a supervised daemon
+
+Today's presence is a pile of independent event-triggered workflows plus watchdog sweeps bolted on after each silent failure (four found in one evening — see the 2026-07-02 solutions doc). Epic: consolidate into one *deliberate* presence layer.
+
+- **Unify liveness**: one heartbeat surface answering "is the butler awake, and which limbs are asleep?" — router, delegation lanes, tunnels (530-class infra-down detection), quality-snapshot cadence, MCP federation peers. Builds on `fleet-status.yml` + `ecosystem-health.yml` + `Scripts/dev-process-overseer.ps1` rather than replacing them.
+- **Dead-letter sweeps as a norm**: every event-triggered lane gets the daily re-route sweep pattern (the fix that unstranded ga#328 after 5+ weeks), not just the Jules lane.
+- **Resource idempotency rule mechanized**: automations create their own labels/resources idempotently (rule from the delegation-chain fixes) — lint for it in CI.
+- **Tracer bullet**: a single `presence` snapshot under `state/fleet/` (or folded into the dev-data manifest) that aggregates lane health + last-heartbeat per limb, red/green, generated on schedule. Nothing acts on it yet; it just exists and is honest.
+- Paths: `.github/workflows/*.yml`, `Scripts/dev-process-overseer.ps1`, `state/fleet/`. **Tribunal: not required** (observability only) until any lane gains new write permissions — then required.
+
+### J2 — Epistemic world model: give hari the prediction half
+
+hari holds beliefs, preserves contradictions, updates on observations — memory without foresight. Epic: close the perception–prediction loop so beliefs generate testable expectations.
+
+- **Forecast records**: each belief can emit an expected-observation (probability + horizon); outcomes are matched back and scored (Brier / calibration curve). Prediction error becomes the belief-update signal instead of raw observation alone.
+- **Contradiction-aware forecasting**: when contradictory beliefs coexist, both forecast; resolution is driven by which one keeps winning — that's the epistemically honest version of belief decay.
+- **Tracer bullet**: hari predicts exactly one narrow, cheap, frequent thing — e.g. "will tonight's `quality-snapshot.yml` run green?" or "will routing-eval in-scope stay ≥ 89%?" — and records forecast vs outcome to its state dir. One belief type, one scorer, end to end.
+- Cross-repo: hari schema additions are a **contract change** (`docs/contracts/` pattern, `links.supersedes` for baseline shifts). **One-way door**: the forecast-record schema, once other repos consume it.
+- Paths: `../hari/` (owner), GA consumes via `hari` MCP; contract lands in `docs/contracts/`. **Tribunal: REQUIRED** (cross-repo contract).
+
+### J3 — Safe action boundary as a first-class contract (the Demerzel superego)
+
+The guardrails exist but live as scattered conventions: cost doctrine in a solutions doc, blocked paths in `agent-blackbox.policy.json`, killswitches checked by individual skills, one-way-door sign-off in CLAUDE.md prose. Epic: promote the boundary to a single machine-readable contract every autonomous actor pre-checks.
+
+- **Action-boundary schema**: capabilities (what an agent may touch), cost lanes (subscription-only vs API-metered, per the 2026-07-02 cost doctrine), one-way-door triggers (OPTIC-K dims, schemas, public APIs, pricing), killswitch + governance-halt semantics — one document, one schema, versioned like `qa-verdict`.
+- **Pre-action check**: `supervised-loop` preflight, `/auto-optimize` scope check, and the AFK router all consume the same contract instead of re-implementing fragments.
+- **Audit trail**: every autonomous action logs (actor, capability invoked, boundary version, verdict) — the property that makes delegation-without-surveillance defensible.
+- **Tracer bullet**: write `docs/contracts/<date>-action-boundary.contract.md` + schema; port exactly one existing consumer (the supervised-loop preflight) to read it. No new enforcement yet — same behavior, single source of truth.
+- Paths: `docs/contracts/`, `Scripts/dev-process-overseer.ps1`, `../Demerzel/` (owner of governance semantics). **Tribunal: REQUIRED** (governance + cross-repo).
+
+### J4 — Learned predictive world model in ix (Dreamer/JEPA-class) [research]
+
+The research-grade missing piece: a model that *simulates consequences before acting* instead of reacting to events. ix already has the MCTS/skill engine — what's missing is a **learned transition model** to roll out against, instead of hand-coded simulators.
+
+- **Shape**: ix runs the predictive model (Rust, owns the compute); **hari is the epistemic memory** (beliefs in → priors; rollout outcomes out → belief updates via J2's forecast records); **Demerzel is the superego** (candidate actions filtered through J3's boundary before *and after* simulation).
+- **Domain discipline**: train on a world we fully own and observe — this repo's own process telemetry (`state/quality/` time series, routing-eval trends, loop-convergence lenses via the ADR-0001 DuckDB layer), NOT music theory and NOT the open internet. The world model predicts *our system*, which is exactly what a butler needs.
+- **Tracer bullet**: one learned transition model over one `state/quality/` metric time series (e.g. predict next chatbot-qa score given a proposed change class), evaluated against the trivial baseline (persistence / last-value). If it can't beat persistence, the epic pauses honestly.
+- **Explicitly parked until**: J2 tracer bullet ships (hari can score forecasts — otherwise the model has no epistemic memory to write to) and ix has capacity. No speculative scaffolding in GA before then (Karpathy rule 2).
+- Paths: `../ix/` (owner), `state/quality/` (training data), contracts in `docs/contracts/`. **Tribunal: REQUIRED** (cross-repo, new ML surface).
+
+### J5 — The Jarvis loop: observe → believe → predict → gate → act → learn [integration]
+
+The vertical slice that makes the other four a system instead of four organs in jars. One real, low-stakes, recurring decision taken end-to-end:
+
+- Presence layer (J1) observes an event → hari (J2) updates beliefs and forecasts outcomes of candidate responses → ix (J4) simulates the top candidates → Demerzel (J3) gates the chosen action against the boundary → harness executes → outcome feeds back into hari's calibration.
+- **Candidate first decision**: "should the dead-letter sweep re-route this stranded issue to Jules, Codex, or a human?" — already automated, already bounded, already observable, and a wrong answer costs almost nothing.
+- **Success criterion** (Karpathy rule 4): one fully audited loop iteration exists in the log — every step attributable, every prediction scored, every action inside the boundary — before any scope expansion.
+- **Blocked on**: J1–J4 tracer bullets. Do not start this epic first; it is the *last* slice, not the vision statement.
+
+---
+
 ## How to Start a Feature
 
 ```bash
