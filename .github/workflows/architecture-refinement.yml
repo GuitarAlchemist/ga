@@ -1,9 +1,11 @@
 # Periodic architecture refinement — headless adaptation of the installed
 # /improve-codebase-architecture skill (.claude/skills/improve-codebase-architecture).
 #
-# "Periodically, when needed": a monthly cron fires a DETERMINISTIC churn gate
-# first — no Claude credits are spent unless one of the five architecture
+# Need-driven, not calendar-driven: a daily cron fires a DETERMINISTIC churn
+# gate first — no Claude credits are spent unless one of the five architecture
 # layers has actually moved since its last review (or has never been reviewed).
+# The daily check-in only bounds the latency between "a layer accumulated
+# enough churn" and "it gets reviewed" to ~1 day; the gate is what decides.
 # The gate picks the layer with the highest churn-since-last-review, so the
 # review always lands where the architecture is being stressed, not on a
 # fixed rotation.
@@ -23,9 +25,10 @@ name: Architecture Refinement
 
 on:
   schedule:
-    # Monthly, first Tuesday-ish (day 2), 06:30 UTC. The churn gate below is
-    # what actually decides whether Claude runs — the cron is just a check-in.
-    - cron: '30 6 2 * *'
+    # Daily, 06:30 UTC. The churn gate below is what actually decides whether
+    # Claude runs — the cron is just the check-in frequency, and the gate job
+    # spends no credits. MIN_COMMITS + MAX_AGE_DAYS are the "as needed" knobs.
+    - cron: '30 6 * * *'
   workflow_dispatch:
     inputs:
       slice:
