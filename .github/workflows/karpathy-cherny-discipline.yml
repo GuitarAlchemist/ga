@@ -77,6 +77,25 @@ jobs:
           done
           exit $missing
 
+      # Jarvis Track J3: the committed action-boundary instance must match a
+      # fresh projection of its source fragments (agent-blackbox.policy.json,
+      # ga.loop-policy.json, Governance.psm1 halt markers) and validate against
+      # docs/contracts/action-boundary.schema.json. Regenerate on drift:
+      #   python Scripts/action-boundary-aggregate.py --root .
+      - name: Verify action-boundary instance matches its sources
+        run: |
+          python Scripts/action-boundary-aggregate.py --root . --check
+          python <<'PYEOF'
+          import json
+          from jsonschema import validate
+          with open('docs/contracts/action-boundary.schema.json') as f:
+              schema = json.load(f)
+          with open('state/governance/action-boundary.json') as f:
+              instance = json.load(f)
+          validate(instance=instance, schema=schema)
+          print('action-boundary.json validates against the contract schema')
+          PYEOF
+
       - name: Validate any committed digest archives against schema
         run: |
           python <<'PYEOF'

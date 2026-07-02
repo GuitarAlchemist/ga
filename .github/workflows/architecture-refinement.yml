@@ -1,0 +1,233 @@
+# Periodic architecture refinement — headless adaptation of the installed
+# /improve-codebase-architecture skill (.claude/skills/improve-codebase-architecture).
+#
+# "Periodically, when needed": a monthly cron fires a DETERMINISTIC churn gate
+# first — no Claude credits are spent unless one of the five architecture
+# layers has actually moved since its last review (or has never been reviewed).
+# The gate picks the layer with the highest churn-since-last-review, so the
+# review always lands where the architecture is being stressed, not on a
+# fixed rotation.
+#
+# PROPOSES, never auto-refactors (same doctrine as backlog-groom and
+# sentrux-next-steps): output is a durable report under
+# state/quality/architecture-refinement/ plus one `needs-triage` issue listing
+# the deepening candidates. A human (or /feature) picks what to act on. The
+# skill's interactive grilling loop stays interactive — this job only runs its
+# explore + candidates phases.
+#
+# COST: subscription-only (CLAUDE_CODE_OAUTH_TOKEN). Per the 2026-07-02 cost
+# doctrine (docs/solutions/tooling/2026-07-02-afk-delegation-chain-failures.md)
+# scheduled lanes NEVER fall back to the pay-per-use API key; if the org token
+# is absent the job skips green.
+name: Architecture Refinement
+
+on:
+  schedule:
+    # Monthly, first Tuesday-ish (day 2), 06:30 UTC. The churn gate below is
+    # what actually decides whether Claude runs — the cron is just a check-in.
+    - cron: '30 6 2 * *'
+  workflow_dispatch:
+    inputs:
+      slice:
+        description: "Layer path(s) to review (blank = highest-churn layer that clears the gate)"
+        required: false
+        default: ""
+      force:
+        description: "Bypass the churn gate (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write        # commit the report under state/quality/
+  issues: write          # file the proposal as a needs-triage issue
+  id-token: write
+
+concurrency:
+  group: architecture-refinement
+  cancel-in-progress: false
+
+env:
+  # A layer qualifies for review when it has ≥ MIN_COMMITS commits since its
+  # last review, or has never been reviewed. Reviews older than MAX_AGE_DAYS
+  # re-qualify regardless of churn (slow-moving layers still drift).
+  MIN_COMMITS: "15"
+  MAX_AGE_DAYS: "90"
+
+jobs:
+  gate:
+    name: Churn gate (no credits spent)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_review: ${{ steps.decide.outputs.run_review }}
+      slice: ${{ steps.decide.outputs.slice }}
+      slug: ${{ steps.decide.outputs.slug }}
+      churn: ${{ steps.decide.outputs.churn }}
+      token_present: ${{ steps.token.outputs.present }}
+    steps:
+      - name: Checkout (full history for churn counts)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check subscription token presence
+        id: token
+        env:
+          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CLAUDE_CODE_OAUTH_TOKEN absent — architecture refinement skips green (cost doctrine: scheduled lanes are subscription-only)."
+          fi
+
+      - name: Pick the neediest layer
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # The five architecture layers (docs/architecture/layers.md), same
+          # slices as scheduled-self-review.yml. slug = report/issue key.
+          declare -A SLICES=(
+            [core]="Common/GA.Core Common/GA.Domain.Core"
+            [domain]="Common/GA.Business.Core"
+            [ml]="Common/GA.Business.ML"
+            [api]="Apps/ga-server/GaApi"
+            [frontend]="ReactComponents/ga-react-components/src"
+          )
+
+          manual_slice="${{ github.event.inputs.slice }}"
+          force="${{ github.event.inputs.force }}"
+
+          if [ -n "$manual_slice" ]; then
+            echo "run_review=true"        >> "$GITHUB_OUTPUT"
+            echo "slice=$manual_slice"    >> "$GITHUB_OUTPUT"
+            echo "slug=manual"            >> "$GITHUB_OUTPUT"
+            echo "churn=n/a"              >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          best_slug=""; best_slice=""; best_churn=-1
+          for slug in "${!SLICES[@]}"; do
+            slice="${SLICES[$slug]}"
+
+            # Last review date for this layer, from the committed report names:
+            # state/quality/architecture-refinement/YYYY-MM-DD-<slug>.md
+            # (`|| true`: under pipefail a no-match ls would otherwise kill the
+            # whole job via set -e on the command substitution.)
+            last=$(ls state/quality/architecture-refinement/*-"$slug".md 2>/dev/null \
+                   | sed -E 's|.*/([0-9]{4}-[0-9]{2}-[0-9]{2})-.*|\1|' | sort | tail -1 || true)
+
+            if [ -n "$last" ]; then
+              churn=$(git rev-list --count --since="$last" HEAD -- $slice)
+              age_days=$(( ( $(date -u +%s) - $(date -u -d "$last" +%s) ) / 86400 ))
+            else
+              churn=$(git rev-list --count HEAD -- $slice)
+              age_days=99999
+            fi
+
+            qualifies=false
+            if [ "$churn" -ge "$MIN_COMMITS" ] || [ "$age_days" -ge "$MAX_AGE_DAYS" ]; then
+              qualifies=true
+            fi
+            echo "layer=$slug last=${last:-never} churn=$churn age_days=$age_days qualifies=$qualifies"
+
+            if [ "$qualifies" = "true" ] && [ "$churn" -gt "$best_churn" ]; then
+              best_slug="$slug"; best_slice="$slice"; best_churn="$churn"
+            fi
+          done
+
+          if [ -z "$best_slug" ] && [ "$force" != "true" ]; then
+            echo "run_review=false" >> "$GITHUB_OUTPUT"
+            echo "No layer clears the churn gate (MIN_COMMITS=$MIN_COMMITS, MAX_AGE_DAYS=$MAX_AGE_DAYS) — skipping, no credits spent."
+            exit 0
+          fi
+
+          if [ -z "$best_slug" ]; then
+            # force=true with a quiet repo: review the least-recently-reviewed layer.
+            best_slug="core"; best_slice="${SLICES[core]}"; best_churn=0
+          fi
+
+          echo "run_review=true"       >> "$GITHUB_OUTPUT"
+          echo "slice=$best_slice"     >> "$GITHUB_OUTPUT"
+          echo "slug=$best_slug"       >> "$GITHUB_OUTPUT"
+          echo "churn=$best_churn"     >> "$GITHUB_OUTPUT"
+          echo "Selected layer: $best_slug ($best_slice), churn=$best_churn"
+
+  review:
+    name: Propose deepening candidates
+    needs: gate
+    if: needs.gate.outputs.run_review == 'true' && needs.gate.outputs.token_present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run the architecture review (explore + candidates only)
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are running the EXPLORE + CANDIDATES phases of the repo's
+            /improve-codebase-architecture skill, headless, on a scheduled sweep.
+            Read .claude/skills/improve-codebase-architecture/SKILL.md and its
+            LANGUAGE.md first and use that vocabulary EXACTLY (module, interface,
+            depth, seam, adapter, leverage, locality, deletion test).
+
+            Slice under review: ${{ needs.gate.outputs.slice }}
+            (churn since last review: ${{ needs.gate.outputs.churn }} commits)
+
+            Ground rules:
+            - Read CONTEXT.md (if present), docs/architecture/layers.md, and
+              docs/adr/*.md before exploring. Do NOT re-litigate ADR decisions;
+              only surface an ADR conflict when the friction is real enough to
+              warrant reopening, and mark it clearly.
+            - Explore the slice organically. Apply the deletion test to anything
+              you suspect is shallow.
+            - Produce AT MOST 3 deepening candidates that clear a high bar
+              (recommendation strength Strong or Worth exploring; drop
+              Speculative ones entirely — this loop runs forever, noise is
+              expensive). Zero candidates is a perfectly good outcome: write the
+              report saying the slice is healthy and file NO issue.
+
+            Deliverables:
+            1. Write the report to
+               state/quality/architecture-refinement/$(date -u +%Y-%m-%d)-${{ needs.gate.outputs.slug }}.md
+               with YAML frontmatter: slice, slug, churn, candidate_count, then
+               one section per candidate: Files / Problem / Solution / Benefits
+               (locality + leverage + test impact) / Recommendation strength.
+            2. If (and only if) there is at least one candidate, open ONE issue:
+                 gh issue create \
+                   --title "[arch-refinement] <slug>: <top candidate one-liner>" \
+                   --label needs-triage \
+                   --body  "<summary of all candidates + link to the report path>"
+               Check `gh issue list --search "[arch-refinement] ${{ needs.gate.outputs.slug }}"`
+               first and do NOT file a duplicate if an open one already covers
+               the same candidates.
+          claude_args: '--allowed-tools "Agent,Read,Grep,Glob,Write,Bash(gh issue list:*),Bash(gh issue create:*),Bash(date:*)"'
+
+      - name: Commit the report
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/quality/architecture-refinement/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No report produced — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(arch): architecture-refinement report $(date -u +%Y-%m-%d) (${{ needs.gate.outputs.slug }}) [skip ci]"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
+            git pull --rebase origin main || true
+          done
+          echo "::error::Could not push the report after 3 attempts."
+          exit 1

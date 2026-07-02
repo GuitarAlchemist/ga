@@ -390,6 +390,27 @@ function devDataPlugin(): Plugin {
         }
     }
 
+    // ── Presence — "is the butler awake?" (Jarvis Track J1) ────────────────
+    // Reads state/fleet/presence.json (presence-snapshot-v0.1.0), written by
+    // .github/workflows/presence-snapshot.yml via Scripts/presence-snapshot.py.
+    // The snapshot only changes on limb-status transitions or the daily
+    // liveness rewrite, so staleness > 26h means the presence workflow itself
+    // is one of the sleeping limbs.
+    function gatherPresence(): unknown | null {
+        const p = path.join(repoRoot, 'state/fleet/presence.json');
+        if (!existsSync(p)) return null;
+        try {
+            const snapshot = JSON.parse(readFileSync(p, 'utf-8'));
+            const generated = Date.parse(snapshot?.generated_at ?? '');
+            const age_hours = Number.isFinite(generated)
+                ? Math.round(((Date.now() - generated) / 3_600_000) * 10) / 10
+                : null;
+            return { ...snapshot, age_hours, stale: age_hours === null || age_hours > 26 };
+        } catch {
+            return null;
+        }
+    }
+
     // ── Test plans — proposals from the /test-plan skill ──────────────────
     // Aggregates state/quality/test-plans/*.md + *.meta.json into a single
     // structured payload for the TestPlansCard on /test#dev/qa. The .md is
@@ -1957,6 +1978,22 @@ function devDataPlugin(): Plugin {
                 res.end(JSON.stringify(projectAlgedonic()));
             });
 
+            // ── /dev-data/presence — fleet presence snapshot (Jarvis J1) ───
+            // Read-only mirror of state/fleet/presence.json with age/stale
+            // annotations. 404 with a pointer while the snapshot workflow
+            // hasn't produced its first commit on this clone.
+            server.middlewares.use('/dev-data/presence', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                const presence = gatherPresence();
+                if (presence === null) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'state/fleet/presence.json not found — produced by .github/workflows/presence-snapshot.yml (Jarvis Track J1)' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify(presence, null, 2));
+            });
+
             // ── POST algedonic/ack/<id> — ack a signal ─────────────────────
             // Body: optional { acked_by, resolution }. Writes a new line to
             // inbox.jsonl with ack.acked = true.
@@ -2097,6 +2134,7 @@ function devDataPlugin(): Plugin {
                         agent_activity: '/dev-data/agent-activity',
                         harness: '/dev-data/harness',
                         algedonic: '/dev-data/algedonic',
+                        presence: '/dev-data/presence',
                         test_plans: '/dev-data/test-plans',
                         in_flight: '/dev-data/in-flight',
                         recent_events: '/dev-data/recent-events',
@@ -2130,6 +2168,7 @@ function devDataPlugin(): Plugin {
                     agent_activity: gatherAgentActivity(),
                     harness: gatherHarness(),
                     algedonic: projectAlgedonic(),
+                    presence: gatherPresence(),
                     in_flight: buildInFlight(),
                     runtime_loops_goals: gatherLoopsGoals(),
                     ai_annotations: gatherAiAnnotations(),
