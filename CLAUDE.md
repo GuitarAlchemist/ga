@@ -142,6 +142,10 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 **How to apply:** treat the modified-file system-reminder as a stomp signal, re-read, rewrite. Don't argue with the hook; fixing it is a separate concern.
 
+```untrusted-correction
+- **2026-07-02**: Écrire le français directement en français idiomatique — jamais de calques de l'anglais ; garder les termes techniques du projet en anglais (limb, lane, tracer bullet, presence snapshot). (Correction utilisateur : « effet de bord agréable », « limbe morte » sont des traductions littérales.)
+```
+
 ## Agent skills
 
 Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
