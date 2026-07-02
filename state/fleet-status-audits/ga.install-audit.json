@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T21:46:00.244171+00:00",
+  "generatedAt": "2026-07-02T01:03:01.728709+00:00",
   "recommendations": [
     "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
   ],
@@ -41,7 +41,7 @@
         },
         {
           "evidence": [
-            "AGENT_BLACKBOX_REF=v0.1.0-beta.2"
+            "AGENT_BLACKBOX_REF=90ed651c73a296c13c9b4953754a2f4898ac4114"
           ],
           "id": "pinning",
           "maxScore": 10,
@@ -75,6 +75,7 @@
         },
         {
           "evidence": [
+            "harness-audit workflow step",
             "response-quality documented in docs/harness-observability.md",
             "state/quality/chatbot-qa-sessions/baseline.json",
             "state/quality/embeddings/baseline.json",
@@ -84,7 +85,7 @@
           "maxScore": 15,
           "name": "Harness and quality observability",
           "recommendation": "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence.",
-          "score": 7,
+          "score": 13,
           "status": "warn"
         },
         {
@@ -132,7 +133,7 @@
         "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
       ],
       "root": "/home/runner/work/ga/ga/ga",
-      "score": 102,
+      "score": 108,
       "verdict": "warn"
     }
   ],
