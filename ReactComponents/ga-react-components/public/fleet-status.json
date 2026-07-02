@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "24384636b507aae41b4d1a9b1af1a2458800f1cf",
-    "generatedAt": "2026-07-02T20:01:12.105873+00:00",
+    "commitSha": "118a8263ac9f96d6991a70d731e61eb5665fe17e",
+    "generatedAt": "2026-07-02T23:29:54.923945+00:00",
     "repoCount": 5,
     "totalPRs": 10
   },
@@ -243,7 +243,7 @@
           "failingChecks": 0,
           "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 646,
           "title": "Enrich AIW doctrine with broader expert practices",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
@@ -255,7 +255,7 @@
           "failingChecks": 0,
           "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 645,
           "title": "Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
@@ -267,7 +267,7 @@
           "failingChecks": 1,
           "headRef": "jules-migrate-qa-tribunal-emit-6028966670826188021",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 644,
           "title": "Migrate qa_tribunal_emit onto demerzel_kit",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
@@ -279,7 +279,7 @@
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
