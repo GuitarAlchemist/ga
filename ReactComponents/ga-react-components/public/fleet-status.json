@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "b1782de7e59d0b306328bebe23bada2cbc9c469c",
-    "generatedAt": "2026-07-02T07:03:14.299230+00:00",
+    "commitSha": "96972479d8024b78c8597e8809f5b8dd15aa347f",
+    "generatedAt": "2026-07-02T17:16:23.654727+00:00",
     "repoCount": 5,
-    "totalPRs": 8
+    "totalPRs": 10
   },
   "repos": [
     {
@@ -131,13 +131,13 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -165,7 +165,7 @@
           "failingChecks": 0,
           "headRef": "refactor/llm-prompt-module-2964725408912808828",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 187,
           "title": "Deepen LLM call seam: a Prompt module (builder + executor)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/187"
@@ -177,7 +177,7 @@
           "failingChecks": 0,
           "headRef": "close-pattern-selector-seam-10759519578910092631",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 186,
           "title": "Close the pattern-selector seam: RecordOutcome on IPatternSelector",
           "url": "https://github.com/GuitarAlchemist/tars/pull/186"
@@ -189,7 +189,7 @@
           "failingChecks": 0,
           "headRef": "port-ix-registry-pattern-7896678019787150836",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 185,
           "title": "Port ix capability registry pattern to F#",
           "url": "https://github.com/GuitarAlchemist/tars/pull/185"
@@ -210,8 +210,32 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 4,
+      "prCount": 6,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T12:39:22Z",
+          "failingChecks": 3,
+          "headRef": "aiw-prompt-harness-engineering-13346103974311787099",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 648,
+          "title": "[AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agents",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T12:12:35Z",
+          "failingChecks": 0,
+          "headRef": "jules/aiw-multi-provider-orchestration-15872019196044205492",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 647,
+          "title": "docs: design AIW-v0.1 multi-provider orchestration",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -228,7 +252,7 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -255,7 +279,7 @@
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
