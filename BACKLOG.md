@@ -109,7 +109,7 @@ These are real problems guitarists hit. They're the North Star for every feature
 
 ## Infrastructure Ideas
 
-- **In-house frugal deep-research workflow (idea captured 2026-07-02)** — the bundled `deep-research` workflow runs every agent on the session model; the two 2026-07-02 runs (~110 agents each, ~6M tokens) triggered a pay-per-use recharge (see the /correct rule in CLAUDE.md). Build a homemade `.claude/workflows/deep-research-frugal.js` with explicit cost levers, targeting ~10-20× cheaper for comparable output:
+- **In-house frugal deep-research workflow (idea captured 2026-07-02; ✅ built same day)** — the bundled `deep-research` workflow runs every agent on the session model; the two 2026-07-02 runs (~110 agents each, ~6M tokens) triggered a pay-per-use recharge (see the /correct rule in CLAUDE.md). Shipped as [`.claude/workflows/deep-research-frugal.js`](.claude/workflows/deep-research-frugal.js) (invoke: `Workflow({name: "deep-research-frugal", args: "<question>"})`); syntax-validated, **not yet run** — the acceptance comparison below still needs a funded smoke run. Cost levers implemented:
   - **Model tiering**: `opts.model: 'haiku'` + `opts.effort: 'low'` for search/fetch/claim-extraction agents; `'sonnet'` for verification; the session model only for the final synthesis (1 agent out of ~50).
   - **Escalating verification**: 1 verdict vote per claim by default, escalate to 3 votes only when the first vote is contested or the claim is load-bearing — instead of a flat 3-vote panel on all claims.
   - **Budget guard**: `while (budget.remaining() > N)` loops + hard fanout caps (4 angles, top-10 sources); `log()` what was dropped so truncation is never silent.
