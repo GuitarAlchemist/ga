@@ -1,0 +1,82 @@
+name: Presence Snapshot
+
+# Jarvis Track J1 tracer bullet — "is the butler awake, and which limbs are
+# asleep?" (BACKLOG.md § Jarvis Track).
+#
+# Aggregates what other workflows already measure into one honest snapshot:
+#   - latest run health of the delegation lanes + scheduled sensors
+#   - sibling reachability from state/algedonic/poller-state.json
+#   - recent algedonic inbox severity
+#
+# Writes state/fleet/presence.json and commits ONLY when a limb's status
+# changes or the snapshot is >24h old (daily liveness proof) — the quiet-write
+# logic lives in the script, so a green fleet produces one commit per day.
+#
+# Nothing consumes this file yet. Tracer bullet: it just exists and is honest.
+
+on:
+  schedule:
+    # Hourly. Actual firing is throttled by GitHub on busy repos (measured
+    # ~2-3h gaps on the */15 ecosystem-health cron); the script's staleness
+    # thresholds account for that.
+    - cron: '23 * * * *'
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/presence-snapshot.yml'
+      - 'Scripts/presence-snapshot.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit the snapshot
+  actions: read     # list workflow runs
+
+concurrency:
+  group: presence-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: Build presence snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout GA
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Self-test the classifier rules
+        run: python3 Scripts/presence-snapshot.py --self-test
+
+      - name: Generate presence snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 Scripts/presence-snapshot.py --root .
+
+      - name: Commit + push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/fleet/presence.json
+
+          if git diff --cached --quiet; then
+            echo "No presence change — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(presence): snapshot $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
+          # Retry on a non-fast-forward race: other [skip ci] chore workflows
+          # commit to main concurrently (same pattern as fleet-status.yml).
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "::warning::push failed (attempt ${attempt}); rebasing on origin/main and retrying."
+            git pull --rebase origin main || true
+          done
+          echo "::error::Could not push presence snapshot after 3 attempts."
+          exit 1
