@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "2b325fdf1fb51758c357ec3ff3930865c4893771",
-    "generatedAt": "2026-07-02T03:38:21.310929+00:00",
+    "commitSha": "7367ba826477ef1b90fce14dedbb3b17e1ee1bbb",
+    "generatedAt": "2026-07-02T04:01:41.123719+00:00",
     "repoCount": 5,
-    "totalPRs": 7
+    "totalPRs": 3
   },
   "repos": [
     {
@@ -128,20 +128,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 3,
+      "prCount": 2,
       "prs": [
-        {
-          "ageDays": 10,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:38:56Z",
-          "failingChecks": 2,
-          "headRef": "chore/carried-over-docs",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 156,
-          "title": "docs + feat(ix-duck): carried-over learnings, doc-hygiene rule, ix_repl example",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/156"
-        },
         {
           "ageDays": 10,
           "author": "spareilleux",
@@ -149,7 +137,7 @@
           "failingChecks": 2,
           "headRef": "feat/architecture-deepenings",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 155,
           "title": "refactor: three architecture deepenings (hexavalent / convergence / tool-schema dedup)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/155"
@@ -161,7 +149,7 @@
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -197,20 +185,8 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 4,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-30T00:35:43Z",
-          "failingChecks": 0,
-          "headRef": "epic-596-seldon-markov-state-space-8858400261108182957",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 605,
-          "title": "[Seldon] Add architecture docs and schemas for Markov and state-space models",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/605"
-        },
         {
           "ageDays": 2,
           "author": "spareilleux",
@@ -222,30 +198,6 @@
           "number": 583,
           "title": "[Planner][P0] Add adaptive fan-out backpressure policy",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/583"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-06-29T23:30:19Z",
-          "failingChecks": 1,
-          "headRef": "feature/seldon-fact-foundations-7189562560182904693",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 566,
-          "title": "Seldon Fact Foundations: Facts, KPI Catalog, and DuckDB Prototypes",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/566"
-        },
-        {
-          "ageDays": 3,
-          "author": "spareilleux",
-          "createdAt": "2026-06-28T04:08:27Z",
-          "failingChecks": 1,
-          "headRef": "feat/github-intelligence-pipeline-arch-6008969315729997440",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 514,
-          "title": "GitHub Intelligence Pipeline Architecture and Schemas",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/514"
         }
       ]
     }
