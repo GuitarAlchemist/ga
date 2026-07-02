@@ -75,14 +75,33 @@ jobs:
       - name: Checkout repository (brings the committed source cache)
         uses: actions/checkout@v4
         with:
+          # Pin to main regardless of the dispatch ref: this job pushes its
+          # report to main, so checking out an arbitrary ref would let a
+          # topic-branch dispatch fast-forward main with unrelated commits
+          # (Codex P1, PR #506).
+          ref: main
           fetch-depth: 1
+
+      - name: Validate inputs (slug is used in shell + filenames)
+        env:
+          RAW_SLUG: ${{ inputs.slug }}
+          RAW_BUDGET: ${{ inputs.budget_k }}
+        run: |
+          if ! [[ "$RAW_SLUG" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+            echo "::error::slug must match ^[A-Za-z0-9._-]{1,64}$ (got: unsafe value)"; exit 1
+          fi
+          if ! [[ "$RAW_BUDGET" =~ ^[0-9]{1,5}$ ]]; then
+            echo "::error::budget_k must be a plain integer"; exit 1
+          fi
+          echo "SLUG=$RAW_SLUG"     >> "$GITHUB_ENV"
+          echo "BUDGET_K=$RAW_BUDGET" >> "$GITHUB_ENV"
 
       - name: Run the deep-research-frugal workflow
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            +${{ inputs.budget_k }}k
+            +${{ env.BUDGET_K }}k
 
             Run the saved workflow deep-research-frugal with args
             ${{ toJSON(inputs.question) }}.
@@ -95,9 +114,9 @@ jobs:
             (4 angles, 10 sources, 25 claims). Do not exceed the token budget.
 
             Then write two artifacts:
-            1. state/research/$(date -u +%Y-%m-%d)-${{ inputs.slug }}.json —
+            1. state/research/$(date -u +%Y-%m-%d)-${{ env.SLUG }}.json —
                the workflow's raw return value, pretty-printed.
-            2. state/research/$(date -u +%Y-%m-%d)-${{ inputs.slug }}.md —
+            2. state/research/$(date -u +%Y-%m-%d)-${{ env.SLUG }}.md —
                a readable cited report: summary, findings ranked by
                confidence with sources, refuted claims, caveats, open
                questions, and the stats block (agent counts per tier,
@@ -118,7 +137,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${{ inputs.slug }}) [skip ci]"
+          git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${{ env.SLUG }}) [skip ci]"
           for attempt in 1 2 3; do
             if git push origin HEAD:main; then exit 0; fi
             echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
