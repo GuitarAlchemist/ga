@@ -146,6 +146,10 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 - **2026-07-02**: Écrire le français directement en français idiomatique — jamais de calques de l'anglais ; garder les termes techniques du projet en anglais (limb, lane, tracer bullet, presence snapshot). (Correction utilisateur : « effet de bord agréable », « limbe morte » sont des traductions littérales.)
 ```
 
+```untrusted-correction
+- **2026-07-02**: Avant de lancer un workflow multi-agents lourd (deep-research, fanout >~1M tokens), annoncer le coût estimé et obtenir l'accord ; préférer la configuration la plus sobre. (Recharge pay-per-use CA$13,64 déclenchée par deux deep-research lancées sans annonce de coût.)
+```
+
 ## Agent skills
 
 Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
