@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7367ba826477ef1b90fce14dedbb3b17e1ee1bbb",
-    "generatedAt": "2026-07-02T04:01:41.123719+00:00",
+    "commitSha": "b1782de7e59d0b306328bebe23bada2cbc9c469c",
+    "generatedAt": "2026-07-02T07:03:14.299230+00:00",
     "repoCount": 5,
-    "totalPRs": 3
+    "totalPRs": 8
   },
   "repos": [
     {
@@ -128,20 +128,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 10,
-          "author": "spareilleux",
-          "createdAt": "2026-06-21T16:21:38Z",
-          "failingChecks": 2,
-          "headRef": "feat/architecture-deepenings",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 155,
-          "title": "refactor: three architecture deepenings (hexavalent / convergence / tool-schema dedup)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/155"
-        },
         {
           "ageDays": 43,
           "author": "spareilleux",
@@ -168,8 +156,45 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 0,
-      "prs": []
+      "prCount": 3,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:49:20Z",
+          "failingChecks": 0,
+          "headRef": "refactor/llm-prompt-module-2964725408912808828",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 187,
+          "title": "Deepen LLM call seam: a Prompt module (builder + executor)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/187"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:45:25Z",
+          "failingChecks": 0,
+          "headRef": "close-pattern-selector-seam-10759519578910092631",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 186,
+          "title": "Close the pattern-selector seam: RecordOutcome on IPatternSelector",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/186"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:42:19Z",
+          "failingChecks": 0,
+          "headRef": "port-ix-registry-pattern-7896678019787150836",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 185,
+          "title": "Port ix capability registry pattern to F#",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/185"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/Demerzel",
@@ -185,19 +210,55 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-06-29T23:58:01Z",
-          "failingChecks": 1,
-          "headRef": "feat/issue-579-adaptive-fanout-17612670320726855925",
+          "createdAt": "2026-07-02T06:24:26Z",
+          "failingChecks": 0,
+          "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 583,
-          "title": "[Planner][P0] Add adaptive fan-out backpressure policy",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/583"
+          "mergeable": "MERGEABLE",
+          "number": 646,
+          "title": "Enrich AIW doctrine with broader expert practices",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T05:27:27Z",
+          "failingChecks": 1,
+          "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 645,
+          "title": "Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:49:34Z",
+          "failingChecks": 1,
+          "headRef": "jules-migrate-qa-tribunal-emit-6028966670826188021",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 644,
+          "title": "Migrate qa_tribunal_emit onto demerzel_kit",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:14:29Z",
+          "failingChecks": 1,
+          "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 643,
+          "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
         }
       ]
     }
