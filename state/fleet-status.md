@@ -46,7 +46,7 @@ _No open PRs._
 | [#611](https://github.com/GuitarAlchemist/Demerzel/pull/611) | Research OpenClaw and Hermes patterns for the GA Harness (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#610](https://github.com/GuitarAlchemist/Demerzel/pull/610) | docs(planner): add issue grooming gate design (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#609](https://github.com/GuitarAlchemist/Demerzel/pull/609) | [Process] Define AI/human delivery ceremonies and cadences (draft) | 1d | MERGEABLE | 0 | spareilleux |
-| [#607](https://github.com/GuitarAlchemist/Demerzel/pull/607) | Epic [P0]: Add Demerzel policy engine and lifecycle state machines (draft) | 1d | CONFLICTING | 1 | spareilleux |
+| [#607](https://github.com/GuitarAlchemist/Demerzel/pull/607) | Epic [P0]: Add Demerzel policy engine and lifecycle state machines (draft) | 2d | CONFLICTING | 1 | spareilleux |
 | [#606](https://github.com/GuitarAlchemist/Demerzel/pull/606) | docs: define AIW lifecycle state machines (draft) | 2d | MERGEABLE | 0 | spareilleux |
 | [#605](https://github.com/GuitarAlchemist/Demerzel/pull/605) | [Seldon] Add architecture docs and schemas for Markov and state-space  (draft) | 2d | CONFLICTING | 0 | spareilleux |
 | [#604](https://github.com/GuitarAlchemist/Demerzel/pull/604) | feat: define Demerzel rule packs for AIW decisions (#589) (draft) | 2d | CONFLICTING | 0 | spareilleux |
@@ -97,6 +97,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-02T01:03:05.972925+00:00 UTC_
+_Generated: 2026-07-02T01:41:41.136291+00:00 UTC_
 
-_Commit: `4e8189bf1321`_
+_Commit: `5f934e334cd9`_

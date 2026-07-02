@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "4e8189bf1321e312ebbc5f704f76deb5b637e99d",
-    "generatedAt": "2026-07-02T01:03:05.972925+00:00",
+    "commitSha": "5f934e334cd9d3f8ce82e67eef6e7e0a089afc03",
+    "generatedAt": "2026-07-02T01:41:41.136291+00:00",
     "repoCount": 5,
     "totalPRs": 32
   },
@@ -333,7 +333,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/609"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-06-30T01:37:27Z",
           "failingChecks": 1,
