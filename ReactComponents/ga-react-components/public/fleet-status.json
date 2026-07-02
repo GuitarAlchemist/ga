@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "96972479d8024b78c8597e8809f5b8dd15aa347f",
-    "generatedAt": "2026-07-02T17:16:23.654727+00:00",
+    "commitSha": "a6cd5797ea4a66759f55df0574267f334eea9dea",
+    "generatedAt": "2026-07-02T18:22:24.884485+00:00",
     "repoCount": 5,
     "totalPRs": 10
   },
@@ -279,7 +279,7 @@
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"

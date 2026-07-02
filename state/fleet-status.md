@@ -41,7 +41,7 @@ _No open PRs._
 | [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 0d | MERGEABLE | 0 | spareilleux |
 | [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 0d | MERGEABLE | 0 | spareilleux |
 | [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 0d | MERGEABLE | 1 | spareilleux |
-| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 0d | UNKNOWN | 1 | spareilleux |
+| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 0d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -75,6 +75,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-02T17:16:23.654727+00:00 UTC_
+_Generated: 2026-07-02T18:22:24.884485+00:00 UTC_
 
-_Commit: `96972479d802`_
+_Commit: `a6cd5797ea4a`_
