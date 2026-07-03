@@ -34,6 +34,13 @@ const CACHE_NOTE = [
   'AFTER a successful fetch, Write the extracted plain text (first line: the URL) to <cache-dir>/<key>.md.',
 ].join(' ')
 
+// Fetch discipline (2026-07-03 smoke test): hung fetches and huge pages were
+// the top cost driver — 7 agents died on "Prompt is too long" retry storms.
+const FETCH_DISCIPLINE =
+  'FETCH DISCIPLINE: try each URL AT MOST ONCE (WebFetch); if it errors, hangs, or the page is ' +
+  'huge, fall back to the cache file and the quoted excerpt and say so in your reasoning — do NOT ' +
+  'retry, do NOT pull full page bodies into your context.'
+
 const stats = { agents: { haiku: 0, sonnet: 0, session: 0 }, cacheHits: 0, escalations: 0, dropped: [] }
 const spent = (tier) => { stats.agents[tier] += 1 }
 
@@ -163,9 +170,11 @@ if (guard('Extract')) {
   const extractions = await pipeline(sources, (src, _item, i) => {
     spent('haiku')
     return agent(
-      `${CACHE_NOTE}\n\nFetch (cache-first) this source and extract up to 5 FALSIFIABLE claims relevant ` +
-        `to the research question — concrete numbers, dates, named facts; skip opinions and marketing. ` +
-        `Quote the supporting sentence verbatim. Set cacheHit=true if the cache file already existed.\n\n` +
+      `${CACHE_NOTE}\n\n${FETCH_DISCIPLINE}\n\nFetch (cache-first) this source and extract up to 5 ` +
+        `FALSIFIABLE claims relevant to the research question — concrete numbers, dates, named facts; ` +
+        `skip opinions and marketing. Cache the CLEANED text only (strip nav/boilerplate; cap ~2000 ` +
+        `words). Quote the supporting sentence verbatim. Set cacheHit=true if the cache file already ` +
+        `existed. If the page is unreachable after one try, return zero claims for it.\n\n` +
         `Source: ${src.url} (${src.title})\nQuestion: ${QUESTION}`,
       { label: `extract:${i}`, phase: 'Extract', schema: CLAIMS_SCHEMA, model: 'haiku', effort: 'low' }
     ).then((r) => {
@@ -197,15 +206,17 @@ if (guard('Extract')) {
 phase('Verify')
 const VOTE_SCHEMA = {
   type: 'object',
-  required: ['refuted'],
+  required: ['refuted', 'confident'],
   properties: {
     refuted: { type: 'boolean' },
+    confident: { type: 'boolean', description: 'true if the evidence found was decisive either way' },
     reasoning: { type: 'string' },
   },
 }
 const refutePrompt = (c) =>
-  `Adversarially verify this claim: try to REFUTE it (fetch the source and at least one independent ` +
-  `check; the ${CACHE_NOTE}). Default to refuted=true if the evidence does not support it as stated.\n\n` +
+  `Adversarially verify this claim: try to REFUTE it (check the source and at least one independent ` +
+  `check; the ${CACHE_NOTE} ${FETCH_DISCIPLINE}). Default to refuted=true if the evidence does not ` +
+  `support it as stated; set confident=false if you could not reach decisive evidence.\n\n` +
   `Claim: ${c.claim}\nQuoted support: ${c.quote || '(none)'}\nSource: ${c.url}`
 
 let verified = []
@@ -225,7 +236,12 @@ if (claims.length && guard('Verify')) {
       },
       async (v1, c, idx) => {
         if (!v1) return null
-        const contested = v1.refuted || c.importance === 'load-bearing'
+        // Escalate on contest or indecision only — NOT on importance alone.
+        // (2026-07-03 smoke test: "load-bearing ⇒ panel" escalated 13/15 claims
+        // on a pricing question where everything is load-bearing, inverting the
+        // tiering: 41 sonnet vs 15 haiku agents. A cleanly-confirmed claim
+        // rarely flips on re-vote; a contested or shaky one does.)
+        const contested = v1.refuted || v1.confident === false
         if (!contested) return { ...c, verdict: 'confirmed', votes: '1-0' }
         if (!guard(`Verify-escalation:${idx}`)) {
           return { ...c, verdict: v1.refuted ? 'refuted' : 'confirmed', votes: v1.refuted ? '0-1' : '1-0' }
