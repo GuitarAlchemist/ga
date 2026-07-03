@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "fff2504fe3b46f4e2a94d3cb941189e752e9de06",
-    "generatedAt": "2026-07-03T01:48:17.176703+00:00",
+    "commitSha": "96512a2768a894a9d36d601aaec08d300995e683",
+    "generatedAt": "2026-07-03T08:47:49.867082+00:00",
     "repoCount": 5,
-    "totalPRs": 10
+    "totalPRs": 20
   },
   "repos": [
     {
@@ -128,8 +128,44 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T02:18:20Z",
+          "failingChecks": 0,
+          "headRef": "duckdb-ix-schema-sketch-18412470984244780338",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 224,
+          "title": "Draft DuckDB schema sketch for IX corpus and episode analytics",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/224"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T02:14:20Z",
+          "failingChecks": 0,
+          "headRef": "feat/tot-data-model-15428277632970752551",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 223,
+          "title": "Define minimal Tree-of-Thought data model and fixtures",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/223"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:59:14Z",
+          "failingChecks": 0,
+          "headRef": "docs/tars-v1-inventory-12889369188447182114",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 222,
+          "title": "Create IX-focused TARS V1 exploration inventory",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/222"
+        },
         {
           "ageDays": 44,
           "author": "spareilleux",
@@ -156,13 +192,97 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 3,
+      "prCount": 10,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-02T04:49:20Z",
+          "createdAt": "2026-07-03T02:08:25Z",
           "failingChecks": 0,
+          "headRef": "design-semantic-to-contract-pipeline-428956318066558801",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 196,
+          "title": "Design semantic-to-contract pipeline for issues, closures, and metascripts",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/196"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:59:51Z",
+          "failingChecks": 0,
+          "headRef": "inventory-markdown-debt-15251084778233510419",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 195,
+          "title": "Inventory and classify Markdown documentation debt",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/195"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:59:47Z",
+          "failingChecks": 0,
+          "headRef": "seed-v1-to-v2-decision-matrix-8283050413666611890",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 194,
+          "title": "Seed V1-to-V2 decision matrix from V1 Insights",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/194"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:58:55Z",
+          "failingChecks": 0,
+          "headRef": "jules/triage-methodology-guard-reasoning-9518732280789103402",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 193,
+          "title": "Interpret Methodology Guard findings without becoming policy authority",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/193"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:58:32Z",
+          "failingChecks": 0,
+          "headRef": "docs-legacy-v1-inventory-14062590202114850358",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 192,
+          "title": "Create TARS V1 Corpus Inventory Documentation",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/192"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:58:07Z",
+          "failingChecks": 0,
+          "headRef": "docs/v1-memory-duckdb-boundary-note-5168030614073081375",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 191,
+          "title": "Draft V1 memory VectorStore and DuckDB boundary note",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/191"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-03T01:57:36Z",
+          "failingChecks": 0,
+          "headRef": "research/beyond-llm-architectures-9637269230075211959",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 190,
+          "title": "Track AI architectures beyond LLMs for harness relevance",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/190"
+        },
+        {
+          "ageDays": 1,
+          "author": "spareilleux",
+          "createdAt": "2026-07-02T04:49:20Z",
+          "failingChecks": 1,
           "headRef": "refactor/llm-prompt-module-2964725408912808828",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -171,10 +291,10 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/187"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:45:25Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "close-pattern-selector-seam-10759519578910092631",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -183,10 +303,10 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/186"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:42:19Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "port-ix-registry-pattern-7896678019787150836",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -237,7 +357,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
@@ -249,7 +369,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 0,
@@ -261,7 +381,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -273,7 +393,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
