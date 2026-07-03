@@ -32,6 +32,9 @@ const CACHE_NOTE = [
   'Cache key: sha256 of the URL — bash: echo -n "<url>" | sha256sum | cut -d" " -f1.',
   'BEFORE fetching, Read <cache-dir>/<key>.md; if it exists, use it and do NOT fetch.',
   'AFTER a successful fetch, Write the extracted plain text (first line: the URL) to <cache-dir>/<key>.md.',
+  'Cache files must contain cleaned SOURCE text only — never your own synthesis, search-result notes,',
+  'or query-specific commentary (a poisoned cache silently corrupts every future run on that URL).',
+  'If you could not fetch the actual page, do NOT write a cache file.',
 ].join(' ')
 
 // Fetch discipline (2026-07-03 smoke test): hung fetches and huge pages were
