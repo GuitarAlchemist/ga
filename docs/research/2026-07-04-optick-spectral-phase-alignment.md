@@ -31,7 +31,12 @@ S(A,B) = max_{t∈Z₁₂}  Σ_{k=1..6} w_k · m_k(A) m_k(B) · cos( φ_k(A) −
                               Σ_k w_k · m_k(A) m_k(B)
 ```
 
-with any non-negative weights `w_k`. Then: (i) `S` is Tₙ-invariant in both arguments; (ii) `S(A, T_t A) = 1` exactly, and the argmax `t*` **recovers the aligning transposition** (phase correlation, as in image registration); (iii) cost is 72 multiply-adds from stored dims — no re-embedding, no 12-fold query expansion; (iv) zero-magnitude terms (undefined phases, e.g. whole-tone sets at odd `k`) vanish from both numerator and denominator, so the operator is total. *Proof:* (i)–(ii) from Theorem 1: the phase deltas of a true transposition satisfy `Δφ_k = 2πkt/12` simultaneously for all k, making every cosine 1 at `t* = −t mod 12`. ∎
+with any non-negative weights `w_k`. Then: (i) `S` is Tₙ-invariant in both arguments; (ii) `S(A, T_t A) = 1` exactly whenever the denominator is non-zero, and the argmax `t*` **recovers the aligning transposition** (phase correlation, as in image registration); (iii) cost is 72 multiply-adds from stored dims — no re-embedding, no 12-fold query expansion. *Proof:* (i)–(ii) from Theorem 1: the phase deltas of a true transposition satisfy `Δφ_k = 2πkt/12` simultaneously for all k, making every cosine 1 at `t* = −t mod 12`. ∎
+
+**Zero-denominator convention (the operator is NOT total — Codex review, ga#513).** `Σ_k w_k m_k(A)m_k(B) = 0` occurs in two real cases and each needs an explicit branch (`denom < ε`):
+
+- **Both spectra null on k=1…6** — exactly the empty set and the chromatic aggregate. These are transpositionally trivial (fixed by every `T_t`), so define `S := 1` with `t* = Z₁₂` (all transpositions align).
+- **Disjoint non-trivial support** — e.g. the augmented triad `{0,4,8}` (support `{3,6}`) vs the diminished-7th `{0,3,6,9}` (support `{4}`): the sets share **no** periodicity content, so define `S := 0` with no `t*` (maximally dissimilar in shape space; no alignment is meaningful). Disjoint support requires both sets to be transpositionally symmetric (support confined to divisors' multiples), so the cases are few and exhaustively enumerable by the Tier-2 sweep — the acceptance criteria in §7 must include this enumeration.
 
 **Theorem 4 (chirality and TnI on demand).** Inversion conjugates the DFT, i.e. negates phases. Hence `S_TnI(A,B) = max( S(A,B), S(A, B̄) )` with `B̄` = phase-negated features gives set-class (TnI) matching **when wanted**, while plain `S` preserves chirality. The Tₙ/TnI distinction becomes a query flag instead of a hard-coded loss of information. ∎
 
@@ -73,5 +78,5 @@ Everything is **query-time arithmetic over dims 96–107 as stored**:
 
 - `S` is Tₙ-invariant, **not** octave/voicing-blind beyond what the chroma already collapses — it inherits SPECTRAL's set-level granularity.
 - For weighted (non-0/1) chromas, Theorem 2's exact ICV correspondence becomes approximate; Theorems 1, 3, 4 are unaffected.
-- Sets fixed by some transposition (e.g. augmented triad, diminished 7th, whole-tone) have `S = 1` at multiple `t*` — return the full argmax set, not one value.
+- Sets fixed by some transposition (e.g. augmented triad, diminished 7th, whole-tone) have `S = 1` at multiple `t*` — return the full argmax set, not one value. The same symmetry is what makes disjoint-support pairs possible (§3, zero-denominator convention) — the two edge cases are the same phenomenon seen from two sides.
 - This is applied synthesis: the shift theorem, Lewin's lemma and phase correlation are classical (Lewin 1959; Quinn 2006–07; Amiot, *Music Through Fourier Space*, 2016). The contribution is the closed-form alignment operator over OPTIC-K's *stored* features, the chirality/Z-pair separation guarantees in retrieval terms, and the exhaustive-verification harness this repo uniquely has.
