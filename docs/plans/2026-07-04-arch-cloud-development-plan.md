@@ -46,6 +46,23 @@ Jules (cloud Google), les lanes GitHub Actions, les previews Netlify sont **déj
 3. **Couche 2 comme proposition chiffrée, pas comme défaut** — plus petite cible always-on (un petit VM faisant tourner le docker-compose, ou seulement les pièces managées), enveloppe $/mois, décision secret-store, tunnel CF activé (ga#493). One-way par la facture et les secrets → **sign-off opérateur obligatoire**.
 4. **Couche 3** — tombe toute seule après la 2 (l'hôte flotte = le VM).
 
+## Estimation de coût — couche 2 (2026-07-04, prix vérifiés)
+
+**Hypothèses** : trafic faible (dev/demo/chatbot-qa, pas d'échelle publique) ; DBs **containerisées** (le `docker-compose.yml` existe déjà — Mongo/Redis/FalkorDB en container, pas managé) ; egress négligeable (tunnel Cloudflare, faible volume) ; Cloudflare Tunnel + Access = **gratuit** (free tier ≤ 50 sièges, `cloudflared` inclus). Empreinte mémoire de la stack Aspire (GaApi + Mongo + Redis + FalkorDB + GaChatbot + GaMcpServer + sidecars Python + MCP hari/tars/sentrux) ≈ **4-7 Go de working set** → 8 Go est le plancher confortable.
+
+| Palier | Cible | VPS frugal (Hetzner) | Équivalent managé (DO/Fly) |
+|---|---|---|---|
+| **1 — Runtime core** (tue le SPOF, rend J1/A1 réels) | 8 Go / 4 vCPU + snapshots + tunnel CF gratuit | **~8 €/mois** (CX33 6,49 € + backups ~1-2 €) | **~45-50 $/mois** (DO 48 $ / Fly 43 $) |
+| **2 — + hôte flotte OpenHands** (A1, plus tard) | 16 Go / 8 vCPU, ou un 2ᵉ petit box | **~25-30 €/mois** (CPX41 ~25 € ou +un CX33) | **~90-95 $/mois** |
+
+**Ce qui ferait exploser la facture (l'anti-reco)** : DBs managées (MongoDB Atlas M10 ~60 $/mois, Redis managé ~15-50 $/mois) = **+75-200 $/mois** — inutile, le compose les fait tourner en container. Hyperscaler (AWS/Azure/GCP) VM + tout managé = **3-5×**, ~150-400 $/mois — non justifié.
+
+**L'autre axe, pour être honnête** : le coût *token* de la flotte si elle tourne en continu n'est **pas** de l'infra — il est plafonné par la cost doctrine (subscription-only, jamais pay-per-use), donc borné par le palier d'abonnement, pas métré. L'estimation ci-dessus, c'est **le box**, pas les agents.
+
+**One-time (non-récurrent)** : containeriser la stack (compose déjà là) + câbler tunnel CF + secret-store ≈ quelques heures, en partie délégable, 0 € récurrent.
+
+**Recommandation chiffrée (aligne cost doctrine « config la plus sobre »)** : **un seul VPS Hetzner CX33 auto-géré faisant tourner le docker-compose + tunnel Cloudflare gratuit ≈ 8 €/mois** pour le runtime core, ~25-30 €/mois quand la flotte OpenHands s'ajoute. Réversible (on peut revenir au desktop). Le chemin managé (DO/Fly ~50 $) n'achète que du confort ops ; l'hyperscaler n'est pas justifié à cette échelle. Sources prix : [costgoat/hetzner](https://costgoat.com/pricing/hetzner), [apicalculators VPS 2026](https://apicalculators.com/blog/cloud-vps-cost-comparison-2026), [getdeploying DO vs Fly](https://getdeploying.com/digitalocean-vs-flyio).
+
 ## Non-goals
 
 - Pas de « tout-cloud » big-bang. Les couches sont indépendamment livrables ; la 1 n'attend pas la 2.
