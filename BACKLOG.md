@@ -423,6 +423,15 @@ Modéliser des esprits pour *servir*, jamais pour *manipuler*. Le mandat le nomm
 
 **Ordre de tir suggéré** : G2-tracer (pur câblage de données existantes, zéro risque) → G3-tracer (un observable de plus dans un ledger qui marche) → G1-tracer ops (petit registre) → G-guard (dès que G1 existe) → face produit de G1 avec M6. Chaque tranche est indépendamment shippable ; aucune ne crée de nouveau système.
 
+## Idea — Moteur de découverte mathématique (capturé 2026-07-04, recherche PENDING ga#517)
+
+Question opérateur : « créer notre propre engine mathématique pour faire de la recherche en IA maison et inventer de nouveaux concepts ? » **Reformulation honnête après inventaire** : l'écosystème *possède déjà* le moteur de calcul (ix, 77 crates) et *invente déjà* des concepts testés (OPTIC-K, opérateur `S` de ga#513, dynamique de Lie de hari — démotée honnêtement face à la baseline Subjective Logic, ce qui est la preuve que la méthode marche). Ce qui manque n'est pas le calcul mais la **boucle de découverte** : générer des conjectures → vérifier mécaniquement → garder/tuer. L'atout unique maison est le côté *vérification* (sweeps exhaustifs sur univers finis : 4096 PC-sets, 224 set classes × 12 ; baselines A/B ; ledger Brier ; tribunal) — le pattern FunSearch/AlphaEvolve, c'est générateur LLM + évaluateur programmatique, et on a des évaluateurs de classe mondiale sans générateur.
+
+- **Prior art atteignable (GitHub)** : OpenEvolve (impl. open-source d'AlphaEvolve), `google-deepmind/alphaevolve_results` (résultats + vérification), `awesome-llm-evolution` (catalogue), Lean4/mathlib (preuve formelle — probablement overkill vs sweeps exhaustifs pour des claims Z12-finis).
+- **Piège nommé (preuves internes)** : un « moteur mathématique générique » est un aimant à rabbit-hole — verdicts K-théorie (« do NOT build »), J4 (« train nothing now »), démotion Lie. Sans substrat vérifiable, ça produit des claims du niveau des fabrications de citation.
+- **Prochain pas (borné)** : une passe deep-research frugale **après v0.4 (ga#517)** — cible : OpenEvolve/FunSearch réutilisable vs réécrire, coût par découverte documenté, et inventaire de NOS univers vérifiables comme évaluateurs. Verdict avant tout code.
+- **Tracer bullet candidat (si verdict positif)** : UNE assertion machine-générée, exhaustivement vérifiée par le sweep, inconnue de nous, sur l'univers Z12 (invariant, caractérisation, borne) — jugée par le tribunal. Pause rule : N runs sans assertion survivante non-triviale → on parke, dit ainsi.
+
 ---
 
 ## How to Start a Feature
