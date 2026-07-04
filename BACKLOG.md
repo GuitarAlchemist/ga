@@ -383,6 +383,46 @@ Infrastructure-facing track: stand up a **continuously-working (always-on) agent
 
 Ce run a consommé **~4,74M tokens sur 79 agents en ~27 min** (15 haiku + **63 sonnet** + 1 synthèse) — soit **~10× l'enveloppe annoncée** (~200-500k). Cause : question **dense en 4 sous-parties** → les agents Extract ont fait 20-55 tool-calls chacun (fetch+search massifs) et Verify a **escaladé 19 fois** (chaque escalade = +2 agents sonnet). Le workflow frugal reste sobre *par claim* mais **pas sur une question multi-parties**. Durcissement candidat (v0.4 / `/correct`) : (a) **borne dure de tokens** que le script applique via `budget.total` (dégrader au lieu de fan-out au-delà) ; (b) **splitter** les questions denses en runs séparés plus étroits ; (c) plafonner le nombre d'escalades Verify par run. À ne pas relancer sans cette borne.
 
+## Giskard Track — mentalics + psychohistoire (epics captured 2026-07-04)
+
+Rôle confirmé par l'opérateur : **tout ce qui relève du mentalisme et de la psychohistoire**. Division du travail dans le canon maison : **Seldon** transfère la connaissance *vers* les humains (teaching, knowledge-packages) ; **Giskard** modélise *les esprits* (humains et agents) et prédit *les agrégats* — c'est lui qui dit à Seldon quoi enseigner, et à Jarvis (J5) à qui déléguer. **Cadrage sur inventaire interne uniquement** — pas de deep-research externe tant que la borne v0.4 du workflow frugal n'existe pas (cost-guard ci-dessus) ; le prior art externe (theory-of-mind agents, user/learner modeling) sera une passe frugale bornée, plus tard.
+
+**Ce qui existe déjà (ne pas re-inventer)** : hari = substrat mentalique complet (BeliefNetwork hexavalent, contradictions préservées, trust profiles `self_trust`/`message_trust`, consensus `RoleWeighted`, Subjective Logic, forecast ledger J2 avec Brier) ; persona **seldon v2.0.0** (Demerzel) déclare déjà « score worker capabilities » + « emit advisory routing recommendations » ; **Prime Radiant** est la surface de visualisation (« Seldon beliefs + Markov predictions » shippé 2026-03-28) ; le **Giskard's Dilemma** est nommé dans `Demerzel/constitutions/demerzel-mandate.md:63` (ne jamais manipuler, Articles 2+5). Giskard = câbler ces organes + combler deux vraies absences : le **modèle de l'humain** et la **prédiction d'agrégats**.
+
+### G1 — Mentalics de l'humain : modèle explicite de ce que l'opérateur/apprenant sait [nouveau]
+
+Personne dans l'écosystème ne modélise l'esprit *humain*. Deux faces, même schéma :
+
+- **Face produit (apprenant)** : le modèle DSR de FSRS (Difficulty/Stability/Retrievability, retenu par M6) est déjà, littéralement, un modèle de la rétention d'un humain — l'adopter comme représentation canonique « ce que le guitariste sait », consommée par Seldon (`/teach`, curriculum) pour choisir quoi enseigner ensuite.
+- **Face ops (opérateur)** : « qu'est-ce que l'humain a vu / acquitté ? » — aujourd'hui les alertes (presence snapshot, algedonic inbox) partent dans le vide épistémique : rien ne track si l'opérateur les a intégrées. Un registre minimal vu/acquitté/périmé par signal transforme les redites en updates ciblés.
+- **Tracer bullet** : UN registre `state/operator-model/` (ou hari belief type dédié) qui enregistre les signaux surfacés à l'opérateur + acquittement, et UNE décision qui le consomme (ne pas re-notifier ce qui est déjà acquitté). Fin à fin, minuscule, mesurable.
+- **Tribunal : not required** pour le tracer ; **REQUIRED** dès que le modèle de l'humain influence des actions autonomes (croisement avec G-guard).
+
+### G2 — Mentalics des agents : reliability model alimenté par du réel [câblage]
+
+La persona seldon *déclare* le scoring de workers ; hari-swarm *a* les trust profiles ; `grade-last-pr` *produit* des grades intent-vs-delivery ; le forecast ledger *score* des prédictions — mais rien ne se parle. Epic : un modèle de fiabilité par agent (Jules, Codex, Claude lanes, humain) par type de tâche, alimenté par les résultats réels (PR grades, outcomes de délégation, forecasts résolus), stocké comme beliefs hari (donc contradictions et décroissance honnêtes), consommé par le routing.
+
+- **C'est exactement la décision candidate de J5** (« re-router vers Jules, Codex ou un humain ? ») — G2 en est la moitié mentalique : J5 fournit la boucle, G2 fournit le modèle de l'autre esprit.
+- **Tracer bullet** : ingérer les grades existants de `state/quality/pr-grades/` comme observations hari (un belief « fiabilité de X sur tâches de classe Y » par agent), et exposer le score via le MCP hari. Aucune décision automatisée encore — le modèle existe et est honnête, c'est tout.
+- Paths : `../hari/` (substrat), `state/quality/pr-grades/` (signal), persona seldon (consommateur déclaré). **Tribunal : REQUIRED** au moment où le routing s'en sert (contrat cross-repo).
+
+### G3 — Psychohistoire : prédire les agrégats, pas les événements [extension J2]
+
+L'axiome psychohistorique : les événements individuels sont imprévisibles, les agrégats le sont. J2 (shippé) prédit des événements unitaires (« ce run sera-t-il vert ? ») ; G3 prédit des **distributions hebdomadaires** — taux de merge de la flotte, dérive qualité chatbot-qa, throughput de délégation — avec calibration Brier identique, dans le **même ledger** (pas de nouveau système : un `observable` de classe agrégat dans le contrat forecast-record existant, pattern `links.supersedes` si besoin).
+
+- **Tracer bullet** : UN forecast d'agrégat (« la flotte sera verte ≥ N % des runs cette semaine ») émis le lundi, résolu le dimanche depuis `state/fleet/presence.json`, scoré dans le ledger J2. Un seul observable, fin à fin.
+- **Affichage** : le Prime Radiant est la surface naturelle (il affiche déjà beliefs + prédictions Markov) — brancher le calibration curve dessus est la version maison du « Prime Radiant » du canon, sans nouveau front.
+- **Tribunal : REQUIRED** si le schéma forecast-record bouge (one-way door déjà notée en J2) ; not required pour un nouvel observable dans le schéma existant.
+
+### G-guard — le Giskard's Dilemma rendu opérationnel [gouvernance, extension J3]
+
+Modéliser des esprits pour *servir*, jamais pour *manipuler*. Le mandat le nomme ; l'action boundary (J3) ne le contient pas encore. Dès que G1/G2 existent, la frontière devient concrète : le modèle de l'humain est **transparent, inspectable, appartient à l'humain** (l'opérateur peut lire/purger son propre modèle) ; aucun usage du modèle pour du dark-pattern (nudge d'acquittement, rétention d'info pour orienter une décision) ; les scores de fiabilité d'agents sont visibles des agents notés (symétrie).
+
+- **Tracer bullet** : trois clauses ajoutées au contrat action-boundary (J3, déjà shippé v0.1 DRAFT) + un check : toute lecture du modèle G1 par un acteur autonome est loggée dans l'audit trail existant. Demerzel est owner (persona-requirements : si une persona `giskard` est créée, behavioral test obligatoire dans `tests/behavioral/`).
+- **Tribunal : REQUIRED** (gouvernance).
+
+**Ordre de tir suggéré** : G2-tracer (pur câblage de données existantes, zéro risque) → G3-tracer (un observable de plus dans un ledger qui marche) → G1-tracer ops (petit registre) → G-guard (dès que G1 existe) → face produit de G1 avec M6. Chaque tranche est indépendamment shippable ; aucune ne crée de nouveau système.
+
 ---
 
 ## How to Start a Feature
