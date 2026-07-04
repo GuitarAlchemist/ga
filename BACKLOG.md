@@ -423,7 +423,11 @@ Modéliser des esprits pour *servir*, jamais pour *manipuler*. Le mandat le nomm
 
 **Ordre de tir suggéré** : G2-tracer (pur câblage de données existantes, zéro risque) → G3-tracer (un observable de plus dans un ledger qui marche) → G1-tracer ops (petit registre) → G-guard (dès que G1 existe) → face produit de G1 avec M6. Chaque tranche est indépendamment shippable ; aucune ne crée de nouveau système.
 
-## Idea — Moteur de découverte mathématique (capturé 2026-07-04, recherche PENDING ga#517)
+## Idea — Moteur de découverte mathématique (capturé 2026-07-04 → **plan approuvé le jour même** : [docs/plans/2026-07-04-research-math-discovery-engine-plan.md](docs/plans/2026-07-04-research-math-discovery-engine-plan.md))
+
+**Mise à jour 2026-07-04 (après inventaire Explore + lecture directe du prior art)** : verdict **GO tracer / NO-BUILD framework**. L'écosystème est à un adaptateur près — `ix-autoresearch` est déjà un kernel FunSearch-style, tars `BenchmarkRunner` est déjà une boucle fermée, et `Tools/GaDomainInvariants` (sweep exhaustif 4096 PC-sets, sub-seconde, contre-exemples minimaux) est l'évaluateur idéal. Tracer : « le LLM invente une loi atonale comme prédicat SQL → le sweep la prouve ou la réfute sur tout l'univers → le tribunal juge la nouveauté ». Pause rule : 3 runs sans survivante non-triviale → park. Détail, non-goals (pas de moteur généraliste, pas de Lean, pas de nouvelle dépendance) et séquencement : voir le plan. L'entrée d'origine ci-dessous est conservée pour l'historique du raisonnement.
+
+### Capture d'origine (2026-07-04, avant inventaire)
 
 Question opérateur : « créer notre propre engine mathématique pour faire de la recherche en IA maison et inventer de nouveaux concepts ? » **Reformulation honnête après inventaire** : l'écosystème *possède déjà* le moteur de calcul (ix, 77 crates) et *invente déjà* des concepts testés (OPTIC-K, opérateur `S` de ga#513, dynamique de Lie de hari — démotée honnêtement face à la baseline Subjective Logic, ce qui est la preuve que la méthode marche). Ce qui manque n'est pas le calcul mais la **boucle de découverte** : générer des conjectures → vérifier mécaniquement → garder/tuer. L'atout unique maison est le côté *vérification* (sweeps exhaustifs sur univers finis : 4096 PC-sets, 224 set classes × 12 ; baselines A/B ; ledger Brier ; tribunal) — le pattern FunSearch/AlphaEvolve, c'est générateur LLM + évaluateur programmatique, et on a des évaluateurs de classe mondiale sans générateur.
 
