@@ -345,6 +345,44 @@ Five frugal runs this session split cleanly by **source reachability**, not topi
 
 The wf_7b53e48d run refuted 12/15 claims — but the transverse finding is that **10 of those 12 refusals were citation fabrication** (two real URLs reused as sources for unrelated claims) plus a **poisoned-cache incident** (a synthesis memo stored as source text). Purged; `state/research-cache/` is now gitignored until the frugal workflow's write discipline is hardened (v0.3: reject non-source cache writes, block fetch-fail stubs). Several refuted claims (corpus licenses, product/legal facts, phase-theory primaries) are *plausible but must be re-sourced*, not treated as false. **Do not freeze any epic above on a refuted-for-citation claim without a clean primary source.**
 
+## Continuous AI Dev Team + Seldon Track (epics captured 2026-07-04)
+
+Infrastructure-facing track: stand up a **continuously-working (always-on) agent dev fleet under cost control**, plus a **Seldon layer** for knowledge transfer IA→humain. Research basis: frugal deep-research run wf_c3efd7cd-71f (**7 confirmed / 18 refuted** — the adversarial panel killed 18 claims, ~all for *citation fabrication* against unrelated Anthropic pricing URLs, not for being disproven; the anti-fabrication guard working as designed). **Net verdict**: epic A (fleet) is solidly sourced from primaries; epic S (Seldon) is a **total coverage hole** — every external candidate was refuted, so it must be re-sourced before any build. Read the confidence markers.
+
+### A1 — Continuous cost-controlled agent dev fleet [infra, research-backed]
+
+**Verified socle** (source primaire, confirmé 1-0) : **OpenHands** (ex-OpenDevin) est le seul candidat self-host qui réunit le triptyque requis — exécution continue par **webhook ET schedule** (« run on a schedule or in response to webhook events »), **multi-agent hot-swap** (Agent Servers OpenHands / Claude Code / Codex / Gemini, bascule local/remote/cloud sans perdre le focus), et self-host Docker. **Nuance licence à ne pas rater** (vérif panel) : double licence **MIT (contenu général) + Polyform Free Trial pour `enterprise/`** — Polyform n'est **PAS** open-source (usage libre 30 j/an, licence commerciale requise au-delà). **CrewAI** (MIT, 54,9k ⭐, v1.15.1, 212 releases) confirmé comme framework multi-agent mature, candidat coordination à côté d'OpenHands.
+
+- **Tracer bullet**: brancher UN trigger OpenHands self-host (webhook GitHub sur une issue `ready-for-agent`) → une tâche → un résultat, en Docker sandbox, sans toucher au reste. Mesurer le coût réel de la tâche. C'est la version « flotte » de ce que Jules/Codex font déjà en délégation — le delta est le self-host + le déclencheur schedule.
+- **À re-vérifier repo par repo avant décision** (survey réfuté en bloc, confiance LOW) : licence/stars/self-host/multi-agent exacts de **SWE-agent, Aider, Cline, Goose** ; **AutoGen** est annoncé en *maintenance mode* (Microsoft pivote) ; les métriques de popularité OpenHands elles-mêmes ont été réfutées 0-3 (ne pas citer un chiffre d'étoiles sans revérifier le repo).
+- **Tribunal: not required** pour le tracer (infra externe, pas de schema GA). Paths: nouveau harness d'orchestration, réutilise le pattern queue/trigger interne (`demerzel-driver-triggers.yml` → `state/triggers/*.trigger.json`).
+
+### A-cost — Modèle de coût de la flotte [verified: leviers Anthropic-natifs UNIQUEMENT]
+
+**Les seuls chiffres fiables sont natifs Anthropic** (source primaire, confirmé 1-0) : prompt caching **cache-read à 0,1x** du prix d'entrée de base ; **Batch API −50 %** input ET output ; **empilement caching + Batch = 70-95 %** de réduction du coût d'entrée total (cas réel ProjectDiscovery **59-70 %** d'économies effectives). Directement aligné sur la cost doctrine « abonnement/cache, jamais API à l'usage brute » et sur le model-tiering déjà pratiqué (haiku/sonnet/opus dans le workflow frugal).
+
+- **DANGER — tout le catalogue de techniques tierces a été RÉFUTÉ 0-3** : Compaction 84 %, Code-Execution+MCP 98,7 %, Token Savior 77 %, codebase-memory-mcp 120x, LLMLingua 20x, model-routing CascadeFlow/ClawRouter 40-70 %, FinOps-for-Agents (5 garde-fous + métrique CAPO), SR-LoopShield anti-boucle — tous traçables à une source unique probablement hallucinée (`github.com/ai-boost/awesome-harness-engineering`). **Ne rien dimensionner sur ces chiffres.** Le model-tiering sobre reste valide comme *pratique* (on le fait), mais sans les pourcentages tiers.
+- **Tribunal: not required** (pas de code GA ; c'est un modèle de coût). Instrumenter tout gain réel dans `state/quality/` avant de le revendiquer (règle R6).
+
+### A-orch — Couche orchestration + garde-fous [verified infra]
+
+**Quatre infra d'orchestration continue matures et atteignables** (source primaire, confirmé 1-0) : **Temporal** (MIT, workflows durables résilients aux pannes), **Prefect** (Apache-2.0, 200M+ tâches/mois), **Airflow** (Apache-2.0, 500+ orgs prod), **Task Orchestrator** (MIT, SQL+MCP) — dont le pattern **gate structurel** (le serveur bloque la progression tant qu'un prérequis n'est pas rempli) + **actor-attribution** est directement réutilisable comme garde-fou human-in-the-loop. **Block `agent-task-queue`** (FIFO, empêche plusieurs agents de lancer des opérations coûteuses en parallèle) = garde-fou de coût concret.
+
+- **Tracer bullet**: un gate Task-Orchestrator (ou l'équivalent maison) qui bloque une tâche de flotte tant qu'un checkpoint humain n'est pas validé — le pattern « queue, not loop » de la doctrine harness, matérialisé.
+- **Trou ouvert (à re-sourcer)** : les garde-fous anti-boucle-infinie / anti-dérive avec backing atteignable (loop/step limits, tool-call caps, per-run budgets, timeouts, kill-switch) — FinOps et SR-LoopShield réfutés ; ne survivent que les gates structurels de Task Orchestrator + le queue/HALT interne GA (non citable comme source externe). Durable-execution : s'appuyer sur **Temporal** (vérifié), pas sur LangGraph (claim durabilité réfuté 0-3).
+
+### S1 — Seldon : couche de transfert de connaissances IA→humain [RESEARCH GAP — ne pas construire encore]
+
+**ZÉRO preuve externe survivante.** Tous les candidats de transfert IA→humain ont été réfutés par le panel : persona Seldon (teaching Socratique + belief-state + learning-path) 0-3 ; réutilisation FSRS-6 + systèmes de doc multi-agents 0-3 ; pattern OpenAI-Codex Plan.md/Implement.md/Documentation.md + Trellis 1-2. Cause dominante : **mauvaise citation** (URLs de pricing Anthropic collées sur des claims Seldon sans rapport). **Impossible de dimensionner l'epic externe depuis ce lot.**
+
+- **Ce que GA possède DÉJÀ en interne** (à cadrer comme point de départ, pas comme preuve externe) : les skills `/teach` et `/seldon*` (assess/plan/deliver/course-pipeline/notebook), les **knowledge-packages** Demerzel (`governance/state/knowledge/`), le MCP NotebookLM, et **FSRS déjà retenu par M6** (spectral track) comme moteur de spaced-repetition. Le Seldon-track est donc davantage « **wire up + mesurer** ce qu'on a » que « trouver des outils externes ».
+- **Questions ouvertes (nouvelle passe reachable-source requise avant tout build)** : (1) outil open-source ATTEIGNABLE pour générer des artefacts pédagogiques depuis le code (docs, résumés d'apprentissage, cours) — aucun n'a survécu ; (2) quel **format d'artefact** Seldon est défendable ; (3) comment **mesurer** que l'humain a effectivement appris (rétention, FSRS, quiz) ; (4) comment Devin / Cursor / Copilot Workspace surfacent concrètement le travail de l'IA aux humains. **Do NOT freeze this epic on any refuted-for-citation claim.**
+- **Prochain pas**: re-run frugal **recadré sur les repos GitHub des skills/outils nommés** (ts-fsrs, les skills seldon locales, docs Cursor/Devin publiques) + inventaire honnête de l'infra interne — pas un epic tant que (2) et (3) n'ont pas de réponse sourcée.
+
+### Research-process finding (2026-07-04, cost-guard) — le workflow frugal n'a PAS été frugal ici
+
+Ce run a consommé **~4,74M tokens sur 79 agents en ~27 min** (15 haiku + **63 sonnet** + 1 synthèse) — soit **~10× l'enveloppe annoncée** (~200-500k). Cause : question **dense en 4 sous-parties** → les agents Extract ont fait 20-55 tool-calls chacun (fetch+search massifs) et Verify a **escaladé 19 fois** (chaque escalade = +2 agents sonnet). Le workflow frugal reste sobre *par claim* mais **pas sur une question multi-parties**. Durcissement candidat (v0.4 / `/correct`) : (a) **borne dure de tokens** que le script applique via `budget.total` (dégrader au lieu de fan-out au-delà) ; (b) **splitter** les questions denses en runs séparés plus étroits ; (c) plafonner le nombre d'escalades Verify par run. À ne pas relancer sans cette borne.
+
 ---
 
 ## How to Start a Feature
