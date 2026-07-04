@@ -79,6 +79,39 @@ assisted review passes (multi-LLM review has repeatedly caught real bugs here �
 security and on "did the system do a good job," but you make that gate one click, not a debugging
 session.
 
+## Which agent, and what makes a config reliable + cheap
+
+The corollary of "optimise the harness, not the model": **reliability comes from the harness, not the
+vendor**, and the cheapest *reliable* config is almost never "use the free external agent." Grounded
+in this ecosystem's own evidence (the 2026-07-04 delegation session):
+
+- **Subscription Claude Code + background sub-agents delivered 100 %** — every module, fix, exposure,
+  and research pass — with **zero external-secret fragility**. The Jules lane, the same day, **broke
+  on a missing pay-per-use `GEMINI_API_KEY`** in the `gemini_dispatch` triage job, is async/slow
+  (hours), and had earlier shipped a real regression that needed a hand-fix. Jules didn't fail as an
+  *agent* — it failed on *metered infra*, the exact anti-pattern the cost doctrine guards against.
+
+The reliable-and-cheap config, in order:
+
+1. **Spine = Claude Code on a flat subscription** (main loop + sub-agents). No pay-per-use fallback
+   (cost doctrine). Flat rate, no per-token surprise — the CA$13.64 recharge that *created* the
+   doctrine was pay-per-use API.
+2. **Fan-out = background sub-agents** for parallel independent work — same subscription, ~$0 at the
+   margin, no external secret to expire. This is what actually ships.
+3. **Model tiering is the real cost lever, not the vendor choice** — Haiku for scout/mechanical,
+   Sonnet for verify, Opus/Fable for synthesis/hard reasoning (the frugal-workflow pattern).
+4. **External async agents (Jules / Codex) = opportunistic AFK bulk only, never on the critical
+   path.** Their compute is free — treat that as *bonus throughput*, not the backbone. A broken
+   external lane must never block delivery. Feed hari's G2 reliability model (`hari-core reliability`)
+   from PR grades so "which agent, for which task class" becomes measured, not assumed.
+5. **The reliability multiplier is verifiers, not pricier agents.** Exhaustive sweeps, the Brier
+   ledger, the tribunal, CI gates catch bad output for a fraction of the cost of a smarter model —
+   the discovery-engine insight (generator + mechanical evaluator) applied to the dev process itself.
+
+The reframe: the cheapest config is not the free vendor, because its hidden costs — latency, the
+regressions you hand-fix, review friction, the secret that expires — exceed the token savings. The
+cheapest **reliable** config is **flat subscription + model tiering + strong mechanical verifiers**.
+
 ## You own the product
 
 AI is weak at original ideas and at deciding *what* to build. Choose the features; ask "what can I
