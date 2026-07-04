@@ -25,7 +25,7 @@ Who is in pain: the operator, who today must either babysit every delegation or 
 | Piece | Where | Role here |
 |---|---|---|
 | Forecast ledger, Brier, calibration query, `void` | hari `forecast.rs` (J2, shipped) | The measurement instrument |
-| Action-boundary contract + aggregator | ga `docs/contracts/*action-boundary*`, `Scripts/action-boundary-aggregate.py` (J3, shipped) | Where `action_class` is *derived*, and where the effective level will be published |
+| Action-boundary contract + aggregator | ga `docs/contracts/*action-boundary*`, `Scripts/action-boundary-aggregate.py` (J3, shipped) | Where the effective level will be published. **Note:** the shipped aggregator projects capabilities/lanes/halt/one-way-door paths but has **no classification field yet** — deriving `action_class` from paths/capabilities is **new contract work** (a classification slice added to the boundary schema), not existing behavior (Codex review, ga#512) |
 | Autonomy vocabulary | `issue_meta.afk.max_autonomy`, supervised-loop gates, blackbox blocked paths | The ladder's rungs already exist informally |
 | Confidence thresholds + hexavalent logic | Demerzel constitution/policies | The governing semantics; `C` (contradictory) already triggers escalation |
 | Simulate-before-acting slice | ga#508 (delegated) | Makes forecasting *mandatory* before acting — the anti-Goodhart keystone (§4.1) |
@@ -64,13 +64,15 @@ effective_level = min( declared_max,                  # human ceiling — NEVER 
 
 `earned_level` is a Demerzel **policy artifact** (YAML, versioned, tribunal-gated), shaped as monotone requirements per rung, e.g.:
 
-| Rung | n_resolved ≥ | brier_mean ≤ | void_rate ≤ | success_rate ≥ | freshness ≤ |
-|---|---|---|---|---|---|
-| L3 | 10 | 0.20 | 0.30 | 0.6 | 30 d |
-| L4 | 20 | 0.15 | 0.20 | 0.7 | 30 d |
-| L5 | 50 | 0.10 | 0.15 | 0.8 | 21 d |
+| Rung | n_resolved ≥ | brier_mean ≤ | resolution ≥ | void_rate ≤ | success_rate ≥ | freshness ≤ |
+|---|---|---|---|---|---|---|
+| L3 | 10 | 0.20 | — (n/a below binning volume) | 0.30 | 0.6 | 30 d |
+| L4 | 20 | 0.15 | above class base-rate floor | 0.20 | 0.7 | 30 d |
+| L5 | 50 | 0.10 | above class base-rate floor | 0.15 | 0.8 | 21 d |
 
 (Numbers illustrative — the tribunal sets them; small-`n` guarded by Wilson lower bounds, not raw means.)
+
+**Resolution gate (the §4.1 counter, made binding):** promotion to **L4 and above requires demonstrated `resolution`** — discrimination above what base-rate prediction yields for that class. While `resolution` is unavailable (`null`, below binning volume — §7.1), **promotion is capped at L3**: in low-entropy classes (docs-only CI, routine routing) an actor could otherwise meet every other threshold by predicting the base rate accurately while discriminating nothing, which is precisely the easy-forecast-farming case §4.1 exists to prevent (Codex review, ga#512).
 
 **Demotion** is windowed and hysteretic: one rung per evaluation cycle on collapse (no flapping), except killswitch/halt conditions which floor to L0 immediately. **Promotion** is rate-limited: at most one rung per `N` newly resolved forecasts, each new rung starting with a shadow period (§4.7).
 
@@ -149,7 +151,7 @@ One actor, one class, zero enforcement:
 3. **Nothing reads it for decisions.** After 30 days: one honest report — what autonomy *would* have been granted vs what was declared, and whether the record moved sanely.
 4. Success criterion (Karpathy R4): ≥1 promotion-or-demotion event justified end-to-end from ledger entries a human can audit, and zero behavior change anywhere.
 
-Blocked on: ga#508 landing (forecast emission at act time). Tribunal: required before any consumer reads `effective` for enforcement — that is the one-way door, and it is explicitly NOT this slice.
+Blocked on: ga#508 landing (forecast emission at act time), **and** the action-class classification slice in the J3 boundary schema (new contract work — §2 note; without it the tracer has no authoritative source for `action_class` and the §4.6 counter cannot hold). Tribunal: required before any consumer reads `effective` for enforcement — that is the one-way door, and it is explicitly NOT this slice.
 
 ## 7. Open questions
 
