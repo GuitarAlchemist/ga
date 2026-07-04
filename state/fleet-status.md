@@ -38,9 +38,9 @@ _No open PRs._
 | [#192](https://github.com/GuitarAlchemist/tars/pull/192) | Create TARS V1 Corpus Inventory Documentation (draft) | 1d | MERGEABLE | 1 | spareilleux |
 | [#191](https://github.com/GuitarAlchemist/tars/pull/191) | Draft V1 memory VectorStore and DuckDB boundary note (draft) | 1d | MERGEABLE | 1 | spareilleux |
 | [#190](https://github.com/GuitarAlchemist/tars/pull/190) | Track AI architectures beyond LLMs for harness relevance (draft) | 1d | MERGEABLE | 1 | spareilleux |
-| [#187](https://github.com/GuitarAlchemist/tars/pull/187) | Deepen LLM call seam: a Prompt module (builder + executor) (draft) | 1d | MERGEABLE | 1 | spareilleux |
-| [#186](https://github.com/GuitarAlchemist/tars/pull/186) | Close the pattern-selector seam: RecordOutcome on IPatternSelector (draft) | 1d | MERGEABLE | 1 | spareilleux |
-| [#185](https://github.com/GuitarAlchemist/tars/pull/185) | Port ix capability registry pattern to F# (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#187](https://github.com/GuitarAlchemist/tars/pull/187) | Deepen LLM call seam: a Prompt module (builder + executor) (draft) | 2d | MERGEABLE | 1 | spareilleux |
+| [#186](https://github.com/GuitarAlchemist/tars/pull/186) | Close the pattern-selector seam: RecordOutcome on IPatternSelector (draft) | 2d | MERGEABLE | 1 | spareilleux |
+| [#185](https://github.com/GuitarAlchemist/tars/pull/185) | Port ix capability registry pattern to F# (draft) | 2d | MERGEABLE | 1 | spareilleux |
 
 ### Demerzel (6 open)
 
@@ -49,9 +49,9 @@ _No open PRs._
 | [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 1d | MERGEABLE | 3 | spareilleux |
 | [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 1d | MERGEABLE | 0 | spareilleux |
-| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 1d | MERGEABLE | 0 | spareilleux |
-| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 1d | MERGEABLE | 1 | spareilleux |
-| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 1d | MERGEABLE | 1 | spareilleux |
+| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 2d | MERGEABLE | 0 | spareilleux |
+| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 2d | MERGEABLE | 1 | spareilleux |
+| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 2d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -85,6 +85,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-04T02:58:38.922519+00:00 UTC_
+_Generated: 2026-07-04T06:06:04.916929+00:00 UTC_
 
-_Commit: `40fc724c6a52`_
+_Commit: `db604f55487e`_

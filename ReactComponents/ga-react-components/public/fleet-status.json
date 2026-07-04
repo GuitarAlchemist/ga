@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "40fc724c6a520cd3f8bed1a2b48579ebc1d0ad56",
-    "generatedAt": "2026-07-04T02:58:38.922519+00:00",
+    "commitSha": "db604f55487ec705ef441ae58a9be63b1e462a71",
+    "generatedAt": "2026-07-04T06:06:04.916929+00:00",
     "repoCount": 5,
     "totalPRs": 20
   },
@@ -279,7 +279,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/190"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:20Z",
           "failingChecks": 1,
@@ -291,7 +291,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/187"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:45:25Z",
           "failingChecks": 1,
@@ -303,7 +303,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/186"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:42:19Z",
           "failingChecks": 1,
@@ -369,7 +369,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 0,
@@ -381,7 +381,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -393,7 +393,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
