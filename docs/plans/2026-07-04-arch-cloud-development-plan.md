@@ -63,6 +63,21 @@ Jules (cloud Google), les lanes GitHub Actions, les previews Netlify sont **déj
 
 **Recommandation chiffrée (aligne cost doctrine « config la plus sobre »)** : **un seul VPS Hetzner CX33 auto-géré faisant tourner le docker-compose + tunnel Cloudflare gratuit ≈ 8 €/mois** pour le runtime core, ~25-30 €/mois quand la flotte OpenHands s'ajoute. Réversible (on peut revenir au desktop). Le chemin managé (DO/Fly ~50 $) n'achète que du confort ops ; l'hyperscaler n'est pas justifié à cette échelle. Sources prix : [costgoat/hetzner](https://costgoat.com/pricing/hetzner), [apicalculators VPS 2026](https://apicalculators.com/blog/cloud-vps-cost-comparison-2026), [getdeploying DO vs Fly](https://getdeploying.com/digitalocean-vs-flyio).
 
+### Choix du provider (affinage 2026-07-04)
+
+**L'insight qui coupe la liste : derrière le tunnel Cloudflare qu'on a déjà conçu, l'origine n'est pas exposée publiquement et le trafic est faible.** Donc les deux arguments phares des alternatives « anti-Hetzner » — mitigation DDoS always-on (OVH) et bande passante non-metrée (OVH/Contabo) — sont **largement neutralisés** : c'est Cloudflare qui encaisse le trafic et le DDoS, pas le box. La décision se réduit à **3 axes** : prix, réserve de RAM (pour la flotte OpenHands plus tard), friction d'onboarding.
+
+- **Workload** : stack docker-compose faible-trafic (Mongo/Redis/FalkorDB + API .NET + sidecars + MCP), dev/demo/chatbot-qa, + hôte flotte plus tard. Pas de site public à fort trafic, pas de game server.
+- **Région** : opérateur francophone (EU ou Québec). Peu structurant *derrière Cloudflare* (l'utilisateur touche l'edge CF, pas l'origine) ; ne compte que pour la latence interactive du chatbot → un provider EU **ou** NA-est convient.
+
+**Recommandation par axe** :
+- **Core always-on frugal + réserve RAM pour la flotte** → **Netcup** ou **Contabo** (value EU, grosse RAM pas chère ; le panel daté de Contabo est sans objet — on pilote en docker-compose/CLI, pas au panel). Même classe de prix que Hetzner, souvent moins cher en RAM.
+- **Hôte flotte burstable** (spin OpenHands seulement pendant les runs) → **Kamatera** (facturation à la seconde/heure) — orthogonal au core, pertinent seulement pour A1.
+- **Si le vrai motif est d'éviter le KYC/passeport de Hetzner** → Hostinger (moins de vérifs) ou BuyVM/Frantech (pseudo-anonyme, crypto). Mais le KYC est une friction *one-time*, pas un coût récurrent — ne switcher que si c'est bloquant.
+- **À écarter pour ce workload** : DO / Linode / Vultr (on paierait du managé/global dont un backend dev EU faible-trafic n'a pas besoin) ; hyperscalers (déjà écartés).
+
+**Le point vraiment structurant n'est pas le provider** (c'est le 10 % facile de la décision, ~8-10 €/mois partout) — c'est le prérequis provider-indépendant : committer les sources `hari-mcp`/`sentrux` + choisir le secret-store. Sans ça, aucun provider ne fait tourner la stack.
+
 ## Non-goals
 
 - Pas de « tout-cloud » big-bang. Les couches sont indépendamment livrables ; la 1 n'attend pas la 2.
