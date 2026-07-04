@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "db604f55487ec705ef441ae58a9be63b1e462a71",
-    "generatedAt": "2026-07-04T06:06:04.916929+00:00",
+    "commitSha": "70b9ff622cb7bd0a272a367846f251e5ec595c6d",
+    "generatedAt": "2026-07-04T06:36:00.304696+00:00",
     "repoCount": 5,
     "totalPRs": 20
   },
@@ -306,7 +306,7 @@
           "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:42:19Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "port-ix-registry-pattern-7896678019787150836",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -357,7 +357,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
