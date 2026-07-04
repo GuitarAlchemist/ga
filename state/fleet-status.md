@@ -22,22 +22,22 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#224](https://github.com/GuitarAlchemist/ix/pull/224) | Draft DuckDB schema sketch for IX corpus and episode analytics (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#223](https://github.com/GuitarAlchemist/ix/pull/223) | Define minimal Tree-of-Thought data model and fixtures (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#222](https://github.com/GuitarAlchemist/ix/pull/222) | Create IX-focused TARS V1 exploration inventory (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 44d | MERGEABLE | 1 | spareilleux |
+| [#224](https://github.com/GuitarAlchemist/ix/pull/224) | Draft DuckDB schema sketch for IX corpus and episode analytics (draft) | 1d | UNKNOWN | 0 | spareilleux |
+| [#223](https://github.com/GuitarAlchemist/ix/pull/223) | Define minimal Tree-of-Thought data model and fixtures (draft) | 1d | UNKNOWN | 0 | spareilleux |
+| [#222](https://github.com/GuitarAlchemist/ix/pull/222) | Create IX-focused TARS V1 exploration inventory (draft) | 1d | UNKNOWN | 0 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 45d | UNKNOWN | 1 | spareilleux |
 
 ### tars (10 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#196](https://github.com/GuitarAlchemist/tars/pull/196) | Design semantic-to-contract pipeline for issues, closures, and metascr (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#195](https://github.com/GuitarAlchemist/tars/pull/195) | Inventory and classify Markdown documentation debt (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#194](https://github.com/GuitarAlchemist/tars/pull/194) | Seed V1-to-V2 decision matrix from V1 Insights (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#193](https://github.com/GuitarAlchemist/tars/pull/193) | Interpret Methodology Guard findings without becoming policy authority (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#192](https://github.com/GuitarAlchemist/tars/pull/192) | Create TARS V1 Corpus Inventory Documentation (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#191](https://github.com/GuitarAlchemist/tars/pull/191) | Draft V1 memory VectorStore and DuckDB boundary note (draft) | 0d | MERGEABLE | 0 | spareilleux |
-| [#190](https://github.com/GuitarAlchemist/tars/pull/190) | Track AI architectures beyond LLMs for harness relevance (draft) | 0d | MERGEABLE | 0 | spareilleux |
+| [#196](https://github.com/GuitarAlchemist/tars/pull/196) | Design semantic-to-contract pipeline for issues, closures, and metascr (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#195](https://github.com/GuitarAlchemist/tars/pull/195) | Inventory and classify Markdown documentation debt (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#194](https://github.com/GuitarAlchemist/tars/pull/194) | Seed V1-to-V2 decision matrix from V1 Insights (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#193](https://github.com/GuitarAlchemist/tars/pull/193) | Interpret Methodology Guard findings without becoming policy authority (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#192](https://github.com/GuitarAlchemist/tars/pull/192) | Create TARS V1 Corpus Inventory Documentation (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#191](https://github.com/GuitarAlchemist/tars/pull/191) | Draft V1 memory VectorStore and DuckDB boundary note (draft) | 1d | MERGEABLE | 1 | spareilleux |
+| [#190](https://github.com/GuitarAlchemist/tars/pull/190) | Track AI architectures beyond LLMs for harness relevance (draft) | 1d | MERGEABLE | 1 | spareilleux |
 | [#187](https://github.com/GuitarAlchemist/tars/pull/187) | Deepen LLM call seam: a Prompt module (builder + executor) (draft) | 1d | MERGEABLE | 1 | spareilleux |
 | [#186](https://github.com/GuitarAlchemist/tars/pull/186) | Close the pattern-selector seam: RecordOutcome on IPatternSelector (draft) | 1d | MERGEABLE | 1 | spareilleux |
 | [#185](https://github.com/GuitarAlchemist/tars/pull/185) | Port ix capability registry pattern to F# (draft) | 1d | MERGEABLE | 1 | spareilleux |
@@ -46,8 +46,8 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 0d | MERGEABLE | 3 | spareilleux |
-| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 0d | MERGEABLE | 0 | spareilleux |
+| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 1d | MERGEABLE | 3 | spareilleux |
+| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 1d | MERGEABLE | 0 | spareilleux |
 | [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 1d | MERGEABLE | 1 | spareilleux |
@@ -85,6 +85,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-03T08:47:49.867082+00:00 UTC_
+_Generated: 2026-07-04T02:26:55.606341+00:00 UTC_
 
-_Commit: `96512a2768a8`_
+_Commit: `435dd2a26ba1`_
