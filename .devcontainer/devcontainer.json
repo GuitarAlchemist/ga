@@ -4,6 +4,9 @@
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    // Rust for cross-repo work — the sibling peers (ix, hari, sentrux) are Rust,
+    // so one cloud dev box builds the whole family (cloud-dev plan, layer 1).
+    "ghcr.io/devcontainers/features/rust:1": {},
     "ghcr.io/devcontainers/features/powershell:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },

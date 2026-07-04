@@ -4,7 +4,7 @@ date: 2026-07-04
 type: arch (groundwork + decision framing)
 reversibility: MIXED — couche 1 two-way (quota/abonnement) ; couche 2 partiellement one-way (coût récurrent métré + secrets déplacés + DB managées) ; couche 3 gratuite une fois la 2 posée
 revisit_trigger: sign-off opérateur sur l'enveloppe de coût de la couche 2 ; ou incident SPOF desktop bloquant
-status: draft — assessment, en attente de décision opérateur sur la couche 2
+status: layer-1 first steps taken (devcontainer + onboarding runbook, 2026-07-04) — couche 2 en attente de décision opérateur sur les coûts
 ---
 
 # Passage au développement cloud
