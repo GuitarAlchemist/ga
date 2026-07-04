@@ -44,6 +44,11 @@
       "minLength": 1,
       "description": "PR title from `gh pr view`."
     },
+    "agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity that AUTHORED the PR — the GitHub login from `gh pr view --json author` (e.g. 'google-labs-jules[bot]', 'chatgpt-codex-connector[bot]', a human login). Distinct from `grader`. Additive in pr-grade-v1 (no schema bump); consumed by hari's per-agent reliability model (Giskard Track G2) — cards without it degrade to agent 'unknown' there."
+    },
     "stated_intent": {
       "type": "string",
       "minLength": 1,

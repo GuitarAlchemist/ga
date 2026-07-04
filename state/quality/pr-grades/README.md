@@ -32,6 +32,7 @@ what the PR title and Summary promised.
 | `merge_sha` | string | **Full 40-char** merge SHA. |
 | `merged_at` | string | RFC3339 UTC. |
 | `title` | string | The PR title from `gh pr view`. |
+| `agent` | string | Optional (additive). Identity that **authored** the PR (`gh pr view --json author` login). Distinct from `grader`. Feeds hari's per-agent reliability model (Giskard G2, `hari-core reliability`); absent → `"unknown"` there. Fill it whenever known. |
 | `stated_intent` | string | PR title + the `## Summary` section of the body. |
 | `actual_files_changed` | string[] | Output of `git show --name-only <sha>`. |
 | `alignment` | enum | One of `"high"`, `"medium"`, `"low"`. See the SKILL for tie-breakers. |
