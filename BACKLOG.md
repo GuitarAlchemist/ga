@@ -269,6 +269,51 @@ The vertical slice that makes the other four a system instead of four organs in 
 
 ---
 
+## Spectral Music Intelligence Track (epics captured 2026-07-04)
+
+Product-facing counterpart to the Jarvis Track. Groundwork + capability map + gap analysis: [docs/plans/2026-07-04-feat-spectral-music-track-groundwork-plan.md](docs/plans/2026-07-04-feat-spectral-music-track-groundwork-plan.md). Research basis: the frugal deep-research run wf_7b53e48d-cbc (3 confirmed / 12 refuted claims — **read the confidence markers below, several angles came back uninstructed and must be re-sourced before an epic freezes**). Organizing insight: **OPTIC-K is already the frozen encoder the JEPA recipe wants** (docs/research/2026-07-04-…-j4-world-models.md). Same tracer-bullet discipline as Jarvis. Gap verdict (Explore inventory): **no domain overhaul; one architectural ML item** (per-candidate scorer seam in the mmap scan) — the rest is composition of existing pieces.
+
+### M1 — Chord⊂scale inclusion lattice [domain, low risk]
+
+Exhaustive, *provable* over the 4096 pitch-class sets (finite-universe sweep doctrine, docs/solutions/architecture/2026-06-19). **Verified basis**: maximal-evenness theory (Clough & Douthett 1991; Tymoczko) is textbook-solid — the major scale is the canonical maximally-even 7-set, pentatonic the n=5 case (confirmed 3-0, though the primary PDF 403'd; re-cite Clough & Douthett directly). **Reuse**: `PitchClassSet.IsSubsetOf` + the full `PitchClassSet.Items` universe + `Scale.Items` (rich tonic-aware catalog). The pattern already exists as `PitchClassSet.GetCompatibleKeys()` scoped to 24 keys — generalize it.
+
+- **Tracer bullet**: one `ContainingScales(PitchClassSet)` op + a cached lattice built by the existing sweep tool, plus a self-validation that **re-derives the maximally-even set counts per cardinality by enumeration** (the research flagged the n=6 count as `gcd(6,12)=6` configs, not "1 or 2" — the sweep settles it internally). Empty-diff invariant sweep = law holds.
+- Paths: `Common/GA.Domain.Core/Theory/Atonal/PitchClassSet.cs`, `…/Tonal/Scales/`, `Tools/GaDomainInvariants`. **Tribunal: not required** (pure domain, no schema/embedding change).
+
+### M2 — Chord→scale matching by Fourier phase distance [analysis]
+
+Rank the M1 candidates by the ga#513 phase-aligned operator `S` between a voicing and each scale. Magnitude k=5 = diatonicity; its phase locates the key on the circle of fifths; modes = same set + ROOT partition. **HONESTY FLAG**: the deep-research **failed to independently validate** the Quinn/Amiot/Tymoczko phase-matching foundation (all such claims refuted 0-3, but *for citation fabrication, not for being disproven* — the Tymoczko PDF 403'd and the run had a systematic fake-citation problem). ga#513 verified its own theorems numerically and cites Lewin/Quinn/Amiot correctly; **before this epic ships, re-source Quinn 2006-07, Amiot 2016 (phase chapters), and Yust (DFT phase spaces / key-finding) from primaries** — open question left by the run.
+
+- **Tracer bullet**: `S`-rank the diatonic scales for a handful of test chords, eyeball against theory (Cmaj7 → Ionian/Lydian/Mixolydian ordering), before any UI.
+- **Blocked on**: M1 (the candidate set) + the M-arch scorer seam. Paths: `Common/GA.Business.ML/Retrieval/` (near `ModulationAnalyzer`, which already un-quantizes phases). **Tribunal: not required** (query-time, no re-index).
+
+### M-arch — Per-candidate scorer seam in the OPTK scan [ML, the one architectural item]
+
+`OptickSearchStrategy.SearchInternal` hardcodes `TensorPrimitives.Dot`; `IVoicingSearchStrategy` is pluggable at strategy level only. Introduce a clean `ICandidateScorer` (or a re-ranking pass) so every future operator — phase-aligned `S`, the TnI flag, Quinn-weighted variants — drops in without editing the parallel scan. **This is the only piece that needs deliberate design**; M2/M4 both depend on it.
+
+- **Tracer bullet**: port the existing `WeightedPartitionCosine` to the seam with **byte-identical** results (pure refactor, provable by diffing top-K on the live index), then add `S` as the second scorer.
+- Paths: `Common/GA.Business.ML/Search/OptickSearchStrategy.cs`, `Embeddings/EmbeddingSchema.cs`. **Tribunal: not required** unless it touches the index format (it must not).
+
+### M3 — Arpeggio path generation on the fretboard [analysis, product]
+
+Arpeggios = ordered sequences + fingerings, not sets. **Verified differentiation**: no mainstream tool combines spectral fretboard visualization with arpeggio ergonomics (research confidence low — the claim was refuted for citation fabrication, so treat differentiation as *plausible, not established*; the concurrent audio/product run wf_9dade0b0 will firm this up). v1 is **deterministic composition of existing pieces** — no ML. **Untouched by research**: fingering-cost prior art (Sayegh, Hori, Radicioni) was never searched — do that before building the cost function.
+
+- **Reuse**: `ShapeGraphBuilder.GenerateShapes` (all fingerings of a PC-set) × `ShapeTransition.ComputePhysicalCost` / `PhysicalCostService.CalculateTransitionCost` × the existing `TabSequenceSolver`/`AdvancedTabSolver`. The gap is a multi-node **path** type chaining shapes (confirmed absent).
+- **Tracer bullet**: generate one arpeggio path (e.g. Amaj7 across 3 positions) ranked by ergonomic cost, `t*` from ga#513 giving the transposed fingering. Paths: `Common/GA.Domain.Services/Fretboard/`, `Common/GA.Business.ML/Tabs/`. **Tribunal: not required**.
+
+### M4 — Progression-JEPA: next-chord prediction in OPTIC-K latent space [ML + ix, research]
+
+**Verified originality**: JEPA/SSL is applied to musical *audio* (Stem-JEPA ISMIR 2024, Audio-JEPA — notably data-efficient, <1/5 the data of wav2vec 2.0; MERT) but **no published JEPA for symbolic chord-progression prediction** (confirmed; absence is medium-confidence). **Verified data availability**: McGill Billboard (742 songs, Burgoyne et al. 2011), Hooktheory research set (18,843 sections), and **CHORDONOMICON (666k songs, arXiv 2410.22046, Oct 2024 — the largest symbolic progression corpus)** — re-cite from primaries, and **licenses/access terms of each are NOT yet verified** (open question). Data doctrine: synthesize training volume from GA's harmony grammars (owned, key-normalized, matches the equivariant loss), fine-tune/eval on these corpora; scarce faithful tabs = eval only.
+
+- **Tracer bullet**: tiny predictor (per-partition MLP or ix's GBDT, ix#221) predicting the next voicing's OPTIC-K embedding from context, vs **honest baselines** (persistence, Markov-on-chord-symbols). Pause rule (Karpathy R4): if it can't beat Markov, the epic pauses and says so.
+- **Blocked on**: M-arch (scorer seam), a `Progression`→embedding-sequence adapter (the DSL/GrothendieckService produces ICV deltas, not training sequences — new adapter needed), corpus license verification, and ix capacity. **Tribunal: REQUIRED** (cross-repo, new ML surface). Not to be confused with the parked J4 (process telemetry) — this is the *musical* application of the same frozen-encoder recipe.
+
+### Track hygiene note (research-process finding, 2026-07-04)
+
+The wf_7b53e48d run refuted 12/15 claims — but the transverse finding is that **10 of those 12 refusals were citation fabrication** (two real URLs reused as sources for unrelated claims) plus a **poisoned-cache incident** (a synthesis memo stored as source text). Purged; `state/research-cache/` is now gitignored until the frugal workflow's write discipline is hardened (v0.3: reject non-source cache writes, block fetch-fail stubs). Several refuted claims (corpus licenses, product/legal facts, phase-theory primaries) are *plausible but must be re-sourced*, not treated as false. **Do not freeze any epic above on a refuted-for-citation claim without a clean primary source.**
+
+---
+
 ## How to Start a Feature
 
 ```bash
