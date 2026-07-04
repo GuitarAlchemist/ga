@@ -352,3 +352,7 @@ state/quality/domain-invariants/*.jsonl
 
 # git-bash/msys crash dumps
 *.stackdump
+
+# Frugal deep-research source cache — regenerable; not committed until write-discipline
+# hardening lands (v0.2 still lets agents write synthesis memos / fetch-fail stubs — see BACKLOG).
+state/research-cache/

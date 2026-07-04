@@ -1,6 +1,6 @@
 export const meta = {
   name: 'deep-research-frugal',
-  description: 'Cost-tiered deep research: haiku search/fetch/extract, sonnet escalating verify, session-model synthesis',
+  description: 'Cost-tiered deep research (v0.3): haiku search/fetch/extract, sonnet escalating verify, session-model synthesis; reachability-aware + anti-fabrication',
   whenToUse: 'Fact-checked research reports when cost matters. Pass the question as args (string or {question}). Targets ~10-20x cheaper than the bundled deep-research via hard fanout caps, model tiering, 1-vote verification with escalation, and an on-disk source cache. BACKLOG.md "In-house frugal deep-research workflow" is the design record.',
   phases: [
     { title: 'Scope', detail: 'decompose the question into at most 4 search angles', model: 'haiku' },
@@ -118,9 +118,15 @@ const searches = (
     angles.map((a) => () => {
       spent('haiku')
       return agent(
-        `Web-search this angle of a research question and return the ${MAX_RESULTS_PER_ANGLE} most ` +
-          `load-bearing sources (prefer primary sources: official announcements, papers, first-party ` +
-          `data; mark quality). Angle "${a.key}": ${a.query}\n\nOverall question for context: ${QUESTION}`,
+        `Web-search this angle and return the ${MAX_RESULTS_PER_ANGLE} most load-bearing sources ` +
+          `(prefer primary: official announcements, first-party repos/docs, papers; mark quality).\n\n` +
+          `REACHABILITY (v0.3, this sandbox's network policy 403s most academic publishers — ` +
+          `arxiv.org, springer, journals, NIH/NCBI, even Wikipedia — at the proxy): strongly prefer ` +
+          `sources whose evidence is FETCHABLE here — GitHub repos (LICENSE, README, code), product ` +
+          `docs, official blogs, changelogs, GitHub-hosted datasets. Treat a paywalled/publisher URL ` +
+          `as a POINTER whose claims must be corroborated from a reachable source or from the search ` +
+          `snippet itself — never as a fetchable primary. Angle "${a.key}": ${a.query}\n\n` +
+          `Overall question for context: ${QUESTION}`,
         { label: `search:${a.key}`, phase: 'Search', schema: SEARCH_SCHEMA, model: 'haiku', effort: 'low' }
       )
     })
@@ -177,8 +183,13 @@ if (guard('Extract')) {
         `FALSIFIABLE claims relevant to the research question — concrete numbers, dates, named facts; ` +
         `skip opinions and marketing. Cache the CLEANED text only (strip nav/boilerplate; cap ~2000 ` +
         `words). Quote the supporting sentence verbatim. Set cacheHit=true if the cache file already ` +
-        `existed. If the page is unreachable after one try, return zero claims for it.\n\n` +
-        `Source: ${src.url} (${src.title})\nQuestion: ${QUESTION}`,
+        `existed.\n\nANTI-FABRICATION (v0.3, HARD RULE): every claim's source MUST be content you ` +
+        `actually retrieved in THIS task. If the fetch 403s/fails and you have no WebSearch snippet ` +
+        `for it, return ZERO claims for this source — do NOT attach this URL to a claim you inferred ` +
+        `from prior knowledge, and do NOT reuse another reachable URL as a stand-in source. If you ` +
+        `only have a search snippet (not the full page), you may extract from it but set ` +
+        `importance:"minor" and quote the snippet verbatim. Never write a cache file for a source you ` +
+        `could not fetch.\n\nSource: ${src.url} (${src.title})\nQuestion: ${QUESTION}`,
       { label: `extract:${i}`, phase: 'Extract', schema: CLAIMS_SCHEMA, model: 'haiku', effort: 'low' }
     ).then((r) => {
       if (r && r.cacheHit) stats.cacheHits += 1
@@ -220,6 +231,11 @@ const refutePrompt = (c) =>
   `Adversarially verify this claim: try to REFUTE it (check the source and at least one independent ` +
   `check; the ${CACHE_NOTE} ${FETCH_DISCIPLINE}). Default to refuted=true if the evidence does not ` +
   `support it as stated; set confident=false if you could not reach decisive evidence.\n\n` +
+  `v0.3 SOURCE-UNREACHABLE RULE: if the cited source 403s/is unreachable AND you cannot corroborate ` +
+  `the claim from any fetchable source, vote refuted=false, confident=false and say ` +
+  `"SOURCE_UNREACHABLE" in reasoning — this marks the claim UNVERIFIED (it will be dropped from ` +
+  `confirmed findings), NOT confirmed. A claim citing a URL nobody in this run could open is a ` +
+  `fabrication signal: refute it unless a DIFFERENT reachable source supports it.\n\n` +
   `Claim: ${c.claim}\nQuoted support: ${c.quote || '(none)'}\nSource: ${c.url}`
 
 let verified = []
