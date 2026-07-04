@@ -22,10 +22,10 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#224](https://github.com/GuitarAlchemist/ix/pull/224) | Draft DuckDB schema sketch for IX corpus and episode analytics (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#223](https://github.com/GuitarAlchemist/ix/pull/223) | Define minimal Tree-of-Thought data model and fixtures (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#222](https://github.com/GuitarAlchemist/ix/pull/222) | Create IX-focused TARS V1 exploration inventory (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 45d | UNKNOWN | 1 | spareilleux |
+| [#224](https://github.com/GuitarAlchemist/ix/pull/224) | Draft DuckDB schema sketch for IX corpus and episode analytics (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#223](https://github.com/GuitarAlchemist/ix/pull/223) | Define minimal Tree-of-Thought data model and fixtures (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#222](https://github.com/GuitarAlchemist/ix/pull/222) | Create IX-focused TARS V1 exploration inventory (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 45d | MERGEABLE | 1 | spareilleux |
 
 ### tars (10 open)
 
@@ -85,6 +85,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-04T02:26:55.606341+00:00 UTC_
+_Generated: 2026-07-04T02:58:38.922519+00:00 UTC_
 
-_Commit: `435dd2a26ba1`_
+_Commit: `40fc724c6a52`_

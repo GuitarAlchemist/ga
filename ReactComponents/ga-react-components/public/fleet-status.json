@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "435dd2a26ba18ec029f74841637ba6359438f972",
-    "generatedAt": "2026-07-04T02:26:55.606341+00:00",
+    "commitSha": "40fc724c6a520cd3f8bed1a2b48579ebc1d0ad56",
+    "generatedAt": "2026-07-04T02:58:38.922519+00:00",
     "repoCount": 5,
     "totalPRs": 20
   },
@@ -137,7 +137,7 @@
           "failingChecks": 0,
           "headRef": "duckdb-ix-schema-sketch-18412470984244780338",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 224,
           "title": "Draft DuckDB schema sketch for IX corpus and episode analytics",
           "url": "https://github.com/GuitarAlchemist/ix/pull/224"
@@ -149,7 +149,7 @@
           "failingChecks": 0,
           "headRef": "feat/tot-data-model-15428277632970752551",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 223,
           "title": "Define minimal Tree-of-Thought data model and fixtures",
           "url": "https://github.com/GuitarAlchemist/ix/pull/223"
@@ -161,7 +161,7 @@
           "failingChecks": 0,
           "headRef": "docs/tars-v1-inventory-12889369188447182114",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 222,
           "title": "Create IX-focused TARS V1 exploration inventory",
           "url": "https://github.com/GuitarAlchemist/ix/pull/222"
@@ -173,7 +173,7 @@
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
