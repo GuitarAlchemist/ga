@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "197e0c4f61d1d6ea4cae8a2bc647baf4f306e7cc",
-    "generatedAt": "2026-07-05T08:39:45.209561+00:00",
+    "commitSha": "bdf1707fd27088dc653adf612706854063117aaf",
+    "generatedAt": "2026-07-05T15:32:23.995989+00:00",
     "repoCount": 5,
     "totalPRs": 7
   },
@@ -131,13 +131,13 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 46,
+          "ageDays": 47,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -176,7 +176,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
@@ -188,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
