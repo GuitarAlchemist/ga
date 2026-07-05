@@ -450,6 +450,19 @@ Question opérateur : « créer notre propre engine mathématique pour faire de 
 
 ---
 
+## Compounding KB — retrieval + anti-rot (capturé 2026-07-05 → **plan** : [docs/plans/2026-07-05-arch-compounding-kb-retrieval-curation.md](docs/plans/2026-07-05-arch-compounding-kb-retrieval-curation.md))
+
+Question opérateur (leçon Karpathy « LLM Wiki / compounding knowledge base ») : *« comment implémenter au mieux ? »*. **Recadrage honnête après deux passes de recherche bornées (sources atteignables uniquement)** : l'écosystème *est déjà* un compounding KB (`/learnings` → `docs/solutions/`, `/digest`, plans, `ix-streeling` → `catalog.jsonl`, agent `learnings-researcher`). Le vrai manque n'est pas de le construire mais de (a) faire en sorte que l'agent *trouve* ce qui y est avant de re-résoudre, et (b) l'empêcher de rancir. **Fait de taille : 36 entrées dans `docs/solutions/` aujourd'hui — bien sous le seuil ~500 où la recherche vectorielle/hybride devient rentable.** Donc pas de base vectorielle maintenant (ce serait du future-proofing) ; le besoin proche est câblage + anti-rot.
+
+- **Slice 1 (tracer, à faire en premier)** — retrieve-before-re-solve via **BM25** sur le `catalog.jsonl` existant (frontmatter `module`/`tags`/`problem_type` en pré-filtre dur, BM25 dans l'ensemble filtré), exposé comme un outil skill/MCP `search` que l'agent appelle *avant* d'implémenter, + un harnais **recall@k / MRR** déterministe sous `state/quality/`. Réutilise `ix-streeling` (tantivy ou SQLite FTS5), pas de nouvelle infra. Chunking : découper sur H2/H3 en **préfixant le frontmatter**.
+- **Slice 2 (risque quasi nul, suivi rapide)** — signal de fraîcheur : `last_verified` (+ `ttl_days` optionnel) dans le frontmatter `docs/solutions/` + un check CI qui *signale* (jamais ne supprime) les entrées périmées. Même famille que les checks DESIGN.md-sync / readme-drift déjà en place.
+- **Slice 3 (technique éprouvée, humain fusionne)** — rapport de quasi-doublons *propose-only* : MinHash-Jaccard (~0,8) nocturne → file de revue sous `state/quality/` ; passe optionnelle embedding-cosine pour les doublons sémantiques. Jamais d'auto-merge.
+- **Slice 4 (capacité max, en dernier)** — compaction offline qui **émet un nouveau digest proposé** (contrat *never-mutate-input* d'Anthropic Dreams), jamais d'édition en place — on **rejette** explicitement la mutation in-place du `dream-skill` open-source. Détection de contradiction (mécanisme Graphiti porté sans le graphe) alimente cette file, strictement propose-for-review.
+- **Fil conducteur** (accord de toutes les sources prudentes) : la consolidation est offline, non-destructive, revue ; seule la mémoire-brouillon d'agent à faible enjeu s'auto-supprime. Notre KB append-mostly reste du côté « propose, préserve l'historique, l'humain accepte ». Tous les slices sont two-way-door.
+- **Coût de ne pas curer** : largement affirmé, faiblement prouvé dans les sources atteignables (un seul chiffre « ~20 % de chute de recall », page 403'd, non vérifié) — argument de plus pour le harnais recall@k : mesurer notre propre dérive plutôt qu'importer un chiffre.
+
+---
+
 ## How to Start a Feature
 
 ```bash
