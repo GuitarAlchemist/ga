@@ -193,6 +193,7 @@ To `state/quality/pr-grades/<merge-sha>.json` — the **full** SHA, no truncatio
   "merge_sha": "abc123def456...",
   "merged_at": "2026-05-23T23:35:20Z",
   "title": "feat(harness): /grade-last-pr skill",
+  "agent": "spareilleux",
   "stated_intent": "Adds a /grade-last-pr skill that grades merged PRs against stated intent and writes the result to state/quality/pr-grades/. Closes item #5 of the harness plan.",
   "actual_files_changed": [
     ".claude/skills/grade-last-pr/SKILL.md",
@@ -231,6 +232,7 @@ Schema notes:
 - `alignment` is one of `"high"`, `"medium"`, `"low"` — no other values.
 - `reasons` is 1–5 short sentences. If you can't articulate a reason, the grade isn't ready.
 - `grader` is the model name (free-form string; example: `"claude-opus-4-7"`).
+- `agent` (additive, optional but **fill it whenever known**) is the identity that *authored* the PR — the GitHub login from `gh pr view <n> --json author` (e.g. `"google-labs-jules[bot]"`, `"chatgpt-codex-connector[bot]"`, a human login). Distinct from `grader` (who graded). Consumed by hari's per-agent reliability model (Giskard Track G2, `hari-core reliability`); cards without it degrade to agent `"unknown"` there.
 - `codex_review` is optional but **strongly recommended**. Set `status` to `"reviewed"` if the API returned any Codex comments (even zero unresolved), `"not_reviewed"` if Codex hasn't visited yet, or `"skipped"` if the API call failed (record the error in `reasons`).
 
 ### 8. Print the terminal summary
