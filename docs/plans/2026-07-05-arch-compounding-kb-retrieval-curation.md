@@ -121,6 +121,19 @@ drop from outdated embeddings") is a single unverified secondary claim, page 403
 *mechanism* as credible and the *magnitude* as unproven. This is itself an argument for the recall@k
 harness: measure our own drift rather than import someone's number.
 
+## External validation (2026-07-06)
+
+Independent convergence on Slice 1's "filter-first, cosine-as-fallback" stance: the Towards
+Data Science *Enterprise Document Intelligence* series (**"Cosine Is Not the Foundation"** /
+**"Retrieval Is Filtering, Not Search"**) argues that RAG retrieval is *filtering on structured
+fields*, with embeddings an **optional fallback, not the foundation** — the same conclusion this
+plan's retrieval pass reached from different sources. Two independent lines landing on filter-first
+is evidence the Slice-1 ordering (frontmatter hard-filter → BM25 → vector only later) is right.
+**Caveat — OPTIC-K is exempt:** "cosine is not the foundation" is about *generic text* retrieval.
+OPTIC-K's `WeightedPartitionCosine` is a hand-engineered 240-dim musical embedding where
+partition-weighted cosine *is* the validated design, not a text-cosine crutch — do not let the
+headline trigger a rethink of the voicing-retrieval path. (Snippet-sourced; TDS primary 403'd.)
+
 ## Source reports (this session, reachable-sourced)
 
 - Retrieval pass — BM25 vs vector vs hybrid, frontmatter-aware retrieval, chunking, retrieve-before-
