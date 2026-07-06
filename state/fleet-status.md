@@ -22,7 +22,7 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 47d | MERGEABLE | 1 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 48d | MERGEABLE | 1 | spareilleux |
 
 ### tars
 
@@ -32,12 +32,12 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 3d | UNKNOWN | 3 | spareilleux |
-| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 3d | UNKNOWN | 0 | spareilleux |
-| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 3d | UNKNOWN | 0 | spareilleux |
-| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 3d | UNKNOWN | 0 | spareilleux |
-| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 3d | UNKNOWN | 1 | spareilleux |
-| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 3d | UNKNOWN | 1 | spareilleux |
+| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 3d | MERGEABLE | 3 | spareilleux |
+| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 3d | MERGEABLE | 0 | spareilleux |
+| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 4d | MERGEABLE | 0 | spareilleux |
+| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 4d | MERGEABLE | 0 | spareilleux |
+| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 4d | MERGEABLE | 1 | spareilleux |
+| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 4d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -71,6 +71,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-05T15:32:23.995989+00:00 UTC_
+_Generated: 2026-07-06T09:54:21.820714+00:00 UTC_
 
-_Commit: `bdf1707fd270`_
+_Commit: `58a41500cd66`_
