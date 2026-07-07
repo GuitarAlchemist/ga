@@ -2,6 +2,7 @@
 title: "The \"frugal\" deep-research workflow blew ~10x its envelope on a dense multi-part question"
 date: 2026-07-04
 problem_type: "tooling"
+module: "deep-research"
 component: ".claude/workflows/deep-research-frugal.js"
 symptoms:
   - "A single run consumed ~4.74M subagent tokens across 79 agents in ~27 min, vs an announced envelope of ~200-500k — roughly 10x over"
