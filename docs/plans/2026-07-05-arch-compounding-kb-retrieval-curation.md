@@ -134,6 +134,12 @@ OPTIC-K's `WeightedPartitionCosine` is a hand-engineered 240-dim musical embeddi
 partition-weighted cosine *is* the validated design, not a text-cosine crutch — do not let the
 headline trigger a rethink of the voicing-retrieval path. (Snippet-sourced; TDS primary 403'd.)
 
+**Mechanistic evidence for the `revisit_trigger` (~500-doc vector threshold):** TDS *"HNSW at
+Scale: Why Your RAG System Gets Worse as the Vector Database Grows"* reports that HNSW index recall
+*degrades* as the corpus grows — i.e. jumping to a vector DB isn't just premature at 36 docs, it
+carries a concrete failure mode at scale. This strengthens the deferral: BM25+filter first, add the
+vector tier only when a measured recall@k gap justifies eating that cost/complexity. (Snippet-sourced.)
+
 ## Source reports (this session, reachable-sourced)
 
 - Retrieval pass — BM25 vs vector vs hybrid, frontmatter-aware retrieval, chunking, retrieve-before-
