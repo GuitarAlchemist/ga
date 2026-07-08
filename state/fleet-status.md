@@ -18,31 +18,31 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#522](https://github.com/GuitarAlchemist/ga/pull/522) | docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/d | 0d | CONFLICTING | 0 | spareilleux |
+| [#522](https://github.com/GuitarAlchemist/ga/pull/522) | docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/d | 1d | UNKNOWN | 0 | spareilleux |
 
-### ix (2 open)
-
-| # | Title | Age | Mergeable | Failing checks | Author |
-|---|---|---:|---|---:|---|
-| [#227](https://github.com/GuitarAlchemist/ix/pull/227) | feat(streeling): compounding-KB Slice 1 (BM25 retrieval + recall@k) +  | 0d | MERGEABLE | 0 | spareilleux |
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 49d | MERGEABLE | 1 | spareilleux |
-
-### tars (1 open)
+### ix (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#199](https://github.com/GuitarAlchemist/tars/pull/199) | refactor(evolution): IPromotionStore + single-verdict PromotionGate (# | 0d | MERGEABLE | 0 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 49d | UNKNOWN | 1 | spareilleux |
+
+### tars (2 open)
+
+| # | Title | Age | Mergeable | Failing checks | Author |
+|---|---|---:|---|---:|---|
+| [#200](https://github.com/GuitarAlchemist/tars/pull/200) | Refactor promotion store and gate to eliminate global state (draft) | 0d | MERGEABLE | 0 | spareilleux |
+| [#199](https://github.com/GuitarAlchemist/tars/pull/199) | refactor(evolution): IPromotionStore + single-verdict PromotionGate (# | 1d | MERGEABLE | 1 | spareilleux |
 
 ### Demerzel (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 4d | UNKNOWN | 3 | spareilleux |
-| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 4d | UNKNOWN | 0 | spareilleux |
-| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 5d | UNKNOWN | 0 | spareilleux |
-| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 5d | MERGEABLE | 1 | spareilleux |
-| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 5d | MERGEABLE | 1 | spareilleux |
-| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 5d | UNKNOWN | 1 | spareilleux |
+| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 5d | MERGEABLE | 3 | spareilleux |
+| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 5d | MERGEABLE | 0 | spareilleux |
+| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 6d | MERGEABLE | 0 | spareilleux |
+| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 6d | MERGEABLE | 1 | spareilleux |
+| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 6d | MERGEABLE | 1 | spareilleux |
+| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 6d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -76,6 +76,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-07T09:22:29.700451+00:00 UTC_
+_Generated: 2026-07-08T08:07:07.405110+00:00 UTC_
 
-_Commit: `3056563dfc85`_
+_Commit: `03a16a7858f7`_

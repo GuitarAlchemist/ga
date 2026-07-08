@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "3056563dfc85375752e347f5677d08ac8d200550",
-    "generatedAt": "2026-07-07T09:22:29.700451+00:00",
+    "commitSha": "03a16a7858f7c83c31530d30a18d3acac5e501ca",
+    "generatedAt": "2026-07-08T08:07:07.405110+00:00",
     "repoCount": 5,
     "totalPRs": 10
   },
@@ -116,13 +116,13 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-07T04:16:05Z",
           "failingChecks": 0,
           "headRef": "claude/jarvis-track-scoping-9431c6",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 522,
           "title": "docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/discovery captures + G2 pr-grade field",
           "url": "https://github.com/GuitarAlchemist/ga/pull/522"
@@ -141,20 +141,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-07T04:13:06Z",
-          "failingChecks": 0,
-          "headRef": "claude/jarvis-track-scoping-9431c6",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 227,
-          "title": "feat(streeling): compounding-KB Slice 1 (BM25 retrieval + recall@k) + J4 GBDT tracer + governance bump",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/227"
-        },
         {
           "ageDays": 49,
           "author": "spareilleux",
@@ -162,7 +150,7 @@
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -181,13 +169,25 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 1,
+      "prCount": 2,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-07T04:14:45Z",
+          "createdAt": "2026-07-07T10:38:39Z",
           "failingChecks": 0,
+          "headRef": "refactor/promotion-store-gate-13352222723704742074",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 200,
+          "title": "Refactor promotion store and gate to eliminate global state",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/200"
+        },
+        {
+          "ageDays": 1,
+          "author": "spareilleux",
+          "createdAt": "2026-07-07T04:14:45Z",
+          "failingChecks": 1,
           "headRef": "claude/jarvis-track-scoping-9431c6",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -214,43 +214,43 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
           "headRef": "aiw-prompt-harness-engineering-13346103974311787099",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 648,
           "title": "[AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agents",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
           "headRef": "jules/aiw-multi-provider-orchestration-15872019196044205492",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 647,
           "title": "docs: design AIW-v0.1 multi-provider orchestration",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
           "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 646,
           "title": "Enrich AIW doctrine with broader expert practices",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 1,
@@ -262,7 +262,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -274,13 +274,13 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
