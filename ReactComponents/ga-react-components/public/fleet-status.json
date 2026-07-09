@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "03a16a7858f7c83c31530d30a18d3acac5e501ca",
-    "generatedAt": "2026-07-08T08:07:07.405110+00:00",
+    "commitSha": "7e5eb820ba95a146c38794613831fe1af37320dc",
+    "generatedAt": "2026-07-09T09:19:48.025805+00:00",
     "repoCount": 5,
     "totalPRs": 10
   },
@@ -116,7 +116,7 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-07T04:16:05Z",
           "failingChecks": 0,
@@ -144,13 +144,13 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 49,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -172,10 +172,10 @@
       "prCount": 2,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-07T10:38:39Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "refactor/promotion-store-gate-13352222723704742074",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -184,7 +184,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/200"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-07T04:14:45Z",
           "failingChecks": 1,
@@ -214,7 +214,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
@@ -226,7 +226,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
@@ -238,7 +238,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
@@ -250,7 +250,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 1,
@@ -262,7 +262,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -274,7 +274,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
