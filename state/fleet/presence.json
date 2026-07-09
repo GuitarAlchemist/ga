@@ -1,25 +1,25 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-09T08:49:58.426277Z",
+  "generated_at": "2026-07-09T12:18:30.345534Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "red",
+  "overall": "yellow",
   "limbs": [
     {
       "id": "lane:jules-router",
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-08T08:44:29Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28929667899",
-      "detail": "latest completed run: success"
+      "last_heartbeat": "2026-07-09T10:13:21Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29010878346",
+      "detail": "latest completed run: skipped"
     },
     {
       "id": "lane:claude-mention",
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-07T13:25:08Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28869695734",
+      "last_heartbeat": "2026-07-09T10:13:20Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29010877924",
       "detail": "latest completed run: skipped"
     },
     {
@@ -44,10 +44,10 @@
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "red",
-      "last_heartbeat": "2026-07-09T05:30:14Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28996381045",
-      "detail": "latest completed run: failure"
+      "status": "green",
+      "last_heartbeat": "2026-07-09T11:47:18Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29015981105",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-08T08:06:36Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28927491976",
+      "last_heartbeat": "2026-07-09T09:19:16Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29007774253",
       "detail": "latest completed run: success"
     },
     {
