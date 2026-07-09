@@ -1,8 +1,8 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-08T20:40:28.057944Z",
+  "generated_at": "2026-07-09T08:49:58.426277Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "yellow",
+  "overall": "red",
   "limbs": [
     {
       "id": "lane:jules-router",
@@ -44,10 +44,10 @@
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-08T20:16:35Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28972732983",
-      "detail": "latest completed run: success"
+      "status": "red",
+      "last_heartbeat": "2026-07-09T05:30:14Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28996381045",
+      "detail": "latest completed run: failure"
     },
     {
       "id": "sensor:quality-snapshot",
