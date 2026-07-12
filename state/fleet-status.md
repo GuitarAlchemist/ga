@@ -18,31 +18,31 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#522](https://github.com/GuitarAlchemist/ga/pull/522) | docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/d | 4d | CONFLICTING | 0 | spareilleux |
+| [#522](https://github.com/GuitarAlchemist/ga/pull/522) | docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/d | 5d | CONFLICTING | 0 | spareilleux |
 
 ### ix (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 52d | MERGEABLE | 1 | spareilleux |
+| [#50](https://github.com/GuitarAlchemist/ix/pull/50) | feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic (draft) | 53d | MERGEABLE | 1 | spareilleux |
 
 ### tars (2 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#200](https://github.com/GuitarAlchemist/tars/pull/200) | Refactor promotion store and gate to eliminate global state (draft) | 3d | MERGEABLE | 1 | spareilleux |
-| [#199](https://github.com/GuitarAlchemist/tars/pull/199) | refactor(evolution): IPromotionStore + single-verdict PromotionGate (# | 4d | MERGEABLE | 1 | spareilleux |
+| [#200](https://github.com/GuitarAlchemist/tars/pull/200) | Refactor promotion store and gate to eliminate global state (draft) | 4d | MERGEABLE | 1 | spareilleux |
+| [#199](https://github.com/GuitarAlchemist/tars/pull/199) | refactor(evolution): IPromotionStore + single-verdict PromotionGate (# | 5d | MERGEABLE | 1 | spareilleux |
 
 ### Demerzel (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 8d | UNKNOWN | 3 | spareilleux |
-| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 8d | UNKNOWN | 0 | spareilleux |
-| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 9d | UNKNOWN | 0 | spareilleux |
-| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 9d | UNKNOWN | 1 | spareilleux |
-| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 9d | UNKNOWN | 1 | spareilleux |
-| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 9d | UNKNOWN | 1 | spareilleux |
+| [#648](https://github.com/GuitarAlchemist/Demerzel/pull/648) | [AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agent (draft) | 9d | MERGEABLE | 3 | spareilleux |
+| [#647](https://github.com/GuitarAlchemist/Demerzel/pull/647) | docs: design AIW-v0.1 multi-provider orchestration (draft) | 9d | MERGEABLE | 0 | spareilleux |
+| [#646](https://github.com/GuitarAlchemist/Demerzel/pull/646) | Enrich AIW doctrine with broader expert practices (draft) | 10d | MERGEABLE | 0 | spareilleux |
+| [#645](https://github.com/GuitarAlchemist/Demerzel/pull/645) | Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406) (draft) | 10d | MERGEABLE | 1 | spareilleux |
+| [#644](https://github.com/GuitarAlchemist/Demerzel/pull/644) | Migrate qa_tribunal_emit onto demerzel_kit (draft) | 10d | MERGEABLE | 1 | spareilleux |
+| [#643](https://github.com/GuitarAlchemist/Demerzel/pull/643) | feat(policy): adaptive fan-out backpressure policy + architecture doc  | 10d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -76,6 +76,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-11T07:39:16.345487+00:00 UTC_
+_Generated: 2026-07-12T07:58:06.635540+00:00 UTC_
 
-_Commit: `6e21ef70e5f5`_
+_Commit: `629ab1e8b14e`_
