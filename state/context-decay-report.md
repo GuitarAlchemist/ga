@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-07-11T09:41:41Z_
+_Generated: 2026-07-12T09:54:20Z_
 
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
