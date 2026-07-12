@@ -66,3 +66,55 @@ Verifier + both law sets live in the session scratchpad (`z12_sweep.py`,
 `claude_laws.py`, `sol_laws.py`); pair-laws verified by ICV-group exhaustion
 (equivalent to the full 16.7M-pair sweep). Raw verdict output reproduced in
 the session log.
+
+---
+
+# Round 2 — original-conjectures-only, harder shapes (same day)
+
+Rules hardened: textbook theorems disqualified; exact censuses,
+characterizations, and substructure laws required; **pre-verification by code
+explicitly allowed** (both sides; Sol declared `PREVERIFIE: oui` on all 5).
+
+## Scoreboard (cumulative: Sol 10/10, Claude 7/10)
+
+| Generator | R2 survived | Notes |
+|---|---:|---|
+| GPT-5.6 Sol | **5/5** | survivors-only submission (private generate→verify→filter loop) |
+| Claude | 3/5 | kills published (R2 Z-tetrachord trichords; R3 mono-trichord uniqueness) |
+
+## Surviving round-2 laws
+
+- **Claude R1**: all-distinct-ICV classes exist only at cards 6 and 7, exactly
+  two each ({0-5} + major hexachord {0,2,4,5,7,9}; {0-6} + diatonic).
+- **Claude R4**: for d∈{1,5}, `ic_d(s)=|s|−1 ⟹ s is a d-generated chain`.
+- **Claude R5**: exactly **20**/50 hexachord classes are self-complementary,
+  and they are precisely the non-Z hexachords.
+- **SOL-R2-1/2**: exactly **2** all-tetrachord octachords; exactly **5**
+  all-pentachord nonachords (listed in the law set).
+- **SOL-R2-3**: unique all-trichord hexachord {0,1,2,4,7,8} — *survives the
+  sweep but is literature-known* (Carter/Morris all-trichord hexachord);
+  novelty claim to be deflated by the tribunal.
+- **SOL-R2-4** (most striking of the duel): the **set of deletion classes
+  determines the Tn/TnI class** for card ≥ 3 — a reconstruction-type result;
+  candidate genuine find pending literature check.
+- **SOL-R2-5**: unique-deletion AND unique-addition neighbor classes are
+  exactly {0369}, {014589}, whole-tone, octatonic — i.e. Messiaen's
+  limited-transposition family; elegant, known-adjacent.
+
+## Instructive kills (Claude, published)
+
+- Z-tetrachords {0146}/{0137} **do** share trichord classes ((016), (026)).
+- Mono-trichord classes of card ≥ 4 are **three**, not one: {0167},
+  **{0268} (French sixth)**, {0369} — the refutation itself was a discovery.
+
+## Round-2 reading (honest)
+
+Pre-verification changes what is measured: round 2 demonstrates both
+frontiers can run the **full FunSearch-style loop end-to-end** (generate →
+exhaustively verify → filter), which is the load-bearing feasibility fact for
+the discovery engine. Survival rate is no longer a proxy for raw mathematical
+intuition once the loop is private. **Pause rule invoked**: two rounds settle
+feasibility; further rounds add laws, not information. Next per plan: ga#519
+product evaluator + tribunal novelty judgment (SOL-R2-4, Claude R5, and the
+combined Z-window 4–8 are the priority candidates; SOL-R2-3/5 to be deflated
+as literature-known).
