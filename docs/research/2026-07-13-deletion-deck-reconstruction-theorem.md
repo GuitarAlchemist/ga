@@ -78,12 +78,19 @@ inequivalent since their interval multisets {d,d,2d} ≠ {d,2d,2d} differ. ∎
 
 ## Verification status
 
-| N | verdict | collisions |
+| N | set-deck | multiset-deck |
 |---|---|---|
-| 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19 | HOLDS (all cards) | — |
-| 10 | fails | {0,2,4} vs {0,2,6} only |
-| 15 | fails | {0,3,6} vs {0,3,9} only |
-| 20 | fails | {0,4,8} vs {0,4,12} only |
+| 6–27 with 5∤N (17 moduli) | HOLDS (all cards) | HOLDS |
+| 10 | fails: {0,2,4} vs {0,2,6} only | HOLDS |
+| 15 | fails: {0,3,6} vs {0,3,9} only | HOLDS |
+| 20 | fails: {0,4,8} vs {0,4,12} only | HOLDS |
+| 25 (**5²|N stress test**) | fails: {0,5,10} vs {0,5,15} only — **no new family, no order-5 subcycle interaction** | HOLDS |
+
+Sharp empirical statement over the full range 6 ≤ N ≤ 27: **set-deck
+reconstruction holds iff 5 ∤ N**; every failure is the single proved trichord
+pair; the **multiset deck is complete on every modulus tested**. The Z25 run
+strongly supports the "unique obstruction from an order-5 quotient"
+hypothesis: even with 5² | N, no secondary structure appears.
 
 Exhaustive over all 2^N subsets per modulus; classes via full dihedral-orbit
 canonicalization; decks compared as frozensets. (Session scratchpad:
@@ -108,12 +115,18 @@ canonicalization; decks compared as frozensets. (Session scratchpad:
 
 ## Open problems
 
-1. Structural proof for |S| ≥ 4 (the conjecture; exhaustively true ≤ Z20).
-   A plausible route: induction using the trichord analysis on the gap
-   structure of the deck's minimum-cardinality members.
-2. Moduli beyond 20 (predicted: fails exactly at 5 | N via the same family;
-   Z25 would also admit d = 5 — check whether new families appear when
-   N = 25, i.e. 5² | N).
+1. Structural proof for |S| ≥ 4 (the conjecture; exhaustively true ≤ Z27).
+   **Preferred attack (2026-07-13): a multiplicity-recovery lemma** — show
+   that global compatibility among ≥ 4 deleted cards forces the occurrence
+   count of each card class even when only the support is given, reducing
+   the set-deck problem to multiset-deck reconstruction (empirically
+   complete on all 22 moduli tested). The trichord obstruction is then
+   explained exactly: three cards give too few cross-constraints to recover
+   multiplicities.
+2. ~~Z25 stress test~~ **DONE**: fails only via {0,5,10}/{0,5,15} (the d=5
+   family); no new families under 5² | N. Next stress: Z30 (both 5|N and a
+   6-smooth modulus; memory-bound, needs a bitset/streaming canonicalizer)
+   and a multiset-deck completeness proof.
 3. ~~Whether the *multiset* deck is complete~~ **RESOLVED (this session)**:
    the deck *with multiplicities* reconstructs on every modulus tested,
    including the failing ones (exhaustive: Z10, Z15, Z20, plus Z12, Z16 —
