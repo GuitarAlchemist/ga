@@ -17,6 +17,7 @@ rewrites). Pure Python 3 stdlib + one C file; no dependencies.
 | `realizability_n3.py` | Point C closure at n=3: which abstract {(1,2),(2,1)} ambiguities are *doubly realizable*, 6 ≤ N ≤ 20 | ~2 min |
 | `point_d_lemma.py` | Point D: repeated-card lemma sub-case verification (symmetry / impossible / exchange), exhaustive 6 ≤ N ≤ 14 with assertions | ~1 min |
 | `o3_tetrachord_proof_check.py` | Theorem T4 (O3): every clause of the tetrachord coincidence classification + parity uniqueness asserted over **all** C(N,4) subsets, 4 ≤ N ≤ 30 | ~1 min |
+| `l6_invariant_test.py` | §7.1: injectivity of the L6 invariant (P, F) on necklaces — collides from n = 6 (minimal: Z8), collision-free at n = 4, 5 (≤ N = 40 checked separately) | seconds |
 | `referee_6_16.txt`, `referee_17_20.txt` | Captured outputs of the two bench runs | — |
 
 Every script asserts internally (Kelly parity of the true multiplicity vector,

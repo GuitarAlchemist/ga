@@ -269,6 +269,42 @@ No new search was needed — the referee confirms the two formulations are
 equivalent, so composition-level intuition can be trusted on the tested
 range.
 
+### 7.1 The L6 invariant tested against O2 (addendum, same day)
+
+Write P for the multiset of parts of the necklace and
+F = {g_j + g_{j+1}} for the multiset of adjacent sums — the pair (P, F) is
+exactly what L6 extracts from the deck-level union
+U = (n−2)·P ⊎ F. Exhaustive injectivity test on necklaces
+(`l6_invariant_test.py`):
+
+- **(P, F) is NOT a complete invariant for n ≥ 6.** Minimal counterexample
+  at N = 8: necklaces (1,1,1,2,1,2) and (1,1,2,1,1,2) share P **and** F
+  (and U), yet their decks differ — e.g. the first deck contains the card
+  (1,2,1,2,2), the second (1,1,2,2,2), same parts in different cyclic
+  order. Collisions grow rapidly (Z24, n = 7: 2604 pairs). The obstruction
+  is precise: (P, F) forgets the **cyclic arrangement**, which the deck's
+  individual cards retain. Any proof of O2 must therefore use how parts
+  co-occur *within* cards, not just the global part/sum counts — the naive
+  L6 route is dead for n ≥ 6.
+- **(P, F) has no collision at n = 4 or n = 5 for any N ≤ 40** (empirical).
+- **Lemma L7 (proved): at n = 4, (P, F) determines the necklace.**
+  *Proof.* The six pairwise sums of P split as F ⊎ O with
+  O = {g₁+g₃, g₂+g₄} the opposite-pair sums, so O = (pairwise sums) ∖ F is
+  computable from (P, F) by multiset subtraction. A 4-necklace up to
+  rotation/reflection is exactly a partition of P into two opposite pairs.
+  Two distinct partitions with equal sum-multisets — say
+  {a+b, c+d} = {a+c, b+d} — force b = c (or a = d), and then the two
+  partitions coincide as partitions of the *multiset* P, hence give the
+  same necklace. ∎
+
+This refines O2 at the bottom of the ladder: **(O2a)** show the multiset
+deck determines (P, F) at n = 4 (then L7 finishes: multiset-deck
+completeness for tetrachords, all N — which with Theorem T4 would close
+set-deck reconstruction for tetrachords entirely). Empirical support: no
+U-collision at n = 4 for N ≤ 24 and no (P, F) collision for N ≤ 40; what
+is missing is the deck → (P, F) extraction, nontrivial because which part
+of a card is the fused one is not marked.
+
 ## 8. What remains open (no extrapolation)
 
 - **(O1)** Uniqueness of the parity+ICV system for n ≥ 4, general N.
@@ -280,7 +316,10 @@ range.
   6 ≤ N ≤ 30. Note (O1) + (O2) + Theorem R ⟹ the general n ≥ 4
   conjecture; but neither is proved, and (O1) might fail at some larger N
   while reconstruction still holds (§5's realizability gap) — failure of
-  (O1) would weaken the strategy, not refute the conjecture.
+  (O1) would weaken the strategy, not refute the conjecture. §7.1 sharpens
+  the route: the coarse L6 invariant (P, F) is provably insufficient for
+  n ≥ 6, sufficient-if-extractable at n = 4 (Lemma L7); the tetrachord
+  instance is isolated as **(O2a)**: deck → (P, F) extraction at n = 4.
 - **(O3)** ~~Whether parity alone suffices at n = 4~~ **CLOSED (2026-07-13,
   same day): Theorem T4 in the main write-up** — parity has a unique
   admissible solution for every tetrachord support, **all N**, via the exact
