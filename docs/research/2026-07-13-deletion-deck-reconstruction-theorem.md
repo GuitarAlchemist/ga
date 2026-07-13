@@ -80,17 +80,21 @@ inequivalent since their interval multisets {d,d,2d} ≠ {d,2d,2d} differ. ∎
 
 | N | set-deck | multiset-deck |
 |---|---|---|
-| 6–27 with 5∤N (17 moduli) | HOLDS (all cards) | HOLDS |
+| 6–30 with 5∤N (20 moduli) | HOLDS (all cards) | HOLDS |
 | 10 | fails: {0,2,4} vs {0,2,6} only | HOLDS |
 | 15 | fails: {0,3,6} vs {0,3,9} only | HOLDS |
 | 20 | fails: {0,4,8} vs {0,4,12} only | HOLDS |
-| 25 (**5²|N stress test**) | fails: {0,5,10} vs {0,5,15} only — **no new family, no order-5 subcycle interaction** | HOLDS |
+| 25 (**5²|N stress test**) | fails: {0,5,10} vs {0,5,15} only — no new family under 5²|N | HOLDS |
+| 30 (**5|N and 6-smooth**) | fails: {0,6,12} vs {0,6,18} only — **predicted pair, confirmed** | HOLDS |
 
-Sharp empirical statement over the full range 6 ≤ N ≤ 27: **set-deck
-reconstruction holds iff 5 ∤ N**; every failure is the single proved trichord
-pair; the **multiset deck is complete on every modulus tested**. The Z25 run
-strongly supports the "unique obstruction from an order-5 quotient"
-hypothesis: even with 5² | N, no secondary structure appears.
+Sharp empirical statement over the full range 6 ≤ N ≤ 30 (25 moduli, ~2.1
+billion subsets swept in total): **set-deck reconstruction holds iff 5 ∤ N**;
+every failure at 5 | N (10, 15, 20, 25, 30) is the single proved trichord
+pair {0,d,2d}/{0,d,3d}, d = N/5, with **no collision of cardinality ≥ 4
+anywhere**; the **multiset deck is complete on every modulus tested**. Both
+stress tests passed: 5² | N (Z25) creates no secondary family, and Z30
+(5 | N with rich subgroup structure) produces exactly the predicted d = 6
+pair and nothing else.
 
 Exhaustive over all 2^N subsets per modulus; classes via full dihedral-orbit
 canonicalization; decks compared as frozensets. (Session scratchpad:
@@ -124,9 +128,11 @@ canonicalization; decks compared as frozensets. (Session scratchpad:
    explained exactly: three cards give too few cross-constraints to recover
    multiplicities.
 2. ~~Z25 stress test~~ **DONE**: fails only via {0,5,10}/{0,5,15} (the d=5
-   family); no new families under 5² | N. Next stress: Z30 (both 5|N and a
-   6-smooth modulus; memory-bound, needs a bitset/streaming canonicalizer)
-   and a multiset-deck completeness proof.
+   family); no new families under 5² | N. ~~Z30~~ **DONE** (C sweep, 2^30):
+   exactly the predicted {0,6,12}/{0,6,18} and nothing else. Beyond Z30 a
+   streaming/bracelet-enumeration canonicalizer is needed (canon array
+   exceeds RAM). Remaining computational target: none urgent — the pattern
+   is stable across 25 moduli; the effort now belongs to the proofs.
 3. ~~Whether the *multiset* deck is complete~~ **RESOLVED (this session)**:
    the deck *with multiplicities* reconstructs on every modulus tested,
    including the failing ones (exhaustive: Z10, Z15, Z20, plus Z12, Z16 —
