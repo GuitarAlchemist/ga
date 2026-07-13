@@ -118,3 +118,47 @@ feasibility; further rounds add laws, not information. Next per plan: ga#519
 product evaluator + tribunal novelty judgment (SOL-R2-4, Claude R5, and the
 combined Z-window 4–8 are the priority candidates; SOL-R2-3/5 to be deflated
 as literature-known).
+
+---
+
+# Tribunal input (2026-07-13) — literature check + Zn extension
+
+## Novelty verdicts (Sol literature pass, citations spot-checked for authenticity)
+
+| Law | Verdict | Anchor |
+|---|---|---|
+| **SOL-R2-4 deletion-deck reconstruction** | **adjacent — exact theorem not found → serious original candidate** (conf. 0.84) | Lewin EMB/COV inclusion functions (JMT 21/2 1977; PNM 18 1979-80) keep multiplicities; Harary set-reconstruction (1964) is unweighted simple graphs — neither yields this theorem |
+| Z-window 4–8 | adjacent — immediate consequence of published census (Straus 1991; Jedrzejewski & Johnson arXiv:1304.6608) | no standalone "Z-window theorem" phrase located |
+| 20 self-complementary = non-Z | **known** (Forte 1985 + Straus 1991, direct corollary) | deflated |
+| Periodic ICV bounds | **known** — Buchler's saturation formula is practically identical (diss. 1997 ch.2; PNM 38/2 2000, 55-58) | deflated |
+| ic_d=n−1 ⟹ chain (d∈{1,5}) | **known** — special case of Buchler's maximizer characterization | deflated |
+
+Citation authenticity: all major anchors verified real (Lewin, Straus, Forte,
+Buchler, Harary, Jedrzejewski/Johnson). Two flags: "McKay up to 13 vertices"
+(11 is the well-established bound — re-verify) and Joksimović arXiv:2605.22948
+(2026 preprint, unverifiable from this session).
+
+## Zn extension of the reconstruction law (new, this session)
+
+Exhaustive sweep of the deletion-deck reconstruction over Z6..Z16
+(`zn_reconstruction.py`, canonical Tn/TnI orbits per modulus):
+
+- **HOLDS**: Z6, Z7, Z8, Z9, Z11, Z12, Z13, Z14, Z16.
+- **FAILS**: **Z10** ({0,2,4} vs {0,2,6}) and **Z15** ({0,3,6} vs {0,3,9}).
+
+The failures are one structural family: in Z(5d), the trichords {0,d,2d} and
+{0,d,3d} share a deletion deck (invert({0,3d}) = {0,2d} mod 5d) while being
+Tn/TnI-inequivalent — an analytic counterexample for every modulus divisible
+by 5. **The law therefore fails iff 5|N on the tested range**, making the Z12
+theorem non-vacuous: it sits on the good side of a real obstruction.
+
+## Write-up frame (per the tribunal input)
+
+The defensible contribution: *a set-reconstruction theorem for the family of
+cyclic metric pitch-class graphs under the dihedral action — exhaustively
+verified for Z12 (and all N ≤ 16 with 5∤N), with the mod-5 counterexample
+family delimiting it* — explicitly positioned against Lewin's inclusion
+vectors (which keep multiplicities) and Harary's set-reconstruction
+conjecture (unweighted graphs). Next: structural proof attempt; check the
+McKay bound; optionally sweep Z17–Z20 to confirm the 5|N boundary (Z20
+predicted to fail via d=4).
