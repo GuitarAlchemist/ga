@@ -281,11 +281,17 @@ range.
   conjecture; but neither is proved, and (O1) might fail at some larger N
   while reconstruction still holds (§5's realizability gap) — failure of
   (O1) would weaken the strategy, not refute the conjecture.
-- **(O3)** Whether parity alone suffices at n = 4 (true for all N ≤ 20) —
-  a much smaller, possibly tractable target: the first genuinely open
-  stratum above the proved trichord case.
+- **(O3)** ~~Whether parity alone suffices at n = 4~~ **CLOSED (2026-07-13,
+  same day): Theorem T4 in the main write-up** — parity has a unique
+  admissible solution for every tetrachord support, **all N**, via the exact
+  coincidence classification of tetrachord decks (adjacent coincidences come
+  in pairs; (3,1) impossible; r = 3 forces the necklace (a,b,b,a) whose
+  doubled card has signature size 3 vs size 1 for the singles; r = 2 forces
+  (2,2) with distinct signatures). Note: at n = 4, Kelly parity **is**
+  ICV-integrality (a trichord's deletions are its ICV), so T4 is exactly the
+  n = 4 instance of O1 — the first inductive floor of the program.
 - **(O4)** Whether ICV-integrality alone (without parity) suffices at
-  n ≥ 5.
+  n ≥ 5. (At n = 4 the two systems coincide, so O4 starts at n = 5.)
 - **Closed** (for all N, by proof): the n = 3 stratum — collisions exist
   iff 5 | N, and are exactly {0,d,2d}/{0,d,3d}, d = N/5 (trichord theorem;
   re-derived and re-checked in this pass, including the boundary sub-cases
@@ -302,7 +308,8 @@ range.
 | "Three cards give too few cross-constraints" (heuristic) | **Now a theorem** (L3): both systems are provably vacuous at n = 3 |
 
 The best honest statement of the program's status: *set-deck reconstruction
-for n ≥ 4 is reduced, by a proved theorem, to two independent empirical
+for n ≥ 5 is reduced, by a proved theorem, to two independent empirical
 regularities (O1, O2), each exhaustively verified on a bounded range; the
-only proved general-N statements are the trichord classification (n = 3)
-and the lemmas L0–L6.*
+proved general-N statements are the trichord classification (n = 3), the
+tetrachord multiplicity-recovery theorem T4 (n = 4, closing O3), and the
+lemmas L0–L6.*

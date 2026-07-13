@@ -16,6 +16,7 @@ rewrites). Pure Python 3 stdlib + one C file; no dependencies.
 | `referee_ext.py` | Same bench, list-based canonicalization, 17 ≤ N ≤ 20 | ~2 min |
 | `realizability_n3.py` | Point C closure at n=3: which abstract {(1,2),(2,1)} ambiguities are *doubly realizable*, 6 ≤ N ≤ 20 | ~2 min |
 | `point_d_lemma.py` | Point D: repeated-card lemma sub-case verification (symmetry / impossible / exchange), exhaustive 6 ≤ N ≤ 14 with assertions | ~1 min |
+| `o3_tetrachord_proof_check.py` | Theorem T4 (O3): every clause of the tetrachord coincidence classification + parity uniqueness asserted over **all** C(N,4) subsets, 4 ≤ N ≤ 30 | ~1 min |
 | `referee_6_16.txt`, `referee_17_20.txt` | Captured outputs of the two bench runs | — |
 
 Every script asserts internally (Kelly parity of the true multiplicity vector,
