@@ -19,8 +19,12 @@ gh secret set GEMINI_API_KEY --repo GuitarAlchemist/ga
 
 The `gemini_dispatch` triage job fails with *"Please set an Auth method …
 GEMINI_API_KEY"* (verified in the failed run logs); every
-`ready-for-agent`+`jules` issue reports "unable to process" until the secret
-exists. One command re-opens the whole delegation lane.
+`ready-for-agent`+`jules` issue then shows a noisy github-actions[bot] "unable
+to process" comment until the secret exists. **This does not block Jules** —
+`jules-auto-delegate.yml` dispatches Jules via `PAT_TOKEN` independently of
+Gemini. Setting `GEMINI_API_KEY` only **silences the triage noise**; it does
+*not* "re-open" the delegation lane (Jules is never gated on it). See
+`docs/solutions/tooling/2026-07-04-jules-unable-to-process-is-gemini-triage-not-the-router.md`.
 
 ## 2. 🤝 Commit the local-only MCP sources — kills the desktop SPOF
 

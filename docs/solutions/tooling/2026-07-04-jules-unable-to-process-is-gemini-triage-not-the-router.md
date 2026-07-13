@@ -2,6 +2,7 @@
 title: "Jules \"unable to process\" is the gemini-dispatch triage failing, NOT the jules-auto-delegate router"
 date: 2026-07-04
 problem_type: "tooling"
+module: "afk-delegation"
 component: ".github/workflows/gemini-dispatch.yml + .github/workflows/jules-auto-delegate.yml"
 symptoms:
   - "A `ready-for-agent`+`jules` issue shows three comments: github-actions[bot] \"working on it\" → google-labs-jules[bot] \"Jules is on it [task URL]\" → github-actions[bot] \"I'm sorry, I was unable to process your request\" ~20s later"
