@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "db604f55487ec705ef441ae58a9be63b1e462a71",
-    "generatedAt": "2026-07-04T06:06:04.916929+00:00",
+    "commitSha": "629ab1e8b14ee6e3e6834277a49dd8e10bff5754",
+    "generatedAt": "2026-07-12T07:58:06.635540+00:00",
     "repoCount": 5,
-    "totalPRs": 20
+    "totalPRs": 10
   },
   "repos": [
     {
@@ -113,8 +113,21 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 5,
+          "author": "spareilleux",
+          "createdAt": "2026-07-07T04:16:05Z",
+          "failingChecks": 0,
+          "headRef": "claude/jarvis-track-scoping-9431c6",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 522,
+          "title": "docs: session planning + compounding-KB Slice 1 plan + Giskard/cloud/discovery captures + G2 pr-grade field",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/522"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -128,46 +141,10 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 1,
       "prs": [
         {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T02:18:20Z",
-          "failingChecks": 0,
-          "headRef": "duckdb-ix-schema-sketch-18412470984244780338",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 224,
-          "title": "Draft DuckDB schema sketch for IX corpus and episode analytics",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/224"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T02:14:20Z",
-          "failingChecks": 0,
-          "headRef": "feat/tot-data-model-15428277632970752551",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 223,
-          "title": "Define minimal Tree-of-Thought data model and fixtures",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/223"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:59:14Z",
-          "failingChecks": 0,
-          "headRef": "docs/tars-v1-inventory-12889369188447182114",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 222,
-          "title": "Create IX-focused TARS V1 exploration inventory",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/222"
-        },
-        {
-          "ageDays": 45,
+          "ageDays": 53,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -192,127 +169,31 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 10,
+      "prCount": 2,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 4,
           "author": "spareilleux",
-          "createdAt": "2026-07-03T02:08:25Z",
+          "createdAt": "2026-07-07T10:38:39Z",
           "failingChecks": 1,
-          "headRef": "design-semantic-to-contract-pipeline-428956318066558801",
+          "headRef": "refactor/promotion-store-gate-13352222723704742074",
           "isDraft": true,
           "mergeable": "MERGEABLE",
-          "number": 196,
-          "title": "Design semantic-to-contract pipeline for issues, closures, and metascripts",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/196"
+          "number": 200,
+          "title": "Refactor promotion store and gate to eliminate global state",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/200"
         },
         {
-          "ageDays": 1,
+          "ageDays": 5,
           "author": "spareilleux",
-          "createdAt": "2026-07-03T01:59:51Z",
+          "createdAt": "2026-07-07T04:14:45Z",
           "failingChecks": 1,
-          "headRef": "inventory-markdown-debt-15251084778233510419",
-          "isDraft": true,
+          "headRef": "claude/jarvis-track-scoping-9431c6",
+          "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 195,
-          "title": "Inventory and classify Markdown documentation debt",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/195"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:59:47Z",
-          "failingChecks": 1,
-          "headRef": "seed-v1-to-v2-decision-matrix-8283050413666611890",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 194,
-          "title": "Seed V1-to-V2 decision matrix from V1 Insights",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/194"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:58:55Z",
-          "failingChecks": 1,
-          "headRef": "jules/triage-methodology-guard-reasoning-9518732280789103402",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 193,
-          "title": "Interpret Methodology Guard findings without becoming policy authority",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/193"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:58:32Z",
-          "failingChecks": 1,
-          "headRef": "docs-legacy-v1-inventory-14062590202114850358",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 192,
-          "title": "Create TARS V1 Corpus Inventory Documentation",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/192"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:58:07Z",
-          "failingChecks": 1,
-          "headRef": "docs/v1-memory-duckdb-boundary-note-5168030614073081375",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 191,
-          "title": "Draft V1 memory VectorStore and DuckDB boundary note",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/191"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-03T01:57:36Z",
-          "failingChecks": 1,
-          "headRef": "research/beyond-llm-architectures-9637269230075211959",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 190,
-          "title": "Track AI architectures beyond LLMs for harness relevance",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/190"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T04:49:20Z",
-          "failingChecks": 1,
-          "headRef": "refactor/llm-prompt-module-2964725408912808828",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 187,
-          "title": "Deepen LLM call seam: a Prompt module (builder + executor)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/187"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T04:45:25Z",
-          "failingChecks": 1,
-          "headRef": "close-pattern-selector-seam-10759519578910092631",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 186,
-          "title": "Close the pattern-selector seam: RecordOutcome on IPatternSelector",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/186"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T04:42:19Z",
-          "failingChecks": 1,
-          "headRef": "port-ix-registry-pattern-7896678019787150836",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 185,
-          "title": "Port ix capability registry pattern to F#",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/185"
+          "number": 199,
+          "title": "refactor(evolution): IPromotionStore + single-verdict PromotionGate (#42) + governance bump",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/199"
         }
       ]
     },
@@ -333,7 +214,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
@@ -345,7 +226,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 1,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
@@ -357,7 +238,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 1,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
@@ -369,10 +250,10 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 2,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -381,7 +262,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 2,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -393,7 +274,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 2,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,

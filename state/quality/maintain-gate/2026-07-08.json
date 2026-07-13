@@ -1,7 +1,7 @@
 {
   "schema_version": "maintain-verdict-snapshot.v0.1",
   "domain": "maintain-gate",
-  "emitted_at": "2026-07-12T09:39:10.168060578+00:00",
+  "emitted_at": "2026-07-08T09:57:35.069062933+00:00",
   "metric_name": "maintain_yield_delta",
   "metric_value": 0.0,
   "oracle_status": "warn",

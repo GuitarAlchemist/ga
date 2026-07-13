@@ -1,0 +1,16 @@
+{
+  "domain": "embeddings",
+  "emitted_at": "2026-07-09T10:30:39.8792278Z",
+  "timestamp": "2026-07-09T10:30:39.8792278Z",
+  "metric_name": "leak_detection_full_classifier_accuracy",
+  "metric_value": 0.8310833333333333,
+  "oracle_status": "ok",
+  "summary": "Real measurement carried forward from 2026-06-25 — deterministic index unchanged (producer can't run on hosted CI).",
+  "degraded": false,
+  "carried_forward": true,
+  "carried_forward_from": "2026-06-25",
+  "last_known_good_pass_pct": 0.8310833333333333,
+  "last_known_good_date": "2026-06-25",
+  "last_known_good_source": "snapshot",
+  "notes": "seed=42 deterministic + static optick.index => this value holds until the next OPTIC-K rebuild. Refresh on rebuild via Scripts/refresh-embeddings-snapshot.ps1 (optic-k-rebuild skill step 1b). Flips amber if no real snapshot within 30 days."
+}
