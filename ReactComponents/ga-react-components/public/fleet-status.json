@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "00d37535df485f164991a9f8fb959a1f2cf657c2",
-    "generatedAt": "2026-07-13T02:30:13.555976+00:00",
+    "commitSha": "143d641b2cc96c49a393f4a84609a09a82de4210",
+    "generatedAt": "2026-07-13T08:46:44.610737+00:00",
     "repoCount": 5,
     "totalPRs": 8
   },
@@ -137,7 +137,7 @@
           "failingChecks": 1,
           "headRef": "feat/optick-sae-phase1-rerun",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 50,
           "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
           "url": "https://github.com/GuitarAlchemist/ix/pull/50"
@@ -165,7 +165,7 @@
           "failingChecks": 1,
           "headRef": "refactor/promotion-store-gate-13352222723704742074",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 200,
           "title": "Refactor promotion store and gate to eliminate global state",
           "url": "https://github.com/GuitarAlchemist/tars/pull/200"
@@ -213,7 +213,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
@@ -225,7 +225,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 1,
@@ -237,7 +237,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -249,7 +249,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
