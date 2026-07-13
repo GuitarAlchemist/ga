@@ -1,8 +1,8 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-12T15:30:12.772352Z",
+  "generated_at": "2026-07-13T04:06:37.034614Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "yellow",
+  "overall": "green",
   "limbs": [
     {
       "id": "lane:jules-router",
@@ -36,8 +36,8 @@
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-05T15:31:50Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28745767904",
+      "last_heartbeat": "2026-07-13T02:29:39Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29219626309",
       "detail": "latest completed run: success"
     },
     {
@@ -45,26 +45,26 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-12T14:35:04Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29196524981",
+      "last_heartbeat": "2026-07-13T01:03:29Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29216604151",
       "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "yellow",
-      "last_heartbeat": "2026-07-05T15:31:50Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/28745767938",
-      "detail": "stale: last run 2026-07-05T15:31:50Z, expected cadence ~1560 min"
+      "status": "green",
+      "last_heartbeat": "2026-07-13T02:29:39Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29219626325",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:fleet-status",
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-12T07:57:36Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29185058135",
+      "last_heartbeat": "2026-07-13T02:29:39Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29219626330",
       "detail": "latest completed run: success"
     },
     {
