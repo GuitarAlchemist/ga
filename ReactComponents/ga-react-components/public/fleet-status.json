@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "143d641b2cc96c49a393f4a84609a09a82de4210",
-    "generatedAt": "2026-07-13T08:46:44.610737+00:00",
+    "commitSha": "4021367eea0b656cd0bab549ed33719a0f843d04",
+    "generatedAt": "2026-07-14T07:46:12.643792+00:00",
     "repoCount": 5,
-    "totalPRs": 8
+    "totalPRs": 9
   },
   "repos": [
     {
@@ -131,7 +131,7 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 54,
+          "ageDays": 55,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -156,10 +156,22 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 1,
+      "prCount": 2,
       "prs": [
         {
-          "ageDays": 5,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-13T09:37:53Z",
+          "failingChecks": 0,
+          "headRef": "chore/update-demerzel-e8e229d-29239815910",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 201,
+          "title": "chore: update Demerzel submodule (16 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/201"
+        },
+        {
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-07T10:38:39Z",
           "failingChecks": 1,
@@ -189,73 +201,73 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
           "headRef": "aiw-prompt-harness-engineering-13346103974311787099",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 648,
           "title": "[AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agents",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
           "headRef": "jules/aiw-multi-provider-orchestration-15872019196044205492",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 647,
           "title": "docs: design AIW-v0.1 multi-provider orchestration",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
           "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 646,
           "title": "Enrich AIW doctrine with broader expert practices",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 1,
           "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 645,
           "title": "Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
           "headRef": "jules-migrate-qa-tribunal-emit-6028966670826188021",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 644,
           "title": "Migrate qa_tribunal_emit onto demerzel_kit",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
           "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 643,
           "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
