@@ -177,6 +177,33 @@ set-deck reconstruction for all tetrachords on that range **with the
 multiplicity-recovery half now unconditional for all N** — the first genuinely
 inductive floor of the program above the proved trichord case.
 
+### Second, independent proof (GPT-5.6 Sol, 2026-07-15; adversarially reviewed)
+
+Sol produced an independent Kelly-parity-only proof of the realizable form of
+T4 (support ⟹ multiplicities; abstract system uniqueness not claimed).
+Adversarial review: [2026-07-15-sol-o3-proof-adversarial-review.md](2026-07-15-sol-o3-proof-adversarial-review.md)
+— all clauses SOUND after a one-sentence repair (the Kelly section must invoke
+deck invariance explicitly to convert per-card deletion counts into class
+coefficients a_{C,R}). **Decision: both proofs are retained.** Shared
+coincidence skeleton (his Lemmes 2–4 ≈ T4.1–T4.3, with two cleaner passages:
+multiset *cancellation* instead of element matching, and "any 3 of 4 cyclic
+positions contain an adjacent pair"), but a genuinely different r = 3
+endgame worth recording:
+
+> In the (a, b, b, a) configuration, the two single cards satisfy the **exact
+> signature identity** p(V) = p(W) = e_{λ(2a)}, because 2a + 2b = N makes
+> λ(2a) = λ(2b). The two singles are therefore parity-indistinguishable *from
+> each other*, yet the Kelly test still pins the doubled card: with
+> p(U) = e_{N/2} + e_a + e_b (three distinct coordinates, since a ≠ b and
+> a, b < N/2), the vector (2,1,1) on U gives p(V) + p(W) = 0 while both
+> alternatives give p(U) + e_{λ(2a)} ≠ 0.
+
+This is sharper than T4's signature-size argument (|sig| = 3 vs 1) and is the
+minimal-hypothesis variant: it uses only L0 + L1, no ICV identity, and
+suffices for Theorem R at n = 4. Machine cross-check of every clause of both
+proofs over all 4-part necklaces, 4 ≤ N ≤ 40:
+`code/2026-07-13-deletion-deck/sol_o3_review_check.py`.
+
 ## Verification status
 
 | N | set-deck | multiset-deck |
