@@ -68,3 +68,10 @@ L0–L6 and Theorem R untouched — no demonstrable error found in either.
 §2 should add: "for each x ∈ S, #{y ∈ S∖{x} : SC((S∖{x})∖{y}) = R} =
 a_{SC(S∖{x}),R} by Lemme 1 applied to the card S∖{x}; summing over x and
 grouping by card class gives Σᵢ mᵢ a_{Cᵢ,R}." Nothing else.
+
+**Repair status: APPLIED (2026-07-15, confirmed by Sol).** §2 now makes the
+real-deletion → class-coefficient step explicit before the multiplicity
+grouping. The proof is final; no remaining reservations. O3 is closed by two
+independent, fully reviewed proofs. Sol's next assignment: O2a (multiset deck
+⟹ (P, F) at n = 4), which with L7 + O3 would close tetrachord set-deck
+reconstruction entirely.
