@@ -320,6 +320,10 @@ of a card is the fused one is not marked.
   the route: the coarse L6 invariant (P, F) is provably insufficient for
   n ≥ 6, sufficient-if-extractable at n = 4 (Lemma L7); the tetrachord
   instance is isolated as **(O2a)**: deck → (P, F) extraction at n = 4.
+  **(O2a) CLOSED (2026-07-15): Sol's extraction + ordering proof, reviewed
+  and accepted** ([review](2026-07-15-sol-o2a-proof-adversarial-review.md))
+  — with O3 this closes tetrachord set-deck reconstruction entirely; O2
+  remains open only for n ≥ 5.
 - **(O3)** ~~Whether parity alone suffices at n = 4~~ **CLOSED (2026-07-13,
   same day): Theorem T4 in the main write-up** — parity has a unique
   admissible solution for every tetrachord support, **all N**, via the exact
