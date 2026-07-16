@@ -463,7 +463,7 @@ La recherche deletion-deck (sortie du duel discovery-engine, désormais gelée :
 - **Property-tests invariants** (quasi gratuits) : Σ ICV(S∖x) = (n−2)·ICV(S) et parité de Kelly comme oracles dans les suites de tests Harmony/ML existantes.
 - **Deck-similarity pour OPTIC-K** : proximité « à une carte partagée près » comme voisinage orthogonal au cosinus d'embedding, à côté du chemin ICV (`IcvNeighborsSkill`).
 
-**Tracer bullet** : `DeletionDeckAnalyzer` + table Z12 + un skill chatbot + les 2 property-tests — vertical, chaque couche touchée. À lancer via `/feature` quand son tour vient dans la queue.
+**Tracer bullet** : `DeletionDeckAnalyzer` + table Z12 + un skill chatbot + les 2 property-tests — vertical, chaque couche touchée. **Issues créées 2026-07-16** : [#531](https://github.com/GuitarAlchemist/ga/issues/531) (analyzer + property-tests, `ready-for-agent`), [#532](https://github.com/GuitarAlchemist/ga/issues/532) (skill chatbot, dépend de #531), [#533](https://github.com/GuitarAlchemist/ga/issues/533) (spike deck-similarity OPTIC-K, `ready-for-human`).
 
 ---
 
