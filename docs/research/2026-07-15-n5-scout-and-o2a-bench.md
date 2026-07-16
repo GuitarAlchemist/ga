@@ -57,14 +57,14 @@ Findings (all empirical on the range):
    suffices at n = 5; together they did on every class tested.
 3. **Multiplicity profiles observed: only 1⁵, 2+1+1+1, 2+2+1, and 5.**
    Never 4+1, never 3+2, never 3+1+1.
-   - **C5.1 (conjecture):** at n = 5, three equal cards force five equal
-     cards (the T4.3 phenomenon persists).
+   - **C5.1 — PROVED same day** (three equal cards force five): see
+     [2026-07-15-pentachord-coincidence-lemmas.md](2026-07-15-pentachord-coincidence-lemmas.md).
    - Profile 5 occurs exactly at 5 | N via the regular necklace
-     (d,d,d,d,d).
-   - Profile 2+1+1+1 occurs only at 3 | N on this range (counts 1, 1, 2,
-     2, 3, 3 at N = 9, 12, 15, 18, 21, 24) — unexplained; worth a
-     structural look. **C5.2 (conjecture):** 2+1+1+1 at n = 5 requires
-     3 | N.
+     (d,d,d,d,d) — proved as part of C5.1.
+   - **C5.2 — PROVED same day**, sharpened to a full classification:
+     2+1+1+1 ⟺ necklace (a,b,a,b,a+b), a ≠ b, N = 3(a+b), with count
+     ⌊(N/3 − 1)/2⌋ — explaining the observed 1, 1, 2, 2, 3, 3 at
+     N = 9 … 24.
 4. Adjacent (|i−j| = 1) and distance-2 card coincidences occur in roughly
    equal numbers; both types are realized — the n = 4 luxury that adjacent
    coincidences pair up (T4.1) does **not** visibly survive as-is.
