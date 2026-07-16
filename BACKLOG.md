@@ -454,6 +454,19 @@ Question opérateur : « créer notre propre engine mathématique pour faire de 
 
 ---
 
+## Deletion-deck → produit (capturé 2026-07-16, issu de la campagne de recherche 2026-07-12→16)
+
+La recherche deletion-deck (sortie du duel discovery-engine, désormais gelée : [docs/research/2026-07-16-deletion-deck-closing-synthesis.md](docs/research/2026-07-16-deletion-deck-closing-synthesis.md)) a produit un théorème directement exploitable : **tout set class de Z12 de cardinalité ≥ 3 est déterminé par le simple *ensemble* de ses classes de délétion à une note** (5∤12 ⟹ zéro collision ; prouvé n=3,4 pour tout N, exhaustif toutes cardinalités ≤ Z30). Quatre pistes produit, du plus proche au plus spéculatif :
+
+- **`DeletionDeckAnalyzer` (couche 3, `GA.Business.Core` Analysis/Harmony)** — deck d'un set class + lookup inversé (table précalculée sur les 224 classes Z12) : graphe de navigation « drop-a-note » entre classes, recherche inversée (« quels tétracordes se simplifient en ces trichordes ? »), empreinte canonique par deck.
+- **Skill chatbot « deck »** (hybride catalogue/calcul) : « que devient cet accord si je lâche une note ? », « d'où peut venir ce trichorde ? » — avec l'anomalie mod-5 pour les univers microtonaux (10/15/20/25/30-EDO : exactement une paire ambiguë, forme {0,d,2d}/{0,d,3d}).
+- **Property-tests invariants** (quasi gratuits) : Σ ICV(S∖x) = (n−2)·ICV(S) et parité de Kelly comme oracles dans les suites de tests Harmony/ML existantes.
+- **Deck-similarity pour OPTIC-K** : proximité « à une carte partagée près » comme voisinage orthogonal au cosinus d'embedding, à côté du chemin ICV (`IcvNeighborsSkill`).
+
+**Tracer bullet** : `DeletionDeckAnalyzer` + table Z12 + un skill chatbot + les 2 property-tests — vertical, chaque couche touchée. À lancer via `/feature` quand son tour vient dans la queue.
+
+---
+
 ## Compounding KB — retrieval + anti-rot (capturé 2026-07-05 → **plan** : [docs/plans/2026-07-05-arch-compounding-kb-retrieval-curation.md](docs/plans/2026-07-05-arch-compounding-kb-retrieval-curation.md))
 
 Question opérateur (leçon Karpathy « LLM Wiki / compounding knowledge base ») : *« comment implémenter au mieux ? »*. **Recadrage honnête après deux passes de recherche bornées (sources atteignables uniquement)** : l'écosystème *est déjà* un compounding KB (`/learnings` → `docs/solutions/`, `/digest`, plans, `ix-streeling` → `catalog.jsonl`, agent `learnings-researcher`). Le vrai manque n'est pas de le construire mais de (a) faire en sorte que l'agent *trouve* ce qui y est avant de re-résoudre, et (b) l'empêcher de rancir. **Fait de taille : 36 entrées dans `docs/solutions/` aujourd'hui — bien sous le seuil ~500 où la recherche vectorielle/hybride devient rentable.** Donc pas de base vectorielle maintenant (ce serait du future-proofing) ; le besoin proche est câblage + anti-rot.

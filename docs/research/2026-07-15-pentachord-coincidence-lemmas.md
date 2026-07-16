@@ -130,13 +130,52 @@ Both theorems, plus the count formula and P1, machine-verified for
 — both are now theorems, and the scout's "2+1+1+1 only at 3 | N" and
 "profile 5 only at 5 | N" observations are explained exactly).
 
-## What remains for multiplicity recovery at n = 5 (O1-n=5)
+## Theorem T-N5 (profile classification — added 2026-07-16)
 
-The only nontrivial profile left is **2+2+1** (two coincident pairs). By
-the results above its possible shapes are constrained: each pair is
-adjacent-type (bringing its twisted partner) or distance-2-type. The next
-step is the T4.4-style classification of 2+2+1 necklace families, then the
-per-family uniqueness of the parity + ICV system (the scout already shows
-uniqueness empirically for 7 ≤ N ≤ 24, with the two systems genuinely
-complementary: ICV alone fails on the d·(1,1,2,4,2) family, parity alone
-on scattered 2+2+1 classes).
+At n = 5 the support size r = |D(S)| takes only the values {1, 3, 4, 5}
+(**r = 2 is impossible**), and **r determines the multiplicity profile**,
+with exact necklace families:
+
+| r | profile | necklace (up to dihedral) |
+|---|---|---|
+| 5 | 1+1+1+1+1 | generic |
+| 4 | 2+1+1+1 | (a, b, a, b, a+b), a ≠ b — so N = 3(a+b) |
+| 3 | 2+2+1 | (a, b, a, c, c), (a, b, c) not all equal |
+| 2 | — | impossible |
+| 1 | 5 | (d, d, d, d, d) — so N = 5d |
+
+*Proof.* By C5.1 no profile has a part 3 or 4 except the full 5, so the
+possible profiles are exactly 1⁵ (r = 5), 2+1+1+1 (r = 4), 2+2+1 (r = 3)
+and 5 (r = 1); r = 2 would require profile 4+1 or 3+2, both impossible.
+The r = 4 family is Theorem C5.2; the r = 1 family is part of C5.1. It
+remains to classify r = 3, i.e. two disjoint coincident pairs.
+
+*Case A — some pair is adjacent.* By L5.A the necklace is (a, b, a, c, c)
+(rotate so the pair is (Δ₁, Δ₂)); P1 supplies the second pair (Δ₃, Δ₅);
+the fifth card Δ₄ is single unless a further coincidence occurs, and every
+remaining coincidence condition on (a, b, a, c, c) — the three other
+adjacent conditions and the five distance-2 conditions in both branches —
+forces either a = b = c (regular, profile 5) or a zero gap (checked one by
+one; e.g. Δ₂ = Δ₄ branch 2 needs g₁ = g₂ + g₃, i.e. a = b + a, so b = 0).
+
+*Case B — no pair is adjacent.* A branch-1 distance-2 pair at position i
+has conditions gᵢ = gᵢ₊₃ ∧ gᵢ₊₁ = gᵢ₊₂, which are **exactly** L5.A's
+conditions at position i+3 — it forces the adjacent pair
+Δᵢ₊₃ = Δᵢ₊₄, contradicting Case B. So every pair is branch-2; but a
+branch-2 pair forces the necklace (a, b, a, b, a+b), which by C5.2 has
+exactly **one** coincident pair — profile 2+1+1+1, not 2+2+1.
+Contradiction; Case B is empty.
+
+Conversely (a, b, a, c, c), not all equal, has exactly the two pairs
+(Δ₁, Δ₂) and (Δ₃, Δ₅) by L5.A + P1 and the exclusion list above. ∎
+
+Machine verification of all biconditionals: 7 ≤ N ≤ 40
+(`n5_profile_theorem_check.py`).
+
+**Consequence for O1-n=5.** The set-deck determines the multiplicity
+*profile* outright (it is a function of the support size alone). What
+remains of multiplicity recovery at n = 5 is only the *assignment*
+question — which support member carries multiplicity 2 when r ∈ {3, 4} —
+empirically pinned by parity + ICV on every class, 7 ≤ N ≤ 24 (scout), and
+in principle recoverable instead by direct inversion of the classified
+families; left open as a precisely-bounded gap.
