@@ -1,16 +1,16 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-16T06:38:19.874134Z",
+  "generated_at": "2026-07-16T23:15:26.230767Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "yellow",
+  "overall": "red",
   "limbs": [
     {
       "id": "lane:jules-router",
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-16T03:09:49Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29468315840",
+      "last_heartbeat": "2026-07-16T08:54:54Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29485184150",
       "detail": "latest completed run: skipped"
     },
     {
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-16T04:10:15Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29470704580",
+      "last_heartbeat": "2026-07-16T08:54:54Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29485183906",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-16T06:03:21Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29475585867",
+      "last_heartbeat": "2026-07-16T22:38:30Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29540131833",
       "detail": "latest completed run: success"
     },
     {
@@ -63,49 +63,49 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-15T07:48:53Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29398603425",
+      "last_heartbeat": "2026-07-16T07:53:40Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29481487359",
       "detail": "latest completed run: success"
     },
     {
       "id": "sibling:Demerzel",
       "kind": "sibling-repo",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/Demerzel",
-      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=1, blocked_prs=n/a (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:hari",
       "kind": "sibling-repo",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/hari",
-      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=1, blocked_prs=n/a (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:ix",
       "kind": "sibling-repo",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/ix",
-      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=1, blocked_prs=n/a (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:tars",
       "kind": "sibling-repo",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/tars",
-      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=1, blocked_prs=n/a (as of last ecosystem-health poll)"
     },
     {
       "id": "sensor:algedonic-inbox",
       "kind": "sensor",
-      "status": "green",
-      "last_heartbeat": "2026-06-29T15:29:06Z",
+      "status": "red",
+      "last_heartbeat": "2026-07-16T22:39:02Z",
       "evidence": "state/algedonic/inbox.jsonl",
-      "detail": "last 24h: critical=0 fail=0 warn=0 (warn does not degrade presence)"
+      "detail": "last 24h: critical=1 fail=0 warn=4 (warn does not degrade presence)"
     }
   ]
 }
