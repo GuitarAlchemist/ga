@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "325955a9a1209aebf35689786aa21116b0a7fb54",
-    "generatedAt": "2026-07-16T07:54:17.136108+00:00",
+    "commitSha": "07e34fe796a1493db6f426362b0cdc323cb2f5d1",
+    "generatedAt": "2026-07-17T07:51:22.530881+00:00",
     "repoCount": 5,
-    "totalPRs": 13
+    "totalPRs": 14
   },
   "repos": [
     {
@@ -116,7 +116,7 @@
       "prCount": 1,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-16T03:35:34Z",
           "failingChecks": 1,
@@ -141,10 +141,22 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-17T04:05:37Z",
+          "failingChecks": 0,
+          "headRef": "feat/expose-fractal-takagi-derham-design-4426447255116065950",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 233,
+          "title": "Expose ix-fractal Takagi and de Rham primitives design",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/233"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-16T03:46:12Z",
           "failingChecks": 0,
@@ -156,7 +168,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/232"
         },
         {
-          "ageDays": 57,
+          "ageDays": 58,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -184,10 +196,10 @@
       "prCount": 4,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-16T03:43:40Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "fix-ci-health-false-positive-8069506246488309479",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -196,10 +208,10 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/204"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-16T03:38:12Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "agent/fix-ci-health-build-job",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -208,7 +220,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/203"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-13T09:37:53Z",
           "failingChecks": 1,
@@ -220,7 +232,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/201"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-07-07T10:38:39Z",
           "failingChecks": 1,
@@ -250,7 +262,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
@@ -262,7 +274,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
@@ -274,7 +286,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
         },
         {
-          "ageDays": 14,
+          "ageDays": 15,
           "author": "spareilleux",
           "createdAt": "2026-07-02T06:24:26Z",
           "failingChecks": 0,
@@ -286,7 +298,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
         },
         {
-          "ageDays": 14,
+          "ageDays": 15,
           "author": "spareilleux",
           "createdAt": "2026-07-02T05:27:27Z",
           "failingChecks": 1,
@@ -298,7 +310,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
         },
         {
-          "ageDays": 14,
+          "ageDays": 15,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:49:34Z",
           "failingChecks": 1,
@@ -310,7 +322,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
         },
         {
-          "ageDays": 14,
+          "ageDays": 15,
           "author": "spareilleux",
           "createdAt": "2026-07-02T04:14:29Z",
           "failingChecks": 1,
