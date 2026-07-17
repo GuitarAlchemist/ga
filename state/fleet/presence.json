@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-17T00:56:59.736104Z",
+  "generated_at": "2026-07-17T04:31:26.999987Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-16T23:36:12Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29542546199",
+      "last_heartbeat": "2026-07-17T04:22:24Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29554689636",
       "detail": "latest completed run: success"
     },
     {
@@ -70,34 +70,34 @@
     {
       "id": "sibling:Demerzel",
       "kind": "sibling-repo",
-      "status": "red",
+      "status": "green",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/Demerzel",
-      "detail": "consecutive_failures=2, blocked_prs=n/a (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:hari",
       "kind": "sibling-repo",
-      "status": "red",
+      "status": "green",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/hari",
-      "detail": "consecutive_failures=2, blocked_prs=n/a (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:ix",
       "kind": "sibling-repo",
-      "status": "red",
+      "status": "green",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/ix",
-      "detail": "consecutive_failures=2, blocked_prs=n/a (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
     },
     {
       "id": "sibling:tars",
       "kind": "sibling-repo",
-      "status": "red",
+      "status": "green",
       "last_heartbeat": null,
       "evidence": "https://github.com/GuitarAlchemist/tars",
-      "detail": "consecutive_failures=2, blocked_prs=n/a (as of last ecosystem-health poll)"
+      "detail": "consecutive_failures=0, blocked_prs=0 (as of last ecosystem-health poll)"
     },
     {
       "id": "sensor:algedonic-inbox",
