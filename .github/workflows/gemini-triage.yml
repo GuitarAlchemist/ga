@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 7
     outputs:
       available_labels: '${{ steps.get_labels.outputs.available_labels }}'
-      selected_labels: '${{ env.SELECTED_LABELS }}'
+      selected_labels: '${{ steps.capture_labels.outputs.selected_labels }}'
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -57,6 +57,7 @@ jobs:
           ${{ steps.get_labels.outputs.available_labels != '' }}
         uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
         env:
+          GEMINI_CLI_TRUST_WORKSPACE: 'true'
           GITHUB_TOKEN: '' # Do NOT pass any auth tokens here since this runs on untrusted inputs
           ISSUE_TITLE: '${{ github.event.issue.title }}'
           ISSUE_BODY: '${{ github.event.issue.body }}'
@@ -120,7 +121,7 @@ jobs:
 
             **Output File Path**:
             ```
-            ${{ env.GITHUB_ENV }}
+            $GITHUB_ENV
             ```
 
             ## Steps
@@ -134,14 +135,20 @@ jobs:
             4. Use the "echo" shell command to append the CSV labels to the output file path provided above:
 
                 ```
-                echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "[filepath_for_env]"
+                echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "$GITHUB_ENV"
                 ```
 
                 for example:
 
                 ```
-                echo "SELECTED_LABELS=bug,enhancement" >> "/tmp/runner/env"
+                echo "SELECTED_LABELS=bug,enhancement" >> "$GITHUB_ENV"
                 ```
+
+      - name: 'Capture selected labels'
+        id: 'capture_labels'
+        if: always()
+        run: |-
+          echo "selected_labels=${SELECTED_LABELS:-}" >> "$GITHUB_OUTPUT"
 
   label:
     runs-on: 'ubuntu-latest'
