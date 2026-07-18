@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "6d1bdad9ea2a3a832ced347577ffbf20534a013b",
-    "generatedAt": "2026-07-18T07:26:16.626622+00:00",
+    "commitSha": "d7e44d8afe00aebe62905953482463a715537a3c",
+    "generatedAt": "2026-07-18T18:14:36.046952+00:00",
     "repoCount": 5,
-    "totalPRs": 14
+    "totalPRs": 13
   },
   "repos": [
     {
@@ -113,21 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 1,
-      "prs": [
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-16T03:35:34Z",
-          "failingChecks": 1,
-          "headRef": "agent/fix-gemini-triage-github-env",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 534,
-          "title": "fix: make Gemini triage export selected labels reliably",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/534"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -168,7 +155,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/232"
         },
         {
-          "ageDays": 59,
+          "ageDays": 60,
           "author": "spareilleux",
           "createdAt": "2026-05-19T09:18:15Z",
           "failingChecks": 1,
@@ -220,7 +207,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/203"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-13T09:37:53Z",
           "failingChecks": 1,
@@ -232,7 +219,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/201"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-07T10:38:39Z",
           "failingChecks": 1,
@@ -262,7 +249,7 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:39:22Z",
           "failingChecks": 3,
@@ -274,7 +261,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-07-02T12:12:35Z",
           "failingChecks": 0,
