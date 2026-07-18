@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "domain": "readme-drift",
+  "snapshot_date": "2026-07-13",
+  "snapshot_at": "2026-07-13T11:09:36.8820000Z",
+  "thresholds_days": {
+    "borderline": 14,
+    "stale": 30,
+    "very_stale": 60
+  },
+  "repos": [
+    {
+      "repo": "ga",
+      "status": "stale",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-07-13",
+      "drift_days": 58
+    },
+    {
+      "repo": "ix",
+      "status": "borderline",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-06-21",
+      "head_date": "2026-07-12",
+      "drift_days": 21
+    },
+    {
+      "repo": "Demerzel",
+      "status": "ok",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-07-01",
+      "head_date": "2026-07-10",
+      "drift_days": 9
+    },
+    {
+      "repo": "tars",
+      "status": "ok",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-07-01",
+      "head_date": "2026-07-12",
+      "drift_days": 11
+    },
+    {
+      "repo": "guitaralchemist.github.io",
+      "status": "ok",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-05-16",
+      "drift_days": 0
+    },
+    {
+      "repo": "agent-blackbox",
+      "status": "stale",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-07-02",
+      "drift_days": 46
+    },
+    {
+      "repo": "demerzel-bot",
+      "status": "very-stale",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-06-20",
+      "drift_days": 76
+    },
+    {
+      "repo": "ga-godot",
+      "status": "very-stale",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-06-20",
+      "drift_days": 76
+    },
+    {
+      "repo": "hari",
+      "status": "very-stale",
+      "readme_mtime": "2026-07-13",
+      "readme_touch": "2026-05-01",
+      "head_date": "2026-07-07",
+      "drift_days": 67
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "ok": 3,
+    "borderline": 1,
+    "stale": 2,
+    "very_stale": 3,
+    "absent": 0
+  },
+  "emitted_at": "2026-07-13T11:09:36.8820000Z",
+  "metric_name": "readme_freshness_ratio",
+  "metric_value": 0.3333,
+  "oracle_status": "error",
+  "problems": [
+    {
+      "path": "ga",
+      "status": "stale"
+    },
+    {
+      "path": "ix",
+      "status": "borderline"
+    },
+    {
+      "path": "agent-blackbox",
+      "status": "stale"
+    },
+    {
+      "path": "demerzel-bot",
+      "status": "very-stale"
+    },
+    {
+      "path": "ga-godot",
+      "status": "very-stale"
+    },
+    {
+      "path": "hari",
+      "status": "very-stale"
+    }
+  ]
+}
