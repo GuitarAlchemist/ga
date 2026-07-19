@@ -293,7 +293,13 @@ public static class CanonicalChordRecognizer
     /// </summary>
     private static CanonicalChordResult FallbackFromForte(PitchClassSet pcSet)
     {
-        var forte = ProgrammaticForteCatalog.GetForteNumber(pcSet);
+        // Human-facing label: use Allen Forte's canonical 1973 numbering
+        // (CanonicalForteCatalog), NOT the internal Rahn-ordered
+        // ProgrammaticForteCatalog. The two disagree for some set classes — e.g.
+        // {0,1,6,7} is canonical Forte 4-9 but Rahn 4-21 — and this string is read
+        // by users, so it must match the standard catalog. It also preserves the
+        // Z marker (e.g. "4-Z15"), which the Rahn catalog does not model. See #544.
+        var hasForte = CanonicalForteCatalog.TryGetForteLabel(pcSet, out var canonicalLabel);
         var cardinality = pcSet.Count;
         var cardinalityName = cardinality switch
         {
@@ -310,7 +316,7 @@ public static class CanonicalChordRecognizer
             _ => $"{cardinality}-note set",
         };
 
-        var forteLabel = forte.HasValue ? $"Forte {forte}" : "set";
+        var forteLabel = hasForte ? $"Forte {canonicalLabel}" : "set";
         return new CanonicalChordResult(
             CanonicalName: $"{forteLabel} ({cardinalityName})",
             Root: null,
@@ -318,7 +324,7 @@ public static class CanonicalChordRecognizer
             Extension: null,
             Alterations: [],
             SlashSuffix: null,
-            PatternName: forte?.ToString(),
+            PatternName: canonicalLabel,
             MatchDistance: -1,
             IsNaturallyOccurring: false);
     }
