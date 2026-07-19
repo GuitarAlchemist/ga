@@ -1,14 +1,19 @@
 {
   "mcpServers": {
     "ix": {
-      "command": "cargo",
-      "args": ["run", "--release", "-p", "ix-agent"],
+      "command": "C:/Users/spare/source/repos/ix/target/release/ix-mcp.exe",
+      "args": [],
       "cwd": "C:/Users/spare/source/repos/ix"
     },
     "demerzel": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "Apps/demerzel-bridge/DemerzelBridge/DemerzelBridge.csproj", "--no-build"],
+      "args": [
+        "run",
+        "--project",
+        "Apps/demerzel-bridge/DemerzelBridge/DemerzelBridge.csproj",
+        "--no-build"
+      ],
       "env": {
         "DEMERZEL_API_KEY": "${DEMERZEL_API_KEY}",
         "DEMERZEL_URL": "http://localhost:8200"
@@ -17,7 +22,10 @@
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
     },
     "context7": {
       "type": "http",
@@ -25,24 +33,39 @@
     },
     "ga": {
       "command": "dotnet",
-      "args": ["run", "--project", "C:/Users/spare/source/repos/ga/GaMcpServer/GaMcpServer.csproj", "--no-build", "--"]
+      "args": [
+        "run",
+        "--project",
+        "C:/Users/spare/source/repos/ga/GaMcpServer/GaMcpServer.csproj",
+        "--no-build",
+        "--"
+      ]
     },
     "tars": {
       "command": "C:/Users/spare/source/repos/tars/v2/src/Tars.Interface.Cli/bin/Release/net10.0/Tars.Interface.Cli.exe",
-      "args": ["mcp", "server"]
+      "args": [
+        "mcp",
+        "server"
+      ]
     },
     "notebooklm": {
       "command": "npx",
-      "args": ["notebooklm-mcp@latest"]
+      "args": [
+        "notebooklm-mcp@latest"
+      ]
     },
     "sentrux": {
       "command": "C:/Users/spare/bin/sentrux.exe",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     },
     "hari": {
       "command": "C:/Users/spare/source/repos/hari/target/release/hari-mcp.exe",
       "args": [],
-      "env": { "HARI_STATE_DIR": "C:/Users/spare/source/repos/hari/state/harness" }
+      "env": {
+        "HARI_STATE_DIR": "C:/Users/spare/source/repos/hari/state/harness"
+      }
     }
   }
 }
