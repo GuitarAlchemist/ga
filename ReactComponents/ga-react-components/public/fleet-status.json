@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "25ec8ffae9ffacfbc7d9cf67bf8b0b664d4d0f61",
-    "generatedAt": "2026-07-19T21:50:53.732126+00:00",
+    "commitSha": "dce7063683a3a47161394e29be66cc3ab9de23c2",
+    "generatedAt": "2026-07-19T21:55:58.174614+00:00",
     "repoCount": 5,
-    "totalPRs": 5
+    "totalPRs": 4
   },
   "repos": [
     {
@@ -128,21 +128,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 1,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-19T20:46:41Z",
-          "failingChecks": 0,
-          "headRef": "feat/optick-sae-emit-optick-row-id",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 234,
-          "title": "feat(optick-sae): emit optick_row id column in feature_activations.parquet",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/234"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -218,7 +205,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
