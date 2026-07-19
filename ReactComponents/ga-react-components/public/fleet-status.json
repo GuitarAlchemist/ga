@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a1da5efe0dbfce92cff8fc705a43576447e09045",
-    "generatedAt": "2026-07-19T07:57:42.821664+00:00",
+    "commitSha": "25ec8ffae9ffacfbc7d9cf67bf8b0b664d4d0f61",
+    "generatedAt": "2026-07-19T21:50:53.732126+00:00",
     "repoCount": 5,
-    "totalPRs": 1
+    "totalPRs": 5
   },
   "repos": [
     {
@@ -128,8 +128,21 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-19T20:46:41Z",
+          "failingChecks": 0,
+          "headRef": "feat/optick-sae-emit-optick-row-id",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 234,
+          "title": "feat(optick-sae): emit optick_row id column in feature_activations.parquet",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/234"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -160,8 +173,44 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-19T21:13:05Z",
+          "failingChecks": 0,
+          "headRef": "feat/planner-536-collisions",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 763,
+          "title": "feat(planner): file/path collision detector over the execution graph (#536)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/763"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-19T21:05:41Z",
+          "failingChecks": 0,
+          "headRef": "feat/planner-535-critical-path",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 762,
+          "title": "feat(planner): critical-path analysis over the execution graph (#535)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/762"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-19T20:58:53Z",
+          "failingChecks": 0,
+          "headRef": "feat/aiw-471-budget-loop",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 761,
+          "title": "feat(aiw): enforce budget gate in the AFK/AIW episode loop (#471 tracer)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/761"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
