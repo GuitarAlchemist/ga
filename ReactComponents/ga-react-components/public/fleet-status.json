@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "d7e44d8afe00aebe62905953482463a715537a3c",
-    "generatedAt": "2026-07-18T18:14:36.046952+00:00",
+    "commitSha": "a1da5efe0dbfce92cff8fc705a43576447e09045",
+    "generatedAt": "2026-07-19T07:57:42.821664+00:00",
     "repoCount": 5,
-    "totalPRs": 13
+    "totalPRs": 1
   },
   "repos": [
     {
@@ -128,45 +128,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 3,
-      "prs": [
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-17T04:05:37Z",
-          "failingChecks": 0,
-          "headRef": "feat/expose-fractal-takagi-derham-design-4426447255116065950",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 233,
-          "title": "Expose ix-fractal Takagi and de Rham primitives design",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/233"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-16T03:46:12Z",
-          "failingChecks": 0,
-          "headRef": "agent/test-supervised-loop-preflight",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 232,
-          "title": "test: lock supervised-loop preflight verification semantics",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/232"
-        },
-        {
-          "ageDays": 60,
-          "author": "spareilleux",
-          "createdAt": "2026-05-19T09:18:15Z",
-          "failingChecks": 1,
-          "headRef": "feat/optick-sae-phase1-rerun",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 50,
-          "title": "feat(ix-optick-sae): AuxK ghost grads, --supersedes flag, 5k synthetic corpus",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/50"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -180,57 +143,8 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 4,
-      "prs": [
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-16T03:43:40Z",
-          "failingChecks": 2,
-          "headRef": "fix-ci-health-false-positive-8069506246488309479",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 204,
-          "title": "Stop treating cancelled build-selfhosted as a failed required build",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/204"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-16T03:38:12Z",
-          "failingChecks": 2,
-          "headRef": "agent/fix-ci-health-build-job",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 203,
-          "title": "fix: make CI health sweeper inspect the exact build job",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/203"
-        },
-        {
-          "ageDays": 5,
-          "author": "spareilleux",
-          "createdAt": "2026-07-13T09:37:53Z",
-          "failingChecks": 1,
-          "headRef": "chore/update-demerzel-e8e229d-29239815910",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 201,
-          "title": "chore: update Demerzel submodule (16 commits behind)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/201"
-        },
-        {
-          "ageDays": 11,
-          "author": "spareilleux",
-          "createdAt": "2026-07-07T10:38:39Z",
-          "failingChecks": 1,
-          "headRef": "refactor/promotion-store-gate-13352222723704742074",
-          "isDraft": true,
-          "mergeable": "CONFLICTING",
-          "number": 200,
-          "title": "Refactor promotion store and gate to eliminate global state",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/200"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/Demerzel",
@@ -246,79 +160,19 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 1,
       "prs": [
         {
-          "ageDays": 16,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-02T12:39:22Z",
-          "failingChecks": 3,
-          "headRef": "aiw-prompt-harness-engineering-13346103974311787099",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 648,
-          "title": "[AIW-v0.1][P0] Prompt and harness engineering discipline for AFK agents",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/648"
-        },
-        {
-          "ageDays": 16,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T12:12:35Z",
-          "failingChecks": 0,
-          "headRef": "jules/aiw-multi-provider-orchestration-15872019196044205492",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 647,
-          "title": "docs: design AIW-v0.1 multi-provider orchestration",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/647"
-        },
-        {
-          "ageDays": 16,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T06:24:26Z",
-          "failingChecks": 0,
-          "headRef": "aiw-expert-synthesis-doctrine-5216689442385362489",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 646,
-          "title": "Enrich AIW doctrine with broader expert practices",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/646"
-        },
-        {
-          "ageDays": 16,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T05:27:27Z",
+          "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
-          "headRef": "migrate-qa-tribunal-emit-to-demerzel-kit-3015553440664021996",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 645,
-          "title": "Migrate `qa_tribunal_emit` to use `demerzel_kit` (#406)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/645"
-        },
-        {
-          "ageDays": 16,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T04:49:34Z",
-          "failingChecks": 1,
-          "headRef": "jules-migrate-qa-tribunal-emit-6028966670826188021",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 644,
-          "title": "Migrate qa_tribunal_emit onto demerzel_kit",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/644"
-        },
-        {
-          "ageDays": 16,
-          "author": "spareilleux",
-          "createdAt": "2026-07-02T04:14:29Z",
-          "failingChecks": 1,
-          "headRef": "claude/chatgpt-feed-org-coverage-eeaj59",
+          "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 643,
-          "title": "feat(policy): adaptive fan-out backpressure policy + architecture doc (slim #583 redo)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/643"
+          "number": 734,
+          "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
         }
       ]
     }
