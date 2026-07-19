@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "dce7063683a3a47161394e29be66cc3ab9de23c2",
-    "generatedAt": "2026-07-19T21:55:58.174614+00:00",
+    "commitSha": "685801f0b66e80410f5a5121c08b30f776dec4bd",
+    "generatedAt": "2026-07-19T23:28:28.833588+00:00",
     "repoCount": 5,
-    "totalPRs": 4
+    "totalPRs": 2
   },
   "repos": [
     {
@@ -160,52 +160,28 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 4,
+      "prCount": 2,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-19T21:13:05Z",
+          "createdAt": "2026-07-19T23:26:08Z",
           "failingChecks": 0,
-          "headRef": "feat/planner-536-collisions",
+          "headRef": "feat/streeling-517-ontology",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 763,
-          "title": "feat(planner): file/path collision detector over the execution graph (#536)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/763"
+          "number": 770,
+          "title": "docs(streeling): core identifiers + engineering ontology v1 (#517)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/770"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-19T21:05:41Z",
-          "failingChecks": 0,
-          "headRef": "feat/planner-535-critical-path",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 762,
-          "title": "feat(planner): critical-path analysis over the execution graph (#535)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/762"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-19T20:58:53Z",
-          "failingChecks": 0,
-          "headRef": "feat/aiw-471-budget-loop",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 761,
-          "title": "feat(aiw): enforce budget gate in the AFK/AIW episode loop (#471 tracer)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/761"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
