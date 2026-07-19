@@ -9,8 +9,8 @@ hypotheses:
     refuted_if: The top-activating voicings of most sampled features share no GA-computable musical property above chance, OR features are dominated by always-on / polysemantic behaviour.
 tools: [pyarrow, ix_pca, ix_silhouette, ga_chord_to_set, ga_icv_neighbors, OptickIndexReader, paper-search, fable-5]
 artifacts: state/research/optick-sae-feature-atlas/
-validators: []            # to fill at conclusion — Fable 5 + tars cross-check
-confidence: medium        # directional (26-feature sample); active pending scale-up + validation
+validators: [fable-5]     # Fable 5 adversarial review done (refuted the naïve 49%); tars pending
+confidence: medium-high   # PC-set detector finding validated; ICV class confirmed but full-support sensitivity pending
 supersedes: null
 superseded_by: null
 ---
@@ -23,17 +23,19 @@ superseded_by: null
 
 ## TL;DR
 
-**Open — active, not concluded.** The SAE is real and reconstructs near-perfectly
-(R² 0.9996), with 820/1024 alive features. Two things had to be established
-before any interpretability verdict is possible, and both are now done:
-(1) **prior art** — the method is settled (reuse TopK-SAE top-activating-example
-analysis + Karvonen-2024 ground-truth-partition scoring; guard against Chanin
-absorption + Tian low-sensitivity); the *application* to symbolic music-theoretic
-concepts appears unpublished. (2) **The feature→voicing mapping was missing and
-non-trivial** — the activation parquet dropped the voicing id after a seeded 5%
-train/val split, so row *j* ≠ voicing *j*. Recovered exactly (proof below). The
-one early red flag: **8 always-on features** (fire on ≥95% of all voicings) —
-a known SAE pathology, trivially non-monosemantic.
+**Active, not concluded — but with a validated, honest headline.** The SAE
+reconstructs near-perfectly (R² 0.9996) with 820/1024 alive features, *but* ~half
+of those (400) are near-dead (fire strongly on <10 voicings) — the effective
+dictionary is ~379 selective features. Of those, **24% are robust exact-pitch-
+class-set detectors** (median lift 938× chance), plus a **small, independently-
+confirmed class of transposition-invariant ICV/chord-quality detectors** (feat 830
+= Forte 3-8 across 5 keys & 3 instruments — textbook). An early top-K reading
+suggested a rosier "~49% / band-structured" story; **independent Fable 5 review
+refuted it** as a recall-only artifact over trivially-pure near-dead features (the
+Tian trap) and required the min-support/precision fix now applied. Two enabling
+findings along the way: the feature→voicing mapping was silently dropped by a
+seeded train/val split (recovered exactly) and the parquet was non-conformant to
+its own contract. One data bug spun off (a mislabelled Forte class).
 
 ---
 
@@ -153,9 +155,10 @@ instrument. **The best-explaining attribute is band-structured:**
   bucketed separately.
 - **Mid → transposition-invariant quality detectors (the interesting finding).**
   feat 176 (freq 2.45%): pc_set purity 0.24 but **ICV purity 1.00** — one chord
-  *quality* across all transpositions. feat 715 is a clean **Forte 4-21 tetrachord**
-  detector (ICV 1.00). These are exactly the abstract, nameable music-theoretic
-  concepts an SAE is hoped to surface — and they're distinct from the embedding's
+  *quality* across all transpositions. (feat 715 looked like a clean tetrachord
+  detector here but **Pass 3 refuted it** — it fires on 76% of voicings; always-on.
+  Its "Forte 4-21" label is also a data bug — see Pass 3.) These are the abstract,
+  nameable concepts an SAE is hoped to surface — distinct from the embedding's
   root-carrying dims (the ICV path, per CLAUDE.md).
 - **High → instrument/register + always-on.** feat 265 exhibits the **Tian
   sensitivity trap** the prior-art flagged: pc_set purity 1.00 on its top-25 yet
@@ -163,23 +166,59 @@ instrument. **The best-explaining attribute is band-structured:**
   over-states monosemanticity. Precision/sensitivity (does it fire *only* on the
   attribute) is the missing half and the reason this stays a pass, not a verdict.
 
+**Pass 3 (done — full population, 820 features, precision + independent
+validation)** — `pass3-precision.json`. Fixes Pass 2's recall-only metric per the
+prior-art guardrails: musical attributes were precomputed for **all 297,395
+voicings** (`attrs.npz`), and per feature the interpretation is scored by
+**precision over its strongly-activating set** (activation ≥ 50% of the feature's
+max), with a **base-rate lift** (chance-adjusted; instrument base rate is 0.9517,
+so "instrument" purity is near-meaningless — correcting Pass 2's "high→instrument").
+
+- **~half the alive features are near-dead:** 400/820 fire strongly on <10
+  voicings (memorization-scale units, not detectors); 41 are always-on (freq >20%).
+  The effective dictionary is ~379 selective features, not 820.
+- **Robust exact-PC-set detectors:** among the 379 selective features, **92 (24%)**
+  reach precision ≥0.8 at lift ≥2 — median lift **938×** chance. That is the
+  defensible "monosemantic detector" figure: **24% of selective features / 11% of
+  alive** — *not* the ~49% an unfiltered top-K purity suggested.
+- **Transposition-invariant ICV detectors — confirmed, small but genuine.**
+  Independent review verified feat 176 (one Xm13 quality across 5 keys), 758
+  (aug-family pentachord, 3 transpositions), and **830 (Forte 3-8 across 5 pc-sets
+  AND 3 instruments — textbook)**. These are the novel, most interesting class.
+- **Data bug surfaced (independent review):** a voicing labelled `quality_inferred
+  = "Forte 4-21"` is actually **Forte 4-9** ({4,5,10,11}, ICV [2,0,0,0,2,2]; 4-21
+  is [0,2,4,6]). Defect in OPTIC-K's `quality_inferred` producer, not this study's
+  code (ICV independently recomputed). → follow-up ticket candidate.
+
+**Independent validation (Fable 5, adversarial).** A different model re-derived
+the counts from the raw evidence (`validation-evidence.json`) and: CONFIRMED the
+ICV class (176/758/830), REFUTED feat 715 as an always-on artifact (catching that
+Pass 2 applied its own Tian guardrail inconsistently — flagged 265 but celebrated
+715), and REFUTED the unfiltered "49%" as inflated by trivial-support features.
+Its required fix — minimum-support floor + full-support precision — is implemented
+above (→ the 24%/11% figures). Verdict: **do not conclude yet.**
+
 ## 5. Verdict
 
-**Interim (confidence: medium, directional):** the hypothesis is **provisionally
-supported** on a 26-feature sample — most alive features *are* explained by a
-single nameable music-theoretic attribute — with the important refinement that
-**which** attribute is frequency-band-structured: rare features detect exact
-pitch-class sets, mid-frequency features detect transposition-invariant ICV
-*shapes* (chord qualities), high-frequency features mostly detect instrument, and
-a handful are always-on (non-monosemantic). This is a sharper claim than the
-hypothesis anticipated (it predicted "one property"; reality is "one property,
-but the property class shifts with feature frequency").
+**Interim (confidence: medium-high on the PC-set finding, medium on ICV):** the
+hypothesis is **partially supported, at a lower rate than top-K inspection
+suggested.** On the full population with a precision metric and a minimum-support
+floor: ~half the "alive" dictionary is near-dead (support <10); of the ~379
+genuinely selective features, **24% are robust exact-pitch-class-set detectors**
+(median lift 938× chance), and a **small but genuine, independently-confirmed
+class of transposition-invariant ICV/chord-quality detectors** exists among
+selective mid-frequency features (feat 830 textbook). The naïve "~49% / band-
+structured" reading of Pass 2 was **over-stated** — an artifact of recall-only
+top-K purity over trivially-pure near-dead features (the Tian trap), caught by
+independent (Fable 5) review.
 
-**Not yet `concluded`** — three gaps remain: (a) the sample is 26/820; (b) the
-purity metric is recall-only and over-states monosemanticity for always-on
-features (Tian) — need a precision/sensitivity metric + Chanin absorption check;
-(c) no independent-model validation yet. Per protocol, `concluded` requires
-Fable 5 / tars re-checking the interpretation claims.
+**Not yet `concluded`** (per Fable 5's recommendation, honoured). The required
+metric fix (min-support floor + full-support precision) is done; two gaps remain
+before conclusion: (a) **full-support** ICV sensitivity for the 176/758/830 class
+(currently established on top activations, not the whole support); (b) a
+re-validation pass on the corrected 24%/11% figure. Chanin absorption still
+unmeasured. The `quality_inferred = "Forte 4-21"` data bug is a spun-off
+follow-up, not a blocker.
 
 - **One-way-door check:** none triggered. This study *reads* OPTIC-K; it must not
   change dimensions or the schema. Any recommendation to do so is a separate,

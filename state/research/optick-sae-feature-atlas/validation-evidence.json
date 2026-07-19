@@ -1,0 +1,1767 @@
+{
+ "9": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 250,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.0039
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     1,
+     3,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     2,
+     0,
+     3,
+     0,
+     1
+    ],
+    "quality": "Ebaug7/B",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "10": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 341,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.0051
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     0,
+     2,
+     4,
+     9
+    ],
+    "icv": [
+     0,
+     2,
+     1,
+     1,
+     2,
+     0
+    ],
+    "quality": "D7sus2/C",
+    "instrument": "ukulele"
+   }
+  ]
+ },
+ "13": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 2013,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.0444
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     0,
+     1,
+     3,
+     6,
+     8,
+     10
+    ],
+    "icv": [
+     1,
+     4,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Ab11",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     1,
+     3,
+     6,
+     8,
+     10
+    ],
+    "icv": [
+     1,
+     4,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Ab11",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "18": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 294,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.004
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     0,
+     3,
+     4,
+     7
+    ],
+    "icv": [
+     1,
+     0,
+     2,
+     2,
+     1,
+     0
+    ],
+    "quality": "C",
+    "instrument": "ukulele"
+   }
+  ]
+ },
+ "21": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 1901,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.0128
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     0,
+     3,
+     7,
+     9
+    ],
+    "icv": [
+     0,
+     1,
+     2,
+     1,
+     1,
+     1
+    ],
+    "quality": "Am7b5/Eb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     3,
+     7,
+     9
+    ],
+    "icv": [
+     0,
+     1,
+     2,
+     1,
+     1,
+     1
+    ],
+    "quality": "Am7b5/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     3,
+     7,
+     9
+    ],
+    "icv": [
+     0,
+     1,
+     2,
+     1,
+     1,
+     1
+    ],
+    "quality": "Am7b5/Eb",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "23": {
+  "freq": 0.0,
+  "best": {
+   "attr": "pc_set",
+   "value": 515,
+   "precision": 1.0,
+   "lift": 938.15,
+   "coverage": 0.0048
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     1,
+     6,
+     9
+    ],
+    "icv": [
+     0,
+     0,
+     1,
+     1,
+     1,
+     0
+    ],
+    "quality": "Gbm/Db",
+    "instrument": "ukulele"
+   }
+  ]
+ },
+ "176": {
+  "freq": 0.0245,
+  "best": {
+   "attr": "pc_set",
+   "value": 1155,
+   "precision": 0.012,
+   "lift": 11.51,
+   "coverage": 0.2965
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     0,
+     1,
+     5,
+     7,
+     8,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Bbm13/C",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     1,
+     5,
+     7,
+     8,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Bbm13/Db",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     1,
+     5,
+     7,
+     8,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Bbm13/Ab",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     1,
+     5,
+     7,
+     8,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Bbm13/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     4,
+     6,
+     8,
+     9
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gbm13/E",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Cm13/D",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Cm13/Eb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     4,
+     5,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gm13/F",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     4,
+     5,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gm13/E",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Cm13/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Cm13/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     4,
+     5,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gm13/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     4,
+     5,
+     7,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gm13/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     4,
+     6,
+     8,
+     9
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gbm13/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     4,
+     6,
+     8,
+     9
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gbm13/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     4,
+     6,
+     8,
+     9
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Gbm13/Ab",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     5,
+     7,
+     8
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Fm13/Ab",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     5,
+     7,
+     8
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Fm13/Ab",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     5,
+     7,
+     8
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Fm13/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     2,
+     3,
+     5,
+     7,
+     8
+    ],
+    "icv": [
+     2,
+     3,
+     3,
+     2,
+     4,
+     1
+    ],
+    "quality": "Fm13/G",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "715": {
+  "freq": 0.7557,
+  "best": {
+   "attr": "pc_set",
+   "value": 871,
+   "precision": 0.015,
+   "lift": 14.22,
+   "coverage": 0.8298
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     3,
+     4,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     3,
+     4,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     3,
+     4,
+     9,
+     10
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     4,
+     5,
+     10,
+     11
+    ],
+    "icv": [
+     2,
+     0,
+     0,
+     0,
+     2,
+     2
+    ],
+    "quality": "Forte 4-21 (tetrachord)",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "758": {
+  "freq": 0.0352,
+  "best": {
+   "attr": "pc_set",
+   "value": 1247,
+   "precision": 0.019,
+   "lift": 17.54,
+   "coverage": 0.5321
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     1,
+     3,
+     5,
+     8,
+     9
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Faug7/Eb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     5,
+     8,
+     9
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Faug7/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     5,
+     8,
+     9
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Faug7",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/A",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)/B",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     2,
+     3,
+     7,
+     9,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Ebaug(maj7)",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     4,
+     6,
+     8,
+     11
+    ],
+    "icv": [
+     1,
+     2,
+     1,
+     3,
+     2,
+     1
+    ],
+    "quality": "Caug(maj7)/Gb",
+    "instrument": "guitar"
+   }
+  ]
+ },
+ "830": {
+  "freq": 0.0126,
+  "best": {
+   "attr": "pc_set",
+   "value": 1009,
+   "precision": 0.046,
+   "lift": 43.33,
+   "coverage": 0.3755
+  },
+  "strong_voicings": [
+   {
+    "pc_set": [
+     4,
+     8,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Bbm7b5/E",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/G",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Gb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/B",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/B",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Gb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Gb",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "bass"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/G",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/G",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/B",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     0,
+     6,
+     10
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Cm7b5/Bb",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     3,
+     5,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Fm7b5/Eb",
+    "instrument": "ukulele"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/B",
+    "instrument": "bass"
+   },
+   {
+    "pc_set": [
+     1,
+     7,
+     11
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Dbm7b5/B",
+    "instrument": "guitar"
+   },
+   {
+    "pc_set": [
+     1,
+     3,
+     9
+    ],
+    "icv": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "quality": "Ebm7b5/Db",
+    "instrument": "ukulele"
+   }
+  ]
+ }
+}

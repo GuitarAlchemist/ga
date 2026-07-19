@@ -139,5 +139,5 @@ open the follow-up plan/ADR — the study links to it, not the other way around.
 
 | Date | Study | Status | Verdict (one line) |
 |---|---|---|---|
-| 2026-07-19 | [OPTIC-K SAE feature atlas](2026-07-19-optick-sae-feature-atlas.md) | active | Provisional yes — features are interpretable, but the attribute is band-structured: rare→PC-set, mid→ICV shape, high→instrument. Pending scale-up + Fable 5 validation |
+| 2026-07-19 | [OPTIC-K SAE feature atlas](2026-07-19-optick-sae-feature-atlas.md) | active | Partial — ~half the dict is near-dead; 24% of selective features are robust PC-set detectors + a small confirmed ICV-quality class. Fable 5 refuted the naïve 49%. Pending full-support ICV sensitivity |
 | 2026-06-15 | [Nested-loop chatbot dev w/ DuckDB](2026-06-15-nested-loop-chatbot-development-duckdb.md) | concluded | Yes — ~80% already built; the oracle, not the loop, is load-bearing |
