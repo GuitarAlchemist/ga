@@ -92,6 +92,7 @@ Progressive-disclosure map for fresh agents. Look here before grepping — most 
 |---|---|
 | Deciding *how* to direct AI on a non-trivial change | `docs/methodology/agentic-engineering.md` (harness > model; strategic over tactical; DX≈AX; procedures vs abilities; queues not loops) |
 | Implementing a non-trivial feature | `docs/plans/YYYY-MM-DD-<type>-<name>-plan.md` (in flight) → `docs/archive/` (shipped) |
+| Doing fundamental research (music or code) | `docs/research/README.md` (protocol: Question→Hypothesis→Method→Evidence→Verdict; stage→tool map) + `_TEMPLATE.md`; artifacts in `state/research/<slug>/`. Rationale: `docs/adr/0006-research-framework-protocol.md` |
 | Debugging a known class of bug | `docs/solutions/<category>/<date>-<topic>.md` (compounded fixes, frontmatter: `module / tags / problem_type`) |
 | Touching the layered architecture | `docs/architecture/layers.md` (the 5-layer rule), `docs/architecture/audit-YYYY-MM-DD.md` (latest decisions) |
 | Adding a chat / agent endpoint | `docs/architecture/chat-surfaces.md` — which path is canonical, which are dead |
