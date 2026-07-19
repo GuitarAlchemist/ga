@@ -197,6 +197,10 @@ todos/
 # OPTIC-K generated index (build artifact, ~660MB)
 **/state/voicings/optick.index
 
+# Research study derived artifact: row->voicing id map is regenerable from its
+# provenance JSON (seeded derivation) — keep the provenance, not the 3.5MB parquet.
+state/research/optick-sae-feature-atlas/row-index-map.parquet
+
 # DuckDB quality analytics layer: the .duckdb is a generated binary materialized
 # from the committed JSON snapshots by analytics/build-views.sql — regenerable,
 # never committed. The build script and README are tracked.

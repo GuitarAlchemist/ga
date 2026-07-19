@@ -1,0 +1,892 @@
+[
+  {
+    "feature": 26,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      5,
+      6,
+      9
+    ],
+    "modal_icv": [
+      1,
+      0,
+      1,
+      1,
+      0,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Gbm(maj7)"
+    ]
+  },
+  {
+    "feature": 89,
+    "freq": 2e-05,
+    "support": 6,
+    "topK": 6,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.667,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      4,
+      8,
+      10,
+      11
+    ],
+    "modal_icv": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "E/Ab",
+      "E/Ab",
+      "E/Bb",
+      "E/Ab"
+    ]
+  },
+  {
+    "feature": 173,
+    "freq": 0.000353,
+    "support": 105,
+    "topK": 25,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.6,
+      "instrument": 0.52
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      4,
+      5,
+      11
+    ],
+    "modal_icv": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "E5/B",
+      "E5/B",
+      "E5",
+      "E5/B"
+    ]
+  },
+  {
+    "feature": 176,
+    "freq": 0.024543,
+    "support": 7299,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.24,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.24,
+      "instrument": 1.0
+    },
+    "best_attr": "icv_shape",
+    "best_purity": 1.0,
+    "modal_pc_set": null,
+    "modal_icv": [
+      2,
+      3,
+      3,
+      2,
+      4,
+      1
+    ],
+    "modal_cardinality": 6,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Bbm13/Db",
+      "Bbm13/C",
+      "Bbm13/Ab",
+      "Bbm13/G"
+    ]
+  },
+  {
+    "feature": 265,
+    "freq": 0.950278,
+    "support": 282608,
+    "topK": 25,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.4,
+      "instrument": 0.96
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      2,
+      4,
+      10,
+      11
+    ],
+    "modal_icv": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "E7#11/Bb",
+      "E7#11/B",
+      "E7#11/D",
+      "E7#11/D"
+    ]
+  },
+  {
+    "feature": 267,
+    "freq": 0.083515,
+    "support": 24837,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.16,
+      "icv_shape": 0.2,
+      "cardinality": 0.72,
+      "root_bass": 0.28,
+      "instrument": 0.68
+    },
+    "best_attr": "cardinality",
+    "best_purity": 0.72,
+    "modal_pc_set": null,
+    "modal_icv": null,
+    "modal_cardinality": 2,
+    "modal_instrument": "bass",
+    "example_qualities": [
+      "Db + F (Major 3rd)",
+      "D + F (Minor 3rd)",
+      "F5",
+      "Eb + F (Major 2nd)"
+    ]
+  },
+  {
+    "feature": 320,
+    "freq": 0.15776,
+    "support": 46917,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.88,
+      "icv_shape": 0.88,
+      "cardinality": 0.88,
+      "root_bass": 0.48,
+      "instrument": 0.92
+    },
+    "best_attr": "instrument",
+    "best_purity": 0.92,
+    "modal_pc_set": [
+      3,
+      4,
+      9,
+      10
+    ],
+    "modal_icv": [
+      2,
+      0,
+      0,
+      0,
+      2,
+      2
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Forte 4-21 (tetrachord)",
+      "Forte 4-21 (tetrachord)",
+      "Eb5/E",
+      "Forte 4-21 (tetrachord)"
+    ]
+  },
+  {
+    "feature": 345,
+    "freq": 0.96929,
+    "support": 288262,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.48,
+      "icv_shape": 0.48,
+      "cardinality": 0.76,
+      "root_bass": 0.48,
+      "instrument": 1.0
+    },
+    "best_attr": "instrument",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      2,
+      3,
+      5,
+      8,
+      10
+    ],
+    "modal_icv": [
+      1,
+      2,
+      2,
+      1,
+      3,
+      1
+    ],
+    "modal_cardinality": 5,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Ebm(maj9)/Ab",
+      "Ebm(maj9)/Ab",
+      "Ebm(maj9)/Ab",
+      "Ebm(maj9)/D"
+    ]
+  },
+  {
+    "feature": 464,
+    "freq": 0.897584,
+    "support": 266937,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.76,
+      "icv_shape": 0.76,
+      "cardinality": 0.76,
+      "root_bass": 0.36,
+      "instrument": 0.96
+    },
+    "best_attr": "instrument",
+    "best_purity": 0.96,
+    "modal_pc_set": [
+      0,
+      1,
+      7,
+      8
+    ],
+    "modal_icv": [
+      2,
+      0,
+      0,
+      1,
+      2,
+      1
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Abmaj7(shell)/G",
+      "Abmaj7(shell)/G",
+      "Abmaj7(shell)",
+      "Abmaj7(shell)"
+    ]
+  },
+  {
+    "feature": 465,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      1,
+      2,
+      5,
+      8,
+      9
+    ],
+    "modal_icv": [
+      2,
+      0,
+      2,
+      3,
+      2,
+      1
+    ],
+    "modal_cardinality": 5,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Dm(maj7)/A"
+    ]
+  },
+  {
+    "feature": 480,
+    "freq": 0.00112,
+    "support": 333,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.84,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.68,
+      "instrument": 0.52
+    },
+    "best_attr": "icv_shape",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      1,
+      3
+    ],
+    "modal_icv": [
+      0,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    "modal_cardinality": 2,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Eb + F (Major 2nd)",
+      "Db + Eb (Major 2nd)",
+      "Db + Eb (Major 2nd)",
+      "Db + Eb (Major 2nd)"
+    ]
+  },
+  {
+    "feature": 484,
+    "freq": 0.000182,
+    "support": 54,
+    "topK": 25,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.56,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      2,
+      6,
+      9,
+      11
+    ],
+    "modal_icv": [
+      0,
+      1,
+      2,
+      1,
+      2,
+      0
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Bm7",
+      "Bm7",
+      "Bm7/D",
+      "Bm7/A"
+    ]
+  },
+  {
+    "feature": 521,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      0,
+      5,
+      10
+    ],
+    "modal_icv": [
+      0,
+      1,
+      0,
+      0,
+      2,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "ukulele",
+    "example_qualities": [
+      "Fsus4/C"
+    ]
+  },
+  {
+    "feature": 632,
+    "freq": 0.087513,
+    "support": 26026,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.12,
+      "icv_shape": 0.2,
+      "cardinality": 0.64,
+      "root_bass": 0.36,
+      "instrument": 0.6
+    },
+    "best_attr": "cardinality",
+    "best_purity": 0.64,
+    "modal_pc_set": null,
+    "modal_icv": null,
+    "modal_cardinality": 2,
+    "modal_instrument": "bass",
+    "example_qualities": [
+      "F (unison)",
+      "Eb + F (Major 2nd)",
+      "D + F (Minor 3rd)",
+      "F (unison)"
+    ]
+  },
+  {
+    "feature": 639,
+    "freq": 0.076131,
+    "support": 22641,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.2,
+      "icv_shape": 0.2,
+      "cardinality": 0.72,
+      "root_bass": 0.28,
+      "instrument": 0.48
+    },
+    "best_attr": "cardinality",
+    "best_purity": 0.72,
+    "modal_pc_set": null,
+    "modal_icv": null,
+    "modal_cardinality": 2,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Gb + Ab (Major 2nd)",
+      "Gb5",
+      "C + Gb (Tritone)",
+      "C + Gb (Tritone)"
+    ]
+  },
+  {
+    "feature": 697,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      0,
+      5,
+      7
+    ],
+    "modal_icv": [
+      0,
+      1,
+      0,
+      0,
+      2,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "ukulele",
+    "example_qualities": [
+      "Csus4"
+    ]
+  },
+  {
+    "feature": 715,
+    "freq": 0.755709,
+    "support": 224744,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.84,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.6,
+      "instrument": 1.0
+    },
+    "best_attr": "icv_shape",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      4,
+      5,
+      10,
+      11
+    ],
+    "modal_icv": [
+      2,
+      0,
+      0,
+      0,
+      2,
+      2
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Forte 4-21 (tetrachord)",
+      "Forte 4-21 (tetrachord)",
+      "Forte 4-21 (tetrachord)",
+      "Forte 4-21 (tetrachord)"
+    ]
+  },
+  {
+    "feature": 717,
+    "freq": 0.000461,
+    "support": 137,
+    "topK": 25,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.6,
+      "instrument": 0.4
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      3,
+      11
+    ],
+    "modal_icv": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "modal_cardinality": 2,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "B + Eb (Major 3rd)",
+      "B + Eb (Major 3rd)",
+      "B + Eb (Major 3rd)",
+      "B + Eb (Major 3rd)"
+    ]
+  },
+  {
+    "feature": 739,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      0,
+      4,
+      9
+    ],
+    "modal_icv": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Am/E"
+    ]
+  },
+  {
+    "feature": 758,
+    "freq": 0.035229,
+    "support": 10477,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.64,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.44,
+      "instrument": 1.0
+    },
+    "best_attr": "icv_shape",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      2,
+      3,
+      7,
+      9,
+      11
+    ],
+    "modal_icv": [
+      1,
+      2,
+      1,
+      3,
+      2,
+      1
+    ],
+    "modal_cardinality": 5,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Faug7/Eb",
+      "Ebaug(maj7)",
+      "Ebaug(maj7)/A",
+      "Faug7/A"
+    ]
+  },
+  {
+    "feature": 788,
+    "freq": 0.80879,
+    "support": 240530,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.52,
+      "icv_shape": 0.56,
+      "cardinality": 0.6,
+      "root_bass": 0.36,
+      "instrument": 0.72
+    },
+    "best_attr": "instrument",
+    "best_purity": 0.72,
+    "modal_pc_set": [
+      0,
+      6,
+      10,
+      11
+    ],
+    "modal_icv": [
+      2,
+      1,
+      0,
+      1,
+      1,
+      1
+    ],
+    "modal_cardinality": 4,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Bmaj7/C",
+      "Bmaj7/C",
+      "Bmaj7/Gb",
+      "Bmaj7/C"
+    ]
+  },
+  {
+    "feature": 800,
+    "freq": 0.013951,
+    "support": 4149,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.16,
+      "icv_shape": 0.56,
+      "cardinality": 0.56,
+      "root_bass": 0.24,
+      "instrument": 0.68
+    },
+    "best_attr": "instrument",
+    "best_purity": 0.68,
+    "modal_pc_set": null,
+    "modal_icv": [
+      0,
+      1,
+      0,
+      0,
+      2,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Gsus2/D",
+      "Dbsus4/Ab",
+      "Csus2/D",
+      "Bbsus4/F"
+    ]
+  },
+  {
+    "feature": 817,
+    "freq": 0.000259,
+    "support": 77,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.96,
+      "icv_shape": 0.96,
+      "cardinality": 0.96,
+      "root_bass": 0.48,
+      "instrument": 0.6
+    },
+    "best_attr": "pc_set",
+    "best_purity": 0.96,
+    "modal_pc_set": [
+      1,
+      3,
+      9
+    ],
+    "modal_icv": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Ebm7b5/A",
+      "Ebm7b5/A",
+      "Faug7",
+      "Ebm7b5/Db"
+    ]
+  },
+  {
+    "feature": 824,
+    "freq": 3e-06,
+    "support": 1,
+    "topK": 1,
+    "purity": {
+      "pc_set": 1.0,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 1.0,
+      "instrument": 1.0
+    },
+    "best_attr": "pc_set",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      0,
+      1,
+      2,
+      8,
+      11
+    ],
+    "modal_icv": [
+      3,
+      2,
+      2,
+      1,
+      1,
+      1
+    ],
+    "modal_cardinality": 5,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Bm6"
+    ]
+  },
+  {
+    "feature": 830,
+    "freq": 0.012579,
+    "support": 3741,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.48,
+      "icv_shape": 1.0,
+      "cardinality": 1.0,
+      "root_bass": 0.24,
+      "instrument": 0.56
+    },
+    "best_attr": "icv_shape",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      0,
+      6,
+      10
+    ],
+    "modal_icv": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Bbm7b5/E",
+      "Dbm7b5/G",
+      "Cm7b5/Gb",
+      "Dbm7b5/B"
+    ]
+  },
+  {
+    "feature": 839,
+    "freq": 0.000165,
+    "support": 49,
+    "topK": 25,
+    "purity": {
+      "pc_set": 0.96,
+      "icv_shape": 0.96,
+      "cardinality": 1.0,
+      "root_bass": 0.48,
+      "instrument": 0.72
+    },
+    "best_attr": "cardinality",
+    "best_purity": 1.0,
+    "modal_pc_set": [
+      3,
+      6,
+      10
+    ],
+    "modal_icv": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      0
+    ],
+    "modal_cardinality": 3,
+    "modal_instrument": "guitar",
+    "example_qualities": [
+      "Ebm/Gb",
+      "Ebm/Gb",
+      "Ebm/Gb",
+      "Ebm/Gb"
+    ]
+  }
+]

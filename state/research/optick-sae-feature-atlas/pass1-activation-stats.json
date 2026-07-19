@@ -1,0 +1,25 @@
+{
+  "source_parquet": "state/quality/optick-sae/2026-06-14/feature_activations.parquet",
+  "n_voicings": 297395,
+  "n_features": 1024,
+  "k_sparse_observed": {
+    "min": 28,
+    "median": 32,
+    "max": 32,
+    "pct_exactly_32": 0.9412
+  },
+  "alive": 820,
+  "dead": 204,
+  "always_on_ge95pct": 8,
+  "rare_lt0p1pct": 568,
+  "activation_freq_percentiles": {
+    "p10": 0.0,
+    "p25": 0.0,
+    "p50": 0.0001,
+    "p75": 0.0022,
+    "p90": 0.07,
+    "p95": 0.1759,
+    "p99": 0.9232,
+    "p100": 1.0
+  }
+}

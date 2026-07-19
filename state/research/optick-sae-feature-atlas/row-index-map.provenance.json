@@ -1,0 +1,11 @@
+{
+  "derivation": "np.random.seed(42); idx=arange(313047); np.random.shuffle(idx); train_idx=idx[15652:]",
+  "seed": 42,
+  "corpus_size": 313047,
+  "held_out_pct": 0.05,
+  "n_held": 15652,
+  "parquet_rows": 297395,
+  "meaning": "feature_activations.parquet row j corresponds to optick.index position train_idx[j]",
+  "rng": "numpy legacy global MT19937 (np.random.seed + np.random.shuffle) \u2014 stable across numpy versions",
+  "caveat": "implicit recovery; durable fix is to emit optick_row at the producer (ix/crates/ix-optick-sae/python/train.py)"
+}
