@@ -1,0 +1,11954 @@
+{
+ "0": {
+  "ns": 243,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1893,
+   "P": 0.198,
+   "lift": 185.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.123,
+   "lift": 1.1
+  }
+ },
+ "1": {
+  "ns": 49,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1008,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.306,
+   "lift": 2.7
+  }
+ },
+ "2": {
+  "ns": 12994,
+  "freq": 0.0734,
+  "harm": {
+   "attr": "pc_set",
+   "val": 292,
+   "P": 0.01,
+   "lift": 9.7
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.945,
+   "lift": 1.0
+  }
+ },
+ "3": {
+  "ns": 2790,
+  "freq": 0.0918,
+  "harm": {
+   "attr": "pc_set",
+   "val": 976,
+   "P": 0.068,
+   "lift": 63.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.162,
+   "lift": 1.4
+  }
+ },
+ "4": {
+  "ns": 94,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 366,
+   "P": 0.989,
+   "lift": 928.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.213,
+   "lift": 1.8
+  }
+ },
+ "5": {
+  "ns": 14113,
+  "freq": 0.0484,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2076,
+   "P": 0.007,
+   "lift": 6.2
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.951,
+   "lift": 1.0
+  }
+ },
+ "6": {
+  "ns": 243,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 503,
+   "P": 0.395,
+   "lift": 370.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "7": {
+  "ns": 212,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 675,
+   "P": 0.363,
+   "lift": 340.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.363,
+   "lift": 3.2
+  }
+ },
+ "9": {
+  "ns": 103,
+  "freq": 0.0048,
+  "harm": {
+   "attr": "pc_set",
+   "val": 579,
+   "P": 0.398,
+   "lift": 373.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.146,
+   "lift": 1.3
+  }
+ },
+ "10": {
+  "ns": 48,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 970,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.208,
+   "lift": 1.8
+  }
+ },
+ "11": {
+  "ns": 192,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1749,
+   "P": 0.526,
+   "lift": 493.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "12": {
+  "ns": 1156,
+  "freq": 0.0076,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1069,
+   "P": 0.238,
+   "lift": 223.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.156,
+   "lift": 1.4
+  }
+ },
+ "13": {
+  "ns": 12,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1529,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "14": {
+  "ns": 26012,
+  "freq": 0.0875,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.004,
+   "lift": 3.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.298,
+   "lift": 2.6
+  }
+ },
+ "15": {
+  "ns": 10,
+  "freq": 0.0,
+  "harm": {
+   "attr": "pc_set",
+   "val": 528,
+   "P": 0.9,
+   "lift": 844.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 1.0,
+   "lift": 8.7
+  }
+ },
+ "16": {
+  "ns": 48,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1306,
+   "P": 0.729,
+   "lift": 684.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.396,
+   "lift": 3.4
+  }
+ },
+ "18": {
+  "ns": 54,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1870,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.278,
+   "lift": 2.4
+  }
+ },
+ "19": {
+  "ns": 342,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1282,
+   "P": 0.424,
+   "lift": 397.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.164,
+   "lift": 1.4
+  }
+ },
+ "20": {
+  "ns": 47,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1252,
+   "P": 0.83,
+   "lift": 778.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.213,
+   "lift": 1.8
+  }
+ },
+ "21": {
+  "ns": 52,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1645,
+   "P": 0.577,
+   "lift": 541.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.346,
+   "lift": 3.0
+  }
+ },
+ "24": {
+  "ns": 109,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1329,
+   "P": 0.468,
+   "lift": 439.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.248,
+   "lift": 2.2
+  }
+ },
+ "26": {
+  "ns": 75,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1077,
+   "P": 0.813,
+   "lift": 763.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.24,
+   "lift": 2.1
+  }
+ },
+ "27": {
+  "ns": 1055,
+  "freq": 0.0744,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1598,
+   "P": 0.023,
+   "lift": 21.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.438,
+   "lift": 3.8
+  }
+ },
+ "28": {
+  "ns": 8415,
+  "freq": 0.0553,
+  "harm": {
+   "attr": "pc_set",
+   "val": 72,
+   "P": 0.005,
+   "lift": 4.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.464,
+   "lift": 4.0
+  }
+ },
+ "29": {
+  "ns": 6805,
+  "freq": 0.0625,
+  "harm": {
+   "attr": "pc_set",
+   "val": 115,
+   "P": 0.011,
+   "lift": 10.8
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.497,
+   "lift": 1.1
+  }
+ },
+ "31": {
+  "ns": 245,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.363,
+   "lift": 340.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.216,
+   "lift": 1.9
+  }
+ },
+ "32": {
+  "ns": 76,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 325,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "34": {
+  "ns": 17084,
+  "freq": 0.0579,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.006,
+   "lift": 5.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.633,
+   "lift": 1.0
+  }
+ },
+ "35": {
+  "ns": 14965,
+  "freq": 0.0597,
+  "harm": {
+   "attr": "pc_set",
+   "val": 104,
+   "P": 0.018,
+   "lift": 16.9
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.669,
+   "lift": 1.1
+  }
+ },
+ "36": {
+  "ns": 10,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1499,
+   "P": 0.4,
+   "lift": 375.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.7,
+   "lift": 6.1
+  }
+ },
+ "39": {
+  "ns": 101,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 374,
+   "P": 0.584,
+   "lift": 548.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.198,
+   "lift": 1.7
+  }
+ },
+ "40": {
+  "ns": 89,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 963,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.292,
+   "lift": 2.5
+  }
+ },
+ "41": {
+  "ns": 377,
+  "freq": 0.0049,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1972,
+   "P": 0.236,
+   "lift": 221.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "43": {
+  "ns": 36,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1202,
+   "P": 0.75,
+   "lift": 703.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.75,
+   "lift": 6.5
+  }
+ },
+ "44": {
+  "ns": 67,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1969,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.269,
+   "lift": 2.3
+  }
+ },
+ "45": {
+  "ns": 644,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 174,
+   "P": 0.467,
+   "lift": 438.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.148,
+   "lift": 1.3
+  }
+ },
+ "46": {
+  "ns": 51,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1481,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.235,
+   "lift": 2.0
+  }
+ },
+ "47": {
+  "ns": 538,
+  "freq": 0.0284,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1747,
+   "P": 0.459,
+   "lift": 430.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.149,
+   "lift": 1.3
+  }
+ },
+ "49": {
+  "ns": 60,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1843,
+   "P": 0.317,
+   "lift": 297.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "50": {
+  "ns": 19,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1663,
+   "P": 0.316,
+   "lift": 296.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.263,
+   "lift": 2.3
+  }
+ },
+ "51": {
+  "ns": 182,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 789,
+   "P": 0.632,
+   "lift": 592.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.198,
+   "lift": 1.7
+  }
+ },
+ "52": {
+  "ns": 95,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1618,
+   "P": 0.758,
+   "lift": 711.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "54": {
+  "ns": 24,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1503,
+   "P": 0.625,
+   "lift": 586.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.375,
+   "lift": 3.3
+  }
+ },
+ "55": {
+  "ns": 221,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 937,
+   "P": 0.724,
+   "lift": 679.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.163,
+   "lift": 1.4
+  }
+ },
+ "56": {
+  "ns": 73,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.288,
+   "lift": 2.5
+  }
+ },
+ "57": {
+  "ns": 381,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1364,
+   "P": 0.465,
+   "lift": 435.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.722,
+   "lift": 1.2
+  }
+ },
+ "61": {
+  "ns": 140,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1870,
+   "P": 0.993,
+   "lift": 931.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.164,
+   "lift": 1.4
+  }
+ },
+ "62": {
+  "ns": 10,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1005,
+   "P": 0.8,
+   "lift": 750.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.9,
+   "lift": 7.8
+  }
+ },
+ "63": {
+  "ns": 383,
+  "freq": 0.01,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.561,
+   "lift": 526.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "64": {
+  "ns": 45,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2011,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.311,
+   "lift": 2.7
+  }
+ },
+ "66": {
+  "ns": 30,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2018,
+   "P": 0.567,
+   "lift": 531.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.567,
+   "lift": 4.9
+  }
+ },
+ "67": {
+  "ns": 2310,
+  "freq": 0.0262,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.132,
+   "lift": 123.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.122,
+   "lift": 1.1
+  }
+ },
+ "68": {
+  "ns": 324,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 701,
+   "P": 0.435,
+   "lift": 408.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "69": {
+  "ns": 134,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1282,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "72": {
+  "ns": 169,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 198,
+   "P": 0.432,
+   "lift": 405.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.201,
+   "lift": 1.7
+  }
+ },
+ "73": {
+  "ns": 149,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 927,
+   "P": 0.544,
+   "lift": 510.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.242,
+   "lift": 2.1
+  }
+ },
+ "74": {
+  "ns": 121,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 882,
+   "P": 0.372,
+   "lift": 348.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.24,
+   "lift": 2.1
+  }
+ },
+ "75": {
+  "ns": 95,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 579,
+   "P": 0.379,
+   "lift": 355.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "78": {
+  "ns": 24,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1390,
+   "P": 0.958,
+   "lift": 899.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.375,
+   "lift": 3.3
+  }
+ },
+ "79": {
+  "ns": 115,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1278,
+   "P": 0.6,
+   "lift": 562.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "80": {
+  "ns": 472,
+  "freq": 0.0032,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.405,
+   "lift": 379.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.161,
+   "lift": 1.4
+  }
+ },
+ "82": {
+  "ns": 205,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1381,
+   "P": 0.468,
+   "lift": 439.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.176,
+   "lift": 1.5
+  }
+ },
+ "84": {
+  "ns": 119,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 281,
+   "P": 0.689,
+   "lift": 646.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "85": {
+  "ns": 111,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 312,
+   "P": 0.685,
+   "lift": 642.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "86": {
+  "ns": 126,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1308,
+   "P": 0.437,
+   "lift": 409.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.19,
+   "lift": 1.7
+  }
+ },
+ "87": {
+  "ns": 8630,
+  "freq": 0.0384,
+  "harm": {
+   "attr": "pc_set",
+   "val": 70,
+   "P": 0.009,
+   "lift": 8.2
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.68,
+   "lift": 1.1
+  }
+ },
+ "88": {
+  "ns": 147,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1174,
+   "P": 0.599,
+   "lift": 561.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.245,
+   "lift": 2.1
+  }
+ },
+ "90": {
+  "ns": 11,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.545,
+   "lift": 511.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.364,
+   "lift": 3.2
+  }
+ },
+ "92": {
+  "ns": 125,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 984,
+   "P": 0.536,
+   "lift": 502.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "93": {
+  "ns": 71,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 292,
+   "P": 0.817,
+   "lift": 766.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.394,
+   "lift": 3.4
+  }
+ },
+ "94": {
+  "ns": 210,
+  "freq": 0.0069,
+  "harm": {
+   "attr": "pc_set",
+   "val": 955,
+   "P": 0.057,
+   "lift": 53.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.457,
+   "lift": 4.0
+  }
+ },
+ "95": {
+  "ns": 57,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 412,
+   "P": 0.667,
+   "lift": 625.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.439,
+   "lift": 3.8
+  }
+ },
+ "96": {
+  "ns": 981,
+  "freq": 0.0046,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1797,
+   "P": 0.055,
+   "lift": 51.6
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.523,
+   "lift": 1.1
+  }
+ },
+ "97": {
+  "ns": 99,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 39,
+   "P": 0.747,
+   "lift": 701.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "98": {
+  "ns": 2340,
+  "freq": 0.0648,
+  "harm": {
+   "attr": "pc_set",
+   "val": 0,
+   "P": 0.093,
+   "lift": 87.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.208,
+   "lift": 1.8
+  }
+ },
+ "99": {
+  "ns": 1027,
+  "freq": 0.0105,
+  "harm": {
+   "attr": "pc_set",
+   "val": 590,
+   "P": 0.275,
+   "lift": 257.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.185,
+   "lift": 1.6
+  }
+ },
+ "101": {
+  "ns": 264,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 616,
+   "P": 0.561,
+   "lift": 525.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.178,
+   "lift": 1.5
+  }
+ },
+ "102": {
+  "ns": 387,
+  "freq": 0.0064,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1852,
+   "P": 0.235,
+   "lift": 220.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.189,
+   "lift": 1.6
+  }
+ },
+ "103": {
+  "ns": 633,
+  "freq": 0.0124,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1696,
+   "P": 0.193,
+   "lift": 180.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.215,
+   "lift": 1.9
+  }
+ },
+ "106": {
+  "ns": 20434,
+  "freq": 0.0805,
+  "harm": {
+   "attr": "pc_set",
+   "val": 418,
+   "P": 0.004,
+   "lift": 3.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "108": {
+  "ns": 138,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 366,
+   "P": 0.522,
+   "lift": 489.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.254,
+   "lift": 2.2
+  }
+ },
+ "109": {
+  "ns": 3153,
+  "freq": 0.0151,
+  "harm": {
+   "attr": "pc_set",
+   "val": 418,
+   "P": 0.068,
+   "lift": 63.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.124,
+   "lift": 1.1
+  }
+ },
+ "113": {
+  "ns": 797,
+  "freq": 0.006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 581,
+   "P": 0.074,
+   "lift": 69.4
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.967,
+   "lift": 1.0
+  }
+ },
+ "114": {
+  "ns": 2147,
+  "freq": 0.0756,
+  "harm": {
+   "attr": "pc_set",
+   "val": 116,
+   "P": 0.047,
+   "lift": 44.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.225,
+   "lift": 2.0
+  }
+ },
+ "115": {
+  "ns": 25,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.76,
+   "lift": 6.6
+  }
+ },
+ "117": {
+  "ns": 91,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 38,
+   "P": 0.692,
+   "lift": 649.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.264,
+   "lift": 2.3
+  }
+ },
+ "118": {
+  "ns": 454,
+  "freq": 0.0072,
+  "harm": {
+   "attr": "pc_set",
+   "val": 559,
+   "P": 0.198,
+   "lift": 186.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.196,
+   "lift": 1.7
+  }
+ },
+ "122": {
+  "ns": 77,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 871,
+   "P": 0.87,
+   "lift": 816.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.325,
+   "lift": 2.8
+  }
+ },
+ "124": {
+  "ns": 23,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 856,
+   "P": 0.304,
+   "lift": 285.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.478,
+   "lift": 4.2
+  }
+ },
+ "125": {
+  "ns": 619,
+  "freq": 0.0049,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1304,
+   "P": 0.25,
+   "lift": 234.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "126": {
+  "ns": 55,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 882,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "128": {
+  "ns": 338,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.305,
+   "lift": 285.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.133,
+   "lift": 1.2
+  }
+ },
+ "129": {
+  "ns": 1955,
+  "freq": 0.1134,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1672,
+   "P": 0.081,
+   "lift": 75.8
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.581,
+   "lift": 1.2
+  }
+ },
+ "130": {
+  "ns": 232,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1469,
+   "P": 0.228,
+   "lift": 214.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.272,
+   "lift": 2.4
+  }
+ },
+ "131": {
+  "ns": 140,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 95,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.207,
+   "lift": 1.8
+  }
+ },
+ "132": {
+  "ns": 474,
+  "freq": 0.01,
+  "harm": {
+   "attr": "pc_set",
+   "val": 366,
+   "P": 0.177,
+   "lift": 166.3
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.954,
+   "lift": 1.0
+  }
+ },
+ "134": {
+  "ns": 2882,
+  "freq": 0.1375,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1179,
+   "P": 0.091,
+   "lift": 85.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.138,
+   "lift": 1.2
+  }
+ },
+ "138": {
+  "ns": 151,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1089,
+   "P": 0.523,
+   "lift": 490.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.212,
+   "lift": 1.8
+  }
+ },
+ "141": {
+  "ns": 15,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1133,
+   "P": 0.867,
+   "lift": 813.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.333,
+   "lift": 2.9
+  }
+ },
+ "143": {
+  "ns": 85,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 91,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.235,
+   "lift": 2.0
+  }
+ },
+ "144": {
+  "ns": 44,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 277,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.341,
+   "lift": 3.0
+  }
+ },
+ "145": {
+  "ns": 611,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 937,
+   "P": 0.136,
+   "lift": 127.4
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.65,
+   "lift": 1.0
+  }
+ },
+ "146": {
+  "ns": 80,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1705,
+   "P": 0.938,
+   "lift": 879.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.212,
+   "lift": 1.8
+  }
+ },
+ "147": {
+  "ns": 124,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1164,
+   "P": 0.395,
+   "lift": 370.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "148": {
+  "ns": 49,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.653,
+   "lift": 612.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.469,
+   "lift": 4.1
+  }
+ },
+ "150": {
+  "ns": 23684,
+  "freq": 0.0796,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.004,
+   "lift": 3.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.218,
+   "lift": 1.9
+  }
+ },
+ "151": {
+  "ns": 10,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1301,
+   "P": 0.4,
+   "lift": 375.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.6,
+   "lift": 5.2
+  }
+ },
+ "152": {
+  "ns": 54,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 575,
+   "P": 0.389,
+   "lift": 364.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.241,
+   "lift": 2.1
+  }
+ },
+ "153": {
+  "ns": 174,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.552,
+   "lift": 517.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "154": {
+  "ns": 48,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 905,
+   "P": 0.833,
+   "lift": 781.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.396,
+   "lift": 3.4
+  }
+ },
+ "156": {
+  "ns": 11051,
+  "freq": 0.0509,
+  "harm": {
+   "attr": "pc_set",
+   "val": 47,
+   "P": 0.008,
+   "lift": 7.6
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.628,
+   "lift": 1.0
+  }
+ },
+ "157": {
+  "ns": 358,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 396,
+   "P": 0.187,
+   "lift": 175.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.131,
+   "lift": 1.1
+  }
+ },
+ "158": {
+  "ns": 42,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 314,
+   "P": 0.238,
+   "lift": 223.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.19,
+   "lift": 1.7
+  }
+ },
+ "160": {
+  "ns": 92,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1259,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.283,
+   "lift": 2.5
+  }
+ },
+ "161": {
+  "ns": 111,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 350,
+   "P": 0.64,
+   "lift": 600.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.234,
+   "lift": 2.0
+  }
+ },
+ "163": {
+  "ns": 217,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 882,
+   "P": 0.23,
+   "lift": 216.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 1,
+   "P": 0.77,
+   "lift": 1.2
+  }
+ },
+ "166": {
+  "ns": 110,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 401,
+   "P": 0.318,
+   "lift": 298.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.355,
+   "lift": 3.1
+  }
+ },
+ "167": {
+  "ns": 33,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1028,
+   "P": 0.152,
+   "lift": 142.1
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.758,
+   "lift": 1.6
+  }
+ },
+ "168": {
+  "ns": 43,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1792,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.209,
+   "lift": 1.8
+  }
+ },
+ "170": {
+  "ns": 109,
+  "freq": 0.0043,
+  "harm": {
+   "attr": "pc_set",
+   "val": 192,
+   "P": 0.321,
+   "lift": 301.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.183,
+   "lift": 1.6
+  }
+ },
+ "171": {
+  "ns": 169,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 515,
+   "P": 0.769,
+   "lift": 721.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.201,
+   "lift": 1.7
+  }
+ },
+ "173": {
+  "ns": 169,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.621,
+   "lift": 582.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.178,
+   "lift": 1.5
+  }
+ },
+ "174": {
+  "ns": 10,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1174,
+   "P": 0.3,
+   "lift": 281.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.7,
+   "lift": 6.1
+  }
+ },
+ "175": {
+  "ns": 98,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 651,
+   "P": 0.99,
+   "lift": 928.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.306,
+   "lift": 2.7
+  }
+ },
+ "176": {
+  "ns": 4807,
+  "freq": 0.0165,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1155,
+   "P": 0.012,
+   "lift": 11.5
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.95,
+   "lift": 1.0
+  }
+ },
+ "178": {
+  "ns": 66,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 677,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.212,
+   "lift": 1.8
+  }
+ },
+ "180": {
+  "ns": 163,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1949,
+   "P": 0.344,
+   "lift": 322.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "181": {
+  "ns": 14,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1361,
+   "P": 0.357,
+   "lift": 335.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "183": {
+  "ns": 23531,
+  "freq": 0.0791,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.004,
+   "lift": 3.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.22,
+   "lift": 1.9
+  }
+ },
+ "184": {
+  "ns": 90,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1012,
+   "P": 0.533,
+   "lift": 500.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.289,
+   "lift": 2.5
+  }
+ },
+ "185": {
+  "ns": 167,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.527,
+   "lift": 494.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.138,
+   "lift": 1.2
+  }
+ },
+ "186": {
+  "ns": 420,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1469,
+   "P": 0.312,
+   "lift": 292.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.145,
+   "lift": 1.3
+  }
+ },
+ "187": {
+  "ns": 42,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 331,
+   "P": 0.476,
+   "lift": 446.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.429,
+   "lift": 3.7
+  }
+ },
+ "188": {
+  "ns": 104,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.942,
+   "lift": 884.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.231,
+   "lift": 2.0
+  }
+ },
+ "189": {
+  "ns": 430,
+  "freq": 0.0086,
+  "harm": {
+   "attr": "pc_set",
+   "val": 274,
+   "P": 0.149,
+   "lift": 139.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.174,
+   "lift": 1.5
+  }
+ },
+ "191": {
+  "ns": 622,
+  "freq": 0.0075,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2058,
+   "P": 0.09,
+   "lift": 84.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "192": {
+  "ns": 510,
+  "freq": 0.0043,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1218,
+   "P": 0.335,
+   "lift": 314.6
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.714,
+   "lift": 1.5
+  }
+ },
+ "193": {
+  "ns": 15,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2147,
+   "P": 0.533,
+   "lift": 500.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.533,
+   "lift": 4.6
+  }
+ },
+ "194": {
+  "ns": 662,
+  "freq": 0.005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2058,
+   "P": 0.085,
+   "lift": 79.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.122,
+   "lift": 1.1
+  }
+ },
+ "195": {
+  "ns": 70,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1009,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.229,
+   "lift": 2.0
+  }
+ },
+ "196": {
+  "ns": 25,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1576,
+   "P": 0.16,
+   "lift": 150.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.44,
+   "lift": 3.8
+  }
+ },
+ "197": {
+  "ns": 91,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 518,
+   "P": 0.505,
+   "lift": 474.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.242,
+   "lift": 2.1
+  }
+ },
+ "198": {
+  "ns": 123,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 458,
+   "P": 0.431,
+   "lift": 404.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.293,
+   "lift": 2.5
+  }
+ },
+ "199": {
+  "ns": 112,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1078,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.321,
+   "lift": 2.8
+  }
+ },
+ "200": {
+  "ns": 4578,
+  "freq": 0.042,
+  "harm": {
+   "attr": "pc_set",
+   "val": 513,
+   "P": 0.016,
+   "lift": 15.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.536,
+   "lift": 1.1
+  }
+ },
+ "201": {
+  "ns": 23,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1126,
+   "P": 0.696,
+   "lift": 652.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.304,
+   "lift": 2.6
+  }
+ },
+ "202": {
+  "ns": 21,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 830,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.762,
+   "lift": 6.6
+  }
+ },
+ "203": {
+  "ns": 179,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1989,
+   "P": 0.425,
+   "lift": 398.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "204": {
+  "ns": 286,
+  "freq": 0.0052,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1750,
+   "P": 0.577,
+   "lift": 541.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.133,
+   "lift": 1.2
+  }
+ },
+ "205": {
+  "ns": 370,
+  "freq": 0.0034,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1153,
+   "P": 0.357,
+   "lift": 334.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "206": {
+  "ns": 327,
+  "freq": 0.0044,
+  "harm": {
+   "attr": "pc_set",
+   "val": 205,
+   "P": 0.202,
+   "lift": 189.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "207": {
+  "ns": 761,
+  "freq": 0.0059,
+  "harm": {
+   "attr": "pc_set",
+   "val": 139,
+   "P": 0.067,
+   "lift": 62.9
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.706,
+   "lift": 1.1
+  }
+ },
+ "209": {
+  "ns": 2330,
+  "freq": 0.0108,
+  "harm": {
+   "attr": "pc_set",
+   "val": 122,
+   "P": 0.021,
+   "lift": 19.3
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.627,
+   "lift": 1.3
+  }
+ },
+ "211": {
+  "ns": 12,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 459,
+   "P": 0.333,
+   "lift": 312.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.417,
+   "lift": 3.6
+  }
+ },
+ "212": {
+  "ns": 23748,
+  "freq": 0.0799,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1035,
+   "P": 0.004,
+   "lift": 3.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.216,
+   "lift": 1.9
+  }
+ },
+ "213": {
+  "ns": 54,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1598,
+   "P": 0.315,
+   "lift": 295.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.259,
+   "lift": 2.3
+  }
+ },
+ "214": {
+  "ns": 234,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 91,
+   "P": 0.376,
+   "lift": 352.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.265,
+   "lift": 2.3
+  }
+ },
+ "217": {
+  "ns": 1357,
+  "freq": 0.0048,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1245,
+   "P": 0.046,
+   "lift": 42.9
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.664,
+   "lift": 1.4
+  }
+ },
+ "221": {
+  "ns": 338,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1400,
+   "P": 0.462,
+   "lift": 433.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "222": {
+  "ns": 10,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1746,
+   "P": 0.4,
+   "lift": 375.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.6,
+   "lift": 5.2
+  }
+ },
+ "223": {
+  "ns": 204,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 325,
+   "P": 0.436,
+   "lift": 409.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "225": {
+  "ns": 160,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 480,
+   "P": 0.656,
+   "lift": 615.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "226": {
+  "ns": 18,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 655,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.278,
+   "lift": 2.4
+  }
+ },
+ "227": {
+  "ns": 1080,
+  "freq": 0.0131,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1197,
+   "P": 0.092,
+   "lift": 86.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.16,
+   "lift": 1.4
+  }
+ },
+ "228": {
+  "ns": 24,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1202,
+   "P": 0.417,
+   "lift": 390.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.583,
+   "lift": 5.1
+  }
+ },
+ "229": {
+  "ns": 184,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 156,
+   "P": 0.397,
+   "lift": 372.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.201,
+   "lift": 1.7
+  }
+ },
+ "230": {
+  "ns": 181,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 389,
+   "P": 0.017,
+   "lift": 15.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.199,
+   "lift": 1.7
+  }
+ },
+ "231": {
+  "ns": 48,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 437,
+   "P": 0.917,
+   "lift": 860.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "232": {
+  "ns": 157,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2052,
+   "P": 0.529,
+   "lift": 496.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.229,
+   "lift": 2.0
+  }
+ },
+ "233": {
+  "ns": 103,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1481,
+   "P": 0.32,
+   "lift": 300.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.146,
+   "lift": 1.3
+  }
+ },
+ "235": {
+  "ns": 115,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1749,
+   "P": 0.417,
+   "lift": 391.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.191,
+   "lift": 1.7
+  }
+ },
+ "236": {
+  "ns": 156,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.603,
+   "lift": 565.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "237": {
+  "ns": 376,
+  "freq": 0.0048,
+  "harm": {
+   "attr": "pc_set",
+   "val": 292,
+   "P": 0.25,
+   "lift": 234.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.231,
+   "lift": 2.0
+  }
+ },
+ "238": {
+  "ns": 179,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1574,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.251,
+   "lift": 2.2
+  }
+ },
+ "239": {
+  "ns": 1372,
+  "freq": 0.0742,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1259,
+   "P": 0.021,
+   "lift": 19.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.292,
+   "lift": 2.5
+  }
+ },
+ "240": {
+  "ns": 897,
+  "freq": 0.0068,
+  "harm": {
+   "attr": "pc_set",
+   "val": 3,
+   "P": 0.089,
+   "lift": 83.7
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.68,
+   "lift": 1.1
+  }
+ },
+ "242": {
+  "ns": 46,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1237,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.261,
+   "lift": 2.3
+  }
+ },
+ "244": {
+  "ns": 121,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1208,
+   "P": 0.57,
+   "lift": 535.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.174,
+   "lift": 1.5
+  }
+ },
+ "245": {
+  "ns": 201,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 634,
+   "P": 0.229,
+   "lift": 214.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "246": {
+  "ns": 25,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 347,
+   "P": 0.2,
+   "lift": 187.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.56,
+   "lift": 4.9
+  }
+ },
+ "247": {
+  "ns": 301,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1064,
+   "P": 0.269,
+   "lift": 252.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.14,
+   "lift": 1.2
+  }
+ },
+ "249": {
+  "ns": 1458,
+  "freq": 0.0876,
+  "harm": {
+   "attr": "pc_set",
+   "val": 543,
+   "P": 0.182,
+   "lift": 170.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.296,
+   "lift": 2.6
+  }
+ },
+ "251": {
+  "ns": 333,
+  "freq": 0.0055,
+  "harm": {
+   "attr": "pc_set",
+   "val": 224,
+   "P": 0.24,
+   "lift": 225.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "252": {
+  "ns": 45,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1301,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.244,
+   "lift": 2.1
+  }
+ },
+ "253": {
+  "ns": 154,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1597,
+   "P": 0.656,
+   "lift": 615.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.227,
+   "lift": 2.0
+  }
+ },
+ "254": {
+  "ns": 928,
+  "freq": 0.0132,
+  "harm": {
+   "attr": "pc_set",
+   "val": 851,
+   "P": 0.301,
+   "lift": 282.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.17,
+   "lift": 1.5
+  }
+ },
+ "255": {
+  "ns": 8381,
+  "freq": 0.0295,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.007,
+   "lift": 6.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 4,
+   "P": 0.492,
+   "lift": 1.1
+  }
+ },
+ "257": {
+  "ns": 6076,
+  "freq": 0.0784,
+  "harm": {
+   "attr": "pc_set",
+   "val": 616,
+   "P": 0.005,
+   "lift": 4.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.646,
+   "lift": 5.6
+  }
+ },
+ "260": {
+  "ns": 637,
+  "freq": 0.0117,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1971,
+   "P": 0.328,
+   "lift": 307.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.124,
+   "lift": 1.1
+  }
+ },
+ "261": {
+  "ns": 180,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1989,
+   "P": 0.406,
+   "lift": 380.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.294,
+   "lift": 2.6
+  }
+ },
+ "262": {
+  "ns": 199,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 251,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.166,
+   "lift": 1.4
+  }
+ },
+ "263": {
+  "ns": 3166,
+  "freq": 0.048,
+  "harm": {
+   "attr": "pc_set",
+   "val": 678,
+   "P": 0.083,
+   "lift": 77.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.123,
+   "lift": 1.1
+  }
+ },
+ "266": {
+  "ns": 220,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1750,
+   "P": 0.359,
+   "lift": 336.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.164,
+   "lift": 1.4
+  }
+ },
+ "268": {
+  "ns": 184,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1893,
+   "P": 0.261,
+   "lift": 244.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.174,
+   "lift": 1.5
+  }
+ },
+ "269": {
+  "ns": 174,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1230,
+   "P": 0.178,
+   "lift": 167.1
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 4,
+   "P": 0.54,
+   "lift": 1.2
+  }
+ },
+ "270": {
+  "ns": 120,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 997,
+   "P": 0.383,
+   "lift": 359.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "271": {
+  "ns": 64,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1979,
+   "P": 0.688,
+   "lift": 645.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.234,
+   "lift": 2.0
+  }
+ },
+ "273": {
+  "ns": 11,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 842,
+   "P": 0.273,
+   "lift": 255.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.364,
+   "lift": 3.2
+  }
+ },
+ "274": {
+  "ns": 255,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.396,
+   "lift": 371.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.157,
+   "lift": 1.4
+  }
+ },
+ "280": {
+  "ns": 31,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1377,
+   "P": 0.387,
+   "lift": 363.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.194,
+   "lift": 1.7
+  }
+ },
+ "284": {
+  "ns": 847,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 829,
+   "P": 0.09,
+   "lift": 84.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.671,
+   "lift": 1.1
+  }
+ },
+ "285": {
+  "ns": 125,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 816,
+   "P": 0.704,
+   "lift": 660.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "286": {
+  "ns": 51,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1033,
+   "P": 0.98,
+   "lift": 919.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.373,
+   "lift": 3.2
+  }
+ },
+ "287": {
+  "ns": 1854,
+  "freq": 0.0748,
+  "harm": {
+   "attr": "pc_set",
+   "val": 651,
+   "P": 0.018,
+   "lift": 16.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.494,
+   "lift": 4.3
+  }
+ },
+ "288": {
+  "ns": 20,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1198,
+   "P": 0.9,
+   "lift": 844.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.4,
+   "lift": 3.5
+  }
+ },
+ "289": {
+  "ns": 148,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1239,
+   "P": 0.399,
+   "lift": 374.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.196,
+   "lift": 1.7
+  }
+ },
+ "290": {
+  "ns": 199,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1969,
+   "P": 0.246,
+   "lift": 231.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.151,
+   "lift": 1.3
+  }
+ },
+ "291": {
+  "ns": 117,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 732,
+   "P": 0.504,
+   "lift": 473.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.197,
+   "lift": 1.7
+  }
+ },
+ "292": {
+  "ns": 22,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 407,
+   "P": 0.455,
+   "lift": 426.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.273,
+   "lift": 2.4
+  }
+ },
+ "297": {
+  "ns": 57,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2012,
+   "P": 0.912,
+   "lift": 855.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "298": {
+  "ns": 175,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 701,
+   "P": 0.349,
+   "lift": 327.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "299": {
+  "ns": 19,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 707,
+   "P": 0.474,
+   "lift": 444.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.263,
+   "lift": 2.3
+  }
+ },
+ "300": {
+  "ns": 4571,
+  "freq": 0.0193,
+  "harm": {
+   "attr": "pc_set",
+   "val": 174,
+   "P": 0.019,
+   "lift": 18.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.129,
+   "lift": 1.1
+  }
+ },
+ "302": {
+  "ns": 116,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 448,
+   "P": 0.69,
+   "lift": 647.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.241,
+   "lift": 2.1
+  }
+ },
+ "303": {
+  "ns": 805,
+  "freq": 0.0081,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1029,
+   "P": 0.268,
+   "lift": 251.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.138,
+   "lift": 1.2
+  }
+ },
+ "304": {
+  "ns": 72,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 802,
+   "P": 0.986,
+   "lift": 925.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.264,
+   "lift": 2.3
+  }
+ },
+ "305": {
+  "ns": 127,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.701,
+   "lift": 657.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.252,
+   "lift": 2.2
+  }
+ },
+ "306": {
+  "ns": 48,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1761,
+   "P": 0.521,
+   "lift": 488.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "307": {
+  "ns": 105,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 156,
+   "P": 0.543,
+   "lift": 509.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.162,
+   "lift": 1.4
+  }
+ },
+ "309": {
+  "ns": 324,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 224,
+   "P": 0.525,
+   "lift": 492.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.157,
+   "lift": 1.4
+  }
+ },
+ "310": {
+  "ns": 115,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 769,
+   "P": 0.696,
+   "lift": 652.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.226,
+   "lift": 2.0
+  }
+ },
+ "311": {
+  "ns": 157,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1365,
+   "P": 0.548,
+   "lift": 513.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.191,
+   "lift": 1.7
+  }
+ },
+ "312": {
+  "ns": 13,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 698,
+   "P": 0.692,
+   "lift": 649.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.538,
+   "lift": 4.7
+  }
+ },
+ "313": {
+  "ns": 14070,
+  "freq": 0.0874,
+  "harm": {
+   "attr": "pc_set",
+   "val": 301,
+   "P": 0.011,
+   "lift": 10.0
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.715,
+   "lift": 1.1
+  }
+ },
+ "316": {
+  "ns": 1073,
+  "freq": 0.0093,
+  "harm": {
+   "attr": "pc_set",
+   "val": 829,
+   "P": 0.226,
+   "lift": 212.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.121,
+   "lift": 1.1
+  }
+ },
+ "319": {
+  "ns": 57,
+  "freq": 0.0108,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1792,
+   "P": 0.316,
+   "lift": 296.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.316,
+   "lift": 2.7
+  }
+ },
+ "320": {
+  "ns": 2563,
+  "freq": 0.017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.038,
+   "lift": 35.5
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.73,
+   "lift": 1.2
+  }
+ },
+ "322": {
+  "ns": 95,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2300,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.284,
+   "lift": 2.5
+  }
+ },
+ "324": {
+  "ns": 59,
+  "freq": 0.0061,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1534,
+   "P": 0.492,
+   "lift": 461.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.254,
+   "lift": 2.2
+  }
+ },
+ "326": {
+  "ns": 99,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1900,
+   "P": 0.505,
+   "lift": 473.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "327": {
+  "ns": 150,
+  "freq": 0.0035,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1153,
+   "P": 0.48,
+   "lift": 450.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.16,
+   "lift": 1.4
+  }
+ },
+ "328": {
+  "ns": 66,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 0.227,
+   "lift": 213.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.227,
+   "lift": 2.0
+  }
+ },
+ "329": {
+  "ns": 1494,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 25,
+   "P": 0.054,
+   "lift": 50.2
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.945,
+   "lift": 1.0
+  }
+ },
+ "330": {
+  "ns": 28,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 296,
+   "P": 0.429,
+   "lift": 402.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "331": {
+  "ns": 8090,
+  "freq": 0.0296,
+  "harm": {
+   "attr": "pc_set",
+   "val": 911,
+   "P": 0.012,
+   "lift": 11.1
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.964,
+   "lift": 1.0
+  }
+ },
+ "333": {
+  "ns": 130,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1059,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.208,
+   "lift": 1.8
+  }
+ },
+ "335": {
+  "ns": 95,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2143,
+   "P": 0.432,
+   "lift": 404.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "338": {
+  "ns": 58,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 869,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.207,
+   "lift": 1.8
+  }
+ },
+ "339": {
+  "ns": 1817,
+  "freq": 0.0068,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.053,
+   "lift": 50.1
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.948,
+   "lift": 1.0
+  }
+ },
+ "340": {
+  "ns": 199,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 401,
+   "P": 0.362,
+   "lift": 339.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.156,
+   "lift": 1.4
+  }
+ },
+ "341": {
+  "ns": 110,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1242,
+   "P": 0.491,
+   "lift": 460.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.255,
+   "lift": 2.2
+  }
+ },
+ "342": {
+  "ns": 325,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.314,
+   "lift": 294.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "344": {
+  "ns": 56,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1828,
+   "P": 0.911,
+   "lift": 854.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "347": {
+  "ns": 4404,
+  "freq": 0.0568,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.062,
+   "lift": 58.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "348": {
+  "ns": 26153,
+  "freq": 0.088,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1111,
+   "P": 0.004,
+   "lift": 3.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "350": {
+  "ns": 382,
+  "freq": 0.0046,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1407,
+   "P": 0.44,
+   "lift": 412.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.134,
+   "lift": 1.2
+  }
+ },
+ "351": {
+  "ns": 77,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 161,
+   "P": 0.987,
+   "lift": 926.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.221,
+   "lift": 1.9
+  }
+ },
+ "352": {
+  "ns": 300,
+  "freq": 0.0026,
+  "harm": {
+   "attr": "pc_set",
+   "val": 851,
+   "P": 0.233,
+   "lift": 218.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "353": {
+  "ns": 134,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1705,
+   "P": 0.575,
+   "lift": 539.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "354": {
+  "ns": 10,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 569,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.3,
+   "lift": 2.6
+  }
+ },
+ "356": {
+  "ns": 16,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1843,
+   "P": 0.188,
+   "lift": 175.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.688,
+   "lift": 6.0
+  }
+ },
+ "358": {
+  "ns": 22,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 39,
+   "P": 0.909,
+   "lift": 852.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.318,
+   "lift": 2.8
+  }
+ },
+ "360": {
+  "ns": 224,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 726,
+   "P": 0.384,
+   "lift": 360.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.246,
+   "lift": 2.1
+  }
+ },
+ "361": {
+  "ns": 3492,
+  "freq": 0.0836,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2143,
+   "P": 0.008,
+   "lift": 7.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.679,
+   "lift": 5.9
+  }
+ },
+ "363": {
+  "ns": 202,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1705,
+   "P": 0.376,
+   "lift": 353.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.198,
+   "lift": 1.7
+  }
+ },
+ "364": {
+  "ns": 127,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1700,
+   "P": 0.827,
+   "lift": 775.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.291,
+   "lift": 2.5
+  }
+ },
+ "366": {
+  "ns": 23,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2086,
+   "P": 0.87,
+   "lift": 815.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.304,
+   "lift": 2.6
+  }
+ },
+ "369": {
+  "ns": 312,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1031,
+   "P": 0.51,
+   "lift": 478.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "370": {
+  "ns": 1375,
+  "freq": 0.0087,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.208,
+   "lift": 195.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.137,
+   "lift": 1.2
+  }
+ },
+ "372": {
+  "ns": 33,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 187,
+   "P": 0.515,
+   "lift": 483.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.273,
+   "lift": 2.4
+  }
+ },
+ "373": {
+  "ns": 106,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 412,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.33,
+   "lift": 2.9
+  }
+ },
+ "374": {
+  "ns": 107,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 754,
+   "P": 0.57,
+   "lift": 534.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.196,
+   "lift": 1.7
+  }
+ },
+ "375": {
+  "ns": 73,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1534,
+   "P": 0.644,
+   "lift": 604.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.205,
+   "lift": 1.8
+  }
+ },
+ "376": {
+  "ns": 694,
+  "freq": 0.0133,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1221,
+   "P": 0.163,
+   "lift": 152.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.298,
+   "lift": 2.6
+  }
+ },
+ "379": {
+  "ns": 275,
+  "freq": 0.0688,
+  "harm": {
+   "attr": "pc_set",
+   "val": 203,
+   "P": 0.058,
+   "lift": 54.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.44,
+   "lift": 3.8
+  }
+ },
+ "381": {
+  "ns": 281,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 428,
+   "P": 0.313,
+   "lift": 293.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.164,
+   "lift": 1.4
+  }
+ },
+ "382": {
+  "ns": 122,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1810,
+   "P": 0.344,
+   "lift": 323.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.213,
+   "lift": 1.9
+  }
+ },
+ "383": {
+  "ns": 739,
+  "freq": 0.0175,
+  "harm": {
+   "attr": "pc_set",
+   "val": 70,
+   "P": 0.261,
+   "lift": 245.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "384": {
+  "ns": 17,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1741,
+   "P": 0.765,
+   "lift": 717.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.235,
+   "lift": 2.0
+  }
+ },
+ "385": {
+  "ns": 10,
+  "freq": 0.0,
+  "harm": {
+   "attr": "pc_set",
+   "val": 625,
+   "P": 0.8,
+   "lift": 750.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.4,
+   "lift": 3.5
+  }
+ },
+ "386": {
+  "ns": 64,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 7,
+   "P": 0.969,
+   "lift": 908.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.266,
+   "lift": 2.3
+  }
+ },
+ "387": {
+  "ns": 10288,
+  "freq": 0.0455,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1035,
+   "P": 0.007,
+   "lift": 6.6
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.956,
+   "lift": 1.0
+  }
+ },
+ "388": {
+  "ns": 445,
+  "freq": 0.0044,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1078,
+   "P": 0.252,
+   "lift": 236.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.249,
+   "lift": 2.2
+  }
+ },
+ "389": {
+  "ns": 1213,
+  "freq": 0.0159,
+  "harm": {
+   "attr": "pc_set",
+   "val": 846,
+   "P": 0.126,
+   "lift": 118.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.128,
+   "lift": 1.1
+  }
+ },
+ "390": {
+  "ns": 43,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2113,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.279,
+   "lift": 2.4
+  }
+ },
+ "394": {
+  "ns": 58,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 801,
+   "P": 0.379,
+   "lift": 355.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.224,
+   "lift": 1.9
+  }
+ },
+ "395": {
+  "ns": 228,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 360,
+   "P": 0.303,
+   "lift": 283.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.136,
+   "lift": 1.2
+  }
+ },
+ "396": {
+  "ns": 450,
+  "freq": 0.0056,
+  "harm": {
+   "attr": "pc_set",
+   "val": 396,
+   "P": 0.164,
+   "lift": 154.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.176,
+   "lift": 1.5
+  }
+ },
+ "397": {
+  "ns": 5500,
+  "freq": 0.0502,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1737,
+   "P": 0.013,
+   "lift": 12.1
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.658,
+   "lift": 1.1
+  }
+ },
+ "398": {
+  "ns": 12,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 0.583,
+   "lift": 547.3
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 3,
+   "P": 0.667,
+   "lift": 1.4
+  }
+ },
+ "399": {
+  "ns": 427,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 332,
+   "P": 0.176,
+   "lift": 164.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.178,
+   "lift": 1.5
+  }
+ },
+ "401": {
+  "ns": 1928,
+  "freq": 0.0094,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1754,
+   "P": 0.032,
+   "lift": 30.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.491,
+   "lift": 1.0
+  }
+ },
+ "402": {
+  "ns": 807,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 649,
+   "P": 0.098,
+   "lift": 91.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.757,
+   "lift": 1.2
+  }
+ },
+ "404": {
+  "ns": 380,
+  "freq": 0.0068,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1034,
+   "P": 0.503,
+   "lift": 471.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.158,
+   "lift": 1.4
+  }
+ },
+ "405": {
+  "ns": 312,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 793,
+   "P": 0.212,
+   "lift": 198.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "406": {
+  "ns": 109,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 248,
+   "P": 0.844,
+   "lift": 791.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.33,
+   "lift": 2.9
+  }
+ },
+ "407": {
+  "ns": 268,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 104,
+   "P": 0.384,
+   "lift": 360.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.224,
+   "lift": 1.9
+  }
+ },
+ "408": {
+  "ns": 221,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.697,
+   "lift": 653.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.136,
+   "lift": 1.2
+  }
+ },
+ "409": {
+  "ns": 82,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 937,
+   "P": 0.988,
+   "lift": 926.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "411": {
+  "ns": 57,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 10,
+   "P": 0.702,
+   "lift": 658.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.509,
+   "lift": 4.4
+  }
+ },
+ "412": {
+  "ns": 89,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 556,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.236,
+   "lift": 2.0
+  }
+ },
+ "414": {
+  "ns": 315,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1845,
+   "P": 0.219,
+   "lift": 205.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "417": {
+  "ns": 92,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 412,
+   "P": 0.489,
+   "lift": 458.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.304,
+   "lift": 2.6
+  }
+ },
+ "418": {
+  "ns": 70,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1749,
+   "P": 0.671,
+   "lift": 629.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.186,
+   "lift": 1.6
+  }
+ },
+ "419": {
+  "ns": 7762,
+  "freq": 0.0304,
+  "harm": {
+   "attr": "pc_set",
+   "val": 927,
+   "P": 0.01,
+   "lift": 9.8
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.954,
+   "lift": 1.0
+  }
+ },
+ "421": {
+  "ns": 3457,
+  "freq": 0.0165,
+  "harm": {
+   "attr": "pc_set",
+   "val": 31,
+   "P": 0.019,
+   "lift": 18.2
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.953,
+   "lift": 1.0
+  }
+ },
+ "422": {
+  "ns": 24,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1333,
+   "P": 0.292,
+   "lift": 273.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.75,
+   "lift": 6.5
+  }
+ },
+ "423": {
+  "ns": 464,
+  "freq": 0.0044,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1365,
+   "P": 0.103,
+   "lift": 97.1
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 3,
+   "P": 0.494,
+   "lift": 1.1
+  }
+ },
+ "424": {
+  "ns": 1868,
+  "freq": 0.0334,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1337,
+   "P": 0.142,
+   "lift": 133.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.126,
+   "lift": 1.1
+  }
+ },
+ "425": {
+  "ns": 243,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 145,
+   "P": 0.284,
+   "lift": 266.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.292,
+   "lift": 2.5
+  }
+ },
+ "426": {
+  "ns": 280,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 605,
+   "P": 0.843,
+   "lift": 790.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.193,
+   "lift": 1.7
+  }
+ },
+ "427": {
+  "ns": 616,
+  "freq": 0.0969,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1979,
+   "P": 0.12,
+   "lift": 112.7
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 1,
+   "P": 0.776,
+   "lift": 1.2
+  }
+ },
+ "428": {
+  "ns": 23,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 909,
+   "P": 0.957,
+   "lift": 897.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.565,
+   "lift": 4.9
+  }
+ },
+ "429": {
+  "ns": 156,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1173,
+   "P": 0.551,
+   "lift": 517.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.167,
+   "lift": 1.4
+  }
+ },
+ "430": {
+  "ns": 49,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1001,
+   "P": 0.898,
+   "lift": 842.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.347,
+   "lift": 3.0
+  }
+ },
+ "431": {
+  "ns": 440,
+  "freq": 0.0075,
+  "harm": {
+   "attr": "pc_set",
+   "val": 199,
+   "P": 0.318,
+   "lift": 298.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.141,
+   "lift": 1.2
+  }
+ },
+ "432": {
+  "ns": 258,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1700,
+   "P": 0.407,
+   "lift": 381.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.209,
+   "lift": 1.8
+  }
+ },
+ "434": {
+  "ns": 277,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 38,
+   "P": 0.682,
+   "lift": 640.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.202,
+   "lift": 1.8
+  }
+ },
+ "436": {
+  "ns": 1408,
+  "freq": 0.0252,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1800,
+   "P": 0.154,
+   "lift": 144.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.124,
+   "lift": 1.1
+  }
+ },
+ "437": {
+  "ns": 193,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 651,
+   "P": 0.503,
+   "lift": 471.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.233,
+   "lift": 2.0
+  }
+ },
+ "438": {
+  "ns": 78,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1652,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.231,
+   "lift": 2.0
+  }
+ },
+ "439": {
+  "ns": 286,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1013,
+   "P": 0.448,
+   "lift": 419.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "442": {
+  "ns": 243,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1597,
+   "P": 0.416,
+   "lift": 389.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.189,
+   "lift": 1.6
+  }
+ },
+ "444": {
+  "ns": 46,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1443,
+   "P": 0.978,
+   "lift": 917.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.457,
+   "lift": 4.0
+  }
+ },
+ "445": {
+  "ns": 11745,
+  "freq": 0.0425,
+  "harm": {
+   "attr": "pc_set",
+   "val": 115,
+   "P": 0.007,
+   "lift": 6.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.113,
+   "lift": 1.0
+  }
+ },
+ "446": {
+  "ns": 183,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 344,
+   "P": 0.333,
+   "lift": 312.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "448": {
+  "ns": 648,
+  "freq": 0.0113,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1179,
+   "P": 0.318,
+   "lift": 298.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.14,
+   "lift": 1.2
+  }
+ },
+ "449": {
+  "ns": 289,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 598,
+   "P": 0.298,
+   "lift": 279.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.183,
+   "lift": 1.6
+  }
+ },
+ "450": {
+  "ns": 148,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1700,
+   "P": 0.635,
+   "lift": 595.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.311,
+   "lift": 2.7
+  }
+ },
+ "451": {
+  "ns": 14,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1978,
+   "P": 0.571,
+   "lift": 536.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.571,
+   "lift": 5.0
+  }
+ },
+ "452": {
+  "ns": 279,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 178,
+   "P": 0.573,
+   "lift": 538.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "454": {
+  "ns": 100,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1481,
+   "P": 0.56,
+   "lift": 525.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "455": {
+  "ns": 741,
+  "freq": 0.0068,
+  "harm": {
+   "attr": "pc_set",
+   "val": 91,
+   "P": 0.115,
+   "lift": 107.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.117,
+   "lift": 1.0
+  }
+ },
+ "456": {
+  "ns": 38,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1286,
+   "P": 0.289,
+   "lift": 271.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.421,
+   "lift": 3.7
+  }
+ },
+ "458": {
+  "ns": 36,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 870,
+   "P": 0.778,
+   "lift": 729.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "460": {
+  "ns": 44,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2262,
+   "P": 0.364,
+   "lift": 341.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.273,
+   "lift": 2.4
+  }
+ },
+ "461": {
+  "ns": 38,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 802,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.237,
+   "lift": 2.1
+  }
+ },
+ "463": {
+  "ns": 216,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1012,
+   "P": 0.361,
+   "lift": 338.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.157,
+   "lift": 1.4
+  }
+ },
+ "466": {
+  "ns": 26345,
+  "freq": 0.0886,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.004,
+   "lift": 3.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.196,
+   "lift": 1.7
+  }
+ },
+ "467": {
+  "ns": 961,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 377,
+   "P": 0.088,
+   "lift": 83.0
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.635,
+   "lift": 1.0
+  }
+ },
+ "468": {
+  "ns": 75,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 941,
+   "P": 0.8,
+   "lift": 750.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.227,
+   "lift": 2.0
+  }
+ },
+ "470": {
+  "ns": 931,
+  "freq": 0.0082,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1286,
+   "P": 0.18,
+   "lift": 169.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.121,
+   "lift": 1.1
+  }
+ },
+ "471": {
+  "ns": 6157,
+  "freq": 0.0217,
+  "harm": {
+   "attr": "bass",
+   "val": 4,
+   "P": 0.291,
+   "lift": 3.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.542,
+   "lift": 4.7
+  }
+ },
+ "472": {
+  "ns": 10,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1119,
+   "P": 0.3,
+   "lift": 281.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.4,
+   "lift": 3.5
+  }
+ },
+ "473": {
+  "ns": 14,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1329,
+   "P": 0.643,
+   "lift": 603.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "474": {
+  "ns": 234,
+  "freq": 0.0035,
+  "harm": {
+   "attr": "pc_set",
+   "val": 667,
+   "P": 0.265,
+   "lift": 248.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "476": {
+  "ns": 105,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 403,
+   "P": 0.533,
+   "lift": 500.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.219,
+   "lift": 1.9
+  }
+ },
+ "479": {
+  "ns": 72,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.972,
+   "lift": 912.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.278,
+   "lift": 2.4
+  }
+ },
+ "480": {
+  "ns": 118,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 350,
+   "P": 0.653,
+   "lift": 612.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.203,
+   "lift": 1.8
+  }
+ },
+ "482": {
+  "ns": 1417,
+  "freq": 0.0242,
+  "harm": {
+   "attr": "pc_set",
+   "val": 960,
+   "P": 0.173,
+   "lift": 162.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.169,
+   "lift": 1.5
+  }
+ },
+ "483": {
+  "ns": 57,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1413,
+   "P": 0.965,
+   "lift": 905.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "484": {
+  "ns": 57,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 88,
+   "P": 0.947,
+   "lift": 888.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.281,
+   "lift": 2.4
+  }
+ },
+ "486": {
+  "ns": 715,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1069,
+   "P": 0.281,
+   "lift": 263.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.187,
+   "lift": 1.6
+  }
+ },
+ "488": {
+  "ns": 511,
+  "freq": 0.0061,
+  "harm": {
+   "attr": "pc_set",
+   "val": 495,
+   "P": 0.403,
+   "lift": 378.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.736,
+   "lift": 1.2
+  }
+ },
+ "489": {
+  "ns": 786,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1084,
+   "P": 0.304,
+   "lift": 285.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.139,
+   "lift": 1.2
+  }
+ },
+ "490": {
+  "ns": 1642,
+  "freq": 0.0057,
+  "harm": {
+   "attr": "pc_set",
+   "val": 3,
+   "P": 0.049,
+   "lift": 45.7
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.725,
+   "lift": 1.2
+  }
+ },
+ "491": {
+  "ns": 336,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1219,
+   "P": 0.22,
+   "lift": 206.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.113,
+   "lift": 1.0
+  }
+ },
+ "492": {
+  "ns": 35,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 585,
+   "P": 0.657,
+   "lift": 616.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.771,
+   "lift": 6.7
+  }
+ },
+ "496": {
+  "ns": 569,
+  "freq": 0.0041,
+  "harm": {
+   "attr": "pc_set",
+   "val": 145,
+   "P": 0.315,
+   "lift": 295.1
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.728,
+   "lift": 1.2
+  }
+ },
+ "497": {
+  "ns": 4617,
+  "freq": 0.036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1197,
+   "P": 0.021,
+   "lift": 20.1
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.642,
+   "lift": 1.0
+  }
+ },
+ "498": {
+  "ns": 510,
+  "freq": 0.0047,
+  "harm": {
+   "attr": "pc_set",
+   "val": 499,
+   "P": 0.427,
+   "lift": 401.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.175,
+   "lift": 1.5
+  }
+ },
+ "501": {
+  "ns": 135,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2333,
+   "P": 0.022,
+   "lift": 20.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.252,
+   "lift": 2.2
+  }
+ },
+ "502": {
+  "ns": 391,
+  "freq": 0.007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 72,
+   "P": 0.545,
+   "lift": 511.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "503": {
+  "ns": 1788,
+  "freq": 0.0176,
+  "harm": {
+   "attr": "pc_set",
+   "val": 487,
+   "P": 0.149,
+   "lift": 140.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.133,
+   "lift": 1.2
+  }
+ },
+ "504": {
+  "ns": 65,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 0.8,
+   "lift": 750.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.4,
+   "lift": 3.5
+  }
+ },
+ "505": {
+  "ns": 170,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1365,
+   "P": 0.259,
+   "lift": 242.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "506": {
+  "ns": 8140,
+  "freq": 0.0838,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 0.004,
+   "lift": 3.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.872,
+   "lift": 7.6
+  }
+ },
+ "508": {
+  "ns": 178,
+  "freq": 0.0034,
+  "harm": {
+   "attr": "pc_set",
+   "val": 67,
+   "P": 0.433,
+   "lift": 405.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.169,
+   "lift": 1.5
+  }
+ },
+ "509": {
+  "ns": 11,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1639,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 3,
+   "P": 0.818,
+   "lift": 1.7
+  }
+ },
+ "510": {
+  "ns": 46,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1826,
+   "P": 0.674,
+   "lift": 632.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.174,
+   "lift": 1.5
+  }
+ },
+ "511": {
+  "ns": 233,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 911,
+   "P": 0.318,
+   "lift": 298.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "512": {
+  "ns": 2971,
+  "freq": 0.155,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1153,
+   "P": 0.049,
+   "lift": 46.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.556,
+   "lift": 4.8
+  }
+ },
+ "513": {
+  "ns": 170,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 377,
+   "P": 0.506,
+   "lift": 474.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.165,
+   "lift": 1.4
+  }
+ },
+ "515": {
+  "ns": 44,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 715,
+   "P": 0.841,
+   "lift": 788.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.409,
+   "lift": 3.6
+  }
+ },
+ "516": {
+  "ns": 114,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 651,
+   "P": 0.026,
+   "lift": 24.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.307,
+   "lift": 2.7
+  }
+ },
+ "517": {
+  "ns": 1006,
+  "freq": 0.0034,
+  "harm": {
+   "attr": "pc_set",
+   "val": 635,
+   "P": 0.046,
+   "lift": 42.9
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.971,
+   "lift": 1.0
+  }
+ },
+ "518": {
+  "ns": 21,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 78,
+   "P": 0.238,
+   "lift": 223.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.429,
+   "lift": 3.7
+  }
+ },
+ "520": {
+  "ns": 180,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2011,
+   "P": 0.461,
+   "lift": 432.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "521": {
+  "ns": 14,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 830,
+   "P": 0.857,
+   "lift": 804.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "522": {
+  "ns": 117,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 678,
+   "P": 0.761,
+   "lift": 713.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.265,
+   "lift": 2.3
+  }
+ },
+ "525": {
+  "ns": 288,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1427,
+   "P": 0.326,
+   "lift": 306.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.132,
+   "lift": 1.1
+  }
+ },
+ "526": {
+  "ns": 58,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1683,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.362,
+   "lift": 3.1
+  }
+ },
+ "527": {
+  "ns": 73,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 11,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.274,
+   "lift": 2.4
+  }
+ },
+ "528": {
+  "ns": 25,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 67,
+   "P": 0.76,
+   "lift": 713.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.52,
+   "lift": 4.5
+  }
+ },
+ "530": {
+  "ns": 105,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 104,
+   "P": 0.581,
+   "lift": 545.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.219,
+   "lift": 1.9
+  }
+ },
+ "531": {
+  "ns": 680,
+  "freq": 0.0071,
+  "harm": {
+   "attr": "pc_set",
+   "val": 343,
+   "P": 0.249,
+   "lift": 233.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.149,
+   "lift": 1.3
+  }
+ },
+ "532": {
+  "ns": 38,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 979,
+   "P": 0.816,
+   "lift": 765.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.263,
+   "lift": 2.3
+  }
+ },
+ "533": {
+  "ns": 209,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 769,
+   "P": 0.397,
+   "lift": 372.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.282,
+   "lift": 2.5
+  }
+ },
+ "534": {
+  "ns": 261,
+  "freq": 0.0034,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.337,
+   "lift": 316.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.234,
+   "lift": 2.0
+  }
+ },
+ "535": {
+  "ns": 208,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1371,
+   "P": 0.38,
+   "lift": 356.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "536": {
+  "ns": 16,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 54,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.562,
+   "lift": 4.9
+  }
+ },
+ "537": {
+  "ns": 124,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1598,
+   "P": 0.774,
+   "lift": 726.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.258,
+   "lift": 2.2
+  }
+ },
+ "538": {
+  "ns": 25893,
+  "freq": 0.0871,
+  "harm": {
+   "attr": "pc_set",
+   "val": 224,
+   "P": 0.004,
+   "lift": 3.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.216,
+   "lift": 1.9
+  }
+ },
+ "540": {
+  "ns": 57,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 38,
+   "P": 0.912,
+   "lift": 855.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "541": {
+  "ns": 103,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1365,
+   "P": 0.466,
+   "lift": 437.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.165,
+   "lift": 1.4
+  }
+ },
+ "542": {
+  "ns": 356,
+  "freq": 0.0026,
+  "harm": {
+   "attr": "pc_set",
+   "val": 181,
+   "P": 0.275,
+   "lift": 258.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.239,
+   "lift": 2.1
+  }
+ },
+ "543": {
+  "ns": 27,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 296,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.333,
+   "lift": 2.9
+  }
+ },
+ "546": {
+  "ns": 351,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1089,
+   "P": 0.353,
+   "lift": 331.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.131,
+   "lift": 1.1
+  }
+ },
+ "547": {
+  "ns": 11,
+  "freq": 0.0,
+  "harm": {
+   "attr": "pc_set",
+   "val": 533,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.273,
+   "lift": 2.4
+  }
+ },
+ "549": {
+  "ns": 179,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1364,
+   "P": 0.531,
+   "lift": 497.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.223,
+   "lift": 1.9
+  }
+ },
+ "550": {
+  "ns": 68,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2333,
+   "P": 0.515,
+   "lift": 482.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.662,
+   "lift": 5.7
+  }
+ },
+ "551": {
+  "ns": 18,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1400,
+   "P": 0.611,
+   "lift": 573.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.389,
+   "lift": 3.4
+  }
+ },
+ "552": {
+  "ns": 162,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1051,
+   "P": 0.747,
+   "lift": 700.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.228,
+   "lift": 2.0
+  }
+ },
+ "554": {
+  "ns": 589,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1381,
+   "P": 0.112,
+   "lift": 105.1
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.659,
+   "lift": 1.1
+  }
+ },
+ "555": {
+  "ns": 587,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1012,
+   "P": 0.136,
+   "lift": 127.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "557": {
+  "ns": 21116,
+  "freq": 0.0753,
+  "harm": {
+   "attr": "pc_set",
+   "val": 692,
+   "P": 0.002,
+   "lift": 2.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.718,
+   "lift": 1.5
+  }
+ },
+ "559": {
+  "ns": 25,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 337,
+   "P": 0.68,
+   "lift": 637.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.36,
+   "lift": 3.1
+  }
+ },
+ "560": {
+  "ns": 243,
+  "freq": 0.0686,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1259,
+   "P": 0.045,
+   "lift": 42.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.56,
+   "lift": 4.9
+  }
+ },
+ "561": {
+  "ns": 107,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1247,
+   "P": 0.766,
+   "lift": 719.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.243,
+   "lift": 2.1
+  }
+ },
+ "562": {
+  "ns": 141,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 639,
+   "P": 0.319,
+   "lift": 299.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.199,
+   "lift": 1.7
+  }
+ },
+ "563": {
+  "ns": 13,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2268,
+   "P": 0.462,
+   "lift": 433.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.538,
+   "lift": 4.7
+  }
+ },
+ "565": {
+  "ns": 104,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 909,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.317,
+   "lift": 2.8
+  }
+ },
+ "566": {
+  "ns": 87,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1294,
+   "P": 0.356,
+   "lift": 334.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.184,
+   "lift": 1.6
+  }
+ },
+ "567": {
+  "ns": 102,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 648,
+   "P": 0.539,
+   "lift": 505.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.275,
+   "lift": 2.4
+  }
+ },
+ "568": {
+  "ns": 205,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 42,
+   "P": 0.259,
+   "lift": 242.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.259,
+   "lift": 2.2
+  }
+ },
+ "569": {
+  "ns": 442,
+  "freq": 0.0102,
+  "harm": {
+   "attr": "pc_set",
+   "val": 554,
+   "P": 0.652,
+   "lift": 611.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.208,
+   "lift": 1.8
+  }
+ },
+ "573": {
+  "ns": 261,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 16,
+   "P": 0.284,
+   "lift": 266.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.146,
+   "lift": 1.3
+  }
+ },
+ "574": {
+  "ns": 214,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 927,
+   "P": 0.612,
+   "lift": 574.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "575": {
+  "ns": 34,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 625,
+   "P": 0.265,
+   "lift": 248.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.294,
+   "lift": 2.6
+  }
+ },
+ "576": {
+  "ns": 190,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1652,
+   "P": 0.4,
+   "lift": 375.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.226,
+   "lift": 2.0
+  }
+ },
+ "577": {
+  "ns": 220,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1871,
+   "P": 0.245,
+   "lift": 230.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.218,
+   "lift": 1.9
+  }
+ },
+ "578": {
+  "ns": 371,
+  "freq": 0.0049,
+  "harm": {
+   "attr": "pc_set",
+   "val": 970,
+   "P": 0.197,
+   "lift": 184.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "579": {
+  "ns": 669,
+  "freq": 0.0049,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1845,
+   "P": 0.281,
+   "lift": 263.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.178,
+   "lift": 1.5
+  }
+ },
+ "580": {
+  "ns": 356,
+  "freq": 0.0046,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1403,
+   "P": 0.452,
+   "lift": 424.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.171,
+   "lift": 1.5
+  }
+ },
+ "581": {
+  "ns": 101,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 454,
+   "P": 0.406,
+   "lift": 380.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "583": {
+  "ns": 19,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 585,
+   "P": 0.947,
+   "lift": 888.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.526,
+   "lift": 4.6
+  }
+ },
+ "584": {
+  "ns": 979,
+  "freq": 0.016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1800,
+   "P": 0.137,
+   "lift": 128.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.134,
+   "lift": 1.2
+  }
+ },
+ "585": {
+  "ns": 952,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1750,
+   "P": 0.091,
+   "lift": 85.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.117,
+   "lift": 1.0
+  }
+ },
+ "586": {
+  "ns": 159,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1078,
+   "P": 0.346,
+   "lift": 324.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.176,
+   "lift": 1.5
+  }
+ },
+ "590": {
+  "ns": 734,
+  "freq": 0.0078,
+  "harm": {
+   "attr": "pc_set",
+   "val": 337,
+   "P": 0.094,
+   "lift": 88.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.771,
+   "lift": 1.2
+  }
+ },
+ "591": {
+  "ns": 80,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 715,
+   "P": 0.9,
+   "lift": 844.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.275,
+   "lift": 2.4
+  }
+ },
+ "592": {
+  "ns": 2157,
+  "freq": 0.1084,
+  "harm": {
+   "attr": "pc_set",
+   "val": 50,
+   "P": 0.114,
+   "lift": 106.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "593": {
+  "ns": 143,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 118,
+   "P": 0.469,
+   "lift": 439.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.175,
+   "lift": 1.5
+  }
+ },
+ "594": {
+  "ns": 174,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 554,
+   "P": 0.374,
+   "lift": 350.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "595": {
+  "ns": 585,
+  "freq": 0.0107,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1337,
+   "P": 0.35,
+   "lift": 328.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.125,
+   "lift": 1.1
+  }
+ },
+ "596": {
+  "ns": 58,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1086,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "598": {
+  "ns": 27,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 47,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.259,
+   "lift": 2.3
+  }
+ },
+ "599": {
+  "ns": 179,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1208,
+   "P": 0.402,
+   "lift": 377.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "600": {
+  "ns": 211,
+  "freq": 0.005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1084,
+   "P": 0.502,
+   "lift": 471.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "601": {
+  "ns": 57,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 277,
+   "P": 0.895,
+   "lift": 839.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.193,
+   "lift": 1.7
+  }
+ },
+ "602": {
+  "ns": 12,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.917,
+   "lift": 860.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.333,
+   "lift": 2.9
+  }
+ },
+ "603": {
+  "ns": 2013,
+  "freq": 0.034,
+  "harm": {
+   "attr": "pc_set",
+   "val": 30,
+   "P": 0.127,
+   "lift": 118.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.136,
+   "lift": 1.2
+  }
+ },
+ "605": {
+  "ns": 77,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1761,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.247,
+   "lift": 2.1
+  }
+ },
+ "606": {
+  "ns": 1388,
+  "freq": 0.0734,
+  "harm": {
+   "attr": "pc_set",
+   "val": 106,
+   "P": 0.048,
+   "lift": 45.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.207,
+   "lift": 1.8
+  }
+ },
+ "609": {
+  "ns": 10503,
+  "freq": 0.0811,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.009,
+   "lift": 8.5
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.943,
+   "lift": 1.0
+  }
+ },
+ "610": {
+  "ns": 259,
+  "freq": 0.0052,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2076,
+   "P": 0.618,
+   "lift": 579.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.259,
+   "lift": 2.2
+  }
+ },
+ "611": {
+  "ns": 403,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1147,
+   "P": 0.308,
+   "lift": 288.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.144,
+   "lift": 1.2
+  }
+ },
+ "612": {
+  "ns": 20,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1344,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.75,
+   "lift": 6.5
+  }
+ },
+ "614": {
+  "ns": 194,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.423,
+   "lift": 396.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.268,
+   "lift": 2.3
+  }
+ },
+ "615": {
+  "ns": 158,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1089,
+   "P": 0.848,
+   "lift": 795.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.146,
+   "lift": 1.3
+  }
+ },
+ "617": {
+  "ns": 146,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 855,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.144,
+   "lift": 1.2
+  }
+ },
+ "618": {
+  "ns": 143,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 203,
+   "P": 0.594,
+   "lift": 557.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.245,
+   "lift": 2.1
+  }
+ },
+ "619": {
+  "ns": 435,
+  "freq": 0.0061,
+  "harm": {
+   "attr": "pc_set",
+   "val": 426,
+   "P": 0.366,
+   "lift": 342.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.133,
+   "lift": 1.2
+  }
+ },
+ "620": {
+  "ns": 1100,
+  "freq": 0.0096,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.094,
+   "lift": 87.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.739,
+   "lift": 1.2
+  }
+ },
+ "621": {
+  "ns": 14,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 863,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "622": {
+  "ns": 184,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1111,
+   "P": 0.326,
+   "lift": 305.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "623": {
+  "ns": 359,
+  "freq": 0.0071,
+  "harm": {
+   "attr": "pc_set",
+   "val": 91,
+   "P": 0.437,
+   "lift": 410.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.156,
+   "lift": 1.4
+  }
+ },
+ "624": {
+  "ns": 949,
+  "freq": 0.0032,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.09,
+   "lift": 84.0
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.629,
+   "lift": 1.0
+  }
+ },
+ "625": {
+  "ns": 117,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 649,
+   "P": 0.547,
+   "lift": 513.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.222,
+   "lift": 1.9
+  }
+ },
+ "626": {
+  "ns": 103,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1152,
+   "P": 0.883,
+   "lift": 828.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.243,
+   "lift": 2.1
+  }
+ },
+ "627": {
+  "ns": 96,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 625,
+   "P": 0.646,
+   "lift": 605.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "628": {
+  "ns": 298,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 554,
+   "P": 0.339,
+   "lift": 318.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.201,
+   "lift": 1.7
+  }
+ },
+ "629": {
+  "ns": 160,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 68,
+   "P": 0.506,
+   "lift": 474.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "630": {
+  "ns": 13115,
+  "freq": 0.0447,
+  "harm": {
+   "attr": "pc_set",
+   "val": 67,
+   "P": 0.006,
+   "lift": 5.9
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.95,
+   "lift": 1.0
+  }
+ },
+ "631": {
+  "ns": 325,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1173,
+   "P": 0.289,
+   "lift": 271.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.225,
+   "lift": 2.0
+  }
+ },
+ "632": {
+  "ns": 10992,
+  "freq": 0.0875,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.006,
+   "lift": 6.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.647,
+   "lift": 5.6
+  }
+ },
+ "634": {
+  "ns": 624,
+  "freq": 0.0112,
+  "harm": {
+   "attr": "pc_set",
+   "val": 829,
+   "P": 0.386,
+   "lift": 362.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.213,
+   "lift": 1.9
+  }
+ },
+ "636": {
+  "ns": 55,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1408,
+   "P": 0.891,
+   "lift": 835.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.182,
+   "lift": 1.6
+  }
+ },
+ "638": {
+  "ns": 115,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1377,
+   "P": 0.757,
+   "lift": 709.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.252,
+   "lift": 2.2
+  }
+ },
+ "639": {
+  "ns": 127,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 178,
+   "P": 0.614,
+   "lift": 576.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.181,
+   "lift": 1.6
+  }
+ },
+ "640": {
+  "ns": 216,
+  "freq": 0.0039,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1247,
+   "P": 0.352,
+   "lift": 330.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "642": {
+  "ns": 3972,
+  "freq": 0.0881,
+  "harm": {
+   "attr": "pc_set",
+   "val": 477,
+   "P": 0.074,
+   "lift": 69.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.166,
+   "lift": 1.4
+  }
+ },
+ "643": {
+  "ns": 55,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1534,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.2,
+   "lift": 1.7
+  }
+ },
+ "644": {
+  "ns": 228,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 598,
+   "P": 0.737,
+   "lift": 691.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.193,
+   "lift": 1.7
+  }
+ },
+ "645": {
+  "ns": 192,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1084,
+   "P": 0.37,
+   "lift": 346.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.208,
+   "lift": 1.8
+  }
+ },
+ "646": {
+  "ns": 14,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 3,
+   "P": 0.286,
+   "lift": 268.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "647": {
+  "ns": 733,
+  "freq": 0.0061,
+  "harm": {
+   "attr": "pc_set",
+   "val": 211,
+   "P": 0.089,
+   "lift": 83.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 5,
+   "P": 0.479,
+   "lift": 1.0
+  }
+ },
+ "650": {
+  "ns": 211,
+  "freq": 0.0032,
+  "harm": {
+   "attr": "pc_set",
+   "val": 937,
+   "P": 0.545,
+   "lift": 511.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.213,
+   "lift": 1.9
+  }
+ },
+ "651": {
+  "ns": 199,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 350,
+   "P": 0.739,
+   "lift": 693.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.176,
+   "lift": 1.5
+  }
+ },
+ "652": {
+  "ns": 23,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 31,
+   "P": 0.565,
+   "lift": 530.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.435,
+   "lift": 3.8
+  }
+ },
+ "653": {
+  "ns": 465,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1179,
+   "P": 0.598,
+   "lift": 560.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.151,
+   "lift": 1.3
+  }
+ },
+ "654": {
+  "ns": 318,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 726,
+   "P": 0.27,
+   "lift": 253.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "655": {
+  "ns": 527,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 288,
+   "P": 0.142,
+   "lift": 133.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "656": {
+  "ns": 168,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 33,
+   "P": 0.292,
+   "lift": 273.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "657": {
+  "ns": 111,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 667,
+   "P": 0.82,
+   "lift": 769.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.387,
+   "lift": 3.4
+  }
+ },
+ "658": {
+  "ns": 9338,
+  "freq": 0.06,
+  "harm": {
+   "attr": "pc_set",
+   "val": 499,
+   "P": 0.03,
+   "lift": 27.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.713,
+   "lift": 1.1
+  }
+ },
+ "659": {
+  "ns": 103,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1747,
+   "P": 0.553,
+   "lift": 519.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.272,
+   "lift": 2.4
+  }
+ },
+ "660": {
+  "ns": 10,
+  "freq": 0.0,
+  "harm": {
+   "attr": "pc_set",
+   "val": 66,
+   "P": 0.6,
+   "lift": 562.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.3,
+   "lift": 2.6
+  }
+ },
+ "661": {
+  "ns": 54,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1428,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.204,
+   "lift": 1.8
+  }
+ },
+ "662": {
+  "ns": 296,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 312,
+   "P": 0.253,
+   "lift": 237.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.122,
+   "lift": 1.1
+  }
+ },
+ "663": {
+  "ns": 39,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2143,
+   "P": 0.59,
+   "lift": 553.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.462,
+   "lift": 4.0
+  }
+ },
+ "664": {
+  "ns": 397,
+  "freq": 0.0123,
+  "harm": {
+   "attr": "pc_set",
+   "val": 428,
+   "P": 0.607,
+   "lift": 569.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.214,
+   "lift": 1.9
+  }
+ },
+ "665": {
+  "ns": 4992,
+  "freq": 0.0728,
+  "harm": {
+   "attr": "pc_set",
+   "val": 934,
+   "P": 0.017,
+   "lift": 15.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.687,
+   "lift": 1.1
+  }
+ },
+ "666": {
+  "ns": 538,
+  "freq": 0.0142,
+  "harm": {
+   "attr": "pc_set",
+   "val": 437,
+   "P": 0.184,
+   "lift": 172.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.145,
+   "lift": 1.3
+  }
+ },
+ "667": {
+  "ns": 3024,
+  "freq": 0.016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 31,
+   "P": 0.021,
+   "lift": 19.5
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.669,
+   "lift": 1.1
+  }
+ },
+ "668": {
+  "ns": 86,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1534,
+   "P": 0.442,
+   "lift": 414.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.302,
+   "lift": 2.6
+  }
+ },
+ "669": {
+  "ns": 82,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 251,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.244,
+   "lift": 2.1
+  }
+ },
+ "670": {
+  "ns": 98,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1337,
+   "P": 0.602,
+   "lift": 564.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.204,
+   "lift": 1.8
+  }
+ },
+ "671": {
+  "ns": 44,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1856,
+   "P": 0.455,
+   "lift": 426.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.182,
+   "lift": 1.6
+  }
+ },
+ "672": {
+  "ns": 1594,
+  "freq": 0.0755,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2300,
+   "P": 0.023,
+   "lift": 21.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.663,
+   "lift": 5.8
+  }
+ },
+ "673": {
+  "ns": 479,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 115,
+   "P": 0.165,
+   "lift": 154.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.136,
+   "lift": 1.2
+  }
+ },
+ "674": {
+  "ns": 7359,
+  "freq": 0.0489,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1797,
+   "P": 0.015,
+   "lift": 13.8
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.949,
+   "lift": 1.0
+  }
+ },
+ "675": {
+  "ns": 18,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1845,
+   "P": 0.222,
+   "lift": 208.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.778,
+   "lift": 6.8
+  }
+ },
+ "676": {
+  "ns": 30,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.767,
+   "lift": 719.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.367,
+   "lift": 3.2
+  }
+ },
+ "677": {
+  "ns": 7084,
+  "freq": 0.0628,
+  "harm": {
+   "attr": "pc_set",
+   "val": 941,
+   "P": 0.018,
+   "lift": 16.6
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.693,
+   "lift": 1.1
+  }
+ },
+ "678": {
+  "ns": 132,
+  "freq": 0.0031,
+  "harm": {
+   "attr": "pc_set",
+   "val": 616,
+   "P": 0.644,
+   "lift": 604.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.182,
+   "lift": 1.6
+  }
+ },
+ "679": {
+  "ns": 153,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 795,
+   "P": 0.209,
+   "lift": 196.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "680": {
+  "ns": 13,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1477,
+   "P": 0.538,
+   "lift": 505.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "681": {
+  "ns": 14,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1973,
+   "P": 0.643,
+   "lift": 603.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "682": {
+  "ns": 10,
+  "freq": 0.0,
+  "harm": {
+   "attr": "pc_set",
+   "val": 363,
+   "P": 0.7,
+   "lift": 656.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "683": {
+  "ns": 1201,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1637,
+   "P": 0.073,
+   "lift": 68.7
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.961,
+   "lift": 1.0
+  }
+ },
+ "685": {
+  "ns": 68,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1703,
+   "P": 0.838,
+   "lift": 786.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.265,
+   "lift": 2.3
+  }
+ },
+ "686": {
+  "ns": 5028,
+  "freq": 0.0203,
+  "harm": {
+   "attr": "pc_set",
+   "val": 72,
+   "P": 0.042,
+   "lift": 39.7
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.626,
+   "lift": 1.0
+  }
+ },
+ "689": {
+  "ns": 520,
+  "freq": 0.0047,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1403,
+   "P": 0.235,
+   "lift": 220.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.138,
+   "lift": 1.2
+  }
+ },
+ "692": {
+  "ns": 35,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 433,
+   "P": 0.886,
+   "lift": 830.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.343,
+   "lift": 3.0
+  }
+ },
+ "693": {
+  "ns": 225,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 277,
+   "P": 0.529,
+   "lift": 496.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.227,
+   "lift": 2.0
+  }
+ },
+ "694": {
+  "ns": 14,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2052,
+   "P": 0.643,
+   "lift": 603.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "698": {
+  "ns": 98,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 487,
+   "P": 0.643,
+   "lift": 603.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.255,
+   "lift": 2.2
+  }
+ },
+ "699": {
+  "ns": 361,
+  "freq": 0.0407,
+  "harm": {
+   "attr": "pc_set",
+   "val": 613,
+   "P": 0.252,
+   "lift": 236.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.169,
+   "lift": 1.5
+  }
+ },
+ "700": {
+  "ns": 14,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2052,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "702": {
+  "ns": 100,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1413,
+   "P": 0.55,
+   "lift": 516.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "703": {
+  "ns": 112,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1523,
+   "P": 0.357,
+   "lift": 335.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.17,
+   "lift": 1.5
+  }
+ },
+ "704": {
+  "ns": 95,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1400,
+   "P": 0.432,
+   "lift": 404.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.221,
+   "lift": 1.9
+  }
+ },
+ "705": {
+  "ns": 155,
+  "freq": 0.0032,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1084,
+   "P": 0.594,
+   "lift": 556.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.219,
+   "lift": 1.9
+  }
+ },
+ "706": {
+  "ns": 427,
+  "freq": 0.006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1853,
+   "P": 0.691,
+   "lift": 648.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.164,
+   "lift": 1.4
+  }
+ },
+ "707": {
+  "ns": 332,
+  "freq": 0.0058,
+  "harm": {
+   "attr": "pc_set",
+   "val": 598,
+   "P": 0.217,
+   "lift": 203.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.289,
+   "lift": 2.5
+  }
+ },
+ "708": {
+  "ns": 108,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1461,
+   "P": 0.028,
+   "lift": 26.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.278,
+   "lift": 2.4
+  }
+ },
+ "710": {
+  "ns": 106,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1035,
+   "P": 0.679,
+   "lift": 637.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.34,
+   "lift": 2.9
+  }
+ },
+ "711": {
+  "ns": 493,
+  "freq": 0.0225,
+  "harm": {
+   "attr": "pc_set",
+   "val": 515,
+   "P": 0.424,
+   "lift": 397.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "713": {
+  "ns": 26439,
+  "freq": 0.0889,
+  "harm": {
+   "attr": "pc_set",
+   "val": 248,
+   "P": 0.004,
+   "lift": 3.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.204,
+   "lift": 1.8
+  }
+ },
+ "714": {
+  "ns": 2226,
+  "freq": 0.0589,
+  "harm": {
+   "attr": "pc_set",
+   "val": 446,
+   "P": 0.083,
+   "lift": 78.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.137,
+   "lift": 1.2
+  }
+ },
+ "715": {
+  "ns": 530,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 95,
+   "P": 0.37,
+   "lift": 346.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.14,
+   "lift": 1.2
+  }
+ },
+ "716": {
+  "ns": 1286,
+  "freq": 0.0178,
+  "harm": {
+   "attr": "pc_set",
+   "val": 416,
+   "P": 0.194,
+   "lift": 182.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.145,
+   "lift": 1.3
+  }
+ },
+ "717": {
+  "ns": 992,
+  "freq": 0.0758,
+  "harm": {
+   "attr": "pc_set",
+   "val": 963,
+   "P": 0.023,
+   "lift": 21.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.458,
+   "lift": 4.0
+  }
+ },
+ "719": {
+  "ns": 23944,
+  "freq": 0.0805,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.004,
+   "lift": 3.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.219,
+   "lift": 1.9
+  }
+ },
+ "720": {
+  "ns": 211,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 598,
+   "P": 0.379,
+   "lift": 355.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.204,
+   "lift": 1.8
+  }
+ },
+ "721": {
+  "ns": 23547,
+  "freq": 0.0792,
+  "harm": {
+   "attr": "pc_set",
+   "val": 678,
+   "P": 0.004,
+   "lift": 3.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.22,
+   "lift": 1.9
+  }
+ },
+ "723": {
+  "ns": 92,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1949,
+   "P": 0.609,
+   "lift": 571.1
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 1,
+   "P": 0.815,
+   "lift": 1.3
+  }
+ },
+ "724": {
+  "ns": 534,
+  "freq": 0.0051,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1305,
+   "P": 0.296,
+   "lift": 277.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.169,
+   "lift": 1.5
+  }
+ },
+ "728": {
+  "ns": 218,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1009,
+   "P": 0.413,
+   "lift": 387.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "730": {
+  "ns": 69,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1422,
+   "P": 0.217,
+   "lift": 203.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.391,
+   "lift": 3.4
+  }
+ },
+ "731": {
+  "ns": 121,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 279,
+   "P": 0.479,
+   "lift": 449.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.669,
+   "lift": 5.8
+  }
+ },
+ "732": {
+  "ns": 112,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 193,
+   "P": 0.634,
+   "lift": 594.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.241,
+   "lift": 2.1
+  }
+ },
+ "733": {
+  "ns": 1994,
+  "freq": 0.008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1481,
+   "P": 0.054,
+   "lift": 50.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.152,
+   "lift": 1.3
+  }
+ },
+ "734": {
+  "ns": 70,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.971,
+   "lift": 911.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.243,
+   "lift": 2.1
+  }
+ },
+ "737": {
+  "ns": 20,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 782,
+   "P": 0.55,
+   "lift": 516.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "739": {
+  "ns": 54,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 639,
+   "P": 0.833,
+   "lift": 781.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.407,
+   "lift": 3.5
+  }
+ },
+ "741": {
+  "ns": 379,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 65,
+   "P": 0.317,
+   "lift": 297.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.177,
+   "lift": 1.5
+  }
+ },
+ "743": {
+  "ns": 592,
+  "freq": 0.009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.355,
+   "lift": 332.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.157,
+   "lift": 1.4
+  }
+ },
+ "744": {
+  "ns": 37,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 295,
+   "P": 0.73,
+   "lift": 684.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.351,
+   "lift": 3.1
+  }
+ },
+ "745": {
+  "ns": 1995,
+  "freq": 0.0135,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1020,
+   "P": 0.068,
+   "lift": 64.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.545,
+   "lift": 1.2
+  }
+ },
+ "746": {
+  "ns": 11,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 415,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.364,
+   "lift": 3.2
+  }
+ },
+ "749": {
+  "ns": 55,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1845,
+   "P": 0.945,
+   "lift": 887.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.182,
+   "lift": 1.6
+  }
+ },
+ "750": {
+  "ns": 130,
+  "freq": 0.0035,
+  "harm": {
+   "attr": "pc_set",
+   "val": 332,
+   "P": 0.562,
+   "lift": 526.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.215,
+   "lift": 1.9
+  }
+ },
+ "751": {
+  "ns": 701,
+  "freq": 0.0043,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1034,
+   "P": 0.255,
+   "lift": 239.6
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.655,
+   "lift": 1.1
+  }
+ },
+ "753": {
+  "ns": 168,
+  "freq": 0.0026,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1377,
+   "P": 0.464,
+   "lift": 435.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.202,
+   "lift": 1.8
+  }
+ },
+ "755": {
+  "ns": 518,
+  "freq": 0.0047,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1301,
+   "P": 0.154,
+   "lift": 144.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.156,
+   "lift": 1.4
+  }
+ },
+ "758": {
+  "ns": 739,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1382,
+   "P": 0.068,
+   "lift": 63.5
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.76,
+   "lift": 1.2
+  }
+ },
+ "759": {
+  "ns": 106,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2058,
+   "P": 0.491,
+   "lift": 460.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.255,
+   "lift": 2.2
+  }
+ },
+ "762": {
+  "ns": 570,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 428,
+   "P": 0.154,
+   "lift": 144.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.144,
+   "lift": 1.2
+  }
+ },
+ "763": {
+  "ns": 76,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1949,
+   "P": 0.579,
+   "lift": 543.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.276,
+   "lift": 2.4
+  }
+ },
+ "764": {
+  "ns": 294,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1543,
+   "P": 0.211,
+   "lift": 197.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.241,
+   "lift": 2.1
+  }
+ },
+ "767": {
+  "ns": 2052,
+  "freq": 0.0098,
+  "harm": {
+   "attr": "pc_set",
+   "val": 158,
+   "P": 0.032,
+   "lift": 29.7
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.954,
+   "lift": 1.0
+  }
+ },
+ "768": {
+  "ns": 379,
+  "freq": 0.0035,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1222,
+   "P": 0.454,
+   "lift": 425.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "769": {
+  "ns": 163,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 678,
+   "P": 0.546,
+   "lift": 512.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.239,
+   "lift": 2.1
+  }
+ },
+ "770": {
+  "ns": 454,
+  "freq": 0.0146,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.427,
+   "lift": 400.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.194,
+   "lift": 1.7
+  }
+ },
+ "771": {
+  "ns": 23,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1031,
+   "P": 0.435,
+   "lift": 407.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.391,
+   "lift": 3.4
+  }
+ },
+ "772": {
+  "ns": 23,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1316,
+   "P": 0.174,
+   "lift": 163.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.435,
+   "lift": 3.8
+  }
+ },
+ "773": {
+  "ns": 73,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 970,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "774": {
+  "ns": 10,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 533,
+   "P": 0.3,
+   "lift": 281.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "775": {
+  "ns": 455,
+  "freq": 0.0045,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1871,
+   "P": 0.119,
+   "lift": 111.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "777": {
+  "ns": 95,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1301,
+   "P": 0.453,
+   "lift": 424.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.232,
+   "lift": 2.0
+  }
+ },
+ "779": {
+  "ns": 238,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.366,
+   "lift": 342.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.197,
+   "lift": 1.7
+  }
+ },
+ "781": {
+  "ns": 173,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1031,
+   "P": 0.902,
+   "lift": 846.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.202,
+   "lift": 1.8
+  }
+ },
+ "783": {
+  "ns": 194,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1133,
+   "P": 0.402,
+   "lift": 377.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.139,
+   "lift": 1.2
+  }
+ },
+ "786": {
+  "ns": 24152,
+  "freq": 0.0814,
+  "harm": {
+   "attr": "pc_set",
+   "val": 205,
+   "P": 0.004,
+   "lift": 3.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.214,
+   "lift": 1.9
+  }
+ },
+ "787": {
+  "ns": 157,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1247,
+   "P": 0.414,
+   "lift": 388.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "788": {
+  "ns": 167,
+  "freq": 0.0042,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1381,
+   "P": 0.341,
+   "lift": 320.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "789": {
+  "ns": 70,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 72,
+   "P": 0.614,
+   "lift": 576.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.314,
+   "lift": 2.7
+  }
+ },
+ "791": {
+  "ns": 373,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1009,
+   "P": 0.236,
+   "lift": 221.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.131,
+   "lift": 1.1
+  }
+ },
+ "792": {
+  "ns": 51,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 461,
+   "P": 0.863,
+   "lift": 809.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.176,
+   "lift": 1.5
+  }
+ },
+ "793": {
+  "ns": 96,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1164,
+   "P": 0.552,
+   "lift": 517.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.271,
+   "lift": 2.4
+  }
+ },
+ "794": {
+  "ns": 117,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1477,
+   "P": 0.504,
+   "lift": 473.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.197,
+   "lift": 1.7
+  }
+ },
+ "795": {
+  "ns": 2710,
+  "freq": 0.0288,
+  "harm": {
+   "attr": "pc_set",
+   "val": 499,
+   "P": 0.103,
+   "lift": 96.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.69,
+   "lift": 1.1
+  }
+ },
+ "796": {
+  "ns": 21,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 325,
+   "P": 0.762,
+   "lift": 714.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.857,
+   "lift": 7.4
+  }
+ },
+ "797": {
+  "ns": 282,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1219,
+   "P": 0.879,
+   "lift": 825.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "799": {
+  "ns": 441,
+  "freq": 0.0033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.238,
+   "lift": 223.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.154,
+   "lift": 1.3
+  }
+ },
+ "800": {
+  "ns": 2760,
+  "freq": 0.0097,
+  "harm": {
+   "attr": "pc_set",
+   "val": 635,
+   "P": 0.018,
+   "lift": 17.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 4,
+   "P": 0.851,
+   "lift": 1.8
+  }
+ },
+ "802": {
+  "ns": 638,
+  "freq": 0.0048,
+  "harm": {
+   "attr": "pc_set",
+   "val": 24,
+   "P": 0.332,
+   "lift": 311.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.155,
+   "lift": 1.3
+  }
+ },
+ "803": {
+  "ns": 95,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2143,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.284,
+   "lift": 2.5
+  }
+ },
+ "807": {
+  "ns": 21047,
+  "freq": 0.1003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 692,
+   "P": 0.002,
+   "lift": 2.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.718,
+   "lift": 1.5
+  }
+ },
+ "808": {
+  "ns": 14808,
+  "freq": 0.0533,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1308,
+   "P": 0.008,
+   "lift": 7.7
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.677,
+   "lift": 1.1
+  }
+ },
+ "809": {
+  "ns": 14,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 769,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.357,
+   "lift": 3.1
+  }
+ },
+ "810": {
+  "ns": 1140,
+  "freq": 0.0141,
+  "harm": {
+   "attr": "pc_set",
+   "val": 181,
+   "P": 0.146,
+   "lift": 136.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.126,
+   "lift": 1.1
+  }
+ },
+ "812": {
+  "ns": 11,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 905,
+   "P": 0.455,
+   "lift": 426.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.364,
+   "lift": 3.2
+  }
+ },
+ "814": {
+  "ns": 71,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 963,
+   "P": 0.986,
+   "lift": 924.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.254,
+   "lift": 2.2
+  }
+ },
+ "815": {
+  "ns": 54,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 939,
+   "P": 0.759,
+   "lift": 712.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.444,
+   "lift": 3.9
+  }
+ },
+ "816": {
+  "ns": 47,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 119,
+   "P": 0.277,
+   "lift": 259.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.191,
+   "lift": 1.7
+  }
+ },
+ "817": {
+  "ns": 320,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 598,
+   "P": 0.269,
+   "lift": 252.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.134,
+   "lift": 1.2
+  }
+ },
+ "818": {
+  "ns": 37,
+  "freq": 0.0003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 749,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.351,
+   "lift": 3.1
+  }
+ },
+ "819": {
+  "ns": 66,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.939,
+   "lift": 881.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.258,
+   "lift": 2.2
+  }
+ },
+ "820": {
+  "ns": 183,
+  "freq": 0.0021,
+  "harm": {
+   "attr": "pc_set",
+   "val": 769,
+   "P": 0.59,
+   "lift": 553.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.18,
+   "lift": 1.6
+  }
+ },
+ "821": {
+  "ns": 1996,
+  "freq": 0.0305,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.044,
+   "lift": 41.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.169,
+   "lift": 1.5
+  }
+ },
+ "822": {
+  "ns": 458,
+  "freq": 0.0221,
+  "harm": {
+   "attr": "pc_set",
+   "val": 303,
+   "P": 0.456,
+   "lift": 428.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.153,
+   "lift": 1.3
+  }
+ },
+ "823": {
+  "ns": 13,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 867,
+   "P": 0.231,
+   "lift": 216.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 1.0,
+   "lift": 8.7
+  }
+ },
+ "829": {
+  "ns": 2327,
+  "freq": 0.0238,
+  "harm": {
+   "attr": "pc_set",
+   "val": 519,
+   "P": 0.066,
+   "lift": 62.1
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.737,
+   "lift": 1.2
+  }
+ },
+ "830": {
+  "ns": 978,
+  "freq": 0.004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1009,
+   "P": 0.091,
+   "lift": 85.4
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.946,
+   "lift": 1.0
+  }
+ },
+ "831": {
+  "ns": 321,
+  "freq": 0.0044,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1403,
+   "P": 0.193,
+   "lift": 181.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.187,
+   "lift": 1.6
+  }
+ },
+ "832": {
+  "ns": 79,
+  "freq": 0.0013,
+  "harm": {
+   "attr": "pc_set",
+   "val": 303,
+   "P": 0.873,
+   "lift": 819.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "833": {
+  "ns": 87,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1073,
+   "P": 0.816,
+   "lift": 765.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.299,
+   "lift": 2.6
+  }
+ },
+ "835": {
+  "ns": 570,
+  "freq": 0.0058,
+  "harm": {
+   "attr": "pc_set",
+   "val": 809,
+   "P": 0.17,
+   "lift": 159.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.13,
+   "lift": 1.1
+  }
+ },
+ "836": {
+  "ns": 599,
+  "freq": 0.0206,
+  "harm": {
+   "attr": "pc_set",
+   "val": 600,
+   "P": 0.285,
+   "lift": 267.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.19,
+   "lift": 1.7
+  }
+ },
+ "837": {
+  "ns": 454,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 911,
+   "P": 0.119,
+   "lift": 111.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.134,
+   "lift": 1.2
+  }
+ },
+ "838": {
+  "ns": 4238,
+  "freq": 0.0144,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1020,
+   "P": 0.032,
+   "lift": 30.1
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.712,
+   "lift": 1.1
+  }
+ },
+ "839": {
+  "ns": 162,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 678,
+   "P": 0.586,
+   "lift": 550.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.191,
+   "lift": 1.7
+  }
+ },
+ "840": {
+  "ns": 60,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 592,
+   "P": 0.433,
+   "lift": 406.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.467,
+   "lift": 4.1
+  }
+ },
+ "841": {
+  "ns": 58,
+  "freq": 0.0025,
+  "harm": {
+   "attr": "pc_set",
+   "val": 366,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.31,
+   "lift": 2.7
+  }
+ },
+ "842": {
+  "ns": 86,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 726,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.221,
+   "lift": 1.9
+  }
+ },
+ "844": {
+  "ns": 14,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 779,
+   "P": 0.929,
+   "lift": 871.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.286,
+   "lift": 2.5
+  }
+ },
+ "845": {
+  "ns": 261,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1849,
+   "P": 0.544,
+   "lift": 510.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.192,
+   "lift": 1.7
+  }
+ },
+ "846": {
+  "ns": 17,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 39,
+   "P": 0.529,
+   "lift": 496.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.235,
+   "lift": 2.0
+  }
+ },
+ "847": {
+  "ns": 1241,
+  "freq": 0.0065,
+  "harm": {
+   "attr": "pc_set",
+   "val": 648,
+   "P": 0.058,
+   "lift": 54.4
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.68,
+   "lift": 1.1
+  }
+ },
+ "849": {
+  "ns": 78,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1749,
+   "P": 0.667,
+   "lift": 625.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "850": {
+  "ns": 1547,
+  "freq": 0.0149,
+  "harm": {
+   "attr": "pc_set",
+   "val": 556,
+   "P": 0.152,
+   "lift": 142.5
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.647,
+   "lift": 1.0
+  }
+ },
+ "851": {
+  "ns": 18,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1996,
+   "P": 0.333,
+   "lift": 312.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.333,
+   "lift": 2.9
+  }
+ },
+ "852": {
+  "ns": 11,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2333,
+   "P": 0.273,
+   "lift": 255.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.727,
+   "lift": 6.3
+  }
+ },
+ "853": {
+  "ns": 6589,
+  "freq": 0.0945,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1943,
+   "P": 0.033,
+   "lift": 30.6
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.671,
+   "lift": 1.4
+  }
+ },
+ "854": {
+  "ns": 12,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1440,
+   "P": 0.333,
+   "lift": 312.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.417,
+   "lift": 3.6
+  }
+ },
+ "855": {
+  "ns": 416,
+  "freq": 0.0082,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1012,
+   "P": 0.32,
+   "lift": 299.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "856": {
+  "ns": 102,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1800,
+   "P": 0.627,
+   "lift": 588.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.294,
+   "lift": 2.6
+  }
+ },
+ "857": {
+  "ns": 178,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1361,
+   "P": 0.438,
+   "lift": 411.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.213,
+   "lift": 1.9
+  }
+ },
+ "858": {
+  "ns": 295,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 754,
+   "P": 0.207,
+   "lift": 194.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.125,
+   "lift": 1.1
+  }
+ },
+ "859": {
+  "ns": 1133,
+  "freq": 0.0132,
+  "harm": {
+   "attr": "pc_set",
+   "val": 479,
+   "P": 0.213,
+   "lift": 199.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.138,
+   "lift": 1.2
+  }
+ },
+ "862": {
+  "ns": 282,
+  "freq": 0.0037,
+  "harm": {
+   "attr": "pc_set",
+   "val": 276,
+   "P": 0.826,
+   "lift": 775.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.188,
+   "lift": 1.6
+  }
+ },
+ "863": {
+  "ns": 6734,
+  "freq": 0.0766,
+  "harm": {
+   "attr": "pc_set",
+   "val": 677,
+   "P": 0.01,
+   "lift": 9.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.504,
+   "lift": 1.1
+  }
+ },
+ "865": {
+  "ns": 395,
+  "freq": 0.003,
+  "harm": {
+   "attr": "pc_set",
+   "val": 144,
+   "P": 0.557,
+   "lift": 522.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.137,
+   "lift": 1.2
+  }
+ },
+ "866": {
+  "ns": 3316,
+  "freq": 0.1231,
+  "harm": {
+   "attr": "pc_set",
+   "val": 726,
+   "P": 0.08,
+   "lift": 75.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.132,
+   "lift": 1.1
+  }
+ },
+ "867": {
+  "ns": 91,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1033,
+   "P": 0.945,
+   "lift": 886.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.209,
+   "lift": 1.8
+  }
+ },
+ "868": {
+  "ns": 138,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 25,
+   "P": 0.964,
+   "lift": 904.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.297,
+   "lift": 2.6
+  }
+ },
+ "869": {
+  "ns": 152,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 251,
+   "P": 0.342,
+   "lift": 320.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.158,
+   "lift": 1.4
+  }
+ },
+ "873": {
+  "ns": 458,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 997,
+   "P": 0.489,
+   "lift": 458.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.14,
+   "lift": 1.2
+  }
+ },
+ "875": {
+  "ns": 5344,
+  "freq": 0.0191,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1029,
+   "P": 0.013,
+   "lift": 11.9
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.703,
+   "lift": 1.1
+  }
+ },
+ "876": {
+  "ns": 1751,
+  "freq": 0.0184,
+  "harm": {
+   "attr": "pc_set",
+   "val": 247,
+   "P": 0.154,
+   "lift": 144.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.13,
+   "lift": 1.1
+  }
+ },
+ "877": {
+  "ns": 30,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 281,
+   "P": 0.667,
+   "lift": 625.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.5,
+   "lift": 4.3
+  }
+ },
+ "878": {
+  "ns": 46,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2058,
+   "P": 0.826,
+   "lift": 775.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.283,
+   "lift": 2.5
+  }
+ },
+ "879": {
+  "ns": 3077,
+  "freq": 0.0899,
+  "harm": {
+   "attr": "pc_set",
+   "val": 55,
+   "P": 0.079,
+   "lift": 73.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.139,
+   "lift": 1.2
+  }
+ },
+ "880": {
+  "ns": 1189,
+  "freq": 0.0086,
+  "harm": {
+   "attr": "pc_set",
+   "val": 224,
+   "P": 0.229,
+   "lift": 214.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.144,
+   "lift": 1.2
+  }
+ },
+ "882": {
+  "ns": 15694,
+  "freq": 0.0529,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.006,
+   "lift": 5.4
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.62,
+   "lift": 1.0
+  }
+ },
+ "883": {
+  "ns": 9329,
+  "freq": 0.0433,
+  "harm": {
+   "attr": "pc_set",
+   "val": 189,
+   "P": 0.009,
+   "lift": 8.6
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.709,
+   "lift": 1.1
+  }
+ },
+ "886": {
+  "ns": 847,
+  "freq": 0.0062,
+  "harm": {
+   "attr": "pc_set",
+   "val": 612,
+   "P": 0.272,
+   "lift": 254.8
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.698,
+   "lift": 1.1
+  }
+ },
+ "887": {
+  "ns": 60,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1428,
+   "P": 0.85,
+   "lift": 797.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.233,
+   "lift": 2.0
+  }
+ },
+ "888": {
+  "ns": 2463,
+  "freq": 0.0092,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1009,
+   "P": 0.036,
+   "lift": 33.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.124,
+   "lift": 1.1
+  }
+ },
+ "889": {
+  "ns": 110,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 330,
+   "P": 0.482,
+   "lift": 452.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.209,
+   "lift": 1.8
+  }
+ },
+ "890": {
+  "ns": 174,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.471,
+   "lift": 442.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.207,
+   "lift": 1.8
+  }
+ },
+ "892": {
+  "ns": 486,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1174,
+   "P": 0.356,
+   "lift": 334.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.136,
+   "lift": 1.2
+  }
+ },
+ "893": {
+  "ns": 268,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1412,
+   "P": 0.302,
+   "lift": 283.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "894": {
+  "ns": 40,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2221,
+   "P": 0.875,
+   "lift": 820.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.175,
+   "lift": 1.5
+  }
+ },
+ "895": {
+  "ns": 475,
+  "freq": 0.0044,
+  "harm": {
+   "attr": "pc_set",
+   "val": 383,
+   "P": 0.177,
+   "lift": 165.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "896": {
+  "ns": 13,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2052,
+   "P": 0.385,
+   "lift": 360.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.615,
+   "lift": 5.3
+  }
+ },
+ "897": {
+  "ns": 1302,
+  "freq": 0.0053,
+  "harm": {
+   "attr": "pc_set",
+   "val": 152,
+   "P": 0.051,
+   "lift": 47.6
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.957,
+   "lift": 1.0
+  }
+ },
+ "899": {
+  "ns": 2715,
+  "freq": 0.0686,
+  "harm": {
+   "attr": "pc_set",
+   "val": 339,
+   "P": 0.069,
+   "lift": 65.0
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.786,
+   "lift": 1.7
+  }
+ },
+ "900": {
+  "ns": 138,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.471,
+   "lift": 441.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.203,
+   "lift": 1.8
+  }
+ },
+ "901": {
+  "ns": 18,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 283,
+   "P": 0.667,
+   "lift": 625.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.611,
+   "lift": 5.3
+  }
+ },
+ "902": {
+  "ns": 48,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 2347,
+   "P": 0.833,
+   "lift": 781.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.229,
+   "lift": 2.0
+  }
+ },
+ "903": {
+  "ns": 29,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 268,
+   "P": 0.931,
+   "lift": 873.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.345,
+   "lift": 3.0
+  }
+ },
+ "904": {
+  "ns": 74,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1012,
+   "P": 0.811,
+   "lift": 760.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.23,
+   "lift": 2.0
+  }
+ },
+ "905": {
+  "ns": 324,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 161,
+   "P": 0.157,
+   "lift": 147.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.127,
+   "lift": 1.1
+  }
+ },
+ "906": {
+  "ns": 123,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 957,
+   "P": 0.382,
+   "lift": 358.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.171,
+   "lift": 1.5
+  }
+ },
+ "907": {
+  "ns": 61,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1469,
+   "P": 0.82,
+   "lift": 769.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.23,
+   "lift": 2.0
+  }
+ },
+ "908": {
+  "ns": 3134,
+  "freq": 0.0129,
+  "harm": {
+   "attr": "pc_set",
+   "val": 569,
+   "P": 0.019,
+   "lift": 17.4
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 6,
+   "P": 0.577,
+   "lift": 1.2
+  }
+ },
+ "910": {
+  "ns": 245,
+  "freq": 0.0045,
+  "harm": {
+   "attr": "pc_set",
+   "val": 314,
+   "P": 0.306,
+   "lift": 287.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.314,
+   "lift": 2.7
+  }
+ },
+ "911": {
+  "ns": 498,
+  "freq": 0.0211,
+  "harm": {
+   "attr": "pc_set",
+   "val": 403,
+   "P": 0.392,
+   "lift": 367.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.155,
+   "lift": 1.3
+  }
+ },
+ "912": {
+  "ns": 103,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 692,
+   "P": 0.534,
+   "lift": 501.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.35,
+   "lift": 3.0
+  }
+ },
+ "913": {
+  "ns": 34,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1435,
+   "P": 0.559,
+   "lift": 524.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.265,
+   "lift": 2.3
+  }
+ },
+ "914": {
+  "ns": 124,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1856,
+   "P": 0.363,
+   "lift": 340.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.298,
+   "lift": 2.6
+  }
+ },
+ "915": {
+  "ns": 134,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1652,
+   "P": 0.567,
+   "lift": 532.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "917": {
+  "ns": 538,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 556,
+   "P": 0.286,
+   "lift": 268.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.147,
+   "lift": 1.3
+  }
+ },
+ "918": {
+  "ns": 141,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 67,
+   "P": 0.553,
+   "lift": 519.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.199,
+   "lift": 1.7
+  }
+ },
+ "919": {
+  "ns": 680,
+  "freq": 0.0094,
+  "harm": {
+   "attr": "pc_set",
+   "val": 329,
+   "P": 0.15,
+   "lift": 140.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "920": {
+  "ns": 119,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1842,
+   "P": 0.319,
+   "lift": 299.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.168,
+   "lift": 1.5
+  }
+ },
+ "921": {
+  "ns": 12,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 927,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.333,
+   "lift": 2.9
+  }
+ },
+ "922": {
+  "ns": 664,
+  "freq": 0.0113,
+  "harm": {
+   "attr": "pc_set",
+   "val": 205,
+   "P": 0.36,
+   "lift": 337.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.173,
+   "lift": 1.5
+  }
+ },
+ "923": {
+  "ns": 1390,
+  "freq": 0.012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1177,
+   "P": 0.196,
+   "lift": 184.3
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.626,
+   "lift": 1.0
+  }
+ },
+ "924": {
+  "ns": 6642,
+  "freq": 0.0233,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.016,
+   "lift": 14.8
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.719,
+   "lift": 1.2
+  }
+ },
+ "926": {
+  "ns": 19,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 515,
+   "P": 0.895,
+   "lift": 839.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.263,
+   "lift": 2.3
+  }
+ },
+ "927": {
+  "ns": 13,
+  "freq": 0.0047,
+  "harm": {
+   "attr": "pc_set",
+   "val": 963,
+   "P": 0.231,
+   "lift": 216.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.385,
+   "lift": 3.3
+  }
+ },
+ "929": {
+  "ns": 67,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 360,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.209,
+   "lift": 1.8
+  }
+ },
+ "930": {
+  "ns": 1195,
+  "freq": 0.0173,
+  "harm": {
+   "attr": "pc_set",
+   "val": 648,
+   "P": 0.01,
+   "lift": 9.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.424,
+   "lift": 3.7
+  }
+ },
+ "931": {
+  "ns": 212,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 428,
+   "P": 0.325,
+   "lift": 305.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.142,
+   "lift": 1.2
+  }
+ },
+ "932": {
+  "ns": 107,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1770,
+   "P": 0.449,
+   "lift": 420.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.234,
+   "lift": 2.0
+  }
+ },
+ "934": {
+  "ns": 2067,
+  "freq": 0.0094,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1427,
+   "P": 0.038,
+   "lift": 35.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.172,
+   "lift": 1.5
+  }
+ },
+ "936": {
+  "ns": 3580,
+  "freq": 0.0148,
+  "harm": {
+   "attr": "pc_set",
+   "val": 356,
+   "P": 0.02,
+   "lift": 18.9
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.663,
+   "lift": 1.1
+  }
+ },
+ "939": {
+  "ns": 15,
+  "freq": 0.0001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1168,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.6,
+   "lift": 5.2
+  }
+ },
+ "941": {
+  "ns": 134,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1095,
+   "P": 0.187,
+   "lift": 175.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 8,
+   "P": 0.425,
+   "lift": 3.7
+  }
+ },
+ "942": {
+  "ns": 9380,
+  "freq": 0.0819,
+  "harm": {
+   "attr": "pc_set",
+   "val": 867,
+   "P": 0.024,
+   "lift": 22.2
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.754,
+   "lift": 1.2
+  }
+ },
+ "943": {
+  "ns": 772,
+  "freq": 0.0075,
+  "harm": {
+   "attr": "pc_set",
+   "val": 281,
+   "P": 0.124,
+   "lift": 116.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.21,
+   "lift": 1.8
+  }
+ },
+ "944": {
+  "ns": 589,
+  "freq": 0.0028,
+  "harm": {
+   "attr": "pc_set",
+   "val": 161,
+   "P": 0.129,
+   "lift": 121.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.144,
+   "lift": 1.3
+  }
+ },
+ "945": {
+  "ns": 1056,
+  "freq": 0.0057,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.08,
+   "lift": 75.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.215,
+   "lift": 1.9
+  }
+ },
+ "946": {
+  "ns": 91,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1059,
+   "P": 0.363,
+   "lift": 340.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.264,
+   "lift": 2.3
+  }
+ },
+ "947": {
+  "ns": 649,
+  "freq": 0.0027,
+  "harm": {
+   "attr": "pc_set",
+   "val": 211,
+   "P": 0.094,
+   "lift": 88.2
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 5,
+   "P": 0.475,
+   "lift": 1.0
+  }
+ },
+ "948": {
+  "ns": 471,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1308,
+   "P": 0.155,
+   "lift": 145.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 10,
+   "P": 0.246,
+   "lift": 2.1
+  }
+ },
+ "949": {
+  "ns": 239,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1197,
+   "P": 0.356,
+   "lift": 333.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.197,
+   "lift": 1.7
+  }
+ },
+ "950": {
+  "ns": 67,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1173,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.179,
+   "lift": 1.6
+  }
+ },
+ "951": {
+  "ns": 84,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 719,
+   "P": 0.548,
+   "lift": 513.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.19,
+   "lift": 1.7
+  }
+ },
+ "952": {
+  "ns": 47,
+  "freq": 0.0011,
+  "harm": {
+   "attr": "pc_set",
+   "val": 614,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.277,
+   "lift": 2.4
+  }
+ },
+ "953": {
+  "ns": 104,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 360,
+   "P": 0.5,
+   "lift": 469.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "955": {
+  "ns": 71,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.254,
+   "lift": 237.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.296,
+   "lift": 2.6
+  }
+ },
+ "956": {
+  "ns": 1702,
+  "freq": 0.0826,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1413,
+   "P": 0.025,
+   "lift": 23.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.235,
+   "lift": 2.0
+  }
+ },
+ "960": {
+  "ns": 496,
+  "freq": 0.0059,
+  "harm": {
+   "attr": "pc_set",
+   "val": 71,
+   "P": 0.294,
+   "lift": 276.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.159,
+   "lift": 1.4
+  }
+ },
+ "961": {
+  "ns": 343,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 735,
+   "P": 0.528,
+   "lift": 495.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.14,
+   "lift": 1.2
+  }
+ },
+ "962": {
+  "ns": 47,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 203,
+   "P": 0.723,
+   "lift": 678.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.489,
+   "lift": 4.2
+  }
+ },
+ "963": {
+  "ns": 74,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 707,
+   "P": 0.757,
+   "lift": 710.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.216,
+   "lift": 1.9
+  }
+ },
+ "964": {
+  "ns": 253,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 489,
+   "P": 0.585,
+   "lift": 548.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.19,
+   "lift": 1.6
+  }
+ },
+ "965": {
+  "ns": 38,
+  "freq": 0.0002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 30,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.237,
+   "lift": 2.1
+  }
+ },
+ "968": {
+  "ns": 23947,
+  "freq": 0.0819,
+  "harm": {
+   "attr": "pc_set",
+   "val": 366,
+   "P": 0.004,
+   "lift": 3.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.22,
+   "lift": 1.9
+  }
+ },
+ "969": {
+  "ns": 1047,
+  "freq": 0.0068,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.087,
+   "lift": 81.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.139,
+   "lift": 1.2
+  }
+ },
+ "970": {
+  "ns": 398,
+  "freq": 0.0036,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1023,
+   "P": 0.09,
+   "lift": 84.9
+  },
+  "geom": {
+   "attr": "maxrep",
+   "val": 2,
+   "P": 0.638,
+   "lift": 1.0
+  }
+ },
+ "971": {
+  "ns": 133,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 979,
+   "P": 0.436,
+   "lift": 409.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.195,
+   "lift": 1.7
+  }
+ },
+ "972": {
+  "ns": 140,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 65,
+   "P": 0.529,
+   "lift": 495.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.143,
+   "lift": 1.2
+  }
+ },
+ "974": {
+  "ns": 160,
+  "freq": 0.0017,
+  "harm": {
+   "attr": "pc_set",
+   "val": 513,
+   "P": 0.3,
+   "lift": 281.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.181,
+   "lift": 1.6
+  }
+ },
+ "975": {
+  "ns": 282,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1133,
+   "P": 0.493,
+   "lift": 462.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.181,
+   "lift": 1.6
+  }
+ },
+ "976": {
+  "ns": 219,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1304,
+   "P": 0.242,
+   "lift": 227.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.201,
+   "lift": 1.7
+  }
+ },
+ "977": {
+  "ns": 11336,
+  "freq": 0.0686,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1111,
+   "P": 0.004,
+   "lift": 3.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.484,
+   "lift": 4.2
+  }
+ },
+ "978": {
+  "ns": 77,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1138,
+   "P": 0.636,
+   "lift": 597.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.299,
+   "lift": 2.6
+  }
+ },
+ "979": {
+  "ns": 288,
+  "freq": 0.0029,
+  "harm": {
+   "attr": "pc_set",
+   "val": 295,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.146,
+   "lift": 1.3
+  }
+ },
+ "981": {
+  "ns": 166,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 144,
+   "P": 0.458,
+   "lift": 429.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.319,
+   "lift": 2.8
+  }
+ },
+ "982": {
+  "ns": 118,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 670,
+   "P": 0.246,
+   "lift": 230.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.195,
+   "lift": 1.7
+  }
+ },
+ "984": {
+  "ns": 146,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 171,
+   "P": 0.548,
+   "lift": 514.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.226,
+   "lift": 2.0
+  }
+ },
+ "985": {
+  "ns": 161,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 312,
+   "P": 0.516,
+   "lift": 483.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 12,
+   "P": 0.292,
+   "lift": 2.5
+  }
+ },
+ "988": {
+  "ns": 1560,
+  "freq": 0.0053,
+  "harm": {
+   "attr": "pc_set",
+   "val": 67,
+   "P": 0.053,
+   "lift": 49.3
+  },
+  "geom": {
+   "attr": "nopen",
+   "val": 0,
+   "P": 0.942,
+   "lift": 1.0
+  }
+ },
+ "991": {
+  "ns": 75,
+  "freq": 0.0006,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1197,
+   "P": 0.947,
+   "lift": 888.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.187,
+   "lift": 1.6
+  }
+ },
+ "992": {
+  "ns": 83,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 248,
+   "P": 0.783,
+   "lift": 734.7
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.205,
+   "lift": 1.8
+  }
+ },
+ "993": {
+  "ns": 144,
+  "freq": 0.0014,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1730,
+   "P": 0.444,
+   "lift": 417.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 11,
+   "P": 0.25,
+   "lift": 2.2
+  }
+ },
+ "994": {
+  "ns": 19,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 374,
+   "P": 0.895,
+   "lift": 839.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.211,
+   "lift": 1.8
+  }
+ },
+ "995": {
+  "ns": 4171,
+  "freq": 0.0151,
+  "harm": {
+   "attr": "pc_set",
+   "val": 979,
+   "P": 0.012,
+   "lift": 11.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 9,
+   "P": 0.124,
+   "lift": 1.1
+  }
+ },
+ "996": {
+  "ns": 431,
+  "freq": 0.0052,
+  "harm": {
+   "attr": "pc_set",
+   "val": 56,
+   "P": 0.144,
+   "lift": 135.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.181,
+   "lift": 1.6
+  }
+ },
+ "997": {
+  "ns": 90,
+  "freq": 0.0019,
+  "harm": {
+   "attr": "pc_set",
+   "val": 182,
+   "P": 0.167,
+   "lift": 156.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.278,
+   "lift": 2.4
+  }
+ },
+ "998": {
+  "ns": 70,
+  "freq": 0.0004,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1197,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.4,
+   "lift": 3.5
+  }
+ },
+ "999": {
+  "ns": 39,
+  "freq": 0.001,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1004,
+   "P": 0.256,
+   "lift": 240.6
+  },
+  "geom": {
+   "attr": "nsound",
+   "val": 4,
+   "P": 0.846,
+   "lift": 1.8
+  }
+ },
+ "1000": {
+  "ns": 212,
+  "freq": 0.0016,
+  "harm": {
+   "attr": "pc_set",
+   "val": 655,
+   "P": 0.392,
+   "lift": 367.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.193,
+   "lift": 1.7
+  }
+ },
+ "1001": {
+  "ns": 4508,
+  "freq": 0.11,
+  "harm": {
+   "attr": "pc_set",
+   "val": 80,
+   "P": 0.047,
+   "lift": 44.3
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.15,
+   "lift": 1.3
+  }
+ },
+ "1002": {
+  "ns": 52,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1845,
+   "P": 0.981,
+   "lift": 920.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.212,
+   "lift": 1.8
+  }
+ },
+ "1003": {
+  "ns": 187,
+  "freq": 0.0015,
+  "harm": {
+   "attr": "pc_set",
+   "val": 294,
+   "P": 0.305,
+   "lift": 286.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.16,
+   "lift": 1.4
+  }
+ },
+ "1005": {
+  "ns": 440,
+  "freq": 0.0023,
+  "harm": {
+   "attr": "pc_set",
+   "val": 412,
+   "P": 0.241,
+   "lift": 226.0
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.202,
+   "lift": 1.8
+  }
+ },
+ "1006": {
+  "ns": 715,
+  "freq": 0.0125,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1361,
+   "P": 0.217,
+   "lift": 203.4
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.183,
+   "lift": 1.6
+  }
+ },
+ "1007": {
+  "ns": 313,
+  "freq": 0.0024,
+  "harm": {
+   "attr": "pc_set",
+   "val": 455,
+   "P": 0.45,
+   "lift": 422.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.137,
+   "lift": 1.2
+  }
+ },
+ "1008": {
+  "ns": 106,
+  "freq": 0.0007,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1147,
+   "P": 0.557,
+   "lift": 522.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.217,
+   "lift": 1.9
+  }
+ },
+ "1009": {
+  "ns": 423,
+  "freq": 0.0159,
+  "harm": {
+   "attr": "pc_set",
+   "val": 715,
+   "P": 0.296,
+   "lift": 277.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 5,
+   "P": 0.17,
+   "lift": 1.5
+  }
+ },
+ "1010": {
+  "ns": 200,
+  "freq": 0.0012,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1033,
+   "P": 0.39,
+   "lift": 365.9
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 4,
+   "P": 0.135,
+   "lift": 1.2
+  }
+ },
+ "1011": {
+  "ns": 112,
+  "freq": 0.0018,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 1.0,
+   "lift": 938.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.295,
+   "lift": 2.6
+  }
+ },
+ "1014": {
+  "ns": 53,
+  "freq": 0.0022,
+  "harm": {
+   "attr": "pc_set",
+   "val": 310,
+   "P": 0.434,
+   "lift": 407.1
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.226,
+   "lift": 2.0
+  }
+ },
+ "1016": {
+  "ns": 1726,
+  "freq": 0.033,
+  "harm": {
+   "attr": "pc_set",
+   "val": 957,
+   "P": 0.162,
+   "lift": 151.6
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 3,
+   "P": 0.132,
+   "lift": 1.1
+  }
+ },
+ "1018": {
+  "ns": 57,
+  "freq": 0.0005,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1703,
+   "P": 0.965,
+   "lift": 905.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 1,
+   "P": 0.298,
+   "lift": 2.6
+  }
+ },
+ "1019": {
+  "ns": 170,
+  "freq": 0.0008,
+  "harm": {
+   "attr": "pc_set",
+   "val": 93,
+   "P": 0.524,
+   "lift": 491.2
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 6,
+   "P": 0.206,
+   "lift": 1.8
+  }
+ },
+ "1020": {
+  "ns": 287,
+  "freq": 0.002,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1190,
+   "P": 0.317,
+   "lift": 297.5
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 7,
+   "P": 0.139,
+   "lift": 1.2
+  }
+ },
+ "1021": {
+  "ns": 6642,
+  "freq": 0.0256,
+  "harm": {
+   "attr": "pc_set",
+   "val": 924,
+   "P": 0.016,
+   "lift": 14.8
+  },
+  "geom": {
+   "attr": "span",
+   "val": 4,
+   "P": 0.719,
+   "lift": 1.2
+  }
+ },
+ "1023": {
+  "ns": 60,
+  "freq": 0.0009,
+  "harm": {
+   "attr": "pc_set",
+   "val": 1705,
+   "P": 0.833,
+   "lift": 781.8
+  },
+  "geom": {
+   "attr": "minfret",
+   "val": 2,
+   "P": 0.267,
+   "lift": 2.3
+  }
+ }
+}

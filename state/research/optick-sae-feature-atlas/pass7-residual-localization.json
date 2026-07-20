@@ -1,0 +1,35 @@
+{
+  "study": "2026-07-20-sae-residual-modal-morphology",
+  "artifact": "state/quality/optick-sae/2026-07-20/ (dict 1024, k 32, AuxK 0.10)",
+  "selective_features": 747,
+  "harmonically_explained_P_ge_0.8": 138,
+  "residual_P_lt_0.5": 441,
+  "geometry_rescued_of_residual": 2,
+  "coherence_mean_pairwise_similarity": {
+    "explained": 1.064,
+    "residual": 0.872,
+    "random_control": 0.721,
+    "residual_p10": 0.79,
+    "random_p90": 0.738,
+    "note": "compact partition-weighted vectors; only between-group comparison is meaningful"
+  },
+  "dominant_partition_share": {
+    "explained": {
+      "STRUCTURE": 0.88,
+      "MODAL": 0.1,
+      "SYMBOLIC": 0.01
+    },
+    "residual": {
+      "STRUCTURE": 0.64,
+      "MODAL": 0.25,
+      "MORPHOLOGY": 0.1,
+      "SYMBOLIC": 0.01
+    }
+  },
+  "mean_partition_purity": {
+    "explained": 0.633,
+    "residual": 0.695
+  },
+  "verdict": "Residual is real coherent structure concentrated in MODAL + MORPHOLOGY -- partitions with no attribute vocabulary. Gap is vocabulary, not model. Do NOT optimize partition purity.",
+  "next": "Build modal + richer morphology attribute vocabulary from existing GA domain code, then re-score the 441."
+}

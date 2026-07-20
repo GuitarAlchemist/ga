@@ -139,6 +139,7 @@ open the follow-up plan/ADR — the study links to it, not the other way around.
 
 | Date | Study | Status | Verdict (one line) |
 |---|---|---|---|
+| 2026-07-20 | [SAE residual is modal + morphological](2026-07-20-sae-residual-modal-morphology.md) | concluded | The 441 "uninterpretable" features are real coherent structure (0.872 vs 0.721 random) concentrated in MODAL/MORPHOLOGY — partitions we built no vocabulary for. Don't optimize purity |
 | 2026-07-19 | [SAE dictionary utilization sweep](2026-07-19-sae-dictionary-utilization-sweep.md) | concluded | No — shrinking `dict_size` is counterproductive. **AuxK** (already merged, unused by prod) nearly doubles the effective dictionary 379→747 at unchanged R². Action: regenerate the artifact |
 | 2026-07-19 | [OPTIC-K SAE feature atlas](2026-07-19-optick-sae-feature-atlas.md) | concluded | Yes, partially — two disjoint concept classes (92 exact-PC-set + 59 transposition-invariant ICV-quality detectors), heavy feature-splitting, ~half the dict near-dead. 3 Fable 5 passes; top-K misleads both ways |
 | 2026-06-15 | [Nested-loop chatbot dev w/ DuckDB](2026-06-15-nested-loop-chatbot-development-duckdb.md) | concluded | Yes — ~80% already built; the oracle, not the loop, is load-bearing |
