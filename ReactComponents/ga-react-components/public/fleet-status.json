@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "1db9ac977ffa56307f6d18adf6a087c8857e15b3",
-    "generatedAt": "2026-07-20T04:54:18.255303+00:00",
+    "commitSha": "4d20a47bce21cb2f61daea0f1d87acfe41271823",
+    "generatedAt": "2026-07-20T05:01:47.270188+00:00",
     "repoCount": 5,
-    "totalPRs": 11
+    "totalPRs": 12
   },
   "repos": [
     {
@@ -118,6 +118,18 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-07-20T04:55:16Z",
+          "failingChecks": 0,
+          "headRef": "feat/chatbot-llm-judge-invariants",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 564,
+          "title": "feat(chatbot-qa): LLM-as-judge gate so answer quality becomes measurable",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/564"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-07-20T04:47:44Z",
           "failingChecks": 0,
           "headRef": "docs/compound-router-anchor-lessons",
@@ -150,18 +162,6 @@
           "number": 558,
           "title": "fix(routing): send \"what notes are in <chord>\" to chord-info, not scale-info (#555)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/558"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T00:57:26Z",
-          "failingChecks": 0,
-          "headRef": "chore/regenerate-sae-artifact-auxk",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 551,
-          "title": "SAE: regenerate production artifact with AuxK (+97% effective dict) + study #3 (residual is modal/morphological)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/551"
         }
       ]
     },
@@ -177,8 +177,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 3,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T05:01:36Z",
+          "failingChecks": 0,
+          "headRef": "fix/verify-ci-parity",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 240,
+          "title": "fix(harness): make verify.ps1 gate on clippy at CI's exact flags (#228 P1-3)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/240"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -195,7 +207,7 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:39:49Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "fix/maintain-gate-absent-metric-evidence",
           "isDraft": false,
           "mergeable": "MERGEABLE",
