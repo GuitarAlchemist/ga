@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4d20a47bce21cb2f61daea0f1d87acfe41271823",
-    "generatedAt": "2026-07-20T05:01:47.270188+00:00",
+    "commitSha": "7092ec0f2d959db379aeb48c36e9b2c479f6a3b1",
+    "generatedAt": "2026-07-20T05:03:58.168330+00:00",
     "repoCount": 5,
-    "totalPRs": 12
+    "totalPRs": 13
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
@@ -150,18 +150,6 @@
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T04:12:11Z",
-          "failingChecks": 0,
-          "headRef": "fix/555-chord-tone-routing",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 558,
-          "title": "fix(routing): send \"what notes are in <chord>\" to chord-info, not scale-info (#555)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/558"
         }
       ]
     },
@@ -177,8 +165,32 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 3,
+      "prCount": 5,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T05:03:08Z",
+          "failingChecks": 1,
+          "headRef": "docs/fractal-exposure-plan",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 242,
+          "title": "docs(plans): ix-fractal Takagi/de Rham exposure plan (#203)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/242"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T05:02:14Z",
+          "failingChecks": 0,
+          "headRef": "docs/crate-count-78",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 241,
+          "title": "docs: correct crate count to 78 and add missing ix-registrar (#228 P2-6)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/241"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
