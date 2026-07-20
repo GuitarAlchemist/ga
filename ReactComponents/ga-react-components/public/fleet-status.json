@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "685801f0b66e80410f5a5121c08b30f776dec4bd",
-    "generatedAt": "2026-07-19T23:28:28.833588+00:00",
+    "commitSha": "8aeaa853335dc11660ed38df083b99cb92467703",
+    "generatedAt": "2026-07-20T00:48:18.612847+00:00",
     "repoCount": 5,
-    "totalPRs": 2
+    "totalPRs": 4
   },
   "repos": [
     {
@@ -160,8 +160,32 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 2,
+      "prCount": 4,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T00:24:49Z",
+          "failingChecks": 0,
+          "headRef": "feat/aiw-provider-native-tokens",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 772,
+          "title": "feat(aiw): provider-native token accounting + knowledge-type routing doctrine",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/772"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-19T23:41:18Z",
+          "failingChecks": 0,
+          "headRef": "docs/pocock-harness-delta",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 771,
+          "title": "docs(methodology): 2026-07 agentic-engineering delta from Pocock channel sweep",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/771"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -181,7 +205,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
