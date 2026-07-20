@@ -281,6 +281,14 @@ prompts:
 
   - prompt: "notes in c major"
     category: case-variants
+    # routes_to pinned 2026-07-20 as a REGRESSION GUARD for issue #555. The
+    # first version of that fix sent this prompt from skill.scaleinfo 0.93 to
+    # fallback-direct 0.00 — chord-quality anchors pull bare "<root> <quality>"
+    # queries across, and once ChordInfoSkill wins it cannot parse "c major" as
+    # a chord symbol, so the query falls through to the LLM. The substring
+    # invariants below still passed while that happened (the LLM answered
+    # correctly), so only pinning the route catches it.
+    routes_to: skill.scaleinfo
     contains: ["C", "D", "E", "F", "G", "A", "B"]
     min_length: 20
     max_elapsed_ms: 20000
@@ -505,3 +513,48 @@ prompts:
     contains_any: ["yes", "no", "Z", "equivalent", "inversion", "transposition", "different", "same", "related"]
     min_length: 50
     max_elapsed_ms: 30000
+
+  # ── chord-tones vs scale disambiguation (issue #555, fixed 2026-07-20) ──
+  #
+  # Locks the routing boundary between ChordInfoSkill and ScaleInfoSkill.
+  # Before the fix "What notes are in a C major triad" routed to
+  # skill.scaleinfo at 0.90 confidence and returned the 7-note SCALE for a
+  # 3-note triad request.
+  #
+  # NOTE on min_length: these answers are deliberately terse (35-43 chars,
+  # e.g. "C major chord contains C, E, and G."). The corpus default is 50,
+  # which would fail a CORRECT answer — hence the explicit lower bound.
+  #
+  # The scaleinfo entry below is a REGRESSION GUARD, not a feature test: the
+  # first version of the #555 fix sent "notes in c major" from
+  # skill.scaleinfo 0.93 to fallback-direct 0.00, because chord anchors pull
+  # bare "<root> <quality>" queries across. An offline cosine simulation had
+  # predicted that prompt was safe; only an A/B against a rebuilt baseline
+  # binary caught it. Keep this entry pinned to skill.scaleinfo.
+
+  - prompt: "What notes are in a G7 chord"
+    category: chord-tones
+    routes_to: skill.chordinfo
+    contains: ["G", "B", "D", "F"]
+    not_contains: ["Mixolydian", "solo over", "scale has"]
+    min_length: 25
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "What notes are in a C major triad"
+    category: chord-tones
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G"]
+    not_contains: ["7 notes", "scale has", "Relative minor"]
+    min_length: 25
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "which notes form a B minor triad"
+    category: chord-tones
+    routes_to: skill.chordinfo
+    contains: ["B", "D", "F#"]
+    not_contains: ["7 notes", "scale has"]
+    min_length: 25
+    max_elapsed_ms: 20000
+    retry: 0
