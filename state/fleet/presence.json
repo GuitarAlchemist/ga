@@ -1,71 +1,71 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-20T00:59:41.757633Z",
+  "generated_at": "2026-07-20T04:57:12.224953Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "yellow",
+  "overall": "red",
   "limbs": [
     {
       "id": "lane:jules-router",
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/jules-auto-delegate.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:28:29Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29716974813",
+      "detail": "latest completed run: skipped"
     },
     {
       "id": "lane:claude-mention",
       "kind": "delegation-lane",
       "workflow": "claude.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/claude.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:55:26Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29717973416",
+      "detail": "latest completed run: skipped"
     },
     {
       "id": "lane:claude-pr-review",
       "kind": "review-lane",
       "workflow": "claude-code-review.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/claude-code-review.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:55:20Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29717969630",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:post-merge-smoke",
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/post-merge-smoke.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "red",
+      "last_heartbeat": "2026-07-20T04:53:43Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29717908592",
+      "detail": "latest completed run: failure"
     },
     {
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/ecosystem-health.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:00:48Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29715887211",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/quality-snapshot.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:53:43Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29717908606",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:fleet-status",
       "kind": "sensor",
       "workflow": "fleet-status.yml",
-      "status": "unknown",
-      "last_heartbeat": null,
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/fleet-status.yml",
-      "detail": "no runs found (workflow never fired, or API unreachable)"
+      "status": "green",
+      "last_heartbeat": "2026-07-20T04:53:43Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29717908593",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sibling:Demerzel",
