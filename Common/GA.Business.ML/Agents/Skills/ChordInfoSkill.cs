@@ -69,6 +69,32 @@ public sealed partial class ChordInfoSkill(ILogger<ChordInfoSkill> logger) : IOr
         "What is Dm7b5",
         "What is F#m7",
         "What is Bbdim7",
+
+        // Chord-quality-noun phrasings (issue #555, 2026-07-20). Every anchor
+        // above is chord-SYMBOL-shaped ("Dm7", "Cmaj7", "F#m7b5") or
+        // "what chord is <notes>". None covered "what notes are in a
+        // <spelled-out quality> triad/chord" — while ScaleInfoSkill carried
+        // three anchors of exactly that shape ("What notes are in C major?",
+        // "Show me the notes in C major", "List the notes in Bb major"). So
+        // the product's most basic question routed to the scale skill at 0.90
+        // confidence and answered "C major triad" with the 7-note SCALE.
+        //
+        // These anchor on the chord-quality NOUN (triad / chord), never on a
+        // bare "<root> <quality>" — bare forms are genuinely ambiguous and
+        // belong to ScaleInfoSkill, which the corpus depends on
+        // ("notes in c major" must stay a scale answer).
+        //
+        // Measured with bge-large at the production 0.64 threshold against a
+        // 20-query set (mostly held out from these anchors): 15/20 -> 19/20,
+        // no scale-side regressions. Harness intentionally included held-out
+        // variants because an anchor scores 1.000 against itself and would
+        // otherwise flatter the result.
+        "what notes are in a C major triad",
+        "what are the notes of an A minor triad",
+        "what notes make up a G7 chord",
+        "which notes form a B diminished triad",
+        "spell a G7 chord",
+        "what notes are in an E major chord",
     ];
 
     public bool CanHandle(string message)

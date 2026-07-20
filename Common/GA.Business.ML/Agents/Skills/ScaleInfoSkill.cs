@@ -60,6 +60,34 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         "Show me the notes in C major",
         "Show me the notes in A minor",
         "Show me the notes in G major",
+
+        // Scale-side defence for the chord-quality anchors added to
+        // ChordInfoSkill for issue #555 (2026-07-20). Adding chord-noun
+        // anchors there pulls "what notes are in <root> <quality>" queries
+        // toward chordinfo generally — measured: it broke "what notes are in
+        // the A minor scale" (0.890 scaleinfo -> 0.900 chordinfo) even though
+        // the query says "scale" outright. These re-anchor the explicit-scale
+        // and bare-key forms so the two skills separate on the trailing noun
+        // rather than on the root-plus-quality prefix they share.
+        //
+        // Do not add a bare "<root> <quality>" anchor beyond D major here: a
+        // sweep showed "what notes are in F minor" drags "F sharp minor triad"
+        // back across to this skill (19/20 -> 18/20).
+        "what notes are in the A minor scale",
+        "what notes are in the G major scale",
+        "what notes are in D major",
+        "what notes are in the B flat major scale",
+        // Terse bare-key forms. An offline 3-intent cosine simulation said the
+        // chord anchors above were safe for these; the LIVE router disagreed —
+        // "notes in c major" went from skill.scaleinfo 0.93 to
+        // fallback-direct 0.00 (chordinfo wins the embedding race, then
+        // ChordInfoSkill cannot parse "c major" as a chord symbol, so the whole
+        // query falls through to the LLM). The simulation was not a valid proxy
+        // because production ranks many more intents than the three modelled.
+        // Verified by A/B against a rebuilt baseline binary, not by simulation.
+        "notes in c major",
+        "notes in a minor",
+        "notes in g major",
     ];
 
     // Matches: "notes in C major", "what is Bb minor scale", "D# minor notes", etc.
