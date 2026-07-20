@@ -1,0 +1,214 @@
+{
+  "study": "2026-07-19-sae-dictionary-width-utilization",
+  "status": "WITHDRAWN \u2014 invalid design; retained as a near-miss record",
+  "why_invalid": "All sweep/control runs left --batch-size unpinned at the default 256; the production baseline used 4096. Every cross-reference to the baseline is confounded.",
+  "runs": {
+    "aux0-s1": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 50.5,
+      "purity_mean": 0.4918,
+      "purity_p10": 0.2782,
+      "batch_size": 256
+    },
+    "aux0-s2": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 50.2,
+      "purity_mean": 0.5006,
+      "purity_p10": 0.2821,
+      "batch_size": 256
+    },
+    "aux0-s3": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 51.2,
+      "purity_mean": 0.513,
+      "purity_p10": 0.2785,
+      "batch_size": 256
+    },
+    "aux0.10-s1": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 71.4,
+      "purity_mean": 0.5051,
+      "purity_p10": 0.2776,
+      "batch_size": 256
+    },
+    "aux0.10-s2": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 73.6,
+      "purity_mean": 0.5011,
+      "purity_p10": 0.2832,
+      "batch_size": 256
+    },
+    "aux0.10-s3": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 73.8,
+      "purity_mean": 0.5114,
+      "purity_p10": 0.2818,
+      "batch_size": 256
+    },
+    "d1024": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 0.9999,
+      "dead_pct": 69.6,
+      "purity_mean": 0.5196,
+      "purity_p10": 0.2858,
+      "batch_size": 256
+    },
+    "d1024-noaux": {
+      "dict_size": 1024,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 48.6,
+      "purity_mean": 0.5176,
+      "purity_p10": 0.2838,
+      "batch_size": 256
+    },
+    "d2048": {
+      "dict_size": 2048,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 63.2,
+      "purity_mean": 0.5949,
+      "purity_p10": 0.3309,
+      "batch_size": 256
+    },
+    "d2048-s1": {
+      "dict_size": 2048,
+      "mse": 0.0,
+      "r2": 1.0,
+      "dead_pct": 21.0,
+      "purity_mean": 0.6885,
+      "purity_p10": 0.3633,
+      "batch_size": 256
+    },
+    "d2048-s2": {
+      "dict_size": 2048,
+      "mse": 0.0,
+      "r2": 0.9999,
+      "dead_pct": 18.7,
+      "purity_mean": 0.6792,
+      "purity_p10": 0.3606,
+      "batch_size": 256
+    },
+    "d2048-s3": {
+      "dict_size": 2048,
+      "mse": 0.0,
+      "r2": 0.9999,
+      "dead_pct": 14.5,
+      "purity_mean": 0.6998,
+      "purity_p10": 0.3843,
+      "batch_size": 256
+    },
+    "d256": {
+      "dict_size": 256,
+      "mse": 0.0,
+      "r2": 0.9998,
+      "dead_pct": 68.4,
+      "purity_mean": 0.4226,
+      "purity_p10": 0.2651,
+      "batch_size": 256
+    },
+    "d4096": {
+      "dict_size": 4096,
+      "mse": 2e-06,
+      "r2": 0.9995,
+      "dead_pct": 8.0,
+      "purity_mean": 0.7442,
+      "purity_p10": 0.4657,
+      "batch_size": 256
+    },
+    "d4096-noaux": {
+      "dict_size": 4096,
+      "mse": 1e-06,
+      "r2": 0.9997,
+      "dead_pct": 2.1,
+      "purity_mean": 0.7673,
+      "purity_p10": 0.5007,
+      "batch_size": 256
+    },
+    "d4096-s1": {
+      "dict_size": 4096,
+      "mse": 1e-06,
+      "r2": 0.9996,
+      "dead_pct": 8.6,
+      "purity_mean": 0.7654,
+      "purity_p10": 0.47,
+      "batch_size": 256
+    },
+    "d4096-s2": {
+      "dict_size": 4096,
+      "mse": 1e-06,
+      "r2": 0.9996,
+      "dead_pct": 7.2,
+      "purity_mean": 0.7379,
+      "purity_p10": 0.4743,
+      "batch_size": 256
+    },
+    "d4096-s3": {
+      "dict_size": 4096,
+      "mse": 1e-06,
+      "r2": 0.9996,
+      "dead_pct": 8.0,
+      "purity_mean": 0.7532,
+      "purity_p10": 0.4752,
+      "batch_size": 256
+    },
+    "d512": {
+      "dict_size": 512,
+      "mse": 0.0,
+      "r2": 0.9999,
+      "dead_pct": 75.4,
+      "purity_mean": 0.4207,
+      "purity_p10": 0.2689,
+      "batch_size": 256
+    },
+    "d8192": {
+      "dict_size": 8192,
+      "mse": 1e-06,
+      "r2": 0.9997,
+      "dead_pct": 18.4,
+      "purity_mean": 0.7154,
+      "purity_p10": 0.4256,
+      "batch_size": 256
+    }
+  },
+  "acceptance_test": {
+    "note": "dict=1024 k=32 seed=42 epochs=50 batch=4096 aux=0 under the width-relative thresholds \u2014 reproduces the 2026-06-14 artifact and study 0's decomposition exactly.",
+    "near_dead": 400,
+    "always_on": 41,
+    "effective_dict": 379,
+    "alive": 820,
+    "dead_pct": 19.9,
+    "purity_mean": 0.5314,
+    "loss_final": 1.46e-06
+  },
+  "auxk_bias_ab": {
+    "note": "Removing `+ b_dec` from auxk_reconstruct (Gao et al. conformance) makes AuxK inert. Change was NOT shipped; rationale recorded in train.py.",
+    "config": "dict=1024 k=32 seed=42 epochs=50 batch=4096",
+    "aux_off": {
+      "dead_pct": 19.92,
+      "purity_mean": 0.5314
+    },
+    "aux_on_with_bias": {
+      "dead_pct": 4.88,
+      "purity_mean": 0.6125
+    },
+    "aux_on_bias_removed": {
+      "dead_pct": 19.6,
+      "purity_mean": 0.5722
+    }
+  },
+  "see_also": "state/research/sae-dictionary-utilization-sweep/sweep-results.json (the correct bs=4096 sweep, run independently the same evening)"
+}
