@@ -279,6 +279,10 @@ if ($Snapshot) {
     $inPromptBlock = $false
     $currentCategory = $null
     $currentSkip = $false
+    # Per-prompt roster. The aggregates above reduce this away; the verdict
+    # ledger below needs the individual entries, so retain them here.
+    $currentPrompt = $null
+    $promptRoster = [System.Collections.ArrayList]::new()
 
     function _Flush {
         if (-not $script:inPromptBlock) { return }
@@ -292,6 +296,12 @@ if ($Snapshot) {
                 }
                 $script:categoryTotals[$script:currentCategory]++
             }
+            if ($script:currentPrompt) {
+                [void]$script:promptRoster.Add([pscustomobject]@{
+                    prompt   = $script:currentPrompt
+                    category = $script:currentCategory
+                })
+            }
         }
     }
 
@@ -301,6 +311,15 @@ if ($Snapshot) {
             $script:inPromptBlock = $true
             $script:currentCategory = $null
             $script:currentSkip = $false
+            # Prompt text is the join key against the "[category] 'prompt'"
+            # failure labels from PromptCorpusTests.EvaluatePromptAsync.
+            $script:currentPrompt = if ($_ -match '^\s*-\s*prompt:\s*"(.*)"\s*(#.*)?$') {
+                $matches[1]
+            } elseif ($_ -match '^\s*-\s*prompt:\s*(\S.*?)\s*(#.*)?$') {
+                $matches[1]
+            } else {
+                $null
+            }
         }
         elseif ($script:inPromptBlock -and $_ -match '^\s+category:\s*"?([^"#]+?)"?\s*(#.*)?$') {
             if ($null -eq $script:currentCategory) {
@@ -489,6 +508,66 @@ if ($Snapshot) {
     $snap | ConvertTo-Json -Depth 4 | Set-Content $snapshotPath -Encoding UTF8
     Write-Host ""
     Write-Host "Wrote trend snapshot to $snapshotPath" -ForegroundColor Cyan
+
+    # ── Per-prompt verdict ledger (additive; consumer: GuitarAlchemist/hari#13) ──
+    # The snapshot answers "what fraction passed today". It cannot answer "did
+    # prompt X's verdict change since yesterday" — the per-prompt join is
+    # computed and then discarded. This persists it.
+    #
+    # Why hari wants it: hari's contradiction-preserving lattice needs the SAME
+    # proposition observed MORE THAN ONCE with the possibility of disagreement.
+    # Nothing else in the ecosystem supplies that. ix-autoresearch's targets
+    # perturb continuous config spaces, so a config is never revisited (2000
+    # perturbations → 2000 distinct configs); the invariant firings re-observe
+    # daily but have been 1.0/ok every day since 2026-04-18. This corpus is the
+    # only candidate: same 52 active prompts, judged daily.
+    #
+    # Separate artifact, NOT new fields on $snap: the snapshot's shape is pinned
+    # by ix-quality-trend (ix/crates/ix-quality-trend/src/snapshot.rs) and read by
+    # emit-ga-retrieval-quality.ps1. Nothing above this line changes.
+    $verdictDir = Join-Path $snapshotDir "verdicts"
+    if (-not (Test-Path $verdictDir)) {
+        New-Item -ItemType Directory -Path $verdictDir -Force | Out-Null
+    }
+    $verdictPath = Join-Path $verdictDir "$date.jsonl"
+
+    # Failure labels are "[category] 'prompt'" — index the prompt text so the
+    # roster join is exact rather than a substring scan.
+    $failedPrompts = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($f in $failures) {
+        if ($f -match "^\[[^\]]*\]\s*'(.*)'") {
+            [void]$failedPrompts.Add($matches[1])
+        }
+    }
+
+    $verdictLines = foreach ($entry in $promptRoster) {
+        # Degraded runs are recorded as "unknown", not dropped: "the backend was
+        # incomplete" is real evidence ABOUT the observation, and omitting the day
+        # would let a consumer misread the gap as agreement. Uses the same
+        # $environmentDegraded computed above, so it inherits both the declared
+        # GA_CORPUS_ENV_DEGRADED verdict and the BACKEND_DEGRADED marker.
+        $verdict = if ($environmentDegraded) {
+            "unknown"
+        } elseif ($failedPrompts.Contains($entry.prompt)) {
+            "fail"
+        } else {
+            "pass"
+        }
+        ([pscustomobject]@{
+            date      = $date
+            timestamp = $snap.timestamp
+            prompt    = $entry.prompt
+            category  = $entry.category
+            verdict   = $verdict
+            degraded  = [bool]$environmentDegraded
+        } | ConvertTo-Json -Depth 3 -Compress)
+    }
+    $verdictLines | Set-Content $verdictPath -Encoding UTF8
+
+    $vPass = @($verdictLines | Where-Object { $_ -match '"verdict":"pass"' }).Count
+    $vFail = @($verdictLines | Where-Object { $_ -match '"verdict":"fail"' }).Count
+    $vUnk  = @($verdictLines | Where-Object { $_ -match '"verdict":"unknown"' }).Count
+    Write-Host "Wrote $(@($verdictLines).Count) per-prompt verdicts to $verdictPath (pass=$vPass fail=$vFail unknown=$vUnk)" -ForegroundColor Cyan
 
     # ── Unified Quality Gate Ledger (v1) — also emit a row ──
     # See ix/docs/contracts/2026-05-24-quality-gate-ledger.contract.md.
