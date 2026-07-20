@@ -45,6 +45,35 @@ public class PromptCorpusTests
         "index is not loaded",
     ];
 
+    /// <summary>
+    ///     Machine-readable token stamped into a failure message when the backend
+    ///     answered in degraded mode. <c>Scripts/run-prompt-corpus.ps1</c> matches
+    ///     this to classify the run as an environment failure.
+    /// </summary>
+    internal const string BackendDegradedToken = "BACKEND_DEGRADED";
+
+    /// <summary>
+    ///     Graceful-degradation signatures. When the backend cannot serve — no
+    ///     chat model configured (the model-less CI case), readiness probe failing,
+    ///     or an unloadable SKILL.md — the chatbot deliberately returns polite
+    ///     fallback prose instead of an HTTP error. Those prompts therefore fail as
+    ///     ordinary invariant mismatches, and the snapshot writer's transport-error
+    ///     heuristic (HTTP 5xx / connection refused / timed out) never fires. The
+    ///     result was a month of daily snapshots publishing <c>pass_pct: 7.69</c>
+    ///     with <c>degraded: false</c> while the chatbot actually scored 98.08%
+    ///     against a real model — graceful degradation defeating the degradation
+    ///     detector. Stamping <see cref="BackendDegradedToken"/> lets the snapshot
+    ///     writer emit "no signal" instead of a fabricated pass-rate.
+    ///     Sources: <c>ReadinessGatedChatApplicationService</c> (readiness refusal)
+    ///     and <c>SkillMdDrivenWrapperBase</c>'s catch-block <c>DegradedResponseText</c>
+    ///     (emitted only on the exception path, Confidence = 0).
+    /// </summary>
+    private static readonly string[] BackendDegradedMarkers =
+    [
+        "The chatbot can't serve a request right now",
+        "right now. Please try again.",
+    ];
+
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
@@ -205,6 +234,13 @@ public class PromptCorpusTests
 
         if (string.IsNullOrWhiteSpace(answer))
             return ($"{label} → empty response", null);
+
+        // Checked BEFORE the content invariants: a degraded backend answers with
+        // polite fallback prose, which would otherwise be scored as an ordinary
+        // "missing substring" failure and published as a real pass-rate.
+        foreach (var marker in BackendDegradedMarkers)
+            if (answer.Contains(marker, StringComparison.OrdinalIgnoreCase))
+                return ($"{label} → {BackendDegradedToken}: backend returned a degraded fallback answer", null);
 
         var minLen = entry.MinLength ?? 50;
         if (answer.Length < minLen)

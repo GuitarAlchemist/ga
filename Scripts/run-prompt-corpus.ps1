@@ -349,7 +349,17 @@ if ($Snapshot) {
     # Recording pass_pct=0 in that case actively pollutes the trend line
     # with a false floor. Emit null + a note instead so the dashboard
     # shows "no useful signal" rather than "the chatbot collapsed."
+    # BACKEND_DEGRADED (added 2026-07-20): the transport-error patterns below only
+    # catch HARD failures. The chatbot degrades GRACEFULLY — with no chat model
+    # configured (model-less CI), a failing readiness probe, or an unloadable
+    # SKILL.md, it returns polite fallback prose, so every prompt failed as an
+    # ordinary "missing substring" mismatch and this heuristic never fired. That
+    # published `pass_pct: 7.69, degraded: false` daily for a month while the
+    # chatbot actually scored 98.08% against a real model. PromptCorpusTests now
+    # stamps BACKEND_DEGRADED into such failures; match it here so the run is
+    # classified as no-signal instead of a fabricated pass-rate.
     $envFailureFailures = @($failures | Where-Object {
+        $_ -match 'BACKEND_DEGRADED' -or `
         $_ -match 'HTTP 5\d\d' -or `
         $_ -match 'connection refused' -or `
         $_ -match 'timed out' -or `
@@ -359,7 +369,20 @@ if ($Snapshot) {
     $envFailureRatio = if ($failures.Count -gt 0) {
         $envFailureFailures.Count / $failures.Count
     } else { 0 }
-    $environmentDegraded = $envFailureRatio -ge 0.9
+    # Primary signal: an EXPLICIT declaration that the environment is incomplete.
+    # The CI preflight already computes ollama_ok / optic_ok and warns "DEGRADED",
+    # but that verdict never reached this writer, which re-derived degradation from
+    # failure TEXT. A runner with a real model but no OPTIC-K index produces ordinary
+    # invariant failures (not transport errors), so the heuristic below returned
+    # false and the snapshot published `pass_pct: 7.69, degraded: false` daily for a
+    # month — a real measurement of a knowingly-incomplete environment, presented as
+    # the chatbot's quality. (Measured against a complete local backend the same
+    # corpus scores 98.08%.) Don't infer what the caller already knows.
+    $declaredDegraded = ($env:GA_CORPUS_ENV_DEGRADED -in @('1', 'true', 'TRUE', 'yes', 'YES'))
+    $environmentDegraded = $declaredDegraded -or ($envFailureRatio -ge 0.9)
+    if ($declaredDegraded) {
+        Write-Host "Environment declared degraded via GA_CORPUS_ENV_DEGRADED — snapshot will carry degraded=true." -ForegroundColor Yellow
+    }
 
     $date = Get-Date -Format "yyyy-MM-dd"
     $snapshotDir = Join-Path $repoRoot "state/quality/chatbot-qa"
