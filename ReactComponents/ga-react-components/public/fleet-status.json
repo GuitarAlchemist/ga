@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "98060385e298d904dc8738cfefbb56197f142da1",
-    "generatedAt": "2026-07-20T04:33:08.393432+00:00",
+    "commitSha": "1db9ac977ffa56307f6d18adf6a087c8857e15b3",
+    "generatedAt": "2026-07-20T04:54:18.255303+00:00",
     "repoCount": 5,
-    "totalPRs": 9
+    "totalPRs": 11
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 5,
+      "prCount": 4,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:47:44Z",
+          "failingChecks": 0,
+          "headRef": "docs/compound-router-anchor-lessons",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 562,
+          "title": "docs(solutions): #555 router-anchor fix + eval-register-blindness pattern",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/562"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -122,7 +134,7 @@
           "failingChecks": 1,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -134,34 +146,10 @@
           "failingChecks": 0,
           "headRef": "fix/555-chord-tone-routing",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 558,
           "title": "fix(routing): send \"what notes are in <chord>\" to chord-info, not scale-info (#555)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/558"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T03:28:03Z",
-          "failingChecks": 0,
-          "headRef": "feat/chatbot-llm-judge-invariants",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 556,
-          "title": "feat(chatbot-qa): LLM-as-judge gate so answer quality becomes measurable",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/556"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T02:08:09Z",
-          "failingChecks": 1,
-          "headRef": "fix/chatbot-qa-oracle-degraded-detection",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 553,
-          "title": "fix(chatbot-qa): stop publishing a fake pass-rate for a degraded environment (7.69% \u2192 real 98.08%)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/553"
         },
         {
           "ageDays": 0,
@@ -170,7 +158,7 @@
           "failingChecks": 0,
           "headRef": "chore/regenerate-sae-artifact-auxk",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 551,
           "title": "SAE: regenerate production artifact with AuxK (+97% effective dict) + study #3 (residual is modal/morphological)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/551"
@@ -189,8 +177,33 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 0,
-      "prs": []
+      "prCount": 2,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:44:23Z",
+          "failingChecks": 0,
+          "headRef": "docs/green-ci-dead-gate-pattern",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 239,
+          "title": "docs(solutions): green CI + DEGRADED dashboard = a missing input",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/239"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:39:49Z",
+          "failingChecks": 1,
+          "headRef": "fix/maintain-gate-absent-metric-evidence",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 238,
+          "title": "fix(ix-duck): skip the maintain snapshot when metric evidence is absent",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/238"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -221,8 +234,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 4,
+      "prCount": 5,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:46:03Z",
+          "failingChecks": 0,
+          "headRef": "docs/solution-silent-exit-codes",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 801,
+          "title": "docs(solutions): capture the swallowed-exit-code failure and its pattern",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/801"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -254,7 +279,7 @@
           "failingChecks": 0,
           "headRef": "refactor/decompose-claude-md",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 775,
           "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
@@ -266,7 +291,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
