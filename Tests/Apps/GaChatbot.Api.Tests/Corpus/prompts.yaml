@@ -505,3 +505,81 @@ prompts:
     contains_any: ["yes", "no", "Z", "equivalent", "inversion", "transposition", "different", "same", "related"]
     min_length: 50
     max_elapsed_ms: 30000
+
+  # ── judged (LLM-as-judge quality gate) ─────────────────────────────────
+  #
+  # Prompts carrying `judge:` are graded by a STRONGER model
+  # (gpt-oss:120b-cloud by default) in JudgedPrompts_SatisfyTheirRubric,
+  # not by substring matching.
+  #
+  # Why: the substring gate measures the deterministic skill layer, not the
+  # chat model. Pointed at a deliberately bogus chat model, 50 of 52 prompts
+  # still passed — the asserted tokens come from domain output regardless of
+  # model quality. So "did the model upgrade help?" was unmeasurable until
+  # these existed. Reasoning prompts are where model strength actually shows.
+  #
+  # Rubric discipline: keep `judge:` about music theory and about answering
+  # the question asked. Do NOT ask the judge to verify claims about GA's own
+  # catalog — during bring-up it failed a correct answer over the true
+  # statement "there are 26 mode families in the catalog", which no general
+  # model can check. Those belong in `contains` / `not_contains`.
+
+  - prompt: "Explain why a tritone substitution works"
+    category: reasoning
+    min_length: 120
+    max_elapsed_ms: 60000
+    judge: >-
+      Must explain that the substitute dominant shares the same tritone
+      (guide tones: 3rd and b7th) as the original dominant, which is why it
+      can replace it. Mentioning the resulting chromatic bass descent is a
+      plus, not a requirement.
+
+  - prompt: "What is the difference between a major seventh and a minor seventh chord"
+    category: reasoning
+    min_length: 100
+    max_elapsed_ms: 60000
+    judge: >-
+      Must correctly distinguish the two chord qualities by their intervals
+      (major 7th = major triad + major 7th; minor 7th = minor triad + minor
+      7th). Confusing either quality, or conflating "minor seventh chord"
+      with "dominant seventh", is a failure.
+
+  - prompt: "Why does the Lydian mode sound brighter than Ionian"
+    category: reasoning
+    min_length: 100
+    max_elapsed_ms: 60000
+    judge: >-
+      Must identify the raised fourth (#4 / #11) as the single degree that
+      distinguishes Lydian from Ionian, and connect it to the brighter
+      character. Naming any other degree as the difference is a failure.
+
+  # ── known-bad, awaiting fix (skipped so the gate stays honest about scope)
+  #
+  # These reproduce confirmed defects found by the judge probe on 2026-07-20.
+  # They are committed skipped — documented and ready to flip to active the
+  # moment the underlying issue closes — rather than left out, so the repro
+  # does not have to be rediscovered.
+
+  - prompt: "What is the relative minor of E-flat major"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["C minor"]
+    not_contains: ["E major", "C#m", "4 sharps"]
+    min_length: 30
+    skip: true
+    skip_reason: >-
+      Issue #554 — spelled-out accidentals parse as naturals, so "E-flat major"
+      is answered as "E major" (C#m, 4 sharps). Shorthand "Eb major" is correct.
+
+  - prompt: "What notes are in a C major triad"
+    category: chord-tones
+    routes_to: skill.chordinfo
+    contains: ["C", "E", "G"]
+    not_contains: ["7 notes", "scale has"]
+    min_length: 20
+    skip: true
+    skip_reason: >-
+      Issue #555 — misroutes to skill.scaleinfo at 0.90 confidence and returns
+      the 7-note C major scale instead of the 3-note triad, despite
+      skills/chord-info/SKILL.md already declaring the "what notes are in"
+      trigger. Router-ranking bug; fix is embedding-side, not keyword rules.
