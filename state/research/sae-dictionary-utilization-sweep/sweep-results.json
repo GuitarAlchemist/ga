@@ -1,0 +1,84 @@
+{
+  "experiment": "OPTIC-K SAE dict_size + AuxK sweep",
+  "corpus": {
+    "index": "state/voicings/optick.index",
+    "voicings": 313047,
+    "schema": "OPTIC-K-v1.8"
+  },
+  "fixed_hyperparams": {
+    "epochs": 50,
+    "batch_size": 4096,
+    "lr": 0.001,
+    "seed": 42,
+    "k_sparse": 32
+  },
+  "metric_note": "effective_dict_size = alive AND strong_support>=10 AND freq<=0.2 (ix PR #235); thresholds match study 0-prime",
+  "production_baseline_2026_06_14": {
+    "reconstruction_r2": 0.999559,
+    "dead_features_pct": 19.92,
+    "alive": 820,
+    "effective_dict_size": 379,
+    "purity_mean": 0.5314,
+    "note": "reproduced exactly by the auxk_off arm"
+  },
+  "arms": {
+    "dict1024_auxk_on": {
+      "dict_size": 1024,
+      "aux_alpha": 0.1,
+      "reconstruction_r2": 0.999137,
+      "reconstruction_mse": 2.77e-06,
+      "dead_features_pct": 4.88,
+      "alive": 974,
+      "near_dead_count": 192,
+      "always_on_count": 35,
+      "effective_dict_size": 747,
+      "effective_dict_pct": 72.95,
+      "partition_purity_mean": 0.612546
+    },
+    "dict1024_auxk_off": {
+      "dict_size": 1024,
+      "aux_alpha": 0.0,
+      "reconstruction_r2": 0.999559,
+      "reconstruction_mse": 1.41e-06,
+      "dead_features_pct": 19.92,
+      "alive": 820,
+      "near_dead_count": 400,
+      "always_on_count": 41,
+      "effective_dict_size": 379,
+      "effective_dict_pct": 37.01,
+      "partition_purity_mean": 0.531448
+    },
+    "dict512_auxk_on": {
+      "dict_size": 512,
+      "aux_alpha": 0.1,
+      "reconstruction_r2": 0.99927,
+      "reconstruction_mse": 2.34e-06,
+      "dead_features_pct": 26.17,
+      "alive": 378,
+      "near_dead_count": 203,
+      "always_on_count": 40,
+      "effective_dict_size": 135,
+      "effective_dict_pct": 26.37,
+      "partition_purity_mean": 0.461747
+    },
+    "dict256_auxk_on": {
+      "dict_size": 256,
+      "aux_alpha": 0.1,
+      "reconstruction_r2": 0.998391,
+      "reconstruction_mse": 5.16e-06,
+      "dead_features_pct": 14.45,
+      "alive": 219,
+      "near_dead_count": 98,
+      "always_on_count": 36,
+      "effective_dict_size": 85,
+      "effective_dict_pct": 33.2,
+      "partition_purity_mean": 0.404699
+    }
+  },
+  "verdict": {
+    "hypothesis": "smaller dict_size raises utilization",
+    "outcome": "REFUTED",
+    "finding": "AuxK ghost-grads (already merged in ix #50, unused by production artifact) raises effective dictionary 379->747 (+97%) and purity 0.531->0.613 at unchanged reconstruction; dict_size reduction is counterproductive.",
+    "action": "regenerate the production SAE artifact with the current trainer (default --aux-alpha 0.10)"
+  }
+}
