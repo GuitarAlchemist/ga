@@ -1,71 +1,71 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-19T19:37:38.691310Z",
+  "generated_at": "2026-07-20T00:59:41.757633Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "red",
+  "overall": "yellow",
   "limbs": [
     {
       "id": "lane:jules-router",
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-19T09:08:39Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29681055280",
-      "detail": "latest completed run: skipped"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/jules-auto-delegate.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "lane:claude-mention",
       "kind": "delegation-lane",
       "workflow": "claude.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-19T09:08:39Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29681055297",
-      "detail": "latest completed run: skipped"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/claude.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "lane:claude-pr-review",
       "kind": "review-lane",
       "workflow": "claude-code-review.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-18T17:38:45Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29654312908",
-      "detail": "latest completed run: success"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/claude-code-review.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "sensor:post-merge-smoke",
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
-      "status": "red",
-      "last_heartbeat": "2026-07-18T18:13:59Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29655459252",
-      "detail": "latest completed run: failure"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/post-merge-smoke.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-19T19:29:05Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29700690788",
-      "detail": "latest completed run: success"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/ecosystem-health.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-18T18:13:59Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29655459280",
-      "detail": "latest completed run: success"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/quality-snapshot.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "sensor:fleet-status",
       "kind": "sensor",
       "workflow": "fleet-status.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-19T07:57:09Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29678969603",
-      "detail": "latest completed run: success"
+      "status": "unknown",
+      "last_heartbeat": null,
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/workflows/fleet-status.yml",
+      "detail": "no runs found (workflow never fired, or API unreachable)"
     },
     {
       "id": "sibling:Demerzel",

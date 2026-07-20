@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "685801f0b66e80410f5a5121c08b30f776dec4bd",
-    "generatedAt": "2026-07-19T23:28:28.833588+00:00",
+    "commitSha": "98060385e298d904dc8738cfefbb56197f142da1",
+    "generatedAt": "2026-07-20T04:33:08.393432+00:00",
     "repoCount": 5,
-    "totalPRs": 2
+    "totalPRs": 9
   },
   "repos": [
     {
@@ -113,8 +113,69 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 0,
-      "prs": []
+      "prCount": 5,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:13:33Z",
+          "failingChecks": 1,
+          "headRef": "fix/readme-drift-sensor-label",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 559,
+          "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/559"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T04:12:11Z",
+          "failingChecks": 0,
+          "headRef": "fix/555-chord-tone-routing",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 558,
+          "title": "fix(routing): send \"what notes are in <chord>\" to chord-info, not scale-info (#555)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/558"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T03:28:03Z",
+          "failingChecks": 0,
+          "headRef": "feat/chatbot-llm-judge-invariants",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 556,
+          "title": "feat(chatbot-qa): LLM-as-judge gate so answer quality becomes measurable",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/556"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T02:08:09Z",
+          "failingChecks": 1,
+          "headRef": "fix/chatbot-qa-oracle-degraded-detection",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 553,
+          "title": "fix(chatbot-qa): stop publishing a fake pass-rate for a degraded environment (7.69% \u2192 real 98.08%)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/553"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T00:57:26Z",
+          "failingChecks": 0,
+          "headRef": "chore/regenerate-sae-artifact-auxk",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 551,
+          "title": "SAE: regenerate production artifact with AuxK (+97% effective dict) + study #3 (residual is modal/morphological)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/551"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/ix",
@@ -160,19 +221,43 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 2,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-19T23:26:08Z",
-          "failingChecks": 0,
-          "headRef": "feat/streeling-517-ontology",
+          "createdAt": "2026-07-20T04:31:04Z",
+          "failingChecks": 1,
+          "headRef": "fix/ideation-sigpipe",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 770,
-          "title": "docs(streeling): core identifiers + engineering ontology v1 (#517)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/770"
+          "number": 798,
+          "title": "fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#704)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/798"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T03:40:59Z",
+          "failingChecks": 1,
+          "headRef": "feat/budget-policy-schema",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 791,
+          "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-20T00:57:38Z",
+          "failingChecks": 0,
+          "headRef": "refactor/decompose-claude-md",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 775,
+          "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
         },
         {
           "ageDays": 1,
