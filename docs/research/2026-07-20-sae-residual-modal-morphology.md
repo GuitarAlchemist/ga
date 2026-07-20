@@ -4,20 +4,20 @@ date: 2026-07-20
 status: concluded
 domain: embeddings
 question: Is the harmonically-unexplained residual of the OPTIC-K SAE real structure or noise — and if real, what is it?
-answer: "Real, and identifiable. 441 of 747 selective features are unexplained by any harmonic attribute, yet they are coherent (intra-feature similarity 0.872 vs 0.721 random) and MORE cleanly partition-localized than the explained ones (purity 0.695 vs 0.633). They concentrate in MODAL (25% vs 10%) and MORPHOLOGY (10% vs ~0%) — partitions for which we had built no attribute vocabulary. The gap is our vocabulary, not the SAE."
+answer: "Mostly NOT a vocabulary gap. Of 441 unexplained features, 281 (64%) are dominated by STRUCTURE — the one partition we DID have vocabulary for — so vocabulary can account for at most the ~154 MODAL/MORPHOLOGY-dominated ones (~35%). MODAL/MORPHOLOGY enrichment is a modest 1.28x/1.59x against the correct baseline, not the 2.5x an earlier draft claimed. The residual is coherent above a random-voicing baseline but that control cannot separate coherent from polysemantic. Separately and more consequentially: 40 of 124 compact dims (32.3%) are ALWAYS ZERO across the whole corpus."
 hypotheses:
-  - claim: The residual is either polysemantic noise, or fingering-geometry ("playability") concepts our harmonic attributes could not name.
-    refuted_if: Residual coherence is indistinguishable from random voicing sets (⇒ noise), or geometry attributes explain most of it.
-    outcome: BOTH REFUTED. Not noise (coherence well above random, p10 clears random's p90). Not geometry either — crude geometry attributes rescued only 2 of 441. The real locus is MODAL + MORPHOLOGY.
-tools: [pyarrow, safetensors, OPTK metadata reader, optick.index compact vectors]
+  - claim: The residual is either polysemantic noise, or concepts (modal / fingering) our harmonic attribute vocabulary could not name.
+    refuted_if: Residual coherence is indistinguishable from a random baseline (⇒ noise), or the residual is dominated by partitions we already had vocabulary for (⇒ not a vocabulary gap).
+    outcome: PARTIALLY REFUTED. Noise branch disfavored (coherence 0.872 vs 0.721) but not cleanly refuted — the control was random voicing SETS, not random DIRECTIONS. Vocabulary branch holds for only ~35% of the residual; the STRUCTURE-dominant 64% majority points at feature splitting / absorption / disjunctive features instead.
+tools: [pyarrow, safetensors, OPTK metadata reader, optick.index compact vectors, fable-5]
 artifacts: state/research/optick-sae-feature-atlas/
-validators: [random-baseline-control, partition-localization-cross-check]
-confidence: medium-high
+validators: [fable-5]
+confidence: medium
 supersedes: null
 superseded_by: null
 ---
 
-# The SAE residual is modal and morphological, not noise
+# What is the SAE's unexplained residual? (and: a third of OPTIC-K is dead)
 
 **Date:** 2026-07-20
 **Type:** research — third in the OPTIC-K SAE line ([study 0'](2026-07-19-optick-sae-feature-atlas.md) → [utilization sweep](2026-07-19-sae-dictionary-utilization-sweep.md) → this)
@@ -25,120 +25,160 @@ superseded_by: null
 
 ## TL;DR
 
-**Real, coherent, and locatable.** On the regenerated (AuxK) artifact, **441 of 747**
-selective features are unexplained by any harmonic attribute. They are **not
-noise**: intra-feature similarity 0.872 vs **0.721** for random voicing sets, with
-their p10 (0.790) clearing random's p90 (0.738) — essentially every residual
-feature is genuinely coherent. They are also **more** cleanly partition-localized
-than the explained features (purity 0.695 vs 0.633), and they concentrate in
-**MODAL (25% vs 10%)** and **MORPHOLOGY (10% vs ~0%)**.
+Two results, and the **second matters more than the first**.
 
-**The limitation was our vocabulary, not the model.** Every attribute we scored
-with (pitch-class set, ICV, cardinality, root, instrument) is *STRUCTURE*
-vocabulary — which is why 88% of "explained" features are STRUCTURE features.
-MODAL is the largest partition in the trained slice (40 of 124 dims) and we never
-built a single attribute for it.
+**1. The residual is mostly NOT a vocabulary gap.** Of 747 selective features, 138
+are harmonically explained and **441 are residual**. They are coherent above a
+random-voicing baseline (0.872 vs 0.721) — so probably not pure noise — but
+**281 of the 441 (64%) are dominated by STRUCTURE**, the one partition our
+attributes *did* cover, and are unexplained anyway. Vocabulary can therefore
+account for at most the ~154 MODAL/MORPHOLOGY-dominated features (~35%). The
+MODAL/MORPHOLOGY enrichment is a modest **1.28× / 1.59×** against the correct
+baseline (all 747 selective) — an earlier draft of this study claimed 2.5× by
+using the *vocabulary-selected* explained group as the denominator, which is a
+selection artifact. **Corrected after adversarial review.**
 
-**Corollary — do not optimize partition purity.** Purity measures agreement with
-the partition *hypothesis*, not correctness; the residual has *higher* purity
-than the explained set while being *less* nameable. Purity is a thermometer.
+**2. 40 of 124 compact dims (32.3%) are always exactly zero** across all 313,047
+voicings. **CONTEXT is 11/12 dead** (one live dimension). **MODAL is 16/40 dead.**
+A third of the trained embedding slice carries no information at all. This is an
+embedding defect that affects everything downstream — similarity search, RAG
+retrieval, and this SAE — and it is far more actionable than anything else here.
+
+**Corollary that survived review: do not optimize `feature_partition_purity`.**
+Within STRUCTURE-dominant features only (controlling for partition width),
+residual purity is **0.691 (n=281)** vs explained **0.648 (n=122)**, t ≈ 2.7 — so
+the purity-vs-nameability dissociation is real and not a width artifact. Purity is
+a thermometer; read it, never target it.
 
 ## 1. Question
 
-Study 0' characterized features by matching them to known attributes. Features
-matching known attributes teach us nothing new — the only place new musical
-knowledge can live is the features matching *nothing we can already name*. That
-residual was measured and discarded as failure. Is anything there?
+Features matching known attributes teach us nothing new — the only place new
+musical knowledge can live is the features matching *nothing we can already name*.
+Study 0' measured that residual and discarded it as failure. Is anything there?
 
 ## 2. Hypothesis
 
-- **Claim:** The residual is either (a) polysemantic noise, or (b) fingering
-  geometry / "playability" concepts our harmonic vocabulary cannot express.
-- **Refuted if:** residual coherence ≈ random (⇒ noise), or geometry attributes
-  explain most of it.
-- **Outcome:** **both refuted** — see §4.
+- **Claim:** the residual is either (a) polysemantic noise, or (b) concepts
+  (modal / fingering) our harmonic vocabulary cannot express.
+- **Refuted if:** coherence ≈ random (⇒ noise), or the residual is dominated by
+  partitions we already had vocabulary for (⇒ not a vocabulary gap).
+- **Outcome:** partially refuted — see §5.
 
 ## 3. Method (reproducible)
 
 On the regenerated artifact `state/quality/optick-sae/2026-07-20/` (dict 1024,
-k 32, AuxK 0.10 — see the utilization sweep study). Selective features only
-(`strong_support ≥ 10`, `freq ≤ 0.2`) → 747.
+k 32, AuxK 0.10). Selective features only (`strong_support ≥ 10`, `freq ≤ 0.2`)
+→ 747.
 
-1. **Attribute scoring.** Best-by-lift precision over each feature's
-   strong-activation set (activation ≥ 50% of the feature's own max), for
-   **harmonic** attributes (pc-set, ICV, cardinality, bass PC, instrument) and
-   **geometry** attributes derived from the fret diagram (span, min fret, open
-   count, sounding-string count, max repeated fret).
-   Residual := best harmonic precision < 0.5.
-2. **Coherence control.** Mean pairwise similarity of a feature's strong voicings
-   using the OPTK compact vectors, vs **random voicing sets of comparable size**
-   (the control that separates "coherent" from "noise").
-3. **Partition localization.** Dominant OPTIC-K partition of each decoder atom
-   (`argmax_partition ‖w[partition]‖² / ‖w‖²`) from `sae_weights.safetensors`,
-   compared between explained and residual groups.
+1. **Attribute scoring** — best-by-lift precision over each feature's
+   strong-activation set (≥50% of its own max), for **harmonic** attributes
+   (pc-set, ICV, cardinality, bass PC, instrument) and **geometry** attributes
+   from the fret diagram (span, min fret, open count, sounding count, max repeat).
+   Residual := best harmonic precision < 0.5; explained := ≥ 0.8.
+2. **Coherence control** — mean pairwise similarity of a feature's strong voicings
+   over the OPTK compact vectors, vs **random voicing sets** of comparable size.
+3. **Partition localization** — dominant partition of each decoder atom
+   (`argmax_p ‖w[p]‖²/‖w‖²`) from `sae_weights.safetensors`, **baselined against
+   all 747 selective features** (the correction; see §4).
+4. **Dead-dimension census** — per-dim `max|v|` over all 313,047 corpus vectors.
 
 ## 4. Evidence
 
-**Attribute scoring** — 747 selective; **138** harmonically explained (P ≥ 0.8);
-**441** residual (P < 0.5). Geometry rescued only **2** of the 441 (P ≥ 0.8,
-lift ≥ 2); the 20 apparent `nopen` hits are near chance and are rejected by the
-lift filter.
+**Counts.** 747 selective → 138 explained (P ≥ 0.8), **441 residual** (P < 0.5),
+**168 middle band** (0.5 ≤ P < 0.8). Geometry rescued only **2** of the 441; the
+20 apparent `nopen` hits all have lift exactly 1.0 (pure base-rate artifact).
 
-**Coherence (higher = tighter cluster)**
+**Partition localization — with the correct baseline.**
+
+| group | n | STRUCTURE | MODAL | MORPHOLOGY | SYMBOLIC |
+|---|---|---|---|---|---|
+| **all selective (baseline)** | 747 | 73.0% | 19.3% | 6.4% | 1.3% |
+| residual | 441 | **63.7%** | 24.7% | 10.2% | 1.4% |
+| explained | 138 | 88.4% | 10.1% | — | 1.4% |
+
+Enrichment of the residual **vs all-selective**: MODAL **1.28×**, MORPHOLOGY
+**1.59×**, STRUCTURE 0.87×. Against the *explained* group it looks like 2.5×, but
+that group is mechanically STRUCTURE-heavy *because every scoring attribute is
+STRUCTURE vocabulary* — a selection artifact. **The residual is majority
+STRUCTURE-dominant (281/441).**
+
+**Coherence** (higher = tighter cluster; partition-weighted vectors, so only the
+between-group comparison is meaningful)
 
 | group | n | mean | p10 | p90 |
 |---|---|---|---|---|
-| harmonically explained | 60 | 1.064 | 0.980 | 1.131 |
-| **residual** | 60 | **0.872** | 0.790 | 0.969 |
-| random voicing sets (control) | 60 | 0.721 | 0.704 | 0.738 |
+| explained | 60 | 1.064 | 0.980 | 1.131 |
+| residual | 60 | 0.872 | 0.790 | 0.969 |
+| random voicing sets | 60 | 0.721 | 0.704 | 0.738 |
 
-Residual sits ~44% of the way from random to fully-explained; its p10 exceeds the
-control's p90 ⇒ **not noise**.
+**Purity dissociation, width-controlled.** Within STRUCTURE-dominant features only:
+residual purity **0.691 (n=281)** vs explained **0.648 (n=122)**, t ≈ 2.7. The
+headline gap (0.695 vs 0.633) is inflated by composition, but the effect survives
+stratification.
 
-**Partition localization**
+**Dead-dimension census (the consequential finding).** Per-dim `max|v|` over all
+313,047 voicings: **40 of 124 compact dims are identically zero (32.3%)**.
 
-| group | n | dominant partition | mean partition-purity |
+| partition | dims | dead | live |
 |---|---|---|---|
-| explained | 138 | STRUCTURE 88%, MODAL 10%, SYMBOLIC 1% | 0.633 |
-| **residual** | 441 | STRUCTURE 64%, **MODAL 25%**, **MORPHOLOGY 10%**, SYMBOLIC 1% | **0.695** |
+| STRUCTURE | 24 | 5 | 19 |
+| MORPHOLOGY | 24 | 5 | 19 |
+| **CONTEXT** | 12 | **11** | **1** |
+| SYMBOLIC | 12 | 3 | 9 |
+| **MODAL** | 40 | **16** | **24** |
+| ROOT | 12 | 0 | 12 |
 
-Residual features are *more* cleanly localized yet *less* nameable — the decisive
-evidence that the gap is vocabulary, not model quality.
+Independently predicted by source reading: `MorphologyVectorService` writes
+nothing past local index 18 (⇒ compact 43–47 dead), and `ModalVectorService`
+fills only 33 of its 40 slots (⇒ the MODAL tail dead). CONTEXT having **one** live
+dimension means it is effectively not a partition at all.
 
 ## 5. Verdict
 
-**CONCLUDED.** The residual is **real, coherent structure concentrated in MODAL
-and MORPHOLOGY** — partitions for which no attribute vocabulary existed. Both
-hypothesis branches are refuted: it is neither noise nor (crudely-measured)
-fingering geometry.
+**CONCLUDED, with the headline corrected after adversarial review.**
 
-Two consequences:
+- **The residual is not primarily a vocabulary gap.** 64% of it is
+  STRUCTURE-dominant — the partition we *did* have vocabulary for — and remains
+  unexplained. The leading candidates for that majority are **feature splitting /
+  absorption / disjunctive features** (Chanin 2024 absorption, flagged as a
+  guardrail in study 0' and still never measured), not missing concepts. Building
+  modal + morphology vocabulary is still worth doing, but its expected yield is
+  **~150 features, not "a large share of 441."**
+- **Noise is disfavored, not refuted.** Beating random *voicing sets* is nearly
+  automatic for any linear direction, since a feature's strong set is selected by a
+  direction in that same space. The correct control is the strong sets of **random
+  directions**; until that is run, "coherent" is not cleanly separated from
+  "polysemantic blend of 2–3 clusters," which is exactly what 44%-of-the-way-to-
+  explained looks like.
+- **Never optimize partition purity** — survives the width confound (above).
+- **The real finding is the dead dimensions.** A third of the trained slice is
+  structurally zero, CONTEXT is 11/12 dead, and MODAL is 40% dead. This wastes
+  similarity-search capacity, distorts the partition weighting, and means SAE
+  features "dominated by MODAL" actually live in 24 dims, not 40.
 
-1. **Build modal + morphological attribute vocabulary**, then re-score. GA already
-   owns the modal machinery (`ModalFamily`, `AtonalModalFamiliesConfig`, modal set
-   classes) — the attributes are constructible from existing domain code, not
-   research-grade unknowns. This is the highest-value next step and would likely
-   convert a large share of the 441.
-2. **Do not optimize `feature_partition_purity`.** It measures agreement with the
-   partition hypothesis. The residual has *higher* purity than the explained set
-   while being *less* interpretable — proof that purity and nameability are not
-   the same axis. Read it; never target it.
+**Confidence: medium** — counts and the dead-dim census are exact and reproducible;
+the coherence inference is weakened by its control; enrichment is real but modest.
 
-**Confidence: medium-high** — the coherence result has a proper random control and
-the partition split is large (2.5× MODAL enrichment). **Caveats:** "explained"
-is defined by *our* attribute list, so the 138/441 split is vocabulary-relative,
-not absolute; geometry attributes were crude (diagram-derived) and a richer
-morphology vocabulary might rescue more than 2; coherence used the compact
-similarity vectors, which are partition-weighted, so absolute values are not
-cosines in [-1,1] — only the between-group comparison is meaningful.
+**Caveats:** "explained" is defined by *our* attribute list, so the 138/441 split is
+vocabulary-relative; coherence used a 60-of-441 subsample; the geometry attributes
+were badly formulated (see §6) so the "not geometry" branch is under-tested.
 
 - **One-way-door check:** none. Read-only analysis over a committed artifact.
 
 ## 6. Next
 
-1. **Modal attribute vocabulary** (mode/scale context implied by a voicing) +
-   richer morphology (stretch, hand position, finger independence) → re-score the
-   441. This is the concrete follow-up.
-2. If a large share resolves, the SAE has *earned* a real claim: it discovers modal
-   and playability structure the hand-designed partitions assert but never named.
-   If it does not resolve, that is the signal to stop investing in the SAE.
+1. **File the dead-dimension defect** — highest value, independent of SAE work.
+2. **Re-score with correct attribute vocabulary.** Source reading (Fable 5) shows
+   my attributes were wrong for both partitions:
+   - **MORPHOLOGY is mostly pitch classes, not geometry:** dims 0–11 are a *bass
+     pitch-class one-hot* (12 of 24), 15–16 melody-PC sin/cos, with only span (12),
+     note count (13), avg fret (17) and barre (18) as geometry. My "min fret" and
+     "max repeated fret" were off-spec; "open-string count" is not encoded at all.
+     Correct attributes: **bassPitchClass, averageFret, melodyPitchClass, barreRequired**.
+   - **MODAL is a 33-mode compatibility profile** (per-mode fit score with a
+     conflict veto), not a single mode label. Correct attributes:
+     **mode-compatibility set / argmax best-fit mode (34 values)**, **modal family
+     (ICV family, ~200 values)**, **root-relative PC-set id (≤2048, the ceiling)**.
+3. **Run the random-direction control** to settle coherent-vs-polysemantic.
+4. **Measure absorption** (Chanin) on the STRUCTURE-dominant residual majority —
+   the hypothesis this study's evidence actually points to.
