@@ -182,3 +182,36 @@ were badly formulated (see §6) so the "not geometry" branch is under-tested.
 3. **Run the random-direction control** to settle coherent-vs-polysemantic.
 4. **Measure absorption** (Chanin) on the STRUCTURE-dominant residual majority —
    the hypothesis this study's evidence actually points to.
+
+## 7. Closing tests (2026-07-20) — the SAE line is closed
+
+Both tests §6 called for were run. Both point the same way.
+
+**Corrected-vocabulary re-score.** Scoring the 441 residual features against the
+attributes Fable 5's source reading identified (bassPC, **melodyPC**, avgFret,
+barre, root-relative PC-set id [1015 values], ICV family [117]) — per-attribute
+precision, *not* best-by-lift — newly explains **57 of 441 (13%)**: melodyPC 48,
+ICV family 9. `melodyPitchClass` was a genuine gap (2 dedicated embedding dims, no
+attribute), but the total yield is far below the ~35% ceiling. Even the
+root-relative PC-set id (the *maximal-information* attribute, which MODAL is a
+deterministic function of) explained none at threshold.
+
+**Random-direction control** — the null §5 said was missing:
+
+| control | n | mean | p10 | p90 |
+|---|---|---|---|---|
+| residual features | 60 | 0.871 | 0.795 | 0.967 |
+| **random directions** | 60 | **0.778** | 0.726 | 0.818 |
+
+Against the correct null the gap largely collapses (earlier random-*voicing-set*
+control: 0.721), and residual p10 now **overlaps** random-direction p90. The claim
+"essentially every residual feature is genuinely coherent" is dead.
+
+**Verdict: the residual is not a discovery vein.** Correct vocabulary resolves 13%;
+coherence is only modestly above a proper null with overlapping distributions. Per
+this study's own §6 exit criterion — "if it does not resolve, that is the signal to
+stop investing in the SAE" — **this line is closed.** The durable outputs are the
+[dead-dimension defect (#552)](https://github.com/GuitarAlchemist/ga/issues/552),
+the +97% utilization fix, and "never optimize partition purity."
+
+Evidence: `state/research/optick-sae-feature-atlas/pass9-closing-tests.json`.
