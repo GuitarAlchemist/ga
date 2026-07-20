@@ -210,7 +210,18 @@ jobs:
         #   1 = runner did not complete (no snapshot written)
         #   2 = snapshot written but environment-degraded (carryforward)
         # We tolerate 0 and 2; we want the workflow visibility for 1.
+        env:
+          # Forward the preflight verdict so the snapshot writer does not have to
+          # RE-DERIVE degradation from failure text. Without this, a runner with a
+          # real model but no OPTIC-K index produces ordinary invariant failures
+          # (not transport errors), the text heuristic returns false, and a real
+          # measurement of a knowingly-incomplete environment gets published as the
+          # chatbot's quality — which is exactly how `pass_pct: 7.69, degraded:
+          # false` shipped daily for a month while the same corpus scored 98.08%
+          # against a complete backend.
+          GA_CORPUS_ENV_DEGRADED: ${{ (steps.preflight.outputs.ollama_ok == 'true' && steps.preflight.outputs.optic_ok == 'true') && '0' || '1' }}
         run: |
+          Write-Host "Preflight verdict -> GA_CORPUS_ENV_DEGRADED=$env:GA_CORPUS_ENV_DEGRADED (ollama_ok=${{ steps.preflight.outputs.ollama_ok }} optic_ok=${{ steps.preflight.outputs.optic_ok }})"
           pwsh Scripts/run-prompt-corpus.ps1 -Snapshot -NoBuild
           $code = $LASTEXITCODE
           "exit_code=$code" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
