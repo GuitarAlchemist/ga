@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "artifact_id": "optick-sae-2026-07-20T00-50-00Z-auxk01-topk-sae",
+  "trained_at": "2026-07-20T00:50:42Z",
+  "trainer": "ix-optick-sae",
+  "trainer_version": "0.1.0",
+  "input": {
+    "optick_index_path": "C:/Users/spare/source/repos/ga/state/voicings/optick.index",
+    "optick_index_sha": "sha256:89354bcb3513efbe1523651b734743c6921186a9e807f53bfbe4a74a254bd267",
+    "optick_dim": 240,
+    "compact_training_dim": 124,
+    "schema_version": "OPTIC-K-v1.8",
+    "corpus_size": 313047,
+    "partitions_used": [
+      "STRUCTURE",
+      "MORPHOLOGY",
+      "CONTEXT",
+      "SYMBOLIC",
+      "MODAL",
+      "ROOT"
+    ]
+  },
+  "model": {
+    "kind": "topk_sae",
+    "dict_size": 1024,
+    "k_sparse": 32,
+    "training": {
+      "epochs": 50,
+      "batch_size": 4096,
+      "lr": 0.001,
+      "seed": 42,
+      "loss_final": 2.83e-06,
+      "sparsity_actual_mean": 0.031012
+    }
+  },
+  "metrics": {
+    "reconstruction_mse": 2.77e-06,
+    "reconstruction_r2": 0.999137,
+    "active_features_per_voicing_p50": 32,
+    "active_features_per_voicing_p95": 32,
+    "dead_features_pct": 4.88,
+    "feature_partition_purity_mean": 0.612546,
+    "feature_partition_purity_p10": 0.323061
+  },
+  "features_summary": {
+    "total": 1024,
+    "alive": 974,
+    "high_frequency_count": 170,
+    "low_frequency_count": 75,
+    "near_dead_count": 192,
+    "always_on_count": 35,
+    "effective_dict_size": 747,
+    "effective_dict_pct": 72.95
+  },
+  "links": {
+    "feature_activations_parquet": "feature_activations.parquet",
+    "feature_manifest_jsonl": "feature_manifest.jsonl",
+    "training_log": "training.log",
+    "model_weights": "sae_weights.safetensors",
+    "supersedes": "optick-sae-2026-06-14T20-16-57Z-019ec7c7-topk-sae"
+  },
+  "narrative": "Phase 1 training run on real OPTIC-K corpus (124-dim slice)."
+}
