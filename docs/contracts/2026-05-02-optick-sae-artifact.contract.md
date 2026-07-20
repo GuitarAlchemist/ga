@@ -143,6 +143,19 @@ The contract is a **two-way door** until Phase 4 freeze (target 2026-Q3). Field 
 | `alive` | int | Total - dead. |
 | `high_frequency_count` | int | Features active on ≥ 10% of corpus. Often candidates for "too coarse." |
 | `low_frequency_count` | int | Features active on < 0.1% of corpus. Often candidates for "too specific" or noise. |
+| `near_dead_count` | int (optional, v0.1.2+) | Alive features that fire **strongly** (≥ 50% of the feature's own max) on fewer than 10 voicings — technically alive but doing no real work. |
+| `always_on_count` | int (optional, v0.1.2+) | Features active on > 20% of the corpus — carrying a shared/DC component rather than a distinctive concept. |
+| `effective_dict_size` | int (optional, v0.1.2+) | Features that are alive, not near-dead and not always-on — **the dictionary actually doing distinctive work.** |
+| `effective_dict_pct` | float (optional, v0.1.2+) | `effective_dict_size / total * 100`. |
+
+> **Why the optional utilization fields exist (v0.1.2, 2026-07-20).** `alive` and
+> `dead_features_pct` materially *overstate* usable capacity: a feature can be
+> "alive" yet fire strongly on <10 voicings. GA study
+> [`2026-07-19-optick-sae-feature-atlas`](../research/2026-07-19-optick-sae-feature-atlas.md)
+> measured 400 of 820 "alive" features as near-dead on the 2026-06-14 artifact,
+> while `dead_features_pct` reported just 19.92%. `effective_dict_size` is the
+> honest utilization number. Fields are **optional** so pre-v0.1.2 artifacts stay
+> valid; producer emits them as of ix PR #235.
 
 ### 3.5 `links`
 

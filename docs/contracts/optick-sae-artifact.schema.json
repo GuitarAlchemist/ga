@@ -174,7 +174,12 @@
         "total": { "type": "integer", "minimum": 1 },
         "alive": { "type": "integer", "minimum": 0 },
         "high_frequency_count": { "type": "integer", "minimum": 0 },
-        "low_frequency_count": { "type": "integer", "minimum": 0 }
+        "low_frequency_count": { "type": "integer", "minimum": 0 },
+
+        "near_dead_count": { "type": "integer", "minimum": 0 },
+        "always_on_count": { "type": "integer", "minimum": 0 },
+        "effective_dict_size": { "type": "integer", "minimum": 0 },
+        "effective_dict_pct": { "type": "number", "minimum": 0, "maximum": 100 }
       }
     },
     "links": {
