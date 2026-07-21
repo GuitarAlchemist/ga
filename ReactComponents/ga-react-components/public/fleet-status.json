@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "53ff879ec766a06d4a34e5157f1e7a879ef14239",
-    "generatedAt": "2026-07-21T01:25:54.935841+00:00",
+    "commitSha": "a92e5b70f87bf60e32b7d1da2bb5ed3538276947",
+    "generatedAt": "2026-07-21T01:53:14.044141+00:00",
     "repoCount": 5,
-    "totalPRs": 8
+    "totalPRs": 11
   },
   "repos": [
     {
@@ -113,19 +113,31 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-21T01:24:41Z",
-          "failingChecks": 0,
-          "headRef": "feat/arpeggio-suggestions-skill",
+          "createdAt": "2026-07-21T01:41:07Z",
+          "failingChecks": 1,
+          "headRef": "feat/alternate-tunings-drop-c",
           "isDraft": false,
           "mergeable": "UNKNOWN",
-          "number": 568,
-          "title": "feat(chatbot): improvise over a whole progression \u2014 arpeggio + scale per chord (#555 sibling North Star)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/568"
+          "number": 571,
+          "title": "feat(chatbot): add drop-C to AlternateTuningsSkill \u2014 closes the drop-C North Star gap",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/571"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T01:31:05Z",
+          "failingChecks": 0,
+          "headRef": "docs/backlog-northstar-coverage-audit",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 570,
+          "title": "docs(backlog): audit North Star coverage \u2014 5 shipped, 6 partial, 5 real gaps",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/570"
         },
         {
           "ageDays": 0,
@@ -165,8 +177,33 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 0,
-      "prs": []
+      "prCount": 2,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T01:38:03Z",
+          "failingChecks": 0,
+          "headRef": "fix/crate-maturity-reconciliation",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 246,
+          "title": "fix(ix-skill): reconcile crate-maturity.toml against workspace members (#243)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/246"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T01:37:12Z",
+          "failingChecks": 0,
+          "headRef": "fix/loop-policy-consolidation",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 245,
+          "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/245"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -206,7 +243,7 @@
           "failingChecks": 0,
           "headRef": "docs/solution-silent-exit-codes",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 801,
           "title": "docs(solutions): capture the swallowed-exit-code failure and its pattern",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/801"
@@ -218,7 +255,7 @@
           "failingChecks": 1,
           "headRef": "fix/ideation-sigpipe",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 798,
           "title": "fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#704)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/798"
@@ -230,7 +267,7 @@
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
@@ -242,7 +279,7 @@
           "failingChecks": 0,
           "headRef": "refactor/decompose-claude-md",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 775,
           "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
@@ -254,7 +291,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
