@@ -471,6 +471,17 @@ prompts:
     max_elapsed_ms: 20000
     retry: 0
 
+  # Tuning-INFO path (works today via AlternateTuningsSkill). Distinct from the
+  # chord-shapes-IN-a-tuning entries below, which still need the voicing tool.
+  - prompt: "How do I tune to drop C"
+    category: alternate-tunings
+    routes_to: skill.alternatetunings
+    contains: ["C", "G", "F", "A", "D"]
+    contains_any: ["Drop C", "major third", "-4"]
+    min_length: 60
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic — tuning-table lookup
+
   - prompt: "Give me a Cadd9 in DADGAD"
     category: alternate-tunings
     skip: true
