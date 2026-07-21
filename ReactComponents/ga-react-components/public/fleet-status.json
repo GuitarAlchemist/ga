@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "ed05b652c11bdb70d6fe767c9fc3fba6d93ad20e",
-    "generatedAt": "2026-07-21T02:02:20.575755+00:00",
+    "commitSha": "16272a948639a0d2a25a2781648868ee3df8b1cc",
+    "generatedAt": "2026-07-21T02:22:01.785515+00:00",
     "repoCount": 5,
     "totalPRs": 8
   },
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T01:41:07Z",
-          "failingChecks": 0,
-          "headRef": "feat/alternate-tunings-drop-c",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 571,
-          "title": "feat(chatbot): add drop-C to AlternateTuningsSkill \u2014 closes the drop-C North Star gap",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/571"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -134,7 +122,7 @@
           "failingChecks": 1,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -162,7 +150,7 @@
           "failingChecks": 0,
           "headRef": "fix/loop-policy-consolidation",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 245,
           "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/245"
@@ -198,8 +186,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 5,
+      "prCount": 6,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T02:21:17Z",
+          "failingChecks": 0,
+          "headRef": "fix/ixql-grammar-conflict",
+          "isDraft": false,
+          "mergeable": "CONFLICTING",
+          "number": 805,
+          "title": "fix(ixql): make the grammar generate \u2014 GLR conflicts, corpus, oracle repair (closes #780)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/805"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",

@@ -14,27 +14,27 @@ _8 open PR(s) across 5 repos._
 
 _No open PRs._
 
-### ga (2 open)
+### ga (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#571](https://github.com/GuitarAlchemist/ga/pull/571) | feat(chatbot): add drop-C to AlternateTuningsSkill — closes the drop-C | 0d | UNKNOWN | 0 | spareilleux |
-| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 0d | MERGEABLE | 1 | spareilleux |
+| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 0d | UNKNOWN | 1 | spareilleux |
 
 ### ix (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#245](https://github.com/GuitarAlchemist/ix/pull/245) | fix(harness): consolidate loop policy — close the fail-open scope gate | 0d | UNKNOWN | 0 | spareilleux |
+| [#245](https://github.com/GuitarAlchemist/ix/pull/245) | fix(harness): consolidate loop policy — close the fail-open scope gate | 0d | MERGEABLE | 0 | spareilleux |
 
 ### tars
 
 _No open PRs._
 
-### Demerzel (5 open)
+### Demerzel (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#805](https://github.com/GuitarAlchemist/Demerzel/pull/805) | fix(ixql): make the grammar generate — GLR conflicts, corpus, oracle r | 0d | CONFLICTING | 0 | spareilleux |
 | [#801](https://github.com/GuitarAlchemist/Demerzel/pull/801) | docs(solutions): capture the swallowed-exit-code failure and its patte | 0d | MERGEABLE | 0 | spareilleux |
 | [#798](https://github.com/GuitarAlchemist/Demerzel/pull/798) | fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#70 | 0d | MERGEABLE | 1 | spareilleux |
 | [#791](https://github.com/GuitarAlchemist/Demerzel/pull/791) | feat(schemas): validate aiw-budget-policy on load, fail closed (#784) | 0d | MERGEABLE | 1 | spareilleux |
@@ -73,6 +73,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-21T02:02:20.575755+00:00 UTC_
+_Generated: 2026-07-21T02:22:01.785515+00:00 UTC_
 
-_Commit: `ed05b652c11b`_
+_Commit: `16272a948639`_
