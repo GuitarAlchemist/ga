@@ -79,3 +79,10 @@ wrong. An octo 4-way debate forced reading the actual code (found the existing
 pre-route), and the live stack trace then pinned a one-line null-deref. The
 deterministic corpus is 100% but has no LLM-bound/voicing-search prompts, so it
 never caught this.
+
+---
+
+**See also:** [2026-07-20-router-anchor-shape-misroute-chord-vs-scale.md](2026-07-20-router-anchor-shape-misroute-chord-vs-scale.md)
+— same subsystem, different root cause (ExamplePrompt anchor shape, not a
+null-deref), and an independent instance of the closing observation above: the
+corpus was green because it had no prompt of the failing *shape*.
