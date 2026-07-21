@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "32a47e367cbe17e5d8156d91407cacb02b68a7c6",
-    "generatedAt": "2026-07-20T08:38:21.560756+00:00",
+    "commitSha": "53ff879ec766a06d4a34e5157f1e7a879ef14239",
+    "generatedAt": "2026-07-21T01:25:54.935841+00:00",
     "repoCount": 5,
-    "totalPRs": 13
+    "totalPRs": 8
   },
   "repos": [
     {
@@ -118,6 +118,18 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-07-21T01:24:41Z",
+          "failingChecks": 0,
+          "headRef": "feat/arpeggio-suggestions-skill",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 568,
+          "title": "feat(chatbot): improvise over a whole progression \u2014 arpeggio + scale per chord (#555 sibling North Star)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/568"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-07-20T04:55:16Z",
           "failingChecks": 0,
           "headRef": "feat/chatbot-llm-judge-invariants",
@@ -126,18 +138,6 @@
           "number": 564,
           "title": "feat(chatbot-qa): LLM-as-judge gate so answer quality becomes measurable",
           "url": "https://github.com/GuitarAlchemist/ga/pull/564"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T04:47:44Z",
-          "failingChecks": 0,
-          "headRef": "docs/compound-router-anchor-lessons",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 562,
-          "title": "docs(solutions): #555 router-anchor fix + eval-register-blindness pattern",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/562"
         },
         {
           "ageDays": 0,
@@ -165,69 +165,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 5,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T05:03:08Z",
-          "failingChecks": 1,
-          "headRef": "docs/fractal-exposure-plan",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 242,
-          "title": "docs(plans): ix-fractal Takagi/de Rham exposure plan (#203)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/242"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T05:02:14Z",
-          "failingChecks": 0,
-          "headRef": "docs/crate-count-78",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 241,
-          "title": "docs: correct crate count to 78 and add missing ix-registrar (#228 P2-6)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/241"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T05:01:36Z",
-          "failingChecks": 0,
-          "headRef": "fix/verify-ci-parity",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 240,
-          "title": "fix(harness): make verify.ps1 gate on clippy at CI's exact flags (#228 P1-3)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/240"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T04:44:23Z",
-          "failingChecks": 0,
-          "headRef": "docs/green-ci-dead-gate-pattern",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 239,
-          "title": "docs(solutions): green CI + DEGRADED dashboard = a missing input",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/239"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T04:39:49Z",
-          "failingChecks": 0,
-          "headRef": "fix/maintain-gate-absent-metric-evidence",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 238,
-          "title": "fix(ix-duck): skip the maintain snapshot when metric evidence is absent",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/238"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -267,7 +206,7 @@
           "failingChecks": 0,
           "headRef": "docs/solution-silent-exit-codes",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 801,
           "title": "docs(solutions): capture the swallowed-exit-code failure and its pattern",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/801"
@@ -279,7 +218,7 @@
           "failingChecks": 1,
           "headRef": "fix/ideation-sigpipe",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 798,
           "title": "fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#704)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/798"
@@ -291,31 +230,31 @@
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T00:57:38Z",
           "failingChecks": 0,
           "headRef": "refactor/decompose-claude-md",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 775,
           "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
