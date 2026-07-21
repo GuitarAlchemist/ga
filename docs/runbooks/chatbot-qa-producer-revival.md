@@ -64,22 +64,26 @@ git commit -m "chore(quality): chatbot-qa snapshot <today> [skip ci]"
 ```
 
 That is exactly how the `2026-07-19` snapshot got there. It clears the freshness
-sensor but does **not** revive the automation — do one of the durable fixes below.
+sensor for a few days but is a one-off; the durable automation fix is below (option
+1 is now implemented on this branch).
 
-## Durable fix — this is an OWNER DECISION (pick one)
+## Durable fix
 
-All three restore a daily snapshot; they differ in cost and in whether CI measures
-a *real* `pass_pct` or an honest *degraded* one. I did **not** apply any of these,
-because each changes the producer's declared behaviour (`#411`'s "measure real
-pass_pct in-runner" intent) or spends money/infra — an owner call, not a silent one.
+Option 1 below is now **IMPLEMENTED on branch `ci/chatbot-qa-producer-revival`**
+(unpushed). Options 2 and 3 remain available if/when live `pass_pct` is wanted.
 
-1. **Gate the in-runner Ollama off by default → free daily *degraded* snapshots.**
-   Make the `Install + warm in-runner Ollama (default backend)` step opt-in (e.g.
-   `if: vars.CHATBOT_QA_INRUNNER_OLLAMA == 'true'`). With it off, the corpus runs
-   fast, the chatbot degrades gracefully, and — thanks to #553 — the snapshot is
-   written honestly (`pass_pct: null, degraded: true, carryforward`) and committed
-   within budget. **Smallest revival; restores freshness at zero cost; loses real
-   measurement until option 2/3.** Recommended as the immediate automation fix.
+1. **DONE — in-runner Ollama gated off by default → free daily *degraded* snapshots.**
+   The `Install + warm in-runner Ollama` step is now
+   `if: ${{ env.OLLAMA_BASE_URL == '' && vars.CHATBOT_QA_INRUNNER_OLLAMA == 'true' }}`,
+   i.e. opt-in. On a scheduled run with the variable unset (the default): the step
+   is skipped, the backend preflight reports `ollama_ok=false`, the `Run corpus`
+   step forwards `GA_CORPUS_ENV_DEGRADED=1`, and `run-prompt-corpus.ps1` writes an
+   honest degraded snapshot (`pass_pct: null, degraded: true`, carryforward) and
+   exits 2 — which the workflow tolerates and commits within the 60-min budget.
+   This restores the proven pre-#411 behaviour; the `timeout-minutes: 60` cap is
+   kept. To opt back into real in-runner measurement (accepting the >60-min risk),
+   set repo variable `CHATBOT_QA_INRUNNER_OLLAMA=true`; a remote `OLLAMA_BASE_URL`
+   secret still overrides either way.
 
 2. **Provision the remote backend → real `pass_pct`.** Follow
    [`chatbot-qa-ollama-ci-endpoint.md`](chatbot-qa-ollama-ci-endpoint.md): stand up
@@ -91,10 +95,13 @@ pass_pct in-runner" intent) or spends money/infra — an owner call, not a silen
    and raise/remove `timeout-minutes`. Real measurement, but ties the daily signal
    to that runner's uptime.
 
-Recommendation: ship **(1)** now to stop the bleeding (free, restores the daily
-artifact the four readers need), then do **(2)** when someone wants live `pass_pct`
-back. Whichever you pick, the freshness sensor stays as the tripwire so this can't
-silently rot again.
+Status: **(1) is shipped on this branch** — free, restores the daily artifact the
+four readers need. Do **(2)** when someone wants live `pass_pct` back. Either way,
+the freshness sensor stays as the tripwire so this can't silently rot again.
+
+Remaining owner decisions: **push branch `ci/chatbot-qa-producer-revival` + open a
+PR** (deliberately unpushed here), and **optionally provision the remote Ollama
+backend** (option 2) for real `pass_pct`.
 
 ## Verify after fixing
 
