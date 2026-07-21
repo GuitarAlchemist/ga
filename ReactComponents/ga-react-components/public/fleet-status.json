@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "16272a948639a0d2a25a2781648868ee3df8b1cc",
-    "generatedAt": "2026-07-21T02:22:01.785515+00:00",
+    "commitSha": "2230d591ae1f56eaef44347a296bf6e6c4ed9252",
+    "generatedAt": "2026-07-21T08:06:35.053510+00:00",
     "repoCount": 5,
-    "totalPRs": 8
+    "totalPRs": 10
   },
   "repos": [
     {
@@ -113,10 +113,34 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 1,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T03:33:44Z",
+          "failingChecks": 0,
+          "headRef": "feat/outside-notes-skill",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 577,
+          "title": "feat(chatbot): OutsideNotesSkill \u2014 \"why does this sound outside?\" (North Star gap)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/577"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T03:20:18Z",
+          "failingChecks": 1,
+          "headRef": "ci/chatbot-qa-producer-revival",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 576,
+          "title": "fix(chatbot-qa): revive the daily producer \u2014 gate in-runner Ollama, add artifact-freshness sensor",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/576"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 1,
@@ -191,47 +215,47 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-21T02:21:17Z",
-          "failingChecks": 0,
-          "headRef": "fix/ixql-grammar-conflict",
+          "createdAt": "2026-07-21T03:20:42Z",
+          "failingChecks": 5,
+          "headRef": "chore/retire-driver-revive-quality-trend",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 805,
-          "title": "fix(ixql): make the grammar generate \u2014 GLR conflicts, corpus, oracle repair (closes #780)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/805"
+          "mergeable": "MERGEABLE",
+          "number": 808,
+          "title": "governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loop tripwires, archive sweep",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/808"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-20T04:46:03Z",
-          "failingChecks": 0,
-          "headRef": "docs/solution-silent-exit-codes",
+          "createdAt": "2026-07-21T02:59:14Z",
+          "failingChecks": 1,
+          "headRef": "fix/schema-metaschema-draft07",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 801,
-          "title": "docs(solutions): capture the swallowed-exit-code failure and its pattern",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/801"
+          "mergeable": "UNKNOWN",
+          "number": 807,
+          "title": "fix(schemas): resolvable http draft-07 metaschema + regression guard (closes #792)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/807"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:31:04Z",
           "failingChecks": 1,
           "headRef": "fix/ideation-sigpipe",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 798,
           "title": "fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#704)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/798"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T03:40:59Z",
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
@@ -243,7 +267,7 @@
           "failingChecks": 0,
           "headRef": "refactor/decompose-claude-md",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 775,
           "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
@@ -255,7 +279,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
