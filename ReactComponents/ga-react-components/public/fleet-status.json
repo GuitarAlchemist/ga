@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a92e5b70f87bf60e32b7d1da2bb5ed3538276947",
-    "generatedAt": "2026-07-21T01:53:14.044141+00:00",
+    "commitSha": "28c1bb9a94757fa5dae639eb0bf198045d375bf7",
+    "generatedAt": "2026-07-21T01:55:07.662493+00:00",
     "repoCount": 5,
-    "totalPRs": 11
+    "totalPRs": 10
   },
   "repos": [
     {
@@ -113,31 +113,19 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-07-21T01:41:07Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "feat/alternate-tunings-drop-c",
           "isDraft": false,
           "mergeable": "UNKNOWN",
           "number": 571,
           "title": "feat(chatbot): add drop-C to AlternateTuningsSkill \u2014 closes the drop-C North Star gap",
           "url": "https://github.com/GuitarAlchemist/ga/pull/571"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T01:31:05Z",
-          "failingChecks": 0,
-          "headRef": "docs/backlog-northstar-coverage-audit",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 570,
-          "title": "docs(backlog): audit North Star coverage \u2014 5 shipped, 6 partial, 5 real gaps",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/570"
         },
         {
           "ageDays": 0,
