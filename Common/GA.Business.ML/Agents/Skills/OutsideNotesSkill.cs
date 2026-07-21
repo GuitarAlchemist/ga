@@ -219,13 +219,26 @@ public sealed partial class OutsideNotesSkill(ILogger<OutsideNotesSkill> logger)
     private static IReadOnlyList<string> ChordToneNames(int rootPc, string quality)
     {
         var formula = ChordVocabulary.GetFormula(quality);
-        return [.. formula.Intervals.Select(i => PcName(((rootPc + i) % 12 + 12) % 12))];
+        var useFlat = PrefersFlatSpelling(rootPc, quality);
+        return [.. formula.Intervals.Select(i => PcName(((rootPc + i) % 12 + 12) % 12, useFlat))];
     }
 
     private static readonly string[] SharpNames =
         ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-    private static string PcName(int pc) => SharpNames[((pc % 12) + 12) % 12];
+    private static readonly string[] FlatNames =
+        ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+
+    private static string PcName(int pc, bool useFlat = false) =>
+        (useFlat ? FlatNames : SharpNames)[((pc % 12) + 12) % 12];
+
+    // Guitarists expect flats in minor / diminished / half-diminished chords and
+    // in flat-rooted chords (Eb, Bb, Ab, Db, Gb, F). Otherwise sharps read fine.
+    private static bool PrefersFlatSpelling(int rootPc, string quality) =>
+        quality.Contains("minor", StringComparison.Ordinal) ||
+        quality.Contains("diminished", StringComparison.Ordinal) ||
+        quality.Contains("half", StringComparison.Ordinal) ||
+        rootPc is 5 or 10 or 3 or 8 or 1 or 6;   // F, Bb, Eb, Ab, Db, Gb
 
     private static string QualityDisplaySuffix(string quality) => quality switch
     {
