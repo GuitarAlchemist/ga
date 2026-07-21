@@ -112,6 +112,11 @@ public sealed class GaPlugin : IChatPlugin
         // canonical quality→scales mapping. Pure domain compute, no LLM.
         services.AddOrchestratorSkillIntent<ImprovisationSkill>();
 
+        // OutsideNotesSkill (2026-07-20) — "why does F sound outside over Cmaj7"
+        // — classifies a single note against a chord as chord-tone / tension /
+        // avoid, derived purely from the chord tones. Pure domain compute, no LLM.
+        services.AddOrchestratorSkillIntent<OutsideNotesSkill>();
+
         // Skills using IChatClient are Scoped (IChatClient lifetime is Scoped).
         services.AddOrchestratorSkillIntent<KeyIdentificationSkill>(ServiceLifetime.Scoped);
         services.AddOrchestratorSkillIntent<ProgressionCompletionSkill>(ServiceLifetime.Scoped);
