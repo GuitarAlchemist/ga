@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "28c1bb9a94757fa5dae639eb0bf198045d375bf7",
-    "generatedAt": "2026-07-21T01:55:07.662493+00:00",
+    "commitSha": "ed05b652c11bdb70d6fe767c9fc3fba6d93ad20e",
+    "generatedAt": "2026-07-21T02:02:20.575755+00:00",
     "repoCount": 5,
-    "totalPRs": 10
+    "totalPRs": 8
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 2,
       "prs": [
         {
           "ageDays": 0,
@@ -130,23 +130,11 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-20T04:55:16Z",
-          "failingChecks": 0,
-          "headRef": "feat/chatbot-llm-judge-invariants",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 564,
-          "title": "feat(chatbot-qa): LLM-as-judge gate so answer quality becomes measurable",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/564"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 1,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -165,20 +153,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T01:38:03Z",
-          "failingChecks": 0,
-          "headRef": "fix/crate-maturity-reconciliation",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 246,
-          "title": "fix(ix-skill): reconcile crate-maturity.toml against workspace members (#243)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/246"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -186,7 +162,7 @@
           "failingChecks": 0,
           "headRef": "fix/loop-policy-consolidation",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 245,
           "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/245"
