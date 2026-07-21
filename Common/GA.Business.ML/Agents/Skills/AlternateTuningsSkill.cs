@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 
 /// <summary>
 /// Domain-backed alternate-tuning skill. Answers tuning-info questions and
-/// shape questions for common alternate tunings (DADGAD, drop-D, open-G, open-D,
-/// double drop-D, DGCGCD, half-step down, whole-step down).
+/// shape questions for common alternate tunings (DADGAD, drop-D, drop-C, open-G,
+/// open-D, double drop-D, DGCGCD, half-step down, whole-step down).
 /// Surface forms:
 /// <list type="bullet">
 /// <item><b>"What is DADGAD tuning"</b> → string-by-string note layout + interval analysis</item>
@@ -26,8 +26,8 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
 {
     public string Name => "AlternateTunings";
     public string Description =>
-        "Answers alternate-tuning questions: what is DADGAD / drop-D / open-G / " +
-        "open-D / double-drop-D / DGCGCD / half-step-down / whole-step-down. " +
+        "Answers alternate-tuning questions: what is DADGAD / drop-D / drop-C / " +
+        "open-G / open-D / double-drop-D / DGCGCD / half-step-down / whole-step-down. " +
         "Returns the string-by-string layout (low → high) and explains the " +
         "intervallic difference from standard tuning. Pure lookup — no LLM call.";
 
@@ -35,6 +35,8 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
     [
         "what is DADGAD tuning",
         "what's drop D tuning",
+        "how do I tune to drop C",
+        "drop C tuning notes",
         "how do I tune to open G",
         "open D tuning notes",
         "what is double drop D tuning",
@@ -56,6 +58,9 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
         (new Regex(@"(?<!\bdouble\s)(?<!\bdouble-)\bdrop[\s-]?d\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-d"),
         // Double drop D
         (new Regex(@"\bdouble[\s-]?drop[\s-]?d\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "double-drop-d"),
+        // Drop C — the (?![#b]) rejects "drop C#" / "drop Cb", which are
+        // different tunings not in this table (better no match than a wrong one).
+        (new Regex(@"\bdrop[\s-]?c\b(?![#b])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-c"),
         // Open G
         (new Regex(@"\bopen[\s-]?g\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "open-g"),
         // Open D
@@ -87,6 +92,12 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
             Notes: ["D", "A", "D", "G", "B", "D"],
             VsStandard: "Strings 6 and 1 both dropped a whole step (E→D). Strings 5–2 are standard.",
             Flavor: "Neil Young's signature ('Cinnamon Girl', 'Cortez the Killer'). Both Ds frame any voicing with a fat low-and-high D drone."),
+
+        ["drop-c"] = new(
+            DisplayName: "Drop C",
+            Notes: ["C", "G", "C", "F", "A", "D"],
+            VsStandard: "Whole-step-down (D standard) with the 6th string dropped one more whole step: string 6 is down a major third (E→C), strings 5–1 each down a whole step. Equivalently, drop-D shifted down a whole step.",
+            Flavor: "Metal / metalcore staple — System of a Down, Bullet for My Valentine, Killswitch Engage. Heavy low-C chug with one-finger power chords on the bottom three strings, like drop-D but darker and slacker. Pairs with thicker strings (.011–.056+) to keep tension."),
 
         ["open-g"] = new(
             DisplayName: "Open G",
@@ -268,7 +279,7 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
     private static AgentResponse CannotHandle() => new()
     {
         AgentId    = AgentIds.Theory,
-        Result     = "Ask about a named alternate tuning (DADGAD, drop-D, open-G, open-D, double-drop-D, DGCGCD, half-step-down, whole-step-down), or give 6 notes low→high.",
+        Result     = "Ask about a named alternate tuning (DADGAD, drop-D, drop-C, open-G, open-D, double-drop-D, DGCGCD, half-step-down, whole-step-down), or give 6 notes low→high.",
         Confidence = 0.1f,
         Evidence   = ["AlternateTuningsSkill: no recognised tuning name or note sequence"],
     };
