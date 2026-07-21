@@ -10,33 +10,44 @@ See `docs/plans/` for active plans.
 
 These are real problems guitarists hit. They're the North Star for every feature.
 
+**Coverage audit (2026-07-20).** ✅ shipped · 🟡 partial (works, but narrower than
+the bullet) · ⬜ gap (no skill). Tag = the routed `IOrchestratorSkill` that
+answers it. The audit exists because a `skills/`-folder count (18) badly
+undercounted the real capability — there are 31 routed skill classes — and made
+the product look less complete than it is. Verify a tag against the live router
+(`RoutingEvalHarness`) before trusting it; don't re-derive coverage from folders.
+
 ### Ear Training & Recognition
-- **"What key am I in?"** — a guitarist plays a progression by ear and wants GA to identify the key, suggest the scale, and show the diatonic chord set
-- **"Why does this sound outside?"** — given a chord or note over a backing, explain which scale degrees are "outside" and why (tension vs. resolution)
-- **"Is this a common substitution?"** — given two chords, tell the guitarist if there's a known substitution relationship (tritone sub, backdoor dominant, parallel minor, etc.)
+- ✅ **"What key am I in?"** — `KeyIdentificationSkill`. Identifies the key of a chord progression.
+- ⬜ **"Why does this sound outside?"** — given a chord or note over a backing, explain which scale degrees are "outside" and why (tension vs. resolution). *No skill classifies a note against a chord as chord-tone / tension / avoid.* Next tracer-bullet candidate — computable from existing `InferQuality` + a chord-tone set, semantically distinct from neighbours.
+- ✅ **"Is this a common substitution?"** — `ChordSubstitutionSkill`. Tritone sub, backdoor/secondary dominant, ICV-neighbour swaps, set-class equivalents, two-chord relationship classification.
 
 ### Chord & Voicing Discovery
-- **"My hand hurts playing barre chords"** — suggest open-position or partial-barre voicings for any chord, ranked by fret-hand stretch
-- **"I play in DADGAD / open D / open G"** — generate correct chord shapes for any alternate tuning, with voicing diagrams
+- ✅ **"My hand hurts playing barre chords"** — `ChordVoicingsSkill` (easier voicings) + `FretSpanSkill` + `CapoSkill`.
+- 🟡 **"I play in DADGAD / open D / open G"** — `AlternateTuningsSkill` ships the tuning layout (string-by-string, low→high) + interval delta from standard, for DADGAD/drop-D/open-G/open-D/double-drop-D/DGCGCD/half- and whole-step-down. **Missing:** generating specific *chord shapes in* a given tuning with voicing diagrams.
 
 ### Improvisation & Scale Choice
-- **"Which arpeggio fits this chord progression?"** — given Am F C G, suggest the arpeggios and scales that work over each chord with mode names
-- **"How do I solo over a ii-V-I?"** — step-by-step: target notes, guide tones, chromatic approaches, bebop scale options
-- **"Show me a lick in the style of [blues / jazz / country]"** — generate a 2-bar lick in ASCII tab + VexTab matching the stylistic vocabulary
+- ✅ **"Which arpeggio fits this chord progression?"** — `ImprovisationSkill` v2 (2026-07-20, PR #568). Classifies each chord in a run and returns its arpeggio + scales, key-agnostically.
+- 🟡 **"How do I solo over a ii-V-I?"** — `ImprovisationSkill` handles single chords and now concrete progressions (`Dm7 G7 Cmaj7`). **Missing:** Roman-numeral input without a stated key, and the step-by-step guide-tone / chromatic-approach / bebop walkthrough.
+- ⬜ **"Show me a lick in the style of [blues / jazz / country]"** — `GenreEssentialsSkill` names essential chords/scales for a genre but does **not** generate a lick. Lick generation (ASCII tab + VexTab) is unbuilt.
 
 ### Practice & Learning
-- **"I want to practice this scale in all positions"** — generate all 5 CAGED positions for any scale, with tab + fretboard diagram
-- **"I keep forgetting chord tones"** — a drill: show a chord symbol → user names the intervals → GA verifies with GaChordIntervals
-- **"How long until I can play this song?"** — technique gap analysis: compare required techniques to user's known skills, suggest a practice sequence
+- ⬜ **"I want to practice this scale in all positions"** — generate all 5 CAGED positions for any scale, with tab + fretboard diagram. *No CAGED-position skill.*
+- 🟡 **"I keep forgetting chord tones"** — `ChordInfoSkill` returns chord tones on demand. **Missing:** the interactive drill loop (prompt → user answers → verify).
+- ⬜ **"How long until I can play this song?"** — technique gap analysis. Unbuilt (needs a user skill model).
 
 ### Songwriting & Composition
-- **"Help me finish this progression"** — given 2-3 chords, suggest 2-3 natural completions that cadence correctly, in the same key
-- **"Make this progression more interesting"** — apply passing chords, secondary dominants, or borrowed chords to a plain I-IV-V
-- **"What would this sound like in a minor key?"** — parallel minor / relative minor translation of an existing progression
+- ✅ **"Help me finish this progression"** — `ProgressionCompletionSkill`. Diatonic cadence completions in the detected key.
+- 🟡 **"Make this progression more interesting"** — `ProgressionMoodSkill` (darken/brighten via parallel-minor / modal interchange / borrowed chords) + `ChordSubstitutionSkill`. **Missing:** a dedicated "add passing chords / secondary dominants to a plain I-IV-V" transform.
+- 🟡 **"What would this sound like in a minor key?"** — `RelativeKeySkill` + `TransposeSkill` + `ProgressionMoodSkill` (parallel-minor). Covered piecewise; no single "translate this whole progression to parallel/relative minor" skill.
 
 ### Technical / Gear
-- **"How do I tune to drop-C?"** — fret-by-fret retuning guide with string tensions and chord shape adjustments
-- **"Why does my tab look wrong?"** — parse ASCII tab and flag common notation errors (string order, timing symbols, missing barlines)
+- 🟡 **"How do I tune to drop-C?"** — `AlternateTuningsSkill` covers drop-D, half-/whole-step-down, and the open tunings. **Missing:** drop-C specifically, and string-tension / retuning-step guidance.
+- ⬜ **"Why does my tab look wrong?"** — parse ASCII tab and flag notation errors. *No tab-linting skill.*
+
+**Net:** 5 ✅ fully shipped · 6 🟡 partial · 5 ⬜ genuine gaps. The gaps worth a
+tracer bullet next, in rough value order: *sound-outside* (computable now,
+low routing-collision risk), *CAGED positions*, *tab-lint*.
 
 ---
 
