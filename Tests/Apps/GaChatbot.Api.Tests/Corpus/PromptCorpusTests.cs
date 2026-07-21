@@ -201,6 +201,113 @@ public class PromptCorpusTests
             $"Prompts violating invariants ({failures.Count}):\n  - {string.Join("\n  - ", failures)}");
     }
 
+    /// <summary>
+    ///     Grades every prompt carrying a <c>judge:</c> rubric with a stronger
+    ///     model. This is the only gate in the corpus that can see answer
+    ///     <em>quality</em> — the substring invariants measure the deterministic
+    ///     skill layer, so they stay green even when the chat model is replaced
+    ///     with a bogus one (measured: 50 of 52 still passed).
+    /// </summary>
+    /// <remarks>
+    ///     Fails loudly with <see cref="LlmJudge.JudgeUnavailableToken"/> rather
+    ///     than passing when the judge cannot be reached. A quality gate that
+    ///     reports success because it could not run is precisely the bug this
+    ///     corpus already shipped once — see the note on
+    ///     <see cref="BackendDegradedMarkers"/>.
+    /// </remarks>
+    [Test]
+    [Explicit("Slow + calls an external judge model. Run before releases and when comparing chat models.")]
+    public async Task JudgedPrompts_SatisfyTheirRubric()
+    {
+        var judged = _corpus!.Prompts
+            .Where(p => !p.Skip && !string.IsNullOrWhiteSpace(p.Judge))
+            .ToList();
+
+        Assert.That(judged, Is.Not.Empty,
+            "No prompts carry a `judge:` rubric — the quality gate would silently measure nothing.");
+
+        var judge = LlmJudge.Create();
+        if (!await judge.IsAvailableAsync())
+        {
+            Assert.Fail(
+                $"{LlmJudge.JudgeUnavailableToken}: judge model unreachable " +
+                $"(set {LlmJudge.EndpointEnvVar} / {LlmJudge.ModelEnvVar}). " +
+                "Reporting no signal rather than a pass.");
+        }
+
+        var failures = new List<string>();
+
+        foreach (var entry in judged)
+        {
+            var (answer, _, error) = await FetchAnswerAsync(entry);
+            if (error is not null)
+            {
+                failures.Add($"{JudgeLabel(entry)} → {error}");
+                continue;
+            }
+
+            JudgeVerdict verdict;
+            try
+            {
+                verdict = await judge.JudgeAsync(entry.Prompt, answer!, entry.Judge);
+            }
+            catch (Exception ex)
+            {
+                failures.Add($"{JudgeLabel(entry)} → {LlmJudge.JudgeUnavailableToken}: {ex.Message}");
+                continue;
+            }
+
+            if (!verdict.IsPass)
+            {
+                failures.Add($"{JudgeLabel(entry)} → JUDGE_FAIL: {verdict.Reason}");
+            }
+        }
+
+        Assert.That(failures, Is.Empty,
+            $"Prompts rejected by the judge ({failures.Count}/{judged.Count}):\n  - {string.Join("\n  - ", failures)}");
+    }
+
+    private static string JudgeLabel(PromptEntry entry) =>
+        $"[{entry.Category ?? "uncategorized"}] \"{entry.Prompt}\"";
+
+    /// <summary>
+    ///     Fetches one answer without applying any invariant. Shared by the
+    ///     judge gate, which needs the raw prose rather than a pass/fail.
+    ///     Returns <c>error</c> non-null for transport-level problems and for
+    ///     the degraded-backend case, so the judge is never asked to grade a
+    ///     fallback apology as if it were an answer.
+    /// </summary>
+    private async Task<(string? answer, long elapsedMs, string? error)> FetchAnswerAsync(PromptEntry entry)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        HttpResponseMessage response;
+        try
+        {
+            response = await _client!.PostAsJsonAsync("/api/chatbot/chat", new { message = entry.Prompt });
+        }
+        catch (Exception ex)
+        {
+            return (null, sw.ElapsedMilliseconds, $"exception: {ex.GetType().Name}: {ex.Message}");
+        }
+        sw.Stop();
+
+        if (response.StatusCode != HttpStatusCode.OK)
+            return (null, sw.ElapsedMilliseconds, $"HTTP {(int)response.StatusCode}");
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var answer = body.TryGetProperty("naturalLanguageAnswer", out var a) ? a.GetString() ?? "" : "";
+
+        if (string.IsNullOrWhiteSpace(answer))
+            return (null, sw.ElapsedMilliseconds, "empty response");
+
+        foreach (var marker in BackendDegradedMarkers)
+            if (answer.Contains(marker, StringComparison.OrdinalIgnoreCase))
+                return (null, sw.ElapsedMilliseconds,
+                    $"{BackendDegradedToken}: backend returned a degraded fallback answer");
+
+        return (answer, sw.ElapsedMilliseconds, null);
+    }
+
     // ── evaluation ──────────────────────────────────────────────────────────
 
     private async Task<(string? failure, string? warning)> EvaluatePromptAsync(PromptEntry entry)
@@ -403,6 +510,22 @@ public class PromptCorpusTests
         // total). Set to 0 for deterministic-skill prompts where any
         // wording variance is a real bug.
         public int? Retry { get; set; }
+
+        /// <summary>
+        ///     Opt-in LLM-judge rubric. When set, <c>JudgedPrompts_SatisfyTheirRubric</c>
+        ///     sends the answer to a stronger model (see <see cref="LlmJudge"/>) and
+        ///     fails the prompt if the judge rejects it.
+        ///
+        ///     Use this for prompts whose correctness lives in the <em>prose</em>
+        ///     rather than in a substring — explanations, comparisons, reasoning.
+        ///     Substring invariants cannot distinguish a 3B model from a frontier
+        ///     one on those, since both emit the same keywords.
+        ///
+        ///     Keep the rubric about music theory and about answering the question.
+        ///     Do not ask the judge to verify claims about GA's own catalog; it
+        ///     cannot check them and will produce false failures.
+        /// </summary>
+        public string? Judge { get; set; }
 
         // ── Trace-shape invariants (GitHub agentic-behavior validation) ─────
         // These check the structured trace returned with every chat
