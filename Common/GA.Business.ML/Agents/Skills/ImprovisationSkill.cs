@@ -9,9 +9,33 @@ using GA.Business.ML.Search;
 /// typed chord parser to extract a chord symbol from the user query, infers
 /// the chord quality, and returns matching modes / scales drawn from a
 /// canonical chord-scale mapping. Pure domain compute; no LLM at the skill
-/// layer. Single-chord queries only in v1 — progression handling (ii-V-I,
-/// minor blues, etc.) is documented as v2 scope.
+/// layer.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>v2 (2026-07-20)</b> adds the progression path: when the query contains a
+/// run of two or more chord symbols ("Am F C G"), each chord is classified
+/// independently and returned with its arpeggio and chord-scale candidates.
+/// This closes the BACKLOG North Star item "which arpeggio fits this chord
+/// progression?".
+/// </para>
+/// <para>
+/// The per-chord classification is deliberately <b>key-agnostic</b>. The
+/// obvious alternative — infer the key, then map each chord to a scale degree
+/// and hand back that degree's mode — is what
+/// <c>GaMcpServer/Tools/GuitaristProblemTools.cs</c> does, and it is wrong for
+/// any borrowed or secondary chord: it locates the degree by root pitch-class
+/// alone, so an A major chord in C major is still reported as degree vi and
+/// handed Aeolian, putting a natural C against the chord's C#. Reusing
+/// <see cref="InferQuality"/> per chord cannot make that mistake, because it
+/// reads the quality the user actually wrote.
+/// </para>
+/// <para>
+/// Roman-numeral queries ("how do I solo over a ii-V-I") are still out of
+/// scope — there are no chord symbols to classify without a stated key. The
+/// no-chord branch says so explicitly rather than guessing.
+/// </para>
+/// </remarks>
 [GuitarAlchemist.Registry.GaSkill("Improvisation", "scale")]
 public sealed partial class ImprovisationSkill(
     ILogger<ImprovisationSkill> logger,
@@ -20,10 +44,11 @@ public sealed partial class ImprovisationSkill(
     public string Name => "Improvisation";
 
     public string Description =>
-        "Suggests scales and modes to improvise / solo over a given chord. " +
-        "Parses the chord symbol from the user query (e.g. 'Cmaj7', 'G7', " +
-        "'Am7b5') and returns canonical chord-scale candidates with their " +
-        "note spellings and a one-line color note. Single-chord queries only.";
+        "Suggests scales, modes and arpeggios to improvise / solo over a chord " +
+        "or a whole chord progression. For a single chord (e.g. 'Cmaj7', 'G7', " +
+        "'Am7b5') it returns canonical chord-scale candidates with a one-line " +
+        "color note. For a run of chords (e.g. 'Am F C G') it returns, for each " +
+        "chord in turn, the matching arpeggio and the scales to play over it.";
 
     public IReadOnlyList<string> ExamplePrompts =>
     [
@@ -37,6 +62,22 @@ public sealed partial class ImprovisationSkill(
         "what to play over a Bm7b5",
         "improvisation choices for E7alt",
         "solo over a Cmaj9 chord",
+        // v2 (2026-07-20) progression anchors. These carry MORE than one chord
+        // symbol and lean on the noun "progression" / "over these chords" so the
+        // router separates them from single-chord scale lookups and from
+        // ProgressionCompletionSkill (which is about what chord comes NEXT, not
+        // what to play over the existing ones). Keep at least two chord symbols
+        // in every anchor — that multi-chord shape is the routing signal.
+        "which arpeggio fits Am F C G",
+        "what arpeggios work over Dm7 G7 Cmaj7",
+        "arpeggios to solo over Am F C G",
+        "what scales fit over the progression Cmaj7 A7 Dm7 G7",
+        "how do I improvise over Am F C G",
+        "which arpeggio for each chord in Em C G D",
+        // "solo over the changes" — jazz idiom for improvising through a
+        // progression. Held-out testing showed this phrasing drifting to
+        // practiceroutine (0.78); it belongs here. "changes" = the chords.
+        "what do I solo over the changes Dm7 G7 Cmaj7",
     ];
 
     // Intent keywords. The CanHandle gate is "improvisation intent AND a
@@ -53,6 +94,10 @@ public sealed partial class ImprovisationSkill(
         // fallback path (semantic router catches them; fallback didn't).
         "which mode", "which modes", "what mode", "what modes",
         "chord-scale", "chord scale",
+        // v2 (2026-07-20) progression / arpeggio intent. "arpeggio" makes the
+        // "which arpeggio fits ..." family reachable through the CanHandle
+        // fallback path, not just the semantic router.
+        "arpeggio", "arpeggios",
     ];
 
     public bool CanHandle(string message)
@@ -71,6 +116,14 @@ public sealed partial class ImprovisationSkill(
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        // Progression path (v2): if the query names two or more chord symbols,
+        // classify each independently and return per-chord arpeggio + scales.
+        // Checked BEFORE the single-chord extractor, whose ExtractAsync collapses
+        // a run to one symbol.
+        var run = ExtractChordRun(message);
+        if (run.Count >= 2)
+            return BuildProgressionResponse(run);
+
         var structured = await extractor.ExtractAsync(message, cancellationToken).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(structured.ChordSymbol))
@@ -79,10 +132,11 @@ public sealed partial class ImprovisationSkill(
             {
                 AgentId = $"skill.{Name.ToLowerInvariant()}",
                 Result =
-                    "I couldn't find a chord name in your request. Try naming a single " +
-                    "chord (e.g. 'Cmaj7', 'G7', 'Am7b5') and I'll suggest scales to " +
-                    "improvise over it. Progression-level questions (ii-V-I, minor blues) " +
-                    "aren't supported yet — name a specific chord.",
+                    "I couldn't find a chord name in your request. Name one chord " +
+                    "(e.g. 'Cmaj7', 'G7', 'Am7b5') and I'll suggest scales to improvise " +
+                    "over it, or a run of chords (e.g. 'Am F C G') and I'll give the " +
+                    "arpeggio and scales for each. Roman-numeral progressions (ii-V-I) " +
+                    "need concrete chord symbols — name the chords in your key.",
                 Confidence = 0.2f,
                 Evidence = [],
                 Assumptions = ["Typed parser produced no ChordSymbol from the query."],
@@ -125,6 +179,109 @@ public sealed partial class ImprovisationSkill(
             },
         };
     }
+
+    // -------------------------------------------------------------------
+    // Progression path (v2). Extract a run of chord symbols in query order,
+    // then classify each with the same InferQuality used for single chords.
+    // -------------------------------------------------------------------
+
+    /// <summary>
+    /// Pull chord symbols out of <paramref name="message"/> in order, de-noising
+    /// the English words around them. Case-sensitive root (a bare lowercase "a"
+    /// is the article, not an A chord) with a required accidental / quality /
+    /// extension-digit suffix — same shape as <see cref="ChordSuffixRegex"/> but
+    /// capturing every match rather than testing for one.
+    /// </summary>
+    // Internal for direct unit-test coverage of the tokenizer.
+    internal static IReadOnlyList<string> ExtractChordRun(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return [];
+        var chords = new List<string>();
+        foreach (Match m in ChordTokenRegex().Matches(message))
+        {
+            var tok = m.Value.Trim();
+            // A quality-less single uppercase letter (A-G) with a following
+            // space is ambiguous with a plain note / roman-ish token, but in a
+            // run like "Am F C G" the bare "F", "C", "G" ARE chords. Accept
+            // them; the run length gate (>=2) already excludes lone letters.
+            if (tok.Length > 0) chords.Add(tok);
+        }
+        return chords;
+    }
+
+    private AgentResponse BuildProgressionResponse(IReadOnlyList<string> chords)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Over **{string.Join(" – ", chords)}**, for each chord:");
+        sb.AppendLine();
+
+        var evidence = new List<string>();
+        var data = new List<object>();
+
+        foreach (var chord in chords)
+        {
+            var root = ExtractRoot(chord);
+            var quality = InferQuality(chord);
+            var arpeggio = ArpeggioFor(root, quality);
+            var scales = ScalesFor(quality);
+            // Best/most-common scale first — that is the one to lead with per chord.
+            var lead = scales.Count > 0 ? scales[0] : new Scale("Major scale of the root", "fallback");
+
+            sb.AppendLine(
+                $"- **{chord}** → arpeggio **{arpeggio}**, play **{root} {lead.Name}** " +
+                $"({lead.Color}).");
+
+            evidence.Add($"{chord}: arpeggio {arpeggio}; scales {string.Join(", ", scales.Select(s => root + " " + s.Name))}");
+            data.Add(new
+            {
+                chord,
+                quality = quality.Display,
+                arpeggio,
+                scales = scales.Select(s => new { name = $"{root} {s.Name}", color = s.Color }).ToList(),
+            });
+        }
+
+        sb.AppendLine();
+        sb.AppendLine(
+            "Each arpeggio spells the chord tones; the scale adds the passing notes " +
+            "for lines between them.");
+
+        logger.LogDebug("ImprovisationSkill: progression [{Chords}] → {Count} chords classified",
+            string.Join(" ", chords), chords.Count);
+
+        return new AgentResponse
+        {
+            AgentId = $"skill.{Name.ToLowerInvariant()}",
+            Result = sb.ToString(),
+            Confidence = 0.85f,
+            Evidence = evidence,
+            Assumptions = ["Each chord classified independently from its written quality; no key inferred."],
+            Data = new { progression = chords, perChord = data },
+        };
+    }
+
+    /// <summary>Chord-tone arpeggio label for a classified quality, e.g. "Am7", "Fmaj7".</summary>
+    // Internal for unit-test coverage — the single most-broken behavior of the
+    // MCP arpeggio tool was root + full-suffix concatenation ("Amm7").
+    internal static string ArpeggioFor(string root, QualityClass quality) =>
+        root + quality.Kind switch
+        {
+            QualityKind.Major            => "",       // C  → major triad
+            QualityKind.Major7           => "maj7",
+            QualityKind.LydianMaj7       => "maj7#11",
+            QualityKind.Dominant7        => "7",
+            QualityKind.AlteredDominant  => "7alt",
+            QualityKind.Altered          => "7alt",
+            QualityKind.SuspendedDominant => "7sus4",
+            QualityKind.Minor            => "m",      // Am → minor triad
+            QualityKind.Minor7           => "m7",
+            QualityKind.MinorMajor7      => "mMaj7",
+            QualityKind.HalfDiminished   => "m7b5",
+            QualityKind.Diminished       => "dim",
+            QualityKind.Diminished7      => "dim7",
+            QualityKind.Augmented        => "aug",
+            _                            => "",
+        };
 
     // -------------------------------------------------------------------
     // Chord symbol → root + quality. Conservative: the parser already
@@ -292,6 +449,17 @@ public sealed partial class ImprovisationSkill(
 
     [GeneratedRegex(@"\b[A-G][#b]?\s+(?:[Mm]ajor|[Mm]inor|[Mm]aj|[Mm]in|[Dd]im|[Aa]ug|[Ss]us)\b")]
     private static partial Regex ChordWithSpacedQualityRegex();
+
+    // Progression tokenizer (v2). Captures each chord symbol in a run, longest
+    // quality alternation first so "Cmaj7" is one token, not "C" + "maj7". The
+    // quality group is OPTIONAL so a bare triad in a run ("F", "C", "G" in
+    // "Am F C G") still matches — the >=2 run-length gate in ExecuteAsync keeps
+    // a lone capital letter from being read as a one-chord "progression".
+    // Case-sensitive root: a lowercase "a"/"e" is an English article, never a
+    // chord. Known edge case: "the E string and A string" yields [E, A]; the
+    // improv-intent gate in CanHandle makes that combination rare in practice.
+    [GeneratedRegex(@"\b[A-G][#b]?(?:maj7#11|maj7\+11|maj7|maj9|maj13|maj|mmaj7|minmaj7|m7b5|m7#5|m7|m9|m11|m13|m6|min7|min|m|dim7|dim|aug|°7|°|ø|sus2|sus4|sus|add9|add11|7alt|alt|7b9|7#9|7b5|7#11|13b9|13|11|9|7|69|6|5|\+|Δ|-7|-)?\b")]
+    private static partial Regex ChordTokenRegex();
 
     internal enum QualityKind
     {

@@ -447,6 +447,30 @@ prompts:
     max_elapsed_ms: 20000
     retry: 0
 
+  # ── arpeggio-over-progression (unblocked 2026-07-20, BACKLOG North Star
+  #    "which arpeggio fits this chord progression?") ──────────────────────
+  # ImprovisationSkill v2: a run of 2+ chord symbols is classified per chord
+  # and returned with each chord's arpeggio + scales. routes_to pins the
+  # semantic route in both directions — the #555 lesson: a content-only
+  # invariant is structurally blind to a routing regression.
+  - prompt: "which arpeggio fits Am F C G"
+    category: improvisation-progression
+    routes_to: skill.improvisation
+    contains_any: ["Aeolian", "Dorian", "arpeggio"]
+    not_contains: ["Amm"]              # the MCP tool's root+suffix concat bug
+    min_length: 40
+    max_elapsed_ms: 20000
+    retry: 0                           # deterministic — pure classification
+
+  - prompt: "what arpeggios work over Dm7 G7 Cmaj7"
+    category: improvisation-progression
+    routes_to: skill.improvisation
+    contains_any: ["Dorian", "Mixolydian", "Ionian", "arpeggio"]
+    not_contains: ["Dmm7"]
+    min_length: 40
+    max_elapsed_ms: 20000
+    retry: 0
+
   - prompt: "Give me a Cadd9 in DADGAD"
     category: alternate-tunings
     skip: true

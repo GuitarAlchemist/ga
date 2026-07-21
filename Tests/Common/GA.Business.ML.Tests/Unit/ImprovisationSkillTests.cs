@@ -195,4 +195,118 @@ public class ImprovisationSkillTests
         Assert.That(ImprovisationSkill.InferQuality("7").Kind.ToString(), Is.EqualTo("Unknown"));
         Assert.That(ImprovisationSkill.InferQuality("#G").Kind.ToString(), Is.EqualTo("Unknown"));
     }
+
+    // ===============================================================
+    // v2 (2026-07-20) — progression / arpeggio path.
+    // ===============================================================
+
+    // ---------------------------------------------------------------
+    // ArpeggioFor — the label must be the CANONICAL chord symbol, never
+    // root + full-suffix concatenation. This is the exact defect in the
+    // MCP arpeggio tool (GuitaristProblemTools.cs), which built "Am" +
+    // "m7" = "Amm7". Pin every quality so it cannot regress here.
+    // ---------------------------------------------------------------
+
+    [TestCase("Am", "Am")]      // minor triad — NOT "Amm"
+    [TestCase("A", "A")]        // major triad — bare root, no suffix
+    [TestCase("Dm7", "Dm7")]    // NOT "Dmm7"
+    [TestCase("Cmaj7", "Cmaj7")]
+    [TestCase("G7", "G7")]
+    [TestCase("Bm7b5", "Bm7b5")]
+    [TestCase("Cdim7", "Cdim7")]
+    [TestCase("Cdim", "Cdim")]
+    [TestCase("Caug", "Caug")]
+    [TestCase("CmMaj7", "CmMaj7")]
+    [TestCase("C7alt", "C7alt")]
+    [TestCase("Cmaj7#11", "Cmaj7#11")]
+    public void ArpeggioFor_ReturnsCanonicalSymbol_NotConcatenatedSuffix(string chord, string expected)
+    {
+        var root = ImprovisationSkill.ExtractRoot(chord);
+        var quality = ImprovisationSkill.InferQuality(chord);
+        Assert.That(ImprovisationSkill.ArpeggioFor(root, quality), Is.EqualTo(expected),
+            $"ArpeggioFor({chord}) must be the canonical chord symbol, not a concatenation");
+    }
+
+    // ---------------------------------------------------------------
+    // ExtractChordRun — pulls chord symbols out of a progression query
+    // in order, ignoring the English words around them.
+    // ---------------------------------------------------------------
+
+    [TestCase("which arpeggio fits Am F C G", new[] { "Am", "F", "C", "G" })]
+    [TestCase("what arpeggios work over Dm7 G7 Cmaj7", new[] { "Dm7", "G7", "Cmaj7" })]
+    [TestCase("arpeggios to solo over Am F C G", new[] { "Am", "F", "C", "G" })]
+    [TestCase("how do I improvise over Am F C G", new[] { "Am", "F", "C", "G" })]
+    [TestCase("Em C G D", new[] { "Em", "C", "G", "D" })]
+    // Single chord — still extracted, but the >=2 gate in ExecuteAsync keeps it
+    // on the single-chord path.
+    [TestCase("solo over Cmaj7", new[] { "Cmaj7" })]
+    public void ExtractChordRun_PullsChordsInOrder(string message, string[] expected)
+    {
+        var run = ImprovisationSkill.ExtractChordRun(message);
+        Assert.That(run, Is.EqualTo(expected).AsCollection,
+            $"ExtractChordRun({message}) did not return the expected chord run");
+    }
+
+    [Test]
+    public void ExtractChordRun_IgnoresLowercaseArticlesAndVerbs()
+    {
+        // "do", "I", "a" must not be read as D / — / A chords.
+        var run = ImprovisationSkill.ExtractChordRun("how do I improvise over a Dm7 and a G7");
+        Assert.That(run, Is.EqualTo(new[] { "Dm7", "G7" }).AsCollection);
+    }
+
+    // ---------------------------------------------------------------
+    // CanHandle — progression / arpeggio queries claim the skill.
+    // ---------------------------------------------------------------
+
+    [TestCase("which arpeggio fits Am F C G")]
+    [TestCase("what arpeggios work over Dm7 G7 Cmaj7")]
+    [TestCase("arpeggios to solo over Am F C G")]
+    [TestCase("which arpeggio for each chord in Em C G D")]
+    public void CanHandle_True_OnProgressionArpeggioQueries(string message)
+    {
+        var skill = MakeSkill();
+        Assert.That(skill.CanHandle(message), Is.True,
+            $"expected ImprovisationSkill to claim progression query: {message}");
+    }
+
+    // ---------------------------------------------------------------
+    // ExecuteAsync — progression path returns one line per chord with the
+    // correct (non-concatenated) arpeggio, and never routes through the
+    // single-chord extractor (which is null in this fixture — proving the
+    // progression branch runs first).
+    // ---------------------------------------------------------------
+
+    [Test]
+    public async Task ExecuteAsync_Progression_ReturnsPerChordArpeggios()
+    {
+        var skill = MakeSkill(); // extractor is null! — must not be called
+        var response = await skill.ExecuteAsync("which arpeggio fits Am F C G");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("Am"));
+            Assert.That(response.Result, Does.Not.Contain("Amm"),
+                "the Amm7-class concatenation bug must not appear");
+            Assert.That(response.Result, Does.Contain("Aeolian").Or.Contain("Dorian"),
+                "each chord should carry a scale suggestion");
+            Assert.That(response.Evidence, Has.Count.EqualTo(4),
+                "one evidence line per chord in the progression");
+        });
+    }
+
+    [Test]
+    public async Task ExecuteAsync_Progression_ClassifiesBorrowedChordByWrittenQuality()
+    {
+        // The whole point of the key-agnostic design: an A MAJOR chord in a
+        // C-major context is a secondary dominant / borrowed chord. The MCP
+        // tool would call it degree vi and hand back A minor. We must classify
+        // it as major from what the user wrote.
+        var skill = MakeSkill();
+        var response = await skill.ExecuteAsync("arpeggios over C A Dm G");
+
+        // "A" (major) must yield the A major arpeggio, not "Am".
+        Assert.That(response.Evidence.Any(e => e.StartsWith("A:") && !e.StartsWith("Am")),
+            Is.True, $"A major must be classified major, not minor. Evidence: {string.Join(" | ", response.Evidence)}");
+    }
 }
