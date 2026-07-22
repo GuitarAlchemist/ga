@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "40e082214e0d7f98d0b617312b0078816378830c",
-    "generatedAt": "2026-07-22T02:32:38.977810+00:00",
+    "commitSha": "dc173d32a65df7ae88b54c19333082e69b0decaf",
+    "generatedAt": "2026-07-22T08:07:10.201486+00:00",
     "repoCount": 5,
     "totalPRs": 14
   },
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:33:44Z",
           "failingChecks": 0,
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/577"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
@@ -152,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
@@ -186,7 +186,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-bracelet-fourier",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 252,
           "title": "feat(bracelet): DFT / Fourier-space of pitch-class sets \u2014 separate the Z-related pairs ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ix/pull/252"
@@ -198,7 +198,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-fleet-claims",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 251,
           "title": "feat(fleet): ix-owned coordination-ledger tool (validate/append/status)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/251"
@@ -210,7 +210,7 @@
           "failingChecks": 0,
           "headRef": "fix/optick-sae-activations-coverage",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 250,
           "title": "fix(optick-sae): declare activations_coverage in the artifact (#248)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/250"
@@ -222,7 +222,7 @@
           "failingChecks": 0,
           "headRef": "fix/loop-policy-consolidation",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 245,
           "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/245"
@@ -298,7 +298,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/815"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:42Z",
           "failingChecks": 3,
@@ -310,7 +310,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/808"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-20T03:40:59Z",
           "failingChecks": 1,
@@ -328,7 +328,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"

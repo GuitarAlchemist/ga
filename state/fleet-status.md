@@ -19,18 +19,18 @@ _No open PRs._
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 0d | UNKNOWN | 1 | spareilleux |
-| [#577](https://github.com/GuitarAlchemist/ga/pull/577) | feat(chatbot): OutsideNotesSkill — "why does this sound outside?" (Nor | 0d | UNKNOWN | 0 | spareilleux |
-| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 0d | UNKNOWN | 3 | spareilleux |
-| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 1d | UNKNOWN | 3 | spareilleux |
+| [#577](https://github.com/GuitarAlchemist/ga/pull/577) | feat(chatbot): OutsideNotesSkill — "why does this sound outside?" (Nor | 1d | UNKNOWN | 0 | spareilleux |
+| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 1d | UNKNOWN | 3 | spareilleux |
+| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 2d | UNKNOWN | 3 | spareilleux |
 
 ### ix (4 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#252](https://github.com/GuitarAlchemist/ix/pull/252) | feat(bracelet): DFT / Fourier-space of pitch-class sets — separate the | 0d | UNKNOWN | 0 | spareilleux |
-| [#251](https://github.com/GuitarAlchemist/ix/pull/251) | feat(fleet): ix-owned coordination-ledger tool (validate/append/status | 0d | UNKNOWN | 0 | spareilleux |
-| [#250](https://github.com/GuitarAlchemist/ix/pull/250) | fix(optick-sae): declare activations_coverage in the artifact (#248) | 0d | UNKNOWN | 0 | spareilleux |
-| [#245](https://github.com/GuitarAlchemist/ix/pull/245) | fix(harness): consolidate loop policy — close the fail-open scope gate | 1d | UNKNOWN | 0 | spareilleux |
+| [#252](https://github.com/GuitarAlchemist/ix/pull/252) | feat(bracelet): DFT / Fourier-space of pitch-class sets — separate the | 0d | MERGEABLE | 0 | spareilleux |
+| [#251](https://github.com/GuitarAlchemist/ix/pull/251) | feat(fleet): ix-owned coordination-ledger tool (validate/append/status | 0d | MERGEABLE | 0 | spareilleux |
+| [#250](https://github.com/GuitarAlchemist/ix/pull/250) | fix(optick-sae): declare activations_coverage in the artifact (#248) | 0d | MERGEABLE | 0 | spareilleux |
+| [#245](https://github.com/GuitarAlchemist/ix/pull/245) | fix(harness): consolidate loop policy — close the fail-open scope gate | 1d | MERGEABLE | 0 | spareilleux |
 
 ### tars (1 open)
 
@@ -44,9 +44,9 @@ _No open PRs._
 |---|---|---:|---|---:|---|
 | [#817](https://github.com/GuitarAlchemist/Demerzel/pull/817) | feat(galactic): add live session bridge tracer bullet (draft) | 0d | MERGEABLE | 0 | spareilleux |
 | [#815](https://github.com/GuitarAlchemist/Demerzel/pull/815) | feat(harness): add fleet compaction telemetry | 0d | MERGEABLE | 1 | spareilleux |
-| [#808](https://github.com/GuitarAlchemist/Demerzel/pull/808) | governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loo | 0d | MERGEABLE | 3 | spareilleux |
-| [#791](https://github.com/GuitarAlchemist/Demerzel/pull/791) | feat(schemas): validate aiw-budget-policy on load, fail closed (#784) | 1d | MERGEABLE | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 3d | CONFLICTING | 1 | spareilleux |
+| [#808](https://github.com/GuitarAlchemist/Demerzel/pull/808) | governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loo | 1d | MERGEABLE | 3 | spareilleux |
+| [#791](https://github.com/GuitarAlchemist/Demerzel/pull/791) | feat(schemas): validate aiw-budget-policy on load, fail closed (#784) | 2d | MERGEABLE | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 3d | MERGEABLE | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -80,6 +80,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-22T02:32:38.977810+00:00 UTC_
+_Generated: 2026-07-22T08:07:10.201486+00:00 UTC_
 
-_Commit: `40e082214e0d`_
+_Commit: `dc173d32a65d`_
