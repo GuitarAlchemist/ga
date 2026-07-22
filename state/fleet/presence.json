@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-21T04:38:51.626750Z",
+  "generated_at": "2026-07-22T03:53:18.852616Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -9,8 +9,8 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-21T01:22:53Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29792960888",
+      "last_heartbeat": "2026-07-22T00:59:12Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29881819748",
       "detail": "latest completed run: skipped"
     },
     {
@@ -18,26 +18,26 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-21T03:33:50Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29798853981",
+      "last_heartbeat": "2026-07-22T02:32:07Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29886075158",
       "detail": "latest completed run: skipped"
     },
     {
       "id": "lane:claude-pr-review",
       "kind": "review-lane",
       "workflow": "claude-code-review.yml",
-      "status": "green",
-      "last_heartbeat": "2026-07-21T03:33:47Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29798850870",
-      "detail": "latest completed run: success"
+      "status": "red",
+      "last_heartbeat": "2026-07-22T01:02:57Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29882006489",
+      "detail": "latest completed run: failure"
     },
     {
       "id": "sensor:post-merge-smoke",
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
       "status": "red",
-      "last_heartbeat": "2026-07-21T02:21:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29795622142",
+      "last_heartbeat": "2026-07-22T02:32:10Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29886077730",
       "detail": "latest completed run: failure"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-21T04:28:58Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29801362013",
+      "last_heartbeat": "2026-07-22T01:04:53Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29882101945",
       "detail": "latest completed run: success"
     },
     {
@@ -54,8 +54,8 @@
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-21T02:21:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29795622154",
+      "last_heartbeat": "2026-07-22T02:32:10Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29886077722",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-21T02:21:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29795622171",
+      "last_heartbeat": "2026-07-22T02:32:10Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/29886077691",
       "detail": "latest completed run: success"
     },
     {
