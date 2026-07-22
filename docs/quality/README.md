@@ -41,7 +41,7 @@ _None. All tracked metrics are within threshold vs their 7-day average._
 
 ## Embeddings detail
 
-_54 snapshot(s) loaded. Sparklines show up to 24 most recent points._
+_55 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 
 | Metric | Latest | Δ vs prev | Δ vs 7d | Drift | 30d avg | n | n_degraded | Sparkline |
 |---|---|---|---|---|---|---|---|---|
@@ -93,7 +93,7 @@ _35 snapshot(s) loaded. Sparklines show up to 24 most recent points._
 ## Methodology
 
 - **Snapshots root:** `state/quality`
-- **Snapshots loaded:** 54 embeddings / 45 voicing-analysis / 35 chatbot-qa
+- **Snapshots loaded:** 55 embeddings / 45 voicing-analysis / 35 chatbot-qa
 - **Regression threshold:** 5.0% absolute Δ vs 7-day average, in the "bad" direction
 - **Drift detection:** Page-Hinkley over direction-adjusted metric levels; only higher-is-better and lower-is-better metrics participate
 - **Direction semantics:** higher-is-better (pass rates, coverage, consistency), lower-is-better (leak accuracy, unknown-chord rate, invariant failures), neutral (corpus counts, Betti numbers — reported for context only)
