@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "dc173d32a65df7ae88b54c19333082e69b0decaf",
-    "generatedAt": "2026-07-22T08:07:10.201486+00:00",
+    "commitSha": "ad8da8d9436601f49d02cc3113b43196b155b65a",
+    "generatedAt": "2026-07-22T22:39:58.926531+00:00",
     "repoCount": 5,
-    "totalPRs": 14
+    "totalPRs": 12
   },
   "repos": [
     {
@@ -113,31 +113,19 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
           "mergeable": "UNKNOWN",
           "number": 579,
           "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T03:33:44Z",
-          "failingChecks": 0,
-          "headRef": "feat/outside-notes-skill",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 577,
-          "title": "feat(chatbot): OutsideNotesSkill \u2014 \"why does this sound outside?\" (North Star gap)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/577"
         },
         {
           "ageDays": 1,
@@ -177,7 +165,7 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
@@ -214,18 +202,6 @@
           "number": 250,
           "title": "fix(optick-sae): declare activations_coverage in the artifact (#248)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/250"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T01:37:12Z",
-          "failingChecks": 0,
-          "headRef": "fix/loop-policy-consolidation",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 245,
-          "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/245"
         }
       ]
     },
@@ -322,7 +298,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
