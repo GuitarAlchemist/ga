@@ -154,6 +154,26 @@ prompts:
     forbidden_agent_ids: ["skill.relativekey"]
     must_not_fallback: true
 
+  # ── outside notes (unblocked 2026-07-20, BACKLOG North Star "why does this
+  #    sound outside?") — OutsideNotesSkill classifies a note over a chord ─────
+  - prompt: "why does F sound outside over Cmaj7"
+    category: outside-notes
+    routes_to: skill.outsidenotes
+    contains: ["avoid", "11"]
+    contains_any: ["semitone", "half-step", "half step", "third"]
+    min_length: 80
+    max_elapsed_ms: 20000
+    retry: 0                          # deterministic — pure classification
+
+  - prompt: "is A a tension or a chord tone over Cmaj7"
+    category: outside-notes
+    routes_to: skill.outsidenotes
+    contains_any: ["tension", "13", "chord tone"]
+    not_contains: ["avoid note"]      # A (13) is a safe tension, not an avoid
+    min_length: 60
+    max_elapsed_ms: 20000
+    retry: 0
+
   # ── chord operations (ga_dsl_eval-backed) ───────────────────────────────
   - prompt: "Transpose C E G to D"
     category: operations
