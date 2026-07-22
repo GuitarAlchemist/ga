@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "2230d591ae1f56eaef44347a296bf6e6c4ed9252",
-    "generatedAt": "2026-07-21T08:06:35.053510+00:00",
+    "commitSha": "40e082214e0d7f98d0b617312b0078816378830c",
+    "generatedAt": "2026-07-22T02:32:38.977810+00:00",
     "repoCount": 5,
-    "totalPRs": 10
+    "totalPRs": 14
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 4,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-22T00:26:54Z",
+          "failingChecks": 1,
+          "headRef": "feat/dft-phase-homometry",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 579,
+          "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/579"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -131,7 +143,7 @@
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
-          "failingChecks": 1,
+          "failingChecks": 3,
           "headRef": "ci/chatbot-qa-producer-revival",
           "isDraft": false,
           "mergeable": "UNKNOWN",
@@ -143,7 +155,7 @@
           "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
-          "failingChecks": 1,
+          "failingChecks": 3,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
           "mergeable": "UNKNOWN",
@@ -165,16 +177,52 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 1,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-22T00:07:25Z",
+          "failingChecks": 0,
+          "headRef": "feat/ix-bracelet-fourier",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 252,
+          "title": "feat(bracelet): DFT / Fourier-space of pitch-class sets \u2014 separate the Z-related pairs ICV cannot",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/252"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T23:41:07Z",
+          "failingChecks": 0,
+          "headRef": "feat/ix-fleet-claims",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 251,
+          "title": "feat(fleet): ix-owned coordination-ledger tool (validate/append/status)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/251"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-21T23:34:41Z",
+          "failingChecks": 0,
+          "headRef": "fix/optick-sae-activations-coverage",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 250,
+          "title": "fix(optick-sae): declare activations_coverage in the artifact (#248)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/250"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-21T01:37:12Z",
           "failingChecks": 0,
           "headRef": "fix/loop-policy-consolidation",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 245,
           "title": "fix(harness): consolidate loop policy \u2014 close the fail-open scope gate (#228 P1-5)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/245"
@@ -193,8 +241,21 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-22T02:20:20Z",
+          "failingChecks": 1,
+          "headRef": "fix/anglesharp-nu1902",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 206,
+          "title": "fix(deps): unblock CI with patched AngleSharp",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/206"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/Demerzel",
@@ -210,13 +271,37 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 5,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-07-22T01:18:59Z",
+          "failingChecks": 0,
+          "headRef": "feat/galactic-live-bridge",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 817,
+          "title": "feat(galactic): add live session bridge tracer bullet",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/817"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-22T00:52:57Z",
+          "failingChecks": 1,
+          "headRef": "feat/claude-compaction-telemetry",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 815,
+          "title": "feat(harness): add fleet compaction telemetry",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/815"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:42Z",
-          "failingChecks": 5,
+          "failingChecks": 3,
           "headRef": "chore/retire-driver-revive-quality-trend",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -225,61 +310,25 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/808"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T02:59:14Z",
-          "failingChecks": 1,
-          "headRef": "fix/schema-metaschema-draft07",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 807,
-          "title": "fix(schemas): resolvable http draft-07 metaschema + regression guard (closes #792)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/807"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T04:31:04Z",
-          "failingChecks": 1,
-          "headRef": "fix/ideation-sigpipe",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 798,
-          "title": "fix(ideation): stop SIGPIPE killing the loop as the backlog grows (#704)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/798"
-        },
-        {
           "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-20T03:40:59Z",
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
         },
         {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-07-20T00:57:38Z",
-          "failingChecks": 0,
-          "headRef": "refactor/decompose-claude-md",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 775,
-          "title": "refactor(docs): decompose CLAUDE.md into single-sourced authorities",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/775"
-        },
-        {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
