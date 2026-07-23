@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "ad8da8d9436601f49d02cc3113b43196b155b65a",
-    "generatedAt": "2026-07-22T22:39:58.926531+00:00",
+    "commitSha": "368d1195dc36f4592a1c0bcac44a051d33dd68fe",
+    "generatedAt": "2026-07-23T00:11:38.653754+00:00",
     "repoCount": 5,
-    "totalPRs": 12
+    "totalPRs": 8
   },
   "repos": [
     {
@@ -165,45 +165,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 3,
-      "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-22T00:07:25Z",
-          "failingChecks": 0,
-          "headRef": "feat/ix-bracelet-fourier",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 252,
-          "title": "feat(bracelet): DFT / Fourier-space of pitch-class sets \u2014 separate the Z-related pairs ICV cannot",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/252"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T23:41:07Z",
-          "failingChecks": 0,
-          "headRef": "feat/ix-fleet-claims",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 251,
-          "title": "feat(fleet): ix-owned coordination-ledger tool (validate/append/status)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/251"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-21T23:34:41Z",
-          "failingChecks": 0,
-          "headRef": "fix/optick-sae-activations-coverage",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 250,
-          "title": "fix(optick-sae): declare activations_coverage in the artifact (#248)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/250"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -222,14 +185,14 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-22T02:20:20Z",
-          "failingChecks": 1,
-          "headRef": "fix/anglesharp-nu1902",
-          "isDraft": true,
-          "mergeable": "MERGEABLE",
-          "number": 206,
-          "title": "fix(deps): unblock CI with patched AngleSharp",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/206"
+          "createdAt": "2026-07-22T23:38:17Z",
+          "failingChecks": 3,
+          "headRef": "refactor/reason-feedback-seam",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 207,
+          "title": "feat: round-1 research program + round-3 self-improve seeds closed (backlog empty)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/207"
         }
       ]
     },
@@ -247,7 +210,7 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 5,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
@@ -256,31 +219,19 @@
           "failingChecks": 0,
           "headRef": "feat/galactic-live-bridge",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 817,
           "title": "feat(galactic): add live session bridge tracer bullet",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/817"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-22T00:52:57Z",
-          "failingChecks": 1,
-          "headRef": "feat/claude-compaction-telemetry",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 815,
-          "title": "feat(harness): add fleet compaction telemetry",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/815"
-        },
-        {
           "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:42Z",
-          "failingChecks": 3,
+          "failingChecks": 1,
           "headRef": "chore/retire-driver-revive-quality-trend",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 808,
           "title": "governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loop tripwires, archive sweep",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/808"
@@ -292,7 +243,7 @@
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
@@ -304,7 +255,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
