@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "368d1195dc36f4592a1c0bcac44a051d33dd68fe",
-    "generatedAt": "2026-07-23T00:11:38.653754+00:00",
+    "commitSha": "ce7c7e0cdeae07f94de33d6a33e7a6ab7ac780b4",
+    "generatedAt": "2026-07-23T08:10:23.891030+00:00",
     "repoCount": 5,
-    "totalPRs": 8
+    "totalPRs": 12
   },
   "repos": [
     {
@@ -113,10 +113,22 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-23T00:12:37Z",
+          "failingChecks": 1,
+          "headRef": "ci/reusable-claude-review",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 588,
+          "title": "ci: adopt reusable Claude review diagnostics",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/588"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
           "failingChecks": 2,
@@ -128,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
@@ -140,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
@@ -165,8 +177,33 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 0,
-      "prs": []
+      "prCount": 2,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-23T03:20:36Z",
+          "failingChecks": 5,
+          "headRef": "chore/update-demerzel-20260723",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 256,
+          "title": "chore: update Demerzel submodule (523 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/256"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-23T00:12:38Z",
+          "failingChecks": 1,
+          "headRef": "ci/reusable-claude-review",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 255,
+          "title": "ci: adopt reusable Claude review diagnostics",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/255"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -180,8 +217,20 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 1,
+      "prCount": 2,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-23T03:26:10Z",
+          "failingChecks": 0,
+          "headRef": "chore/update-demerzel-48e90e8-29976976328",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 209,
+          "title": "chore: update Demerzel submodule (91 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/209"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -189,7 +238,7 @@
           "failingChecks": 3,
           "headRef": "refactor/reason-feedback-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 207,
           "title": "feat: round-1 research program + round-3 self-improve seeds closed (backlog empty)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/207"
@@ -213,37 +262,37 @@
       "prCount": 4,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-22T01:18:59Z",
           "failingChecks": 0,
           "headRef": "feat/galactic-live-bridge",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 817,
           "title": "feat(galactic): add live session bridge tracer bullet",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/817"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:42Z",
           "failingChecks": 1,
           "headRef": "chore/retire-driver-revive-quality-trend",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 808,
           "title": "governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loop tripwires, archive sweep",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/808"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-20T03:40:59Z",
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
@@ -255,7 +304,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"

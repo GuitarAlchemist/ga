@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T00:11:35.845322+00:00",
+  "generatedAt": "2026-07-23T08:10:20.374565+00:00",
   "recommendations": [
     "Emit harness-audit, response-quality, overseer, and quality baseline artifacts for durable review evidence."
   ],
@@ -77,9 +77,9 @@
           "evidence": [
             "harness-audit workflow step",
             "response-quality documented in docs/harness-observability.md",
-            "state/quality/chatbot-qa-sessions/baseline.json",
             "state/quality/chatbot-qa/baseline.json",
-            "state/quality/embeddings/baseline.json"
+            "state/quality/ga-retrieval/baseline.json",
+            "state/quality/readme-drift/baseline.json"
           ],
           "id": "observability",
           "maxScore": 15,
@@ -92,9 +92,9 @@
           "evidence": [
             "Scripts/supervised-loop-preflight.ps1",
             ".claude/skills/supervised-loop/SKILL.md",
-            "state/quality/chatbot-qa-sessions/baseline.json",
             "state/quality/chatbot-qa/baseline.json",
-            "state/quality/embeddings/baseline.json"
+            "state/quality/ga-retrieval/baseline.json",
+            "state/quality/readme-drift/baseline.json"
           ],
           "id": "loop-controls",
           "maxScore": 10,
