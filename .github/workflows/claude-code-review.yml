@@ -17,7 +17,7 @@ jobs:
       pull-requests: read
       issues: read
       id-token: write
-    uses: GuitarAlchemist/.github/.github/workflows/claude-code-review.yml@0a36fe841e8100c79c03af4237ab0aeadfb50332
+    uses: GuitarAlchemist/.github/.github/workflows/claude-code-review.yml@ecd319a2c9bf27b951229343b4aa13ab5e9dfeef
     with:
       pr_number: ${{ github.event.pull_request.number }}
     secrets:
