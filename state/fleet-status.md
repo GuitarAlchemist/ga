@@ -14,37 +14,37 @@ _12 open PR(s) across 5 repos._
 
 _No open PRs._
 
-### ga (4 open)
+### ga (5 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 0d | UNKNOWN | 1 | spareilleux |
-| [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 1d | UNKNOWN | 2 | spareilleux |
-| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 2d | UNKNOWN | 3 | spareilleux |
-| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 3d | UNKNOWN | 3 | spareilleux |
+| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(chatbot): arpeggio PerformanceIntent structured-output tracer (#5 | 0d | MERGEABLE | 0 | spareilleux |
+| [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 1d | MERGEABLE | 1 | spareilleux |
+| [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 2d | MERGEABLE | 2 | spareilleux |
+| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 3d | MERGEABLE | 3 | spareilleux |
+| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 4d | MERGEABLE | 3 | spareilleux |
 
-### ix (2 open)
+### ix (3 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#256](https://github.com/GuitarAlchemist/ix/pull/256) | chore: update Demerzel submodule (523 commits behind) | 0d | MERGEABLE | 5 | spareilleux |
-| [#255](https://github.com/GuitarAlchemist/ix/pull/255) | ci: adopt reusable Claude review diagnostics | 0d | MERGEABLE | 1 | spareilleux |
+| [#257](https://github.com/GuitarAlchemist/ix/pull/257) | chore: update Demerzel submodule (533 commits behind) | 0d | MERGEABLE | 5 | spareilleux |
+| [#256](https://github.com/GuitarAlchemist/ix/pull/256) | chore: update Demerzel submodule (523 commits behind) | 1d | MERGEABLE | 5 | spareilleux |
+| [#255](https://github.com/GuitarAlchemist/ix/pull/255) | ci: adopt reusable Claude review diagnostics | 1d | MERGEABLE | 1 | spareilleux |
 
 ### tars (2 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#209](https://github.com/GuitarAlchemist/tars/pull/209) | chore: update Demerzel submodule (91 commits behind) | 0d | MERGEABLE | 0 | spareilleux |
-| [#207](https://github.com/GuitarAlchemist/tars/pull/207) | feat: round-1 research program + round-3 self-improve seeds closed (ba | 0d | CONFLICTING | 3 | spareilleux |
+| [#209](https://github.com/GuitarAlchemist/tars/pull/209) | chore: update Demerzel submodule (91 commits behind) | 1d | MERGEABLE | 1 | spareilleux |
+| [#207](https://github.com/GuitarAlchemist/tars/pull/207) | feat: round-1 research program + round-3 self-improve seeds closed (ba | 1d | CONFLICTING | 3 | spareilleux |
 
-### Demerzel (4 open)
+### Demerzel (2 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#817](https://github.com/GuitarAlchemist/Demerzel/pull/817) | feat(galactic): add live session bridge tracer bullet (draft) | 1d | MERGEABLE | 0 | spareilleux |
-| [#808](https://github.com/GuitarAlchemist/Demerzel/pull/808) | governance: hex-merge spec v1.1+v1.2, belief-currency enforcement, loo | 2d | MERGEABLE | 1 | spareilleux |
-| [#791](https://github.com/GuitarAlchemist/Demerzel/pull/791) | feat(schemas): validate aiw-budget-policy on load, fail closed (#784) | 3d | MERGEABLE | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 4d | MERGEABLE | 1 | spareilleux |
+| [#791](https://github.com/GuitarAlchemist/Demerzel/pull/791) | feat(schemas): validate aiw-budget-policy on load, fail closed (#784) | 4d | UNKNOWN | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 5d | UNKNOWN | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -78,6 +78,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-07-23T08:10:23.891030+00:00 UTC_
+_Generated: 2026-07-24T08:06:05.013406+00:00 UTC_
 
-_Commit: `ce7c7e0cdeae`_
+_Commit: `f09c634bf020`_
