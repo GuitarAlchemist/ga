@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-07-23T10:26:34Z_
+_Generated: 2026-07-24T10:23:09Z_
 
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
@@ -78,23 +78,6 @@ _Generated: 2026-07-23T10:26:34Z_
 - `CONTEXT.md` → missing: `state/quality/<domain>/`
 - `CONTEXT.md` → missing: `wide/close-voicing`
 - `CONTEXT.md` → missing: `~/.demerzel/HALT-ALL`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `../../../docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Common/GA.Business.Core.Orchestration/Plugins/`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/<Name>Skill.cs`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `MemoryWriteHook.cs`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Program.cs`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ServiceLifetime.Scoped`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/architecture/layers.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-di-composition-root-casing-drift.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-11-memoryhook-conflates-transcript-log-with-durable-memory.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`
-- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `> 0.85`
@@ -117,3 +100,20 @@ _Generated: 2026-07-23T10:26:34Z_
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `docs/solutions/runtime-errors/enricher-substring-on-wrong-field-cmaj7-jazz.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `prompts.yaml`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `../../../docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ChatbotOrchestrationExtensions.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Common/GA.Business.Core.Orchestration/Plugins/`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `GA.Business.ML/Agents/Skills/<Name>Skill.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `MemoryWriteHook.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `Program.cs`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `ServiceLifetime.Scoped`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/architecture/layers.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/plans/2026-05-03-chatbot-agent-framework-migration-recommendation.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-07-di-composition-root-casing-drift.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/architecture/2026-05-11-memoryhook-conflates-transcript-log-with-durable-memory.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`
+- `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
