@@ -146,6 +146,60 @@ public static class ChordAtonalTool
 
     [McpServerTool]
     [Description(
+        "Distinguish two chords that the interval-class vector (ICV) treats as identical — the two blind " +
+        "spots of ICV: homometric (Z-related) pairs and major-vs-minor chirality. Reports whether they " +
+        "share an ICV, the phase-aligned similarity S (chirality-preserving) and S_TnI (set-class), and the " +
+        "transposition t* that best aligns them. Example: 4-Z15 and 4-Z29 share an ICV yet S_TnI = 0.67 " +
+        "(genuinely different shapes); C major and C minor share an ICV but S = 0.57 (distinct handedness), " +
+        "S_TnI = 1 (inversion-equivalent).")]
+    public static async Task<string> GaHomometricDistinguish(
+        [Description("First chord, e.g. 'C'")] string chord1,
+        [Description("Second chord, e.g. 'Cm'")] string chord2)
+    {
+        var pcs1 = await GetPitchClassesAsync(chord1);
+        var pcs2 = await GetPitchClassesAsync(chord2);
+        if (pcs1.Length == 0) return $"Error: could not parse '{chord1}'";
+        if (pcs2.Length == 0) return $"Error: could not parse '{chord2}'";
+
+        var setA = ToPitchClassSet(pcs1);
+        var setB = ToPitchClassSet(pcs2);
+        var icvA = setA.IntervalClassVector;
+        var icvB = setB.IntervalClassVector;
+        var icvEqual = icvA.Id.Equals(icvB.Id);
+
+        var plain = SpectralPhaseAlignment.Similarity(setA, setB);
+        var tni = SpectralPhaseAlignment.SimilarityTnI(setA, setB);
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Distinguishing {chord1} {FormatPcs(pcs1)} vs {chord2} {FormatPcs(pcs2)}");
+        sb.AppendLine($"  ICV {chord1}: {icvA}");
+        sb.AppendLine($"  ICV {chord2}: {icvB}");
+        sb.AppendLine(icvEqual
+            ? "  ICV verdict: IDENTICAL — the interval-class vector is blind here."
+            : "  ICV verdict: different — ICV already distinguishes these.");
+        var tStar = plain.AligningTranspositions.Count > 0
+            ? $"  t*=[{string.Join(",", plain.AligningTranspositions)}]"
+            : "  (no alignment)";
+        sb.AppendLine($"  Phase-aligned S (chirality-kept): {plain.Similarity:F4}{tStar}");
+        sb.AppendLine($"  Phase-aligned S_TnI (set-class):  {tni.Similarity:F4}" +
+                      (tni.Inverted ? "  (via inversion)" : string.Empty));
+
+        string verdict;
+        if (plain.Similarity >= 1.0 - 1e-6)
+            verdict = "Same shape up to transposition — one is a transposition of the other.";
+        else if (tni.Similarity >= 1.0 - 1e-6)
+            verdict = "Chirality pair — same set class (T/I-equivalent), opposite handedness (e.g. major vs minor).";
+        else if (icvEqual)
+            verdict = "Homometric but distinct — a Z-related pair: identical interval content, genuinely " +
+                      "different shape. ICV cannot separate them; DFT phase can.";
+        else
+            verdict = "Distinct set classes.";
+        sb.Append($"  → {verdict}");
+        return sb.ToString();
+    }
+
+    [McpServerTool]
+    [Description(
         "Find all standard chords (triads, 7ths, 9ths) that are set-class equivalent (T/I) to the input chord — " +
         "same prime form under transposition or inversion. These are the deepest substitutions: " +
         "same interval content regardless of root. " +
