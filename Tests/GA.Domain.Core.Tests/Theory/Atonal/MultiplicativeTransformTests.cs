@@ -19,8 +19,7 @@ public class MultiplicativeTransformTests
     }
 
     [Test]
-    public void M5_IsInvolution()
-    {
+    public void M5_IsInvolution() =>
         Assert.Multiple(() =>
         {
             foreach (var id in PitchClassSetId.Items)
@@ -28,11 +27,9 @@ public class MultiplicativeTransformTests
                 Assert.That(id.M5.M5.Value, Is.EqualTo(id.Value), $"M5 not involutive for {id.Value}");
             }
         });
-    }
 
     [Test]
-    public void M7_EqualsM5OfInversion()
-    {
+    public void M7_EqualsM5OfInversion() =>
         Assert.Multiple(() =>
         {
             foreach (var id in PitchClassSetId.Items)
@@ -40,11 +37,9 @@ public class MultiplicativeTransformTests
                 Assert.That(id.M7.Value, Is.EqualTo(id.Inverse.M5.Value), $"M7 != M5(Inverse) for {id.Value}");
             }
         });
-    }
 
     [Test]
-    public void M5_PreservesCardinality()
-    {
+    public void M5_PreservesCardinality() =>
         Assert.Multiple(() =>
         {
             foreach (var id in PitchClassSetId.Items)
@@ -52,11 +47,9 @@ public class MultiplicativeTransformTests
                 Assert.That(id.M5.Cardinality, Is.EqualTo(id.Cardinality), $"M5 changed cardinality for {id.Value}");
             }
         });
-    }
 
     [Test]
-    public void Multiply_ByElevenEqualsInversion_ByOneIsIdentity()
-    {
+    public void Multiply_ByElevenEqualsInversion_ByOneIsIdentity() =>
         Assert.Multiple(() =>
         {
             foreach (var id in PitchClassSetId.Items)
@@ -65,11 +58,9 @@ public class MultiplicativeTransformTests
                 Assert.That(id.Multiply(11).Value, Is.EqualTo(id.Inverse.Value), $"Multiply(11) != inversion for {id.Value}");
             }
         });
-    }
 
     [Test]
-    public void MRelated_OnSetClasses_IsInvolution()
-    {
+    public void MRelated_OnSetClasses_IsInvolution() =>
         Assert.Multiple(() =>
         {
             foreach (var sc in SetClass.Items)
@@ -77,7 +68,6 @@ public class MultiplicativeTransformTests
                 Assert.That(sc.MRelated.MRelated, Is.EqualTo(sc), $"MRelated not involutive for {sc}");
             }
         });
-    }
 
     [Test]
     public void MRelated_SelfRelatedCount_MatchesExhaustiveEnumeration()

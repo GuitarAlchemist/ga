@@ -42,25 +42,19 @@ public class StrTests
     [TestCase(-1)]
     [TestCase(0)]
     [TestCase(27)]
+    // Arrange & Act & Assert
     public void FromValue_OutOfRange_ThrowsArgumentOutOfRangeException(int value)
-    {
-        // Arrange & Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => GA.Domain.Core.Instruments.Primitives.Str.FromValue(value));
-    }
+        => Assert.Throws<ArgumentOutOfRangeException>(() => GA.Domain.Core.Instruments.Primitives.Str.FromValue(value));
 
     [Test]
+    // Assert
     public void Min_ReturnsCorrectValue()
-    {
-        // Assert
-        Assert.That(GA.Domain.Core.Instruments.Primitives.Str.Min.Value, Is.EqualTo(1));
-    }
+        => Assert.That(GA.Domain.Core.Instruments.Primitives.Str.Min.Value, Is.EqualTo(1));
 
     [Test]
+    // Assert
     public void Max_ReturnsCorrectValue()
-    {
-        // Assert
-        Assert.That(GA.Domain.Core.Instruments.Primitives.Str.Max.Value, Is.EqualTo(26));
-    }
+        => Assert.That(GA.Domain.Core.Instruments.Primitives.Str.Max.Value, Is.EqualTo(26));
 
     [Test]
     public void ToString_ReturnsValueAsString()

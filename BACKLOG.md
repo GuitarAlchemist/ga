@@ -478,6 +478,38 @@ Question opérateur (leçon Karpathy « LLM Wiki / compounding knowledge base »
 
 ---
 
+## Core Domain Hardening — deferred structural findings (review 2026-07-24)
+
+The 2026-07-24 review of `Common\GA.Core` + `Common\GA.Domain.Core` shipped all the behavioural fixes (parsing, arithmetic, ordering, thread-safety, hashing — see the tests added in `Tests\Common\GA.Core.Tests` and `Tests\GA.Domain.Core.Tests`). What follows is what was **deliberately not** fixed in that pass because each item is a refactor with a blast radius, not a bug fix. Each needs its own plan doc.
+
+### Chord identity vs voicing (highest value)
+
+`Theory\Harmony\Chord.cs` mods every formula interval to 12 at construction (`:35`), so `C9`, `Cadd9` and `C7add2` collapse to the same pitch-class set, and `Equals`/`GetHashCode` (`:202`, `:304`) key on root + PC-set only — while the type still publishes `Bass`, `IsInverted`, `GetInversion`, `ToInversion`. Decide the contract: either keep PC-set semantics and move voicing/inversion out of `Chord`, or carry octave-aware notes so 9/11/13 extensions survive. `Notes` is an `AccidentedNoteCollection` (no octave), so this is a model change, not a one-liner.
+
+### Railway-Oriented Programming absent from the domain core
+
+`Result<>`/`Option<>`/`Try<>` has zero hits across `Primitives\` and `Theory\`, while `Theory\Tonal` alone has ~51 `throw new` sites (`Chord.cs:53,79`, `Key.cs:157,227,292,360`). Convert construction/parse failures to `Result<T,E>` per the convention, keeping `throw` for genuine boundaries. Large, mechanical, needs a staged plan (one folder per PR) because every caller changes.
+
+### Duplication with no single authority
+
+- Three Forte catalogs (`ForteCatalog`, `CanonicalForteCatalog`, `ProgrammaticForteCatalog`) with no stated precedence — designate one authority, make the others adapters or delete.
+- ~20 near-clone `…ScaleDegree` structs under `Theory\Tonal\Primitives\*` mirroring `Theory\Tonal\Modes\*` 1:1, each with a hand-written `Name` switch ending in `throw` — one degree value object driven by `ModeCatalog` would collapse ~40 files.
+- `Position` vs `PositionLocation` duplicate the same coordinate pair.
+
+### Layer-1 purity violations
+
+`Design\Persistence\DocumentBase.cs:9` carries `Id`/`CreatedAt`/`UpdatedAt` and `ChordVoicingSnapshot` exists "for persistence" — both belong above layer 1 per [docs/architecture/layers.md](docs/architecture/layers.md). Same class of issue: hardcoded data that the convention says belongs in YAML (`GA.Business.Config` owns YAML with a hardcoded fallback) — `Instruments\Tuning.cs:23-38` (guitar/ukulele/bass/7-string) and `Instruments\Biomechanics\HandModel.cs:29-91` (standard adult hand, whose own TODO says it doesn't belong there).
+
+### API sharp edges (small but breaking)
+
+`PitchClass` exposes **both** `implicit operator Note.Sharp` and `implicit operator Note.Flat` (`:283-285`) plus implicit `int → PitchClass` (`:187`), so an `int` can silently become a spelled note. Make spelling an explicit choice. Related: `PitchClass.ToString()` emits `T`/`E`, which forces `TryParse` to keep reading `"E"` as 11 rather than as the note E — an explicit notation-mode parameter would remove the remaining ambiguity (the `A`/`B` half of it is already fixed via `TryParseSetNotation`).
+
+### Coverage still thin
+
+`GA.Core\Collections\LazyCollection.cs` / `LazyReadOnlyDictionary.cs` untested; `Theory\Atonal` set operations lack transposition/inversion invariant tests; `Instruments\Biomechanics` and `Design\Schema` untested.
+
+---
+
 ## How to Start a Feature
 
 ```bash

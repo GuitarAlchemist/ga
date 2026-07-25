@@ -1,5 +1,6 @@
 namespace GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 
+using System.Globalization;
 using System.Linq;
 using Domain.Core.Primitives.Notes;
 using Primitives;
@@ -13,26 +14,41 @@ using Primitives;
 /// <param name="Notes">The MIDI notes that are played</param>
 public sealed record Voicing(Position[] Positions, MidiNote[] Notes)
 {
+    private string? _diagram;
+
     /// <summary>
     ///     Position diagram for this voicing (e.g., "0-0-x-x-x-x"). Voicing equality is based on this.
     /// </summary>
-    public string Diagram
-    {
-        get
-        {
-            var parts = new string[Positions.Length];
-            for (var i = 0; i < Positions.Length; i++)
-            {
-                parts[i] = Positions[i] switch
-                {
-                    Position.Muted => "x",
-                    Position.Played played => played.Location.Fret.Value.ToString(),
-                    _ => "x"
-                };
-            }
+    /// <remarks>
+    ///     Computed once and cached: <see cref="Equals(Voicing)" /> and <see cref="GetHashCode" /> are built on it, so
+    ///     recomputing it would allocate a string and an array on every comparison in voicing search/ranking loops.
+    /// </remarks>
+    public string Diagram => _diagram ??= BuildDiagram();
 
-            return string.Join("-", parts);
+    /// <summary>
+    ///     Copy constructor - deliberately declared so that the cached <see cref="Diagram" /> is not copied by
+    ///     <c>with</c> expressions (the copy has different positions).
+    /// </summary>
+    private Voicing(Voicing original)
+    {
+        Positions = original.Positions;
+        Notes = original.Notes;
+    }
+
+    private string BuildDiagram()
+    {
+        var parts = new string[Positions.Length];
+        for (var i = 0; i < Positions.Length; i++)
+        {
+            parts[i] = Positions[i] switch
+            {
+                Position.Muted => "x",
+                Position.Played played => played.Location.Fret.Value.ToString(CultureInfo.InvariantCulture),
+                _ => "x"
+            };
         }
+
+        return string.Join("-", parts);
     }
 
     /// <summary>Fret span across fretted notes (0 if none).</summary>
@@ -101,5 +117,5 @@ public sealed record Voicing(Position[] Positions, MidiNote[] Notes)
     /// <summary>
     ///     Hash code based on position diagram for consistent hashing
     /// </summary>
-    public override int GetHashCode() => Diagram.GetHashCode();
+    public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(Diagram);
 }
