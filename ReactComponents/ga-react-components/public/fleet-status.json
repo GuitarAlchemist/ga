@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "7ea9b34abfb6a73a1fd39112864203f36f818192",
-    "generatedAt": "2026-07-24T13:01:27.223618+00:00",
+    "commitSha": "c31244d44167ae477842919ddc6ed15f117d55e7",
+    "generatedAt": "2026-07-25T01:11:59.682453+00:00",
     "repoCount": 5,
     "totalPRs": 12
   },
@@ -116,7 +116,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
           "failingChecks": 0,
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:37Z",
           "failingChecks": 1,
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
           "failingChecks": 2,
@@ -216,7 +216,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/256"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:38Z",
           "failingChecks": 1,
@@ -256,7 +256,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/209"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-22T23:38:17Z",
           "failingChecks": 3,
@@ -292,19 +292,19 @@
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
