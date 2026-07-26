@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4c085bfbef201af653e0fa973ba967c53ea80d2b",
-    "generatedAt": "2026-07-25T07:49:40.189526+00:00",
+    "commitSha": "532629a2886964b7bf9ec6c80862ed0d4d319a7b",
+    "generatedAt": "2026-07-26T08:06:30.357910+00:00",
     "repoCount": 5,
-    "totalPRs": 18
+    "totalPRs": 20
   },
   "repos": [
     {
@@ -113,10 +113,22 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 5,
+      "prCount": 6,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-25T17:19:15Z",
+          "failingChecks": 1,
+          "headRef": "agent/fix-gemini-triage-fallback",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 608,
+          "title": "Make Gemini issue triage failures non-blocking",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/608"
+        },
+        {
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
           "failingChecks": 0,
@@ -128,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:37Z",
           "failingChecks": 1,
@@ -140,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
           "failingChecks": 2,
@@ -152,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
@@ -164,13 +176,13 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -189,10 +201,22 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 5,
+      "prCount": 6,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-26T03:26:38Z",
+          "failingChecks": 5,
+          "headRef": "chore/update-demerzel-20260726",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 260,
+          "title": "chore: update Demerzel submodule (538 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/260"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T02:01:23Z",
           "failingChecks": 0,
@@ -204,7 +228,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/259"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T01:17:51Z",
           "failingChecks": 5,
@@ -216,7 +240,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/258"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-24T03:14:33Z",
           "failingChecks": 5,
@@ -228,7 +252,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/257"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-23T03:20:36Z",
           "failingChecks": 5,
@@ -240,7 +264,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/256"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:38Z",
           "failingChecks": 1,
@@ -268,7 +292,7 @@
       "prCount": 2,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-23T03:26:10Z",
           "failingChecks": 1,
@@ -280,7 +304,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/209"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-22T23:38:17Z",
           "failingChecks": 3,
@@ -310,19 +334,19 @@
       "prCount": 6,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T01:54:44Z",
           "failingChecks": 0,
           "headRef": "docs/solution-partial-sweep",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 837,
           "title": "docs(solutions): compound 2026-07-25 \u2014 a partial sweep of a shared seam recurs",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/837"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T01:49:15Z",
           "failingChecks": 0,
@@ -334,49 +358,49 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/836"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T01:43:46Z",
           "failingChecks": 1,
           "headRef": "fix/capability-expansion-retired-model",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 833,
           "title": "fix(loop): revive capability-expansion \u2014 three layered failures behind one dead loop (#703)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/833"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-25T01:31:42Z",
           "failingChecks": 1,
           "headRef": "fix/risk-report-comment-resilience",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 829,
           "title": "fix(ci): risk-report must not fail closed on a comment-POST flake (#773)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/829"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-20T03:40:59Z",
           "failingChecks": 1,
           "headRef": "feat/budget-policy-schema",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 791,
           "title": "feat(schemas): validate aiw-budget-policy on load, fail closed (#784)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/791"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
