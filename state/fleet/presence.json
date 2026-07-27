@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-07-26T17:29:51.970084Z",
+  "generated_at": "2026-07-27T08:50:28.151627Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -9,8 +9,8 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-26T09:08:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30195911715",
+      "last_heartbeat": "2026-07-26T21:29:28Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30221177609",
       "detail": "latest completed run: skipped"
     },
     {
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-26T09:08:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30195911582",
+      "last_heartbeat": "2026-07-26T21:30:23Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30221212158",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,18 +45,18 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-07-26T16:50:26Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30211310102",
+      "last_heartbeat": "2026-07-27T08:22:24Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30249649416",
       "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": "2026-07-25T01:11:21Z",
       "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30137973709",
-      "detail": "latest completed run: success"
+      "detail": "stale: last run 2026-07-25T01:11:21Z, expected cadence ~1560 min"
     },
     {
       "id": "sensor:fleet-status",
