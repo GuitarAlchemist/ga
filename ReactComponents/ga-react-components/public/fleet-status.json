@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a5f7bc6a46154c0484d2ad9b0d9192e4885c68d2",
-    "generatedAt": "2026-07-29T08:18:26.119719+00:00",
+    "commitSha": "94fdaea2b2a5a91d27ddfa38daf8902727036fc1",
+    "generatedAt": "2026-07-30T08:06:16.950297+00:00",
     "repoCount": 5,
-    "totalPRs": 19
+    "totalPRs": 17
   },
   "repos": [
     {
@@ -116,7 +116,7 @@
       "prCount": 9,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:20:16Z",
           "failingChecks": 0,
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/618"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:11:22Z",
           "failingChecks": 0,
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/617"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-29T02:02:57Z",
           "failingChecks": 2,
@@ -152,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-25T17:19:15Z",
           "failingChecks": 1,
@@ -164,19 +164,19 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
           "mergeable": "MERGEABLE",
           "number": 598,
-          "title": "feat(chatbot): arpeggio PerformanceIntent structured-output tracer (#589)",
+          "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:37Z",
           "failingChecks": 1,
@@ -188,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
           "failingChecks": 2,
@@ -200,7 +200,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
@@ -212,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
@@ -237,55 +237,19 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 1,
       "prs": [
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-29T03:02:27Z",
-          "failingChecks": 6,
-          "headRef": "chore/update-demerzel",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 269,
-          "title": "chore: update Demerzel submodule (569 commits behind)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/269"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-29T02:49:54Z",
-          "failingChecks": 1,
-          "headRef": "fix/hex-merge-conformance-hari-27-28",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 268,
-          "title": "fix(fuzzy): conform hex-merge to hari#27/#28 + Demerzel bump (supersedes #263)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/268"
-        },
-        {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-29T02:02:50Z",
           "failingChecks": 0,
           "headRef": "agent/ix-247-k1-invariant",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 267,
           "title": "fix(ktheory): correct K1 cycle invariant",
           "url": "https://github.com/GuitarAlchemist/ix/pull/267"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-07-29T00:18:40Z",
-          "failingChecks": 5,
-          "headRef": "chore/update-demerzel-20260729",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 263,
-          "title": "chore: update Demerzel submodule (544 commits behind)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/263"
         }
       ]
     },
@@ -306,35 +270,35 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-29T02:49:39Z",
-          "failingChecks": 1,
-          "headRef": "ci/selfhosted-runner-opt-in",
+          "createdAt": "2026-07-30T03:08:11Z",
+          "failingChecks": 0,
+          "headRef": "sync/demerzel-submodule-20260730",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 213,
-          "title": "ci: make build-selfhosted opt-in so it stops leaving a pending check on every PR",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/213"
+          "mergeable": "UNKNOWN",
+          "number": 215,
+          "title": "chore(governance): sync demerzel submodule to master",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/215"
         },
         {
-          "ageDays": 6,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-23T03:26:10Z",
-          "failingChecks": 1,
-          "headRef": "chore/update-demerzel-48e90e8-29976976328",
+          "createdAt": "2026-07-30T02:48:28Z",
+          "failingChecks": 0,
+          "headRef": "chore/update-demerzel-da96c7d-30509445047",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 209,
-          "title": "chore: update Demerzel submodule (91 commits behind)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/209"
+          "mergeable": "UNKNOWN",
+          "number": 214,
+          "title": "chore: update Demerzel submodule (66 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/214"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-22T23:38:17Z",
           "failingChecks": 1,
           "headRef": "refactor/reason-feedback-seam",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 207,
           "title": "feat: round-1 research program + round-3 self-improve seeds closed (backlog empty)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/207"
@@ -355,40 +319,52 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 3,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-29T04:07:35Z",
-          "failingChecks": 0,
-          "headRef": "fix/afk-863-spend-attribution",
+          "createdAt": "2026-07-30T03:43:06Z",
+          "failingChecks": 2,
+          "headRef": "fix/baml-drift-ci",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 887,
-          "title": "fix(afk): attribute the local backend to the API it bills (#863)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/887"
+          "mergeable": "MERGEABLE",
+          "number": 924,
+          "title": "ci(baml): run the drift check that already existed (#919)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/924"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-07-29T00:49:53Z",
-          "failingChecks": 0,
-          "headRef": "docs/runtime-code-doctrine",
+          "createdAt": "2026-07-30T02:56:22Z",
+          "failingChecks": 1,
+          "headRef": "fix/wiki-sync-sigpipe",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 859,
-          "title": "docs: relax \"no runtime code\" to \"no consumer or product runtime\"",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/859"
+          "mergeable": "MERGEABLE",
+          "number": 923,
+          "title": "fix(ci): stop the wiki sync dying on SIGPIPE (#917)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/923"
         },
         {
-          "ageDays": 10,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-07-30T02:41:45Z",
+          "failingChecks": 1,
+          "headRef": "feat/baml-claude-code-transport",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 922,
+          "title": "feat(baml): run the typed grader on the subscription, not a metered API",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/922"
+        },
+        {
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
