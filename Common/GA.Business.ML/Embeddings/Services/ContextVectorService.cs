@@ -1,7 +1,5 @@
 namespace GA.Business.ML.Embeddings.Services;
 
-using System;
-using System.Numerics;
 using Domain.Core.Theory.Tonal;
 
 /// <summary>
@@ -19,7 +17,6 @@ public class ContextVectorService
     ///     but for Query/Progression logic, it is fully populated.
     /// </summary>
     public static double[] ComputeEmbedding(
-        int[]? midiNotes = null,
         string? harmonicFunction = null, // Tonic, Subdominant, Dominant
         double stabilityDelta = 0.0, // Change in stability from previous
         double tension = 0.0, // Harmonic tension
@@ -52,23 +49,7 @@ public class ContextVectorService
         // 5: Is Resolution
         v[5] = isResolution ? 1.0 : 0.0;
 
-        // 6-11: Key Relationship (Circle of Fifths distance, etc)
-        if (midiNotes != null && midiNotes.Length > 0)
-        {
-            var spec = PhaseSphereService.ComputeWeightedSpectralVector(midiNotes);
-            var normalizedSpec = PhaseSphereService.NormalizeToSphere(spec);
-            var k5 = normalizedSpec[4]; // k=5 component is index 4
-
-            if (k5.Magnitude > 1e-10)
-            {
-                var phi5 = k5.Phase;
-                for (var m = 0; m < 6; m++)
-                {
-                    var theta = m * Math.PI / 6.0;
-                    v[6 + m] = k5.Magnitude * Math.Cos(phi5 - theta);
-                }
-            }
-        }
+        // 6-11: Reserved for Key Relationship (Circle of Fifths distance, etc)
 
         return v;
     }

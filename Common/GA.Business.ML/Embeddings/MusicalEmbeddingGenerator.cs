@@ -96,31 +96,11 @@ public class MusicalEmbeddingGenerator(
         // ═══════════════════════════════════════════════════════════════════════
         // PARTITION 4: CONTEXT (54-65)
         // ═══════════════════════════════════════════════════════════════════════
-        var harmonicFunc = doc.HarmonicFunction;
-        if (string.IsNullOrEmpty(harmonicFunc) || string.Equals(harmonicFunc, "Functional Harmony", StringComparison.OrdinalIgnoreCase))
-        {
-            var tagsAndQuality = (doc.Quality ?? "") + " " + string.Join(" ", doc.SemanticTags ?? []);
-            var lower = tagsAndQuality.ToLowerInvariant();
-            if (lower.Contains("dominant") || lower.Contains("diminished") || lower.Contains("augmented") || lower.Contains("tension") || lower.Contains("m7b5"))
-            {
-                harmonicFunc = "Dominant";
-            }
-            else if (lower.Contains("subdominant") || lower.Contains("minor") || lower.Contains("sus4") || lower.Contains("sus2") || lower.Contains("add9"))
-            {
-                harmonicFunc = "Subdominant";
-            }
-            else if (lower.Contains("tonic") || lower.Contains("major") || lower.Contains("major7"))
-            {
-                harmonicFunc = "Tonic";
-            }
-        }
-
         var contextVector = ContextVectorService.ComputeEmbedding(
-            midiNotes: doc.MidiNotes,
-            harmonicFunction: harmonicFunc,
-            stabilityDelta: doc.Consonance - 0.5,
+            harmonicFunction: doc.HarmonicFunction,
+            stabilityDelta: 0.0,
             tension: 1.0 - doc.Consonance,
-            isResolution: doc.Consonance > 0.7
+            isResolution: false
         );
 
         // ═══════════════════════════════════════════════════════════════════════

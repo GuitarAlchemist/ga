@@ -12,7 +12,7 @@ using NUnit.Framework;
 [Category("RequiresModel")]
 public class MlNaturalnessRankerTests
 {
-    private MlNaturalnessRanker? _ranker;
+    private MlNaturalnessRanker _ranker;
 
     [SetUp]
     public void Setup()
@@ -20,16 +20,12 @@ public class MlNaturalnessRankerTests
         // Try to locate the model at various relative positions
         var modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models", "naturalness_ranker.onnx");
         TestContext.WriteLine($"Loading model from: {modelPath}");
-        if (!File.Exists(modelPath))
-        {
-            Assert.Ignore("ONNX model file is missing!");
-            return;
-        }
+        Assert.That(File.Exists(modelPath), Is.True, "ONNX model file is missing!");
         _ranker = new MlNaturalnessRanker();
     }
 
     [TearDown]
-    public void Teardown() => _ranker?.Dispose();
+    public void Teardown() => _ranker.Dispose();
 
     [Test]
     public void PredictNaturalness_ReturnsNonNeutralValue()

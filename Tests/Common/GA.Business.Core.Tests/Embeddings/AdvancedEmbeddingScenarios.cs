@@ -102,24 +102,13 @@ public class AdvancedEmbeddingScenarios
         var contextTonic = GetSubspace(vTonic, EmbeddingSchema.ContextOffset, EmbeddingSchema.ContextDim);
         var contextDominant = GetSubspace(vDominant, EmbeddingSchema.ContextOffset, EmbeddingSchema.ContextDim);
         var sim = CosineSimilarity(contextTonic, contextDominant);
-
-        var funcTonic = contextTonic.Take(3).ToArray();
-        var funcDominant = contextDominant.Take(3).ToArray();
-        var funcSim = CosineSimilarity(funcTonic, funcDominant);
-
         // Assert
         TestContext.WriteLine(
             $"Tonic Context Vector: [{string.Join(", ", contextTonic.Select(x => x.ToString("F2")))}]");
         TestContext.WriteLine(
             $"Dominant Context Vector: [{string.Join(", ", contextDominant.Select(x => x.ToString("F2")))}]");
         TestContext.WriteLine($"Contextual Similarity (Tonic vs Dominant): {sim:P2}");
-        TestContext.WriteLine($"Harmonic Function Subspace Similarity: {funcSim:P2}");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(funcSim, Is.EqualTo(0.0).Within(1e-5), "Opposite harmonic function subspaces should be completely orthogonal.");
-            Assert.That(sim, Is.GreaterThan(0.5), "Overall context similarity should reflect identical chord/key geometry.");
-        });
+        Assert.That(sim, Is.LessThan(0.1), "Opposite harmonic functions should have low contextual similarity.");
     }
 
     [Test]
