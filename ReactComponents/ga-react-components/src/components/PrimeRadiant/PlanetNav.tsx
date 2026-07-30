@@ -34,6 +34,7 @@ const PLANETS = [
   { icon: '\u25CF', name: 'Saturn', target: 'saturn', color: '#ffeecc' },
   { icon: '\u25CF', name: 'Uranus', target: 'uranus', color: '#88ccdd' },
   { icon: '\u25CF', name: 'Neptune', target: 'neptune', color: '#4444cc' },
+  { icon: '\u2699', name: 'IX', target: 'ix', color: '#7a828c' },
 ] as const;
 
 const GIS_LAYERS = [

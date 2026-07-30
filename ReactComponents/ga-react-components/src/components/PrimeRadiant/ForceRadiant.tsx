@@ -68,6 +68,7 @@ import { panelRegistry } from './PanelRegistry';
 import type { AlgedonicSignal } from './AlgedonicPanel';
 const AlgedonicPanel = React.lazy(() => import('./AlgedonicPanel').then(m => ({ default: m.AlgedonicPanel })));
 const CICDPanel = React.lazy(() => import('./CICDPanel').then(m => ({ default: m.CICDPanel })));
+const IssuesPanel = React.lazy(() => import('./IssuesPanel').then(m => ({ default: m.IssuesPanel })));
 const ClaudeCodePanel = React.lazy(() => import('./ClaudeCodePanel').then(m => ({ default: m.ClaudeCodePanel })));
 const LibraryPanel = React.lazy(() => import('./LibraryPanel').then(m => ({ default: m.LibraryPanel })));
 const AssetProvenancePanel = React.lazy(() => import('./AssetProvenancePanel').then(m => ({ default: m.AssetProvenancePanel })));
@@ -87,6 +88,7 @@ import { getConnectionLog } from './ConnectionLog';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
+import { startIssuesGisBridge, type IssuesGisBridgeHandle } from './IssuesGisBridge';
 import { useAgentPresence } from './AgentPresence';
 const TheoryTribunal = React.lazy(() => import('./TheoryTribunal').then(m => ({ default: m.TheoryTribunal })));
 const SeldonFacultyPanel = React.lazy(() => import('./SeldonFacultyPanel').then(m => ({ default: m.SeldonFacultyPanel })));
@@ -923,6 +925,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const gisManagersRef = useRef<Map<string, GisLayerManager>>(new Map());
   const [gisManagers, setGisManagers] = useState<Map<string, GisLayerManager>>(new Map());
   const signalRGisBridgeRef = useRef<SignalRGisBridgeHandle | null>(null);
+  const issuesGisBridgeRef = useRef<IssuesGisBridgeHandle | null>(null);
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
@@ -3242,7 +3245,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // GIS layers — on mobile, only Earth to save memory
     const gisMgrs = new Map<string, GisLayerManager>();
-    const gisPlanets = isLowEnd ? ['earth'] : ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury'];
+    const gisPlanets = isLowEnd ? ['earth'] : ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury', 'ix'];
     for (const name of gisPlanets) {
       const mgr = createGisLayer(solarSystem, name);
       if (mgr) gisMgrs.set(name, mgr);
@@ -3256,6 +3259,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       signalRGisBridgeRef.current = startSignalRGisBridge(earthGis, (event) => {
         console.log('[SignalRGisBridge]', event);
       });
+    }
+
+    // ─── GitHub issues/PRs → IX planet GIS bridge ───
+    const ixGis = gisMgrs.get('ix');
+    if (ixGis) {
+      issuesGisBridgeRef.current = startIssuesGisBridge(ixGis);
     }
 
     // ─── Solar system planet hover detection (raycasting) ───
@@ -3721,6 +3730,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       pollingHandleOuter?.stop();
       signalRGisBridgeRef.current?.cleanup();
       signalRGisBridgeRef.current = null;
+      issuesGisBridgeRef.current?.dispose();
+      issuesGisBridgeRef.current = null;
       cloudCleanupOuter?.();
       markerCleanupOuter?.();
       lodCleanupOuter?.();
@@ -4770,6 +4781,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             agent: AgentPanel,
             llm: LLMStatus,
             cicd: CICDPanel,
+            issues: IssuesPanel,
             claude: ClaudeCodePanel,
             library: LibraryPanel,
             assets: AssetProvenancePanel,
