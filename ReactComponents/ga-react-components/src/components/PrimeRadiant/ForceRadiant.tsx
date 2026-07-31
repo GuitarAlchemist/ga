@@ -3,6 +3,7 @@
 // Beliefs applied: force-directed layout, size+brightness hierarchy,
 // billboard LOD labels, bloom 0.4/0.5/0.7, orbit controls, breathing animation.
 
+import './set-window-three'; // must evaluate before 3d-force-graph so it uses project Three.js
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
@@ -108,7 +109,7 @@ import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
 import { createNearbyStars, type NearbyStarsHandle } from './NearbyStars';
-import { LaniakeaHUD } from './LaniakeaHUD';
+import { createLaniakeaSceneObject } from './LaniakeaSceneObject';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -2067,12 +2068,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
+    const _hudOffset = new THREE.Vector3(22, 18, -80); // camera-local Laniakea HUD position
     const _trackWp = new THREE.Vector3();
     const _trackOffset = new THREE.Vector3();
     const _tickVec3 = new THREE.Vector3(); // pre-allocated for zoom inertia
     const _tickColor = new THREE.Color();  // pre-allocated for IXQL color overrides
     const _linkColorA = new THREE.Color(); // pre-allocated for edge propagation lerp
     const _linkColorB = new THREE.Color();
+    let laniakeaObject: THREE.Group | null = null;
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
@@ -2108,6 +2111,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const currentLinkOpacity = fg.linkOpacity();
         if (currentNodeOpacity !== targetNodeOpacity) fg.nodeOpacity(targetNodeOpacity);
         if (currentLinkOpacity !== targetLinkOpacity) fg.linkOpacity(targetLinkOpacity);
+        if (laniakeaObject) {
+          laniakeaObject.visible = sOpts.laniakeaHud !== false;
+          laniakeaObject.userData.update?.(t);
+          // Keep the HUD pinned to a fixed spot in the camera's view, but leave its
+          // orientation world-locked so the axis widget acts as a real spatial compass.
+          _hudOffset.set(22, 18, -80);
+          laniakeaObject.position.copy(fgCam.position).add(_hudOffset.applyQuaternion(fgCam.quaternion));
+        }
       }
 
       // ─── Camera sync: apply incoming position from presentation leader ───
@@ -2139,7 +2150,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         lastCameraSave = now2;
         try {
           const cp = fgCam.position;
-          const ct = fg.scene().position; // lookAt target approximation
+          const controls = fg.controls() as { target?: THREE.Vector3 } | undefined;
+          const ct = controls?.target ?? fg.scene().position;
           localStorage.setItem('prime-radiant-camera', JSON.stringify({
             px: cp.x, py: cp.y, pz: cp.z,
             lx: ct.x, ly: ct.y, lz: ct.z,
@@ -2821,7 +2833,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controls.dampingFactor = 0.12;   // smooth inertia on all movements
       controls.zoomSpeed = 1.2;        // faster zoom response
       (controls as Record<string, unknown>).minDistance = 0.005; // allow very close zoom for planet detail
-      (controls as Record<string, unknown>).maxDistance = 500;
+      (controls as Record<string, unknown>).maxDistance = 3000; // allow zooming out to the cosmic overview
       (controls as Record<string, unknown>).enableZoom = true;
       (controls as Record<string, unknown>).rotateSpeed = 0.4;  // halved from 0.8
       (controls as Record<string, unknown>).panSpeed = 0.6;
@@ -3158,6 +3170,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const solarSystem = createSolarSystem(8.0);
     solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
     fg.scene().add(solarSystem);
+
+    // ─── LANIAKEA SUPERCLUSTER — 3D HUD overlay that tracks the camera
+    // Kept in the scene but re-positioned each frame so it stays at a fixed
+    // spot in the camera's view. This separates it from the local galaxy /
+    // solar-system scale while keeping it visible as a context overlay.
+    laniakeaObject = createLaniakeaSceneObject();
+    laniakeaObject.scale.set(6.5, 6.5, 6.5);
+    fg.scene().add(laniakeaObject);
 
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
@@ -3965,8 +3985,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Find planet in the scene-parented solar system
       const cam = fg.camera() as THREE.PerspectiveCamera;
+
+      if (planet === 'laniakea') {
+        // Detach solar system from camera if it is camera-parented
+        const solarGroup = cam.getObjectByName('sun')?.parent;
+        if (solarGroup) {
+          const groupWorldPos = new THREE.Vector3();
+          solarGroup.getWorldPosition(groupWorldPos);
+          cam.remove(solarGroup);
+          fg.scene().add(solarGroup);
+          solarGroup.position.copy(groupWorldPos);
+        }
+        solarFollowCameraRef.current = false;
+        trackedPlanetRef.current = null;
+        setTrackedPlanetName(null);
+        const controls = fg.controls() as { target?: THREE.Vector3 };
+        if (controls.target) controls.target.set(0, 0, 0);
+        // Zoom out to a cosmic overview so the HUD is contextually anchored.
+        fg.cameraPosition({ x: 0, y: 300, z: 2500 }, { x: 0, y: 0, z: 0 }, 1500);
+        return;
+      }
+
+      // Find planet in the scene-parented solar system
       const solarGroup = fg.scene().getObjectByName('sun')?.parent;
       if (!solarGroup) return;
       const obj = solarGroup.getObjectByName(planet);
@@ -4110,8 +4151,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         {/* Keyboard shortcut legend — discoverable runtime toggles for layers + post-FX */}
         <KeyboardLegend />
-
-        {sceneOptions.laniakeaHud !== false && <LaniakeaHUD />}
 
         {/* Floating label when hovering a Voronoi jurisdiction shell */}
         {hoveredShell && (
@@ -4511,6 +4550,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             solarFollowCameraRef.current = true;
             trackedPlanetRef.current = null;
             setTrackedPlanetName(null);
+            return;
+          }
+
+          if (target === 'laniakea') {
+            const navSolarGroup = navCam.getObjectByName('sun')?.parent;
+            if (navSolarGroup) {
+              const groupWorldPos = new THREE.Vector3();
+              navSolarGroup.getWorldPosition(groupWorldPos);
+              navCam.remove(navSolarGroup);
+              fg.scene().add(navSolarGroup);
+              navSolarGroup.position.copy(groupWorldPos);
+            }
+            solarFollowCameraRef.current = false;
+            trackedPlanetRef.current = null;
+            setTrackedPlanetName(null);
+            fg.cameraPosition(
+              { x: 0, y: 300, z: 2500 },
+              { x: 0, y: 0, z: 0 },
+              1500,
+            );
             return;
           }
 

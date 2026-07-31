@@ -20,8 +20,15 @@ export interface PlanetNavProps {
 // Planets that have a YouTube course
 const PLANETS_WITH_VIDEO = new Set(['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'titan']);
 
-const PLANETS = [
+interface PlanetEntry {
+  icon: string;
+  name: string;
+  target: string;
+  color?: string;
+}
+const PLANETS: PlanetEntry[] = [
   { icon: '\u2604', name: 'Demerzel', target: 'demerzel-head' },
+  { icon: '\uD83C\uDF0C', name: 'Laniakea', target: 'laniakea', color: '#ff8f32' },
   { icon: '\u2600', name: 'Sun', target: 'sun' },
   { icon: '\u25CF', name: 'Mercury', target: 'mercury', color: '#9e9e9e' },
   { icon: '\u25CF', name: 'Venus', target: 'venus', color: '#e3d500' },
@@ -35,7 +42,7 @@ const PLANETS = [
   { icon: '\u25CF', name: 'Uranus', target: 'uranus', color: '#88ccdd' },
   { icon: '\u25CF', name: 'Neptune', target: 'neptune', color: '#4444cc' },
   { icon: '\u2699', name: 'IX', target: 'ix', color: '#7a828c' },
-] as const;
+];
 
 const GIS_LAYERS = [
   { id: 'borders', label: 'Borders' },
@@ -93,7 +100,7 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
       <button
         className={`planet-nav__toggle ${expanded ? 'planet-nav__toggle--active' : ''}`}
         onClick={() => setExpanded(v => !v)}
-        title="Solar System Navigation"
+        title="Cosmic Navigation"
         aria-label="Toggle planet navigation"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,7 +112,7 @@ export const PlanetNav: React.FC<PlanetNavProps> = ({ onNavigateToPlanet, onLoad
       {/* Expanded planet list */}
       {expanded && (
         <div className="planet-nav__menu" ref={menuRef}>
-          <div className="planet-nav__title">Solar System</div>
+          <div className="planet-nav__title">Cosmic Map</div>
           {onResetView && (
             <button
               className="planet-nav__item planet-nav__item--reset"
