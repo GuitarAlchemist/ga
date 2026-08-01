@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents;
+using GA.Domain.Services.Tonal;
 using NUnit.Framework;
 
 [TestFixture]
