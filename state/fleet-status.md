@@ -21,8 +21,8 @@ _No open PRs._
 | [#618](https://github.com/GuitarAlchemist/ga/pull/618) | Resolve Empty OPTIC-K CONTEXT Partition via Circle of Fifths Geometry  (draft) | 3d | UNKNOWN | 0 | spareilleux |
 | [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf (draft) | 3d | UNKNOWN | 0 | spareilleux |
 | [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes (draft) | 3d | UNKNOWN | 2 | spareilleux |
-| [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking (draft) | 6d | UNKNOWN | 1 | spareilleux |
-| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 8d | UNKNOWN | 1 | spareilleux |
+| [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking (draft) | 7d | UNKNOWN | 1 | spareilleux |
+| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 9d | UNKNOWN | 1 | spareilleux |
 | [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 9d | UNKNOWN | 1 | spareilleux |
 | [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 10d | UNKNOWN | 2 | spareilleux |
 | [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 11d | UNKNOWN | 3 | spareilleux |
@@ -36,7 +36,7 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#221](https://github.com/GuitarAlchemist/tars/pull/221) | chore: update Demerzel submodule (16 commits behind) | 0d | MERGEABLE | 0 | spareilleux |
+| [#221](https://github.com/GuitarAlchemist/tars/pull/221) | chore: update Demerzel submodule (16 commits behind) | 1d | MERGEABLE | 0 | spareilleux |
 | [#219](https://github.com/GuitarAlchemist/tars/pull/219) | chore(ci): drop the pay-per-use fallback now the OAuth token is provis | 1d | MERGEABLE | 5 | spareilleux |
 | [#207](https://github.com/GuitarAlchemist/tars/pull/207) | feat: round-1 research program + round-3 self-improve seeds closed (ba | 9d | MERGEABLE | 1 | spareilleux |
 
@@ -44,11 +44,11 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#940](https://github.com/GuitarAlchemist/Demerzel/pull/940) | docs(design): Gaia — local semantic bus for cross-session AI coordinat | 1d | UNKNOWN | 0 | spareilleux |
-| [#939](https://github.com/GuitarAlchemist/Demerzel/pull/939) | fix(freshness): enumerate event-triggered loops, bound to event supply | 1d | UNKNOWN | 0 | spareilleux |
+| [#940](https://github.com/GuitarAlchemist/Demerzel/pull/940) | docs(design): Gaia — local semantic bus for cross-session AI coordinat | 1d | MERGEABLE | 0 | spareilleux |
+| [#939](https://github.com/GuitarAlchemist/Demerzel/pull/939) | fix(freshness): enumerate event-triggered loops, bound to event supply | 1d | MERGEABLE | 0 | spareilleux |
 | [#935](https://github.com/GuitarAlchemist/Demerzel/pull/935) | fix(ci): select a reviewer by its own credential, stop interpolating s | 1d | MERGEABLE | 1 | spareilleux |
-| [#930](https://github.com/GuitarAlchemist/Demerzel/pull/930) | fix(ci): push to master over a write deploy key so the risk-report rul (draft) | 1d | UNKNOWN | 2 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 13d | UNKNOWN | 1 | spareilleux |
+| [#930](https://github.com/GuitarAlchemist/Demerzel/pull/930) | fix(ci): push to master over a write deploy key so the risk-report rul (draft) | 2d | CONFLICTING | 2 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 14d | UNKNOWN | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -82,6 +82,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-08-01T08:02:13.439403+00:00 UTC_
+_Generated: 2026-08-01T22:26:22.865685+00:00 UTC_
 
-_Commit: `ed086cfd7edc`_
+_Commit: `3da354287781`_

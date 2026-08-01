@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "ed086cfd7edc9d20dc91f584a271ec58cf763553",
-    "generatedAt": "2026-08-01T08:02:13.439403+00:00",
+    "commitSha": "3da354287781789b7c74259932fe35b0f2322917",
+    "generatedAt": "2026-08-01T22:26:22.865685+00:00",
     "repoCount": 5,
     "totalPRs": 17
   },
@@ -152,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-07-25T17:19:15Z",
           "failingChecks": 1,
@@ -164,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
           "failingChecks": 1,
@@ -255,7 +255,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-07-31T14:22:23Z",
           "failingChecks": 0,
@@ -315,7 +315,7 @@
           "failingChecks": 0,
           "headRef": "docs/gaia-semantic-bus",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 940,
           "title": "docs(design): Gaia \u2014 local semantic bus for cross-session AI coordination",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/940"
@@ -327,7 +327,7 @@
           "failingChecks": 0,
           "headRef": "fix/844-event-triggered-loops",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 939,
           "title": "fix(freshness): enumerate event-triggered loops, bound to event supply (part of #844)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/939"
@@ -345,19 +345,19 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/935"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-30T13:07:47Z",
           "failingChecks": 2,
           "headRef": "fix/902-ruleset-bypass-deploy-key",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 930,
           "title": "fix(ci): push to master over a write deploy key so the risk-report ruleset can be activated (#902)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/930"
         },
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
