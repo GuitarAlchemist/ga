@@ -523,17 +523,52 @@ public static class GaArpeggioSuggestionsTool
                 };
             }
 
+            string scaleDegree;
             string modeName2;
             string notes;
 
             if (SuffixMatchesQuality(pattern[degIdx].Suffix, quality.Kind))
             {
+                scaleDegree = romans[degIdx];
                 var (_, m, n) = degreeModes[degIdx];
                 modeName2 = m;
                 notes = n;
             }
             else
             {
+                // Mismatched quality — secondary or borrowed/chromatic chord!
+                // Determine Roman numeral/degree label
+                if (!isMinor)
+                {
+                    // In a major key, we can identify specific secondary dominants:
+                    // (keyPc + offset) % 12 == chordPc
+                    var relativeOffset = (chordPc - keyPc + 12) % 12;
+                    if (relativeOffset == 9 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/ii" : "secondary";
+                    }
+                    else if (relativeOffset == 2 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/V" : "secondary";
+                    }
+                    else if (relativeOffset == 4 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/vi" : "secondary";
+                    }
+                    else if (relativeOffset == 0 && quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7)
+                    {
+                        scaleDegree = "V/IV";
+                    }
+                    else
+                    {
+                        scaleDegree = "secondary";
+                    }
+                }
+                else
+                {
+                    scaleDegree = "secondary";
+                }
+
                 var (m, n) = GetQualityModeAndNotes(quality.Kind);
                 modeName2 = m;
                 notes = n;
@@ -542,7 +577,7 @@ public static class GaArpeggioSuggestionsTool
             return new
             {
                 chord,
-                scaleDegree = romans[degIdx],
+                scaleDegree = scaleDegree,
                 arpeggio    = arpeggio,
                 mode        = modeName2,
                 notes
