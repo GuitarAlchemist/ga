@@ -104,6 +104,18 @@ Hard stops:
 - monetary or wall-clock budget is exhausted;
 - the next action requires authority above the packet's grant.
 
+### Wayfinder is an escalation trigger, not a cadence
+
+Periodic reconciliation runs ordinary issue/PR triage, evidence-freshness checks,
+and packet discovery. It does **not** open a fresh Wayfinder map. Invoke Wayfinder
+only for a materially new destination that is larger than one session, still too
+foggy to spec, and has no existing canonical program/map. Continue that one map
+until its decision frontier is empty, then return to spec/tickets/implementation.
+
+The current Cloud Factory program already has a destination, plan, ownership
+split, contracts, and tracer, so a second map would duplicate authority. See the
+[primary-source cadence assessment](../research/2026-08-02-wayfinder-reconciliation-cadence.md).
+
 ## Existing modules to deepen, not duplicate
 
 - `Scripts/supervised-loop-preflight.ps1`: deterministic readiness and protected
