@@ -21,7 +21,7 @@ vendor the matcher or schemas.
 The current draft integration revision is:
 
 ```text
-GuitarAlchemist/agent-blackbox@526eb4044b75d39d89481628ed1f5b42ccdf85b6
+GuitarAlchemist/agent-blackbox@b90839e457998089d30e2e7f4c73ea49511cdddc
 ```
 
 That revision belongs to stacked draft PR #51 and is not a released contract.
@@ -37,7 +37,7 @@ Use an operator-local JSON file outside the repositories being inspected:
   "contract_source": {
     "repository": "GuitarAlchemist/agent-blackbox",
     "path": "C:/path/to/agent-blackbox-contract-checkout",
-    "expected_revision": "526eb4044b75d39d89481628ed1f5b42ccdf85b6"
+    "expected_revision": "b90839e457998089d30e2e7f4c73ea49511cdddc"
   },
   "repositories": [
     {
@@ -54,9 +54,11 @@ Use an operator-local JSON file outside the repositories being inspected:
 }
 ```
 
-An `issue` creates a canonical empty `afk-task-state-v0.1` binding for that
-repository. A lane without an issue is explicitly `unbound`; the adapter does
-not invent issue ownership.
+An `issue` creates a canonical empty `afk-task-state-v0.2` binding for that
+repository. The snapshot also advertises `afk-evidence-manifest-v0.2`; the
+v0.2 contracts bind task identity, policy, budget, task state, lease, and exact
+Git revisions. A lane without an issue is explicitly `unbound`; the adapter
+does not invent issue ownership.
 
 ## Run and recheck
 

@@ -23,8 +23,8 @@ from typing import Any, Protocol
 
 
 SNAPSHOT_CONTRACT = "ga-local-reconciliation-snapshot-v0.1"
-AFK_TASK_CONTRACT = "afk-task-state-v0.1"
-AFK_EVIDENCE_CONTRACT = "afk-evidence-manifest-v0.1"
+AFK_TASK_CONTRACT = "afk-task-state-v0.2"
+AFK_EVIDENCE_CONTRACT = "afk-evidence-manifest-v0.2"
 
 
 class Matcher(Protocol):
@@ -235,7 +235,7 @@ def _task_binding(repository: dict[str, Any]) -> dict[str, Any]:
     return {
         "status": "bound",
         "canonical": {
-            "schema_version": 1,
+            "schema_version": 2,
             "contract": AFK_TASK_CONTRACT,
             "task": {"repository": repository["id"], "issue": issue},
             "attempts": [],

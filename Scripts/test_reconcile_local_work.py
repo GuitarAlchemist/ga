@@ -64,7 +64,7 @@ class ReconcileLocalWorkTests(unittest.TestCase):
         self.config = {
             "schema_version": 1,
             "repositories": [
-                {"id": "GuitarAlchemist/test", "path": str(self.repo)},
+                {"id": "GuitarAlchemist/test", "path": str(self.repo), "issue": 7},
                 {"id": "GuitarAlchemist/missing", "path": str(self.root / "missing")},
             ],
             "path_classes": {
@@ -157,6 +157,10 @@ class ReconcileLocalWorkTests(unittest.TestCase):
         self.assertEqual(main["provenance"][0]["session_id"], "ended-1")
         self.assertEqual(main["dirty_paths"][0]["classification"], "source")
         self.assertEqual(main["classification"], "active")
+        self.assertEqual(snapshot["canonical_contracts"]["task_state"], "afk-task-state-v0.2")
+        self.assertEqual(snapshot["canonical_contracts"]["evidence"], "afk-evidence-manifest-v0.2")
+        self.assertEqual(main["task_binding"]["canonical"]["schema_version"], 2)
+        self.assertEqual(main["task_binding"]["canonical"]["contract"], "afk-task-state-v0.2")
 
         detached = lanes[str(self.detached.resolve())]
         self.assertTrue(detached["detached"])
