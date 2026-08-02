@@ -37,9 +37,10 @@ to the exact commit it certifies.
 
 One operator command produces a read-only snapshot of unfinished ecosystem work.
 Each candidate becomes a typed work packet with one next action. The packet uses
-the canonical `afk-task-state-v0.1` and `afk-evidence-manifest-v0.1` contracts from
-agent-blackbox #44; this adapter adds only local discovery provenance such as
-worktree path, dirty-path digest, and classification. The factory may then advance
+the canonical `afk-task-state-v0.2` and `afk-evidence-manifest-v0.2` contracts from
+agent-blackbox #44 and stacked draft PR #51; GA PR #633 pins their reviewed exact
+head. This adapter adds only local discovery provenance such as worktree path,
+dirty-path digest, and classification. The factory may then advance
 one packet in an isolated worktree, run its declared verifier, obtain an independent
 review, and stop at the configured authority boundary.
 
