@@ -127,11 +127,26 @@ public class SpectralPhaseAlignmentTests
     // ── zero-denominator convention (ga#513) ─────────────────────────────────
 
     [Test]
-    public void EmptySet_IsTriviallyAligned()
+    public void OneNullSpectrum_IsNotAlignedWithNonNullSpectrum()
     {
         var r = SpectralPhaseAlignment.Similarity(new PitchClassSet([]), Pcs(0, 4, 7));
-        Assert.That(r.Similarity, Is.EqualTo(1.0).Within(1e-9), "empty set is fixed by every T_t");
-        Assert.That(r.AligningTranspositions, Has.Count.EqualTo(12));
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.Similarity, Is.EqualTo(0.0).Within(1e-9));
+            Assert.That(r.AligningTranspositions, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void BothNullSpectra_AreTriviallyAligned()
+    {
+        var empty = new PitchClassSet([]);
+        var r = SpectralPhaseAlignment.Similarity(empty, empty);
+        Assert.Multiple(() =>
+        {
+            Assert.That(r.Similarity, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(r.AligningTranspositions, Has.Count.EqualTo(12));
+        });
     }
 
     [Test]

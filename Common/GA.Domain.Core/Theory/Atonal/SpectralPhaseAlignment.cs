@@ -111,10 +111,10 @@ public static class SpectralPhaseAlignment
         if (denom < Epsilon)
         {
             // Zero-denominator convention (Codex review, ga#513):
-            //  - a or b null on k=1..6 (empty set / chromatic aggregate): transpositionally
-            //    trivial, fixed by every T_t → S := 1 with every t aligning.
+            //  - both a and b null on k=1..6 (empty set / chromatic aggregate):
+            //    transpositionally trivial, fixed by every T_t → S := 1 with every t aligning.
             //  - otherwise both non-trivial with disjoint periodicity support → S := 0, no t*.
-            return AllNull(fa, weights) || AllNull(fb, weights)
+            return AllNull(fa, weights) && AllNull(fb, weights)
                 ? new Alignment(1.0, AllTranspositions(), inverted)
                 : new Alignment(0.0, [], inverted);
         }

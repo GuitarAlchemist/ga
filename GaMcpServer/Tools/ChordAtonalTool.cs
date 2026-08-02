@@ -86,6 +86,11 @@ public static class ChordAtonalTool
 
     private static async Task<int[]> GetPitchClassesAsync(string symbol)
     {
+        if (CanonicalForteCatalog.TryGetPrimeForm(symbol, out var primeForm))
+        {
+            return [.. primeForm.Select(pc => pc.Value).Order()];
+        }
+
         var rootPc = ParseRootPc(symbol);
         var intervals = await GetIntervalNamesAsync(symbol);
         return [.. intervals
