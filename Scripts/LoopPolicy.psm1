@@ -118,6 +118,9 @@ function Test-GaLoopPolicy {
     }
 
     $shaBindings = @($Policy.evidence.bind_to)
+    if ($Policy.evidence.schema -ne 'afk-evidence-manifest-v0.2') {
+        $problems.Add('evidence_contract_not_v0.2')
+    }
     foreach ($binding in @('base_sha', 'head_sha')) {
         if ($shaBindings -notcontains $binding) {
             $problems.Add("evidence_missing_$binding")

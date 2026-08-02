@@ -70,6 +70,11 @@ $localPostflight.postflight.provider = 'ga-local-copy'
 $result = Test-GaLoopPolicy -Policy $localPostflight
 Assert ((-not $result.Valid) -and ($result.Problems -contains 'postflight_provider_not_agent_blackbox')) 'GA must consume Agent Blackbox postflight'
 
+$staleEvidenceContract = Copy-Policy $policy
+$staleEvidenceContract.evidence.schema = 'afk-evidence-manifest-v0.1'
+$result = Test-GaLoopPolicy -Policy $staleEvidenceContract
+Assert ((-not $result.Valid) -and ($result.Problems -contains 'evidence_contract_not_v0.2')) 'GA evidence is pinned to the Agent Blackbox v0.2 contract'
+
 if ($failures.Count -gt 0) {
     Write-Host "`n$($failures.Count) failure(s)." -ForegroundColor Red
     exit 1

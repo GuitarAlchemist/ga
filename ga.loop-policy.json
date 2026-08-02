@@ -118,7 +118,7 @@
     "autonomous_merge": false
   },
   "evidence": {
-    "schema": "afk-evidence-manifest-v0.1",
+    "schema": "afk-evidence-manifest-v0.2",
     "provider": "GuitarAlchemist/agent-blackbox#44",
     "bind_to": [
       "base_sha",
