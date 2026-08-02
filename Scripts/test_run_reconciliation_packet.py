@@ -14,6 +14,7 @@ from Scripts.run_reconciliation_packet import (
     PacketRunner,
     StartPacketRequest,
     SubprocessAgentBlackboxToolkit,
+    SubprocessGovernanceGate,
 )
 
 
@@ -62,6 +63,16 @@ class FakeToolkit:
     def release(self, **kwargs: object) -> dict:
         self.calls.append(("release", kwargs))
         return {"status": kwargs["terminal_status"]}
+
+
+class FakeGovernanceGate:
+    def __init__(self) -> None:
+        self.calls: list[dict] = []
+        self.verdict = {"allowed": True, "source": "none", "reason": None}
+
+    def check(self, **kwargs: object) -> dict:
+        self.calls.append(kwargs)
+        return self.verdict
 
 
 class PacketRunnerTests(unittest.TestCase):
@@ -123,7 +134,12 @@ class PacketRunnerTests(unittest.TestCase):
             "packets": [self.packet],
         }
         self.toolkit = FakeToolkit()
-        self.runner = PacketRunner(toolkit=self.toolkit, event_log=self.events)
+        self.governance = FakeGovernanceGate()
+        self.runner = PacketRunner(
+            toolkit=self.toolkit,
+            governance=self.governance,
+            event_log=self.events,
+        )
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -168,6 +184,20 @@ class PacketRunnerTests(unittest.TestCase):
         self._git(self.source, "commit", "-m", "advance")
 
         with self.assertRaisesRegex(RuntimeError, "stale"):
+            self.runner.start(self._start_request())
+
+        self.assertFalse(self.target.exists())
+        self.assertFalse(self.events.exists())
+        self.assertEqual(self.toolkit.calls, [])
+
+    def test_start_refuses_a_stop_signal_before_acquiring_a_lease(self) -> None:
+        self.governance.verdict = {
+            "allowed": False,
+            "source": "stop-marker",
+            "reason": "operator pause",
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "operator pause"):
             self.runner.start(self._start_request())
 
         self.assertFalse(self.target.exists())
@@ -244,6 +274,36 @@ class PacketRunnerTests(unittest.TestCase):
         self.assertEqual(release["failure_class"], "review")
         self.assertEqual(event["event"], "postflight-failed")
         self.assertEqual(event["failure_class"], "review")
+
+    def test_finish_halt_releases_the_exact_lease_as_durably_stopped(self) -> None:
+        self.runner.start(self._start_request())
+        self.governance.verdict = {
+            "allowed": False,
+            "source": "halt-all",
+            "reason": "cost spike",
+        }
+        self.budget.write_text(json.dumps({"max_attempts": 99}) + "\n", encoding="utf-8")
+
+        event = self.runner.finish(
+            FinishPacketRequest(
+                handle_path=self.handle,
+                task_state_path=self.task_state,
+                policy_path=self.policy,
+                budget_path=self.budget,
+                evidence_path=self.evidence,
+                verdict_path=self.verdict,
+            )
+        )
+
+        self.assertEqual([name for name, _ in self.toolkit.calls], ["acquire", "start", "release"])
+        release = self.toolkit.calls[-1][1]
+        self.assertEqual(release["terminal_status"], "stopped")
+        self.assertEqual(release["token"], "0123456789abcdef0123456789abcdef")
+        self.assertEqual(release["generation"], 1)
+        self.assertEqual(event["event"], "stopped")
+        self.assertEqual(event["stop_source"], "halt-all")
+        self.assertEqual(event["stop_reason"], "cost spike")
+        self.assertFalse(self.verdict.exists())
 
     def test_finish_rejects_a_changed_budget_before_postflight(self) -> None:
         self.runner.start(self._start_request())
@@ -324,7 +384,11 @@ class PacketRunnerTests(unittest.TestCase):
             encoding="utf-8",
         )
         toolkit = SubprocessAgentBlackboxToolkit(Path(os.environ["AGENT_BLACKBOX_CHECKOUT"]))
-        runner = PacketRunner(toolkit=toolkit, event_log=self.events)
+        runner = PacketRunner(
+            toolkit=toolkit,
+            governance=self.governance,
+            event_log=self.events,
+        )
         runner.start(self._start_request())
         (self.target / "src" / "app.py").write_text("print('head')\n", encoding="utf-8")
         self._git(self.target, "add", ".")
@@ -409,6 +473,22 @@ class PacketRunnerTests(unittest.TestCase):
 
         self.assertEqual(event["event"], "postflight-passed")
         self.assertEqual(json.loads(self.verdict.read_text(encoding="utf-8"))["verdict"], "pass")
+
+    def test_subprocess_governance_adapter_detects_a_declared_stop_marker(self) -> None:
+        stop_marker = self.source / "state" / "quality" / "test" / ".STOP"
+        stop_marker.parent.mkdir(parents=True)
+        stop_marker.write_text("operator pause\n", encoding="utf-8")
+        adapter = SubprocessGovernanceGate(Path("Scripts/Governance.psm1"))
+
+        verdict = adapter.check(
+            repository_path=self.source,
+            agent_id="codex-test",
+            stop_marker_paths=[stop_marker],
+        )
+
+        self.assertFalse(verdict["allowed"])
+        self.assertEqual(verdict["source"], "stop-marker")
+        self.assertEqual(verdict["reason"], "operator pause")
 
     @staticmethod
     def _sha256(path: Path) -> str:

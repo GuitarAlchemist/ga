@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol
@@ -42,6 +42,10 @@ class AgentBlackboxToolkit(Protocol):
     def release(self, **kwargs: object) -> dict[str, Any]: ...
 
 
+class GovernanceGate(Protocol):
+    def check(self, **kwargs: object) -> dict[str, Any]: ...
+
+
 @dataclass
 class StartPacketRequest:
     snapshot: dict[str, Any]
@@ -55,6 +59,7 @@ class StartPacketRequest:
     provider: str
     attempt: int
     lease_seconds: int
+    stop_marker_paths: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -116,10 +121,12 @@ class PacketRunner:
         self,
         *,
         toolkit: AgentBlackboxToolkit,
+        governance: GovernanceGate,
         event_log: Path,
         toolkit_revision: str | None = None,
     ):
         self.toolkit = toolkit
+        self.governance = governance
         self.event_log = event_log
         self.toolkit_revision = toolkit_revision
 
@@ -156,6 +163,17 @@ class PacketRunner:
         observed_dirty = _git(source, "status", "--porcelain=v1", "--untracked-files=all").stdout
         if observed_head != packet["head_sha"] or observed_dirty:
             raise RuntimeError("snapshot is stale: selected source HEAD or dirty state changed")
+
+        stop_marker_paths = self._resolve_stop_markers(source, request.stop_marker_paths)
+        governance = self.governance.check(
+            repository_path=source,
+            agent_id=request.worker,
+            stop_marker_paths=stop_marker_paths,
+        )
+        if not governance.get("allowed", False):
+            source_name = governance.get("source") or "governance"
+            reason = governance.get("reason") or "stop signal is active"
+            raise RuntimeError(f"packet stopped by {source_name}: {reason}")
 
         task = packet["task_binding"]["canonical"]["task"]
         budget = _read_json(budget_path)
@@ -212,6 +230,7 @@ class PacketRunner:
                 "budget_path": str(budget_path),
                 "budget_sha256": _sha256_file(budget_path),
                 "event_log_path": str(self.event_log.resolve(strict=False)),
+                "stop_marker_paths": [str(path) for path in stop_marker_paths],
                 "snapshot_generated_at": request.snapshot.get("generated_at"),
                 "packet_source_signature": packet.get("source_signature"),
                 "lease": {"token": token, "generation": generation},
@@ -252,23 +271,45 @@ class PacketRunner:
             raise RuntimeError("run handle Agent Blackbox revision differs from the packet runner")
         worktree = Path(handle["isolated_worktree"]).resolve(strict=True)
         task_state_path = request.task_state_path.resolve(strict=True)
-        budget_path = request.budget_path.resolve(strict=True)
         event_log_path = self.event_log.resolve(strict=False)
         if task_state_path != Path(handle["task_state_path"]).resolve(strict=True):
             raise RuntimeError("finish task-state path differs from the started run")
-        if budget_path != Path(handle["budget_path"]).resolve(strict=True):
-            raise RuntimeError("finish budget path differs from the started run")
         if event_log_path != Path(handle["event_log_path"]).resolve(strict=False):
             raise RuntimeError("finish event log differs from the started run")
-        if _sha256_file(budget_path) != handle["budget_sha256"]:
-            raise RuntimeError("finish budget differs from the budget pinned at start")
         head_sha = _git(worktree, "rev-parse", "HEAD").stdout.strip()
         lease = handle["lease"]
         token = lease["token"]
         generation = lease["generation"]
+        source_worktree = Path(handle["source_worktree"]).resolve(strict=True)
+        governance = self.governance.check(
+            repository_path=source_worktree,
+            agent_id=handle["worker"],
+            stop_marker_paths=[Path(path) for path in handle.get("stop_marker_paths", [])],
+        )
+        if not governance.get("allowed", False):
+            self.toolkit.release(
+                task_state_path=task_state_path,
+                token=token,
+                generation=generation,
+                terminal_status="stopped",
+                failure_class=None,
+            )
+            event = self._event(
+                handle,
+                event="stopped",
+                head_sha=head_sha,
+                stop_source=governance.get("source") or "governance",
+                stop_reason=governance.get("reason") or "stop signal is active",
+            )
+            return self._append_event(event, idempotency_key=f"{handle['run_id']}:stopped")
+
+        budget_path = request.budget_path.resolve(strict=True)
+        if budget_path != Path(handle["budget_path"]).resolve(strict=True):
+            raise RuntimeError("finish budget path differs from the started run")
+        if _sha256_file(budget_path) != handle["budget_sha256"]:
+            raise RuntimeError("finish budget differs from the budget pinned at start")
         verdict_path = request.verdict_path.resolve(strict=False)
         evidence_path = request.evidence_path.resolve(strict=True)
-        source_worktree = Path(handle["source_worktree"]).resolve(strict=True)
         for output in (verdict_path, evidence_path, task_state_path, budget_path, event_log_path):
             if self._inside(output, worktree) or self._inside(output, source_worktree):
                 raise ValueError("run control files must stay outside source and isolated worktrees")
@@ -372,6 +413,16 @@ class PacketRunner:
     @staticmethod
     def _inside(candidate: Path, root: Path) -> bool:
         return candidate == root or root in candidate.parents
+
+    @staticmethod
+    def _resolve_stop_markers(source: Path, declared: list[Path]) -> list[Path]:
+        resolved = []
+        for path in declared:
+            marker = (path if path.is_absolute() else source / path).resolve(strict=False)
+            if not PacketRunner._inside(marker, source):
+                raise ValueError("declared stop markers must stay inside the source worktree")
+            resolved.append(marker)
+        return resolved
 
     @staticmethod
     def _lease_identity(record: dict[str, Any]) -> tuple[str, int]:
@@ -535,6 +586,62 @@ class SubprocessAgentBlackboxToolkit:
         return completed
 
 
+class SubprocessGovernanceGate:
+    """Production adapter over GA's canonical PowerShell governance module."""
+
+    def __init__(self, module_path: Path):
+        self.module_path = module_path.resolve(strict=True)
+
+    def check(self, **kwargs: object) -> dict[str, Any]:
+        environment = os.environ.copy()
+        environment["GA_PACKET_GOVERNANCE_MODULE"] = str(self.module_path)
+        environment["GA_PACKET_REPO_ROOT"] = str(kwargs["repository_path"])
+        environment["GA_PACKET_AGENT_ID"] = str(kwargs["agent_id"])
+        environment["GA_PACKET_STOP_MARKERS"] = json.dumps(
+            [str(path) for path in kwargs.get("stop_marker_paths", [])]
+        )
+        command = (
+            "$ErrorActionPreference = 'Stop'; "
+            "Import-Module $env:GA_PACKET_GOVERNANCE_MODULE -Force; "
+            "$markers = @(ConvertFrom-Json -InputObject $env:GA_PACKET_STOP_MARKERS); "
+            "$verdict = Test-GovernanceGate -AgentId $env:GA_PACKET_AGENT_ID "
+            "-RepoRoot $env:GA_PACKET_REPO_ROOT -StopMarkerPath $markers; "
+            "$verdict | ConvertTo-Json -Compress -Depth 4"
+        )
+        try:
+            completed = subprocess.run(
+                ["pwsh", "-NoProfile", "-NonInteractive", "-Command", command],
+                capture_output=True,
+                text=True,
+                check=False,
+                env=environment,
+            )
+        except OSError as error:
+            raise RuntimeError("PowerShell governance gate is unavailable") from error
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"PowerShell governance gate failed ({completed.returncode}): "
+                f"{completed.stderr or completed.stdout}"
+            )
+        try:
+            value = json.loads(completed.stdout)
+        except json.JSONDecodeError as error:
+            raise RuntimeError(
+                f"PowerShell governance gate returned invalid JSON: {completed.stdout}"
+            ) from error
+        allowed = value.get("Allowed")
+        source = value.get("Source")
+        if not isinstance(allowed, bool) or not isinstance(source, str):
+            raise RuntimeError("PowerShell governance gate returned an invalid verdict")
+        return {
+            "allowed": allowed,
+            "source": source,
+            "reason": value.get("Reason"),
+            "halted_by": value.get("HaltedBy"),
+            "exempt": bool(value.get("Exempt", False)),
+        }
+
+
 def _toolkit_from_config(
     config_path: Path,
 ) -> tuple[SubprocessAgentBlackboxToolkit, dict[str, Any]]:
@@ -561,6 +668,13 @@ def main(argv: list[str] | None = None) -> int:
     start.add_argument("--provider", required=True)
     start.add_argument("--attempt", type=int, default=1)
     start.add_argument("--lease-seconds", type=int, default=3600)
+    start.add_argument(
+        "--stop-marker",
+        action="append",
+        type=Path,
+        default=[Path(".STOP")],
+        help="repo-relative packet/domain stop marker; repeatable",
+    )
 
     finish = subparsers.add_parser("finish")
     finish.add_argument("--handle", type=Path, required=True)
@@ -574,6 +688,7 @@ def main(argv: list[str] | None = None) -> int:
     toolkit, contract_source = _toolkit_from_config(args.config)
     runner = PacketRunner(
         toolkit=toolkit,
+        governance=SubprocessGovernanceGate(Path(__file__).resolve().parent / "Governance.psm1"),
         event_log=args.event_log,
         toolkit_revision=contract_source["observed_revision"],
     )
@@ -597,6 +712,7 @@ def main(argv: list[str] | None = None) -> int:
                 provider=args.provider,
                 attempt=args.attempt,
                 lease_seconds=args.lease_seconds,
+                stop_marker_paths=args.stop_marker,
             )
         )
     else:
