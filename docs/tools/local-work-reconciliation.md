@@ -149,8 +149,16 @@ python Scripts/run_reconciliation_packet.py `
   --handle C:\operator\runs\ga-630-attempt-1.json `
   --task-state C:\operator\runs\ga-630-task-state.json `
   --budget C:\operator\runs\ga-630-budget.json `
+  --stop-marker state/quality/chatbot-qa/.STOP `
   --worker codex --provider openai
 ```
+
+The repo-root `.STOP` marker is checked by default. Repeat `--stop-marker` for
+packet/domain sentinels such as `state/quality/<domain>/.STOP`; declared paths
+must stay inside the source worktree. The canonical governance gate also checks
+the repo-local `state/.loop-halted` switch and the operator-local
+`~/.demerzel/HALT-ALL` contract before a lease is acquired and again before
+postflight.
 
 After the worker commits the slice and an independent reviewer produces an
 `afk-evidence-manifest-v0.2` bound to that exact head, finish it:
@@ -167,6 +175,13 @@ python Scripts/run_reconciliation_packet.py `
   --evidence C:\operator\runs\ga-630-evidence.json `
   --verdict C:\operator\runs\ga-630-postflight.json
 ```
+
+A stop signal present before `start` refuses the packet without acquiring a
+lease. A signal that appears during the run makes `finish` release the exact
+token and generation as `stopped`, append the source and reason durably, skip
+postflight, and preserve the isolated worktree for diagnosis. This stop path
+takes precedence over budget drift so the kill switch cannot be blocked by a
+changed control file.
 
 A failed postflight is terminal and classified as review, budget, policy,
 provider, infrastructure, or verification. The runner does not retry functional
@@ -195,6 +210,7 @@ that Claude conversation content is excluded.
 
 The packet-runner suite additionally covers stale snapshot rejection, eligibility
 gates, isolated-worktree creation, exact lease generation, token redaction,
-budget/path pinning, successful postflight, and terminal failure classification.
+budget/path pinning, canonical STOP/HALT handling, successful postflight, and
+terminal failure classification.
 Set `AGENT_BLACKBOX_CHECKOUT` to the exact reviewed checkout to exercise the real
 lease and postflight CLI end to end; otherwise that one integration test skips.
