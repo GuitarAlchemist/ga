@@ -111,6 +111,67 @@ Classification is advice, not authority. Mutation still requires an uncontested
 Gaia/Galactic claim, an isolated worktree, an Agent Blackbox lease/budget, and
 exact-SHA postflight evidence.
 
+## Advance one packet
+
+`Scripts/run_reconciliation_packet.py` is the bounded lifecycle module layered
+over the read-only snapshot. It exposes two operations and deliberately does not
+accept a worker command:
+
+- `start` rechecks one `ready`, unowned, clean, non-behind, issue-bound packet;
+  creates one isolated `codex/` worktree at the snapshot SHA; acquires and starts
+  the canonical Agent Blackbox fenced lease; writes an operator-controlled run
+  handle; appends
+  a `started` transition; and stops.
+- `finish` reads that handle after the worker has committed one bounded slice;
+  invokes canonical Agent Blackbox postflight against independently produced
+  evidence; releases only the exact lease token and generation; appends the
+  terminal transition with the verdict hash; and stops.
+
+The run handle, task state, budget, evidence, event log, and verdict must live
+outside every discovered and isolated worktree. The GA event log is an
+append-only audit projection; canonical Agent Blackbox task state and verdicts
+remain authoritative. The projection hashes the lease token rather than
+exposing it. The handle pins the budget digest, task-state path, base SHA, packet
+generation, and reviewed Agent Blackbox revision. `finish` fails before
+postflight if the budget or task-state path differs from `start`.
+
+Start one packet:
+
+```powershell
+python Scripts/run_reconciliation_packet.py `
+  --config C:\operator\reconciliation-config.json `
+  --event-log C:\operator\runs\events.jsonl `
+  start `
+  --snapshot C:\operator\reconciliation-snapshot.json `
+  --packet-id local-0123456789abcdef01234567 `
+  --target-worktree C:\operator\worktrees\ga-630-attempt-1 `
+  --branch codex/factory-ga-630-attempt-1 `
+  --handle C:\operator\runs\ga-630-attempt-1.json `
+  --task-state C:\operator\runs\ga-630-task-state.json `
+  --budget C:\operator\runs\ga-630-budget.json `
+  --worker codex --provider openai
+```
+
+After the worker commits the slice and an independent reviewer produces an
+`afk-evidence-manifest-v0.2` bound to that exact head, finish it:
+
+```powershell
+python Scripts/run_reconciliation_packet.py `
+  --config C:\operator\reconciliation-config.json `
+  --event-log C:\operator\runs\events.jsonl `
+  finish `
+  --handle C:\operator\runs\ga-630-attempt-1.json `
+  --task-state C:\operator\runs\ga-630-task-state.json `
+  --policy C:\src\ga\ga.loop-policy.json `
+  --budget C:\operator\runs\ga-630-budget.json `
+  --evidence C:\operator\runs\ga-630-evidence.json `
+  --verdict C:\operator\runs\ga-630-postflight.json
+```
+
+A failed postflight is terminal and classified as review, budget, policy,
+provider, infrastructure, or verification. The runner does not retry functional
+work, remove diagnostic worktrees, push, mark a PR ready, or merge.
+
 ## Transcript boundary
 
 This command reconciles provenance, not conversations. Importing a ChatGPT
@@ -125,9 +186,15 @@ The test suite creates disposable Git repositories and never points a mutating
 test at an operator checkout:
 
 ```powershell
-python -m unittest Scripts.test_reconcile_local_work -v
+python -m unittest Scripts.test_reconcile_local_work Scripts.test_run_reconciliation_packet -v
 ```
 
 It covers dirty/ahead/behind/detached/missing/invalid lanes, PR and live-owner
 binding, stable IDs, stale detection, exact dependency pins, and the guarantee
 that Claude conversation content is excluded.
+
+The packet-runner suite additionally covers stale snapshot rejection, eligibility
+gates, isolated-worktree creation, exact lease generation, token redaction,
+budget/path pinning, successful postflight, and terminal failure classification.
+Set `AGENT_BLACKBOX_CHECKOUT` to the exact reviewed checkout to exercise the real
+lease and postflight CLI end to end; otherwise that one integration test skips.
