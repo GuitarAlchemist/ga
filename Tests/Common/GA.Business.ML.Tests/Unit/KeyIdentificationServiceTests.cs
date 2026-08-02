@@ -105,6 +105,11 @@ public class KeyIdentificationServiceTests
         Assert.That(top[0].MatchCount, Is.EqualTo(4));
     }
 
+    [TestCase("C major", "AM7")]
+    [TestCase("Bb major", "GMIN7")]
+    public void IsChordDiatonic_UppercaseMinorQuality_IsParsedAsMinor(string key, string chord) =>
+        Assert.That(KeyIdentificationService.IsChordDiatonic(key, chord), Is.True);
+
     // ── Empty / no-match cases ────────────────────────────────────────────────
 
     [Test]

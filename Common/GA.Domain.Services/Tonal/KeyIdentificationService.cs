@@ -132,17 +132,17 @@ public static partial class KeyIdentificationService
         var rootStr = s.Length >= 2 && s[1] is '#' or 'b' ? s[..2] : s[..1];
         if (!RootPcMap.TryGetValue(rootStr, out var rootPc)) return null;
 
+        var normalizedQuality = s[rootStr.Length..].ToLowerInvariant();
         var isDominant = chord.Contains('7') &&
-                         !chord.Contains("maj", StringComparison.OrdinalIgnoreCase) &&
-                         !chord.Contains('m') &&
-                         !chord.Contains("dim", StringComparison.OrdinalIgnoreCase);
+                         string.IsNullOrEmpty(normalizedQuality) &&
+                         !chord.Contains("maj", StringComparison.OrdinalIgnoreCase);
 
         if (isDominant)
         {
             return (rootPc, ChordQuality.Dominant);
         }
 
-        var quality = s[rootStr.Length..].ToLowerInvariant() switch
+        var quality = normalizedQuality switch
         {
             "m"   => ChordQuality.Minor,
             "dim" => ChordQuality.Diminished,
@@ -263,7 +263,8 @@ public static partial class KeyIdentificationService
     // e.g. "G7" → "G", "Cmaj7" → "C", "Am7" → "Am", "Bdim7" → "Bdim", "A#m" → "Bbm"
     private static string NormalizeChord(string chord)
     {
-        var s = Regex.Replace(chord.Trim(), @"(maj|min|aug|sus|add)?\d+.*$", "", RegexOptions.IgnoreCase);
+        var s = Regex.Replace(chord.Trim(), "min", "m", RegexOptions.IgnoreCase);
+        s = Regex.Replace(s, @"(maj|aug|sus|add)?\d+.*$", "", RegexOptions.IgnoreCase);
         return s.Replace("A#", "Bb").Replace("D#", "Eb").Replace("G#", "Ab");
     }
 

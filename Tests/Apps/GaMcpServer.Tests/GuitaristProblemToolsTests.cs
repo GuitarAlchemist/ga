@@ -69,15 +69,18 @@ public sealed class GuitaristProblemToolsTests
     public async Task GaAnalyzeProgression_G7_C_LabelsG7AsV_And_C_AsI()
     {
         var analysis = await GaDslTool.GaAnalyzeProgression("G7 C");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var chordLineIndex = Array.FindIndex(lines, line => line.StartsWith("G7", StringComparison.Ordinal));
+        Assert.That(chordLineIndex, Is.GreaterThanOrEqualTo(0), "Should contain a G7/C chord line");
 
-        // The expected analysis should identify C major and label G7 as V, C as I.
-        // It format matches:
-        // Key: C major  (confidence 2/2)
-        // G7     C
-        // V      I
-        Assert.That(analysis, Does.Contain("Key: C major"), "Should identify C major");
-        Assert.That(analysis, Does.Contain("G7"), "Should contain G7 in chords line");
-        Assert.That(analysis, Does.Contain("V"), "Should label G7 as V");
-        Assert.That(analysis, Does.Contain("I"), "Should label C as I");
+        var chords = lines[chordLineIndex].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var functions = lines[chordLineIndex + 1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var mappings = chords.Zip(functions).Select(pair => $"{pair.First}->{pair.Second}");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(analysis, Does.Contain("Key: C major"), "Should identify C major");
+            Assert.That(mappings, Is.EqualTo(new[] { "G7->V", "C->I" }));
+        });
     }
 }
