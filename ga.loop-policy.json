@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
-  "description": "Edit scopes for the supervised autonomous loop on GA. Sibling to agent-blackbox.policy.json (which governs risk scoring). The loop skill must only edit paths matched by allow_edit and must never edit paths matched by protected_paths. Initial GA rollout is intentionally conservative — narrower than risk-policy. Widen with operator review only after several clean cycles.",
-  "schemaVersion": "0.1",
+  "version": "0.2.0",
+  "description": "Executable scope and readiness gates for GA AFK work. Sibling to agent-blackbox.policy.json (risk scoring). Initial code access is limited to two layer-4 seams and matching test filename families. Widen only through operator-reviewed policy changes.",
+  "schemaVersion": "0.2",
   "domain": "ga-harness",
   "allow_edit": [
     "docs/**",
@@ -10,6 +10,10 @@
     "state/quality/**",
     "state/governance/**",
     ".claude/skills/**",
+    "Common/GA.Business.ML/Agents/Skills/**",
+    "Common/GA.Business.ML/Agents/Mcp/**",
+    "Tests/Common/GA.Business.ML.Tests/Unit/*SkillTests.cs",
+    "Tests/Common/GA.Business.ML.Tests/Unit/*McpToolsTests.cs",
     "BACKLOG.md",
     "README.md",
     "AGENTS.md",
@@ -31,5 +35,105 @@
     "Directory.Build.targets",
     "ga.loop-policy.json",
     "agent-blackbox.policy.json"
-  ]
+  ],
+  "verification_levels": {
+    "schema": "ga-verification-levels-v0.1",
+    "description": "Verification depth, not GA autonomy level. Every result is bound to the submitted head SHA by postflight.",
+    "L0": {
+      "purpose": "Deterministic eligibility and kill-switch preflight before edits.",
+      "commands": [
+        "pwsh Scripts/supervised-loop-preflight.ps1"
+      ]
+    },
+    "L1": {
+      "purpose": "Focused project verification for the changed source seam.",
+      "commands": [
+        "dotnet test Tests/Common/GA.Business.ML.Tests/GA.Business.ML.Tests.csproj"
+      ],
+      "selection_rule": "Add a FullyQualifiedName filter when it covers every changed behavior; otherwise run the whole project. Run the relevant documented verifier for docs/scripts/frontend-only slices."
+    },
+    "L2": {
+      "purpose": "Cloud-development smoke validation before opening or updating a draft PR.",
+      "commands": [
+        "bash Scripts/cloud-validate.sh"
+      ],
+      "platform_commands": {
+        "windows": [
+          "pwsh Scripts/cloud-validate.ps1"
+        ]
+      }
+    },
+    "L3": {
+      "purpose": "Full merge-gate verification. Required before ready-for-merge, never inferred from L1/L2.",
+      "commands": [
+        "dotnet build AllProjects.slnx -c Debug",
+        "dotnet test AllProjects.slnx"
+      ],
+      "conditional_commands": {
+        "frontend_changed": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "frontend_working_directory": "ReactComponents/ga-react-components"
+      }
+    }
+  },
+  "postflight": {
+    "provider": "GuitarAlchemist/agent-blackbox#44",
+    "path_matcher_provider": "GuitarAlchemist/agent-blackbox#46",
+    "adapter_issue": "GuitarAlchemist/ga#630",
+    "status": "external_dependency",
+    "required_before_ready": true,
+    "requirements": [
+      "exact_base_and_head_sha",
+      "allow_and_protected_path_verdict",
+      "task_budget_verdict",
+      "test_evidence_for_code_changes",
+      "evidence_manifest_complete",
+      "no_unrelated_dirty_changes"
+    ]
+  },
+  "independent_review": {
+    "mechanism": "required_check",
+    "check_name": "Independent Review Verdict",
+    "producer_requirement": "separate_reviewer_identity_or_context",
+    "author_comment_satisfies": false,
+    "enforcement_issue": "GuitarAlchemist/ga#630"
+  },
+  "promotion_gates": {
+    "draft_pr": {
+      "requires": [
+        "L0",
+        "L1",
+        "L2"
+      ]
+    },
+    "ready_for_merge": {
+      "requires": [
+        "L3",
+        "postflight",
+        "independent_review"
+      ]
+    },
+    "autonomous_merge": false
+  },
+  "evidence": {
+    "schema": "afk-evidence-manifest-v0.1",
+    "provider": "GuitarAlchemist/agent-blackbox#44",
+    "bind_to": [
+      "base_sha",
+      "head_sha"
+    ],
+    "required_artifacts": [
+      "harness_audit",
+      "overseer_state",
+      "quality_baseline_and_last",
+      "risk_report",
+      "verification_results",
+      "independent_review_verdict"
+    ],
+    "conditional_artifacts": [
+      "response_quality_report"
+    ]
+  }
 }
