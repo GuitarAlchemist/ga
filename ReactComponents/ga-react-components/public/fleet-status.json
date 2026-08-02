@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "3da354287781789b7c74259932fe35b0f2322917",
-    "generatedAt": "2026-08-01T22:26:22.865685+00:00",
+    "commitSha": "c3eadd9234919330f5286db1cccdef18df787d85",
+    "generatedAt": "2026-08-02T08:04:00.797168+00:00",
     "repoCount": 5,
-    "totalPRs": 17
+    "totalPRs": 20
   },
   "repos": [
     {
@@ -113,40 +113,76 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 9,
+      "prCount": 12,
       "prs": [
         {
-          "ageDays": 3,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T02:46:50Z",
+          "failingChecks": 0,
+          "headRef": "fix/chatbot-spelled-out-accidentals-13049288891185417624",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 628,
+          "title": "Normalize Chatbot Spelled-out Accidentals to Shorthand Forms",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/628"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T01:24:25Z",
+          "failingChecks": 0,
+          "headRef": "fix-ga-arpeggio-suggestions-mcp-3483423780975728752",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 626,
+          "title": "Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and key-blind degree mapping",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/626"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-01T22:57:33Z",
+          "failingChecks": 0,
+          "headRef": "fix/key-detection-cadences-13824242442048306677",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 625,
+          "title": "Delegate key detection to KeyIdentificationService on MCP and F# closures",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/625"
+        },
+        {
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:20:16Z",
           "failingChecks": 0,
           "headRef": "fix/optick-context-partition-6076855656732833655",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 618,
           "title": "Resolve Empty OPTIC-K CONTEXT Partition via Circle of Fifths Geometry and Context-Free Proxies",
           "url": "https://github.com/GuitarAlchemist/ga/pull/618"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:11:22Z",
           "failingChecks": 0,
           "headRef": "research/grothendieck-optick-17780670402022075853",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 617,
           "title": "Prototype Grothendieck and categorical constructions for OPTICK transformations",
           "url": "https://github.com/GuitarAlchemist/ga/pull/617"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-07-29T02:02:57Z",
           "failingChecks": 2,
           "headRef": "agent/ga-613-placeholder-routes",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 615,
           "title": "fix(frontend): remove dead placeholder routes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
@@ -158,7 +194,7 @@
           "failingChecks": 1,
           "headRef": "agent/fix-gemini-triage-fallback",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 608,
           "title": "Make Gemini issue triage failures non-blocking",
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
@@ -170,55 +206,55 @@
           "failingChecks": 1,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 598,
           "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:37Z",
           "failingChecks": 1,
           "headRef": "ci/reusable-claude-review",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 588,
           "title": "ci: adopt reusable Claude review diagnostics",
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
           "failingChecks": 2,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 579,
           "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
           "headRef": "ci/chatbot-qa-producer-revival",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 576,
           "title": "fix(chatbot-qa): revive the daily producer \u2014 gate in-runner Ollama, add artifact-freshness sensor",
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -267,7 +303,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/221"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:54:48Z",
           "failingChecks": 5,
@@ -279,7 +315,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/219"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-22T23:38:17Z",
           "failingChecks": 1,
@@ -309,7 +345,7 @@
       "prCount": 5,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-31T02:50:06Z",
           "failingChecks": 0,
@@ -321,7 +357,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/940"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:16:13Z",
           "failingChecks": 0,
@@ -333,7 +369,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/939"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:02:03Z",
           "failingChecks": 1,
@@ -363,7 +399,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
