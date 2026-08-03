@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "c3eadd9234919330f5286db1cccdef18df787d85",
-    "generatedAt": "2026-08-02T08:04:00.797168+00:00",
+    "commitSha": "e6afd3688409923e33b98b92b63a720437bab14e",
+    "generatedAt": "2026-08-03T09:20:53.512631+00:00",
     "repoCount": 5,
-    "totalPRs": 20
+    "totalPRs": 24
   },
   "repos": [
     {
@@ -113,10 +113,70 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 12,
+      "prCount": 17,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T21:29:06Z",
+          "failingChecks": 0,
+          "headRef": "codex/629-policy-readiness",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 637,
+          "title": "feat(harness): align AFK policy and readiness gates",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/637"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T20:56:48Z",
+          "failingChecks": 0,
+          "headRef": "codex/david-skills-pilot",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 636,
+          "title": "chore(skills): add audited decision pilot",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/636"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T19:56:59Z",
+          "failingChecks": 0,
+          "headRef": "codex/630-packet-runner",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 634,
+          "title": "feat(harness): advance one reconciliation packet",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/634"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T17:27:09Z",
+          "failingChecks": 0,
+          "headRef": "codex/630-reconciliation-snapshot",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 633,
+          "title": "feat(harness): add read-only work reconciliation snapshot",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/633"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T16:00:23Z",
+          "failingChecks": 0,
+          "headRef": "codex/cloud-factory-tracer",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 632,
+          "title": "docs(factory): reconcile local and GitHub work lanes",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/632"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-08-02T02:46:50Z",
           "failingChecks": 0,
@@ -128,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/628"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-08-02T01:24:25Z",
           "failingChecks": 0,
@@ -140,7 +200,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/626"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-08-01T22:57:33Z",
           "failingChecks": 0,
@@ -152,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/625"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:20:16Z",
           "failingChecks": 0,
@@ -164,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/618"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:11:22Z",
           "failingChecks": 0,
@@ -176,10 +236,10 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/617"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-07-29T02:02:57Z",
-          "failingChecks": 2,
+          "failingChecks": 0,
           "headRef": "agent/ga-613-placeholder-routes",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -188,7 +248,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-07-25T17:19:15Z",
           "failingChecks": 1,
@@ -200,7 +260,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
           "failingChecks": 1,
@@ -212,7 +272,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-23T00:12:37Z",
           "failingChecks": 1,
@@ -224,10 +284,10 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-07-22T00:26:54Z",
-          "failingChecks": 2,
+          "failingChecks": 1,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -236,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-07-21T03:20:18Z",
           "failingChecks": 3,
@@ -248,7 +308,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
         },
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-07-20T04:13:33Z",
           "failingChecks": 3,
@@ -291,7 +351,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-07-31T14:22:23Z",
           "failingChecks": 0,
@@ -303,7 +363,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/221"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:54:48Z",
           "failingChecks": 5,
@@ -315,7 +375,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/219"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-07-22T23:38:17Z",
           "failingChecks": 1,
@@ -342,25 +402,13 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 5,
+      "prCount": 4,
       "prs": [
         {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-07-31T02:50:06Z",
-          "failingChecks": 0,
-          "headRef": "docs/gaia-semantic-bus",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 940,
-          "title": "docs(design): Gaia \u2014 local semantic bus for cross-session AI coordination",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/940"
-        },
-        {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:16:13Z",
-          "failingChecks": 0,
+          "failingChecks": 2,
           "headRef": "fix/844-event-triggered-loops",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -369,10 +417,10 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/939"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:02:03Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "fix/846-reviewer-selection",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -381,7 +429,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/935"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-07-30T13:07:47Z",
           "failingChecks": 2,
@@ -393,7 +441,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/930"
         },
         {
-          "ageDays": 14,
+          "ageDays": 15,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
