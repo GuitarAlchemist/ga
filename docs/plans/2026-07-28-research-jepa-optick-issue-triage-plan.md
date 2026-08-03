@@ -1,6 +1,6 @@
 # JEPA / OPTICK issue cluster — triage and sequencing
 
-**Status: triage complete, 2026-07-28.** Disposition of the seven-issue JEPA cluster filed 2026-07-25/26 (ga#605, #606, #607, #610, #611, #612 + GuitarAlchemist/tars#212). No model is trained, no contract is frozen, no code changes beyond the one producer fix filed as its own issue.
+**Status: triage complete, 2026-07-28. First candidate fix reviewed and sent back for a second pass, 2026-07-29 (§5a).** Disposition of the seven-issue JEPA cluster filed 2026-07-25/26 (ga#605, #606, #607, #610, #611, #612 + GuitarAlchemist/tars#212). No model is trained, no contract is frozen, no code changes beyond the one producer fix filed as its own issue.
 
 Type: research (triage + sequencing). Reversibility: two-way — labels, comments, and this document only. The one-way doors (OPTIC-K dimensions, index schema hash) are explicitly **not** touched.
 
@@ -68,6 +68,19 @@ Root cause, confirmed by reading the producer:
 Why this ranks above every issue in the cluster: it is a **producer fix, cheaper than any model**, it improves every existing consumer (similarity search, RAG retrieval, the SAE) at once, and it builds the honest baseline a future JEPA would have to beat. Per rule 6 it is a metric-moving change and therefore declares baseline + direction + guardrail; the partition layout and weights are untouched, so **no re-index of the schema hash is required** — only a corpus rebuild.
 
 ga#616 is labelled `bug` + `ready-for-agent` — the only issue deliberately left in the agent lane (see §7).
+
+### 5a. First attempt returned green but not informative — criterion sharpened (2026-07-29)
+
+The agent dispatch on ga#616 produced **PR #618** (draft, 14/14 checks green, +197/−8). It fills the partition with circle-of-fifths geometry — the right idea, the one ga#616 proposed — but it trades zeros for redundancy rather than for information, so it was sent back for a second pass rather than merged:
+
+- **Slots 3 and 5 are collinear with slot 4.** `stabilityDelta: doc.Consonance - 0.5` and `isResolution: doc.Consonance > 0.7` sit next to `tension: 1.0 - doc.Consonance` — three dims, one degree of freedom. And `Consonance`-derived context dynamics are *already* in the embedding: `ComputeExtensions` writes `HarmonicInertia` and `ResolutionPressure` at dims 78–79.
+- **Slots 6–11 are six projections of one complex k=5 coefficient** whose magnitude and phase `PopulateSpectralPartition` already writes as `FourierMagK5` / `FourierPhaseK5`. Rank 2 dressed as six dims, *and* a double-count of SPECTRAL content under `CONTEXT`'s 0.20 weight — which silently re-weights similarity for every existing consumer.
+- **No guardrail evidence**: no dead-dim audit rerun, no `state/quality/` before/after snapshot, no hash verification, no corpus rebuild. Four of five acceptance criteria unmet.
+- **Two unrelated test edits**: an inverted assertion in `AdvancedEmbeddingScenarios.ContextualShift_SameChord_DifferentFunction` (defensible, but it changes a documented behavioural claim and must be stated as such), and `MlNaturalnessRankerTests.Setup` downgraded from a hard failure on a missing ONNX model to `Assert.Ignore` — a green-CI convenience with nothing to do with ga#616. Revert required.
+
+**Consequence for the criteria** (amended on ga#616): *"no `CONTEXT` dim is identically zero"* was insufficient — a dim can be live and still carry nothing, if the quantity is already elsewhere in the embedding. The criterion is now **linear independence from the rest of the embedding**, with an explicit redundancy check against dims 78–79 and against SPECTRAL, and effective rank reported alongside the dead-dim count.
+
+**The likeliest correct outcome is now a weight reduction, not a fuller partition.** What `CONTEXT` can hold that no other partition can is anything *relative to a key or tonic* — SPECTRAL is absolute and per-voicing, and `PhaseSphereService.ComputeRelativePhases` already exists for the relative case. If nothing key-relative survives scrutiny for a context-free voicing, the honest fix is to reduce the 0.20 weight to the degrees of freedom actually carried. Either way ga#605's revival condition holds: the deterministic baseline must be measured on a `CONTEXT` partition that is *honest*, not merely non-zero.
 
 ## 5b. Backlog linkage (orphan problem closed)
 
