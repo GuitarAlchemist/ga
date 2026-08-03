@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-08-02T23:24:47.536954Z",
+  "generated_at": "2026-08-03T23:32:13.235852Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "green",
   "limbs": [
@@ -9,8 +9,8 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-02T21:52:34Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30768849158",
+      "last_heartbeat": "2026-08-03T10:32:46Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30805996947",
       "detail": "latest completed run: skipped"
     },
     {
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-02T22:15:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30769710191",
+      "last_heartbeat": "2026-08-03T10:32:46Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30805996812",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-02T23:08:30Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30771626824",
+      "last_heartbeat": "2026-08-03T23:17:21Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30861737454",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-02T08:03:23Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30739017327",
+      "last_heartbeat": "2026-08-03T09:18:27Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30800833358",
       "detail": "latest completed run: success"
     },
     {
