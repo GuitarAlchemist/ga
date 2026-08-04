@@ -1,8 +1,8 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-08-03T23:32:13.235852Z",
+  "generated_at": "2026-08-04T03:44:36.666013Z",
   "repo": "GuitarAlchemist/ga",
-  "overall": "green",
+  "overall": "yellow",
   "limbs": [
     {
       "id": "lane:jules-router",
@@ -45,18 +45,18 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-03T23:17:21Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30861737454",
+      "last_heartbeat": "2026-08-04T00:57:23Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30867208671",
       "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "green",
+      "status": "yellow",
       "last_heartbeat": "2026-08-01T22:25:48Z",
       "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/30721237813",
-      "detail": "latest completed run: success"
+      "detail": "stale: last run 2026-08-01T22:25:48Z, expected cadence ~1560 min"
     },
     {
       "id": "sensor:fleet-status",
