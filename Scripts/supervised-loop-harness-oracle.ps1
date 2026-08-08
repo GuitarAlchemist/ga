@@ -29,6 +29,9 @@ $required = @(
     'ga.loop-policy.json',
     'agent-blackbox.policy.json',
     'Scripts/dev-process-overseer.ps1',
+    'Scripts/LoopPolicy.psm1',
+    'Scripts/cloud-validate.sh',
+    'Scripts/cloud-validate.ps1',
     'Scripts/supervised-loop-preflight.ps1',
     '.claude/skills/supervised-loop/SKILL.md',
     'state/quality/ga-harness/baseline.json'
@@ -47,8 +50,15 @@ try {
     $problems += 'loop_policy_unparseable'
 }
 if ($loopPolicy) {
-    if (-not $loopPolicy.allow_edit -or $loopPolicy.allow_edit.Count -eq 0) { $problems += 'loop_policy_missing_allow_edit' }
-    if (-not $loopPolicy.protected_paths -or $loopPolicy.protected_paths.Count -eq 0) { $problems += 'loop_policy_missing_protected_paths' }
+    try {
+        Import-Module (Join-Path $PSScriptRoot 'LoopPolicy.psm1') -Force
+        $policyVerdict = Test-GaLoopPolicy -Policy $loopPolicy
+        if (-not $policyVerdict.Valid) {
+            $problems += @($policyVerdict.Problems | ForEach-Object { "loop_policy_contract_$_" })
+        }
+    } catch {
+        $problems += 'loop_policy_validator_failed'
+    }
 }
 
 $status = if ($problems.Count -eq 0) { 'ok' } else { 'fail' }
@@ -62,7 +72,7 @@ $last = [ordered]@{
     oracle_status   = $status
     oracle_command  = 'pwsh Scripts/supervised-loop-harness-oracle.ps1'
     summary         = if ($status -eq 'ok') {
-        'Supervised-loop kit artifacts present and parseable.'
+        'Supervised-loop kit artifacts and AFK readiness contract are valid.'
     } else {
         "Kit readiness check failed: $($problems -join ', ')"
     }
