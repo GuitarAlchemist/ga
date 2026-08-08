@@ -1,7 +1,10 @@
 namespace GA.Domain.Core.Primitives.Intervals;
 
+using System.Globalization;
+using GA.Core.Extensions;
+
 /// <summary>
-///     A simple interval size (Between 1 and 8 semitones)
+///     A simple interval size (a diatonic interval number between 1 and 8 - unison to octave)
 /// </summary>
 /// <remarks>
 ///     https://en.wikipedia.org/wiki/Interval_(Objects)
@@ -15,10 +18,10 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     private const int _maxValue = IntervalSizeValues.OctaveValue;
 
     public static readonly IReadOnlySet<SimpleIntervalSize>
-        Perfect = new HashSet<SimpleIntervalSize>([1, 4, 5, 8]); // 1, 4, 5, 8, 11, 12, 15 => Perfect
+        Perfect = ImmutableHashSet.Create<SimpleIntervalSize>(1, 4, 5, 8); // 1, 4, 5, 8, 11, 12, 15 => Perfect
 
     public static readonly IReadOnlySet<SimpleIntervalSize>
-        Imperfect = new HashSet<SimpleIntervalSize>([2, 3, 6, 7]); // 2, 3, 6, 7, 9, 10, 13, 14 => Imperfect
+        Imperfect = ImmutableHashSet.Create<SimpleIntervalSize>(2, 3, 6, 7); // 2, 3, 6, 7, 9, 10, 13, 14 => Imperfect
 
     /// <summary>
     ///     Formula available for a perfect interval
@@ -98,8 +101,16 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     public static int CheckRange(int value, int minValue, int maxValue) =>
         ValueObjectUtils<SimpleIntervalSize>.EnsureValueRange(value, minValue, maxValue);
 
+    /// <summary>
+    ///     Adds a number of diatonic degrees, wrapping within the 7 diatonic degrees (octave equivalence).
+    /// </summary>
+    /// <remarks>
+    ///     Degrees are 1-based, therefore the wrapping is done on <c>Value - 1</c>; the result is always in the 1..7 range
+    ///     (<see cref="Octave" /> is the octave-equivalent of <see cref="Unison" />, e.g. <c>Seventh + 1 == Unison</c>).
+    ///     Negative increments wrap as well (<c>Unison + -1 == Seventh</c>).
+    /// </remarks>
     public static SimpleIntervalSize operator +(SimpleIntervalSize intervalSize, int increment) =>
-        new() { Value = intervalSize.Value + increment % 7 };
+        new() { Value = (intervalSize.Value - 1 + increment).Mod(7) + 1 };
 
     public static SimpleIntervalSize operator ++(SimpleIntervalSize intervalSize) => intervalSize + 1;
 
@@ -124,7 +135,7 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SimpleIntervalSize ToInverse() => FromValue(9 - Value);
 
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
     private static class IntervalSizeValues
     {
@@ -154,9 +165,15 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out SimpleIntervalSize result)
     {
-        if (!int.TryParse(s, out var i))
+        result = default;
+        if (!int.TryParse(s, NumberStyles.Integer, provider ?? CultureInfo.InvariantCulture, out var i))
         {
-            throw new ArgumentException("Invalid format");
+            return false;
+        }
+
+        if (i is < _minValue or > _maxValue)
+        {
+            return false;
         }
 
         result = FromValue(i);

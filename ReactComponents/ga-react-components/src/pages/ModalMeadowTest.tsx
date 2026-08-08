@@ -19,7 +19,7 @@
  * notifies us via the onModeChange / onUserTakeover callbacks.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Container, Box, Typography, Paper } from '@mui/material';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 import { useIsMobile } from '../components/Common/ResponsiveDemoShell';
@@ -31,6 +31,60 @@ import {
   type ModeConfig,
 } from '../components/ModalMeadow';
 
+interface ModalMeadowCompassHandle {
+  setHeading: (headingDegrees: number) => void;
+}
+
+// Camera-facing 2D compass. The N/E/S/W dial stays fixed and the green needle
+// rotates to point in the direction the player is looking.
+const ModalMeadowCompass = forwardRef<ModalMeadowCompassHandle, object>(
+  (_props, ref) => {
+    const needleRef = useRef<SVGPathElement>(null);
+    useImperativeHandle(ref, () => ({
+      setHeading: (headingDegrees: number) => {
+        if (needleRef.current) {
+          needleRef.current.setAttribute('transform', `rotate(${headingDegrees}, 44, 44)`);
+        }
+      },
+    }));
+    return (
+      <svg width={88} height={88} viewBox="0 0 88 88">
+        <circle
+          cx={44}
+          cy={44}
+          r={40}
+          fill="rgba(0,0,0,0.65)"
+          stroke="rgba(155,227,138,0.35)"
+          strokeWidth={1}
+        />
+        <line x1={44} y1={8} x2={44} y2={80} stroke="rgba(155,227,138,0.25)" strokeWidth={1} />
+        <line x1={8} y1={44} x2={80} y2={44} stroke="rgba(155,227,138,0.25)" strokeWidth={1} />
+        <text x={44} y={18} textAnchor="middle" fill="#ff6b6b" fontSize="11" fontFamily="monospace" fontWeight={700}>
+          N
+        </text>
+        <text x={78} y={48} textAnchor="middle" fill="#cdeac0" fontSize="11" fontFamily="monospace">
+          E
+        </text>
+        <text x={44} y={80} textAnchor="middle" fill="#cdeac0" fontSize="11" fontFamily="monospace">
+          S
+        </text>
+        <text x={10} y={48} textAnchor="middle" fill="#cdeac0" fontSize="11" fontFamily="monospace">
+          W
+        </text>
+        <path
+          ref={needleRef}
+          d="M44 14 L38 34 L44 30 L50 34 Z"
+          fill="#9be38a"
+          opacity={0.9}
+          transform="rotate(0, 44, 44)"
+        />
+        <circle cx={44} cy={44} r={3} fill="#cdeac0" />
+      </svg>
+    );
+  },
+);
+ModalMeadowCompass.displayName = 'ModalMeadowCompass';
+
 const ModalMeadowTest: React.FC = () => {
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<ModeConfig>(LYDIAN);
@@ -38,6 +92,7 @@ const ModalMeadowTest: React.FC = () => {
   // v0.6 pattern (kept): auto-walk is on until this flips true via
   // pointer-lock click or a movement-key press inside the canvas.
   const [tookOver, setTookOver] = useState<boolean>(false);
+  const compassRef = useRef<ModalMeadowCompassHandle>(null);
 
   // Callbacks are useCallback'd because ModalMeadow's effect depends on them;
   // a fresh function each render would re-tear-down the whole scene.
@@ -46,6 +101,9 @@ const ModalMeadowTest: React.FC = () => {
   const handleModeChange = useCallback((m: ModeConfig) => setMode(m), []);
   const handleLockChange = useCallback((l: boolean) => setLocked(l), []);
   const handleUserTakeover = useCallback(() => setTookOver(true), []);
+  const handleCameraHeadingChange = useCallback((heading: number) => {
+    compassRef.current?.setHeading(heading);
+  }, []);
 
   // v1.4: short-circuit before instantiating the Three.js scene on mobile.
   // Saves the 240k-blade GPU spin-up and avoids the pointer-lock /
@@ -73,6 +131,7 @@ const ModalMeadowTest: React.FC = () => {
           onModeChange={handleModeChange}
           onLockChange={handleLockChange}
           onUserTakeover={handleUserTakeover}
+          onCameraHeadingChange={handleCameraHeadingChange}
         />
 
         {/* Centre-top pointer-lock hint — only when not locked. v0.6 swap
@@ -100,6 +159,24 @@ const ModalMeadowTest: React.FC = () => {
               : 'Auto-walking the brightness curve · Click to take control'}
           </Paper>
         )}
+
+        {/* Top-right camera-facing compass. Updated every frame via ref so the
+            React tree does not re-render. */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 24,
+            right: 24,
+            bgcolor: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: '50%',
+            border: '1px solid rgba(155,227,138,0.2)',
+            p: 0.5,
+            pointerEvents: 'none',
+          }}
+        >
+          <ModalMeadowCompass ref={compassRef} />
+        </Box>
 
         {/* Bottom-left mode panel + brightness-curve pip strip. */}
         <Paper

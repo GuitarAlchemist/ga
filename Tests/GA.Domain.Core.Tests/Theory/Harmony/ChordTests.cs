@@ -59,20 +59,14 @@ public class ChordTests
     [TestCase("Cm", ChordQuality.Minor)]
     [TestCase("Cdim", ChordQuality.Diminished)]
     [TestCase("Caug", ChordQuality.Augmented)]
-    public void FromSymbol_ShouldCreateCorrectQuality(string symbol, ChordQuality expectedQuality)
-    {
-        Assert.That(Chord.FromSymbol(symbol).Quality, Is.EqualTo(expectedQuality));
-    }
+    public void FromSymbol_ShouldCreateCorrectQuality(string symbol, ChordQuality expectedQuality) => Assert.That(Chord.FromSymbol(symbol).Quality, Is.EqualTo(expectedQuality));
 
     [TestCase("C7", ChordExtension.Seventh)]
     [TestCase("Cmaj7", ChordExtension.Seventh)]
     [TestCase("C9", ChordExtension.Ninth)]
     [TestCase("C11", ChordExtension.Eleventh)]
     [TestCase("C13", ChordExtension.Thirteenth)]
-    public void FromSymbol_ShouldCreateCorrectExtension(string symbol, ChordExtension expectedExtension)
-    {
-        Assert.That(Chord.FromSymbol(symbol).Extension, Is.EqualTo(expectedExtension));
-    }
+    public void FromSymbol_ShouldCreateCorrectExtension(string symbol, ChordExtension expectedExtension) => Assert.That(Chord.FromSymbol(symbol).Extension, Is.EqualTo(expectedExtension));
 
     [Test]
     public void FromSymbol_ParsesRootWithAccidental()
@@ -87,16 +81,44 @@ public class ChordTests
     }
 
     [Test]
-    public void TryFromSymbol_InvalidSymbol_ReturnsFalse()
+    public void TryFromSymbol_InvalidSymbol_ReturnsFalse() => Assert.Multiple(() =>
     {
-        Assert.Multiple(() =>
-        {
-            Assert.That(Chord.TryFromSymbol("H7", out _), Is.False);   // H is not a note letter
-            Assert.That(Chord.TryFromSymbol("Cwobble", out _), Is.False); // unknown suffix
-            Assert.That(Chord.TryFromSymbol("C", out var c), Is.True);
-            Assert.That(c!.Quality, Is.EqualTo(ChordQuality.Major));
-        });
-    }
+        Assert.That(Chord.TryFromSymbol("H7", out _), Is.False);   // H is not a note letter
+        Assert.That(Chord.TryFromSymbol("Cwobble", out _), Is.False); // unknown suffix
+        Assert.That(Chord.TryFromSymbol("C", out var c), Is.True);
+        Assert.That(c!.Quality, Is.EqualTo(ChordQuality.Major));
+    });
+
+    // Regression: IsInverted compared a Note.Accidented against the original Note subtype, so record equality
+    // across subtypes always failed and a root-position chord reported as inverted.
+    [Test]
+    public void RootPosition_IsNotInverted() => Assert.Multiple(() =>
+    {
+        Assert.That(Chord.FromSymbol("C").IsInverted, Is.False);
+        Assert.That(Chord.FromSymbol("C").GetInversion(), Is.Zero);
+        Assert.That(Chord.FromSymbol("F#m7").IsInverted, Is.False);
+        Assert.That(new Chord(Note.Sharp.C, ChordFormula.Major).IsInverted, Is.False);
+    });
+
+    // TryFromSymbol must not rely on exceptions as control flow
+    [Test]
+    public void TryFromSymbol_DoesNotThrowForAnyInput() => Assert.Multiple(() =>
+    {
+        Assert.That(() => Chord.TryFromSymbol("", out _), Throws.Nothing);
+        Assert.That(() => Chord.TryFromSymbol("   ", out _), Throws.Nothing);
+        Assert.That(() => Chord.TryFromSymbol("Amm7", out _), Throws.Nothing);
+        Assert.That(Chord.TryFromSymbol("", out _), Is.False);
+        Assert.That(Chord.TryFromSymbol("   ", out _), Is.False);
+        Assert.That(Chord.TryFromSymbol("Amm7", out _), Is.False);
+    });
+
+    [Test]
+    public void FromSymbol_InvalidSymbol_Throws() => Assert.Multiple(() =>
+    {
+        Assert.That(() => Chord.FromSymbol(""), Throws.ArgumentException);
+        Assert.That(() => Chord.FromSymbol("Amm7"), Throws.ArgumentException);
+        Assert.That(() => Chord.FromSymbol("H7"), Throws.ArgumentException);
+    });
 
     [Test]
     public void Inversions_ShouldWorkCorrectly()
@@ -135,14 +157,11 @@ public class ChordTests
         new(new Note.Accidented(NaturalNote.C, Accidental.Natural), formula);
 
     private static int[] PitchClassValues(Chord chord) =>
-        chord.PitchClassSet.Select(pc => pc.Value).OrderBy(v => v).ToArray();
+        [.. chord.PitchClassSet.Select(pc => pc.Value).OrderBy(v => v)];
 
+    // C major triad = {C, E, G} = {0, 4, 7}.
     [Test]
-    public void MajorTriad_HasRootMajorThirdPerfectFifth()
-    {
-        // C major triad = {C, E, G} = {0, 4, 7}.
-        Assert.That(PitchClassValues(CChord(ChordFormula.Major)), Is.EqualTo(new[] { 0, 4, 7 }));
-    }
+    public void MajorTriad_HasRootMajorThirdPerfectFifth() => Assert.That(PitchClassValues(CChord(ChordFormula.Major)), Is.EqualTo(new[] { 0, 4, 7 }));
 
     [Test]
     public void Dominant7_HasExpectedPitchClasses()
@@ -176,10 +195,7 @@ public class ChordTests
     }
 
     [TestCaseSource(nameof(SeventhChordCases))]
-    public void SeventhChords_ClassifyAsSeventhExtension(ChordFormula formula)
-    {
-        Assert.That(CChord(formula).Extension, Is.EqualTo(ChordExtension.Seventh));
-    }
+    public void SeventhChords_ClassifyAsSeventhExtension(ChordFormula formula) => Assert.That(CChord(formula).Extension, Is.EqualTo(ChordExtension.Seventh));
 
     public static IEnumerable<TestCaseData> SeventhChordCases
     {
@@ -192,46 +208,37 @@ public class ChordTests
     }
 
     [Test]
-    public void Formula_Quality_IsClassifiedFromIntervals()
+    public void Formula_Quality_IsClassifiedFromIntervals() => Assert.Multiple(() =>
     {
-        Assert.Multiple(() =>
-        {
-            Assert.That(ChordFormula.Major.Quality, Is.EqualTo(ChordQuality.Major));
-            Assert.That(ChordFormula.Minor.Quality, Is.EqualTo(ChordQuality.Minor));
-            Assert.That(ChordFormula.Diminished.Quality, Is.EqualTo(ChordQuality.Diminished));
-            Assert.That(ChordFormula.Augmented.Quality, Is.EqualTo(ChordQuality.Augmented));
-            Assert.That(ChordFormula.Dominant7.Quality, Is.EqualTo(ChordQuality.Dominant));
-            Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major));
-            Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor));
-        });
-    }
+        Assert.That(ChordFormula.Major.Quality, Is.EqualTo(ChordQuality.Major));
+        Assert.That(ChordFormula.Minor.Quality, Is.EqualTo(ChordQuality.Minor));
+        Assert.That(ChordFormula.Diminished.Quality, Is.EqualTo(ChordQuality.Diminished));
+        Assert.That(ChordFormula.Augmented.Quality, Is.EqualTo(ChordQuality.Augmented));
+        Assert.That(ChordFormula.Dominant7.Quality, Is.EqualTo(ChordQuality.Dominant));
+        Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major));
+        Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor));
+    });
 
+    // A suspended chord replaces the third with a 2nd (sus2) or 4th (sus4).
     [Test]
-    public void SuspendedFormulas_AreDetectedAsSuspended()
+    public void SuspendedFormulas_AreDetectedAsSuspended() => Assert.Multiple(() =>
     {
-        // A suspended chord replaces the third with a 2nd (sus2) or 4th (sus4).
-        Assert.Multiple(() =>
-        {
-            Assert.That(ChordFormula.Suspended2.IsSuspended, Is.True);
-            Assert.That(ChordFormula.Suspended4.IsSuspended, Is.True);
-            Assert.That(ChordFormula.Suspended2.Quality, Is.EqualTo(ChordQuality.Suspended));
-            Assert.That(ChordFormula.Suspended4.Quality, Is.EqualTo(ChordQuality.Suspended));
-            Assert.That(ChordFormula.Suspended2.Extension, Is.EqualTo(ChordExtension.Sus2));
-            Assert.That(ChordFormula.Suspended4.Extension, Is.EqualTo(ChordExtension.Sus4));
-        });
-    }
+        Assert.That(ChordFormula.Suspended2.IsSuspended, Is.True);
+        Assert.That(ChordFormula.Suspended4.IsSuspended, Is.True);
+        Assert.That(ChordFormula.Suspended2.Quality, Is.EqualTo(ChordQuality.Suspended));
+        Assert.That(ChordFormula.Suspended4.Quality, Is.EqualTo(ChordQuality.Suspended));
+        Assert.That(ChordFormula.Suspended2.Extension, Is.EqualTo(ChordExtension.Sus2));
+        Assert.That(ChordFormula.Suspended4.Extension, Is.EqualTo(ChordExtension.Sus4));
+    });
 
+    // Chords that contain a third (major or minor) are never suspended.
     [Test]
-    public void NonSuspendedFormulas_AreNotSuspended()
+    public void NonSuspendedFormulas_AreNotSuspended() => Assert.Multiple(() =>
     {
-        // Chords that contain a third (major or minor) are never suspended.
-        Assert.Multiple(() =>
-        {
-            Assert.That(ChordFormula.Major.IsSuspended, Is.False);
-            Assert.That(ChordFormula.Minor.IsSuspended, Is.False);
-            Assert.That(ChordFormula.Dominant7.IsSuspended, Is.False);
-        });
-    }
+        Assert.That(ChordFormula.Major.IsSuspended, Is.False);
+        Assert.That(ChordFormula.Minor.IsSuspended, Is.False);
+        Assert.That(ChordFormula.Dominant7.IsSuspended, Is.False);
+    });
 
     [Test]
     public void ToInversion_PreservesPitchClassContent()

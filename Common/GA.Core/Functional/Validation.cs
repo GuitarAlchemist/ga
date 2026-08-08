@@ -56,6 +56,39 @@ public readonly record struct Validation<TValue, TError>
     public static Validation<TValue, TError> Failure(IEnumerable<TError> errors) => new(errors);
     public static Validation<TValue, TError> Failure(params TError[] errors) => new(errors);
 
+    /// <summary>
+    ///     Functor: Maps the success value to a new value using the provided function.
+    ///     If this validation is invalid, the errors are propagated unchanged.
+    /// </summary>
+    public Validation<TResult, TError> Map<TResult>(Func<TValue, TResult> mapper) =>
+        _isValid
+            ? Validation<TResult, TError>.Success(mapper(_value!))
+            : Validation<TResult, TError>.Failure(_errors);
+
+    /// <summary>
+    ///     Monadic bind: Chains this validation into another validation-returning function.
+    ///     If this validation is invalid, the errors are propagated unchanged and the binder is not invoked.
+    /// </summary>
+    public Validation<TResult, TError> Bind<TResult>(Func<TValue, Validation<TResult, TError>> binder) =>
+        _isValid
+            ? binder(_value!)
+            : Validation<TResult, TError>.Failure(_errors);
+
+    /// <summary>
+    ///     Applicative: Applies a validation of a function to this validation.
+    ///     Accumulates errors from both validations if both are invalid.
+    /// </summary>
+    public Validation<TResult, TError> Apply<TResult>(Validation<Func<TValue, TResult>, TError> validationFunc)
+    {
+        if (_isValid && validationFunc._isValid)
+        {
+            return Validation<TResult, TError>.Success(validationFunc._value!(_value!));
+        }
+
+        var allErrors = _errors.AddRange(validationFunc._errors);
+        return Validation<TResult, TError>.Failure(allErrors);
+    }
+
     public TResult Match<TResult>(Func<TValue, TResult> onValid, Func<ImmutableList<TError>, TResult> onInvalid) =>
         _isValid ? onValid(_value!) : onInvalid(_errors);
 }
