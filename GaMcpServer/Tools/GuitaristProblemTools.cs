@@ -453,33 +453,132 @@ public static class GaArpeggioSuggestionsTool
         var romans      = isMinor ? GuitaristHelpers.MinorRomans  : GuitaristHelpers.MajorRomans;
         var degreeModes = isMinor ? MinorDegreeModes : MajorDegreeModes;
 
+        bool SuffixMatchesQuality(string diatonicSuffix, GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind kind)
+        {
+            if (diatonicSuffix == "m")
+            {
+                return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor
+                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor7
+                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.MinorMajor7;
+            }
+            if (diatonicSuffix == "dim")
+            {
+                return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished
+                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished7
+                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.HalfDiminished;
+            }
+            // Diatonic suffix is "" (Major)
+            return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major7
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.LydianMaj7
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.AlteredDominant
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Altered
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.SuspendedDominant
+                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Augmented;
+        }
+
+        (string Mode, string Notes) GetQualityModeAndNotes(GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind kind) =>
+            kind switch
+            {
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major7 => ("Ionian (major)", "R, M2, M3, P4, P5, M6, M7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.LydianMaj7 => ("Lydian", "R, M2, M3, A4, P5, M6, M7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major => ("Ionian (major)", "R, M2, M3, P4, P5, M6, M7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 => ("Mixolydian", "R, M2, M3, P4, P5, M6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.AlteredDominant => ("Altered (Super Locrian)", "R, m2, m3, d4, d5, m6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Altered => ("Altered (Super Locrian)", "R, m2, m3, d4, d5, m6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.SuspendedDominant => ("Mixolydian", "R, M2, P4, P5, M6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor7 => ("Dorian", "R, M2, m3, P4, P5, M6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor => ("Aeolian (minor)", "R, M2, m3, P4, P5, m6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.MinorMajor7 => ("Melodic Minor", "R, M2, m3, P4, P5, M6, M7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.HalfDiminished => ("Locrian", "R, m2, m3, P4, d5, m6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished => ("Locrian", "R, m2, m3, P4, d5, m6, m7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished7 => ("Whole-Half Diminished", "R, M2, m3, P4, d5, m6, d7, M7"),
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Augmented => ("Whole Tone", "R, M2, M3, d5, m6, m7"),
+                _ => ("depends on context", "R, M2, M3, P5")
+            };
+
         var suggestions = chords.Select(chord =>
         {
             var chordPc = GuitaristHelpers.ChordRootPc(chord);
             if (chordPc < 0)
                 return new { chord, scaleDegree = "?", arpeggio = "?", mode = "unknown", notes = "" };
 
+            var root = GA.Business.ML.Agents.Skills.ImprovisationSkill.ExtractRoot(chord);
+            var quality = GA.Business.ML.Agents.Skills.ImprovisationSkill.InferQuality(chord);
+            var arpeggio = GA.Business.ML.Agents.Skills.ImprovisationSkill.ArpeggioFor(root, quality);
+
             // Find which scale degree this chord root matches.
             var degIdx = Array.FindIndex(offsets, o => (keyPc + o) % 12 == chordPc);
             if (degIdx < 0)
             {
-                // Chromatic chord — use generic major arpeggio suggestion.
+                // Chromatic chord — use generic arpeggio suggestion.
                 return new
                 {
                     chord,
                     scaleDegree = "chromatic",
-                    arpeggio    = chord + " (chromatic — outside key)",
+                    arpeggio    = arpeggio + " (chromatic — outside key)",
                     mode        = "depends on context",
                     notes       = "R, M2, M3, P5"
                 };
             }
 
-            var (arpeggioSuffix, modeName2, notes) = degreeModes[degIdx];
+            string scaleDegree;
+            string modeName2;
+            string notes;
+
+            if (SuffixMatchesQuality(pattern[degIdx].Suffix, quality.Kind))
+            {
+                scaleDegree = romans[degIdx];
+                var (_, m, n) = degreeModes[degIdx];
+                modeName2 = m;
+                notes = n;
+            }
+            else
+            {
+                // Mismatched quality — secondary or borrowed/chromatic chord!
+                // Determine Roman numeral/degree label
+                if (!isMinor)
+                {
+                    // In a major key, we can identify specific secondary dominants:
+                    // (keyPc + offset) % 12 == chordPc
+                    var relativeOffset = (chordPc - keyPc + 12) % 12;
+                    if (relativeOffset == 9 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/ii" : "secondary";
+                    }
+                    else if (relativeOffset == 2 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/V" : "secondary";
+                    }
+                    else if (relativeOffset == 4 && (quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 || quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major))
+                    {
+                        scaleDegree = quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 ? "V/vi" : "secondary";
+                    }
+                    else if (relativeOffset == 0 && quality.Kind == GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7)
+                    {
+                        scaleDegree = "V/IV";
+                    }
+                    else
+                    {
+                        scaleDegree = "secondary";
+                    }
+                }
+                else
+                {
+                    scaleDegree = "secondary";
+                }
+
+                var (m, n) = GetQualityModeAndNotes(quality.Kind);
+                modeName2 = m;
+                notes = n;
+            }
+
             return new
             {
                 chord,
-                scaleDegree = romans[degIdx],
-                arpeggio    = chord + arpeggioSuffix,
+                scaleDegree = scaleDegree,
+                arpeggio    = arpeggio,
                 mode        = modeName2,
                 notes
             };
