@@ -1,4 +1,5 @@
 using GaChatbot.Api.Extensions;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -15,6 +16,17 @@ builder.Logging.AddSimpleConsole();
 builder.Logging.AddDebug();
 
 builder.Services.AddControllers();
+// Data Protection backs the chat session cookie (HttpChatSessionCookie).
+// Unlike GaApi — which gets IDataProtectionProvider transitively from
+// AddAuthentication — this host registers no auth, so nothing else pulls
+// the service in and GetOrIssue would fail at request time.
+// SetApplicationName isolates the key ring from any other app sharing the
+// keys directory, so a cookie minted elsewhere can never Unprotect here.
+// Keys use the framework default location; if it isn't writable (some
+// container images) they are ephemeral and sessions rotate on restart —
+// acceptable for the anonymous demo, whose threat model already treats
+// rotation as expected.
+builder.Services.AddDataProtection().SetApplicationName("GaChatbot.Api");
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpClient();
 builder.Services.AddTransient(_ => new HttpClient());
