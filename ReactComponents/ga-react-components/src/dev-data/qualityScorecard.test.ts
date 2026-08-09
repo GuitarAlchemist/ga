@@ -43,10 +43,18 @@ const AUDIT_NOW = new Date('2026-08-09T12:00:00Z');
 // 2026-07-20T10:37Z) is 0.6 days old. It pins that the demotion comes from
 // `advisory: true` alone and owes nothing to the snapshot being old.
 const FRESH_NOW = new Date('2026-07-21T00:00:00Z');
-// The exact instant readme-drift's committed snapshot (emitted
-// 2026-08-03T11:21:18.864Z) turns 7 days old — the boundary at which a fixed
-// 7-day staleness rule would have demoted a genuine red verdict.
-const CADENCE_BOUNDARY_NOW = new Date('2026-08-10T11:21:19Z');
+// The instant the SELECTED readme-drift snapshot turns 7 days old — the
+// boundary at which a fixed 7-day staleness rule would have demoted a genuine
+// red verdict. Derived from that snapshot's own `emitted_at`, never pinned to
+// an absolute date: the sensor rewrites this domain weekly (Mondays 08:00
+// UTC), so a hard-coded instant would stop proving anything — and then fail
+// spuriously, reporting a tiny age against a 7-day floor — the first time the
+// producer runs. Deriving it makes the `> 7` precondition true by
+// construction, and keeps holding if readme-drift's cadence ever changes.
+const SEVEN_DAYS_MS = 7 * 86_400_000;
+function cadenceBoundaryNow(snapshot: Record<string, unknown>): Date {
+    return new Date(Date.parse(snapshot.emitted_at as string) + SEVEN_DAYS_MS + 1_000);
+}
 
 interface TreeEntry { domain: string; data: Record<string, unknown> }
 
@@ -173,11 +181,12 @@ describe('published quality scorecard', () => {
     // skipped. This is the guard for that: classification depends on the
     // snapshot's fields, never on the wall clock.
     it('keeps readme-drift a live regression at the 7-day cadence boundary', () => {
-        const { regressions, staleOrAdvisory } = classifyAll(entries, CADENCE_BOUNDARY_NOW);
         const drift = entries.find((e) => e.domain === 'readme-drift')!;
+        const boundaryNow = cadenceBoundaryNow(drift.data);
+        const { regressions, staleOrAdvisory } = classifyAll(entries, boundaryNow);
         // Confirm the clock really is past the boundary, so this is not a
         // vacuous assertion if the committed snapshot is ever refreshed.
-        expect(classifyQualitySnapshot('readme-drift', drift.data, CADENCE_BOUNDARY_NOW).ageDays!).toBeGreaterThan(7);
+        expect(classifyQualitySnapshot('readme-drift', drift.data, boundaryNow).ageDays!).toBeGreaterThan(7);
         expect(regressions).toContain('readme-drift: oracle_status=error');
         expect(staleOrAdvisory.map((e) => e.domain)).toEqual(['maintain-gate']);
     });
