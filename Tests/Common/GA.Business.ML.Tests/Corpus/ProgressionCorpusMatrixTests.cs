@@ -237,6 +237,136 @@ public class ProgressionCorpusMatrixTests
         Assert.Pass();
     }
 
+    // ── Cells whose pass must mean what it says ──────────────────────────────
+
+    /// <summary>
+    ///     Negative control for the empty-seam-result path. "No forbidden centre
+    ///     appeared in the top tie" is vacuously true when the seam produced no
+    ///     candidate at all, so recording a pass there reports success for an
+    ///     input the product could not answer. It is worse than an odd cell on
+    ///     <c>pc-02</c>, whose sibling <c>key.top_candidate_acceptable</c> is
+    ///     already failing: a total parse regression would move neither cell and
+    ///     emit no gate signal at all.
+    /// </summary>
+    /// <remarks>
+    ///     Replayed rather than provoked, because no corpus case makes the seam
+    ///     return nothing today - which is why the false pass was invisible.
+    /// </remarks>
+    [Test]
+    public void ForbiddenCenterCell_FailsClosedOnAnEmptySeamResult()
+    {
+        Assert.That(KeyIdentificationService.Identify(["N.C."]), Is.Empty,
+            "the empty-result path must be reachable, or this control means nothing");
+
+        Assert.Multiple(() =>
+        {
+            foreach (var c in ProgressionCorpus.Load().Cases)
+            {
+                var cell = ForbiddenCenterCell(c, []);
+
+                Assert.That(cell.Status, Is.EqualTo(Fail),
+                    $"{c.Id}: an empty candidate set must not pass key.forbidden_center_excluded");
+                Assert.That(cell.Observed, Is.EqualTo("(no candidate)"),
+                    $"{c.Id}: the cell must say the seam answered nothing");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The discriminating half of the control above: failing closed must not
+    ///     become failing always. A non-empty result that avoids every forbidden
+    ///     centre still passes.
+    /// </summary>
+    [Test]
+    public void ForbiddenCenterCell_StillPassesOnACleanNonEmptyResult() =>
+        Assert.Multiple(() =>
+        {
+            foreach (var c in ProgressionCorpus.Load().Cases)
+            {
+                var acceptable = c.Expected.AcceptableTonalCenters[0];
+                var cell = ForbiddenCenterCell(c, [Candidate(acceptable)]);
+
+                Assert.That(cell.Status, Is.EqualTo(Pass),
+                    $"{c.Id}: '{acceptable}' is not forbidden, so the cell must still pass");
+            }
+        });
+
+    /// <summary>
+    ///     #623 and #614 replace the relative-key scoring tie with a functional
+    ///     reading. That collapse is the intended improvement, and it must not be
+    ///     scorable as a <c>pass -&gt; fail</c> product regression on the corpus's
+    ///     one ambiguity cell. Replays every tie width, including the collapsed
+    ///     and empty ones no seam can produce today.
+    /// </summary>
+    [Test]
+    public void AmbiguityCell_IsBlockedForEveryScoringTieWidth()
+    {
+        var ambiguous = ProgressionCorpus.Load().Cases
+            .Where(c => c.Uncertainty.ExpectedBehavior != "confident").ToList();
+
+        Assert.That(ambiguous, Is.Not.Empty, "#627 requires an intentionally ambiguous case");
+
+        IReadOnlyList<KeyIdentificationService.KeyCandidate>[] replays =
+        [
+            [],                                                             // seam parsed nothing
+            [Candidate("C major")],                                         // tie collapsed by the #623 fix
+            [Candidate("A minor"), Candidate("C major")],                   // today's accidental tie
+            [Candidate("A minor"), Candidate("C major"), Candidate("F major")]
+        ];
+
+        Assert.Multiple(() =>
+        {
+            foreach (var c in ambiguous)
+            foreach (var candidates in replays)
+            {
+                var cell = KeyChecks(c, candidates)
+                    .Single(x => x.CheckName == "key.alternatives_when_ambiguous");
+
+                Assert.That(cell.Status, Is.EqualTo(Blocked),
+                    $"{c.Id} with {candidates.Count} candidate(s): a bare scoring tie is not an " +
+                    "explicit alternatives or abstention signal, so it cannot be scored either way");
+                Assert.That(cell.BlockedOn, Is.EqualTo(new[] { 623 }),
+                    $"{c.Id}: the ambiguity seam is the one #623 has to supply");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The artifact must not contradict itself: a case cannot record
+    ///     "no seam reports alternatives, warnings or abstention" and a passing
+    ///     alternatives cell for the same seam in the same run.
+    /// </summary>
+    [Test]
+    public void AmbiguityCell_AgreesWithTheSiblingUncertaintyCell()
+    {
+        var matrix = BuildMatrix();
+
+        Assert.Multiple(() =>
+        {
+            foreach (var c in matrix.Cases)
+            {
+                var alternatives = c.Checks.FirstOrDefault(x => x.CheckName == "key.alternatives_when_ambiguous");
+                if (alternatives is null) continue;
+
+                var uncertainty = c.Checks.Single(x => x.CheckName == "uncertainty.behavior");
+
+                Assert.That(alternatives.Status, Is.EqualTo(uncertainty.Status),
+                    $"{c.Id}: key.alternatives_when_ambiguous and uncertainty.behavior describe the " +
+                    "same missing capability and must report the same status");
+                Assert.That(alternatives.BlockedOn, Is.EqualTo(uncertainty.BlockedOn),
+                    $"{c.Id}: both cells wait on the same issue");
+            }
+        });
+    }
+
+    private static CheckResult ForbiddenCenterCell(
+        ProgressionCase c, IReadOnlyList<KeyIdentificationService.KeyCandidate> candidates) =>
+        KeyChecks(c, candidates).Single(x => x.CheckName == "key.forbidden_center_excluded");
+
+    /// <summary>A seam result standing in for one scored key, for replay only.</summary>
+    private static KeyIdentificationService.KeyCandidate Candidate(string key) =>
+        new(key, RelativeKey: string.Empty, MatchCount: 1, TotalChords: 1, DiatonicSet: []);
+
     // ── Matrix construction ──────────────────────────────────────────────────
 
     private static Dictionary<string, string> Flatten(Matrix matrix) =>
@@ -293,9 +423,19 @@ public class ProgressionCorpusMatrixTests
         return new MatrixCase(c.Id, c.Category, checks.OrderBy(x => x.CheckName, StringComparer.Ordinal).ToList());
     }
 
-    private static IEnumerable<CheckResult> KeyChecks(ProgressionCase c)
+    private static IEnumerable<CheckResult> KeyChecks(ProgressionCase c) =>
+        KeyChecks(c, KeyIdentificationService.Identify(c.Input.CanonicalChords));
+
+    /// <summary>
+    ///     Scores the key cells from a seam result. The seam call is split out so
+    ///     a test can replay a synthetic result - in particular the empty result
+    ///     and the collapsed single reading - without waiting for the product to
+    ///     produce one. Neither state is reachable from any corpus case today,
+    ///     which is precisely why they went unscored.
+    /// </summary>
+    private static IEnumerable<CheckResult> KeyChecks(
+        ProgressionCase c, IReadOnlyList<KeyIdentificationService.KeyCandidate> candidates)
     {
-        var candidates = KeyIdentificationService.Identify(c.Input.CanonicalChords);
         var topScore = candidates.Count == 0 ? 0 : candidates.Max(x => x.MatchCount);
         var topTied = candidates.Where(x => x.MatchCount == topScore)
             .Select(x => x.Key).Order(StringComparer.Ordinal).ToList();
@@ -312,11 +452,17 @@ public class ProgressionCorpusMatrixTests
         var forbiddenHits = topTied
             .Intersect(c.Forbidden.TonalCenters, StringComparer.OrdinalIgnoreCase).ToList();
 
+        // Fails closed on an empty candidate set: "no forbidden centre appeared"
+        // is vacuously true when the seam answered nothing, and a pass there
+        // would report success for a total parse failure. See
+        // ForbiddenCenterCell_FailsClosedOnAnEmptySeamResult.
         yield return new CheckResult(
             "key.forbidden_center_excluded", "key.identify",
-            forbiddenHits.Count == 0 ? Pass : Fail,
-            forbiddenHits.Count == 0 ? $"top-tied: {observed}" : $"forbidden in top-tied: {string.Join(" | ", forbiddenHits)}",
-            $"none of: {string.Join(" | ", c.Forbidden.TonalCenters)}",
+            topTied.Count > 0 && forbiddenHits.Count == 0 ? Pass : Fail,
+            topTied.Count == 0 ? observed
+                : forbiddenHits.Count == 0 ? $"top-tied: {observed}"
+                : $"forbidden in top-tied: {string.Join(" | ", forbiddenHits)}",
+            $"at least one candidate, and none of: {string.Join(" | ", c.Forbidden.TonalCenters)}",
             BlockedOn: null);
 
         if (c.Uncertainty.ExpectedBehavior == "confident")
@@ -330,16 +476,23 @@ public class ProgressionCorpusMatrixTests
         }
         else
         {
-            var offersAll = c.Expected.AcceptableTonalCenters
-                .All(a => topTied.Contains(a, StringComparer.OrdinalIgnoreCase));
-
+            // #627 asks whether an ambiguous progression is answered with
+            // explicit alternatives or an abstention. No seam in this assembly
+            // reports either - which is what the sibling uncertainty.behavior
+            // cell already records as blocked on #623. The only thing observable
+            // here is a bare relative-key scoring tie, the same artefact that
+            // fails eleven key.single_reading_when_confident cells; scoring it as
+            // a pass would contradict that sibling cell and would turn the #623
+            // fix, which collapses the tie to one reading, into a build-failing
+            // pass -> fail regression. The tie width is deliberately kept out of
+            // this cell. See AmbiguityCell_IsBlockedForEveryScoringTieWidth.
             yield return new CheckResult(
-                "key.alternatives_when_ambiguous", "key.identify",
-                topTied.Count >= c.Uncertainty.MinAlternatives && offersAll ? Pass : Fail,
-                $"{topTied.Count} tied candidate(s): {observed}",
-                $"at least {c.Uncertainty.MinAlternatives}, including all of: " +
+                "key.alternatives_when_ambiguous", null, Blocked,
+                "no seam reports alternatives, warnings or abstention for a progression; " +
+                "a bare relative-key scoring tie is not an ambiguity signal",
+                $"at least {c.Uncertainty.MinAlternatives} explicit alternatives, including all of: " +
                 string.Join(" | ", c.Expected.AcceptableTonalCenters),
-                BlockedOn: null);
+                BlockedOn: [623]);
         }
     }
 

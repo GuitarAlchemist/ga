@@ -30,9 +30,9 @@
     }
   ],
   "totals": {
-    "pass": 52,
+    "pass": 51,
     "fail": 21,
-    "blocked": 72
+    "blocked": 73
   },
   "cases": [
     {
@@ -97,7 +97,7 @@
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: A minor | C major",
-          "expected": "none of: D major | D minor | G major"
+          "expected": "at least one candidate, and none of: D major | D minor | G major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -202,7 +202,7 @@
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: A major | E minor | F# minor | G major",
-          "expected": "none of: B minor | E major | C major"
+          "expected": "at least one candidate, and none of: B minor | E major | C major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -307,7 +307,7 @@
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: A minor | C major",
-          "expected": "none of: A major | F major | G major"
+          "expected": "at least one candidate, and none of: A major | F major | G major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -412,7 +412,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: A minor",
-          "expected": "none of: A minor | A major | G major"
+          "expected": "at least one candidate, and none of: A minor | A major | G major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -517,7 +517,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: F major",
-          "expected": "none of: F major | F minor | Ab major"
+          "expected": "at least one candidate, and none of: F major | F minor | Ab major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -622,7 +622,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: F major",
-          "expected": "none of: Bb major | F major | G minor"
+          "expected": "at least one candidate, and none of: Bb major | F major | G minor"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -727,7 +727,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: A minor",
-          "expected": "none of: E major | A minor | A major"
+          "expected": "at least one candidate, and none of: E major | A minor | A major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -832,7 +832,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: A minor | C major",
-          "expected": "none of: C major | D minor | A minor"
+          "expected": "at least one candidate, and none of: C major | D minor | A minor"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -937,7 +937,7 @@
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: A minor | C major",
-          "expected": "none of: F major | E minor | D minor | G major"
+          "expected": "at least one candidate, and none of: F major | E minor | D minor | G major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -1042,7 +1042,7 @@
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: C minor | Eb major",
-          "expected": "none of: E major | B major | F major | C# minor"
+          "expected": "at least one candidate, and none of: E major | B major | F major | C# minor"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -1157,7 +1157,7 @@
           "seam": "key.identify",
           "status": "fail",
           "observed": "forbidden in top-tied: Eb major",
-          "expected": "none of: Eb major | C major | G major"
+          "expected": "at least one candidate, and none of: Eb major | C major | G major"
         },
         {
           "check": "key.single_reading_when_confident",
@@ -1259,17 +1259,19 @@
         },
         {
           "check": "key.alternatives_when_ambiguous",
-          "seam": "key.identify",
-          "status": "pass",
-          "observed": "2 tied candidate(s): A minor | C major",
-          "expected": "at least 2, including all of: C major | A minor"
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression; a bare relative-key scoring tie is not an ambiguity signal",
+          "expected": "at least 2 explicit alternatives, including all of: C major | A minor",
+          "blocked_on": [
+            623
+          ]
         },
         {
           "check": "key.forbidden_center_excluded",
           "seam": "key.identify",
           "status": "pass",
           "observed": "top-tied: A minor | C major",
-          "expected": "none of: F major | G major | D minor"
+          "expected": "at least one candidate, and none of: F major | G major | D minor"
         },
         {
           "check": "key.top_candidate_acceptable",

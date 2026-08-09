@@ -340,6 +340,78 @@ public class ProgressionCorpusStructureTests
         });
     }
 
+    // ── The hand-written case index beside the data ──────────────────────────
+
+    /// <summary>
+    ///     The README case table is the only part of this corpus that is written
+    ///     by hand next to machine-generated data, which makes it the one place
+    ///     the published evidence can drift from the data silently - and it did:
+    ///     <c>pc-11</c>'s progression was reworked in the data commit while the
+    ///     table kept publishing the removed one. This makes agreement structural
+    ///     rather than clerical.
+    /// </summary>
+    [Test]
+    public void ReadmeCaseTable_AgreesWithTheCorpus()
+    {
+        var rows = ReadmeCaseRows();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rows.Select(r => r.Id), Is.EqualTo(Cases.Select(c => c.Id)),
+                "the README case table must list every corpus case, in corpus order");
+
+            foreach (var c in Cases)
+            {
+                var row = rows.FirstOrDefault(r => r.Id == c.Id);
+                if (row is null) continue;
+
+                Assert.That(row.Progression, Is.EqualTo(RenderProgression(c.Input.Chords)),
+                    $"{c.Id}: README progression disagrees with input.chords");
+                Assert.That(row.Pins, Is.EqualTo(RenderPins(c.Pins.Issues)),
+                    $"{c.Id}: README pins column disagrees with pins.issues");
+            }
+        });
+
+        static string RenderProgression(IReadOnlyList<string> chords) =>
+            chords.Any(s => s.Contains(' '))
+                ? string.Join(" ", chords.Select(s => $"\"{s}\""))
+                : string.Join(" ", chords);
+
+        static string RenderPins(IReadOnlyList<int> issues) =>
+            issues.Count == 0 ? "-" : string.Join(", ", issues.Select(i => $"#{i}"));
+    }
+
+    /// <summary>Rows of the README's "twelve cases" table, in file order.</summary>
+    private static IReadOnlyList<ReadmeRow> ReadmeCaseRows()
+    {
+        var rows = new List<ReadmeRow>();
+        var inCaseTable = false;
+
+        foreach (var line in File.ReadAllLines(ProgressionCorpus.ReadmePath))
+        {
+            if (line.StartsWith("## ", StringComparison.Ordinal))
+            {
+                inCaseTable = line.Contains("cases", StringComparison.OrdinalIgnoreCase);
+                continue;
+            }
+
+            if (!inCaseTable || !line.StartsWith("| `", StringComparison.Ordinal)) continue;
+
+            var cells = line.Trim('|').Split('|').Select(x => x.Trim()).ToList();
+            Assert.That(cells, Has.Count.EqualTo(6),
+                $"unexpected README case-table row shape: {line}");
+
+            rows.Add(new ReadmeRow(cells[0].Trim('`'), cells[2], cells[5]));
+        }
+
+        Assert.That(rows, Is.Not.Empty,
+            $"no case rows found in {ProgressionCorpus.ReadmePath}");
+
+        return rows;
+    }
+
+    private sealed record ReadmeRow(string Id, string Progression, string Pins);
+
     [Test]
     public void Tunings_AreDeclaredConsistentlyAcrossCases()
     {

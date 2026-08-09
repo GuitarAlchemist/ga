@@ -43,7 +43,7 @@ reads it, and it lives under the test project rather than
 | `pc-08-modal-dorian-vamp` | modal | Dm7 Em7 Dm7 Em7 | standard | D dorian | - |
 | `pc-09-starts-off-tonic` | starts away from tonic | Fmaj7 Em7 Dm7 G7 Cmaj7 | standard | C major | #614 |
 | `pc-10-spelled-out-accidentals` | spelled-out accidentals | "F minor 7" "B-flat 7" "E-flat major 7" | standard | Eb major | #554 |
-| `pc-11-drop-c-alternate-tuning` | alternate tuning | Cm Ab Eb Bb | **Drop C** | C minor | - |
+| `pc-11-drop-c-alternate-tuning` | alternate tuning | Cm Fm Ab G | **Drop C** | C minor | - |
 | `pc-12-ambiguous-relative-pair` | ambiguous | Am F C G | standard | C major *or* A minor | - |
 
 Two cases pin #614 and three pin #567, satisfying "at least two cases must

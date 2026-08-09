@@ -38,6 +38,7 @@ internal static class ProgressionCorpus
 
     public const string CorpusFileName = "progression-corpus.v1.json";
     public const string SchemaFileName = "progression-corpus.v1.schema.json";
+    public const string ReadmeFileName = "README.md";
 
     /// <summary>The twelve coverage categories required by GuitarAlchemist/ga#627.</summary>
     public static readonly IReadOnlyList<string> RequiredCategories =
@@ -71,6 +72,13 @@ internal static class ProgressionCorpus
     public static string CorpusPath => Path.Combine(Directory, CorpusFileName);
 
     public static string SchemaPath => Path.Combine(Directory, SchemaFileName);
+
+    /// <summary>
+    ///     The hand-written case index that ships beside the data. It is the
+    ///     in-repo "list of all cases" #627 asks for, so it is held to the data
+    ///     by a test rather than by care.
+    /// </summary>
+    public static string ReadmePath => Path.Combine(Directory, ReadmeFileName);
 
     /// <summary>
     ///     Where the machine-readable pass/fail matrix lives, alongside the other
