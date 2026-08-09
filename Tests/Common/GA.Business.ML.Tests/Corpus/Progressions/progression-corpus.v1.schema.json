@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitaralchemist.com/schemas/progression-corpus.v1.schema.json",
+  "title": "Progression-to-voicing evaluation corpus, v1 (draft)",
+  "description": "Language-neutral contract for the held-out deterministic progression-to-voicing evaluation corpus introduced by GuitarAlchemist/ga#627 under story #623. This is evaluation data, NOT production configuration: nothing in the runtime reads it. Expectations describe what a musically correct system must answer and are deliberately not trimmed to current product behaviour. STATUS: draft (v0.1.x convention) - not frozen; freeze only at the Phase 4 milestone of #623. NOTE FOR IMPLEMENTERS: the in-repo validator (JsonSchemaSubsetValidator) implements a bounded subset of JSON Schema - type, const, enum, required, properties, additionalProperties (boolean), items, minItems, maxItems, uniqueItems, minimum, maximum, minLength, pattern, $ref into $defs. Keep this document inside that subset; ProgressionCorpusLoaderTests fails if an unsupported keyword appears.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_version",
+    "corpus_id",
+    "corpus_version",
+    "status",
+    "held_out",
+    "issue",
+    "parent_issue",
+    "description",
+    "cases"
+  ],
+  "properties": {
+    "schema": { "const": "progression-corpus.v1.schema.json" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "corpus_id": { "const": "progression-to-voicing" },
+    "corpus_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "status": { "enum": ["draft", "frozen"] },
+    "held_out": { "type": "boolean" },
+    "issue": { "type": "string", "minLength": 1 },
+    "parent_issue": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "title", "input", "expected", "forbidden", "uncertainty", "pins", "provenance"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^pc-[0-9]{2}-[a-z0-9-]+$" },
+        "category": { "$ref": "#/$defs/category" },
+        "title": { "type": "string", "minLength": 1 },
+        "input": { "$ref": "#/$defs/input" },
+        "expected": { "$ref": "#/$defs/expected" },
+        "forbidden": { "$ref": "#/$defs/forbidden" },
+        "uncertainty": { "$ref": "#/$defs/uncertainty" },
+        "pins": { "$ref": "#/$defs/pins" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+
+    "category": {
+      "description": "The twelve required coverage categories of GuitarAlchemist/ga#627. Every value must be used by at least one case; the loader tests enforce that.",
+      "enum": [
+        "major-ii-V-I",
+        "minor-ii-V-i",
+        "major-I-vi-IV-V",
+        "deceptive-cadence",
+        "borrowed-iv",
+        "borrowed-bVII",
+        "secondary-dominant",
+        "modal",
+        "starts-away-from-tonic",
+        "spelled-out-accidentals",
+        "alternate-tuning",
+        "ambiguous"
+      ]
+    },
+
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chords", "canonical_chords", "instrument", "tuning", "key_hint", "spelling_equivalence_groups"],
+      "properties": {
+        "chords": {
+          "description": "The progression exactly as a user would type it - may use spelled-out accidentals.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "canonical_chords": {
+          "description": "Shorthand equivalents of `chords`, index-aligned. Identical to `chords` unless the case exercises alternative spellings.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "instrument": { "enum": ["guitar"] },
+        "tuning": { "$ref": "#/$defs/tuning" },
+        "key_hint": { "type": ["string", "null"] },
+        "spelling_equivalence_groups": {
+          "description": "Sets of chord spellings that MUST resolve identically. A group's canonical member need not appear in the progression - #554 names E-flat, B-flat and F-sharp, and all three share one parse boundary.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/spelling_group" }
+        }
+      }
+    },
+
+    "spelling_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "spellings"],
+      "properties": {
+        "canonical": { "type": "string", "minLength": 1 },
+        "spellings": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "tuning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "open_strings"],
+      "properties": {
+        "id": { "enum": ["standard", "drop-c"] },
+        "name": { "type": "string", "minLength": 1 },
+        "open_strings": {
+          "description": "Scientific-pitch open strings, lowest string first.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 8,
+          "items": { "type": "string", "pattern": "^[A-G](#|b)?[0-9]$" }
+        }
+      }
+    },
+
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tonal_center",
+        "acceptable_tonal_centers",
+        "roman_numerals",
+        "alternative_roman_numerals",
+        "functions",
+        "scale_families",
+        "required_chord_tones",
+        "explanation_facts",
+        "voicing_sequence"
+      ],
+      "properties": {
+        "tonal_center": { "type": "string", "minLength": 1 },
+        "acceptable_tonal_centers": {
+          "description": "Every tonal centre a correct system may return. A modal centre such as 'D dorian' is allowed here even though no current seam can express it - that gap is reported, never papered over.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "roman_numerals": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "alternative_roman_numerals": {
+          "description": "Additional complete readings that are also acceptable (used by the ambiguous case).",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "functions": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/function" }
+        },
+        "scale_families": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/scale_family" }
+        },
+        "required_chord_tones": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/chord_tones" }
+        },
+        "explanation_facts": {
+          "description": "Facts an explanation must convey. Graded by a later explanation judge; this task only pins them as data.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "voicing_sequence": { "$ref": "#/$defs/voicing_sequence" },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "function": {
+      "enum": [
+        "tonic",
+        "tonic-substitute",
+        "predominant",
+        "dominant",
+        "secondary-dominant",
+        "borrowed-predominant",
+        "borrowed-subtonic",
+        "deceptive-resolution",
+        "modal-tonic",
+        "modal-colour",
+        "submediant",
+        "mediant",
+        "subtonic"
+      ]
+    },
+
+    "scale_family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chord", "acceptable"],
+      "properties": {
+        "chord": { "type": "string", "minLength": 1 },
+        "acceptable": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "chord_tones": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chord", "quality", "root", "root_pitch_class", "pitch_classes", "notes"],
+      "properties": {
+        "chord": { "type": "string", "minLength": 1 },
+        "quality": {
+          "enum": ["major-triad", "minor-triad", "dominant-7", "major-7", "minor-7", "half-diminished-7"]
+        },
+        "root": { "type": "string", "pattern": "^[A-G](#|b)?$" },
+        "root_pitch_class": { "type": "integer", "minimum": 0, "maximum": 11 },
+        "pitch_classes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0, "maximum": 11 }
+        },
+        "notes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-G](#|##|b|bb)?$" }
+        }
+      }
+    },
+
+    "voicing_sequence": {
+      "description": "At least one complete valid realisation of the progression. Fret numbers are validated against the case tuning by fret arithmetic only - no harmonic analysis is re-implemented in the harness.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tuning_id", "frames"],
+      "properties": {
+        "tuning_id": { "enum": ["standard", "drop-c"] },
+        "frames": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/voicing_frame" }
+        }
+      }
+    },
+
+    "voicing_frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chord", "shape_family", "frets_low_to_high", "sounded_pitch_classes"],
+      "properties": {
+        "chord": { "type": "string", "minLength": 1 },
+        "shape_family": { "enum": ["E", "A"] },
+        "frets_low_to_high": {
+          "description": "One entry per string, lowest string first. null means the string is muted.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 8,
+          "items": { "type": ["integer", "null"], "minimum": 0, "maximum": 24 }
+        },
+        "sounded_pitch_classes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0, "maximum": 11 }
+        }
+      }
+    },
+
+    "forbidden": {
+      "description": "Answers that are factually wrong for this case. A system that emits any of these fails the case regardless of what else it gets right.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tonal_centers", "facts"],
+      "properties": {
+        "tonal_centers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_behavior", "min_alternatives", "max_confidence"],
+      "properties": {
+        "expected_behavior": {
+          "description": "confident = one answer is required; alternatives = more than one reading must be offered; warn = a caveat must be surfaced; abstain = the system must decline rather than guess.",
+          "enum": ["confident", "alternatives", "warn", "abstain"]
+        },
+        "min_alternatives": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "max_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "pins": {
+      "description": "Open GA issues whose regression this case pins. #627 requires at least two cases pinning #614 and #567.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issues", "rationale"],
+      "properties": {
+        "issues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "rationale": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "added_in", "rationale"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "added_in": { "const": "GuitarAlchemist/ga#627" },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
