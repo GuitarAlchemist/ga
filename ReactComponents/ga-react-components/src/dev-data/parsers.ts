@@ -527,3 +527,70 @@ export function isMaintainStale(ageHours: number | null, maxAgeHours = 36): bool
     if (ageHours == null) return true;
     return ageHours > maxAgeHours;
 }
+
+// ── Quality scorecard classification (ix#244) ───────────────────────────
+// `gatherQuality()` (vite.config.ts), published at /dev-data/quality and
+// /dev-data/manifest, used to promote every non-ok `oracle_status` straight
+// into `regressions[]`. That reads two very different things as live
+// regressions: a verdict the producer itself marks non-binding
+// (`advisory: true`), and a feed that stopped emitting weeks ago. The
+// maintain-gate tile already tells those states apart (parseMaintainGate /
+// maintainAgeHours / isMaintainStale above); this seam is the same freshness
+// and advisory semantics, reused by the second reader of the same files.
+//
+// Reclassify, never drop: `regressions[]` is a published number with four
+// rendering consumers, so a demoted entry keeps its exact label and moves to
+// `stale_or_advisory[]` rather than disappearing.
+
+/** How a quality snapshot should be reported on the published scorecard. */
+export type QualitySnapshotKind = 'regression' | 'stale' | 'advisory' | 'ok';
+
+export interface QualitySnapshotClassification {
+    /** Published label — byte-identical to the pre-change `regressions[]` entry. */
+    label: string;
+    kind: QualitySnapshotKind;
+    /** Days since `emitted_at`; null when it is absent or unparseable. */
+    ageDays: number | null;
+}
+
+/**
+ * Classify one quality snapshot for the published scorecard.
+ *
+ * Rules, applied in order:
+ *   0. `oracle_status` absent or `'ok'` ⇒ `'ok'`. No adverse signal to report;
+ *      preserves the pre-change behaviour exactly, so a domain the scorecard
+ *      never surfaced does not start appearing under a new key. (Domains that
+ *      emit no `oracle_status` at all stay invisible — a separate silent-rot
+ *      gap, deliberately not widened here.)
+ *   A. `advisory === true` ⇒ `'advisory'`. The producer declares the verdict
+ *      non-binding and the maintain-gate contract has a MUST clause to present
+ *      it that way. Read dynamically: it flips to false at IX Phase-3b
+ *      (ga#428) and this must follow the field, never assume it.
+ *   B. older than `staleAfterDays`, or `emitted_at` absent/unparseable ⇒
+ *      `'stale'`. Unknown freshness counts as stale — the same green-but-dead
+ *      guard as `isMaintainStale`. The default mirrors ix-quality-trend's
+ *      `DEFAULT_STALE_AFTER_DAYS = 7`.
+ *   C. otherwise ⇒ `'regression'`: a live, binding, non-ok verdict.
+ *
+ * A and B are independently sufficient by design — neither may silently rot
+ * into a no-op behind the other. `now` and `staleAfterDays` are injected for
+ * testability.
+ */
+export function classifyQualitySnapshot(
+    domain: string,
+    data: unknown,
+    now: Date = new Date(),
+    staleAfterDays = 7,
+): QualitySnapshotClassification {
+    const record = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
+    const status = typeof record.oracle_status === 'string' ? record.oracle_status : undefined;
+    const emittedAt = typeof record.emitted_at === 'string' ? record.emitted_at : undefined;
+    const ageHours = maintainAgeHours(emittedAt, now);
+    const ageDays = ageHours === null ? null : ageHours / 24;
+    const label = `${domain}: oracle_status=${status}`;
+
+    if (!status || status === 'ok') return { label, kind: 'ok', ageDays };
+    if (record.advisory === true) return { label, kind: 'advisory', ageDays };
+    if (ageDays === null || ageDays > staleAfterDays) return { label, kind: 'stale', ageDays };
+    return { label, kind: 'regression', ageDays };
+}
