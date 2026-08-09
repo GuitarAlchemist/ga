@@ -57,9 +57,13 @@ $env:ASPNETCORE_URLS = 'http://localhost:5252'
 # Proxy__PublicHost is NOT set here: it ships as 'demos.guitaralchemist.com' in
 # Apps/GaChatbot.Api/appsettings.json. It is the host the forwarded-header guard
 # pins X-Forwarded-Host to, and it is what makes the session cookie Secure behind
-# the TLS-terminating tunnel. Do NOT blank or unset it — every tunnel request then
-# takes the strip branch and the public cookie silently ships without Secure.
-# Override it only if the public hostname moves, and change appsettings.json with it.
+# the TLS-terminating tunnel. Never set it to an empty or whitespace value in
+# this shell — environment variables outrank appsettings.json, so a blank one
+# makes every tunnel request take the strip branch and the public cookie
+# silently ships without Secure. UNSETTING it is the safe action, not the
+# dangerous one: the shipped appsettings.json value applies again. Step 6
+# asserts the cookie really kept Secure. If the public hostname moves, change
+# appsettings.json — not this block.
 Start-Process -FilePath dotnet `
   -ArgumentList 'run --project Apps/GaChatbot.Api/GaChatbot.Api.csproj -c Release --no-build' `
   -WindowStyle Hidden `
@@ -86,6 +90,25 @@ Invoke-RestMethod `
   Select-Object -ExpandProperty steps |
   Select-Object name, status, @{n='agentId';e={$_.attributes.'agent.id'}} |
   Format-Table -AutoSize
+
+#    Same surface, but assert the session cookie survived the tunnel WITH
+#    Secure. If Proxy:PublicHost is missing or blanked, the forwarded-header
+#    guard takes the strip branch, Request.IsHttps stays false, and the cookie
+#    ships without Secure — a silent failure neither the status check (step 5)
+#    nor the trace shape above can see.
+$cookieProbe = Invoke-WebRequest `
+  -Uri https://demos.guitaralchemist.com/api/chatbot/chat `
+  -Method POST `
+  -ContentType 'application/json' `
+  -Body (@{ Message = 'cookie probe' } | ConvertTo-Json) `
+  -UseBasicParsing
+$setCookie = @($cookieProbe.Headers['Set-Cookie']) -join '; '
+if ($setCookie -notmatch 'ga_chat_session=') {
+  throw "No ga_chat_session cookie issued. Got: $setCookie"
+}
+if ($setCookie -notmatch '(?i)secure') {
+  throw "Session cookie lacks Secure — check Proxy:PublicHost in Apps/GaChatbot.Api/appsettings.json. Got: $setCookie"
+}
 ```
 
 The probe should show the 6-step canonical shape:
@@ -122,6 +145,7 @@ Cloudflare ingress is unchanged by a rollback — only the local process binary 
 | Step 6 returns 400 `"Message cannot be empty."` | body field name is `Message`, not `prompt` (case-sensitive) | this runbook now sends `Message`; fork callers should mirror it |
 | Probe returns answer but `agentId = skill.modes` or fallback | new build not actually running (cached process) OR cascade not configured | check `gachatbot-api.log` head for "Now listening on: 5252" and verify env vars |
 | `/api/chatbot/chat` returns 404 | `Chatbot__PathBase` env var missing | step 4 — must be set BEFORE Start-Process |
+| Step 6 throws `Session cookie lacks Secure`, or public chat answers but the session resets every turn | `Proxy:PublicHost` missing/blank in `Apps/GaChatbot.Api/appsettings.json`, or a blank `Proxy__PublicHost` exported in the launch shell — the forwarded-header guard takes the strip branch | restore `Proxy.PublicHost` in `appsettings.json` (it ships as `demos.guitaralchemist.com`), `Remove-Item Env:\Proxy__PublicHost` if it is set, then repeat steps 3–4 and re-run the step 6 cookie assertion |
 | Rollback step says `$oldSha` is null or unset | step 2's `$oldSha = (git rev-parse HEAD).Trim()` was skipped | recover the prior sha from `git reflog show HEAD` or the deployment journal; this runbook captures it pre-pull |
 | Ollama timeout cascades produce `orchestration.fallback` step | Ollama is down OR no cascade configured | verify `ollama:11434` reachable AND `AI__CascadeProvider=mistral` set with valid `MISTRAL_API_KEY` |
 

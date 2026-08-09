@@ -28,11 +28,22 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 /// the guard that keeps them apart.
 /// </para>
 /// <para>
-/// The fixture deliberately supplies no <c>Proxy:PublicHost</c> of its own: it
-/// reads the value the host ships in <c>Apps/GaChatbot.Api/appsettings.json</c>
-/// (<c>TestWebApplicationFactory</c> points the content root at the app source
-/// directory). Overriding it here would prove the middleware works when handed
-/// a public host while leaving the deployment free to stop supplying one.
+/// The fixture deliberately supplies no <c>Proxy:PublicHost</c> of its own, so
+/// the host under test resolves whatever configuration reaches it. Overriding
+/// it here would prove the middleware works when handed a public host while
+/// leaving the deployment free to stop supplying one.
+/// </para>
+/// <para>
+/// What reaches the host is NOT
+/// <c>Apps/GaChatbot.Api/appsettings.json</c> read live: <c>Program.cs</c> pins
+/// <c>ContentRootPath</c> to <c>AppContext.BaseDirectory</c>, which overrides
+/// <c>TestWebApplicationFactory</c>'s <c>UseContentRoot</c>, so the host reads
+/// the copy MSBuild refreshes into the TEST project's output on every build —
+/// and an ambient <c>Proxy__PublicHost</c> environment variable still outranks
+/// that copy. <c>ShippedConfiguration_SuppliesTheProxyPublicHost</c> therefore
+/// reads the shipped file straight off disk instead: that keeps it meaningful
+/// when the run skips the build, and stops the shell it runs in from reddening
+/// it while the shipped file is intact.
 /// </para>
 /// </remarks>
 [TestFixture]
@@ -92,12 +103,19 @@ public class ForwardedHeadersSessionCookieTests
     [Test]
     public void ShippedConfiguration_SuppliesTheProxyPublicHost()
     {
-        using var factory = CreateFactory();
+        // Read the shipped file itself rather than the host's resolved
+        // configuration — see the class remarks for why the host is the wrong
+        // oracle for a claim about what the deployment ships.
+        var shipped = new ConfigurationBuilder()
+            .AddJsonFile(TestPaths.RepositoryPath("Apps", "GaChatbot.Api", "appsettings.json"))
+            .Build();
 
-        var publicHost = factory.Services.GetRequiredService<IConfiguration>()["Proxy:PublicHost"];
+        var publicHost = shipped["Proxy:PublicHost"];
 
-        Assert.That(publicHost, Is.Not.Null.And.Not.Empty,
-            "Apps/GaChatbot.Api/appsettings.json must ship Proxy:PublicHost. Without it the " +
+        // Program.cs:73 and :91 both branch on IsNullOrWhiteSpace, so a
+        // whitespace-only value is as inert as a missing one.
+        Assert.That(string.IsNullOrWhiteSpace(publicHost), Is.False,
+            "Apps/GaChatbot.Api/appsettings.json must ship a non-blank Proxy:PublicHost. Without it the " +
             "forwarded-header guard takes the strip branch on every request — including tunnel " +
             "traffic — so the Program.cs fix is inert in production and the public session " +
             "cookie silently loses Secure again. See docs/runbooks/chatbot-deploy.md step 4.");
@@ -130,9 +148,10 @@ public class ForwardedHeadersSessionCookieTests
             .WithWebHostBuilder(builder =>
             {
                 // No Proxy:PublicHost override on purpose — see the class remarks.
-                // The shipped appsettings.json value is what mirrors the deployed
-                // cloudflared ingress (docs/runbooks/chatbot-deploy.md:24), and it
-                // is what these tests must depend on.
+                // The deployed value must reach the host through the same
+                // configuration path production uses (docs/runbooks/chatbot-deploy.md:24);
+                // a test setting here would keep these tests green after the
+                // deployment stopped supplying one.
                 builder.ConfigureTestServices(services =>
                 {
                     // The chat provider is irrelevant here — only the cookie the
