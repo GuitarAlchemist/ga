@@ -96,20 +96,41 @@ Invoke-RestMethod `
 #    guard takes the strip branch, Request.IsHttps stays false, and the cookie
 #    ships without Secure — a silent failure neither the status check (step 5)
 #    nor the trace shape above can see.
+#
+#    A Set-Cookie block can hold more than one cookie, and the cookies that are
+#    NOT ga_chat_session are the likelier ones to be Secure: Cloudflare's
+#    __cf_bm / cf_clearance are issued Secure whenever the zone emits them, and
+#    anything the app starts setting later lands in the same block. So the
+#    assertion has to pick the ga_chat_session header out of the set and test
+#    THAT header. Matching /secure/ across the joined block reports success off
+#    somebody else's cookie while the session cookie ships bare — the exact
+#    silent pass this step exists to prevent.
+function Assert-GaChatSessionSecure {
+  param([string[]] $SetCookieHeaders)
+
+  # -cmatch: cookie names are case-sensitive, mirroring the ordinal match in
+  # ForwardedHeadersSessionCookieTests.SessionSetCookie.
+  $session = @($SetCookieHeaders) | Where-Object { $_ -cmatch '^ga_chat_session=' } | Select-Object -First 1
+  if (-not $session) {
+    throw "No ga_chat_session cookie issued. Got: $(@($SetCookieHeaders) -join ' | ')"
+  }
+  # Whole attribute, not a substring: the protected session id is base64url and
+  # could otherwise spell 'secure' by accident.
+  if ($session -notmatch '(?i)(^|;)\s*secure\s*(;|$)') {
+    throw "Session cookie lacks Secure — check Proxy:PublicHost in Apps/GaChatbot.Api/appsettings.json. Got: $session"
+  }
+}
+
 $cookieProbe = Invoke-WebRequest `
   -Uri https://demos.guitaralchemist.com/api/chatbot/chat `
   -Method POST `
   -ContentType 'application/json' `
   -Body (@{ Message = 'cookie probe' } | ConvertTo-Json) `
   -UseBasicParsing
-$setCookie = @($cookieProbe.Headers['Set-Cookie']) -join '; '
-if ($setCookie -notmatch 'ga_chat_session=') {
-  throw "No ga_chat_session cookie issued. Got: $setCookie"
-}
-if ($setCookie -notmatch '(?i)secure') {
-  throw "Session cookie lacks Secure — check Proxy:PublicHost in Apps/GaChatbot.Api/appsettings.json. Got: $setCookie"
-}
+Assert-GaChatSessionSecure -SetCookieHeaders @($cookieProbe.Headers['Set-Cookie'])
 ```
+
+`Assert-GaChatSessionSecure` is not decoration: `ShippedRunbook_CookieAssertion_TestsTheSessionCookieNotTheWholeHeaderBlock` in `Tests/Apps/GaChatbot.Api.Tests/Controllers/ForwardedHeadersSessionCookieTests.cs` lifts this exact function out of this file and runs it against a two-cookie fixture. Renaming or inlining it turns that guard red with an actionable message; changing what it asserts turns it red on behaviour.
 
 The probe should show the 6-step canonical shape:
 `chat.request → orchestration.answer → orchestration.route → agent.semantic_result → notation.vextab → response.emit`,

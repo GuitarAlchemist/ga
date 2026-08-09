@@ -1,5 +1,7 @@
 namespace GaChatbot.Api.Tests.Controllers;
 
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -45,10 +47,22 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 /// when the run skips the build, and stops the shell it runs in from reddening
 /// it while the shipped file is intact.
 /// </para>
+/// <para>
+/// <c>ShippedRunbook_CookieAssertion_TestsTheSessionCookieNotTheWholeHeaderBlock</c>
+/// extends that same "guard the shipped artefact" idea to the operator-side
+/// check. Nothing in this process runs
+/// <c>docs/runbooks/chatbot-deploy.md</c>, so its step-6 assertion — the only
+/// check that can observe the PUBLIC cookie losing <c>Secure</c> — had no
+/// oracle at all, and the response it inspects can carry several
+/// <c>Set-Cookie</c> headers of which only one is the session cookie.
+/// </para>
 /// </remarks>
 [TestFixture]
 public class ForwardedHeadersSessionCookieTests
 {
+    /// <summary>Name of the step-6 assertion this fixture lifts out of the runbook.</summary>
+    private const string RunbookAssertionName = "Assert-GaChatSessionSecure";
+
     [Test]
     public async Task ChatBehindTheTunnel_IssuesASecureSessionCookie()
     {
@@ -119,6 +133,110 @@ public class ForwardedHeadersSessionCookieTests
             "forwarded-header guard takes the strip branch on every request — including tunnel " +
             "traffic — so the Program.cs fix is inert in production and the public session " +
             "cookie silently loses Secure again. See docs/runbooks/chatbot-deploy.md step 4.");
+    }
+
+    [Test]
+    public void ShippedRunbook_CookieAssertion_TestsTheSessionCookieNotTheWholeHeaderBlock()
+    {
+        var assertion = ShippedRunbookCookieAssertion();
+
+        // The cookies that are NOT the session cookie are the likelier ones to
+        // be Secure — Cloudflare issues __cf_bm / cf_clearance Secure whenever
+        // the zone emits them. An assertion that joins the headers and matches
+        // /secure/ therefore reports success on this exact pair while the
+        // session cookie, the only one that matters here, ships bare.
+        const string cloudflareDecoy =
+            "__cf_bm=Jd8n3o.decoy; path=/; domain=.guitaralchemist.com; HttpOnly; Secure; SameSite=None";
+        const string bareSession =
+            "ga_chat_session=6f1c9d2e-4a70-4f5b-9d21-0b2c3e4f5a61; path=/api/chatbot; samesite=lax; httponly";
+        const string secureSession = bareSession + "; secure";
+
+        var bare = RunShippedRunbookAssertion(assertion, cloudflareDecoy, bareSession);
+        var secure = RunShippedRunbookAssertion(assertion, cloudflareDecoy, secureSession);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(bare.ExitCode, Is.Not.Zero,
+                "docs/runbooks/chatbot-deploy.md step 6 accepted a response whose ga_chat_session cookie " +
+                "carries no Secure attribute, because another cookie in the same response does. Step 6 " +
+                "must select the ga_chat_session Set-Cookie header before asserting Secure on it — " +
+                "otherwise a deploy that silently dropped Secure passes its own regression check.");
+            Assert.That(bare.Stderr, Does.Contain("lacks Secure"),
+                "Step 6 must name the failure it found; the operator acts on that message.");
+            Assert.That(secure.ExitCode, Is.Zero,
+                "Step 6 rejected a genuinely Secure session cookie, which would block a healthy deploy. " +
+                $"stderr: {secure.Stderr}");
+        });
+    }
+
+    /// <summary>
+    /// Lifts the step-6 cookie assertion out of the shipped runbook so it can be
+    /// executed rather than merely read.
+    /// </summary>
+    private static string ShippedRunbookCookieAssertion()
+    {
+        var runbook = TestPaths.RepositoryPath("docs", "runbooks", "chatbot-deploy.md");
+        var lines = File.ReadAllLines(runbook);
+
+        var start = Array.FindIndex(
+            lines,
+            line => line.StartsWith($"function {RunbookAssertionName}", StringComparison.Ordinal));
+        Assert.That(start, Is.GreaterThanOrEqualTo(0),
+            $"{runbook} no longer defines a column-0 '{RunbookAssertionName}' function. Step 6's cookie " +
+            "assertion is the only check that can see the public session cookie lose Secure, so it stays " +
+            "in a named function this guard can execute; inlining it back into the procedure removes the " +
+            "only oracle the runbook has.");
+
+        // The body's braces are balanced and none appear inside its strings or
+        // regexes; an unbalanced edit falls through to the failure below.
+        var depth = 0;
+        for (var i = start; i < lines.Length; i++)
+        {
+            depth += lines[i].Count(c => c == '{') - lines[i].Count(c => c == '}');
+            if (depth == 0) return string.Join(Environment.NewLine, lines[start..(i + 1)]);
+        }
+
+        Assert.Fail($"{RunbookAssertionName} in {runbook} is never closed.");
+        return string.Empty;
+    }
+
+    private static (int ExitCode, string Stderr) RunShippedRunbookAssertion(
+        string assertion,
+        params string[] setCookieHeaders)
+    {
+        var headers = string.Join(", ", setCookieHeaders.Select(h => $"'{h.Replace("'", "''")}'"));
+        var script = Path.Combine(Path.GetTempPath(), $"ga-runbook-cookie-{Guid.NewGuid():N}.ps1");
+        File.WriteAllText(script, string.Join(Environment.NewLine,
+            assertion,
+            $"{RunbookAssertionName} -SetCookieHeaders @({headers})"));
+
+        try
+        {
+            using var pwsh = Process.Start(new ProcessStartInfo("pwsh")
+            {
+                ArgumentList = { "-NoProfile", "-NonInteractive", "-File", script },
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }) ?? throw new InvalidOperationException("pwsh produced no process handle.");
+
+            var stdout = pwsh.StandardOutput.ReadToEndAsync();
+            var stderr = pwsh.StandardError.ReadToEnd();
+            pwsh.WaitForExit();
+            stdout.GetAwaiter().GetResult();
+            return (pwsh.ExitCode, stderr);
+        }
+        catch (Win32Exception e)
+        {
+            // A skip here would make the guard vacuous on exactly the machines
+            // that run the deploy, so this fails instead. pwsh is already a hard
+            // dependency of the repo (Scripts/*.ps1, .githooks/pre-commit).
+            Assert.Fail($"pwsh could not be launched, so the shipped runbook assertion was never executed: {e.Message}");
+            return (0, string.Empty);
+        }
+        finally
+        {
+            File.Delete(script);
+        }
     }
 
     private static HttpRequestMessage ChatRequest(bool cloudflare, string forwardedProto)
