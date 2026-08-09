@@ -54,6 +54,12 @@ dotnet build Apps/GaChatbot.Api/GaChatbot.Api.csproj -c Release --nologo
 $env:Chatbot__PathBase = '/chatbot'
 $env:AI__CascadeProvider = 'mistral'      # optional but recommended; needs MISTRAL_API_KEY
 $env:ASPNETCORE_URLS = 'http://localhost:5252'
+# Proxy__PublicHost is NOT set here: it ships as 'demos.guitaralchemist.com' in
+# Apps/GaChatbot.Api/appsettings.json. It is the host the forwarded-header guard
+# pins X-Forwarded-Host to, and it is what makes the session cookie Secure behind
+# the TLS-terminating tunnel. Do NOT blank or unset it — every tunnel request then
+# takes the strip branch and the public cookie silently ships without Secure.
+# Override it only if the public hostname moves, and change appsettings.json with it.
 Start-Process -FilePath dotnet `
   -ArgumentList 'run --project Apps/GaChatbot.Api/GaChatbot.Api.csproj -c Release --no-build' `
   -WindowStyle Hidden `

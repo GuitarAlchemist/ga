@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -26,12 +27,17 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 /// branch; this fixture pins the deployed one, and the spoof test below pins
 /// the guard that keeps them apart.
 /// </para>
+/// <para>
+/// The fixture deliberately supplies no <c>Proxy:PublicHost</c> of its own: it
+/// reads the value the host ships in <c>Apps/GaChatbot.Api/appsettings.json</c>
+/// (<c>TestWebApplicationFactory</c> points the content root at the app source
+/// directory). Overriding it here would prove the middleware works when handed
+/// a public host while leaving the deployment free to stop supplying one.
+/// </para>
 /// </remarks>
 [TestFixture]
 public class ForwardedHeadersSessionCookieTests
 {
-    private const string PublicHost = "demos.guitaralchemist.com";
-
     [Test]
     public async Task ChatBehindTheTunnel_IssuesASecureSessionCookie()
     {
@@ -83,6 +89,20 @@ public class ForwardedHeadersSessionCookieTests
         Assert.That(SessionSetCookie(response), Does.Not.Contain("secure").IgnoreCase);
     }
 
+    [Test]
+    public void ShippedConfiguration_SuppliesTheProxyPublicHost()
+    {
+        using var factory = CreateFactory();
+
+        var publicHost = factory.Services.GetRequiredService<IConfiguration>()["Proxy:PublicHost"];
+
+        Assert.That(publicHost, Is.Not.Null.And.Not.Empty,
+            "Apps/GaChatbot.Api/appsettings.json must ship Proxy:PublicHost. Without it the " +
+            "forwarded-header guard takes the strip branch on every request — including tunnel " +
+            "traffic — so the Program.cs fix is inert in production and the public session " +
+            "cookie silently loses Secure again. See docs/runbooks/chatbot-deploy.md step 4.");
+    }
+
     private static HttpRequestMessage ChatRequest(bool cloudflare, string forwardedProto)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/chatbot/chat")
@@ -109,9 +129,10 @@ public class ForwardedHeadersSessionCookieTests
         new TestWebApplicationFactory()
             .WithWebHostBuilder(builder =>
             {
-                // Mirrors the deployed cloudflared ingress
-                // (docs/runbooks/chatbot-deploy.md:24).
-                builder.UseSetting("Proxy:PublicHost", PublicHost);
+                // No Proxy:PublicHost override on purpose — see the class remarks.
+                // The shipped appsettings.json value is what mirrors the deployed
+                // cloudflared ingress (docs/runbooks/chatbot-deploy.md:24), and it
+                // is what these tests must depend on.
                 builder.ConfigureTestServices(services =>
                 {
                     // The chat provider is irrelevant here — only the cookie the
