@@ -531,25 +531,44 @@ export function isMaintainStale(ageHours: number | null, maxAgeHours = 36): bool
 // ── Quality scorecard classification (ix#244) ───────────────────────────
 // `gatherQuality()` (vite.config.ts), published at /dev-data/quality and
 // /dev-data/manifest, used to promote every non-ok `oracle_status` straight
-// into `regressions[]`. That reads two very different things as live
-// regressions: a verdict the producer itself marks non-binding
-// (`advisory: true`), and a feed that stopped emitting weeks ago. The
-// maintain-gate tile already tells those states apart (parseMaintainGate /
-// maintainAgeHours / isMaintainStale above); this seam is the same freshness
-// and advisory semantics, reused by the second reader of the same files.
+// into `regressions[]`. That read the maintain-gate verdict — which the
+// producer itself marks non-binding via `advisory: true` — as a live
+// regression, republished daily off a file frozen since 2026-07-20.
 //
 // Reclassify, never drop: `regressions[]` is a published number with four
 // rendering consumers, so a demoted entry keeps its exact label and moves to
 // `stale_or_advisory[]` rather than disappearing.
+//
+// SCOPE — advisory only, deliberately. An earlier draft of this seam also
+// demoted snapshots older than a fixed 7-day threshold. That threshold is
+// unsafe as a wall-clock rule: GA's producers emit on different cadences, and
+// 7 days is exactly `readme-drift`'s (`.github/workflows/readme-drift-sensor.yml`
+// runs weekly, Mondays 08:00 UTC). It would have demoted that producer's
+// genuine, currently-red `oracle_status=error` roughly 20 hours after the rule
+// shipped, and — since nothing renders `stale_or_advisory[]` yet — hidden a
+// real failure entirely. Telling "stale" from "live" needs a per-domain
+// expected-cadence signal, not a single wall-clock constant; that is its own
+// slice. Until it exists, a non-ok verdict that is not producer-declared
+// advisory stays a regression, however old it is: fail toward reporting.
+// The published key keeps the name `stale_or_advisory` — it is the demotion
+// bucket, and the cadence-aware slice will add the `'stale'` kind to it.
 
-/** How a quality snapshot should be reported on the published scorecard. */
-export type QualitySnapshotKind = 'regression' | 'stale' | 'advisory' | 'ok';
+/**
+ * How a quality snapshot should be reported on the published scorecard.
+ *
+ * No `'stale'` member: staleness is not classified here (see SCOPE above).
+ */
+export type QualitySnapshotKind = 'regression' | 'advisory' | 'ok';
 
 export interface QualitySnapshotClassification {
     /** Published label — byte-identical to the pre-change `regressions[]` entry. */
     label: string;
     kind: QualitySnapshotKind;
-    /** Days since `emitted_at`; null when it is absent or unparseable. */
+    /**
+     * Days since `emitted_at`; null when it is absent or unparseable.
+     * Reported for context only — it is NOT an input to `kind`. Published as
+     * `age_days` (snake_case at the payload boundary) by `gatherQuality()`.
+     */
     ageDays: number | null;
 }
 
@@ -566,21 +585,17 @@ export interface QualitySnapshotClassification {
  *      non-binding and the maintain-gate contract has a MUST clause to present
  *      it that way. Read dynamically: it flips to false at IX Phase-3b
  *      (ga#428) and this must follow the field, never assume it.
- *   B. older than `staleAfterDays`, or `emitted_at` absent/unparseable ⇒
- *      `'stale'`. Unknown freshness counts as stale — the same green-but-dead
- *      guard as `isMaintainStale`. The default mirrors ix-quality-trend's
- *      `DEFAULT_STALE_AFTER_DAYS = 7`.
- *   C. otherwise ⇒ `'regression'`: a live, binding, non-ok verdict.
+ *   B. otherwise ⇒ `'regression'`: a binding, non-ok verdict.
  *
- * A and B are independently sufficient by design — neither may silently rot
- * into a no-op behind the other. `now` and `staleAfterDays` are injected for
- * testability.
+ * The result is a pure function of the snapshot's own fields, so it is stable
+ * over wall-clock time: no entry can change bucket without the data or this
+ * code changing. `now` is injected only to make the reported `ageDays`
+ * deterministic under test.
  */
 export function classifyQualitySnapshot(
     domain: string,
     data: unknown,
     now: Date = new Date(),
-    staleAfterDays = 7,
 ): QualitySnapshotClassification {
     const record = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
     const status = typeof record.oracle_status === 'string' ? record.oracle_status : undefined;
@@ -591,6 +606,5 @@ export function classifyQualitySnapshot(
 
     if (!status || status === 'ok') return { label, kind: 'ok', ageDays };
     if (record.advisory === true) return { label, kind: 'advisory', ageDays };
-    if (ageDays === null || ageDays > staleAfterDays) return { label, kind: 'stale', ageDays };
     return { label, kind: 'regression', ageDays };
 }

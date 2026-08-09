@@ -531,7 +531,7 @@ describe('classifyQualitySnapshot', () => {
         expect(v.kind).toBe('advisory');
     });
 
-    it('advisory wins over staleness (a stale advisory is still advisory)', () => {
+    it('demotes an advisory snapshot regardless of its age', () => {
         const v = classifyQualitySnapshot('maintain-gate', { emitted_at: OLD, oracle_status: 'warn', advisory: true }, NOW);
         expect(v.kind).toBe('advisory');
     });
@@ -543,30 +543,30 @@ describe('classifyQualitySnapshot', () => {
         expect(v.kind).toBe('regression');
     });
 
-    // Rule B — staleness.
-    it('classifies a snapshot older than the DEFAULT 7-day threshold as stale', () => {
-        // staleAfterDays deliberately not injected — this pins the default,
-        // which mirrors ix-quality-trend's DEFAULT_STALE_AFTER_DAYS = 7.
-        const v = classifyQualitySnapshot('readme-drift', { emitted_at: OLD, oracle_status: 'error' }, NOW);
-        expect(v.kind).toBe('stale');
-        expect(v.label).toBe('readme-drift: oracle_status=error');
-    });
-
-    it('treats absent or unparseable emitted_at as stale — never fresh', () => {
-        expect(classifyQualitySnapshot('x', { oracle_status: 'warn' }, NOW).kind).toBe('stale');
-        expect(classifyQualitySnapshot('x', { emitted_at: 'not-a-date', oracle_status: 'warn' }, NOW).kind).toBe('stale');
-    });
-
-    it('honours an injected staleAfterDays threshold', () => {
-        const snap = { emitted_at: OLD, oracle_status: 'warn' };
-        expect(classifyQualitySnapshot('x', snap, NOW, 30).kind).toBe('regression');
-        expect(classifyQualitySnapshot('x', snap, NOW, 1).kind).toBe('stale');
-    });
-
-    // Rule C — live regression.
-    it('classifies a fresh, binding, non-ok snapshot as a regression', () => {
+    // Rule B — binding non-ok verdict.
+    it('classifies a binding, non-ok snapshot as a regression', () => {
         expect(classifyQualitySnapshot('embeddings', { emitted_at: FRESH, oracle_status: 'warn' }, NOW).kind).toBe('regression');
         expect(classifyQualitySnapshot('readme-drift', { emitted_at: FRESH, oracle_status: 'error' }, NOW).kind).toBe('regression');
+    });
+
+    // Age must never demote. An earlier draft demoted anything older than a
+    // fixed 7 days; 7 days is exactly readme-drift's weekly producer cadence,
+    // so that rule silently moved a genuine red verdict out of regressions[]
+    // ~20h after it shipped. Classification is now a pure function of the
+    // snapshot's own fields — age is reported, never acted on.
+    it('never demotes a binding non-ok snapshot on age alone, however old', () => {
+        const snap = { emitted_at: OLD, oracle_status: 'error' };
+        expect(classifyQualitySnapshot('readme-drift', snap, NOW).kind).toBe('regression');
+        for (const later of ['2026-09-15T12:00:00Z', '2027-01-01T12:00:00Z', '2030-01-01T12:00:00Z']) {
+            expect(classifyQualitySnapshot('readme-drift', snap, new Date(later)).kind).toBe('regression');
+        }
+    });
+
+    it('keeps a non-ok snapshot with absent or unparseable emitted_at a regression', () => {
+        // Unknown freshness must fail TOWARD reporting on this surface: a
+        // binding bad verdict may not vanish because its timestamp is missing.
+        expect(classifyQualitySnapshot('x', { oracle_status: 'warn' }, NOW).kind).toBe('regression');
+        expect(classifyQualitySnapshot('x', { emitted_at: 'not-a-date', oracle_status: 'warn' }, NOW).kind).toBe('regression');
     });
 
     // Label + age. The label is a PUBLISHED string with four rendering

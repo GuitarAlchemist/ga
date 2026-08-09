@@ -16,6 +16,13 @@
 // this a reproduction of the reported defect rather than a synthetic fixture),
 // and it couples the expected counts to the tree. When a producer's committed
 // verdict changes, the expectations below change with it.
+//
+// NOTE: `legacyRegressions()` models the `oracle_status` producer only — the
+// one this change classifies. `gatherQuality()` has a second, unclassified
+// producer of `regressions[]` (the prior-vs-latest `metric_value` comparison,
+// vite.config.ts:127-137), which emits nothing on today's tree. So the
+// set-equality guard below proves the CLASSIFIER is loss-free, not that the
+// whole published `regressions[]` is set-preserved.
 
 import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -24,17 +31,22 @@ import { classifyQualitySnapshot } from './parsers';
 import type { QualitySnapshotClassification } from './parsers';
 
 const QUALITY_DIR = path.resolve(__dirname, '../../../../state/quality');
+const VITE_CONFIG = path.resolve(__dirname, '../../vite.config.ts');
 
-// Frozen clocks. The tree is real, so a live `new Date()` would silently
-// re-classify domains as their snapshots age past the staleness threshold and
-// this guard would flip on a calendar boundary instead of on a code change.
+// Frozen clocks. The tree is real, so a live `new Date()` would make the
+// reported ages drift and the assertions below flip on a calendar boundary
+// instead of on a code change.
 //
 // AUDIT_NOW is the instant the ix#244 baseline (3 regressions) was measured.
 const AUDIT_NOW = new Date('2026-08-09T12:00:00Z');
 // FRESH_NOW is a clock at which the maintain-gate snapshot (emitted
-// 2026-07-20T10:37Z) is 0.6 days old, i.e. well inside the staleness window.
-// It isolates rule A (advisory) from rule B (stale): only A can fire here.
+// 2026-07-20T10:37Z) is 0.6 days old. It pins that the demotion comes from
+// `advisory: true` alone and owes nothing to the snapshot being old.
 const FRESH_NOW = new Date('2026-07-21T00:00:00Z');
+// The exact instant readme-drift's committed snapshot (emitted
+// 2026-08-03T11:21:18.864Z) turns 7 days old — the boundary at which a fixed
+// 7-day staleness rule would have demoted a genuine red verdict.
+const CADENCE_BOUNDARY_NOW = new Date('2026-08-10T11:21:19Z');
 
 interface TreeEntry { domain: string; data: Record<string, unknown> }
 
@@ -108,7 +120,7 @@ describe('published quality scorecard', () => {
         ]);
     });
 
-    it('does not report an advisory, stale snapshot as a regression', () => {
+    it('does not report the advisory snapshot as a regression', () => {
         const { regressions, staleOrAdvisory } = classifyAll(entries, AUDIT_NOW);
         expect(regressions).not.toContain('maintain-gate: oracle_status=warn');
         expect(staleOrAdvisory.map((e) => e.domain)).toEqual(['maintain-gate']);
@@ -142,13 +154,59 @@ describe('published quality scorecard', () => {
     });
 
     it('advisory alone demotes it, even when the snapshot is fresh', () => {
-        // At FRESH_NOW rule B cannot fire, so this pins rule A as independently
-        // sufficient — it must not rot into a no-op hidden behind staleness.
+        // The demotion must come from `advisory: true`, not from the snapshot
+        // happening to be old. At FRESH_NOW it is 0.6 days old and still moves.
         const { regressions, staleOrAdvisory } = classifyAll(entries, FRESH_NOW);
         const gate = staleOrAdvisory.find((e) => e.domain === 'maintain-gate');
         expect(gate).toBeDefined();
-        expect(gate!.ageDays!).toBeLessThan(7);
+        expect(gate!.ageDays!).toBeLessThan(1);
         expect(gate!.kind).toBe('advisory');
         expect(regressions).not.toContain('maintain-gate: oracle_status=warn');
+    });
+
+    // ── Time stability ──────────────────────────────────────────────────
+    // readme-drift emits weekly (.github/workflows/readme-drift-sensor.yml,
+    // Mondays 08:00 UTC) and its newest committed snapshot is a genuine
+    // `oracle_status=error`. A fixed 7-day staleness rule would demote it —
+    // out of the only array any consumer renders — the moment it turned 7
+    // days old, and every week thereafter that the producer ran late or was
+    // skipped. This is the guard for that: classification depends on the
+    // snapshot's fields, never on the wall clock.
+    it('keeps readme-drift a live regression at the 7-day cadence boundary', () => {
+        const { regressions, staleOrAdvisory } = classifyAll(entries, CADENCE_BOUNDARY_NOW);
+        const drift = entries.find((e) => e.domain === 'readme-drift')!;
+        // Confirm the clock really is past the boundary, so this is not a
+        // vacuous assertion if the committed snapshot is ever refreshed.
+        expect(classifyQualitySnapshot('readme-drift', drift.data, CADENCE_BOUNDARY_NOW).ageDays!).toBeGreaterThan(7);
+        expect(regressions).toContain('readme-drift: oracle_status=error');
+        expect(staleOrAdvisory.map((e) => e.domain)).toEqual(['maintain-gate']);
+    });
+
+    it('publishes the same split however far the clock advances', () => {
+        const baseline = classifyAll(entries, AUDIT_NOW);
+        for (const later of ['2026-08-10T11:21:19Z', '2026-09-15T12:00:00Z', '2027-06-01T12:00:00Z']) {
+            const { regressions, staleOrAdvisory } = classifyAll(entries, new Date(later));
+            expect(regressions).toEqual(baseline.regressions);
+            expect(staleOrAdvisory.map((e) => `${e.domain}/${e.kind}`))
+                .toEqual(baseline.staleOrAdvisory.map((e) => `${e.domain}/${e.kind}`));
+        }
+    });
+
+    // ── Published key naming ────────────────────────────────────────────
+    // `/dev-data/quality` and `/dev-data/manifest` are published surfaces that
+    // agent readers fetch; every multi-word key they emit is snake_case
+    // (`generated_at`, `eta_minutes`, `age_hours` on the sibling maintain-gate
+    // route). The internal classification field is camelCase `ageDays`, so the
+    // payload boundary in gatherQuality() must rename it. No test imports
+    // vite.config.ts (GA #643), so this guards the real file as source text.
+    it('publishes the age field as age_days, not ageDays, on both surfaces', () => {
+        const src = readFileSync(VITE_CONFIG, 'utf-8');
+        const gatherQuality = src.slice(src.indexOf('function gatherQuality('), src.indexOf('interface ActivityEntry'));
+        expect(gatherQuality).toContain('age_days: verdict.ageDays');
+        expect(gatherQuality).not.toMatch(/\bageDays\s*:/);
+        // Both published surfaces embed the whole gatherQuality() return
+        // object, so neither can omit or rename the key independently.
+        expect(src).toContain('...gatherQuality()');
+        expect(src).toContain('quality: gatherQuality(),');
     });
 });

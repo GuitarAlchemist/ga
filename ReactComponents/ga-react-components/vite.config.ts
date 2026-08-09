@@ -97,7 +97,11 @@ function devDataPlugin(): Plugin {
     const repoRoot = path.resolve(__dirname, '../..');
 
     interface QualityEntry { source: string; data: unknown }
-    interface StaleOrAdvisoryEntry { domain: string; kind: Exclude<QualitySnapshotKind, 'regression' | 'ok'>; ageDays: number | null; label: string }
+    // Published payload shape: snake_case keys at the boundary, matching every
+    // other /dev-data/* key this file emits (`generated_at`, `eta_minutes`,
+    // `age_hours` on the sibling /dev-data/maintain-gate route). The internal
+    // camelCase `ageDays` is renamed to `age_days` on the way out.
+    interface StaleOrAdvisoryEntry { domain: string; kind: Exclude<QualitySnapshotKind, 'regression' | 'ok'>; age_days: number | null; label: string }
     function gatherQuality(): { domains: Record<string, QualityEntry>; regressions: string[]; stale_or_advisory: StaleOrAdvisoryEntry[] } {
         const qualityDir = path.join(repoRoot, 'state', 'quality');
         const domains: Record<string, QualityEntry> = {};
@@ -144,16 +148,17 @@ function devDataPlugin(): Plugin {
             }
             if (chosen) {
                 domains[entry.name] = chosen;
-                // ix#244: an advisory (producer-declared non-binding) or stale
-                // snapshot is reclassified, not dropped — the entry keeps its
-                // label and moves to stale_or_advisory[] so nothing leaves the
-                // published payload. Freshness/advisory semantics are shared
-                // with the /dev-data/maintain-gate tile via parsers.ts.
+                // ix#244: an advisory snapshot (one the producer itself marks
+                // non-binding) is reclassified, not dropped — the entry keeps
+                // its label and moves to stale_or_advisory[] so nothing leaves
+                // the published payload. Advisory is the only demotion this
+                // slice makes; see the SCOPE note on classifyQualitySnapshot
+                // for why staleness needs a per-domain cadence signal first.
                 const verdict = classifyQualitySnapshot(entry.name, chosen.data);
                 if (verdict.kind === 'regression') {
                     regressions.push(verdict.label);
                 } else if (verdict.kind !== 'ok') {
-                    staleOrAdvisory.push({ domain: entry.name, kind: verdict.kind, ageDays: verdict.ageDays, label: verdict.label });
+                    staleOrAdvisory.push({ domain: entry.name, kind: verdict.kind, age_days: verdict.ageDays, label: verdict.label });
                 }
             }
         }
