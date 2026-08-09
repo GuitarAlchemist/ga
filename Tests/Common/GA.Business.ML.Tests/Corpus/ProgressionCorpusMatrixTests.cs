@@ -79,6 +79,19 @@ public class ProgressionCorpusMatrixTests
             ["half-diminished-7"] = ImprovisationSkill.QualityKind.HalfDiminished
         };
 
+    /// <summary>
+    ///     Snapshot of the committed artifact taken before any test can rewrite
+    ///     it, so <see cref="Matrix_WriteEvidenceArtifact" /> cannot influence the
+    ///     regression gate depending on which runs first.
+    /// </summary>
+    private string? _committedMatrixText;
+
+    [OneTimeSetUp]
+    public void CaptureCommittedMatrix() =>
+        _committedMatrixText = File.Exists(ProgressionCorpus.MatrixPath)
+            ? File.ReadAllText(ProgressionCorpus.MatrixPath)
+            : null;
+
     // ── The matrix ───────────────────────────────────────────────────────────
 
     [Test]
@@ -140,15 +153,15 @@ public class ProgressionCorpusMatrixTests
     [Test]
     public void Matrix_HasNotRegressedAgainstTheCommittedArtifact()
     {
-        if (!File.Exists(ProgressionCorpus.MatrixPath))
+        if (_committedMatrixText is null)
         {
             Assert.Fail(
                 $"no committed matrix at {ProgressionCorpus.MatrixPath}. " +
                 $"Generate it with {WriteEnvVar}=1 and commit the result.");
+            return;
         }
 
-        var committed = JsonSerializer.Deserialize<Matrix>(
-                            File.ReadAllText(ProgressionCorpus.MatrixPath), ReadOptions)
+        var committed = JsonSerializer.Deserialize<Matrix>(_committedMatrixText, ReadOptions)
                         ?? throw new InvalidOperationException("committed matrix deserialised to null");
 
         var current = BuildMatrix();

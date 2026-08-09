@@ -1,0 +1,1309 @@
+{
+  "artifact": "progression-corpus-matrix",
+  "artifact_version": "1.0.0",
+  "issue": "GuitarAlchemist/ga#627",
+  "parent_issue": "GuitarAlchemist/ga#623",
+  "corpus_id": "progression-to-voicing",
+  "corpus_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "note": "Deterministic: no clock, no network, no randomness. Regenerate with GA_CORPUS_WRITE_MATRIX=1. \u0027blocked\u0027 means no deterministic seam exists in this assembly yet, not that the expectation is optional.",
+  "seams": [
+    {
+      "id": "key.identify",
+      "implementation": "GA.Business.ML.Agents.KeyIdentificationService.Identify",
+      "notes": "Scores all 30 major/minor keys on root \u002B triad quality. Cannot express modal centres."
+    },
+    {
+      "id": "improvisation.quality",
+      "implementation": "GA.Business.ML.Agents.Skills.ImprovisationSkill.InferQuality",
+      "notes": "Classifies chord quality from the written symbol."
+    },
+    {
+      "id": "improvisation.arpeggio",
+      "implementation": "GA.Business.ML.Agents.Skills.ImprovisationSkill.ArpeggioFor",
+      "notes": "Builds the canonical arpeggio symbol for a root plus quality."
+    },
+    {
+      "id": "tuning.parse",
+      "implementation": "GA.Domain.Core.Primitives.Notes.PitchCollection.Parse",
+      "notes": "Parses scientific-pitch open strings into domain pitches."
+    }
+  ],
+  "totals": {
+    "pass": 52,
+    "fail": 21,
+    "blocked": 72
+  },
+  "cases": [
+    {
+      "id": "pc-01-major-ii-v-i",
+      "category": "major-ii-V-I",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "none of: D major | D minor | G major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-02-minor-ii-v-i",
+      "category": "minor-ii-V-i",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A major | E minor | F# minor | G major",
+          "expected": "none of: B minor | E major | C major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "4 tied candidate(s): A major | E minor | F# minor | G major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "top-tied: A major | E minor | F# minor | G major",
+          "expected": "one of: A minor"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-03-major-i-vi-iv-v",
+      "category": "major-I-vi-IV-V",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "none of: A major | F major | G major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-04-deceptive-cadence",
+      "category": "deceptive-cadence",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: A minor",
+          "expected": "none of: A minor | A major | G major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-05-borrowed-iv",
+      "category": "borrowed-iv",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: F major",
+          "expected": "none of: F major | F minor | Ab major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "4 tied candidate(s): A minor | C major | D minor | F major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major | D minor | F major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-06-borrowed-bvii",
+      "category": "borrowed-bVII",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: F major",
+          "expected": "none of: Bb major | F major | G minor"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): D minor | F major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "top-tied: D minor | F major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-07-secondary-dominant",
+      "category": "secondary-dominant",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: A minor",
+          "expected": "none of: E major | A minor | A major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-08-modal-dorian-vamp",
+      "category": "modal",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: A minor | C major",
+          "expected": "none of: C major | D minor | A minor"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: D dorian"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-09-starts-off-tonic",
+      "category": "starts-away-from-tonic",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "none of: F major | E minor | D minor | G major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-10-spelled-out-accidentals",
+      "category": "spelled-out-accidentals",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: C minor | Eb major",
+          "expected": "none of: E major | B major | F major | C# minor"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "2 tied candidate(s): C minor | Eb major",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: C minor | Eb major",
+          "expected": "one of: Eb major"
+        },
+        {
+          "check": "spelling.equivalent_spellings_agree",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "\u0027E-flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E flat maj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027E-flatmaj7\u0027 -\u003E A major,Ab minor,B major,C# minor,Cb major,E major,F# minor,G# minor != \u0027Ebmaj7\u0027 -\u003E Ab major,Bb major,C minor,Eb major,F minor,G minor; \u0027B-flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027B flat 7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027B-flat7\u0027 -\u003E Ab minor,B major,C# minor,Cb major,D# minor,E major,Eb minor,F# major,G# minor,Gb major != \u0027Bb7\u0027 -\u003E Bb major,C minor,D minor,Eb major,F major,G minor; \u0027F-sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F sharp minor\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor; \u0027F-sharpm\u0027 -\u003E A minor,Bb major,C major,D minor,F major,G minor != \u0027F#m\u0027 -\u003E A major,B minor,C# minor,D major,E major,F# minor",
+          "expected": "spelled-out and shorthand accidentals resolve identically (GuitarAlchemist/ga#554)",
+          "blocked_on": [
+            554
+          ]
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-11-drop-c-alternate-tuning",
+      "category": "alternate-tuning",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "forbidden in top-tied: Eb major",
+          "expected": "none of: Eb major | C major | G major"
+        },
+        {
+          "check": "key.single_reading_when_confident",
+          "seam": "key.identify",
+          "status": "fail",
+          "observed": "4 tied candidate(s): Ab major | C minor | Eb major | F minor",
+          "expected": "exactly 1 top candidate"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: Ab major | C minor | Eb major | F minor",
+          "expected": "one of: C minor"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027C2 G2 C3 F3 A3 D4\u0027 -\u003E MIDI 36,43,48,53,57,62",
+          "expected": "MIDI 36,43,48,53,57,62"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-12-ambiguous-relative-pair",
+      "category": "ambiguous",
+      "checks": [
+        {
+          "check": "analysis.chord_functions",
+          "status": "blocked",
+          "observed": "no seam assigns harmonic function per chord",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.roman_numerals",
+          "status": "blocked",
+          "observed": "no seam produces Roman numerals for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            614
+          ]
+        },
+        {
+          "check": "analysis.scale_families",
+          "status": "blocked",
+          "observed": "no seam produces per-chord scale choices in the context of a key",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623,
+            567
+          ]
+        },
+        {
+          "check": "explanation.required_facts",
+          "status": "blocked",
+          "observed": "explanation grading needs the #623 orchestration path plus a judge",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "improvisation.arpeggio_symbol_is_canonical",
+          "seam": "improvisation.arpeggio",
+          "status": "pass",
+          "observed": "no arpeggio symbol matched a forbidden fact",
+          "expected": "no arpeggio symbol contains a forbidden string (e.g. the #567 \u0027Amm7\u0027 concatenation)"
+        },
+        {
+          "check": "improvisation.quality_from_written_symbol",
+          "seam": "improvisation.quality",
+          "status": "pass",
+          "observed": "all chord qualities classified from the written symbol",
+          "expected": "each chord\u0027s inferred quality matches the quality written in the symbol"
+        },
+        {
+          "check": "key.alternatives_when_ambiguous",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "2 tied candidate(s): A minor | C major",
+          "expected": "at least 2, including all of: C major | A minor"
+        },
+        {
+          "check": "key.forbidden_center_excluded",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "none of: F major | G major | D minor"
+        },
+        {
+          "check": "key.top_candidate_acceptable",
+          "seam": "key.identify",
+          "status": "pass",
+          "observed": "top-tied: A minor | C major",
+          "expected": "one of: C major | A minor"
+        },
+        {
+          "check": "tuning.domain_parses_open_strings",
+          "seam": "tuning.parse",
+          "status": "pass",
+          "observed": "\u0027E2 A2 D3 G3 B3 E4\u0027 -\u003E MIDI 40,45,50,55,59,64",
+          "expected": "MIDI 40,45,50,55,59,64"
+        },
+        {
+          "check": "uncertainty.behavior",
+          "status": "blocked",
+          "observed": "no seam reports alternatives, warnings or abstention for a progression",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        },
+        {
+          "check": "voicing.product_generates_valid_path",
+          "status": "blocked",
+          "observed": "no seam generates a voicing path for a progression in a given tuning",
+          "expected": "see the corpus expectation for this case",
+          "blocked_on": [
+            623
+          ]
+        }
+      ]
+    }
+  ]
+}
