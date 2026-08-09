@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "97cefe333508e480bf945b1ca887d7fb5218e68a",
-    "generatedAt": "2026-08-09T06:37:06.652094+00:00",
+    "commitSha": "980c7151fb0f179f8eb0f2cb337293be0a856e0d",
+    "generatedAt": "2026-08-09T09:17:29.690565+00:00",
     "repoCount": 5,
-    "totalPRs": 35
+    "totalPRs": 36
   },
   "repos": [
     {
@@ -385,8 +385,20 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 11,
+      "prCount": 12,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-08-09T07:04:10Z",
+          "failingChecks": 0,
+          "headRef": "chore/update-demerzel-a40386e-31300291558",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 240,
+          "title": "chore: update Demerzel submodule (51 commits behind)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/240"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -394,7 +406,7 @@
           "failingChecks": 0,
           "headRef": "cortex-verification-placeholders-and-orphaned-loops-12482827775676586965",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 239,
           "title": "Refine Cortex verification and close grammar distillation loop",
           "url": "https://github.com/GuitarAlchemist/tars/pull/239"
@@ -406,7 +418,7 @@
           "failingChecks": 0,
           "headRef": "jules-1183020563305497841-b0b1cfb3",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 238,
           "title": "Unify Pattern Compilation and LLM-JSON Response Parsing Seams",
           "url": "https://github.com/GuitarAlchemist/tars/pull/238"
@@ -418,7 +430,7 @@
           "failingChecks": 0,
           "headRef": "arch-refinement/cortex-evolution-orphaned-adapters-3382984801176808477",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 237,
           "title": "[arch-refinement] Cortex/Evolution orphaned adapters and dead field",
           "url": "https://github.com/GuitarAlchemist/tars/pull/237"
@@ -430,7 +442,7 @@
           "failingChecks": 0,
           "headRef": "untangle-ledger-storage-17344364847182702177",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 236,
           "title": "Untangle Ledger Storage: IBeliefLog, IEvidenceStore, IPlanStore",
           "url": "https://github.com/GuitarAlchemist/tars/pull/236"
@@ -442,7 +454,7 @@
           "failingChecks": 0,
           "headRef": "tars-v2-grammar-compatibility-12758894827563215301",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 234,
           "title": "Build TARS V2 grammar distillation and metascript compatibility layer",
           "url": "https://github.com/GuitarAlchemist/tars/pull/234"
@@ -454,7 +466,7 @@
           "failingChecks": 0,
           "headRef": "cortex-evolution-refine-12064732257356939770",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 233,
           "title": "Refactor EvolutionContext and remove dead runGate code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/233"
@@ -466,7 +478,7 @@
           "failingChecks": 0,
           "headRef": "cortex-evolution-seam-gaps-9699879404800848688",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 232,
           "title": "Unify IPromotionStore Persistence and Remove Dead WoTController",
           "url": "https://github.com/GuitarAlchemist/tars/pull/232"
@@ -478,7 +490,7 @@
           "failingChecks": 0,
           "headRef": "jules-5741676607076158650-5e9a2534",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 231,
           "title": "Add human-readable HTML AFK Agent Board dashboard",
           "url": "https://github.com/GuitarAlchemist/tars/pull/231"
@@ -490,7 +502,7 @@
           "failingChecks": 0,
           "headRef": "tars-ix-runtime-boundary-and-contracts-4376312904672594885",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 230,
           "title": "Define TARS-IX runtime boundary and artifact exchange contracts",
           "url": "https://github.com/GuitarAlchemist/tars/pull/230"
@@ -502,7 +514,7 @@
           "failingChecks": 5,
           "headRef": "chore/drop-anthropic-key-fallback",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 219,
           "title": "chore(ci): drop the pay-per-use fallback now the OAuth token is provisioned",
           "url": "https://github.com/GuitarAlchemist/tars/pull/219"
@@ -514,7 +526,7 @@
           "failingChecks": 1,
           "headRef": "refactor/reason-feedback-seam",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 207,
           "title": "feat: round-1 research program + round-3 self-improve seeds closed (backlog empty)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/207"
