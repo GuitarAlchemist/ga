@@ -46,6 +46,13 @@ using Microsoft.AspNetCore.DataProtection;
 /// the bug this class exists to fix.
 /// </para>
 /// <para>
+/// <b><c>Secure</c> depends on forwarded headers:</b> the flag follows
+/// <c>Request.IsHttps</c>, and the deployment terminates TLS at a cloudflared
+/// tunnel that forwards to plain HTTP. <c>Program.cs</c> must therefore
+/// register <c>UseForwardedHeaders</c> for this cookie to be <c>Secure</c> in
+/// production — pinned by <c>ForwardedHeadersSessionCookieTests</c>.
+/// </para>
+/// <para>
 /// <b>Threat model:</b> rotation across browser sessions (cookie cleared, new
 /// incognito window) is by design — the same trade-off SignalR reconnect
 /// rotation makes. The cookie is a CONVENIENCE that keeps memory continuity

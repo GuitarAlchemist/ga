@@ -1,5 +1,6 @@
 using GaChatbot.Api.Extensions;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -47,6 +48,54 @@ if (allowedOrigins.Length > 0)
 }
 
 var app = builder.Build();
+
+// Trust X-Forwarded-* from the reverse proxy so Request.Scheme reflects the
+// CLIENT-facing scheme. Mirrors Apps/ga-server/GaApi/Program.cs.
+//
+// Why this host needs it: the deployment terminates TLS at the cloudflared
+// `ga-demos` tunnel and forwards to plain http://localhost:5252
+// (docs/runbooks/chatbot-deploy.md). Without this, Request.IsHttps is false on
+// EVERY production request, so HttpChatSessionCookie issues the session cookie
+// without `Secure` on https://demos.guitaralchemist.com — the cookie that keys
+// MemoryStore / ChatTranscriptStore partitions.
+//
+// Safety: forwarded headers are honoured only for requests that actually came
+// through the tunnel (CF-Connecting-IP present) AND only when a public host is
+// configured. Stray headers on direct/localhost requests are stripped, so a
+// dev proxy emitting a partial set can't talk the host into an https view of
+// itself — that would mint a Secure cookie the browser refuses to send back
+// over http, silently rotating the session on every turn.
+// Must run before UsePathBase so the whole pipeline sees the corrected scheme.
+var publicHost = builder.Configuration["Proxy:PublicHost"];
+app.Use(async (ctx, next) =>
+{
+    var isProxiedRequest = !string.IsNullOrEmpty(ctx.Request.Headers["CF-Connecting-IP"].ToString());
+    if (isProxiedRequest && !string.IsNullOrWhiteSpace(publicHost))
+    {
+        // The tunnel sets X-Forwarded-Proto but not X-Forwarded-Host; synthesise
+        // it so the forwarded host matches the configured public origin.
+        ctx.Request.Headers["X-Forwarded-Host"] = publicHost;
+    }
+    else
+    {
+        ctx.Request.Headers.Remove("X-Forwarded-Proto");
+        ctx.Request.Headers.Remove("X-Forwarded-Host");
+        ctx.Request.Headers.Remove("X-Forwarded-For");
+    }
+    await next();
+});
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+};
+if (!string.IsNullOrWhiteSpace(publicHost))
+{
+    forwardedHeadersOptions.AllowedHosts.Add(publicHost);
+}
+// Cloudflare can connect from any IP — clear the default localhost-only allowlist.
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Optional path-base for hosting under a public host's sub-path
 // (e.g. demos.guitaralchemist.com/chatbot via Cloudflare Tunnel ingress
