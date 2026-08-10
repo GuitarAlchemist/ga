@@ -345,3 +345,75 @@ warnings noisy enough to be ignored.
 
 The current authority boundary is **push corrected branches and stop before
 ready/merge**. Granting `ready` or `merge` authority is deliberately separate.
+
+## 2026-08-09 coordination handover and verified lane state
+
+Coordination moved from Codex to the visible Claude Code control plane mid-session
+when Codex credits were exhausted. This section records only what was independently
+re-proved by the coordinator, not what a lane claimed.
+
+### Fixed points re-proved by the coordinator
+
+Both digests were recomputed from the pinned `inventory-digest/1` recipe
+(`relpath|bytes|sha256`, forward slashes, decimal bytes, lowercase hex, en-US
+case-insensitive line order, LF join, no trailing newline, hashed UTF-8 without BOM)
+in an independent PowerShell implementation, on the canonical tree and on each
+immutable review copy:
+
+| Artifact | Files | Bytes | `inventory-digest/1` | Copies verified byte-identical |
+|---|---|---|---|---|
+| `gaia-interagent` R6 exit | 37 | 450,549 | `0ecf0bf435c420a002555ab5993abbb9cc33d451f141aa0761183df2b937fb2b` | `gaia-interagent-r6-standards`, `gaia-interagent-r6-spec` |
+| engineering-skills vNext R3 exit | 85 | 607,633 | `a4bf1f072f5bc8afa490e8d26e5100dd2a7dd566ceb051f7d520710b5d50b969` | `gaia-engineering-skills-r4-review` |
+
+The R6 exit digest differs from the tree R5 reviewed, so **R5's verdict does not
+carry over to these bytes** and fresh Standards and Spec reviews are mandatory.
+
+### Lane verdicts consumed
+
+| Lane | Marker | Verdict |
+|---|---|---|
+| Gaia Interagent R6 repair writer | `GAIA_INTERAGENT_R6_REPAIR_WRITER_COMPLETE` | writer claim only; five-file delta, 32 files byte-identical, G20/G21 left open |
+| Gaia Interagent R5 Spec | `GAIA_INTERAGENT_R5_SPEC_COMPLETE` | REQUEST_CHANGES, five findings, against superseded bytes |
+| Engineering Skills R3 repair writer | `GAIA_ENGINEERING_SKILLS_R3_REPAIR_WRITER_COMPLETE` | writer claim only; one file edited; gate G-6 deliberately left open for the coordinator |
+| Gaia Mechanics R5 security | `GAIA_MECHANICS_AGENTICS_R5_SECURITY_COMPLETE` | REQUEST_CHANGES; R5-B1 decisive — the R3-B7 blocker recurs inside its own repair |
+
+Mechanics has now returned REQUEST_CHANGES three consecutive times with the same
+blocker surviving its own fix. That is a signal to park the lane, not to commission
+another revision.
+
+### Antigravity CLI lane, retired unstarted
+
+An `agy` session (Antigravity CLI 1.1.11, Gemini 3.6 Flash Low, **elevated**
+Administrator shell) was discovered acting as an unregistered fifth mutable writer
+in this repository, outside the visible control plane. Findings:
+
+- its working tree was **clean** — it had written nothing, so retiring it costs nothing;
+- it had launched a full `dotnet test AllProjects.slnx` run as a Stage 2 "baseline";
+- Stage 2's target, `Store.check_and_claim`, **does not exist anywhere in this
+  repository** — it occurs only in this plan's prose. A repository-wide search also
+  found no occurrence in `Demerzel`, `Demerzel-936`, `Demerzel-937`, `Demerzel-baml`,
+  `demerzel-bot`, `afk-harness` or `agent-blackbox`.
+
+So the baseline run could not have informed the fix, because the fix cannot be made
+in this checkout. **Stage 2 is mis-located in this plan**: the brokerless claim seam
+belongs to Demerzel Gaia PR #940, and Stage 2 must name that checkout explicitly
+before any lane is assigned to it.
+
+### Effective-integration milestone
+
+**M0. Not integrated.** M2 through M5 remain absent. Nothing here authorises
+implementation, install, publication, spend or routing. The mechanics tracer plan
+remains REQUEST_CHANGES and its implementation remains unauthorised; torseur/wrench
+and literal constitutive/material laws stay rejected.
+
+### Carried open
+
+- G20 exact-product live Claude+Codex and G21 installed-loader resolution: **OPEN**,
+  neither attempted, simulated nor inferred.
+- Engineering-skills gate G-6: satisfiable but **not closed**; folded into the R4
+  independent review's scope rather than self-certified by the writer.
+- A dedicated `GuitarAlchemist/gaia-interagent` remote remains **absent**, so the
+  Gaia product has no publication destination and none was created.
+- Two panes whose cwd is a canonical product tree were left idle deliberately: any
+  crash debris written there would invalidate the fixed points above, so they cannot
+  host reviewers and require an operator-run stop.
