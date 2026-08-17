@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "domain": "readme-drift",
+  "snapshot_date": "2026-08-17",
+  "snapshot_at": "2026-08-17T08:41:21.4366225Z",
+  "thresholds_days": {
+    "borderline": 14,
+    "stale": 30,
+    "very_stale": 60
+  },
+  "repos": [
+    {
+      "repo": "ga",
+      "status": "very-stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-08-17",
+      "drift_days": 93
+    },
+    {
+      "repo": "ix",
+      "status": "borderline",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-07-28",
+      "head_date": "2026-08-16",
+      "drift_days": 19
+    },
+    {
+      "repo": "Demerzel",
+      "status": "borderline",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-07-29",
+      "head_date": "2026-08-16",
+      "drift_days": 18
+    },
+    {
+      "repo": "tars",
+      "status": "stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-07-01",
+      "head_date": "2026-08-09",
+      "drift_days": 39
+    },
+    {
+      "repo": "guitaralchemist.github.io",
+      "status": "very-stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-05-16",
+      "head_date": "2026-07-21",
+      "drift_days": 66
+    },
+    {
+      "repo": "agent-blackbox",
+      "status": "very-stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-05-17",
+      "head_date": "2026-08-08",
+      "drift_days": 83
+    },
+    {
+      "repo": "demerzel-bot",
+      "status": "very-stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-07-18",
+      "drift_days": 104
+    },
+    {
+      "repo": "ga-godot",
+      "status": "very-stale",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-04-05",
+      "head_date": "2026-06-20",
+      "drift_days": 76
+    },
+    {
+      "repo": "hari",
+      "status": "borderline",
+      "readme_mtime": "2026-08-17",
+      "readme_touch": "2026-07-20",
+      "head_date": "2026-08-09",
+      "drift_days": 20
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "ok": 0,
+    "borderline": 3,
+    "stale": 1,
+    "very_stale": 5,
+    "absent": 0
+  },
+  "emitted_at": "2026-08-17T08:41:21.4366225Z",
+  "metric_name": "readme_freshness_ratio",
+  "metric_value": 0.0,
+  "oracle_status": "error",
+  "problems": [
+    {
+      "path": "ga",
+      "status": "very-stale"
+    },
+    {
+      "path": "ix",
+      "status": "borderline"
+    },
+    {
+      "path": "Demerzel",
+      "status": "borderline"
+    },
+    {
+      "path": "tars",
+      "status": "stale"
+    },
+    {
+      "path": "guitaralchemist.github.io",
+      "status": "very-stale"
+    },
+    {
+      "path": "agent-blackbox",
+      "status": "very-stale"
+    },
+    {
+      "path": "demerzel-bot",
+      "status": "very-stale"
+    },
+    {
+      "path": "ga-godot",
+      "status": "very-stale"
+    },
+    {
+      "path": "hari",
+      "status": "borderline"
+    }
+  ]
+}
