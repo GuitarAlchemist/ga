@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-08-21T17:51:35.992459Z",
+  "generated_at": "2026-08-22T18:53:25.592014Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -9,17 +9,17 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-21T07:08:15Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32457315875",
-      "detail": "latest completed run: success"
+      "last_heartbeat": "2026-08-22T07:17:31Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32559205872",
+      "detail": "latest completed run: skipped"
     },
     {
       "id": "lane:claude-mention",
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-19T07:29:59Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32228105230",
+      "last_heartbeat": "2026-08-22T07:17:31Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32559205650",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-21T17:30:08Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32508482318",
+      "last_heartbeat": "2026-08-22T18:19:07Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32590376018",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-08-21T06:25:54Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32454360309",
+      "last_heartbeat": "2026-08-22T06:20:07Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32556697424",
       "detail": "latest completed run: success"
     },
     {
