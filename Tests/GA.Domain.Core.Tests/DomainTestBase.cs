@@ -51,7 +51,5 @@ public abstract class DomainTestBase
     /// Creates a test instance of T with sample data.
     /// </summary>
     protected static T CreateTestInstance<T>()
-    {
-        return Activator.CreateInstance<T>();
-    }
+        => Activator.CreateInstance<T>();
 }

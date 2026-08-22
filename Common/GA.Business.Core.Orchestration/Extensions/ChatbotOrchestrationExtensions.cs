@@ -67,6 +67,12 @@ public static class ChatbotOrchestrationExtensions
         // Shared Ollama HTTP client wrapper — single plumbing point for /api/generate calls
         services.AddSingleton<OllamaGenerateClient>();
 
+        // Arpeggio-suggestion structured-output tracer (ga#589): LLM proposes a typed
+        // PerformanceIntent via Ollama's native JSON-schema structured outputs, then the
+        // deterministic theory engine validates it before it reaches the user.
+        services.AddSingleton<PerformanceIntents.PerformanceIntentValidator>();
+        services.AddSingleton<PerformanceIntents.ArpeggioIntentService>();
+
         // Core stateless services (Singleton — no scoped dependencies)
         services.AddSingleton<DomainMetadataPrompter>();
         services.AddSingleton<GroundedPromptBuilder>();

@@ -13,21 +13,15 @@ using NUnit.Framework;
 public class FretboardTests
 {
     [Test]
-    public void Default_IsSixStringTwentyFourFretGuitar()
+    public void Default_IsSixStringTwentyFourFretGuitar() => Assert.Multiple(() =>
     {
-        Assert.Multiple(() =>
-        {
-            Assert.That(Fretboard.Default.StringCount, Is.EqualTo(6));
-            Assert.That(Fretboard.Default.FretCount, Is.EqualTo(24));
-            Assert.That(Fretboard.Default.StringCount, Is.EqualTo(Fretboard.Default.Tuning.StringCount));
-        });
-    }
+        Assert.That(Fretboard.Default.StringCount, Is.EqualTo(6));
+        Assert.That(Fretboard.Default.FretCount, Is.EqualTo(24));
+        Assert.That(Fretboard.Default.StringCount, Is.EqualTo(Fretboard.Default.Tuning.StringCount));
+    });
 
     [Test]
-    public void CreateGuitar_HonoursRequestedFretCount()
-    {
-        Assert.That(Fretboard.CreateGuitar(12).FretCount, Is.EqualTo(12));
-    }
+    public void CreateGuitar_HonoursRequestedFretCount() => Assert.That(Fretboard.CreateGuitar(12).FretCount, Is.EqualTo(12));
 
     // Open-string pitch classes for standard tuning, indexed 0 (high E) .. 5 (low E).
     [TestCase(0, 4)]  // E
@@ -36,10 +30,7 @@ public class FretboardTests
     [TestCase(3, 2)]  // D
     [TestCase(4, 9)]  // A
     [TestCase(5, 4)]  // E
-    public void GetNote_OpenString_HasExpectedPitchClass(int stringIndex, int expectedPc)
-    {
-        Assert.That(Fretboard.Default.GetNote(stringIndex, 0).PitchClass.Value, Is.EqualTo(expectedPc));
-    }
+    public void GetNote_OpenString_HasExpectedPitchClass(int stringIndex, int expectedPc) => Assert.That(Fretboard.Default.GetNote(stringIndex, 0).PitchClass.Value, Is.EqualTo(expectedPc));
 
     [Test]
     public void GetNote_TwelfthFret_IsSamePitchClassAsOpen()
@@ -57,25 +48,16 @@ public class FretboardTests
     [TestCase(3, 7)]  // G
     [TestCase(5, 9)]  // A
     [TestCase(12, 4)] // E (one octave up)
-    public void GetNote_AppliesFretAsSemitoneOffset(int fret, int expectedPc)
-    {
-        Assert.That(Fretboard.Default.GetNote(0, fret).PitchClass.Value, Is.EqualTo(expectedPc));
-    }
+    public void GetNote_AppliesFretAsSemitoneOffset(int fret, int expectedPc) => Assert.That(Fretboard.Default.GetNote(0, fret).PitchClass.Value, Is.EqualTo(expectedPc));
 
     [Test]
-    public void GetPitchClass_AgreesWithGetNote()
-    {
-        Assert.That(Fretboard.Default.GetPitchClass(3, 5), Is.EqualTo(Fretboard.Default.GetNote(3, 5).PitchClass));
-    }
+    public void GetPitchClass_AgreesWithGetNote() => Assert.That(Fretboard.Default.GetPitchClass(3, 5), Is.EqualTo(Fretboard.Default.GetNote(3, 5).PitchClass));
 
     [TestCase(-1, 0)]  // string below range
     [TestCase(6, 0)]   // string == StringCount (out of range)
     [TestCase(0, -1)]  // fret below range
     [TestCase(0, 25)]  // fret above FretCount
-    public void GetNote_OutOfRange_Throws(int stringIndex, int fret)
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => Fretboard.Default.GetNote(stringIndex, fret));
-    }
+    public void GetNote_OutOfRange_Throws(int stringIndex, int fret) => Assert.Throws<ArgumentOutOfRangeException>(() => Fretboard.Default.GetNote(stringIndex, fret));
 
     [Test]
     public void GetPositionsForNote_ReturnsOnlyValidPositions()
