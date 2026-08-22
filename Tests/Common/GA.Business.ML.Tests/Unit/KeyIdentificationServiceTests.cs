@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents;
+using GA.Domain.Services.Tonal;
 using NUnit.Framework;
 
 [TestFixture]
@@ -103,6 +104,11 @@ public class KeyIdentificationServiceTests
         Assert.That(top, Has.Some.Matches<KeyIdentificationService.KeyCandidate>(c => c.Key == "C major"));
         Assert.That(top[0].MatchCount, Is.EqualTo(4));
     }
+
+    [TestCase("C major", "AM7")]
+    [TestCase("Bb major", "GMIN7")]
+    public void IsChordDiatonic_UppercaseMinorQuality_IsParsedAsMinor(string key, string chord) =>
+        Assert.That(KeyIdentificationService.IsChordDiatonic(key, chord), Is.True);
 
     // ── Empty / no-match cases ────────────────────────────────────────────────
 
