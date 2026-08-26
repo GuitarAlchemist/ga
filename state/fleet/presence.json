@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-08-26T15:56:32.318301Z",
+  "generated_at": "2026-08-26T18:08:22.884862Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -44,10 +44,10 @@
       "id": "sensor:ecosystem-health",
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
-      "status": "red",
-      "last_heartbeat": "2026-08-26T15:06:11Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32984070069",
-      "detail": "latest completed run: startup_failure"
+      "status": "green",
+      "last_heartbeat": "2026-08-26T16:33:05Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/32989015931",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
