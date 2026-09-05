@@ -155,6 +155,16 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
 
+Audited davidondrej pilot skills (`next-decision`, `decisions`) are vendored
+project-scoped under `.claude/skills/` from
+`davidondrej/skills@f2ce449939b4b46707bc8692cbf9f473b2d891e7` (MIT). Both
+are prompt-only and contain no scripts or executable assets: `next-decision`
+resolves one open choice at a time; `decisions` is a manual uncertainty audit
+and carries an installer-generated Codex manual-only policy. Do not bulk-update from
+`main`; re-audit and pin each upstream revision. `fable-safe-prompt`, broad
+system guardrails, destructive setup/production skills, and scheduler wrappers
+are intentionally excluded.
+
 ### Issue tracker
 
 GitHub Issues on `GuitarAlchemist/ga`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
