@@ -273,6 +273,7 @@ The research-grade missing piece: a model that *simulates consequences before ac
 - **Explicitly parked until**: J2 tracer bullet ships (hari can score forecasts — otherwise the model has no epistemic memory to write to — **✅ shipped 2026-07-02**) and ix has capacity. No speculative scaffolding in GA before then (Karpathy rule 2).
 - **Research verdict (2026-07-02)** — [docs/research/2026-07-02-deep-research-j4-world-models.md](docs/research/2026-07-02-deep-research-j4-world-models.md) (104 agents, 22 confirmed / 3 killed claims): **prepare-the-data now, train nothing explicit now.** (1) Invest now: frontier-as-implicit-world-model (WebDreamer pattern, +34-42% relative with zero training) plugged into J2's Brier ledger, and classic GBDT predictors for CI observables (Facebook production proof). (2) Prepare data: log every typed action→observation transition (action type, diff features, before-state baselines, observed outcome, forecast+resolution) — target order 10⁶ transitions (Dreamer-7B: 3.1M), successes included (~99:1 imbalance). (3) Wait on any latent JEPA/Dreamer-class model: no SE-domain backbone exists, and a 397B trained world model beats frontier-as-simulator by only 0.46 pt (58.71 vs 58.25 on AgentWorldBench). Small-model path plausibly practicable at 2-5 yrs if open weights + logged corpus exist; SE-native latent world model 5-15 yrs or never needed. The tracer bullet below stands, with GBDT-vs-persistence as the reference technique (not a neural net). Not to be confused with [docs/research/world-models-diffusion-ga-eval.md](docs/research/world-models-diffusion-ga-eval.md) (music-product surfaces, DEFER — different scope).
 - **J4-data (the real near-term investment)**: instrument the existing harness to log the transition schema above — natural extension of J2's forecast ledger + J1's presence snapshot. Own tracer bullet: one workflow (e.g. post-merge smoke) emitting one typed transition record per run to `state/transitions/`, schema versioned in `docs/contracts/`.
+- **Tracker (triaged 2026-07-28)**: the agentic half lives in `GuitarAlchemist/tars#212` — `not_ready`, blocked on **ga#507** (typed action→observation transition logging), *not* on the musical spike ga#605. One transition schema (ga#507), two domains on top of it; do not let tars redefine it. Cluster triage: [docs/plans/2026-07-28-research-jepa-optick-issue-triage-plan.md](docs/plans/2026-07-28-research-jepa-optick-issue-triage-plan.md).
 - Paths: `../ix/` (owner), `state/quality/` (training data), contracts in `docs/contracts/`. **Tribunal: REQUIRED** (cross-repo, new ML surface).
 
 ### J5 — The Jarvis loop: observe → believe → predict → gate → act → learn [integration]
@@ -324,6 +325,8 @@ Arpeggios = ordered sequences + fingerings, not sets. **Verified differentiation
 
 - **Tracer bullet**: tiny predictor (per-partition MLP or ix's GBDT, ix#221) predicting the next voicing's OPTIC-K embedding from context, vs **honest baselines** (persistence, Markov-on-chord-symbols). Pause rule (Karpathy R4): if it can't beat Markov, the epic pauses and says so.
 - **Blocked on**: M-arch (scorer seam), a `Progression`→embedding-sequence adapter (the DSL/GrothendieckService produces ICV deltas, not training sequences — new adapter needed), corpus license verification, and ix capacity. **Tribunal: REQUIRED** (cross-repo, new ML surface). Not to be confused with the parked J4 (process telemetry) — this is the *musical* application of the same frozen-encoder recipe.
+- **Tracker (triaged 2026-07-28)**: this epic's issue cluster is **ga#605** (JEPA spike — VERDICT **NOT-YET** conf. 0.78), **ga#610** (state/action/goal contracts — narrow before starting), **ga#612** (contact-centric physical contracts — parked behind #610), **ga#606** (Jacobian geometry — parked: 40/124 compact dims identically zero), **ga#611** (COCONUT latent planning — parked: baseline planner cost never measured), **ga#607** (Grothendieck/categorical — the only one with no blocking dependency). All six are `ready-for-human`; none is in the agent lane (`ready-for-agent` fires `jules-auto-delegate.yml` — see §7 of the triage). Full disposition + revisit triggers: [docs/plans/2026-07-28-research-jepa-optick-issue-triage-plan.md](docs/plans/2026-07-28-research-jepa-optick-issue-triage-plan.md).
+- **Prerequisite that outranks the whole cluster**: **ga#616** — the `CONTEXT` partition carries similarity weight **0.20** and is measured empty (11/12 dims dead; the producer hardcodes `stabilityDelta: 0.0` / `isResolution: false`, and slots 6–11 have been `Reserved` since v1.1). A producer fix, cheaper than any model, that raises the deterministic baseline this epic must beat. Not a schema change — layout/weights/hash unchanged, corpus rebuild only.
 
 ### M5 — "Listen to me play": on-device audio input [ML, product — research-backed]
 
@@ -475,6 +478,38 @@ Question opérateur (leçon Karpathy « LLM Wiki / compounding knowledge base »
 - **Slice 4 (capacité max, en dernier)** — compaction offline qui **émet un nouveau digest proposé** (contrat *never-mutate-input* d'Anthropic Dreams), jamais d'édition en place — on **rejette** explicitement la mutation in-place du `dream-skill` open-source. Détection de contradiction (mécanisme Graphiti porté sans le graphe) alimente cette file, strictement propose-for-review.
 - **Fil conducteur** (accord de toutes les sources prudentes) : la consolidation est offline, non-destructive, revue ; seule la mémoire-brouillon d'agent à faible enjeu s'auto-supprime. Notre KB append-mostly reste du côté « propose, préserve l'historique, l'humain accepte ». Tous les slices sont two-way-door.
 - **Coût de ne pas curer** : largement affirmé, faiblement prouvé dans les sources atteignables (un seul chiffre « ~20 % de chute de recall », page 403'd, non vérifié) — argument de plus pour le harnais recall@k : mesurer notre propre dérive plutôt qu'importer un chiffre.
+
+---
+
+## Core Domain Hardening — deferred structural findings (review 2026-07-24)
+
+The 2026-07-24 review of `Common\GA.Core` + `Common\GA.Domain.Core` shipped all the behavioural fixes (parsing, arithmetic, ordering, thread-safety, hashing — see the tests added in `Tests\Common\GA.Core.Tests` and `Tests\GA.Domain.Core.Tests`). What follows is what was **deliberately not** fixed in that pass because each item is a refactor with a blast radius, not a bug fix. Each needs its own plan doc.
+
+### Chord identity vs voicing (highest value)
+
+`Theory\Harmony\Chord.cs` mods every formula interval to 12 at construction (`:35`), so `C9`, `Cadd9` and `C7add2` collapse to the same pitch-class set, and `Equals`/`GetHashCode` (`:202`, `:304`) key on root + PC-set only — while the type still publishes `Bass`, `IsInverted`, `GetInversion`, `ToInversion`. Decide the contract: either keep PC-set semantics and move voicing/inversion out of `Chord`, or carry octave-aware notes so 9/11/13 extensions survive. `Notes` is an `AccidentedNoteCollection` (no octave), so this is a model change, not a one-liner.
+
+### Railway-Oriented Programming absent from the domain core
+
+`Result<>`/`Option<>`/`Try<>` has zero hits across `Primitives\` and `Theory\`, while `Theory\Tonal` alone has ~51 `throw new` sites (`Chord.cs:53,79`, `Key.cs:157,227,292,360`). Convert construction/parse failures to `Result<T,E>` per the convention, keeping `throw` for genuine boundaries. Large, mechanical, needs a staged plan (one folder per PR) because every caller changes.
+
+### Duplication with no single authority
+
+- Three Forte catalogs (`ForteCatalog`, `CanonicalForteCatalog`, `ProgrammaticForteCatalog`) with no stated precedence — designate one authority, make the others adapters or delete.
+- ~20 near-clone `…ScaleDegree` structs under `Theory\Tonal\Primitives\*` mirroring `Theory\Tonal\Modes\*` 1:1, each with a hand-written `Name` switch ending in `throw` — one degree value object driven by `ModeCatalog` would collapse ~40 files.
+- `Position` vs `PositionLocation` duplicate the same coordinate pair.
+
+### Layer-1 purity violations
+
+`Design\Persistence\DocumentBase.cs:9` carries `Id`/`CreatedAt`/`UpdatedAt` and `ChordVoicingSnapshot` exists "for persistence" — both belong above layer 1 per [docs/architecture/layers.md](docs/architecture/layers.md). Same class of issue: hardcoded data that the convention says belongs in YAML (`GA.Business.Config` owns YAML with a hardcoded fallback) — `Instruments\Tuning.cs:23-38` (guitar/ukulele/bass/7-string) and `Instruments\Biomechanics\HandModel.cs:29-91` (standard adult hand, whose own TODO says it doesn't belong there).
+
+### API sharp edges (small but breaking)
+
+`PitchClass` exposes **both** `implicit operator Note.Sharp` and `implicit operator Note.Flat` (`:283-285`) plus implicit `int → PitchClass` (`:187`), so an `int` can silently become a spelled note. Make spelling an explicit choice. Related: `PitchClass.ToString()` emits `T`/`E`, which forces `TryParse` to keep reading `"E"` as 11 rather than as the note E — an explicit notation-mode parameter would remove the remaining ambiguity (the `A`/`B` half of it is already fixed via `TryParseSetNotation`).
+
+### Coverage still thin
+
+`GA.Core\Collections\LazyCollection.cs` / `LazyReadOnlyDictionary.cs` untested; `Theory\Atonal` set operations lack transposition/inversion invariant tests; `Instruments\Biomechanics` and `Design\Schema` untested.
 
 ---
 
