@@ -1,4 +1,4 @@
-namespace GA.Business.ML.Agents;
+namespace GA.Domain.Services.Tonal;
 
 using System.Collections.Frozen;
 using System.Text.RegularExpressions;
@@ -26,7 +26,7 @@ public static partial class KeyIdentificationService
 
     // ── Internal chord quality model ──────────────────────────────────────────
 
-    private enum ChordQuality { Major, Minor, Diminished }
+    private enum ChordQuality { Major, Minor, Diminished, Dominant }
 
     // Natural major: I M, II m, III m, IV M, V M, VI m, VII dim
     private static readonly ChordQuality[] MajorPattern =
@@ -132,7 +132,17 @@ public static partial class KeyIdentificationService
         var rootStr = s.Length >= 2 && s[1] is '#' or 'b' ? s[..2] : s[..1];
         if (!RootPcMap.TryGetValue(rootStr, out var rootPc)) return null;
 
-        var quality = s[rootStr.Length..].ToLowerInvariant() switch
+        var normalizedQuality = s[rootStr.Length..].ToLowerInvariant();
+        var isDominant = chord.Contains('7') &&
+                         string.IsNullOrEmpty(normalizedQuality) &&
+                         !chord.Contains("maj", StringComparison.OrdinalIgnoreCase);
+
+        if (isDominant)
+        {
+            return (rootPc, ChordQuality.Dominant);
+        }
+
+        var quality = normalizedQuality switch
         {
             "m"   => ChordQuality.Minor,
             "dim" => ChordQuality.Diminished,
@@ -164,7 +174,24 @@ public static partial class KeyIdentificationService
             .Select(kd =>
             {
                 var matchCount = parsed.Count(chord =>
-                    kd.DiatonicTriads.Any(t => t.RootPc == chord.RootPc && t.Quality == chord.Quality));
+                    kd.DiatonicTriads.Any(t =>
+                    {
+                        if (t.RootPc != chord.RootPc) return false;
+                        if (chord.Quality == ChordQuality.Dominant)
+                        {
+                            var isMajorKey = kd.Name.Contains("major", StringComparison.OrdinalIgnoreCase);
+                            var idx = Array.FindIndex(kd.DiatonicTriads, x => x.RootPc == t.RootPc);
+                            if (isMajorKey)
+                            {
+                                return idx == 4 && t.Quality == ChordQuality.Major;
+                            }
+                            else
+                            {
+                                return (idx == 6 || idx == 4) && (t.Quality == ChordQuality.Major || t.Quality == ChordQuality.Minor);
+                            }
+                        }
+                        return t.Quality == chord.Quality;
+                    }));
 
                 return new KeyCandidate(
                     Key: kd.Name,
@@ -176,6 +203,38 @@ public static partial class KeyIdentificationService
             .Where(c => c.MatchCount > 0)
             .OrderByDescending(c => c.MatchCount)
             .ThenBy(c => c.Key)];
+    }
+
+    /// <summary>
+    /// Checks if a chord symbol is diatonic to a key.
+    /// </summary>
+    public static bool IsChordDiatonic(string keyName, string chordSymbol)
+    {
+        var keyData = AllKeys.FirstOrDefault(k => k.Name.Equals(keyName, StringComparison.OrdinalIgnoreCase));
+        if (keyData == null) return false;
+
+        var parsed = ParseChordRootAndQuality(chordSymbol);
+        if (!parsed.HasValue) return false;
+
+        var (rootPc, quality) = parsed.Value;
+        return keyData.DiatonicTriads.Any(t =>
+        {
+            if (t.RootPc != rootPc) return false;
+            if (quality == ChordQuality.Dominant)
+            {
+                var isMajorKey = keyData.Name.Contains("major", StringComparison.OrdinalIgnoreCase);
+                var idx = Array.FindIndex(keyData.DiatonicTriads, x => x.RootPc == t.RootPc);
+                if (isMajorKey)
+                {
+                    return idx == 4 && t.Quality == ChordQuality.Major;
+                }
+                else
+                {
+                    return (idx == 6 || idx == 4) && (t.Quality == ChordQuality.Major || t.Quality == ChordQuality.Minor);
+                }
+            }
+            return t.Quality == quality;
+        });
     }
 
     /// <summary>
@@ -204,10 +263,11 @@ public static partial class KeyIdentificationService
     // e.g. "G7" → "G", "Cmaj7" → "C", "Am7" → "Am", "Bdim7" → "Bdim", "A#m" → "Bbm"
     private static string NormalizeChord(string chord)
     {
-        var s = Regex.Replace(chord.Trim(), @"(maj|min|aug|sus|add)?\d+.*$", "", RegexOptions.IgnoreCase);
+        var s = Regex.Replace(chord.Trim(), "min", "m", RegexOptions.IgnoreCase);
+        s = Regex.Replace(s, @"(maj|aug|sus|add)?\d+.*$", "", RegexOptions.IgnoreCase);
         return s.Replace("A#", "Bb").Replace("D#", "Eb").Replace("G#", "Ab");
     }
 
-    [GeneratedRegex(@"\b[A-G][b#]?(m|dim|aug|maj)?\b", RegexOptions.None)]
+    [GeneratedRegex(@"\b[A-G][b#]?(?:m|dim|aug|maj|min|sus|add)?\d*(?:b5|#5|b9|#9|#11|b13)?\b", RegexOptions.IgnoreCase)]
     private static partial Regex ChordPattern();
 }

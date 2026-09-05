@@ -6,6 +6,7 @@ using Microsoft.FSharp.Core;
 using ModelContextProtocol.Server;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GA.Domain.Services.Tonal;
 
 using GaReg = GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
 
@@ -172,44 +173,45 @@ public static class GaKeyFromProgressionTool
         if (chords is not { Length: > 0 })
             return JsonSerializer.Serialize(new { error = "No chords provided." });
 
-        // Parse each chord to its root pitch class; ignore unrecognised symbols.
-        var chordPcs = chords
-            .Select(c => (chord: c, pc: GuitaristHelpers.ChordRootPc(c)))
-            .Where(x => x.pc >= 0)
+        var parsedCandidates = KeyIdentificationService.Identify(chords);
+        if (parsedCandidates.Count == 0)
+            return JsonSerializer.Serialize(new { error = "Could not parse or identify any candidate keys." });
+
+        var firstChordPc = GuitaristHelpers.ChordRootPc(chords[0]);
+
+        var candidates = parsedCandidates
+            .Select(c =>
+            {
+                var parts = c.Key.Split(' ');
+                var keyName = parts[0];
+                var mode = parts[1];
+                var keyRootPc = GuitaristHelpers.ChordRootPc(keyName);
+
+                var matchingChords = chords.Where(chord => KeyIdentificationService.IsChordDiatonic(c.Key, chord)).ToList();
+                var score = matchingChords.Count;
+
+                return new
+                {
+                    key = c.Key,
+                    mode,
+                    score,
+                    keyRootPc,
+                    matchingChords
+                };
+            })
+            .Where(x => x.score > 0)
+            .OrderByDescending(x => x.score)
+            .ThenByDescending(x => x.keyRootPc == firstChordPc ? 1 : 0)
+            .ThenByDescending(x => x.mode.Equals("major", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+            .Select(x => new
+            {
+                key = x.key,
+                mode = x.mode,
+                confidence = $"{x.score}/{chords.Length} ({x.score * 100 / chords.Length}%)",
+                matchingChords = x.matchingChords
+            })
+            .Take(3)
             .ToList();
-
-        if (chordPcs.Count == 0)
-            return JsonSerializer.Serialize(new { error = "Could not parse any chord roots." });
-
-        var pcs = chordPcs.Select(x => x.pc).ToList();
-
-        // Score all 24 keys (12 major + 12 minor).
-        var keyConfigs = new[]
-        {
-            (mode: "major", offsets: GuitaristHelpers.MajorOffsets, pattern: GuitaristHelpers.MajorPattern),
-            (mode: "minor", offsets: GuitaristHelpers.MinorOffsets, pattern: GuitaristHelpers.MinorPattern)
-        };
-
-        var candidates = (
-            from rootPc in Enumerable.Range(0, 12)
-            from cfg in keyConfigs
-            let diatonic = cfg.offsets.Select(o => (rootPc + o) % 12).ToHashSet()
-            let matchingChords = chords.Where(c =>
-            {
-                var pc = GuitaristHelpers.ChordRootPc(c);
-                return pc >= 0 && diatonic.Contains(pc);
-            }).ToList()
-            let score = matchingChords.Count
-            where score > 0
-            orderby score descending, (rootPc == pcs[0] ? 1 : 0) descending
-            select new
-            {
-                key            = GuitaristHelpers.KeyName(rootPc) + " " + cfg.mode,
-                mode           = cfg.mode,
-                confidence     = $"{score}/{chords.Length} ({score * 100 / chords.Length}%)",
-                matchingChords
-            }
-        ).Take(3).ToList();
 
         var best = candidates.FirstOrDefault();
         var result = new
