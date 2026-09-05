@@ -301,7 +301,16 @@ public class ProductionOrchestrator(
         return response;
     }
 
-    public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
+    /// <remarks>
+    /// <c>virtual</c> so a host adapter test can substitute a stub orchestrator
+    /// and assert on the <see cref="ChatRequest"/> it actually receives. Without
+    /// that seam the session-identity invariant on
+    /// <c>GaChatbot.Api.Services.ProductionChatOrchestratorClient.AnswerAsync</c>
+    /// is only pinned on a helper nothing forces that method to call — a gap an
+    /// independent review closed by re-inlining the original defect with the
+    /// whole suite still green. See <c>ProductionChatOrchestratorClientTests</c>.
+    /// </remarks>
+    public virtual async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();

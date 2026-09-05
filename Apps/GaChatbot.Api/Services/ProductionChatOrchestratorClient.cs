@@ -11,11 +11,25 @@ public sealed class ProductionChatOrchestratorClient(IServiceProvider servicePro
         CancellationToken cancellationToken = default)
     {
         var orchestrator = serviceProvider.GetRequiredService<ProductionOrchestrator>();
-        return orchestrator.AnswerAsync(
-            new ChatRequest(
-                request.Message,
-                SessionId: null,
-                History: request.History),
-            cancellationToken);
+        return orchestrator.AnswerAsync(ToOrchestratorRequest(request), cancellationToken);
     }
+
+    /// <summary>
+    /// Maps this host's <see cref="ChatExecutionRequest"/> onto the
+    /// orchestrator's <see cref="ChatRequest"/>.
+    /// </summary>
+    /// <remarks>
+    /// Session identity MUST survive this hop. <c>ProductionOrchestrator</c>
+    /// substitutes a fresh <c>Guid</c> whenever it receives a null SessionId,
+    /// so dropping it here doesn't fail loudly — it silently gives every turn
+    /// its own memory partition, which reads as "the chatbot has amnesia" and
+    /// makes <c>Memory:EnrichOnRetrieve</c> a no-op on this host.
+    /// Exposed as a pure function so that invariant is directly testable
+    /// without standing up the orchestrator.
+    /// </remarks>
+    public static ChatRequest ToOrchestratorRequest(ChatExecutionRequest request) =>
+        new(
+            request.Message,
+            SessionId: request.SessionId,
+            History: request.History);
 }

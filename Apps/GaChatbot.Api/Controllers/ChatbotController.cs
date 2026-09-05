@@ -31,6 +31,12 @@ public sealed class ChatbotController(
             return;
         }
 
+        // MUST run before StartAsync: issuing the session cookie writes a
+        // response header, and headers are read-only once the response is
+        // committed to the wire. Validation already ran above, so malformed
+        // requests still don't get a cookie.
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
         Response.Headers.Append("Cache-Control", "no-cache");
@@ -46,7 +52,10 @@ public sealed class ChatbotController(
 
         try
         {
-            var chatRequest = new ChatExecutionRequest(message, ToConversationTurns(request.ConversationHistory));
+            var chatRequest = new ChatExecutionRequest(
+                message,
+                ToConversationTurns(request.ConversationHistory),
+                sessionId);
 
             await foreach (var update in chatApplicationService.ChatStreamAsync(chatRequest, cancellationToken))
             {
@@ -113,6 +122,11 @@ public sealed class ChatbotController(
             return BadRequest(new { error = "Message cannot be empty." });
         }
 
+        // Resolved after validation but before the concurrency gate: a caller
+        // turned away with 503 should still carry a session into their retry,
+        // otherwise a busy moment silently starts them a new conversation.
+        var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
         if (!await concurrencyGate.TryEnterAsync(cancellationToken))
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
@@ -123,7 +137,10 @@ public sealed class ChatbotController(
         {
             var sw = Stopwatch.StartNew();
             var response = await chatApplicationService.ChatAsync(
-                new ChatExecutionRequest(message, ToConversationTurns(request.ConversationHistory)),
+                new ChatExecutionRequest(
+                    message,
+                    ToConversationTurns(request.ConversationHistory),
+                    sessionId),
                 cancellationToken);
             sw.Stop();
 
