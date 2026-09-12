@@ -97,7 +97,7 @@ public class ChatbotController(
             // there. Busy/Validation become SSE error frames (the wire never returns
             // 503 after StartAsync); Ok streams the routing frame + chunks + [DONE].
             var result = await chatIntake.IntakeAsync(
-                new ChatIntakeRequest(message, sessionId),
+                new ChatIntakeRequest(message, sessionId, ToConversationTurns(request.ConversationHistory)),
                 cancellationToken);
 
             if (result.IsFailure)
@@ -172,7 +172,7 @@ public class ChatbotController(
         var sw = Stopwatch.StartNew();
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
         var result = await chatIntake.IntakeAsync(
-            new ChatIntakeRequest(request.Message, sessionId),
+            new ChatIntakeRequest(request.Message, sessionId, ToConversationTurns(request.ConversationHistory)),
             cancellationToken);
         sw.Stop();
 
@@ -314,6 +314,12 @@ public class ChatbotController(
             ]));
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static List<ConversationTurn>? ToConversationTurns(List<ChatMessage>? history) =>
+        history?
+            .Where(message => message is not null && !string.IsNullOrWhiteSpace(message.Content))
+            .Select(message => new ConversationTurn(message.Role, message.Content, DateTimeOffset.UtcNow))
+            .ToList();
 
     private async Task WriteSseLineAsync(string data, CancellationToken ct)
     {
