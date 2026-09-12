@@ -19,7 +19,7 @@ the product look less complete than it is. Verify a tag against the live router
 
 ### Ear Training & Recognition
 - ✅ **"What key am I in?"** — `KeyIdentificationSkill`. Identifies the key of a chord progression.
-- ⬜ **"Why does this sound outside?"** — given a chord or note over a backing, explain which scale degrees are "outside" and why (tension vs. resolution). *No skill classifies a note against a chord as chord-tone / tension / avoid.* Next tracer-bullet candidate — computable from existing `InferQuality` + a chord-tone set, semantically distinct from neighbours.
+- 🟡 **"Why does this sound outside?"** — `OutsideNotesSkill` classifies one explicit note over one chord as chord tone, available tension, or avoid note, with interval and degree explanations. **Missing:** degree-word input, note-vs-key context, and backing/progression context. Evidence: `Common/GA.Business.ML/Agents/Skills/OutsideNotesSkill.cs` and `Tests/Common/GA.Business.ML.Tests/Unit/OutsideNotesSkillTests.cs`.
 - ✅ **"Is this a common substitution?"** — `ChordSubstitutionSkill`. Tritone sub, backdoor/secondary dominant, ICV-neighbour swaps, set-class equivalents, two-chord relationship classification.
 
 ### Chord & Voicing Discovery
@@ -42,12 +42,12 @@ the product look less complete than it is. Verify a tag against the live router
 - 🟡 **"What would this sound like in a minor key?"** — `RelativeKeySkill` + `TransposeSkill` + `ProgressionMoodSkill` (parallel-minor). Covered piecewise; no single "translate this whole progression to parallel/relative minor" skill.
 
 ### Technical / Gear
-- 🟡 **"How do I tune to drop-C?"** — `AlternateTuningsSkill` covers drop-D, half-/whole-step-down, and the open tunings. **Missing:** drop-C specifically, and string-tension / retuning-step guidance.
+- ✅ **"How do I tune to drop-C?"** — `AlternateTuningsSkill` returns C–G–C–F–A–D, per-string changes from standard, and basic string-tension guidance; named and six-note lookups are covered by `AlternateTuningsSkillTests`. Instrument-specific setup advice remains outside this lookup skill.
 - ⬜ **"Why does my tab look wrong?"** — parse ASCII tab and flag notation errors. *No tab-linting skill.*
 
-**Net:** 5 ✅ fully shipped · 6 🟡 partial · 5 ⬜ genuine gaps. The gaps worth a
-tracer bullet next, in rough value order: *sound-outside* (computable now,
-low routing-collision risk), *CAGED positions*, *tab-lint*.
+**Net:** 6 ✅ fully shipped · 6 🟡 partial · 4 ⬜ listed gaps.
+
+**Targeted reconciliation (2026-09-12):** corrected the two stale claims above against the current implementation and unit tests. This is source/test evidence, not a fresh live-router coverage audit. The remaining gap labels retain the original audit scope; verify end-to-end consumers and existing lower-layer capabilities before selecting a new tracer bullet.
 
 ---
 
