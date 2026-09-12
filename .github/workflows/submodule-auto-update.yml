@@ -78,16 +78,43 @@ jobs:
           BEHIND=${{ steps.check.outputs.behind }}
           CURRENT=${{ steps.check.outputs.current }}
           LATEST=${{ steps.check.outputs.latest }}
-          BRANCH="chore/update-demerzel-$(date +%Y%m%d)"
+          LATEST_FULL=$(git -C governance/demerzel rev-parse origin/master)
 
-          git checkout -b "$BRANCH"
-          git commit -m "chore: update Demerzel submodule ($BEHIND commits)"
-          git push origin "$BRANCH"
+          # Advance the open update PR if there is one; otherwise open a branch
+          # named for the target commit. The old per-day branch made every
+          # same-day re-run (this job fires on each Demerzel push and every 6h)
+          # fail non-fast-forward, and would have opened a fresh PR each day.
+          OPEN_BRANCH=$(gh pr list --state open --json headRefName \
+            -q '[.[] | select(.headRefName | startswith("chore/update-demerzel-"))][0].headRefName // empty')
+          git restore --staged governance/demerzel
+          if [ -n "$OPEN_BRANCH" ]; then
+            BRANCH="$OPEN_BRANCH"
+            git fetch -q origin "$BRANCH"
+            git checkout -q -B "$BRANCH" FETCH_HEAD
+          else
+            BRANCH="chore/update-demerzel-$LATEST"
+            git checkout -q -b "$BRANCH"
+          fi
+          git update-index --cacheinfo "160000,$LATEST_FULL,governance/demerzel"
+          if git diff --cached --quiet; then
+            echo "$BRANCH already points governance/demerzel at $LATEST"
+          else
+            git commit -m "chore: update Demerzel submodule ($BEHIND commits)"
+            git push origin "$BRANCH"
+          fi
 
-          # Get recent commit messages for PR body
+          # Not `git log | head -15`: under the runner's `-o pipefail`, head closing
+          # the pipe SIGPIPEs git log (exit 141) once the backlog outgrows 15
+          # commits, killing the step after the push but before the PR exists.
           cd governance/demerzel
-          CHANGES=$(git log --oneline "$CURRENT..$LATEST" | head -15)
+          CHANGES=$(git log --oneline -15 "$CURRENT..$LATEST")
           cd ../..
+
+          if [ -n "$OPEN_BRANCH" ]; then
+            gh pr edit "$BRANCH" --title "chore: update Demerzel submodule ($BEHIND commits behind)"
+            echo "### Advanced open PR on $BRANCH ($BEHIND commits)" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
 
           gh pr create \
             --title "chore: update Demerzel submodule ($BEHIND commits behind)" \
