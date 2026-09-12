@@ -78,6 +78,39 @@ public class ForwardedHeadersSessionCookieTests
             "conversational memory the moment Memory:EnrichOnRetrieve flips.");
     }
 
+    [TestCase("198.51.100.10", false)]
+    [TestCase("127.0.0.1", true)]
+    [TestCase("::1", true)]
+    public async Task ChatWithForwardedHeaders_OnlyTrustsLoopbackPeers(string remoteAddress, bool expectSecure)
+    {
+        using var factory = CreateFactory();
+        using var body = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("{\"message\":\"cookie probe\"}"));
+
+        // Set the transport peer itself: caller-supplied Cloudflare headers
+        // cannot authenticate the connection to the local tunnel connector.
+        var context = await factory.Server.SendAsync(ctx =>
+        {
+            ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse(remoteAddress);
+            ctx.Request.Method = "POST";
+            ctx.Request.Scheme = "http";
+            ctx.Request.Path = "/api/chatbot/chat";
+            ctx.Request.ContentType = "application/json";
+            ctx.Request.ContentLength = body.Length;
+            ctx.Request.Body = body;
+            ctx.Request.Headers["CF-Connecting-IP"] = "203.0.113.7";
+            ctx.Request.Headers["X-Forwarded-For"] = "203.0.113.7";
+            ctx.Request.Headers["X-Forwarded-Proto"] = "https";
+        });
+
+        Assert.That(context.Response.StatusCode, Is.EqualTo(200));
+        var sessionCookie = context.Response.Headers["Set-Cookie"].Single(value =>
+            value!.StartsWith(HttpChatSessionCookie.CookieName + "=", StringComparison.Ordinal));
+        var secure = sessionCookie!.Split(';').Any(attribute =>
+            string.Equals(attribute.Trim(), "secure", StringComparison.OrdinalIgnoreCase));
+        Assert.That(secure, Is.EqualTo(expectSecure),
+            "Only a trusted loopback peer may supply the scheme used to issue the session cookie.");
+    }
+
     [Test]
     public async Task ChatBehindTheTunnel_KeepsTheCookieHttpOnlyAndPathScoped()
     {

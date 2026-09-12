@@ -59,12 +59,11 @@ var app = builder.Build();
 // without `Secure` on https://demos.guitaralchemist.com — the cookie that keys
 // MemoryStore / ChatTranscriptStore partitions.
 //
-// Safety: forwarded headers are honoured only for requests that actually came
-// through the tunnel (CF-Connecting-IP present) AND only when a public host is
-// configured. Stray headers on direct/localhost requests are stripped, so a
-// dev proxy emitting a partial set can't talk the host into an https view of
-// itself — that would mint a Secure cookie the browser refuses to send back
-// over http, silently rotating the session on every turn.
+// The tunnel connector reaches this host over loopback. Forwarded headers
+// retain the framework's default loopback trust boundary below; local peers
+// are trusted. CF-Connecting-IP is only a marker, not proof of provenance.
+// Requiring that marker and a configured public host also keeps partial
+// dev-proxy header sets from minting Secure cookies on plain HTTP.
 // Must run before UsePathBase so the whole pipeline sees the corrected scheme.
 var publicHost = builder.Configuration["Proxy:PublicHost"];
 app.Use(async (ctx, next) =>
@@ -92,9 +91,9 @@ if (!string.IsNullOrWhiteSpace(publicHost))
 {
     forwardedHeadersOptions.AllowedHosts.Add(publicHost);
 }
-// Cloudflare can connect from any IP — clear the default localhost-only allowlist.
-forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
+// Keep the default IPv4/IPv6 loopback restrictions: the immediate peer is
+// the local cloudflared connector, not a Cloudflare edge IP. A remote peer
+// must not become trusted merely by supplying CF-Connecting-IP.
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Optional path-base for hosting under a public host's sub-path
