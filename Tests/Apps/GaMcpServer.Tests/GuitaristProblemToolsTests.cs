@@ -22,6 +22,29 @@ public sealed class GuitaristProblemToolsTests
         public string Notes { get; set; } = "";
     }
 
+    [TestCase("Cmaj7", "I", "Cmaj7", "Ionian (major)", "M7", "m7")]
+    [TestCase("G7", "V", "G7", "Mixolydian", "m7", "M7")]
+    [TestCase("Bm7b5", "vii°", "Bm7b5", "Locrian", "d5", "P5")]
+    [TestCase("C7", "V/IV", "C7", "Mixolydian", "m7", "M7")]
+    [TestCase("Gmaj7", "secondary", "Gmaj7", "Ionian (major)", "M7", "m7")]
+    [TestCase("Bbm", "chromatic", "Bbm (chromatic — outside key)", "Aeolian (minor)", "m3", "M3")]
+    public async Task GaArpeggioSuggestions_WrittenQuality_PreservesChordTones(
+        string chord, string degree, string arpeggio, string mode, string includedInterval, string excludedInterval)
+    {
+        var json = await GaArpeggioSuggestionsTool.GaArpeggioSuggestions([chord], "C major");
+        using var result = JsonDocument.Parse(json);
+        var suggestion = result.RootElement.GetProperty("suggestions")[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(suggestion.GetProperty("scaleDegree").GetString(), Is.EqualTo(degree));
+            Assert.That(suggestion.GetProperty("arpeggio").GetString(), Is.EqualTo(arpeggio));
+            Assert.That(suggestion.GetProperty("mode").GetString(), Is.EqualTo(mode));
+            Assert.That(suggestion.GetProperty("notes").GetString(), Does.Contain(includedInterval));
+            Assert.That(suggestion.GetProperty("notes").GetString(), Does.Not.Contain(excludedInterval));
+        });
+    }
+
     [Test]
     public async Task GaArpeggioSuggestions_DiatonicProgression_ReturnsCorrectArpeggiosAndModes()
     {

@@ -453,30 +453,18 @@ public static class GaArpeggioSuggestionsTool
         var romans      = isMinor ? GuitaristHelpers.MinorRomans  : GuitaristHelpers.MajorRomans;
         var degreeModes = isMinor ? MinorDegreeModes : MajorDegreeModes;
 
-        bool SuffixMatchesQuality(string diatonicSuffix, GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind kind)
-        {
-            if (diatonicSuffix == "m")
+        bool SuffixMatchesQuality(string diatonicSuffix, string seventhSuffix, GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind kind) =>
+            kind switch
             {
-                return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor
-                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor7
-                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.MinorMajor7;
-            }
-            if (diatonicSuffix == "dim")
-            {
-                return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished
-                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished7
-                            or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.HalfDiminished;
-            }
-            // Diatonic suffix is "" (Major)
-            return kind is GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major7
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.LydianMaj7
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.AlteredDominant
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Altered
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.SuspendedDominant
-                        or GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Augmented;
-        }
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major => diatonicSuffix == "",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor => diatonicSuffix == "m",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Diminished => diatonicSuffix == "dim",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Major7 => seventhSuffix == "maj7",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Minor7 => seventhSuffix == "m7",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.Dominant7 => seventhSuffix == "7",
+                GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind.HalfDiminished => seventhSuffix == "m7b5",
+                _ => false
+            };
 
         (string Mode, string Notes) GetQualityModeAndNotes(GA.Business.ML.Agents.Skills.ImprovisationSkill.QualityKind kind) =>
             kind switch
@@ -512,14 +500,15 @@ public static class GaArpeggioSuggestionsTool
             var degIdx = Array.FindIndex(offsets, o => (keyPc + o) % 12 == chordPc);
             if (degIdx < 0)
             {
-                // Chromatic chord — use generic arpeggio suggestion.
+                // Chromatic roots still need notes that match their written quality.
+                var chromatic = GetQualityModeAndNotes(quality.Kind);
                 return new
                 {
                     chord,
                     scaleDegree = "chromatic",
                     arpeggio    = arpeggio + " (chromatic — outside key)",
-                    mode        = "depends on context",
-                    notes       = "R, M2, M3, P5"
+                    mode        = chromatic.Mode,
+                    notes       = chromatic.Notes
                 };
             }
 
@@ -527,7 +516,7 @@ public static class GaArpeggioSuggestionsTool
             string modeName2;
             string notes;
 
-            if (SuffixMatchesQuality(pattern[degIdx].Suffix, quality.Kind))
+            if (SuffixMatchesQuality(pattern[degIdx].Suffix, degreeModes[degIdx].Arpeggio, quality.Kind))
             {
                 scaleDegree = romans[degIdx];
                 var (_, m, n) = degreeModes[degIdx];
