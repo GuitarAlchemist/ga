@@ -22,10 +22,23 @@ public sealed class PromptSanitizationHook(ILogger<PromptSanitizationHook> logge
         @"(?:SYSTEM|USER|ASSISTANT)\s*:|###\s*\w|```\s*system",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    // Matches letter roots A-G (case-insensitive) followed by optional hyphens or spaces and then "flat" or "sharp"
+    private static readonly Regex SpelledOutFlatPattern = new(
+        @"\b(?<root>[A-Ga-g])\s*[-—–]?\s*flat\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex SpelledOutSharpPattern = new(
+        @"\b(?<root>[A-Ga-g])\s*[-—–]?\s*sharp\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public Task<HookResult> OnRequestReceived(ChatHookContext ctx, CancellationToken ct = default)
     {
         // 1. NFKD normalization — flattens look-alike Unicode characters
         var normalized = NormalizeUnicode(ctx.CurrentMessage);
+
+        // 1.5. Normalise spelled-out accidentals (e.g. E-flat -> Eb, F-sharp -> F#)
+        normalized = SpelledOutFlatPattern.Replace(normalized, "${root}b");
+        normalized = SpelledOutSharpPattern.Replace(normalized, "${root}#");
 
         // 2. Reject obvious injection attempts
         if (InjectionPattern.IsMatch(normalized))

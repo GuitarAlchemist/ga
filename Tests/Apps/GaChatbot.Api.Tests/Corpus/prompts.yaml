@@ -653,13 +653,44 @@ prompts:
   - prompt: "What is the relative minor of E-flat major"
     category: scales-keys
     routes_to: skill.relativekey
-    contains: ["C minor"]
+    contains: ["Cm", "3 flats"]
     not_contains: ["E major", "C#m", "4 sharps"]
     min_length: 30
-    skip: true
-    skip_reason: >-
-      Issue #554 — spelled-out accidentals parse as naturals, so "E-flat major"
-      is answered as "E major" (C#m, 4 sharps). Shorthand "Eb major" is correct.
+
+  - prompt: "What is the relative minor of E flat major"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["Cm", "3 flats"]
+    not_contains: ["E major", "C#m", "4 sharps"]
+    min_length: 30
+
+  - prompt: "relative minor of B-flat major"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["Gm", "2 flats"]
+    not_contains: ["B major", "G#m", "5 sharps"]
+    min_length: 30
+
+  - prompt: "relative minor of B flat major"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["Gm", "2 flats"]
+    not_contains: ["B major", "G#m", "5 sharps"]
+    min_length: 30
+
+  - prompt: "relative major of F-sharp minor"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["A major", "3 sharps"]
+    not_contains: ["F major", "Ab major", "4 flats"]
+    min_length: 30
+
+  - prompt: "relative major of F sharp minor"
+    category: scales-keys
+    routes_to: skill.relativekey
+    contains: ["A major", "3 sharps"]
+    not_contains: ["F major", "Ab major", "4 flats"]
+    min_length: 30
 
   # #555 is FIXED (PR #558, 2026-07-20) — this prompt is an ACTIVE guard now,
   # not the skipped repro it was when this branch first added it.
