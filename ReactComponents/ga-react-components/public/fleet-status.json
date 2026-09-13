@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "00e6b56a36e1109d8f22600ebb9f0599a5f33529",
-    "generatedAt": "2026-09-13T16:39:58.939479+00:00",
+    "commitSha": "3adb81ae17ed4e928a3d95c9e7cf25e5428a79d3",
+    "generatedAt": "2026-09-13T17:16:54.464613+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 29
   },
   "repos": [
     {
@@ -396,8 +396,21 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-13T17:16:22Z",
+          "failingChecks": 0,
+          "headRef": "fix/226-remove-orphan-cortex-modules",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 266,
+          "title": "chore: delete four Cortex modules that no production code reaches (#226)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/266"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/Demerzel",
@@ -413,8 +426,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-13T16:58:19Z",
+          "failingChecks": 1,
+          "headRef": "feat/staleness-dormant",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 1076,
+          "title": "feat(staleness): dormant categories for producer-less state (policy 1.4.0)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1076"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -422,7 +447,7 @@
           "failingChecks": 1,
           "headRef": "ci/staleness-scan-job",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1075,
           "title": "ci(staleness): run lifecycle staleness scan in governance-validate",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1075"
