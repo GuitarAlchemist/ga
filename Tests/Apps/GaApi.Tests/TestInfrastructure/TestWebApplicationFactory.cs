@@ -32,12 +32,13 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         // an AnthropicProvider IChatClient at boot (intentional per PR #151 — fail
         // fast on misconfig). CI has no ANTHROPIC_API_KEY, so every WebApplicationFactory
         // test in this assembly blew up at host build with InvalidOperationException
-        // out of AnthropicProvider.CreateChatClient. None of the GaApi.Tests fixtures
-        // actually exercise the chat endpoint — they cover GraphQL, REST, and DI
-        // shape. The Ollama branch registers a lazy adapter that never probes the
-        // network unless something resolves IChatService, so this is safe even
-        // without an Ollama instance running.
+        // out of AnthropicProvider.CreateChatClient. Chat transport fixtures supply
+        // deterministic intake/provider dependencies where they need them.
         builder.UseSetting("AI:ChatProvider", "ollama");
+
+        // HTTP contracts do not exercise offline corpus generation. Avoid rebuilding
+        // the voicing index and issuing embedding requests whenever a test host starts.
+        builder.UseSetting("VoicingSearch:EnableIndexing", "false");
 
         base.ConfigureWebHost(builder);
     }
