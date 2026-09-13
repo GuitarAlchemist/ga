@@ -1,0 +1,184 @@
+name: Chatbot QA Freshness
+
+# Tripwire for the chatbot-qa producer. The producer
+# (.github/workflows/chatbot-qa-snapshot.yml) writes a daily
+# state/quality/chatbot-qa/YYYY-MM-DD.json that four live readers +
+# hari issues #13/#20 depend on. It died SILENTLY: every scheduled run
+# since 2026-06-21 is CANCELLED at the 60-minute job timeout during the
+# in-runner-Ollama corpus step (PR #411, 2026-06-16), so the commit step
+# never runs and no snapshot lands. The Actions UI showed "cancelled",
+# not "failed", and nobody was watching that workflow — so the freshest
+# snapshot stayed 2026-06-19 for a month (the 2026-07-19 snapshot on main
+# is a one-off LOCAL hand-run committed via #553, not the producer).
+#
+# The producer's own in-run degradation guards (algedonic + tracking issue)
+# can't catch this: they only fire when the run REACHES them. A run that is
+# cancelled at the wall never reaches any guard. This sensor watches the
+# ARTIFACT instead — it fails loudly when the newest snapshot is older than
+# MAX_AGE_DAYS, converting a silent 30-day death into a 3-day alarm.
+#
+# See docs/runbooks/chatbot-qa-producer-revival.md for the root cause and
+# the manual-run command. This sensor does NOT run the corpus and costs
+# nothing; it only reads the committed snapshots.
+#
+# Precedent: README Drift Sensor (readme-drift-sensor.yml) — same
+# green-but-dead failure mode, same single-tracking-issue pattern.
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # 12:00 UTC daily — after the 06:00 producer run + its ~08:00 commit window
+  workflow_dispatch:
+    inputs:
+      max_age_days:
+        description: 'Override staleness threshold (days)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: chatbot-qa-freshness
+  cancel-in-progress: false
+
+env:
+  # Producer cadence is daily (one YYYY-MM-DD.json per day, 2026-05-16..2026-06-19).
+  # 3 days tolerates a couple of legitimately-missed daily runs before alarming,
+  # while still catching a real death ~10x faster than the month it actually took.
+  MAX_AGE_DAYS: '3'
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check newest chatbot-qa snapshot age
+        id: check
+        shell: pwsh
+        run: |
+          $maxAge = if (-not [string]::IsNullOrWhiteSpace('${{ github.event.inputs.max_age_days }}')) {
+            [int]'${{ github.event.inputs.max_age_days }}'
+          } else {
+            [int]$env:MAX_AGE_DAYS
+          }
+          $dir = 'state/quality/chatbot-qa'
+
+          # Only real daily snapshots count — ignore baseline.json / last*.json / dirs.
+          $snaps = @()
+          if (Test-Path $dir) {
+            $snaps = Get-ChildItem $dir -Filter '*.json' -File |
+              Where-Object { $_.BaseName -match '^\d{4}-\d{2}-\d{2}$' }
+          }
+
+          if (-not $snaps -or $snaps.Count -eq 0) {
+            "stale=true"          | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "newest_date=none"    | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "age_days=infinite"   | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+            "max_age=$maxAge"     | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+            Write-Host "::error::No chatbot-qa snapshots found under $dir — producer has never produced or the path moved."
+            exit 0
+          }
+
+          $newest = $snaps |
+            ForEach-Object { [datetime]::ParseExact($_.BaseName, 'yyyy-MM-dd', $null) } |
+            Sort-Object -Descending | Select-Object -First 1
+          $today   = [datetime]::UtcNow.Date
+          $ageDays = ($today - $newest).Days
+          $isStale = $ageDays -gt $maxAge
+
+          "stale=$($isStale.ToString().ToLower())"     | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "newest_date=$($newest.ToString('yyyy-MM-dd'))" | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "age_days=$ageDays"                          | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "max_age=$maxAge"                            | Out-File $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+          if ($isStale) {
+            Write-Host "::error::Chatbot QA snapshot is STALE — newest $($newest.ToString('yyyy-MM-dd')) is $ageDays days old (threshold $maxAge). The daily producer is not landing snapshots. See docs/runbooks/chatbot-qa-producer-revival.md."
+          } else {
+            Write-Host "Chatbot QA snapshot is FRESH — newest $($newest.ToString('yyyy-MM-dd')), $ageDays days old (threshold $maxAge)."
+          }
+
+      - name: Open or update tracking issue when stale
+        if: steps.check.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          NEWEST: ${{ steps.check.outputs.newest_date }}
+          AGE: ${{ steps.check.outputs.age_days }}
+          MAX_AGE: ${{ steps.check.outputs.max_age }}
+        shell: pwsh
+        run: |
+          $title = '[meta] Chatbot QA snapshot stale — producer not landing daily snapshots'
+          $run   = "${env:GITHUB_SERVER_URL}/${env:GITHUB_REPOSITORY}/actions/runs/${env:GITHUB_RUN_ID}"
+          $bt    = [char]0x60
+          $body  = @(
+            "## Chatbot QA producer appears dead",
+            "",
+            "The freshness sensor found the newest ${bt}state/quality/chatbot-qa/YYYY-MM-DD.json${bt}",
+            "is **$($env:NEWEST)** — $($env:AGE) days old (threshold $($env:MAX_AGE) days).",
+            "",
+            "Four live readers + hari issues #13/#20 consume this snapshot. A stale",
+            "snapshot means they are running on month-old (or fabricated-fresh) data.",
+            "",
+            "**Known root cause (2026-06-21 onward):** the producer workflow",
+            "${bt}chatbot-qa-snapshot.yml${bt} is CANCELLED at its 60-minute job timeout during",
+            "the in-runner-Ollama corpus step (introduced by #411), so the commit step",
+            "never runs. The Actions UI shows ${bt}cancelled${bt}, not ${bt}failed${bt}.",
+            "",
+            "**Fix / triage:** see ${bt}docs/runbooks/chatbot-qa-producer-revival.md${bt}.",
+            "The one-line manual unblock is:",
+            "",
+            "$bt$bt$bt",
+            "pwsh Scripts/run-prompt-corpus.ps1 -Snapshot   # then commit state/quality/chatbot-qa/<today>.json",
+            "$bt$bt$bt",
+            "",
+            "Sensor run: $run",
+            "",
+            "_This issue is updated (not duplicated) daily by ${bt}chatbot-qa-freshness.yml${bt}",
+            "and closed automatically once a fresh snapshot lands._"
+          ) -join "`n"
+
+          # Self-heal the label first — `gh issue create --label` hard-fails when the
+          # label is absent, which is exactly how readme-drift-sensor silently broke.
+          gh label create chatbot --color 1D76DB --description "Chatbot / chatbot-qa" --force 2>$null
+
+          $existing = gh issue list --search "$title in:title" --state open --json number,title --limit 5 | ConvertFrom-Json
+          $match = $null
+          if ($existing) { $match = $existing | Where-Object { $_.title -eq $title } | Select-Object -First 1 }
+          if ($match) {
+            Write-Host "Updating existing tracking issue #$($match.number)"
+            $body | gh issue comment $match.number -F -
+          } else {
+            Write-Host "Opening new tracking issue"
+            $body | gh issue create --title $title --label chatbot -F -
+          }
+
+      - name: Close tracking issue when fresh
+        if: steps.check.outputs.stale == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          NEWEST: ${{ steps.check.outputs.newest_date }}
+        shell: pwsh
+        run: |
+          $title = '[meta] Chatbot QA snapshot stale — producer not landing daily snapshots'
+          $existing = gh issue list --search "$title in:title" --state open --json number,title --limit 5 | ConvertFrom-Json
+          if ($existing) {
+            foreach ($i in $existing) {
+              if ($i.title -eq $title) {
+                gh issue close $i.number --comment "Fresh snapshot landed ($($env:NEWEST)). Closing automatically; the sensor will reopen if the producer stalls again."
+              }
+            }
+          } else {
+            Write-Host "No open staleness issue — nothing to close."
+          }
+
+      - name: Fail the run when stale
+        if: steps.check.outputs.stale == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "Failing the workflow so the stale producer is a loud red X, not a silent gap."
+          exit 1
