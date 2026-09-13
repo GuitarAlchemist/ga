@@ -4,6 +4,7 @@ open GA.Business.DSL.Closures.GaAsync
 open GA.Business.DSL.Closures.GaClosureRegistry
 open GA.Business.DSL.Types
 open GA.Business.DSL.Services
+open GA.Domain.Services.Tonal
 
 // ── Note / accidental helpers ─────────────────────────────────────────────────
 
@@ -305,34 +306,53 @@ let analyzeProgression : GaClosure =
                   if validPcs.IsEmpty then
                       return Error (GaError.DomainError "Could not parse any chord symbols")
                   else
-                      // Score every major and minor key.
-                      // Tiebreaker: prefer the key whose root matches the first chord.
-                      let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
-                      let keyRootPc, scaleName =
-                          [ for rpc in 0..11 do
-                              yield rpc, "major", scoreKey rpc majorOffsets validPcs
-                              yield rpc, "minor", scoreKey rpc minorOffsets validPcs ]
-                          |> List.maxBy (fun (rpc, _, s) -> s * 2 + (if rpc = firstPc then 1 else 0))
-                          |> fun (rpc, scale, _) -> rpc, scale
-                      let offsets = if scaleName = "major" then majorOffsets else minorOffsets
-                      let romans  = if scaleName = "major" then majorRomans  else minorRomans
-                      let keyName = conventionalKeyName keyRootPc
-                      let confidence =
-                          let matches = scoreKey keyRootPc offsets validPcs
-                          sprintf "%d/%d" matches validPcs.Length
-                      let symLine =
-                          parsed |> Array.map (fun p ->
-                              let s = p |> Option.map fst |> Option.defaultValue "?"
-                              sprintf "%-6s" s) |> String.concat " "
-                      let romLine =
-                          parsed |> Array.map (fun p ->
-                              let r = p |> Option.map (fun (_, pc) ->
-                                  romanFor keyRootPc offsets romans pc) |> Option.defaultValue "?"
-                              sprintf "%-6s" r) |> String.concat " "
-                      let result =
-                          sprintf "Key: %s %s  (confidence %s)\n%s\n%s"
-                              keyName scaleName confidence symLine romLine
-                      return Ok (box result)
+                      // Identify candidate keys via KeyIdentificationService
+                      let candidates = KeyIdentificationService.Identify(symbols)
+                      if candidates.Count = 0 then
+                          return Error (GaError.DomainError "Could not identify key for the given chords")
+                      else
+                          let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
+                          let bestCandidate =
+                              candidates
+                              |> Seq.sortByDescending (fun cand ->
+                                  let keyRoot = cand.Key.Split(' ').[0]
+                                  let rootStr, acc = splitNoteAcc keyRoot
+                                  let keyRootPc = (noteToSemitone rootStr + accToSemitone acc + 12) % 12
+                                  let firstPcMatch = if (keyRootPc + 12) % 12 = firstPc then 1 else 0
+                                  let isMajor = if cand.Key.EndsWith("major", System.StringComparison.OrdinalIgnoreCase) then 1 else 0
+                                  cand.MatchCount, firstPcMatch, isMajor)
+                              |> Seq.head
+
+                          let keyParts = bestCandidate.Key.Split(' ')
+                          let keyName = keyParts.[0]
+                          let scaleName = keyParts.[1]
+
+                          let keyRootStr, keyAcc = splitNoteAcc keyName
+                          let keyRootPc = (noteToSemitone keyRootStr + accToSemitone keyAcc + 12) % 12
+
+                          let offsets = if scaleName = "major" then majorOffsets else minorOffsets
+                          let romans  = if scaleName = "major" then majorRomans  else minorRomans
+
+                          let matches =
+                              symbols
+                              |> Array.filter (fun sym -> KeyIdentificationService.IsChordDiatonic(bestCandidate.Key, sym))
+                              |> Array.length
+
+                          let confidence = sprintf "%d/%d" matches symbols.Length
+
+                          let symLine =
+                              parsed |> Array.map (fun p ->
+                                  let s = p |> Option.map fst |> Option.defaultValue "?"
+                                  sprintf "%-6s" s) |> String.concat " "
+                          let romLine =
+                              parsed |> Array.map (fun p ->
+                                  let r = p |> Option.map (fun (_, pc) ->
+                                      romanFor keyRootPc offsets romans pc) |> Option.defaultValue "?"
+                                  sprintf "%-6s" r) |> String.concat " "
+                          let result =
+                              sprintf "Key: %s %s  (confidence %s)\n%s\n%s"
+                                  keyName scaleName confidence symLine romLine
+                          return Ok (box result)
           } }
 
 // ── Query / projection / join helpers ─────────────────────────────────────────
@@ -649,48 +669,63 @@ let progressionCompletion : GaClosure =
                   if validPcs.IsEmpty then
                       return Error (GaError.DomainError "Could not parse any chord symbols")
                   else
-                      // Score every key; tiebreaker: prefer key whose root = first chord.
-                      let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
-                      let keyRootPc, scaleName =
-                          [ for rpc in 0..11 do
-                              yield rpc, "major", scoreKey rpc majorOffsets validPcs
-                              yield rpc, "minor", scoreKey rpc minorOffsets validPcs ]
-                          |> List.maxBy (fun (rpc, _, s) -> s * 2 + (if rpc = firstPc then 1 else 0))
-                          |> fun (rpc, scale, _) -> rpc, scale
-                      let keyName = conventionalKeyName keyRootPc
-                      // Diatonic chord name at a given scale degree index.
-                      let offsets   = if scaleName = "major" then majorOffsets else minorOffsets
-                      let qualities =
-                          if scaleName = "major"
-                          then [| ""; "m"; "m"; ""; ""; "m"; "dim" |]   // I ii iii IV V vi vii°
-                          else [| "m"; "dim"; ""; "m"; "m"; ""; "" |]   // i ii° III iv v VI VII
-                      let diatonicAt idx =
-                          let root = (keyRootPc + offsets.[idx]) % 12
-                          sprintf "%s%s" (conventionalKeyName root) qualities.[idx]
-                      // Build 2–3 cadence suggestions.
-                      let suggestions =
-                          if scaleName = "minor" then
-                              // V7 from harmonic minor (raised 7th → dominant 7th)
-                              let v7Name   = sprintf "%s7" (conventionalKeyName ((keyRootPc + 7) % 12))
-                              // ♭VII from natural minor
-                              let bviiName = conventionalKeyName ((keyRootPc + 10) % 12)
-                              // iv (minor subdominant)
-                              let ivName   = diatonicAt 3
-                              [ sprintf "  1. %-12s → authentic cadence (V7 → i)" v7Name
-                                sprintf "  2. %-12s → half cadence (♭VII → i loop)" bviiName
-                                sprintf "  3. %-12s → iv–V7–i turnaround" (sprintf "%s %s" ivName v7Name) ]
-                          else
-                              let vName  = diatonicAt 4   // V
-                              let ivName = diatonicAt 3   // IV
-                              let iiName = diatonicAt 1   // ii
-                              [ sprintf "  1. %-12s → authentic cadence (V → I)" vName
-                                sprintf "  2. %-12s → plagal cadence (IV → I)" ivName
-                                sprintf "  3. %-12s → ii–V–I approach" (sprintf "%s %s" iiName vName) ]
-                      let inputLine = String.concat " – " (Array.toList symbols)
-                      let result =
-                          sprintf "Progression: %s  (key: %s %s)\n\nSuggested completions:\n%s"
-                              inputLine keyName scaleName (String.concat "\n" suggestions)
-                      return Ok (box result)
+                      // Identify candidate keys via KeyIdentificationService
+                      let candidates = KeyIdentificationService.Identify(symbols)
+                      if candidates.Count = 0 then
+                          return Error (GaError.DomainError "Could not identify key for the given chords")
+                      else
+                          let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
+                          let bestCandidate =
+                              candidates
+                              |> Seq.sortByDescending (fun cand ->
+                                  let keyRoot = cand.Key.Split(' ').[0]
+                                  let rootStr, acc = splitNoteAcc keyRoot
+                                  let keyRootPc = (noteToSemitone rootStr + accToSemitone acc + 12) % 12
+                                  let firstPcMatch = if (keyRootPc + 12) % 12 = firstPc then 1 else 0
+                                  let isMajor = if cand.Key.EndsWith("major", System.StringComparison.OrdinalIgnoreCase) then 1 else 0
+                                  cand.MatchCount, firstPcMatch, isMajor)
+                              |> Seq.head
+
+                          let keyParts = bestCandidate.Key.Split(' ')
+                          let keyName = keyParts.[0]
+                          let scaleName = keyParts.[1]
+
+                          let keyRootStr, keyAcc = splitNoteAcc keyName
+                          let keyRootPc = (noteToSemitone keyRootStr + accToSemitone keyAcc + 12) % 12
+
+                          // Diatonic chord name at a given scale degree index.
+                          let offsets   = if scaleName = "major" then majorOffsets else minorOffsets
+                          let qualities =
+                              if scaleName = "major"
+                              then [| ""; "m"; "m"; ""; ""; "m"; "dim" |]   // I ii iii IV V vi vii°
+                              else [| "m"; "dim"; ""; "m"; "m"; ""; "" |]   // i ii° III iv v VI VII
+                          let diatonicAt idx =
+                              let root = (keyRootPc + offsets.[idx]) % 12
+                              sprintf "%s%s" (conventionalKeyName root) qualities.[idx]
+                          // Build 2–3 cadence suggestions.
+                          let suggestions =
+                              if scaleName = "minor" then
+                                  // V7 from harmonic minor (raised 7th → dominant 7th)
+                                  let v7Name   = sprintf "%s7" (conventionalKeyName ((keyRootPc + 7) % 12))
+                                  // ♭VII from natural minor
+                                  let bviiName = conventionalKeyName ((keyRootPc + 10) % 12)
+                                  // iv (minor subdominant)
+                                  let ivName   = diatonicAt 3
+                                  [ sprintf "  1. %-12s → authentic cadence (V7 → i)" v7Name
+                                    sprintf "  2. %-12s → half cadence (♭VII → i loop)" bviiName
+                                    sprintf "  3. %-12s → iv–V7–i turnaround" (sprintf "%s %s" ivName v7Name) ]
+                              else
+                                  let vName  = diatonicAt 4   // V
+                                  let ivName = diatonicAt 3   // IV
+                                  let iiName = diatonicAt 1   // ii
+                                  [ sprintf "  1. %-12s → authentic cadence (V → I)" vName
+                                    sprintf "  2. %-12s → plagal cadence (IV → I)" ivName
+                                    sprintf "  3. %-12s → ii–V–I approach" (sprintf "%s %s" iiName vName) ]
+                          let inputLine = String.concat " – " (Array.toList symbols)
+                          let result =
+                              sprintf "Progression: %s  (key: %s %s)\n\nSuggested completions:\n%s"
+                                  inputLine keyName scaleName (String.concat "\n" suggestions)
+                          return Ok (box result)
           } }
 
 // ── Registration ──────────────────────────────────────────────────────────────
