@@ -133,10 +133,28 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
         "deterministic-voicing",            // VoicingAgent (regex-guard fast path)
     ];
 
-    public async Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default)
+    public Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, null, cancellationToken);
+
+    public Task<ChatResponse> ChatStreamingAsync(
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, onToken, cancellationToken);
+
+    private async Task<ChatResponse> ExecuteAsync(
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
     {
         var opts = _options.Value;
-        var response = await _inner.ChatAsync(request, cancellationToken);
+        var emittedText = false;
+        async Task EmitAsync(string token)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrEmpty(token)) return;
+            await onToken!(token);
+            emittedText = true;
+        }
+        var response = onToken is null
+            ? await _inner.ChatAsync(request, cancellationToken)
+            : await _inner.ChatStreamingAsync(request, EmitAsync, cancellationToken);
 
         // Gate 1: master switch. Always emit a step so observability shows
         // the fallback decision even when nothing fires.
@@ -206,6 +224,14 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
                     ? new AgentRoutingMetadata("orchestrator", 0f, "deterministic-failure-protected")
                     : response.Routing with { Confidence = 0f },
             };
+        }
+
+        // A streamed answer cannot be retracted. Never splice a fallback into text already sent.
+        if (emittedText)
+        {
+            _capture.AddStep("fallback.skipped", "completed", 0,
+                new Dictionary<string, object?> { ["fallback.gated"] = "stream-started" });
+            return response;
         }
 
         // All gates passed — fire the fallback handler.
