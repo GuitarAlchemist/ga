@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "6991bde206aa953ecc8ec4c2f98387cc0d657133",
-    "generatedAt": "2026-09-13T15:43:17.670409+00:00",
+    "commitSha": "1e4db0217802437cc2a80ccaf90187742a77438e",
+    "generatedAt": "2026-09-13T15:57:05.788566+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 26
   },
   "repos": [
     {
@@ -426,7 +426,7 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 5,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 29,
@@ -441,25 +441,13 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 40,
-          "author": "spareilleux",
-          "createdAt": "2026-08-03T18:16:38Z",
-          "failingChecks": 0,
-          "headRef": "claude/963-bound-event-supply-window",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 967,
-          "title": "fix(freshness): bound event-supply cost without forgetting obligations",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/967"
-        },
-        {
           "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-07-31T00:02:03Z",
-          "failingChecks": 1,
+          "failingChecks": 3,
           "headRef": "fix/846-reviewer-selection",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 935,
           "title": "fix(ci): select a reviewer by its own credential, stop interpolating secrets (#846)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/935"
