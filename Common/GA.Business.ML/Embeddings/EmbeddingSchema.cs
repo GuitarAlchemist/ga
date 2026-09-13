@@ -119,7 +119,7 @@ public static class EmbeddingSchema
         new("IDENTITY",     0,   5,   0.00f, PartitionRole.Identity),
         new("STRUCTURE",    6,   29,  0.45f, PartitionRole.Similarity),
         new("MORPHOLOGY",   30,  53,  0.25f, PartitionRole.Similarity),
-        new("CONTEXT",      54,  65,  0.20f, PartitionRole.Similarity),
+        new("CONTEXT",      54,  65,  0.05f, PartitionRole.Similarity),
         new("SYMBOLIC",     66,  77,  0.10f, PartitionRole.Similarity),
         new("EXTENSIONS",   78,  95,  0.00f, PartitionRole.Info),
         new("SPECTRAL",     96,  108, 0.00f, PartitionRole.Info),
@@ -366,8 +366,8 @@ public static class EmbeddingSchema
     /// <summary>Number of dimensions in CONTEXT partition.</summary>
     public const int ContextDim = 12;
 
-    /// <summary>Similarity weight for CONTEXT partition (0.20).</summary>
-    public const double ContextWeight = 0.20;
+    /// <summary>Similarity weight for CONTEXT partition (0.05).</summary>
+    public const double ContextWeight = 0.05;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // PARTITION 5: SYMBOLIC (66-77)
