@@ -67,3 +67,13 @@ Current GaApi source already emits grounding and trace in both REST JSON and the
 GaApi REST SSE now emits `X-Accel-Buffering: no`, matching its AG-UI sibling and GaChatbot.Api REST SSE. This asks compatible proxies not to buffer the stream; it does not prove how deployed ingress behaves. Buffered REST dispatch and routing-before-text remain intact for existing `ga-client` consumers. These tests establish the canonical host's contract, not complete cross-host behavioral parity or production readiness.
 
 Verification for this follow-up: 4 REST SSE regression cases failed on the missing header before the change; all 8 REST history/metadata cases pass afterward. Full solution build passed (0 errors, 66 warnings); full solution tests passed (3496 passed, 25 skipped, 0 failed across 10 projects). Scoped formatting and diff checks passed.
+
+## SignalR hub history follow-up (2026-09-13, Claude)
+
+`ChatbotHub.SendMessage` stored normalized per-connection turns but constructed `ChatIntakeRequest` without `History`. `ProductionOrchestrator.AnswerAsync` (the non-streaming path the hub uses) passes only `req.History` to LLM and deterministic agents, so hub follow-ups reached agents with no conversation history; only routing enrichment could see prior turns through the session-scoped `ConversationHistoryStore`. The hub now forwards a snapshot of its stored turns, in order, and forwards `null` when none exist so first-message requests are unchanged. `ClearHistory` and rejected intakes (busy) continue to leave no forwarded turns.
+
+Forwarding the hub's own store, rather than making `AnswerAsync` fall back to `ConversationHistoryStore`, preserves `ClearHistory` semantics: the orchestrator store is not cleared by that hub method and would otherwise resurrect cleared turns.
+
+Verification: three deterministic hub tests (`Tests/Apps/GaApi.Tests/Hubs/ChatbotHubHistoryTests.cs`); the ordering test failed before the change and all three pass afterward. Chat-scoped GaApi tests pass (62). Full solution build passed with 0 errors. The full GaApi project run had 9 failures, all 30-second MongoDB/GraphQL integration timeouts with Docker stopped and port 27017 closed; they are environmental and unrelated to this change, and no services were started or restarted.
+
+Remaining, not addressed here: REST requests that rely on the session cookie without client-supplied history still give agents no history on the non-streaming path; `ClearHistory` does not clear the orchestrator's session store used for routing enrichment; fallback remains message-only. Live hub behavior is unverified.
