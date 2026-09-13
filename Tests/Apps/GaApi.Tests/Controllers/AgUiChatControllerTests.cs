@@ -285,11 +285,14 @@ public class AgUiChatControllerTests
         Assert.That(message.GetString(), Is.Not.Null.And.Not.Empty);
     }
 
-    [Test]
-    public async Task AgUiStream_ForwardsConversationHistory()
+    // History carries prior turns only: the orchestrator receives the current user
+    // message separately, and GaChatbot.Api excludes it from history the same way.
+    [TestCase("/api/chatbot/agui/stream")]
+    [TestCase("/api/chatbot/agui/json")]
+    public async Task AgUi_ForwardsPriorTurnsWithoutCurrentMessage(string route)
     {
         TestHarmonicChatOrchestrator.LastRequest = null;
-        using var response = await _client!.PostAsJsonAsync("/api/chatbot/agui/stream", new
+        using var response = await _client!.PostAsJsonAsync(route, new
         {
             threadId = "history-thread",
             runId = "history-run",
@@ -297,15 +300,30 @@ public class AgUiChatControllerTests
             {
                 new { role = "user", content = "I am playing Dm7." },
                 new { role = "assistant", content = "Its notes are D F A C." },
+                new { role = "user", content = "  " },
                 new { role = "user", content = "Which scale fits?" }
             }
         });
         _ = await response.Content.ReadAsStringAsync();
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(TestHarmonicChatOrchestrator.LastRequest?.History, Is.Not.Null);
-        Assert.That(TestHarmonicChatOrchestrator.LastRequest!.History!.Select(turn => turn.Content),
-            Is.EqualTo(new[] { "I am playing Dm7.", "Its notes are D F A C.", "Which scale fits?" }));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest, Is.Not.Null);
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest!.Message, Is.EqualTo("Which scale fits?"));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest.History, Is.Not.Null);
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest.History!.Select(turn => (turn.Role, turn.Content)),
+            Is.EqualTo(new[] { ("user", "I am playing Dm7."), ("assistant", "Its notes are D F A C.") }));
+    }
+
+    [TestCase("/api/chatbot/agui/stream")]
+    [TestCase("/api/chatbot/agui/json")]
+    public async Task AgUi_SingleMessage_ForwardsEmptyHistory(string route)
+    {
+        TestHarmonicChatOrchestrator.LastRequest = null;
+        using var response = await _client!.PostAsJsonAsync(route, ValidInput);
+        _ = await response.Content.ReadAsStringAsync();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest?.History, Is.Not.Null.And.Empty);
     }
 
     // ── INFO-003: server-issued cookie SessionId (task #107) ─────────────────────

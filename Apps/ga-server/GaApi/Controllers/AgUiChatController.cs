@@ -42,17 +42,10 @@ public class AgUiChatController(
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> AgUiJson([FromBody] RunAgentInput input, CancellationToken cancellationToken)
     {
-        var userMessage = input.Messages
-            .LastOrDefault(m => m.Role == "user")?.Content?.Trim();
+        var (userMessage, history) = SplitCurrentTurn(input.Messages);
 
         if (string.IsNullOrWhiteSpace(userMessage))
             return BadRequest("No user message found in the request.");
-
-        var history = input.Messages
-            .Where(m => m.Content is not null)
-            .Select(m => new GA.Business.Core.Orchestration.Models.ConversationTurn(
-                m.Role, m.Content!, DateTimeOffset.UtcNow))
-            .ToList();
 
         // Phase C P1 (task #107 INFO-003) — server-issued cookie is the SessionId
         // source. ThreadId is a client-controlled AG-UI state primitive, NOT a
@@ -94,8 +87,7 @@ public class AgUiChatController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task AgUiStream([FromBody] RunAgentInput input, CancellationToken cancellationToken)
     {
-        var userMessage = input.Messages
-            .LastOrDefault(m => m.Role == "user")?.Content?.Trim();
+        var (userMessage, history) = SplitCurrentTurn(input.Messages);
 
         if (string.IsNullOrWhiteSpace(userMessage))
         {
@@ -146,10 +138,6 @@ public class AgUiChatController(
                 started = true;
             }
 
-            var history = input.Messages
-                .Where(message => message.Content is not null)
-                .Select(message => new ConversationTurn(message.Role, message.Content!, DateTimeOffset.UtcNow))
-                .ToList();
             var result = await chatIntake.IntakeStreamingAsync(
                 new ChatIntakeRequest(userMessage, sessionId, history),
                 async token =>
@@ -226,6 +214,29 @@ public class AgUiChatController(
             logger.LogError(ex, "Error in AG-UI stream for run {RunId}", runId);
             await writer.WriteRunErrorAsync("Failed to process message. Please try again.", "INTERNAL_ERROR", cancellationToken);
         }
+    }
+
+    // The last user message is the current turn. History carries only the other nonblank turns,
+    // because the orchestrator treats ChatRequest.History as prior context (GaChatbot.Api parity).
+    private static (string? Message, List<ConversationTurn> History) SplitCurrentTurn(IReadOnlyList<AgUiMessage> messages)
+    {
+        var currentIndex = -1;
+        for (var i = messages.Count - 1; i >= 0; i--)
+        {
+            if (messages[i].Role == "user")
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        List<ConversationTurn> history =
+        [
+            .. messages
+                .Where((message, index) => index != currentIndex && !string.IsNullOrWhiteSpace(message.Content))
+                .Select(message => new ConversationTurn(message.Role, message.Content!, DateTimeOffset.UtcNow))
+        ];
+        return (currentIndex < 0 ? null : messages[currentIndex].Content?.Trim(), history);
     }
 }
 

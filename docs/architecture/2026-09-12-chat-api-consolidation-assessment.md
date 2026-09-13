@@ -77,3 +77,13 @@ Forwarding the hub's own store, rather than making `AnswerAsync` fall back to `C
 Verification: three deterministic hub tests (`Tests/Apps/GaApi.Tests/Hubs/ChatbotHubHistoryTests.cs`); the ordering test failed before the change and all three pass afterward. Chat-scoped GaApi tests pass (62). Full solution build passed with 0 errors. The full GaApi project run had 9 failures, all 30-second MongoDB/GraphQL integration timeouts with Docker stopped and port 27017 closed; they are environmental and unrelated to this change, and no services were started or restarted.
 
 Remaining, not addressed here: REST requests that rely on the session cookie without client-supplied history still give agents no history on the non-streaming path; `ClearHistory` does not clear the orchestrator's session store used for routing enrichment; fallback remains message-only. Live hub behavior is unverified.
+
+## AG-UI current-turn history follow-up (2026-09-13, Claude)
+
+Both GaApi AG-UI actions (`agui/json` and `agui/stream`) forwarded every message, including the current user message, as `ChatIntakeRequest.History`. `ProductionOrchestrator` treats `History` as prior context: agents received the current question twice, and `RoutingContextEnricher` could select the current message as the "prior" user turn. GaChatbot.Api already excludes the current user message. An earlier HTTP test had pinned the duplicating behavior as the contract.
+
+GaApi now treats the last user message as the current turn and forwards only the other nonblank messages, in order. A request carrying only the current message forwards an empty list, not `null`, so the orchestrator's session-store fallback is not newly enabled by this change.
+
+Verification: the previous stream-only history test was replaced by four HTTP cases covering both routes (prior turns without the current message; a single message yields empty history). All four failed before the change and pass afterward. Chat-scoped GaApi tests pass (65). Full solution build passed with 0 errors. Scoped whitespace formatting and diff checks passed.
+
+Open product decision: `ga-client` (`agUiChatService.ts`) sends only the current message, so its agents still receive no conversation history. Either the client sends the full AG-UI thread, or GaApi forwards `null` when no prior turns exist so the cookie-scoped `ConversationHistoryStore` supplies context. The second option can carry turns from an earlier conversation in the same browser into a new thread (the cookie lasts 30 days). Neither is implemented here.
