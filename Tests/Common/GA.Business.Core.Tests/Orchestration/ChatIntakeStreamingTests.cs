@@ -20,7 +20,7 @@ public class ChatIntakeStreamingTests
         var gate = new Mock<ILlmConcurrencyGate>();
         gate.Setup(value => value.TryEnterAsync(It.IsAny<CancellationToken>())).ReturnsAsync(gateOpen);
         var fallback = new Mock<IFallbackChatHandler>();
-        fallback.Setup(value => value.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync("fallback answer");
+        fallback.Setup(value => value.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>())).ReturnsAsync("fallback answer");
         var trace = new Mock<IAgenticTraceCapture>();
         trace.Setup(value => value.Build()).Returns(new AgenticTrace("trace", "test", "run", []));
         trace.Setup(value => value.StartStep(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<string, object?>?>()))
@@ -102,7 +102,7 @@ public class ChatIntakeStreamingTests
         var result = await intake.IntakeStreamingAsync(new("hi"), token => { chunks.Add(token); return Task.CompletedTask; });
         Assert.That(result.GetValueOrThrow().Routing!.RoutingMethod, Is.EqualTo(expectedRoute));
         Assert.That(string.Concat(chunks), Is.EqualTo(expectedRoute == "fallback" ? "fallback answer" : "original answer"));
-        fallback.Verify(value => value.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+        fallback.Verify(value => value.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()),
             expectedRoute == "fallback" ? Times.Once() : Times.Never());
     }
 

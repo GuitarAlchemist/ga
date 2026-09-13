@@ -246,7 +246,7 @@ public sealed class FallbackChatApplicationService : IChatApplicationService
 
         try
         {
-            var fallbackText = await _fallback.AnswerAsync(request.Message, fallbackCts.Token);
+            var fallbackText = await _fallback.AnswerAsync(request.Message, request.History, fallbackCts.Token);
             sw.Stop();
 
             _capture.AddStep(
