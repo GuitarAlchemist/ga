@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "63bfb1a2ad4bccc7a82df6d550d9983696c17856",
-    "generatedAt": "2026-09-13T18:55:52.822885+00:00",
+    "commitSha": "b75dc3084143569e3daf89ea1737911b027e97c9",
+    "generatedAt": "2026-09-13T18:57:43.923350+00:00",
     "repoCount": 5,
-    "totalPRs": 28
+    "totalPRs": 27
   },
   "repos": [
     {
@@ -311,7 +311,7 @@
           "ageDays": 52,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -463,20 +463,8 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 3,
+      "prCount": 2,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-13T18:53:13Z",
-          "failingChecks": 0,
-          "headRef": "feat/afk-lane-claims",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 1081,
-          "title": "feat(afk): claim issue lanes in the fleet ledger through galactic_bridge",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1081"
-        },
         {
           "ageDays": 30,
           "author": "spareilleux",
