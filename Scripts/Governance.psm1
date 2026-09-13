@@ -78,8 +78,9 @@ function Get-HaltMarkerPath {
 
 <#
 .SYNOPSIS
-    Decide whether the calling agent may run a cycle right now, honoring BOTH the
-    cross-repo HALT-ALL marker and the per-repo state/.loop-halted kill switch.
+    Decide whether the calling agent may run a cycle right now, honoring declared
+    packet/domain .STOP markers, the cross-repo HALT-ALL marker, and the per-repo
+    state/.loop-halted kill switch.
     Implements every consumer obligation from the overseer-halt-marker contract:
     opportunistic read, fail-closed on unknown schema_version, honor expires_at,
     honor exempt_agents, honor scope, surface the reason.
@@ -87,7 +88,7 @@ function Get-HaltMarkerPath {
     [pscustomobject] @{
         Allowed  = [bool]   # $true = may act
         Halted   = [bool]   # convenience = -not Allowed
-        Source   = 'none' | 'halt-all' | 'loop-halted' | 'unknown-version'
+        Source   = 'none' | 'stop-marker' | 'halt-all' | 'loop-halted' | 'unknown-version'
         Reason   = [string]
         HaltedBy = [string]
         Exempt   = [bool]   # agent was exempt from HALT-ALL (a local halt can still apply)
@@ -101,6 +102,7 @@ function Test-GovernanceGate {
         # Overridable for tests; defaults to the canonical per-user / per-repo paths.
         [string] $MarkerPath = (Get-HaltMarkerPath),
         [string] $LoopHaltedPath = (Join-Path $RepoRoot 'state/.loop-halted'),
+        [string[]] $StopMarkerPath = @(),
         [string] $SchemaPath = (Join-Path $PSScriptRoot '../docs/contracts/overseer-halt-marker.schema.json')
     )
 
@@ -113,6 +115,22 @@ function Test-GovernanceGate {
 
     $localHalted = Test-Path -LiteralPath $LoopHaltedPath
     $exempt = $false
+
+    # ── Packet/domain stop markers (declared by the caller) ──
+    foreach ($declaredPath in @($StopMarkerPath)) {
+        if (-not $declaredPath) { continue }
+        $resolvedPath = if ([System.IO.Path]::IsPathRooted($declaredPath)) {
+            [System.IO.Path]::GetFullPath($declaredPath)
+        } else {
+            [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $declaredPath))
+        }
+        if (Test-Path -LiteralPath $resolvedPath) {
+            $reason = ''
+            try { $reason = (Get-Content -LiteralPath $resolvedPath -Raw -ErrorAction Stop).Trim() } catch { }
+            if (-not $reason) { $reason = "stop marker present: $resolvedPath" }
+            return New-Verdict $false 'stop-marker' $reason $null $false
+        }
+    }
 
     # ── Cross-repo HALT-ALL marker (opportunistic) ──
     if (Test-Path -LiteralPath $MarkerPath) {
