@@ -26,7 +26,7 @@ _No open PRs._
 | [#636](https://github.com/GuitarAlchemist/ga/pull/636) | chore(skills): add audited decision pilot (draft) | 41d | MERGEABLE | 0 | spareilleux |
 | [#634](https://github.com/GuitarAlchemist/ga/pull/634) | feat(harness): advance one reconciliation packet (draft) | 41d | MERGEABLE | 0 | spareilleux |
 | [#633](https://github.com/GuitarAlchemist/ga/pull/633) | feat(harness): add read-only work reconciliation snapshot (draft) | 41d | MERGEABLE | 0 | spareilleux |
-| [#632](https://github.com/GuitarAlchemist/ga/pull/632) | docs(factory): reconcile local and GitHub work lanes (draft) | 41d | MERGEABLE | 0 | spareilleux |
+| [#632](https://github.com/GuitarAlchemist/ga/pull/632) | docs(factory): reconcile local and GitHub work lanes (draft) | 42d | MERGEABLE | 0 | spareilleux |
 | [#628](https://github.com/GuitarAlchemist/ga/pull/628) | Normalize Chatbot Spelled-out Accidentals to Shorthand Forms (draft) | 42d | MERGEABLE | 0 | spareilleux |
 | [#626](https://github.com/GuitarAlchemist/ga/pull/626) | Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and (draft) | 42d | MERGEABLE | 0 | spareilleux |
 | [#625](https://github.com/GuitarAlchemist/ga/pull/625) | Delegate key detection to KeyIdentificationService on MCP and F# closu (draft) | 42d | MERGEABLE | 0 | spareilleux |
@@ -40,23 +40,22 @@ _No open PRs._
 | [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 54d | MERGEABLE | 3 | spareilleux |
 | [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 55d | MERGEABLE | 3 | spareilleux |
 
-### ix (1 open)
+### ix
 
-| # | Title | Age | Mergeable | Failing checks | Author |
-|---|---|---:|---|---:|---|
-| [#319](https://github.com/GuitarAlchemist/ix/pull/319) | ci: run the DuckDB SQL goldens instead of skipping them (draft) | 1d | UNKNOWN | 1 | spareilleux |
+_No open PRs._
 
 ### tars
 
 _No open PRs._
 
-### Demerzel (4 open)
+### Demerzel (5 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#1071](https://github.com/GuitarAlchemist/Demerzel/pull/1071) | feat(afk): recover stranded AFK work from #930 (draft, blocking review (draft) | 0d | CONFLICTING | 1 | spareilleux |
+| [#1070](https://github.com/GuitarAlchemist/Demerzel/pull/1070) | fix(ci): push to master over a write deploy key, not GITHUB_TOKEN (#90 | 0d | UNKNOWN | 0 | spareilleux |
 | [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 29d | UNKNOWN | 2 | spareilleux |
-| [#935](https://github.com/GuitarAlchemist/Demerzel/pull/935) | fix(ci): select a reviewer by its own credential, stop interpolating s | 44d | MERGEABLE | 3 | spareilleux |
-| [#930](https://github.com/GuitarAlchemist/Demerzel/pull/930) | fix(ci): push to master over a write deploy key so the risk-report rul (draft) | 45d | UNKNOWN | 2 | spareilleux |
+| [#935](https://github.com/GuitarAlchemist/Demerzel/pull/935) | fix(ci): select a reviewer by its own credential, stop interpolating s | 44d | UNKNOWN | 3 | spareilleux |
 | [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 56d | UNKNOWN | 1 | spareilleux |
 
 ## Install-audit fleet score
@@ -91,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-13T15:57:05.788566+00:00 UTC_
+_Generated: 2026-09-13T16:21:29.969563+00:00 UTC_
 
-_Commit: `1e4db0217802`_
+_Commit: `bcfd7fe951aa`_

@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "1e4db0217802437cc2a80ccaf90187742a77438e",
-    "generatedAt": "2026-09-13T15:57:05.788566+00:00",
+    "commitSha": "bcfd7fe951aa4ae6ef40f6426e3fa09fa44f9a20",
+    "generatedAt": "2026-09-13T16:21:29.969563+00:00",
     "repoCount": 5,
     "totalPRs": 26
   },
@@ -212,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/633"
         },
         {
-          "ageDays": 41,
+          "ageDays": 42,
           "author": "spareilleux",
           "createdAt": "2026-08-02T16:00:23Z",
           "failingChecks": 0,
@@ -381,21 +381,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 1,
-      "prs": [
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-09-12T14:35:22Z",
-          "failingChecks": 1,
-          "headRef": "fix/duckdb-sql-golden-in-ci",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 319,
-          "title": "ci: run the DuckDB SQL goldens instead of skipping them",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/319"
-        }
-      ]
+      "prCount": 0,
+      "prs": []
     },
     {
       "fullName": "GuitarAlchemist/tars",
@@ -426,8 +413,32 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 4,
+      "prCount": 5,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-13T16:05:03Z",
+          "failingChecks": 1,
+          "headRef": "feat/afk-stranded-work",
+          "isDraft": true,
+          "mergeable": "CONFLICTING",
+          "number": 1071,
+          "title": "feat(afk): recover stranded AFK work from #930 (draft, blocking review findings)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1071"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-13T16:02:40Z",
+          "failingChecks": 0,
+          "headRef": "fix/902-deploy-key-push",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 1070,
+          "title": "fix(ci): push to master over a write deploy key, not GITHUB_TOKEN (#902)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1070"
+        },
         {
           "ageDays": 29,
           "author": "spareilleux",
@@ -447,22 +458,10 @@
           "failingChecks": 3,
           "headRef": "fix/846-reviewer-selection",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 935,
           "title": "fix(ci): select a reviewer by its own credential, stop interpolating secrets (#846)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/935"
-        },
-        {
-          "ageDays": 45,
-          "author": "spareilleux",
-          "createdAt": "2026-07-30T13:07:47Z",
-          "failingChecks": 2,
-          "headRef": "fix/902-ruleset-bypass-deploy-key",
-          "isDraft": true,
-          "mergeable": "UNKNOWN",
-          "number": 930,
-          "title": "fix(ci): push to master over a write deploy key so the risk-report ruleset can be activated (#902)",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/930"
         },
         {
           "ageDays": 56,
