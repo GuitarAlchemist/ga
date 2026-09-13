@@ -84,6 +84,7 @@ public class ChatbotController(
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
         Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("X-Accel-Buffering", "no");
         Response.Headers.Append("Connection", "keep-alive");
 
         // Commit status + headers to the client immediately so the

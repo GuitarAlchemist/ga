@@ -59,3 +59,11 @@ Inspection of successful-test output exposed a separate HTTP 500 masked by permi
 These checks establish local database-read compatibility, not full deployed host parity. The existing by-ID test still accepts a missing placeholder ID; it does not establish successful retrieval of a seeded chord by ID. Ingress migration and retirement remain subject to the earlier ADR-0005 evidence requirements.
 
 Final verification: full solution build passed with 0 errors and 73 warnings. Full solution tests passed with 3,496 passed, 25 skipped, and 0 failed across 10 projects in 2 minutes 15 seconds, using isolated "bin/CodexIntegrationValidation/" outputs. GaApi contributed 174 passing tests. Scoped whitespace formatting and diff checks passed.
+
+## REST wire-contract follow-up
+
+Current GaApi source already emits grounding and trace in both REST JSON and the first REST SSE routing frame; the older surface inventory is not evidence of missing metadata. Deterministic HTTP tests now assert routing identity/confidence, grounding source/revision/query type, trace identity/step, history forwarding, and the SSE sequence: routing, answer, then `[DONE]`.
+
+GaApi REST SSE now emits `X-Accel-Buffering: no`, matching its AG-UI sibling and GaChatbot.Api REST SSE. This asks compatible proxies not to buffer the stream; it does not prove how deployed ingress behaves. Buffered REST dispatch and routing-before-text remain intact for existing `ga-client` consumers. These tests establish the canonical host's contract, not complete cross-host behavioral parity or production readiness.
+
+Verification for this follow-up: 4 REST SSE regression cases failed on the missing header before the change; all 8 REST history/metadata cases pass afterward. Full solution build passed (0 errors, 66 warnings); full solution tests passed (3496 passed, 25 skipped, 0 failed across 10 projects). Scoped formatting and diff checks passed.
