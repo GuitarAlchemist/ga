@@ -253,6 +253,7 @@ public sealed class IcvNeighborsSkill(
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about ICV-neighbor pitch-class sets near a chord, e.g. \"ICV neighbors of Cmaj7\" or \"what chords are harmonically close to Dm7\".",
         Confidence = 0.1f,

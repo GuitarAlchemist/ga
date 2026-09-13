@@ -101,3 +101,31 @@ Verification: four new vitest cases (`Apps/ga-client/src/test/agUiChatService.te
 This establishes history forwarding for the fallback path only. Fallback trigger parity is still not established: GaChatbot.Api also falls back on empty answers, ungrounded "no matches" answers, orchestration exceptions, and a 60-second orchestration timeout, and it returns a user-facing message when the fallback times out. GaApi's decorator fires only on low confidence outside deterministic routes and returns the original response on fallback timeout.
 
 Verification: two new tests (`FallbackChatApplicationServiceTests.ChatAsync_FallbackEnabled_LowConfidenceInner_ForwardsRequestHistory` and `ChatProviderAdapterTests.Fallback_ForwardsHistoryToProviderInOrder`) failed with `null` history before the change and pass afterward. Existing fallback mocks were updated to the new signature. Orchestration-scoped core tests pass (80), chat-scoped GaApi tests pass (66), and the full solution build passed with 0 errors. With Docker running again, the full solution suite passed: 3,504 passed, 23 skipped, 0 failed across 9 test projects (GaApi 181 passed).
+
+## Declined intents and agent history follow-up (2026-09-13, Claude)
+
+A live AG-UI run against GaApi with Ollama 0.34.0 fully on the GPU showed that conversational follow-ups never reached the LLM. The semantic intent router sent "What is my name…", "Which key did I say…", and "Describe his playing style" to `skill.rememberthis`, `skill.keyidentification`, and `skill.capo`. Each skill found none of its input and returned help text at confidence 0 to 0.3, identical with and without history. Enabling fallback would not help: `FallbackChatApplicationService` deliberately never fires on `orchestrator-skill-semantic` routes.
+
+A second defect sat behind the first. On the non-streaming path (`AnswerAsync`, used by REST and `agui/json`), `ProductionOrchestrator` passes `ChatRequest.History` to the selected agent, but none of the five specialized agents (Theory, Tab, Technique, Composer, Critic) passed `AgentRequest.ConversationHistory` to the LLM. Only the streaming path sent prior turns.
+
+Changes:
+
+- `AgentResponse.Declined` and `IntentResult.Declined` mark a request that lacks the input shape a skill handles. `OrchestratorSkillIntent` forwards the flag. When an intent declines, both `AnswerAsync` and `AnswerStreamingAsync` record a `routing.declined` trace step and continue to the deterministic-agent and LLM agent paths instead of returning the skill's help text.
+- Skills set the flag only where no recognizable input was found: the `CannotHandle` helpers of 11 pattern skills (including Capo, RelativeKey, AlternateTunings, OutsideNotes, the ICV and Grothendieck skills, SetTheoryEquivalence, and TheoryComparison), RememberThis without remember phrasing, and KeyIdentification and ProgressionCompletion when no chord symbols were extracted. Recognized but unresolvable requests (for example, capo fret 25) keep their deterministic errors, so the P1 #5 contract is unchanged for real skill failures.
+- The five agents now pass `request.ConversationHistory` to `ChatAsync`. In `ChatWithCritiqueAsync` only the draft call receives history, because the critique and refinement prompts quote the draft.
+
+Verification:
+
+- Unit tests: `SkillDeclineTests` (4 cases), `OrchestratorSkillIntentDeclineTests` (2 cases), and `AgentConversationHistoryTests` (5 agents).
+- `DeclinedIntentFallThroughTests` in GaChatbot.Api.Tests (4 cases) runs the production-wired orchestrator with a fake embedder, a fake chat client, a single fixed intent, and Ollama pointed at an unreachable port. It asserts that a declined intent falls through to an agent whose LLM call carries the prior turn, on both paths. Its non-streaming case failed until the agent fix landed.
+- The full solution build passed with 0 errors. The full suite passed: 3,519 passed, 23 skipped, 0 failed across 9 test projects.
+- Live, against an isolated GaApi on port 5299 using the new build and Ollama `llama3.2:3b` on the GPU (29/29 layers offloaded):
+  - With history, the follow-ups answered "Your information is Zorblax and your favorite guitarist is Django Reinhardt", described Django Reinhardt's style, and said "You mentioned composing in the key of G flat major".
+  - The same questions without history answered that no prior information or key was known.
+  - In-scope prompts still route to their skills: "What shape do I play in E with capo 4?" and "What key is Am F C G in?". "What shape do I play in E with capo 25?" still returns the skill's invalid-fret error.
+
+Not addressed:
+
+- The LLM-routed answers come from a 3B model, and agent selection among Theory, Technique, Composer, and Critic is unchanged.
+- `Tests/Apps/GaChatbot.Tests` is not in `AllProjects.slnx` and does not compile (`ExtensionsAINarrator.cs` CS0176), so the new orchestrator test lives in GaChatbot.Api.Tests.
+- A prompt such as "I play a C shape with capo 25" is taken by the explicit-voicing fast path before semantic routing, and it returned HTTP 500 on the test instance because voicing indexing was disabled there.
