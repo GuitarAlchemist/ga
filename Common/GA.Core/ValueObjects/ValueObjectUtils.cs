@@ -77,10 +77,10 @@ public static class ValueObjectUtils<TSelf>
             return true;
         }
 
-        var count = maxValue - minValue;
+        var count = maxValue - minValue + 1;
         if (normalize)
         {
-            value = minValue + (value - minValue).Mod(count) + 1;
+            value = minValue + (value - minValue).Mod(count);
         }
 
         if (value < minValue)

@@ -10,6 +10,14 @@ using ChordTemplate = ChordTemplate;
 /// </summary>
 public sealed class ChordNamingService : IChordNamingService
 {
+    private readonly ChordAnalyzer _analyzer = ChordAnalyzer.Instance;
+
+    /// <summary>
+    ///     Direct analysis using pure pitch class sets.
+    /// </summary>
+    public string Analyze(PitchClassSet pitchClasses, PitchClass? bassNote = null)
+        => _analyzer.AnalyzeAndName(pitchClasses, bassNote);
+
     // Unified modal naming (Roman numerals)
     public string GenerateModalChordName(
         UnifiedModeInstance mode,
@@ -60,3 +68,4 @@ public sealed class ChordNamingService : IChordNamingService
         PitchClass? bassNote = null)
         => ChordTemplateNamingService.GenerateComprehensiveNames(intervals, formulaName, root, bassNote);
 }
+

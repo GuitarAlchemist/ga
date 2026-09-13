@@ -9,7 +9,9 @@ using GA.Core.Collections;
 ///     Provides YouTube video URLs for scale demonstrations, indexed by PitchClassSetId.
 ///     Data is loaded from embedded JSON resource for maintainability.
 /// </summary>
+[System.Obsolete("Use ScaleMetadataRegistry.GetMetadata instead.")]
 public class ScaleVideoUrlById() : LazyIndexerBase<PitchClassSetId, Uri>(LoadVideoUrls())
+
 {
     private static readonly Lazy<ScaleVideoUrlById> LazyInstance = new(() => new());
     internal static ScaleVideoUrlById Instance => LazyInstance.Value;

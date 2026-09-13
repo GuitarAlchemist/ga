@@ -1,6 +1,7 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
 using System.Collections.Frozen;
+using System.Globalization;
 using Abstractions;
 using Design.Attributes;
 using Design.Schema;
@@ -84,7 +85,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     {
         10 => "T", // Abbreviation for 10
         11 => "E", // Abbreviation for 11
-        _ => _value.ToString()
+        _ => _value.ToString(CultureInfo.InvariantCulture)
     };
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
@@ -231,6 +232,12 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Accepts integer notation (0-9), the <c>T</c>/<c>E</c> abbreviations produced by <see cref="ToString" /> (so that
+    ///     <c>Parse(pitchClass.ToString())</c> round-trips) and note names (<c>A</c> =&gt; 9, <c>Bb</c> =&gt; 10, ...).<br />
+    ///     The hex-like set-notation aliases <c>A</c> =&gt; 10 and <c>B</c> =&gt; 11 are <b>not</b> accepted here because they
+    ///     collide with note names - use <see cref="TryParseSetNotation" /> when parsing set notation.
+    /// </remarks>
     public static bool TryParse(string? s, IFormatProvider? provider, out PitchClass result)
     {
         result = default;
@@ -240,7 +247,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         }
 
         var normalizedInput = s.Trim().ToUpperInvariant();
-        if (int.TryParse(normalizedInput, out var i))
+        if (int.TryParse(normalizedInput, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
         {
             if (i is >= 0 and <= 9)
             {
@@ -257,14 +264,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             case "E":
                 result = FromValue(11);
                 return true;
-            // Accept common hex-like aliases sometimes used in set notation
-            // A -> 10, B -> 11 (while keeping existing T/E support). This is parse-only; ToString still uses T/E.
-            case "A":
-                result = FromValue(10);
-                return true;
-            case "B":
-                result = FromValue(11);
-                return true;
         }
 
         if (Note.Chromatic.TryParse(s, provider, out var note))
@@ -274,6 +273,37 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Parses a single pitch class written in set notation, where the hex-like aliases <c>A</c> =&gt; 10 and
+    ///     <c>B</c> =&gt; 11 are used alongside the <c>T</c>/<c>E</c> abbreviations.
+    /// </summary>
+    /// <param name="s">The pitch class, in set notation</param>
+    /// <param name="result">The resulting <see cref="PitchClass" /></param>
+    /// <returns><see langword="true" /> when parsing succeeded; otherwise <see langword="false" /></returns>
+    /// <remarks>
+    ///     Unlike <see cref="TryParse" />, <c>A</c> means 10 (A#/Bb) and not the note A - set notation has no note names.
+    /// </remarks>
+    public static bool TryParseSetNotation(string? s, out PitchClass result)
+    {
+        result = default;
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            return false;
+        }
+
+        switch (s.Trim().ToUpperInvariant())
+        {
+            case "A":
+                result = FromValue(10);
+                return true;
+            case "B":
+                result = FromValue(11);
+                return true;
+        }
+
+        return TryParse(s, null, out result);
     }
 
     #endregion

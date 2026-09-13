@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guitar-alchemist/contracts/performance-intent-v1.json",
+  "title": "Performance Intent (Arpeggio Suggestions)",
+  "description": "Typed intent the chatbot emits via Ollama structured outputs for arpeggio-over-progression advice, validated by the theory engine before reaching the user. Tracer for ga#589 / the #567 bug class. Source of truth: Common/GA.Business.Core.Orchestration/PerformanceIntents/PerformanceIntent.cs (PerformanceIntentSchema.Json).",
+  "type": "object",
+  "properties": {
+    "chord": { "type": "string", "pattern": "^[A-G][#b]?.*$" },
+    "key": { "type": "string", "pattern": "^[A-G][#b]?\\s+(major|minor)$" },
+    "degrees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chord": { "type": "string", "pattern": "^[A-G][#b]?.*$" },
+          "roman": { "type": "string" }
+        },
+        "required": ["chord", "roman"]
+      }
+    },
+    "suggested_arpeggios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chord": { "type": "string", "pattern": "^[A-G][#b]?.*$" },
+          "arpeggio": { "type": "string", "pattern": "^[A-G][#b]?.*$" },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "Ionian (major)", "Dorian", "Phrygian", "Lydian", "Mixolydian",
+              "Aeolian (minor)", "Locrian", "Melodic Minor", "Lydian Dominant",
+              "Mixolydian b6", "Altered (Super Locrian)", "Phrygian Dominant",
+              "Half-Whole Diminished", "Whole-Half Diminished", "Whole Tone",
+              "Lydian Augmented", "Locrian #2", "Major Pentatonic", "Minor Pentatonic"
+            ]
+          }
+        },
+        "required": ["chord", "arpeggio", "mode"]
+      }
+    }
+  },
+  "required": ["chord", "key", "suggested_arpeggios"]
+}

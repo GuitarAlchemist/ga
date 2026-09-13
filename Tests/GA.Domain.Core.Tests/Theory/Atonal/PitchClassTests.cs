@@ -1,6 +1,7 @@
 namespace GA.Domain.Core.Tests.Theory.Atonal;
 
 using NUnit.Framework;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Theory.Atonal;
 
 [TestFixture]
@@ -121,8 +122,10 @@ public class PitchClassTests
     [TestCase("C", 0)]
     [TestCase("T", 10)]
     [TestCase("E", 11)]
-    [TestCase("A", 10)] // Hex-style parsing
-    [TestCase("B", 11)] // Hex-style parsing
+    [TestCase("A", 9)] // Note name - NOT the hex-style alias (see TryParseSetNotation)
+    [TestCase("B", 11)]
+    [TestCase("Bb", 10)]
+    [TestCase("F#", 6)]
     public void TryParse_ValidInput_ReturnsSuccess(string input, int expectedValue)
     {
         // Arrange & Act
@@ -144,5 +147,51 @@ public class PitchClassTests
 
         // Assert
         Assert.That(result, Is.False);
+    }
+
+    [TestCase("A", 10)] // Hex-style set notation
+    [TestCase("B", 11)] // Hex-style set notation
+    [TestCase("T", 10)]
+    [TestCase("E", 11)]
+    [TestCase("0", 0)]
+    [TestCase("9", 9)]
+    public void TryParseSetNotation_ValidInput_ReturnsSuccess(string input, int expectedValue)
+    {
+        // Arrange & Act
+        var result = PitchClass.TryParseSetNotation(input, out var pitchClass);
+
+        // Assert
+        Assert.That(result, Is.True);
+        Assert.That(pitchClass.Value, Is.EqualTo(expectedValue));
+    }
+
+    // Regression: the hex-style alias used to shadow the note name, so "A" parsed as 10 (A#/Bb)
+    [Test]
+    public void TryParse_NoteName_A_IsNine() => Assert.That(PitchClass.Parse("A", null).Value, Is.EqualTo(9));
+
+    [Test]
+    public void Parse_RoundTripsToString()
+    {
+        foreach (var pitchClass in PitchClass.Items)
+        {
+            Assert.That(PitchClass.Parse(pitchClass.ToString(), null), Is.EqualTo(pitchClass));
+        }
+    }
+
+    [Test]
+    public void FromSemitones_FoldsIntoRange() => Assert.Multiple(() =>
+    {
+        Assert.That(PitchClass.FromSemitones(Semitones.FromValue(14)).Value, Is.EqualTo(2));
+        Assert.That(PitchClass.FromSemitones(Semitones.FromValue(-1)).Value, Is.EqualTo(11));
+        Assert.That(PitchClass.FromSemitones(Semitones.FromValue(-13)).Value, Is.EqualTo(11));
+        Assert.That(PitchClass.FromSemitones(Semitones.FromValue(144)).Value, Is.EqualTo(0));
+    });
+
+    [Test]
+    public void PitchClassSet_Parse_UsesSetNotation()
+    {
+        // "A" and "B" mean 10 and 11 inside a set, not the notes A and B
+        Assert.That(PitchClassSet.TryParse("0AB", null, out var set), Is.True);
+        Assert.That(set.Select(pc => pc.Value), Is.EquivalentTo(new[] { 0, 10, 11 }));
     }
 }

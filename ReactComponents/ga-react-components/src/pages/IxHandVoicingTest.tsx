@@ -1,9 +1,11 @@
 import React from 'react';
+import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
+import IxHandVoicingLab from '../components/IxHandVoicingLab';
 
 const IxHandVoicingTest: React.FC = () => (
-  <div style={{ padding: 24, color: '#bda4ff' }}>
-    IxHandVoicingTest — placeholder. Original page deleted; restore from git or rebuild.
-  </div>
+  <DemoErrorBoundary demoName="IX Hand Voicing Lab">
+    <IxHandVoicingLab />
+  </DemoErrorBoundary>
 );
 
 export default IxHandVoicingTest;

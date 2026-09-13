@@ -80,8 +80,16 @@ public abstract partial record Interval
                 return true;
             }
 
-            if (string.IsNullOrEmpty(prefix) || !Accidental.TryParse(prefix, null, out var accidental))
+            Accidental accidental;
+            if (string.IsNullOrEmpty(prefix))
+            {
                 accidental = Accidental.Natural;
+            }
+            else if (!Accidental.TryParse(prefix, null, out accidental))
+            {
+                // The prefix is neither a quality (P, m, M, d, A, ...) nor an accidental (#, b, ...) - not an interval
+                return false;
+            }
 
             if (!IntervalQuality.TryGetFromAccidental(size.Consonance, accidental, out quality))
                 return false;
@@ -90,7 +98,9 @@ public abstract partial record Interval
             return true;
         }
 
-        [GeneratedRegex("^(?'prefix'.*)?(?'number'[1-8])$")]
+        // The prefix must not contain digits, otherwise the greedy match would swallow the interval number
+        // (e.g. "P11" => prefix "P1" + number "1", silently parsed as P1).
+        [GeneratedRegex("^(?'prefix'[^0-9]*)(?'number'[1-8])$")]
         private static partial Regex SimpleIntervalRegex();
 
         #endregion

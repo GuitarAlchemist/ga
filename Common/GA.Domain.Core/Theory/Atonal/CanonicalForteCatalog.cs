@@ -205,7 +205,7 @@ public static class CanonicalForteCatalog
         // set is 0-1 and the chromatic aggregate is 12-1. Keep forward/reverse symmetric.
         if (cardinality == 0)
         {
-            primeForm = new PitchClassSet(Enumerable.Empty<PitchClass>());
+            primeForm = new PitchClassSet([]);
             return indexPart == "1";
         }
         if (cardinality == 12)
