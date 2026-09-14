@@ -1,0 +1,5 @@
+# Release guitar_engine.wasm size for the pinned CI toolchain
+# (.github/workflows/guitar-engine-tools.yml fails on >5% growth).
+# Update both values together when the growth is intended.
+toolchain = "1.98.1"
+bytes = 32190

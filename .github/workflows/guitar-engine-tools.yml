@@ -32,7 +32,8 @@ jobs:
         run: |
           cargo build --release --target wasm32-unknown-unknown
           size=$(stat -c %s target/wasm32-unknown-unknown/release/guitar_engine.wasm)
-          read -r toolchain baseline < wasm-size-baseline.txt
+          toolchain=$(awk -F'"' '/^toolchain/ {print $2}' wasm-size-baseline.toml | tr -d '')
+          baseline=$(awk '/^bytes/ {print $3}' wasm-size-baseline.toml | tr -d '')
           actual_toolchain=$(rustc --version | cut -d' ' -f2)
           limit=$(( baseline * 105 / 100 ))
           echo "guitar_engine.wasm: ${size} B (baseline ${baseline} B on rustc ${toolchain}, limit ${limit} B)" | tee -a "$GITHUB_STEP_SUMMARY"
@@ -41,7 +42,7 @@ jobs:
             exit 1
           fi
           if [ "$size" -gt "$limit" ]; then
-            echo "::error::guitar_engine.wasm grew more than 5% (${baseline} -> ${size} B). If intended, update rust-engine/wasm-size-baseline.txt."
+            echo "::error::guitar_engine.wasm grew more than 5% (${baseline} -> ${size} B). If intended, update rust-engine/wasm-size-baseline.toml."
             exit 1
           fi
 
