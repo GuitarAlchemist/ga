@@ -271,8 +271,8 @@ jobs:
                 else "other" end) as $cat |
               # Shipper: Co-Authored-By trailer from PR body, else author.
               # Shipper = first Co-Authored-By trailer in body; restrict to a
-              # single line (no newlines, no '<', <= 40 chars) so multi-line
-              # bodies don't bleed into the table. `capture(...)? | .name` returns
+              # single line (no newlines, no "<", <= 40 chars) so multi-line
+              # bodies do not bleed into the table. `capture(...)? | .name` returns
               # null on no-match without aborting the pipeline; `// .author.login`
               # then resolves at the outer object scope.
               ((((.body // "") | capture("Co-Authored-By:[ \\t]*(?<name>[^\\n<]{1,40}?)[ \\t]*<"; "im")?) | .name) // .author.login // "?") as $shipper |
