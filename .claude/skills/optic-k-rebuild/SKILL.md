@@ -154,6 +154,23 @@ dark from 2026-05-16 to 2026-06-25.)
 
 After v4-pp rebuild: #25, #28, #32 should flip from FAIL to PASS (cross-instrument STRUCTURE equality, 3-class leak test, cross-octave cosine=1.0).
 
+### 2b. Corpus invariants and dead dimensions
+
+`ix-invariant-produce` only sees synthetic exemplars. `ix-optick-invariants` reads the real index (read-only; build it with `cargo build --release -p ix-optick-invariants` in ix if missing):
+
+```bash
+"C:/Users/spare/source/repos/ix/target/release/ix-optick-invariants.exe" --pretty \
+  --index "C:/Users/spare/source/repos/ga/state/voicings/optick.index" \
+  --out "C:/Users/spare/source/repos/ga/state/baseline/$(date +%Y-%m-%d)-corpus-firings.json"
+"C:/Users/spare/source/repos/ix/target/release/ix-invariant-coverage.exe" \
+  --catalog "C:/Users/spare/source/repos/ga/docs/methodology/invariants-catalog.md" \
+  --firings "C:/Users/spare/source/repos/ga/state/baseline/$(date +%Y-%m-%d)-corpus-firings.json"
+```
+
+- #25, #32, #36 must all PASS (the binary exits 1 otherwise).
+- #37 (no dead dimension) and #38 (no dead weighted partition) are reported on stderr but do not change the exit code unless you pass `--fail-on-dead`. Baseline on the v1.8 index (measured 2026-09-14): **#37 83/124 live, 41 dead** (40 always zero + CONTEXT dim 52 constant); **#38 FAIL: CONTEXT 0/12 live at weight 0.20**. See ga#552, ga#616.
+- The dead count must not go up. A producer fix for ga#552/ga#616 should bring it down; record the new #37 count in the rebuild notes.
+
 ### 3. C# integration tests
 
 ```bash

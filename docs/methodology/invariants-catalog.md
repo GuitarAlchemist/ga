@@ -58,6 +58,8 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 | 33 | text-vs-pc | `ChordName` consistency across instruments for same PC-set | corpus | **FAIL** (29.4%) |
 | 34 | governance | Every persona YAML has `affordances`, `goal_directedness`, `estimator_pairing` | governance/demerzel/personas/ | T |
 | 35 | governance | Every belief file is tetravalent-valid (T/F/U/C only) | state/beliefs/*.json | C |
+| 37 | embedding | No dead dimension: every compact OPTIC-K dim varies across the corpus (max - min > 1e-6) | optick.index | **FAIL** (83/124 live, ix-optick-invariants 2026-09-14, ga#552) |
+| 38 | embedding | No dead weighted partition: a partition with similarity weight > 0 has at least one live dim | optick.index | **FAIL** (CONTEXT 0/12 live at weight 0.20, ix-optick-invariants 2026-09-14, ga#616) |
 
 ## 2. C#/F# mistake tracker roadmap (16 categories)
 
