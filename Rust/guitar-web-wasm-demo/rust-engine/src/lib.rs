@@ -206,8 +206,10 @@ impl Engine {
         match t {
             // 0 – Steel bright: tight, bright, slightly shorter reverb
             0 => {
-                self.decay = 0.9978;
-                self.brightness = 0.80;
+                // decay/brightness fitted to by-the-lake.wav per-band decay with
+                // ix-acoustic-tune CMA-ES (tools/damping-fit; was 0.9978 / 0.80).
+                self.decay = 0.9900;
+                self.brightness = 0.9345;
                 self.dispersion = 0.22;
                 self.attack_decay = 0.986;
                 self.reverb_mix = 0.14;
