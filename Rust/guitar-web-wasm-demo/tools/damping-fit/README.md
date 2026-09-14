@@ -4,83 +4,106 @@ Fits the guitar engine's loop-damping parameters (`decay`, `brightness` for
 guitar type 0) so rendered notes decay per frequency band like
 `reference/by-the-lake.wav`. It uses IX's
 [`ix-acoustic-tune`](https://github.com/GuitarAlchemist/ix/tree/main/crates/ix-acoustic-tune)
-(CMA-ES and `reference::per_band_decay_slopes`) and links `rust-engine`
-natively through its C ABI, so the fitted values mean the same thing in the WASM
-demo. Runs are seeded and deterministic, and a full fit takes about 25 s.
+(`CmaEs`, `reference::band_decay_slope`) and `ix-signal`, both pinned to ix
+`d1bbf1d`. The engine source (`../../rust-engine/src/lib.rs`) is compiled into
+the tool with a `#[path]` module, so `rust-engine`'s crate type and the shipped
+WASM stay unchanged. Runs are seeded and deterministic.
 
 ```sh
 cd Rust/guitar-web-wasm-demo/tools/damping-fit
-cargo run --release -- fit                       # train on 5 notes, report held-out
-cargo run --release -- fit --swap                # the other cross-validation fold
-cargo run --release -- eval 0.9900 0.9345        # per-band error for any params
-cargo run --release -- sustain 0.9900 0.9345     # open-string T60 (extrapolation check)
-cargo run --release -- phrase ../../playwright-downloads/phrase.wav 0.9900 0.9345
+cargo test --release                            # stability bound + noise-floor truncation
+cargo run --release -- grid 1.0                 # decay sweep: train / held-out / all 10 notes
+cargo run --release -- fit [--seed S] [--swap]  # CMA-ES on one fold, scored on the other
+cargo run --release -- eval 0.987 1.0           # reference and render slopes, per-band error
+cargo run --release -- sustain 0.987 1.0        # loop-gain bound + open-string T60
+cargo run --release -- phrase ../../playwright-downloads/phrase.wav 0.987 1.0
 ```
 
 ## How it measures
 
-- **Target:** the 10 cleanest single-note runs in the recording, as found by
-  IX's `analyze_reference` example. They are split by passage into 5 train
-  notes and 5 held-out notes, so the three plucks at 64-66 s all fall on the
-  held-out side.
-- **Metric:** per-band decay slope (log-energy/s) over bands 60-180-360-750-1600-3500-8000 Hz.
-  Both the recording and the render are measured from the RMS peak over the
-  same duration. The loss is the mean absolute slope error across notes and bands.
-- **Critic:** `phrase` renders the note sequence that
-  `scripts/record-and-analyze.js` plays. Point
-  `playwright-downloads/iteration-report.json` at the file
+- **Target notes.** The 10 cleanest single-note runs in the recording, from IX's
+  `analyze_reference`. They are split by passage into 5 train and 5 held-out
+  notes.
+- **Slope.** Per-band decay slope in log-energy/s, over bands
+  60-180-360-750-1600-3500-8000 Hz, measured from the RMS peak.
+- **Noise floor.** A real performance never reaches silence, so each band's
+  floor is the 5th percentile of frame energy over the whole recording.
+  - A band is only fitted while it stays 10 dB above that floor (truncation).
+  - A (note, band) pair is dropped if it gives less than 0.1 s above the floor,
+    falls by less than 3 dB, or has a slope ≥ 0.
+  - The render is measured over exactly the same span as the reference.
+- **Error.** For each band, the error is the median absolute slope error over
+  the surviving notes. A band needs at least 2 surviving notes. The loss is the
+  mean over the bands that are scored.
+- **Stability.** `is_stable` bounds the loop gain, `(decay + 0.0025·(1-f_norm))·sustain`, at
+  every pitch from 82 to 1319 Hz. The fit rejects any `decay` whose bound
+  reaches 1 - 1e-4. Tests check the bound against real renders.
+- **Critic.** `phrase` renders the note sequence that `scripts/record-and-analyze.js` plays. Point
+  `playwright-downloads/iteration-report.json` at it
   (`{"wav_path": "<abs path>"}`), then run `node scripts/run-spectral-critic.js`.
+  The critic compares global spectra over the first 4 s. It does **not** measure decay.
 
-## Result (2026-09-14, ix rev `d1bbf1d`, seed 7)
+## Result (2026-09-14)
 
-| per-band abs. decay error | baseline 0.9978 / 0.80 | fitted 0.9900 / 0.9345 |
-|---|---|---|
-| 60-180 Hz (held-out) | 1.337 | 0.571 |
-| 180-360 Hz | 0.914 | 1.048 |
-| 360-750 Hz | 1.051 | 0.570 |
-| 750-1600 Hz | 1.823 | 0.921 |
-| 1600-3500 Hz | 4.484 | 1.825 |
-| 3500-8000 Hz | 6.935 | 4.286 |
-| **held-out mean** | **2.757** | **1.537** |
-| train mean | 2.851 | 2.189 |
-| `run-spectral-critic.js` score | 0.6498 | 0.6769 |
+Mean error over scored bands (log-energy/s):
 
-Robustness checks:
-- Seeds 7 and 11 reach the same held-out error (1.537). Seed 3 stops at
-  decay 0.9948 and scores 1.691.
-- The swapped fold (fit on the held-out notes) also improves: 2.851 to 2.272.
+| params (decay / brightness) | train | held-out | JS critic |
+|---|---|---|---|
+| 0.9978 / 0.80 (old default) | 2.582 | 2.693 | 0.6498 |
+| 0.9978 / 1.0 (brightness only) | 2.614 | 2.148 | 0.6657 |
+| 0.987 / 0.80 (decay only) | 3.932 | 3.501 | 0.6489 at 0.986 |
+| **0.987 / 1.0 (shipped)** | **1.260** | **0.816** | **0.6797** |
 
-## Caveats (read before tuning further)
+- **The two settings only help together.** Brightness 1.0 alone recovers 29% of
+  the held-out gain. Decay alone makes it worse.
+- **Brightness-only is not an option.** With brightness 1.0, the old decay has
+  an E2 loop gain bound of 1.000096 and a T60 of about 398 s.
+- **Brightness 1.0 means the LP path is off.** Any base brightness ≥ ~0.85 saturates the per-voice
+  clamp, which bypasses the dark `lp_alpha = 0.05` mix. 1.0 states that plainly.
+- **Decay comes from a grid, not CMA-ES.** With brightness saturated the problem
+  is 1-D, and a grid (`grid 1.0`) is enough:
+  - The train and held-out folds both have their minimum at 0.986.
+  - The union of all 10 notes is lowest at 0.986 (1.019), with 0.987 next (1.038).
+  - Changing the floor settings moves the minimum to 0.987: margin 6 dB,
+    or percentile 1% (0.987 to 0.988).
+  - 0.987 ships as the value that is robust across those settings.
+  - With a 15 dB margin, too few bands survive to be meaningful.
+  - CMA-ES (`fit`) agrees: 0.986-0.988 on both folds and several seeds. It
+    earns its place when the engine exposes a multi-parameter damping filter.
 
-- **Low register only.** The recording has no clean single notes above about
-  110 Hz, so nothing validates the upper strings. `decay` is a per-pass gain, so
-  its effect on decay time grows with pitch. Open-string T60 moves from
-  E2 9.3 / A2 121 / D3 31 / G3 10 / B3 5.8 / E4 2.7 s to
-  10.6 / 7.7 / 4.9 / 3.1 / 2.2 / 1.3 s. The baseline's A2 and D3 values are
-  implausible, because the low-string loop gain was at or above 1.0. The shorter
-  E4 is not validated. Listen before building on it.
-- **`decay` sits on its lower bound** (0.990, the demo's Decay slider minimum).
-  The train fold wants it lower still, while the swapped fold settled at 0.996.
-  Treat decay as loosely identified.
-- **`brightness` is flat above about 0.84.** The per-voice brightness clamps
-  at 1.0, which removes the dark `lp_alpha = 0.05` path. Below about 0.82 the
-  error rises steeply.
-- **3500-8000 Hz stays wrong (4.3).** The fixed two-point Karplus-Strong average
-  in the loop removes high frequencies faster than any exposed parameter can
-  offset. Closing that gap needs an engine change: decouple the fractional delay
-  from the damping filter and expose the damping as a tunable parameter. Then
-  refit with this harness.
-- The reference slopes are noisy: it is a real performance with a noise floor
-  and overlapping notes, and some high-band slopes come out positive. The note
-  set is small.
+## Caveats
+
+- **Early decay, one register.** 8 of the 10 notes are the same ~97 Hz pitch,
+  and each window covers only the first 0.35-0.8 s. Using the fit for
+  multi-second T60 assumes a single decay rate.
+- **Upper strings are extrapolated.** Open-string T60 at 0.987 / 1.0 is
+  E2 7.6, A2 5.6, D3 3.7, G3 2.5, B3 1.8, and **E4 1.1 s (unverified)**.
+  At the old default it was E2 9.3, A2 121, D3 31, G3 10, B3 5.8, E4 2.7 s:
+  - E2's loop gain bound was 1.000096, so it could not decay reliably.
+  - A2 and D3 sat just below 1.0 (0.99982 and 0.99908) and decayed very slowly.
+- **3.5-8 kHz.** Once the noise floor is handled, the residual is about 1.9-2.1,
+  down from the 4.3 reported earlier, and it rests on 2-3 notes. The render still
+  decays faster than the reference in 4 of 5 notes. That is weak evidence for a
+  tunable loop filter, not proof that one is needed.
+- **Most bands are dropped for most notes,** because the recording is dense. The
+  error rests on few (note, band) pairs.
+- **The UI slider maximum (0.9999) can make low strings unstable.** This was
+  already true before this change, and so were profiles 1-3 (decay 0.9982,
+  0.9985, 0.9987 all put the E2 bound above 1.0). Their LP mix dampens them in
+  practice. None of this is changed here.
 
 ## En français
 
-`damping-fit` ajuste `decay` et `brightness` du profil 0 (CMA-ES
-d'`ix-acoustic-tune`) pour que la décroissance par bande de fréquence d'une note
-rendue suive `by-the-lake.wav`. Sur les notes de validation, l'erreur moyenne
-passe de 2,757 à 1,537 log-énergie/s, et le score du critique spectral JS passe
-de 0,650 à 0,677. Limites : seules des notes graves (86 à 110 Hz) sont
-disponibles pour valider, et `decay` est en butée à 0,990. La bande
-3,5 à 8 kHz reste mal reproduite : il faut une modification du moteur
-(filtre d'amortissement réglable) avant un nouvel ajustement.
+`damping-fit` ajuste `decay` et `brightness` du profil 0 pour que la décroissance
+par bande d'une note rendue suive `by-the-lake.wav`.
+
+- **Plancher de bruit.** La mesure coupe chaque bande à 10 dB au-dessus du
+  plancher de bruit de l'enregistrement, et écarte les pentes non décroissantes.
+- **Stabilité.** Toute valeur dont le gain de boucle atteint 1 est rejetée.
+- **Réglages livrés.** decay 0,987 et brightness 1,0. Sur les notes de
+  validation, l'erreur passe de 2,693 à 0,816. Le critique JS passe de 0,650 à
+  0,680.
+- **Les deux paramètres sont nécessaires ensemble.** Aucun des deux ne suffit
+  seul.
+- **Limites.** Il n'y a qu'un registre (~97 Hz). La mesure ne couvre que la
+  décroissance initiale. Le T60 de la corde de mi aigu (1,1 s) n'est pas vérifié.

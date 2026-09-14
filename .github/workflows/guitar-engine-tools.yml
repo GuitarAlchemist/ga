@@ -1,0 +1,36 @@
+name: Guitar engine tools
+
+# Builds the WASM guitar engine and tests the offline damping-fit harness, which
+# otherwise no workflow compiles. Path-filtered: only runs when they change.
+on:
+  pull_request:
+    paths:
+      - 'Rust/guitar-web-wasm-demo/rust-engine/**'
+      - 'Rust/guitar-web-wasm-demo/tools/damping-fit/**'
+      - '.github/workflows/guitar-engine-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build engine WASM (release) and report its size
+        working-directory: Rust/guitar-web-wasm-demo/rust-engine
+        run: |
+          cargo build --release --target wasm32-unknown-unknown
+          size=$(stat -c %s target/wasm32-unknown-unknown/release/guitar_engine.wasm)
+          echo "guitar_engine.wasm: ${size} bytes" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Test damping-fit (stability bound, noise-floor truncation)
+        working-directory: Rust/guitar-web-wasm-demo/tools/damping-fit
+        run: cargo test --release --locked

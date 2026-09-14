@@ -206,10 +206,13 @@ impl Engine {
         match t {
             // 0 – Steel bright: tight, bright, slightly shorter reverb
             0 => {
-                // decay/brightness fitted to by-the-lake.wav per-band decay with
-                // ix-acoustic-tune CMA-ES (tools/damping-fit; was 0.9978 / 0.80).
-                self.decay = 0.9900;
-                self.brightness = 0.9345;
+                // Fitted to by-the-lake.wav early per-band decay (tools/damping-fit;
+                // was 0.9978 / 0.80, whose E2 loop gain bound was >= 1.0).
+                // brightness 1.0 saturates the per-voice clamp, i.e. bypasses the
+                // dark LP mix; decay then keeps every string's loop gain < 0.99.
+                // Mirrored in src/atoms/audioAtoms.js GUITAR_PROFILE_DECAY.
+                self.decay = 0.987;
+                self.brightness = 1.0;
                 self.dispersion = 0.22;
                 self.attack_decay = 0.986;
                 self.reverb_mix = 0.14;
