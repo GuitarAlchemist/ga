@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "29a0ab3f35094b134b251d97239a06169d990e93",
-    "generatedAt": "2026-09-14T11:12:06.513954+00:00",
+    "commitSha": "f36cc0c4ab0553169deb500c876b93a38e3d092a",
+    "generatedAt": "2026-09-14T13:01:20.830500+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 29
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 21,
+      "prCount": 22,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T12:58:47Z",
+          "failingChecks": 1,
+          "headRef": "docs/optick-dead-dimension-invariant-step",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 675,
+          "title": "docs(optick): run ix-optick-invariants after each OPTIC-K rebuild; catalog #37/#38",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/675"
+        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -381,8 +393,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 4,
+      "prCount": 5,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T12:58:15Z",
+          "failingChecks": 0,
+          "headRef": "feat/optick-dead-dimension-invariant",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 338,
+          "title": "feat(ix-optick-invariants): dead dimension (#37) and dead weighted partition (#38) invariants",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/338"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -390,9 +414,9 @@
           "failingChecks": 0,
           "headRef": "fix/mcp-tool-false-answers",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 337,
-          "title": "fix(ix-agent): stop ix_cargo_deps and ix_governance_check giving false answers",
+          "title": "fix: governance checks and ix_cargo_deps stop giving false answers",
           "url": "https://github.com/GuitarAlchemist/ix/pull/337"
         },
         {
@@ -402,7 +426,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
@@ -414,7 +438,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
@@ -426,7 +450,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"
