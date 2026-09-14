@@ -5,7 +5,7 @@ export const workletNodeAtom = atom(null);
 export const isAudioReadyAtom = atom(false);
 // Per-type `decay` from rust-engine set_guitar_profile — keep in sync, so the
 // slider shows what the engine plays after a guitar-type switch.
-export const GUITAR_PROFILE_DECAY = [0.987, 0.9982, 0.9985, 0.9987];
+export const GUITAR_PROFILE_DECAY = [0.986, 0.9982, 0.9985, 0.9987];
 export const decayAtom = atom(GUITAR_PROFILE_DECAY[0]);
 export const logAtom = atom([]);
 

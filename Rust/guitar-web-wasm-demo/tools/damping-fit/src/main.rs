@@ -1,15 +1,16 @@
 //! Fit the guitar engine's loop-damping parameters to the per-band decay of the
-//! reference recording, using `ix-acoustic-tune` (CMA-ES + band decay slopes).
+//! reference recording, using `ix-acoustic-tune` (CMA-ES, band decay slopes).
 //!
 //! The engine source is compiled straight into this binary (`#[path]` module
 //! below), so a fitted parameter set means the same thing in the browser without
 //! changing how the shipped WASM is built. Everything is seeded and deterministic.
 //!
 //! Usage (from this directory):
-//!   cargo run --release -- eval    [decay brightness]  per-band decay error (train + held-out)
-//!   cargo run --release -- grid    [brightness]        decay sweep on both folds and their union
-//!   cargo run --release -- fit     [--generations N] [--seed S] [--swap]
-//!   cargo run --release -- sustain [decay brightness]  open-string T60 (extrapolation check)
+//!   cargo run --release -- grid    [brightness]        train-only decay pick, scored on the other fold
+//!   cargo run --release -- sweep                       the same pick across 96 noise-floor settings
+//!   cargo run --release -- eval    [decay brightness]  reference/render slopes, per-band error, pair counts
+//!   cargo run --release -- fit     [--generations N] [--seed S] [--swap]   CMA-ES instead of the grid
+//!   cargo run --release -- sustain [decay brightness]  loop-gain bound + open-string T60
 //!   cargo run --release -- phrase  <out.wav> [decay brightness]
 //!
 //! `phrase` renders the note sequence `scripts/record-and-analyze.js` plays, so
@@ -21,10 +22,10 @@ mod engine;
 
 use engine::{
     engine_init, engine_note_on, engine_render, engine_set_brightness, engine_set_decay,
-    engine_set_guitar_type, Engine,
+    engine_set_guitar_type, Engine, MAX_LOOP_GAIN,
 };
 use ix_acoustic_tune::cmaes::CmaEs;
-use ix_acoustic_tune::reference::{band_decay_slope, default_band_edges, DEFAULT_HOP, DEFAULT_WINDOW};
+use ix_acoustic_tune::reference::{default_band_edges, DEFAULT_HOP, DEFAULT_WINDOW};
 use ix_acoustic_tune::AskTell;
 use ndarray::Array1;
 
@@ -34,6 +35,8 @@ const SR: f64 = 48_000.0;
 const GUITAR_TYPE: i32 = 0;
 /// `[decay, brightness]` guitar type 0 shipped before this fit (the "baseline").
 const BASELINE: [f64; 2] = [0.9978, 0.80];
+/// Brightness-only alternative (unstable at E2; scored for attribution only).
+const BRIGHTNESS_ONLY: [f64; 2] = [0.9978, 1.0];
 
 /// One clean single-note window in the reference: onset time, pitch, and how long
 /// the pitch stays stable before the next pluck overlaps it.
@@ -47,7 +50,8 @@ struct Note {
 // `cargo run -p ix-acoustic-tune --example analyze_reference -- by-the-lake.wav`
 // (pass 1). Split by passage, not interleaved, so the 64-66 s phrase (three plucks
 // of the same passage) cannot leak between train and held-out. 8 of the 10 are the
-// same ~97 Hz pitch: this validates re-plucks of one register, not the neck.
+// same ~97 Hz pitch; only the 110.3 Hz note sits where brightness 0.80 already
+// saturates, so it is the only direct evidence for the decay-only change above G2.
 const TRAIN: [Note; 5] = [
     Note { t: 36.625, f0: 97.2, ring: 0.52 },
     Note { t: 47.400, f0: 97.4, ring: 0.52 },
@@ -67,18 +71,8 @@ const HELD_OUT: [Note; 5] = [
 /// recording and the render are measured from the same point of the envelope.
 const PEAK_SEARCH_S: f64 = 0.15;
 const ENV_FRAME: usize = 256;
-
-/// A reference band is only fitted while its energy stays this far above the
-/// recording's own noise floor in that band (Lundeby-style truncation).
-const FLOOR_MARGIN_DB: f64 = 10.0;
-/// Percentile of whole-recording frame energy taken as a band's noise floor.
-const FLOOR_PERCENTILE: f64 = 0.05;
-/// A (note, band) pair needs at least this much time above the floor...
+/// A (note, band) pair needs at least this much time above the noise floor.
 const MIN_FIT_SECONDS: f64 = 0.10;
-/// ...and must fall by at least this much over it, else it is dropped.
-const MIN_DROP_DB: f64 = 3.0;
-/// A band only counts toward the loss if this many notes survive in it.
-const MIN_NOTES_PER_BAND: usize = 2;
 
 /// Early decay only: the reference rings 0.38-1.03 s before the next pluck, so
 /// slopes describe the first ~0.8 s, not a multi-second T60.
@@ -86,24 +80,41 @@ fn analysis_seconds(n: &Note) -> f64 {
     n.ring.clamp(0.35, 0.8)
 }
 
-/// Index of the RMS-envelope peak within the first `PEAK_SEARCH_S` of `x`.
-fn peak_index(x: &[f64]) -> usize {
-    let limit = ((PEAK_SEARCH_S * SR) as usize).min(x.len());
-    (0..limit.saturating_sub(ENV_FRAME))
-        .step_by(ENV_FRAME)
-        .max_by(|&a, &b| rms(&x[a..a + ENV_FRAME]).total_cmp(&rms(&x[b..b + ENV_FRAME])))
-        .unwrap_or(0)
+/// Decay candidates for `grid` and `sweep`: 0.980..=0.9975 in 0.0005 steps. The
+/// top is the highest stable value on the demo slider's 0.0001 step.
+fn decay_grid() -> Vec<f64> {
+    (0..36).map(|i| 0.980 + 0.0005 * i as f64).collect()
 }
 
-fn rms(x: &[f64]) -> f64 {
-    (x.iter().map(|v| v * v).sum::<f64>() / x.len().max(1) as f64).sqrt()
+// ------------------------------------------------------------------ metric --
+
+/// How reference slopes are cleaned before scoring. `METRIC` is what the tool
+/// uses by default; `sweep` reports the result across the whole family, because
+/// a single setting can be (and at `METRIC` is) the most favourable one.
+#[derive(Clone, Copy)]
+struct Metric {
+    /// Fit a reference band only while it stays this far above its noise floor.
+    margin_db: f64,
+    /// Percentile of whole-recording band energy taken as the noise floor.
+    floor_percentile: f64,
+    /// Drop a (note, band) whose fitted reference decay falls by less than this.
+    /// It filters on the reference slope's steepness, which favours fast decays.
+    min_drop_db: f64,
+    /// A band only counts if this many notes survive in it.
+    min_notes: usize,
+    /// Median (true) or mean (false) of |error| across notes.
+    median: bool,
 }
 
-// ------------------------------------------------------------- noise floor --
+const METRIC: Metric =
+    Metric { margin_db: 10.0, floor_percentile: 0.05, min_drop_db: 3.0, min_notes: 2, median: true };
 
-/// Per-frame energy in each band of `band_edges`, with the same STFT and bin
-/// mapping as `ix_acoustic_tune::reference::band_decay_slope`.
-fn band_energy_track(x: &[f64], hop: usize) -> Vec<Vec<f64>> {
+/// Per-frame energy in each band: `[frame][band]`.
+type Track = Vec<Vec<f64>>;
+
+/// Band energies with the same STFT and bin mapping as
+/// `ix_acoustic_tune::reference::band_decay_slope`.
+fn band_track(x: &[f64], hop: usize) -> Track {
     let edges = default_band_edges();
     let spec = ix_signal::spectral::spectrogram(x, DEFAULT_WINDOW, hop, false);
     let bin_hz = SR / DEFAULT_WINDOW as f64;
@@ -121,88 +132,91 @@ fn band_energy_track(x: &[f64], hop: usize) -> Vec<Vec<f64>> {
         .collect()
 }
 
-/// Noise floor of each band: a low percentile of frame energy over the whole
-/// recording (a real performance has no silence; a render's floor is zero).
-fn band_noise_floors(recording: &[f64]) -> Vec<f64> {
-    let track = band_energy_track(recording, DEFAULT_WINDOW);
-    (0..track[0].len())
-        .map(|b| {
-            let mut e: Vec<f64> = track.iter().map(|f| f[b]).collect();
-            e.sort_by(f64::total_cmp);
-            e[((e.len() - 1) as f64 * FLOOR_PERCENTILE) as usize]
-        })
-        .collect()
+/// Log-energy decay slope of band `b` over the first `frames` frames. Identical
+/// to `band_decay_slope` on the samples spanning those frames (tested), without
+/// recomputing the STFT per band and per span.
+fn slope_over(track: &Track, b: usize, frames: usize) -> f64 {
+    let dt = DEFAULT_HOP as f64 / SR;
+    let pts: Vec<(f64, f64)> = track[..frames.min(track.len())]
+        .iter()
+        .enumerate()
+        .filter(|(_, f)| f[b] > 1e-20)
+        .map(|(i, f)| (i as f64 * dt, f[b].ln()))
+        .collect();
+    let n = pts.len() as f64;
+    if n < 2.0 {
+        return 0.0;
+    }
+    let (sx, sy) = pts.iter().fold((0.0, 0.0), |(a, c), (x, y)| (a + x, c + y));
+    let (sxx, sxy) = pts.iter().fold((0.0, 0.0), |(a, c), (x, y)| (a + x * x, c + x * y));
+    let denom = n * sxx - sx * sx;
+    if denom.abs() < 1e-20 { 0.0 } else { (n * sxy - sx * sy) / denom }
 }
 
-/// Number of STFT frames from the start of `seg` before band `b` first drops to
-/// `floor + FLOOR_MARGIN_DB`. The fit uses only those frames.
-fn frames_above_floor(track: &[Vec<f64>], b: usize, floor: f64) -> usize {
-    let threshold = floor * 10f64.powf(FLOOR_MARGIN_DB / 10.0);
-    track.iter().position(|f| f[b] <= threshold).unwrap_or(track.len())
+/// Whole-recording band energies, sorted, for noise-floor percentiles (a real
+/// performance never reaches silence; a render's floor is zero).
+struct Floors(Vec<Vec<f64>>);
+
+impl Floors {
+    fn new(recording: &[f64]) -> Self {
+        let track = band_track(recording, DEFAULT_WINDOW);
+        Self(
+            (0..track[0].len())
+                .map(|b| {
+                    let mut e: Vec<f64> = track.iter().map(|f| f[b]).collect();
+                    e.sort_by(f64::total_cmp);
+                    e
+                })
+                .collect(),
+        )
+    }
+
+    fn at(&self, b: usize, percentile: f64) -> f64 {
+        let e = &self.0[b];
+        e[((e.len() - 1) as f64 * percentile) as usize]
+    }
 }
 
-/// Samples spanning exactly `frames` STFT frames.
-fn samples_for_frames(frames: usize) -> usize {
-    (frames.max(1) - 1) * DEFAULT_HOP + DEFAULT_WINDOW
-}
-
-/// Where a reference (note, band) slope is measured: `Some(sample span)` from the
-/// envelope peak if it clears the floor long enough and actually decays.
+/// A reference slope kept for scoring, and how many frames it was fitted over.
 struct BandFit {
     slope: f64,
-    span: usize,
+    frames: usize,
 }
 
-fn fit_band(seg: &[f64], track: &[Vec<f64>], b: usize, floor: f64) -> Option<BandFit> {
-    let frames = frames_above_floor(track, b, floor);
-    let span = samples_for_frames(frames).min(seg.len());
-    if (span as f64) < MIN_FIT_SECONDS * SR + DEFAULT_WINDOW as f64 {
+/// Fit band `b` from the envelope peak until it first drops to `floor + margin`;
+/// `None` if that is under `MIN_FIT_SECONDS`, the slope is not negative, or the
+/// fitted drop is under `min_drop_db`.
+fn fit_band(track: &Track, b: usize, floor: f64, m: &Metric) -> Option<BandFit> {
+    let threshold = floor * 10f64.powf(m.margin_db / 10.0);
+    let frames = track.iter().position(|f| f[b] <= threshold).unwrap_or(track.len());
+    let seconds = frames.saturating_sub(1) as f64 * DEFAULT_HOP as f64 / SR;
+    if seconds < MIN_FIT_SECONDS {
         return None;
     }
-    let edges = default_band_edges();
-    let slope = band_decay_slope(&seg[..span], SR, edges[b], edges[b + 1], DEFAULT_WINDOW, DEFAULT_HOP);
-    let seconds = (frames.max(1) - 1) as f64 * DEFAULT_HOP as f64 / SR;
+    let slope = slope_over(track, b, frames);
     let drop_db = -slope * seconds * 10.0 / std::f64::consts::LN_10;
-    (slope < 0.0 && drop_db >= MIN_DROP_DB).then_some(BandFit { slope, span })
+    (slope < 0.0 && drop_db >= m.min_drop_db).then_some(BandFit { slope, frames })
 }
 
 // -------------------------------------------------------------- stability --
 
-/// Reject any decay whose loop gain bound reaches `1 - STABILITY_EPS`.
-const STABILITY_EPS: f32 = 1e-4;
-
-/// Upper bound of the engine's per-voice loop gain at pitch `f`, mirroring
-/// `render()`: `(decay + 0.0025·(1-f_norm))·sustain`. The KS average, dispersion
-/// allpass and LP/bright mix all have |H| <= 1, so this bounds the whole loop.
+/// Upper bound of the engine's per-voice loop gain at pitch `f` *before* the
+/// engine's own `MAX_LOOP_GAIN` clamp, mirroring `render()`:
+/// `(decay + 0.0025·(1-f_norm))·sustain`. The KS average, dispersion allpass and
+/// LP/bright mix all have |H| <= 1 with equality at DC, so the bound is tight.
 fn loop_gain_bound(decay: f32, f: f32) -> f32 {
     let f_norm = ((f.clamp(82.0, 330.0) - 82.0) / (330.0 - 82.0)).clamp(0.0, 1.0);
     let sustain = (0.995 + 0.006 * (1.0 - f_norm)).min(0.9998);
     (decay.clamp(0.95, 0.9999) + 0.0025 * (1.0 - f_norm)) * sustain
 }
 
-/// Stable for every pitch the demo can play (E2 to the 12-string's high E, 82-1319 Hz).
+/// True if the engine's clamp never engages for any pitch the demo can play
+/// (E2 to the 12-string's high E, 82-1319 Hz). A fit must not lean on the clamp.
 fn is_stable(decay: f64) -> bool {
-    (82..=1319).all(|f| loop_gain_bound(decay as f32, f as f32) < 1.0 - STABILITY_EPS)
+    (82..=1319).all(|f| loop_gain_bound(decay as f32, f as f32) < MAX_LOOP_GAIN)
 }
 
-// ---------------------------------------------------------------- parameters --
-
-/// CMA-ES searches a unit box; this maps it onto engine parameters. `decay` is a
-/// per-pass loop gain whose useful range hugs 1.0, so it is searched on a log
-/// scale of `1 - decay` in [0.0002, 0.03]. The top of that range is unstable on
-/// the low strings; `Target::loss` rejects it via `is_stable`.
-const DECAY_LOG_RANGE: (f64, f64) = (-3.506_557_897_319_982, -8.517_193_191_416_238); // ln 0.03, ln 0.0002
-
-fn to_params(u: &[f64]) -> [f64; 2] {
-    let (lo, hi) = DECAY_LOG_RANGE;
-    let decay = 1.0 - (lo + u[0].clamp(0.0, 1.0) * (hi - lo)).exp();
-    [decay, u[1].clamp(0.0, 1.0)]
-}
-
-fn to_unit(p: &[f64; 2]) -> [f64; 2] {
-    let (lo, hi) = DECAY_LOG_RANGE;
-    [((1.0 - p[0]).ln() - lo) / (hi - lo), p[1]]
-}
+// ---------------------------------------------------------------- engine --
 
 fn new_engine(p: &[f64; 2]) -> *mut Engine {
     let eng = engine_init(SR as f32);
@@ -223,104 +237,144 @@ fn render(eng: *mut Engine, frames: usize) -> Vec<f32> {
     buf
 }
 
-/// Render one pluck at the note's pitch (velocity 1.0, as the demo's buttons do).
+/// Render one pluck at `f0` (velocity 1.0, as the demo's buttons do).
 fn render_note(p: &[f64; 2], f0: f64, seconds: f64) -> Vec<f64> {
     let eng = new_engine(p);
     engine_note_on(eng, f0 as f32, 1.0);
-    let frames = (seconds * SR) as usize;
-    let out = render(eng, frames);
+    let out = render(eng, (seconds * SR) as usize);
     free_engine(eng);
     out.into_iter().map(f64::from).collect()
 }
 
+/// Index of the RMS-envelope peak within the first `PEAK_SEARCH_S` of `x`.
+fn peak_index(x: &[f64]) -> usize {
+    let limit = ((PEAK_SEARCH_S * SR) as usize).min(x.len());
+    (0..limit.saturating_sub(ENV_FRAME))
+        .step_by(ENV_FRAME)
+        .max_by(|&a, &b| rms(&x[a..a + ENV_FRAME]).total_cmp(&rms(&x[b..b + ENV_FRAME])))
+        .unwrap_or(0)
+}
+
+fn rms(x: &[f64]) -> f64 {
+    (x.iter().map(|v| v * v).sum::<f64>() / x.len().max(1) as f64).sqrt()
+}
+
+fn peak_track(x: &[f64], n: &Note) -> Track {
+    let p = peak_index(x);
+    band_track(&x[p..(p + (analysis_seconds(n) * SR) as usize).min(x.len())], DEFAULT_HOP)
+}
+
+/// Band tracks of the notes rendered at `p`, one thread per note.
+fn render_tracks(notes: &[Note], p: &[f64; 2]) -> Vec<Track> {
+    std::thread::scope(|s| {
+        let handles: Vec<_> = notes
+            .iter()
+            .map(|n| {
+                s.spawn(move || {
+                    let secs = PEAK_SEARCH_S + analysis_seconds(n) + 0.05;
+                    peak_track(&render_note(p, n.f0, secs), n)
+                })
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).collect()
+    })
+}
+
 // ------------------------------------------------------------------ scoring --
 
-struct Target {
+/// Reference band tracks of a note set (independent of the metric settings).
+struct Notes {
+    label: &'static str,
     notes: &'static [Note],
-    /// `fits[note][band]`: the reference slope and the span it was measured over,
-    /// or `None` if that band is too close to the noise floor for that note.
-    fits: Vec<Vec<Option<BandFit>>>,
+    tracks: Vec<Track>,
 }
 
-fn peak_segment<'a>(x: &'a [f64], n: &Note) -> &'a [f64] {
-    let p = peak_index(x);
-    &x[p..(p + (analysis_seconds(n) * SR) as usize).min(x.len())]
-}
-
-impl Target {
-    fn new(reference: &[f64], floors: &[f64], notes: &'static [Note]) -> Self {
-        let fits = notes
+impl Notes {
+    fn new(recording: &[f64], label: &'static str, notes: &'static [Note]) -> Self {
+        let tracks = notes
             .iter()
             .map(|n| {
                 let start = (n.t * SR) as usize;
                 let end = start + ((PEAK_SEARCH_S + analysis_seconds(n)) * SR) as usize;
-                let seg = peak_segment(&reference[start..end], n);
-                let track = band_energy_track(seg, DEFAULT_HOP);
-                (0..floors.len()).map(|b| fit_band(seg, &track, b, floors[b])).collect()
+                peak_track(&recording[start..end], n)
             })
             .collect();
-        Self { notes, fits }
+        Self { label, notes, tracks }
+    }
+}
+
+/// A note set scored under one metric setting.
+struct Target<'a> {
+    set: &'a Notes,
+    metric: Metric,
+    /// `fits[note][band]`, `None` where the reference band was dropped.
+    fits: Vec<Vec<Option<BandFit>>>,
+}
+
+impl<'a> Target<'a> {
+    fn new(set: &'a Notes, floors: &Floors, metric: Metric) -> Self {
+        let fits = set
+            .tracks
+            .iter()
+            .map(|t| (0..floors.0.len()).map(|b| fit_band(t, b, floors.at(b, metric.floor_percentile), &metric)).collect())
+            .collect();
+        Self { set, metric, fits }
     }
 
     fn bands(&self) -> usize {
-        self.fits[0].len()
+        self.fits.first().map_or(0, Vec::len)
     }
 
     fn survivors(&self, b: usize) -> usize {
         self.fits.iter().filter(|f| f[b].is_some()).count()
     }
 
-    /// Render slopes `[note][band]`, measured over the same span as the reference
-    /// slope for that (note, band); `None` where the reference band was dropped.
-    fn rendered_slopes(&self, p: &[f64; 2]) -> Vec<Vec<Option<f64>>> {
-        let edges = default_band_edges();
-        std::thread::scope(|s| {
-            let handles: Vec<_> = self
-                .notes
-                .iter()
-                .zip(&self.fits)
-                .map(|(n, fits)| {
-                    let edges = &edges;
-                    s.spawn(move || {
-                        let secs = PEAK_SEARCH_S + analysis_seconds(n) + 0.05;
-                        let x = render_note(p, n.f0, secs);
-                        let seg = peak_segment(&x, n);
-                        fits.iter()
-                            .enumerate()
-                            .map(|(b, fit)| {
-                                let span = fit.as_ref()?.span.min(seg.len());
-                                Some(band_decay_slope(&seg[..span], SR, edges[b], edges[b + 1], DEFAULT_WINDOW, DEFAULT_HOP))
-                            })
-                            .collect()
-                    })
-                })
-                .collect();
-            handles.into_iter().map(|h| h.join().unwrap()).collect()
-        })
+    /// `(pairs, bands)` that actually enter the loss.
+    fn scored(&self) -> (usize, usize) {
+        let counted: Vec<usize> =
+            (0..self.bands()).map(|b| self.survivors(b)).filter(|&n| n >= self.metric.min_notes).collect();
+        (counted.iter().sum(), counted.len())
     }
 
-    /// Per-band median |decay slope error| (log-energy/s) over the notes that
-    /// survive the floor. `None` for bands with fewer than `MIN_NOTES_PER_BAND`.
-    fn band_errors(&self, p: &[f64; 2]) -> Vec<Option<f64>> {
-        let rendered = self.rendered_slopes(p);
-        (0..self.bands())
-            .map(|b| {
-                let mut errs: Vec<f64> = rendered
-                    .iter()
-                    .zip(&self.fits)
-                    .filter_map(|(r, fits)| Some((r[b]? - fits[b].as_ref()?.slope).abs()))
-                    .collect();
-                (errs.len() >= MIN_NOTES_PER_BAND).then(|| median(&mut errs))
+    /// Render slopes over the same frames as each kept reference slope.
+    fn render_slopes(&self, rendered: &[Track]) -> Vec<Vec<Option<f64>>> {
+        rendered
+            .iter()
+            .zip(&self.fits)
+            .map(|(t, fits)| {
+                fits.iter().enumerate().map(|(b, f)| Some(slope_over(t, b, f.as_ref()?.frames))).collect()
             })
             .collect()
     }
 
-    /// Mean over scored bands; unstable parameters are rejected outright.
+    /// Per-band |slope error| across notes (median or mean); `None` for bands with
+    /// fewer than `min_notes` surviving notes.
+    fn band_errors(&self, rendered: &[Track]) -> Vec<Option<f64>> {
+        let slopes = self.render_slopes(rendered);
+        (0..self.bands())
+            .map(|b| {
+                let mut errs: Vec<f64> = slopes
+                    .iter()
+                    .zip(&self.fits)
+                    .filter_map(|(r, fits)| Some((r[b]? - fits[b].as_ref()?.slope).abs()))
+                    .collect();
+                (errs.len() >= self.metric.min_notes.max(1)).then(|| {
+                    if self.metric.median { median(&mut errs) } else { errs.iter().sum::<f64>() / errs.len() as f64 }
+                })
+            })
+            .collect()
+    }
+
+    fn score(&self, rendered: &[Track]) -> f64 {
+        mean_scored(&self.band_errors(rendered))
+    }
+
+    /// Render and score; unstable parameters are rejected outright.
     fn loss(&self, p: &[f64; 2]) -> f64 {
         if !is_stable(p[0]) {
             return REJECTED;
         }
-        mean_scored(&self.band_errors(p)).min(REJECTED)
+        self.score(&render_tracks(self.set.notes, p)).min(REJECTED)
     }
 }
 
@@ -339,16 +393,21 @@ fn mean_scored(e: &[Option<f64>]) -> f64 {
     if s.is_empty() { f64::INFINITY } else { s.iter().sum::<f64>() / s.len() as f64 }
 }
 
-fn print_table(label: &str, target: &Target, rows: &[(&str, Vec<Option<f64>>)]) {
+fn print_table(t: &Target, rows: &[(&str, Vec<Option<f64>>)]) {
     let edges = default_band_edges();
-    println!("\n{label} — per-band median |decay slope error| (log-energy/s, lower is better)");
+    let (pairs, bands) = t.scored();
+    println!(
+        "\n{} — per-band {} |decay slope error| (log-energy/s); scored: {pairs} pairs / {bands} bands",
+        t.set.label,
+        if t.metric.median { "median" } else { "mean" }
+    );
     print!("  {:>14}  {:>5}", "band Hz", "notes");
     for (name, _) in rows {
         print!("  {name:>10}");
     }
     println!();
     for b in 0..edges.len() - 1 {
-        print!("  {:>14}  {:>5}", format!("{:.0}-{:.0}", edges[b], edges[b + 1]), target.survivors(b));
+        print!("  {:>14}  {:>5}", format!("{:.0}-{:.0}", edges[b], edges[b + 1]), t.survivors(b));
         for (_, e) in rows {
             match e[b] {
                 Some(v) => print!("  {v:>10.3}"),
@@ -364,14 +423,66 @@ fn print_table(label: &str, target: &Target, rows: &[(&str, Vec<Option<f64>>)]) 
     println!();
 }
 
-fn print_reference(label: &str, t: &Target) {
-    println!("\n{label} reference slopes above the noise floor (log-energy/s; '-' = dropped):");
-    for (n, fits) in t.notes.iter().zip(&t.fits) {
-        let cells: Vec<String> = fits
-            .iter()
-            .map(|f| f.as_ref().map_or(format!("{:>7}", "-"), |f| format!("{:7.2}", f.slope)))
-            .collect();
+fn print_slopes(label: &str, t: &Target, slopes: &[Vec<Option<f64>>]) {
+    println!("\n{} {label} slopes (log-energy/s; '-' = dropped):", t.set.label);
+    for (n, row) in t.set.notes.iter().zip(slopes) {
+        let cells: Vec<String> =
+            row.iter().map(|v| v.map_or(format!("{:>7}", "-"), |v| format!("{v:7.2}"))).collect();
         println!("  t={:7.3}s f0={:5.1}Hz  {}", n.t, n.f0, cells.join(" "));
+    }
+}
+
+// ------------------------------------------------------------- selection --
+
+/// Rendered tracks for every grid decay: `[decay][note]`.
+fn render_grid(set: &Notes, brightness: f64) -> Vec<Vec<Track>> {
+    decay_grid().iter().map(|&d| render_tracks(set.notes, &[d, brightness])).collect()
+}
+
+/// Decay picked on `fit` alone (first minimum on the grid), then scored on `check`.
+struct Pick {
+    decay: f64,
+    check_before: f64,
+    check_after: f64,
+    check_brightness_only: f64,
+}
+
+impl Pick {
+    fn gain(&self) -> f64 {
+        1.0 - self.check_after / self.check_before
+    }
+}
+
+struct Rendered {
+    grid: Vec<Vec<Track>>,
+    baseline: Vec<Track>,
+    brightness_only: Vec<Track>,
+}
+
+impl Rendered {
+    fn new(set: &Notes) -> Self {
+        Self {
+            grid: render_grid(set, 1.0),
+            baseline: render_tracks(set.notes, &BASELINE),
+            brightness_only: render_tracks(set.notes, &BRIGHTNESS_ONLY),
+        }
+    }
+}
+
+fn pick(fit: &Target, fit_r: &Rendered, check: &Target, check_r: &Rendered) -> Pick {
+    let grid = decay_grid();
+    let mut best = (0, f64::INFINITY);
+    for (i, tracks) in fit_r.grid.iter().enumerate() {
+        let l = fit.score(tracks);
+        if l < best.1 {
+            best = (i, l);
+        }
+    }
+    Pick {
+        decay: grid[best.0],
+        check_before: check.score(&check_r.baseline),
+        check_after: check.score(&check_r.grid[best.0]),
+        check_brightness_only: check.score(&check_r.brightness_only),
     }
 }
 
@@ -383,38 +494,20 @@ fn main() {
     match cmd {
         "eval" => {
             let p = params_arg(&args[2..]);
-            let (train, held) = targets();
-            print_reference("train", &train);
-            print_reference("held-out", &held);
-            println!("\nparams: decay={:.5} brightness={:.4} stable={}", p[0], p[1], is_stable(p[0]));
-            for (label, t) in [("train", &train), ("held-out", &held)] {
-                println!("
-{label} render slopes over the same spans (log-energy/s):");
-                for (n, r) in t.notes.iter().zip(t.rendered_slopes(&p)) {
-                    let cells: Vec<String> =
-                        r.iter().map(|v| v.map_or(format!("{:>7}", "-"), |v| format!("{v:7.2}"))).collect();
-                    println!("  t={:7.3}s f0={:5.1}Hz  {}", n.t, n.f0, cells.join(" "));
-                }
-                print_table(label, t, &[("params", t.band_errors(&p))]);
+            let (recording, floors) = load();
+            println!("params: decay={:.5} brightness={:.4} stable={}", p[0], p[1], is_stable(p[0]));
+            for set in [Notes::new(&recording, "train", &TRAIN), Notes::new(&recording, "held-out", &HELD_OUT)] {
+                let t = Target::new(&set, &floors, METRIC);
+                let rendered = render_tracks(set.notes, &p);
+                let reference: Vec<Vec<Option<f64>>> =
+                    t.fits.iter().map(|r| r.iter().map(|f| f.as_ref().map(|f| f.slope)).collect()).collect();
+                print_slopes("reference", &t, &reference);
+                print_slopes("render", &t, &t.render_slopes(&rendered));
+                print_table(&t, &[("params", t.band_errors(&rendered))]);
             }
         }
-        "grid" => {
-            let brightness: f64 = args.get(2).map_or(1.0, |b| b.parse().expect("brightness"));
-            let (train, held) = targets();
-            println!("brightness={brightness:.4}   mean error: train / held-out / all 10 notes");
-            // The baseline itself fails the stability bound; score it unconstrained.
-            let base = [mean_scored(&train.band_errors(&BASELINE)), mean_scored(&held.band_errors(&BASELINE))];
-            println!("  baseline {:.4}/{:.2}  {:.3} / {:.3} / {:.3}  (unstable at E2)", BASELINE[0], BASELINE[1], base[0], base[1], 0.5 * (base[0] + base[1]));
-            for decay in [0.980, 0.982, 0.984, 0.985, 0.986, 0.987, 0.988, 0.989, 0.990, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 0.9975] {
-                let p = [decay, brightness];
-                if !is_stable(decay) {
-                    println!("  decay {decay:.4}  unstable (loop gain bound >= 1 - eps)");
-                    continue;
-                }
-                let (t, h) = (train.loss(&p), held.loss(&p));
-                println!("  decay {decay:.4}  {t:.3} / {h:.3} / {:.3}", 0.5 * (t + h));
-            }
-        }
+        "grid" => grid(args.get(2).map_or(1.0, |b| b.parse().expect("brightness"))),
+        "sweep" => sweep(),
         "fit" => fit(&args[2..]),
         "sustain" => {
             let p = params_arg(&args[2..]);
@@ -434,7 +527,7 @@ fn main() {
             println!("wrote {out} (decay={:.5} brightness={:.4})", p[0], p[1]);
         }
         _ => {
-            eprintln!("usage: guitar-damping-fit eval|grid|fit|sustain|phrase ... (see src/main.rs)");
+            eprintln!("usage: guitar-damping-fit grid|sweep|eval|fit|sustain|phrase ... (see src/main.rs)");
             std::process::exit(2);
         }
     }
@@ -447,10 +540,110 @@ fn params_arg(a: &[String]) -> [f64; 2] {
     }
 }
 
-fn targets() -> (Target, Target) {
-    let reference = load_wav_mono(REFERENCE_WAV);
-    let floors = band_noise_floors(&reference);
-    (Target::new(&reference, &floors, &TRAIN), Target::new(&reference, &floors, &HELD_OUT))
+fn load() -> (Vec<f64>, Floors) {
+    let recording = load_wav_mono(REFERENCE_WAV);
+    let floors = Floors::new(&recording);
+    (recording, floors)
+}
+
+/// Decay picked on one fold only, reported on the other, in both directions.
+fn grid(brightness: f64) {
+    let (recording, floors) = load();
+    let (train_set, held_set) = (Notes::new(&recording, "train", &TRAIN), Notes::new(&recording, "held-out", &HELD_OUT));
+    let (train, held) = (Target::new(&train_set, &floors, METRIC), Target::new(&held_set, &floors, METRIC));
+    let (tr, hr) = (render_grid(&train_set, brightness), render_grid(&held_set, brightness));
+    let (tp, hp) = (train.scored(), held.scored());
+    println!("brightness={brightness:.4}; scored pairs/bands: train {}/{}, held-out {}/{}", tp.0, tp.1, hp.0, hp.1);
+    println!("(the two folds are scored on different bands, so their means are not comparable to each other)");
+    println!("  {:>8}  {:>7}  {:>8}", "decay", "train", "held-out");
+    for (i, d) in decay_grid().iter().enumerate() {
+        println!("  {d:>8.4}  {:>7.3}  {:>8.3}", train.score(&tr[i]), held.score(&hr[i]));
+    }
+    if brightness == 1.0 {
+        let (train_r, held_r) = (
+            Rendered { grid: tr, baseline: render_tracks(&TRAIN, &BASELINE), brightness_only: render_tracks(&TRAIN, &BRIGHTNESS_ONLY) },
+            Rendered { grid: hr, baseline: render_tracks(&HELD_OUT, &BASELINE), brightness_only: render_tracks(&HELD_OUT, &BRIGHTNESS_ONLY) },
+        );
+        for (fit_t, fit_r, check_t, check_r) in [(&train, &train_r, &held, &held_r), (&held, &held_r, &train, &train_r)] {
+            let p = pick(fit_t, fit_r, check_t, check_r);
+            println!(
+                "\npicked on {} only: decay {:.4} -> {}: baseline {:.3} -> {:.3} ({:+.0}%), brightness-only {:.3}",
+                fit_t.set.label,
+                p.decay,
+                check_t.set.label,
+                p.check_before,
+                p.check_after,
+                -100.0 * p.gain(),
+                p.check_brightness_only
+            );
+        }
+    }
+}
+
+/// Train-only pick and held-out gain across 96 noise-floor settings.
+fn sweep() {
+    let (recording, floors) = load();
+    let (train_set, held_set) = (Notes::new(&recording, "train", &TRAIN), Notes::new(&recording, "held-out", &HELD_OUT));
+    let (train_r, held_r) = (Rendered::new(&train_set), Rendered::new(&held_set));
+    let mut rows: Vec<(Metric, Pick, Pick)> = Vec::new();
+    for margin_db in [6.0, 8.0, 10.0, 12.0] {
+        for floor_percentile in [0.01, 0.02, 0.05] {
+            for min_drop_db in [0.0, 3.0] {
+                for min_notes in [1, 2] {
+                    for median in [true, false] {
+                        let m = Metric { margin_db, floor_percentile, min_drop_db, min_notes, median };
+                        let (train, held) = (Target::new(&train_set, &floors, m), Target::new(&held_set, &floors, m));
+                        rows.push((m, pick(&train, &train_r, &held, &held_r), pick(&held, &held_r, &train, &train_r)));
+                    }
+                }
+            }
+        }
+    }
+    println!("margin  pct  drop  n  agg     pick  held-out before->after  gain | swapped pick  gain");
+    for (m, p, s) in &rows {
+        println!(
+            "{:>5.0}  {:>3.0}%  {:>4.0}  {}  {:<6}  {:.4}  {:>6.3} -> {:>6.3}  {:>4.0}% | {:.4}  {:>4.0}%",
+            m.margin_db,
+            m.floor_percentile * 100.0,
+            m.min_drop_db,
+            m.min_notes,
+            if m.median { "median" } else { "mean" },
+            p.decay,
+            p.check_before,
+            p.check_after,
+            100.0 * p.gain(),
+            s.decay,
+            100.0 * s.gain()
+        );
+    }
+    let mut gains: Vec<f64> = rows.iter().map(|(_, p, _)| p.gain()).collect();
+    let is = |m: &Metric, drop: f64| {
+        m.margin_db == METRIC.margin_db
+            && m.floor_percentile == METRIC.floor_percentile
+            && m.min_drop_db == drop
+            && m.min_notes == METRIC.min_notes
+            && m.median == METRIC.median
+    };
+    let default_gain = rows.iter().find(|(m, _, _)| is(m, METRIC.min_drop_db)).unwrap().1.gain();
+    let rank = 1 + gains.iter().filter(|&&g| g > default_gain).count();
+    let picks: Vec<f64> = rows.iter().map(|(_, p, _)| p.decay).collect();
+    let beats_base = rows.iter().filter(|(_, p, _)| p.check_after < p.check_before).count();
+    let beats_bright = rows.iter().filter(|(_, p, _)| p.check_after < p.check_brightness_only).count();
+    let min_gain = gains.iter().copied().fold(f64::INFINITY, f64::min);
+    let max_gain = gains.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    println!("\n{} settings, decay picked on train only, gain measured on held-out:", rows.len());
+    println!("  median gain {:.0}%  range {:.0}%..{:.0}%", 100.0 * median(&mut gains), 100.0 * min_gain, 100.0 * max_gain);
+    println!("  default METRIC gain {:.0}% (rank {rank} of {})", 100.0 * default_gain, rows.len());
+    println!(
+        "  train picks {:.4}..{:.4}; held-out beats baseline in {beats_base}, beats brightness-only in {beats_bright}",
+        picks.iter().copied().fold(f64::INFINITY, f64::min),
+        picks.iter().copied().fold(f64::NEG_INFINITY, f64::max)
+    );
+    let (_, p, s) = rows.iter().find(|(m, _, _)| is(m, 0.0)).unwrap();
+    println!(
+        "  default without the 3 dB drop rule: pick {:.4}, held-out {:.3} -> {:.3} ({:+.0}%); swapped pick {:.4}, {:.3} -> {:.3} ({:+.0}%)",
+        p.decay, p.check_before, p.check_after, -100.0 * p.gain(), s.decay, s.check_before, s.check_after, -100.0 * s.gain()
+    );
 }
 
 fn fit(a: &[String]) {
@@ -462,14 +655,13 @@ fn fit(a: &[String]) {
     };
     let generations = flag("--generations", 25);
     let seed = flag("--seed", 7) as u64;
-    // `--swap` fits on the held-out notes and validates on the train notes (the
-    // other fold of the 2-fold cross-validation).
-    let (mut train, mut held) = targets();
+    let (recording, floors) = load();
+    let (train_set, held_set) = (Notes::new(&recording, "train", &TRAIN), Notes::new(&recording, "held-out", &HELD_OUT));
+    // `--swap` fits on the held-out notes and validates on the train notes.
+    let (mut train, mut held) = (Target::new(&train_set, &floors, METRIC), Target::new(&held_set, &floors, METRIC));
     if a.iter().any(|x| x == "--swap") {
         std::mem::swap(&mut train, &mut held);
     }
-    print_reference("train", &train);
-    print_reference("held-out", &held);
 
     let mut opt = CmaEs::new(Array1::from(to_unit(&[0.99, BASELINE[1]]).to_vec()), 0.2, seed)
         .with_bounds(Array1::zeros(2), Array1::ones(2));
@@ -485,25 +677,34 @@ fn fit(a: &[String]) {
         opt.tell(&scored);
         let (u, l) = opt.recommend().unwrap();
         let p = to_params(u.as_slice().unwrap());
-        println!(
-            "gen {:>3}  best train loss {l:.4}  decay={:.5} brightness={:.4}",
-            opt.generation(),
-            p[0],
-            p[1]
-        );
+        println!("gen {:>3}  best {} loss {l:.4}  decay={:.5} brightness={:.4}", opt.generation(), train.set.label, p[0], p[1]);
     }
     let (u, _) = opt.recommend().unwrap();
     let best = to_params(u.as_slice().unwrap());
-
-    let (train_before, train_after) = (train.band_errors(&BASELINE), train.band_errors(&best));
-    let (held_before, held_after) = (held.band_errors(&BASELINE), held.band_errors(&best));
     println!("\nbaseline: decay={:.5} brightness={:.4} (stable={})", BASELINE[0], BASELINE[1], is_stable(BASELINE[0]));
     println!("fitted:   decay={:.5} brightness={:.4}  (seed {seed}, {generations} generations)", best[0], best[1]);
-    print_table("train", &train, &[("baseline", train_before), ("fitted", train_after)]);
-    print_table("held-out", &held, &[("baseline", held_before.clone()), ("fitted", held_after.clone())]);
-    let (before, after) = (mean_scored(&held_before), mean_scored(&held_after));
-    let verdict = if after < before { "IMPROVES" } else { "DOES NOT IMPROVE" };
-    println!("\nheld-out verdict: fitted {verdict} on baseline ({before:.3} -> {after:.3})");
+    for t in [&train, &held] {
+        let rows = [
+            ("baseline", t.band_errors(&render_tracks(t.set.notes, &BASELINE))),
+            ("fitted", t.band_errors(&render_tracks(t.set.notes, &best))),
+        ];
+        print_table(t, &rows);
+    }
+}
+
+/// CMA-ES searches a unit box; `decay` is searched on a log scale of `1 - decay`
+/// in [0.0002, 0.03]. The top of that range is unstable on the low strings;
+/// `Target::loss` rejects it via `is_stable`.
+const DECAY_LOG_RANGE: (f64, f64) = (-3.506_557_897_319_982, -8.517_193_191_416_238); // ln 0.03, ln 0.0002
+
+fn to_params(u: &[f64]) -> [f64; 2] {
+    let (lo, hi) = DECAY_LOG_RANGE;
+    [1.0 - (lo + u[0].clamp(0.0, 1.0) * (hi - lo)).exp(), u[1].clamp(0.0, 1.0)]
+}
+
+fn to_unit(p: &[f64; 2]) -> [f64; 2] {
+    let (lo, hi) = DECAY_LOG_RANGE;
+    [((1.0 - p[0]).ln() - lo) / (hi - lo), p[1]]
 }
 
 // ------------------------------------------------------------ extrapolation --
@@ -620,8 +821,10 @@ fn write_wav(path: &str, samples: &[f32]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ix_acoustic_tune::reference::band_decay_slope;
 
-    /// RMS of the rendered note in `[a, b)` seconds.
+    const SLIDER_MAX: f32 = 0.9999;
+
     fn window_rms(x: &[f64], a: f64, b: f64) -> f64 {
         rms(&x[(a * SR) as usize..(b * SR) as usize])
     }
@@ -631,28 +834,115 @@ mod tests {
         // E2 bound at 0.9978 is 1.000096 in f32: the old type-0 default fails.
         assert!(loop_gain_bound(0.9978, 82.41) >= 1.0);
         assert!(!is_stable(BASELINE[0]));
-        assert!(is_stable(0.990));
+        assert!(is_stable(0.986));
+        assert!(is_stable(*decay_grid().last().unwrap()));
         // A2 / D3 sit just below 1.0 at the old default (0.99982 / 0.99908).
         assert!(loop_gain_bound(0.9978, 110.0) < 1.0);
         assert!(loop_gain_bound(0.9978, 146.83) < 1.0);
     }
 
     #[test]
-    fn stability_bound_agrees_with_the_render() {
-        // Rejected: at the UI slider max the low string does not decay.
-        assert!(!is_stable(0.9999));
-        let grows = render_note(&[0.9999, 1.0], 82.41, 8.0);
-        assert!(window_rms(&grows, 7.0, 8.0) / window_rms(&grows, 4.0, 5.0) > 0.9);
-        // Accepted: a stable setting decays by several dB over the same span.
-        assert!(is_stable(0.990));
-        let decays = render_note(&[0.990, 1.0], 82.41, 8.0);
-        assert!(window_rms(&decays, 7.0, 8.0) / window_rms(&decays, 4.0, 5.0) < 0.5);
+    fn a_stable_setting_decays() {
+        let x = render_note(&[0.986, 1.0], 82.41, 8.0);
+        assert!(window_rms(&x, 7.0, 8.0) / window_rms(&x, 4.0, 5.0) < 0.5);
+    }
+
+    /// Before `MAX_LOOP_GAIN`, profiles 1-3 drove the E2 DC mode to full scale in
+    /// 45-85 s and the slider max went NaN at ~500 s. With the clamp the loop gain
+    /// is < 1, so a pluck must stay finite and shrink, at every profile default and
+    /// at the slider max. Without the clamp this fails within 60 s (checked by
+    /// removing it): profile 3 is at full scale by ~45 s.
+    #[test]
+    fn long_renders_stay_finite_and_bounded_at_profile_defaults_and_slider_max() {
+        let cases: Vec<(i32, Option<f32>)> = (0..4).flat_map(|t| [(t, None), (t, Some(SLIDER_MAX))]).collect();
+        std::thread::scope(|s| {
+            let handles: Vec<_> = cases
+                .iter()
+                .map(|&(t, decay)| {
+                    s.spawn(move || {
+                        let eng = engine_init(SR as f32);
+                        engine_set_guitar_type(eng, t);
+                        if let Some(d) = decay {
+                            engine_set_decay(eng, d);
+                        }
+                        engine_note_on(eng, 82.41, 1.0);
+                        let x: Vec<f64> = render(eng, (60.0 * SR) as usize).into_iter().map(f64::from).collect();
+                        free_engine(eng);
+                        let label = format!("type {t} decay {decay:?}");
+                        assert!(x.iter().all(|v| v.is_finite()), "{label}: non-finite output");
+                        let (early, late) = (window_rms(&x, 1.0, 11.0), window_rms(&x, 50.0, 60.0));
+                        assert!(late < early, "{label}: RMS grew {early:.4} -> {late:.4}");
+                        let dc = x[x.len() - SR as usize..].iter().sum::<f64>() / SR;
+                        assert!(dc.abs() < 0.1, "{label}: DC offset {dc:.3} in the last second");
+                    })
+                })
+                .collect();
+            handles.into_iter().for_each(|h| h.join().unwrap());
+        });
+    }
+
+    #[test]
+    fn ui_decay_table_matches_engine_profiles() {
+        let js = std::fs::read_to_string("../../src/atoms/audioAtoms.js").unwrap();
+        let l = js.lines().find(|l| l.contains("GUITAR_PROFILE_DECAY =")).unwrap();
+        let table: Vec<f32> =
+            l[l.find('[').unwrap() + 1..l.find(']').unwrap()].split(',').map(|v| v.trim().parse().unwrap()).collect();
+        assert_eq!(table.len(), 4);
+        for (t, &d) in table.iter().enumerate() {
+            let run = |set: bool| {
+                let e = engine_init(48_000.0);
+                engine_set_guitar_type(e, t as i32);
+                if set {
+                    engine_set_decay(e, d);
+                }
+                engine_note_on(e, 82.41, 1.0);
+                let x = render(e, 9_600);
+                free_engine(e);
+                x
+            };
+            assert_eq!(run(false), run(true), "guitar type {t}: JS decay {d} != engine profile");
+        }
+    }
+
+    /// Per-voice brightness saturates at 1.0 from ~110 Hz (velocity 1) at base
+    /// 0.80, so brightness 1.0 only changes the lowest notes: above that the
+    /// shipped change is decay-only.
+    #[test]
+    fn brightness_change_only_reaches_low_notes() {
+        let pair = |f: f64| (render_note(&[0.986, 0.80], f, 0.5), render_note(&[0.986, 1.0], f, 0.5));
+        for f in [196.0, 329.63, 659.26] {
+            let (a, b) = pair(f);
+            assert_eq!(a, b, "{f} Hz should be bit-identical");
+        }
+        let (a, b) = pair(82.41);
+        assert_ne!(a, b, "E2 should differ");
     }
 
     #[test]
     fn fit_rejects_unstable_candidates() {
-        let empty = Target { notes: &[], fits: vec![vec![]] };
-        assert_eq!(empty.loss(&[0.9995, 1.0]), REJECTED);
+        let set = Notes { label: "empty", notes: &[], tracks: vec![] };
+        let t = Target { set: &set, metric: METRIC, fits: vec![] };
+        assert_eq!(t.loss(&[0.9995, 1.0]), REJECTED);
+    }
+
+    #[test]
+    fn track_slope_equals_the_crate_band_decay_slope() {
+        let x: Vec<f64> = (0..(0.8 * SR) as usize)
+            .map(|i| {
+                let t = i as f64 / SR;
+                (-2.0 * t).exp() * (std::f64::consts::TAU * 440.0 * t).sin()
+                    + (-5.0 * t).exp() * (std::f64::consts::TAU * 2500.0 * t).sin()
+            })
+            .collect();
+        let track = band_track(&x, DEFAULT_HOP);
+        let edges = default_band_edges();
+        for b in 0..edges.len() - 1 {
+            for frames in [20, 57, track.len()] {
+                let span = (frames - 1) * DEFAULT_HOP + DEFAULT_WINDOW;
+                let crate_slope = band_decay_slope(&x[..span], SR, edges[b], edges[b + 1], DEFAULT_WINDOW, DEFAULT_HOP);
+                assert!((slope_over(&track, b, frames) - crate_slope).abs() < 1e-9, "band {b} frames {frames}");
+            }
+        }
     }
 
     #[test]
@@ -676,22 +966,19 @@ mod tests {
             })
             .collect();
         let band = 4; // 1600-3500 Hz
-        let edges = default_band_edges();
-        let naive = band_decay_slope(&x, SR, edges[band], edges[band + 1], DEFAULT_WINDOW, DEFAULT_HOP);
-        let floor_track = band_energy_track(&noise[len..], DEFAULT_HOP);
+        let track = band_track(&x, DEFAULT_HOP);
+        let naive = slope_over(&track, band, track.len());
+        let floor_track = band_track(&noise[len..], DEFAULT_HOP);
         let floor = floor_track.iter().map(|f| f[band]).sum::<f64>() / floor_track.len() as f64;
-        let track = band_energy_track(&x, DEFAULT_HOP);
-        let fit = fit_band(&x, &track, band, floor).expect("band clears the floor");
+        let fit = fit_band(&track, band, floor, &METRIC).expect("band clears the floor");
         assert!((fit.slope - true_slope).abs() < 0.1 * true_slope.abs(), "truncated {}", fit.slope);
         assert!((naive - true_slope).abs() > 3.0 * (fit.slope - true_slope).abs(), "naive {naive}");
     }
 
     #[test]
     fn bands_that_do_not_decay_are_dropped() {
-        let x: Vec<f64> = (0..(0.8 * SR) as usize)
-            .map(|i| (std::f64::consts::TAU * 2000.0 * i as f64 / SR).sin())
-            .collect();
-        let track = band_energy_track(&x, DEFAULT_HOP);
-        assert!(fit_band(&x, &track, 4, 1e-12).is_none());
+        let x: Vec<f64> =
+            (0..(0.8 * SR) as usize).map(|i| (std::f64::consts::TAU * 2000.0 * i as f64 / SR).sin()).collect();
+        assert!(fit_band(&band_track(&x, DEFAULT_HOP), 4, 1e-12, &METRIC).is_none());
     }
 }
