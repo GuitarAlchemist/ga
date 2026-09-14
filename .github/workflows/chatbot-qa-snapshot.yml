@@ -53,11 +53,7 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    # in-runner Ollama: model pull + ~50 CPU-inference prompts. 60 was too
-    # tight: every scheduled run since 2026-06-20 was cancelled at the limit
-    # while still inside "Run corpus" (~58 min in), so no snapshot has been
-    # committed since 2026-06-19 (that run needed 43 min at 7.69% pass).
-    timeout-minutes: 180
+    timeout-minutes: 60   # in-runner Ollama: model pull + ~50 CPU-inference prompts
     steps:
       - name: Checkout
         uses: actions/checkout@v4

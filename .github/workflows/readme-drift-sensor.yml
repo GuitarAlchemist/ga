@@ -127,16 +127,9 @@ jobs:
             $n = $existing[0].number
             Write-Host "Updating existing issue #$n"
             $body | gh issue comment $n -F -
-            gh issue edit $n --title "README drift — ${env:DATE} ($($stale.Count) stale)"
+            gh issue edit $n --title "README drift — ${env:DATE} (${($stale.Count)} stale)"
           } else {
             Write-Host "Opening new tracking issue"
-            # `gh issue create --label` refuses a label the repo does not have,
-            # and readme-drift was never created: every run wrote its snapshot,
-            # then died here ("could not add label: 'readme-drift' not found")
-            # without filing the issue.
-            # --force makes this idempotent (creates or updates in place).
-            gh label create readme-drift --force --color FBCA04 --description "README drift sensor tracking issue"
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $body | gh issue create --title "README drift — ${env:DATE} ($($stale.Count) stale)" --label readme-drift -F -
           }
 
