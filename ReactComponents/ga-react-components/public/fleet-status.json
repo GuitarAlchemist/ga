@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "f36cc0c4ab0553169deb500c876b93a38e3d092a",
-    "generatedAt": "2026-09-14T13:01:20.830500+00:00",
+    "commitSha": "4f2066cc179ccf1f585ab6808c6b321d91ffc48a",
+    "generatedAt": "2026-09-14T17:47:37.242046+00:00",
     "repoCount": 5,
-    "totalPRs": 29
+    "totalPRs": 32
   },
   "repos": [
     {
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/675"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-09-12T15:02:38Z",
           "failingChecks": 0,
@@ -164,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/649"
         },
         {
-          "ageDays": 35,
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-08-09T15:01:15Z",
           "failingChecks": 0,
@@ -212,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/634"
         },
         {
-          "ageDays": 42,
+          "ageDays": 43,
           "author": "spareilleux",
           "createdAt": "2026-08-02T17:27:09Z",
           "failingChecks": 0,
@@ -224,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/633"
         },
         {
-          "ageDays": 42,
+          "ageDays": 43,
           "author": "spareilleux",
           "createdAt": "2026-08-02T16:00:23Z",
           "failingChecks": 0,
@@ -308,7 +308,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         },
         {
-          "ageDays": 50,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-07-25T17:19:15Z",
           "failingChecks": 1,
@@ -320,7 +320,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
         },
         {
-          "ageDays": 52,
+          "ageDays": 53,
           "author": "spareilleux",
           "createdAt": "2026-07-23T13:40:00Z",
           "failingChecks": 1,
@@ -393,8 +393,44 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 5,
+      "prCount": 7,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T13:16:44Z",
+          "failingChecks": 0,
+          "headRef": "feat/workflow-liveness-observations",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 341,
+          "title": "feat(ix-harness-github-actions): scheduled-workflow liveness verdicts (hari#29)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/341"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T13:08:51Z",
+          "failingChecks": 0,
+          "headRef": "feat/petri-duckdb-udf",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 340,
+          "title": "feat(ix-duck): ix_petri_analyze UDF over ix-petri (first consumer: gaia#80)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/340"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T13:06:36Z",
+          "failingChecks": 0,
+          "headRef": "feat/autoresearch-hari-sessions",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 339,
+          "title": "fix(autoresearch): contract test collapsed every claim into one; SCHEMA.md points at the real Hari consumer",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/339"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -402,22 +438,10 @@
           "failingChecks": 0,
           "headRef": "feat/optick-dead-dimension-invariant",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 338,
           "title": "feat(ix-optick-invariants): dead dimension (#37) and dead weighted partition (#38) invariants",
           "url": "https://github.com/GuitarAlchemist/ix/pull/338"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-14T04:15:33Z",
-          "failingChecks": 0,
-          "headRef": "fix/mcp-tool-false-answers",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 337,
-          "title": "fix: governance checks and ix_cargo_deps stop giving false answers",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/337"
         },
         {
           "ageDays": 0,
@@ -486,8 +510,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 2,
+      "prCount": 3,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-14T13:05:50Z",
+          "failingChecks": 1,
+          "headRef": "ci/registry-check-gate",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 1084,
+          "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
+        },
         {
           "ageDays": 30,
           "author": "spareilleux",
@@ -495,7 +531,7 @@
           "failingChecks": 2,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -507,7 +543,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
