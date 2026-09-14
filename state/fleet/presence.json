@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-09-13T19:33:58.257060Z",
+  "generated_at": "2026-09-14T01:15:16.511862Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "red",
   "limbs": [
@@ -36,8 +36,8 @@
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
       "status": "red",
-      "last_heartbeat": "2026-09-13T18:57:17Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34776195909",
+      "last_heartbeat": "2026-09-14T00:59:05Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34794399273",
       "detail": "latest completed run: failure"
     },
     {
@@ -45,26 +45,26 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-09-13T18:16:16Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34774108433",
+      "last_heartbeat": "2026-09-14T00:48:52Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34793869763",
       "detail": "latest completed run: success"
     },
     {
       "id": "sensor:quality-snapshot",
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
-      "status": "red",
-      "last_heartbeat": "2026-09-13T18:57:17Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34776195865",
-      "detail": "latest completed run: failure"
+      "status": "green",
+      "last_heartbeat": "2026-09-14T00:59:05Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34794399278",
+      "detail": "latest completed run: success"
     },
     {
       "id": "sensor:fleet-status",
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-09-13T18:57:17Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34776195877",
+      "last_heartbeat": "2026-09-14T00:59:05Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/34794399275",
       "detail": "latest completed run: success"
     },
     {
