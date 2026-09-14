@@ -34,7 +34,7 @@ _No open PRs._
 | [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf (draft) | 47d | UNKNOWN | 0 | spareilleux |
 | [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes (draft) | 47d | UNKNOWN | 0 | spareilleux |
 | [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking (draft) | 50d | UNKNOWN | 1 | spareilleux |
-| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 52d | MERGEABLE | 1 | spareilleux |
+| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 52d | UNKNOWN | 1 | spareilleux |
 | [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 53d | UNKNOWN | 1 | spareilleux |
 | [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 54d | UNKNOWN | 1 | spareilleux |
 | [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 55d | UNKNOWN | 3 | spareilleux |
@@ -91,6 +91,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-14T03:20:41.072328+00:00 UTC_
+_Generated: 2026-09-14T03:27:11.363918+00:00 UTC_
 
-_Commit: `fee2ea4c62b1`_
+_Commit: `bc00bbca3134`_

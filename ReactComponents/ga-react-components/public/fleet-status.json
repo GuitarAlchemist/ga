@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "fee2ea4c62b12f602beefff3231469b81ee560b9",
-    "generatedAt": "2026-09-14T03:20:41.072328+00:00",
+    "commitSha": "bc00bbca3134b1f0cf40e3105a409bc56494380b",
+    "generatedAt": "2026-09-14T03:27:11.363918+00:00",
     "repoCount": 5,
     "totalPRs": 26
   },
@@ -314,7 +314,7 @@
           "failingChecks": 1,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 598,
           "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
