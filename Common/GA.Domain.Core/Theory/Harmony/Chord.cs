@@ -247,9 +247,15 @@ public sealed class Chord : IEquatable<Chord>
     {
         List<ChordFormulaInterval> intervals = [];
 
-        foreach (var note in Notes.Skip(1)) // Skip root
+        // Measure every note from the root, wherever the root sits in the voicing: skipping the
+        // first note skipped the bass, which drops a chord tone from an inverted chord.
+        var semitoneValues = Notes
+            .Select(note => (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12)
+            .Where(semitones => semitones != 0)
+            .Distinct();
+
+        foreach (var semitones in semitoneValues)
         {
-            var semitones = (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12;
             var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
 
             var function = ChordFunctionExtensions.FromSemitones(semitones);

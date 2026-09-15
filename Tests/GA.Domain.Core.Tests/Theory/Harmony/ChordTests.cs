@@ -244,6 +244,26 @@ public class ChordTests
         Assert.That(PitchClassValues(inverted), Is.EqualTo(PitchClassValues(chord)));
     }
 
+    // A chord built from notes measures its intervals from the root, whatever note is in the bass:
+    // C/E (E G C) used to skip E instead of C and lose its third (quality Other).
+    [TestCase("C", 1, ChordQuality.Major, "C")]
+    [TestCase("C", 2, ChordQuality.Major, "C")]
+    [TestCase("Cm", 1, ChordQuality.Minor, "Cm")]
+    [TestCase("C7", 3, ChordQuality.Dominant, "C7")]
+    [TestCase("Cmaj7", 1, ChordQuality.Major, "Cmaj7")]
+    public void ToInversion_KeepsQualityAndSymbol(string symbol, int inversion, ChordQuality expectedQuality, string expectedSymbol)
+    {
+        var inverted = Chord.FromSymbol(symbol).ToInversion(inversion);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(inverted.GetInversion(), Is.EqualTo(inversion));
+            Assert.That(inverted.Quality, Is.EqualTo(expectedQuality));
+            Assert.That(inverted.Symbol, Is.EqualTo(expectedSymbol));
+            Assert.That(inverted.Formula, Is.EqualTo(Chord.FromSymbol(symbol).Formula));
+        });
+    }
+
     // The suffix must name the seventh chord, not just the triad quality plus "7":
     // Cmaj7 was "7", Cm7b5 was "dim7" and Cdim7 (3, 6, 9 semitones) was "dim6".
     [TestCase("C", "")]
