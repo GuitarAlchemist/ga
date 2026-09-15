@@ -180,7 +180,7 @@ public class SpectralRagOrchestrator(
             if (match != null)
             {
                 var explanation = explainer.Explain(match);
-                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, match.Diagram, 1.0, ToDto(explanation), explanation.Summary));
+                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, PlayableNotationFormatter.ToChartOrder(match.Diagram) ?? string.Empty, 1.0, ToDto(explanation), explanation.Summary));
             }
         }
 
@@ -229,7 +229,7 @@ public class SpectralRagOrchestrator(
                 var match = index.FindByIdentity(chord.Symbol);
                 var displayLabel = chord.Symbol;
                 if (match != null && !string.IsNullOrWhiteSpace(match.Diagram))
-                    displayLabel += $" ({match.Diagram})";
+                    displayLabel += $" ({PlayableNotationFormatter.ToChartOrder(match.Diagram)})";
 
                 steps.Add(new GA.Domain.Core.Theory.Harmony.Progressions.ProgressionStep
                 {
