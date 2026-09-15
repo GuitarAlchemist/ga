@@ -16,6 +16,17 @@ public sealed class FretSpanSkill(ILogger<FretSpanSkill> logger) : IOrchestrator
     public string Name        => "FretSpan";
     public string Description => "Computes fret span and playability rating from a chord diagram";
 
+    // SemanticIntentRouter skips intents without examples, so without these the skill was
+    // unreachable from chat (its CanHandle only serves the offline keyword fallback).
+    public IReadOnlyList<string> ExamplePrompts =>
+    [
+        "What is the fret span of x-3-2-0-1-0?",
+        "How hard is the stretch on 8-10-10-9-8-8?",
+        "Is x-5-7-7-6-5 playable for a beginner?",
+        "Fret span and playability of 1-3-3-2-1-1",
+        "Can I reach x-x-12-14-15-14 comfortably?",
+    ];
+
     public bool CanHandle(string message)
     {
         if (!FretDiagram.Contains(message)) return false;
