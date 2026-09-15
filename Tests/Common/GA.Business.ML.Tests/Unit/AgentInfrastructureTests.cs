@@ -96,4 +96,26 @@ public class AgentInfrastructureTests
         Assert.That(result.SelectedAgent, Is.InstanceOf<TheoryAgent>());
         Assert.That(result.RoutingMethod, Is.EqualTo("keyword"));
     }
+
+    [Test]
+    public async Task SemanticRouter_EmbeddingServerDown_FallsBackToKeywords()
+    {
+        var theoryAgent = new TheoryAgent(_chatClientMock.Object, NullLogger<TheoryAgent>.Instance);
+        var tabAgent = new TabAgent(_chatClientMock.Object, NullLogger<TabAgent>.Instance);
+        var embeddings = new Mock<IEmbeddingGenerator<string, Embedding<float>>>();
+        embeddings
+            .Setup(e => e.GenerateAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<EmbeddingGenerationOptions?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Connection refused (127.0.0.1:9)"));
+
+        var router = new SemanticRouter(
+            new GuitarAlchemistAgentBase[] { theoryAgent, tabAgent },
+            null,
+            embeddings.Object,
+            NullLogger<SemanticRouter>.Instance);
+
+        var result = await router.RouteAsync("Explain the circle of fifths");
+
+        Assert.That(result.SelectedAgent, Is.InstanceOf<TheoryAgent>());
+        Assert.That(result.RoutingMethod, Is.EqualTo("keyword"));
+    }
 }
