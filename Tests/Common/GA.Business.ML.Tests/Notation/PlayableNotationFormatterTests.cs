@@ -1,10 +1,70 @@
 namespace GA.Business.ML.Tests.Notation;
 
 using GA.Business.ML.Notation;
+using GA.Domain.Core.Instruments;
+using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Services.Fretboard.Voicings.Generation;
 
 [TestFixture]
 public sealed class PlayableNotationFormatterTests
 {
+    [Test]
+    public async Task VoicingDiagrams_ListStringOneFirst()
+    {
+        // The premise of ToChartOrder: generated voicings (and the index documents built from
+        // them) put the highest string first.
+        var checkedVoicings = 0;
+        await foreach (var voicing in VoicingGenerator.GenerateAllVoicingsAsync(
+                           Fretboard.CreateGuitar(2), windowSize: 2, parallel: false))
+        {
+            for (var i = 0; i < voicing.Positions.Length; i++)
+            {
+                Assert.That(voicing.Positions[i].Location.Str.Value, Is.EqualTo(i + 1));
+            }
+
+            if (++checkedVoicings == 50)
+            {
+                break;
+            }
+        }
+
+        Assert.That(checkedVoicings, Is.EqualTo(50));
+    }
+
+    [TestCase("3-0-x-2-3-x", "x-3-2-x-0-3")]
+    [TestCase("0-1-0-2-3-x", "x-3-2-0-1-0")]
+    [TestCase("10-13-10-x", "x-10-13-10")]
+    [TestCase("x-x-x-x-x-x", "x-x-x-x-x-x")]
+    public void ToChartOrder_ReversesVoicingDiagram(string voicingDiagram, string expected) =>
+        Assert.That(PlayableNotationFormatter.ToChartOrder(voicingDiagram), Is.EqualTo(expected));
+
+    [Test]
+    public void ToChartOrder_ThenVexTab_PlaysTheIndexedNotes()
+    {
+        // Cmaj7 as stored in the index, string 1 first: G4 B3 x E3 C3 x.
+        const string voicingDiagram = "3-0-x-2-3-x";
+
+        var tab = PlayableNotationFormatter.TryFormatChordDiagramAsVexTab(
+            PlayableNotationFormatter.ToChartOrder(voicingDiagram));
+
+        var pitchClasses = tab!.Split(' ')
+            .Select(token => token.Split('/'))
+            .Select(parts => (Tuning.Default[new Str(int.Parse(parts[0]))].MidiNote + int.Parse(parts[1])).PitchClass.Value)
+            .OrderBy(pc => pc)
+            .ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(tab, Is.EqualTo("5/3 4/2 2/0 1/3"));
+            Assert.That(pitchClasses, Is.EqualTo(new[] { 0, 4, 7, 11 }), "C E G B");
+        });
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void ToChartOrder_EmptyInput_ReturnsInput(string? voicingDiagram) =>
+        Assert.That(PlayableNotationFormatter.ToChartOrder(voicingDiagram), Is.EqualTo(voicingDiagram));
+
     [TestCase("x-3-2-0-1-0", "5/3 4/2 3/0 2/1 1/0")]
     [TestCase("x32010", "5/3 4/2 3/0 2/1 1/0")]
     [TestCase("0-2-2-1-0-0", "6/0 5/2 4/2 3/1 2/0 1/0")]

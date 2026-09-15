@@ -49,14 +49,11 @@ public sealed class MusicalQueryEncoder(ModalVectorService modal)
         var root2 = q.RootPitchClass ?? (q.ChordSymbol is { } cs2 && ChordPitchClasses.TryParse(cs2, out var r2, out _) ? r2 : null);
         if (pcs is { Length: > 0 })
         {
-            // ICV not yet wired into the query path. The helper ComputeIcvString +
-            // dual-format ParseIcv (this PR) are forward-ready; turning the wiring on
-            // requires the corpus rebuild step described in
-            // docs/plans/2026-05-12-icv-format-reconciliation-plan.md §2 — without it,
-            // a real query-side ICV signal cosines against the still-misparsed corpus
-            // ICV slice and skews top-K away from exact PC-set matches (see acceptance
-            // criterion: OptickIntegrationTests.cs:118 — "score should rise, not fall").
-            var structure = TheoryVectorService.ComputeEmbedding(pitchClasses: pcs, rootPitchClass: root2);
+            // The query carries the same ICV slice as the corpus (dual-format ParseIcv), so an
+            // exact pitch-class set outranks its subsets. This needs a corpus built with the
+            // dual-format reader: docs/plans/2026-05-12-icv-format-reconciliation-plan.md.
+            var structure = TheoryVectorService.ComputeEmbedding(
+                pitchClasses: pcs, rootPitchClass: root2, intervalClassVector: ComputeIcvString(pcs));
             EmbeddingSchema.WriteInto(raw, "STRUCTURE", structure);
         }
 

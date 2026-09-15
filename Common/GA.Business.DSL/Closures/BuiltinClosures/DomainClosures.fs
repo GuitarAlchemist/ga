@@ -75,13 +75,6 @@ let private serializeAst (ast: ChordAst) =
 
 // ── Interval helpers ──────────────────────────────────────────────────────────
 
-let private intervalName = function
-    | 0  -> "P1"  | 1  -> "m2"  | 2  -> "M2"  | 3  -> "m3"
-    | 4  -> "M3"  | 5  -> "P4"  | 6  -> "TT"  | 7  -> "P5"
-    | 8  -> "m6"  | 9  -> "M6"  | 10 -> "m7"  | 11 -> "M7"
-    | 14 -> "M9"  | 15 -> "m10" | 17 -> "P11" | 21 -> "M13"
-    | n  -> sprintf "+%d" n
-
 let private qualityBaseIntervals = function
     | None            -> [0; 4; 7]
     | Some Major      -> [0; 4; 7]
@@ -91,11 +84,81 @@ let private qualityBaseIntervals = function
     | Some Dominant   -> [0; 4; 7; 10]
     | Some Suspended  -> [0; 5; 7]
 
-let private extensionSemitone = function
-    | "7"    -> Some 10 | "maj7"  -> Some 11
-    | "9"    -> Some 14 | "maj9"  -> Some 14
-    | "11"   -> Some 17 | "13"    -> Some 21
-    | _      -> None
+/// Chord tones of a parsed symbol as (semitones above the root, interval name), sorted.
+/// A stacked extension (9, 11, 13) implies the seventh below it, a bare 7 is minor unless the
+/// token says maj, a diminished seventh chord has a diminished seventh, and alterations replace
+/// the degree they alter: Cm7b5 is P1 m3 d5 m7, G7b9 is P1 M3 P5 m7 m9, Cadd9 has no seventh.
+let private chordTones (ast: ChordAst) : (int * string) list =
+    let exts = ast.Components |> List.choose (function Extension e -> Some e | _ -> None)
+    let has e = List.contains e exts
+    let quality =
+        if has "m7b5" then Some Diminished
+        elif has "sus4" || has "sus2" then Some Suspended
+        else ast.Quality
+    let stackedDegree =
+        exts
+        |> List.choose (function
+            | "7" | "maj7" | "m7b5" -> Some 7
+            | "9" | "maj9" -> Some 9
+            | "11" | "maj11" -> Some 11
+            | "13" | "maj13" -> Some 13
+            | _ -> None)
+        |> function
+            | [] when quality = Some Dominant -> Some 7
+            | [] -> None
+            | degrees -> Some (List.max degrees)
+    let third =
+        match quality with
+        | _ when has "5" && stackedDegree.IsNone -> []
+        | Some Suspended -> if has "2" || has "sus2" then [ 2, "M2" ] else [ 5, "P4" ]
+        | Some Minor | Some Diminished -> [ 3, "m3" ]
+        | _ -> [ 4, "M3" ]
+    let fifth =
+        match quality with
+        | Some Diminished -> 6, "d5"
+        | Some Augmented -> 8, "A5"
+        | _ -> 7, "P5"
+    let seventh =
+        match stackedDegree with
+        | None -> []
+        | Some _ when ast.Quality = Some Major || exts |> List.exists (fun e -> e.StartsWith "maj") -> [ 11, "M7" ]
+        | Some _ when quality = Some Diminished && not (has "m7b5") -> [ 9, "d7" ]
+        | Some _ -> [ 10, "m7" ]
+    let upper =
+        match stackedDegree with
+        | Some 9 -> [ 14, "M9" ]
+        | Some 11 -> [ 14, "M9"; 17, "P11" ]
+        | Some 13 -> [ 14, "M9"; 21, "M13" ]
+        | _ -> []
+    let added =
+        exts
+        |> List.collect (function
+            | "6" -> [ 9, "M6" ]
+            | "6/9" -> [ 9, "M6"; 14, "M9" ]
+            | "add9" -> [ 14, "M9" ]
+            | "add2" -> [ 2, "M2" ]
+            | "add11" -> [ 17, "P11" ]
+            | "add4" -> [ 5, "P4" ]
+            | "add13" -> [ 21, "M13" ]
+            | _ -> [])
+    let alter (tones: (int * string) list) chordComponent =
+        let replace (removed: int list) tone =
+            (tones |> List.filter (fun (s, _) -> not (List.contains s removed))) @ [ tone ]
+        match chordComponent with
+        | Alteration (Flat, "5") -> replace [ 7; 8 ] (6, "d5")
+        | Alteration (Sharp, "5") -> replace [ 6; 7 ] (8, "A5")
+        | Alteration (Flat, "9") -> replace [ 14 ] (13, "m9")
+        | Alteration (Sharp, "9") -> replace [ 14 ] (15, "A9")
+        | Alteration (Sharp, "11") -> replace [ 17 ] (18, "A11")
+        | Alteration (Flat, "13") -> replace [ 21 ] (20, "m13")
+        | Omission "3" -> tones |> List.filter (fun (s, _) -> s <> 3 && s <> 4)
+        | Omission "5" -> tones |> List.filter (fun (s, _) -> s < 6 || s > 8)
+        | _ -> tones
+    let baseTones = [ 0, "P1" ] @ third @ [ fifth ] @ seventh @ added @ upper
+    ast.Components
+    |> List.fold alter baseTones
+    |> List.distinctBy fst
+    |> List.sortBy fst
 
 // ── Diatonic scale degree patterns ────────────────────────────────────────────
 // Each entry: (semitone offset from root, triad QualityType option).
@@ -211,18 +274,7 @@ let chordIntervals : GaClosure =
                   match ChordDslService().Parse(sym :?> string) with
                   | Result.Error err -> return Error (GaError.ParseError ("chord", err))
                   | Result.Ok ast ->
-                      let baseIntervals = qualityBaseIntervals ast.Quality
-                      let extIntervals  =
-                          ast.Components
-                          |> List.choose (function
-                              | Extension e -> extensionSemitone e
-                              | _           -> None)
-                      let all =
-                          (baseIntervals @ extIntervals)
-                          |> List.distinct
-                          |> List.sort
-                          |> List.map intervalName
-                          |> List.toArray
+                      let all = chordTones ast |> List.map snd |> List.toArray
                       return Ok (box all)
           } }
 
@@ -337,22 +389,22 @@ let analyzeProgression : GaClosure =
 
 // ── Query / projection / join helpers ─────────────────────────────────────────
 
-/// Interval name → semitone offset (inverse of intervalName).
+/// Interval name → semitone offset (the names chordTones produces).
 let private intervalSemitone = function
     | "P1" -> Some 0  | "m2" -> Some 1  | "M2" -> Some 2  | "m3" -> Some 3
     | "M3" -> Some 4  | "P4" -> Some 5  | "TT" -> Some 6  | "P5" -> Some 7
     | "m6" -> Some 8  | "M6" -> Some 9  | "m7" -> Some 10 | "M7" -> Some 11
     | "M9" -> Some 14 | "P11" -> Some 17 | "M13" -> Some 21
+    | "d5" -> Some 6  | "A5" -> Some 8  | "d7" -> Some 9  | "m9" -> Some 13
+    | "A9" -> Some 15 | "A11" -> Some 18 | "m13" -> Some 20
     | _    -> None
 
 /// All pitch classes sounded by a parsed chord (root + intervals, mod 12).
 let private chordPitchClasses (ast: ChordAst) =
     let rootPc = (noteToSemitone ast.Root + accToSemitone ast.RootAccidental + 120) % 12
-    let extIntervals =
-        ast.Components |> List.choose (function Extension e -> extensionSemitone e | _ -> None)
-    (qualityBaseIntervals ast.Quality @ extIntervals)
+    chordTones ast
+    |> List.map (fun (i, _) -> (rootPc + i) % 12)
     |> List.distinct
-    |> List.map (fun i -> (rootPc + i) % 12)
 
 /// Filter diatonic chords by quality and/or interval content.
 let queryChords : GaClosure =
@@ -441,15 +493,7 @@ let projectChord : GaClosure =
                   | Result.Error err -> return Error (GaError.ParseError ("chord", err))
                   | Result.Ok ast ->
                       let pc = (noteToSemitone ast.Root + accToSemitone ast.RootAccidental + 120) % 12
-                      let extIntervals =
-                          ast.Components
-                          |> List.choose (function Extension e -> extensionSemitone e | _ -> None)
-                      let intervalStr =
-                          (qualityBaseIntervals ast.Quality @ extIntervals)
-                          |> List.distinct
-                          |> List.sort
-                          |> List.map intervalName
-                          |> String.concat " "
+                      let intervalStr = chordTones ast |> List.map snd |> String.concat " "
                       let qualStr =
                           match ast.Quality with
                           | None | Some Major -> "major" | Some Minor -> "minor"
@@ -513,16 +557,14 @@ let commonTones : GaClosure =
                       else
                           let root1Pc = (noteToSemitone ast1.Root + accToSemitone ast1.RootAccidental + 120) % 12
                           let root2Pc = (noteToSemitone ast2.Root + accToSemitone ast2.RootAccidental + 120) % 12
-                          let extOf (ast: ChordAst) =
-                              ast.Components |> List.choose (function Extension e -> extensionSemitone e | _ -> None)
-                          let ivals1  = qualityBaseIntervals ast1.Quality @ extOf ast1
-                          let ivals2  = qualityBaseIntervals ast2.Quality @ extOf ast2
+                          let ivals1  = chordTones ast1
+                          let ivals2  = chordTones ast2
                           let desc =
                               shared
                               |> List.map (fun pc ->
                                   let noteName = conventionalKeyName pc
-                                  let role1 = ivals1 |> List.tryFind (fun i -> (root1Pc + i) % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
-                                  let role2 = ivals2 |> List.tryFind (fun i -> (root2Pc + i) % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
+                                  let role1 = ivals1 |> List.tryFind (fun (i, _) -> (root1Pc + i) % 12 = pc) |> Option.map snd |> Option.defaultValue "?"
+                                  let role2 = ivals2 |> List.tryFind (fun (i, _) -> (root2Pc + i) % 12 = pc) |> Option.map snd |> Option.defaultValue "?"
                                   sprintf "%s (%s in %s, %s in %s)" noteName role1 (c1 :?> string) role2 (c2 :?> string))
                               |> String.concat "\n  "
                           let result =
@@ -571,10 +613,7 @@ let chordSubstitutions : GaClosure =
                               let pc        = (keyPc + offset) % 12
                               let note, acc = splitNoteAcc naming.[pc]
                               sprintf "%s%s%s" note (accStr acc) (qualSuffix quality))
-                      // Extension semitones for a chord AST
-                      let extOf (ast: ChordAst) =
-                          ast.Components |> List.choose (function Extension e -> extensionSemitone e | _ -> None)
-                      let tIvals = qualityBaseIntervals targetAst.Quality @ extOf targetAst
+                      let tIvals = chordTones targetAst
                       // Score each diatonic chord by common tones with the target
                       let subs =
                           diatonicSymbols
@@ -586,7 +625,7 @@ let chordSubstitutions : GaClosure =
                                   // Skip the chord itself
                                   if cRootPc = targetRootPc && cAst.Quality = targetAst.Quality then None
                                   else
-                                      let cIvals = qualityBaseIntervals cAst.Quality @ extOf cAst
+                                      let cIvals = chordTones cAst
                                       let cPcs   = chordPitchClasses cAst
                                       let shared = targetPcs |> List.filter (fun pc -> cPcs |> List.contains pc)
                                       if shared.IsEmpty then None
@@ -594,15 +633,16 @@ let chordSubstitutions : GaClosure =
                                           let sharedDesc =
                                               shared |> List.map (fun pc ->
                                                   let name = conventionalKeyName pc
-                                                  let r1 = tIvals |> List.tryFind (fun i -> (targetRootPc + i) % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
-                                                  let r2 = cIvals |> List.tryFind (fun i -> (cRootPc + i)     % 12 = pc) |> Option.map intervalName |> Option.defaultValue "?"
+                                                  let r1 = tIvals |> List.tryFind (fun (i, _) -> (targetRootPc + i) % 12 = pc) |> Option.map snd |> Option.defaultValue "?"
+                                                  let r2 = cIvals |> List.tryFind (fun (i, _) -> (cRootPc + i) % 12 = pc) |> Option.map snd |> Option.defaultValue "?"
                                                   sprintf "%s(%s/%s)" name r1 r2)
                                               |> String.concat " "
                                           Some (candidate, shared.Length, sharedDesc))
                           |> List.sortByDescending (fun (_, n, _) -> n)
                       // Tritone substitution — works for dominant-7th chords (M3 + m7)
                       let tritoneSub =
-                          if tIvals |> List.contains 4 && tIvals |> List.contains 10 then
+                          let semitones = tIvals |> List.map fst
+                          if semitones |> List.contains 4 && semitones |> List.contains 10 then
                               let ttPc    = (targetRootPc + 6) % 12
                               let ttChord = sprintf "%s7" (spellingOf true).[ttPc]
                               Some (sprintf "  ◈  %-6s — tritone sub (shares guide tones enharmonically)" ttChord)

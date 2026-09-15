@@ -297,31 +297,16 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
         IEnumerable<VoicingSearchResult> pool,
         VoicingSearchFilters filters)
     {
-        // Extract the chord-quality fragment from filters.ChordName once
-        // so the per-row check below stays cheap. Codex CLI 2026-05-08
-        // pinpointed the bug: callers pass full symbols ("Cmaj7", "Dm7"),
-        // but MapToSearchResult sets d.ChordName = meta.QualityInferred
-        // ("maj7", "m7") so a strict Contains check rejected every row.
-        // Match against quality + verify root pitch class — keeps the
-        // filter selective enough that "Cmaj7" doesn't match every maj7
-        // in the corpus.
-        var (filterRootPitchClass, filterQuality) = filters.ChordName is { Length: > 0 } cn
-            ? ParseChordSymbol(cn)
-            : ((int?)null, (string?)null);
+        // Callers pass full symbols ("Cmaj7", "Dm7"); MapToSearchResult sets d.ChordName to the
+        // stored chord name, which is a full name too ("Dm7(shell)", "C/E", "C + E (Major 3rd)").
+        var filterSymbol = filters.ChordName is { Length: > 0 } cn && ParseChordSymbol(cn).RootPitchClass is not null
+            ? cn
+            : null;
 
         foreach (var r in pool)
         {
             var d = r.Document;
-            if (filterQuality is not null)
-            {
-                var docQuality = d.ChordName ?? string.Empty;
-                if (!docQuality.Contains(filterQuality, StringComparison.OrdinalIgnoreCase)) continue;
-                if (filterRootPitchClass is int rpc && d.MidiNotes.Length > 0)
-                {
-                    var docRootPc = ((d.MidiNotes.Min() % 12) + 12) % 12;
-                    if (docRootPc != rpc) continue;
-                }
-            }
+            if (filterSymbol is not null && !MatchesChordSymbol(d.ChordName, filterSymbol)) continue;
             if (filters.MinMidiPitch is int lo && d.MidiNotes.Length > 0 && d.MidiNotes.Min() < lo) continue;
             if (filters.MaxMidiPitch is int hi && d.MidiNotes.Length > 0 && d.MidiNotes.Max() > hi) continue;
             yield return r;
@@ -329,16 +314,60 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     }
 
     /// <summary>
+    /// True when a stored chord name (for example <c>"Am7/G"</c> or <c>"Cmaj7(shell)"</c>) names the
+    /// same root and quality as the requested symbol. The slash bass and a <c>(shell)</c> marker are
+    /// ignored, so inversions and shell voicings of the chord match; dyads, power chords, other
+    /// roots and other qualities do not.
+    /// </summary>
+    internal static bool MatchesChordSymbol(string? storedName, string symbol)
+    {
+        if (string.IsNullOrWhiteSpace(storedName) || storedName.Contains(" + ", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var (storedRoot, storedQuality) = ParseChordSymbol(StripSlashBass(storedName.Trim()));
+        var (filterRoot, filterQuality) = ParseChordSymbol(symbol.Trim());
+        if (storedRoot is null || filterRoot is null || storedRoot != filterRoot)
+        {
+            return false;
+        }
+
+        var normalizedStored = NormalizeQuality(storedQuality!.Replace("(shell)", string.Empty, StringComparison.Ordinal));
+        return normalizedStored == NormalizeQuality(filterQuality!);
+    }
+
+    // "C6/9/E" → "C6/9"; "C6/9" and "Cm6/9" keep their "/9".
+    private static string StripSlashBass(string name)
+    {
+        var slash = name.LastIndexOf('/');
+        if (slash <= 0 || slash == name.Length - 1)
+        {
+            return name;
+        }
+
+        var bass = name[(slash + 1)..];
+        return ParseChordSymbol(bass) is { RootPitchClass: not null, Quality: "" } ? name[..slash] : name;
+    }
+
+    private static string NormalizeQuality(string quality) => quality switch
+    {
+        "M" or "maj" or "major" => "",
+        "min" or "minor" or "-" => "m",
+        "M7" or "Maj7" or "Δ7" or "Δ" => "maj7",
+        "min7" or "-7" => "m7",
+        "ø" or "ø7" or "min7b5" => "m7b5",
+        "°" or "o" => "dim",
+        "°7" or "o7" => "dim7",
+        "+" => "aug",
+        _ => quality,
+    };
+
+    /// <summary>
     /// Splits a chord symbol like <c>"Cmaj7"</c> / <c>"F#m7"</c> /
     /// <c>"Bbmaj9"</c> into (root pitch class, quality fragment).
     /// Returns nulls when the input doesn't start with a note letter.
     /// </summary>
-    /// <remarks>
-    /// Deliberately permissive on quality — anything after the optional
-    /// accidental is the quality fragment, and the per-row filter does a
-    /// case-insensitive <c>Contains</c> against the document's
-    /// <c>QualityInferred</c> field. Codex CLI 2026-05-08 fix.
-    /// </remarks>
     private static (int? RootPitchClass, string? Quality) ParseChordSymbol(string symbol)
     {
         if (string.IsNullOrEmpty(symbol)) return (null, null);
