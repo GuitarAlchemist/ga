@@ -24,4 +24,18 @@ public sealed class ChordAtonalToolTests
         Assert.That(result, Contains.Substring(pitchSet));
         Assert.That(result, Contains.Substring($"Forte:      {forte}"));
     }
+
+    [TestCase("C", "Major Triad")]
+    [TestCase("Am", "Minor Triad")]
+    [TestCase("Cm7b5", "Half Diminished Seventh")]
+    [TestCase("G7", "Dominant Seventh")]
+    public async Task GaChordToSet_NamesTheSetOnlyWithATranspositionOfIt(string symbol, string name)
+    {
+        // Modes.yaml files several seventh chords with different interval vectors under the vector
+        // <0 1 2 1 1 1>; a lookup by vector alone labelled Cm7b5 (and Cdim7) "Major Seventh".
+        var result = await ChordAtonalTool.GaChordToSet(symbol);
+
+        var scaleLine = result.Split('\n').Select(l => l.Trim()).Single(l => l.StartsWith("Scale:"));
+        Assert.That(scaleLine, Is.EqualTo($"Scale:      {name}"));
+    }
 }

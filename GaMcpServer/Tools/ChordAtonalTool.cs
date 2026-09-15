@@ -115,15 +115,40 @@ public static class ChordAtonalTool
     private static string FormatPcs(IEnumerable<int> pcs) =>
         "{" + string.Join(", ", pcs.Select(pc => NoteNames[pc])) + "}";
 
-    private static string AtonalCard(string label, int[] pcs)
+    /// <summary>
+    /// Name of a Modes.yaml entry whose notes, transposed so that their first note lands on
+    /// <paramref name="rootPc"/>, are exactly <paramref name="pcs"/>. Without a root, a name is
+    /// returned only when a single entry is a transposition of the set.
+    /// A lookup by interval vector alone is not enough: inversions and Z-related sets share a vector,
+    /// and Modes.yaml files seventh chords of different vectors under one family vector, which
+    /// labelled Am "Major Triad" and Cm7b5 "Major Seventh".
+    /// </summary>
+    private static string? TranspositionName(int[] pcs, IntervalClassVector icv, int? rootPc)
+    {
+        var target = pcs.Aggregate(0, (mask, pc) => mask | 1 << pc);
+        var names = ModesConfig.GetAllModes()
+            .Where(m => string.Equals(m.IntervalClassVector, icv.ToString(), StringComparison.OrdinalIgnoreCase))
+            .Where(m =>
+            {
+                var modePcs = m.Notes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(ParseRootPc).ToArray();
+                return modePcs.Length > 0 && Enumerable.Range(0, 12).Any(t =>
+                    (rootPc is null || (modePcs[0] + t) % 12 == rootPc) &&
+                    modePcs.Aggregate(0, (mask, pc) => mask | 1 << (pc + t) % 12) == target);
+            })
+            .Select(m => m.Name)
+            .Distinct()
+            .ToList();
+        return rootPc is not null || names.Count == 1 ? names.FirstOrDefault() : null;
+    }
+
+    private static string AtonalCard(string label, int[] pcs, int? rootPc)
     {
         var set = ToPitchClassSet(pcs);
         var icv = set.IntervalClassVector;
         var prime = set.PrimeForm;
         var forte = prime != null ? ForteCatalog.GetForteNumber(prime) : null;
         var family = set.ModalFamily;
-        var modeOpt = ModesConfig.TryGetModeByIntervalClassVector(icv.Id.ToString());
-        var modeName = FSharpOption<ModesConfig.ModeInfo>.get_IsSome(modeOpt) ? modeOpt.Value.Name : null;
+        var modeName = TranspositionName(pcs, icv, rootPc);
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"{label,-12}{FormatPcs(pcs)} ({pcs.Length} tones)");
@@ -151,7 +176,7 @@ public static class ChordAtonalTool
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var header = $"Chord: {symbol}";
-        var card = AtonalCard("Pitch set:", pcs);
+        var card = AtonalCard("Pitch set:", pcs, ParseRootPc(symbol));
         var opticNote =
             "OPTIC-K layer: STRUCTURE (dims 6–29, w=0.45) — ICV drives structural similarity";
         return $"{header}\n{card}\n{opticNote}";
@@ -224,7 +249,7 @@ public static class ChordAtonalTool
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"Polychord: {chord2}/{chord1}");
-        sb.AppendLine(AtonalCard("Merged:", merged));
+        sb.AppendLine(AtonalCard("Merged:", merged, ParseRootPc(chord1)));
         sb.AppendLine($"  from {chord1}: {FormatPcs(pcs1)}");
         sb.Append($"  from {chord2}: {FormatPcs(pcs2)}");
         return sb.ToString();
@@ -259,8 +284,8 @@ public static class ChordAtonalTool
         foreach (var (neighbor, delta, _) in neighbors)
         {
             var forte = ForteCatalog.GetForteNumber(neighbor.PrimeForm ?? neighbor);
-            var nOpt = ModesConfig.TryGetModeByIntervalClassVector(neighbor.IntervalClassVector.Id.ToString());
-            var nameStr = FSharpOption<ModesConfig.ModeInfo>.get_IsSome(nOpt) ? $" [{nOpt.Value.Name}]" : "";
+            var neighborName = TranspositionName([.. neighbor.Select(pc => pc.Value)], neighbor.IntervalClassVector, rootPc: null);
+            var nameStr = neighborName != null ? $" [{neighborName}]" : "";
             sb.AppendLine($"  {neighbor.IntervalClassVector}  Δ={delta.L1Norm}  Forte:{forte}{nameStr}");
         }
         return sb.ToString().TrimEnd();
