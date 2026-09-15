@@ -10,8 +10,8 @@ using Services;
 // ComplexityCalculator
 
 /// <summary>
-/// Orchestrates the generation of the 228-dimensional canonical musical embedding (v1.7).
-/// Implements OPTIC-K Schema v1.7.
+/// Orchestrates the generation of the canonical musical embedding
+/// (<see cref="EmbeddingSchema.TotalDimension"/> dims, schema <see cref="EmbeddingSchema.Version"/>).
 ///
 /// <para>
 /// This generator produces embeddings according to the OPTIC-K v1.7 schema, which encodes:
@@ -52,7 +52,7 @@ public class MusicalEmbeddingGenerator(
     // overloads; only MODAL (modalService) and the spectral entropy term
     // (phaseSphereService) are computed through injected instances. The generator
     // therefore takes only the two dependencies it actually uses.
-    /// <summary>Returns the total embedding dimension (216 for v1.4/v1.5).</summary>
+    /// <summary>Returns the total embedding dimension (<see cref="EmbeddingSchema.TotalDimension"/>, 240 for v1.8).</summary>
     public int Dimension => EmbeddingSchema.TotalDimension;
 
     /// <summary>

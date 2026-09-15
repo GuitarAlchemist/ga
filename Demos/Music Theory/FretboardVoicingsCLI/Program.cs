@@ -688,7 +688,7 @@ internal class Program
     }
 
     /// <summary>
-    ///     Runs export-embeddings mode: generates OPTIC-K v4 binary index with 112-dim compact embeddings
+    ///     Runs export-embeddings mode: generates OPTIC-K v4 binary index with compact embeddings (124 dims for v1.8)
     ///     for all voicings across one or all instruments.
     /// </summary>
     [Obsolete]
@@ -828,7 +828,7 @@ internal class Program
                     tuningId: instrumentName,
                     primeFormId: primeFormId);
 
-                // Generate the 228-dim embedding
+                // Generate the raw embedding (EmbeddingSchema.TotalDimension dims)
                 var embedding = await generator.GenerateEmbeddingAsync(doc);
 
                 // Build the entry for the binary index
@@ -991,7 +991,7 @@ internal class Program
         Console.Error.WriteLine("  --export-embeddings-help    Show this help message");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Output Format:");
-        Console.Error.WriteLine("  OPTIC-K v4 binary index with 112-dim compact embeddings per voicing,");
+        Console.Error.WriteLine("  OPTIC-K v4 binary index with compact embeddings (124 dims for v1.8) per voicing,");
         Console.Error.WriteLine("  sqrt-weight scaled and L2-normalized, with msgpack metadata.");
         Console.Error.WriteLine("  Instruments are sorted: guitar, bass, ukulele.");
         Console.Error.WriteLine();

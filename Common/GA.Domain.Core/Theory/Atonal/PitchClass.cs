@@ -1,6 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System.Collections.Frozen;
 using Abstractions;
 using Design.Attributes;
 using Design.Schema;
@@ -78,7 +77,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     /// <param name="pitchClass2">The second <see cref="PitchClass" /></param>
     /// <returns></returns>
     public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) =>
-        FastPitchClassCalculator.NormalizedSubtraction(pitchClass1, pitchClass2);
+        FromValue((pitchClass1._value - pitchClass2._value + 12) % 12);
 
     public override string ToString() => _value switch
     {
@@ -98,45 +97,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public Pitch.Sharp ToSharpPitch(Octave octave) => new(ToSharpNote(), octave);
 
     public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
-
-    #region Inner Classes
-
-    /// <summary>
-    ///     Fast calculator class caching common pitch class operations
-    /// </summary>
-    /// <remarks>
-    ///     Internally caches all possible results from operations
-    /// </remarks>
-    private class FastPitchClassCalculator
-    {
-        /// <summary>
-        ///     Pre-computes the normalized difference between all possible combinations of pitch class pairs
-        /// </summary>
-        private static readonly Lazy<FrozenDictionary<(int, int), PitchClass>> _lazySubtractionDictionary =
-            new(GetSubtractionDictionary);
-
-        public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) =>
-            _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
-
-        private static FrozenDictionary<(int, int), PitchClass> GetSubtractionDictionary()
-        {
-            var builder = new Dictionary<(int, int), PitchClass>();
-            // Build from fixed 0..11 range to avoid dependency on cached collections during static init
-            foreach (var pcValue1 in Enumerable.Range(0, 12))
-            {
-                for (var pcValue2 = 0; pcValue2 < 12; pcValue2++)
-                {
-                    builder.Add(
-                        (pcValue1, pcValue2),
-                        FromValue((pcValue1 - pcValue2 + 12) % 12));
-                }
-            }
-
-            return builder.ToFrozenDictionary();
-        }
-    }
-
-    #endregion
 
     #region IStaticValueObjectList<PitchClass> Members
 
