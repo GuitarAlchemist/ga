@@ -4,6 +4,7 @@ using Core.Analysis.Voicings;
 using Domain.Core.Instruments.Fretboard.Voicings.Core;
 using Domain.Core.Theory.Atonal;
 using Models;
+using Musical.Analysis;
 
 public static class VoicingDocumentFactory
 {
@@ -41,7 +42,7 @@ public static class VoicingDocumentFactory
             HasGuideTones = analysis.ToneInventory.HasGuideTones,
             OmittedTones = [.. analysis.ToneInventory.OmittedTones],
             Inversion = CalculateInversion(analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
-                analysis.ChordId.RootPitchClass != null ? PitchClass.Parse(analysis.ChordId.RootPitchClass, null).Value : 0),
+                analysis.ChordId.TryGetRootPitchClass(out var rootPitchClass) ? rootPitchClass.Value : 0),
             Brightness = analysis.PerceptualQualities.Brightness,
             Consonance = analysis.PerceptualQualities.ConsonanceScore,
             Roughness = analysis.PerceptualQualities.Roughness,

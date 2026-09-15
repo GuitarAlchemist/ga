@@ -100,6 +100,23 @@ public class TabAnalysisServiceTests
         });
     }
 
+    // The recognizer names roots with note names ("A", "E"); they must not be read as
+    // set-notation digits (PitchClass.Parse("A") = 10, PitchClass.Parse("E") = 11).
+    [TestCase("x02220", 9)]  // A major
+    [TestCase("022100", 4)]  // E major
+    [TestCase("x24432", 11)] // B minor
+    [TestCase("x13331", 10)] // Bb major
+    [TestCase("x32010", 0)]  // C major
+    public void Analyze_RootPitchClass_ComesFromTheRootNoteName(string diagram, int expectedRootPitchClass)
+    {
+        var result = _service.AnalyzeAsync(diagram).GetAwaiter().GetResult();
+
+        Assert.That(result.Events, Has.Count.EqualTo(1));
+        var document = result.Events[0].Document;
+        TestContext.WriteLine($"{diagram}: {document.ChordName}, root pitch class {document.RootPitchClass}");
+        Assert.That(document.RootPitchClass, Is.EqualTo(expectedRootPitchClass));
+    }
+
     [Test]
     public void TestVerifyKeyDetectionForSimpleProgression()
     {
