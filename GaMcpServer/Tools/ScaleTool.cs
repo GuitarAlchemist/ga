@@ -2,6 +2,7 @@ namespace GaMcpServer.Tools;
 
 using GA.Business.Config;
 using GA.Domain.Core.Theory.Atonal;
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
 [McpServerToolType]
@@ -69,34 +70,59 @@ public static class ScaleTool
             : "n/a";
     }
 
+    // Semitones above the root of each degree, per mode (the seven modes of the major scale).
+    private static readonly Dictionary<string, int[]> ModeOffsets = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["major"] = [0, 2, 4, 5, 7, 9, 11],
+        ["ionian"] = [0, 2, 4, 5, 7, 9, 11],
+        ["dorian"] = [0, 2, 3, 5, 7, 9, 10],
+        ["phrygian"] = [0, 1, 3, 5, 7, 8, 10],
+        ["lydian"] = [0, 2, 4, 6, 7, 9, 11],
+        ["mixolydian"] = [0, 2, 4, 5, 7, 9, 10],
+        ["minor"] = [0, 2, 3, 5, 7, 8, 10],
+        ["natural minor"] = [0, 2, 3, 5, 7, 8, 10],
+        ["aeolian"] = [0, 2, 3, 5, 7, 8, 10],
+        ["locrian"] = [0, 1, 3, 5, 6, 8, 10],
+    };
+
+    private const string Letters = "CDEFGAB";
+    private static readonly int[] LetterPitchClasses = [0, 2, 4, 5, 7, 9, 11];
+
     [McpServerTool]
     [Description(
-        "Get the 7 scale notes for a key string such as 'G major' or 'A minor'. " +
+        "Get the 7 scale notes for a key string such as 'G major', 'Bb major' or 'A minor'. " +
         "Returns a JSON array of {degree, note, pitchClass} objects suitable for fretboard overlays or theory analysis. " +
-        "pitchClass is 0-11 (C=0, C#=1 … B=11). Supports major and natural minor only.")]
+        "Notes are spelled with one letter per degree (F major has Bb, not A#); pitchClass is 0-11 (C=0, C#=1 … B=11). " +
+        "Supports major, natural minor and the modes ionian, dorian, phrygian, lydian, mixolydian, aeolian, locrian.")]
     public static string GetScaleNotes(
-        [Description("Key string in 'Root mode' format, e.g. 'G major', 'A minor', 'Bb major'")] string key)
+        [Description("Key string in 'Root mode' format, e.g. 'G major', 'A minor', 'Bb major', 'D dorian'")] string key)
     {
-        var parts = key.Trim().Split(' ', 2);
+        var parts = (key ?? "").Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2)
-            return $"Invalid key format '{key}'. Expected 'Root mode', e.g. 'G major'.";
+            throw new McpException($"Invalid key format '{key}'. Expected 'Root mode', e.g. 'G major'.");
 
         var root = parts[0];
-        var mode = parts[1].ToLowerInvariant();
+        var mode = string.Join(' ', parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-        string[] noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-        int[] major = [0, 2, 4, 5, 7, 9, 11];
-        int[] minor = [0, 2, 3, 5, 7, 8, 10];
+        var letter = root.Length > 0 ? Letters.IndexOf(char.ToUpperInvariant(root[0])) : -1;
+        var accidental = root.Length > 1 ? root[1..] : "";
+        var shift = accidental switch { "" => 0, "#" => 1, "##" or "x" => 2, "b" => -1, "bb" => -2, _ => (int?)null };
+        if (letter < 0 || shift is null)
+            throw new McpException($"Unknown root note '{root}'. Use a letter A-G with an optional #, ## (or x), b or bb, e.g. C, F#, Bb.");
 
-        var rootIndex = Array.IndexOf(noteNames, root);
-        if (rootIndex < 0)
-            return $"Unknown root note '{root}'. Use sharps (e.g. C#, F#) not flats for black keys.";
+        if (!ModeOffsets.TryGetValue(mode, out var offsets))
+            throw new McpException(
+                $"Unsupported mode '{mode}'. Use major, minor, natural minor, ionian, dorian, phrygian, lydian, mixolydian, aeolian or locrian.");
 
-        var offsets = mode.StartsWith("minor") ? minor : major;
-        var notes = offsets.Select((offset, i) =>
+        var rootPc = (LetterPitchClasses[letter] + shift.Value + 12) % 12;
+        var notes = offsets.Select((offset, degree) =>
         {
-            var pc = (rootIndex + offset) % 12;
-            return $"{{\"degree\":{i + 1},\"note\":\"{noteNames[pc]}\",\"pitchClass\":{pc}}}";
+            // One letter per degree; the accidental is whatever closes the gap to the pitch class.
+            var degreeLetter = (letter + degree) % 7;
+            var pc = (rootPc + offset) % 12;
+            var alteration = (pc - LetterPitchClasses[degreeLetter] + 18) % 12 - 6;
+            var name = Letters[degreeLetter] + new string(alteration > 0 ? '#' : 'b', Math.Abs(alteration));
+            return $"{{\"degree\":{degree + 1},\"note\":\"{name}\",\"pitchClass\":{pc}}}";
         });
         return $"[{string.Join(",", notes)}]";
     }
