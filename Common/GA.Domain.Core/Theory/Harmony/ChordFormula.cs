@@ -296,8 +296,43 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
     /// <summary>
     ///     Gets the chord symbol suffix for this formula
     /// </summary>
+    /// <remarks>
+    ///     <see cref="Quality" /> reports the triad quality of seventh chords (Major for maj7, Diminished
+    ///     for m7b5 and dim7) and <see cref="Extension" /> classifies the diminished seventh (9 semitones)
+    ///     as a sixth, so the seventh itself is read from the intervals here.
+    /// </remarks>
     public string GetSymbolSuffix()
     {
+        bool Has(Semitones semitones) => Intervals.Any(i => i.Interval.Semitones == semitones);
+
+        var hasMinorSeventh = Has(Semitones.MinorSeventh);
+        var hasMajorSeventh = Has(Semitones.MajorSeventh);
+        var isDiminishedTriad = !IsSuspended && Has(Semitones.MinorThird) && Has(Semitones.DiminishedFifth);
+
+        if (isDiminishedTriad && Has(Semitones.MajorSixth) && !hasMinorSeventh && !hasMajorSeventh)
+        {
+            return "dim7";
+        }
+
+        var seventhNumber = Extension switch
+        {
+            ChordExtension.Seventh => "7",
+            ChordExtension.Ninth => "9",
+            ChordExtension.Eleventh => "11",
+            ChordExtension.Thirteenth => "13",
+            _ => null
+        };
+
+        if (seventhNumber is not null && isDiminishedTriad && hasMinorSeventh)
+        {
+            return $"m{seventhNumber}b5";
+        }
+
+        if (seventhNumber is not null && hasMajorSeventh && Quality == ChordQuality.Major)
+        {
+            return $"maj{seventhNumber}";
+        }
+
         var suffix = Quality switch
         {
             ChordQuality.Minor => "m",

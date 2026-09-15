@@ -275,28 +275,7 @@ public sealed class Chord : IEquatable<Chord>
             symbol = Root.ToString();
         }
 
-        symbol += Quality switch
-        {
-            ChordQuality.Minor => "m",
-            ChordQuality.Diminished => "dim",
-            ChordQuality.Augmented => "aug",
-            _ => ""
-        };
-
-        symbol += Extension switch
-        {
-            ChordExtension.Seventh => "7",
-            ChordExtension.Ninth => "9",
-            ChordExtension.Eleventh => "11",
-            ChordExtension.Thirteenth => "13",
-            ChordExtension.Add9 => "add9",
-            ChordExtension.Sixth => "6",
-            ChordExtension.Sus2 => "sus2",
-            ChordExtension.Sus4 => "sus4",
-            _ => ""
-        };
-
-        return symbol;
+        return symbol + Formula.GetSymbolSuffix();
     }
 
     public override bool Equals(object? obj) => Equals(obj as Chord);

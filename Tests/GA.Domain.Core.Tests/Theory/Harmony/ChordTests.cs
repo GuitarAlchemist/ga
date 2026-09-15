@@ -243,4 +243,46 @@ public class ChordTests
 
         Assert.That(PitchClassValues(inverted), Is.EqualTo(PitchClassValues(chord)));
     }
+
+    // The suffix must name the seventh chord, not just the triad quality plus "7":
+    // Cmaj7 was "7", Cm7b5 was "dim7" and Cdim7 (3, 6, 9 semitones) was "dim6".
+    [TestCase("C", "")]
+    [TestCase("Cm", "m")]
+    [TestCase("Cdim", "dim")]
+    [TestCase("Caug", "aug")]
+    [TestCase("C6", "6")]
+    [TestCase("C7", "7")]
+    [TestCase("Cmaj7", "maj7")]
+    [TestCase("Cm7", "m7")]
+    [TestCase("Cm7b5", "m7b5")]
+    [TestCase("Cdim7", "dim7")]
+    [TestCase("C9", "9")]
+    [TestCase("Cmaj9", "maj9")]
+    [TestCase("Cm9", "m9")]
+    [TestCase("Cadd9", "add9")]
+    public void GetSymbolSuffix_NamesSeventhChordQualities(string symbol, string expectedSuffix) =>
+        Assert.That(Chord.FromSymbol(symbol).Formula.GetSymbolSuffix(), Is.EqualTo(expectedSuffix));
+
+    [TestCase(new[] { 0, 4, 7, 11 }, "Cmaj7")]
+    [TestCase(new[] { 0, 3, 6, 10 }, "Cm7b5")]
+    [TestCase(new[] { 0, 3, 6, 9 }, "Cdim7")]
+    [TestCase(new[] { 0, 3, 7, 10 }, "Cm7")]
+    [TestCase(new[] { 0, 4, 7, 10 }, "C7")]
+    public void Constructor_WithNotes_GeneratesSeventhChordSymbol(int[] pitchClasses, string expectedSymbol)
+    {
+        var notes = new AccidentedNoteCollection(
+            [.. pitchClasses.Select(pc => PitchClass.FromValue(pc).ToChromaticNote().ToAccidented())]);
+
+        Assert.That(new Chord(notes).Symbol, Is.EqualTo(expectedSymbol));
+    }
+
+    // Seventh-chord qualities stay reported as their triad quality (plus Dominant): naming services,
+    // key-function analysis and voicing scoring rely on it (see Formula_Quality_IsClassifiedFromIntervals).
+    [Test]
+    public void Formula_Quality_OfHalfDiminishedAndDiminishedSeventh_IsDiminished() =>
+        Assert.Multiple(() =>
+        {
+            Assert.That(Chord.FromSymbol("Cm7b5").Quality, Is.EqualTo(ChordQuality.Diminished));
+            Assert.That(Chord.FromSymbol("Cdim7").Quality, Is.EqualTo(ChordQuality.Diminished));
+        });
 }
