@@ -48,7 +48,7 @@ public class TabAgent(IChatClient chatClient, ILogger<TabAgent> logger) : Guitar
         var containsTab = ContainsTabNotation(request.Query);
 
         var prompt = BuildTabPrompt(request, containsTab);
-        var responseText = await ChatAsync(request.Query, prompt, cancellationToken);
+        var responseText = await ChatAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
         return ParseStructuredResponse(responseText, "Tab parsing failed.");
     }

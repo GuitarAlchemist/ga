@@ -13,32 +13,23 @@ using NUnit.Framework;
 public class ScaleTests
 {
     [Test]
-    public void Major_HasSevenNotes()
-    {
-        Assert.That(Scale.Major.Count, Is.EqualTo(7));
-    }
+    public void Major_HasSevenNotes() => Assert.That(Scale.Major.Count, Is.EqualTo(7));
 
     [Test]
-    public void Major_IntervalClassVector_IsCanonicalDiatonic()
-    {
+    public void Major_IntervalClassVector_IsCanonicalDiatonic() =>
         // The major (diatonic) scale's interval-class vector is the famous <2 5 4 3 6 1>.
         Assert.That(Scale.Major.IntervalClassVector, Is.EqualTo(IntervalClassVector.Major));
-    }
 
     [Test]
-    public void RelativeMajorAndMinor_ShareSamePitchClassSet()
-    {
+    public void RelativeMajorAndMinor_ShareSamePitchClassSet() =>
         // A natural minor ("A B C D E F G") is the relative minor of C major: same pitch classes,
         // different tonal centre. Their unordered pitch-class content must be identical.
         Assert.That(Scale.NaturalMinor.PitchClassSet.Id, Is.EqualTo(Scale.Major.PitchClassSet.Id));
-    }
 
     [Test]
-    public void Major_IsModal()
-    {
+    public void Major_IsModal() =>
         // The diatonic scale generates a non-degenerate modal family (7 distinct rotations).
         Assert.That(Scale.Major.IsModal, Is.True);
-    }
 
     [TestCase(nameof(Scale.MajorPentatonic), 5)]
     [TestCase(nameof(Scale.WholeTone), 6)]

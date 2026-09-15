@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization.Attributes;
 [BsonIgnoreExtraElements]
 public class Chord
 {
-    [BsonId] [BsonElement("_id")] public ObjectId MongoId { get; set; }
+    [BsonId][BsonElement("_id")] public ObjectId MongoId { get; set; }
 
     [BsonElement("Id")] public int Id { get; set; }
 
@@ -20,7 +20,9 @@ public class Chord
 
     [BsonElement("NoteCount")] public int NoteCount { get; set; }
 
-    [BsonElement("Intervals")] public int[]? Intervals { get; set; }
+    [BsonElement("Intervals")]
+    [BsonSerializer(typeof(ChordIntervalsSerializer))]
+    public int[]? Intervals { get; set; }
 
     [BsonElement("PitchClassSet")] public int[]? PitchClassSet { get; set; }
 

@@ -8,7 +8,7 @@ import React, { useSyncExternalStore } from 'react';
 // Types
 // ---------------------------------------------------------------------------
 
-export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral' | 'compliance' | 'metrics' | 'knowledge-graph' | 'godot-inspector';
+export type BuiltInPanelId = 'activity' | 'backlog' | 'agent' | 'seldon' | 'llm' | 'detail' | 'algedonic' | 'university' | 'cicd' | 'issues' | 'claude' | 'notebook' | 'library' | 'assets' | 'godot' | 'gis' | 'lunar' | 'brainstorm' | 'presence' | 'tribunal' | 'faculty' | 'code-tribunal' | 'inbox' | 'ixql-gen' | 'qa' | 'agent-spectral' | 'compliance' | 'metrics' | 'knowledge-graph' | 'godot-inspector';
 export type PanelId = BuiltInPanelId | (string & {});
 
 // ---------------------------------------------------------------------------
@@ -97,6 +97,11 @@ export const ICON_CATALOG: Record<string, React.ReactNode> = {
   cicd: svg([
     h('circle', { key: 'c', cx: 12, cy: 12, r: 3 }),
     h('path', { key: 'p', d: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' }),
+  ]),
+  issues: svg([
+    h('circle', { key: 'c1', cx: 12, cy: 12, r: 10 }),
+    h('line', { key: 'l1', x1: 12, y1: 8, x2: 12, y2: 12 }),
+    h('circle', { key: 'c2', cx: 12, cy: 16, r: 1, fill: 'currentColor', stroke: 'none' }),
   ]),
   university: svg([
     h('path', { key: 'p1', d: 'M22 10v6M2 10l10-5 10 5-10 5z' }),
@@ -281,6 +286,7 @@ const BUILTIN_PANELS: PanelDefinition[] = [
   { id: 'lunar',      label: 'Lunar Lander',   icon: 'lunar',      renderMode: 'overlay', group: 'viz' },
   // ── Ops ──
   { id: 'cicd',          label: 'CI/CD',          icon: 'cicd',       renderMode: 'side',    group: 'ops' },
+  { id: 'issues',        label: 'Issues & PRs',   icon: 'issues',     renderMode: 'side',    group: 'ops' },
   { id: 'code-tribunal', label: 'Code Lab',       icon: 'claude',     renderMode: 'side',    group: 'ops' },
   { id: 'ixql-gen',      label: 'IXQL Gen',       icon: 'ixql-gen',   renderMode: 'side',    group: 'ops' },
   { id: 'qa',            label: 'QA',             icon: 'qa',         renderMode: 'side',    group: 'ops' },

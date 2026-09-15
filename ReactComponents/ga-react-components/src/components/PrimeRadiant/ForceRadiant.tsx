@@ -3,6 +3,7 @@
 // Beliefs applied: force-directed layout, size+brightness hierarchy,
 // billboard LOD labels, bloom 0.4/0.5/0.7, orbit controls, breathing animation.
 
+import './set-window-three'; // must evaluate before 3d-force-graph so it uses project Three.js
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ForceGraph3D, { type NodeObject, type LinkObject } from '3d-force-graph';
 import * as THREE from 'three';
@@ -68,6 +69,7 @@ import { panelRegistry } from './PanelRegistry';
 import type { AlgedonicSignal } from './AlgedonicPanel';
 const AlgedonicPanel = React.lazy(() => import('./AlgedonicPanel').then(m => ({ default: m.AlgedonicPanel })));
 const CICDPanel = React.lazy(() => import('./CICDPanel').then(m => ({ default: m.CICDPanel })));
+const IssuesPanel = React.lazy(() => import('./IssuesPanel').then(m => ({ default: m.IssuesPanel })));
 const ClaudeCodePanel = React.lazy(() => import('./ClaudeCodePanel').then(m => ({ default: m.ClaudeCodePanel })));
 const LibraryPanel = React.lazy(() => import('./LibraryPanel').then(m => ({ default: m.LibraryPanel })));
 const AssetProvenancePanel = React.lazy(() => import('./AssetProvenancePanel').then(m => ({ default: m.AssetProvenancePanel })));
@@ -87,6 +89,7 @@ import { getConnectionLog } from './ConnectionLog';
 import { createGisLayer, type GisLayerManager } from './GisLayer';
 import { usePrControl } from './usePrControl';
 import { startSignalRGisBridge, type SignalRGisBridgeHandle } from './SignalRGisBridge';
+import { startIssuesGisBridge, type IssuesGisBridgeHandle } from './IssuesGisBridge';
 import { useAgentPresence } from './AgentPresence';
 const TheoryTribunal = React.lazy(() => import('./TheoryTribunal').then(m => ({ default: m.TheoryTribunal })));
 const SeldonFacultyPanel = React.lazy(() => import('./SeldonFacultyPanel').then(m => ({ default: m.SeldonFacultyPanel })));
@@ -106,7 +109,7 @@ import { GodRayShader, updateGodRayUniforms } from './shaders/GodRayPass';
 import { bakeSkyboxToCubemap, type BakeSkyboxResult } from './SkyboxBaker';
 import { createAmbientDust, type AmbientDustHandle } from './shaders/AmbientDustTSL';
 import { createNearbyStars, type NearbyStarsHandle } from './NearbyStars';
-import { LaniakeaHUD } from './LaniakeaHUD';
+import { createLaniakeaSceneObject } from './LaniakeaSceneObject';
 import { createTerminalFilaments, type TerminalFilamentsHandle } from './TerminalFilaments';
 import { createVoronoiShells, type VoronoiShellHandle } from './VoronoiShellManager';
 import { createJurisdictionVolumetrics, type JurisdictionVolumetricsHandle } from './JurisdictionVolumetrics';
@@ -923,6 +926,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
   const gisManagersRef = useRef<Map<string, GisLayerManager>>(new Map());
   const [gisManagers, setGisManagers] = useState<Map<string, GisLayerManager>>(new Map());
   const signalRGisBridgeRef = useRef<SignalRGisBridgeHandle | null>(null);
+  const issuesGisBridgeRef = useRef<IssuesGisBridgeHandle | null>(null);
 
   // Phase 2: Dynamic panel definitions created via IXQL CREATE PANEL
   const dynamicPanelDefsRef = useRef<Map<string, DynamicPanelDefinition>>(new Map());
@@ -2064,12 +2068,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     const _riggedFaceOffset = new THREE.Vector3();
     const _solarOffset = new THREE.Vector3();
     const _stationOffset = new THREE.Vector3();
+    const _hudOffset = new THREE.Vector3(22, 18, -80); // camera-local Laniakea HUD position
     const _trackWp = new THREE.Vector3();
     const _trackOffset = new THREE.Vector3();
     const _tickVec3 = new THREE.Vector3(); // pre-allocated for zoom inertia
     const _tickColor = new THREE.Color();  // pre-allocated for IXQL color overrides
     const _linkColorA = new THREE.Color(); // pre-allocated for edge propagation lerp
     const _linkColorB = new THREE.Color();
+    let laniakeaObject: THREE.Group | null = null;
     fg.onEngineTick(() => {
       try {
       const t = Date.now() * 0.001;
@@ -2105,6 +2111,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         const currentLinkOpacity = fg.linkOpacity();
         if (currentNodeOpacity !== targetNodeOpacity) fg.nodeOpacity(targetNodeOpacity);
         if (currentLinkOpacity !== targetLinkOpacity) fg.linkOpacity(targetLinkOpacity);
+        if (laniakeaObject) {
+          laniakeaObject.visible = sOpts.laniakeaHud !== false;
+          laniakeaObject.userData.update?.(t);
+          // Keep the HUD pinned to a fixed spot in the camera's view, but leave its
+          // orientation world-locked so the axis widget acts as a real spatial compass.
+          _hudOffset.set(22, 18, -80);
+          laniakeaObject.position.copy(fgCam.position).add(_hudOffset.applyQuaternion(fgCam.quaternion));
+        }
       }
 
       // ─── Camera sync: apply incoming position from presentation leader ───
@@ -2136,7 +2150,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
         lastCameraSave = now2;
         try {
           const cp = fgCam.position;
-          const ct = fg.scene().position; // lookAt target approximation
+          const controls = fg.controls() as { target?: THREE.Vector3 } | undefined;
+          const ct = controls?.target ?? fg.scene().position;
           localStorage.setItem('prime-radiant-camera', JSON.stringify({
             px: cp.x, py: cp.y, pz: cp.z,
             lx: ct.x, ly: ct.y, lz: ct.z,
@@ -2818,7 +2833,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       controls.dampingFactor = 0.12;   // smooth inertia on all movements
       controls.zoomSpeed = 1.2;        // faster zoom response
       (controls as Record<string, unknown>).minDistance = 0.005; // allow very close zoom for planet detail
-      (controls as Record<string, unknown>).maxDistance = 500;
+      (controls as Record<string, unknown>).maxDistance = 3000; // allow zooming out to the cosmic overview
       (controls as Record<string, unknown>).enableZoom = true;
       (controls as Record<string, unknown>).rotateSpeed = 0.4;  // halved from 0.8
       (controls as Record<string, unknown>).panSpeed = 0.6;
@@ -3156,6 +3171,14 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
     solarSystem.position.set(0, isLowEnd ? 80 : 280, 0);
     fg.scene().add(solarSystem);
 
+    // ─── LANIAKEA SUPERCLUSTER — 3D HUD overlay that tracks the camera
+    // Kept in the scene but re-positioned each frame so it stays at a fixed
+    // spot in the camera's view. This separates it from the local galaxy /
+    // solar-system scale while keeping it visible as a context overlay.
+    laniakeaObject = createLaniakeaSceneObject();
+    laniakeaObject.scale.set(6.5, 6.5, 6.5);
+    fg.scene().add(laniakeaObject);
+
     // ─── CRYSTAL EIFFEL TOWER — toggle via ?tower=1 URL param ───
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('tower')) {
       eiffelHandleOuter = createCrystalEiffelTower(fg.scene());
@@ -3242,7 +3265,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // GIS layers — on mobile, only Earth to save memory
     const gisMgrs = new Map<string, GisLayerManager>();
-    const gisPlanets = isLowEnd ? ['earth'] : ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury'];
+    const gisPlanets = isLowEnd ? ['earth'] : ['earth', 'mars', 'venus', 'jupiter', 'saturn', 'mercury', 'ix'];
     for (const name of gisPlanets) {
       const mgr = createGisLayer(solarSystem, name);
       if (mgr) gisMgrs.set(name, mgr);
@@ -3256,6 +3279,12 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       signalRGisBridgeRef.current = startSignalRGisBridge(earthGis, (event) => {
         console.log('[SignalRGisBridge]', event);
       });
+    }
+
+    // ─── GitHub issues/PRs → IX planet GIS bridge ───
+    const ixGis = gisMgrs.get('ix');
+    if (ixGis) {
+      issuesGisBridgeRef.current = startIssuesGisBridge(ixGis);
     }
 
     // ─── Solar system planet hover detection (raycasting) ───
@@ -3721,6 +3750,8 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       pollingHandleOuter?.stop();
       signalRGisBridgeRef.current?.cleanup();
       signalRGisBridgeRef.current = null;
+      issuesGisBridgeRef.current?.dispose();
+      issuesGisBridgeRef.current = null;
       cloudCleanupOuter?.();
       markerCleanupOuter?.();
       lodCleanupOuter?.();
@@ -3954,8 +3985,29 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       const fg = graphRef.current;
       if (!fg) return;
       setActivePanel(null);
-      // Find planet in the scene-parented solar system
       const cam = fg.camera() as THREE.PerspectiveCamera;
+
+      if (planet === 'laniakea') {
+        // Detach solar system from camera if it is camera-parented
+        const solarGroup = cam.getObjectByName('sun')?.parent;
+        if (solarGroup) {
+          const groupWorldPos = new THREE.Vector3();
+          solarGroup.getWorldPosition(groupWorldPos);
+          cam.remove(solarGroup);
+          fg.scene().add(solarGroup);
+          solarGroup.position.copy(groupWorldPos);
+        }
+        solarFollowCameraRef.current = false;
+        trackedPlanetRef.current = null;
+        setTrackedPlanetName(null);
+        const controls = fg.controls() as { target?: THREE.Vector3 };
+        if (controls.target) controls.target.set(0, 0, 0);
+        // Zoom out to a cosmic overview so the HUD is contextually anchored.
+        fg.cameraPosition({ x: 0, y: 300, z: 2500 }, { x: 0, y: 0, z: 0 }, 1500);
+        return;
+      }
+
+      // Find planet in the scene-parented solar system
       const solarGroup = fg.scene().getObjectByName('sun')?.parent;
       if (!solarGroup) return;
       const obj = solarGroup.getObjectByName(planet);
@@ -4099,8 +4151,6 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
         {/* Keyboard shortcut legend — discoverable runtime toggles for layers + post-FX */}
         <KeyboardLegend />
-
-        {sceneOptions.laniakeaHud !== false && <LaniakeaHUD />}
 
         {/* Floating label when hovering a Voronoi jurisdiction shell */}
         {hoveredShell && (
@@ -4503,6 +4553,26 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             return;
           }
 
+          if (target === 'laniakea') {
+            const navSolarGroup = navCam.getObjectByName('sun')?.parent;
+            if (navSolarGroup) {
+              const groupWorldPos = new THREE.Vector3();
+              navSolarGroup.getWorldPosition(groupWorldPos);
+              navCam.remove(navSolarGroup);
+              fg.scene().add(navSolarGroup);
+              navSolarGroup.position.copy(groupWorldPos);
+            }
+            solarFollowCameraRef.current = false;
+            trackedPlanetRef.current = null;
+            setTrackedPlanetName(null);
+            fg.cameraPosition(
+              { x: 0, y: 300, z: 2500 },
+              { x: 0, y: 0, z: 0 },
+              1500,
+            );
+            return;
+          }
+
           // Navigate to planet — DETACH solar system from camera so user can zoom
           const navSolarGroup = navCam.getObjectByName('sun')?.parent;
           if (navSolarGroup) {
@@ -4770,6 +4840,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
             agent: AgentPanel,
             llm: LLMStatus,
             cicd: CICDPanel,
+            issues: IssuesPanel,
             claude: ClaudeCodePanel,
             library: LibraryPanel,
             assets: AssetProvenancePanel,

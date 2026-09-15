@@ -67,20 +67,17 @@ public class TranspositionClassTests
     }
 
     [Test]
-    public void PrimeForm_IsTranspositionInvariant_ForAllTwelveTranspositions()
+    public void PrimeForm_IsTranspositionInvariant_ForAllTwelveTranspositions() => Assert.Multiple(() =>
     {
-        Assert.Multiple(() =>
+        foreach (var pcs in PitchClassSet.Items)
         {
-            foreach (var pcs in PitchClassSet.Items)
+            var primeId = new TranspositionClass(pcs).PrimeForm.Id.Value;
+            for (var i = 0; i < 12; i++)
             {
-                var primeId = new TranspositionClass(pcs).PrimeForm.Id.Value;
-                for (var i = 0; i < 12; i++)
-                {
-                    var transposed = pcs.Id.Transpose(i).ToPitchClassSet();
-                    Assert.That(new TranspositionClass(transposed).PrimeForm.Id.Value, Is.EqualTo(primeId),
-                        $"Transposition class not invariant under transposition for {pcs.Id.Value}");
-                }
+                var transposed = pcs.Id.Transpose(i).ToPitchClassSet();
+                Assert.That(new TranspositionClass(transposed).PrimeForm.Id.Value, Is.EqualTo(primeId),
+                    $"Transposition class not invariant under transposition for {pcs.Id.Value}");
             }
-        });
-    }
+        }
+    });
 }

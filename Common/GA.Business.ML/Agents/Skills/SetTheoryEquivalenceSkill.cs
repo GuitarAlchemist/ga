@@ -255,6 +255,7 @@ public sealed class SetTheoryEquivalenceSkill : IOrchestratorSkill
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask whether two pitch-class sets are equivalent under transposition, inversion, or both.",
         Confidence = 0.1f,

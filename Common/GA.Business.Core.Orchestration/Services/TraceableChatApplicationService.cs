@@ -24,7 +24,15 @@ public sealed class TraceableChatApplicationService(
     IChatApplicationService inner,
     IAgenticTraceCapture capture) : IChatApplicationService
 {
-    public async Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default)
+    public Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, null, cancellationToken);
+
+    public Task<ChatResponse> ChatStreamingAsync(
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, onToken, cancellationToken);
+
+    private async Task<ChatResponse> ExecuteAsync(
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
     {
         capture.AddStep(
             "chat.request",
@@ -50,7 +58,7 @@ public sealed class TraceableChatApplicationService(
 
         try
         {
-            var response = await inner.ChatAsync(request, cancellationToken);
+            var response = onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken);
 
             step.Complete(
                 finalAttributes: new Dictionary<string, object?>

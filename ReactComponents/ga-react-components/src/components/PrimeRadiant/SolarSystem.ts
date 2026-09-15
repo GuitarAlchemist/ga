@@ -34,6 +34,7 @@ import {
   createIapetusMaterialTSL,
   createTritonMaterialTSL,
   createMirandaMaterialTSL,
+  createIxMaterialTSL,
   createProceduralPlaceholderMaterialTSL,
 } from './shaders/ProceduralMoonTSL';
 import type { MeshBasicNodeMaterial } from 'three/webgpu';
@@ -124,6 +125,7 @@ export const PLANET_ASTRO_DATA: Record<string, PlanetAstroData> = {
   saturn: { name: 'Saturn', distanceAU: 9.54, orbitalPeriodYears: 29.46, diameterKm: 116_460, type: 'Gas giant' },
   uranus: { name: 'Uranus', distanceAU: 19.2, orbitalPeriodYears: 84.01, diameterKm: 50_724, type: 'Ice giant' },
   neptune: { name: 'Neptune', distanceAU: 30.06, orbitalPeriodYears: 164.8, diameterKm: 49_244, type: 'Ice giant' },
+  ix: { name: 'IX', distanceAU: 38.0, orbitalPeriodYears: 0, diameterKm: 11_000, type: 'Fictional forge world' },
 };
 
 interface MoonDef {
@@ -170,6 +172,7 @@ function getRealOrbitalAngle(planetName: string): number {
 
   // Mean longitude at J2000 (L0, degrees) and rate (Ldot, degrees/century)
   // Source: Standish (1992) — JPL Planetary Ephemeris DE405
+  // Fictional bodies use invented elements consistent with the visual orrery.
   const elements: Record<string, { L0: number; Ldot: number }> = {
     mercury:  { L0: 252.251,  Ldot: 149472.675 },
     venus:    { L0: 181.980,  Ldot:  58517.816 },
@@ -179,6 +182,7 @@ function getRealOrbitalAngle(planetName: string): number {
     saturn:   { L0:  49.558,  Ldot:   1222.114 },
     uranus:   { L0: 313.238,  Ldot:    428.267 },
     neptune:  { L0: 304.880,  Ldot:    218.486 },
+    ix:       { L0:  75.000,  Ldot:     55.000 },
   };
 
   const el = elements[planetName];
@@ -303,6 +307,22 @@ const MIRANDA_FRAG = NOISE_LIB + `
     col=mix(col,vec3(.7,.68,.65),chevron*.3*chaos);
     gl_FragColor=vec4(col,1.);}`;
 
+// IX — technological forge world (Dune-inspired fictional planet)
+const IX_FRAG = NOISE_LIB + `
+  varying vec3 vPos;
+  varying vec3 vNormal;
+  void main(){
+    vec3 base=vec3(.18,.20,.22);
+    float g=fbm(vPos*8.);
+    float grid=max(0.,sin(vPos.x*40.)*sin(vPos.y*40.)*sin(vPos.z*40.));
+    grid=smoothstep(.92,.98,grid);
+    vec3 metal=vec3(.45,.48,.52);
+    vec3 col=mix(base,metal,g*.4+grid*.5);
+    float wear=n(vPos*15.)*.15;
+    col*=.9+wear;
+    gl_FragColor=vec4(col,1.);
+  }`;
+
 // ── Unused placeholder for procedural planet fallback ──
 const PROC_PLACEHOLDER = `varying vec3 vPos;void main(){gl_FragColor=vec4(.5,.5,.5,1.);}`;
 
@@ -318,16 +338,18 @@ const EARTH_DIST = 6.5;     // 1 AU in scene units (sqrt(1) = 1)
 const EARTH_RADIUS = 0.12;  // Earth's radius — small enough that inner orbits have visible gaps
 const EARTH_SPEED = 3.0;    // Earth's orbital speed (animation, not real-time)
 
-// Real orbital eccentricities (JPL/NASA)
+// Real orbital eccentricities (JPL/NASA). Fictional bodies use small plausible values.
 const ECCENTRICITY: Record<string, number> = {
   mercury: 0.2056, venus: 0.0068, earth: 0.0167, mars: 0.0934,
   jupiter: 0.0489, saturn: 0.0565, uranus: 0.0457, neptune: 0.0113,
+  ix: 0.04,
 };
 
-// Real orbital inclinations in radians (relative to ecliptic)
+// Real orbital inclinations in radians (relative to ecliptic). Fictional bodies use small plausible values.
 const INCLINATION: Record<string, number> = {
   mercury: 0.1222, venus: 0.0593, earth: 0, mars: 0.0323,
   jupiter: 0.0228, saturn: 0.0435, uranus: 0.0135, neptune: 0.0309,
+  ix: 0.08,
 };
 
 function keplerDistance(au: number): number {
@@ -536,6 +558,21 @@ const PLANETS: PlanetDef[] = [
       { name: 'galatea', radius: 0.01, distance: 0.65, speed: 4.0, fragment: ROCKY_DARK },
     ],
   },
+  {
+    name: 'ix',
+    radius: keplerRadius(11_000),      // 0.33
+    distance: keplerDistance(38.0),     // 41.0
+    speed: keplerSpeed(38.0),          // 0.0041
+    fragment: IX_FRAG,
+    atmosphere: { color: '0.5, 0.55, 0.6', intensity: 0.25, power: 3.0 },
+    // Small forge-moons: Demerzel, ga, tars, ix
+    moons: [
+      { name: 'demerzel-moon', radius: 0.03, distance: 0.55, speed: 1.2, fragment: ROCKY_DARK },
+      { name: 'ga-moon', radius: 0.025, distance: 0.75, speed: 0.9, fragment: ROCKY_REDDISH },
+      { name: 'tars-moon', radius: 0.022, distance: 0.95, speed: 0.6, fragment: ROCKY_DARK },
+      { name: 'ix-moon', radius: 0.02, distance: 1.15, speed: 0.4, fragment: ROCKY_GREY },
+    ],
+  },
 ];
 
 // ── Moon tracking ──
@@ -573,6 +610,7 @@ function getMoonMaterialTSL(fragmentSrc: string): MeshBasicNodeMaterial {
   if (fragmentSrc === ROCKY_REDDISH) return createRockyReddishMaterialTSL();
   if (fragmentSrc === ICY_WHITE) return createIcyWhiteMaterialTSL();
   if (fragmentSrc === ICY_BLUE) return createIcyBlueMaterialTSL();
+  if (fragmentSrc === IX_FRAG) return createIxMaterialTSL();
   return createProceduralPlaceholderMaterialTSL();
 }
 

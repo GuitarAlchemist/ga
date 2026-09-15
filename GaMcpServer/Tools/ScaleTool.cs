@@ -107,4 +107,58 @@ public static class ScaleTool
                 Usage: {usage}
                 """;
     }
+
+    [McpServerTool]
+    [Description(
+        "Get detailed mathematical and structural properties for a scale by binary scale ID. " +
+        "Includes Myhill's Property, Rothenberg Propriety, Maximal Evenness Discrepancy, " +
+        "Well-Formedness, Imperfection Count, Zeitler Legitimacy, and Interval Contradictions/Ambiguities.")]
+    public static string GaScaleProperties(
+        [Description("Binary scale ID, e.g. 1709 for Dorian or 2741 for Major")] int id)
+    {
+        var pcsId = GA.Domain.Core.Theory.Atonal.PitchClassSetId.FromValue(id);
+        var pcs = pcsId.ToPitchClassSet();
+        var (contradictions, ambiguities) = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetIntervalMatrixDiagnostics(pcs);
+        var isWellFormed = GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.IsWellFormed(pcs, out var generator);
+
+        return $"""
+                Binary Scale ID: {id}
+                Pitch Classes: {pcs}
+                Cardinality: {pcs.Cardinality.Value}
+                Myhill's Property: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.HasMyhillProperty(pcs)}
+                Rothenberg Propriety: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetRothenbergPropriety(pcs)}
+                Maximal Evenness Discrepancy: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetMaximalEvennessDiscrepancy(pcs):F4}
+                Well-Formed: {isWellFormed} (Generator: {(isWellFormed ? generator : "none")})
+                Imperfection Count: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetImperfectionCount(pcs)}
+                Zeitler Legitimacy: {GA.Domain.Core.Theory.Atonal.ScaleStructuralProperties.GetZeitlerLegitimacy(pcs)}
+                Interval Contradictions: {contradictions}
+                Interval Ambiguities: {ambiguities}
+                """;
+    }
+
+    [McpServerTool]
+    [Description(
+        "Get all common tertian triads (Major, Minor, Diminished, Augmented) in a scale and their " +
+        "parsimonious voice-leading connections (2 common tones, 1 voice moving by 1-2 semitones).")]
+    public static string GaParsimoniousTriads(
+        [Description("Binary scale ID, e.g. 1709 for Dorian")] int id)
+    {
+        var pcsId = GA.Domain.Core.Theory.Atonal.PitchClassSetId.FromValue(id);
+        var pcs = pcsId.ToPitchClassSet();
+        var triads = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetTertianTriads(pcs);
+        var connections = GA.Domain.Core.Theory.Atonal.AdvancedScaleGeometry.GetParsimoniousTriadConnections(pcs);
+
+        var triadList = string.Join("\n", triads.Select(t => $"  - {t.Root} {t.TriadQuality} ({t.Root}, {t.Third}, {t.Fifth})"));
+        var connList = string.Join("\n", connections.Select(c =>
+            $"  - {c.FromTriad.Root} {c.FromTriad.TriadQuality} <-> {c.ToTriad.Root} {c.ToTriad.TriadQuality} [Voice {c.MovingVoiceFrom} -> {c.MovingVoiceTo} ({c.SemitoneShift} semitone)]"));
+
+        return $"""
+                Triads ({triads.Count}):
+                {triadList}
+
+                Parsimonious Voice-Leading Connections ({connections.Count}):
+                {connList}
+                """;
+    }
 }
+

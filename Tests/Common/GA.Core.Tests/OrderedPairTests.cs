@@ -36,11 +36,37 @@ public class OrderedPairTests
         var a = new UnorderedPairStruct<int>(1, 2);
         var b = new UnorderedPairStruct<int>(2, 1);
 
-        // Note: record struct default equality is order-dependent.
-        // The type provides a custom overload: Equals(UnorderedPairStruct<T>? other)
-        // so we need to call that overload explicitly to verify order-independence.
-        Assert.That(a.Equals((UnorderedPairStruct<int>?)b), Is.True);
-        Assert.That(b.Equals((UnorderedPairStruct<int>?)a), Is.True);
+        // The custom Equals now replaces the compiler-generated (order-dependent) one, so ==, Equals and
+        // hash-based lookups all honour the unordered semantics.
+        Assert.Multiple(() =>
+        {
+            Assert.That(a.Equals(b), Is.True);
+            Assert.That(b.Equals(a), Is.True);
+            Assert.That(a == b, Is.True);
+            Assert.That(a, Is.EqualTo(b));
+            Assert.That(a.GetHashCode(), Is.EqualTo(b.GetHashCode()));
+        });
+    }
+
+    [Test]
+    public void UnorderedPairStruct_UsableAsDictionaryKey_RegardlessOfOrder()
+    {
+        var map = new Dictionary<UnorderedPairStruct<int>, string> { [new(1, 2)] = "first" };
+
+        map[new(2, 1)] = "second";
+
+        Assert.That(map, Has.Count.EqualTo(1));
+        Assert.That(map[new(1, 2)], Is.EqualTo("second"));
+    }
+
+    [Test]
+    public void UnorderedPairStruct_GetHashCode_DoesNotCollide_WithDifferentPairSummingToSameValue()
+    {
+        // (1,2) and (0,3) both sum to 3, which would collide under an additive hash combination.
+        var a = new UnorderedPairStruct<int>(1, 2);
+        var b = new UnorderedPairStruct<int>(0, 3);
+
+        Assert.That(a.GetHashCode(), Is.Not.EqualTo(b.GetHashCode()));
     }
 
     [Test]
@@ -50,5 +76,15 @@ public class OrderedPairTests
         var b = new OrderedPair<int>(2, 1);
 
         Assert.That(a, Is.Not.EqualTo(b));
+    }
+
+    [Test]
+    public void UnorderedPair_GetHashCode_DoesNotCollide_WithDifferentPairSummingToSameValue()
+    {
+        // (1,2) and (0,3) both sum to 3, which would collide under an additive hash combination.
+        var a = new UnorderedPair<int>(1, 2);
+        var b = new UnorderedPair<int>(0, 3);
+
+        Assert.That(a.GetHashCode(), Is.Not.EqualTo(b.GetHashCode()));
     }
 }

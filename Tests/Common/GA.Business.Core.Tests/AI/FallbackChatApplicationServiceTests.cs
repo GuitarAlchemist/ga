@@ -73,14 +73,14 @@ public class FallbackChatApplicationServiceTests
             Routing: new AgentRoutingMetadata("algebra", 1.0f, "ix-algebra"));
 
         var fallback = new Mock<IFallbackChatHandler>();
-        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("FALLBACK INVOKED");
 
         var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
         var response = await decorator.ChatAsync(new ChatRequest("hi"));
 
         Assert.That(response.NaturalLanguageAnswer, Is.EqualTo("grounded answer"));
-        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -92,7 +92,7 @@ public class FallbackChatApplicationServiceTests
             Routing: new AgentRoutingMetadata("agent-x", 0.1f, "agent-x-routing"));
 
         var fallback = new Mock<IFallbackChatHandler>();
-        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("the fallback answer");
 
         var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
@@ -108,7 +108,31 @@ public class FallbackChatApplicationServiceTests
                 "fallback path must clamp confidence to 0 — direct chat is not grounded");
             Assert.That(response.Routing!.RoutingMethod, Is.EqualTo("fallback"));
         });
-        fallback.Verify(f => f.AnswerAsync("hi", It.IsAny<CancellationToken>()), Times.Once);
+        fallback.Verify(f => f.AnswerAsync("hi", It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task ChatAsync_FallbackEnabled_LowConfidenceInner_ForwardsRequestHistory()
+    {
+        var inner = new ChatResponse(
+            NaturalLanguageAnswer: "I don't know",
+            Candidates: [],
+            Routing: new AgentRoutingMetadata("agent-x", 0.1f, "agent-x-routing"));
+        ConversationTurn[] history =
+        [
+            new("user", "I am playing Dm7.", DateTimeOffset.UnixEpoch),
+            new("assistant", "Its notes are D F A C.", DateTimeOffset.UnixEpoch),
+        ];
+        IReadOnlyList<ConversationTurn>? received = null;
+        var fallback = new Mock<IFallbackChatHandler>();
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, IReadOnlyList<ConversationTurn>?, CancellationToken>((_, turns, _) => received = turns)
+            .ReturnsAsync("Try D Dorian.");
+
+        var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
+        await decorator.ChatAsync(new ChatRequest("Which scale fits?", History: history));
+
+        Assert.That(received, Is.SameAs(history));
     }
 
     [Test]
@@ -136,7 +160,7 @@ public class FallbackChatApplicationServiceTests
                 RoutingMethod: "orchestrator-skill-semantic"));
 
         var fallback = new Mock<IFallbackChatHandler>();
-        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("PAPERED-OVER ANSWER");
 
         var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object);
@@ -151,7 +175,7 @@ public class FallbackChatApplicationServiceTests
             Assert.That(response.Routing!.AgentId, Is.EqualTo("skill.transpose"),
                 "deterministic-failure protection: original agent id preserved");
         });
-        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never,
+        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Never,
             "fallback handler MUST NOT be invoked when routing.method indicates a deterministic skill");
     }
 
@@ -178,7 +202,7 @@ public class FallbackChatApplicationServiceTests
             Routing: new AgentRoutingMetadata("skill.transpose", 0.1f, "orchestrator-skill-semantic"));
 
         var fallback = new Mock<IFallbackChatHandler>();
-        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        fallback.Setup(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("PAPERED-OVER ANSWER");
 
         var decorator = MakeDecorator(inner, fallbackEnabled: true, fallbackHandler: fallback.Object, capture: capture);
@@ -193,7 +217,7 @@ public class FallbackChatApplicationServiceTests
             Assert.That(response.Routing!.AgentId, Is.EqualTo("skill.transpose"),
                 "deterministic-failure protection: original agent id preserved (callers can trace the failed path)");
         });
-        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never,
+        fallback.Verify(f => f.AnswerAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<ConversationTurn>?>(), It.IsAny<CancellationToken>()), Times.Never,
             "fallback handler MUST NOT be invoked when a deterministic tool failure is in the trace");
     }
 

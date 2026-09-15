@@ -1,5 +1,8 @@
 namespace GA.Core.Functional;
 
+using System.Threading;
+using System.Threading.Tasks;
+
 /// <summary>
 ///     Represents an IO operation that can be deferred.
 /// </summary>
@@ -25,6 +28,12 @@ public readonly record struct Io<T>
         return new(() => binder(operation()).Run());
     }
 
+    /// <summary>
+    ///     Retries the operation up to <paramref name="maxAttempts"/> times, blocking the
+    ///     calling thread for <paramref name="delay"/> between attempts. Synchronous by design
+    ///     because <see cref="Io{T}"/> wraps a synchronous <see cref="Func{T}"/>; use
+    ///     <see cref="RetryAsync"/> for a non-blocking equivalent.
+    /// </summary>
     public Io<T> Retry(int maxAttempts, TimeSpan delay)
     {
         var operation = _operation;
@@ -40,10 +49,32 @@ public readonly record struct Io<T>
                 }
                 catch when (attempts < maxAttempts)
                 {
-                    System.Threading.Thread.Sleep(delay);
+                    Thread.Sleep(delay);
                 }
             }
         });
+    }
+
+    /// <summary>
+    ///     Async counterpart of <see cref="Retry"/> that awaits a non-blocking
+    ///     <see cref="Task.Delay(TimeSpan)"/> between attempts instead of sleeping the thread.
+    /// </summary>
+    public async Task<T> RetryAsync(int maxAttempts, TimeSpan delay)
+    {
+        var operation = _operation;
+        var attempts = 0;
+        while (true)
+        {
+            try
+            {
+                attempts++;
+                return operation();
+            }
+            catch when (attempts < maxAttempts)
+            {
+                await Task.Delay(delay);
+            }
+        }
     }
 }
 

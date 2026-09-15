@@ -113,6 +113,9 @@ export const sendMessageAtom = atom(
   async (get, set, userMessage: string) => {
     if (!userMessage.trim()) return;
 
+    // Capture prior turns before appending the new message; GaApi keeps history stateless per run.
+    const priorMessages = get(chatMessagesAtom);
+
     set(isLoadingAtom, true);
     set(addMessageAtom, { role: 'user', content: userMessage });
     set(chatInputAtom, '');
@@ -128,9 +131,9 @@ export const sendMessageAtom = atom(
     });
 
     try {
-      const { streamAgUiChat } = await import('../services/agUiChatService');
+      const { streamAgUiChat, toAgUiHistory } = await import('../services/agUiChatService');
 
-      await streamAgUiChat(config.apiEndpoint, userMessage, {
+      await streamAgUiChat(config.apiEndpoint, userMessage, toAgUiHistory(priorMessages), {
         onChunk(delta) {
           accumulated += delta;
           set(currentStreamingMessageAtom, {

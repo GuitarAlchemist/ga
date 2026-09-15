@@ -24,6 +24,49 @@ interface FretboardWithHandProps {
   height?: number;
 }
 
+/** Create a simple text sprite label for 3D annotations. */
+function createTextLabel(text: string, color = '#ffffff', fontSize = 14): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = color;
+  ctx.font = `bold ${fontSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 64);
+  const texture = new THREE.CanvasTexture(canvas);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true }));
+  sprite.scale.set(1.5, 0.75, 1);
+  sprite.renderOrder = 1000;
+  return sprite;
+}
+
+/** Camera-locked spatial compass. */
+function createAxisWidget(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'fretboard-axis-widget';
+  const axisLength = 0.8;
+  const axes = [
+    { dir: new THREE.Vector3(axisLength, 0, 0), color: 0xff4d4d, label: '+X' },
+    { dir: new THREE.Vector3(0, axisLength, 0), color: 0x4dff88, label: '+Y' },
+    { dir: new THREE.Vector3(0, 0, axisLength), color: 0x4d88ff, label: '+Z' },
+  ];
+  for (const { dir, color, label } of axes) {
+    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: false });
+    const geom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), dir]);
+    const line = new THREE.Line(geom, mat);
+    line.renderOrder = 999;
+    group.add(line);
+    const labelSprite = createTextLabel(label, '#ffffff', 16);
+    labelSprite.position.copy(dir).multiplyScalar(1.2);
+    labelSprite.scale.set(0.6, 0.3, 1);
+    group.add(labelSprite);
+  }
+  group.raycast = () => {};
+  return group;
+}
+
 export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
   chordName = 'G',
   apiBaseUrl: _apiBaseUrl = 'https://localhost:7001',
@@ -114,6 +157,8 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
 
     let isMounted = true;
     const canvas = canvasRef.current;
+    let axisWidget: THREE.Group | null = null;
+    const _axisOffset = new THREE.Vector3();
 
     const initScene = async () => {
       try {
@@ -173,6 +218,11 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
         controls.target.set(0, 0, 0);
         controlsRef.current = controls;
 
+        // Spatial compass overlay
+        axisWidget = createAxisWidget();
+        scene.add(axisWidget);
+        _axisOffset.set(0.8, 0.6, -1.5);
+
         // Create fretboard
         createFretboard(scene, voicing);
 
@@ -184,6 +234,10 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
           if (!isMounted) return;
           requestAnimationFrame(animate);
           controls.update();
+          // Keep the compass pinned to the camera while staying world-aligned.
+          _axisOffset.set(0.8, 0.6, -1.5);
+          axisWidget.position.copy(camera.position).add(_axisOffset.applyQuaternion(camera.quaternion));
+          axisWidget.scale.set(1.2, 1.2, 1.2);
           renderer.render(scene, camera);
         };
         animate();
@@ -198,6 +252,18 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
 
     return () => {
       isMounted = false;
+      if (axisWidget) {
+        sceneRef.current?.remove(axisWidget);
+        axisWidget.traverse((obj) => {
+          if (obj instanceof THREE.Sprite) {
+            (obj.material as THREE.SpriteMaterial).map?.dispose();
+            (obj.material as THREE.SpriteMaterial).dispose();
+          } else if (obj instanceof THREE.Line) {
+            obj.geometry.dispose();
+            (obj.material as THREE.Material).dispose();
+          }
+        });
+      }
       controlsRef.current?.dispose();
       rendererRef.current?.dispose();
     };
@@ -236,12 +302,29 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
 
     // Strings
     const stringMaterial = new THREE.MeshStandardMaterial({ color: 0xffdd88, metalness: 0.9 });
+    const stringNames = ['E', 'A', 'D', 'G', 'B', 'E'];
     for (let i = 0; i < 6; i++) {
       const stringGeometry = new THREE.CylinderGeometry(0.02, 0.02, fretboardLength, 8);
       const string = new THREE.Mesh(stringGeometry, stringMaterial);
       string.rotation.x = Math.PI / 2;
-      string.position.x = -fretboardWidth / 2 + (i * fretboardWidth) / 5 + fretboardWidth / 10;
+      const stringX = -fretboardWidth / 2 + (i * fretboardWidth) / 5 + fretboardWidth / 10;
+      string.position.x = stringX;
       fretboardGroup.add(string);
+
+      // String name label at the nut
+      const stringLabel = createTextLabel(stringNames[i], '#ffdd88', 40);
+      stringLabel.position.set(stringX, 0.8, -fretboardLength / 2 - 0.3);
+      stringLabel.scale.set(2.5, 1.25, 1);
+      fretboardGroup.add(stringLabel);
+    }
+
+    // Fret number labels
+    for (let i = 0; i <= numFrets; i++) {
+      const fretZ = -fretboardLength / 2 + (i * fretboardLength) / numFrets;
+      const fretLabel = createTextLabel(String(i), '#c0c0c0', 40);
+      fretLabel.position.set(-fretboardWidth / 2 - 1.0, 0.8, fretZ);
+      fretLabel.scale.set(2.0, 1.0, 1);
+      fretboardGroup.add(fretLabel);
     }
 
     // Position markers for chord with color coding by finger
@@ -274,6 +357,14 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
 
         marker.position.set(stringX, 0.5, fretZ);
         fretboardGroup.add(marker);
+
+        // Finger number label above the marker
+        if (pos.finger !== undefined && pos.finger > 0) {
+          const markerLabel = createTextLabel(String(pos.finger), '#ffffff', 32);
+          markerLabel.position.set(stringX, 1.0, fretZ);
+          markerLabel.scale.set(1.5, 0.75, 1);
+          fretboardGroup.add(markerLabel);
+        }
       }
     });
 
@@ -398,6 +489,14 @@ export const FretboardWithHand: React.FC<FretboardWithHandProps> = ({
       const tip = new THREE.Mesh(tipGeometry, tipMaterial);
       tip.position.y = currentY - tipRadius * 0.5;
       fingerGroup.add(tip);
+
+      // Finger number label on active fingers
+      if (isActive) {
+        const label = createTextLabel(String(fingerIndex), '#ffffff', 32);
+        label.position.copy(tip.position).add(new THREE.Vector3(0, -0.45, 0));
+        label.scale.set(1.5, 0.75, 1);
+        fingerGroup.add(label);
+      }
 
       // Position and orient finger
       if (isActive && targetString !== undefined && targetFret !== undefined) {

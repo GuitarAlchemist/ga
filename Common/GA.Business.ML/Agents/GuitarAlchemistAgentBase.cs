@@ -143,12 +143,14 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
     protected async Task<string> ChatWithCritiqueAsync(
         string userMessage,
         string? systemPrompt = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<ChatHistoryTurn>? conversationHistory = null)
     {
         using var critiqueActivity = ChatbotActivitySource.Source.StartActivity(ChatbotActivitySource.AgentChatWithCritique);
         critiqueActivity?.SetTag(ChatbotActivitySource.TagAgentId, AgentId);
 
-        var draft = await ChatAsync(userMessage, systemPrompt, cancellationToken);
+        // Only the draft sees prior turns; critique and refinement quote the draft directly.
+        var draft = await ChatAsync(userMessage, systemPrompt, cancellationToken, conversationHistory);
 
         var critiqueMessage = $"""
             I gave this answer to a music theory question. Identify any errors, missing context, or improvements. Be concise.
@@ -341,6 +343,13 @@ public record AgentResponse
     /// Gets or sets any structured data returned.
     /// </summary>
     public object? Data { get; init; }
+
+    /// <summary>
+    /// True when the request does not have the input shape this skill handles (for example no
+    /// capo phrase for the capo skill), so a caller may route it to another handler. Distinct
+    /// from a low-confidence answer to a request the skill recognized but could not resolve.
+    /// </summary>
+    public bool Declined { get; init; }
 
     /// <summary>
     /// Creates a low-confidence response indicating the agent cannot help.

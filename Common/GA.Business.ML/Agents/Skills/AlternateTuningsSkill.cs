@@ -55,16 +55,16 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
         // DADGAD — contiguous or hyphenated
         (new Regex(@"\b(?:dadgad|d-a-d-g-a-d)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "dadgad"),
         // Drop D — but NOT "double drop D"
-        (new Regex(@"(?<!\bdouble\s)(?<!\bdouble-)\bdrop[\s-]?d\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-d"),
+        (new Regex(@"(?<!\bdouble\s)(?<!\bdouble-)\bdrop[\s-]?d\b(?![#b♯♭])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-d"),
         // Double drop D
-        (new Regex(@"\bdouble[\s-]?drop[\s-]?d\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "double-drop-d"),
-        // Drop C — the (?![#b]) rejects "drop C#" / "drop Cb", which are
+        (new Regex(@"\bdouble[\s-]?drop[\s-]?d\b(?![#b♯♭])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "double-drop-d"),
+        // Drop C — reject ASCII and Unicode accidentals, which denote
         // different tunings not in this table (better no match than a wrong one).
-        (new Regex(@"\bdrop[\s-]?c\b(?![#b])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-c"),
+        (new Regex(@"\bdrop[\s-]?c\b(?![#b♯♭])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "drop-c"),
         // Open G
-        (new Regex(@"\bopen[\s-]?g\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "open-g"),
+        (new Regex(@"\bopen[\s-]?g\b(?![#b♯♭])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "open-g"),
         // Open D
-        (new Regex(@"\bopen[\s-]?d\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "open-d"),
+        (new Regex(@"\bopen[\s-]?d\b(?![#b♯♭])", RegexOptions.IgnoreCase | RegexOptions.Compiled), "open-d"),
         // DGCGCD (Sonic Youth / Pink Floyd style)
         (new Regex(@"\bdgcgcd\b", RegexOptions.IgnoreCase | RegexOptions.Compiled), "dgcgcd"),
         // Half step down
@@ -278,6 +278,7 @@ public sealed class AlternateTuningsSkill(ILogger<AlternateTuningsSkill> logger)
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about a named alternate tuning (DADGAD, drop-D, drop-C, open-G, open-D, double-drop-D, DGCGCD, half-step-down, whole-step-down), or give 6 notes low→high.",
         Confidence = 0.1f,

@@ -76,7 +76,7 @@ public sealed class RememberThisSkill(ILogger<RememberThisSkill> logger) : IOrch
             return Task.FromResult(AgentResponse.CannotHelp(
                 agentId: "remember-this",
                 reason:  "I didn't find anything to remember in that message — try " +
-                         "phrasing it as 'remember that ...' or 'save this: ...'."));
+                         "phrasing it as 'remember that ...' or 'save this: ...'.") with { Declined = true });
         }
 
         logger.LogInformation(

@@ -29,4 +29,10 @@ public interface IChatApplicationService
     /// Process a chat request through the full orchestration pipeline.
     /// </summary>
     Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Stream text through the same readiness, fallback, and trace pipeline.</summary>
+    Task<ChatResponse> ChatStreamingAsync(
+        ChatRequest request,
+        Func<string, Task> onToken,
+        CancellationToken cancellationToken = default);
 }

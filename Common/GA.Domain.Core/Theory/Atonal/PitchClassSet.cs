@@ -697,7 +697,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         var pitchClasses = new List<PitchClass>();
         foreach (var segment in segments)
         {
-            if (!PitchClass.TryParse(segment, null, out var pitchClass))
+            if (!PitchClass.TryParseSetNotation(segment, out var pitchClass))
             {
                 return false; // Fail if one item fails parsing
             }

@@ -18,6 +18,14 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
     IComparable<Note>,
     IPitchClass
 {
+    /// <summary>
+    ///     Compares two notes by pitch class, then by spelling.
+    /// </summary>
+    /// <remarks>
+    ///     The spelling tiebreaker keeps the ordering consistent with structural equality (<c>CompareTo</c> returns 0
+    ///     only for equal notes), which <see cref="SortedSet{T}" />, binary search and <c>OrderBy</c>/<c>Distinct</c>
+    ///     agreement rely on: enharmonic notes such as C♯ and D♭ share a pitch class but are not equal.
+    /// </remarks>
     public int CompareTo(Note? other)
     {
         if (ReferenceEquals(this, other))
@@ -25,8 +33,39 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             return 0;
         }
 
-        return other is null ? 1 : PitchClass.CompareTo(other.PitchClass);
+        if (other is null)
+        {
+            return 1;
+        }
+
+        var pitchClassComparison = PitchClass.CompareTo(other.PitchClass);
+        if (pitchClassComparison != 0)
+        {
+            return pitchClassComparison;
+        }
+
+        return Equals(other) ? 0 : GetSpellingKey(this).CompareTo(GetSpellingKey(other));
     }
+
+    /// <summary>
+    ///     Gets a deterministic spelling key, used as the <see cref="CompareTo(Note)" /> tiebreaker.
+    /// </summary>
+    private static (int NaturalNote, int HasAccidental, int Accidental, int TypeRank) GetSpellingKey(Note note) =>
+        note switch
+        {
+            KeyNote keyNote => (keyNote.NaturalNote.Value, keyNote.Accidental.HasValue ? 1 : 0,
+                keyNote.Accidental?.Value ?? 0, GetTypeRank(note)),
+            _ => (-1, 0, 0, GetTypeRank(note))
+        };
+
+    private static int GetTypeRank(Note note) => note switch
+    {
+        Chromatic => 0,
+        Sharp => 1,
+        Flat => 2,
+        Accidented => 3,
+        _ => 4
+    };
 
     public abstract PitchClass PitchClass { get; }
 
@@ -58,7 +97,9 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Chromatic B => new(11);
 
         public static Chromatic Parse(string s, IFormatProvider? provider) =>
-            TryParse(s, provider, out var result) ? result : throw new FormatException();
+            TryParse(s, provider, out var result)
+                ? result
+                : throw new FormatException($"'{s}' is not a valid chromatic note.");
 
         public static bool TryParse(string? s, IFormatProvider? provider, out Chromatic result)
         {

@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
+using GA.Business.Core.Orchestration.Services;
 using GaApi.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,7 @@ public class AgUiChatControllerTests
     private static readonly object ValidInput = new
     {
         threadId = "test-thread-1",
-        runId    = "test-run-1",
+        runId = "test-run-1",
         messages = new[] { new { role = "user", content = "What are the chords in G major?", id = "msg-1" } },
     };
 
@@ -48,6 +49,8 @@ public class AgUiChatControllerTests
             .WithWebHostBuilder(builder =>
                 builder.ConfigureServices(services =>
                 {
+                    services.RemoveAll<IChatReadinessProbe>();
+                    services.AddSingleton<IChatReadinessProbe, PermissiveChatReadinessProbe>();
                     services.RemoveAll<IHarmonicChatOrchestrator>();
                     services.AddSingleton<IHarmonicChatOrchestrator, TestHarmonicChatOrchestrator>();
                     services.RemoveAll<ILlmConcurrencyGate>();
@@ -58,13 +61,15 @@ public class AgUiChatControllerTests
         _factory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services =>
             {
+                services.RemoveAll<IChatReadinessProbe>();
+                services.AddSingleton<IChatReadinessProbe, PermissiveChatReadinessProbe>();
                 services.RemoveAll<IHarmonicChatOrchestrator>();
                 services.AddSingleton<IHarmonicChatOrchestrator, TestHarmonicChatOrchestrator>();
                 services.RemoveAll<ILlmConcurrencyGate>();
                 services.AddSingleton<ILlmConcurrencyGate, AlwaysAvailableGate>();
             }));
 
-        _client          = _factory.CreateClient();
+        _client = _factory.CreateClient();
         _saturatedClient = _saturatedFactory.CreateClient();
         // Raw client preserves Set-Cookie in response.Headers so we can
         // assert the server-issued cookie shape (INFO-003 tests).
@@ -87,7 +92,7 @@ public class AgUiChatControllerTests
     [Test]
     public async Task AgUiStream_ShouldReturn400_WhenMessagesIsEmpty()
     {
-        var input    = new { threadId = "t1", runId = "r1", messages = Array.Empty<object>() };
+        var input = new { threadId = "t1", runId = "r1", messages = Array.Empty<object>() };
         var response = await _client!.PostAsJsonAsync("/api/chatbot/agui/stream", input);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
@@ -99,7 +104,7 @@ public class AgUiChatControllerTests
         var input = new
         {
             threadId = "t1",
-            runId    = "r1",
+            runId = "r1",
             messages = new[] { new { role = "user", content = "", id = "m1" } },
         };
         var response = await _client!.PostAsJsonAsync("/api/chatbot/agui/stream", input);
@@ -113,7 +118,7 @@ public class AgUiChatControllerTests
         var input = new
         {
             threadId = "t1",
-            runId    = "r1",
+            runId = "r1",
             messages = new[] { new { role = "user", content = "   ", id = "m1" } },
         };
         var response = await _client!.PostAsJsonAsync("/api/chatbot/agui/stream", input);
@@ -129,7 +134,7 @@ public class AgUiChatControllerTests
         var request = BuildRequest(ValidInput);
         using var response = await _client!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-        Assert.That(response.StatusCode,                              Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(response.Content.Headers.ContentType?.MediaType, Is.EqualTo("text/event-stream"));
     }
 
@@ -190,8 +195,8 @@ public class AgUiChatControllerTests
         var ev = await ReadNextEventAsync(reader);
         Assert.That(ev, Is.Not.Null);
 
-        Assert.That(ev!.Value.TryGetProperty("threadId",  out _), Is.True, "missing camelCase 'threadId'");
-        Assert.That(ev!.Value.TryGetProperty("runId",     out _), Is.True, "missing camelCase 'runId'");
+        Assert.That(ev!.Value.TryGetProperty("threadId", out _), Is.True, "missing camelCase 'threadId'");
+        Assert.That(ev!.Value.TryGetProperty("runId", out _), Is.True, "missing camelCase 'runId'");
         Assert.That(ev!.Value.TryGetProperty("timestamp", out _), Is.True, "missing 'timestamp'");
     }
 
@@ -201,7 +206,7 @@ public class AgUiChatControllerTests
         var input = new
         {
             threadId = "my-specific-thread",
-            runId    = "r1",
+            runId = "r1",
             messages = new[] { new { role = "user", content = "Hello", id = "m1" } },
         };
         var request = BuildRequest(input);
@@ -271,13 +276,54 @@ public class AgUiChatControllerTests
         var errorEvent = await ReadNextEventAsync(reader);
         Assert.That(errorEvent, Is.Not.Null, "expected RUN_ERROR event when gate is saturated");
 
-        errorEvent!.Value.TryGetProperty("type",    out var type);
+        errorEvent!.Value.TryGetProperty("type", out var type);
         errorEvent!.Value.TryGetProperty("message", out var message);
-        errorEvent!.Value.TryGetProperty("code",    out var code);
+        errorEvent!.Value.TryGetProperty("code", out var code);
 
-        Assert.That(type.GetString(),    Is.EqualTo("RUN_ERROR"));
-        Assert.That(code.GetString(),    Is.EqualTo("SERVICE_BUSY"));
+        Assert.That(type.GetString(), Is.EqualTo("RUN_ERROR"));
+        Assert.That(code.GetString(), Is.EqualTo("SERVICE_BUSY"));
         Assert.That(message.GetString(), Is.Not.Null.And.Not.Empty);
+    }
+
+    // History carries prior turns only: the orchestrator receives the current user
+    // message separately, and GaChatbot.Api excludes it from history the same way.
+    [TestCase("/api/chatbot/agui/stream")]
+    [TestCase("/api/chatbot/agui/json")]
+    public async Task AgUi_ForwardsPriorTurnsWithoutCurrentMessage(string route)
+    {
+        TestHarmonicChatOrchestrator.LastRequest = null;
+        using var response = await _client!.PostAsJsonAsync(route, new
+        {
+            threadId = "history-thread",
+            runId = "history-run",
+            messages = new[]
+            {
+                new { role = "user", content = "I am playing Dm7." },
+                new { role = "assistant", content = "Its notes are D F A C." },
+                new { role = "user", content = "  " },
+                new { role = "user", content = "Which scale fits?" }
+            }
+        });
+        _ = await response.Content.ReadAsStringAsync();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest, Is.Not.Null);
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest!.Message, Is.EqualTo("Which scale fits?"));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest.History, Is.Not.Null);
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest.History!.Select(turn => (turn.Role, turn.Content)),
+            Is.EqualTo(new[] { ("user", "I am playing Dm7."), ("assistant", "Its notes are D F A C.") }));
+    }
+
+    [TestCase("/api/chatbot/agui/stream")]
+    [TestCase("/api/chatbot/agui/json")]
+    public async Task AgUi_SingleMessage_ForwardsEmptyHistory(string route)
+    {
+        TestHarmonicChatOrchestrator.LastRequest = null;
+        using var response = await _client!.PostAsJsonAsync(route, ValidInput);
+        _ = await response.Content.ReadAsStringAsync();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(TestHarmonicChatOrchestrator.LastRequest?.History, Is.Not.Null.And.Empty);
     }
 
     // ── INFO-003: server-issued cookie SessionId (task #107) ─────────────────────
@@ -316,7 +362,7 @@ public class AgUiChatControllerTests
         var input = new
         {
             threadId = maliciousThreadId,
-            runId    = "r-malicious",
+            runId = "r-malicious",
             messages = new[] { new { role = "user", content = "Tell me about Cmaj7", id = "m1" } },
         };
 
@@ -350,7 +396,7 @@ public class AgUiChatControllerTests
         var input = new
         {
             threadId = maliciousThreadId,
-            runId    = "r-malicious-json",
+            runId = "r-malicious-json",
             messages = new[] { new { role = "user", content = "Tell me about Dm7", id = "m1" } },
         };
 
@@ -377,7 +423,7 @@ public class AgUiChatControllerTests
     [Category("SlowIntegration")]
     public async Task AgUiStream_StateDelta_ShouldContainAnalysisPhaseComplete()
     {
-        using var cts     = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
         var request = BuildRequest(ValidInput);
         using var response = await _client!.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
         await using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
@@ -411,7 +457,7 @@ public class AgUiChatControllerTests
         var phaseOp = ops.FirstOrDefault(op =>
             op.TryGetProperty("path", out var p) && p.GetString() == "/analysisPhase");
 
-        Assert.That(phaseOp.ValueKind,   Is.Not.EqualTo(JsonValueKind.Undefined), "no op for /analysisPhase in STATE_DELTA");
+        Assert.That(phaseOp.ValueKind, Is.Not.EqualTo(JsonValueKind.Undefined), "no op for /analysisPhase in STATE_DELTA");
         phaseOp.TryGetProperty("value", out var phaseValue);
         Assert.That(phaseValue.GetString(), Is.EqualTo("complete"));
     }

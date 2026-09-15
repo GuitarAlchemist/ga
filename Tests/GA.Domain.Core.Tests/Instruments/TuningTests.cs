@@ -13,21 +13,17 @@ using NUnit.Framework;
 public class TuningTests
 {
     [TestCase(6)]
-    public void Default_IsSixStringGuitar(int expected)
-    {
+    public void Default_IsSixStringGuitar(int expected) =>
         Assert.That(Tuning.Default.StringCount, Is.EqualTo(expected));
-    }
 
     [Test]
-    public void WellKnownTunings_HaveExpectedStringCounts()
-    {
+    public void WellKnownTunings_HaveExpectedStringCounts() =>
         Assert.Multiple(() =>
         {
             Assert.That(Tuning.Ukulele.StringCount, Is.EqualTo(4));
             Assert.That(Tuning.Bass.StringCount, Is.EqualTo(4));
             Assert.That(Tuning.Guitar7String.StringCount, Is.EqualTo(7));
         });
-    }
 
     [Test]
     public void Indexer_String1IsHighestPitch_String6IsLowest()
@@ -45,15 +41,11 @@ public class TuningTests
     }
 
     [Test]
-    public void AsSpan_LengthMatchesStringCount()
-    {
+    public void AsSpan_LengthMatchesStringCount() =>
         Assert.That(Tuning.Default.AsSpan().Length, Is.EqualTo(Tuning.Default.StringCount));
-    }
 
     [Test]
-    public void Indexer_StringBeyondTuning_Throws()
-    {
-        // String 7 is a valid Str value but undefined for a 6-string tuning.
+    // String 7 is a valid Str value but undefined for a 6-string tuning.
+    public void Indexer_StringBeyondTuning_Throws() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => _ = Tuning.Default[(Str)7]);
-    }
 }

@@ -92,4 +92,34 @@ public class VoicingTests
         var b = Make(Played(1, 0), Played(2, 3));
         Assert.That(a, Is.Not.EqualTo(b));
     }
+
+    [Test]
+    public void Diagram_IsCached_AndReturnsTheSameInstance()
+    {
+        var voicing = Make(Played(1, 0), Played(2, 2), Muted(3));
+        var first = voicing.Diagram;
+        var second = voicing.Diagram;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(second, Is.SameAs(first));
+            Assert.That(first, Is.EqualTo("0-2-x"));
+        });
+    }
+
+    [Test]
+    public void Diagram_IsRecomputedAfterWithExpression()
+    {
+        var voicing = Make(Played(1, 0), Played(2, 2));
+        _ = voicing.Diagram; // Populate the cache before copying
+
+        var copy = voicing with { Positions = [Played(1, 5), Played(2, 7)] };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(copy.Diagram, Is.EqualTo("5-7"));
+            Assert.That(voicing.Diagram, Is.EqualTo("0-2"));
+            Assert.That(copy, Is.Not.EqualTo(voicing));
+        });
+    }
 }

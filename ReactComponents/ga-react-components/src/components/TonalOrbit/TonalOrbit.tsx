@@ -325,13 +325,21 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
     halo.scale.set(6, 6, 1);
     scene.add(halo);
 
+    // ─── Spatial compass widget ────────────────────────────────────────────
+    // Small 3D axis HUD that follows the camera but stays world-aligned so the
+    // viewer always has an orientation reference while navigating the orbits.
+    const axisWidget = createAxisWidget();
+    axisWidget.renderOrder = 9999;
+    scene.add(axisWidget);
+    const _axisOffset = new THREE.Vector3();
+
     // ─── Build pitch-orbit bodies (12 planets) ─────────────────────────────
     const orbitMeshes: OrbitMesh[] = [];
     const labelSprites = new Map<THREE.Mesh, THREE.Sprite>();
 
     // Anchor planes for the orbit rings — faint circles so the eye can
-    // see the path each body sweeps.
-    const addOrbitRing = (radius: number, color: number, opacity: number) => {
+    // see the path each body sweeps. Optional label adds spatial context.
+    const addOrbitRing = (radius: number, color: number, opacity: number, label?: string) => {
       const geom = new THREE.RingGeometry(radius - 0.025, radius + 0.025, 96, 1);
       const mat = new THREE.MeshBasicMaterial({
         color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false,
@@ -339,9 +347,24 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       const ring = new THREE.Mesh(geom, mat);
       ring.rotation.x = -Math.PI / 2;
       scene.add(ring);
+      if (label) {
+        const labelSprite = makeHudLabelSprite(label, '#ffffff');
+        // Place the label at a fixed 45° angle on the ring so it doesn't fight
+        // with bodies for screen space, and make it larger than the body labels.
+        const labelAngle = Math.PI / 4;
+        const labelRadius = radius * 0.95;
+        labelSprite.position.set(
+          Math.cos(labelAngle) * labelRadius,
+          0.7,
+          Math.sin(labelAngle) * labelRadius,
+        );
+        labelSprite.scale.set(2.2, 0.55, 1);
+        (ring.userData as { label?: THREE.Sprite }).label = labelSprite;
+        scene.add(labelSprite);
+      }
       return ring;
     };
-    const pitchRing = addOrbitRing(PITCH_RADIUS, 0x6488c8, 0.18);
+    const pitchRing = addOrbitRing(PITCH_RADIUS, 0x6488c8, 0.18, 'Pitch Orbit');
     let chordRing: THREE.Mesh | null = null;
     let scaleRing: THREE.Mesh | null = null;
 
@@ -517,6 +540,12 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
 
     const removeRing = (ring: THREE.Mesh | null) => {
       if (!ring) return;
+      const label = (ring.userData as { label?: THREE.Sprite }).label;
+      if (label) {
+        scene.remove(label);
+        (label.material as THREE.SpriteMaterial).map?.dispose();
+        (label.material as THREE.SpriteMaterial).dispose();
+      }
       scene.remove(ring);
       ring.geometry.dispose();
       (ring.material as THREE.Material).dispose();
@@ -640,7 +669,7 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
         // Build chord orbit around the focused pitch. Source depends on
         // chord-mode: Mode A = 8 chord families on the pitch as root;
         // Mode B = 7 diatonic triads of the pitch's major key.
-        chordRing = addOrbitRing(CHORD_RADIUS, 0xb88c4c, 0.14);
+        chordRing = addOrbitRing(CHORD_RADIUS, 0xb88c4c, 0.14, 'Chord Orbit');
         const chords = chordModeRef.current === 'key' ? keyChordsForPitch(pitch) : chordsForPitch(pitch);
         chords.forEach((cb, i) => {
           const baseAngle = (i / chords.length) * Math.PI * 2;
@@ -658,7 +687,7 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
         // tapping a chord doesn't rebuild the modes (just changes the
         // audio + camera focus).
         if (chordModeRef.current === 'key') {
-          scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12);
+          scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12, 'Scale Orbit');
           const modes = keyModesForPitch(pitch);
           modes.forEach((sb, i) => {
             const baseAngle = (i / modes.length) * Math.PI * 2;
@@ -699,7 +728,7 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       focus.scale = null;
 
       if (chord && chordModeRef.current === 'root') {
-        scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12);
+        scaleRing = addOrbitRing(SCALE_RADIUS, 0x9c4cb8, 0.12, 'Scale Orbit');
         const scales = scalesForChord(chord);
         scales.forEach((sb, i) => {
           const baseAngle = (i / scales.length) * Math.PI * 2;
@@ -976,6 +1005,11 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       // Slow sky rotation so starfield drifts.
       sky.rotation.y = elapsed * 0.005;
 
+      // Keep the spatial-compass axis widget pinned to the camera's view while
+      // staying world-aligned so it actually reads as a 3D compass.
+      _axisOffset.set(24, 18, -32);
+      axisWidget.position.copy(camera.position).add(_axisOffset.applyQuaternion(camera.quaternion));
+
       if (composer) composer.render();
       else renderer.render(scene, camera);
 
@@ -1009,6 +1043,16 @@ export const TonalOrbit: React.FC<TonalOrbitProps> = ({
       removeRing(pitchRing);
       removeRing(chordRing);
       removeRing(scaleRing);
+      scene.remove(axisWidget);
+      axisWidget.traverse((obj) => {
+        if (obj instanceof THREE.Line) {
+          obj.geometry.dispose();
+          (obj.material as THREE.Material).dispose();
+        } else if (obj instanceof THREE.Sprite) {
+          (obj.material as THREE.SpriteMaterial).map?.dispose();
+          (obj.material as THREE.SpriteMaterial).dispose();
+        }
+      });
       scene.remove(star);
       starMat.dispose();
       star.geometry.dispose();
@@ -1084,6 +1128,68 @@ function makeLabelSprite(text: string): THREE.Sprite {
   sprite.scale.set(widthFactor, widthFactor * 0.25, 1);
   sprite.renderOrder = 999;
   return sprite;
+}
+
+function makeHudLabelSprite(text: string, color = '#eafaff'): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = 'bold 24px Menlo, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = color;
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const sprite = new THREE.Sprite(mat);
+  const widthFactor = Math.max(1.2, Math.min(2.8, text.length * 0.26));
+  sprite.scale.set(widthFactor, widthFactor * 0.25, 1);
+  sprite.renderOrder = 9999;
+  return sprite;
+}
+
+function createAxisWidget(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'axis-widget';
+  const axisLength = 2.0;
+  const axes = [
+    { dir: new THREE.Vector3(1, 0, 0), color: 0xff5555, label: 'X' },
+    { dir: new THREE.Vector3(0, 1, 0), color: 0x55ff55, label: 'Y' },
+    { dir: new THREE.Vector3(0, 0, 1), color: 0x5555ff, label: 'Z' },
+  ];
+  axes.forEach(axis => {
+    const end = axis.dir.clone().multiplyScalar(axisLength);
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), end]),
+      new THREE.LineBasicMaterial({
+        color: axis.color,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    group.add(line);
+    const label = makeHudLabelSprite(axis.label, '#ffffff');
+    label.position.copy(end).add(axis.dir.clone().multiplyScalar(0.28));
+    label.scale.set(0.5, 0.25, 1);
+    group.add(label);
+  });
+  return group;
 }
 
 export default TonalOrbit;

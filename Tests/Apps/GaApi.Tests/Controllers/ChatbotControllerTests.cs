@@ -5,11 +5,18 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using GA.Business.Core.Orchestration.Abstractions;
+using GA.Business.Core.Orchestration.Models;
+using GA.Core.Functional;
+using GaApi.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 
 /// <summary>
 ///     Integration tests for <see cref="GaApi.Controllers.ChatbotController" />.
 ///     Covers: GET /api/chatbot/status, GET /api/chatbot/examples,
-///     and POST /api/chatbot/chat/stream (contract only — Ollama may be offline).
+///     and POST /api/chatbot/chat/stream (deterministic transport contracts).
 /// </summary>
 [TestFixture]
 [Category("Integration")]
@@ -18,8 +25,20 @@ public class ChatbotControllerTests
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _factory = new TestWebApplicationFactory();
-        _client  = _factory.CreateClient();
+        // Transport/status contracts must not depend on a live model or embedding service.
+        var intake = new Mock<IChatIntake>();
+        intake.Setup(service => service.IntakeAsync(It.IsAny<ChatIntakeRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ChatResponse, ChatIntakeError>.Success(new ChatResponse("A major chord has a root, third, and fifth.", [])));
+        var provider = new Mock<IChatService>();
+        provider.Setup(service => service.IsAvailableAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _factory = new TestWebApplicationFactory().WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<IChatIntake>();
+            services.AddSingleton(intake.Object);
+            services.RemoveAll<IChatService>();
+            services.AddSingleton(provider.Object);
+        }));
+        _client = _factory.CreateClient();
     }
 
     [OneTimeTearDown]
@@ -30,7 +49,7 @@ public class ChatbotControllerTests
     }
 
     private WebApplicationFactory<Program>? _factory;
-    private HttpClient?                     _client;
+    private HttpClient? _client;
 
     // ── GET /api/chatbot/status ──────────────────────────────────────────────────
 
@@ -46,7 +65,7 @@ public class ChatbotControllerTests
     public async Task GetStatus_ShouldReturnIsAvailableField()
     {
         var response = await _client!.GetAsync("/api/chatbot/status");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(body.TryGetProperty("isAvailable", out var isAvailable), Is.True, "missing isAvailable");
         Assert.That(isAvailable.ValueKind, Is.EqualTo(JsonValueKind.True).Or.EqualTo(JsonValueKind.False));
@@ -56,7 +75,7 @@ public class ChatbotControllerTests
     public async Task GetStatus_ShouldReturnMessageField()
     {
         var response = await _client!.GetAsync("/api/chatbot/status");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(body.TryGetProperty("message", out var message), Is.True, "missing message");
         Assert.That(message.GetString(), Is.Not.Null.And.Not.Empty);
@@ -66,7 +85,7 @@ public class ChatbotControllerTests
     public async Task GetStatus_ShouldReturnTimestampField()
     {
         var response = await _client!.GetAsync("/api/chatbot/status");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(body.TryGetProperty("timestamp", out var timestamp), Is.True, "missing timestamp");
         Assert.That(DateTime.TryParse(timestamp.GetString(), out _), Is.True, "timestamp is not a valid datetime");
@@ -77,7 +96,7 @@ public class ChatbotControllerTests
     {
         // Ollama may or may not be running in CI — but the endpoint must always succeed.
         var response = await _client!.GetAsync("/api/chatbot/status");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         // isAvailable must be a boolean — true if Ollama is up, false if it's not
@@ -99,7 +118,7 @@ public class ChatbotControllerTests
     public async Task GetExamples_ShouldReturnNonEmptyStringArray()
     {
         var response = await _client!.GetAsync("/api/chatbot/examples");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(body.ValueKind, Is.EqualTo(JsonValueKind.Array));
         Assert.That(body.GetArrayLength(), Is.GreaterThan(0), "examples list must not be empty");
@@ -109,7 +128,7 @@ public class ChatbotControllerTests
     public async Task GetExamples_AllItemsShouldBeNonEmptyStrings()
     {
         var response = await _client!.GetAsync("/api/chatbot/examples");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         foreach (var item in body.EnumerateArray())
         {
@@ -121,9 +140,9 @@ public class ChatbotControllerTests
     [Test]
     public async Task GetExamples_ShouldContainGuitarRelatedContent()
     {
-        var response  = await _client!.GetAsync("/api/chatbot/examples");
-        var body      = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var examples  = body.EnumerateArray()
+        var response = await _client!.GetAsync("/api/chatbot/examples");
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var examples = body.EnumerateArray()
             .Select(e => e.GetString()!.ToLowerInvariant())
             .ToList();
 
@@ -150,7 +169,7 @@ public class ChatbotControllerTests
     public async Task GetDemo_ShouldReturnVersionAndCategories()
     {
         var response = await _client!.GetAsync("/api/chatbot/demo");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.That(body.TryGetProperty("version", out var version), Is.True, "missing version");
         Assert.That(version.GetString(), Is.Not.Null.And.Not.Empty);
@@ -164,23 +183,23 @@ public class ChatbotControllerTests
     public async Task GetDemo_EveryCategoryHasRequiredFieldsAndAtLeastOnePrompt()
     {
         var response = await _client!.GetAsync("/api/chatbot/demo");
-        var body     = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         foreach (var category in body.GetProperty("categories").EnumerateArray())
         {
-            Assert.That(category.GetProperty("id").GetString(),          Is.Not.Null.And.Not.Empty);
-            Assert.That(category.GetProperty("name").GetString(),        Is.Not.Null.And.Not.Empty);
-            Assert.That(category.GetProperty("icon").GetString(),        Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("id").GetString(), Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("name").GetString(), Is.Not.Null.And.Not.Empty);
+            Assert.That(category.GetProperty("icon").GetString(), Is.Not.Null.And.Not.Empty);
             Assert.That(category.GetProperty("description").GetString(), Is.Not.Null.And.Not.Empty);
 
             var prompts = category.GetProperty("prompts");
-            Assert.That(prompts.ValueKind,       Is.EqualTo(JsonValueKind.Array));
+            Assert.That(prompts.ValueKind, Is.EqualTo(JsonValueKind.Array));
             Assert.That(prompts.GetArrayLength(), Is.GreaterThan(0),
                 $"category '{category.GetProperty("id").GetString()}' must have at least one prompt");
 
             foreach (var prompt in prompts.EnumerateArray())
             {
-                Assert.That(prompt.GetProperty("prompt").GetString(),      Is.Not.Null.And.Not.Empty);
+                Assert.That(prompt.GetProperty("prompt").GetString(), Is.Not.Null.And.Not.Empty);
                 Assert.That(prompt.GetProperty("description").GetString(), Is.Not.Null.And.Not.Empty);
             }
         }
@@ -191,7 +210,7 @@ public class ChatbotControllerTests
     [Test]
     public async Task ChatStream_ShouldReturn400_WhenMessageIsEmpty()
     {
-        var request  = new { message = "" };
+        var request = new { message = "" };
         var response = await _client!.PostAsJsonAsync("/api/chatbot/chat/stream", request);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
@@ -200,19 +219,19 @@ public class ChatbotControllerTests
     [Test]
     public async Task ChatStream_ShouldReturn400_WhenMessageIsWhitespace()
     {
-        var request  = new { message = "   " };
+        var request = new { message = "   " };
         var response = await _client!.PostAsJsonAsync("/api/chatbot/chat/stream", request);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
     }
 
     [Test]
-    public async Task ChatStream_WhenOllamaAvailable_ShouldReturnEventStream()
+    public async Task ChatStream_ShouldReturnEventStream_FromIntake()
     {
         // Use ResponseHeadersRead so the client returns as soon as the server
         // commits the SSE headers (via Response.StartAsync) — without waiting
         // for the full stream to close, regardless of Ollama availability.
-        var content    = JsonContent.Create(new { message = "What is a major chord?" });
+        var content = JsonContent.Create(new { message = "What is a major chord?" });
         var requestMsg = new HttpRequestMessage(HttpMethod.Post, "/api/chatbot/chat/stream")
         {
             Content = content,
@@ -231,7 +250,7 @@ public class ChatbotControllerTests
     [Test]
     public async Task ChatStream_ShouldReturn400_WhenBodyIsMissing()
     {
-        var content  = new StringContent("{}", Encoding.UTF8, "application/json");
+        var content = new StringContent("{}", Encoding.UTF8, "application/json");
         var response = await _client!.PostAsync("/api/chatbot/chat/stream", content);
 
         // message is null/empty after deserialization — should 400

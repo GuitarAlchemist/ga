@@ -32,7 +32,15 @@ public sealed class ReadinessGatedChatApplicationService(
     IChatReadinessProbe probe,
     IAgenticTraceCapture capture) : IChatApplicationService
 {
-    public async Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default)
+    public Task<ChatResponse> ChatAsync(ChatRequest request, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, null, cancellationToken);
+
+    public Task<ChatResponse> ChatStreamingAsync(
+        ChatRequest request, Func<string, Task> onToken, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(request, onToken, cancellationToken);
+
+    private async Task<ChatResponse> ExecuteAsync(
+        ChatRequest request, Func<string, Task>? onToken, CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
         ChatReadinessResult readiness;
@@ -63,7 +71,7 @@ public sealed class ReadinessGatedChatApplicationService(
 
         if (readiness.IsReady)
         {
-            return await inner.ChatAsync(request, cancellationToken);
+            return onToken is null ? await inner.ChatAsync(request, cancellationToken) : await inner.ChatStreamingAsync(request, onToken, cancellationToken);
         }
 
         // Short-circuit: deterministic, low-confidence, no grounding,

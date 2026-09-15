@@ -1,5 +1,7 @@
 namespace GA.Business.Core.Orchestration.Abstractions;
 
+using GA.Business.Core.Orchestration.Models;
+
 /// <summary>
 /// Last-resort answerer used by
 /// <see cref="GA.Business.Core.Orchestration.Services.FallbackChatApplicationService"/>
@@ -8,7 +10,7 @@ namespace GA.Business.Core.Orchestration.Abstractions;
 /// fallback path is allowed to paper over).
 /// </summary>
 /// <remarks>
-/// Intentionally narrow — string in, string out — so a host can plug in
+/// Intentionally narrow — message and prior turns in, string out — so a host can plug in
 /// any direct-chat path (Ollama, Claude, OpenAI, etc.) without inheriting
 /// the full <see cref="IChatApplicationService"/> contract. The fallback
 /// decorator wraps the returned text into a <c>ChatResponse</c> with
@@ -20,9 +22,13 @@ public interface IFallbackChatHandler
     /// <summary>
     /// Produce a plain-text answer. Should respect the cancellation token
     /// and complete within the fallback timeout configured on
-    /// <see cref="FallbackOptions"/>.
+    /// <see cref="FallbackOptions"/>. <paramref name="history"/> holds the caller's prior
+    /// turns, oldest first, excluding <paramref name="message"/>.
     /// </summary>
-    Task<string> AnswerAsync(string message, CancellationToken cancellationToken = default);
+    Task<string> AnswerAsync(
+        string message,
+        IReadOnlyList<ConversationTurn>? history,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -33,7 +39,10 @@ public interface IFallbackChatHandler
 /// </summary>
 public sealed class NoOpFallbackChatHandler : IFallbackChatHandler
 {
-    public Task<string> AnswerAsync(string message, CancellationToken cancellationToken = default) =>
+    public Task<string> AnswerAsync(
+        string message,
+        IReadOnlyList<ConversationTurn>? history,
+        CancellationToken cancellationToken = default) =>
         Task.FromResult(
             "I couldn't answer that with the deterministic pipeline and no fallback handler is configured. " +
             "Please rephrase or contact an operator.");
