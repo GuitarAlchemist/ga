@@ -265,31 +265,45 @@ public static class ChordAtonalTool
         "Useful for smooth voice-leading or finding unexpected but structurally close substitutions.")]
     public static async Task<string> GaIcvNeighbors(
         [Description("Chord symbol, e.g. 'Am7', 'G7'")] string symbol,
-        [Description("Max Grothendieck L1 distance to search (1–4, default 1)")] int maxDistance = 1)
+        [Description("Max L1 distance between interval-class vectors (1–4, default 1). " +
+                     "Sets of the same size are at least 2 apart; distance 0 is a Z-related set.")] int maxDistance = 1)
     {
         var pcs = await GetPitchClassesAsync(symbol);
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var sourceSet = ToPitchClassSet(pcs);
-        var grothendieck = new GrothendieckService();
-        var neighbors = grothendieck.FindNearby(sourceSet, Math.Clamp(maxDistance, 1, 4))
-            .Where(r => r.Delta.L1Norm > 0) // skip self
+        var sourceIcv = sourceSet.IntervalClassVector;
+        var sourcePrime = sourceSet.PrimeForm;
+        var distance = Math.Clamp(maxDistance, 1, 4);
+        // FindNearby scans all 4096 sets and reports those sharing the source's vector at
+        // distance 1 (GrothendieckDelta.FromIcVs turns a zero delta into Ic1 = 1), so the 24 major
+        // and minor triads came back as C's neighbours. Use the actual L1 distance, skip the
+        // chord's own set class and list each set class once.
+        var neighbors = new GrothendieckService().FindNearby(sourceSet, distance)
+            .Select(r => (r.Set, Distance: IcvDistance(sourceIcv, r.Set.IntervalClassVector)))
+            .Where(n => n.Distance <= distance && !Equals(n.Set.PrimeForm, sourcePrime))
+            .GroupBy(n => n.Set.PrimeForm?.ToString() ?? n.Set.ToString())
+            .Select(g => g.First())
+            .OrderBy(n => n.Distance)
             .Take(12)
             .ToList();
 
         if (neighbors.Count == 0)
-            return $"No neighbors within distance {maxDistance} of {symbol}";
+            return $"No other set class within distance {distance} of {symbol} " +
+                   "(sets of the same size are at least 2 apart)";
 
-        var sourceIcv = sourceSet.IntervalClassVector;
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {maxDistance}):");
-        foreach (var (neighbor, delta, _) in neighbors)
+        sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {distance}):");
+        foreach (var (neighbor, neighborDistance) in neighbors)
         {
             var forte = ForteCatalog.GetForteNumber(neighbor.PrimeForm ?? neighbor);
             var neighborName = TranspositionName([.. neighbor.Select(pc => pc.Value)], neighbor.IntervalClassVector, rootPc: null);
             var nameStr = neighborName != null ? $" [{neighborName}]" : "";
-            sb.AppendLine($"  {neighbor.IntervalClassVector}  Δ={delta.L1Norm}  Forte:{forte}{nameStr}");
+            sb.AppendLine($"  {neighbor.IntervalClassVector}  Δ={neighborDistance}  Forte:{forte}{nameStr}");
         }
         return sb.ToString().TrimEnd();
     }
+
+    private static int IcvDistance(IntervalClassVector a, IntervalClassVector b) =>
+        Enumerable.Range(1, 6).Sum(ic => Math.Abs(a[IntervalClass.FromValue(ic)] - b[IntervalClass.FromValue(ic)]));
 }

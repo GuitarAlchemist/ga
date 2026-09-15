@@ -70,6 +70,30 @@ public sealed class ChordAtonalToolTests
     }
 
     [Test]
+    public async Task GaIcvNeighbors_Distance1_DoesNotListTheChordsOwnSetClass()
+    {
+        // A triad's vector sums to 3, so another triad is at least 2 away; the 24 major and minor
+        // triads share C's vector and used to be reported twelve times at distance 1.
+        var result = await ChordAtonalTool.GaIcvNeighbors("C", 1);
+
+        Assert.That(result, Does.Not.Contain("Forte:3-11"));
+    }
+
+    [Test]
+    public async Task GaIcvNeighbors_Distance2_ListsEachSetClassOnceWithItsTrueDistance()
+    {
+        var lines = (await ChordAtonalTool.GaIcvNeighbors("C", 2))
+            .Split('\n').Skip(1).Select(l => l.Trim()).ToList();
+
+        Assert.That(lines, Is.Not.Empty);
+        Assert.That(lines, Is.Unique);
+        Assert.That(lines, Has.All.Contains("Δ=2"));
+        Assert.That(lines, Has.None.Contains("Forte:3-11"));
+        // 3-7 (025), vector <0 1 1 0 1 0>, differs from <0 0 1 1 1 0> by 2.
+        Assert.That(lines, Has.Some.Contains("Forte:3-7"));
+    }
+
+    [Test]
     public void GaSetClassSubs_Description_DoesNotContradictSetTheory()
     {
         // Am (A C E) and C (C E G) are inversions of each other: both are set class 3-11.
