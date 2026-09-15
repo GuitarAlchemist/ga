@@ -244,6 +244,17 @@ public class ChordTests
         Assert.That(PitchClassValues(inverted), Is.EqualTo(PitchClassValues(chord)));
     }
 
+    // Root is whatever Note type the caller passed while Notes are Accidented: comparing the records
+    // made every root-position chord built on a Note.Sharp or Note.Chromatic root look inverted.
+    [Test]
+    public void IsInverted_RootPosition_IsFalse_WhateverTheRootNoteType() =>
+        Assert.Multiple(() =>
+        {
+            Assert.That(new Chord(Note.Sharp.C, ChordFormula.Major).IsInverted, Is.False);
+            Assert.That(new Chord(Note.Chromatic.C, ChordFormula.Major).IsInverted, Is.False);
+            Assert.That(new Chord(Note.Sharp.C, ChordFormula.Major).ToInversion(1).IsInverted, Is.True);
+        });
+
     // One letter per chord degree, counted up from the root letter in thirds (then 2nds, 4ths, 6ths
     // for added tones), with whatever accidental the interval needs: Cm is C Eb G, never C D# G.
     [TestCase("C", "C E G")]

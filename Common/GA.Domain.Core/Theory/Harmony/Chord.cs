@@ -225,9 +225,13 @@ public sealed class Chord : IEquatable<Chord>
     public PitchClassSet PitchClassSet { get; }
 
     /// <summary>
-    ///     Gets whether this is an inverted chord
+    ///     Gets whether this is an inverted chord (a note other than the root is in the bass)
     /// </summary>
-    public bool IsInverted => Notes[0] != Root;
+    /// <remarks>
+    ///     Compares pitch classes: <see cref="Root" /> keeps the caller's note type while <see cref="Notes" />
+    ///     are <see cref="Note.Accidented" />, and records of different types never compare equal.
+    /// </remarks>
+    public bool IsInverted => Notes[0].PitchClass != Root.PitchClass;
 
     /// <summary>
     ///     Gets the bass note (lowest note in the voicing)
