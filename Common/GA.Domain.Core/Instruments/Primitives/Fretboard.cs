@@ -16,18 +16,30 @@ using Theory.Atonal;
 [DomainInvariant("Fretboard must have at least one string", "StringCount > 0")]
 [DomainInvariant("Fretboard must have a valid number of frets", "FretCount >= 0")]
 [DomainRelationship(typeof(Tuning), RelationshipType.IsChildOf, "A fretboard has a specific tuning")]
-public sealed class Fretboard(Tuning tuning, int fretCount)
+public sealed class Fretboard
 {
+    public Fretboard(Tuning tuning, int fretCount)
+    {
+        ArgumentNullException.ThrowIfNull(tuning);
+        ArgumentOutOfRangeException.ThrowIfNegative(fretCount);
+        if (tuning.StringCount == 0)
+        {
+            throw new ArgumentException("A fretboard must have at least one string", nameof(tuning));
+        }
+
+        Tuning = tuning;
+        FretCount = fretCount;
+    }
 
     /// <summary>
     ///     The tuning of the instrument
     /// </summary>
-    public Tuning Tuning { get; } = tuning ?? throw new ArgumentNullException(nameof(tuning));
+    public Tuning Tuning { get; }
 
     /// <summary>
     ///     Number of frets on the instrument
     /// </summary>
-    public int FretCount { get; } = fretCount;
+    public int FretCount { get; }
 
     /// <summary>
     ///     Number of strings on the instrument

@@ -39,6 +39,10 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         // without an Ollama instance running.
         builder.UseSetting("AI:ChatProvider", "ollama");
 
+        // Endpoint tests do not exercise offline corpus generation. Starting it for
+        // every test host consumes gigabytes and can stall unrelated HTTP tests.
+        builder.UseSetting("VoicingSearch:EnableIndexing", "false");
+
         base.ConfigureWebHost(builder);
     }
 

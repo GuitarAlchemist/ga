@@ -282,17 +282,17 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Flat D(Octave octave) => new(Notes.Note.Flat.D, octave);
 
-        public static Flat DFlat(Octave octave) => new(Notes.Note.Flat.D, octave);
+        public static Flat DFlat(Octave octave) => new(Notes.Note.Flat.DFlat, octave);
 
         public static Flat E(Octave octave) => new(Notes.Note.Flat.E, octave);
 
         public static Flat F(Octave octave) => new(Notes.Note.Flat.F, octave);
 
-        public static Flat FFlat(Octave octave) => new(Notes.Note.Flat.G, octave);
+        public static Flat FFlat(Octave octave) => new(Notes.Note.Flat.FFlat, octave);
 
         public static Flat G(Octave octave) => new(Notes.Note.Flat.G, octave);
 
-        public static Flat GFlat(Octave octave) => new(Notes.Note.Flat.A, octave);
+        public static Flat GFlat(Octave octave) => new(Notes.Note.Flat.GFlat, octave);
 
         public static Flat A(Octave octave) => new(Notes.Note.Flat.A, octave);
 

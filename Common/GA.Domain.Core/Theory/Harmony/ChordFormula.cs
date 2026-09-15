@@ -111,8 +111,24 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
             return true;
         }
 
-        return Intervals.Count == other.Intervals.Count &&
-               Intervals.All(i => other.Intervals.Any(oi => oi.Interval.Equals(i.Interval)));
+        if (Intervals.Count != other.Intervals.Count)
+        {
+            return false;
+        }
+
+        // Formula identity is independent of order, but retains repeated intervals.
+        var counts = Intervals.GroupBy(i => i.Interval).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var item in other.Intervals)
+        {
+            if (!counts.TryGetValue(item.Interval, out var count) || count == 0)
+            {
+                return false;
+            }
+
+            counts[item.Interval] = count - 1;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -306,6 +322,13 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
             _ => ""
         };
 
+        if (Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSeventh) &&
+            Extension is ChordExtension.Seventh or ChordExtension.Ninth or
+                ChordExtension.Eleventh or ChordExtension.Thirteenth)
+        {
+            suffix += "maj";
+        }
+
         suffix += Extension switch
         {
             ChordExtension.Seventh => "7",
@@ -345,7 +368,7 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
     public override bool Equals(object? obj) => Equals(obj as ChordFormula);
 
     public override int GetHashCode() => Intervals.Aggregate(0, (hash, interval) =>
-        HashCode.Combine(hash, interval.Interval.GetHashCode()));
+        unchecked(hash + interval.Interval.GetHashCode()));
 
     public override string ToString() => $"{Name} ({GetSymbolSuffix()})";
 }

@@ -62,6 +62,15 @@ public sealed class Chord : IEquatable<Chord>
         Symbol = GenerateSymbol();
     }
 
+    private Chord(Chord source, AccidentedNoteCollection notes)
+    {
+        Root = source.Root;
+        Formula = source.Formula;
+        Symbol = source.Symbol;
+        PitchClassSet = source.PitchClassSet;
+        Notes = notes;
+    }
+
     // Splits a chord symbol into root (A-G with optional #/b) and a suffix describing quality/extension.
     private static readonly Regex _symbolRegex =
         new("^([A-G][#b]?)(.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -180,7 +189,7 @@ public sealed class Chord : IEquatable<Chord>
     /// <summary>
     ///     Gets whether this is an inverted chord
     /// </summary>
-    public bool IsInverted => Notes[0] != Root;
+    public bool IsInverted => Notes[0].PitchClass != Root.PitchClass;
 
     /// <summary>
     ///     Gets the bass note (lowest note in the voicing)
@@ -232,22 +241,23 @@ public sealed class Chord : IEquatable<Chord>
             throw new ArgumentOutOfRangeException(nameof(inversion));
         }
 
-        if (inversion == 0)
+        var rotation = (inversion - GetInversion() + Notes.Count) % Notes.Count;
+        if (rotation == 0)
         {
             return this;
         }
 
         var notesList = Notes.ToList();
-        var invertedNotes = notesList.Skip(inversion).Concat(notesList.Take(inversion));
+        var invertedNotes = notesList.Skip(rotation).Concat(notesList.Take(rotation));
 
-        return new(new(invertedNotes.ToList()), Root);
+        return new(this, new(invertedNotes.ToList()));
     }
 
     private ChordFormula AnalyzeChordFormula()
     {
         List<ChordFormulaInterval> intervals = [];
 
-        foreach (var note in Notes.Skip(1)) // Skip root
+        foreach (var note in Notes.Where(note => note.PitchClass != Root.PitchClass))
         {
             var semitones = (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12;
             var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
@@ -275,26 +285,7 @@ public sealed class Chord : IEquatable<Chord>
             symbol = Root.ToString();
         }
 
-        symbol += Quality switch
-        {
-            ChordQuality.Minor => "m",
-            ChordQuality.Diminished => "dim",
-            ChordQuality.Augmented => "aug",
-            _ => ""
-        };
-
-        symbol += Extension switch
-        {
-            ChordExtension.Seventh => "7",
-            ChordExtension.Ninth => "9",
-            ChordExtension.Eleventh => "11",
-            ChordExtension.Thirteenth => "13",
-            ChordExtension.Add9 => "add9",
-            ChordExtension.Sixth => "6",
-            ChordExtension.Sus2 => "sus2",
-            ChordExtension.Sus4 => "sus4",
-            _ => ""
-        };
+        symbol += Formula.GetSymbolSuffix();
 
         return symbol;
     }

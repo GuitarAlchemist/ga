@@ -18,8 +18,8 @@ internal static class PitchParser
         }
 
         var regexPattern = typeof(TAccidental) == typeof(SharpAccidental)
-            ? "([A-G])(#?)(10|11|[0-9])"
-            : "([A-G])(b?)(10|11|[0-9])";
+            ? @"\A([A-G])(#?)(-1|[0-9])\z"
+            : @"\A([A-G])(b?)(-1|[0-9])\z";
         var regex = new PcreRegex(regexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
         var match = regex.Match(s);
@@ -49,9 +49,13 @@ internal static class PitchParser
 
         // Parse accidental
         TAccidental? accidental = null;
-        if (accidentalGroup.IsDefined &&
-            TAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
+        if (accidentalGroup.IsDefined && accidentalGroup.Value.Length > 0)
         {
+            if (!TAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
+            {
+                return false;
+            }
+
             accidental = parsedAccidental;
         }
 
