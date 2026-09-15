@@ -27,14 +27,13 @@ public sealed class Chord : IEquatable<Chord>
         Root = root;
         Formula = formula;
 
-        // Build notes from formula
-        List<Note.Accidented> notes = [root.ToAccidented()];
+        // Build notes from formula, each spelled with the letter of its chord degree
+        var accidentedRoot = root.ToAccidented();
+        var semitonesFromRoot = formula.Intervals.Select(i => i.Interval.Semitones.Value % 12).ToHashSet();
+        List<Note.Accidented> notes = [accidentedRoot];
         foreach (var interval in formula.Intervals)
         {
-            // Transpose by adding semitones to pitch class value
-            var newPitchClassValue = (root.PitchClass.Value + interval.Interval.Semitones.Value) % 12;
-            var newNote = new PitchClass { Value = newPitchClassValue }.ToChromaticNote().ToAccidented();
-            notes.Add(newNote);
+            notes.Add(SpellChordTone(accidentedRoot, interval.Interval.Semitones.Value, semitonesFromRoot));
         }
 
         Notes = new(notes);
@@ -105,6 +104,54 @@ public sealed class Chord : IEquatable<Chord>
             chord = null;
             return false;
         }
+    }
+
+    /// <summary>
+    ///     Spells a chord tone with the letter of its chord degree (root letter + 2 letters per third,
+    ///     so the third of C minor is Eb, not D#), then the accidental the interval needs.
+    /// </summary>
+    /// <remarks>
+    ///     Falls back to the sharp spelling if the letter would need more than a double accidental.
+    /// </remarks>
+    private static Note.Accidented SpellChordTone(Note.Accidented root, int semitones, IReadOnlySet<int> semitonesFromRoot)
+    {
+        var pitchClass = (root.PitchClass.Value + semitones) % 12;
+        var letterSteps = GetChordToneDegree(semitones % 12, semitonesFromRoot) - 1;
+        var letter = NaturalNote.FromValue((root.NaturalNote.Value + letterSteps) % 7);
+        var offset = ((pitchClass - letter.PitchClass.Value) % 12 + 18) % 12 - 6; // -6..5
+
+        return offset switch
+        {
+            0 => new(letter),
+            >= -2 and <= 2 => new(letter, Accidental.FromValue(offset)),
+            _ => new PitchClass { Value = pitchClass }.ToChromaticNote().ToAccidented()
+        };
+    }
+
+    /// <summary>
+    ///     Gets the degree (1-7, compound degrees reduced: 9 → 2, 11 → 4, 13 → 6) that a chord tone
+    ///     <paramref name="semitones" /> (0-11) above the root is spelled as, given the other tones.
+    /// </summary>
+    private static int GetChordToneDegree(int semitones, IReadOnlySet<int> semitonesFromRoot)
+    {
+        var hasMajorThird = semitonesFromRoot.Contains(4);
+        var hasPerfectFifth = semitonesFromRoot.Contains(7);
+        var isDiminishedSeventh = semitonesFromRoot.Contains(3) && semitonesFromRoot.Contains(6) &&
+                                  !hasPerfectFifth && !semitonesFromRoot.Contains(10) && !semitonesFromRoot.Contains(11);
+
+        return semitones switch
+        {
+            0 => 1,
+            1 or 2 => 2, // b9, 9 or sus2
+            3 => hasMajorThird ? 2 : 3, // #9 beside a major third, otherwise the minor third
+            4 => 3,
+            5 => 4, // 11 or sus4
+            6 => hasPerfectFifth ? 4 : 5, // #11 beside a perfect fifth, otherwise b5
+            7 => 5,
+            8 => hasPerfectFifth ? 6 : 5, // b13 beside a perfect fifth, otherwise #5
+            9 => isDiminishedSeventh ? 7 : 6, // diminished seventh (Bbb in Cdim7), otherwise 6 or 13
+            _ => 7
+        };
     }
 
     private static ChordFormula ParseSuffix(string suffix)

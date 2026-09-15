@@ -244,6 +244,43 @@ public class ChordTests
         Assert.That(PitchClassValues(inverted), Is.EqualTo(PitchClassValues(chord)));
     }
 
+    // One letter per chord degree, counted up from the root letter in thirds (then 2nds, 4ths, 6ths
+    // for added tones), with whatever accidental the interval needs: Cm is C Eb G, never C D# G.
+    [TestCase("C", "C E G")]
+    [TestCase("Cm", "C Eb G")]
+    [TestCase("Eb", "Eb G Bb")]
+    [TestCase("Ab", "Ab C Eb")]
+    [TestCase("F#", "F♯ A♯ C♯")]
+    [TestCase("Bbm7", "Bb Db F Ab")]
+    [TestCase("Cdim", "C Eb Gb")]
+    [TestCase("Cdim7", "C Eb Gb Bbb")]
+    [TestCase("F#dim7", "F♯ A C Eb")]
+    [TestCase("Gb7", "Gb Bb Db Fb")]
+    [TestCase("Cm7b5", "C Eb Gb Bb")]
+    [TestCase("Caug", "C E G♯")]
+    [TestCase("Csus2", "C D G")]
+    [TestCase("Csus4", "C F G")]
+    [TestCase("C6", "C E G A")]
+    [TestCase("Cm6", "C Eb G A")]
+    [TestCase("C9", "C E G Bb D")]
+    [TestCase("Cadd9", "C E G D")]
+    [TestCase("C13", "C E G Bb D F A")]
+    public void FromSymbol_SpellsOneLetterPerChordDegree(string symbol, string expectedNotes) =>
+        Assert.That(string.Join(" ", Chord.FromSymbol(symbol).Notes), Is.EqualTo(expectedNotes));
+
+    [TestCase(new[] { 1, 4, 7, 10 }, "C Db E G Bb")]  // 7(b9)
+    [TestCase(new[] { 3, 4, 7, 10 }, "C D♯ E G Bb")]  // 7(#9)
+    [TestCase(new[] { 4, 6, 7, 10 }, "C E F♯ G Bb")]  // 7(#11)
+    [TestCase(new[] { 4, 7, 8, 10 }, "C E G Ab Bb")]  // 7(b13)
+    [TestCase(new[] { 4, 6, 10 }, "C E Gb Bb")]        // 7(b5)
+    [TestCase(new[] { 4, 8, 10 }, "C E G♯ Bb")]       // 7(#5)
+    public void Constructor_SpellsAlteredTonesByTheirDegree(int[] semitones, string expectedNotes)
+    {
+        var chord = new Chord(Note.Accidented.C, ChordFormula.FromSemitones("Altered", semitones));
+
+        Assert.That(string.Join(" ", chord.Notes), Is.EqualTo(expectedNotes));
+    }
+
     // A chord built from notes measures its intervals from the root, whatever note is in the bass:
     // C/E (E G C) used to skip E instead of C and lose its third (quality Other).
     [TestCase("C", 1, ChordQuality.Major, "C")]
