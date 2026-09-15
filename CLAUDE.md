@@ -50,6 +50,24 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 - Pre-commit hook (`pwsh Scripts/install-git-hooks.ps1`) enforces `dotnet format` + build.
 - Language standards: `.agent/skills/`. Governance: `demerzel-*` skills.
 
+## AFK scope and promotion gates
+
+`ga.loop-policy.json` is the executable authority for unattended GA work.
+The initial code profile is deliberately narrow: only
+`Common/GA.Business.ML/Agents/Skills/**` and
+`Common/GA.Business.ML/Agents/Mcp/**`, plus matching `*SkillTests.cs` and
+`*McpToolsTests.cs` ML unit tests. Do not infer broader layer-4/5 or
+`Tests/**` access.
+
+The policy's L0-L3 names are **verification depth**, not autonomy levels:
+L0 preflight, L1 focused project verification, L2 Cloud Dev Smoke via
+`Scripts/cloud-validate.sh` (`Scripts/cloud-validate.ps1` on Windows), and L3
+full merge-gate build/test (plus frontend build/lint when applicable). A draft
+requires L0-L2. Ready-for-merge also
+requires L3, Agent Blackbox postflight via GA #630, and the required
+`Independent Review Verdict` check from a separate reviewer identity/context.
+Author comments do not satisfy review independence; AFK actors never merge.
+
 ## Cross-repo contracts
 
 GA collaborates with sibling repos via JSON-on-disk contracts (the canonical handoff pattern across the GuitarAlchemist ecosystem). Sibling clones are typically peers under the same parent directory:
