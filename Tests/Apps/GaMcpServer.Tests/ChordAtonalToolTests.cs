@@ -41,4 +41,27 @@ public sealed class ChordAtonalToolTests
 
         Assert.That(result.Split('\n').Single(l => l.StartsWith("  [m7b5] ")), Contains.Substring("Bm7b5"));
     }
+
+    [Test]
+    public async Task GaIcvNeighbors_MajorTriad_ListsEachOtherIcvOnce()
+    {
+        var result = await ChordAtonalTool.GaIcvNeighbors("C", 2);
+        var lines = result.Split('\n').Skip(1).Select(l => l.Trim()).ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lines, Is.Not.Empty);
+            Assert.That(lines, Is.Unique);
+            Assert.That(lines, Has.None.StartWith("<0 0 1 1 1 0>"));
+        });
+    }
+
+    [Test]
+    public async Task GaIcvNeighbors_TriadAtDistanceOne_HasNoNeighbors()
+    {
+        // Every triad ICV sums to 3, so another triad ICV is at least 2 away.
+        var result = await ChordAtonalTool.GaIcvNeighbors("C", 1);
+
+        Assert.That(result, Is.EqualTo("No neighbors within distance 1 of C"));
+    }
 }

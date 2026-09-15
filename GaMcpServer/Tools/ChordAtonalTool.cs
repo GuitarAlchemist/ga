@@ -233,16 +233,19 @@ public static class ChordAtonalTool
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var sourceSet = ToPitchClassSet(pcs);
+        var sourceIcv = sourceSet.IntervalClassVector;
         var grothendieck = new GrothendieckService();
+        // Sets with the source's own ICV (its transpositions and inversions) are not neighbors, and
+        // every other ICV is listed once.
         var neighbors = grothendieck.FindNearby(sourceSet, Math.Clamp(maxDistance, 1, 4))
-            .Where(r => r.Delta.L1Norm > 0) // skip self
+            .Where(r => r.Set.IntervalClassVector != sourceIcv)
+            .DistinctBy(r => r.Set.IntervalClassVector)
             .Take(12)
             .ToList();
 
         if (neighbors.Count == 0)
             return $"No neighbors within distance {maxDistance} of {symbol}";
 
-        var sourceIcv = sourceSet.IntervalClassVector;
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {maxDistance}):");
         foreach (var (neighbor, delta, _) in neighbors)
