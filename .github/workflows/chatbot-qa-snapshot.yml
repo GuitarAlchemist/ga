@@ -100,14 +100,27 @@ jobs:
             }
           }
 
-      # Default backend: run Ollama ON the runner — no secret, no tunnel, no
-      # Cloudflare. Only runs when the remote OLLAMA_BASE_URL secret did NOT set
-      # a backend above, so a remote override still wins if one is ever configured.
-      # Pulls the exact models the chatbot config declares (Apps/GaChatbot.Api/
-      # appsettings.json: ChatModel llama3.2:3b, EmbeddingModel nomic-embed-text) so
-      # the measured pass_pct is comparable to the local baseline (0.94, llama3.2:3b).
-      - name: Install + warm in-runner Ollama (default backend)
-        if: ${{ env.OLLAMA_BASE_URL == '' }}
+      # In-runner backend: run Ollama ON the runner — no secret, no tunnel, no
+      # Cloudflare. Pulls the exact models the chatbot config declares (Apps/
+      # GaChatbot.Api/appsettings.json: ChatModel llama3.2:3b, EmbeddingModel
+      # nomic-embed-text) so the measured pass_pct is comparable to the local
+      # baseline (0.94, llama3.2:3b).
+      #
+      # OPT-IN, DEFAULT OFF. The model pull + ~50 CPU-inference prompts do not fit
+      # timeout-minutes: 60 on a 2-core hosted runner. Enabling this by default
+      # (#411, 2026-06-16) is what SILENTLY killed the producer: every scheduled
+      # run from 2026-06-21 on was CANCELLED at the 60-min wall before the commit
+      # step, so no snapshot landed for a month (the job read "cancelled", not
+      # "failed"). With the var unset this step is skipped, the backend preflight
+      # degrades, the corpus writes an HONEST degraded snapshot (pass_pct=null,
+      # carryforward) via #553's GA_CORPUS_ENV_DEGRADED path, and the commit step
+      # lands it fast — the proven pre-#411 behaviour. Set repo variable
+      # CHATBOT_QA_INRUNNER_OLLAMA=true to opt back into real in-runner measurement
+      # (accepting the >60-min timeout risk). A remote OLLAMA_BASE_URL secret still
+      # wins over this either way. For real pass_pct without the timeout, see
+      # docs/runbooks/chatbot-qa-producer-revival.md (remote backend / self-hosted).
+      - name: Install + warm in-runner Ollama (opt-in; default off)
+        if: ${{ env.OLLAMA_BASE_URL == '' && vars.CHATBOT_QA_INRUNNER_OLLAMA == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
