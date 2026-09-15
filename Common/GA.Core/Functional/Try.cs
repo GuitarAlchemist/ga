@@ -59,14 +59,18 @@ public static class Try
         }
     }
 
+    /// <summary>
+    ///     Runs an async operation and captures its failure. Cancellation is not a failure: an
+    ///     <see cref="OperationCanceledException" /> propagates to the caller.
+    /// </summary>
     public static async Task<Try<T>> OfAsync<T>(Func<Task<T>> operation)
     {
         try
         {
-            var result = await operation();
+            var result = await operation().ConfigureAwait(false);
             return Try<T>.Success(result);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return Try<T>.Failure(ex);
         }

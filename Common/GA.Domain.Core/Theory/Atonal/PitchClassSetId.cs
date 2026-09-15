@@ -14,6 +14,11 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     private static readonly int[] _valuesArray = [.. Enumerable.Range(_minValue, _maxValue + 1)];
 
+    // A real array: Items used to be a collection expression typed IReadOnlyCollection, which the
+    // compiler backs with a private list type, so ItemsSpan copied all 4,096 ids on every call.
+    private static readonly PitchClassSetId[] _itemsArray =
+        [.. Enumerable.Range(_minValue, _maxValue - _minValue + 1).Select(i => new PitchClassSetId(i))];
+
     public PitchClassSetId(int value) =>
         Value = ValueObjectUtils<PitchClassSetId>.EnsureValueRange(value, _minValue, _maxValue);
 
@@ -56,7 +61,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
         }
     }
 
-    public static ReadOnlySpan<PitchClassSetId> ItemsSpan => Items is PitchClassSetId[] arr ? arr : [.. Items];
+    public static ReadOnlySpan<PitchClassSetId> ItemsSpan => _itemsArray;
     public static ReadOnlySpan<int> ValuesSpan => _valuesArray;
 
     public static IEqualityComparer<PitchClassSetId> ComplementComparer { get; } = new ComplementEqualityComparer();
@@ -67,8 +72,7 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
     public static implicit operator PitchClassSetId(int value) => new(value);
     public static implicit operator int(PitchClassSetId id) => id.Value;
 
-    public static IReadOnlyCollection<PitchClassSetId> Items { get; } =
-        [.. Enumerable.Range(_minValue, _maxValue - _minValue + 1).Select(i => new PitchClassSetId(i))];
+    public static IReadOnlyCollection<PitchClassSetId> Items { get; } = Array.AsReadOnly(_itemsArray);
 
     public static PitchClassSetId Min => new(_minValue);
     public static PitchClassSetId Max => new(_maxValue);
