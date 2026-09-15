@@ -25,8 +25,20 @@ public static partial class PlayableNotationFormatter
         """;
 
     /// <summary>
-    /// Converts a six-string chord diagram such as <c>x-3-2-0-1-0</c> or <c>x32010</c>
-    /// into the GA VexTab token format consumed by the mini UI.
+    /// Converts a voicing diagram as GA stores it (<c>Voicing.Diagram</c> and index documents list
+    /// string 1, the highest, first) into chord-chart order, lowest string first, which is what
+    /// readers expect and what <see cref="TryFormatChordDiagramAsVexTab"/> parses. Open C is stored
+    /// as <c>0-1-0-2-3-x</c> and charted as <c>x-3-2-0-1-0</c>.
+    /// </summary>
+    public static string? ToChartOrder(string? voicingDiagram) =>
+        string.IsNullOrEmpty(voicingDiagram)
+            ? voicingDiagram
+            : string.Join("-", Enumerable.Reverse(voicingDiagram.Split('-')));
+
+    /// <summary>
+    /// Converts a six-string chord diagram in chord-chart order (lowest string first), such as
+    /// <c>x-3-2-0-1-0</c> or <c>x32010</c>, into the GA VexTab token format consumed by the mini UI.
+    /// Diagrams read from GA voicings must go through <see cref="ToChartOrder"/> first.
     /// </summary>
     public static string? TryFormatChordDiagramAsVexTab(string? diagram)
     {

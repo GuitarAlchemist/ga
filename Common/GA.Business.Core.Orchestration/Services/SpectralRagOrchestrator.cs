@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Musical.Explanation;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Rag.Models;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Theory.Harmony;
@@ -108,7 +109,7 @@ public class SpectralRagOrchestrator(
                 candidates.Add(new CandidateVoicing(
                     Id: doc.Id,
                     DisplayName: doc.ChordName ?? "Unknown",
-                    Shape: doc.Diagram,
+                    Shape: PlayableNotationFormatter.ToChartOrder(doc.Diagram) ?? string.Empty,
                     Score: score,
                     ExplanationFacts: ToDto(explanation),
                     ExplanationText: explanation.Summary

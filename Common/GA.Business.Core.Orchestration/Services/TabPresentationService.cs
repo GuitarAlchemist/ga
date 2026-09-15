@@ -3,6 +3,7 @@ namespace GA.Business.Core.Orchestration.Services;
 using System.Text;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Musical.Explanation;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
 using GA.Business.ML.Tabs.Models;
@@ -44,7 +45,7 @@ public class TabPresentationService(
             candidates.Add(new CandidateVoicing(
                 Id: doc.Id,
                 DisplayName: displayName,
-                Shape: doc.Diagram,
+                Shape: PlayableNotationFormatter.ToChartOrder(doc.Diagram) ?? string.Empty,
                 Score: 1.0,
                 ExplanationFacts: new VoicingExplanationDto(explanation.Summary, [..explanation.Tags], [..explanation.Techniques], [..explanation.Styles], explanation.SpectralCentroid),
                 ExplanationText: explanation.Summary
@@ -57,7 +58,7 @@ public class TabPresentationService(
         foreach (var doc in distinctChords)
         {
             var name = doc.ChordName ?? "Unknown";
-            narrative.AppendLine($"- **{name}**: {doc.Diagram}");
+            narrative.AppendLine($"- **{name}**: {PlayableNotationFormatter.ToChartOrder(doc.Diagram)}");
         }
 
         // Style Classification
