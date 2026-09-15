@@ -2,6 +2,7 @@
 // Left-side scene options rail — toggle visual features in the 3D scene.
 
 import React, { useState, useCallback } from 'react';
+import { resolveSceneOptions } from './SceneOptionsLoader';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,28 +56,9 @@ const OPTIONS: SceneOptionsDef[] = [
 ];
 
 function getDefaults(): SceneOptionsState {
-  const state: SceneOptionsState = {};
-  for (const opt of OPTIONS) state[opt.id] = opt.default;
-  state.skyboxMode = 'milky-way';
-  state.voicingSplatsMode = 'backdrop';
-  // Check URL params for overrides
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('tower')) state.tower = true;
-    if (params.has('constellations')) state.constellations = true;
-    if (params.has('weather')) state.weather = true;
-    const skybox = params.get('skybox');
-    if (skybox === 'hubble' || skybox === 'hubble-deep-field') state.skyboxMode = 'hubble-deep-field';
-    if (skybox === 'jwst' || skybox === 'jwt' || skybox === 'webb' || skybox === 'jwst-deep-field') state.skyboxMode = 'jwst-deep-field';
-    const splats = params.get('splats');
-    if (splats === 'off' || splats === 'backdrop' || splats === 'solo') state.voicingSplatsMode = splats;
-  }
-  // Check localStorage for saved preferences
-  try {
-    const saved = localStorage.getItem('prime-radiant-scene-options');
-    if (saved) Object.assign(state, JSON.parse(saved));
-  } catch { /* ignore */ }
-  return state;
+  let saved: string | null = null;
+  try { saved = localStorage.getItem('prime-radiant-scene-options'); } catch { /* ignore */ }
+  return resolveSceneOptions(OPTIONS, typeof window !== 'undefined' ? window.location.search : '', saved);
 }
 
 // ---------------------------------------------------------------------------
