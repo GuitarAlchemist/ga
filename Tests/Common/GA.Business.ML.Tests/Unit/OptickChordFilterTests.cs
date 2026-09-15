@@ -75,6 +75,8 @@ public class OptickChordFilterTests
                     Row("C7", "x-1-3-2-3-x", 60, 58, 52, 48)),
                 Is.EqualTo(new[] { "Cmaj7(shell)/B", "Cmaj7" }));
             Assert.That(Filter("CM7", Row("Cmaj7", "3-0-x-2-3-x", 67, 59, 52, 48)), Has.Length.EqualTo(1));
+            Assert.That(Filter("CMaj7", Row("Cmaj7", "3-0-x-2-3-x", 67, 59, 52, 48)), Has.Length.EqualTo(1));
+            Assert.That(Filter("AMin7", Row("Am7", "0-1-0-2-0-x", 64, 60, 55, 52, 45)), Has.Length.EqualTo(1));
             Assert.That(Filter("F#m7", Row("Gbm7(shell)/A", "2-x-x-2-0-x", 66, 52, 45)), Has.Length.EqualTo(1));
         });
     }

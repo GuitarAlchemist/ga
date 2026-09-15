@@ -353,10 +353,11 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
 
     private static string NormalizeQuality(string quality)
     {
-        if (quality.StartsWith("maj", StringComparison.Ordinal)) quality = quality.Length == 3 ? string.Empty : "maj" + quality[3..];
+        // "maj"/"min" in any case ("Maj7", "Min7") before the case-sensitive "M" (major) and "m" (minor)
+        if (quality.StartsWith("maj", StringComparison.OrdinalIgnoreCase)) quality = quality.Length == 3 ? string.Empty : "maj" + quality[3..];
+        else if (quality.StartsWith("min", StringComparison.OrdinalIgnoreCase)) quality = "m" + quality[3..];
         else if (quality.StartsWith("Δ", StringComparison.Ordinal)) quality = "maj" + quality[1..];
         else if (quality.StartsWith("M", StringComparison.Ordinal)) quality = quality.Length == 1 ? string.Empty : "maj" + quality[1..];
-        else if (quality.StartsWith("min", StringComparison.Ordinal)) quality = "m" + quality[3..];
         else if (quality.StartsWith('-')) quality = "m" + quality[1..];
         return quality;
     }
