@@ -367,15 +367,6 @@ const testPages: TestPageInfo[] = [
     status: 'complete',
   },
   {
-    id: 'ix-hand-voicing',
-    title: 'IX Hand Voicing Lab',
-    description: 'Webcam hand-pose landmarks become fretboard contacts, then IX-style ranking estimates playable chord voicings',
-    technology: 'MediaPipe + Rust WASM + IX scoring',
-    path: '/test/ix-hand-voicing',
-    features: ['Hand Pose', 'Fretboard Calibration', 'Rust WASM', 'Voicing Ranking', 'Intent Detection', 'Wire Hand'],
-    status: 'partial',
-  },
-  {
     id: 'fleet',
     title: 'Fleet Status',
     description: 'Unified "what is happening across the 5 sibling repos right now" view — PRs, install-audit scores, active initiatives, blockers. Static page, baked by CI cron.',

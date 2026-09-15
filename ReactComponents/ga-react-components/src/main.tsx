@@ -55,12 +55,7 @@ import MusicHierarchyDemo from './pages/MusicHierarchyDemo';
 import EcosystemRoadmapTest from './pages/EcosystemRoadmapTest';
 import PrimeRadiantTest from './pages/PrimeRadiantTest';
 import HarmonicNebulaDemo from './pages/HarmonicNebulaDemo';
-import HandPoseVoicingWasmTest from './pages/HandPoseVoicingWasmTest';
-import IxHandVoicingTest from './pages/IxHandVoicingTest';
-import FractalSplatTest from './pages/FractalSplatTest';
-import SunflowerFieldTest from './pages/SunflowerFieldTest';
 import MandelbulbTest from './pages/MandelbulbTest';
-import MapleTreeTest from './pages/MapleTreeTest';
 import GaussianSplatTest from './pages/GaussianSplatTest';
 import FleetStatusTest from './pages/FleetStatusTest';
 
@@ -470,13 +465,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/ecosystem-roadmap" element={<App><EcosystemRoadmapTest /></App>} />
         <Route path="/test/prime-radiant" element={<App><PrimeRadiantTest /></App>} />
         <Route path="/test/harmonic-nebula" element={<App><HarmonicNebulaDemo /></App>} />
-        <Route path="/test/hand-pose-voicing-wasm" element={<App><HandPoseVoicingWasmTest /></App>} />
-        <Route path="/test/ix-hand-voicing" element={<App><IxHandVoicingTest /></App>} />
-        <Route path="/test/fractal-splat" element={<App><FractalSplatTest /></App>} />
-        <Route path="/test/sunflower-field" element={<App><SunflowerFieldTest /></App>} />
         <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
         <Route path="/test/gaussian-splat" element={<App><GaussianSplatTest /></App>} />
-        <Route path="/test/maple-tree" element={<App><MapleTreeTest /></App>} />
         <Route path="/test/fleet" element={<App><FleetStatusTest /></App>} />
 
         {/* AG-UI chat panel — full GA chat with diatonic chord table */}
