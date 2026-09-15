@@ -73,4 +73,61 @@ public class PitchTests
             Assert.That(Pitch.Flat.BFlat(4).PitchClass.Value, Is.EqualTo(10));
         });
     }
+
+    [TestCase("C4", "C4")]
+    [TestCase("c4", "C4")]
+    [TestCase("C#4", "C#4")]
+    [TestCase("F#-1", "F#-1")]
+    [TestCase("G9", "G9")]
+    public void SharpPitch_TryParse_Valid(string input, string expected)
+    {
+        var parsed = Pitch.Sharp.TryParse(input, null, out var pitch);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.True);
+            Assert.That(pitch.ToString(), Is.EqualTo(expected));
+        });
+    }
+
+    [TestCase("Eb2")] // flat spelling: must not be read as "b2"
+    [TestCase("Bb3")]
+    [TestCase("H4")]
+    [TestCase("C")]
+    [TestCase("C#")]
+    [TestCase("C##4")]
+    [TestCase("C4 ")]
+    [TestCase("xC4")]
+    [TestCase("C44")]
+    [TestCase("C10")] // octave out of range (-1..9)
+    public void SharpPitch_TryParse_Invalid(string input) =>
+        Assert.That(Pitch.Sharp.TryParse(input, null, out _), Is.False);
+
+    [TestCase("C4", "C4")]
+    [TestCase("Bb3", "Bb3")]
+    [TestCase("bb3", "Bb3")]
+    [TestCase("Eb2", "Eb2")]
+    [TestCase("Db-1", "Db-1")]
+    public void FlatPitch_TryParse_Valid(string input, string expected)
+    {
+        var parsed = Pitch.Flat.TryParse(input, null, out var pitch);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parsed, Is.True);
+            Assert.That(pitch.ToString(), Is.EqualTo(expected));
+        });
+    }
+
+    [TestCase("C#4")]
+    [TestCase("Ebb")]
+    [TestCase("AEb2")]
+    [TestCase("Bbbb3")]
+    [TestCase("B11")]
+    public void FlatPitch_TryParse_Invalid(string input) =>
+        Assert.That(Pitch.Flat.TryParse(input, null, out _), Is.False);
+
+    [Test]
+    public void FlatPitch_Parse_KeepsTheAccidental() =>
+        Assert.That(Pitch.Flat.Parse("Bb3").PitchClass.Value, Is.EqualTo(10));
 }
