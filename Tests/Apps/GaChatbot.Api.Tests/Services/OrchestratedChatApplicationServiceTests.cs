@@ -68,6 +68,28 @@ public sealed class OrchestratedChatApplicationServiceTests
     }
 
     [Test]
+    public async Task ChatAsync_AnswersHonestlyWhenDirectFallbackIsUnreachable()
+    {
+        // Offline host: the orchestrator failed and the LLM behind the direct
+        // fallback is unreachable too. The endpoint must still answer (no HTTP 500).
+        var service = CreateService(
+            new StubOrchestrator(Exception: new HttpRequestException("Connection refused")),
+            directChatClient: new UnreachableChatClient());
+
+        var result = await service.ChatAsync(new ChatExecutionRequest("Why does a ii-V-I sound resolved?"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.NaturalLanguageAnswer, Does.Contain("currently unavailable"));
+            Assert.That(result.Routing.AgentId, Is.EqualTo("fallback-direct"));
+            Assert.That(result.Routing.Confidence, Is.EqualTo(0f));
+            Assert.That(result.Routing.RoutingMethod, Is.EqualTo("error-fallback-unavailable"));
+            Assert.That(result.Grounding, Is.Null);
+            Assert.That(result.Trace?.Steps.Single(step => step.Name == "gen_ai.chat.fallback").Status, Is.EqualTo("error"));
+        });
+    }
+
+    [Test]
     public async Task ChatAsync_FallsBackWhenOrchestratorTimesOut()
     {
         var service = CreateService(new StubOrchestrator(Exception: new OperationCanceledException()));
@@ -260,6 +282,27 @@ public sealed class OrchestratedChatApplicationServiceTests
             ChatOptions? options = null,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new AiChatResponse(new AiChatMessage(ChatRole.Assistant, responseText)));
+
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<AiChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class UnreachableChatClient : IChatClient
+    {
+        public Task<AiChatResponse> GetResponseAsync(
+            IEnumerable<AiChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default) =>
+            throw new HttpRequestException("Connection refused");
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
             IEnumerable<AiChatMessage> messages,

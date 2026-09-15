@@ -115,15 +115,15 @@ public sealed class SemanticIntentRouter(
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(
-                "SemanticIntentRouter: query embedding timed out after {Timeout}s (backend likely wedged); falling through to LLM path",
+                "SemanticIntentRouter: query embedding timed out after {Timeout}s (backend likely wedged); trying keyword fallback",
                 EmbeddingTimeout.TotalSeconds);
-            return null;
+            return KeywordFallback(query, intents);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex,
-                "SemanticIntentRouter: query embedding failed; routing falls through to LLM path");
-            return null;
+                "SemanticIntentRouter: query embedding failed; trying keyword fallback");
+            return KeywordFallback(query, intents);
         }
 
         // Score every candidate intent by its single best (description-or-example)
@@ -155,8 +155,10 @@ public sealed class SemanticIntentRouter(
 
         if (ranking.Count == 0)
         {
+            // Example embedding failed (see EnsureExamplesEmbeddedAsync) even though
+            // the query embedded: nothing to compare against.
             logger.LogDebug("SemanticIntentRouter: no intent had cached embeddings");
-            return null;
+            return KeywordFallback(query, intents);
         }
 
         // Apply deterministic routing-hint boosts BEFORE sorting so high-precision
@@ -302,6 +304,34 @@ public sealed class SemanticIntentRouter(
         {
             Ranking = routingCandidates,
         };
+    }
+
+    /// <summary><see cref="IntentMatch.MatchedExample"/> of a match chosen by the
+    /// keyword fallback rather than by cosine similarity.</summary>
+    public const string KeywordFallbackSource = "(keyword fallback)";
+
+    // Offline degradation: when the embedding backend cannot score the query, the
+    // first intent (registration order) whose high-precision keyword predicate
+    // matches claims it at the threshold confidence, so deterministic skills still
+    // answer without Ollama. Returns null when none matches (LLM path as before).
+    private IntentMatch? KeywordFallback(string query, IReadOnlyList<IIntent> intents)
+    {
+        foreach (var intent in intents)
+        {
+            if (!intent.MatchesWithoutEmbeddings(query)) continue;
+
+            logger.LogInformation(
+                "SemanticIntentRouter: embeddings unavailable; keyword fallback picked {IntentId} for query={Query}",
+                intent.Id,
+                SanitizeForLog(query));
+
+            return new IntentMatch(intent, MinConfidence, KeywordFallbackSource)
+            {
+                Ranking = [new RoutingCandidate(intent.Id, MinConfidence, 0f, MinConfidence, KeywordFallbackSource)],
+            };
+        }
+
+        return null;
     }
 
     // Best-effort embedder model id from the generator metadata (M.E.AI exposes it

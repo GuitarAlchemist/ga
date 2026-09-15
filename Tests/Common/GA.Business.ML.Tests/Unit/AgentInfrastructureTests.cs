@@ -96,4 +96,62 @@ public class AgentInfrastructureTests
         Assert.That(result.SelectedAgent, Is.InstanceOf<TheoryAgent>());
         Assert.That(result.RoutingMethod, Is.EqualTo("keyword"));
     }
+
+    [Test]
+    public async Task SemanticRouter_EmbeddingBackendDown_FallsBackToKeywordRouting()
+    {
+        // Offline host: an embedding generator is registered but its backend is
+        // unreachable (Ollama not running). Agent-description embedding throws on
+        // the first call; RouteAsync must degrade to keyword routing instead of
+        // propagating the exception to the chat endpoint (HTTP 500).
+        var theoryAgent = new TheoryAgent(_chatClientMock.Object, NullLogger<TheoryAgent>.Instance);
+        var tabAgent = new TabAgent(_chatClientMock.Object, NullLogger<TabAgent>.Instance);
+
+        var failingEmbeddings = new Mock<IEmbeddingGenerator<string, Embedding<float>>>();
+        failingEmbeddings
+            .Setup(e => e.GenerateAsync(
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<EmbeddingGenerationOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Connection refused"));
+
+        var router = new SemanticRouter(
+            new GuitarAlchemistAgentBase[] { theoryAgent, tabAgent },
+            null,
+            failingEmbeddings.Object,
+            NullLogger<SemanticRouter>.Instance);
+
+        var result = await router.RouteAsync("Explain the circle of fifths");
+
+        Assert.That(result.SelectedAgent, Is.InstanceOf<TheoryAgent>());
+        Assert.That(result.RoutingMethod, Is.EqualTo("keyword"));
+    }
+
+    [Test]
+    public void SemanticRouter_CallerCancellation_StillPropagates()
+    {
+        var theoryAgent = new TheoryAgent(_chatClientMock.Object, NullLogger<TheoryAgent>.Instance);
+
+        var embeddings = new Mock<IEmbeddingGenerator<string, Embedding<float>>>();
+        embeddings
+            .Setup(e => e.GenerateAsync(
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<EmbeddingGenerationOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<IEnumerable<string>, EmbeddingGenerationOptions?, CancellationToken>(
+                (_, _, ct) => Task.FromCanceled<GeneratedEmbeddings<Embedding<float>>>(ct));
+
+        var router = new SemanticRouter(
+            new GuitarAlchemistAgentBase[] { theoryAgent },
+            null,
+            embeddings.Object,
+            NullLogger<SemanticRouter>.Instance);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        Assert.That(
+            async () => await router.RouteAsync("Explain the circle of fifths", cts.Token),
+            Throws.InstanceOf<OperationCanceledException>());
+    }
 }

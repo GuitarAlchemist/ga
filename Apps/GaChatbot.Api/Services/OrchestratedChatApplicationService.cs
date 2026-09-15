@@ -250,6 +250,33 @@ public sealed class OrchestratedChatApplicationService(
                     null,
                     trace.Build());
             }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // The LLM backend is unreachable (e.g. Ollama down: HttpRequestException).
+                // This is the last resort, so answer honestly instead of letting the
+                // exception become an HTTP 500 for the user.
+                logger.LogError(exception, "Direct chat fallback failed.");
+
+                const string answer =
+                    "Our reasoning service is currently unavailable, so this question could not be answered. " +
+                    "This is on our side, not your prompt. Try again in a moment, or use a deterministic music-theory query " +
+                    "(e.g. \"modes of C major\", \"relative minor of G major\", \"transpose C E G to D\") which doesn't depend on the LLM.";
+
+                fallbackStep.Complete(
+                    "error",
+                    new Dictionary<string, object?>
+                    {
+                        ["fallback.reason"] = "unavailable",
+                        ["exception.type"] = exception.GetType().Name,
+                        ["response.length"] = answer.Length
+                    });
+
+                return new ChatExecutionResult(
+                    answer,
+                    new AgentRoutingMetadata("fallback-direct", 0f, $"{routingMethod}-unavailable"),
+                    null,
+                    trace.Build());
+            }
         }
     }
 
