@@ -187,7 +187,8 @@ public static class ChordAtonalTool
         "Find all standard chords (triads, 7ths, 9ths) that are set-class equivalent (T/I) to the input chord — " +
         "same prime form under transposition or inversion. These are the deepest substitutions: " +
         "same interval content regardless of root. " +
-        "Example: Am and C are NOT equivalent, but Am and Em are (both minor triads, same prime form 3-11).")]
+        "Example: Am and C are equivalent (A-C-E is an inversion of C-E-G, set class 3-11), " +
+        "and so are Am and Em (a transposition).")]
     public static async Task<string> GaSetClassSubs(
         [Description("Chord symbol, e.g. 'Am', 'Cmaj7', 'G7'")] string symbol)
     {
@@ -201,7 +202,7 @@ public static class ChordAtonalTool
         var forte = ForteCatalog.GetForteNumber(targetPrime);
 
         // Build vocabulary using hardcoded intervals (no async calls for speed)
-        var equivalents = new List<string>();
+        var equivalents = new List<(string Suffix, string Chord)>();
         foreach (var root in RootNames)
         {
             var rootPc = ParseRootPc(root);
@@ -213,7 +214,7 @@ public static class ChordAtonalTool
                 if (cpcs.Length != pcs.Length) continue;
                 var cPrime = ToPitchClassSet(cpcs).PrimeForm;
                 if (cPrime != null && cPrime.Equals(targetPrime))
-                    equivalents.Add(candidate);
+                    equivalents.Add((suffix, candidate));
             }
         }
 
@@ -221,10 +222,11 @@ public static class ChordAtonalTool
         if (equivalents.Count == 0)
             return header + "\n  (none in standard vocabulary — unique set class)";
 
-        // Group by quality suffix for readability
+        // Group by the quality each chord was built from (a suffix test such as EndsWith("")
+        // would match every chord)
         var grouped = equivalents
-            .GroupBy(c => Vocabulary.FirstOrDefault(v => c.EndsWith(v.Suffix)).Suffix)
-            .Select(g => $"  [{(g.Key == "" ? "maj" : g.Key)}] {string.Join("  ", g)}")
+            .GroupBy(e => e.Suffix)
+            .Select(g => $"  [{(g.Key == "" ? "maj" : g.Key)}] {string.Join("  ", g.Select(e => e.Chord))}")
             .ToList();
         return header + "\n" + string.Join("\n", grouped);
     }

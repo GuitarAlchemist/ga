@@ -1,5 +1,6 @@
 namespace GaMcpServer.Tests;
 
+using System.ComponentModel;
 using GaMcpServer.Tools;
 
 /// <summary>
@@ -37,5 +38,47 @@ public sealed class ChordAtonalToolTests
 
         var scaleLine = result.Split('\n').Select(l => l.Trim()).Single(l => l.StartsWith("Scale:"));
         Assert.That(scaleLine, Is.EqualTo($"Scale:      {name}"));
+    }
+
+    private static Dictionary<string, string[]> SubsByQuality(string result) =>
+        result.Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.StartsWith('['))
+            .ToDictionary(
+                l => l[1..l.IndexOf(']')],
+                l => l[(l.IndexOf(']') + 1)..].Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+    [Test]
+    public async Task GaSetClassSubs_GroupsEquivalentsByTheirOwnQuality()
+    {
+        var groups = SubsByQuality(await ChordAtonalTool.GaSetClassSubs("Am"));
+
+        Assert.That(groups.Keys, Is.EquivalentTo(new[] { "maj", "m" }));
+        Assert.That(groups["maj"], Has.Length.EqualTo(12).And.Contains("C").And.Contains("Bb"));
+        Assert.That(groups["m"], Has.Length.EqualTo(11).And.Contains("Em").And.Not.Contains("Am"));
+        Assert.That(groups["maj"].Concat(groups["m"]), Has.None.EndsWith("dim"));
+    }
+
+    [Test]
+    public async Task GaSetClassSubs_G7_ListsDominantAndHalfDiminishedSevenths()
+    {
+        var groups = SubsByQuality(await ChordAtonalTool.GaSetClassSubs("G7"));
+
+        Assert.That(groups.Keys, Is.EquivalentTo(new[] { "7", "m7b5" }));
+        Assert.That(groups["7"], Has.Length.EqualTo(11).And.Not.Contains("G7"));
+        Assert.That(groups["m7b5"], Has.Length.EqualTo(12).And.Contains("Bm7b5"));
+    }
+
+    [Test]
+    public void GaSetClassSubs_Description_DoesNotContradictSetTheory()
+    {
+        // Am (A C E) and C (C E G) are inversions of each other: both are set class 3-11.
+        var description = typeof(ChordAtonalTool).GetMethod(nameof(ChordAtonalTool.GaSetClassSubs))!
+            .GetCustomAttributes(typeof(DescriptionAttribute), false)
+            .Cast<DescriptionAttribute>()
+            .Single().Description;
+
+        Assert.That(description, Does.Not.Contain("NOT equivalent"));
+        Assert.That(description, Contains.Substring("Am and C"));
     }
 }
