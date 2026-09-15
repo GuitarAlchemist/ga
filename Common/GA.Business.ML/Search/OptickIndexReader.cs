@@ -8,7 +8,7 @@ using Embeddings;
 
 /// <summary>
 ///     Reads the OPTK v4 memory-mapped index produced by
-///     <c>OptickIndexWriter</c>. Vectors are 112-dim, pre-scaled by sqrt(partition weight),
+///     <c>OptickIndexWriter</c>. Vectors are compact (the header's dim, 124 for v1.8), pre-scaled by sqrt(partition weight),
 ///     and L2-normalized, so cosine similarity reduces to a dot product.
 ///     <para>
 ///         <b>Concurrency contract:</b> reads (<see cref="GetVector"/>, <see cref="GetMetadata"/>)

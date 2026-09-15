@@ -9,7 +9,7 @@ using Microsoft.Extensions.AI;
 /// <summary>
 ///     Agent specialized in retrieving guitar chord voicings by musical structure.
 ///     Owns the full OPTIC-K pipeline: the composite extractor parses chord/mode/tags from
-///     the query, <see cref="MusicalQueryEncoder"/> composes a 112-dim compact vector in the
+///     the query, <see cref="MusicalQueryEncoder"/> composes a compact vector (124 dims for OPTIC-K v1.8) in the
 ///     same semantic space as the on-disk corpus, and the injected search service runs the
 ///     dot-product scan via <see cref="OptickSearchStrategy"/>.
 ///     <para>

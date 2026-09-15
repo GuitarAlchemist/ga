@@ -12,7 +12,7 @@ using Rag.Models;
 ///     to a dot product; search is a parallel scan + top-K heap.
 ///
 ///     Query vectors are expected to already be weighted + L2-normalized in the compact
-///     112-dim layout — produced by <c>MusicalQueryEncoder</c>.
+///     layout (124 dims for v1.8) — produced by <c>MusicalQueryEncoder</c>.
 /// </summary>
 public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
 {
