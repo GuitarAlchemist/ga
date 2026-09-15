@@ -161,7 +161,14 @@ public static class VoicingAnalyzer
         var physicalTags = VoicingPhysicalAnalyzer.GeneratePhysicalTags(physicalLayout, playabilityInfo, ergonomicsInfo);
 
         // 3. Perceptual Analysis (Sound)
-        var perceptualQualities = new PerceptualQualities(curVoiceChars.Consonance, 0, 0, "Neutral", "Medium");
+        // Named arguments: positionally the consonance landed in Brightness and ConsonanceScore stayed 0,
+        // which pinned the CONTEXT tension (1 - Consonance) at 1 for every voicing (ga#616).
+        var perceptualQualities = new PerceptualQualities(
+            Brightness: 0,
+            ConsonanceScore: curVoiceChars.Consonance,
+            Roughness: 0,
+            TexturalDescription: "Neutral",
+            Register: "Medium");
 
         // 4. Semantic Tags
         var semanticTags = new List<string>(curVoiceChars.SemanticTags);
