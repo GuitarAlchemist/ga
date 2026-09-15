@@ -224,12 +224,13 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                 return false;
             }
 
-            var norm = s.Trim().ToUpperInvariant().Replace("♭", "b");
+            // Only a second character can be the flat sign: "B" is B natural, "Bb", "bb" and "E♭" are flats.
+            var norm = s.Trim().Replace("♭", "b");
             try
             {
-                if (norm.EndsWith("B"))
+                if (norm.Length == 2 && norm[1] is 'b' or 'B')
                 {
-                    if (NaturalNote.TryParse(norm[0].ToString(), null, out var nn))
+                    if (NaturalNote.TryParse(char.ToUpperInvariant(norm[0]).ToString(), null, out var nn))
                     {
                         result = new(nn, Notes.FlatAccidental.Flat);
                         return true;
@@ -237,7 +238,7 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
                 }
                 else
                 {
-                    if (NaturalNote.TryParse(norm, null, out var nn))
+                    if (NaturalNote.TryParse(norm.ToUpperInvariant(), null, out var nn))
                     {
                         result = new(nn);
                         return true;
