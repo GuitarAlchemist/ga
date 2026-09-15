@@ -13,8 +13,12 @@ namespace GA.Domain.Core.Theory.Atonal;
 ///     lookup time via Forte's complement rule: for n ≠ 6, the set class
 ///     <c>n-k</c> and its complement <c>(12−n)-k</c> share the same index and
 ///     Z-status, so e.g. "8-Z15" resolves to the complement of "4-Z15". The
-///     stored prime forms are the standard Forte-column values from the
-///     canonical catalog; <c>CanonicalForteCatalogTests</c> verifies every entry
+///     labels are Forte's numbering, but the stored prime forms are Rahn's
+///     packing (the form <see cref="PitchClassSet.PrimeForm"/> computes), not the
+///     forms printed in Forte's table: the two packings disagree for six set
+///     classes, 5-20 (Rahn 01568, Forte 01378), 6-Z29 (023679, 013689), 6-31
+///     (014579, 013589), and 7-Z18, 7-20 and 8-26 derived from complements.
+///     <c>CanonicalForteCatalogTests</c> verifies every entry
 ///     against GA's own engine (bijection with <see cref="SetClass.Items"/>,
 ///     per-cardinality counts, and Z-marker ⇔ <see cref="PitchClassSet.IsZRelated"/>).
 /// </remarks>
