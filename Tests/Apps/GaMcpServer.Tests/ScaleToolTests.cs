@@ -48,4 +48,23 @@ public sealed class ScaleToolTests
         Assert.That(result, Does.Not.Contain("Some("));
         Assert.That(result, Contains.Substring("Name: Major"));
     }
+
+    [TestCase("Dorian", "C D Eb F G A Bb", 1709)]
+    [TestCase("lydian", "C D E F# G A B", 2773)]
+    public void GaScaleByName_FindsModes(string name, string notes, int id)
+    {
+        var result = ScaleTool.GaScaleByName(name);
+
+        Assert.That(result, Does.Not.StartWith("No scale found"));
+        Assert.That(result, Contains.Substring($"Notes: {notes}"));
+        Assert.That(result, Contains.Substring($"Binary Scale ID: {id}"));
+        Assert.That(result, Contains.Substring("Forte Number: 7-35"));
+        Assert.That(result, Does.Not.Contain("Some("));
+    }
+
+    [Test]
+    public void GaScaleByName_UnknownName_StillReportsNotFound()
+    {
+        Assert.That(ScaleTool.GaScaleByName("Nonexistent"), Does.StartWith("No scale found"));
+    }
 }

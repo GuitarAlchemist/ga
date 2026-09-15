@@ -105,14 +105,37 @@ public static class ScaleTool
     [Description(
         "Look up a scale by name or alternate name (case-insensitive). " +
         "Returns the scale's binary scale ID, notes, category, and other metadata. " +
+        "Modes (Dorian, Lydian, Phrygian dominant…) are looked up in the modes catalog, spelled from C. " +
         "Example: 'Ionian' resolves to the Major scale (id:2741).")]
     public static string GaScaleByName(
-        [Description("Scale name or alternate name, e.g. 'Major', 'Ionian', 'Blues'")] string name)
+        [Description("Scale or mode name, or alternate name, e.g. 'Major', 'Ionian', 'Blues', 'Dorian'")] string name)
     {
         var scale = ScalesConfig.TryGetScaleByName(name);
-        if (scale == null)
-            return $"No scale found for name '{name}'.";
+        if (scale != null)
+            return FormatScale(scale.Value);
 
-        return FormatScale(scale.Value);
+        // Scales.yaml lists one entry per pitch-class set (Major, not its modes);
+        // the modes live in Modes.yaml.
+        var mode = ModesConfig.TryGetModeByName(name);
+        if (mode != null)
+            return FormatMode(mode.Value);
+
+        return $"No scale found for name '{name}'.";
+    }
+
+    private static string FormatMode(ModesConfig.ModeInfo m)
+    {
+        var id = ScalesConfig.computeBinaryScaleId(m.Notes);
+        var alts = m.AlternateNames?.Value is { Count: > 0 } names ? string.Join(", ", names) : "none";
+        var family = m.FamilyName?.Value is { } familyName ? $"Mode of the {familyName}" : "Mode";
+        return $"""
+                Name: {m.Name}
+                Binary Scale ID: {id}
+                Notes: {m.Notes}
+                Category: {family}
+                Alternate Names: {alts}
+                Forte Number: {ForteNumberOf(id)}
+                Description: {m.Description?.Value ?? ""}
+                """;
     }
 }
