@@ -124,8 +124,7 @@ public class NoteTests
         Assert.That(Note.Sharp.TryParse(input, null, out _), Is.False);
 
     [Test]
-    public void KeyNotes_RoundTripThroughToString()
-    {
+    public void KeyNotes_RoundTripThroughToString() =>
         Assert.Multiple(() =>
         {
             foreach (var note in Note.Sharp.Items)
@@ -138,5 +137,4 @@ public class NoteTests
                 Assert.That(Note.Flat.Parse(note.ToString(), null), Is.EqualTo(note));
             }
         });
-    }
 }

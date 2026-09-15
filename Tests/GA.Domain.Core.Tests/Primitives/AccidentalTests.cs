@@ -60,8 +60,7 @@ public class AccidentalTests
         Assert.That(FlatAccidental.TryParse(input, null, out _), Is.False);
 
     [Test]
-    public void Accidentals_RoundTripThroughToString()
-    {
+    public void Accidentals_RoundTripThroughToString() =>
         Assert.Multiple(() =>
         {
             foreach (var sharp in new[] { SharpAccidental.Sharp, SharpAccidental.DoubleSharp })
@@ -74,5 +73,4 @@ public class AccidentalTests
                 Assert.That(FlatAccidental.Parse(flat.ToString()), Is.EqualTo(flat));
             }
         });
-    }
 }

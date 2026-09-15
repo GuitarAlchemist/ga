@@ -62,8 +62,7 @@ public class PitchTests
     }
 
     [Test]
-    public void FlatFactories_BuildTheFlattenedNote()
-    {
+    public void FlatFactories_BuildTheFlattenedNote() =>
         Assert.Multiple(() =>
         {
             Assert.That(Pitch.Flat.DFlat(4).PitchClass.Value, Is.EqualTo(1));
@@ -72,7 +71,6 @@ public class PitchTests
             Assert.That(Pitch.Flat.EFlat(4).PitchClass.Value, Is.EqualTo(3));
             Assert.That(Pitch.Flat.BFlat(4).PitchClass.Value, Is.EqualTo(10));
         });
-    }
 
     [TestCase("C4", "C4")]
     [TestCase("c4", "C4")]
