@@ -4,6 +4,9 @@ dist/
 
 # Rust build artifacts for the WASM guitar engine
 rust-engine/target/
+tools/damping-fit/target/
+# The repo ignores Cargo.lock; pin the fit harness's dependencies anyway.
+!tools/damping-fit/Cargo.lock
 
 # WASM binary copied to public for the demo
 public/guitar_engine.wasm
