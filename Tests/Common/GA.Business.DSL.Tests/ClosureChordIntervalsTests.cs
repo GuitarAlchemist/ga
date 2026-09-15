@@ -45,6 +45,14 @@ public class ClosureChordIntervalsTests
     [TestCase("C6", "P1 M3 P5 M6")]
     [TestCase("Csus4", "P1 P4 P5")]
     [TestCase("C5", "P1 P5")]
+    [TestCase("CM7", "P1 M3 P5 M7")]
+    [TestCase("CMaj7", "P1 M3 P5 M7")]
+    [TestCase("CΔ9", "P1 M3 P5 M7 M9")]
+    [TestCase("CmMaj7", "P1 m3 P5 M7")]
+    [TestCase("C7sus4", "P1 P4 P5 m7")]
+    [TestCase("C9sus4", "P1 P4 P5 m7 M9")]
+    [TestCase("C7omit3", "P1 P5 m7")]
+    [TestCase("C7(no 3)", "P1 P5 m7")]
     public async Task ChordIntervals_SpellsChordTones(string symbol, string expected)
     {
         var intervals = (string[])await Invoke("domain.chordIntervals", ("symbol", symbol));
@@ -68,5 +76,17 @@ public class ClosureChordIntervalsTests
         // Bm7b5 = B D F A, G7 = G B D F: F is the d5 of Bm7b5 and the m7 of G7.
         Assert.That(result, Does.StartWith("Common tones (3)"));
         Assert.That(result, Contains.Substring("F (d5 in Bm7b5, m7 in G7)"));
+    }
+
+    [Test]
+    public async Task ChordIntervals_UnreadSuffix_IsAParseError()
+    {
+        var map = MapModule.OfSeq(new[] { Tuple.Create("symbol", (object)"C7xyz") });
+        var result = await FSharpAsync.StartAsTask(
+            Global.Invoke("domain.chordIntervals", map),
+            FSharpOption<TaskCreationOptions>.None,
+            FSharpOption<CancellationToken>.None);
+
+        Assert.That(result.IsError, Is.True);
     }
 }

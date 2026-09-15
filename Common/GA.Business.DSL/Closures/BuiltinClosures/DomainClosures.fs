@@ -91,7 +91,10 @@ let private qualityBaseIntervals = function
 let private chordTones (ast: ChordAst) : (int * string) list =
     let exts = ast.Components |> List.choose (function Extension e -> Some e | _ -> None)
     let has e = List.contains e exts
-    let quality = if has "m7b5" then Some Diminished else ast.Quality
+    let quality =
+        if has "m7b5" then Some Diminished
+        elif has "sus4" || has "sus2" then Some Suspended
+        else ast.Quality
     let stackedDegree =
         exts
         |> List.choose (function
@@ -107,7 +110,7 @@ let private chordTones (ast: ChordAst) : (int * string) list =
     let third =
         match quality with
         | _ when has "5" && stackedDegree.IsNone -> []
-        | Some Suspended -> if has "2" then [ 2, "M2" ] else [ 5, "P4" ]
+        | Some Suspended -> if has "2" || has "sus2" then [ 2, "M2" ] else [ 5, "P4" ]
         | Some Minor | Some Diminished -> [ 3, "m3" ]
         | _ -> [ 4, "M3" ]
     let fifth =
@@ -118,7 +121,7 @@ let private chordTones (ast: ChordAst) : (int * string) list =
     let seventh =
         match stackedDegree with
         | None -> []
-        | Some _ when exts |> List.exists (fun e -> e.StartsWith "maj") -> [ 11, "M7" ]
+        | Some _ when ast.Quality = Some Major || exts |> List.exists (fun e -> e.StartsWith "maj") -> [ 11, "M7" ]
         | Some _ when quality = Some Diminished && not (has "m7b5") -> [ 9, "d7" ]
         | Some _ -> [ 10, "m7" ]
     let upper =
