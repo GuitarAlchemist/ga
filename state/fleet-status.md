@@ -46,22 +46,22 @@ _No open PRs._
 | [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 54d | UNKNOWN | 1 | spareilleux |
 | [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 55d | UNKNOWN | 1 | spareilleux |
 | [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 56d | UNKNOWN | 3 | spareilleux |
-| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 56d | UNKNOWN | 3 | spareilleux |
+| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 57d | UNKNOWN | 3 | spareilleux |
 
 ### ix (10 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 0d | UNKNOWN | 0 | spareilleux |
-| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 0d | UNKNOWN | 0 | spareilleux |
-| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 0d | UNKNOWN | 1 | spareilleux |
-| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 0d | UNKNOWN | 0 | spareilleux |
-| [#340](https://github.com/GuitarAlchemist/ix/pull/340) | feat(ix-duck): ix_petri_analyze UDF over ix-petri (first consumer: gai | 0d | UNKNOWN | 0 | spareilleux |
-| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 0d | UNKNOWN | 0 | spareilleux |
-| [#338](https://github.com/GuitarAlchemist/ix/pull/338) | feat(ix-optick-invariants): dead dimension (#37) and dead weighted par | 0d | UNKNOWN | 0 | spareilleux |
-| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 1d | UNKNOWN | 0 | spareilleux |
-| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 1d | UNKNOWN | 0 | spareilleux |
+| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 0d | MERGEABLE | 0 | spareilleux |
+| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 0d | MERGEABLE | 0 | spareilleux |
+| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 0d | MERGEABLE | 1 | spareilleux |
+| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 0d | MERGEABLE | 0 | spareilleux |
+| [#340](https://github.com/GuitarAlchemist/ix/pull/340) | feat(ix-duck): ix_petri_analyze UDF over ix-petri (first consumer: gai | 0d | MERGEABLE | 0 | spareilleux |
+| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 0d | MERGEABLE | 0 | spareilleux |
+| [#338](https://github.com/GuitarAlchemist/ix/pull/338) | feat(ix-optick-invariants): dead dimension (#37) and dead weighted par | 0d | MERGEABLE | 0 | spareilleux |
+| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 1d | MERGEABLE | 0 | spareilleux |
+| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 1d | MERGEABLE | 0 | spareilleux |
 
 ### tars
 
@@ -71,11 +71,11 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#1091](https://github.com/GuitarAlchemist/Demerzel/pull/1091) | fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002 | 0d | UNKNOWN | 0 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 0d | UNKNOWN | 1 | spareilleux |
-| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 0d | UNKNOWN | 1 | spareilleux |
-| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 31d | UNKNOWN | 2 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 58d | UNKNOWN | 1 | spareilleux |
+| [#1091](https://github.com/GuitarAlchemist/Demerzel/pull/1091) | fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002 | 0d | MERGEABLE | 0 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 0d | MERGEABLE | 1 | spareilleux |
+| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 0d | MERGEABLE | 1 | spareilleux |
+| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 31d | CONFLICTING | 2 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 58d | CONFLICTING | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -109,6 +109,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-15T04:00:00.149007+00:00 UTC_
+_Generated: 2026-09-15T10:39:24.838779+00:00 UTC_
 
-_Commit: `bc5af091c6cb`_
+_Commit: `1c6a76399cc2`_
