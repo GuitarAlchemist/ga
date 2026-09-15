@@ -20,14 +20,7 @@ public static class ChordAtonalTool
 {
     // ── Static tables ─────────────────────────────────────────────────────────
 
-    private static readonly IReadOnlyDictionary<string, int> IntervalSemitones =
-        new Dictionary<string, int>
-        {
-            ["P1"] = 0, ["m2"] = 1, ["M2"] = 2,  ["m3"] = 3,
-            ["M3"] = 4, ["P4"] = 5, ["TT"] = 6,  ["P5"] = 7,
-            ["m6"] = 8, ["M6"] = 9, ["m7"] = 10, ["M7"] = 11,
-            ["M9"] = 14, ["P11"] = 17, ["M13"] = 21
-        };
+    private static readonly int[] MajorScaleSemitones = [0, 2, 4, 5, 7, 9, 11];
 
     private static readonly IReadOnlyDictionary<string, int> NoteToSemitone =
         new Dictionary<string, int>
@@ -68,6 +61,26 @@ public static class ChordAtonalTool
         return ((s + acc switch { "#" => 1, "b" => -1, "##" => 2, "bb" => -2, _ => 0 }) % 12 + 12) % 12;
     }
 
+    /// <summary>
+    /// Semitones of an interval name returned by <c>domain.chordIntervals</c>, from its quality
+    /// and degree: P5 → 7, d5 → 6, d7 → 9, m9 → 13, A11 → 18. Also accepts the legacy "TT".
+    /// </summary>
+    private static int? IntervalSemitones(string name)
+    {
+        if (name == "TT") return 6;
+        if (name.Length < 2 || !int.TryParse(name.AsSpan(1), out var degree) || degree < 1) return null;
+        var natural = MajorScaleSemitones[(degree - 1) % 7] + 12 * ((degree - 1) / 7);
+        var perfect = (degree - 1) % 7 is 0 or 3 or 4;
+        return (name[0], perfect) switch
+        {
+            ('P', true) or ('M', false) => natural,
+            ('m', false) or ('d', true) => natural - 1,
+            ('d', false) => natural - 2,
+            ('A', _) => natural + 1,
+            _ => null
+        };
+    }
+
     private static async Task<string[]> GetIntervalNamesAsync(string symbol)
     {
         var map = MapModule.OfSeq(new[] { Tuple.Create("symbol", (object)symbol) });
@@ -89,7 +102,7 @@ public static class ChordAtonalTool
         var rootPc = ParseRootPc(symbol);
         var intervals = await GetIntervalNamesAsync(symbol);
         return [.. intervals
-            .Select(iv => IntervalSemitones.TryGetValue(iv, out var s) ? (int?)(rootPc + s) % 12 : null)
+            .Select(iv => IntervalSemitones(iv) is { } s ? (int?)(rootPc + s) % 12 : null)
             .Where(s => s.HasValue)
             .Select(s => s!.Value)
             .Distinct()
