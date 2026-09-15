@@ -28,23 +28,31 @@ public sealed class PitchCollection(IReadOnlyCollection<Pitch> items)
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Parses space-separated pitches, each spelled with a sharp or a flat: "E2 A2 D3 G3 B3 E4", "Eb4 Eb4 G3 C3".
+    /// </summary>
     public static bool TryParse(string? s, IFormatProvider? provider, out PitchCollection result)
     {
         ArgumentNullException.ThrowIfNull(s);
 
         result = Empty;
 
-        var segments = s.Split(" ");
+        var segments = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         List<Pitch> items = [];
         foreach (var segment in segments)
         {
-            if (!Pitch.Sharp.TryParse(segment, null, out var pitch))
+            if (Pitch.Sharp.TryParse(segment, null, out var sharp))
+            {
+                items.Add(sharp);
+            }
+            else if (Pitch.Flat.TryParse(segment, null, out var flat))
+            {
+                items.Add(flat);
+            }
+            else
             {
                 return false; // Fail if one item fails parsing
             }
-
-            items.Add(pitch);
         }
 
         // Success
