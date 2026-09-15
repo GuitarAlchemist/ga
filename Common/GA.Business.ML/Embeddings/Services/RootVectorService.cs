@@ -3,8 +3,10 @@ namespace GA.Business.ML.Embeddings.Services;
 /// <summary>
 ///     Generates the ROOT partition of the musical embedding — a 12-dim one-hot over
 ///     pitch classes 0-11. Added in schema v1.8 (2026-04-19) to carry root-pitch-class
-///     identity <b>outside</b> STRUCTURE, so that STRUCTURE remains genuinely
-///     O+P+T+I-invariant per the schema contract.
+///     identity <b>outside</b> STRUCTURE, so that two voicings of the same pitch-class set get
+///     the same STRUCTURE slice whatever their root, octave or instrument. STRUCTURE is still
+///     <b>not</b> transposition-invariant: its pitch-class chroma changes under T; only its ICV
+///     and cardinality sub-dims are T/I-invariant (see <c>EmbeddingSchema.Partitions</c>).
 ///     <para>
 ///         When the invariant checker <c>ix-optick-invariants</c> tested same-PC-set
 ///         voicings across instruments, only 67/793 (8.4%) produced bit-identical
