@@ -1,6 +1,7 @@
 namespace GaMcpServer.Tools;
 
 using GA.Business.Config;
+using GA.Domain.Core.Theory.Atonal;
 using ModelContextProtocol.Server;
 
 [McpServerToolType]
@@ -22,7 +23,8 @@ public static class ScaleTool
     [Description(
         "Look up a scale by its binary scale ID (12-bit pitch-class bitmask). " +
         "Returns the scale name, notes, category, alternate names, and Forte number if available. " +
-        "Common IDs: Major=2741, Natural Minor=1453, Whole Tone=1365, Diminished=1755.")]
+        "Common IDs: Major=2741 (its relative Natural Minor has the same ID), Whole Tone=1365, " +
+        "Half-Whole Diminished=1755, Whole-Half Diminished=2925.")]
     public static string GaScaleById(
         [Description("Binary scale ID, e.g. 2741 for the major scale")] int id)
     {
@@ -30,11 +32,20 @@ public static class ScaleTool
         if (scale == null)
             return $"No scale found for binary scale ID {id}.";
 
-        var s = scale.Value;
+        return FormatScale(scale.Value);
+    }
+
+    /// <summary>
+    /// Scale card shared by <see cref="GaScaleById"/> and <see cref="GaScaleByName"/>.
+    /// The optional fields are F# options: a C# <c>??</c> on them converts the fallback into
+    /// <c>Some(fallback)</c> and prints "Some(n/a)", so unwrap them explicitly.
+    /// </summary>
+    private static string FormatScale(ScalesConfig.ScaleInfo s)
+    {
         var alts = s.AlternateNames.Count > 0 ? string.Join(", ", s.AlternateNames) : "none";
-        var forte = s.ForteNumber ?? "n/a";
-        var category = s.Category ?? "unknown";
-        var usage = s.Usage ?? "";
+        var forte = s.ForteNumber?.Value is { Length: > 0 } configured ? configured : ForteNumberOf(s.BinaryScaleId);
+        var category = s.Category?.Value ?? "unknown";
+        var usage = s.Usage?.Value ?? "";
         return $"""
                 Name: {s.Name}
                 Binary Scale ID: {s.BinaryScaleId}
@@ -45,6 +56,17 @@ public static class ScaleTool
                 Common: {s.Common}
                 Usage: {usage}
                 """;
+    }
+
+    /// <summary>Forte number of the pitch-class set encoded by a binary scale ID, or "n/a".</summary>
+    private static string ForteNumberOf(int binaryScaleId)
+    {
+        var set = new PitchClassSet(Enumerable.Range(0, 12)
+            .Where(pc => (binaryScaleId & 1 << pc) != 0)
+            .Select(PitchClass.FromValue));
+        return set.PrimeForm is { } prime && ForteCatalog.GetForteNumber(prime) is { } forte
+            ? forte.ToString()
+            : "n/a";
     }
 
     [McpServerTool]
@@ -91,20 +113,6 @@ public static class ScaleTool
         if (scale == null)
             return $"No scale found for name '{name}'.";
 
-        var s = scale.Value;
-        var alts = s.AlternateNames.Count > 0 ? string.Join(", ", s.AlternateNames) : "none";
-        var forte = s.ForteNumber ?? "n/a";
-        var category = s.Category ?? "unknown";
-        var usage = s.Usage ?? "";
-        return $"""
-                Name: {s.Name}
-                Binary Scale ID: {s.BinaryScaleId}
-                Notes: {s.Notes}
-                Category: {category}
-                Alternate Names: {alts}
-                Forte Number: {forte}
-                Common: {s.Common}
-                Usage: {usage}
-                """;
+        return FormatScale(scale.Value);
     }
 }
