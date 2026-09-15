@@ -162,6 +162,11 @@ public static class CanonicalChordPatternCatalog
     ///     Tries to find the best exact match (no missing, no extra intervals).
     ///     Used when we want to accept only patterns that fully describe the voicing.
     /// </summary>
+    /// <remarks>
+    ///     A few names are synonyms for the same interval set (augmented-7 = dominant-7-sharp-5,
+    ///     major-6-add-9 = 6-9, minor-6-add-9 = minor-6-9, 9-sus4 = dominant-11). This returns the
+    ///     primary name, the one with the lowest priority; <see cref="FindAllExact" /> returns the aliases too.
+    /// </remarks>
     public static ChordIntervalPattern? TryFindExact(IReadOnlyCollection<int> intervalsFromRoot)
     {
         ArgumentNullException.ThrowIfNull(intervalsFromRoot);
@@ -174,5 +179,21 @@ public static class CanonicalChordPatternCatalog
         }
 
         return null;
+    }
+
+    /// <summary>
+    ///     Finds every pattern that exactly matches the given intervals-from-root: the primary name
+    ///     returned by <see cref="TryFindExact" /> first, then its aliases, in priority order.
+    /// </summary>
+    public static IReadOnlyList<ChordIntervalPattern> FindAllExact(IReadOnlyCollection<int> intervalsFromRoot)
+    {
+        ArgumentNullException.ThrowIfNull(intervalsFromRoot);
+
+        return
+        [
+            .. All
+                .OrderBy(p => p.Priority)
+                .Where(p => p.TryMatch(intervalsFromRoot, maxMissing: 0, maxExtra: 0) is { IsExact: true })
+        ];
     }
 }
