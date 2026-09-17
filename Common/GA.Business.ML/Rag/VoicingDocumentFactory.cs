@@ -5,6 +5,7 @@ using Domain.Core.Instruments.Fretboard.Voicings.Core;
 using Domain.Core.Primitives.Notes;
 using Domain.Core.Theory.Atonal;
 using Models;
+using Musical.Analysis;
 
 public static class VoicingDocumentFactory
 {

@@ -120,7 +120,7 @@ public class TabAnalysisService(
                 {
                     Id = Guid.NewGuid().ToString(),
                     ChordName = analysis.ChordName,
-                    RootPitchClass = PitchClass.TryParse(analysis.RootPitchClass, null, out var r)
+                    RootPitchClass = analysis.TryGetRootPitchClass(out var r)
                         ? r.Value
                         : midiNotes.Min() % 12,
                     MidiNotes = [.. midiNotes],

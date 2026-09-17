@@ -71,7 +71,8 @@ public sealed record Voicing(Position[] Positions, MidiNote[] Notes)
     public int PlayedNoteCount => Positions.OfType<Position.Played>().Count();
 
     /// <summary>
-    ///     True if 3+ fretted notes share a fret (grouping semantics, not adjacency). Open strings are not barred.
+    ///     True if 3+ fretted notes share a fret (grouping semantics, not adjacency). Open strings
+    ///     (fret 0) are not held by a finger, so they never make a barre.
     ///     NOTE: a separate adjacency-aware barre check lives in
     ///     VoicingPhysicalAnalyzer.DetectBarreRequirement; unifying the two is a
     ///     deliberate follow-up (changes indexed BarreRequired — see PR #456).
