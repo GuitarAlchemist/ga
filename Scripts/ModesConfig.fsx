@@ -1,6 +1,8 @@
 ﻿#I @"../Common/GA.Business.Config"
 #r "nuget: GA.Business.Config, 1.0.0"
 
+open System // String.Join
+
 open GA.Business.Config
 open ModesConfig
 
@@ -17,8 +19,11 @@ let testGetAllModes() =
         printfn $"  Interval Class Vector: %s{mode.IntervalClassVector}"
         printfn $"  Notes: %s{mode.Notes}"
         mode.Description |> Option.iter (fun desc -> printfn $"  Description: %s{desc}")
-        mode.AlternateNames |> Option.iter (fun names -> 
-            printfn $"  Alternate Names: %s{String.Join(", ", names)}")
+        mode.AlternateNames |> Option.iter (fun names ->
+            // The separator has to be bound outside the interpolation: a quoted
+            // literal inside {...} of a single-quote interpolated string is FS3373.
+            let alternateNames = String.Join(", ", names)
+            printfn $"  Alternate Names: %s{alternateNames}")
         printfn ""
     )
 
