@@ -19,7 +19,7 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 - **N** — Not claimed anywhere; latent invariant worth surfacing
 - **FAIL** — Known to fail based on empirical measurement
 
-## 1. Invariant catalog (35 entries)
+## 1. Invariant catalog (38 entries)
 
 | # | Domain | Invariant | Artifact | Status |
 |---|---|---|---|---|
@@ -58,6 +58,9 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 | 33 | text-vs-pc | `ChordName` consistency across instruments for same PC-set | corpus | **FAIL** (29.4%) |
 | 34 | governance | Every persona YAML has `affordances`, `goal_directedness`, `estimator_pairing` | governance/demerzel/personas/ | T |
 | 35 | governance | Every belief file is tetravalent-valid (T/F/U/C only) | state/beliefs/*.json | C |
+| 36 | embedding | Z-pair STRUCTURE separation: for every Z-related set-class pair represented in the corpus, cosine(STRUCTURE, STRUCTURE') <= 1 - 1e-4 (STRUCTURE is not just the ICV) | optick.index | T (19/19 Z-pairs, ix-optick-invariants 2026-09-14) |
+| 37 | embedding | No dead dimension: every compact OPTIC-K dim varies across the corpus (max - min > 1e-6) | optick.index | **FAIL** (83/124 live, ix-optick-invariants 2026-09-14, ga#552) |
+| 38 | embedding | No dead weighted partition: a partition with similarity weight > 0 has at least one live dim | optick.index | **FAIL** (CONTEXT 0/12 live at weight 0.20, ix-optick-invariants 2026-09-14, ga#616) |
 
 ## 2. C#/F# mistake tracker roadmap (16 categories)
 
@@ -108,7 +111,7 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 ### Per-commit (< 30 s budget, run in PR)
 - `ix_code_smells` + `ix_code_analyze` on changed `.cs`/`.fs` files (M1, M2, M5, M6, M7, M12)
 - `ix_ast_query` patterns for M3, M4, M10, M13
-- Invariants #13, #17, #19, #21, #22, #24 as xUnit/NUnit tests under `Tests/GA.Business.Core.Tests/Invariants/`
+- Invariants #13, #17, #19, #21, #22, #24 as xUnit/NUnit tests. No dedicated `Invariants/` test folder exists (the earlier Invariants folder in GA.Business.Core.Tests was removed on 2026-01-11). Catalog-linked tests live in `Tests/Common/GA.Business.Core.Tests/Voicings/`: `ChordRecognitionRoundTripTests.cs` covers #13, `EmbeddingInvariantsTests.cs` covers #25/#33. #17, #19, #24 have no tests yet (status N above).
 
 ### Per-PR merge (5-minute budget, GitHub Action)
 - `ix-catalog-lint` over every YAML (invariants #3, #5, #6, #7, #8)
