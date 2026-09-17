@@ -24,8 +24,10 @@ public sealed unsafe class OptickIndexReader : IDisposable
     /// <summary>
     ///     Compact vector dimension. Derives from <see cref="EmbeddingSchema.CompactDimension"/>
     ///     — sum of similarity-partition dims. v4-pp: 112. v4-pp-r (v1.8, with ROOT partition): 124.
+    ///     Read once: <see cref="EmbeddingSchema.CompactDimension"/> sums the partitions with LINQ
+    ///     on every call, and <see cref="GetVector"/> runs once per indexed voicing in every search.
     /// </summary>
-    public static int Dimension => EmbeddingSchema.CompactDimension;
+    public static int Dimension { get; } = EmbeddingSchema.CompactDimension;
 
     private const uint SupportedVersion = 4;
     private const ushort ExpectedEndian = 0xFEFF;
