@@ -179,7 +179,11 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region IParsable Members
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Parses a pitch class written in <b>set notation</b>; see <see cref="TryParse" /> for the accepted forms.
+    ///     <c>Parse("A")</c> is 10 and <c>Parse("E")</c> is 11, not the notes A (9) and E (4).
+    /// </summary>
+    /// <exception cref="ArgumentException">The input is not a pitch class.</exception>
     public static PitchClass Parse(string s, IFormatProvider? provider)
     {
         if (!TryParse(s, provider, out var result))
@@ -190,7 +194,22 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Tries to parse a pitch class written in <b>set notation</b>, the format <see cref="ToString" /> produces.
+    /// </summary>
+    /// <remarks>
+    ///     Accepted, in this order:
+    ///     <list type="number">
+    ///         <item><description>the digits <c>0</c>..<c>9</c>;</description></item>
+    ///         <item><description>
+    ///             the single-letter digits for 10 and 11: <c>T</c>/<c>E</c> (as in <see cref="ToString" />) and their
+    ///             hexadecimal-style aliases <c>A</c>/<c>B</c>, case-insensitive: <c>"A"</c> is 10 and <c>"E"</c> is 11;
+    ///         </description></item>
+    ///         <item><description>any other note name, via <see cref="Note.Chromatic.TryParse" />: <c>"C"</c> = 0, <c>"Eb"</c> = 3, <c>"Bb"</c> = 10.</description></item>
+    ///     </list>
+    ///     Because of step 2, the single letters A, B and E are <b>not</b> read as note names (A = 9, E = 4).
+    ///     To parse a note name, use <see cref="Note.Accidented.TryParse" /> and take its <see cref="Note.PitchClass" />.
+    /// </remarks>
     public static bool TryParse(string? s, IFormatProvider? provider, out PitchClass result)
     {
         result = default;

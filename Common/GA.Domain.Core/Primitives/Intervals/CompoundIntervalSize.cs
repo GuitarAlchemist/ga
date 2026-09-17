@@ -100,9 +100,10 @@ public readonly record struct CompoundIntervalSize : IParsable<CompoundIntervalS
     /// <inheritdoc />
     public static bool TryParse(string? s, IFormatProvider? provider, out CompoundIntervalSize result)
     {
-        if (!int.TryParse(s, out var i))
+        result = default;
+        if (!int.TryParse(s, provider, out var i) || i is < _minValue or > _maxValue)
         {
-            throw new ArgumentException("Invalid format");
+            return false;
         }
 
         result = FromValue(i);
