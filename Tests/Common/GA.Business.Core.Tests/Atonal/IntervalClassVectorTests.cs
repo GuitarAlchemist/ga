@@ -59,12 +59,10 @@ public class IntervalClassVectorTests
         Assert.That(icv.Vector.Values, Is.EqualTo(new[] { 11, 11, 11, 11, 11, 5 }));
     }
 
-    // Documented limitation: a single count of exactly 12 (only the full chromatic aggregate)
-    // overflows a base-12 digit and does NOT round-trip. Pins the KNOWN behavior so it can't
-    // change silently; to make it faithful, move to base-13 or a 6-field record
-    // (see IntervalClassVectorId remarks).
+    // A count of exactly 12 (only the full chromatic aggregate) overflows a base-12 digit. The id
+    // keeps its packed value and decodes it as a special case (see IntervalClassVectorId remarks).
     [Test]
-    public void ChromaticAggregate_Count12_IsLossy_KnownLimitation()
+    public void ChromaticAggregate_Count12_RoundTrips()
     {
         var counts = new Dictionary<IntervalClass, int>
         {
@@ -78,7 +76,6 @@ public class IntervalClassVectorTests
 
         var icv = new IntervalClassVector(counts);
 
-        Assert.That(icv.Vector.Values, Is.Not.EqualTo(new[] { 12, 12, 12, 12, 12, 6 }),
-            "count=12 overflows base-12; if this starts passing, the encoding was widened — update the docs.");
+        Assert.That(icv.Vector.Values, Is.EqualTo(new[] { 12, 12, 12, 12, 12, 6 }));
     }
 }

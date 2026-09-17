@@ -8,14 +8,20 @@ namespace GA.Domain.Core.Theory.Atonal;
 ///     base-12 to Value = 608761 (2·12⁵ + 5·12⁴ + 4·12³ + 3·12² + 6·12 + 1). Base-12 (not
 ///     base-10) is used so each count digit holds 0–11 — base-10 corrupts any count ≥ 10,
 ///     which occurs for sets of cardinality ≥ 11.
-///     KNOWN LIMITATION: a single count of exactly 12 still overflows a base-12 digit, so the
-///     full chromatic aggregate &lt;12 12 12 12 12 6&gt; does NOT round-trip (decodes to
-///     &lt;1 1 1 1 0 6&gt;). Every set of cardinality ≤ 11 is safe; revisit (base-13 or a
-///     6-field record) only if the 12-note aggregate ever needs a faithful id.
+///     A count of exactly 12 overflows a base-12 digit; only the full chromatic aggregate
+///     &lt;12 12 12 12 12 6&gt; has one. Its value (3257430) is still unique, since every other
+///     vector packs below 12⁶, so it is kept (ids are used as keys, labels and in ix payloads) and
+///     decoded as a special case instead of as digits (which read &lt;1 1 1 1 0 6&gt;).
 /// </remarks>
 /// <param name="Value">The base-12 <see cref="int" /> value</param>
 public readonly record struct IntervalClassVectorId(int Value) : IComparable<IntervalClassVectorId>
 {
+    /// <summary>
+    ///     Packed value of the chromatic aggregate's &lt;12 12 12 12 12 6&gt;, whose counts of 12 overflow
+    ///     their base-12 digits (12·12⁵ + 12·12⁴ + 12·12³ + 12·12² + 12·12 + 6).
+    /// </summary>
+    private const int _chromaticAggregateValue = 3257430;
+
     /// <summary>
     ///     Gets the <see cref="ImmutableSortedDictionary" /> interval class vector for the ID
     /// </summary>
@@ -40,6 +46,16 @@ public readonly record struct IntervalClassVectorId(int Value) : IComparable<Int
     {
         // Decompose base 12 value
         var dictBuilder = ImmutableSortedDictionary.CreateBuilder<IntervalClass, int>();
+        if (value == _chromaticAggregateValue)
+        {
+            for (var icValue = 1; icValue <= 6; icValue++)
+            {
+                dictBuilder.Add(IntervalClass.FromValue(icValue), icValue == 6 ? 6 : 12);
+            }
+
+            return dictBuilder.ToImmutable();
+        }
+
         var dividend = value;
 
         // Iterate deterministically from IC6 down to IC1. This avoids LINQ Reverse() over a custom collection
