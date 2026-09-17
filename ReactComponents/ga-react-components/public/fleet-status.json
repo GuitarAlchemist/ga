@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "2b8764cb5557a220eff32095c02b3012f76c61e3",
-    "generatedAt": "2026-09-17T05:05:14.922257+00:00",
+    "commitSha": "df6cf613d4e13550c058d472be310404cfdecb75",
+    "generatedAt": "2026-09-17T05:06:26.281948+00:00",
     "repoCount": 5,
-    "totalPRs": 53
+    "totalPRs": 49
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 35,
+      "prCount": 33,
       "prs": [
         {
           "ageDays": 0,
@@ -138,18 +138,6 @@
           "number": 694,
           "title": "perf(atonal): PitchClassSet.IntervalClassVector computes each set's id once (75x read, 16.2 MB -> 47 KB)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/694"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-16T14:08:06Z",
-          "failingChecks": 0,
-          "headRef": "fix/compact-voicing-embedding",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 692,
-          "title": "feat(mcp): ga_generate_voicing_embedding layout=compact matches optick.index rows",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/692"
         },
         {
           "ageDays": 1,
@@ -272,18 +260,6 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/677"
         },
         {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-09-14T12:58:47Z",
-          "failingChecks": 0,
-          "headRef": "docs/optick-dead-dimension-invariant-step",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 675,
-          "title": "docs(optick): run ix-optick-invariants after each OPTIC-K rebuild; catalog #37/#38",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/675"
-        },
-        {
           "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-09-12T15:02:38Z",
@@ -374,7 +350,7 @@
           "failingChecks": 0,
           "headRef": "codex/630-reconciliation-snapshot",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 633,
           "title": "feat(harness): add read-only work reconciliation snapshot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/633"
@@ -494,7 +470,7 @@
           "failingChecks": 1,
           "headRef": "ci/reusable-claude-review",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 588,
           "title": "ci: adopt reusable Claude review diagnostics",
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
@@ -506,7 +482,7 @@
           "failingChecks": 1,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 579,
           "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
@@ -518,7 +494,7 @@
           "failingChecks": 3,
           "headRef": "ci/chatbot-qa-producer-revival",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 576,
           "title": "fix(chatbot-qa): revive the daily producer \u2014 gate in-runner Ollama, add artifact-freshness sensor",
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
@@ -530,7 +506,7 @@
           "failingChecks": 3,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -549,20 +525,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 12,
+      "prCount": 9,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-16T13:18:42Z",
-          "failingChecks": 0,
-          "headRef": "fix/optick-search-dim-path",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 348,
-          "title": "fix(ix-agent): ix_optick_search reads query dim from the index and finds the GA index",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/348"
-        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -570,7 +534,7 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
@@ -594,7 +558,7 @@
           "failingChecks": 0,
           "headRef": "feat/markov-work-history",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 343,
           "title": "feat(memristive-markov): distil PR lifecycle history into Seldon Markov transitions (Demerzel#596)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/343"
@@ -626,18 +590,6 @@
         {
           "ageDays": 2,
           "author": "spareilleux",
-          "createdAt": "2026-09-14T13:08:51Z",
-          "failingChecks": 0,
-          "headRef": "feat/petri-duckdb-udf",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 340,
-          "title": "feat(ix-duck): ix_petri_analyze UDF over ix-petri (first consumer: gaia#80)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/340"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
           "createdAt": "2026-09-14T13:06:36Z",
           "failingChecks": 0,
           "headRef": "feat/autoresearch-hari-sessions",
@@ -646,18 +598,6 @@
           "number": 339,
           "title": "fix(autoresearch): contract test collapsed every claim into one; SCHEMA.md points at the real Hari consumer",
           "url": "https://github.com/GuitarAlchemist/ix/pull/339"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-09-14T12:58:15Z",
-          "failingChecks": 0,
-          "headRef": "feat/optick-dead-dimension-invariant",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 338,
-          "title": "feat(ix-optick-invariants): dead dimension (#37) and dead weighted partition (#38) invariants",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/338"
         },
         {
           "ageDays": 3,
@@ -709,8 +649,21 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 0,
-      "prs": []
+      "prCount": 1,
+      "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-17T05:06:20Z",
+          "failingChecks": 0,
+          "headRef": "refactor/44-workflow-load",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 299,
+          "title": "refactor: load and run .wot.trsx workflows outside WotCommand (#44, slice 1)",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/299"
+        }
+      ]
     },
     {
       "fullName": "GuitarAlchemist/Demerzel",
