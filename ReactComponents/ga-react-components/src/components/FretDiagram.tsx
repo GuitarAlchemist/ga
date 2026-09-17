@@ -2,14 +2,34 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { computeFretWindow, rowOf, DEFAULT_FRETS_SHOWN } from './fretWindow';
 
+/**
+ * Order of the `frets` array.
+ *
+ * `low-to-high` is the standard chord-chart order (E A D G B e) — the one
+ * `GA.Business.ML.Agents.FretDiagram` parses and the one printed in chat answers.
+ *
+ * `high-to-low` is the domain's own order: `Str` 1 is the *highest*-pitched string
+ * (`Str.cs`), voicings are generated over `Str.Range(6)`, and `Voicing.Diagram` therefore
+ * emits the high e first. Anything that comes straight off a `Voicing` — including
+ * `GET /api/contextual-chords/voicings/{chord}` (`VoicingFilterService`) and the OPTK index
+ * metadata — is in this order. Open C major arrives as `0-1-0-2-3-x`, not `x-3-2-0-1-0`.
+ */
+export type StringOrder = 'low-to-high' | 'high-to-low';
+
 export interface FretDiagramProps {
   /** Chord name displayed above the diagram */
   chordName: string;
   /**
-   * 6-element fret array (low-E to high-e).
+   * 6-element fret array.
    * -1 = muted (x), 0 = open, 1–12 = fret number.
+   * Interpreted according to {@link stringOrder}.
    */
   frets: number[];
+  /**
+   * Which end of {@link frets} is the low E. Defaults to `low-to-high`, the chord-chart
+   * convention. Pass `high-to-low` for arrays that come from a `Voicing` / the GA API.
+   */
+  stringOrder?: StringOrder;
 }
 
 const STRINGS = 6;
@@ -26,10 +46,13 @@ const MARGIN_TOP = 30;
  * default five rows rather than dropping the notes that fall outside it. See
  * {@link computeFretWindow}.
  */
-const FretDiagram: React.FC<FretDiagramProps> = ({ chordName, frets }) => {
+const FretDiagram: React.FC<FretDiagramProps> = ({ chordName, frets, stringOrder = 'low-to-high' }) => {
   const width = MARGIN_LEFT + (STRINGS - 1) * STRING_SPACING + 24;
 
-  const window = computeFretWindow(frets, DEFAULT_FRETS_SHOWN);
+  // Draw low E on the left regardless of how the caller ordered the array.
+  const lowToHigh = stringOrder === 'high-to-low' ? [...frets].reverse() : frets;
+
+  const window = computeFretWindow(lowToHigh, DEFAULT_FRETS_SHOWN);
   const { baseFret, fretsShown } = window;
 
   const svgHeight = MARGIN_TOP + fretsShown * FRET_SPACING + 10;
@@ -85,7 +108,7 @@ const FretDiagram: React.FC<FretDiagramProps> = ({ chordName, frets }) => {
         )}
 
         {/* Open/muted markers above nut, and dots on frets */}
-        {frets.map((fret, s) => {
+        {lowToHigh.map((fret, s) => {
           const cx = sx(s);
           if (fret === -1) {
             // Muted: ×
