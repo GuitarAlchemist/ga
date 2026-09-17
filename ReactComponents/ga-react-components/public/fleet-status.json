@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "df6cf613d4e13550c058d472be310404cfdecb75",
-    "generatedAt": "2026-09-17T05:06:26.281948+00:00",
+    "commitSha": "bdc28798afb63c0c112443080e140526779be852",
+    "generatedAt": "2026-09-17T10:37:23.657529+00:00",
     "repoCount": 5,
     "totalPRs": 49
   },
@@ -470,7 +470,7 @@
           "failingChecks": 1,
           "headRef": "ci/reusable-claude-review",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 588,
           "title": "ci: adopt reusable Claude review diagnostics",
           "url": "https://github.com/GuitarAlchemist/ga/pull/588"
@@ -482,7 +482,7 @@
           "failingChecks": 1,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 579,
           "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
@@ -494,7 +494,7 @@
           "failingChecks": 3,
           "headRef": "ci/chatbot-qa-producer-revival",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 576,
           "title": "fix(chatbot-qa): revive the daily producer \u2014 gate in-runner Ollama, add artifact-freshness sensor",
           "url": "https://github.com/GuitarAlchemist/ga/pull/576"
@@ -506,7 +506,7 @@
           "failingChecks": 3,
           "headRef": "fix/readme-drift-sensor-label",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 559,
           "title": "fix(ci): self-heal the readme-drift label so the sensor stops failing weekly",
           "url": "https://github.com/GuitarAlchemist/ga/pull/559"
@@ -534,7 +534,7 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
@@ -546,7 +546,7 @@
           "failingChecks": 0,
           "headRef": "fix/ml-course-findings",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 344,
           "title": "fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette singletons, doc imports, ix_kmeans seed",
           "url": "https://github.com/GuitarAlchemist/ix/pull/344"
@@ -558,7 +558,7 @@
           "failingChecks": 0,
           "headRef": "feat/markov-work-history",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 343,
           "title": "feat(memristive-markov): distil PR lifecycle history into Seldon Markov transitions (Demerzel#596)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/343"
@@ -570,7 +570,7 @@
           "failingChecks": 1,
           "headRef": "fix/ga-nightly-quality-schedule",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 342,
           "title": "fix(ix-quality-trend): compare quality snapshots only within one declared population (GA Nightly Quality 141/141 scheduled failures)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/342"
@@ -582,7 +582,7 @@
           "failingChecks": 0,
           "headRef": "feat/workflow-liveness-observations",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 341,
           "title": "feat(ix-harness-github-actions): scheduled-workflow liveness verdicts (hari#29)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/341"
@@ -594,7 +594,7 @@
           "failingChecks": 0,
           "headRef": "feat/autoresearch-hari-sessions",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 339,
           "title": "fix(autoresearch): contract test collapsed every claim into one; SCHEMA.md points at the real Hari consumer",
           "url": "https://github.com/GuitarAlchemist/ix/pull/339"
@@ -606,7 +606,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
@@ -618,7 +618,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
@@ -630,7 +630,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"

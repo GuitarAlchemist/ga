@@ -47,24 +47,24 @@ _No open PRs._
 | [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes (draft) | 50d | UNKNOWN | 0 | spareilleux |
 | [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking (draft) | 53d | UNKNOWN | 1 | spareilleux |
 | [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 55d | UNKNOWN | 1 | spareilleux |
-| [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 56d | MERGEABLE | 1 | spareilleux |
-| [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 57d | MERGEABLE | 1 | spareilleux |
-| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 58d | MERGEABLE | 3 | spareilleux |
-| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 59d | MERGEABLE | 3 | spareilleux |
+| [#588](https://github.com/GuitarAlchemist/ga/pull/588) | ci: adopt reusable Claude review diagnostics | 56d | UNKNOWN | 1 | spareilleux |
+| [#579](https://github.com/GuitarAlchemist/ga/pull/579) | feat(atonal): phase-aligned similarity — distinguish the Z-pairs and c | 57d | UNKNOWN | 1 | spareilleux |
+| [#576](https://github.com/GuitarAlchemist/ga/pull/576) | fix(chatbot-qa): revive the daily producer — gate in-runner Ollama, ad | 58d | UNKNOWN | 3 | spareilleux |
+| [#559](https://github.com/GuitarAlchemist/ga/pull/559) | fix(ci): self-heal the readme-drift label so the sensor stops failing  | 59d | UNKNOWN | 3 | spareilleux |
 
 ### ix (9 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 0d | UNKNOWN | 1 | spareilleux |
-| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 2d | UNKNOWN | 0 | spareilleux |
-| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 2d | UNKNOWN | 0 | spareilleux |
-| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 2d | UNKNOWN | 1 | spareilleux |
-| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 2d | UNKNOWN | 0 | spareilleux |
-| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 2d | UNKNOWN | 0 | spareilleux |
-| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 3d | UNKNOWN | 0 | spareilleux |
-| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 3d | UNKNOWN | 0 | spareilleux |
-| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 3d | UNKNOWN | 0 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 0d | MERGEABLE | 1 | spareilleux |
+| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 2d | MERGEABLE | 0 | spareilleux |
+| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 2d | MERGEABLE | 0 | spareilleux |
+| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 2d | MERGEABLE | 1 | spareilleux |
+| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 2d | MERGEABLE | 0 | spareilleux |
+| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 2d | MERGEABLE | 0 | spareilleux |
+| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 3d | MERGEABLE | 0 | spareilleux |
+| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 3d | MERGEABLE | 0 | spareilleux |
+| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 3d | MERGEABLE | 0 | spareilleux |
 
 ### tars (1 open)
 
@@ -115,6 +115,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-17T05:06:26.281948+00:00 UTC_
+_Generated: 2026-09-17T10:37:23.657529+00:00 UTC_
 
-_Commit: `df6cf613d4e1`_
+_Commit: `bdc28798afb6`_
