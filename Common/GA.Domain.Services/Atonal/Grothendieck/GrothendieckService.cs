@@ -69,8 +69,9 @@ public class GrothendieckService : IGrothendieckService
             if (delta.L1Norm <= maxDistance)
             {
                 var cost = ComputeHarmonicCost(delta);
-                // Avoid adding duplicate self-entry (cost already added above)
-                if (!ReferenceEquals(candidate, source))
+                // Avoid adding duplicate self-entry (cost already added above); compare by value,
+                // since the source need not be the PitchClassSet.Items instance
+                if (!candidate.Equals(source))
                 {
                     results.Add((candidate, delta, cost));
                 }

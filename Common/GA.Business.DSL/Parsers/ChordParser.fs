@@ -83,7 +83,11 @@ module ChordParser =
             (fun root acc qual comps bass -> 
                 { Root = root.ToUpper(); RootAccidental = defaultArg acc Natural; Quality = qual; Components = comps; Bass = bass })
 
+    /// Parses a whole chord symbol: anything left after the symbol (other than trailing whitespace)
+    /// is an error, so "C7sus4" is rejected instead of being read as "C7".
+    let pChordSymbol = pChord .>> spaces .>> eof
+
     let parse chordStr =
-        match run pChord chordStr with
+        match run pChordSymbol chordStr with
         | Success(result, _, _) -> Result.Ok result
         | Failure(errorMsg, _, _) -> Result.Error errorMsg

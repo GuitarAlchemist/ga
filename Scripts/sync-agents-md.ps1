@@ -5,8 +5,9 @@
 
 .DESCRIPTION
     CLAUDE.md is canonical. This script regenerates AGENTS.md as a literal copy
-    with the title swapped (# CLAUDE.md -> # AGENTS.md) and a "do not edit" warning
-    appended at the top so humans don't accidentally edit AGENTS.md directly.
+    with the title swapped (# CLAUDE.md -> # AGENTS.md) and CLAUDE.md's note
+    "Edit `CLAUDE.md`; never edit `AGENTS.md` directly." replaced in place by a
+    "do not edit" warning, so humans don't accidentally edit AGENTS.md directly.
 
     Called by .githooks/pre-commit before each commit; can also be run manually.
     Idempotent — exits 0 if AGENTS.md already matches.
