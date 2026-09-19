@@ -99,6 +99,21 @@ public class SchemaLayoutContractTests
     }
 
     [Test]
+    public void WriteInto_SliceOfTheWrongLength_Throws()
+    {
+        // A short slice used to be copied silently, leaving the rest of the partition zero.
+        double[] shortSlice = [1, 2, 3];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(() => EmbeddingSchema.WriteInto(new double[EmbeddingSchema.TotalDimension], "ROOT", shortSlice),
+                Throws.ArgumentException);
+            Assert.That(() => EmbeddingSchema.WriteInto(new float[EmbeddingSchema.TotalDimension], "ROOT", shortSlice),
+                Throws.ArgumentException);
+        });
+    }
+
+    [Test]
     public void GetPartition_UnknownName_Throws() =>
         Assert.That(() => EmbeddingSchema.GetPartition("NOPE"), Throws.ArgumentException);
 
@@ -115,6 +130,11 @@ public class SchemaLayoutContractTests
             Check("SYMBOLIC",   EmbeddingSchema.SymbolicOffset,   EmbeddingSchema.SymbolicDim,   EmbeddingSchema.SymbolicWeight);
             Check("MODAL",      EmbeddingSchema.ModalOffset,      EmbeddingSchema.ModalDim,      EmbeddingSchema.ModalWeight);
             Check("ROOT",       EmbeddingSchema.RootOffset,       EmbeddingSchema.RootDim,       EmbeddingSchema.RootWeight);
+            Check("IDENTITY",     EmbeddingSchema.IdentityOffset,    EmbeddingSchema.IdentityDim,    0);
+            Check("EXTENSIONS",   EmbeddingSchema.ExtensionsOffset,  EmbeddingSchema.ExtensionsDim,  0);
+            Check("SPECTRAL",     EmbeddingSchema.SpectralOffset,    EmbeddingSchema.SpectralDim,    0);
+            Check("HIERARCHY",    EmbeddingSchema.HierarchyOffset,   EmbeddingSchema.HierarchyDim,   0);
+            Check("ATONAL_MODAL", EmbeddingSchema.AtonalModalOffset, EmbeddingSchema.AtonalModalDim, 0);
         });
 
         static void Check(string name, int offset, int dim, double weight)
