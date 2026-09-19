@@ -121,4 +121,66 @@ public class LazyWithExpirationTests
 
         Assert.That(second, Is.EqualTo(2));
     }
+
+    [Test]
+    [Category("Timing")]
+    public void PendingExpirations_DoNotHoldThreadPoolThreads()
+    {
+        // Each value used to park a pool thread in Thread.Sleep until it expired, so a few dozen
+        // values starved unrelated work queued to the pool.
+        var lazies = Enumerable.Range(0, Environment.ProcessorCount * 4 + 16)
+            .Select(i => new LazyWithExpiration<int>(() => i, TimeSpan.FromSeconds(3)))
+            .ToList();
+        foreach (var lazy in lazies)
+        {
+            _ = lazy.Value;
+        }
+
+        using var unrelatedWorkRan = new ManualResetEventSlim();
+        ThreadPool.UnsafeQueueUserWorkItem(static done => done.Set(), unrelatedWorkRan, preferLocal: false);
+
+        Assert.That(unrelatedWorkRan.Wait(TimeSpan.FromSeconds(1)), Is.True,
+            "work queued to the thread pool should not wait for pending expirations");
+    }
+
+    [Test]
+    public void ExpiresAfterTheWindowMeasuredFromFirstAccess_WithAManualClock()
+    {
+        var clock = new ManualTimeProvider();
+        var counter = 0;
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromSeconds(10), clock);
+
+        clock.Advance(TimeSpan.FromMinutes(5)); // before first access: the window has not started
+        Assert.That(lazy.Value, Is.EqualTo(1));
+
+        clock.Advance(TimeSpan.FromSeconds(9));
+        Assert.That(lazy.Value, Is.EqualTo(1));
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        Assert.That(lazy.Value, Is.EqualTo(2));
+
+        clock.Advance(TimeSpan.FromSeconds(9));
+        Assert.That(lazy.Value, Is.EqualTo(2), "the new window starts at the recompute");
+    }
+
+    [Test]
+    public void ZeroExpiration_RecomputesOnEveryAccess()
+    {
+        var counter = 0;
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.Zero, new ManualTimeProvider());
+
+        Assert.That(lazy.Value, Is.EqualTo(1));
+        Assert.That(lazy.Value, Is.EqualTo(2));
+    }
+
+    private sealed class ManualTimeProvider : TimeProvider
+    {
+        private long _timestamp;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp() => _timestamp;
+
+        public void Advance(TimeSpan by) => _timestamp += by.Ticks;
+    }
 }

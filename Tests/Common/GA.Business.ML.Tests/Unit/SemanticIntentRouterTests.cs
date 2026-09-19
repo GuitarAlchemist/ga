@@ -184,6 +184,98 @@ public class SemanticIntentRouterTests
         Assert.That(match, Is.Null);
     }
 
+    private sealed class KeywordStubIntent(string id, string keyword, IReadOnlyList<string> examples) : IIntent
+    {
+        public string Id => id;
+        public string Description => id;
+        public IReadOnlyList<string> ExamplePrompts => examples;
+
+        public bool MatchesWithoutEmbeddings(string query) =>
+            query.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+
+        public Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new IntentResult(id));
+    }
+
+    private static IEmbeddingGenerator<string, Embedding<float>> FailingEmbedder()
+    {
+        var mock = new Mock<IEmbeddingGenerator<string, Embedding<float>>>();
+        mock.Setup(e => e.GenerateAsync(
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<EmbeddingGenerationOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Connection refused"));
+        return mock.Object;
+    }
+
+    [Test]
+    public async Task RouteAsync_EmbeddingBackendDown_FallsBackToFirstKeywordMatch()
+    {
+        // Offline host (Ollama unreachable): neither the examples nor the query can
+        // be embedded. Deterministic intents must still be reachable through their
+        // keyword predicate, in registration order, instead of the router giving up.
+        var scaleInfo = new KeywordStubIntent("skill.scaleinfo", "notes", ["What notes are in C major?"]);
+        var relativeKey = new KeywordStubIntent("skill.relativekey", "relative", ["Relative minor of G major"]);
+        var fretSpan = new KeywordStubIntent("skill.fretspan", "relative", []);
+
+        var router = new SemanticIntentRouter(
+            FailingEmbedder(),
+            EmptyHintProvider.Instance,
+            NullLogger<SemanticIntentRouter>.Instance);
+
+        var match = await router.RouteAsync(
+            "What is the relative minor of C major?",
+            Services(scaleInfo, relativeKey, fretSpan));
+
+        Assert.That(match, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(match!.Value.Intent.Id, Is.EqualTo("skill.relativekey"));
+            Assert.That(match.Value.MatchedExample, Is.EqualTo(SemanticIntentRouter.KeywordFallbackSource));
+            Assert.That(match.Value.Confidence, Is.EqualTo(router.MinConfidence));
+        });
+    }
+
+    [Test]
+    public async Task RouteAsync_EmbeddingBackendDown_NoKeywordMatch_ReturnsNull()
+    {
+        var relativeKey = new KeywordStubIntent("skill.relativekey", "relative", ["Relative minor of G major"]);
+        var plain = new StubIntent("skill.modes", "modes", ["modes of C"]);
+
+        var router = new SemanticIntentRouter(
+            FailingEmbedder(),
+            EmptyHintProvider.Instance,
+            NullLogger<SemanticIntentRouter>.Instance);
+
+        var match = await router.RouteAsync("Why does a ii-V-I sound resolved?", Services(relativeKey, plain));
+
+        Assert.That(match, Is.Null);
+    }
+
+    [Test]
+    public async Task RouteAsync_EmbeddingsWork_KeywordPredicateIsIgnored()
+    {
+        // The keyword predicate is an offline fallback only: with a working
+        // embedder, a below-threshold query still falls through (returns null).
+        var relativeKey = new KeywordStubIntent("skill.relativekey", "relative", ["relative minor of g major"]);
+
+        var vectors = new Dictionary<string, float[]>
+        {
+            ["relative minor of g major"] = [1f, 0f, 0f, 0f],
+            ["skill.relativekey"]         = [1f, 0f, 0f, 0f],
+            ["a relative question"]       = [0f, 0f, 0f, 1f],
+        };
+
+        var router = new SemanticIntentRouter(
+            StubEmbedder(vectors),
+            EmptyHintProvider.Instance,
+            NullLogger<SemanticIntentRouter>.Instance);
+
+        var match = await router.RouteAsync("a relative question", Services(relativeKey));
+
+        Assert.That(match, Is.Null);
+    }
+
     [Test]
     public async Task RouteAsync_NoIntentsWithExamples_ReturnsNull()
     {

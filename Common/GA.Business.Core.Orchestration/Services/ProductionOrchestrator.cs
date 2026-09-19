@@ -190,6 +190,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Deterministic algebra fast-path (parity with AnswerAsync) ─────────
+        // Algebra prompts are pure finite math: answer them without embeddings or
+        // the LLM, exactly as the non-streaming path does, so the AG-UI stream
+        // does not depend on an embedding endpoint for them.
+        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(
+            req, message, sessionId, correlationId, activity: null, Stopwatch.StartNew(), ct);
+        if (algebraFastPath is not null)
+        {
+            foreach (var word in algebraFastPath.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            return algebraFastPath;
+        }
+
         // ── Follow-up context enrichment for the routing pass ────────────────
         // Same enrichment as the non-streaming AnswerAsync path (see task #168).
         // The streaming path is the one the React demo uses, so without this

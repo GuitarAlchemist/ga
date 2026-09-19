@@ -69,11 +69,21 @@ public class SemanticRouter(
         RoutingResult? semanticResult = null;
         if (textEmbeddings != null)
         {
-            await EnsureEmbeddingsInitializedAsync(cancellationToken);
-            semanticResult = await SemanticRouteAsync(query, cancellationToken);
+            try
+            {
+                await EnsureEmbeddingsInitializedAsync(cancellationToken);
+                semanticResult = await SemanticRouteAsync(query, cancellationToken);
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Embedding backend unreachable (e.g. Ollama down): degrade to the
+                // LLM / keyword routing below instead of failing the whole request.
+                _logger.LogWarning(ex, "Semantic agent routing unavailable; falling back to LLM/keyword routing");
+                semanticResult = null;
+            }
 
             // If confidence is high, we can trust it
-            if (semanticResult.Confidence > 0.85f)
+            if (semanticResult is { Confidence: > 0.85f })
             {
                 routeActivity?.SetTag(ChatbotActivitySource.TagRoutingMethod, semanticResult.RoutingMethod);
                 routeActivity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, semanticResult.Confidence);

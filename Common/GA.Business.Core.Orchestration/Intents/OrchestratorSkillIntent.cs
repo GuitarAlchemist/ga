@@ -24,6 +24,10 @@ public sealed class OrchestratorSkillIntent(IOrchestratorSkill skill) : IIntent
 
     public IReadOnlyList<string> ExamplePrompts => skill.ExamplePrompts;
 
+    /// <summary>Offline fallback: the skill's legacy <see cref="IOrchestratorSkill.CanHandle"/>
+    /// predicate, consulted by <see cref="SemanticIntentRouter"/> only when embeddings are unavailable.</summary>
+    public bool MatchesWithoutEmbeddings(string query) => skill.CanHandle(query);
+
     public async Task<IntentResult> ExecuteAsync(string query, CancellationToken cancellationToken = default)
     {
         var response = await skill.ExecuteAsync(query, cancellationToken);

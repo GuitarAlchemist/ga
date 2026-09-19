@@ -44,7 +44,7 @@ public static class VoicingEmbeddingTool
                  "EmbeddingSchema.CompactDimension (124) weighted, per-partition-normalized vector stored in " +
                  "optick.index, the query shape ix_optick_search expects. Returns JSON with embedding array and metadata.")]
     public static async Task<string> GaGenerateVoicingEmbedding(
-        [Description("Voicing diagram (e.g. 'x-3-2-0-1-0' for Cmaj7)")] string diagram,
+        [Description("Voicing diagram in GA index order, string 1 (highest) first: e.g. '0-1-0-2-3-x' for open C major on guitar (the shape guitarists write x-3-2-0-1-0)")] string diagram,
         [Description("Instrument: guitar, bass, or ukulele")] string instrument,
         [Description("Vector layout: 'raw' (full generator vector, default) or 'compact' (optick.index row layout)")] string layout = "raw")
     {
@@ -88,23 +88,26 @@ public static class VoicingEmbeddingTool
     [Description("Get the OPTIC-K embedding schema info: partitions, dimensions, weights.")]
     public static string GaGetEmbeddingSchema()
     {
+        // Read the layout from the authoritative registry so the answer can't drift from
+        // the generator (a hand-written list here omitted ROOT and used stale dims).
         return JsonSerializer.Serialize(new
         {
             version = EmbeddingSchema.Version,
             totalDimension = EmbeddingSchema.TotalDimension,
-            partitions = new object[]
+            compactDimension = EmbeddingSchema.CompactDimension,
+            partitions = EmbeddingSchema.Partitions.Select(p => new
             {
-                new { name = "IDENTITY", offset = EmbeddingSchema.IdentityOffset, dim = EmbeddingSchema.IdentityDim, weight = 0.0, role = "filter" },
-                new { name = "STRUCTURE", offset = EmbeddingSchema.StructureOffset, dim = EmbeddingSchema.StructureDim, weight = EmbeddingSchema.StructureWeight },
-                new { name = "MORPHOLOGY", offset = EmbeddingSchema.MorphologyOffset, dim = EmbeddingSchema.MorphologyDim, weight = EmbeddingSchema.MorphologyWeight },
-                new { name = "CONTEXT", offset = EmbeddingSchema.ContextOffset, dim = EmbeddingSchema.ContextDim, weight = EmbeddingSchema.ContextWeight },
-                new { name = "SYMBOLIC", offset = EmbeddingSchema.SymbolicOffset, dim = EmbeddingSchema.SymbolicDim, weight = EmbeddingSchema.SymbolicWeight },
-                new { name = "EXTENSIONS", offset = EmbeddingSchema.ExtensionsOffset, dim = EmbeddingSchema.ExtensionsDim, weight = 0.0, role = "info" },
-                new { name = "SPECTRAL", offset = EmbeddingSchema.SpectralOffset, dim = EmbeddingSchema.SpectralDim, weight = 0.0, role = "info" },
-                new { name = "MODAL", offset = EmbeddingSchema.ModalOffset, dim = EmbeddingSchema.ModalDim, weight = 0.10 },
-                new { name = "HIERARCHY", offset = EmbeddingSchema.HierarchyOffset, dim = EmbeddingSchema.HierarchyDim, weight = 0.0, role = "info" },
-                new { name = "ATONAL_MODAL", offset = EmbeddingSchema.AtonalModalOffset, dim = EmbeddingSchema.AtonalModalDim, weight = 0.0, role = "info" }
-            }
+                name = p.Name,
+                offset = p.Start,
+                dim = p.Dim,
+                weight = Math.Round(p.SimilarityWeight, 4),
+                role = p.Role switch
+                {
+                    PartitionRole.Identity => "filter",
+                    PartitionRole.Similarity => "similarity",
+                    _ => "info"
+                }
+            })
         });
     }
 

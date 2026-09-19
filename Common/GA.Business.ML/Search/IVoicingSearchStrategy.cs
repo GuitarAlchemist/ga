@@ -9,7 +9,7 @@ using GA.Domain.Services.Fretboard.Voicings.Core;
 public enum QueryVectorSpace
 {
     /// <summary>
-    ///     Pre-weighted + L2-normalized OPTK v4 compact 112-dim vector. Produced by
+    ///     Pre-weighted + L2-normalized OPTK v4 compact vector (124 dims for OPTIC-K v1.8). Produced by
     ///     <c>MusicalQueryEncoder</c>. Dot product over on-disk vectors is cosine similarity.
     /// </summary>
     OpticCompact112,
