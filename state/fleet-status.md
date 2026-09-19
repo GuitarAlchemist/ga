@@ -33,10 +33,10 @@ _No open PRs._
 | [#681](https://github.com/GuitarAlchemist/ga/pull/681) | fix(mcp): scale, chord-interval, set-class and neighbor tools found by | 4d | MERGEABLE | 0 | spareilleux |
 | [#678](https://github.com/GuitarAlchemist/ga/pull/678) | feat(guitar-engine): damping fit harness (ix-acoustic-tune), train-onl | 4d | MERGEABLE | 1 | spareilleux |
 | [#677](https://github.com/GuitarAlchemist/ga/pull/677) | fix(ci): repair Weekly Backlog Grooming (bash syntax error, wrong test | 4d | MERGEABLE | 1 | spareilleux |
-| [#657](https://github.com/GuitarAlchemist/ga/pull/657) | fix(domain): correct pitch parsing and chord invariants (draft) | 6d | CONFLICTING | 0 | spareilleux |
+| [#657](https://github.com/GuitarAlchemist/ga/pull/657) | fix(domain): correct pitch parsing and chord invariants (draft) | 7d | CONFLICTING | 0 | spareilleux |
 | [#650](https://github.com/GuitarAlchemist/ga/pull/650) | feat(chatbot): scope memory to a session on the canonical chatbot host | 40d | MERGEABLE | 0 | spareilleux |
 | [#649](https://github.com/GuitarAlchemist/ga/pull/649) | fix(dashboard): stop the quality scorecard reading an advisory snapsho | 40d | MERGEABLE | 0 | spareilleux |
-| [#648](https://github.com/GuitarAlchemist/ga/pull/648) | Diagnosed live demo 502 Bad Gateway regression on /chatbot/ (draft) | 40d | MERGEABLE | 0 | spareilleux |
+| [#648](https://github.com/GuitarAlchemist/ga/pull/648) | Diagnosed live demo 502 Bad Gateway regression on /chatbot/ (draft) | 41d | MERGEABLE | 0 | spareilleux |
 | [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates (draft) | 47d | MERGEABLE | 0 | spareilleux |
 | [#636](https://github.com/GuitarAlchemist/ga/pull/636) | chore(skills): add audited decision pilot (draft) | 47d | MERGEABLE | 0 | spareilleux |
 | [#634](https://github.com/GuitarAlchemist/ga/pull/634) | feat(harness): advance one reconciliation packet (draft) | 47d | MERGEABLE | 0 | spareilleux |
@@ -59,24 +59,24 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#353](https://github.com/GuitarAlchemist/ix/pull/353) | feat(quality-gate): wire ix doctor as the producer ix_quality_gate_his | 1d | UNKNOWN | 0 | spareilleux |
-| [#352](https://github.com/GuitarAlchemist/ix/pull/352) | fix(ix-agent): route manual MCP tools through the approval gate | 2d | UNKNOWN | 2 | spareilleux |
-| [#351](https://github.com/GuitarAlchemist/ix/pull/351) | feat(ix-agent): ix_node_catalog + ix_pipeline_validate (node catalog + | 2d | UNKNOWN | 0 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 3d | UNKNOWN | 1 | spareilleux |
-| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 4d | UNKNOWN | 0 | spareilleux |
-| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 4d | UNKNOWN | 0 | spareilleux |
-| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 4d | UNKNOWN | 1 | spareilleux |
-| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 5d | UNKNOWN | 0 | spareilleux |
-| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 5d | UNKNOWN | 0 | spareilleux |
-| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 5d | UNKNOWN | 0 | spareilleux |
-| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 5d | UNKNOWN | 0 | spareilleux |
-| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 5d | UNKNOWN | 0 | spareilleux |
+| [#353](https://github.com/GuitarAlchemist/ix/pull/353) | feat(quality-gate): wire ix doctor as the producer ix_quality_gate_his | 1d | MERGEABLE | 0 | spareilleux |
+| [#352](https://github.com/GuitarAlchemist/ix/pull/352) | fix(ix-agent): route manual MCP tools through the approval gate | 2d | MERGEABLE | 2 | spareilleux |
+| [#351](https://github.com/GuitarAlchemist/ix/pull/351) | feat(ix-agent): ix_node_catalog + ix_pipeline_validate (node catalog + | 2d | MERGEABLE | 0 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 3d | MERGEABLE | 1 | spareilleux |
+| [#344](https://github.com/GuitarAlchemist/ix/pull/344) | fix: ML pipeline leakage, kNN ties, k-means empty clusters, silhouette | 4d | MERGEABLE | 0 | spareilleux |
+| [#343](https://github.com/GuitarAlchemist/ix/pull/343) | feat(memristive-markov): distil PR lifecycle history into Seldon Marko | 4d | MERGEABLE | 0 | spareilleux |
+| [#342](https://github.com/GuitarAlchemist/ix/pull/342) | fix(ix-quality-trend): compare quality snapshots only within one decla | 4d | MERGEABLE | 1 | spareilleux |
+| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 5d | MERGEABLE | 0 | spareilleux |
+| [#339](https://github.com/GuitarAlchemist/ix/pull/339) | fix(autoresearch): contract test collapsed every claim into one; SCHEM | 5d | MERGEABLE | 0 | spareilleux |
+| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 5d | MERGEABLE | 0 | spareilleux |
+| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 5d | MERGEABLE | 0 | spareilleux |
+| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 5d | MERGEABLE | 0 | spareilleux |
 
 ### tars (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#307](https://github.com/GuitarAlchemist/tars/pull/307) | Add the missing MIT LICENSE the README advertises, and stop tracking t | 1d | UNKNOWN | 0 | spareilleux |
+| [#307](https://github.com/GuitarAlchemist/tars/pull/307) | Add the missing MIT LICENSE the README advertises, and stop tracking t | 1d | MERGEABLE | 0 | spareilleux |
 
 ### Demerzel (10 open)
 
@@ -125,6 +125,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-19T14:13:11.608429+00:00 UTC_
+_Generated: 2026-09-19T15:26:27.783653+00:00 UTC_
 
-_Commit: `6a9c4782dab2`_
+_Commit: `3c17f90ae4d3`_
