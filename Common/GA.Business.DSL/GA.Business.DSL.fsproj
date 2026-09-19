@@ -37,6 +37,7 @@
         <Compile Include="Services/WebContentLoader.fs"/>
         <Compile Include="Services/ContentDiscovery.fs"/>
         <Compile Include="Generators/GrothendieckGenerator.fs"/>
+        <Compile Include="Generators/OptickGrothendieck.fs"/>
         <Compile Include="Adapters/TarsGrammarAdapter.fs"/>
         <Compile Include="Closures/GaAsync.fs"/>
         <Compile Include="Closures/GaComputationExpression.fs"/>
