@@ -88,6 +88,27 @@ The skill itself enforces its own hard refusals — it will abort if the
 preflight is not green, if the overseer is stale, or if a hard gate
 (below) is triggered.
 
+## Executable scope and promotion
+
+`ga.loop-policy.json` is the machine-readable authority. The first code
+profile permits only the layer-4 `Agents/Skills/**` and `Agents/Mcp/**`
+seams plus matching ML unit-test filename families; `Common/**`, `Tests/**`,
+and even project-wide ML globs are intentionally rejected as too broad.
+
+Its `verification_levels` are verification depth (not autonomy levels):
+
+- **L0** — supervised-loop preflight and kill switches;
+- **L1** — focused ML test project verification;
+- **L2** — `Scripts/cloud-validate.sh` cloud-development smoke, invoked via
+  `Scripts/cloud-validate.ps1` on Windows so WSL does not shadow Git Bash;
+- **L3** — full solution build/test merge gate, plus frontend build/lint
+  when the frontend changed.
+
+A draft requires L0-L2. Ready-for-merge additionally requires L3, the
+Agent Blackbox postflight consumed through GA #630, and the required
+`Independent Review Verdict` check produced by a separate identity/context.
+An author comment cannot satisfy that check, and autonomous merge is disabled.
+
 ## Hard gates (always require a human)
 
 The supervised loop never bypasses any of these:
@@ -117,9 +138,11 @@ When any of these is needed, the loop emits a cycle-evidence file with
 | Path | Role |
 | ---- | ---- |
 | `.claude/skills/supervised-loop/SKILL.md` | Claude Code skill (one bounded cycle). |
+| `Scripts/LoopPolicy.psm1` | Fail-closed validator for scope, verification, promotion, and evidence invariants. |
+| `Scripts/LoopPolicy.test.ps1` | Deterministic policy contract tests. |
 | `Scripts/supervised-loop-preflight.ps1` | Deterministic readiness gate. |
 | `Scripts/dev-process-overseer.ps1` | (Pre-existing) Producer of `state/governance/dev-process-overseer.json`. |
-| `ga.loop-policy.json` | Edit scope (`allow_edit`, `protected_paths`). |
+| `ga.loop-policy.json` | Edit scope, L0-L3 verification, promotion gates, postflight/review dependencies, and exact-SHA evidence requirements. |
 | `state/quality/ga-harness/baseline.json` | (Pre-existing) Loop baseline. |
 | `docs/loop-onboarding.md` | This document. |
 
