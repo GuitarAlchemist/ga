@@ -1,7 +1,7 @@
 // src/components/PrimeRadiant/DataLoader.ts
 // Loads governance data and builds the graph structure for 3D rendering
 
-import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthStatus, HexavalentTruth, NodeAugmentation } from './types';
+import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthStatus, HealthMetrics, HexavalentTruth, NodeAugmentation } from './types';
 import { HEALTH_STATUS_COLORS } from './types';
 import { LIVE_GOVERNANCE_GRAPH } from './liveData';
 import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
@@ -230,6 +230,38 @@ export interface CameraSyncData {
   sender: string;
 }
 
+// ---------------------------------------------------------------------------
+// NodeChanged event (matches GovernanceHub.BroadcastNodeChanged)
+// ---------------------------------------------------------------------------
+export interface NodeChangedEvent {
+  nodeId: string;
+  health?: HealthMetrics;
+  healthStatus?: GovernanceHealthStatus;
+  color?: string;
+  timestamp?: string;
+}
+
+/**
+ * Turn a NodeChanged payload into a GovernanceNode.
+ *
+ * The hub names the key `nodeId`; GovernanceNode — and `updateNodeHealth`,
+ * which looks each fresh node up by `n.id` — names it `id`. Casting the
+ * payload straight to GovernanceNode left `id` undefined, so the lookup never
+ * matched and every NodeChanged update was dropped without an error.
+ *
+ * Returns null when the payload carries no node id, so the caller can log it
+ * instead of pushing an unusable node into the graph.
+ */
+export function nodeFromNodeChanged(data: NodeChangedEvent | null | undefined): GovernanceNode | null {
+  if (!data?.nodeId) return null;
+  return {
+    id: data.nodeId,
+    health: data.health,
+    healthStatus: data.healthStatus,
+    color: data.color,
+  } as GovernanceNode;
+}
+
 export interface LivePollingHandle {
   /** Stop polling and disconnect SignalR */
   stop: () => void;
@@ -273,9 +305,14 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         processGraph(data);
       });
 
-      connection.on('NodeChanged', (data: { nodeId: string; health: unknown; healthStatus: string; color: string }) => {
+      connection.on('NodeChanged', (data: NodeChangedEvent) => {
         // Partial update — single node
-        onUpdate({ nodes: [data as unknown as GovernanceNode], edges: [], globalHealth: { resilienceScore: 0, lolliCount: 0, ergolCount: 0 }, timestamp: new Date().toISOString() } as GovernanceGraph);
+        const node = nodeFromNodeChanged(data);
+        if (!node) {
+          console.warn('[Governance] NodeChanged without a nodeId — ignored');
+          return;
+        }
+        onUpdate({ nodes: [node], edges: [], globalHealth: { resilienceScore: 0, lolliCount: 0, ergolCount: 0 }, timestamp: new Date().toISOString() } as GovernanceGraph);
       });
 
       connection.on('Connected', (data: { connections: number }) => {
