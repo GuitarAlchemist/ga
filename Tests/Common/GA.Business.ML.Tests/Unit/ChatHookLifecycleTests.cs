@@ -87,6 +87,27 @@ public class ChatHookLifecycleTests
         Assert.That(ctx.CurrentMessage, Contains.Substring("Hello"));
     }
 
+    [TestCase("What is the relative minor of E-flat major", "What is the relative minor of Eb major")]
+    [TestCase("relative minor of E flat major", "relative minor of Eb major")]
+    [TestCase("relative minor of Bb major", "relative minor of Bb major")]
+    [TestCase("relative minor of B-flat major", "relative minor of Bb major")]
+    [TestCase("relative minor of B flat major", "relative minor of Bb major")]
+    [TestCase("relative minor of F-sharp minor", "relative minor of F# minor")]
+    [TestCase("relative minor of F sharp minor", "relative minor of F# minor")]
+    [TestCase("relative minor of G-sharp minor", "relative minor of G# minor")]
+    [TestCase("relative minor of G sharp minor", "relative minor of G# minor")]
+    [TestCase("What about a flat response", "What about ab response")]
+    public async Task PromptSanitizationHook_NormalizesSpelledOutAccidentals(string input, string expected)
+    {
+        var hook = new PromptSanitizationHook(NullLogger<PromptSanitizationHook>.Instance);
+        var ctx  = MakeContext(input);
+
+        var result = await hook.OnRequestReceived(ctx);
+        var finalMessage = result.MutatedMessage ?? ctx.CurrentMessage;
+
+        Assert.That(finalMessage, Is.EqualTo(expected));
+    }
+
     // ── IChatHook default interface implementations ───────────────────────────
 
     [Test]
