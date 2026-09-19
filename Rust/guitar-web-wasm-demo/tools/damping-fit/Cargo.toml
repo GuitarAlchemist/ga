@@ -1,0 +1,24 @@
+[package]
+name = "guitar-damping-fit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Offline dev harness: fit the guitar engine's loop-damping parameters to the per-band decay of reference/by-the-lake.wav with ix-acoustic-tune's CMA-ES."
+
+# Standalone: not part of any parent workspace, never built by the WASM demo.
+# The engine is compiled in from ../../rust-engine/src/lib.rs (see src/main.rs),
+# so rust-engine's crate-type (and the shipped WASM) is untouched.
+[workspace]
+
+[dependencies]
+# Pinned so a fit is reproducible; bump deliberately (both to the same rev).
+ix-acoustic-tune = { git = "https://github.com/GuitarAlchemist/ix", rev = "d1bbf1d2b138304964e81a6a3a18973e97fb55dd" }
+ix-signal = { git = "https://github.com/GuitarAlchemist/ix", rev = "d1bbf1d2b138304964e81a6a3a18973e97fb55dd" }
+ndarray = "0.17"
+
+# The tests render seconds of audio through the engine; unoptimized that is minutes.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
