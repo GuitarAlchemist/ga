@@ -1,5 +1,6 @@
 namespace GaMcpServer.Tools;
 
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
 [McpServerToolType]
@@ -11,11 +12,8 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
         [Description("The key to get diatonic chords for, e.g. 'C major' or 'G minor'")] string key,
         CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient("gaapi");
         var encoded = Uri.EscapeDataString(key);
-        var response = await client.GetAsync($"/api/contextual-chords/keys/{encoded}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        return await GetFromGaApiAsync($"/api/contextual-chords/keys/{encoded}", cancellationToken);
     }
 
     [McpServerTool]
@@ -25,12 +23,9 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
         [Description("The root note, e.g. 'C', 'G#', 'Bb'")] string rootName,
         CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient("gaapi");
         var encodedScale = Uri.EscapeDataString(scaleName);
         var encodedRoot = Uri.EscapeDataString(rootName);
-        var response = await client.GetAsync($"/api/contextual-chords/scales/{encodedScale}/{encodedRoot}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        return await GetFromGaApiAsync($"/api/contextual-chords/scales/{encodedScale}/{encodedRoot}", cancellationToken);
     }
 
     [McpServerTool]
@@ -40,12 +35,9 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
         [Description("The root note, e.g. 'D', 'E', 'F'")] string rootName,
         CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient("gaapi");
         var encodedMode = Uri.EscapeDataString(modeName);
         var encodedRoot = Uri.EscapeDataString(rootName);
-        var response = await client.GetAsync($"/api/contextual-chords/modes/{encodedMode}/{encodedRoot}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        return await GetFromGaApiAsync($"/api/contextual-chords/modes/{encodedMode}/{encodedRoot}", cancellationToken);
     }
 
     [McpServerTool]
@@ -58,15 +50,12 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
         [Description("Exclude voicings with open strings (default false)")] bool noOpenStrings = false,
         CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient("gaapi");
         var encoded = Uri.EscapeDataString(chord);
         var query = new System.Text.StringBuilder($"/api/contextual-chords/voicings/{encoded}?noOpenStrings={noOpenStrings}");
         if (maxDifficulty.HasValue) query.Append($"&maxDifficulty={maxDifficulty}");
         if (minFret.HasValue)       query.Append($"&minFret={minFret}");
         if (maxFret.HasValue)       query.Append($"&maxFret={maxFret}");
-        var response = await client.GetAsync(query.ToString(), cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        return await GetFromGaApiAsync(query.ToString(), cancellationToken);
     }
 
     [McpServerTool]
@@ -75,10 +64,39 @@ public class ContextualChordsTool(IHttpClientFactory httpClientFactory)
         [Description("The key to get borrowed chords for, e.g. 'C major'")] string key,
         CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient("gaapi");
         var encoded = Uri.EscapeDataString(key);
-        var response = await client.GetAsync($"/api/contextual-chords/borrowed/{encoded}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        return await GetFromGaApiAsync($"/api/contextual-chords/borrowed/{encoded}", cancellationToken);
+    }
+
+    /// <summary>
+    /// GETs a GaApi resource and returns its body. Failures become an <see cref="McpException"/>
+    /// with the status and GaApi's message: any other exception reaches the client as the SDK's
+    /// bare "An error occurred invoking '…'", which hid whether GaApi was down or rejected the call.
+    /// </summary>
+    private async Task<string> GetFromGaApiAsync(string pathAndQuery, CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient("gaapi");
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.GetAsync(pathAndQuery, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new McpException($"GaApi is unreachable at {client.BaseAddress} ({ex.Message}). Is GaApi running?", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new McpException($"GaApi at {client.BaseAddress} did not answer within {client.Timeout.TotalSeconds:0} s.", ex);
+        }
+
+        using (response)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                throw new McpException(
+                    $"GaApi returned {(int)response.StatusCode} {response.ReasonPhrase} for {pathAndQuery}: {body}");
+            return body;
+        }
     }
 }
