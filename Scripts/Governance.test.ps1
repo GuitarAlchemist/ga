@@ -6,8 +6,9 @@
 # Covers the load-bearing, fail-closed behaviours that were previously copy-pasted
 # (and untestable) inside SKILL.md prose:
 #   - Test-Contract: valid passes, bad const fails, missing-required fails.
-#   - Test-GovernanceGate: clean → allowed; local kill switch → halted; valid marker →
-#     halted; expired marker → falls through; exempt agent → not marker-halted;
+#   - Test-GovernanceGate: clean → allowed; packet/domain stop → halted; local kill
+#     switch → halted; valid marker → halted; expired marker → falls through;
+#     exempt agent → not marker-halted;
 #     UNKNOWN schema_version → fail-closed halt; unparseable marker → falls through.
 
 [CmdletBinding()]
@@ -29,12 +30,14 @@ $repoRoot = Join-Path $sandbox 'repo'
 New-Item -ItemType Directory -Force -Path (Join-Path $repoRoot 'state') | Out-Null
 $marker = Join-Path $sandbox 'HALT-ALL'
 $loopHalted = Join-Path $repoRoot 'state/.loop-halted'
+$stopMarker = Join-Path $repoRoot 'state/quality/test/.STOP'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $stopMarker) | Out-Null
 
 function Gate([string]$agent = 'auto-optimize') {
-    Test-GovernanceGate -AgentId $agent -RepoRoot $repoRoot -MarkerPath $marker -LoopHaltedPath $loopHalted -SchemaPath $schema
+    Test-GovernanceGate -AgentId $agent -RepoRoot $repoRoot -MarkerPath $marker -LoopHaltedPath $loopHalted -StopMarkerPath @($stopMarker) -SchemaPath $schema
 }
 function Set-Marker($obj) { $obj | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $marker -Encoding utf8 }
-function Clear-State { Remove-Item $marker, $loopHalted -ErrorAction SilentlyContinue }
+function Clear-State { Remove-Item $marker, $loopHalted, $stopMarker -ErrorAction SilentlyContinue }
 
 try {
     Write-Host "Test-Contract:" -ForegroundColor Cyan
@@ -47,6 +50,11 @@ try {
     Write-Host "Test-GovernanceGate:" -ForegroundColor Cyan
     Clear-State
     Assert (Gate).Allowed 'clean (no marker, no kill switch) → allowed'
+
+    Clear-State
+    'operator pause' | Set-Content -LiteralPath $stopMarker -Encoding utf8
+    $v = Gate
+    Assert ((-not $v.Allowed) -and $v.Source -eq 'stop-marker' -and $v.Reason -eq 'operator pause') 'packet/domain .STOP → halted (stop-marker) with reason'
 
     Clear-State
     'cost spike' | Set-Content -LiteralPath $loopHalted -Encoding utf8
