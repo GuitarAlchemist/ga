@@ -2,6 +2,7 @@ namespace GA.Business.ML.Rag;
 
 using Core.Analysis.Voicings;
 using Domain.Core.Instruments.Fretboard.Voicings.Core;
+using Domain.Core.Primitives.Notes;
 using Domain.Core.Theory.Atonal;
 using Models;
 using Musical.Analysis;
@@ -19,6 +20,9 @@ public static class VoicingDocumentFactory
         var diagram = voicing.Diagram;
         var distinctId = $"{tuningId.ToLower()}_{capo}_{diagram.Replace("-", "_").Replace("x", "m")}";
         var id = $"voicing_{distinctId}";
+        // MidiNotes follow position order (string 1, the highest, first), so the bass is the lowest note.
+        var bassMidi = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes.Min() : 0;
+        var rootPc = ParseRootPitchClass(analysis.ChordId.RootPitchClass) ?? bassMidi % 12;
 
         return new()
         {
@@ -35,14 +39,13 @@ public static class VoicingDocumentFactory
             // (which may include a voicing-specific "/bass" suffix that leaks into SYMBOLIC
             // embedding dims and destroys cross-instrument consistency).
             ChordName = analysis.ChordId.CanonicalName ?? analysis.ChordId.ChordName,
-            RootPitchClass = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] % 12 : 0,
-            MidiBassNote = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
+            RootPitchClass = analysis.MidiNotes.Length > 0 ? rootPc : 0,
+            MidiBassNote = bassMidi,
             VoicingType = analysis.VoicingCharacteristics.DropVoicing,
             IsRootless = analysis.VoicingCharacteristics.IsRootless,
             HasGuideTones = analysis.ToneInventory.HasGuideTones,
             OmittedTones = [.. analysis.ToneInventory.OmittedTones],
-            Inversion = CalculateInversion(analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
-                analysis.ChordId.TryGetRootPitchClass(out var rootPitchClass) ? rootPitchClass.Value : 0),
+            Inversion = CalculateInversion(bassMidi, rootPc),
             Brightness = analysis.PerceptualQualities.Brightness,
             Consonance = analysis.PerceptualQualities.ConsonanceScore,
             Roughness = analysis.PerceptualQualities.Roughness,
@@ -76,6 +79,13 @@ public static class VoicingDocumentFactory
             IntervalClassVector = analysis.IntervallicInfo.IntervalClassVector
         };
     }
+
+    /// <summary>
+    ///     Reads a root note name such as "A" or "Bb". PitchClass.Parse is not used because it reads
+    ///     "A" and "B" as the duodecimal digits 10 and 11.
+    /// </summary>
+    private static int? ParseRootPitchClass(string? rootName) =>
+        Note.Accidented.TryParse(rootName, null, out var note) ? note.PitchClass.Value : null;
 
     private static int CalculateInversion(int midiBass, int rootPc)
     {

@@ -148,4 +148,23 @@ public class TabAnalysisServiceTests
             Assert.That(ev0.Document.PossibleKeys, Contains.Item("Key of G"));
         });
     }
+
+    [Test]
+    public async Task AnalyzeAsync_Diagram_ListsLowestStringFirst()
+    {
+        // Open C chord: x on low E, then A3 D2 G0 B1 e0. Tab diagrams are already in chart order,
+        // so presentation must not reverse them the way it reverses stored index voicings.
+        var tab = """
+                  e|--0--|
+                  B|--1--|
+                  G|--0--|
+                  D|--2--|
+                  A|--3--|
+                  E|-----|
+                  """;
+
+        var result = await _service.AnalyzeAsync(tab);
+
+        Assert.That(result.Events.Single().Document.Diagram, Is.EqualTo("x-3-2-0-1-0"));
+    }
 }

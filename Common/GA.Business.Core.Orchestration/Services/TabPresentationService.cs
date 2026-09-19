@@ -44,7 +44,7 @@ public class TabPresentationService(
             candidates.Add(new CandidateVoicing(
                 Id: doc.Id,
                 DisplayName: displayName,
-                Shape: doc.Diagram,
+                Shape: doc.Diagram, // TabAnalysisService builds tab diagrams lowest string first already
                 Score: 1.0,
                 ExplanationFacts: new VoicingExplanationDto(explanation.Summary, [..explanation.Tags], [..explanation.Techniques], [..explanation.Styles], explanation.SpectralCentroid),
                 ExplanationText: explanation.Summary

@@ -2,6 +2,7 @@ namespace GaApi.Services;
 
 using System.Text;
 using GA.Business.ML.Rag.Models;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Search;
 
 /// <summary>
@@ -123,7 +124,7 @@ public sealed class SemanticKnowledgeSource(
         var sb = new StringBuilder();
 
         sb.AppendLine($"## {doc.ChordName}");
-        sb.AppendLine($"Diagram: `{doc.Diagram}`");
+        sb.AppendLine($"Diagram (lowest string first): `{PlayableNotationFormatter.ToChartOrder(doc.Diagram)}`");
 
         if (!string.IsNullOrWhiteSpace(doc.TexturalDescription))
         {

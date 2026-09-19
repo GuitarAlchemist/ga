@@ -29,17 +29,17 @@ public static class VoicingHarmonicAnalyzer
         var dropVoicing = DetectDropVoicing(midiNotes);
 
         return new(
-            chordId,
-            dissonanceScore,
-            consonance,
-            intervalSpread,
-            pitchClasses.Count,
-            pcSet.IntervalClassVector.ToString(),
-            intervalSpread > 12,
-            dropVoicing,
-            false,
-            [],
-            semanticTags
+            ChordId: chordId,
+            DissonanceScore: dissonanceScore,
+            Consonance: consonance,
+            IntervalSpread: intervalSpread,
+            NoteCount: pitchClasses.Count,
+            IntervalClassVector: pcSet.IntervalClassVector.ToString(),
+            IsRootless: false, // the recognizer always picks a root among the sounding pitch classes
+            DropVoicing: dropVoicing,
+            IsOpenVoicing: intervalSpread > 12,
+            Features: [],
+            SemanticTags: semanticTags
         );
     }
 

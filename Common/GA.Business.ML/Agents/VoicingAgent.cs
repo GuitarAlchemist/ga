@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents;
 
 using System.Diagnostics;
 using System.Text;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Search;
 using Microsoft.Extensions.AI;
 
@@ -139,7 +140,7 @@ public sealed class VoicingAgent(
 
         var evidence = results
             .Take(Math.Min(results.Count, 5))
-            .Select(r => $"{r.Document.ChordName ?? "?"} · {r.Document.Diagram} · score={r.Score:F4}")
+            .Select(r => $"{r.Document.ChordName ?? "?"} · {PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)} · score={r.Score:F4}")
             .ToList();
 
         var sb = new StringBuilder();
@@ -148,7 +149,7 @@ public sealed class VoicingAgent(
         sb.AppendLine();
         foreach (var r in results)
         {
-            sb.AppendLine($"- **{r.Document.ChordName ?? "Voicing"}** `{r.Document.Diagram}` " +
+            sb.AppendLine($"- **{r.Document.ChordName ?? "Voicing"}** `{PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)}` " +
                           $"({r.Document.VoicingType ?? "guitar"}, score {r.Score:F3})");
         }
 

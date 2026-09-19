@@ -26,7 +26,9 @@ public static class ChordAtonalTool
             ["P1"] = 0, ["m2"] = 1, ["M2"] = 2,  ["m3"] = 3,
             ["M3"] = 4, ["P4"] = 5, ["TT"] = 6,  ["P5"] = 7,
             ["m6"] = 8, ["M6"] = 9, ["m7"] = 10, ["M7"] = 11,
-            ["M9"] = 14, ["P11"] = 17, ["M13"] = 21
+            ["M9"] = 14, ["P11"] = 17, ["M13"] = 21,
+            ["d5"] = 6, ["A5"] = 8, ["d7"] = 9, ["m9"] = 13,
+            ["A9"] = 15, ["A11"] = 18, ["m13"] = 20
         };
 
     private static readonly IReadOnlyDictionary<string, int> NoteToSemitone =
@@ -130,7 +132,7 @@ public static class ChordAtonalTool
     [Description(
         "Return the full post-tonal identity of a chord: pitch-class set, interval-class vector (ICV), " +
         "prime form, Forte number, modal family position, and matching scale name if any. " +
-        "Bridges tonal chord naming to set theory — e.g. Am7 and Cmaj6 share the same prime form (T/I equivalents).")]
+        "Bridges tonal chord naming to set theory — e.g. Am7 and C6 contain the same pitch classes, so they share one set class.")]
     public static async Task<string> GaChordToSet(
         [Description("Chord symbol, e.g. 'Am7', 'Cmaj9', 'G7b9'")] string symbol)
     {
@@ -149,7 +151,7 @@ public static class ChordAtonalTool
         "Find all standard chords (triads, 7ths, 9ths) that are set-class equivalent (T/I) to the input chord — " +
         "same prime form under transposition or inversion. These are the deepest substitutions: " +
         "same interval content regardless of root. " +
-        "Example: Am and C are NOT equivalent, but Am and Em are (both minor triads, same prime form 3-11).")]
+        "Example: Am and C are equivalent (major and minor triads are inversions of each other, both Forte 3-11).")]
     public static async Task<string> GaSetClassSubs(
         [Description("Chord symbol, e.g. 'Am', 'Cmaj7', 'G7'")] string symbol)
     {
@@ -163,7 +165,7 @@ public static class ChordAtonalTool
         var forte = ForteCatalog.GetForteNumber(targetPrime);
 
         // Build vocabulary using hardcoded intervals (no async calls for speed)
-        var equivalents = new List<string>();
+        var equivalents = new List<(string Chord, string Suffix)>();
         foreach (var root in RootNames)
         {
             var rootPc = ParseRootPc(root);
@@ -175,7 +177,7 @@ public static class ChordAtonalTool
                 if (cpcs.Length != pcs.Length) continue;
                 var cPrime = ToPitchClassSet(cpcs).PrimeForm;
                 if (cPrime != null && cPrime.Equals(targetPrime))
-                    equivalents.Add(candidate);
+                    equivalents.Add((candidate, suffix));
             }
         }
 
@@ -185,7 +187,7 @@ public static class ChordAtonalTool
 
         // Group by quality suffix for readability
         var grouped = equivalents
-            .GroupBy(c => Vocabulary.FirstOrDefault(v => c.EndsWith(v.Suffix)).Suffix)
+            .GroupBy(e => e.Suffix, e => e.Chord)
             .Select(g => $"  [{(g.Key == "" ? "maj" : g.Key)}] {string.Join("  ", g)}")
             .ToList();
         return header + "\n" + string.Join("\n", grouped);
@@ -231,16 +233,19 @@ public static class ChordAtonalTool
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var sourceSet = ToPitchClassSet(pcs);
+        var sourceIcv = sourceSet.IntervalClassVector;
         var grothendieck = new GrothendieckService();
+        // Sets with the source's own ICV (its transpositions and inversions) are not neighbors, and
+        // every other ICV is listed once.
         var neighbors = grothendieck.FindNearby(sourceSet, Math.Clamp(maxDistance, 1, 4))
-            .Where(r => r.Delta.L1Norm > 0) // skip self
+            .Where(r => r.Set.IntervalClassVector != sourceIcv)
+            .DistinctBy(r => r.Set.IntervalClassVector)
             .Take(12)
             .ToList();
 
         if (neighbors.Count == 0)
             return $"No neighbors within distance {maxDistance} of {symbol}";
 
-        var sourceIcv = sourceSet.IntervalClassVector;
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {maxDistance}):");
         foreach (var (neighbor, delta, _) in neighbors)
