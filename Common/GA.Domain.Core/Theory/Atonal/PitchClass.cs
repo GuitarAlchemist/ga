@@ -1,6 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System.Collections.Frozen;
 using Abstractions;
 using Design.Attributes;
 using Design.Schema;
@@ -110,29 +109,26 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     private class FastPitchClassCalculator
     {
         /// <summary>
-        ///     Pre-computes the normalized difference between all possible combinations of pitch class pairs
+        ///     Normalized difference of every pitch class pair, indexed by <c>a * 12 + b</c>. A flat array
+        ///     lookup is several times faster than hashing a tuple key or validating a new value.
         /// </summary>
-        private static readonly Lazy<FrozenDictionary<(int, int), PitchClass>> _lazySubtractionDictionary =
-            new(GetSubtractionDictionary);
+        private static readonly PitchClass[] _subtractionTable = BuildSubtractionTable();
 
         public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) =>
-            _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
+            _subtractionTable[pitchClass1.Value * 12 + pitchClass2.Value];
 
-        private static FrozenDictionary<(int, int), PitchClass> GetSubtractionDictionary()
+        private static PitchClass[] BuildSubtractionTable()
         {
-            var builder = new Dictionary<(int, int), PitchClass>();
-            // Build from fixed 0..11 range to avoid dependency on cached collections during static init
-            foreach (var pcValue1 in Enumerable.Range(0, 12))
+            var table = new PitchClass[144];
+            for (var pcValue1 = 0; pcValue1 < 12; pcValue1++)
             {
                 for (var pcValue2 = 0; pcValue2 < 12; pcValue2++)
                 {
-                    builder.Add(
-                        (pcValue1, pcValue2),
-                        FromValue((pcValue1 - pcValue2 + 12) % 12));
+                    table[pcValue1 * 12 + pcValue2] = FromValue((pcValue1 - pcValue2 + 12) % 12);
                 }
             }
 
-            return builder.ToFrozenDictionary();
+            return table;
         }
     }
 
