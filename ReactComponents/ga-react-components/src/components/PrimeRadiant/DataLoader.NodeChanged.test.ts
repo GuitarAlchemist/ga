@@ -58,4 +58,36 @@ describe('updateNodeHealth fed from NodeChanged', () => {
     expect(nodes[0].health?.lolliCount).toBe(3);
     expect(nodes[0].healthStatus).toBe('error');
   });
+
+  it('applies a server status change when metrics stay the same and color is omitted', () => {
+    const nodes = existing();
+    const changed = updateNodeHealth(nodes, [{
+      id: nodes[0].id,
+      health: { ...nodes[0].health! },
+      healthStatus: 'contradictory',
+    } as GovernanceNode]);
+
+    expect(changed).toEqual({
+      changed: true,
+      updated: ['ix.governance.constitution'],
+    });
+    expect(nodes[0].healthStatus).toBe('contradictory');
+    expect(nodes[0].color).toBe('#FF44FF');
+  });
+
+  it('applies a server color change when metrics and status stay the same', () => {
+    const nodes = existing();
+    const changed = updateNodeHealth(nodes, [{
+      ...nodes[0],
+      health: { ...nodes[0].health! },
+      color: '#FF44FF',
+    }]);
+
+    expect(changed).toEqual({
+      changed: true,
+      updated: ['ix.governance.constitution'],
+    });
+    expect(nodes[0].healthStatus).toBe('healthy');
+    expect(nodes[0].color).toBe('#FF44FF');
+  });
 });

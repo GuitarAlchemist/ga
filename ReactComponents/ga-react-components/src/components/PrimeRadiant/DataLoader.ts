@@ -276,9 +276,11 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let currentGraph: GovernanceGraph | null = null;
 
   const processGraph = (rawGraph: GovernanceGraph) => {
     const graph = applyHealthColors(rawGraph);
+    currentGraph = graph;
     onUpdate(graph);
   };
 
@@ -312,7 +314,23 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
           console.warn('[Governance] NodeChanged without a nodeId — ignored');
           return;
         }
-        onUpdate({ nodes: [node], edges: [], globalHealth: { resilienceScore: 0, lolliCount: 0, ergolCount: 0 }, timestamp: new Date().toISOString() } as GovernanceGraph);
+        if (!currentGraph?.nodes.some(existing => existing.id === node.id)) {
+          console.warn(`[Governance] NodeChanged for unknown node ${node.id} — ignored`);
+          return;
+        }
+        currentGraph = {
+          ...currentGraph,
+          nodes: currentGraph.nodes.map(existing => existing.id === node.id
+            ? {
+                ...existing,
+                health: node.health ?? existing.health,
+                healthStatus: node.healthStatus ?? existing.healthStatus,
+                color: node.color ?? existing.color,
+              }
+            : existing),
+          timestamp: data.timestamp ?? new Date().toISOString(),
+        };
+        onUpdate(currentGraph);
       });
 
       connection.on('Connected', (data: { connections: number }) => {
@@ -490,15 +508,21 @@ export function updateNodeHealth(
 
   for (const node of existingNodes) {
     const fresh = freshMap.get(node.id);
-    if (!fresh?.health) continue;
+    if (!fresh) continue;
 
     const oldScore = node.health?.resilienceScore;
-    const newScore = fresh.health.resilienceScore;
+    const newScore = fresh.health?.resilienceScore;
+    const metricsChanged = fresh.health !== undefined
+      && (oldScore !== newScore
+        || node.health?.ergolCount !== fresh.health.ergolCount
+        || node.health?.lolliCount !== fresh.health.lolliCount);
+    const statusChanged = fresh.healthStatus !== undefined && node.healthStatus !== fresh.healthStatus;
+    const colorChanged = fresh.color !== undefined && node.color !== fresh.color;
 
-    if (oldScore !== newScore || node.health?.ergolCount !== fresh.health.ergolCount || node.health?.lolliCount !== fresh.health.lolliCount) {
-      node.health = fresh.health;
-      node.healthStatus = deriveGovernanceHealthStatus(node);
-      node.color = HEALTH_STATUS_COLORS[node.healthStatus];
+    if (metricsChanged || statusChanged || colorChanged) {
+      if (fresh.health) node.health = fresh.health;
+      node.healthStatus = fresh.healthStatus ?? deriveGovernanceHealthStatus(node);
+      node.color = fresh.color ?? HEALTH_STATUS_COLORS[node.healthStatus];
       updated.push(node.id);
       changed = true;
     }
