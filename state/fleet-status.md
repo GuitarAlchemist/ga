@@ -19,7 +19,7 @@ _No open PRs._
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
 | [#697](https://github.com/GuitarAlchemist/ga/pull/697) | fix: six defects found by the learn courses (HTTP status, SignalR node | 2d | UNKNOWN | 0 | spareilleux |
-| [#696](https://github.com/GuitarAlchemist/ga/pull/696) | fix: three ga-lab findings — dropped fret-diagram notes, mirrored stri | 2d | MERGEABLE | 0 | spareilleux |
+| [#696](https://github.com/GuitarAlchemist/ga/pull/696) | fix: three ga-lab findings — dropped fret-diagram notes, mirrored stri | 2d | UNKNOWN | 0 | spareilleux |
 | [#695](https://github.com/GuitarAlchemist/ga/pull/695) | perf(chords): chord recognition with 12-bit masks, once per pitch-clas | 3d | UNKNOWN | 0 | spareilleux |
 | [#694](https://github.com/GuitarAlchemist/ga/pull/694) | perf(atonal): PitchClassSet.IntervalClassVector computes each set's id | 3d | UNKNOWN | 0 | spareilleux |
 | [#689](https://github.com/GuitarAlchemist/ga/pull/689) | fix(optick): voicing documents use the chord root and lowest note; nam | 4d | UNKNOWN | 0 | spareilleux |
@@ -122,6 +122,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-20T05:17:49.153204+00:00 UTC_
+_Generated: 2026-09-20T10:15:54.846564+00:00 UTC_
 
-_Commit: `2d83c46a4d6c`_
+_Commit: `a3e7ee3b2a0e`_

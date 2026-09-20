@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "2d83c46a4d6ccd5f629a91b477c20f36fcbce18e",
-    "generatedAt": "2026-09-20T05:17:49.153204+00:00",
+    "commitSha": "a3e7ee3b2a0ea1dec6865ccdbbfc87b63bf1f507",
+    "generatedAt": "2026-09-20T10:15:54.846564+00:00",
     "repoCount": 5,
     "totalPRs": 56
   },
@@ -134,7 +134,7 @@
           "failingChecks": 0,
           "headRef": "fix/ga-lab-findings",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 696,
           "title": "fix: three ga-lab findings \u2014 dropped fret-diagram notes, mirrored string order, false L2-normalized claim",
           "url": "https://github.com/GuitarAlchemist/ga/pull/696"
