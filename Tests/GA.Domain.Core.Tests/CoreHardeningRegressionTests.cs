@@ -1,7 +1,9 @@
 namespace GA.Domain.Core.Tests;
 
 using GA.Domain.Core.Primitives.Notes;
+using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal;
 
 [TestFixture]
 public class CoreHardeningRegressionTests
@@ -51,6 +53,40 @@ public class CoreHardeningRegressionTests
         Assert.That(Pitch.Sharp.Parse($"C#{octave}"), Is.EqualTo(Pitch.Sharp.CSharp(octave)));
         Assert.That(Pitch.Flat.Parse($"Db{octave}"), Is.EqualTo(new Pitch.Flat(Note.Flat.DFlat, octave)));
     });
+
+    [Test]
+    public void FlatNoteParsing_DistinguishesNaturalBFromBFlat() => Assert.Multiple(() =>
+    {
+        Assert.That(Note.Flat.Parse("B", null), Is.EqualTo(Note.Flat.B));
+        Assert.That(Note.Flat.Parse("Bb", null), Is.EqualTo(Note.Flat.BFlat));
+        Assert.That(Note.Flat.Parse("D♭", null), Is.EqualTo(Note.Flat.DFlat));
+    });
+
+    [Test]
+    public void IntervalSizeTryParse_InvalidInput_ReturnsFalse() => Assert.Multiple(() =>
+    {
+        Assert.That(SimpleIntervalSize.TryParse("x", null, out _), Is.False);
+        Assert.That(CompoundIntervalSize.TryParse("x", null, out _), Is.False);
+    });
+
+    [Test]
+    public void KeyTryParse_InvalidRoot_ReturnsFalse() => Assert.Multiple(() =>
+    {
+        Assert.That(Key.Major.TryParse("H", out _), Is.False);
+        Assert.That(Key.Minor.TryParse("H", out _), Is.False);
+    });
+
+    [Test]
+    public void KeyGetInterval_MeasuresFromTonicToNote()
+    {
+        var interval = Key.Major.C.GetInterval(new Note.Accidented(NaturalNote.E));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(interval.Size, Is.EqualTo(SimpleIntervalSize.Third));
+            Assert.That(interval.Quality, Is.EqualTo(IntervalQuality.Major));
+        });
+    }
 
     [Test]
     public void FormulaEquality_ReorderedIntervals_WorkAsDictionaryKeys()
@@ -143,5 +179,13 @@ public class CoreHardeningRegressionTests
             Assert.That(parsed.Formula.GetSymbolSuffix(), Is.EqualTo(symbol[1..]));
         });
     }
+
+    [TestCase(1, HarmonicFunction.LeadingTone)]
+    [TestCase(2, HarmonicFunction.Subtonic)]
+    [TestCase(3, HarmonicFunction.Unknown)]
+    public void SeventhDegree_FunctionDependsOnDistanceBelowTonic(
+        int semitonesBelowTonic,
+        HarmonicFunction expected) =>
+        Assert.That(HarmonicFunctionExtensions.FromDegree(7, semitonesBelowTonic), Is.EqualTo(expected));
 
 }

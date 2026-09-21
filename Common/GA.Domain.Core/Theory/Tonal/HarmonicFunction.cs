@@ -13,7 +13,8 @@ public enum HarmonicFunction
     Subdominant, // IV
     Dominant, // V
     Submediant, // vi
-    LeadingTone // vii°
+    LeadingTone, // vii°, one semitone below the tonic
+    Subtonic // VII, two semitones below the tonic
 }
 
 /// <summary>
@@ -32,4 +33,20 @@ public static class HarmonicFunctionExtensions
         7 => HarmonicFunction.LeadingTone,
         _ => HarmonicFunction.Unknown
     };
+
+    /// <summary>
+    ///     Resolves a scale degree when its chromatic distance below the tonic is known.
+    /// </summary>
+    /// <remarks>
+    ///     Degree seven is a leading tone at one semitone below the tonic and a subtonic at two.
+    ///     Other distances do not describe a diatonic seventh degree.
+    /// </remarks>
+    public static HarmonicFunction FromDegree(int degree, int semitonesBelowTonic) => degree == 7
+        ? semitonesBelowTonic switch
+        {
+            1 => HarmonicFunction.LeadingTone,
+            2 => HarmonicFunction.Subtonic,
+            _ => HarmonicFunction.Unknown
+        }
+        : FromDegree(degree);
 }

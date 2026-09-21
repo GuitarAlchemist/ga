@@ -23,6 +23,12 @@ public static class HarmonicFunctionAnalyzer
     };
 
     /// <summary>
+    ///     Resolves a scale degree when its chromatic distance below the tonic is known.
+    /// </summary>
+    public static HarmonicFunction FromScaleDegree(int degree, int semitonesBelowTonic) =>
+        HarmonicFunctionExtensions.FromDegree(degree, semitonesBelowTonic);
+
+    /// <summary>
     ///     Parses a string representation of harmonic function.
     ///     Supports both Name ("Tonic") and Roman ("I").
     /// </summary>
@@ -36,6 +42,11 @@ public static class HarmonicFunctionAnalyzer
         var v = value.Trim().ToLowerInvariant();
 
         // Match by Name
+        if (v.Contains("subtonic"))
+        {
+            return HarmonicFunction.Subtonic;
+        }
+
         if (v.Contains("tonic"))
         {
             return HarmonicFunction.Tonic;

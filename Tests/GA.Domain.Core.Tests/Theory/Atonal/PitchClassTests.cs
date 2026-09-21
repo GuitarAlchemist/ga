@@ -121,14 +121,24 @@ public class PitchClassTests
     [TestCase("C", 0)]
     [TestCase("T", 10)]
     [TestCase("E", 11)]
-    [TestCase("A", 10)] // Hex-style parsing
-    [TestCase("B", 11)] // Hex-style parsing
+    [TestCase("A", 9)]
+    [TestCase("B", 11)]
     public void TryParse_ValidInput_ReturnsSuccess(string input, int expectedValue)
     {
         // Arrange & Act
         var result = PitchClass.TryParse(input, null, out var pitchClass);
 
         // Assert
+        Assert.That(result, Is.True);
+        Assert.That(pitchClass.Value, Is.EqualTo(expectedValue));
+    }
+
+    [TestCase("A", 10)]
+    [TestCase("B", 11)]
+    public void TryParseSetNotation_HexAliases_ReturnExpectedValue(string input, int expectedValue)
+    {
+        var result = PitchClass.TryParseSetNotation(input, out var pitchClass);
+
         Assert.That(result, Is.True);
         Assert.That(pitchClass.Value, Is.EqualTo(expectedValue));
     }
