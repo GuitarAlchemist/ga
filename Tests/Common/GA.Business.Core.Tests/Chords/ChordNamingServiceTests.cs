@@ -2,6 +2,7 @@ namespace GA.Business.Core.Tests.Chords;
 
 using GA.Domain.Core.Theory.Atonal;
 using GA.Domain.Core.Theory.Harmony;
+using GA.Domain.Core.Theory.Tonal;
 using GA.Domain.Core.Theory.Tonal.Modes.Unified;
 using GA.Domain.Services.Chords;
 using GA.Domain.Services.Chords.Abstractions;
@@ -17,6 +18,33 @@ public class ChordNamingServiceTests
         var svc = new UnifiedModeService();
         return svc.FromPitchClassSet(set, root);
     }
+
+    [TestCase(0, "Major 7th", new[] { 4, 7, 11 }, KeyAwareChordNamingService.ChordFunction.Tonic, "Imaj7")]
+    [TestCase(2, "Minor 7th", new[] { 3, 7, 10 }, KeyAwareChordNamingService.ChordFunction.Supertonic, "ii7")]
+    [TestCase(7, "Dominant 7th", new[] { 4, 7, 10 }, KeyAwareChordNamingService.ChordFunction.Dominant, "V7")]
+    [TestCase(11, "Half-diminished 7th", new[] { 3, 6, 10 }, KeyAwareChordNamingService.ChordFunction.LeadingTone, "viiø7")]
+    public void KeyAwareAnalysis_CMajor_SeventhSpecies_PreserveTriadFunctionAndRomanCase(
+        int rootPitchClass,
+        string formulaName,
+        int[] semitones,
+        KeyAwareChordNamingService.ChordFunction expectedFunction,
+        string expectedRomanNumeral)
+    {
+        var formula = ChordFormula.FromSemitones(formulaName, semitones);
+        var template = ChordTemplate.Analytical.FromSetTheory(formula, formulaName);
+
+        var result = KeyAwareChordNamingService.AnalyzeInKey(
+            template,
+            PitchClass.FromValue(rootPitchClass),
+            Key.Major.C);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Function, Is.EqualTo(expectedFunction));
+            Assert.That(result.RomanNumeral, Is.EqualTo(expectedRomanNumeral));
+        });
+    }
+
     [Test]
     public void RomanNumerals_Ionian_SevenChords_AreNamed_AsExpected()
     {

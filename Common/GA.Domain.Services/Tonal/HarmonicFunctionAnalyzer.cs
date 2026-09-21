@@ -47,19 +47,19 @@ public static class HarmonicFunctionAnalyzer
             return HarmonicFunction.Subtonic;
         }
 
-        if (v.Contains("tonic"))
-        {
-            return HarmonicFunction.Tonic;
-        }
-
         if (v.Contains("supertonic"))
         {
             return HarmonicFunction.Supertonic;
         }
 
-        if (v.Contains("mediant"))
+        if (v.Contains("tonic"))
         {
-            return HarmonicFunction.Mediant;
+            return HarmonicFunction.Tonic;
+        }
+
+        if (v.Contains("submediant"))
+        {
+            return HarmonicFunction.Submediant;
         }
 
         if (v.Contains("subdominant"))
@@ -72,9 +72,9 @@ public static class HarmonicFunctionAnalyzer
             return HarmonicFunction.Dominant;
         }
 
-        if (v.Contains("submediant"))
+        if (v.Contains("mediant"))
         {
-            return HarmonicFunction.Submediant;
+            return HarmonicFunction.Mediant;
         }
 
         if (v.Contains("leading"))
@@ -105,7 +105,8 @@ public static class HarmonicFunctionAnalyzer
         HarmonicFunction.Tonic or HarmonicFunction.Submediant or HarmonicFunction.Mediant => HarmonicFunctionCategory
             .Tonic,
         HarmonicFunction.Subdominant or HarmonicFunction.Supertonic => HarmonicFunctionCategory.Subdominant,
-        HarmonicFunction.Dominant or HarmonicFunction.LeadingTone => HarmonicFunctionCategory.Dominant,
+        HarmonicFunction.Dominant or HarmonicFunction.LeadingTone or HarmonicFunction.Subtonic =>
+            HarmonicFunctionCategory.Dominant,
         _ => HarmonicFunctionCategory.Ambiguous
     };
 }

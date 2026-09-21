@@ -21,3 +21,18 @@ public enum ChordQuality
     Augmented,
     Suspended
 }
+
+/// <summary>
+/// Groups specific seventh-chord species by the triad quality that determines
+/// functional harmony and Roman-numeral casing.
+/// </summary>
+public static class ChordQualityExtensions
+{
+    public static ChordQuality ToTriadFamily(this ChordQuality quality) => quality switch
+    {
+        ChordQuality.Major7 or ChordQuality.Dominant => ChordQuality.Major,
+        ChordQuality.Minor7 => ChordQuality.Minor,
+        ChordQuality.Diminished7 or ChordQuality.HalfDiminished => ChordQuality.Diminished,
+        _ => quality
+    };
+}

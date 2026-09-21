@@ -139,7 +139,7 @@ public static class KeyTool
         var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
                   ?? throw new InvalidOperationException($"Key not found: {keyName}");
 
-        // Get the relative key - parallel minor for major keys, parallel major for minor keys
+        // Relative keys share a key signature and use opposite modes.
         Key relativeKey = key.KeyMode switch
         {
             KeyMode.Major => new Key.Minor(key.KeySignature),

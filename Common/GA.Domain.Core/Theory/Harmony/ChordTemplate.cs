@@ -48,8 +48,16 @@ public abstract record ChordTemplate
         public override ChordFormula Formula => ChordFormula;
         public string Description => $"{ParentScale.Name} degree {ScaleDegree} ({ChordFormula.Name})";
 
-        /// <summary>Inferred harmonic function based on the scale degree (e.g. Tonic, Dominant).</summary>
-        public HarmonicFunction Function => HarmonicFunctionExtensions.FromDegree(ScaleDegree);
+        /// <summary>Inferred harmonic function based on the scale degree and its distance below the tonic.</summary>
+        public HarmonicFunction Function
+        {
+            get
+            {
+                var semitonesAboveTonic = ParentScale.SimpleIntervals.ElementAt(ScaleDegree - 1).Semitones.Value % 12;
+                var semitonesBelowTonic = (12 - semitonesAboveTonic) % 12;
+                return HarmonicFunctionExtensions.FromDegree(ScaleDegree, semitonesBelowTonic);
+            }
+        }
     }
 
     /// <summary>

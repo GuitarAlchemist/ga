@@ -7,6 +7,12 @@ using GA.Domain.Core.Theory.Atonal;
 public class PitchClassTests
 {
     [Test]
+    public void PitchClassSet_Parse_UsesSetNotationAliases() =>
+        Assert.That(
+            PitchClassSet.Parse("0A").Select(pitchClass => pitchClass.Value),
+            Is.EquivalentTo(new[] { 0, 10 }));
+
+    [Test]
     public void FromValue_ValidValue_CreatesInstance()
     {
         // Arrange & Act

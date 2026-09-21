@@ -179,6 +179,8 @@ public sealed class Chord : IEquatable<Chord>
             "7" => ChordFormula.Dominant7,
             "maj7" or "△7" => ChordFormula.Major7,
             "m7" or "min7" or "-7" => ChordFormula.Minor7,
+            "mmaj7" or "minmaj7" or "m(maj7)" =>
+                ChordFormula.FromSemitones("Minor major 7th", 3, 7, 11),
             "dim7" or "°7" => ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9),
             "m7b5" or "ø7" => ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10),
             "9" => ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14),
