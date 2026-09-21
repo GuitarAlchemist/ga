@@ -154,17 +154,26 @@ public class ContextualChordService
         return await Task.FromResult(results);
     }
 
-    private static string GetRomanNumeral(int degree, ChordQuality quality)
+    internal static string GetRomanNumeral(int degree, ChordQuality quality)
     {
         string[] upper = ["I", "II", "III", "IV", "V", "VI", "VII"];
         string[] lower = ["i", "ii", "iii", "iv", "v", "vi", "vii"];
 
-        var numeral = quality is ChordQuality.Minor or ChordQuality.Diminished
+        var triadFamily = quality.ToTriadFamily();
+        var numeral = triadFamily is ChordQuality.Minor or ChordQuality.Diminished
             ? lower[degree - 1]
             : upper[degree - 1];
 
-        if (quality == ChordQuality.Diminished) numeral += "°";
-        if (quality == ChordQuality.Augmented)  numeral += "+";
+        numeral += quality switch
+        {
+            ChordQuality.Major7 => "maj7",
+            ChordQuality.Minor7 or ChordQuality.Dominant => "7",
+            ChordQuality.Diminished7 => "°7",
+            ChordQuality.HalfDiminished => "ø7",
+            ChordQuality.Diminished => "°",
+            ChordQuality.Augmented => "+",
+            _ => ""
+        };
 
         return numeral;
     }

@@ -183,9 +183,10 @@ public static class BasicChordExtensionsService
     private static string GetSeventhNotation(ChordQuality quality) =>
         quality switch
         {
-            ChordQuality.Major => "maj7",
-            ChordQuality.Minor => "m7",
-            ChordQuality.Diminished => "dim7",
+            ChordQuality.Major or ChordQuality.Major7 => "maj7",
+            ChordQuality.Minor or ChordQuality.Minor7 => "m7",
+            ChordQuality.Diminished or ChordQuality.Diminished7 => "dim7",
+            ChordQuality.HalfDiminished => "m7b5",
             ChordQuality.Augmented => "aug7",
             ChordQuality.Dominant => "7",
             _ => "7" // Default to dominant for Seventh extension
@@ -197,9 +198,10 @@ public static class BasicChordExtensionsService
     private static string GetNinthNotation(ChordQuality quality) =>
         quality switch
         {
-            ChordQuality.Major => "maj9",
-            ChordQuality.Minor => "m9",
-            ChordQuality.Diminished => "dim9",
+            ChordQuality.Major or ChordQuality.Major7 => "maj9",
+            ChordQuality.Minor or ChordQuality.Minor7 => "m9",
+            ChordQuality.Diminished or ChordQuality.Diminished7 => "dim9",
+            ChordQuality.HalfDiminished => "m9b5",
             ChordQuality.Augmented => "aug9",
             ChordQuality.Dominant => "9",
             _ => "9" // Default to dominant for Ninth extension
@@ -211,8 +213,8 @@ public static class BasicChordExtensionsService
     private static string GetEleventhNotation(ChordQuality quality) =>
         quality switch
         {
-            ChordQuality.Major => "maj11",
-            ChordQuality.Minor => "m11",
+            ChordQuality.Major or ChordQuality.Major7 => "maj11",
+            ChordQuality.Minor or ChordQuality.Minor7 => "m11",
             ChordQuality.Dominant => "11",
             _ => "11" // Default to dominant for Eleventh extension
         };
@@ -223,8 +225,8 @@ public static class BasicChordExtensionsService
     private static string GetThirteenthNotation(ChordQuality quality) =>
         quality switch
         {
-            ChordQuality.Major => "maj13",
-            ChordQuality.Minor => "m13",
+            ChordQuality.Major or ChordQuality.Major7 => "maj13",
+            ChordQuality.Minor or ChordQuality.Minor7 => "m13",
             ChordQuality.Dominant => "13",
             _ => "13" // Default to dominant for Thirteenth extension
         };

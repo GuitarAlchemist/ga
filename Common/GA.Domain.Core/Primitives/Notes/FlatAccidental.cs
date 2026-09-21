@@ -62,7 +62,7 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     #region IParsable Members
 
     //language=regexp
-    public static readonly string RegexPattern = "^(b{1,3}|♭{1,3}|𝄫)$";
+    public static readonly string RegexPattern = @"\A(b{1,3}|♭{1,3}|𝄫)\z";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     /// <inheritdoc />

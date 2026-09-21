@@ -98,56 +98,6 @@ public static class VoicingHarmonicAnalyzer
         return names[pc % 12];
     }
 
-    private static int GetComplexity(ChordTemplate t)
-    {
-        int score = 0;
-
-        // Extensions
-        score += t.Extension switch
-        {
-            ChordExtension.Triad => 0,
-            ChordExtension.Sus2 => 1,
-            ChordExtension.Sus4 => 2,
-            ChordExtension.Sixth => 3,
-            ChordExtension.Seventh => 10,
-            ChordExtension.Add9 => 11,
-            ChordExtension.Ninth => 20,
-            _ => 30
-        };
-
-        // Quality preferences (Major/Minor/Dominant are most common)
-        score += t.Quality switch
-        {
-            ChordQuality.Major => 0,
-            ChordQuality.Minor => 0,
-            ChordQuality.Dominant => 1,
-            ChordQuality.Diminished => 2,
-            ChordQuality.Augmented => 3,
-            _ => 5
-        };
-
-        // Stacking
-        if (t.StackingType != ChordStackingType.Tertian) score += 5;
-
-        // Penalize non-standard triads to favor standard chords (e.g. C/E over E mb6)
-        if (t.Extension == ChordExtension.Triad && t.StackingType == ChordStackingType.Tertian)
-        {
-            if (!IsStandardIntervals(t)) score += 10;
-        }
-
-        return score;
-    }
-
-    private static bool IsStandardIntervals(ChordTemplate t)
-    {
-        var pcs = t.PitchClassSet.Select(p => p.Value).OrderBy(x => x).ToList();
-        return
-            pcs.SequenceEqual([0, 4, 7]) || // Major
-            pcs.SequenceEqual([0, 3, 7]) || // Minor
-            pcs.SequenceEqual([0, 3, 6]) || // Diminished
-            pcs.SequenceEqual([0, 4, 8]); // Augmented
-    }
-
     private static double CalculateDissonance(int[] midiNotes)
     {
         // Placeholder dissonance calculation (e.g. based on intervals)

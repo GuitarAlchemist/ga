@@ -1,8 +1,11 @@
 ﻿namespace GA.Business.Core.Tests;
 
 using Domain.Core.Theory.Harmony;
+using Domain.Core.Theory.Atonal;
+using Domain.Core.Theory.Tonal;
 using Domain.Core.Theory.Tonal.Modes.Diatonic;
 using Domain.Core.Theory.Tonal.Primitives.Diatonic;
+using Domain.Core.Theory.Tonal.Scales;
 using Domain.Services.Chords;
 
 [TestFixture]
@@ -85,6 +88,31 @@ public class ChordTemplateFactoryTests
         // Assert
         Assert.That(modalChords.Count, Is.EqualTo(7)); // 7 degrees in major scale
         Assert.That(modalChords.All(c => c.Extension == ChordExtension.Triad), Is.True);
+    }
+
+    [Test]
+    public void AeolianSeventhDegree_IsSubtonic()
+    {
+        var aeolianMode = MajorScaleMode.Get(MajorScaleDegree.Aeolian);
+        var seventhDegree = ChordTemplateFactory.CreateModalChords(aeolianMode)
+            .OfType<ChordTemplate.TonalModal>()
+            .Single(chord => chord.ScaleDegree == 7);
+
+        Assert.That(seventhDegree.Function, Is.EqualTo(HarmonicFunction.Subtonic));
+    }
+
+    [Test]
+    public void EnhancedAeolianSeventhDegree_IsSubtonic()
+    {
+        var aeolianMode = MajorScaleMode.Get(MajorScaleDegree.Aeolian);
+        var seventhDegree = ChordTemplateFactory.CreateModalChords(aeolianMode)
+            .OfType<ChordTemplate.TonalModal>()
+            .Single(chord => chord.ScaleDegree == 7);
+        var enhanced = new EnhancedChordTemplate(seventhDegree);
+
+        Assert.That(
+            enhanced.GetHarmonicFunction(Scale.NaturalMinor, PitchClass.FromValue(7)),
+            Is.EqualTo(HarmonicFunction.Subtonic));
     }
 
     [Test]

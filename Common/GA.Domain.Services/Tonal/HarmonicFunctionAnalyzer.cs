@@ -23,6 +23,12 @@ public static class HarmonicFunctionAnalyzer
     };
 
     /// <summary>
+    ///     Resolves a scale degree when its chromatic distance below the tonic is known.
+    /// </summary>
+    public static HarmonicFunction FromScaleDegree(int degree, int semitonesBelowTonic) =>
+        HarmonicFunctionExtensions.FromDegree(degree, semitonesBelowTonic);
+
+    /// <summary>
     ///     Parses a string representation of harmonic function.
     ///     Supports both Name ("Tonic") and Roman ("I").
     /// </summary>
@@ -36,9 +42,9 @@ public static class HarmonicFunctionAnalyzer
         var v = value.Trim().ToLowerInvariant();
 
         // Match by Name
-        if (v.Contains("tonic"))
+        if (v.Contains("subtonic"))
         {
-            return HarmonicFunction.Tonic;
+            return HarmonicFunction.Subtonic;
         }
 
         if (v.Contains("supertonic"))
@@ -46,9 +52,14 @@ public static class HarmonicFunctionAnalyzer
             return HarmonicFunction.Supertonic;
         }
 
-        if (v.Contains("mediant"))
+        if (v.Contains("tonic"))
         {
-            return HarmonicFunction.Mediant;
+            return HarmonicFunction.Tonic;
+        }
+
+        if (v.Contains("submediant"))
+        {
+            return HarmonicFunction.Submediant;
         }
 
         if (v.Contains("subdominant"))
@@ -61,9 +72,9 @@ public static class HarmonicFunctionAnalyzer
             return HarmonicFunction.Dominant;
         }
 
-        if (v.Contains("submediant"))
+        if (v.Contains("mediant"))
         {
-            return HarmonicFunction.Submediant;
+            return HarmonicFunction.Mediant;
         }
 
         if (v.Contains("leading"))
@@ -94,7 +105,8 @@ public static class HarmonicFunctionAnalyzer
         HarmonicFunction.Tonic or HarmonicFunction.Submediant or HarmonicFunction.Mediant => HarmonicFunctionCategory
             .Tonic,
         HarmonicFunction.Subdominant or HarmonicFunction.Supertonic => HarmonicFunctionCategory.Subdominant,
-        HarmonicFunction.Dominant or HarmonicFunction.LeadingTone => HarmonicFunctionCategory.Dominant,
+        HarmonicFunction.Dominant or HarmonicFunction.LeadingTone or HarmonicFunction.Subtonic =>
+            HarmonicFunctionCategory.Dominant,
         _ => HarmonicFunctionCategory.Ambiguous
     };
 }

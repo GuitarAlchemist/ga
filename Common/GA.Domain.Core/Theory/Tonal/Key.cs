@@ -73,7 +73,7 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
     /// </summary>
     /// <param name="note">The <see cref="Note.Accidented" /></param>
     /// <returns>The <see cref="Interval.Simple" /></returns>
-    public Interval.Simple GetInterval(Note.Accidented note) => note.GetInterval(Root);
+    public Interval.Simple GetInterval(Note.Accidented note) => Root.GetInterval(note);
 
     /// <summary>
     ///     Gets the 7 notes in the key
@@ -154,7 +154,8 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         {
             if (!Note.KeyNote.TryParse(input, out var keyRootNotes))
             {
-                throw new InvalidOperationException("Failed parsing key root");
+                majorKey = null!;
+                return false;
             }
 
             var sharpKeyNote = keyRootNotes.FirstOrDefault(note => note is Note.Sharp);
@@ -289,7 +290,8 @@ public abstract record Key(KeySignature KeySignature) : IStaticPrintableReadonly
         {
             if (!Note.KeyNote.TryParse(input, out var keyRootNotes))
             {
-                throw new InvalidOperationException("Failed parsing key root");
+                minorKey = null!;
+                return false;
             }
 
             var sharpKeyNote = keyRootNotes.FirstOrDefault(note => note is Note.Sharp);

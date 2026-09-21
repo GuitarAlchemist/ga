@@ -132,16 +132,16 @@ public class EnhancedChordTemplate : IEquatable<EnhancedChordTemplate>
             return HarmonicFunction.Unknown;
         }
 
-        var scaleRoot = scale.PitchClassSet.First(); // Assume first pitch class is root
-        var intervalFromScaleRoot = (root.Value - scaleRoot.Value + 12) % 12;
-
-        // Map interval semitones to scale degree (simplified for heptatonic)
-        var degree = intervalFromScaleRoot switch
+        var scaleNotes = scale.ToList();
+        var scaleRoot = scaleNotes[0].PitchClass;
+        var degreeIndex = scaleNotes.FindIndex(note => note.PitchClass == root);
+        if (degreeIndex < 0)
         {
-            0 => 1, 2 => 2, 4 => 3, 5 => 4, 7 => 5, 9 => 6, 11 => 7, _ => 0
-        };
+            return HarmonicFunction.Unknown;
+        }
 
-        return HarmonicFunctionExtensions.FromDegree(degree);
+        var semitonesBelowTonic = (scaleRoot.Value - root.Value + 12) % 12;
+        return HarmonicFunctionExtensions.FromDegree(degreeIndex + 1, semitonesBelowTonic);
     }
 
     /// <summary>Creates a chord voicing with the specified bass note</summary>
