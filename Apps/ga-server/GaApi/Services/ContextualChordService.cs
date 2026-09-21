@@ -154,7 +154,7 @@ public class ContextualChordService
         return await Task.FromResult(results);
     }
 
-    private static string GetRomanNumeral(int degree, ChordQuality quality)
+    internal static string GetRomanNumeral(int degree, ChordQuality quality)
     {
         string[] upper = ["I", "II", "III", "IV", "V", "VI", "VII"];
         string[] lower = ["i", "ii", "iii", "iv", "v", "vi", "vii"];
