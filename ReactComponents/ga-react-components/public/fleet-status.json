@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "39f0928b35077204f6154fe0128de4885a2a4c25",
-    "generatedAt": "2026-09-22T16:21:34.640423+00:00",
+    "commitSha": "637c9055067976ea87de264b81b51abc2e0bba58",
+    "generatedAt": "2026-09-22T20:56:18.986534+00:00",
     "repoCount": 5,
     "totalPRs": 58
   },
@@ -284,7 +284,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/677"
         },
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-08-09T18:36:36Z",
           "failingChecks": 0,
@@ -296,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/650"
         },
         {
-          "ageDays": 43,
+          "ageDays": 44,
           "author": "spareilleux",
           "createdAt": "2026-08-09T17:52:10Z",
           "failingChecks": 0,
@@ -344,7 +344,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/636"
         },
         {
-          "ageDays": 50,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-08-02T19:56:59Z",
           "failingChecks": 0,
@@ -356,7 +356,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/634"
         },
         {
-          "ageDays": 50,
+          "ageDays": 51,
           "author": "spareilleux",
           "createdAt": "2026-08-02T17:27:09Z",
           "failingChecks": 0,
@@ -452,7 +452,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         },
         {
-          "ageDays": 58,
+          "ageDays": 59,
           "author": "spareilleux",
           "createdAt": "2026-07-25T17:19:15Z",
           "failingChecks": 1,
@@ -546,7 +546,7 @@
           "failingChecks": 0,
           "headRef": "feat/quality-gate-ledger",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 353,
           "title": "feat(quality-gate): wire ix doctor as the producer ix_quality_gate_history reads",
           "url": "https://github.com/GuitarAlchemist/ix/pull/353"
@@ -558,7 +558,7 @@
           "failingChecks": 2,
           "headRef": "fix/manual-tools-approval-gate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 352,
           "title": "fix(ix-agent): route manual MCP tools through the approval gate",
           "url": "https://github.com/GuitarAlchemist/ix/pull/352"
@@ -570,7 +570,7 @@
           "failingChecks": 0,
           "headRef": "feat/node-catalog-validate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 351,
           "title": "feat(ix-agent): ix_node_catalog + ix_pipeline_validate (node catalog + offline pipeline validation)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/351"
@@ -582,7 +582,7 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
@@ -606,7 +606,7 @@
           "failingChecks": 0,
           "headRef": "feat/markov-work-history",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 343,
           "title": "feat(memristive-markov): distil PR lifecycle history into Seldon Markov transitions (Demerzel#596)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/343"
@@ -618,7 +618,7 @@
           "failingChecks": 1,
           "headRef": "fix/ga-nightly-quality-schedule",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 342,
           "title": "fix(ix-quality-trend): compare quality snapshots only within one declared population (GA Nightly Quality 141/141 scheduled failures)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/342"
@@ -630,7 +630,7 @@
           "failingChecks": 0,
           "headRef": "feat/workflow-liveness-observations",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 341,
           "title": "feat(ix-harness-github-actions): scheduled-workflow liveness verdicts (hari#29)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/341"
@@ -642,43 +642,43 @@
           "failingChecks": 0,
           "headRef": "feat/autoresearch-hari-sessions",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 339,
           "title": "fix(autoresearch): contract test collapsed every claim into one; SCHEMA.md points at the real Hari consumer",
           "url": "https://github.com/GuitarAlchemist/ix/pull/339"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:53Z",
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:51Z",
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:49Z",
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"
@@ -838,7 +838,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
         },
         {
-          "ageDays": 38,
+          "ageDays": 39,
           "author": "spareilleux",
           "createdAt": "2026-08-14T18:13:24Z",
           "failingChecks": 2,
