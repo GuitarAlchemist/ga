@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7e1d123b019e59f36520c4a833c3853ac00fddc7",
-    "generatedAt": "2026-09-23T23:35:47.676147+00:00",
+    "commitSha": "30da36a6596f75b2063f67092feec57606f990a5",
+    "generatedAt": "2026-09-23T23:37:07.964826+00:00",
     "repoCount": 5,
-    "totalPRs": 51
+    "totalPRs": 49
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 28,
+      "prCount": 26,
       "prs": [
         {
           "ageDays": 2,
@@ -162,30 +162,6 @@
           "number": 696,
           "title": "fix: three ga-lab findings \u2014 dropped fret-diagram notes, mirrored string order, false L2-normalized claim",
           "url": "https://github.com/GuitarAlchemist/ga/pull/696"
-        },
-        {
-          "ageDays": 6,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T05:02:48Z",
-          "failingChecks": 0,
-          "headRef": "perf/chord-recognition",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 695,
-          "title": "perf(chords): chord recognition with 12-bit masks, once per pitch-class set (VoicingAnalyzer 7.8x, 759 MB -> 82 MB)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/695"
-        },
-        {
-          "ageDays": 6,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T05:02:46Z",
-          "failingChecks": 0,
-          "headRef": "perf/interval-class-vector",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 694,
-          "title": "perf(atonal): PitchClassSet.IntervalClassVector computes each set's id once (75x read, 16.2 MB -> 47 KB)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/694"
         },
         {
           "ageDays": 8,
