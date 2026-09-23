@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "30da36a6596f75b2063f67092feec57606f990a5",
-    "generatedAt": "2026-09-23T23:37:07.964826+00:00",
+    "commitSha": "e2751aa3290be80888181c6b3d17add3f4cf85a0",
+    "generatedAt": "2026-09-23T23:38:27.874802+00:00",
     "repoCount": 5,
-    "totalPRs": 49
+    "totalPRs": 47
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 26,
+      "prCount": 24,
       "prs": [
         {
           "ageDays": 2,
@@ -138,30 +138,6 @@
           "number": 714,
           "title": "fix(concurrency): propagate pipeline failures",
           "url": "https://github.com/GuitarAlchemist/ga/pull/714"
-        },
-        {
-          "ageDays": 6,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T23:18:22Z",
-          "failingChecks": 0,
-          "headRef": "fix/course-findings-trivial",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 697,
-          "title": "fix: six defects found by the learn courses (HTTP status, SignalR node key, duplicate reference, two F# scripts, console.error)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/697"
-        },
-        {
-          "ageDays": 6,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T23:02:10Z",
-          "failingChecks": 0,
-          "headRef": "fix/ga-lab-findings",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 696,
-          "title": "fix: three ga-lab findings \u2014 dropped fret-diagram notes, mirrored string order, false L2-normalized claim",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/696"
         },
         {
           "ageDays": 8,
