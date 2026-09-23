@@ -5,6 +5,7 @@ import {
   workletNodeAtom,
   isAudioReadyAtom,
   decayAtom,
+  GUITAR_PROFILE_DECAY,
   logAtom,
   stringsAtom,
 } from './atoms/audioAtoms';
@@ -55,6 +56,8 @@ function App() {
 
   const handleGuitarTypeChange = (type) => {
     setGuitarType(type);
+    // The engine resets decay to the profile's value; mirror it in the slider.
+    setDecay(GUITAR_PROFILE_DECAY[type]);
     if (node) {
       setEngineGuitarType(node, type);
     }
@@ -165,7 +168,7 @@ function App() {
             Decay
             <input
               type="range"
-              min="0.990"
+              min="0.980"
               max="0.9999"
               step="0.0001"
               value={decay}
