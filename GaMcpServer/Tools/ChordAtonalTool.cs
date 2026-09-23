@@ -235,10 +235,10 @@ public static class ChordAtonalTool
     [Description(
         "Stack two chords into a polychord and analyze the combined pitch-class set: merged tones, " +
         "ICV, prime form, Forte number, modal family, and any matching scale name. " +
-        "Example: B triad over C triad → Lydian mode set {C,D,E,F#,G,B}.")]
+        "Example: D triad over C triad → {C,D,E,F#,G,A} (6-33), C Lydian without its seventh.")]
     public static async Task<string> GaPolychord(
         [Description("Bottom chord, e.g. 'C'")] string chord1,
-        [Description("Top chord, e.g. 'B'")] string chord2)
+        [Description("Top chord, e.g. 'D'")] string chord2)
     {
         var pcs1Task = GetPitchClassesAsync(chord1);
         var pcs2Task = GetPitchClassesAsync(chord2);
