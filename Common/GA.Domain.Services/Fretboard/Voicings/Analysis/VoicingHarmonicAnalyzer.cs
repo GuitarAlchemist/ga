@@ -28,18 +28,22 @@ public static class VoicingHarmonicAnalyzer
 
         var dropVoicing = DetectDropVoicing(midiNotes);
 
+        // Named arguments: positionally, the spread test landed in IsRootless and IsOpenVoicing
+        // was always false, so every voicing wider than an octave was tagged rootless.
         return new(
-            chordId,
-            dissonanceScore,
-            consonance,
-            intervalSpread,
-            pitchClasses.Count,
-            pcSet.IntervalClassVector.ToString(),
-            intervalSpread > 12,
-            dropVoicing,
-            false,
-            [],
-            semanticTags
+            ChordId: chordId,
+            DissonanceScore: dissonanceScore,
+            Consonance: consonance,
+            IntervalSpread: intervalSpread,
+            NoteCount: pitchClasses.Count,
+            IntervalClassVector: pcSet.IntervalClassVector.ToString(),
+            // CanonicalChordRecognizer only picks roots among the sounding pitch classes, so the
+            // identified chord always contains its root; there is no rootless detection here.
+            IsRootless: false,
+            DropVoicing: dropVoicing,
+            IsOpenVoicing: intervalSpread > 12,
+            Features: [],
+            SemanticTags: semanticTags
         );
     }
 
