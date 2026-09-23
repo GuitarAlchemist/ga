@@ -1,7 +1,7 @@
 // src/components/PrimeRadiant/DataLoader.ts
 // Loads governance data and builds the graph structure for 3D rendering
 
-import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthStatus, HexavalentTruth, NodeAugmentation } from './types';
+import type { GovernanceGraph, GovernanceNode, GovernanceEdge, GovernanceHealthStatus, HealthMetrics, HexavalentTruth, NodeAugmentation } from './types';
 import { HEALTH_STATUS_COLORS } from './types';
 import { LIVE_GOVERNANCE_GRAPH } from './liveData';
 import { SAMPLE_GOVERNANCE_GRAPH } from './sampleData';
@@ -230,6 +230,38 @@ export interface CameraSyncData {
   sender: string;
 }
 
+// ---------------------------------------------------------------------------
+// NodeChanged event (matches GovernanceHub.BroadcastNodeChanged)
+// ---------------------------------------------------------------------------
+export interface NodeChangedEvent {
+  nodeId: string;
+  health?: HealthMetrics;
+  healthStatus?: GovernanceHealthStatus;
+  color?: string;
+  timestamp?: string;
+}
+
+/**
+ * Turn a NodeChanged payload into a GovernanceNode.
+ *
+ * The hub names the key `nodeId`; GovernanceNode — and `updateNodeHealth`,
+ * which looks each fresh node up by `n.id` — names it `id`. Casting the
+ * payload straight to GovernanceNode left `id` undefined, so the lookup never
+ * matched and every NodeChanged update was dropped without an error.
+ *
+ * Returns null when the payload carries no node id, so the caller can log it
+ * instead of pushing an unusable node into the graph.
+ */
+export function nodeFromNodeChanged(data: NodeChangedEvent | null | undefined): GovernanceNode | null {
+  if (!data?.nodeId) return null;
+  return {
+    id: data.nodeId,
+    health: data.health,
+    healthStatus: data.healthStatus,
+    color: data.color,
+  } as GovernanceNode;
+}
+
 export interface LivePollingHandle {
   /** Stop polling and disconnect SignalR */
   stop: () => void;
@@ -244,9 +276,11 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
   let active = true;
   let connection: signalR.HubConnection | null = null;
   let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let currentGraph: GovernanceGraph | null = null;
 
   const processGraph = (rawGraph: GovernanceGraph) => {
     const graph = applyHealthColors(rawGraph);
+    currentGraph = graph;
     onUpdate(graph);
   };
 
@@ -273,9 +307,30 @@ export function startLivePolling(config: LiveDataConfig): LivePollingHandle {
         processGraph(data);
       });
 
-      connection.on('NodeChanged', (data: { nodeId: string; health: unknown; healthStatus: string; color: string }) => {
+      connection.on('NodeChanged', (data: NodeChangedEvent) => {
         // Partial update — single node
-        onUpdate({ nodes: [data as unknown as GovernanceNode], edges: [], globalHealth: { resilienceScore: 0, lolliCount: 0, ergolCount: 0 }, timestamp: new Date().toISOString() } as GovernanceGraph);
+        const node = nodeFromNodeChanged(data);
+        if (!node) {
+          console.warn('[Governance] NodeChanged without a nodeId — ignored');
+          return;
+        }
+        if (!currentGraph?.nodes.some(existing => existing.id === node.id)) {
+          console.warn(`[Governance] NodeChanged for unknown node ${node.id} — ignored`);
+          return;
+        }
+        currentGraph = {
+          ...currentGraph,
+          nodes: currentGraph.nodes.map(existing => existing.id === node.id
+            ? {
+                ...existing,
+                health: node.health ?? existing.health,
+                healthStatus: node.healthStatus ?? existing.healthStatus,
+                color: node.color ?? existing.color,
+              }
+            : existing),
+          timestamp: data.timestamp ?? new Date().toISOString(),
+        };
+        onUpdate(currentGraph);
       });
 
       connection.on('Connected', (data: { connections: number }) => {
@@ -453,15 +508,21 @@ export function updateNodeHealth(
 
   for (const node of existingNodes) {
     const fresh = freshMap.get(node.id);
-    if (!fresh?.health) continue;
+    if (!fresh) continue;
 
     const oldScore = node.health?.resilienceScore;
-    const newScore = fresh.health.resilienceScore;
+    const newScore = fresh.health?.resilienceScore;
+    const metricsChanged = fresh.health !== undefined
+      && (oldScore !== newScore
+        || node.health?.ergolCount !== fresh.health.ergolCount
+        || node.health?.lolliCount !== fresh.health.lolliCount);
+    const statusChanged = fresh.healthStatus !== undefined && node.healthStatus !== fresh.healthStatus;
+    const colorChanged = fresh.color !== undefined && node.color !== fresh.color;
 
-    if (oldScore !== newScore || node.health?.ergolCount !== fresh.health.ergolCount || node.health?.lolliCount !== fresh.health.lolliCount) {
-      node.health = fresh.health;
-      node.healthStatus = deriveGovernanceHealthStatus(node);
-      node.color = HEALTH_STATUS_COLORS[node.healthStatus];
+    if (metricsChanged || statusChanged || colorChanged) {
+      if (fresh.health) node.health = fresh.health;
+      node.healthStatus = fresh.healthStatus ?? deriveGovernanceHealthStatus(node);
+      node.color = fresh.color ?? HEALTH_STATUS_COLORS[node.healthStatus];
       updated.push(node.id);
       changed = true;
     }
