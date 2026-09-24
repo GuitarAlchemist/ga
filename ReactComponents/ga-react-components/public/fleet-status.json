@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "86c75ed9bab0e1113c2482fe9431acfc63977580",
-    "generatedAt": "2026-09-24T13:54:46.816557+00:00",
+    "commitSha": "f443e232160d4bc7bdbc731c0f4dd72e919635a6",
+    "generatedAt": "2026-09-24T14:29:13.444670+00:00",
     "repoCount": 5,
-    "totalPRs": 25
+    "totalPRs": 23
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 7,
+      "prCount": 5,
       "prs": [
         {
           "ageDays": 0,
@@ -174,30 +174,6 @@
           "number": 633,
           "title": "feat(harness): add read-only work reconciliation snapshot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/633"
-        },
-        {
-          "ageDays": 53,
-          "author": "spareilleux",
-          "createdAt": "2026-08-01T22:57:33Z",
-          "failingChecks": 1,
-          "headRef": "fix/key-detection-cadences-13824242442048306677",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 625,
-          "title": "Delegate key detection to KeyIdentificationService on MCP and F# closures",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/625"
-        },
-        {
-          "ageDays": 57,
-          "author": "spareilleux",
-          "createdAt": "2026-07-29T02:02:57Z",
-          "failingChecks": 1,
-          "headRef": "agent/ga-613-placeholder-routes",
-          "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 615,
-          "title": "fix(frontend): remove dead placeholder routes",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/615"
         }
       ]
     },
