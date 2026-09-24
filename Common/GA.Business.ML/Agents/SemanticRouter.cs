@@ -69,11 +69,22 @@ public class SemanticRouter(
         RoutingResult? semanticResult = null;
         if (textEmbeddings != null)
         {
-            await EnsureEmbeddingsInitializedAsync(cancellationToken);
-            semanticResult = await SemanticRouteAsync(query, cancellationToken);
+            try
+            {
+                await EnsureEmbeddingsInitializedAsync(cancellationToken);
+                semanticResult = await SemanticRouteAsync(query, cancellationToken);
+            }
+            catch (Exception ex) when (ex is HttpRequestException
+                                       || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+            {
+                // A TaskCanceledException the caller did not ask for is an HttpClient timeout.
+                // An unreachable embedding server must not fail the request: LLM and keyword
+                // routing below still work without embeddings.
+                _logger.LogWarning(ex, "Semantic routing unavailable; falling back to LLM or keyword routing.");
+            }
 
             // If confidence is high, we can trust it
-            if (semanticResult.Confidence > 0.85f)
+            if (semanticResult is { Confidence: > 0.85f })
             {
                 routeActivity?.SetTag(ChatbotActivitySource.TagRoutingMethod, semanticResult.RoutingMethod);
                 routeActivity?.SetTag(ChatbotActivitySource.TagRoutingConfidence, semanticResult.Confidence);

@@ -8,8 +8,18 @@ using Embeddings;
 
 /// <summary>
 ///     Reads the OPTK v4 memory-mapped index produced by
-///     <c>OptickIndexWriter</c>. Vectors are 112-dim, pre-scaled by sqrt(partition weight),
-///     and L2-normalized, so cosine similarity reduces to a dot product.
+///     <c>OptickIndexWriter</c>. Vectors are compact (the header's dim, 124 for v1.8): each
+///     similarity partition is L2-normalized on its own, then scaled by sqrt(partition weight).
+///     The dot product of two such vectors is therefore the
+///     <see cref="EmbeddingSchema.WeightedPartitionCosine"/> of their raws.
+///     <para>
+///         <b>These vectors are not unit vectors.</b> Summing the squared partition norms gives
+///         <c>‖v‖² = Σ weight[p]</c> over the partitions with a non-zero raw slice — 1.15 for a
+///         fully populated vector under the v4-pp-r weights, 1.05 when one 0.10 partition is
+///         empty. Scores are bounded by Σ weight, not by 1, so a threshold or distance that
+///         assumes a plain cosine over unit vectors is wrong by that factor. See
+///         <c>CompactVectorNormTests</c>.
+///     </para>
 ///     <para>
 ///         <b>Concurrency contract:</b> reads (<see cref="GetVector"/>, <see cref="GetMetadata"/>)
 ///         are safe from any thread. <b>Dispose must not run while searches are in flight</b> —
@@ -24,8 +34,10 @@ public sealed unsafe class OptickIndexReader : IDisposable
     /// <summary>
     ///     Compact vector dimension. Derives from <see cref="EmbeddingSchema.CompactDimension"/>
     ///     — sum of similarity-partition dims. v4-pp: 112. v4-pp-r (v1.8, with ROOT partition): 124.
+    ///     Read once: <see cref="EmbeddingSchema.CompactDimension"/> sums the partitions with LINQ
+    ///     on every call, and <see cref="GetVector"/> runs once per indexed voicing in every search.
     /// </summary>
-    public static int Dimension => EmbeddingSchema.CompactDimension;
+    public static int Dimension { get; } = EmbeddingSchema.CompactDimension;
 
     private const uint SupportedVersion = 4;
     private const ushort ExpectedEndian = 0xFEFF;

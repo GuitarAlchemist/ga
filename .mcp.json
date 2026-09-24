@@ -36,7 +36,7 @@
       "args": [
         "run",
         "--project",
-        "C:/Users/spare/source/repos/ga/GaMcpServer/GaMcpServer.csproj",
+        "GaMcpServer/GaMcpServer.csproj",
         "--no-build",
         "--"
       ]

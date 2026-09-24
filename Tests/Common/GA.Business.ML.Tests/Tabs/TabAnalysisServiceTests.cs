@@ -100,6 +100,23 @@ public class TabAnalysisServiceTests
         });
     }
 
+    // The recognizer names roots with note names ("A", "E"); they must not be read as
+    // set-notation digits (PitchClass.Parse("A") = 10, PitchClass.Parse("E") = 11).
+    [TestCase("x02220", 9)]  // A major
+    [TestCase("022100", 4)]  // E major
+    [TestCase("x24432", 11)] // B minor
+    [TestCase("x13331", 10)] // Bb major
+    [TestCase("x32010", 0)]  // C major
+    public void Analyze_RootPitchClass_ComesFromTheRootNoteName(string diagram, int expectedRootPitchClass)
+    {
+        var result = _service.AnalyzeAsync(diagram).GetAwaiter().GetResult();
+
+        Assert.That(result.Events, Has.Count.EqualTo(1));
+        var document = result.Events[0].Document;
+        TestContext.WriteLine($"{diagram}: {document.ChordName}, root pitch class {document.RootPitchClass}");
+        Assert.That(document.RootPitchClass, Is.EqualTo(expectedRootPitchClass));
+    }
+
     [Test]
     public void TestVerifyKeyDetectionForSimpleProgression()
     {
@@ -130,5 +147,24 @@ public class TabAnalysisServiceTests
             var ev0 = result.Events[0];
             Assert.That(ev0.Document.PossibleKeys, Contains.Item("Key of G"));
         });
+    }
+
+    [Test]
+    public async Task AnalyzeAsync_Diagram_ListsLowestStringFirst()
+    {
+        // Open C chord: x on low E, then A3 D2 G0 B1 e0. Tab diagrams are already in chart order,
+        // so presentation must not reverse them the way it reverses stored index voicings.
+        var tab = """
+                  e|--0--|
+                  B|--1--|
+                  G|--0--|
+                  D|--2--|
+                  A|--3--|
+                  E|-----|
+                  """;
+
+        var result = await _service.AnalyzeAsync(tab);
+
+        Assert.That(result.Events.Single().Document.Diagram, Is.EqualTo("x-3-2-0-1-0"));
     }
 }

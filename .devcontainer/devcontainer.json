@@ -21,7 +21,8 @@
       ]
     }
   },
-  // Keep create fast; restore on demand. Full build/test:
-  //   dotnet build AllProjects.slnx -c Debug && dotnet test AllProjects.slnx
-  "postCreateCommand": "npm install -g @anthropic-ai/claude-code"
+  // Keep creation fast. The bootstrap verifies the toolchain and only installs
+  // Claude Code automatically inside GitHub Codespaces. Restore/build remains
+  // explicit through Scripts/cloud-validate.sh.
+  "postCreateCommand": "bash Scripts/cloud-bootstrap.sh"
 }

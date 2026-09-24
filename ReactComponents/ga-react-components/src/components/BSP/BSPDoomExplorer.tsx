@@ -5383,7 +5383,9 @@ export const BSPDoomExplorer: React.FC<BSPDoomExplorerProps> = ({
   const updateFPS = () => {
     // Simple FPS counter
     const now = performance.now();
-    const delta = now - (updateFPS as Record<string, number>).lastTime || 0;
+    const lastTime: number | undefined = (updateFPS as Record<string, number>).lastTime;
+    // No previous frame yet: delta 0 skips the update below
+    const delta = lastTime === undefined ? 0 : now - lastTime;
     (updateFPS as Record<string, number>).lastTime = now;
 
     if (delta > 0) {
