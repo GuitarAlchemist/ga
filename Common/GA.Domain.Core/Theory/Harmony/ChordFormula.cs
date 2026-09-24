@@ -111,8 +111,24 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
             return true;
         }
 
-        return Intervals.Count == other.Intervals.Count &&
-               Intervals.All(i => other.Intervals.Any(oi => oi.Interval.Equals(i.Interval)));
+        if (Intervals.Count != other.Intervals.Count)
+        {
+            return false;
+        }
+
+        // Formula identity is independent of order, but retains repeated intervals.
+        var counts = Intervals.GroupBy(i => i.Interval).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var item in other.Intervals)
+        {
+            if (!counts.TryGetValue(item.Interval, out var count) || count == 0)
+            {
+                return false;
+            }
+
+            counts[item.Interval] = count - 1;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -178,16 +194,40 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
         var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones == Semitones.DiminishedFifth);
         var hasAugmentedFifth = Intervals.Any(i => i.Interval.Semitones == Semitones.AugmentedFifth);
         var hasMinorSeventh = Intervals.Any(i => i.Interval.Semitones == Semitones.MinorSeventh);
+        var hasMajorSeventh = Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSeventh);
+        var hasDiminishedSeventh = hasMinorThird && hasDiminishedFifth &&
+                                   Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSixth) &&
+                                   !hasMinorSeventh && !hasMajorSeventh;
 
         if (IsSuspended)
         {
             return ChordQuality.Suspended;
         }
 
+        if (hasDiminishedSeventh)
+        {
+            return ChordQuality.Diminished7;
+        }
+
+        if (hasDiminishedFifth && hasMinorThird && hasMinorSeventh)
+        {
+            return ChordQuality.HalfDiminished;
+        }
+
         // Dominant: Major 3rd + Minor 7th
         if (hasMajorThird && hasMinorSeventh)
         {
             return ChordQuality.Dominant;
+        }
+
+        if (hasMajorThird && hasMajorSeventh)
+        {
+            return ChordQuality.Major7;
+        }
+
+        if (hasMinorThird && hasMinorSeventh)
+        {
+            return ChordQuality.Minor7;
         }
 
         if (hasDiminishedFifth && hasMinorThird)
@@ -230,8 +270,14 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
             };
         }
 
-        var hasSeventh = Intervals.Any(i =>
-            i.Interval.Semitones == Semitones.MinorSeventh || i.Interval.Semitones == Semitones.MajorSeventh);
+        var hasMinorThird = Intervals.Any(i => i.Interval.Semitones == Semitones.MinorThird);
+        var hasDiminishedFifth = Intervals.Any(i => i.Interval.Semitones == Semitones.DiminishedFifth);
+        var hasMinorSeventh = Intervals.Any(i => i.Interval.Semitones == Semitones.MinorSeventh);
+        var hasMajorSeventh = Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSeventh);
+        var hasDiminishedSeventh = hasMinorThird && hasDiminishedFifth &&
+                                   Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSixth) &&
+                                   !hasMinorSeventh && !hasMajorSeventh;
+        var hasSeventh = hasMinorSeventh || hasMajorSeventh || hasDiminishedSeventh;
 
         var hasNinth = Intervals.Any(i =>
             i.Interval.Semitones == Semitones.Tone ||
@@ -246,8 +292,10 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
         var hasEleventh = Intervals.Any(i =>
             i.Interval.Semitones == Semitones.PerfectFourth || i.Interval.Semitones == Semitones.PerfectEleventh);
         var hasThirteenth = Intervals.Any(i =>
-            i.Interval.Semitones == Semitones.MajorSixth || i.Interval.Semitones == Semitones.MajorThirteenth);
-        var hasSixth = Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSixth);
+            (i.Interval.Semitones == Semitones.MajorSixth && !hasDiminishedSeventh) ||
+            i.Interval.Semitones == Semitones.MajorThirteenth);
+        var hasSixth = !hasDiminishedSeventh &&
+                       Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSixth);
 
         if (IsSuspended)
         {
@@ -296,11 +344,6 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
     /// <summary>
     ///     Gets the chord symbol suffix for this formula
     /// </summary>
-    /// <remarks>
-    ///     <see cref="Quality" /> reports the triad quality of seventh chords (Major for maj7, Diminished
-    ///     for m7b5 and dim7) and <see cref="Extension" /> classifies the diminished seventh (9 semitones)
-    ///     as a sixth, so the seventh itself is read from the intervals here.
-    /// </remarks>
     public string GetSymbolSuffix()
     {
         bool Has(Semitones semitones) => Intervals.Any(i => i.Interval.Semitones == semitones);
@@ -328,7 +371,7 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
             return $"m{seventhNumber}b5";
         }
 
-        if (seventhNumber is not null && hasMajorSeventh && Quality == ChordQuality.Major)
+        if (seventhNumber is not null && hasMajorSeventh && Quality == ChordQuality.Major7)
         {
             return $"maj{seventhNumber}";
         }
@@ -336,10 +379,18 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
         var suffix = Quality switch
         {
             ChordQuality.Minor => "m",
+            ChordQuality.Minor7 => "m",
             ChordQuality.Diminished => "dim",
             ChordQuality.Augmented => "aug",
             _ => ""
         };
+
+        if (Intervals.Any(i => i.Interval.Semitones == Semitones.MajorSeventh) &&
+            Extension is ChordExtension.Seventh or ChordExtension.Ninth or
+                ChordExtension.Eleventh or ChordExtension.Thirteenth)
+        {
+            suffix += "maj";
+        }
 
         suffix += Extension switch
         {
@@ -380,7 +431,7 @@ public sealed class ChordFormula : IEquatable<ChordFormula>
     public override bool Equals(object? obj) => Equals(obj as ChordFormula);
 
     public override int GetHashCode() => Intervals.Aggregate(0, (hash, interval) =>
-        HashCode.Combine(hash, interval.Interval.GetHashCode()));
+        unchecked(hash + interval.Interval.GetHashCode()));
 
     public override string ToString() => $"{Name} ({GetSymbolSuffix()})";
 }

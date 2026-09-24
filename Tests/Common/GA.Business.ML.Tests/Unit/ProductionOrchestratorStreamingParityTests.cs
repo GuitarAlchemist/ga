@@ -36,7 +36,8 @@ public class ProductionOrchestratorStreamingParityTests
 
     private static string MethodBody(string source, string method)
     {
-        var start = Regex.Match(source, $@"public\s+async\s+Task<ChatResponse>\s+{method}\s*\(");
+        // The declaration may carry modifiers between "public" and "async" (AnswerAsync is virtual).
+        var start = Regex.Match(source, $@"public\s+(?:virtual\s+|override\s+|sealed\s+)*async\s+Task<ChatResponse>\s+{method}\s*\(");
         Assert.That(start.Success, Is.True, $"{method} not found in ProductionOrchestrator.cs");
         var next = Regex.Match(source[(start.Index + start.Length)..], @"\n    (public|private|internal|protected)\s");
         return next.Success ? source.Substring(start.Index, start.Length + next.Index) : source[start.Index..];

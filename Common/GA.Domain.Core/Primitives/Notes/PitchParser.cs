@@ -4,8 +4,8 @@ internal static class PitchParser
 {
     // Anchored: the whole input must be a pitch ("Eb2" is not a sharp pitch, even though it ends with "b2").
     // Octave range matches Octave (-1..9).
-    private static readonly PcreRegex _sharpRegex = new("^([A-G])(#?)(-1|[0-9])$", PcreOptions.Compiled | PcreOptions.IgnoreCase);
-    private static readonly PcreRegex _flatRegex = new("^([A-G])(b?)(-1|[0-9])$", PcreOptions.Compiled | PcreOptions.IgnoreCase);
+    private static readonly PcreRegex _sharpRegex = new(@"\A([A-G])(#?)(-1|[0-9])\z", PcreOptions.Compiled | PcreOptions.IgnoreCase);
+    private static readonly PcreRegex _flatRegex = new(@"\A([A-G])(b?)(-1|[0-9])\z", PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     public static bool TryParse<TAccidental, TKeyNote, TPitch>(
         string? s,

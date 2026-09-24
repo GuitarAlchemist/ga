@@ -61,6 +61,15 @@ public sealed class Chord : IEquatable<Chord>
         Symbol = GenerateSymbol();
     }
 
+    private Chord(Chord source, AccidentedNoteCollection notes)
+    {
+        Root = source.Root;
+        Formula = source.Formula;
+        Symbol = source.Symbol;
+        PitchClassSet = source.PitchClassSet;
+        Notes = notes;
+    }
+
     // Splits a chord symbol into root (A-G with optional #/b) and a suffix describing quality/extension.
     private static readonly Regex _symbolRegex =
         new("^([A-G][#b]?)(.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -170,6 +179,8 @@ public sealed class Chord : IEquatable<Chord>
             "7" => ChordFormula.Dominant7,
             "maj7" or "△7" => ChordFormula.Major7,
             "m7" or "min7" or "-7" => ChordFormula.Minor7,
+            "mmaj7" or "minmaj7" or "m(maj7)" =>
+                ChordFormula.FromSemitones("Minor major 7th", 3, 7, 11),
             "dim7" or "°7" => ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9),
             "m7b5" or "ø7" => ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10),
             "9" => ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14),
@@ -283,15 +294,16 @@ public sealed class Chord : IEquatable<Chord>
             throw new ArgumentOutOfRangeException(nameof(inversion));
         }
 
-        if (inversion == 0)
+        var rotation = (inversion - GetInversion() + Notes.Count) % Notes.Count;
+        if (rotation == 0)
         {
             return this;
         }
 
         var notesList = Notes.ToList();
-        var invertedNotes = notesList.Skip(inversion).Concat(notesList.Take(inversion));
+        var invertedNotes = notesList.Skip(rotation).Concat(notesList.Take(rotation));
 
-        return new(new(invertedNotes.ToList()), Root);
+        return new(this, new(invertedNotes.ToList()));
     }
 
     private ChordFormula AnalyzeChordFormula()

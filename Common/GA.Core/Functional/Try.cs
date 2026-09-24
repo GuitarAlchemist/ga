@@ -60,8 +60,8 @@ public static class Try
     }
 
     /// <summary>
-    ///     Runs an asynchronous operation and captures its failure. Cancellation is not a failure:
-    ///     an <see cref="OperationCanceledException" /> propagates to the caller.
+    ///     Runs an async operation and captures its failure. Cancellation is not a failure: an
+    ///     <see cref="OperationCanceledException" /> propagates to the caller.
     /// </summary>
     public static async Task<Try<T>> OfAsync<T>(Func<Task<T>> operation)
     {

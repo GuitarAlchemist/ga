@@ -219,20 +219,35 @@ public static class EmbeddingSchema
     ///     Writes a partition-sized <paramref name="slice"/> into its raw-vector offset.
     ///     The single place the layout's offsets are applied on the write side.
     /// </summary>
+    /// <exception cref="ArgumentException">The slice is not exactly the partition's size.</exception>
     public static void WriteInto<T>(Span<T> raw, string partitionName, ReadOnlySpan<T> slice) =>
-        slice.CopyTo(raw.Slice(GetPartition(partitionName).Start, slice.Length));
+        slice.CopyTo(raw.Slice(SizedPartition(partitionName, slice.Length).Start, slice.Length));
 
     /// <summary>
     ///     Writes a <c>double</c> partition slice into a <c>float</c> raw vector (corpus side),
     ///     converting element-wise. Preserves the prior <c>Array.ConvertAll</c> semantics.
     /// </summary>
+    /// <exception cref="ArgumentException">The slice is not exactly the partition's size.</exception>
     public static void WriteInto(Span<float> raw, string partitionName, ReadOnlySpan<double> slice)
     {
-        var start = GetPartition(partitionName).Start;
+        var start = SizedPartition(partitionName, slice.Length).Start;
         for (var i = 0; i < slice.Length; i++)
         {
             raw[start + i] = (float)slice[i];
         }
+    }
+
+    private static EmbeddingPartition SizedPartition(string partitionName, int sliceLength)
+    {
+        var partition = GetPartition(partitionName);
+        if (sliceLength != partition.Dim)
+        {
+            throw new ArgumentException(
+                $"Partition '{partitionName}' has {partition.Dim} dims but the slice has {sliceLength}.",
+                nameof(sliceLength));
+        }
+
+        return partition;
     }
 
     /// <summary>
@@ -835,7 +850,7 @@ public static class EmbeddingSchema
     #endregion
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PARTITION 9: HIERARCHY (149-156) — NEW in v1.5/v1.6
+    // PARTITION 9: HIERARCHY (149-163) — NEW in v1.5/v1.6
     // Structural complexity and hierarchical depth.
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -845,7 +860,7 @@ public static class EmbeddingSchema
     public const int HierarchyOffset = 149;
 
     /// <summary>Number of dimensions in HIERARCHY partition.</summary>
-    public const int HierarchyDim = 8;
+    public const int HierarchyDim = 15;
 
     /// <summary>End of HIERARCHY partition (exclusive).</summary>
     public const int HierarchyEnd = HierarchyOffset + HierarchyDim;
@@ -859,7 +874,7 @@ public static class EmbeddingSchema
     #endregion
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PARTITION 10: ATONAL MODAL (164-180) — NEW in v1.7
+    // PARTITION 10: ATONAL MODAL (164-227) — NEW in v1.7
     // Bridge between tonal modes and atonal modal families.
     // Maps EVERY set class to a structural modal coordinate.
     // ═══════════════════════════════════════════════════════════════════════════
@@ -870,7 +885,7 @@ public static class EmbeddingSchema
     public const int AtonalModalOffset = 164;
 
     /// <summary>Number of dimensions in ATONAL_MODAL partition.</summary>
-    public const int AtonalModalDim = 17;
+    public const int AtonalModalDim = 64;
 
     /// <summary>End of ATONAL_MODAL partition (exclusive).</summary>
     public const int AtonalModalEnd = AtonalModalOffset + AtonalModalDim;

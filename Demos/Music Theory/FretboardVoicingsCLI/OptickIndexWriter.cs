@@ -8,8 +8,10 @@ using GA.Business.ML.Embeddings;
 /// <summary>
 /// A single voicing entry to be written into the OPTIC-K v4 binary index.
 /// <paramref name="Embedding"/> is the raw vector from MusicalEmbeddingGenerator (240 dims for v1.8).
-/// The writer extracts the search-relevant dims (124 for v1.8), applies sqrt-weight scaling,
-/// and L2-normalizes before writing.
+/// The writer extracts the search-relevant dims (124 for v1.8), L2-normalizes each similarity
+/// partition on its own, then scales it by sqrt(partition weight). The result is not a unit vector:
+/// ‖v‖² = Σ weight[p] over the non-empty partitions (1.15 fully populated, 1.05 with one 0.10
+/// partition empty). See <c>ExtractAndNormalize</c> and <c>CompactVectorNormTests</c>.
 /// </summary>
 public sealed record VoicingEntry(
     float[] Embedding,
@@ -34,7 +36,7 @@ public sealed record VoicingEntry(
 /// <list type="bullet">
 ///   <item>Header: magic, version, schema hash, endian, dim, counts, instrument offsets, metadata_offsets_offset, vectors_offset, metadata_offset, metadata_length, partition weights[112]</item>
 ///   <item>metadata_offsets: count × u64 (byte offset of each msgpack record, relative to metadata_offset)</item>
-///   <item>Vectors: count × dim × float32 (weighted + L2-normalized), sorted by instrument</item>
+///   <item>Vectors: count × dim × float32 (per-partition L2-normalized, then sqrt-weight scaled; ‖v‖² = Σ weight, not 1), sorted by instrument</item>
 ///   <item>Metadata: count × msgpack records (unchanged from v3)</item>
 /// </list>
 /// </para>

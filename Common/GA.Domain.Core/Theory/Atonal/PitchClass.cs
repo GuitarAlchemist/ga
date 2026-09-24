@@ -77,7 +77,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     /// <param name="pitchClass2">The second <see cref="PitchClass" /></param>
     /// <returns></returns>
     public static PitchClass operator -(PitchClass pitchClass1, PitchClass pitchClass2) =>
-        FromValue((pitchClass1._value - pitchClass2._value + 12) % 12);
+        FastPitchClassCalculator.NormalizedSubtraction(pitchClass1, pitchClass2);
 
     public override string ToString() => _value switch
     {
@@ -97,6 +97,42 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     public Pitch.Sharp ToSharpPitch(Octave octave) => new(ToSharpNote(), octave);
 
     public Pitch.Flat ToFlatPitch(Octave octave) => new(ToFlatNote(), octave);
+
+    #region Inner Classes
+
+    /// <summary>
+    ///     Fast calculator class caching common pitch class operations
+    /// </summary>
+    /// <remarks>
+    ///     Internally caches all possible results from operations
+    /// </remarks>
+    private class FastPitchClassCalculator
+    {
+        /// <summary>
+        ///     Normalized difference of every pitch class pair, indexed by <c>a * 12 + b</c>. A flat array
+        ///     lookup is several times faster than hashing a tuple key or validating a new value.
+        /// </summary>
+        private static readonly PitchClass[] _subtractionTable = BuildSubtractionTable();
+
+        public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) =>
+            _subtractionTable[pitchClass1.Value * 12 + pitchClass2.Value];
+
+        private static PitchClass[] BuildSubtractionTable()
+        {
+            var table = new PitchClass[144];
+            for (var pcValue1 = 0; pcValue1 < 12; pcValue1++)
+            {
+                for (var pcValue2 = 0; pcValue2 < 12; pcValue2++)
+                {
+                    table[pcValue1 * 12 + pcValue2] = FromValue((pcValue1 - pcValue2 + 12) % 12);
+                }
+            }
+
+            return table;
+        }
+    }
+
+    #endregion
 
     #region IStaticValueObjectList<PitchClass> Members
 
@@ -179,11 +215,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
 
     #region IParsable Members
 
-    /// <summary>
-    ///     Parses a pitch class written in <b>set notation</b>; see <see cref="TryParse" /> for the accepted forms.
-    ///     <c>Parse("A")</c> is 10 and <c>Parse("E")</c> is 11, not the notes A (9) and E (4).
-    /// </summary>
-    /// <exception cref="ArgumentException">The input is not a pitch class.</exception>
+    /// <inheritdoc />
     public static PitchClass Parse(string s, IFormatProvider? provider)
     {
         if (!TryParse(s, provider, out var result))
@@ -194,21 +226,10 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         return result;
     }
 
-    /// <summary>
-    ///     Tries to parse a pitch class written in <b>set notation</b>, the format <see cref="ToString" /> produces.
-    /// </summary>
+    /// <inheritdoc />
     /// <remarks>
-    ///     Accepted, in this order:
-    ///     <list type="number">
-    ///         <item><description>the digits <c>0</c>..<c>9</c>;</description></item>
-    ///         <item><description>
-    ///             the single-letter digits for 10 and 11: <c>T</c>/<c>E</c> (as in <see cref="ToString" />) and their
-    ///             hexadecimal-style aliases <c>A</c>/<c>B</c>, case-insensitive: <c>"A"</c> is 10 and <c>"E"</c> is 11;
-    ///         </description></item>
-    ///         <item><description>any other note name, via <see cref="Note.Chromatic.TryParse" />: <c>"C"</c> = 0, <c>"Eb"</c> = 3, <c>"Bb"</c> = 10.</description></item>
-    ///     </list>
-    ///     Because of step 2, the single letters A, B and E are <b>not</b> read as note names (A = 9, E = 4).
-    ///     To parse a note name, use <see cref="Note.Accidented.TryParse" /> and take its <see cref="Note.PitchClass" />.
+    ///     Accepts integer notation (0-9), the <c>T</c>/<c>E</c> abbreviations produced by <see cref="ToString" /> and
+    ///     note names. Hex-like <c>A</c>/<c>B</c> set-notation aliases belong to <see cref="TryParseSetNotation" />.
     /// </remarks>
     public static bool TryParse(string? s, IFormatProvider? provider, out PitchClass result)
     {
@@ -236,14 +257,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             case "E":
                 result = FromValue(11);
                 return true;
-            // Accept common hex-like aliases sometimes used in set notation
-            // A -> 10, B -> 11 (while keeping existing T/E support). This is parse-only; ToString still uses T/E.
-            case "A":
-                result = FromValue(10);
-                return true;
-            case "B":
-                result = FromValue(11);
-                return true;
         }
 
         if (Note.Chromatic.TryParse(s, provider, out var note))
@@ -253,6 +266,30 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Tries to parse a single pitch class in set notation, including <c>A</c> for 10 and <c>B</c> for 11.
+    /// </summary>
+    public static bool TryParseSetNotation(string? s, out PitchClass result)
+    {
+        result = default;
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            return false;
+        }
+
+        switch (s.Trim().ToUpperInvariant())
+        {
+            case "A":
+                result = FromValue(10);
+                return true;
+            case "B":
+                result = FromValue(11);
+                return true;
+        }
+
+        return TryParse(s, null, out result);
     }
 
     #endregion

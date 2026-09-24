@@ -14,8 +14,8 @@ public readonly record struct PitchClassSetId : IStaticReadonlyCollectionFromVal
 
     private static readonly int[] _valuesArray = [.. Enumerable.Range(_minValue, _maxValue + 1)];
 
-    // Backs both Items and ItemsSpan: ItemsSpan used to test Items for an array (never true for a
-    // collection expression) and copy all 4,096 ids on every access.
+    // A real array: Items used to be a collection expression typed IReadOnlyCollection, which the
+    // compiler backs with a private list type, so ItemsSpan copied all 4,096 ids on every call.
     private static readonly PitchClassSetId[] _itemsArray =
         [.. Enumerable.Range(_minValue, _maxValue - _minValue + 1).Select(i => new PitchClassSetId(i))];
 

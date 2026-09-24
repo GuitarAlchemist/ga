@@ -131,35 +131,41 @@ type GaFsiSessionPool(poolSize: int, preludePath: string) =
         let ct = defaultArg cancellationToken CancellationToken.None
         async {
             do! gate.WaitAsync(ct) |> Async.AwaitTask
-            let s = acquireSession ()
-            s.Stdout.Clear() |> ignore
-            s.Stderr.Clear() |> ignore
-            let sw = Diagnostics.Stopwatch.StartNew()
             try
-                match s.Session.EvalInteractionNonThrowing script with
-                | Choice1Of2 _, diags ->
-                    sw.Stop()
-                    let out = s.Stdout.ToString()
-                    let errors = diags |> Array.filter (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
-                    gate.Release() |> ignore
-                    if errors.Length > 0 then
+                let s = acquireSession ()
+                let mutable returnSession = true
+                let sw = Diagnostics.Stopwatch.StartNew()
+                try
+                    try
+                        s.Stdout.Clear() |> ignore
+                        s.Stderr.Clear() |> ignore
+                        match s.Session.EvalInteractionNonThrowing script with
+                        | Choice1Of2 _, diags ->
+                            sw.Stop()
+                            let out = s.Stdout.ToString()
+                            let errors = diags |> Array.filter (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
+                            if errors.Length > 0 then
+                                return GaScriptError ("Compilation errors", out, toDiagnostics errors, sw.Elapsed.TotalMilliseconds)
+                            else
+                                return GaScriptOk (None, out, sw.Elapsed.TotalMilliseconds)
+                        | Choice2Of2 ex, diags ->
+                            sw.Stop()
+                            let out = s.Stdout.ToString()
+                            // Crashed session — discard it, replace with a fresh one
+                            returnSession <- false
+                            created <- created - 1
+                            let fresh = createSession ()
+                            created <- created + 1
+                            releaseSession fresh
+                            return GaScriptError (ex.Message, out, toDiagnostics diags, sw.Elapsed.TotalMilliseconds)
+                    with ex ->
+                        sw.Stop()
+                        return GaScriptError ($"Unexpected error: {ex.Message}", "", [||], sw.Elapsed.TotalMilliseconds)
+                finally
+                    if returnSession then
                         releaseSession s
-                        return GaScriptError ("Compilation errors", out, toDiagnostics errors, sw.Elapsed.TotalMilliseconds)
-                    else
-                        releaseSession s
-                        return GaScriptOk (None, out, sw.Elapsed.TotalMilliseconds)
-                | Choice2Of2 ex, diags ->
-                    sw.Stop()
-                    let out = s.Stdout.ToString()
-                    // Crashed session — discard it, replace with a fresh one
-                    let fresh = createSession ()
-                    releaseSession fresh
-                    gate.Release() |> ignore
-                    return GaScriptError (ex.Message, out, toDiagnostics diags, sw.Elapsed.TotalMilliseconds)
-            with ex ->
-                sw.Stop()
+            finally
                 gate.Release() |> ignore
-                return GaScriptError ($"Unexpected error: {ex.Message}", "", [||], sw.Elapsed.TotalMilliseconds)
         }
 
     interface IDisposable with
