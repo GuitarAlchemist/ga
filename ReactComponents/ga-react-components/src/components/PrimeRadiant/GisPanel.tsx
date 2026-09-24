@@ -65,6 +65,7 @@ const PLANET_META: Record<string, { label: string; hasRealGeo: boolean; descript
   jupiter: { label: 'Jupiter', hasRealGeo: false, description: 'Gas giant — orbital markers only' },
   saturn:  { label: 'Saturn',  hasRealGeo: false, description: 'Gas giant — orbital markers only' },
   mercury: { label: 'Mercury', hasRealGeo: false, description: 'Abstract surface — governance markers only' },
+  ix:      { label: 'IX',      hasRealGeo: false, description: 'Fictional forge world — ecosystem issues/PRs' },
 };
 
 // Presets scoped by planet capability

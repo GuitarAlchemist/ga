@@ -92,7 +92,9 @@ public abstract partial record Interval
             return true;
         }
 
-        [GeneratedRegex("^(?'prefix'.*)?(?'number'[1-8])$")]
+        // The prefix must not contain digits, otherwise the greedy match would swallow the interval number
+        // (e.g. "P11" => prefix "P1" + number "1", silently parsed as P1).
+        [GeneratedRegex("^(?'prefix'[^0-9]*)(?'number'[1-8])$")]
         private static partial Regex SimpleIntervalRegex();
 
         #endregion

@@ -151,9 +151,23 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 - **2026-07-02**: Avant de lancer un workflow multi-agents lourd (deep-research, fanout >~1M tokens), annoncer le coût estimé et obtenir l'accord ; préférer la configuration la plus sobre. (Recharge pay-per-use CA$13,64 déclenchée par deux deep-research lancées sans annonce de coût.)
 ```
 
+```untrusted-correction
+- **2026-08-03**: Pour les fanouts Claude Code, utiliser le Plan Max sans `ANTHROPIC_API_KEY` et traiter `ready-for-human` par IA avant l'humain. (Le fanout sur abonnement n'a pas de coût API marginal et la file humaine est trop volumineuse.)
+```
+
 ## Agent skills
 
 Per-repo config for the installed aihero/mattpocock engineering skills (`grill-with-docs`, `grill-me`, `to-prd`, `to-issues`, `tdd`, `improve-codebase-architecture`, `teach`), installed project-scoped into `.claude/skills/` via `npx skills@latest add mattpocock/skills --copy` (MIT; Socket/Snyk clean). Configured 2026-06-14 via `/setup-matt-pocock-skills`.
+
+Audited davidondrej pilot skills (`next-decision`, `decisions`) are vendored
+project-scoped under `.claude/skills/` from
+`davidondrej/skills@f2ce449939b4b46707bc8692cbf9f473b2d891e7` (MIT). Both
+are prompt-only and contain no scripts or executable assets: `next-decision`
+resolves one open choice at a time; `decisions` is a manual uncertainty audit
+and carries an installer-generated Codex manual-only policy. Do not bulk-update from
+`main`; re-audit and pin each upstream revision. `fable-safe-prompt`, broad
+system guardrails, destructive setup/production skills, and scheduler wrappers
+are intentionally excluded.
 
 ### Issue tracker
 

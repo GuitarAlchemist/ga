@@ -386,6 +386,96 @@ const colorModeIndex = (mode: MandelbulbProps['colorMode']) => {
   return 0;
 };
 
+// Small camera-locked, world-aligned 3D compass so the viewer can keep track
+// of which way they are oriented inside the fractal.
+function createAxisWidget(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'mandelbulb-axis-widget';
+
+  const axisLength = 1.8;
+  const thickness = 0.08;
+  const headRadius = 0.14;
+  const headLength = 0.28;
+
+  const axes = [
+    { axis: new THREE.Vector3(1, 0, 0), color: 0xff4d4d, label: '+X' },
+    { axis: new THREE.Vector3(0, 1, 0), color: 0x4dff88, label: '+Y' },
+    { axis: new THREE.Vector3(0, 0, 1), color: 0x4d88ff, label: '+Z' },
+  ];
+
+  // Dark circular backdrop so the bright axes remain readable against any
+  // fractal background.
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = 256;
+  bgCanvas.height = 256;
+  const bgCtx = bgCanvas.getContext('2d')!;
+  bgCtx.fillStyle = 'rgba(5, 5, 13, 0.78)';
+  bgCtx.beginPath();
+  bgCtx.arc(128, 128, 120, 0, Math.PI * 2);
+  bgCtx.fill();
+  bgCtx.strokeStyle = 'rgba(189, 164, 255, 0.3)';
+  bgCtx.lineWidth = 4;
+  bgCtx.stroke();
+  const bgTexture = new THREE.CanvasTexture(bgCanvas);
+  const bgSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: bgTexture, transparent: true, opacity: 1, depthTest: false }),
+  );
+  bgSprite.scale.set(2.4, 2.4, 1);
+  bgSprite.renderOrder = -1;
+  group.add(bgSprite);
+
+  // Small origin marker.
+  const origin = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false }),
+  );
+  origin.renderOrder = 998;
+  group.add(origin);
+
+  for (const { axis, color, label } of axes) {
+    const shaft = new THREE.Mesh(
+      new THREE.BoxGeometry(
+        axis.x ? axisLength : thickness,
+        axis.y ? axisLength : thickness,
+        axis.z ? axisLength : thickness,
+      ),
+      new THREE.MeshBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.9 }),
+    );
+    shaft.position.copy(axis).multiplyScalar(axisLength / 2);
+    shaft.renderOrder = 999;
+    group.add(shaft);
+
+    const tip = new THREE.Mesh(
+      new THREE.ConeGeometry(headRadius, headLength, 16),
+      new THREE.MeshBasicMaterial({ color, depthTest: false }),
+    );
+    tip.position.copy(axis).multiplyScalar(axisLength);
+    tip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+    tip.renderOrder = 999;
+    group.add(tip);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 64, 32);
+    const texture = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.9, depthTest: false }),
+    );
+    sprite.position.copy(axis).multiplyScalar(axisLength + 0.35);
+    sprite.scale.set(1.2, 0.6, 1);
+    sprite.renderOrder = 1000;
+    group.add(sprite);
+  }
+
+  return group;
+}
+
 const Mandelbulb: React.FC<MandelbulbProps> = ({
   width,
   height,
@@ -405,8 +495,8 @@ const Mandelbulb: React.FC<MandelbulbProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const initialWidth = width ?? container.clientWidth ?? 1280;
-    const initialHeight = height ?? container.clientHeight ?? 720;
+    const initialWidth = width ?? (container.clientWidth || 1280);
+    const initialHeight = height ?? (container.clientHeight || 720);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(initialWidth, initialHeight);
@@ -451,6 +541,33 @@ const Mandelbulb: React.FC<MandelbulbProps> = ({
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(quad);
 
+    // Spatial compass overlay rendered in a small corner canvas so it sits on
+    // top of the fractal without being affected by post-processing.
+    const COMPASS_SIZE = 220;
+    const compassCanvas = document.createElement('canvas');
+    compassCanvas.style.position = 'absolute';
+    compassCanvas.style.top = '16px';
+    compassCanvas.style.left = '16px';
+    compassCanvas.style.width = `${COMPASS_SIZE}px`;
+    compassCanvas.style.height = `${COMPASS_SIZE}px`;
+    compassCanvas.style.pointerEvents = 'none';
+    compassCanvas.style.zIndex = '10';
+    container.appendChild(compassCanvas);
+
+    const compassRenderer = new THREE.WebGLRenderer({
+      canvas: compassCanvas,
+      alpha: true,
+      antialias: true,
+    });
+    compassRenderer.setSize(COMPASS_SIZE, COMPASS_SIZE);
+    compassRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.4));
+    compassRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const compassScene = new THREE.Scene();
+    const compassCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    const compassWidget = createAxisWidget();
+    compassScene.add(compassWidget);
+
     // Post-processing — UnrealBloom amplifies the dispersion glints and
     // crystal highlights without washing out the surface lighting in the
     // non-crystal modes (high threshold so only true highlights bloom).
@@ -491,6 +608,14 @@ const Mandelbulb: React.FC<MandelbulbProps> = ({
       bloomPass.strength = bloom;
 
       composer.render();
+
+      // Orient the compass camera to match the orbit camera while keeping a
+      // fixed distance from the origin so the axes read as a world compass.
+      compassCamera.position.copy(orbitCamera.position).normalize().multiplyScalar(5);
+      compassCamera.lookAt(0, 0, 0);
+      compassCamera.updateMatrixWorld();
+      compassRenderer.render(compassScene, compassCamera);
+
       frame = requestAnimationFrame(animate);
     };
     animate();
@@ -516,6 +641,19 @@ const Mandelbulb: React.FC<MandelbulbProps> = ({
       composer.dispose();
       quad.geometry.dispose();
       material.dispose();
+      compassRenderer.dispose();
+      if (compassCanvas.parentNode === container) {
+        container.removeChild(compassCanvas);
+      }
+      compassWidget.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          obj.geometry.dispose();
+          (obj.material as THREE.Material).dispose();
+        } else if (obj instanceof THREE.Sprite) {
+          (obj.material as THREE.SpriteMaterial).map?.dispose();
+          (obj.material as THREE.SpriteMaterial).dispose();
+        }
+      });
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);

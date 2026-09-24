@@ -16,10 +16,7 @@ using NUnit.Framework;
 public class ScaleModeTests
 {
     [Test]
-    public void Items_ReturnsSevenModes()
-    {
-        Assert.That(MajorScaleMode.Items.Count(), Is.EqualTo(7));
-    }
+    public void Items_ReturnsSevenModes() => Assert.That(MajorScaleMode.Items.Count(), Is.EqualTo(7));
 
     // Degree -> (mode name, tonal-centre pitch class) for the C-major parent scale.
     [TestCase(1, "Ionian", 0)]   // C
@@ -51,9 +48,7 @@ public class ScaleModeTests
     [TestCase(6, true)]  // Aeolian
     [TestCase(7, true)]  // Locrian
     public void Mode_IsMinorMode_TracksMinorThird(int degree, bool expectedMinor)
-    {
-        Assert.That(MajorScaleMode.Get(degree).IsMinorMode, Is.EqualTo(expectedMinor));
-    }
+        => Assert.That(MajorScaleMode.Get(degree).IsMinorMode, Is.EqualTo(expectedMinor));
 
     [Test]
     public void Get_ByDegreeValueObject_EqualsGetByInt()

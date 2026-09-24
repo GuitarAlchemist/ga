@@ -1,6 +1,6 @@
 # Context decay report
 
-_Generated: 2026-09-23T13:29:25Z_
+_Generated: 2026-09-24T13:24:20Z_
 
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
@@ -28,22 +28,6 @@ _Generated: 2026-09-23T13:29:25Z_
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `index.html`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `vite.config.ts`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `winget upgrade Ollama.Ollama`
-- `CONTEXT.md` → missing: `/dev-data/*`
-- `CONTEXT.md` → missing: `/diagnose`
-- `CONTEXT.md` → missing: `/grill-with-docs`
-- `CONTEXT.md` → missing: `/improve-codebase-architecture`
-- `CONTEXT.md` → missing: `/tdd`
-- `CONTEXT.md` → missing: `GA.AI.Service`
-- `CONTEXT.md` → missing: `GA.Domain.Services`
-- `CONTEXT.md` → missing: `GaChatbot.Api`
-- `CONTEXT.md` → missing: `SCHEMA.json`
-- `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
-- `CONTEXT.md` → missing: `dev-process-overseer.ps1`
-- `CONTEXT.md` → missing: `docs/contracts/*.schema.json`
-- `CONTEXT.md` → missing: `state/.loop-halted`
-- `CONTEXT.md` → missing: `state/quality/<domain>/`
-- `CONTEXT.md` → missing: `wide/close-voicing`
-- `CONTEXT.md` → missing: `~/.demerzel/HALT-ALL`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../CLAUDE.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `../../../../docs/architecture/layers.md`
 - `Common/GA.Business.ML/Agents/CONTEXT.md` → missing: `> 0.85`
@@ -83,6 +67,22 @@ _Generated: 2026-09-23T13:29:25Z_
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
+- `CONTEXT.md` → missing: `/dev-data/*`
+- `CONTEXT.md` → missing: `/diagnose`
+- `CONTEXT.md` → missing: `/grill-with-docs`
+- `CONTEXT.md` → missing: `/improve-codebase-architecture`
+- `CONTEXT.md` → missing: `/tdd`
+- `CONTEXT.md` → missing: `GA.AI.Service`
+- `CONTEXT.md` → missing: `GA.Domain.Services`
+- `CONTEXT.md` → missing: `GaChatbot.Api`
+- `CONTEXT.md` → missing: `SCHEMA.json`
+- `CONTEXT.md` → missing: `demos.guitaralchemist.com/test#dev/...`
+- `CONTEXT.md` → missing: `dev-process-overseer.ps1`
+- `CONTEXT.md` → missing: `docs/contracts/*.schema.json`
+- `CONTEXT.md` → missing: `state/.loop-halted`
+- `CONTEXT.md` → missing: `state/quality/<domain>/`
+- `CONTEXT.md` → missing: `wide/close-voicing`
+- `CONTEXT.md` → missing: `~/.demerzel/HALT-ALL`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
 - `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`

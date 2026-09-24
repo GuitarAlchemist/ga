@@ -194,6 +194,7 @@ public sealed class GrothendieckDeltaSkill(
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about the Grothendieck delta or harmonic distance between two named chords, e.g. \"harmonic distance from Cmaj7 to G7\" or \"delta C to F\".",
         Confidence = 0.1f,

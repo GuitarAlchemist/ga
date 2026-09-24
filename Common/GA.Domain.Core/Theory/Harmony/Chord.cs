@@ -87,15 +87,12 @@ public sealed class Chord : IEquatable<Chord>
             throw new ArgumentException("Chord symbol cannot be null or empty", nameof(symbol));
         }
 
-        var match = _symbolRegex.Match(symbol.Trim());
-        if (!match.Success)
+        if (!TryFromSymbol(symbol, out var chord) || chord is null)
         {
             throw new ArgumentException($"Invalid chord symbol: {symbol}", nameof(symbol));
         }
 
-        var root = Note.Accidented.Parse(match.Groups[1].Value, null);
-        var formula = ParseSuffix(match.Groups[2].Value);
-        return new(root, formula, symbol);
+        return chord;
     }
 
     /// <summary>
@@ -103,16 +100,30 @@ public sealed class Chord : IEquatable<Chord>
     /// </summary>
     public static bool TryFromSymbol(string symbol, out Chord? chord)
     {
-        try
+        chord = null;
+        if (string.IsNullOrWhiteSpace(symbol))
         {
-            chord = FromSymbol(symbol);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            chord = null;
             return false;
         }
+
+        var match = _symbolRegex.Match(symbol.Trim());
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        if (!Note.Accidented.TryParse(match.Groups[1].Value, null, out var root))
+        {
+            return false;
+        }
+
+        if (!TryParseSuffix(match.Groups[2].Value, out var formula) || formula is null)
+        {
+            return false;
+        }
+
+        chord = new(root, formula, symbol);
+        return true;
     }
 
     /// <summary>
@@ -163,10 +174,10 @@ public sealed class Chord : IEquatable<Chord>
         };
     }
 
-    private static ChordFormula ParseSuffix(string suffix)
+    private static bool TryParseSuffix(string suffix, out ChordFormula? formula)
     {
         var s = suffix.Trim().ToLowerInvariant().Replace(" ", "");
-        return s switch
+        formula = s switch
         {
             "" or "maj" or "major" => ChordFormula.Major,
             "m" or "min" or "minor" or "-" => ChordFormula.Minor,
@@ -194,8 +205,10 @@ public sealed class Chord : IEquatable<Chord>
             "m13" or "min13" or "-13" => ChordFormula.FromSemitones("Minor 13th", 3, 7, 10, 14, 17, 21),
             "add9" => ChordFormula.FromSemitones("Add9", 4, 7, 14),
             "6/9" or "69" => ChordFormula.FromSemitones("6/9", 4, 7, 9, 14),
-            _ => throw new ArgumentException($"Unrecognized chord suffix: '{suffix}'", nameof(suffix))
+            _ => null
         };
+
+        return formula is not null;
     }
 
     /// <summary>

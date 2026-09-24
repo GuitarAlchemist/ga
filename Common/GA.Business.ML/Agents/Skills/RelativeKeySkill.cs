@@ -265,6 +265,7 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about the relative or parallel key of a given major/minor key, or how many sharps/flats a key has.",
         Confidence = 0.1f,

@@ -55,6 +55,7 @@ import MusicHierarchyDemo from './pages/MusicHierarchyDemo';
 import EcosystemRoadmapTest from './pages/EcosystemRoadmapTest';
 import PrimeRadiantTest from './pages/PrimeRadiantTest';
 import HarmonicNebulaDemo from './pages/HarmonicNebulaDemo';
+import IxHandVoicingTest from './pages/IxHandVoicingTest';
 import MandelbulbTest from './pages/MandelbulbTest';
 import GaussianSplatTest from './pages/GaussianSplatTest';
 import FleetStatusTest from './pages/FleetStatusTest';
@@ -465,6 +466,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/test/ecosystem-roadmap" element={<App><EcosystemRoadmapTest /></App>} />
         <Route path="/test/prime-radiant" element={<App><PrimeRadiantTest /></App>} />
         <Route path="/test/harmonic-nebula" element={<App><HarmonicNebulaDemo /></App>} />
+        <Route path="/test/ix-hand-voicing" element={<App><IxHandVoicingTest /></App>} />
         <Route path="/test/mandelbulb" element={<App><MandelbulbTest /></App>} />
         <Route path="/test/gaussian-splat" element={<App><GaussianSplatTest /></App>} />
         <Route path="/test/fleet" element={<App><FleetStatusTest /></App>} />

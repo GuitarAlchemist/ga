@@ -85,6 +85,9 @@ public sealed record IntentGroundingEvidence(
 /// <param name="Data">Optional structured payload propagated from the wrapped
 /// skill's <c>AgentResponse.Data</c> so <c>OnResponseSent</c> hooks can
 /// pattern-match (e.g. a <c>MemoryWriteRequest</c>); <c>null</c> by default.</param>
+/// <param name="Declined">True when the query does not have the input shape this intent
+/// handles; the orchestrator then continues to the next dispatch path instead of returning
+/// <paramref name="Answer"/>.</param>
 public sealed record IntentResult(
     string Answer,
     float Confidence = 1.0f,
@@ -99,4 +102,5 @@ public sealed record IntentResult(
     // and ProductionOrchestrator's skillRespForHooks reconstruction had
     // Data=null. MemoryWriteHook's `is MemoryWriteRequest` guard then
     // never matched and durable-memory writes silently failed.
-    object? Data = null);
+    object? Data = null,
+    bool Declined = false);

@@ -82,6 +82,13 @@ public sealed class Scale : IStaticReadonlyCollection<Scale>,
     public ModalFamily? ModalFamily =>
         ModalFamily.TryGetValue(IntervalClassVector, out var modalFamily) ? modalFamily : null;
 
+    public bool HasMyhillProperty => PitchClassSet.HasMyhillProperty();
+    public RothenbergPropriety RothenbergPropriety => PitchClassSet.GetRothenbergPropriety();
+    public double MaximalEvennessDiscrepancy => PitchClassSet.GetMaximalEvennessDiscrepancy();
+    public bool IsWellFormed => PitchClassSet.IsWellFormed(out _);
+    public int ImperfectionCount => PitchClassSet.GetImperfectionCount();
+    public ZeitlerLegitimacy ZeitlerLegitimacy => PitchClassSet.GetZeitlerLegitimacy();
+
     public IEnumerator<Note> GetEnumerator() => _notes.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_notes).GetEnumerator();

@@ -302,6 +302,7 @@ public sealed partial class OutsideNotesSkill(ILogger<OutsideNotesSkill> logger)
 
     private AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = $"skill.{Name.ToLowerInvariant()}",
         Result     =
             "Tell me a single note and a single chord and I'll say whether it's a chord " +
