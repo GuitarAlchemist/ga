@@ -9,7 +9,7 @@ using Microsoft.Extensions.AI;
 /// <summary>
 ///     Agent specialized in retrieving guitar chord voicings by musical structure.
 ///     Owns the full OPTIC-K pipeline: the composite extractor parses chord/mode/tags from
-///     the query, <see cref="MusicalQueryEncoder"/> composes a 112-dim compact vector in the
+///     the query, <see cref="MusicalQueryEncoder"/> composes a compact vector (124 dims for OPTIC-K v1.8) in the
 ///     same semantic space as the on-disk corpus, and the injected search service runs the
 ///     dot-product scan via <see cref="OptickSearchStrategy"/>.
 ///     <para>
@@ -149,8 +149,7 @@ public sealed class VoicingAgent(
         sb.AppendLine();
         foreach (var r in results)
         {
-            sb.AppendLine($"- **{r.Document.ChordName ?? "Voicing"}** `{PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)}` " +
-                          $"({r.Document.VoicingType ?? "guitar"}, score {r.Score:F3})");
+            AppendResultLine(sb, r.Document.ChordName, r.Document.Diagram, r.Document.VoicingType, r.Score);
         }
 
         // Top-score proxy for confidence. Partition-weighted cosine maxes around 1.0 for a
@@ -178,6 +177,26 @@ public sealed class VoicingAgent(
                 }).ToList()
             }
         };
+    }
+
+    /// <summary>
+    ///     One markdown bullet per search result, followed by its VexTab fence. Index diagrams
+    ///     follow <c>Voicing.Diagram</c> order (string 1 = high E first), so the bullet shows the
+    ///     diagram in chart order (<see cref="PlayableNotationFormatter.ToChartOrder"/>) and the fence
+    ///     is built with <see cref="DiagramStringOrder.HighToLow"/>; the chat host's generic
+    ///     augmentation (which assumes the guitarist's low-E-first order) then sees the fence
+    ///     and leaves the line alone instead of rendering a mirrored tab.
+    /// </summary>
+    internal static void AppendResultLine(StringBuilder sb, string? chordName, string diagram, string? voicingType, double score)
+    {
+        sb.AppendLine($"- **{chordName ?? "Voicing"}** `{PlayableNotationFormatter.ToChartOrder(diagram)}` " +
+                      $"({voicingType ?? "guitar"}, score {score:F3})");
+        if (PlayableNotationFormatter.TryFormatChordDiagramAsVexTab(diagram, DiagramStringOrder.HighToLow) is { } notation)
+        {
+            sb.AppendLine("```vextab");
+            sb.AppendLine(notation);
+            sb.AppendLine("```");
+        }
     }
 
     private static string DescribeIntent(StructuredQuery q)

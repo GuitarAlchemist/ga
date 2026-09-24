@@ -8,9 +8,10 @@ using Embeddings;
 
 /// <summary>
 ///     Reads the OPTK v4 memory-mapped index produced by
-///     <c>OptickIndexWriter</c>. Vectors are 112-dim: each similarity partition is L2-normalized
-///     on its own, then scaled by sqrt(partition weight). The dot product of two such vectors is
-///     therefore the <see cref="EmbeddingSchema.WeightedPartitionCosine"/> of their raws.
+///     <c>OptickIndexWriter</c>. Vectors are compact (the header's dim, 124 for v1.8): each
+///     similarity partition is L2-normalized on its own, then scaled by sqrt(partition weight).
+///     The dot product of two such vectors is therefore the
+///     <see cref="EmbeddingSchema.WeightedPartitionCosine"/> of their raws.
 ///     <para>
 ///         <b>These vectors are not unit vectors.</b> Summing the squared partition norms gives
 ///         <c>‖v‖² = Σ weight[p]</c> over the partitions with a non-zero raw slice — 1.15 for a

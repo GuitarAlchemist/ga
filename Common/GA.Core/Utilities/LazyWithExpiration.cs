@@ -1,60 +1,74 @@
 ﻿namespace GA.Core.Utilities;
 
-using System.Diagnostics;
-
 /// <summary>
-///     A lazily created value that is recreated on the first access after it expires. The expiration
-///     clock starts when the value is created and is checked on access, so no thread waits for it.
+///     A lazily computed value that is recomputed on the first access after it expires. The
+///     expiration window starts on the first access to <see cref="Value" />, not at construction.
 /// </summary>
+/// <remarks>
+///     Expiration is checked against a timestamp on access. It used to be driven by a thread-pool
+///     task blocked in <c>Thread.Sleep</c> for each value, which starved unrelated pool work.
+/// </remarks>
 public class LazyWithExpiration<T>
 {
-    private readonly long _expirationTicks;
+    private readonly TimeSpan _expirationTime;
     private readonly Func<T> _func;
-    private State _state = null!;
+    private readonly TimeProvider _timeProvider;
+    private Entry _entry;
 
     public LazyWithExpiration(
         Func<T> func,
         TimeSpan expirationTime)
+        : this(func, expirationTime, TimeProvider.System)
     {
-        _expirationTicks = (long)(expirationTime.TotalSeconds * Stopwatch.Frequency);
-        _func = func;
+    }
 
-        Reset();
+    public LazyWithExpiration(
+        Func<T> func,
+        TimeSpan expirationTime,
+        TimeProvider timeProvider)
+    {
+        _expirationTime = expirationTime;
+        _func = func;
+        _timeProvider = timeProvider;
+        _entry = new(func);
     }
 
     public T Value
     {
         get
         {
-            var state = _state;
-            if (state.Lazy.IsValueCreated && Stopwatch.GetTimestamp() - state.CreatedAt >= _expirationTicks)
+            while (true)
             {
-                // Only one caller replaces an expired state; the others read the replacement.
-                Interlocked.CompareExchange(ref _state, NewState(), state);
-                state = _state;
-            }
+                var entry = Volatile.Read(ref _entry);
+                var now = _timeProvider.GetTimestamp();
+                if (entry.TryStart(now, out var startedAt)
+                    || _timeProvider.GetElapsedTime(startedAt, now) < _expirationTime)
+                {
+                    return entry.Lazy.Value;
+                }
 
-            return state.Lazy.Value;
+                // Expired: replace this entry (unless another caller or Reset already did) and retry.
+                Interlocked.CompareExchange(ref _entry, new(_func), entry);
+            }
         }
     }
 
-    public void Reset() => _state = NewState();
+    public void Reset() => Volatile.Write(ref _entry, new(_func));
 
-    private State NewState()
+    private sealed class Entry(Func<T> func)
     {
-        var state = new State();
-        state.Lazy = new(() =>
+        private const long NotStarted = long.MinValue;
+        private long _startedAt = NotStarted;
+
+        public Lazy<T> Lazy { get; } = new(func);
+
+        /// <summary>Starts the expiration window at <paramref name="now" /> if this is the first access.</summary>
+        /// <returns><c>true</c> when this call started the window.</returns>
+        public bool TryStart(long now, out long startedAt)
         {
-            var value = _func();
-            state.CreatedAt = Stopwatch.GetTimestamp();
-            return value;
-        });
-        return state;
-    }
-
-    private sealed class State
-    {
-        public Lazy<T> Lazy = null!;
-        public long CreatedAt;
+            var previous = Interlocked.CompareExchange(ref _startedAt, now, NotStarted);
+            startedAt = previous == NotStarted ? now : previous;
+            return previous == NotStarted;
+        }
     }
 }

@@ -26,7 +26,7 @@ public sealed record StructuredQuery(
 }
 
 /// <summary>
-///     Composes a 112-dim OPTK v4 compact query vector from a <see cref="StructuredQuery"/>.
+///     Composes an OPTK v4 compact query vector (<see cref="EmbeddingSchema.CompactDimension"/> dims, 124 for v1.8) from a <see cref="StructuredQuery"/>.
 ///     Uses the *same* vector services the corpus-side <c>MusicalEmbeddingGenerator</c>
 ///     uses for STRUCTURE/MODAL/SYMBOLIC partitions. Query and corpus therefore live in the
 ///     identical semantic space — no alignment training required.
@@ -134,7 +134,7 @@ public sealed class MusicalQueryEncoder(ModalVectorService modal)
     }
 
     /// <summary>
-    ///     Extract the 112 search-relevant dims (STRUCTURE+MORPHOLOGY+CONTEXT+SYMBOLIC+MODAL),
+    ///     Extract the search-relevant dims (STRUCTURE+MORPHOLOGY+CONTEXT+SYMBOLIC+MODAL+ROOT, 124 for v1.8),
     ///     per-partition L2-normalize, then apply sqrt(partition weight). Mirrors
     ///     <c>OptickIndexWriter.ExtractAndNormalize</c> (v4-pp semantics).
     ///     <para>

@@ -7,9 +7,9 @@ using GA.Business.ML.Embeddings;
 
 /// <summary>
 /// A single voicing entry to be written into the OPTIC-K v4 binary index.
-/// <paramref name="Embedding"/> is the 228-dim raw vector from MusicalEmbeddingGenerator.
-/// The writer extracts the 112 search-relevant dims, L2-normalizes each similarity partition
-/// on its own, then scales it by sqrt(partition weight). The result is not a unit vector:
+/// <paramref name="Embedding"/> is the raw vector from MusicalEmbeddingGenerator (240 dims for v1.8).
+/// The writer extracts the search-relevant dims (124 for v1.8), L2-normalizes each similarity
+/// partition on its own, then scales it by sqrt(partition weight). The result is not a unit vector:
 /// ‖v‖² = Σ weight[p] over the non-empty partitions (1.15 fully populated, 1.05 with one 0.10
 /// partition empty). See <c>ExtractAndNormalize</c> and <c>CompactVectorNormTests</c>.
 /// </summary>
@@ -25,7 +25,7 @@ public sealed record VoicingEntry(
 /// <para>
 /// V4 improvements over v3:
 /// <list type="bullet">
-///   <item>Dimension reduced from 228 → 112 (only search-relevant partitions kept)</item>
+///   <item>Dimension reduced from raw to compact (only search-relevant partitions kept: 228 → 112 at v1.7, 240 → 124 at v1.8)</item>
 ///   <item>Info-only partitions (IDENTITY, EXTENSIONS, SPECTRAL, HIERARCHY, ATONAL_MODAL) dropped</item>
 ///   <item>Per-voicing metadata offset table for O(1) metadata fetch</item>
 ///   <item>~55% smaller files, no search-quality regression</item>
@@ -36,7 +36,7 @@ public sealed record VoicingEntry(
 /// <list type="bullet">
 ///   <item>Header: magic, version, schema hash, endian, dim, counts, instrument offsets, metadata_offsets_offset, vectors_offset, metadata_offset, metadata_length, partition weights[112]</item>
 ///   <item>metadata_offsets: count × u64 (byte offset of each msgpack record, relative to metadata_offset)</item>
-///   <item>Vectors: count × 112 × float32 (per-partition L2-normalized, then sqrt-weight scaled; ‖v‖² = Σ weight, not 1), sorted by instrument</item>
+///   <item>Vectors: count × dim × float32 (per-partition L2-normalized, then sqrt-weight scaled; ‖v‖² = Σ weight, not 1), sorted by instrument</item>
 ///   <item>Metadata: count × msgpack records (unchanged from v3)</item>
 /// </list>
 /// </para>
@@ -58,7 +58,7 @@ public sealed class OptickIndexWriter : IDisposable
     private static readonly int RawDimension = EmbeddingSchema.TotalDimension;
 
     /// <summary>
-    /// Compact v4 dimension — sum of similarity-partition sizes (112 for v1.7).
+    /// Compact v4 dimension — sum of similarity-partition sizes (124 for v1.8; 112 for v1.7).
     /// </summary>
     private static readonly int Dimension = EmbeddingSchema.CompactDimension;
 
@@ -218,7 +218,7 @@ public sealed class OptickIndexWriter : IDisposable
         size += 8;                          // vectors_offset
         size += 8;                          // metadata_offset
         size += 8;                          // metadata_length
-        size += Dimension * 4;              // partition_weights (112 x float)
+        size += Dimension * 4;              // partition_weights (dim x float)
         return size;
     }
 
@@ -308,7 +308,7 @@ public sealed class OptickIndexWriter : IDisposable
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// Extracts the 112 search-relevant dimensions from the 228-dim raw embedding.
+    /// Extracts the search-relevant (compact) dimensions from the raw embedding.
     /// <para>
     /// v4-pp normalization (per-partition): each partition slice is L2-normalized
     /// *before* applying its sqrt-weight scaling. Unlike the old global-L2 scheme

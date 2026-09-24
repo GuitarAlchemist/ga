@@ -161,4 +161,18 @@ public class PitchClassTests
         // Assert
         Assert.That(result, Is.False);
     }
+
+    [Test]
+    public void Subtraction_AllPairs_IsTheIntervalUpFromTheSecondToTheFirst()
+    {
+        for (var a = 0; a < 12; a++)
+        {
+            for (var b = 0; b < 12; b++)
+            {
+                var difference = PitchClass.FromValue(a) - PitchClass.FromValue(b);
+
+                Assert.That(difference.Value, Is.EqualTo(((a - b) % 12 + 12) % 12), $"{a} - {b}");
+            }
+        }
+    }
 }

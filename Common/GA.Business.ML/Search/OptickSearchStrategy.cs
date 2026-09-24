@@ -12,7 +12,7 @@ using Rag.Models;
 ///     to a dot product; search is a parallel scan + top-K heap.
 ///
 ///     Query vectors are expected to already be weighted + L2-normalized in the compact
-///     112-dim layout — produced by <c>MusicalQueryEncoder</c>.
+///     layout (124 dims for v1.8) — produced by <c>MusicalQueryEncoder</c>.
 /// </summary>
 public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
 {
@@ -293,20 +293,30 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
         return new VoicingSearchResult(document, score, query);
     }
 
-    private static IEnumerable<VoicingSearchResult> ApplyFilters(
+    internal static IEnumerable<VoicingSearchResult> ApplyFilters(
         IEnumerable<VoicingSearchResult> pool,
         VoicingSearchFilters filters)
     {
-        // Callers pass full symbols ("Cmaj7", "Dm7"); MapToSearchResult sets d.ChordName to the
-        // stored chord name, which is a full name too ("Dm7(shell)", "C/E", "C + E (Major 3rd)").
-        var filterSymbol = filters.ChordName is { Length: > 0 } cn && ParseChordSymbol(cn).RootPitchClass is not null
-            ? cn
-            : null;
+        // filters.ChordName is a chord symbol ("Cmaj7", "F#m7", "C", optionally "/E");
+        // d.ChordName is the index's QualityInferred, a full chord name that may carry a
+        // voicing tag and a bass ("Cmaj7(shell)/B", "Am/C", "C + E (Major 3rd)"). Compare
+        // root pitch class and quality exactly: a substring test let "Am7" accept
+        // "Gbm7(shell)/A" and the empty quality of "C" accept any name with a C bass.
+        // Inversions and shells of the requested chord match; a slash bass in the filter
+        // additionally requires that lowest note.
+        var filterChord = filters.ChordName is { Length: > 0 } cn ? ParseChordName(cn) : null;
 
         foreach (var r in pool)
         {
             var d = r.Document;
-            if (filterSymbol is not null && !MatchesChordSymbol(d.ChordName, filterSymbol)) continue;
+            if (filterChord is { } fc)
+            {
+                if (ParseChordName(d.ChordName) is not { } docChord) continue;
+                if (docChord.RootPitchClass != fc.RootPitchClass) continue;
+                if (!string.Equals(docChord.Quality, fc.Quality, StringComparison.Ordinal)) continue;
+                if (fc.BassPitchClass is int bass
+                    && (d.MidiNotes.Length == 0 || ((d.MidiNotes.Min() % 12) + 12) % 12 != bass)) continue;
+            }
             if (filters.MinMidiPitch is int lo && d.MidiNotes.Length > 0 && d.MidiNotes.Min() < lo) continue;
             if (filters.MaxMidiPitch is int hi && d.MidiNotes.Length > 0 && d.MidiNotes.Max() > hi) continue;
             yield return r;
@@ -314,60 +324,65 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
     }
 
     /// <summary>
-    /// True when a stored chord name (for example <c>"Am7/G"</c> or <c>"Cmaj7(shell)"</c>) names the
-    /// same root and quality as the requested symbol. The slash bass and a <c>(shell)</c> marker are
-    /// ignored, so inversions and shell voicings of the chord match; dyads, power chords, other
-    /// roots and other qualities do not.
+    /// Parses a chord symbol or index chord name into root pitch class, normalized quality
+    /// (text between the root and any <c>(tag)</c> or <c>/bass</c>, with common aliases folded:
+    /// <c>M7</c>/<c>Δ7</c> → <c>maj7</c>, <c>min</c>/<c>-</c> → <c>m</c>, <c>maj</c>/<c>M</c> → major triad)
+    /// and optional slash-bass pitch class. Returns null when the text doesn't start with a note name.
     /// </summary>
-    internal static bool MatchesChordSymbol(string? storedName, string symbol)
+    internal static (int RootPitchClass, string Quality, int? BassPitchClass)? ParseChordName(string? name)
     {
-        if (string.IsNullOrWhiteSpace(storedName) || storedName.Contains(" + ", StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(name)) return null;
+
+        var (root, rest) = ParseChordSymbol(name.Trim());
+        if (root is not int rootPc || rest is null) return null;
+
+        int? bassPc = null;
+        var slash = rest.IndexOf('/');
+        if (slash >= 0)
         {
-            return false;
+            var (bass, bassRest) = ParseChordSymbol(rest[(slash + 1)..].Trim());
+            bassPc = bass is not null && string.IsNullOrEmpty(bassRest) ? bass : null;
+            rest = rest[..slash];
         }
 
-        var (storedRoot, storedQuality) = ParseChordSymbol(StripSlashBass(storedName.Trim()));
-        var (filterRoot, filterQuality) = ParseChordSymbol(symbol.Trim());
-        if (storedRoot is null || filterRoot is null || storedRoot != filterRoot)
-        {
-            return false;
-        }
+        var paren = rest.IndexOf('(');
+        if (paren >= 0) rest = rest[..paren];
 
-        var normalizedStored = NormalizeQuality(storedQuality!.Replace("(shell)", string.Empty, StringComparison.Ordinal));
-        return normalizedStored == NormalizeQuality(filterQuality!);
+        return (rootPc, NormalizeQuality(rest.Trim()), bassPc);
     }
 
-    // "C6/9/E" → "C6/9"; "C6/9" and "Cm6/9" keep their "/9".
-    private static string StripSlashBass(string name)
-    {
-        var slash = name.LastIndexOf('/');
-        if (slash <= 0 || slash == name.Length - 1)
-        {
-            return name;
-        }
+    /// <summary>
+    /// True when a stored chord name (for example <c>"Am7/G"</c> or <c>"Cmaj7(shell)"</c>) names the
+    /// same root and quality as the requested symbol, ignoring any slash bass on either side:
+    /// inversions and shell voicings of the chord match; dyads, other roots and other qualities
+    /// do not. The search filter additionally honours a slash bass in the request.
+    /// </summary>
+    internal static bool MatchesChordSymbol(string? storedName, string symbol) =>
+        ParseChordName(symbol) is { } wanted
+        && ParseChordName(storedName) is { } stored
+        && stored.RootPitchClass == wanted.RootPitchClass
+        && string.Equals(stored.Quality, wanted.Quality, StringComparison.Ordinal);
 
-        var bass = name[(slash + 1)..];
-        return ParseChordSymbol(bass) is { RootPitchClass: not null, Quality: "" } ? name[..slash] : name;
+    private static string NormalizeQuality(string quality)
+    {
+        // "maj"/"min" in any case ("Maj7", "Min7") before the case-sensitive "M" (major) and "m" (minor)
+        if (quality.StartsWith("maj", StringComparison.OrdinalIgnoreCase)) quality = quality.Length == 3 ? string.Empty : "maj" + quality[3..];
+        else if (quality.StartsWith("min", StringComparison.OrdinalIgnoreCase)) quality = "m" + quality[3..];
+        else if (quality.StartsWith("Δ", StringComparison.Ordinal)) quality = "maj" + quality[1..];
+        else if (quality.StartsWith("M", StringComparison.Ordinal)) quality = quality.Length == 1 ? string.Empty : "maj" + quality[1..];
+        else if (quality.StartsWith('-')) quality = "m" + quality[1..];
+        return quality;
     }
-
-    private static string NormalizeQuality(string quality) => quality switch
-    {
-        "M" or "maj" or "major" => "",
-        "min" or "minor" or "-" => "m",
-        "M7" or "Maj7" or "Δ7" or "Δ" => "maj7",
-        "min7" or "-7" => "m7",
-        "ø" or "ø7" or "min7b5" => "m7b5",
-        "°" or "o" => "dim",
-        "°7" or "o7" => "dim7",
-        "+" => "aug",
-        _ => quality,
-    };
 
     /// <summary>
     /// Splits a chord symbol like <c>"Cmaj7"</c> / <c>"F#m7"</c> /
     /// <c>"Bbmaj9"</c> into (root pitch class, quality fragment).
     /// Returns nulls when the input doesn't start with a note letter.
     /// </summary>
+    /// <remarks>
+    /// Anything after the optional accidental is returned as the quality
+    /// fragment; <see cref="ParseChordName"/> trims tags and bass from it.
+    /// </remarks>
     private static (int? RootPitchClass, string? Quality) ParseChordSymbol(string symbol)
     {
         if (string.IsNullOrEmpty(symbol)) return (null, null);

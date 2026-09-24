@@ -31,6 +31,12 @@ public interface IIntent
     /// cosine similarity across all of them.</summary>
     IReadOnlyList<string> ExamplePrompts { get; }
 
+    /// <summary>High-precision keyword predicate that <see cref="SemanticIntentRouter"/>
+    /// consults only when the embedding backend cannot score the query (e.g. Ollama
+    /// unreachable), so deterministic intents still answer offline. Never used while
+    /// embeddings work. Default: <c>false</c> (the intent is embedding-routed only).</summary>
+    bool MatchesWithoutEmbeddings(string query) => false;
+
     /// <summary>Run the intent against the user query. Implementations should
     /// return a zero-confidence result rather than throwing for recoverable
     /// errors (e.g. unparseable input) so the chatbot pipeline can degrade
