@@ -16,6 +16,10 @@ public class ChordDslTests
     [TestCase("D-7", "Dm7")]
     [TestCase("EbΔ9", "Ebmaj9")]
     [TestCase("Cmin7b5", "Cm7b5")]
+    // Suffixes the parser used to stop before, and so had to reject.
+    [TestCase("C7sus4", "C7sus4")]
+    [TestCase("CMaj7", "Cmaj7")]
+    [TestCase("Comit3", "C(no 3)")]
     public void Test_Normalization(string input, string expected)
     {
         var result = _service.Normalize(input);
@@ -42,8 +46,7 @@ public class ChordDslTests
         Assert.That(ast.Components.Length, Is.EqualTo(3));
     }
     // The whole symbol must be understood: a parser that stops early returns a different chord
-    // ("C7sus4" read as C7, "Cm(maj7)" as Cm) instead of an error.
-    [TestCase("C7sus4")]
+    // ("Cm(maj7)" read as Cm) instead of an error.
     [TestCase("Cm(maj7)")]
     [TestCase("Cø7")]
     [TestCase("G7 foo")]

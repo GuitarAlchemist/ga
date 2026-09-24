@@ -351,6 +351,18 @@ public sealed class OptickSearchStrategy : IVoicingSearchStrategy, IDisposable
         return (rootPc, NormalizeQuality(rest.Trim()), bassPc);
     }
 
+    /// <summary>
+    /// True when a stored chord name (for example <c>"Am7/G"</c> or <c>"Cmaj7(shell)"</c>) names the
+    /// same root and quality as the requested symbol, ignoring any slash bass on either side:
+    /// inversions and shell voicings of the chord match; dyads, other roots and other qualities
+    /// do not. The search filter additionally honours a slash bass in the request.
+    /// </summary>
+    internal static bool MatchesChordSymbol(string? storedName, string symbol) =>
+        ParseChordName(symbol) is { } wanted
+        && ParseChordName(storedName) is { } stored
+        && stored.RootPitchClass == wanted.RootPitchClass
+        && string.Equals(stored.Quality, wanted.Quality, StringComparison.Ordinal);
+
     private static string NormalizeQuality(string quality)
     {
         // "maj"/"min" in any case ("Maj7", "Min7") before the case-sensitive "M" (major) and "m" (minor)

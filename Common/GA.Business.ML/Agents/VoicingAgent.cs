@@ -140,7 +140,7 @@ public sealed class VoicingAgent(
 
         var evidence = results
             .Take(Math.Min(results.Count, 5))
-            .Select(r => $"{r.Document.ChordName ?? "?"} · {r.Document.Diagram} · score={r.Score:F4}")
+            .Select(r => $"{r.Document.ChordName ?? "?"} · {PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)} · score={r.Score:F4}")
             .ToList();
 
         var sb = new StringBuilder();
@@ -181,14 +181,15 @@ public sealed class VoicingAgent(
 
     /// <summary>
     ///     One markdown bullet per search result, followed by its VexTab fence. Index diagrams
-    ///     follow <c>Voicing.Diagram</c> order (string 1 = high E first), so the fence is built
-    ///     here with <see cref="DiagramStringOrder.HighToLow"/>; the chat host's generic
+    ///     follow <c>Voicing.Diagram</c> order (string 1 = high E first), so the bullet shows the
+    ///     diagram in chart order (<see cref="PlayableNotationFormatter.ToChartOrder"/>) and the fence
+    ///     is built with <see cref="DiagramStringOrder.HighToLow"/>; the chat host's generic
     ///     augmentation (which assumes the guitarist's low-E-first order) then sees the fence
     ///     and leaves the line alone instead of rendering a mirrored tab.
     /// </summary>
     internal static void AppendResultLine(StringBuilder sb, string? chordName, string diagram, string? voicingType, double score)
     {
-        sb.AppendLine($"- **{chordName ?? "Voicing"}** `{diagram}` " +
+        sb.AppendLine($"- **{chordName ?? "Voicing"}** `{PlayableNotationFormatter.ToChartOrder(diagram)}` " +
                       $"({voicingType ?? "guitar"}, score {score:F3})");
         if (PlayableNotationFormatter.TryFormatChordDiagramAsVexTab(diagram, DiagramStringOrder.HighToLow) is { } notation)
         {
