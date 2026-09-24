@@ -14,57 +14,57 @@ _32 open PR(s) across 5 repos._
 
 _No open PRs._
 
-### ga (13 open)
+### ga (14 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#727](https://github.com/GuitarAlchemist/ga/pull/727) | fix(ci): pin the review workflow to the revision with the classifier f | 0d | UNKNOWN | 1 | spareilleux |
-| [#725](https://github.com/GuitarAlchemist/ga/pull/725) | fix(ml): copy the tracked naturalness model into the build output | 0d | UNKNOWN | 1 | spareilleux |
-| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 52d | UNKNOWN | 1 | spareilleux |
-| [#636](https://github.com/GuitarAlchemist/ga/pull/636) | chore(skills): add audited decision pilot | 52d | UNKNOWN | 1 | spareilleux |
-| [#634](https://github.com/GuitarAlchemist/ga/pull/634) | feat(harness): advance one reconciliation packet | 52d | UNKNOWN | 0 | spareilleux |
-| [#632](https://github.com/GuitarAlchemist/ga/pull/632) | docs(factory): reconcile local and GitHub work lanes | 52d | UNKNOWN | 1 | spareilleux |
-| [#628](https://github.com/GuitarAlchemist/ga/pull/628) | Normalize Chatbot Spelled-out Accidentals to Shorthand Forms | 53d | UNKNOWN | 1 | spareilleux |
-| [#626](https://github.com/GuitarAlchemist/ga/pull/626) | Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and | 53d | UNKNOWN | 1 | spareilleux |
-| [#625](https://github.com/GuitarAlchemist/ga/pull/625) | Delegate key detection to KeyIdentificationService on MCP and F# closu | 53d | UNKNOWN | 1 | spareilleux |
-| [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf | 57d | UNKNOWN | 1 | spareilleux |
-| [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes | 57d | UNKNOWN | 1 | spareilleux |
-| [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking | 60d | UNKNOWN | 1 | spareilleux |
-| [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 62d | MERGEABLE | 0 | spareilleux |
+| [#728](https://github.com/GuitarAlchemist/ga/pull/728) | feat(ga-react-components): ComfyUI-style editor for IX pipelines (trac | 0d | MERGEABLE | 1 | spareilleux |
+| [#727](https://github.com/GuitarAlchemist/ga/pull/727) | fix(ci): pin the review workflow to the revision with the classifier f | 0d | MERGEABLE | 1 | spareilleux |
+| [#725](https://github.com/GuitarAlchemist/ga/pull/725) | fix(ml): copy the tracked naturalness model into the build output | 0d | MERGEABLE | 1 | spareilleux |
+| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 52d | MERGEABLE | 1 | spareilleux |
+| [#636](https://github.com/GuitarAlchemist/ga/pull/636) | chore(skills): add audited decision pilot | 52d | MERGEABLE | 1 | spareilleux |
+| [#634](https://github.com/GuitarAlchemist/ga/pull/634) | feat(harness): advance one reconciliation packet | 52d | CONFLICTING | 0 | spareilleux |
+| [#633](https://github.com/GuitarAlchemist/ga/pull/633) | feat(harness): add read-only work reconciliation snapshot | 52d | MERGEABLE | 0 | spareilleux |
+| [#632](https://github.com/GuitarAlchemist/ga/pull/632) | docs(factory): reconcile local and GitHub work lanes | 52d | MERGEABLE | 1 | spareilleux |
+| [#628](https://github.com/GuitarAlchemist/ga/pull/628) | Normalize Chatbot Spelled-out Accidentals to Shorthand Forms | 53d | MERGEABLE | 1 | spareilleux |
+| [#626](https://github.com/GuitarAlchemist/ga/pull/626) | Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and | 53d | MERGEABLE | 1 | spareilleux |
+| [#625](https://github.com/GuitarAlchemist/ga/pull/625) | Delegate key detection to KeyIdentificationService on MCP and F# closu | 53d | MERGEABLE | 1 | spareilleux |
+| [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf | 57d | MERGEABLE | 1 | spareilleux |
+| [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes | 57d | CONFLICTING | 1 | spareilleux |
+| [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking | 60d | MERGEABLE | 1 | spareilleux |
 
 ### ix (7 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#353](https://github.com/GuitarAlchemist/ix/pull/353) | feat(quality-gate): wire ix doctor as the producer ix_quality_gate_his | 6d | UNKNOWN | 0 | spareilleux |
-| [#352](https://github.com/GuitarAlchemist/ix/pull/352) | fix(ix-agent): route manual MCP tools through the approval gate | 6d | UNKNOWN | 2 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 8d | UNKNOWN | 1 | spareilleux |
-| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 9d | UNKNOWN | 0 | spareilleux |
-| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 10d | UNKNOWN | 0 | spareilleux |
-| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 10d | UNKNOWN | 0 | spareilleux |
-| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 10d | UNKNOWN | 0 | spareilleux |
+| [#353](https://github.com/GuitarAlchemist/ix/pull/353) | feat(quality-gate): wire ix doctor as the producer ix_quality_gate_his | 6d | MERGEABLE | 0 | spareilleux |
+| [#352](https://github.com/GuitarAlchemist/ix/pull/352) | fix(ix-agent): route manual MCP tools through the approval gate | 7d | CONFLICTING | 2 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 8d | MERGEABLE | 1 | spareilleux |
+| [#341](https://github.com/GuitarAlchemist/ix/pull/341) | feat(ix-harness-github-actions): scheduled-workflow liveness verdicts  | 10d | MERGEABLE | 0 | spareilleux |
+| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 10d | MERGEABLE | 0 | spareilleux |
+| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 10d | MERGEABLE | 0 | spareilleux |
+| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 10d | MERGEABLE | 0 | spareilleux |
 
-### tars (2 open)
+### tars (1 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#316](https://github.com/GuitarAlchemist/tars/pull/316) | fix: close the tool-calling loop through the ILlmService/IChatClient b | 0d | UNKNOWN | 0 | spareilleux |
 | [#307](https://github.com/GuitarAlchemist/tars/pull/307) | Add the missing MIT LICENSE the README advertises, and stop tracking t | 6d | UNKNOWN | 0 | spareilleux |
 
 ### Demerzel (10 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#1121](https://github.com/GuitarAlchemist/Demerzel/pull/1121) | fix(loop-health): correlate an event-producer run by head_sha alone | 1d | UNKNOWN | 0 | spareilleux |
-| [#1120](https://github.com/GuitarAlchemist/Demerzel/pull/1120) | fix(streeling): restore stripped Spanish accents in 12 course modules | 1d | UNKNOWN | 0 | spareilleux |
-| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 3d | UNKNOWN | 2 | spareilleux |
-| [#1102](https://github.com/GuitarAlchemist/Demerzel/pull/1102) | fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002,  | 6d | UNKNOWN | 0 | spareilleux |
-| [#1098](https://github.com/GuitarAlchemist/Demerzel/pull/1098) | docs(streeling): French and Spanish translations of 14 modules | 7d | UNKNOWN | 0 | spareilleux |
-| [#1091](https://github.com/GuitarAlchemist/Demerzel/pull/1091) | fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002 | 9d | UNKNOWN | 1 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 9d | UNKNOWN | 1 | spareilleux |
-| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 9d | UNKNOWN | 1 | spareilleux |
-| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 40d | UNKNOWN | 2 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 67d | UNKNOWN | 1 | spareilleux |
+| [#1121](https://github.com/GuitarAlchemist/Demerzel/pull/1121) | fix(loop-health): correlate an event-producer run by head_sha alone | 1d | MERGEABLE | 0 | spareilleux |
+| [#1120](https://github.com/GuitarAlchemist/Demerzel/pull/1120) | fix(streeling): restore stripped Spanish accents in 12 course modules | 1d | MERGEABLE | 0 | spareilleux |
+| [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 3d | MERGEABLE | 2 | spareilleux |
+| [#1102](https://github.com/GuitarAlchemist/Demerzel/pull/1102) | fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002,  | 6d | MERGEABLE | 0 | spareilleux |
+| [#1098](https://github.com/GuitarAlchemist/Demerzel/pull/1098) | docs(streeling): French and Spanish translations of 14 modules | 7d | CONFLICTING | 0 | spareilleux |
+| [#1091](https://github.com/GuitarAlchemist/Demerzel/pull/1091) | fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002 | 9d | MERGEABLE | 1 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 9d | MERGEABLE | 1 | spareilleux |
+| [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 10d | MERGEABLE | 1 | spareilleux |
+| [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 40d | CONFLICTING | 2 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 67d | CONFLICTING | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -98,6 +98,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-24T13:02:14.337270+00:00 UTC_
+_Generated: 2026-09-24T13:52:33.230521+00:00 UTC_
 
-_Commit: `63a8d0d9ab13`_
+_Commit: `a9c2cb275ca2`_

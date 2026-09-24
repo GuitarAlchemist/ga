@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "63a8d0d9ab13007196b24f1a97da3f5b4953e2eb",
-    "generatedAt": "2026-09-24T13:02:14.337270+00:00",
+    "commitSha": "a9c2cb275ca256c716adab362c40dda6742e1c19",
+    "generatedAt": "2026-09-24T13:52:33.230521+00:00",
     "repoCount": 5,
     "totalPRs": 32
   },
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 13,
+      "prCount": 14,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-24T13:12:57Z",
+          "failingChecks": 1,
+          "headRef": "feat/ix-pipeline-editor",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 728,
+          "title": "feat(ga-react-components): ComfyUI-style editor for IX pipelines (tracer bullet)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/728"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -122,7 +134,7 @@
           "failingChecks": 1,
           "headRef": "fix/claude-review-classifier-pin",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 727,
           "title": "fix(ci): pin the review workflow to the revision with the classifier fix",
           "url": "https://github.com/GuitarAlchemist/ga/pull/727"
@@ -134,7 +146,7 @@
           "failingChecks": 1,
           "headRef": "fix/naturalness-model-copy",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 725,
           "title": "fix(ml): copy the tracked naturalness model into the build output",
           "url": "https://github.com/GuitarAlchemist/ga/pull/725"
@@ -146,7 +158,7 @@
           "failingChecks": 1,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
@@ -158,7 +170,7 @@
           "failingChecks": 1,
           "headRef": "codex/david-skills-pilot",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 636,
           "title": "chore(skills): add audited decision pilot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/636"
@@ -170,10 +182,22 @@
           "failingChecks": 0,
           "headRef": "codex/630-packet-runner",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 634,
           "title": "feat(harness): advance one reconciliation packet",
           "url": "https://github.com/GuitarAlchemist/ga/pull/634"
+        },
+        {
+          "ageDays": 52,
+          "author": "spareilleux",
+          "createdAt": "2026-08-02T17:27:09Z",
+          "failingChecks": 0,
+          "headRef": "codex/630-reconciliation-snapshot",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 633,
+          "title": "feat(harness): add read-only work reconciliation snapshot",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/633"
         },
         {
           "ageDays": 52,
@@ -182,7 +206,7 @@
           "failingChecks": 1,
           "headRef": "codex/cloud-factory-tracer",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 632,
           "title": "docs(factory): reconcile local and GitHub work lanes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/632"
@@ -194,7 +218,7 @@
           "failingChecks": 1,
           "headRef": "fix/chatbot-spelled-out-accidentals-13049288891185417624",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 628,
           "title": "Normalize Chatbot Spelled-out Accidentals to Shorthand Forms",
           "url": "https://github.com/GuitarAlchemist/ga/pull/628"
@@ -206,7 +230,7 @@
           "failingChecks": 1,
           "headRef": "fix-ga-arpeggio-suggestions-mcp-3483423780975728752",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 626,
           "title": "Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and key-blind degree mapping",
           "url": "https://github.com/GuitarAlchemist/ga/pull/626"
@@ -218,7 +242,7 @@
           "failingChecks": 1,
           "headRef": "fix/key-detection-cadences-13824242442048306677",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 625,
           "title": "Delegate key detection to KeyIdentificationService on MCP and F# closures",
           "url": "https://github.com/GuitarAlchemist/ga/pull/625"
@@ -230,7 +254,7 @@
           "failingChecks": 1,
           "headRef": "research/grothendieck-optick-17780670402022075853",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 617,
           "title": "Prototype Grothendieck and categorical constructions for OPTICK transformations",
           "url": "https://github.com/GuitarAlchemist/ga/pull/617"
@@ -242,7 +266,7 @@
           "failingChecks": 1,
           "headRef": "agent/ga-613-placeholder-routes",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 615,
           "title": "fix(frontend): remove dead placeholder routes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
@@ -254,22 +278,10 @@
           "failingChecks": 1,
           "headRef": "agent/fix-gemini-triage-fallback",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 608,
           "title": "Make Gemini issue triage failures non-blocking",
           "url": "https://github.com/GuitarAlchemist/ga/pull/608"
-        },
-        {
-          "ageDays": 62,
-          "author": "spareilleux",
-          "createdAt": "2026-07-23T13:40:00Z",
-          "failingChecks": 0,
-          "headRef": "feat/589-performance-intent-tracer",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 598,
-          "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/598"
         }
       ]
     },
@@ -294,19 +306,19 @@
           "failingChecks": 0,
           "headRef": "feat/quality-gate-ledger",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 353,
           "title": "feat(quality-gate): wire ix doctor as the producer ix_quality_gate_history reads",
           "url": "https://github.com/GuitarAlchemist/ix/pull/353"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-09-17T13:07:49Z",
           "failingChecks": 2,
           "headRef": "fix/manual-tools-approval-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 352,
           "title": "fix(ix-agent): route manual MCP tools through the approval gate",
           "url": "https://github.com/GuitarAlchemist/ix/pull/352"
@@ -318,19 +330,19 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-09-14T13:16:44Z",
           "failingChecks": 0,
           "headRef": "feat/workflow-liveness-observations",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 341,
           "title": "feat(ix-harness-github-actions): scheduled-workflow liveness verdicts (hari#29)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/341"
@@ -342,7 +354,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
@@ -354,7 +366,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
@@ -366,7 +378,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"
@@ -385,20 +397,8 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 2,
+      "prCount": 1,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-24T05:08:50Z",
-          "failingChecks": 0,
-          "headRef": "fix/305-tool-calling",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 316,
-          "title": "fix: close the tool-calling loop through the ILlmService/IChatClient bridge (#305)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/316"
-        },
         {
           "ageDays": 6,
           "author": "spareilleux",
@@ -436,7 +436,7 @@
           "failingChecks": 0,
           "headRef": "fix/freshness-head-sha-correlation",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1121,
           "title": "fix(loop-health): correlate an event-producer run by head_sha alone",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1121"
@@ -448,7 +448,7 @@
           "failingChecks": 0,
           "headRef": "fix/streeling-spanish-accents",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1120,
           "title": "fix(streeling): restore stripped Spanish accents in 12 course modules",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1120"
@@ -460,7 +460,7 @@
           "failingChecks": 2,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -472,7 +472,7 @@
           "failingChecks": 0,
           "headRef": "fix/streeling-jazz-and-academy",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1102,
           "title": "fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002, CYB-002, NET-001, GAA-002 and GAA-003",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1102"
@@ -484,7 +484,7 @@
           "failingChecks": 0,
           "headRef": "docs/streeling-fr-es-translations",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1098,
           "title": "docs(streeling): French and Spanish translations of 14 modules",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1098"
@@ -496,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "fix/streeling-music-modules",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1091,
           "title": "fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1091"
@@ -508,19 +508,19 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-09-14T13:05:50Z",
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -532,7 +532,7 @@
           "failingChecks": 2,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -544,7 +544,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
