@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "6a44a96bf6eb2189ed4d12521dae419572578f96",
-    "generatedAt": "2026-09-24T00:44:51.942292+00:00",
+    "commitSha": "fcde546671a0a37662b5b88374cb2d7eb665b8de",
+    "generatedAt": "2026-09-24T00:49:23.665594+00:00",
     "repoCount": 5,
-    "totalPRs": 41
+    "totalPRs": 40
   },
   "repos": [
     {
@@ -113,31 +113,19 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 18,
+      "prCount": 17,
       "prs": [
         {
           "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-09-21T22:55:21Z",
-          "failingChecks": 1,
+          "failingChecks": 0,
           "headRef": "codex/smoke-incident-dedup",
           "isDraft": false,
           "mergeable": "MERGEABLE",
           "number": 715,
           "title": "fix(ci): reuse post-merge smoke incidents",
           "url": "https://github.com/GuitarAlchemist/ga/pull/715"
-        },
-        {
-          "ageDays": 2,
-          "author": "spareilleux",
-          "createdAt": "2026-09-21T22:45:54Z",
-          "failingChecks": 1,
-          "headRef": "codex/concurrency-failure-propagation",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 714,
-          "title": "fix(concurrency): propagate pipeline failures",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/714"
         },
         {
           "ageDays": 8,
@@ -158,7 +146,7 @@
           "failingChecks": 0,
           "headRef": "fix/ga-course-findings-lot1",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 686,
           "title": "fix: GA bugs found by the music-theory-ga and ga-ai courses (lot 1)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/686"
@@ -314,7 +302,7 @@
           "failingChecks": 0,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 598,
           "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
@@ -326,7 +314,7 @@
           "failingChecks": 1,
           "headRef": "feat/dft-phase-homometry",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 579,
           "title": "feat(atonal): phase-aligned similarity \u2014 distinguish the Z-pairs and chirality ICV cannot",
           "url": "https://github.com/GuitarAlchemist/ga/pull/579"
