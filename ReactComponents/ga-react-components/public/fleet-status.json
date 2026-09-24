@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "a9c2cb275ca256c716adab362c40dda6742e1c19",
-    "generatedAt": "2026-09-24T13:52:33.230521+00:00",
+    "commitSha": "86c75ed9bab0e1113c2482fe9431acfc63977580",
+    "generatedAt": "2026-09-24T13:54:46.816557+00:00",
     "repoCount": 5,
-    "totalPRs": 32
+    "totalPRs": 25
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 14,
+      "prCount": 7,
       "prs": [
         {
           "ageDays": 0,
@@ -140,18 +140,6 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/727"
         },
         {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-24T03:15:26Z",
-          "failingChecks": 1,
-          "headRef": "fix/naturalness-model-copy",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 725,
-          "title": "fix(ml): copy the tracked naturalness model into the build output",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/725"
-        },
-        {
           "ageDays": 52,
           "author": "spareilleux",
           "createdAt": "2026-08-02T21:29:06Z",
@@ -162,18 +150,6 @@
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
-        },
-        {
-          "ageDays": 52,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T20:56:48Z",
-          "failingChecks": 1,
-          "headRef": "codex/david-skills-pilot",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 636,
-          "title": "chore(skills): add audited decision pilot",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/636"
         },
         {
           "ageDays": 52,
@@ -191,7 +167,7 @@
           "ageDays": 52,
           "author": "spareilleux",
           "createdAt": "2026-08-02T17:27:09Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "codex/630-reconciliation-snapshot",
           "isDraft": false,
           "mergeable": "MERGEABLE",
@@ -200,64 +176,16 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/633"
         },
         {
-          "ageDays": 52,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T16:00:23Z",
-          "failingChecks": 1,
-          "headRef": "codex/cloud-factory-tracer",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 632,
-          "title": "docs(factory): reconcile local and GitHub work lanes",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/632"
-        },
-        {
-          "ageDays": 53,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T02:46:50Z",
-          "failingChecks": 1,
-          "headRef": "fix/chatbot-spelled-out-accidentals-13049288891185417624",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 628,
-          "title": "Normalize Chatbot Spelled-out Accidentals to Shorthand Forms",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/628"
-        },
-        {
-          "ageDays": 53,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T01:24:25Z",
-          "failingChecks": 1,
-          "headRef": "fix-ga-arpeggio-suggestions-mcp-3483423780975728752",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 626,
-          "title": "Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and key-blind degree mapping",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/626"
-        },
-        {
           "ageDays": 53,
           "author": "spareilleux",
           "createdAt": "2026-08-01T22:57:33Z",
           "failingChecks": 1,
           "headRef": "fix/key-detection-cadences-13824242442048306677",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "CONFLICTING",
           "number": 625,
           "title": "Delegate key detection to KeyIdentificationService on MCP and F# closures",
           "url": "https://github.com/GuitarAlchemist/ga/pull/625"
-        },
-        {
-          "ageDays": 57,
-          "author": "spareilleux",
-          "createdAt": "2026-07-29T03:11:22Z",
-          "failingChecks": 1,
-          "headRef": "research/grothendieck-optick-17780670402022075853",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 617,
-          "title": "Prototype Grothendieck and categorical constructions for OPTICK transformations",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/617"
         },
         {
           "ageDays": 57,
@@ -270,18 +198,6 @@
           "number": 615,
           "title": "fix(frontend): remove dead placeholder routes",
           "url": "https://github.com/GuitarAlchemist/ga/pull/615"
-        },
-        {
-          "ageDays": 60,
-          "author": "spareilleux",
-          "createdAt": "2026-07-25T17:19:15Z",
-          "failingChecks": 1,
-          "headRef": "agent/fix-gemini-triage-fallback",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 608,
-          "title": "Make Gemini issue triage failures non-blocking",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/608"
         }
       ]
     },
@@ -406,7 +322,7 @@
           "failingChecks": 0,
           "headRef": "chore/licence-and-untrack-venv",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 307,
           "title": "Add the missing MIT LICENSE the README advertises, and stop tracking the committed tts-venv",
           "url": "https://github.com/GuitarAlchemist/tars/pull/307"
