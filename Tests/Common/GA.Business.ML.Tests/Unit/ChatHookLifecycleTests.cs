@@ -96,7 +96,9 @@ public class ChatHookLifecycleTests
     [TestCase("relative minor of F sharp minor", "relative minor of F# minor")]
     [TestCase("relative minor of G-sharp minor", "relative minor of G# minor")]
     [TestCase("relative minor of G sharp minor", "relative minor of G# minor")]
-    [TestCase("What about a flat response", "What about ab response")]
+    [TestCase("What about a flat response", "What about a flat response")]
+    [TestCase("a sharp contrast", "a sharp contrast")]
+    [TestCase("E FLAT major", "Eb major")]
     public async Task PromptSanitizationHook_NormalizesSpelledOutAccidentals(string input, string expected)
     {
         var hook = new PromptSanitizationHook(NullLogger<PromptSanitizationHook>.Instance);

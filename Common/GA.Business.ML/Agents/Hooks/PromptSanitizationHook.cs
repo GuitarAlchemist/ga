@@ -22,14 +22,15 @@ public sealed class PromptSanitizationHook(ILogger<PromptSanitizationHook> logge
         @"(?:SYSTEM|USER|ASSISTANT)\s*:|###\s*\w|```\s*system",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Matches letter roots A-G (case-insensitive) followed by optional hyphens or spaces and then "flat" or "sharp"
+    // A capital root A-G, an optional hyphen or dash, then "flat" or "sharp" in any case. The root is
+    // case-sensitive so the article in "a flat response" or "a sharp contrast" is left alone.
     private static readonly Regex SpelledOutFlatPattern = new(
-        @"\b(?<root>[A-Ga-g])\s*[-—–]?\s*flat\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        @"\b(?<root>[A-G])\s*[-—–]?\s*(?i:flat)\b",
+        RegexOptions.Compiled);
 
     private static readonly Regex SpelledOutSharpPattern = new(
-        @"\b(?<root>[A-Ga-g])\s*[-—–]?\s*sharp\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        @"\b(?<root>[A-G])\s*[-—–]?\s*(?i:sharp)\b",
+        RegexOptions.Compiled);
 
     public Task<HookResult> OnRequestReceived(ChatHookContext ctx, CancellationToken ct = default)
     {
