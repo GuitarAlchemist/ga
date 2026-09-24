@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "b316edde87088f67e30d1cf48e5b7c5680c46f20",
-    "generatedAt": "2026-09-24T10:43:03.476128+00:00",
+    "commitSha": "63a8d0d9ab13007196b24f1a97da3f5b4953e2eb",
+    "generatedAt": "2026-09-24T13:02:14.337270+00:00",
     "repoCount": 5,
     "totalPRs": 32
   },
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 12,
+      "prCount": 13,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-24T12:43:47Z",
+          "failingChecks": 1,
+          "headRef": "fix/claude-review-classifier-pin",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 727,
+          "title": "fix(ci): pin the review workflow to the revision with the classifier fix",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/727"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -254,7 +266,7 @@
           "failingChecks": 0,
           "headRef": "feat/589-performance-intent-tracer",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 598,
           "title": "feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay",
           "url": "https://github.com/GuitarAlchemist/ga/pull/598"
@@ -273,7 +285,7 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 8,
+      "prCount": 7,
       "prs": [
         {
           "ageDays": 6,
@@ -300,19 +312,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/352"
         },
         {
-          "ageDays": 6,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T13:04:57Z",
-          "failingChecks": 0,
-          "headRef": "feat/node-catalog-validate",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 351,
-          "title": "feat(ix-agent): ix_node_catalog + ix_pipeline_validate (node catalog + offline pipeline validation)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/351"
-        },
-        {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-09-16T13:01:29Z",
           "failingChecks": 1,
@@ -394,7 +394,7 @@
           "failingChecks": 0,
           "headRef": "fix/305-tool-calling",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 316,
           "title": "fix: close the tool-calling loop through the ILlmService/IChatClient bridge (#305)",
           "url": "https://github.com/GuitarAlchemist/tars/pull/316"
@@ -406,7 +406,7 @@
           "failingChecks": 0,
           "headRef": "chore/licence-and-untrack-venv",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 307,
           "title": "Add the missing MIT LICENSE the README advertises, and stop tracking the committed tts-venv",
           "url": "https://github.com/GuitarAlchemist/tars/pull/307"
@@ -436,7 +436,7 @@
           "failingChecks": 0,
           "headRef": "fix/freshness-head-sha-correlation",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1121,
           "title": "fix(loop-health): correlate an event-producer run by head_sha alone",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1121"
@@ -448,7 +448,7 @@
           "failingChecks": 0,
           "headRef": "fix/streeling-spanish-accents",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1120,
           "title": "fix(streeling): restore stripped Spanish accents in 12 course modules",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1120"
@@ -460,7 +460,7 @@
           "failingChecks": 2,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -472,7 +472,7 @@
           "failingChecks": 0,
           "headRef": "fix/streeling-jazz-and-academy",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1102,
           "title": "fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002, CYB-002, NET-001, GAA-002 and GAA-003",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1102"
@@ -484,7 +484,7 @@
           "failingChecks": 0,
           "headRef": "docs/streeling-fr-es-translations",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 1098,
           "title": "docs(streeling): French and Spanish translations of 14 modules",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1098"
@@ -496,7 +496,7 @@
           "failingChecks": 1,
           "headRef": "fix/streeling-music-modules",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1091,
           "title": "fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1091"
@@ -508,7 +508,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -520,7 +520,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -532,7 +532,7 @@
           "failingChecks": 2,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -544,7 +544,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
