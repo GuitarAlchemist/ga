@@ -1,6 +1,5 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
-using System.Collections.Frozen;
 using Abstractions;
 using Design.Attributes;
 using Design.Schema;
@@ -110,29 +109,26 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     private class FastPitchClassCalculator
     {
         /// <summary>
-        ///     Pre-computes the normalized difference between all possible combinations of pitch class pairs
+        ///     Normalized difference of every pitch class pair, indexed by <c>a * 12 + b</c>. A flat array
+        ///     lookup is several times faster than hashing a tuple key or validating a new value.
         /// </summary>
-        private static readonly Lazy<FrozenDictionary<(int, int), PitchClass>> _lazySubtractionDictionary =
-            new(GetSubtractionDictionary);
+        private static readonly PitchClass[] _subtractionTable = BuildSubtractionTable();
 
         public static PitchClass NormalizedSubtraction(PitchClass pitchClass1, PitchClass pitchClass2) =>
-            _lazySubtractionDictionary.Value[(pitchClass1.Value, pitchClass2.Value)];
+            _subtractionTable[pitchClass1.Value * 12 + pitchClass2.Value];
 
-        private static FrozenDictionary<(int, int), PitchClass> GetSubtractionDictionary()
+        private static PitchClass[] BuildSubtractionTable()
         {
-            var builder = new Dictionary<(int, int), PitchClass>();
-            // Build from fixed 0..11 range to avoid dependency on cached collections during static init
-            foreach (var pcValue1 in Enumerable.Range(0, 12))
+            var table = new PitchClass[144];
+            for (var pcValue1 = 0; pcValue1 < 12; pcValue1++)
             {
                 for (var pcValue2 = 0; pcValue2 < 12; pcValue2++)
                 {
-                    builder.Add(
-                        (pcValue1, pcValue2),
-                        FromValue((pcValue1 - pcValue2 + 12) % 12));
+                    table[pcValue1 * 12 + pcValue2] = FromValue((pcValue1 - pcValue2 + 12) % 12);
                 }
             }
 
-            return builder.ToFrozenDictionary();
+            return table;
         }
     }
 
@@ -231,6 +227,10 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Accepts integer notation (0-9), the <c>T</c>/<c>E</c> abbreviations produced by <see cref="ToString" /> and
+    ///     note names. Hex-like <c>A</c>/<c>B</c> set-notation aliases belong to <see cref="TryParseSetNotation" />.
+    /// </remarks>
     public static bool TryParse(string? s, IFormatProvider? provider, out PitchClass result)
     {
         result = default;
@@ -257,14 +257,6 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
             case "E":
                 result = FromValue(11);
                 return true;
-            // Accept common hex-like aliases sometimes used in set notation
-            // A -> 10, B -> 11 (while keeping existing T/E support). This is parse-only; ToString still uses T/E.
-            case "A":
-                result = FromValue(10);
-                return true;
-            case "B":
-                result = FromValue(11);
-                return true;
         }
 
         if (Note.Chromatic.TryParse(s, provider, out var note))
@@ -274,6 +266,30 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///     Tries to parse a single pitch class in set notation, including <c>A</c> for 10 and <c>B</c> for 11.
+    /// </summary>
+    public static bool TryParseSetNotation(string? s, out PitchClass result)
+    {
+        result = default;
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            return false;
+        }
+
+        switch (s.Trim().ToUpperInvariant())
+        {
+            case "A":
+                result = FromValue(10);
+                return true;
+            case "B":
+                result = FromValue(11);
+                return true;
+        }
+
+        return TryParse(s, null, out result);
     }
 
     #endregion

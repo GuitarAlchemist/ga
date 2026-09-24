@@ -15,7 +15,7 @@ using ModelContextProtocol.Server;
 
 /// <summary>
 ///     MCP tool exposing OPTIC-K voicing search. Accepts natural language — the typed
-///     extractor pulls chord/mode/tags, the musical encoder produces a 112-dim OPTK vector,
+///     extractor pulls chord/mode/tags, the musical encoder produces a compact OPTK vector,
 ///     and the mmap reader returns top-K voicings with diagrams and metadata.
 ///
 ///     When the typed extractor finds nothing, callers that opt in via
@@ -93,7 +93,7 @@ public static class VoicingSearchTool
     [Description(
         "Search the OPTIC-K voicing index by natural-language query. " +
         "Parses chord symbols (Cmaj7, F#m7b5), mode names (Lydian, Dorian), and " +
-        "technique/style tags (drop2, shell, jazz) from the query, composes a 112-dim " +
+        "technique/style tags (drop2, shell, jazz) from the query, composes a compact " +
         "OPTK v4 vector via partition-weighted musical encoding, and returns top-K " +
         "matching voicings. Works fully offline for canonical vocabulary. " +
         "For fuzzy phrasing (\"something warm and mellow\") the caller can opt in to " +

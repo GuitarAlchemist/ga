@@ -7,6 +7,12 @@ using GA.Domain.Core.Theory.Atonal;
 public class PitchClassTests
 {
     [Test]
+    public void PitchClassSet_Parse_UsesSetNotationAliases() =>
+        Assert.That(
+            PitchClassSet.Parse("0A").Select(pitchClass => pitchClass.Value),
+            Is.EquivalentTo(new[] { 0, 10 }));
+
+    [Test]
     public void FromValue_ValidValue_CreatesInstance()
     {
         // Arrange & Act
@@ -121,14 +127,24 @@ public class PitchClassTests
     [TestCase("C", 0)]
     [TestCase("T", 10)]
     [TestCase("E", 11)]
-    [TestCase("A", 10)] // Hex-style parsing
-    [TestCase("B", 11)] // Hex-style parsing
+    [TestCase("A", 9)]
+    [TestCase("B", 11)]
     public void TryParse_ValidInput_ReturnsSuccess(string input, int expectedValue)
     {
         // Arrange & Act
         var result = PitchClass.TryParse(input, null, out var pitchClass);
 
         // Assert
+        Assert.That(result, Is.True);
+        Assert.That(pitchClass.Value, Is.EqualTo(expectedValue));
+    }
+
+    [TestCase("A", 10)]
+    [TestCase("B", 11)]
+    public void TryParseSetNotation_HexAliases_ReturnExpectedValue(string input, int expectedValue)
+    {
+        var result = PitchClass.TryParseSetNotation(input, out var pitchClass);
+
         Assert.That(result, Is.True);
         Assert.That(pitchClass.Value, Is.EqualTo(expectedValue));
     }
@@ -144,5 +160,19 @@ public class PitchClassTests
 
         // Assert
         Assert.That(result, Is.False);
+    }
+
+    [Test]
+    public void Subtraction_AllPairs_IsTheIntervalUpFromTheSecondToTheFirst()
+    {
+        for (var a = 0; a < 12; a++)
+        {
+            for (var b = 0; b < 12; b++)
+            {
+                var difference = PitchClass.FromValue(a) - PitchClass.FromValue(b);
+
+                Assert.That(difference.Value, Is.EqualTo(((a - b) % 12 + 12) % 12), $"{a} - {b}");
+            }
+        }
     }
 }

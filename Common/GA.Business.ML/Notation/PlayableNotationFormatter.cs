@@ -25,10 +25,30 @@ public static partial class PlayableNotationFormatter
         """;
 
     /// <summary>
-    /// Converts a six-string chord diagram such as <c>x-3-2-0-1-0</c> or <c>x32010</c>
-    /// into the GA VexTab token format consumed by the mini UI.
+    /// Converts a voicing diagram as GA stores it (<c>Voicing.Diagram</c> and index documents list
+    /// string 1, the highest, first) into chord-chart order, lowest string first, which is what
+    /// readers expect and what <see cref="TryFormatChordDiagramAsVexTab"/> parses. Open C is stored
+    /// as <c>0-1-0-2-3-x</c> and charted as <c>x-3-2-0-1-0</c>.
     /// </summary>
-    public static string? TryFormatChordDiagramAsVexTab(string? diagram)
+    public static string? ToChartOrder(string? voicingDiagram) =>
+        string.IsNullOrEmpty(voicingDiagram)
+            ? voicingDiagram
+            : string.Join("-", Enumerable.Reverse(voicingDiagram.Split('-')));
+
+    /// <summary>
+    /// Converts a six-string chord diagram in chord-chart order (lowest string first), such as
+    /// <c>x-3-2-0-1-0</c> or <c>x32010</c>, into the GA VexTab token format consumed by the mini UI.
+    /// Diagrams read from GA voicings must go through <see cref="ToChartOrder"/> first, or use the
+    /// overload taking <see cref="DiagramStringOrder.HighToLow"/>.
+    /// </summary>
+    public static string? TryFormatChordDiagramAsVexTab(string? diagram) =>
+        TryFormatChordDiagramAsVexTab(diagram, DiagramStringOrder.LowToHigh);
+
+    /// <summary>
+    /// Converts a six-string chord diagram whose fret tokens are in <paramref name="order"/>
+    /// into the GA VexTab token format (string 6 = low E), lowest string first.
+    /// </summary>
+    public static string? TryFormatChordDiagramAsVexTab(string? diagram, DiagramStringOrder order)
     {
         var frets = TryParseSixStringDiagram(diagram);
         if (frets is null)
@@ -37,27 +57,32 @@ public static partial class PlayableNotationFormatter
         }
 
         List<string> tokens = [];
-        for (var index = 0; index < frets.Count; index++)
+        for (var guitarString = frets.Count; guitarString >= 1; guitarString--)
         {
-            var fret = frets[index];
-            if (fret is null)
+            var index = order == DiagramStringOrder.LowToHigh ? frets.Count - guitarString : guitarString - 1;
+            if (frets[index] is not { } fret)
             {
                 continue;
             }
 
-            var guitarString = frets.Count - index;
-            tokens.Add(FormattableString.Invariant($"{guitarString}/{fret.Value}"));
+            tokens.Add(FormattableString.Invariant($"{guitarString}/{fret}"));
         }
 
         return tokens.Count == 0 ? null : string.Join(" ", tokens);
     }
 
     /// <summary>
-    /// Converts a six-string chord diagram into a fenced <c>vextab</c> block.
+    /// Converts a six-string chord diagram (guitarist convention, low E first) into a fenced <c>vextab</c> block.
     /// </summary>
-    public static string? TryFormatChordDiagramAsMarkdownFence(string? diagram)
+    public static string? TryFormatChordDiagramAsMarkdownFence(string? diagram) =>
+        TryFormatChordDiagramAsMarkdownFence(diagram, DiagramStringOrder.LowToHigh);
+
+    /// <summary>
+    /// Converts a six-string chord diagram whose fret tokens are in <paramref name="order"/> into a fenced <c>vextab</c> block.
+    /// </summary>
+    public static string? TryFormatChordDiagramAsMarkdownFence(string? diagram, DiagramStringOrder order)
     {
-        var notation = TryFormatChordDiagramAsVexTab(diagram);
+        var notation = TryFormatChordDiagramAsVexTab(diagram, order);
         return notation is null
             ? null
             : $"```vextab{Environment.NewLine}{notation}{Environment.NewLine}```";
@@ -244,6 +269,20 @@ public static partial class PlayableNotationFormatter
 
         return false;
     }
+}
+
+/// <summary>
+/// Order of the six fret tokens in a chord-diagram string.
+/// </summary>
+public enum DiagramStringOrder
+{
+    /// <summary>Guitarist convention: string 6 (low E) first, e.g. <c>x-3-2-0-1-0</c> = open C.
+    /// Used by hand-written and LLM-written diagrams, <c>FretSpanSkill</c> and <c>BeginnerChordsSkill</c>.</summary>
+    LowToHigh,
+
+    /// <summary><c>Voicing.Diagram</c> convention (<c>Str</c> 1 = high E first), e.g. <c>0-1-0-2-3-x</c> = open C.
+    /// Used by the voicing generator, the OPTK index and therefore voicing search results.</summary>
+    HighToLow,
 }
 
 public sealed record NotationAugmentationResult(

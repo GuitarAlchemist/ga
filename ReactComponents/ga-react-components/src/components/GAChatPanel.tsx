@@ -19,6 +19,12 @@ export interface GAChatPanelProps {
 /** Voicing shape returned by GET /api/contextual-chords/voicings/{chord} */
 interface Voicing {
   chordName: string;
+  /**
+   * Fret per string, **highest string first** (high e, B, G, D, A, low E).
+   * `VoicingFilterService` projects `voicing.Positions`, which are generated over
+   * `Str.Range(6)`, and `Str` 1 is the highest-pitched string — so open C major comes
+   * back as `[0, 1, 0, 2, 3, -1]`, not `[-1, 3, 2, 0, 1, 0]`.
+   */
   frets: number[];
   difficulty: string;
 }
@@ -219,7 +225,11 @@ const GAChatPanel: React.FC<GAChatPanelProps> = ({ agentUrl, apiBaseUrl }) => {
       >
         {voicingLoading && <CircularProgress size={32} sx={{ m: 2 }} />}
         {!voicingLoading && activeVoicing && (
-          <FretDiagram chordName={activeVoicing.chordName} frets={activeVoicing.frets} />
+          <FretDiagram
+            chordName={activeVoicing.chordName}
+            frets={activeVoicing.frets}
+            stringOrder="high-to-low"
+          />
         )}
         {!voicingLoading && !activeVoicing && (
           <Typography variant="caption" sx={{ p: 1, display: 'block' }}>No voicing found</Typography>
