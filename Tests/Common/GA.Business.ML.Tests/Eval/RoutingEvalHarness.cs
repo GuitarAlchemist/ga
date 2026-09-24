@@ -139,10 +139,10 @@ public class RoutingEvalHarness
             "Expected ≥15 IOrchestratorSkill-derived intents from GA.Business.ML " +
             $"(PR #160 / 2026-05-06 graduation count). Found {intents.Count}.");
 
-        // FretSpanSkill intentionally has zero ExamplePrompts — it's
-        // dispatched by ProductionOrchestrator's CanHandle regex, not
-        // semantic routing. So "examples==0" is NOT malformed; "empty Id"
-        // or "missing skill. prefix" is.
+        // An intent with zero ExamplePrompts is skipped by semantic routing
+        // (and CanHandle only serves the offline keyword fallback), so it is
+        // unreachable in chat — but it is not malformed; "empty Id" or
+        // "missing skill. prefix" is.
         var malformed = intents
             .Where(i => string.IsNullOrWhiteSpace(i.Id) ||
                         !i.Id.StartsWith("skill.", StringComparison.Ordinal))
@@ -158,7 +158,7 @@ public class RoutingEvalHarness
         // Logged so changes to the production set are visible in test output.
         var withoutExamples = intents.Where(i => i.ExamplePrompts.Count == 0).Select(i => i.Id).ToList();
         TestContext.WriteLine(
-            $"Intents without ExamplePrompts (regex-routed in production): " +
+            $"Intents without ExamplePrompts (unreachable by semantic routing): " +
             $"{(withoutExamples.Count == 0 ? "(none)" : string.Join(", ", withoutExamples))}");
 
         // Spot-check: a few known skill IDs must be present. If these miss,
@@ -505,10 +505,11 @@ public class RoutingEvalHarness
     /// not a production regression gate.
     /// </para>
     /// <para>
-    /// Excluded intents (production routes them via regex, not semantic):
+    /// Excluded intents:
     /// <list type="bullet">
-    ///   <item><c>skill.fretspan</c> — FretSpanSkill has no ExamplePrompts;
-    ///         dispatched by ProductionOrchestrator's CanHandle regex.</item>
+    ///   <item><c>skill.fretspan</c> — not stubbed yet. It had no ExamplePrompts, so it was
+    ///         unreachable (production has no CanHandle foreach); it now declares examples
+    ///         and can be added here with the next labeled-corpus update.</item>
     /// </list>
     /// </para>
     /// </remarks>
@@ -524,7 +525,7 @@ public class RoutingEvalHarness
                     "what is Lydian mode", "what notes are in G mixolydian" ]);
         AddStubIntent(sc, "skill.interval", "Interval between two notes / interval naming.",
             ["interval between two notes", "what is a perfect fifth", "interval from C to G"]);
-        // skill.fretspan EXCLUDED — see remarks above (regex-routed in production).
+        // skill.fretspan EXCLUDED — see remarks above (not stubbed yet).
         AddStubIntent(sc, "skill.chordsubstitution", "Chord substitution suggestions for a given chord.",
             ["chord substitution", "substitute for a chord", "tritone sub", "what can substitute for"]);
         AddStubIntent(sc, "skill.beginnerchords", "Beginner chord suggestions.",

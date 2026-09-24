@@ -32,6 +32,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
+
+    - name: Run post-merge smoke incident contract tests
+      run: node --test Scripts/post-merge-smoke-incident.test.js
         
     - name: Restore dependencies
       run: dotnet restore AllProjects.slnx

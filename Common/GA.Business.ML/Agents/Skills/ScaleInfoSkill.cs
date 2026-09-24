@@ -105,6 +105,10 @@ public sealed class ScaleInfoSkill(ILogger<ScaleInfoSkill> logger) : IOrchestrat
         // both because "C major" + "note" satisfies our pattern.
         if (q.Contains("chord")) return false;
 
+        // Yield to RelativeKeySkill: "what is the relative minor of C major?"
+        // names a key but asks for a related key, not for its notes.
+        if (RelativeKeySkill.IsKeyRelationQuestion(message)) return false;
+
         return KeyPattern.IsMatch(message) &&
                (q.Contains("note") || q.Contains("scale") || q.Contains("what is") ||
                 q.Contains("what's in") || q.Contains("tell me") || q.Contains("show me") ||
