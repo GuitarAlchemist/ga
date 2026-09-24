@@ -302,6 +302,8 @@ public static partial class KeyIdentificationService
         return s.Replace("A#", "Bb").Replace("D#", "Eb").Replace("G#", "Ab");
     }
 
-    [GeneratedRegex(@"\b[A-G][b#]?(?:m|dim|aug|maj|min|sus|add)?\d*(?:b5|#5|b9|#9|#11|b13)?\b", RegexOptions.IgnoreCase)]
+    // The root is case-sensitive: with IgnoreCase, prose such as "I am composing" yielded the chord
+    // "am", so a message with no chords got a key analysis instead of a decline.
+    [GeneratedRegex(@"\b[A-G][b#]?(?:maj|Maj|min|m|dim|aug|sus|add)?\d*(?:b5|#5|b9|#9|#11|b13)?\b", RegexOptions.None)]
     private static partial Regex ChordPattern();
 }
