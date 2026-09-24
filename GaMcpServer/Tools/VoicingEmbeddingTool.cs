@@ -39,20 +39,38 @@ public static class VoicingEmbeddingTool
     };
 
     [McpServerTool]
-    [Description("Generate a 228-dim OPTIC-K embedding vector for a chord voicing. Returns JSON with embedding array and metadata.")]
+    [Description("Generate an OPTIC-K embedding vector for a chord voicing. layout='raw' (default) returns the full " +
+                 "EmbeddingSchema.TotalDimension (240) generator vector; layout='compact' returns the " +
+                 "EmbeddingSchema.CompactDimension (124) weighted, per-partition-normalized vector stored in " +
+                 "optick.index, the query shape ix_optick_search expects. Returns JSON with embedding array and metadata.")]
     public static async Task<string> GaGenerateVoicingEmbedding(
         [Description("Voicing diagram (e.g. 'x-3-2-0-1-0' for Cmaj7)")] string diagram,
-        [Description("Instrument: guitar, bass, or ukulele")] string instrument)
+        [Description("Instrument: guitar, bass, or ukulele")] string instrument,
+        [Description("Vector layout: 'raw' (full generator vector, default) or 'compact' (optick.index row layout)")] string layout = "raw")
     {
+        var compact = layout.ToLowerInvariant() switch
+        {
+            "raw" => false,
+            "compact" => true,
+            _ => throw new ArgumentException($"Unknown layout: {layout}. Expected raw or compact.")
+        };
+
         var voicing = ParseDiagram(diagram, instrument.ToLowerInvariant());
         var analysis = VoicingAnalyzer.Analyze(voicing);
         var doc = VoicingDocumentFactory.FromAnalysis(voicing, analysis, tuningId: instrument);
-        var embedding = await Generator.Value.GenerateEmbeddingAsync(doc);
+        var raw = await Generator.Value.GenerateEmbeddingAsync(doc);
+
+        // Compact = the index writer's projection (similarity partitions, per-partition L2, sqrt-weight),
+        // taken from the shared EmbeddingSchema layout op rather than re-derived here.
+        var embedding = compact
+            ? Array.ConvertAll(EmbeddingSchema.ExtractCompact(Array.ConvertAll(raw, v => (double)v)), v => (float)v)
+            : raw;
 
         return JsonSerializer.Serialize(new
         {
-            dimension = EmbeddingSchema.TotalDimension,
+            dimension = compact ? EmbeddingSchema.CompactDimension : EmbeddingSchema.TotalDimension,
             schema = EmbeddingSchema.Version,
+            layout = compact ? EmbeddingSchema.CompactLayoutV4 : "raw",
             embedding,
             metadata = new
             {

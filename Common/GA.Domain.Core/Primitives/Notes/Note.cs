@@ -113,6 +113,28 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
             keyNotes = builder.ToImmutable();
             return keyNotes.Count > 0;
         }
+
+        /// <summary>
+        ///     Splits a trimmed note name into its natural note (first character) and the accidental text that follows.
+        /// </summary>
+        private protected static bool TrySplit(string? s, out NaturalNote naturalNote, out string accidentalText)
+        {
+            naturalNote = default;
+            accidentalText = string.Empty;
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return false;
+            }
+
+            var trimmed = s.Trim();
+            if (!NaturalNote.TryParse(trimmed[..1], null, out naturalNote))
+            {
+                return false;
+            }
+
+            accidentalText = trimmed[1..];
+            return true;
+        }
     }
 
     /// <summary>
@@ -142,40 +164,31 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Sharp Parse(string s, IFormatProvider? provider) =>
             TryParse(s, provider, out var result) ? result : throw new FormatException();
 
+        /// <summary>
+        ///     Parses a natural note letter (case-insensitive) optionally followed by a sharp accidental
+        ///     (<c>#</c>, <c>##</c>, <c>x</c>, <c>♯</c>): "C", "C#", "Cx". Anything else returns <c>false</c>.
+        /// </summary>
         public static bool TryParse(string? s, IFormatProvider? provider, out Sharp result)
         {
             result = null!;
-            if (string.IsNullOrWhiteSpace(s))
+            if (!TrySplit(s, out var naturalNote, out var accidentalText))
             {
                 return false;
             }
 
-            var norm = s.Trim().ToUpperInvariant().Replace("♯", "#");
-            try
+            if (accidentalText.Length == 0)
             {
-                if (norm.EndsWith('#'))
-                {
-                    if (NaturalNote.TryParse(norm[0].ToString(), null, out var nn))
-                    {
-                        result = new(nn, Notes.SharpAccidental.Sharp);
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (NaturalNote.TryParse(norm, null, out var nn))
-                    {
-                        result = new(nn);
-                        return true;
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore parsing errors
+                result = new(naturalNote);
+                return true;
             }
 
-            return false;
+            if (!Notes.SharpAccidental.TryParse(accidentalText, provider, out var accidental))
+            {
+                return false;
+            }
+
+            result = new(naturalNote, accidental);
+            return true;
         }
 
         protected override PitchClass GetPitchClass() =>
@@ -216,39 +229,32 @@ public abstract record Note : IStaticPairNorm<Note, IntervalClass>,
         public static Flat Parse(string s, IFormatProvider? provider) =>
             TryParse(s, provider, out var result) ? result : throw new FormatException();
 
+        /// <summary>
+        ///     Parses a natural note letter (case-insensitive) optionally followed by a flat accidental
+        ///     (<c>b</c>, <c>bb</c>, <c>bbb</c>, <c>♭</c>): "B" is B natural, "Bb" and "B♭" are B flat.
+        ///     Anything else returns <c>false</c>.
+        /// </summary>
         public static bool TryParse(string? s, IFormatProvider? provider, out Flat result)
         {
             result = null!;
-            if (string.IsNullOrWhiteSpace(s))
+            if (!TrySplit(s, out var naturalNote, out var accidentalText))
             {
                 return false;
             }
 
-            var norm = s.Trim().ToUpperInvariant().Replace("♭", "b");
-            try
+            if (accidentalText.Length == 0)
             {
-                if (norm.EndsWith("B"))
-                {
-                    if (NaturalNote.TryParse(norm[0].ToString(), null, out var nn))
-                    {
-                        result = new(nn, Notes.FlatAccidental.Flat);
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (NaturalNote.TryParse(norm, null, out var nn))
-                    {
-                        result = new(nn);
-                        return true;
-                    }
-                }
-            }
-            catch
-            {
+                result = new(naturalNote);
+                return true;
             }
 
-            return false;
+            if (!Notes.FlatAccidental.TryParse(accidentalText, provider, out var accidental))
+            {
+                return false;
+            }
+
+            result = new(naturalNote, accidental);
+            return true;
         }
 
         protected override PitchClass GetPitchClass() =>

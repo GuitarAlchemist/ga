@@ -121,4 +121,20 @@ public class LazyWithExpirationTests
 
         Assert.That(second, Is.EqualTo(2));
     }
+
+    [Test]
+    [Category("Timing")]
+    public void ManyValues_DoNotHoldThreadPoolThreads()
+    {
+        var lazies = Enumerable.Range(0, 64)
+            .Select(i => new LazyWithExpiration<int>(() => i, TimeSpan.FromSeconds(1)))
+            .ToList();
+        foreach (var lazy in lazies)
+        {
+            _ = lazy.Value;
+        }
+
+        // A sleeping thread per value used to starve the pool, delaying unrelated work by seconds.
+        Assert.That(Task.Run(() => 1).Wait(TimeSpan.FromMilliseconds(500)), Is.True);
+    }
 }

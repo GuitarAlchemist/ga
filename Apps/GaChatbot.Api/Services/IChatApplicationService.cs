@@ -18,9 +18,21 @@ public interface IChatApplicationService
     Task<ChatbotStatus> GetStatusAsync(CancellationToken cancellationToken = default);
 }
 
+/// <param name="Message">The user's current turn.</param>
+/// <param name="History">Prior turns supplied by the caller, if any.</param>
+/// <param name="SessionId">
+/// Opaque per-conversation identifier resolved by the transport layer
+/// (<see cref="HttpChatSessionCookie"/> for this host). Flows through to
+/// <see cref="GA.Business.Core.Orchestration.Models.ChatRequest.SessionId"/>,
+/// which is what scopes <c>MemoryStore</c> reads/writes and
+/// <c>ChatTranscriptStore</c> turns to one conversation. <c>null</c> means
+/// "no session" — the orchestrator then mints a throwaway per-request ID, so
+/// nothing written during the turn is reachable from any later turn.
+/// </param>
 public sealed record ChatExecutionRequest(
     string Message,
-    List<ConversationTurn>? History = null);
+    List<ConversationTurn>? History = null,
+    string? SessionId = null);
 
 public sealed record ChatExecutionResult(
     string NaturalLanguageAnswer,

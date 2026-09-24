@@ -31,7 +31,7 @@ public class SkillRegistryParityTests
     /// <c>[GaSkill]</c>. Must equal the <c>AddOrchestratorSkillIntent&lt;T&gt;()</c>
     /// count in <c>GaPlugin.cs</c>.
     /// </summary>
-    private const int ExpectedMlSkillCount = 31;
+    private const int ExpectedMlSkillCount = 32;   // +OutsideNotesSkill (2026-07-20)
 
     /// <summary>Force <c>GA.Business.ML</c> to load so its ModuleInitializer runs.</summary>
     private static Assembly MlAssembly => typeof(IOrchestratorSkill).Assembly;

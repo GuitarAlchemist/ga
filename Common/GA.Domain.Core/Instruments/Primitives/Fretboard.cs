@@ -70,13 +70,16 @@ public sealed class Fretboard(Tuning tuning, int fretCount)
     /// <summary>
     ///     Gets all possible positions for a specific note
     /// </summary>
+    /// <remarks>
+    ///     Matches by pitch class, so any spelling or note type (C, B#, Dbb) finds the same positions.
+    /// </remarks>
     public IEnumerable<Position> GetPositionsForNote(Note note)
     {
         for (var stringIndex = 0; stringIndex < StringCount; stringIndex++)
         {
             for (var fret = 0; fret <= FretCount; fret++)
             {
-                if (GetNote(stringIndex, fret).Equals(note))
+                if (GetNote(stringIndex, fret).PitchClass == note.PitchClass)
                 {
                     var location = new PositionLocation(new(stringIndex + 1), new(fret));
                     var openStringPitch = Tuning[new(stringIndex + 1)];

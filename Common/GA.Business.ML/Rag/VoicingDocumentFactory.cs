@@ -4,6 +4,7 @@ using Core.Analysis.Voicings;
 using Domain.Core.Instruments.Fretboard.Voicings.Core;
 using Domain.Core.Theory.Atonal;
 using Models;
+using Musical.Analysis;
 
 public static class VoicingDocumentFactory
 {
@@ -16,6 +17,14 @@ public static class VoicingDocumentFactory
         int translationOffset = 0)
     {
         var diagram = voicing.Diagram;
+
+        // MidiNotes follow string order (string 1, the highest, first), so the bass is the
+        // lowest note, not MidiNotes[0]. The root is the recognized chord root; the bass pitch
+        // class stands in only when the recognizer found none.
+        int? bassMidi = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes.Min() : null;
+        var rootPitchClass = analysis.ChordId.TryGetRootPitchClass(out var chordRoot)
+            ? chordRoot.Value
+            : bassMidi % 12 ?? 0;
         var distinctId = $"{tuningId.ToLower()}_{capo}_{diagram.Replace("-", "_").Replace("x", "m")}";
         var id = $"voicing_{distinctId}";
 
@@ -34,14 +43,13 @@ public static class VoicingDocumentFactory
             // (which may include a voicing-specific "/bass" suffix that leaks into SYMBOLIC
             // embedding dims and destroys cross-instrument consistency).
             ChordName = analysis.ChordId.CanonicalName ?? analysis.ChordId.ChordName,
-            RootPitchClass = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] % 12 : 0,
-            MidiBassNote = analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
+            RootPitchClass = rootPitchClass,
+            MidiBassNote = bassMidi ?? 0,
             VoicingType = analysis.VoicingCharacteristics.DropVoicing,
             IsRootless = analysis.VoicingCharacteristics.IsRootless,
             HasGuideTones = analysis.ToneInventory.HasGuideTones,
             OmittedTones = [.. analysis.ToneInventory.OmittedTones],
-            Inversion = CalculateInversion(analysis.MidiNotes.Length > 0 ? analysis.MidiNotes[0] : 0,
-                analysis.ChordId.RootPitchClass != null ? PitchClass.Parse(analysis.ChordId.RootPitchClass, null).Value : 0),
+            Inversion = CalculateInversion(bassMidi ?? 0, rootPitchClass),
             Brightness = analysis.PerceptualQualities.Brightness,
             Consonance = analysis.PerceptualQualities.ConsonanceScore,
             Roughness = analysis.PerceptualQualities.Roughness,

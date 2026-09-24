@@ -41,4 +41,23 @@ public class ChordDslTests
         Assert.That(ast.Root, Is.EqualTo("C"));
         Assert.That(ast.Components.Length, Is.EqualTo(3));
     }
+    // The whole symbol must be understood: a parser that stops early returns a different chord
+    // ("C7sus4" read as C7, "Cm(maj7)" as Cm) instead of an error.
+    [TestCase("C7sus4")]
+    [TestCase("Cm(maj7)")]
+    [TestCase("Cø7")]
+    [TestCase("G7 foo")]
+    public void Parse_RejectsUnparsedTrailingInput(string input)
+    {
+        var result = _service.Parse(input);
+        Assert.That(result.IsError, Is.True, result.IsOk ? $"Parsed as {_service.Render(result.ResultValue)}" : "");
+    }
+
+    [Test]
+    public void Parse_AllowsTrailingWhitespace()
+    {
+        var result = _service.Parse("Am7 ");
+        Assert.That(result.IsOk, Is.True, result.IsError ? result.ErrorValue : "");
+        Assert.That(_service.Render(result.ResultValue), Is.EqualTo("Am7"));
+    }
 }

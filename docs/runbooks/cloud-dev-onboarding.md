@@ -14,6 +14,21 @@ Legend: ✅ done in-repo · 🤝 delegatable (Jules/agent) · 👤 operator-only
   extension. One container builds ga *and* the Rust peers (ix / hari / sentrux)
   when they're cloned as sibling peers. No system duckdb needed — the invariant
   sweep uses DuckDB.NET (bundled native lib), so dotnet suffices.
+- ✅ **Bootstrap is executable and shared.** `Scripts/cloud-bootstrap.sh`
+  verifies the cloud toolchain used by Codespaces and agents. Codespaces installs
+  the Claude Code CLI on first creation; CI and local Dev Containers avoid that
+  extra network/install step.
+- ✅ **The same bounded validation runs locally and in GitHub Actions.** Run:
+
+  ```bash
+  bash Scripts/cloud-validate.sh
+  ```
+
+  It restores the focused `GA.Business.ML.Tests` project and runs the key-
+  identification and improvisation correctness smoke tests that support the
+  progression-coach North Star. `.github/workflows/cloud-dev-smoke.yml` builds
+  the actual devcontainer with `devcontainers/ci` and runs this command on
+  relevant pull requests or manual dispatch.
 - 👤 **Use it as the canonical surface.** Open the repo in a **Codespace** (or
   VS Code + Dev Containers) → the toolchain is there, no local install.
 - 👤 **Make Claude Code *web* sessions carry the toolchain.** Web sessions do
