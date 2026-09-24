@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "e3acc7a00e763a92053ad3bc394cdd3523ec8578",
-    "generatedAt": "2026-09-24T03:05:08.541026+00:00",
+    "commitSha": "4ac105e6b7acbf824911adf031082718e222f0d3",
+    "generatedAt": "2026-09-24T03:33:40.146082+00:00",
     "repoCount": 5,
     "totalPRs": 37
   },
@@ -116,16 +116,16 @@
       "prCount": 14,
       "prs": [
         {
-          "ageDays": 8,
+          "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-09-15T13:14:28Z",
-          "failingChecks": 0,
-          "headRef": "fix/course-findings-round3",
+          "createdAt": "2026-09-24T03:15:26Z",
+          "failingChecks": 1,
+          "headRef": "fix/naturalness-model-copy",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 688,
-          "title": "fix: course findings round 3 (offline chatbot, mirrored VexTab, chord filter, MCP schema, GA.Core perf)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/688"
+          "mergeable": "MERGEABLE",
+          "number": 725,
+          "title": "fix(ml): copy the tracked naturalness model into the build output",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/725"
         },
         {
           "ageDays": 52,
@@ -194,7 +194,7 @@
           "failingChecks": 0,
           "headRef": "fix/chatbot-spelled-out-accidentals-13049288891185417624",
           "isDraft": true,
-          "mergeable": "MERGEABLE",
+          "mergeable": "CONFLICTING",
           "number": 628,
           "title": "Normalize Chatbot Spelled-out Accidentals to Shorthand Forms",
           "url": "https://github.com/GuitarAlchemist/ga/pull/628"
@@ -224,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/625"
         },
         {
-          "ageDays": 56,
+          "ageDays": 57,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:20:16Z",
           "failingChecks": 0,
@@ -236,7 +236,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/618"
         },
         {
-          "ageDays": 56,
+          "ageDays": 57,
           "author": "spareilleux",
           "createdAt": "2026-07-29T03:11:22Z",
           "failingChecks": 0,

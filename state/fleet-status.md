@@ -18,17 +18,17 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#688](https://github.com/GuitarAlchemist/ga/pull/688) | fix: course findings round 3 (offline chatbot, mirrored VexTab, chord  | 8d | CONFLICTING | 0 | spareilleux |
+| [#725](https://github.com/GuitarAlchemist/ga/pull/725) | fix(ml): copy the tracked naturalness model into the build output | 0d | MERGEABLE | 1 | spareilleux |
 | [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates (draft) | 52d | MERGEABLE | 0 | spareilleux |
 | [#636](https://github.com/GuitarAlchemist/ga/pull/636) | chore(skills): add audited decision pilot (draft) | 52d | MERGEABLE | 0 | spareilleux |
 | [#634](https://github.com/GuitarAlchemist/ga/pull/634) | feat(harness): advance one reconciliation packet (draft) | 52d | MERGEABLE | 0 | spareilleux |
 | [#633](https://github.com/GuitarAlchemist/ga/pull/633) | feat(harness): add read-only work reconciliation snapshot (draft) | 52d | MERGEABLE | 0 | spareilleux |
 | [#632](https://github.com/GuitarAlchemist/ga/pull/632) | docs(factory): reconcile local and GitHub work lanes (draft) | 52d | MERGEABLE | 0 | spareilleux |
-| [#628](https://github.com/GuitarAlchemist/ga/pull/628) | Normalize Chatbot Spelled-out Accidentals to Shorthand Forms (draft) | 53d | MERGEABLE | 0 | spareilleux |
+| [#628](https://github.com/GuitarAlchemist/ga/pull/628) | Normalize Chatbot Spelled-out Accidentals to Shorthand Forms (draft) | 53d | CONFLICTING | 0 | spareilleux |
 | [#626](https://github.com/GuitarAlchemist/ga/pull/626) | Fix ga_arpeggio_suggestions MCP tool arpeggio suffix concatenation and (draft) | 53d | MERGEABLE | 0 | spareilleux |
 | [#625](https://github.com/GuitarAlchemist/ga/pull/625) | Delegate key detection to KeyIdentificationService on MCP and F# closu (draft) | 53d | MERGEABLE | 0 | spareilleux |
-| [#618](https://github.com/GuitarAlchemist/ga/pull/618) | Resolve Empty OPTIC-K CONTEXT Partition via Circle of Fifths Geometry  (draft) | 56d | MERGEABLE | 0 | spareilleux |
-| [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf (draft) | 56d | MERGEABLE | 0 | spareilleux |
+| [#618](https://github.com/GuitarAlchemist/ga/pull/618) | Resolve Empty OPTIC-K CONTEXT Partition via Circle of Fifths Geometry  (draft) | 57d | MERGEABLE | 0 | spareilleux |
+| [#617](https://github.com/GuitarAlchemist/ga/pull/617) | Prototype Grothendieck and categorical constructions for OPTICK transf (draft) | 57d | MERGEABLE | 0 | spareilleux |
 | [#615](https://github.com/GuitarAlchemist/ga/pull/615) | fix(frontend): remove dead placeholder routes (draft) | 57d | MERGEABLE | 0 | spareilleux |
 | [#608](https://github.com/GuitarAlchemist/ga/pull/608) | Make Gemini issue triage failures non-blocking (draft) | 60d | MERGEABLE | 1 | spareilleux |
 | [#598](https://github.com/GuitarAlchemist/ga/pull/598) | feat(prime-radiant): issues/PR triage panel + IX planet GIS overlay | 62d | CONFLICTING | 0 | spareilleux |
@@ -103,6 +103,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-24T03:05:08.541026+00:00 UTC_
+_Generated: 2026-09-24T03:33:40.146082+00:00 UTC_
 
-_Commit: `e3acc7a00e76`_
+_Commit: `4ac105e6b7ac`_
