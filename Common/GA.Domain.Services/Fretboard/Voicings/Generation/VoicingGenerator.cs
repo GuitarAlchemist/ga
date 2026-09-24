@@ -189,32 +189,42 @@ public static class VoicingGenerator
             // Producer: Generate voicings for each window in parallel
             var producerTask = Task.Run(async () =>
             {
-                await Parallel.ForEachAsync(
-                    Enumerable.Range(0, maxStartFret + 1),
-                    new ParallelOptions
-                    {
-                        MaxDegreeOfParallelism = Environment.ProcessorCount,
-                        CancellationToken = cancellationToken
-                    },
-                    async (startFret, ct) =>
-                    {
-                        var endFret = startFret + windowSize;
-                        var voicings = GenerateAllVoicingsInWindowOptimized(
-                            fretboard,
-                            startFret,
-                            endFret,
-                            cachedFrets,
-                            cachedStrings,
-                            cachedMutedPositions,
-                            cachedLocations,
-                            minPlayedNotes,
-                            windowSize);
+                Exception? completionError = null;
+                try
+                {
+                    await Parallel.ForEachAsync(
+                        Enumerable.Range(0, maxStartFret + 1),
+                        new ParallelOptions
+                        {
+                            MaxDegreeOfParallelism = Environment.ProcessorCount,
+                            CancellationToken = cancellationToken
+                        },
+                        async (startFret, ct) =>
+                        {
+                            var endFret = startFret + windowSize;
+                            var voicings = GenerateAllVoicingsInWindowOptimized(
+                                fretboard,
+                                startFret,
+                                endFret,
+                                cachedFrets,
+                                cachedStrings,
+                                cachedMutedPositions,
+                                cachedLocations,
+                                minPlayedNotes,
+                                windowSize);
 
-                        await channel.Writer.WriteAsync((startFret, voicings), ct);
-                    });
-
-                channel.Writer.Complete();
-            }, cancellationToken);
+                            await channel.Writer.WriteAsync((startFret, voicings), ct);
+                        });
+                }
+                catch (Exception ex)
+                {
+                    completionError = ex;
+                }
+                finally
+                {
+                    channel.Writer.TryComplete(completionError);
+                }
+            });
 
             // Consumer: Process results as they come in
             // For true streaming we can't guarantee global order perfectly without buffering,

@@ -13,6 +13,7 @@ import {
     extractPrRefs,
     extractDocRefs,
     parseValueCatalog,
+    classifyQualitySnapshot,
 } from './parsers';
 
 describe('categorize', () => {
@@ -505,5 +506,83 @@ describe('parseValueCatalog', () => {
 
     it('returns empty array for empty input', () => {
         expect(parseValueCatalog('')).toEqual([]);
+    });
+});
+
+describe('classifyQualitySnapshot', () => {
+    const NOW = new Date('2026-08-09T12:00:00Z');
+    const FRESH = '2026-08-09T00:00:00Z';   // 0.5 days before NOW
+    const OLD = '2026-07-20T12:00:00Z';     // 20 days before NOW
+
+    // Rule 0 — no adverse signal. Preserves the pre-change behaviour exactly:
+    // a snapshot the scorecard never reported must not start appearing.
+    it('returns ok when the snapshot carries no oracle_status', () => {
+        expect(classifyQualitySnapshot('chatbot-qa', { emitted_at: FRESH }, NOW).kind).toBe('ok');
+    });
+
+    it('returns ok when oracle_status is ok, however old the snapshot is', () => {
+        const v = classifyQualitySnapshot('invariants', { emitted_at: OLD, oracle_status: 'ok' }, NOW);
+        expect(v.kind).toBe('ok');
+    });
+
+    // Rule A — advisory.
+    it('classifies a fresh advisory snapshot as advisory, never a regression', () => {
+        const v = classifyQualitySnapshot('maintain-gate', { emitted_at: FRESH, oracle_status: 'warn', advisory: true }, NOW);
+        expect(v.kind).toBe('advisory');
+    });
+
+    it('demotes an advisory snapshot regardless of its age', () => {
+        const v = classifyQualitySnapshot('maintain-gate', { emitted_at: OLD, oracle_status: 'warn', advisory: true }, NOW);
+        expect(v.kind).toBe('advisory');
+    });
+
+    it('reads advisory dynamically — advisory:false is not exempt', () => {
+        // ga#428 flips maintain-gate to advisory:false at IX Phase-3b; the
+        // classifier must follow the field, not assume it stays true.
+        const v = classifyQualitySnapshot('maintain-gate', { emitted_at: FRESH, oracle_status: 'warn', advisory: false }, NOW);
+        expect(v.kind).toBe('regression');
+    });
+
+    // Rule B — binding non-ok verdict.
+    it('classifies a binding, non-ok snapshot as a regression', () => {
+        expect(classifyQualitySnapshot('embeddings', { emitted_at: FRESH, oracle_status: 'warn' }, NOW).kind).toBe('regression');
+        expect(classifyQualitySnapshot('readme-drift', { emitted_at: FRESH, oracle_status: 'error' }, NOW).kind).toBe('regression');
+    });
+
+    // Age must never demote. An earlier draft demoted anything older than a
+    // fixed 7 days; 7 days is exactly readme-drift's weekly producer cadence,
+    // so that rule silently moved a genuine red verdict out of regressions[]
+    // ~20h after it shipped. Classification is now a pure function of the
+    // snapshot's own fields — age is reported, never acted on.
+    it('never demotes a binding non-ok snapshot on age alone, however old', () => {
+        const snap = { emitted_at: OLD, oracle_status: 'error' };
+        expect(classifyQualitySnapshot('readme-drift', snap, NOW).kind).toBe('regression');
+        for (const later of ['2026-09-15T12:00:00Z', '2027-01-01T12:00:00Z', '2030-01-01T12:00:00Z']) {
+            expect(classifyQualitySnapshot('readme-drift', snap, new Date(later)).kind).toBe('regression');
+        }
+    });
+
+    it('keeps a non-ok snapshot with absent or unparseable emitted_at a regression', () => {
+        // Unknown freshness must fail TOWARD reporting on this surface: a
+        // binding bad verdict may not vanish because its timestamp is missing.
+        expect(classifyQualitySnapshot('x', { oracle_status: 'warn' }, NOW).kind).toBe('regression');
+        expect(classifyQualitySnapshot('x', { emitted_at: 'not-a-date', oracle_status: 'warn' }, NOW).kind).toBe('regression');
+    });
+
+    // Label + age. The label is a PUBLISHED string with four rendering
+    // consumers — it must stay byte-identical to the pre-change one.
+    it('keeps the published label identical to the pre-change string', () => {
+        const v = classifyQualitySnapshot('maintain-gate', { emitted_at: OLD, oracle_status: 'warn', advisory: true }, NOW);
+        expect(v.label).toBe('maintain-gate: oracle_status=warn');
+    });
+
+    it('reports ageDays from emitted_at, and null when it is unknown', () => {
+        expect(classifyQualitySnapshot('x', { emitted_at: OLD, oracle_status: 'warn' }, NOW).ageDays).toBeCloseTo(20, 5);
+        expect(classifyQualitySnapshot('x', { oracle_status: 'warn' }, NOW).ageDays).toBeNull();
+    });
+
+    it('tolerates a non-object payload without throwing', () => {
+        expect(classifyQualitySnapshot('x', null, NOW).kind).toBe('ok');
+        expect(classifyQualitySnapshot('x', 'garbage', NOW).kind).toBe('ok');
     });
 });

@@ -61,6 +61,7 @@
         <Project Path="Common/GA.Application/GA.Application.csproj" />
     </Folder>
     <Folder Name="/4 - AI &amp; ML/">
+        <Project Path="Common/GA.Business.AI/GA.Business.AI.csproj" />
         <Project Path="Common/GA.Business.ML/GA.Business.ML.csproj" />
     </Folder>
     <Folder Name="/5 - Orchestration/">
@@ -255,6 +256,7 @@
     <Folder Name="/Tests/">
         <Project Path="Tests/Apps/GaApi.Tests/GaApi.Tests.csproj" />
         <Project Path="Tests/Apps/GaChatbot.Api.Tests/GaChatbot.Api.Tests.csproj" />
+        <Project Path="Tests/Apps/GaMcpServer.Tests/GaMcpServer.Tests.csproj" />
         <Project Path="Tests/Common/GA.Business.Core.Tests/GA.Business.Core.Tests.csproj" />
         <Project Path="Tests/Common/GA.Core.Tests/GA.Core.Tests.csproj" />
         <Project Path="Tests/GA.Domain.Core.Tests/GA.Domain.Core.Tests.csproj" />

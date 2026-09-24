@@ -16,6 +16,11 @@ public class ModalVectorService
     /// <summary>
     ///     Computes the Modal partition of the embedding.
     /// </summary>
+    /// <remarks>
+    ///     Mode names must match the domain catalogue's <c>ScaleMode.Name</c>
+    ///     (<see cref="ModalCharacteristicIntervalService" /> looks them up by name); a name it does
+    ///     not know leaves its slot at zero.
+    /// </remarks>
     public double[] ComputeEmbedding(ChordVoicingRagDocument doc)
     {
         var v = new double[EmbeddingSchema.ModalDim]; // Offset: 109, Dim: 40
@@ -49,31 +54,31 @@ public class ModalVectorService
         // === 2. Harmonic Minor Modes (116-122) ===
         ComputeModeScore(v, EmbeddingSchema.ModalHarmonicMinor - EmbeddingSchema.ModalOffset, "Harmonic minor",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalLocrianNatural6 - EmbeddingSchema.ModalOffset, "Locrian ♮6",
+        ComputeModeScore(v, EmbeddingSchema.ModalLocrianNatural6 - EmbeddingSchema.ModalOffset, "Locrian Natural 6",
             voicingIntervals);
         ComputeModeScore(v, EmbeddingSchema.ModalIonianAugmented - EmbeddingSchema.ModalOffset, "Ionian augmented",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalDorianSharp4 - EmbeddingSchema.ModalOffset, "Dorian ♯4",
+        ComputeModeScore(v, EmbeddingSchema.ModalDorianSharp4 - EmbeddingSchema.ModalOffset, "Dorian Sharp 4",
             voicingIntervals);
         ComputeModeScore(v, EmbeddingSchema.ModalPhrygianDominant - EmbeddingSchema.ModalOffset, "Phrygian dominant",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalLydianSharp2 - EmbeddingSchema.ModalOffset, "Lydian ♯2",
+        ComputeModeScore(v, EmbeddingSchema.ModalLydianSharp2 - EmbeddingSchema.ModalOffset, "Lydian Sharp 2",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalAlteredDoubleFlat7 - EmbeddingSchema.ModalOffset, "Altered ♭♭7",
+        ComputeModeScore(v, EmbeddingSchema.ModalAlteredDoubleFlat7 - EmbeddingSchema.ModalOffset, "Altered bb7",
             voicingIntervals);
 
         // === 3. Melodic Minor Modes (123-129) ===
         ComputeModeScore(v, EmbeddingSchema.ModalMelodicMinor - EmbeddingSchema.ModalOffset, "Melodic minor",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalDorianFlat2 - EmbeddingSchema.ModalOffset, "Dorian ♭2",
+        ComputeModeScore(v, EmbeddingSchema.ModalDorianFlat2 - EmbeddingSchema.ModalOffset, "Dorian b2",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalLydianAugmented - EmbeddingSchema.ModalOffset, "Lydian ♯5",
+        ComputeModeScore(v, EmbeddingSchema.ModalLydianAugmented - EmbeddingSchema.ModalOffset, "Lydian Augmented",
             voicingIntervals);
         ComputeModeScore(v, EmbeddingSchema.ModalLydianDominant - EmbeddingSchema.ModalOffset, "Lydian dominant",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalMixolydianFlat6 - EmbeddingSchema.ModalOffset, "Mixolydian ♭6",
+        ComputeModeScore(v, EmbeddingSchema.ModalMixolydianFlat6 - EmbeddingSchema.ModalOffset, "Mixolydian b6",
             voicingIntervals);
-        ComputeModeScore(v, EmbeddingSchema.ModalLocrianNatural2 - EmbeddingSchema.ModalOffset, "Locrian ♮2",
+        ComputeModeScore(v, EmbeddingSchema.ModalLocrianNatural2 - EmbeddingSchema.ModalOffset, "Locrian Natural 2",
             voicingIntervals);
         ComputeModeScore(v, EmbeddingSchema.ModalAltered - EmbeddingSchema.ModalOffset, "Altered", voicingIntervals);
 
@@ -101,6 +106,9 @@ public class ModalVectorService
         ComputeModeScore(v, EmbeddingSchema.ModalBlues - EmbeddingSchema.ModalOffset, "Blues", voicingIntervals);
         ComputeModeScore(v, EmbeddingSchema.ModalWholeTone - EmbeddingSchema.ModalOffset, "Whole-tone",
             voicingIntervals);
+        // No catalogue mode is named "Diminished", so this slot stays zero. Mapping it to "Half-whole
+        // diminished" would not help yet: ModalCharacteristicIntervalService loads the whole-tone modes
+        // at indices 206-211 and the diminished modes at 208-209, so their interval tables collide.
         ComputeModeScore(v, EmbeddingSchema.ModalDiminished - EmbeddingSchema.ModalOffset, "Diminished",
             voicingIntervals);
 

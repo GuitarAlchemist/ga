@@ -198,6 +198,18 @@ public class GrothendieckServiceTests
         }
 
         [Test]
+        public void ShouldFindNearby_ListSourceOnce_WhenSourceIsNotTheCatalogInstance()
+        {
+            // Arrange: a set built by the caller is equal to, but not the same object as, its PitchClassSet.Items entry
+            var cMajorTriad = new PitchClassSet([PitchClass.FromValue(0), PitchClass.FromValue(4), PitchClass.FromValue(7)]);
+            Assert.That(PitchClassSet.Items.Any(s => ReferenceEquals(s, cMajorTriad)), Is.False, "precondition");
+            // Act
+            var nearby = _service.FindNearby(cMajorTriad, 2).ToList();
+            // Assert: the source appears once (the distance-0 identity entry), not again as its own neighbour
+            Assert.That(nearby.Count(n => n.Set.Id == cMajorTriad.Id), Is.EqualTo(1));
+        }
+
+        [Test]
         public void ShouldFindNearby_ReturnSameResultOnRepeatCall()
         {
             // Cache invariant: FindNearby is pure (deterministic over a static

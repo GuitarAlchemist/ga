@@ -2,6 +2,11 @@ namespace GA.Domain.Core.Primitives.Notes;
 
 internal static class PitchParser
 {
+    // Anchored: the whole input must be a pitch ("Eb2" is not a sharp pitch, even though it ends with "b2").
+    // Octave range matches Octave (-1..9).
+    private static readonly PcreRegex _sharpRegex = new(@"\A([A-G])(#?)(-1|[0-9])\z", PcreOptions.Compiled | PcreOptions.IgnoreCase);
+    private static readonly PcreRegex _flatRegex = new(@"\A([A-G])(b?)(-1|[0-9])\z", PcreOptions.Compiled | PcreOptions.IgnoreCase);
+
     public static bool TryParse<TAccidental, TKeyNote, TPitch>(
         string? s,
         Func<NaturalNote, TAccidental?, TKeyNote> createKeyNote,
@@ -17,10 +22,7 @@ internal static class PitchParser
             return false;
         }
 
-        var regexPattern = typeof(TAccidental) == typeof(SharpAccidental)
-            ? "([A-G])(#?)(10|11|[0-9])"
-            : "([A-G])(b?)(10|11|[0-9])";
-        var regex = new PcreRegex(regexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
+        var regex = typeof(TAccidental) == typeof(SharpAccidental) ? _sharpRegex : _flatRegex;
 
         var match = regex.Match(s);
         if (!match.Success)
@@ -49,9 +51,13 @@ internal static class PitchParser
 
         // Parse accidental
         TAccidental? accidental = null;
-        if (accidentalGroup.IsDefined &&
-            TAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
+        if (accidentalGroup.IsDefined && accidentalGroup.Value.Length > 0)
         {
+            if (!TAccidental.TryParse(accidentalGroup.Value, null, out var parsedAccidental))
+            {
+                return false; // Never drop an accidental silently
+            }
+
             accidental = parsedAccidental;
         }
 

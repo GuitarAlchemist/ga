@@ -1,0 +1,221 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "e2e-dashboard-playwright",
+  "timestamp": "2026-09-24T03-46-16Z",
+  "git_sha": "4ac105e6b7acbf824911adf031082718e222f0d3",
+  "git_ref": "refs/heads/main",
+  "run_id": "35951917329",
+  "outcome": "failure",
+  "base_url": "https://demos.guitaralchemist.com",
+  "summary": {
+    "total": 29,
+    "passed": 18,
+    "failed": 6,
+    "skipped": 5
+  },
+  "tests": [
+    {
+      "title": "ai-annotations-tab.spec.ts › AI Annotations tab › renders card + filters + table",
+      "file": "ai-annotations-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 10814,
+      "error": null
+    },
+    {
+      "title": "auth-gate.spec.ts › CF Access auth gate › SkillActionButton disables + shows lock when /cdn-cgi/access/get-identity returns 401",
+      "file": "auth-gate.spec.ts",
+      "status": "passed",
+      "duration_ms": 3707,
+      "error": null
+    },
+    {
+      "title": "auth-gate.spec.ts › CF Access auth gate › SkillActionButton enables and POSTs to /actions/* when identity returns 200",
+      "file": "auth-gate.spec.ts",
+      "status": "passed",
+      "duration_ms": 4043,
+      "error": null
+    },
+    {
+      "title": "chatbot-showcase.spec.ts › Chatbot showcase › opens modal, clicks a prompt, response < 5s",
+      "file": "chatbot-showcase.spec.ts",
+      "status": "failed",
+      "duration_ms": 709,
+      "error": "Error: expected ≥35 validated QA badges (verified or warning) — fewer means the qa-summary fallback or the canonical baseline is broken\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m35\u001b[39m\nReceived:    \u001b[31m9\u001b[39m"
+    },
+    {
+      "title": "dashboard-loads.spec.ts › Dashboard loads › /test returns 200 and renders core chrome",
+      "file": "dashboard-loads.spec.ts",
+      "status": "timedOut",
+      "duration_ms": 30698,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+    },
+    {
+      "title": "epic-drilldown.spec.ts › Epic drill-down › clicking an epic row reveals sub-sections and items",
+      "file": "epic-drilldown.spec.ts",
+      "status": "timedOut",
+      "duration_ms": 31086,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+    },
+    {
+      "title": "epic-drilldown.spec.ts › Epic drill-down › PR badge links to the correct GitHub PR URL",
+      "file": "epic-drilldown.spec.ts",
+      "status": "timedOut",
+      "duration_ms": 40082,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › renders items + baseline tiles",
+      "file": "harness-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 3393,
+      "error": null
+    },
+    {
+      "title": "harness-tab.spec.ts › Harness tab › skill action button queues an invocation",
+      "file": "harness-tab.spec.ts",
+      "status": "skipped",
+      "duration_ms": 7,
+      "error": null
+    },
+    {
+      "title": "heartbeat-banner.spec.ts › Heartbeat banner › renders with healthy color + epic-shipped percentage",
+      "file": "heartbeat-banner.spec.ts",
+      "status": "timedOut",
+      "duration_ms": 30367,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+    },
+    {
+      "title": "manifest-page.spec.ts › Manifest viewer › /test/manifest loads with copy-curl + schema_version",
+      "file": "manifest-page.spec.ts",
+      "status": "timedOut",
+      "duration_ms": 30258,
+      "error": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+    },
+    {
+      "title": "mcp-control.spec.ts › MCP dashboard control (Phase 1, read-only) › connects to /hubs/dev-dashboard when on /test#dev",
+      "file": "mcp-control.spec.ts",
+      "status": "passed",
+      "duration_ms": 15252,
+      "error": null
+    },
+    {
+      "title": "mcp-control.spec.ts › MCP dashboard control (Phase 1, read-only) › data-dashboard-root marker is rendered on /test#dev",
+      "file": "mcp-control.spec.ts",
+      "status": "passed",
+      "duration_ms": 15537,
+      "error": null
+    },
+    {
+      "title": "mcp-control.spec.ts › MCP dashboard control (Phase 1, read-only) › does NOT connect to /hubs/dev-dashboard from a demo page",
+      "file": "mcp-control.spec.ts",
+      "status": "passed",
+      "duration_ms": 17969,
+      "error": null
+    },
+    {
+      "title": "mcp-control.spec.ts › MCP dashboard control (Phase 1, read-only) › hub endpoint is reachable on backend (crossover-skip)",
+      "file": "mcp-control.spec.ts",
+      "status": "passed",
+      "duration_ms": 254,
+      "error": null
+    },
+    {
+      "title": "mission-control.spec.ts › Mission Control › renders all four quadrants with count badges",
+      "file": "mission-control.spec.ts",
+      "status": "skipped",
+      "duration_ms": 22552,
+      "error": null
+    },
+    {
+      "title": "mission-control.spec.ts › Mission Control › PR-ready row opens GitHub PR URL when clicked",
+      "file": "mission-control.spec.ts",
+      "status": "skipped",
+      "duration_ms": 30112,
+      "error": null
+    },
+    {
+      "title": "sentrux-next-steps.spec.ts › Sentrux Next Steps card › card visible at top of Sentrux tab",
+      "file": "sentrux-next-steps.spec.ts",
+      "status": "passed",
+      "duration_ms": 9218,
+      "error": null
+    },
+    {
+      "title": "sentrux-next-steps.spec.ts › Sentrux Next Steps card › next-steps endpoint returns either populated payload or graceful empty",
+      "file": "sentrux-next-steps.spec.ts",
+      "status": "passed",
+      "duration_ms": 215,
+      "error": null
+    },
+    {
+      "title": "sentrux-next-steps.spec.ts › Sentrux Next Steps card › inputs chips render when seed payload is populated",
+      "file": "sentrux-next-steps.spec.ts",
+      "status": "passed",
+      "duration_ms": 3639,
+      "error": null
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › tab visible in dev strip + four cards render",
+      "file": "sentrux-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 8982,
+      "error": null
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › health endpoint returns ok=true or graceful unreachable",
+      "file": "sentrux-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 166,
+      "error": null
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › rescan button is rendered (auth-aware)",
+      "file": "sentrux-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 6799,
+      "error": null
+    },
+    {
+      "title": "sentrux-tab.spec.ts › Sentrux tab › rescan POST is local-only",
+      "file": "sentrux-tab.spec.ts",
+      "status": "passed",
+      "duration_ms": 159,
+      "error": null
+    },
+    {
+      "title": "test-plans-card.spec.ts › TestPlansCard (/test#dev/qa) › renders header + chatbot footer + empty-or-list state",
+      "file": "test-plans-card.spec.ts",
+      "status": "passed",
+      "duration_ms": 5874,
+      "error": null
+    },
+    {
+      "title": "test-plans-card.spec.ts › TestPlansCard (/test#dev/qa) › Generate for chatbot button POSTs the queue line (local only)",
+      "file": "test-plans-card.spec.ts",
+      "status": "skipped",
+      "duration_ms": 3,
+      "error": null
+    },
+    {
+      "title": "value-complexity-heatmap.spec.ts › Value × Complexity heatmap › renders 4 quadrants with count badges",
+      "file": "value-complexity-heatmap.spec.ts",
+      "status": "passed",
+      "duration_ms": 3762,
+      "error": null
+    },
+    {
+      "title": "value-scorecard.spec.ts › ValueScorecard (/test#dev/summary) › renders the scorecard with stars once deployed",
+      "file": "value-scorecard.spec.ts",
+      "status": "skipped",
+      "duration_ms": 30223,
+      "error": null
+    },
+    {
+      "title": "value-scorecard.spec.ts › ValueScorecard (/test#dev/summary) › the /dev-data/value endpoint responds with the catalog shape",
+      "file": "value-scorecard.spec.ts",
+      "status": "passed",
+      "duration_ms": 7047,
+      "error": null
+    }
+  ]
+}

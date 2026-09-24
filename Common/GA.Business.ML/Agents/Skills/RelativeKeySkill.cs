@@ -47,7 +47,20 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         "Key signature of B minor",
     ];
 
-    public bool CanHandle(string message) => false;  // semantic-routing only
+    // Semantic routing is the normal path; this predicate only serves the offline
+    // keyword fallback (embeddings unavailable), so it accepts exactly the
+    // phrasings ExecuteAsync can answer.
+    public bool CanHandle(string message) => IsKeyRelationQuestion(message);
+
+    /// <summary>True for the relative-key, parallel-key and key-signature phrasings
+    /// <see cref="ExecuteAsync"/> answers. <see cref="ScaleInfoSkill"/> yields on these.</summary>
+    internal static bool IsKeyRelationQuestion(string? message) =>
+        !string.IsNullOrWhiteSpace(message)
+        && (RelativeMinorPattern.IsMatch(message)
+            || RelativeMajorPattern.IsMatch(message)
+            || ParallelMinorPattern.IsMatch(message)
+            || ParallelMajorPattern.IsMatch(message)
+            || KeySignaturePattern.IsMatch(message));
 
     private static readonly Regex RelativeMinorPattern =
         new(@"\brelative\s+min(?:or)?\s+of\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
