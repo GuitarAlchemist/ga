@@ -220,6 +220,7 @@ public sealed class CapoSkill(ILogger<CapoSkill> logger) : IOrchestratorSkill
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask about a capo + sounding key (\"what shape do I play in E with capo 4\") or a capo + played shape (\"I play a C shape with capo 3, what does it sound like\").",
         Confidence = 0.1f,

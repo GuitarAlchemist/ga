@@ -11,6 +11,31 @@ import { Ocean } from '../components/Ocean';
 import CastButton from '../components/Common/CastButton';
 import { DemoErrorBoundary } from '../components/Common/DemoErrorBoundary';
 
+// Simple 2D compass to keep the viewer oriented over the horizon-less ocean.
+const OceanCompass: React.FC = () => (
+  <svg width={88} height={88} viewBox="0 0 88 88">
+    <circle cx={44} cy={44} r={40} fill="rgba(0,0,0,0.65)" stroke="rgba(0,229,255,0.3)" strokeWidth={1} />
+    <line x1={44} y1={8} x2={44} y2={80} stroke="rgba(0,229,255,0.35)" strokeWidth={1} />
+    <line x1={8} y1={44} x2={80} y2={44} stroke="rgba(0,229,255,0.35)" strokeWidth={1} />
+    <text x={44} y={18} textAnchor="middle" fill="#ff6b6b" fontSize="11" fontFamily="monospace" fontWeight={700}>
+      N
+    </text>
+    <text x={78} y={48} textAnchor="middle" fill="#a0c0d0" fontSize="11" fontFamily="monospace">
+      E
+    </text>
+    <text x={44} y={80} textAnchor="middle" fill="#a0c0d0" fontSize="11" fontFamily="monospace">
+      S
+    </text>
+    <text x={10} y={48} textAnchor="middle" fill="#a0c0d0" fontSize="11" fontFamily="monospace">
+      W
+    </text>
+    <path d="M44 22 L36 40 L44 36 L52 40 Z" fill="#00e5ff" opacity={0.9} />
+    <text x={44} y={58} textAnchor="middle" fill="#00e5ff" fontSize="8" fontFamily="monospace">
+      waves
+    </text>
+  </svg>
+);
+
 const FEATURES = [
   { label: '8-Wave Gerstner', detail: 'Choppy horizontal displacement', color: '#00e5ff' },
   { label: 'Fresnel Reflections', detail: 'Schlick (F0 = 0.02, IOR 1.33)', color: '#ffab00' },
@@ -83,6 +108,23 @@ const OceanTest: React.FC = () => (
           <div style={{ color: '#556070', marginTop: 4 }}>
             Drag: orbit &middot; Scroll: zoom &middot; RMB: pan
           </div>
+        </Box>
+
+        {/* Bottom-right compass */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 12,
+            right: 12,
+            bgcolor: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: '50%',
+            border: '1px solid rgba(0,229,255,0.2)',
+            p: 0.5,
+            pointerEvents: 'none',
+          }}
+        >
+          <OceanCompass />
         </Box>
       </Box>
     </Box>

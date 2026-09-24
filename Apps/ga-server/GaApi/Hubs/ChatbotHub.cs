@@ -116,8 +116,10 @@ public sealed class ChatbotHub(
             // conversation rather than across every anonymous tab (PR #157 Phase A). The
             // seam takes it as an opaque id. Rate-limit + length cap stay here above
             // (SignalR-specific: the HTTP limiter only fires on the WS upgrade).
+            // Forward the stored per-connection turns like the REST and AG-UI transports do;
+            // without them, LLM agents on the non-streaming path receive no conversation history.
             var result = await chatIntake.IntakeAsync(
-                new ChatIntakeRequest(trimmedMessage, connectionId),
+                new ChatIntakeRequest(trimmedMessage, connectionId, ToConversationTurns(history)),
                 cancellationToken);
 
             if (result.IsFailure)
@@ -251,6 +253,12 @@ public sealed class ChatbotHub(
         _rateLimits.TryRemove(connectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
+
+    // Snapshot the stored turns (already normalized on write); null keeps first-message requests unchanged.
+    private static List<ConversationTurn>? ToConversationTurns(List<ChatMessage> history) =>
+        history.Count == 0
+            ? null
+            : [.. history.Select(message => new ConversationTurn(message.Role, message.Content, DateTimeOffset.UtcNow))];
 
     private static IEnumerable<string> SplitIntoChunks(string text) =>
         GA.Business.Core.Orchestration.Helpers.SseChunker.SplitIntoChunks(text);

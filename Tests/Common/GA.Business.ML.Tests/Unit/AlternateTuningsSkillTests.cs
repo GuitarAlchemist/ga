@@ -92,4 +92,35 @@ public class AlternateTuningsSkillTests
         Assert.That(answer, Does.Not.Contain("C – G – C – F – A – D"),
             "drop C# must not be answered as Drop C");
     }
+
+    [Test]
+    public async Task NamedTuning_WithAccidental_DoesNotReturnNaturalTuning(
+        [Values("drop C", "drop D", "double drop D", "open G", "open D")] string tuning,
+        [Values("#", "b", "♯", "♭")] string accidental)
+    {
+        var response = await MakeSkill().ExecuteAsync($"what is {tuning}{accidental} tuning");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Confidence, Is.EqualTo(0.1f));
+            Assert.That(response.Result, Does.Contain("Ask about a named alternate tuning"));
+            Assert.That(response.Result, Does.Not.Contain("| String |"));
+        });
+    }
+
+    [TestCase("drop C", "C – G – C – F – A – D")]
+    [TestCase("drop-D", "D – A – D – G – B – E")]
+    [TestCase("double drop D", "D – A – D – G – B – D")]
+    [TestCase("open G", "D – G – D – G – B – D")]
+    [TestCase("OPEN-D", "D – A – D – F# – A – D")]
+    public async Task NamedTuning_WithoutAccidental_StillReturnsLayout(string tuning, string layout)
+    {
+        var response = await MakeSkill().ExecuteAsync($"what is {tuning}?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Confidence, Is.EqualTo(1.0f));
+            Assert.That(response.Result, Does.Contain(layout));
+        });
+    }
 }

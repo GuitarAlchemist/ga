@@ -51,15 +51,12 @@ public interface IRangeValueObject<TSelf> : IValueObject<TSelf>
             return value;
         }
 
-        // Attempt to normalize the value
-        var count = maxValue - minValue;
+        // Attempt to normalize the value (the range is inclusive, hence the + 1)
+        var count = maxValue - minValue + 1;
 
         if (normalize)
         {
-            value =
-                minValue
-                +
-                (value - minValue).Mod(count) + 1;
+            value = minValue + (value - minValue).Mod(count);
         }
 
         if (value < minValue)

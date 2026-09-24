@@ -33,7 +33,7 @@ public class TechniqueAgent(IChatClient chatClient, ILogger<TechniqueAgent> logg
         Logger.LogInformation("TechniqueAgent processing: {Query}", request.Query);
 
         var prompt = BuildTechniquePrompt(request);
-        var responseText = await ChatAsync(request.Query, prompt, cancellationToken);
+        var responseText = await ChatAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
         return ParseStructuredResponse(responseText, "Technique evaluation failed.");
     }
@@ -105,13 +105,13 @@ public class ComposerAgent(IChatClient chatClient, ILogger<ComposerAgent> logger
             {
                 var enrichedQuery = $"{request.Query}\n\n[Theory context]: {theoryResult.Result}";
                 var prompt = BuildComposerPrompt(request);
-                var responseText = await ChatAsync(enrichedQuery, prompt, cancellationToken: cancellationToken);
+                var responseText = await ChatAsync(enrichedQuery, prompt, cancellationToken, request.ConversationHistory);
                 return ParseStructuredResponse(responseText, "Composition generation failed.");
             }
         }
 
         var composerPrompt = BuildComposerPrompt(request);
-        var text = await ChatAsync(request.Query, composerPrompt, cancellationToken: cancellationToken);
+        var text = await ChatAsync(request.Query, composerPrompt, cancellationToken, request.ConversationHistory);
         return ParseStructuredResponse(text, "Composition generation failed.");
     }
 
@@ -176,7 +176,7 @@ public class CriticAgent(IChatClient chatClient, ILogger<CriticAgent> logger)
         Logger.LogInformation("CriticAgent processing: {Query}", request.Query);
 
         var prompt = BuildCriticPrompt(request);
-        var responseText = await ChatAsync(request.Query, prompt, cancellationToken);
+        var responseText = await ChatAsync(request.Query, prompt, cancellationToken, request.ConversationHistory);
 
         return ParseStructuredResponse(responseText, "Musical critique failed.");
     }

@@ -32,43 +32,32 @@ public class KeyTests
     }
 
     [Test]
-    public void MajorKey_HasSevenNotes()
-    {
-        Assert.That(Key.Major.C.Notes.Count, Is.EqualTo(7));
-    }
+    public void MajorKey_HasSevenNotes() => Assert.That(Key.Major.C.Notes.Count, Is.EqualTo(7));
 
     [Test]
-    public void CMajorKey_PitchClassSet_MatchesMajorScale()
-    {
+    public void CMajorKey_PitchClassSet_MatchesMajorScale() =>
         Assert.That(Key.Major.C.PitchClassSet.Id, Is.EqualTo(Scale.Major.PitchClassSet.Id));
-    }
 
     [Test]
-    public void RelativeKeys_ShareSamePitchClassSet()
-    {
+    public void RelativeKeys_ShareSamePitchClassSet() =>
         // C major (0 sharps/flats) and A minor (0 sharps/flats) are relative keys — same notes.
         Assert.That(Key.Minor.Am.PitchClassSet.Id, Is.EqualTo(Key.Major.C.PitchClassSet.Id));
-    }
 
     [Test]
-    public void KeyMode_IsModeSpecific()
-    {
+    public void KeyMode_IsModeSpecific() =>
         Assert.Multiple(() =>
         {
             Assert.That(Key.Major.C.KeyMode, Is.EqualTo(KeyMode.Major));
             Assert.That(Key.Minor.Am.KeyMode, Is.EqualTo(KeyMode.Minor));
         });
-    }
 
     [Test]
-    public void MajorKey_AccidentalKind_TracksSignature()
-    {
+    public void MajorKey_AccidentalKind_TracksSignature() =>
         Assert.Multiple(() =>
         {
             Assert.That(Key.Major.G.AccidentalKind, Is.EqualTo(AccidentalKind.Sharp));
             Assert.That(Key.Major.F.AccidentalKind, Is.EqualTo(AccidentalKind.Flat));
         });
-    }
 
     [Test]
     public void TryParse_KnownRoot_ResolvesKey()

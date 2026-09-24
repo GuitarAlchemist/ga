@@ -125,6 +125,14 @@ public class ProductionOrchestrator(
                 ["routing.note"]    = "no intent crossed MinConfidence; falling through to LLM agent path",
             });
     }
+
+    private void EmitDeclinedTrace(string intentId) =>
+        traceCapture.AddStep("routing.declined", "completed", 0,
+            new Dictionary<string, object?>
+            {
+                ["routing.declined_id"] = intentId,
+                ["routing.note"]        = "intent found no input it handles; falling through to LLM agent path",
+            });
     private static readonly string[] ExplicitVoicingKeywords =
     [
         "voicing",
@@ -453,65 +461,71 @@ public class ProductionOrchestrator(
 
             var intentResult = await pick.Intent.ExecuteAsync(message, ct);
 
-            // Map IntentResult back to AgentResponse for hook compatibility.
-            // PR #185 (2026-05-12): forward Data so structured payloads
-            // (e.g. RememberThisSkill's MemoryWriteRequest) reach
-            // OnResponseSent hooks. Without this line — and the matching
-            // Data field on IntentResult + the forward in
-            // OrchestratorSkillIntent — durable-memory writes from the
-            // semantic-routing path silently fail because MemoryWriteHook
-            // pattern-matches on ctx.Response?.Data.
-            var skillRespForHooks = new AgentResponse
+            // A declined intent saw no input it handles; continue to the agent path with history.
+            if (!intentResult.Declined)
             {
-                AgentId    = pick.Intent.Id,
-                Result     = intentResult.Answer,
-                Confidence = intentResult.Confidence,
-                Evidence   = intentResult.Evidence ?? [],
-                Assumptions = [],
-                Data       = intentResult.Data,
-            };
+                // Map IntentResult back to AgentResponse for hook compatibility.
+                // PR #185 (2026-05-12): forward Data so structured payloads
+                // (e.g. RememberThisSkill's MemoryWriteRequest) reach
+                // OnResponseSent hooks. Without this line — and the matching
+                // Data field on IntentResult + the forward in
+                // OrchestratorSkillIntent — durable-memory writes from the
+                // semantic-routing path silently fail because MemoryWriteHook
+                // pattern-matches on ctx.Response?.Data.
+                var skillRespForHooks = new AgentResponse
+                {
+                    AgentId    = pick.Intent.Id,
+                    Result     = intentResult.Answer,
+                    Confidence = intentResult.Confidence,
+                    Evidence   = intentResult.Evidence ?? [],
+                    Assumptions = [],
+                    Data       = intentResult.Data,
+                };
 
-            // OnAfterSkill hooks
-            var afterCtx = new ChatHookContext
-            {
-                OriginalMessage  = req.Message,
-                CurrentMessage   = message,
-                MatchedSkillName = pick.Intent.Id,
-                Response         = skillRespForHooks,
-                CorrelationId    = correlationId,
-                SessionId        = sessionId,   // PR #157 Phase B
-            };
-            foreach (var hook in _hooks)
-                await hook.OnAfterSkill(afterCtx, ct);
+                // OnAfterSkill hooks
+                var afterCtx = new ChatHookContext
+                {
+                    OriginalMessage  = req.Message,
+                    CurrentMessage   = message,
+                    MatchedSkillName = pick.Intent.Id,
+                    Response         = skillRespForHooks,
+                    CorrelationId    = correlationId,
+                    SessionId        = sessionId,   // PR #157 Phase B
+                };
+                foreach (var hook in _hooks)
+                    await hook.OnAfterSkill(afterCtx, ct);
 
-            sw.Stop();
-            activity?.SetTag("orchestration.branch", pick.Intent.Id);
-            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+                sw.Stop();
+                activity?.SetTag("orchestration.branch", pick.Intent.Id);
+                activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
 
-            var chatResp = new ChatResponse(
-                NaturalLanguageAnswer: intentResult.Answer,
-                Candidates: [],
-                Routing: new AgentRoutingMetadata(
-                    pick.Intent.Id,
-                    Math.Min(intentResult.Confidence, pick.Confidence),
-                    intentResult.RoutingMethodOverride ?? "semantic-intent"),
-                Grounding: BuildGrounding(intentResult));
+                var chatResp = new ChatResponse(
+                    NaturalLanguageAnswer: intentResult.Answer,
+                    Candidates: [],
+                    Routing: new AgentRoutingMetadata(
+                        pick.Intent.Id,
+                        Math.Min(intentResult.Confidence, pick.Confidence),
+                        intentResult.RoutingMethodOverride ?? "semantic-intent"),
+                    Grounding: BuildGrounding(intentResult));
 
-            // OnResponseSent hooks (memory writing, analytics)
-            var sentCtx = new ChatHookContext
-            {
-                OriginalMessage  = req.Message,
-                CurrentMessage   = message,
-                MatchedSkillName = pick.Intent.Id,
-                Response         = skillRespForHooks,
-                CorrelationId    = correlationId,
-                SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
-            };
-            foreach (var hook in _hooks)
-                await hook.OnResponseSent(sentCtx, ct);
+                // OnResponseSent hooks (memory writing, analytics)
+                var sentCtx = new ChatHookContext
+                {
+                    OriginalMessage  = req.Message,
+                    CurrentMessage   = message,
+                    MatchedSkillName = pick.Intent.Id,
+                    Response         = skillRespForHooks,
+                    CorrelationId    = correlationId,
+                    SessionId        = sessionId,   // PR #157 Phase B — load-bearing for MemoryHook session scope
+                };
+                foreach (var hook in _hooks)
+                    await hook.OnResponseSent(sentCtx, ct);
 
-            historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
-            return chatResp;
+                historyStore.AddTurn(sessionId, "assistant", chatResp.NaturalLanguageAnswer);
+                return chatResp;
+            }
+
+            EmitDeclinedTrace(pick.Intent.Id);
         }
 
         if (TrySelectDeterministicAgent(message, out var deterministicAgent, out var deterministicRouting))
@@ -833,6 +847,12 @@ public class ProductionOrchestrator(
         if (IsTabIntentWithoutTab(pick.Intent.Id, executeMessage)) return null;
 
         var result = await pick.Intent.ExecuteAsync(executeMessage, ct);
+        if (result.Declined)
+        {
+            EmitDeclinedTrace(pick.Intent.Id);
+            return null;
+        }
+
         return new ChatResponse(
             NaturalLanguageAnswer: result.Answer,
             Candidates: [],
