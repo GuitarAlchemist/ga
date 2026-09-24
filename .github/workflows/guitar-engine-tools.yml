@@ -1,0 +1,51 @@
+name: Guitar engine tools
+
+# Builds the WASM guitar engine and tests the offline damping-fit harness, which
+# otherwise no workflow compiles. Path-filtered: only runs when they change.
+on:
+  pull_request:
+    paths:
+      - 'Rust/guitar-web-wasm-demo/rust-engine/**'
+      - 'Rust/guitar-web-wasm-demo/tools/damping-fit/**'
+      - 'Rust/guitar-web-wasm-demo/src/atoms/**'
+      - '.github/workflows/guitar-engine-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned: the size baseline below is only meaningful for one toolchain.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.1
+          targets: wasm32-unknown-unknown
+
+      - name: Build engine WASM (release) and check size against the baseline
+        working-directory: Rust/guitar-web-wasm-demo/rust-engine
+        run: |
+          cargo build --release --target wasm32-unknown-unknown
+          size=$(stat -c %s target/wasm32-unknown-unknown/release/guitar_engine.wasm)
+          toolchain=$(awk -F'"' '/^toolchain/ {print $2}' wasm-size-baseline.toml)
+          baseline=$(awk '/^bytes/ {print $3}' wasm-size-baseline.toml | tr -dc '0-9')
+          actual_toolchain=$(rustc --version | cut -d' ' -f2)
+          limit=$(( baseline * 105 / 100 ))
+          echo "guitar_engine.wasm: ${size} B (baseline ${baseline} B on rustc ${toolchain}, limit ${limit} B)" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$actual_toolchain" != "$toolchain" ]; then
+            echo "::error::rustc ${actual_toolchain} != baseline toolchain ${toolchain}; update both together"
+            exit 1
+          fi
+          if [ "$size" -gt "$limit" ]; then
+            echo "::error::guitar_engine.wasm grew more than 5% (${baseline} -> ${size} B). If intended, update rust-engine/wasm-size-baseline.toml."
+            exit 1
+          fi
+
+      - name: Test damping-fit (stability, long renders, UI table, noise floor)
+        working-directory: Rust/guitar-web-wasm-demo/tools/damping-fit
+        run: cargo test --release --locked

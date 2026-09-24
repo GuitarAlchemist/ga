@@ -1,5 +1,7 @@
 namespace GA.Domain.Core.Theory.Harmony;
 
+using System.Numerics;
+
 /// <summary>
 ///     A canonical chord pattern expressed as intervals-from-root (mod 12, sorted ascending).
 ///     Part of the content-enumerated chord recognition architecture (replaces the
@@ -41,6 +43,22 @@ public readonly record struct ChordIntervalPattern(
     {
         ArgumentNullException.ThrowIfNull(intervalsFromRoot);
 
+        // Intervals are pitch classes relative to the root, so each side is a 12-bit set and
+        // missing, extra and overlap are popcounts of AND/AND-NOT. This runs once per pattern per
+        // candidate root for every voicing analysed, and the set version allocated a HashSet here
+        // plus one inside each of Except, Except and Intersect.
+        if (TryMask(Intervals, out var patternMask) && TryMask(intervalsFromRoot, out var voicingMask))
+        {
+            var missingBits = BitOperations.PopCount((uint)(patternMask & ~voicingMask));
+            var extraBits = BitOperations.PopCount((uint)(voicingMask & ~patternMask));
+
+            if (missingBits > maxMissing || extraBits > maxExtra)
+                return null;
+
+            return new MatchResult(this, Overlap: BitOperations.PopCount((uint)(patternMask & voicingMask)), Missing: missingBits, Extra: extraBits);
+        }
+
+        // Values outside 0-11 do not fit the mask: keep the set semantics for them
         var patternSet = new HashSet<int>(Intervals);
         var voicingSet = intervalsFromRoot is HashSet<int> hs ? hs : [.. intervalsFromRoot];
 
@@ -51,6 +69,39 @@ public readonly record struct ChordIntervalPattern(
             return null;
 
         return new MatchResult(this, Overlap: patternSet.Intersect(voicingSet).Count(), Missing: missing, Extra: extra);
+    }
+
+    /// <summary>
+    ///     Folds intervals into a 12-bit mask (bit i set when interval i is present).
+    ///     Returns false when a value lies outside 0-11 and cannot be represented.
+    /// </summary>
+    private static bool TryMask(IEnumerable<int> intervals, out int mask)
+    {
+        mask = 0;
+        switch (intervals)
+        {
+            case int[] array:
+                foreach (var interval in array)
+                {
+                    if ((uint)interval > 11) return false;
+                    mask |= 1 << interval;
+                }
+                return true;
+            case HashSet<int> set:
+                foreach (var interval in set)
+                {
+                    if ((uint)interval > 11) return false;
+                    mask |= 1 << interval;
+                }
+                return true;
+            default:
+                foreach (var interval in intervals)
+                {
+                    if ((uint)interval > 11) return false;
+                    mask |= 1 << interval;
+                }
+                return true;
+        }
     }
 }
 

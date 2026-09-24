@@ -38,7 +38,16 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
     #endregion
 
-    private MidiNote GetMidiNote() => MidiNote.Create(Octave, PitchClass);
+    /// <summary>
+    ///     Gets the number of semitones between the C that starts <see cref="Octave" /> and this pitch.
+    /// </summary>
+    /// <remarks>
+    ///     Octave numbers change at C (scientific pitch notation), so a spelling that crosses the B/C boundary
+    ///     falls outside 0-11: Cb4 is -1 (B3) and B#3 is 12 (C4).
+    /// </remarks>
+    protected virtual int SemitonesAboveOctaveC => PitchClass.Value;
+
+    private MidiNote GetMidiNote() => MidiNote.FromValue((Octave.Value - Octave.Min.Value) * 12 + SemitonesAboveOctaveC);
 
     #region Chromatic Pitch
 
@@ -73,6 +82,10 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
     {
         /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
+
+        /// <inheritdoc />
+        protected override int SemitonesAboveOctaveC =>
+            Note.NaturalNote.PitchClass.Value + (Note.SharpAccidental?.Value ?? 0);
 
         /// <summary>
         ///     Gets a sharp pitch from a pitch (e.g. C#/Db => C#)
@@ -240,6 +253,10 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
     {
         /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
+
+        /// <inheritdoc />
+        protected override int SemitonesAboveOctaveC =>
+            Note.NaturalNote.PitchClass.Value + (Note.FlatAccidental?.Value ?? 0);
 
         /// <summary>
         ///     Gets a flat pitch from a pitch (e.g. C#/Db => Db)

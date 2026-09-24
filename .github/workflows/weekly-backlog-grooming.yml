@@ -271,8 +271,8 @@ jobs:
                 else "other" end) as $cat |
               # Shipper: Co-Authored-By trailer from PR body, else author.
               # Shipper = first Co-Authored-By trailer in body; restrict to a
-              # single line (no newlines, no '<', <= 40 chars) so multi-line
-              # bodies don't bleed into the table. `capture(...)? | .name` returns
+              # single line (no newlines, no "<", <= 40 chars) so multi-line
+              # bodies do not bleed into the table. `capture(...)? | .name` returns
               # null on no-match without aborting the pipeline; `// .author.login`
               # then resolves at the outer object scope.
               ((((.body // "") | capture("Co-Authored-By:[ \\t]*(?<name>[^\\n<]{1,40}?)[ \\t]*<"; "im")?) | .name) // .author.login // "?") as $shipper |
@@ -399,6 +399,22 @@ jobs:
             echo "$latest|$baseline"
           }
 
+          # " (YYYY-MM-DD)" for the snapshot a value came from, plus ", stale"
+          # when it predates the 7d window: otherwise a months-old snapshot
+          # (e.g. a one-off local run) reads as this week's number.
+          snap_date() {
+            local fdate
+            fdate=$(basename "$1" .json)
+            fdate="${fdate:0:10}"
+            if [[ "$fdate" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              if [[ "$fdate" < "$(date -u -d '7 days ago' +%Y-%m-%d)" ]]; then
+                echo " ($fdate, stale)"
+              else
+                echo " ($fdate)"
+              fi
+            fi
+          }
+
           emit_row() {
             local domain="$1"
             local latest_val="$2"
@@ -413,18 +429,18 @@ jobs:
           if [ -n "$LATEST" ]; then
             LV=$(jq -r '.pass_pct // "null"' "$LATEST")
             if [ "$LV" = "null" ]; then
-              emit_row "chatbot-qa" "null (env-degraded)" "n/a" "degraded"
+              emit_row "chatbot-qa" "null (env-degraded)$(snap_date "$LATEST")" "n/a" "degraded"
             elif [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
               BV=$(jq -r '.pass_pct // "null"' "$BASE")
               if [ "$BV" = "null" ]; then
-                emit_row "chatbot-qa" "$LV" "(no baseline)" "n/a"
+                emit_row "chatbot-qa" "$LV$(snap_date "$LATEST")" "(no baseline)" "n/a"
               else
                 D=$(awk "BEGIN { printf \"%+.3f\", $LV - $BV }")
                 V=$(awk "BEGIN { d = $LV - $BV; if (d >= 0.02) print \"improved\"; else if (d <= -0.02) print \"regressed\"; else print \"stable\" }")
-                emit_row "chatbot-qa" "$LV" "$D" "$V"
+                emit_row "chatbot-qa" "$LV$(snap_date "$LATEST")" "$D" "$V"
               fi
             else
-              emit_row "chatbot-qa" "$LV" "(no baseline)" "n/a"
+              emit_row "chatbot-qa" "$LV$(snap_date "$LATEST")" "(no baseline)" "n/a"
             fi
           else
             emit_row "chatbot-qa" "(none)" "(none)" "n/a"
@@ -439,9 +455,9 @@ jobs:
               BV=$(jq -r '.Corpus.Total // 0' "$BASE")
               D=$((LV - BV))
               V=$(awk "BEGIN { d = $LV - $BV; b = $BV; if (b == 0) print \"n/a\"; else if (d / b >= 0.01) print \"improved\"; else if (d / b <= -0.01) print \"regressed\"; else print \"stable\" }")
-              emit_row "voicing-analysis" "$LV" "$D" "$V"
+              emit_row "voicing-analysis" "$LV$(snap_date "$LATEST")" "$D" "$V"
             else
-              emit_row "voicing-analysis" "$LV" "(no baseline)" "n/a"
+              emit_row "voicing-analysis" "$LV$(snap_date "$LATEST")" "(no baseline)" "n/a"
             fi
           else
             emit_row "voicing-analysis" "(none)" "(none)" "n/a"
@@ -458,15 +474,15 @@ jobs:
             elif [ -n "$BASE" ] && [ "$BASE" != "$LATEST" ]; then
               BV=$(jq -r '.leak_detection.full_classifier_accuracy // "null"' "$BASE")
               if [ "$BV" = "null" ]; then
-                emit_row "embeddings" "$LV" "(no baseline)" "n/a"
+                emit_row "embeddings" "$LV$(snap_date "$LATEST")" "(no baseline)" "n/a"
               else
                 D=$(awk "BEGIN { printf \"%+.3f\", $LV - $BV }")
                 # Inverted: improved = leak fell.
                 V=$(awk "BEGIN { d = $LV - $BV; if (d <= -0.02) print \"improved\"; else if (d >= 0.02) print \"regressed\"; else print \"stable\" }")
-                emit_row "embeddings" "$LV" "$D" "$V"
+                emit_row "embeddings" "$LV$(snap_date "$LATEST")" "$D" "$V"
               fi
             else
-              emit_row "embeddings" "$LV" "(no baseline)" "n/a"
+              emit_row "embeddings" "$LV$(snap_date "$LATEST")" "(no baseline)" "n/a"
             fi
           else
             emit_row "embeddings" "(none)" "(none)" "n/a"
@@ -577,6 +593,13 @@ jobs:
             ' $TP_METAS 2>/dev/null || echo 0)
           fi
           # PRs merged in the window with no <head_sha>.md test plan.
+          # nullglob: with no meta files the pattern must expand to nothing.
+          # Passed literally, jq printed "0" for the empty slurp AND failed on
+          # the missing path, so `|| echo 0` made HAS_PLAN "0\n0" and every
+          # PR counted as having a plan.
+          shopt -s nullglob
+          TP_META_FILES=(state/quality/test-plans/*.meta.json)
+          shopt -u nullglob
           NO_PLAN_PRS=$(echo "$PR_JSON" | jq -r --arg cutoff "$CUTOFF_ISO" '
             .[] | select(.mergedAt >= $cutoff) |
             "\(.number)|\(.mergeCommit.oid // "")"
@@ -587,7 +610,13 @@ jobs:
             # contains the merge sha OR a sha that appears in the PR's commits,
             # skip. For the simple case, just check if ANY meta references this
             # PR number — the schema has `pr_number`.
-            HAS_PLAN=$(jq -s --argjson num "$num" '[.[] | select(.pr_number == $num)] | length' state/quality/test-plans/*.meta.json 2>/dev/null || echo 0)
+            if [ "${#TP_META_FILES[@]}" -eq 0 ]; then
+              HAS_PLAN=0
+            elif ! HAS_PLAN=$(jq -s --argjson num "$num" '[.[] | select(.pr_number == $num)] | length' "${TP_META_FILES[@]}" 2>/dev/null); then
+              # Unreadable meta: say so rather than guess either way.
+              echo "#$num (unverified)"
+              continue
+            fi
             if [ "$HAS_PLAN" = "0" ]; then echo "#$num"; fi
           done | paste -sd', ' -)
           {

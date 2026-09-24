@@ -81,7 +81,7 @@ public class ChordTests
         Assert.Multiple(() =>
         {
             Assert.That(chord.Root.PitchClass.Value, Is.EqualTo(6)); // F#
-            Assert.That(chord.Quality, Is.EqualTo(ChordQuality.Minor));
+            Assert.That(chord.Quality, Is.EqualTo(ChordQuality.Minor7));
             Assert.That(chord.Extension, Is.EqualTo(ChordExtension.Seventh));
         });
     }
@@ -201,8 +201,8 @@ public class ChordTests
             Assert.That(ChordFormula.Diminished.Quality, Is.EqualTo(ChordQuality.Diminished));
             Assert.That(ChordFormula.Augmented.Quality, Is.EqualTo(ChordQuality.Augmented));
             Assert.That(ChordFormula.Dominant7.Quality, Is.EqualTo(ChordQuality.Dominant));
-            Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major));
-            Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor));
+            Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major7));
+            Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor7));
         });
     }
 
@@ -298,7 +298,7 @@ public class ChordTests
     [TestCase("C", 2, ChordQuality.Major, "C")]
     [TestCase("Cm", 1, ChordQuality.Minor, "Cm")]
     [TestCase("C7", 3, ChordQuality.Dominant, "C7")]
-    [TestCase("Cmaj7", 1, ChordQuality.Major, "Cmaj7")]
+    [TestCase("Cmaj7", 1, ChordQuality.Major7, "Cmaj7")]
     public void ToInversion_KeepsQualityAndSymbol(string symbol, int inversion, ChordQuality expectedQuality, string expectedSymbol)
     {
         var inverted = Chord.FromSymbol(symbol).ToInversion(inversion);
@@ -344,13 +344,25 @@ public class ChordTests
         Assert.That(new Chord(notes).Symbol, Is.EqualTo(expectedSymbol));
     }
 
-    // Seventh-chord qualities stay reported as their triad quality (plus Dominant): naming services,
-    // key-function analysis and voicing scoring rely on it (see Formula_Quality_IsClassifiedFromIntervals).
     [Test]
-    public void Formula_Quality_OfHalfDiminishedAndDiminishedSeventh_IsDiminished() =>
+    public void Formula_Quality_DistinguishesSeventhChordSpecies() =>
         Assert.Multiple(() =>
         {
-            Assert.That(Chord.FromSymbol("Cm7b5").Quality, Is.EqualTo(ChordQuality.Diminished));
-            Assert.That(Chord.FromSymbol("Cdim7").Quality, Is.EqualTo(ChordQuality.Diminished));
+            Assert.That(Chord.FromSymbol("Cmaj7").Quality, Is.EqualTo(ChordQuality.Major7));
+            Assert.That(Chord.FromSymbol("Cm7").Quality, Is.EqualTo(ChordQuality.Minor7));
+            Assert.That(Chord.FromSymbol("Cm7b5").Quality, Is.EqualTo(ChordQuality.HalfDiminished));
+            Assert.That(Chord.FromSymbol("Cdim7").Quality, Is.EqualTo(ChordQuality.Diminished7));
         });
+
+    [Test]
+    public void DiminishedSeventh_IsASeventhExtension() =>
+        Assert.That(Chord.FromSymbol("Cdim7").Extension, Is.EqualTo(ChordExtension.Seventh));
+
+    [Test]
+    public void MinorMajorSeventh_SymbolRoundTrips()
+    {
+        var chord = new Chord(Note.Accidented.C, ChordFormula.FromSemitones("Minor major seventh", 3, 7, 11));
+
+        Assert.That(Chord.FromSymbol(chord.Symbol).Formula, Is.EqualTo(chord.Formula));
+    }
 }

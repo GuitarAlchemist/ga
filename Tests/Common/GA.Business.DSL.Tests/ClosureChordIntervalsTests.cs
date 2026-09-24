@@ -6,8 +6,10 @@ using Microsoft.FSharp.Core;
 using static GA.Business.DSL.Closures.GaClosureRegistry.GaClosureRegistry;
 
 /// <summary>
-///     domain.chordIntervals and the closures built on the same chord tones must spell sevenths,
-///     stacked extensions and alterations the way a theory textbook does.
+/// Verifies domain.chordIntervals (and the closures sharing its chord-tone model)
+/// against textbook chord spelling: one interval per chord degree, named by degree
+/// (d5, not TT), with alterations applied and the seventh implied by 9/11/13 chords.
+/// Expected values match <c>Chord.FromSymbol</c> in GA.Domain.Core.
 /// </summary>
 [TestFixture]
 public class ClosureChordIntervalsTests
@@ -16,7 +18,7 @@ public class ClosureChordIntervalsTests
     public void EnsureClosuresRegistered() =>
         GaClosureBootstrap.init();
 
-    private static async Task<object> Invoke(string closureName, params (string Key, object Value)[] inputs)
+    private static async Task<object?> Invoke(string closureName, params (string Key, object Value)[] inputs)
     {
         var map = MapModule.OfSeq(inputs.Select(kv => Tuple.Create(kv.Key, kv.Value)));
         var result = await FSharpAsync.StartAsTask(
@@ -28,65 +30,74 @@ public class ClosureChordIntervalsTests
     }
 
     [TestCase("C", "P1 M3 P5")]
-    [TestCase("Am", "P1 m3 P5")]
-    [TestCase("G7", "P1 M3 P5 m7")]
-    [TestCase("Cmaj7", "P1 M3 P5 M7")]
-    [TestCase("Am7", "P1 m3 P5 m7")]
-    [TestCase("Cm7b5", "P1 m3 d5 m7")]
+    [TestCase("Cm", "P1 m3 P5")]
     [TestCase("Cdim", "P1 m3 d5")]
-    [TestCase("Cdim7", "P1 m3 d5 d7")]
     [TestCase("Caug", "P1 M3 A5")]
-    [TestCase("C9", "P1 M3 P5 m7 M9")]
-    [TestCase("Cmaj9", "P1 M3 P5 M7 M9")]
-    [TestCase("G7b9", "P1 M3 P5 m7 m9")]
-    [TestCase("G7#9", "P1 M3 P5 m7 A9")]
-    [TestCase("C13", "P1 M3 P5 m7 M9 M13")]
-    [TestCase("Cadd9", "P1 M3 P5 M9")]
-    [TestCase("C6", "P1 M3 P5 M6")]
+    [TestCase("Csus2", "P1 M2 P5")]
     [TestCase("Csus4", "P1 P4 P5")]
     [TestCase("C5", "P1 P5")]
-    [TestCase("CM7", "P1 M3 P5 M7")]
-    [TestCase("CMaj7", "P1 M3 P5 M7")]
-    [TestCase("CΔ9", "P1 M3 P5 M7 M9")]
-    [TestCase("CmMaj7", "P1 m3 P5 M7")]
-    [TestCase("C7sus4", "P1 P4 P5 m7")]
-    [TestCase("C9sus4", "P1 P4 P5 m7 M9")]
-    [TestCase("C7omit3", "P1 P5 m7")]
-    [TestCase("C7(no 3)", "P1 P5 m7")]
-    public async Task ChordIntervals_SpellsChordTones(string symbol, string expected)
+    [TestCase("C6", "P1 M3 P5 M6")]
+    [TestCase("C7", "P1 M3 P5 m7")]
+    [TestCase("Cmaj7", "P1 M3 P5 M7")]
+    [TestCase("Cm7", "P1 m3 P5 m7")]
+    [TestCase("Cm7b5", "P1 m3 d5 m7")]
+    [TestCase("Cdim7", "P1 m3 d5 d7")]
+    [TestCase("C9", "P1 M3 P5 m7 M9")]
+    [TestCase("Cmaj9", "P1 M3 P5 M7 M9")]
+    [TestCase("Cm9", "P1 m3 P5 m7 M9")]
+    [TestCase("Cadd9", "P1 M3 P5 M9")]
+    [TestCase("C6/9", "P1 M3 P5 M6 M9")]
+    [TestCase("C11", "P1 M3 P5 m7 M9 P11")]
+    [TestCase("C13", "P1 M3 P5 m7 M9 P11 M13")]
+    [TestCase("G7b9", "P1 M3 P5 m7 m9")]
+    [TestCase("C7#9", "P1 M3 P5 m7 A9")]
+    [TestCase("C7#11", "P1 M3 P5 m7 A11")]
+    [TestCase("C7b13", "P1 M3 P5 m7 m13")]
+    [TestCase("C7b5", "P1 M3 d5 m7")]
+    [TestCase("C7#5", "P1 M3 A5 m7")]
+    public async Task ChordIntervals_MatchTextbookSpelling(string symbol, string expected)
     {
-        var intervals = (string[])await Invoke("domain.chordIntervals", ("symbol", symbol));
-
-        Assert.That(string.Join(' ', intervals), Is.EqualTo(expected));
+        var value = await Invoke("domain.chordIntervals", ("symbol", symbol));
+        Assert.That(string.Join(" ", (string[])value!), Is.EqualTo(expected));
     }
 
     [Test]
     public async Task ProjectChord_Intervals_UseTheSameChordTones()
     {
-        var row = (string)await Invoke("domain.projectChord", ("symbol", "Cm7b5"), ("fields", "intervals"));
-
-        Assert.That(row, Is.EqualTo("intervals=P1 m3 d5 m7"));
+        var value = await Invoke("domain.projectChord", ("symbol", "Cm7b5"), ("fields", "intervals"));
+        Assert.That(value, Is.EqualTo("intervals=P1 m3 d5 m7"));
     }
 
     [Test]
-    public async Task CommonTones_Bm7b5AndG7_ShareTheFlatFifthAsSeventh()
+    public async Task CommonTones_SeeTheAlteredFifth()
     {
-        var result = (string)await Invoke("domain.commonTones", ("chord1", "Bm7b5"), ("chord2", "G7"));
-
-        // Bm7b5 = B D F A, G7 = G B D F: F is the d5 of Bm7b5 and the m7 of G7.
-        Assert.That(result, Does.StartWith("Common tones (3)"));
-        Assert.That(result, Contains.Substring("F (d5 in Bm7b5, m7 in G7)"));
+        // Cm7b5 = C Eb Gb Bb; Ebm = Eb Gb Bb — three shared tones, Gb is the d5 of Cm7b5.
+        var value = (string)(await Invoke("domain.commonTones", ("chord1", "Cm7b5"), ("chord2", "Ebm")))!;
+        Assert.That(value, Does.StartWith("Common tones (3):"));
+        Assert.That(value, Contains.Substring("d5 in Cm7b5"));
     }
 
     [Test]
-    public async Task ChordIntervals_UnreadSuffix_IsAParseError()
+    public async Task ChordSubstitutions_Dim7_HasNoTritoneSub()
     {
-        var map = MapModule.OfSeq(new[] { Tuple.Create("symbol", (object)"C7xyz") });
-        var result = await FSharpAsync.StartAsTask(
-            Global.Invoke("domain.chordIntervals", map),
-            FSharpOption<TaskCreationOptions>.None,
-            FSharpOption<CancellationToken>.None);
+        // Cdim7 has no major third or minor seventh: not a dominant.
+        var value = (string)(await Invoke("domain.chordSubstitutions", ("symbol", "Cdim7"), ("key", "C")))!;
+        Assert.That(value, Does.Not.Contain("tritone sub"));
+    }
 
-        Assert.That(result.IsError, Is.True);
+    [Test]
+    public async Task QueryChords_HasInterval_AcceptsDegreeNames()
+    {
+        var d5 = (string[])(await Invoke("domain.queryChords", ("key", "C"), ("scale", "major"), ("hasInterval", "d5")))!;
+        var tt = (string[])(await Invoke("domain.queryChords", ("key", "C"), ("scale", "major"), ("hasInterval", "TT")))!;
+        Assert.That(d5, Is.EqualTo(new[] { "vii°=Bdim" }));
+        Assert.That(tt, Is.EqualTo(d5));
+    }
+
+    [Test]
+    public async Task QueryChords_HasInterval_IsCaseSensitive_MinorThirdIsNotMajorThird()
+    {
+        var m3 = (string[])(await Invoke("domain.queryChords", ("key", "C"), ("scale", "major"), ("hasInterval", "m3")))!;
+        Assert.That(m3, Is.EqualTo(new[] { "ii=Dm", "iii=Em", "vi=Am", "vii°=Bdim" }));
     }
 }

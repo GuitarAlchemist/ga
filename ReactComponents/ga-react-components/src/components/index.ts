@@ -37,7 +37,7 @@ export type { FretboardHeatMapProps } from './FretboardHeatMap';
 // Export AG-UI chat components
 export { default as DiatonicChordTable } from './DiatonicChordTable';
 export { default as FretDiagram } from './FretDiagram';
-export type { FretDiagramProps } from './FretDiagram';
+export type { FretDiagramProps, StringOrder } from './FretDiagram';
 export { default as GAChatPanel } from './GAChatPanel';
 export type { GAChatPanelProps } from './GAChatPanel';
 
