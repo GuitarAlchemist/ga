@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents;
+using GA.Domain.Services.Tonal;
 using NUnit.Framework;
 
 [TestFixture]
@@ -90,6 +91,30 @@ public class KeyIdentificationServiceTests
         Assert.That(top, Has.Some.Matches<KeyIdentificationService.KeyCandidate>(c => c.Key == "E major"));
     }
 
+    // V7/vi must not pull a major progression toward its relative minor (corpus case pc-07),
+    // and the authentic cadence G7 -> C puts C major first among the tied keys.
+    [Test]
+    public void Identify_SecondaryDominantInMajor_KeepsTheMajorKeyOnTop()
+    {
+        var results = KeyIdentificationService.Identify(new[] { "C", "E7", "Am", "F", "G7", "C" });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(TopTied(results).Select(c => c.Key), Does.Contain("C major"));
+            Assert.That(results[0].Key, Is.EqualTo("C major"));
+        });
+    }
+
+    // The harmonic-minor V7 is not counted as diatonic, but resolving it to i decides the order.
+    // F# minor and A major tie on the count; by name alone A major would be listed first.
+    [Test]
+    public void Identify_HarmonicMinorCadence_ListsTheMinorKeyFirst()
+    {
+        var results = KeyIdentificationService.Identify(new[] { "F#m", "C#7", "F#m" });
+
+        Assert.That(results[0].Key, Is.EqualTo("F# minor"));
+    }
+
     // ── Extensions stripped correctly ─────────────────────────────────────────
 
     [Test]
@@ -103,6 +128,11 @@ public class KeyIdentificationServiceTests
         Assert.That(top, Has.Some.Matches<KeyIdentificationService.KeyCandidate>(c => c.Key == "C major"));
         Assert.That(top[0].MatchCount, Is.EqualTo(4));
     }
+
+    [TestCase("C major", "AM7")]
+    [TestCase("Bb major", "GMIN7")]
+    public void IsChordDiatonic_UppercaseMinorQuality_IsParsedAsMinor(string key, string chord) =>
+        Assert.That(KeyIdentificationService.IsChordDiatonic(key, chord), Is.True);
 
     // ── Empty / no-match cases ────────────────────────────────────────────────
 
