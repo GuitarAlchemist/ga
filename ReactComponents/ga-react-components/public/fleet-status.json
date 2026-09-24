@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "17b8091bdcfabde8a8ad23c67dd0b9edffc04397",
-    "generatedAt": "2026-09-24T14:31:17.932322+00:00",
+    "commitSha": "ad4b3ca8be57a3270d24ee200286b454426e65f0",
+    "generatedAt": "2026-09-24T14:57:44.530362+00:00",
     "repoCount": 5,
-    "totalPRs": 22
+    "totalPRs": 21
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
@@ -150,18 +150,6 @@
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
-        },
-        {
-          "ageDays": 52,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T19:56:59Z",
-          "failingChecks": 0,
-          "headRef": "codex/630-packet-runner",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 634,
-          "title": "feat(harness): advance one reconciliation packet",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/634"
         }
       ]
     },
