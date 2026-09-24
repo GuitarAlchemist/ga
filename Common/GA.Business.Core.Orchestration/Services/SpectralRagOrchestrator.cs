@@ -5,6 +5,7 @@ using GA.Business.Core.Orchestration.Abstractions;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Musical.Explanation;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Rag.Models;
 using GA.Domain.Core.Instruments.Fretboard.Voicings.Core;
 using GA.Domain.Core.Theory.Harmony;
@@ -108,7 +109,7 @@ public class SpectralRagOrchestrator(
                 candidates.Add(new CandidateVoicing(
                     Id: doc.Id,
                     DisplayName: doc.ChordName ?? "Unknown",
-                    Shape: doc.Diagram,
+                    Shape: PlayableNotationFormatter.ToChartOrder(doc.Diagram) ?? string.Empty,
                     Score: score,
                     ExplanationFacts: ToDto(explanation),
                     ExplanationText: explanation.Summary
@@ -179,7 +180,7 @@ public class SpectralRagOrchestrator(
             if (match != null)
             {
                 var explanation = explainer.Explain(match);
-                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, match.Diagram, 1.0, ToDto(explanation), explanation.Summary));
+                comparisonCandidates.Add(new CandidateVoicing(match.Id, c.Symbol, PlayableNotationFormatter.ToChartOrder(match.Diagram) ?? string.Empty, 1.0, ToDto(explanation), explanation.Summary));
             }
         }
 
@@ -228,7 +229,7 @@ public class SpectralRagOrchestrator(
                 var match = index.FindByIdentity(chord.Symbol);
                 var displayLabel = chord.Symbol;
                 if (match != null && !string.IsNullOrWhiteSpace(match.Diagram))
-                    displayLabel += $" ({match.Diagram})";
+                    displayLabel += $" ({PlayableNotationFormatter.ToChartOrder(match.Diagram)})";
 
                 steps.Add(new GA.Domain.Core.Theory.Harmony.Progressions.ProgressionStep
                 {

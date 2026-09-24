@@ -137,4 +137,15 @@ public class NoteTests
                 Assert.That(Note.Flat.Parse(note.ToString(), null), Is.EqualTo(note));
             }
         });
+
+    // Regression, found by the music-theory-ga course: the flat sign counts only
+    // after the letter, so "B" is B natural while "bb" and "E♭" are flats.
+    [TestCase("Bb", 10)]
+    [TestCase("bb", 10)]
+    [TestCase("E♭", 3)]
+    [TestCase("eb", 3)]
+    [TestCase("B", 11)]
+    [TestCase("F", 5)]
+    public void Test_Flat_Parse_ReadsTheFlatSignOnlyAfterTheLetter(string text, int pitchClass) =>
+        Assert.That(Note.Flat.Parse(text, null).PitchClass.Value, Is.EqualTo(pitchClass));
 }

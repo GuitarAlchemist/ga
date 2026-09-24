@@ -173,7 +173,7 @@ public static class ChordAtonalTool
     [Description(
         "Return the full post-tonal identity of a chord: pitch-class set, interval-class vector (ICV), " +
         "prime form, Forte number, modal family position, and matching scale name if any. " +
-        "Bridges tonal chord naming to set theory — e.g. Am7 and Cmaj6 share the same prime form (T/I equivalents).")]
+        "Bridges tonal chord naming to set theory — e.g. Am7 and C6 contain the same pitch classes, so they share one set class.")]
     public static async Task<string> GaChordToSet(
         [Description("Chord symbol, e.g. 'Am7', 'Cmaj9', 'G7b9'")] string symbol)
     {

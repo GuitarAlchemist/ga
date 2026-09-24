@@ -91,6 +91,15 @@ public class VoicingTests
     }
 
     [Test]
+    public void HasBarre_FalseForThreeOpenStrings()
+    {
+        // Open G chord (3-2-0-0-0-3 from low E): three open strings, no barre.
+        var openG = Make(Played(1, 3), Played(2, 0), Played(3, 0), Played(4, 0), Played(5, 2), Played(6, 3));
+
+        Assert.That(openG.HasBarre(), Is.False);
+    }
+
+    [Test]
     public void Equality_IsBasedOnDiagram_NotNoteArrays()
     {
         var a = new Voicing([Played(1, 0), Played(2, 2)], [(MidiNote)40, (MidiNote)45]);
