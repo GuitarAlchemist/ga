@@ -324,9 +324,8 @@ public class SchemaContractTests
         PopulatePartition(v1, v2, EmbeddingSchema.ContextOffset, EmbeddingSchema.ContextEnd, 0.7);
         PopulatePartition(v1, v2, EmbeddingSchema.SymbolicOffset, EmbeddingSchema.SymbolicEnd, 0.3);
         var similarity = ComputeWeightedPartitionSimilarity(v1, v2);
-        var expectedWeightSum = EmbeddingSchema.StructureWeight + EmbeddingSchema.MorphologyWeight + EmbeddingSchema.ContextWeight + EmbeddingSchema.SymbolicWeight;
-        Assert.That(similarity, Is.EqualTo(expectedWeightSum).Within(0.0001),
-            $"Identical vectors should have similarity = {expectedWeightSum}");
+        Assert.That(similarity, Is.EqualTo(1.0).Within(0.0001),
+            "Identical vectors should have similarity = 1.0");
     }
     /// <summary>
     /// Orthogonal vectors in STRUCTURE should have low similarity.
