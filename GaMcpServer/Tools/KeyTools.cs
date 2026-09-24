@@ -139,7 +139,7 @@ public static class KeyTool
         var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
                   ?? throw new InvalidOperationException($"Key not found: {keyName}");
 
-        // Get the relative key - parallel minor for major keys, parallel major for minor keys
+        // Relative keys share a key signature and use opposite modes.
         Key relativeKey = key.KeyMode switch
         {
             KeyMode.Major => new Key.Minor(key.KeySignature),
@@ -157,13 +157,14 @@ public static class KeyTool
         var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
                   ?? throw new InvalidOperationException($"Key not found: {keyName}");
 
-        // Create the parallel key - major for minor keys, minor for major keys
-        Key parallelKey = key.KeyMode switch
-        {
-            KeyMode.Major => new Key.Minor(key.KeySignature),
-            KeyMode.Minor => new Key.Major(key.KeySignature),
-            _ => throw new InvalidOperationException($"Unsupported key mode: {key.KeyMode}")
-        };
+        var targetMode = key.KeyMode == KeyMode.Major ? KeyMode.Minor : KeyMode.Major;
+        var parallelKey = Key.Items.FirstOrDefault(candidate =>
+            candidate.KeyMode == targetMode &&
+            candidate.Root.NaturalNote == key.Root.NaturalNote &&
+            candidate.Root.Accidental == key.Root.Accidental)
+            ?? Key.Items.FirstOrDefault(candidate =>
+                candidate.KeyMode == targetMode && candidate.Root.PitchClass == key.Root.PitchClass)
+            ?? throw new InvalidOperationException($"Parallel key not found for: {keyName}");
 
         return parallelKey.ToString();
     }
@@ -201,11 +202,23 @@ public static class KeyTool
         var key = Key.Items.FirstOrDefault(k => k.ToString() == keyName)
                   ?? throw new InvalidOperationException($"Key not found: {keyName}");
 
-        var position = GetCircleOfFifthsPosition(key.KeySignature.ToString());
-        var prevKey = Key.Items.FirstOrDefault(k =>
-            GetCircleOfFifthsPosition(k.KeySignature.ToString()) == position - 1);
-        var nextKey = Key.Items.FirstOrDefault(k =>
-            GetCircleOfFifthsPosition(k.KeySignature.ToString()) == position + 1);
+        var position = GetCircleOfFifthsPosition(keyName);
+        var prevKey = Key.Items.FirstOrDefault(candidate =>
+            candidate.KeyMode == key.KeyMode &&
+            (candidate.KeySignature.AccidentalKind switch
+            {
+                AccidentalKind.Sharp => candidate.KeySignature.AccidentalCount,
+                AccidentalKind.Flat => -candidate.KeySignature.AccidentalCount,
+                _ => 0
+            }) == position - 1);
+        var nextKey = Key.Items.FirstOrDefault(candidate =>
+            candidate.KeyMode == key.KeyMode &&
+            (candidate.KeySignature.AccidentalKind switch
+            {
+                AccidentalKind.Sharp => candidate.KeySignature.AccidentalCount,
+                AccidentalKind.Flat => -candidate.KeySignature.AccidentalCount,
+                _ => 0
+            }) == position + 1);
 
         return new NeighboringKeys(
             prevKey?.ToString() ?? "None",

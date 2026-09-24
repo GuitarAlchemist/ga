@@ -27,13 +27,39 @@ public static class CanonicalChordRecognizer
     {
         ArgumentNullException.ThrowIfNull(pcSet);
 
+        // Everything except the slash suffix is a function of the pitch-class set alone
+        // (invariant #33), and there are only 4096 sets: the pattern search runs once per set
+        // and later calls read the answer back. The bass hint is applied on top, exactly as
+        // BuildResult applies it.
+        var entry = SetResults[pcSet.Id.Value] ??= Compute(pcSet);
+        if (entry.ChordRoot is not { } root || !bassNote.HasValue || bassNote.Value.Value == root)
+            return entry.Result;
+
+        return entry.Result with { SlashSuffix = SlashSuffixes[bassNote.Value.Value] };
+    }
+
+    /// <summary>One recognized set: the bass-independent result, and the root a bass is compared with.</summary>
+    /// <param name="Result">The result with no slash suffix.</param>
+    /// <param name="ChordRoot">The chord root when the result came from pattern matching, which is
+    ///     the only path that adds a slash suffix; null for empty sets, unisons, dyads and the Forte fallback.</param>
+    private sealed record SetResult(CanonicalChordResult Result, int? ChordRoot);
+
+    // Indexed by PitchClassSetId.Value. Filled lazily; two threads racing on one slot compute
+    // equal, immutable results, so the last write wins harmlessly.
+    private static readonly SetResult?[] SetResults = new SetResult?[4096];
+
+    private static readonly string[] SlashSuffixes =
+        [.. Enumerable.Range(0, 12).Select(pc => $"/{GetNoteName(pc)}")];
+
+    private static SetResult Compute(PitchClassSet pcSet)
+    {
         var pcs = pcSet.Select(p => p.Value).Distinct().OrderBy(v => v).ToArray();
         return pcs.Length switch
         {
-            0 => Empty(),
-            1 => IdentifyUnison(pcs[0]),
-            2 => IdentifyDyad(pcs[0], pcs[1]),
-            _ => IdentifyChordSet(pcs, pcSet, bassNote),
+            0 => new(Empty(), null),
+            1 => new(IdentifyUnison(pcs[0]), null),
+            2 => new(IdentifyDyad(pcs[0], pcs[1]), null),
+            _ => IdentifyChordSet(pcs, pcSet),
         };
     }
 
@@ -120,7 +146,7 @@ public static class CanonicalChordRecognizer
     ///     Full chord recognition for 3+ pitch classes. Tries every PC as root,
     ///     matches against the canonical pattern catalog, picks the best candidate.
     /// </summary>
-    private static CanonicalChordResult IdentifyChordSet(int[] pcs, PitchClassSet pcSet, PitchClass? bassNote)
+    private static SetResult IdentifyChordSet(int[] pcs, PitchClassSet pcSet)
     {
         var candidates = new List<Candidate>();
 
@@ -140,7 +166,7 @@ public static class CanonicalChordRecognizer
         }
 
         if (candidates.Count == 0)
-            return FallbackFromForte(pcSet);
+            return new(FallbackFromForte(pcSet), null);
 
         // Ranking is strictly PC-set-based — the bass note must NOT influence which
         // pattern wins, or Invariant #33 (CanonicalName is register-invariant for a
@@ -156,7 +182,7 @@ public static class CanonicalChordRecognizer
             .ThenBy(c => RootCommonness(c.Root))
             .First();
 
-        return BuildResult(best, bassNote);
+        return new(BuildResult(best, bassNote: null), best.Root);
     }
 
     private static CanonicalChordResult BuildResult(Candidate best, PitchClass? bassNote)

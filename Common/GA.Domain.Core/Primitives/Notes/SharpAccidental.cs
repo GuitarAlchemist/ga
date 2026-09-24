@@ -61,7 +61,7 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
     #region IParsable Members
 
     //language=regexp
-    public static readonly string RegexPattern = "^(#|x)$";
+    public static readonly string RegexPattern = "^(#{1,2}|♯{1,2}|x|𝄪)$";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     /// <inheritdoc />
@@ -91,10 +91,10 @@ public readonly record struct SharpAccidental : IRangeValueObject<SharpAccidenta
         }
 
         var group = match.Groups[1];
-        SharpAccidental? accidental = group.Value.ToUpperInvariant() switch
+        SharpAccidental? accidental = group.Value.ToLowerInvariant() switch
         {
-            "#" => Sharp,
-            "x" => DoubleSharp,
+            "#" or "♯" => Sharp,
+            "##" or "♯♯" or "x" or "𝄪" => DoubleSharp,
             _ => null
         };
 
