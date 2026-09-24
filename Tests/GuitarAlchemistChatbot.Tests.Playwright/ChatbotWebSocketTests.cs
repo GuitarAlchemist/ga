@@ -73,9 +73,13 @@ public class ChatbotWebSocketTests : PageTest
     {
         TestContext.WriteLine("Testing WebSocket connection...");
 
-        // Wait for connection status
+        // Wait for the connection to be reported, not merely for the element to exist.
+        // #status is in the page from the first paint, with class "status" and the text
+        // "Connecting...", so WaitForAsync returns immediately and the sample below races
+        // the SignalR onconnected handler that adds the class. Waiting on the state is what
+        // WebSocket_SendMessage_ShouldReceiveStreamingResponse already does.
+        await Page.WaitForSelectorAsync("#status.connected", new() { Timeout = _defaultTimeout });
         var statusElement = Page.Locator("#status");
-        await statusElement.WaitForAsync(new() { Timeout = _defaultTimeout });
 
         var statusText = await statusElement.TextContentAsync();
         TestContext.WriteLine($"📊 Connection Status: {statusText}");

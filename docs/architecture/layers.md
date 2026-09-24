@@ -11,7 +11,7 @@ Guitar Alchemist enforces a one-way dependency chain. Lower layers MUST NOT know
 
 1. **Core** — `GA.Core`, `GA.Domain.Core` (pure primitives: Note, Interval, Fretboard)
 2. **Domain** — `GA.Business.Core`, `GA.Business.Config`, `GA.BSP.Core` (logic, YAML, BSP)
-3. **Analysis** — `GA.Business.Core.Harmony`, `GA.Business.Core.Fretboard` (chord/scale, voice leading, spectral)
+3. **Analysis** — `GA.Domain.Services` (chord/scale analysis, voicing generation and analysis, voice leading, spectral)
 4. **AI/ML** — `GA.Business.ML` (embeddings, vector search, RAG, OPTIC-K schema)
 5. **Orchestration** — `GA.Business.Core.Orchestration`, `GA.Business.Assets`, `GA.Business.Intelligence`
 

@@ -46,6 +46,12 @@ impl Resonator {
 
 const MAX_VOICES: usize = 8;
 
+/// Ceiling on the per-voice Karplus-Strong loop gain. Every loop stage (KS
+/// average, dispersion allpass, LP/brightness mix) has gain 1 at DC, so a
+/// `decay * sustain` product >= 1 makes the low-string DC mode grow without bound
+/// (full scale in under 90 s for profiles 1-3, NaN at the slider max).
+pub const MAX_LOOP_GAIN: f32 = 1.0 - 1.0e-4;
+
 /// Per-string voice (polyphonic Karplus–Strong)
 struct Voice {
     buffer: std::vec::Vec<f32>,
@@ -206,8 +212,15 @@ impl Engine {
         match t {
             // 0 – Steel bright: tight, bright, slightly shorter reverb
             0 => {
-                self.decay = 0.9978;
-                self.brightness = 0.80;
+                // Fitted to by-the-lake.wav early per-band decay (tools/damping-fit,
+                // decay picked on the train notes only; was 0.9978 / 0.80).
+                // brightness 1.0 saturates the per-voice clamp, bypassing the dark
+                // LP mix — but only below ~110-160 Hz, where 0.80 had not yet
+                // saturated. Above that the change is decay-only, extrapolated
+                // from a single 110 Hz reference note.
+                // Mirrored in src/atoms/audioAtoms.js GUITAR_PROFILE_DECAY.
+                self.decay = 0.986;
+                self.brightness = 1.0;
                 self.dispersion = 0.22;
                 self.attack_decay = 0.986;
                 self.reverb_mix = 0.14;
@@ -415,7 +428,8 @@ impl Engine {
                 let f_norm = ((f - 82.0) / (330.0 - 82.0)).clamp(0.0, 1.0);
 
                 // Folk bright profile per voice
-                let decay = (base_decay + 0.0025 * (1.0 - f_norm)) * voice.sustain;
+                let decay =
+                    ((base_decay + 0.0025 * (1.0 - f_norm)) * voice.sustain).min(MAX_LOOP_GAIN);
                 let brightness = (base_brightness + 0.45 * f_norm + voice.pluck_mix * 0.30)
                     .clamp(0.0, 1.0);
                 let dispersion =

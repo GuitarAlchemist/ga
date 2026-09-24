@@ -154,6 +154,27 @@ dark from 2026-05-16 to 2026-06-25.)
 
 After v4-pp rebuild: #25, #28, #32 should flip from FAIL to PASS (cross-instrument STRUCTURE equality, 3-class leak test, cross-octave cosine=1.0).
 
+### 2b. Corpus invariants and dead dimensions
+
+`ix-optick-invariants` reads the real index (read-only). `ix-invariant-produce` only sees synthetic exemplars. #37/#38 need GuitarAlchemist/ix#338 merged, so always rebuild from current ix `main` first, even if a binary already exists: an older binary silently skips #37/#38.
+
+```bash
+# ix checkout must be on an up-to-date main (git -C .../ix switch main && git -C .../ix pull --ff-only)
+cargo build --release -p ix-optick-invariants --manifest-path "C:/Users/spare/source/repos/ix/Cargo.toml"
+"C:/Users/spare/source/repos/ix/target/release/ix-optick-invariants.exe" --pretty \
+  --index "C:/Users/spare/source/repos/ga/state/voicings/optick.index" \
+  --out "C:/Users/spare/source/repos/ga/state/baseline/$(date +%Y-%m-%d)-corpus-firings.json"
+"C:/Users/spare/source/repos/ix/target/release/ix-invariant-coverage.exe" \
+  --catalog "C:/Users/spare/source/repos/ga/docs/methodology/invariants-catalog.md" \
+  --firings "C:/Users/spare/source/repos/ga/state/baseline/$(date +%Y-%m-%d)-corpus-firings.json"
+```
+
+- Check the binary is current: stderr must show `[7/7] Testing invariant #38`. If it stops at `[5/5]`, the binary predates ix#338. Rebuild it; do not read the missing lines as "no dead dims".
+- #25, #32, #36 must all PASS (the binary exits 1 otherwise).
+- #37 (no dead dimension) and #38 (no dead weighted partition) are reported on stderr but do not change the exit code unless you pass `--fail-on-dead`. Baseline on the v1.8 index (measured 2026-09-14): **#37 83/124 live, 41 dead** (40 always zero + CONTEXT dim 52 constant); **#38 FAIL: CONTEXT 0/12 live at weight 0.20**. See ga#552, ga#616.
+- The dead count must not go up. A producer fix for ga#552/ga#616 should bring it down; record the new #37 count in the rebuild notes.
+- Read the #37/#38 verdict from the `ix-optick-invariants` stderr. In `ix-invariant-coverage` output (which exits 0 even when it prints `Suboptimal`), the `optick-dim-*` and `optick-partition-CONTEXT` entries under "Coverage gaps" are these index defects: a fired exemplar means PASS, so the dead ones fire nothing. They are not missing catalog entries.
+
 ### 3. C# integration tests
 
 ```bash

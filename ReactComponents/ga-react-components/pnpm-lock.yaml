@@ -93,9 +93,6 @@ importers:
         specifier: ^4.2.3
         version: 4.5.4(@types/node@22.18.11)(rollup@4.52.4)(typescript@5.9.3)(vite@5.4.20(@types/node@22.18.11))
     devDependencies:
-      '@esbuild/win32-x64':
-        specifier: ^0.25.12
-        version: 0.25.12
       '@eslint/js':
         specifier: ^9.11.1
         version: 9.38.0
@@ -141,6 +138,10 @@ importers:
       vite:
         specifier: ^5.4.8
         version: 5.4.20(@types/node@22.18.11)
+    optionalDependencies:
+      '@esbuild/win32-x64':
+        specifier: ^0.25.12
+        version: 0.25.12
 
 packages:
 
@@ -2788,7 +2789,8 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  '@esbuild/win32-x64@0.25.12': {}
+  '@esbuild/win32-x64@0.25.12':
+    optional: true
 
   '@eslint-community/eslint-utils@4.9.0(eslint@9.38.0)':
     dependencies:
