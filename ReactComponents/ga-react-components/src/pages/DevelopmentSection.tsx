@@ -76,6 +76,12 @@ const devLinks: DevLink[] = [
     icon: <AccountTreeIcon />,
   },
   {
+    title: 'IX Pipeline Editor',
+    description: 'Node-graph editor for IX pipelines: catalog palette, live validation, run (local only).',
+    path: '/test/pipeline-editor',
+    icon: <AccountTreeIcon />,
+  },
+  {
     title: 'Prime Radiant',
     description: 'Demerzel governance graph — 3D force-directed visualization with health overlay.',
     path: '/test/prime-radiant',
