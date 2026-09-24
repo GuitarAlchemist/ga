@@ -1,5 +1,6 @@
 namespace GaApi.Tests.Services;
 
+using GA.Domain.Core.Theory.Harmony;
 using GaApi.Services;
 
 [TestFixture]
@@ -10,6 +11,17 @@ public class ContextualChordServiceTests
 
     [SetUp]
     public void SetUp() => _sut = new ContextualChordService();
+
+    [TestCase(1, ChordQuality.Major7, "Imaj7")]
+    [TestCase(2, ChordQuality.Minor7, "ii7")]
+    [TestCase(5, ChordQuality.Dominant, "V7")]
+    [TestCase(7, ChordQuality.HalfDiminished, "viiø7")]
+    [TestCase(7, ChordQuality.Diminished7, "vii°7")]
+    public void GetRomanNumeral_SeventhSpecies_PreservesTriadFamilyAndSpecies(
+        int degree,
+        ChordQuality quality,
+        string expected) =>
+        Assert.That(ContextualChordService.GetRomanNumeral(degree, quality), Is.EqualTo(expected));
 
     // ── GetChordsForModeAsync ────────────────────────────────────────────────
 

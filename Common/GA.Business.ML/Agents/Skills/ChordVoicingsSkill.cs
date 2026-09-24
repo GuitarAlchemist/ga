@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Skills;
 
 using System.Text;
 using System.Text.RegularExpressions;
+using GA.Business.ML.Notation;
 using GA.Business.ML.Search;
 
 /// <summary>
@@ -132,13 +133,13 @@ public sealed partial class ChordVoicingsSkill(
         foreach (var r in results)
         {
             sb.AppendLine(
-                $"- **{r.Document.ChordName ?? "Voicing"}** `{r.Document.Diagram}` " +
+                $"- **{r.Document.ChordName ?? "Voicing"}** `{PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)}` " +
                 $"({r.Document.VoicingType ?? "guitar"}, score {r.Score:F3})");
         }
 
         var evidence = results
             .Take(Math.Min(results.Count, 5))
-            .Select(r => $"{r.Document.ChordName ?? "?"} · {r.Document.Diagram} · score={r.Score:F4}")
+            .Select(r => $"{r.Document.ChordName ?? "?"} · {PlayableNotationFormatter.ToChartOrder(r.Document.Diagram)} · score={r.Score:F4}")
             .ToList();
 
         logger.LogDebug(

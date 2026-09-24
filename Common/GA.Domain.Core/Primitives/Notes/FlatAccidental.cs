@@ -4,7 +4,7 @@ using GA.Core.Abstractions;
 using Intervals;
 
 /// <summary>
-///     Flat accidental (bbb | bbb | bb)
+///     Flat accidental (b | bb | bbb)
 /// </summary>
 /// <remarks>
 ///     Implements <see cref="IRangeValueObject{TSelf}" />
@@ -62,7 +62,7 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
     #region IParsable Members
 
     //language=regexp
-    public static readonly string RegexPattern = "^(#|x)$";
+    public static readonly string RegexPattern = @"\A(b{1,3}|♭{1,3}|𝄫)\z";
     private static readonly PcreRegex _regex = new(RegexPattern, PcreOptions.Compiled | PcreOptions.IgnoreCase);
 
     /// <inheritdoc />
@@ -93,10 +93,11 @@ public readonly record struct FlatAccidental : IRangeValueObject<FlatAccidental>
         }
 
         var group = match.Groups[1];
-        FlatAccidental? parsedFlatAccidental = group.Value.ToUpperInvariant() switch
+        FlatAccidental? parsedFlatAccidental = group.Value.ToLowerInvariant() switch
         {
-            "#" => Flat,
-            "x" => DoubleFlat,
+            "b" or "♭" => Flat,
+            "bb" or "♭♭" or "𝄫" => DoubleFlat,
+            "bbb" or "♭♭♭" => TripleFlat,
             _ => null
         };
 

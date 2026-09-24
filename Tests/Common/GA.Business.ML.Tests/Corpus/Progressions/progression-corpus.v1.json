@@ -1,0 +1,3189 @@
+{
+  "schema": "progression-corpus.v1.schema.json",
+  "schema_version": "1.0.0",
+  "corpus_id": "progression-to-voicing",
+  "corpus_version": "1.0.0",
+  "status": "draft",
+  "held_out": true,
+  "issue": "GuitarAlchemist/ga#627",
+  "parent_issue": "GuitarAlchemist/ga#623",
+  "description": "Held-out deterministic evaluation corpus for the progression-to-voicing vertical slice. Expectations state what a musically correct system must answer; they are deliberately NOT trimmed to what production currently does. Pitch classes, note spellings and voicing frets are machine generated from the chord symbols and re-verified by the loader tests.",
+  "cases": [
+    {
+      "id": "pc-01-major-ii-v-i",
+      "category": "major-ii-V-I",
+      "title": "Major ii-V-I in C",
+      "input": {
+        "chords": [
+          "Dm7",
+          "G7",
+          "Cmaj7"
+        ],
+        "canonical_chords": [
+          "Dm7",
+          "G7",
+          "Cmaj7"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "ii7",
+          "V7",
+          "Imaj7"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "predominant",
+          "dominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "Dm7",
+            "acceptable": [
+              "D Dorian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G7",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Cmaj7",
+            "acceptable": [
+              "C Ionian",
+              "C major",
+              "C Lydian"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Dm7",
+            "quality": "minor-7",
+            "root": "D",
+            "root_pitch_class": 2,
+            "pitch_classes": [
+              2,
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "D",
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "G7",
+            "quality": "dominant-7",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2,
+              5
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D",
+              "F"
+            ]
+          },
+          {
+            "chord": "Cmaj7",
+            "quality": "major-7",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7,
+              11
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G",
+              "B"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "ii-V-I",
+          "G7 resolves to Cmaj7",
+          "the tritone B-F resolves to C-E"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Dm7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                5,
+                7,
+                5,
+                6,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                2,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "G7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                3,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "Cmaj7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                4,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7,
+                11
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "D major",
+          "D minor",
+          "G major"
+        ],
+        "facts": [
+          "G7 is the tonic",
+          "the key is D minor",
+          "the key is D major"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          614
+        ],
+        "rationale": "#614 reports Dm7 G7 Cmaj7 detected as D minor by the MCP root-only scorer; the authoritative KeyIdentificationService scores C major 3/3."
+      },
+      "provenance": {
+        "source": "Canonical jazz cadence; the exact prefix tabulated in GuitarAlchemist/ga#614.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "The single most common functional cadence, and the case the first-chord tie-break is structurally worst at."
+      }
+    },
+    {
+      "id": "pc-02-minor-ii-v-i",
+      "category": "minor-ii-V-i",
+      "title": "Minor ii-V-i in A minor",
+      "input": {
+        "chords": [
+          "Bm7b5",
+          "E7",
+          "Am"
+        ],
+        "canonical_chords": [
+          "Bm7b5",
+          "E7",
+          "Am"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "A minor",
+        "acceptable_tonal_centers": [
+          "A minor"
+        ],
+        "roman_numerals": [
+          "iim7b5",
+          "V7",
+          "i"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "predominant",
+          "dominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "Bm7b5",
+            "acceptable": [
+              "B Locrian",
+              "B Locrian natural 2",
+              "A harmonic minor"
+            ]
+          },
+          {
+            "chord": "E7",
+            "acceptable": [
+              "E Phrygian dominant",
+              "A harmonic minor",
+              "E altered"
+            ]
+          },
+          {
+            "chord": "Am",
+            "acceptable": [
+              "A Aeolian",
+              "A harmonic minor",
+              "A natural minor"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Bm7b5",
+            "quality": "half-diminished-7",
+            "root": "B",
+            "root_pitch_class": 11,
+            "pitch_classes": [
+              11,
+              2,
+              5,
+              9
+            ],
+            "notes": [
+              "B",
+              "D",
+              "F",
+              "A"
+            ]
+          },
+          {
+            "chord": "E7",
+            "quality": "dominant-7",
+            "root": "E",
+            "root_pitch_class": 4,
+            "pitch_classes": [
+              4,
+              8,
+              11,
+              2
+            ],
+            "notes": [
+              "E",
+              "G#",
+              "B",
+              "D"
+            ]
+          },
+          {
+            "chord": "Am",
+            "quality": "minor-triad",
+            "root": "A",
+            "root_pitch_class": 9,
+            "pitch_classes": [
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "A",
+              "C",
+              "E"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "minor ii-V-i",
+          "E7 carries the raised leading tone G#",
+          "G# comes from A harmonic minor, not A natural minor"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Bm7b5",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                2,
+                3,
+                2,
+                3,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                9,
+                11
+              ]
+            },
+            {
+              "chord": "E7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                0,
+                2,
+                0,
+                1,
+                0,
+                0
+              ],
+              "sounded_pitch_classes": [
+                2,
+                4,
+                8,
+                11
+              ]
+            },
+            {
+              "chord": "Am",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                0,
+                2,
+                2,
+                1,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                9
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "B minor",
+          "E major",
+          "C major"
+        ],
+        "facts": [
+          "E minor is the dominant",
+          "the key is B minor",
+          "G natural is the leading tone"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "Textbook minor cadence; mirrors #614 row \"Em7 A7 Dmaj7\" in the minor domain.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "The dominant is chromatic to the natural-minor scale, so a diatonic-only key scorer must still land on A minor rather than the key that happens to contain G#."
+      }
+    },
+    {
+      "id": "pc-03-major-i-vi-iv-v",
+      "category": "major-I-vi-IV-V",
+      "title": "I-vi-IV-V in C major",
+      "input": {
+        "chords": [
+          "C",
+          "Am",
+          "F",
+          "G"
+        ],
+        "canonical_chords": [
+          "C",
+          "Am",
+          "F",
+          "G"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "I",
+          "vi",
+          "IV",
+          "V"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "tonic-substitute",
+          "predominant",
+          "dominant"
+        ],
+        "scale_families": [
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Am",
+            "acceptable": [
+              "A Aeolian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "Am",
+            "quality": "minor-triad",
+            "root": "A",
+            "root_pitch_class": 9,
+            "pitch_classes": [
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "A",
+              "C",
+              "E"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "G",
+            "quality": "major-triad",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "I-vi-IV-V",
+          "Am is the relative minor of C major",
+          "the arpeggio over Am is Am7"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "Am",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                0,
+                2,
+                2,
+                1,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                9
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "G",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                5,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                7,
+                11
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "A major",
+          "F major",
+          "G major"
+        ],
+        "facts": [
+          "Amm7",
+          "Am is borrowed",
+          "A minor is the tonic key"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          567
+        ],
+        "rationale": "#567 reports ArpeggioFor concatenating root + full suffix, producing \"Amm7\" for Am at degree vi in C major. This case forbids that string and requires the canonical \"Am7\"."
+      },
+      "provenance": {
+        "source": "The \"50s\" progression; Am-in-C-major is the exact input in the #567 report.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "Cheap, unambiguous key, but the vi chord is the concatenation bug's trigger, so the case is both a baseline and a regression pin."
+      }
+    },
+    {
+      "id": "pc-04-deceptive-cadence",
+      "category": "deceptive-cadence",
+      "title": "Deceptive cadence V-vi in C major",
+      "input": {
+        "chords": [
+          "C",
+          "F",
+          "G7",
+          "Am"
+        ],
+        "canonical_chords": [
+          "C",
+          "F",
+          "G7",
+          "Am"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "I",
+          "IV",
+          "V7",
+          "vi"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "predominant",
+          "dominant",
+          "deceptive-resolution"
+        ],
+        "scale_families": [
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G7",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Am",
+            "acceptable": [
+              "A Aeolian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "G7",
+            "quality": "dominant-7",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2,
+              5
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D",
+              "F"
+            ]
+          },
+          {
+            "chord": "Am",
+            "quality": "minor-triad",
+            "root": "A",
+            "root_pitch_class": 9,
+            "pitch_classes": [
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "A",
+              "C",
+              "E"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "deceptive cadence",
+          "V-vi",
+          "the expected resolution to C is withheld",
+          "Am shares C and E with C major"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "G7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                3,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "Am",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                5,
+                7,
+                7,
+                5,
+                5,
+                5
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                9
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "A minor",
+          "A major",
+          "G major"
+        ],
+        "facts": [
+          "Am is the tonic",
+          "authentic cadence",
+          "the progression ends on I"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "Standard voice-leading pedagogy (V-vi interrupted cadence).",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "The final chord is not the tonic, so any system that infers the key from the last chord - a common shortcut - fails here."
+      }
+    },
+    {
+      "id": "pc-05-borrowed-iv",
+      "category": "borrowed-iv",
+      "title": "Borrowed minor iv in C major",
+      "input": {
+        "chords": [
+          "C",
+          "F",
+          "Fm",
+          "C"
+        ],
+        "canonical_chords": [
+          "C",
+          "F",
+          "Fm",
+          "C"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "I",
+          "IV",
+          "iv",
+          "I"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "predominant",
+          "borrowed-predominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Fm",
+            "acceptable": [
+              "F Dorian",
+              "F Aeolian",
+              "F melodic minor"
+            ]
+          },
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "Fm",
+            "quality": "minor-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              8,
+              0
+            ],
+            "notes": [
+              "F",
+              "Ab",
+              "C"
+            ]
+          },
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "modal interchange",
+          "iv is borrowed from C minor",
+          "Fm introduces Ab, which is outside C major",
+          "Ab resolves down by semitone to G"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "Fm",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                1,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                8
+              ]
+            },
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "F major",
+          "F minor",
+          "Ab major"
+        ],
+        "facts": [
+          "Fm is diatonic to C major",
+          "F Lydian fits Fm",
+          "play A natural over Fm",
+          "the key changes to F minor"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          567
+        ],
+        "rationale": "#567 reports key-blind degree mapping: the degree index is found by root pitch class only, so Fm at scale degree IV is still classified as IV/Lydian and A natural is recommended against the chord's Ab. This case forbids exactly that."
+      },
+      "provenance": {
+        "source": "Modal-interchange pedagogy; the failure shape described in GuitarAlchemist/ga#567 -2.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "F and Fm share a root, so only written quality distinguishes them. A root-only classifier cannot tell them apart at all."
+      }
+    },
+    {
+      "id": "pc-06-borrowed-bvii",
+      "category": "borrowed-bVII",
+      "title": "Borrowed bVII in C major",
+      "input": {
+        "chords": [
+          "C",
+          "Bb",
+          "F",
+          "C"
+        ],
+        "canonical_chords": [
+          "C",
+          "Bb",
+          "F",
+          "C"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "I",
+          "bVII",
+          "IV",
+          "I"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "borrowed-subtonic",
+          "predominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Bb",
+            "acceptable": [
+              "Bb Lydian",
+              "C Mixolydian",
+              "F major"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major",
+              "F major"
+            ]
+          },
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "Bb",
+            "quality": "major-triad",
+            "root": "Bb",
+            "root_pitch_class": 10,
+            "pitch_classes": [
+              10,
+              2,
+              5
+            ],
+            "notes": [
+              "Bb",
+              "D",
+              "F"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "bVII",
+          "Bb is borrowed from C Mixolydian",
+          "Bb is a whole step below the tonic",
+          "there is no leading tone B natural in Bb"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "Bb",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                1,
+                3,
+                3,
+                3,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                10
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "Bb major",
+          "F major",
+          "G minor"
+        ],
+        "facts": [
+          "Bb is diatonic to C major",
+          "Bbdim",
+          "the key is Bb major",
+          "B natural is a chord tone of Bb"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "Mixolydian-inflected rock cadence (I-bVII-IV-I).",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "Diatonic-count key scoring is drawn toward F major here, because C, Bb and F are all diatonic to F. Only the tonic function of C disambiguates."
+      }
+    },
+    {
+      "id": "pc-07-secondary-dominant",
+      "category": "secondary-dominant",
+      "title": "Secondary dominant V7/vi in C major",
+      "input": {
+        "chords": [
+          "C",
+          "E7",
+          "Am",
+          "F",
+          "G7",
+          "C"
+        ],
+        "canonical_chords": [
+          "C",
+          "E7",
+          "Am",
+          "F",
+          "G7",
+          "C"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "I",
+          "V7/vi",
+          "vi",
+          "IV",
+          "V7",
+          "I"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "secondary-dominant",
+          "tonic-substitute",
+          "predominant",
+          "dominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "E7",
+            "acceptable": [
+              "E Phrygian dominant",
+              "A harmonic minor",
+              "E altered",
+              "E Mixolydian b9 b13"
+            ]
+          },
+          {
+            "chord": "Am",
+            "acceptable": [
+              "A Aeolian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G7",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "E7",
+            "quality": "dominant-7",
+            "root": "E",
+            "root_pitch_class": 4,
+            "pitch_classes": [
+              4,
+              8,
+              11,
+              2
+            ],
+            "notes": [
+              "E",
+              "G#",
+              "B",
+              "D"
+            ]
+          },
+          {
+            "chord": "Am",
+            "quality": "minor-triad",
+            "root": "A",
+            "root_pitch_class": 9,
+            "pitch_classes": [
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "A",
+              "C",
+              "E"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "G7",
+            "quality": "dominant-7",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2,
+              5
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D",
+              "F"
+            ]
+          },
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "secondary dominant",
+          "V7/vi",
+          "E7 tonicises Am",
+          "G# is the leading tone of A and is outside C major"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "E7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                0,
+                2,
+                0,
+                1,
+                0,
+                0
+              ],
+              "sounded_pitch_classes": [
+                2,
+                4,
+                8,
+                11
+              ]
+            },
+            {
+              "chord": "Am",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                0,
+                2,
+                2,
+                1,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                9
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "G7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                3,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "E major",
+          "A minor",
+          "A major"
+        ],
+        "facts": [
+          "E Phrygian fits E7",
+          "G natural is a chord tone of E7",
+          "E7 is diatonic to C major",
+          "the key modulates to A minor"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          567
+        ],
+        "rationale": "#567 -2: any secondary dominant gets confidently wrong advice because degree mapping ignores written quality - E7 at degree iii would be sent to E Phrygian, whose G natural contradicts the chord's G#."
+      },
+      "provenance": {
+        "source": "Standard tonicisation pedagogy; the \"secondary dominant\" failure named in #567.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "Longest case in the corpus (6 chords) and the one where a single chromatic chord must not drag the global key away from C."
+      }
+    },
+    {
+      "id": "pc-08-modal-dorian-vamp",
+      "category": "modal",
+      "title": "D Dorian modal vamp",
+      "input": {
+        "chords": [
+          "Dm7",
+          "Em7",
+          "Dm7",
+          "Em7"
+        ],
+        "canonical_chords": [
+          "Dm7",
+          "Em7",
+          "Dm7",
+          "Em7"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "D dorian",
+        "acceptable_tonal_centers": [
+          "D dorian"
+        ],
+        "roman_numerals": [
+          "i7",
+          "ii7",
+          "i7",
+          "ii7"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "modal-tonic",
+          "modal-colour",
+          "modal-tonic",
+          "modal-colour"
+        ],
+        "scale_families": [
+          {
+            "chord": "Dm7",
+            "acceptable": [
+              "D Dorian"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "acceptable": [
+              "D Dorian",
+              "E Phrygian"
+            ]
+          },
+          {
+            "chord": "Dm7",
+            "acceptable": [
+              "D Dorian"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "acceptable": [
+              "D Dorian",
+              "E Phrygian"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Dm7",
+            "quality": "minor-7",
+            "root": "D",
+            "root_pitch_class": 2,
+            "pitch_classes": [
+              2,
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "D",
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "quality": "minor-7",
+            "root": "E",
+            "root_pitch_class": 4,
+            "pitch_classes": [
+              4,
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "E",
+              "G",
+              "B",
+              "D"
+            ]
+          },
+          {
+            "chord": "Dm7",
+            "quality": "minor-7",
+            "root": "D",
+            "root_pitch_class": 2,
+            "pitch_classes": [
+              2,
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "D",
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "quality": "minor-7",
+            "root": "E",
+            "root_pitch_class": 4,
+            "pitch_classes": [
+              4,
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "E",
+              "G",
+              "B",
+              "D"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "modal",
+          "D Dorian",
+          "the characteristic note is the natural 6th, B",
+          "there is no dominant chord and no functional cadence",
+          "the parent major scale is C major but the tonal centre is D"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Dm7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                5,
+                7,
+                5,
+                6,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                2,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "Em7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                7,
+                9,
+                7,
+                8,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                4,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "Dm7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                5,
+                7,
+                5,
+                6,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                2,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "Em7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                7,
+                9,
+                7,
+                8,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                4,
+                7,
+                11
+              ]
+            }
+          ]
+        },
+        "notes": "The parent key is C major, but C major is a FORBIDDEN answer here: reporting the parent key as the tonal centre is the exact error this case exists to catch."
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "C major",
+          "D minor",
+          "A minor"
+        ],
+        "facts": [
+          "Bb",
+          "D natural minor",
+          "D Aeolian",
+          "the progression is a ii-V in C"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "Modal-jazz vamp idiom (So What family), reduced to two chords.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "A modal centre is not one of the 30 major/minor keys, so this case deliberately exceeds what a major/minor-only key scorer can express. It is held-out precisely to keep that gap visible."
+      }
+    },
+    {
+      "id": "pc-09-starts-off-tonic",
+      "category": "starts-away-from-tonic",
+      "title": "Progression beginning on IV in C major",
+      "input": {
+        "chords": [
+          "Fmaj7",
+          "Em7",
+          "Dm7",
+          "G7",
+          "Cmaj7"
+        ],
+        "canonical_chords": [
+          "Fmaj7",
+          "Em7",
+          "Dm7",
+          "G7",
+          "Cmaj7"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major"
+        ],
+        "roman_numerals": [
+          "IVmaj7",
+          "iii7",
+          "ii7",
+          "V7",
+          "Imaj7"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "predominant",
+          "tonic-substitute",
+          "predominant",
+          "dominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "Fmaj7",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "acceptable": [
+              "E Phrygian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Dm7",
+            "acceptable": [
+              "D Dorian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G7",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "Cmaj7",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Fmaj7",
+            "quality": "major-7",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C",
+              "E"
+            ]
+          },
+          {
+            "chord": "Em7",
+            "quality": "minor-7",
+            "root": "E",
+            "root_pitch_class": 4,
+            "pitch_classes": [
+              4,
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "E",
+              "G",
+              "B",
+              "D"
+            ]
+          },
+          {
+            "chord": "Dm7",
+            "quality": "minor-7",
+            "root": "D",
+            "root_pitch_class": 2,
+            "pitch_classes": [
+              2,
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "D",
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "G7",
+            "quality": "dominant-7",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2,
+              5
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D",
+              "F"
+            ]
+          },
+          {
+            "chord": "Cmaj7",
+            "quality": "major-7",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7,
+              11
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G",
+              "B"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "the progression starts on IV, not I",
+          "descending ii-V-I approach",
+          "the tonic arrives only at the end"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Fmaj7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                8,
+                10,
+                9,
+                10,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "Em7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                7,
+                9,
+                7,
+                8,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                4,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "Dm7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                5,
+                7,
+                5,
+                6,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                2,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "G7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                3,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                7,
+                11
+              ]
+            },
+            {
+              "chord": "Cmaj7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                4,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7,
+                11
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "F major",
+          "E minor",
+          "D minor",
+          "G major"
+        ],
+        "facts": [
+          "the key is F major",
+          "Fmaj7 is the tonic",
+          "the first chord determines the key"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          614
+        ],
+        "rationale": "#614 shows \"F G C\" detected as F major because the tie-break favours the first chord's root. This case generalises that row: the first chord is IV and must not become the tonic."
+      },
+      "provenance": {
+        "source": "Generalisation of the \"F G C -> F major\" row in GuitarAlchemist/ga#614.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "Isolates the first-chord tie-break defect from the quality-blind defect: every chord here is quality-distinct and diatonic, so only the tie-break can go wrong."
+      }
+    },
+    {
+      "id": "pc-10-spelled-out-accidentals",
+      "category": "spelled-out-accidentals",
+      "title": "ii-V-I in E-flat major written with spelled-out accidentals",
+      "input": {
+        "chords": [
+          "F minor 7",
+          "B-flat 7",
+          "E-flat major 7"
+        ],
+        "canonical_chords": [
+          "Fm7",
+          "Bb7",
+          "Ebmaj7"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": [
+          {
+            "canonical": "Ebmaj7",
+            "spellings": [
+              "Ebmaj7",
+              "E-flat maj7",
+              "E flat maj7",
+              "E-flatmaj7"
+            ]
+          },
+          {
+            "canonical": "Bb7",
+            "spellings": [
+              "Bb7",
+              "B-flat 7",
+              "B flat 7",
+              "B-flat7"
+            ]
+          },
+          {
+            "canonical": "F#m",
+            "spellings": [
+              "F#m",
+              "F-sharp minor",
+              "F sharp minor",
+              "F-sharpm"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "tonal_center": "Eb major",
+        "acceptable_tonal_centers": [
+          "Eb major"
+        ],
+        "roman_numerals": [
+          "ii7",
+          "V7",
+          "Imaj7"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "predominant",
+          "dominant",
+          "tonic"
+        ],
+        "scale_families": [
+          {
+            "chord": "Fm7",
+            "acceptable": [
+              "F Dorian",
+              "Eb major"
+            ]
+          },
+          {
+            "chord": "Bb7",
+            "acceptable": [
+              "Bb Mixolydian",
+              "Eb major"
+            ]
+          },
+          {
+            "chord": "Ebmaj7",
+            "acceptable": [
+              "Eb Ionian",
+              "Eb major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Fm7",
+            "quality": "minor-7",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              8,
+              0,
+              3
+            ],
+            "notes": [
+              "F",
+              "Ab",
+              "C",
+              "Eb"
+            ]
+          },
+          {
+            "chord": "Bb7",
+            "quality": "dominant-7",
+            "root": "Bb",
+            "root_pitch_class": 10,
+            "pitch_classes": [
+              10,
+              2,
+              5,
+              8
+            ],
+            "notes": [
+              "Bb",
+              "D",
+              "F",
+              "Ab"
+            ]
+          },
+          {
+            "chord": "Ebmaj7",
+            "quality": "major-7",
+            "root": "Eb",
+            "root_pitch_class": 3,
+            "pitch_classes": [
+              3,
+              7,
+              10,
+              2
+            ],
+            "notes": [
+              "Eb",
+              "G",
+              "Bb",
+              "D"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "E-flat major has three flats",
+          "ii-V-I",
+          "E-flat and Eb are the same chord",
+          "B-flat and Bb are the same chord"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Fm7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                8,
+                10,
+                8,
+                9,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                3,
+                5,
+                8
+              ]
+            },
+            {
+              "chord": "Bb7",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                6,
+                8,
+                6,
+                7,
+                6,
+                6
+              ],
+              "sounded_pitch_classes": [
+                2,
+                5,
+                8,
+                10
+              ]
+            },
+            {
+              "chord": "Ebmaj7",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                6,
+                8,
+                7,
+                8,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                3,
+                7,
+                10
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "E major",
+          "B major",
+          "F major",
+          "C# minor"
+        ],
+        "facts": [
+          "E major",
+          "four sharps",
+          "the key is E major",
+          "B major is the dominant"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [
+          554
+        ],
+        "rationale": "#554: spelled-out accidentals silently truncate to the natural note (\"E-flat major\" -> E major) and the system then fabricates a key signature. Every spelling group below must resolve identically to its canonical shorthand."
+      },
+      "provenance": {
+        "source": "GuitarAlchemist/ga#554 repro, lifted from a key question into a progression.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "#554 names E-flat, B-flat and F-sharp plus spacing variants; all three accidentals are pinned here even though F# is not in the progression, because the parse boundary is shared."
+      }
+    },
+    {
+      "id": "pc-11-drop-c-alternate-tuning",
+      "category": "alternate-tuning",
+      "title": "i-iv-VI-V in C minor, Drop C tuning",
+      "input": {
+        "chords": [
+          "Cm",
+          "Fm",
+          "Ab",
+          "G"
+        ],
+        "canonical_chords": [
+          "Cm",
+          "Fm",
+          "Ab",
+          "G"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "drop-c",
+          "name": "Drop C",
+          "open_strings": [
+            "C2",
+            "G2",
+            "C3",
+            "F3",
+            "A3",
+            "D4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C minor",
+        "acceptable_tonal_centers": [
+          "C minor"
+        ],
+        "roman_numerals": [
+          "i",
+          "iv",
+          "VI",
+          "V"
+        ],
+        "alternative_roman_numerals": [],
+        "functions": [
+          "tonic",
+          "predominant",
+          "submediant",
+          "dominant"
+        ],
+        "scale_families": [
+          {
+            "chord": "Cm",
+            "acceptable": [
+              "C Aeolian",
+              "C natural minor",
+              "C harmonic minor"
+            ]
+          },
+          {
+            "chord": "Fm",
+            "acceptable": [
+              "F Dorian",
+              "F Aeolian",
+              "C natural minor"
+            ]
+          },
+          {
+            "chord": "Ab",
+            "acceptable": [
+              "Ab Lydian",
+              "C natural minor"
+            ]
+          },
+          {
+            "chord": "G",
+            "acceptable": [
+              "G Phrygian dominant",
+              "C harmonic minor",
+              "G altered"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Cm",
+            "quality": "minor-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              3,
+              7
+            ],
+            "notes": [
+              "C",
+              "Eb",
+              "G"
+            ]
+          },
+          {
+            "chord": "Fm",
+            "quality": "minor-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              8,
+              0
+            ],
+            "notes": [
+              "F",
+              "Ab",
+              "C"
+            ]
+          },
+          {
+            "chord": "Ab",
+            "quality": "major-triad",
+            "root": "Ab",
+            "root_pitch_class": 8,
+            "pitch_classes": [
+              8,
+              0,
+              3
+            ],
+            "notes": [
+              "Ab",
+              "C",
+              "Eb"
+            ]
+          },
+          {
+            "chord": "G",
+            "quality": "major-triad",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "Drop C tuning is C G C F A D low to high",
+          "the sixth string is a major third below standard E",
+          "strings five to one are standard tuning transposed down a whole step",
+          "the V chord is G major, not G minor",
+          "B natural is the leading tone and comes from C harmonic minor"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "drop-c",
+          "frames": [
+            {
+              "chord": "Cm",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                5,
+                7,
+                7,
+                6,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                3,
+                7
+              ]
+            },
+            {
+              "chord": "Fm",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                10,
+                12,
+                12,
+                11,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                8
+              ]
+            },
+            {
+              "chord": "Ab",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                1,
+                3,
+                3,
+                3,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                3,
+                8
+              ]
+            },
+            {
+              "chord": "G",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                0,
+                2,
+                2,
+                2,
+                null
+              ],
+              "sounded_pitch_classes": [
+                2,
+                7,
+                11
+              ]
+            }
+          ]
+        }
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "Eb major",
+          "C major",
+          "G major"
+        ],
+        "facts": [
+          "standard tuning",
+          "E A D G B E",
+          "Bb is the leading tone",
+          "drop D",
+          "the key is Eb major",
+          "Gm is the dominant"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "confident",
+        "min_alternatives": 1,
+        "max_confidence": null
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "Drop-C is the alternate tuning already modelled by AlternateTuningsSkill (C - G - C - F - A - D); the harmony is the harmonic-minor i-iv-VI-V cadence.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "The only case whose fret numbers are wrong under standard tuning, so it fails loudly if the tuning is ignored rather than silently sounding plausible. The major V is deliberate: it makes C minor unambiguous, so this case cannot be confused with the relative-pair ambiguity of pc-12, which uses the same i-VI-III-VII interval pattern this case avoids."
+      }
+    },
+    {
+      "id": "pc-12-ambiguous-relative-pair",
+      "category": "ambiguous",
+      "title": "Ambiguous vi-IV-I-V / i-VI-III-VII",
+      "input": {
+        "chords": [
+          "Am",
+          "F",
+          "C",
+          "G"
+        ],
+        "canonical_chords": [
+          "Am",
+          "F",
+          "C",
+          "G"
+        ],
+        "instrument": "guitar",
+        "tuning": {
+          "id": "standard",
+          "name": "Standard E",
+          "open_strings": [
+            "E2",
+            "A2",
+            "D3",
+            "G3",
+            "B3",
+            "E4"
+          ]
+        },
+        "key_hint": null,
+        "spelling_equivalence_groups": []
+      },
+      "expected": {
+        "tonal_center": "C major",
+        "acceptable_tonal_centers": [
+          "C major",
+          "A minor"
+        ],
+        "roman_numerals": [
+          "vi",
+          "IV",
+          "I",
+          "V"
+        ],
+        "alternative_roman_numerals": [
+          [
+            "i",
+            "VI",
+            "III",
+            "VII"
+          ]
+        ],
+        "functions": [
+          "tonic-substitute",
+          "predominant",
+          "tonic",
+          "dominant"
+        ],
+        "scale_families": [
+          {
+            "chord": "Am",
+            "acceptable": [
+              "A Aeolian",
+              "C major",
+              "A natural minor"
+            ]
+          },
+          {
+            "chord": "F",
+            "acceptable": [
+              "F Lydian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "C",
+            "acceptable": [
+              "C Ionian",
+              "C major"
+            ]
+          },
+          {
+            "chord": "G",
+            "acceptable": [
+              "G Mixolydian",
+              "C major"
+            ]
+          }
+        ],
+        "required_chord_tones": [
+          {
+            "chord": "Am",
+            "quality": "minor-triad",
+            "root": "A",
+            "root_pitch_class": 9,
+            "pitch_classes": [
+              9,
+              0,
+              4
+            ],
+            "notes": [
+              "A",
+              "C",
+              "E"
+            ]
+          },
+          {
+            "chord": "F",
+            "quality": "major-triad",
+            "root": "F",
+            "root_pitch_class": 5,
+            "pitch_classes": [
+              5,
+              9,
+              0
+            ],
+            "notes": [
+              "F",
+              "A",
+              "C"
+            ]
+          },
+          {
+            "chord": "C",
+            "quality": "major-triad",
+            "root": "C",
+            "root_pitch_class": 0,
+            "pitch_classes": [
+              0,
+              4,
+              7
+            ],
+            "notes": [
+              "C",
+              "E",
+              "G"
+            ]
+          },
+          {
+            "chord": "G",
+            "quality": "major-triad",
+            "root": "G",
+            "root_pitch_class": 7,
+            "pitch_classes": [
+              7,
+              11,
+              2
+            ],
+            "notes": [
+              "G",
+              "B",
+              "D"
+            ]
+          }
+        ],
+        "explanation_facts": [
+          "C major and A minor are relative keys and share all four chords",
+          "there is no G# and therefore no dominant of A minor",
+          "the progression is genuinely ambiguous"
+        ],
+        "voicing_sequence": {
+          "tuning_id": "standard",
+          "frames": [
+            {
+              "chord": "Am",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                0,
+                2,
+                2,
+                1,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                9
+              ]
+            },
+            {
+              "chord": "F",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                1,
+                3,
+                3,
+                2,
+                1,
+                1
+              ],
+              "sounded_pitch_classes": [
+                0,
+                5,
+                9
+              ]
+            },
+            {
+              "chord": "C",
+              "shape_family": "A",
+              "frets_low_to_high": [
+                null,
+                3,
+                5,
+                5,
+                5,
+                null
+              ],
+              "sounded_pitch_classes": [
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "chord": "G",
+              "shape_family": "E",
+              "frets_low_to_high": [
+                3,
+                5,
+                5,
+                4,
+                3,
+                3
+              ],
+              "sounded_pitch_classes": [
+                2,
+                7,
+                11
+              ]
+            }
+          ]
+        },
+        "notes": "A system that returns exactly one tonal centre with high confidence FAILS this case even if that centre is C major."
+      },
+      "forbidden": {
+        "tonal_centers": [
+          "F major",
+          "G major",
+          "D minor"
+        ],
+        "facts": [
+          "unambiguously",
+          "the key is definitely",
+          "confidence 100%"
+        ]
+      },
+      "uncertainty": {
+        "expected_behavior": "alternatives",
+        "min_alternatives": 2,
+        "max_confidence": 0.8
+      },
+      "pins": {
+        "issues": [],
+        "rationale": null
+      },
+      "provenance": {
+        "source": "The relative-major/minor ambiguity built into the four-chord pop loop.",
+        "added_in": "GuitarAlchemist/ga#627",
+        "rationale": "The corpus needs one case where a single confident answer is itself the failure. A correct system offers both readings, warns, or abstains."
+      }
+    }
+  ]
+}

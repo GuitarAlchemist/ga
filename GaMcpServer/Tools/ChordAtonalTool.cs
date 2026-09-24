@@ -20,14 +20,7 @@ public static class ChordAtonalTool
 {
     // ── Static tables ─────────────────────────────────────────────────────────
 
-    private static readonly IReadOnlyDictionary<string, int> IntervalSemitones =
-        new Dictionary<string, int>
-        {
-            ["P1"] = 0, ["m2"] = 1, ["M2"] = 2,  ["m3"] = 3,
-            ["M3"] = 4, ["P4"] = 5, ["TT"] = 6,  ["P5"] = 7,
-            ["m6"] = 8, ["M6"] = 9, ["m7"] = 10, ["M7"] = 11,
-            ["M9"] = 14, ["P11"] = 17, ["M13"] = 21
-        };
+    private static readonly int[] MajorScaleSemitones = [0, 2, 4, 5, 7, 9, 11];
 
     private static readonly IReadOnlyDictionary<string, int> NoteToSemitone =
         new Dictionary<string, int>
@@ -68,6 +61,26 @@ public static class ChordAtonalTool
         return ((s + acc switch { "#" => 1, "b" => -1, "##" => 2, "bb" => -2, _ => 0 }) % 12 + 12) % 12;
     }
 
+    /// <summary>
+    /// Semitones of an interval name returned by <c>domain.chordIntervals</c>, from its quality
+    /// and degree: P5 → 7, d5 → 6, d7 → 9, m9 → 13, A11 → 18. Also accepts the legacy "TT".
+    /// </summary>
+    private static int? IntervalSemitones(string name)
+    {
+        if (name == "TT") return 6;
+        if (name.Length < 2 || !int.TryParse(name.AsSpan(1), out var degree) || degree < 1) return null;
+        var natural = MajorScaleSemitones[(degree - 1) % 7] + 12 * ((degree - 1) / 7);
+        var perfect = (degree - 1) % 7 is 0 or 3 or 4;
+        return (name[0], perfect) switch
+        {
+            ('P', true) or ('M', false) => natural,
+            ('m', false) or ('d', true) => natural - 1,
+            ('d', false) => natural - 2,
+            ('A', _) => natural + 1,
+            _ => null
+        };
+    }
+
     private static async Task<string[]> GetIntervalNamesAsync(string symbol)
     {
         var map = MapModule.OfSeq(new[] { Tuple.Create("symbol", (object)symbol) });
@@ -86,10 +99,15 @@ public static class ChordAtonalTool
 
     private static async Task<int[]> GetPitchClassesAsync(string symbol)
     {
+        if (CanonicalForteCatalog.TryGetPrimeForm(symbol, out var primeForm))
+        {
+            return [.. primeForm.Select(pc => pc.Value).Order()];
+        }
+
         var rootPc = ParseRootPc(symbol);
         var intervals = await GetIntervalNamesAsync(symbol);
         return [.. intervals
-            .Select(iv => IntervalSemitones.TryGetValue(iv, out var s) ? (int?)(rootPc + s) % 12 : null)
+            .Select(iv => IntervalSemitones(iv) is { } s ? (int?)(rootPc + s) % 12 : null)
             .Where(s => s.HasValue)
             .Select(s => s!.Value)
             .Distinct()
@@ -102,15 +120,40 @@ public static class ChordAtonalTool
     private static string FormatPcs(IEnumerable<int> pcs) =>
         "{" + string.Join(", ", pcs.Select(pc => NoteNames[pc])) + "}";
 
-    private static string AtonalCard(string label, int[] pcs)
+    /// <summary>
+    /// Name of a Modes.yaml entry whose notes, transposed so that their first note lands on
+    /// <paramref name="rootPc"/>, are exactly <paramref name="pcs"/>. Without a root, a name is
+    /// returned only when a single entry is a transposition of the set.
+    /// A lookup by interval vector alone is not enough: inversions and Z-related sets share a vector,
+    /// and Modes.yaml files seventh chords of different vectors under one family vector, which
+    /// labelled Am "Major Triad" and Cm7b5 "Major Seventh".
+    /// </summary>
+    private static string? TranspositionName(int[] pcs, IntervalClassVector icv, int? rootPc)
+    {
+        var target = pcs.Aggregate(0, (mask, pc) => mask | 1 << pc);
+        var names = ModesConfig.GetAllModes()
+            .Where(m => string.Equals(m.IntervalClassVector, icv.ToString(), StringComparison.OrdinalIgnoreCase))
+            .Where(m =>
+            {
+                var modePcs = m.Notes.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(ParseRootPc).ToArray();
+                return modePcs.Length > 0 && Enumerable.Range(0, 12).Any(t =>
+                    (rootPc is null || (modePcs[0] + t) % 12 == rootPc) &&
+                    modePcs.Aggregate(0, (mask, pc) => mask | 1 << (pc + t) % 12) == target);
+            })
+            .Select(m => m.Name)
+            .Distinct()
+            .ToList();
+        return rootPc is not null || names.Count == 1 ? names.FirstOrDefault() : null;
+    }
+
+    private static string AtonalCard(string label, int[] pcs, int? rootPc)
     {
         var set = ToPitchClassSet(pcs);
         var icv = set.IntervalClassVector;
         var prime = set.PrimeForm;
         var forte = prime != null ? ForteCatalog.GetForteNumber(prime) : null;
         var family = set.ModalFamily;
-        var modeOpt = ModesConfig.TryGetModeByIntervalClassVector(icv.Id.ToString());
-        var modeName = FSharpOption<ModesConfig.ModeInfo>.get_IsSome(modeOpt) ? modeOpt.Value.Name : null;
+        var modeName = TranspositionName(pcs, icv, rootPc);
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"{label,-12}{FormatPcs(pcs)} ({pcs.Length} tones)");
@@ -130,7 +173,7 @@ public static class ChordAtonalTool
     [Description(
         "Return the full post-tonal identity of a chord: pitch-class set, interval-class vector (ICV), " +
         "prime form, Forte number, modal family position, and matching scale name if any. " +
-        "Bridges tonal chord naming to set theory — e.g. Am7 and Cmaj6 share the same prime form (T/I equivalents).")]
+        "Bridges tonal chord naming to set theory — e.g. Am7 and C6 contain the same pitch classes, so they share one set class.")]
     public static async Task<string> GaChordToSet(
         [Description("Chord symbol, e.g. 'Am7', 'Cmaj9', 'G7b9'")] string symbol)
     {
@@ -138,7 +181,7 @@ public static class ChordAtonalTool
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var header = $"Chord: {symbol}";
-        var card = AtonalCard("Pitch set:", pcs);
+        var card = AtonalCard("Pitch set:", pcs, ParseRootPc(symbol));
         var opticNote =
             "OPTIC-K layer: STRUCTURE (dims 6–29, w=0.45) — ICV drives structural similarity";
         return $"{header}\n{card}\n{opticNote}";
@@ -146,10 +189,65 @@ public static class ChordAtonalTool
 
     [McpServerTool]
     [Description(
+        "Distinguish two chords that the interval-class vector (ICV) treats as identical — the two blind " +
+        "spots of ICV: homometric (Z-related) pairs and major-vs-minor chirality. Reports whether they " +
+        "share an ICV, the phase-aligned similarity S (chirality-preserving) and S_TnI (set-class), and the " +
+        "transposition t* that best aligns them. Example: 4-Z15 and 4-Z29 share an ICV yet S_TnI = 0.67 " +
+        "(genuinely different shapes); C major and C minor share an ICV but S = 0.57 (distinct handedness), " +
+        "S_TnI = 1 (inversion-equivalent).")]
+    public static async Task<string> GaHomometricDistinguish(
+        [Description("First chord, e.g. 'C'")] string chord1,
+        [Description("Second chord, e.g. 'Cm'")] string chord2)
+    {
+        var pcs1 = await GetPitchClassesAsync(chord1);
+        var pcs2 = await GetPitchClassesAsync(chord2);
+        if (pcs1.Length == 0) return $"Error: could not parse '{chord1}'";
+        if (pcs2.Length == 0) return $"Error: could not parse '{chord2}'";
+
+        var setA = ToPitchClassSet(pcs1);
+        var setB = ToPitchClassSet(pcs2);
+        var icvA = setA.IntervalClassVector;
+        var icvB = setB.IntervalClassVector;
+        var icvEqual = icvA.Id.Equals(icvB.Id);
+
+        var plain = SpectralPhaseAlignment.Similarity(setA, setB);
+        var tni = SpectralPhaseAlignment.SimilarityTnI(setA, setB);
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Distinguishing {chord1} {FormatPcs(pcs1)} vs {chord2} {FormatPcs(pcs2)}");
+        sb.AppendLine($"  ICV {chord1}: {icvA}");
+        sb.AppendLine($"  ICV {chord2}: {icvB}");
+        sb.AppendLine(icvEqual
+            ? "  ICV verdict: IDENTICAL — the interval-class vector is blind here."
+            : "  ICV verdict: different — ICV already distinguishes these.");
+        var tStar = plain.AligningTranspositions.Count > 0
+            ? $"  t*=[{string.Join(",", plain.AligningTranspositions)}]"
+            : "  (no alignment)";
+        sb.AppendLine($"  Phase-aligned S (chirality-kept): {plain.Similarity:F4}{tStar}");
+        sb.AppendLine($"  Phase-aligned S_TnI (set-class):  {tni.Similarity:F4}" +
+                      (tni.Inverted ? "  (via inversion)" : string.Empty));
+
+        string verdict;
+        if (plain.Similarity >= 1.0 - 1e-6)
+            verdict = "Same shape up to transposition — one is a transposition of the other.";
+        else if (tni.Similarity >= 1.0 - 1e-6)
+            verdict = "Chirality pair — same set class (T/I-equivalent), opposite handedness (e.g. major vs minor).";
+        else if (icvEqual)
+            verdict = "Homometric but distinct — a Z-related pair: identical interval content, genuinely " +
+                      "different shape. ICV cannot separate them; DFT phase can.";
+        else
+            verdict = "Distinct set classes.";
+        sb.Append($"  → {verdict}");
+        return sb.ToString();
+    }
+
+    [McpServerTool]
+    [Description(
         "Find all standard chords (triads, 7ths, 9ths) that are set-class equivalent (T/I) to the input chord — " +
         "same prime form under transposition or inversion. These are the deepest substitutions: " +
         "same interval content regardless of root. " +
-        "Example: Am and C are NOT equivalent, but Am and Em are (both minor triads, same prime form 3-11).")]
+        "Example: Am and C are equivalent (A-C-E is an inversion of C-E-G, set class 3-11), " +
+        "and so are Am and Em (a transposition).")]
     public static async Task<string> GaSetClassSubs(
         [Description("Chord symbol, e.g. 'Am', 'Cmaj7', 'G7'")] string symbol)
     {
@@ -163,7 +261,7 @@ public static class ChordAtonalTool
         var forte = ForteCatalog.GetForteNumber(targetPrime);
 
         // Build vocabulary using hardcoded intervals (no async calls for speed)
-        var equivalents = new List<string>();
+        var equivalents = new List<(string Suffix, string Chord)>();
         foreach (var root in RootNames)
         {
             var rootPc = ParseRootPc(root);
@@ -175,7 +273,7 @@ public static class ChordAtonalTool
                 if (cpcs.Length != pcs.Length) continue;
                 var cPrime = ToPitchClassSet(cpcs).PrimeForm;
                 if (cPrime != null && cPrime.Equals(targetPrime))
-                    equivalents.Add(candidate);
+                    equivalents.Add((suffix, candidate));
             }
         }
 
@@ -183,10 +281,11 @@ public static class ChordAtonalTool
         if (equivalents.Count == 0)
             return header + "\n  (none in standard vocabulary — unique set class)";
 
-        // Group by quality suffix for readability
+        // Group by the quality each chord was built from (a suffix test such as EndsWith("")
+        // would match every chord)
         var grouped = equivalents
-            .GroupBy(c => Vocabulary.FirstOrDefault(v => c.EndsWith(v.Suffix)).Suffix)
-            .Select(g => $"  [{(g.Key == "" ? "maj" : g.Key)}] {string.Join("  ", g)}")
+            .GroupBy(e => e.Suffix)
+            .Select(g => $"  [{(g.Key == "" ? "maj" : g.Key)}] {string.Join("  ", g.Select(e => e.Chord))}")
             .ToList();
         return header + "\n" + string.Join("\n", grouped);
     }
@@ -195,10 +294,10 @@ public static class ChordAtonalTool
     [Description(
         "Stack two chords into a polychord and analyze the combined pitch-class set: merged tones, " +
         "ICV, prime form, Forte number, modal family, and any matching scale name. " +
-        "Example: B triad over C triad → Lydian mode set {C,D,E,F#,G,B}.")]
+        "Example: D triad over C triad → {C,D,E,F#,G,A} (6-33), C Lydian without its seventh.")]
     public static async Task<string> GaPolychord(
         [Description("Bottom chord, e.g. 'C'")] string chord1,
-        [Description("Top chord, e.g. 'B'")] string chord2)
+        [Description("Top chord, e.g. 'D'")] string chord2)
     {
         var pcs1Task = GetPitchClassesAsync(chord1);
         var pcs2Task = GetPitchClassesAsync(chord2);
@@ -211,7 +310,7 @@ public static class ChordAtonalTool
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"Polychord: {chord2}/{chord1}");
-        sb.AppendLine(AtonalCard("Merged:", merged));
+        sb.AppendLine(AtonalCard("Merged:", merged, ParseRootPc(chord1)));
         sb.AppendLine($"  from {chord1}: {FormatPcs(pcs1)}");
         sb.Append($"  from {chord2}: {FormatPcs(pcs2)}");
         return sb.ToString();
@@ -225,31 +324,45 @@ public static class ChordAtonalTool
         "Useful for smooth voice-leading or finding unexpected but structurally close substitutions.")]
     public static async Task<string> GaIcvNeighbors(
         [Description("Chord symbol, e.g. 'Am7', 'G7'")] string symbol,
-        [Description("Max Grothendieck L1 distance to search (1–4, default 1)")] int maxDistance = 1)
+        [Description("Max L1 distance between interval-class vectors (1–4, default 1). " +
+                     "Sets of the same size are at least 2 apart; distance 0 is a Z-related set.")] int maxDistance = 1)
     {
         var pcs = await GetPitchClassesAsync(symbol);
         if (pcs.Length == 0) return $"Error: could not parse chord '{symbol}'";
 
         var sourceSet = ToPitchClassSet(pcs);
-        var grothendieck = new GrothendieckService();
-        var neighbors = grothendieck.FindNearby(sourceSet, Math.Clamp(maxDistance, 1, 4))
-            .Where(r => r.Delta.L1Norm > 0) // skip self
+        var sourceIcv = sourceSet.IntervalClassVector;
+        var sourcePrime = sourceSet.PrimeForm;
+        var distance = Math.Clamp(maxDistance, 1, 4);
+        // FindNearby scans all 4096 sets and reports those sharing the source's vector at
+        // distance 1 (GrothendieckDelta.FromIcVs turns a zero delta into Ic1 = 1), so the 24 major
+        // and minor triads came back as C's neighbours. Use the actual L1 distance, skip the
+        // chord's own set class and list each set class once.
+        var neighbors = new GrothendieckService().FindNearby(sourceSet, distance)
+            .Select(r => (r.Set, Distance: IcvDistance(sourceIcv, r.Set.IntervalClassVector)))
+            .Where(n => n.Distance <= distance && !Equals(n.Set.PrimeForm, sourcePrime))
+            .GroupBy(n => n.Set.PrimeForm?.ToString() ?? n.Set.ToString())
+            .Select(g => g.First())
+            .OrderBy(n => n.Distance)
             .Take(12)
             .ToList();
 
         if (neighbors.Count == 0)
-            return $"No neighbors within distance {maxDistance} of {symbol}";
+            return $"No other set class within distance {distance} of {symbol} " +
+                   "(sets of the same size are at least 2 apart)";
 
-        var sourceIcv = sourceSet.IntervalClassVector;
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {maxDistance}):");
-        foreach (var (neighbor, delta, _) in neighbors)
+        sb.AppendLine($"ICV neighbors of {symbol} (ICV {sourceIcv}, dist ≤ {distance}):");
+        foreach (var (neighbor, neighborDistance) in neighbors)
         {
             var forte = ForteCatalog.GetForteNumber(neighbor.PrimeForm ?? neighbor);
-            var nOpt = ModesConfig.TryGetModeByIntervalClassVector(neighbor.IntervalClassVector.Id.ToString());
-            var nameStr = FSharpOption<ModesConfig.ModeInfo>.get_IsSome(nOpt) ? $" [{nOpt.Value.Name}]" : "";
-            sb.AppendLine($"  {neighbor.IntervalClassVector}  Δ={delta.L1Norm}  Forte:{forte}{nameStr}");
+            var neighborName = TranspositionName([.. neighbor.Select(pc => pc.Value)], neighbor.IntervalClassVector, rootPc: null);
+            var nameStr = neighborName != null ? $" [{neighborName}]" : "";
+            sb.AppendLine($"  {neighbor.IntervalClassVector}  Δ={neighborDistance}  Forte:{forte}{nameStr}");
         }
         return sb.ToString().TrimEnd();
     }
+
+    private static int IcvDistance(IntervalClassVector a, IntervalClassVector b) =>
+        Enumerable.Range(1, 6).Sum(ic => Math.Abs(a[IntervalClass.FromValue(ic)] - b[IntervalClass.FromValue(ic)]));
 }

@@ -81,7 +81,7 @@ public class ChordTests
         Assert.Multiple(() =>
         {
             Assert.That(chord.Root.PitchClass.Value, Is.EqualTo(6)); // F#
-            Assert.That(chord.Quality, Is.EqualTo(ChordQuality.Minor));
+            Assert.That(chord.Quality, Is.EqualTo(ChordQuality.Minor7));
             Assert.That(chord.Extension, Is.EqualTo(ChordExtension.Seventh));
         });
     }
@@ -201,8 +201,8 @@ public class ChordTests
             Assert.That(ChordFormula.Diminished.Quality, Is.EqualTo(ChordQuality.Diminished));
             Assert.That(ChordFormula.Augmented.Quality, Is.EqualTo(ChordQuality.Augmented));
             Assert.That(ChordFormula.Dominant7.Quality, Is.EqualTo(ChordQuality.Dominant));
-            Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major));
-            Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor));
+            Assert.That(ChordFormula.Major7.Quality, Is.EqualTo(ChordQuality.Major7));
+            Assert.That(ChordFormula.Minor7.Quality, Is.EqualTo(ChordQuality.Minor7));
         });
     }
 
@@ -242,5 +242,127 @@ public class ChordTests
         var inverted = chord.ToInversion(1);
 
         Assert.That(PitchClassValues(inverted), Is.EqualTo(PitchClassValues(chord)));
+    }
+
+    // Root is whatever Note type the caller passed while Notes are Accidented: comparing the records
+    // made every root-position chord built on a Note.Sharp or Note.Chromatic root look inverted.
+    [Test]
+    public void IsInverted_RootPosition_IsFalse_WhateverTheRootNoteType() =>
+        Assert.Multiple(() =>
+        {
+            Assert.That(new Chord(Note.Sharp.C, ChordFormula.Major).IsInverted, Is.False);
+            Assert.That(new Chord(Note.Chromatic.C, ChordFormula.Major).IsInverted, Is.False);
+            Assert.That(new Chord(Note.Sharp.C, ChordFormula.Major).ToInversion(1).IsInverted, Is.True);
+        });
+
+    // One letter per chord degree, counted up from the root letter in thirds (then 2nds, 4ths, 6ths
+    // for added tones), with whatever accidental the interval needs: Cm is C Eb G, never C D# G.
+    [TestCase("C", "C E G")]
+    [TestCase("Cm", "C Eb G")]
+    [TestCase("Eb", "Eb G Bb")]
+    [TestCase("Ab", "Ab C Eb")]
+    [TestCase("F#", "F♯ A♯ C♯")]
+    [TestCase("Bbm7", "Bb Db F Ab")]
+    [TestCase("Cdim", "C Eb Gb")]
+    [TestCase("Cdim7", "C Eb Gb Bbb")]
+    [TestCase("F#dim7", "F♯ A C Eb")]
+    [TestCase("Gb7", "Gb Bb Db Fb")]
+    [TestCase("Cm7b5", "C Eb Gb Bb")]
+    [TestCase("Caug", "C E G♯")]
+    [TestCase("Csus2", "C D G")]
+    [TestCase("Csus4", "C F G")]
+    [TestCase("C6", "C E G A")]
+    [TestCase("Cm6", "C Eb G A")]
+    [TestCase("C9", "C E G Bb D")]
+    [TestCase("Cadd9", "C E G D")]
+    [TestCase("C13", "C E G Bb D F A")]
+    public void FromSymbol_SpellsOneLetterPerChordDegree(string symbol, string expectedNotes) =>
+        Assert.That(string.Join(" ", Chord.FromSymbol(symbol).Notes), Is.EqualTo(expectedNotes));
+
+    [TestCase(new[] { 1, 4, 7, 10 }, "C Db E G Bb")]  // 7(b9)
+    [TestCase(new[] { 3, 4, 7, 10 }, "C D♯ E G Bb")]  // 7(#9)
+    [TestCase(new[] { 4, 6, 7, 10 }, "C E F♯ G Bb")]  // 7(#11)
+    [TestCase(new[] { 4, 7, 8, 10 }, "C E G Ab Bb")]  // 7(b13)
+    [TestCase(new[] { 4, 6, 10 }, "C E Gb Bb")]        // 7(b5)
+    [TestCase(new[] { 4, 8, 10 }, "C E G♯ Bb")]       // 7(#5)
+    public void Constructor_SpellsAlteredTonesByTheirDegree(int[] semitones, string expectedNotes)
+    {
+        var chord = new Chord(Note.Accidented.C, ChordFormula.FromSemitones("Altered", semitones));
+
+        Assert.That(string.Join(" ", chord.Notes), Is.EqualTo(expectedNotes));
+    }
+
+    // A chord built from notes measures its intervals from the root, whatever note is in the bass:
+    // C/E (E G C) used to skip E instead of C and lose its third (quality Other).
+    [TestCase("C", 1, ChordQuality.Major, "C")]
+    [TestCase("C", 2, ChordQuality.Major, "C")]
+    [TestCase("Cm", 1, ChordQuality.Minor, "Cm")]
+    [TestCase("C7", 3, ChordQuality.Dominant, "C7")]
+    [TestCase("Cmaj7", 1, ChordQuality.Major7, "Cmaj7")]
+    public void ToInversion_KeepsQualityAndSymbol(string symbol, int inversion, ChordQuality expectedQuality, string expectedSymbol)
+    {
+        var inverted = Chord.FromSymbol(symbol).ToInversion(inversion);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(inverted.GetInversion(), Is.EqualTo(inversion));
+            Assert.That(inverted.Quality, Is.EqualTo(expectedQuality));
+            Assert.That(inverted.Symbol, Is.EqualTo(expectedSymbol));
+            Assert.That(inverted.Formula, Is.EqualTo(Chord.FromSymbol(symbol).Formula));
+        });
+    }
+
+    // The suffix must name the seventh chord, not just the triad quality plus "7":
+    // Cmaj7 was "7", Cm7b5 was "dim7" and Cdim7 (3, 6, 9 semitones) was "dim6".
+    [TestCase("C", "")]
+    [TestCase("Cm", "m")]
+    [TestCase("Cdim", "dim")]
+    [TestCase("Caug", "aug")]
+    [TestCase("C6", "6")]
+    [TestCase("C7", "7")]
+    [TestCase("Cmaj7", "maj7")]
+    [TestCase("Cm7", "m7")]
+    [TestCase("Cm7b5", "m7b5")]
+    [TestCase("Cdim7", "dim7")]
+    [TestCase("C9", "9")]
+    [TestCase("Cmaj9", "maj9")]
+    [TestCase("Cm9", "m9")]
+    [TestCase("Cadd9", "add9")]
+    public void GetSymbolSuffix_NamesSeventhChordQualities(string symbol, string expectedSuffix) =>
+        Assert.That(Chord.FromSymbol(symbol).Formula.GetSymbolSuffix(), Is.EqualTo(expectedSuffix));
+
+    [TestCase(new[] { 0, 4, 7, 11 }, "Cmaj7")]
+    [TestCase(new[] { 0, 3, 6, 10 }, "Cm7b5")]
+    [TestCase(new[] { 0, 3, 6, 9 }, "Cdim7")]
+    [TestCase(new[] { 0, 3, 7, 10 }, "Cm7")]
+    [TestCase(new[] { 0, 4, 7, 10 }, "C7")]
+    public void Constructor_WithNotes_GeneratesSeventhChordSymbol(int[] pitchClasses, string expectedSymbol)
+    {
+        var notes = new AccidentedNoteCollection(
+            [.. pitchClasses.Select(pc => PitchClass.FromValue(pc).ToChromaticNote().ToAccidented())]);
+
+        Assert.That(new Chord(notes).Symbol, Is.EqualTo(expectedSymbol));
+    }
+
+    [Test]
+    public void Formula_Quality_DistinguishesSeventhChordSpecies() =>
+        Assert.Multiple(() =>
+        {
+            Assert.That(Chord.FromSymbol("Cmaj7").Quality, Is.EqualTo(ChordQuality.Major7));
+            Assert.That(Chord.FromSymbol("Cm7").Quality, Is.EqualTo(ChordQuality.Minor7));
+            Assert.That(Chord.FromSymbol("Cm7b5").Quality, Is.EqualTo(ChordQuality.HalfDiminished));
+            Assert.That(Chord.FromSymbol("Cdim7").Quality, Is.EqualTo(ChordQuality.Diminished7));
+        });
+
+    [Test]
+    public void DiminishedSeventh_IsASeventhExtension() =>
+        Assert.That(Chord.FromSymbol("Cdim7").Extension, Is.EqualTo(ChordExtension.Seventh));
+
+    [Test]
+    public void MinorMajorSeventh_SymbolRoundTrips()
+    {
+        var chord = new Chord(Note.Accidented.C, ChordFormula.FromSemitones("Minor major seventh", 3, 7, 11));
+
+        Assert.That(Chord.FromSymbol(chord.Symbol).Formula, Is.EqualTo(chord.Formula));
     }
 }

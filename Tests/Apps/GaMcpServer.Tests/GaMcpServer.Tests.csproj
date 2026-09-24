@@ -24,6 +24,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\GaMcpServer\GaMcpServer.csproj" />
+    <!-- OptickIndexWriter: the compact-layout test compares against the rows the index writer stores. -->
+    <ProjectReference Include="..\..\..\Demos\Music Theory\FretboardVoicingsCLI\FretboardVoicingsCLI.csproj" />
   </ItemGroup>
 
 </Project>
