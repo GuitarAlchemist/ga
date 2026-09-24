@@ -61,7 +61,8 @@ public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<P
                               "Please write them as standard chord names, e.g. \"Am F C\".",
                 Confidence  = 0.3f,
                 Evidence    = [],
-                Assumptions = ["No parseable chord symbols found"]
+                Assumptions = ["No parseable chord symbols found"],
+                Declined    = chords.Count == 0
             };
 
         var top          = candidates[0];

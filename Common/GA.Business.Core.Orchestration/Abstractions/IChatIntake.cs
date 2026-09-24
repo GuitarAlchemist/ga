@@ -29,6 +29,12 @@ public interface IChatIntake
     Task<Result<ChatResponse, ChatIntakeError>> IntakeAsync(
         ChatIntakeRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Validate, acquire the gate, and stream through the application pipeline.</summary>
+    Task<Result<ChatResponse, ChatIntakeError>> IntakeStreamingAsync(
+        ChatIntakeRequest request,
+        Func<string, Task> onToken,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

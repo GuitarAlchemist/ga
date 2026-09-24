@@ -1,5 +1,6 @@
 namespace GA.Domain.Core.Theory.Atonal;
 
+using System.Globalization;
 using Abstractions;
 using Design.Attributes;
 using Design.Schema;
@@ -83,7 +84,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     {
         10 => "T", // Abbreviation for 10
         11 => "E", // Abbreviation for 11
-        _ => _value.ToString()
+        _ => _value.ToString(CultureInfo.InvariantCulture)
     };
 
     public Note.Chromatic ToChromaticNote() => _chromaticNotes[_value];
@@ -240,7 +241,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
         }
 
         var normalizedInput = s.Trim().ToUpperInvariant();
-        if (int.TryParse(normalizedInput, out var i))
+        if (int.TryParse(normalizedInput, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
         {
             if (i is >= 0 and <= 9)
             {

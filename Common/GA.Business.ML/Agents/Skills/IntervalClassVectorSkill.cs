@@ -238,6 +238,7 @@ public sealed class IntervalClassVectorSkill(
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = "Ask for an ICV of a chord, scale, or explicit pitch-class set, e.g. \"ICV of Cmaj7\", \"interval-class vector of {0,2,4,5,7,9,11}\", \"ICV of the dorian mode\".",
         Confidence = 0.1f,

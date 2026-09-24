@@ -7,7 +7,9 @@ using Core.Theory.Harmony;
 /// <summary>
 ///     Provides simple slash-chord analysis and naming utilities.
 /// </summary>
+[System.Obsolete("Use ChordAnalyzer or ChordNamingService.Analyze instead.")]
 public static class SlashChordNamingService
+
 {
     public enum SlashChordType
     {

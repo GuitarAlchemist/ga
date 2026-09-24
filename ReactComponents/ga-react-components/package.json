@@ -34,6 +34,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@mediapipe/hands": "^0.4.1675469240",
     "@microsoft/signalr": "^10.0.0",
     "@mkkellogg/gaussian-splats-3d": "^0.4.7",
     "@monaco-editor/react": "^4.7.0",

@@ -119,6 +119,59 @@ function pitchClassToNumber(pc: string): number {
   return pitchMap[pc] || 0;
 }
 
+// Spatial compass widget for 3D orientation reference.
+function createAxisWidget(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'harmonic-axis-widget';
+  const axisLength = 0.6;
+  const axes = [
+    { dir: new THREE.Vector3(axisLength, 0, 0), color: 0xff4d4d, label: '+X' },
+    { dir: new THREE.Vector3(0, axisLength, 0), color: 0x4dff88, label: '+Y' },
+    { dir: new THREE.Vector3(0, 0, axisLength), color: 0x4d88ff, label: '+Z' },
+  ];
+
+  for (const { dir, color, label } of axes) {
+    const mat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.85,
+      depthTest: false,
+    });
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      dir,
+    ]);
+    const line = new THREE.Line(geom, mat);
+    line.renderOrder = 999;
+    group.add(line);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 32, 16);
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.9,
+      depthTest: false,
+    });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.position.copy(dir).multiplyScalar(1.15);
+    sprite.scale.set(0.3, 0.15, 1);
+    sprite.renderOrder = 1000;
+    group.add(sprite);
+  }
+
+  group.raycast = () => {};
+  return group;
+}
+
 // ==================
 // Component
 // ==================
@@ -203,6 +256,11 @@ export const HarmonicNavigator3D: React.FC<Props> = ({
     keyWheel.position.set(0, -1.75, 0);
     scene.add(keyWheel);
 
+    // Spatial compass overlay
+    const axisWidget = createAxisWidget();
+    scene.add(axisWidget);
+    const _axisOffset = new THREE.Vector3(0.8, 0.6, -1.5);
+
     // Pointer picking
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -243,6 +301,10 @@ export const HarmonicNavigator3D: React.FC<Props> = ({
     let raf = 0;
     const tick = () => {
       controls.update();
+      // Keep the compass pinned to the camera while staying world-aligned.
+      _axisOffset.set(0.8, 0.6, -1.5);
+      axisWidget.position.copy(camera.position).add(_axisOffset.applyQuaternion(camera.quaternion));
+      axisWidget.scale.set(0.15, 0.15, 0.15);
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
@@ -252,6 +314,16 @@ export const HarmonicNavigator3D: React.FC<Props> = ({
       cancelAnimationFrame(raf);
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       ro.disconnect();
+      scene.remove(axisWidget);
+      axisWidget.traverse((obj) => {
+        if (obj instanceof THREE.Line) {
+          obj.geometry.dispose();
+          (obj.material as THREE.Material).dispose();
+        } else if (obj instanceof THREE.Sprite) {
+          (obj.material as THREE.SpriteMaterial).map?.dispose();
+          (obj.material as THREE.SpriteMaterial).dispose();
+        }
+      });
       renderer.dispose();
       if (container && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
