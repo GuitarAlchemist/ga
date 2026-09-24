@@ -156,16 +156,26 @@ public static partial class KeyIdentificationService
 
     /// <summary>
     /// Scores all 30 major/minor keys using pitch-class arithmetic and returns candidates
-    /// with at least one diatonic match, sorted by descending match count then by key name.
+    /// with at least one diatonic match, sorted by descending match count plus cadence weight,
+    /// then by key name.
     /// </summary>
+    /// <remarks>
+    ///     Pitch content alone cannot separate a key from its relative when a secondary dominant is
+    ///     present: in <c>C E7 Am F G7 C</c>, E7 (V7/vi) fits A harmonic minor but not C major, so A
+    ///     minor matches more chords. The ending decides it: a progression that closes on the key's
+    ///     dominant then tonic (an authentic cadence) adds two. A progression that merely stops on a
+    ///     chord adds nothing, so relative keys stay tied and a half cadence does not promote the key
+    ///     of its last chord.
+    ///     <see cref="KeyCandidate.MatchCount" /> stays the plain diatonic count.
+    /// </remarks>
     public static IReadOnlyList<KeyCandidate> Identify(IEnumerable<string> chordSymbols)
     {
-        var parsed = chordSymbols
+        var ordered = chordSymbols
             .Select(ParseChordRootAndQuality)
             .Where(p => p.HasValue)
             .Select(p => p!.Value)
-            .Distinct()
             .ToList();
+        var parsed = ordered.Distinct().ToList();
 
         if (parsed.Count == 0)
             return [];
@@ -187,22 +197,43 @@ public static partial class KeyIdentificationService
                             }
                             else
                             {
-                                return (idx == 6 || idx == 4) && (t.Quality == ChordQuality.Major || t.Quality == ChordQuality.Minor);
+                                // VII7 only: its four notes are all in the natural minor scale. The harmonic-minor
+                                // V7 is not, so it is recognised by CadenceWeight when it resolves to i,
+                                // instead of making every V7/vi in a major key pull toward the relative minor.
+                                return idx == 6 && t.Quality == ChordQuality.Major;
                             }
                         }
                         return t.Quality == chord.Quality;
                     }));
 
-                return new KeyCandidate(
+                return (Candidate: new KeyCandidate(
                     Key: kd.Name,
                     RelativeKey: kd.RelativeName,
                     MatchCount: matchCount,
                     TotalChords: parsed.Count,
-                    DiatonicSet: kd.DiatonicSymbols);
+                    DiatonicSet: kd.DiatonicSymbols), Cadence: CadenceWeight(kd, ordered));
             })
-            .Where(c => c.MatchCount > 0)
-            .OrderByDescending(c => c.MatchCount)
-            .ThenBy(c => c.Key)];
+            .Where(s => s.Candidate.MatchCount > 0)
+            .OrderByDescending(s => s.Candidate.MatchCount + s.Cadence)
+            .ThenBy(s => s.Candidate.Key)
+            .Select(s => s.Candidate)];
+    }
+
+    // 2 when the progression ends on the key's dominant (major triad or dominant seventh on
+    // degree 5, so V7 of harmonic minor counts) followed by its tonic triad; otherwise 0.
+    private static int CadenceWeight(DomainKeyData kd, IReadOnlyList<(int RootPc, ChordQuality Quality)> ordered)
+    {
+        if (ordered.Count == 0) return 0;
+
+        var tonic = kd.DiatonicTriads[0];
+        var last = ordered[^1];
+        if (ordered.Count < 2 || last.RootPc != tonic.RootPc || last.Quality != tonic.Quality) return 0;
+
+        var before = ordered[^2];
+        var dominantRoot = kd.DiatonicTriads[4].RootPc;
+        var isDominant = before.RootPc == dominantRoot
+                         && before.Quality is ChordQuality.Major or ChordQuality.Dominant;
+        return isDominant ? 2 : 0;
     }
 
     /// <summary>
@@ -230,7 +261,10 @@ public static partial class KeyIdentificationService
                 }
                 else
                 {
-                    return (idx == 6 || idx == 4) && (t.Quality == ChordQuality.Major || t.Quality == ChordQuality.Minor);
+                    // VII7 only: its four notes are all in the natural minor scale. The harmonic-minor
+                    // V7 is not, so it is recognised by CadenceWeight when it resolves to i,
+                    // instead of making every V7/vi in a major key pull toward the relative minor.
+                    return idx == 6 && t.Quality == ChordQuality.Major;
                 }
             }
             return t.Quality == quality;
