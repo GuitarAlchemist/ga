@@ -110,6 +110,11 @@ async def add_episode(
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
+    except HTTPException:
+        # 400s raised above are deliberate - re-raise them untouched.
+        # Without this clause the generic handler below catches them and
+        # answers 500 with the detail "400: <message>".
+        raise
     except Exception as e:
         logger.error(f"Error adding episode: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -126,6 +131,11 @@ async def search_knowledge(
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
+    except HTTPException:
+        # 400s raised above are deliberate - re-raise them untouched.
+        # Without this clause the generic handler below catches them and
+        # answers 500 with the detail "400: <message>".
+        raise
     except Exception as e:
         logger.error(f"Error searching knowledge: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -142,6 +152,11 @@ async def get_recommendations(
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
+    except HTTPException:
+        # 400s raised above are deliberate - re-raise them untouched.
+        # Without this clause the generic handler below catches them and
+        # answers 500 with the detail "400: <message>".
+        raise
     except Exception as e:
         logger.error(f"Error getting recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -158,6 +173,11 @@ async def get_user_progress(
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
+    except HTTPException:
+        # 400s raised above are deliberate - re-raise them untouched.
+        # Without this clause the generic handler below catches them and
+        # answers 500 with the detail "400: <message>".
+        raise
     except Exception as e:
         logger.error(f"Error getting user progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))

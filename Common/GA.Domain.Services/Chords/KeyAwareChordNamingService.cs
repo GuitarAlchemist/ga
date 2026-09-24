@@ -64,7 +64,7 @@ public static class KeyAwareChordNamingService
     {
         var scaleDegree = GetScaleDegree(root, key);
         var function = DetermineChordFunction(scaleDegree, template, key);
-        var romanNumeral = GenerateRomanNumeral(scaleDegree, template, key);
+        var romanNumeral = GenerateRomanNumeral(scaleDegree, template);
         var isNaturallyOccurring = IsNaturallyOccurringInKey(template, root, key);
         var requiresAccidentals = RequiresAccidentals(root, key);
         var probability = CalculateKeyProbability(template, root, key, isNaturallyOccurring, function);
@@ -126,7 +126,7 @@ public static class KeyAwareChordNamingService
     /// </summary>
     internal static ChordFunction DetermineChordFunction(int scaleDegree, ChordTemplate template, Key key)
     {
-        var quality = template.Quality;
+        var quality = template.Quality.ToTriadFamily();
         var isMajorKey = key.KeyMode == KeyMode.Major;
 
         return (scaleDegree, quality, isMajorKey) switch
@@ -151,7 +151,7 @@ public static class KeyAwareChordNamingService
     /// <summary>
     ///     Generates Roman numeral notation
     /// </summary>
-    private static string GenerateRomanNumeral(int scaleDegree, ChordTemplate template, Key key)
+    private static string GenerateRomanNumeral(int scaleDegree, ChordTemplate template)
     {
         var baseRoman = scaleDegree switch
         {
@@ -159,7 +159,7 @@ public static class KeyAwareChordNamingService
         };
 
         // Adjust case based on chord quality
-        if (template.Quality is ChordQuality.Minor or ChordQuality.Diminished)
+        if (template.Quality.ToTriadFamily() is ChordQuality.Minor or ChordQuality.Diminished)
         {
             baseRoman = baseRoman.ToLower();
         }
@@ -167,7 +167,9 @@ public static class KeyAwareChordNamingService
         // Add quality symbols
         var qualitySymbol = template.Quality switch
         {
-            ChordQuality.Diminished => "Â°",
+            ChordQuality.Major7 => "maj",
+            ChordQuality.Diminished or ChordQuality.Diminished7 => "°",
+            ChordQuality.HalfDiminished => "ø",
             ChordQuality.Augmented => "+",
             _ => ""
         };

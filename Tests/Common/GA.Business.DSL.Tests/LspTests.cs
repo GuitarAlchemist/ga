@@ -413,4 +413,25 @@ public class LspTests
 
         Assert.That(result.IsGaScriptError, Is.True, "Syntax error should produce GaScriptError");
     }
+
+    [Test]
+    public async Task GaFsiSessionPool_EvalAsync_UnexpectedFailure_ReturnsSessionToPool()
+    {
+        using var pool = new GaFsiSessionPool(1, "missing-prelude.fsx");
+
+        var failedResult = await Microsoft.FSharp.Control.FSharpAsync.StartAsTask(
+            pool.EvalAsync(null!, Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None),
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.Tasks.TaskCreationOptions>.None,
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None);
+
+        Assert.That(failedResult.IsGaScriptError, Is.True);
+
+        var recoveryTask = Microsoft.FSharp.Control.FSharpAsync.StartAsTask(
+            pool.EvalAsync("printfn \"recovered\"", Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None),
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.Tasks.TaskCreationOptions>.None,
+            Microsoft.FSharp.Core.FSharpOption<System.Threading.CancellationToken>.None);
+
+        var recoveredResult = await recoveryTask.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.That(recoveredResult.IsGaScriptOk, Is.True, $"Expected the pool to recover but got: {recoveredResult}");
+    }
 }

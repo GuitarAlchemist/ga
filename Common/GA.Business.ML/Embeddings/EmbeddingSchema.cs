@@ -19,14 +19,14 @@ public enum PartitionRole
 }
 
 /// <summary>
-///     A contiguous range of dimensions in the raw 228-dim embedding vector,
+///     A contiguous range of dimensions in the raw embedding vector (<see cref="EmbeddingSchema.TotalDimension"/> dims),
 ///     with its similarity weight and role. Single source of truth for the
 ///     partition layout — consumed by <c>OptickIndexWriter</c>, search tooling,
 ///     and cross-repo schema-hash verification.
 /// </summary>
 /// <param name="Name">Partition name (e.g. "STRUCTURE").</param>
-/// <param name="Start">Inclusive start index in the raw 228-dim space.</param>
-/// <param name="End">Inclusive end index in the raw 228-dim space.</param>
+/// <param name="Start">Inclusive start index in the raw embedding space.</param>
+/// <param name="End">Inclusive end index in the raw embedding space.</param>
 /// <param name="SimilarityWeight">Weight used in similarity; 0 if Role != Similarity.</param>
 /// <param name="Role">Role this partition plays.</param>
 public readonly record struct EmbeddingPartition(
@@ -44,8 +44,9 @@ public readonly record struct EmbeddingPartition(
 }
 
 /// <summary>
-///     Canonical definition of the Musical Embedding Vector Schema (v1.3.1).
-///     Implements OPTIC-K Schema v1.3.1.
+///     Canonical definition of the Musical Embedding Vector Schema (current version: <see cref="Version"/>).
+///     <see cref="Partitions"/> is the authoritative layout; the table below only lists the
+///     partitions introduced up to v1.3.1 (MODAL, HIERARCHY, ATONAL_MODAL and ROOT came later).
 ///     <para>
 ///         This schema implements the OPTIC/K equivalence theory within a practical ML embedding format.
 ///         The vector is partitioned into semantic subspaces, each serving a distinct purpose:
@@ -80,11 +81,13 @@ public readonly record struct EmbeddingPartition(
 ///     <para>
 ///         <b>Similarity Formula</b>: Weighted Partition Cosine
 ///         <code>Similarity(A,B) = Σ weight[p] × cosine(normalize(A[p]), normalize(B[p]))</code>
-///         Where weights are: STRUCTURE=0.45, MORPHOLOGY=0.25, CONTEXT=0.20, SYMBOLIC=0.10
-///         IDENTITY, EXTENSIONS and SPECTRAL are excluded from similarity scoring.
+///         Where weights are: STRUCTURE=0.45, MORPHOLOGY=0.25, CONTEXT=0.20, SYMBOLIC=0.10, MODAL=0.10, ROOT=0.05
+///         (see <see cref="Partitions"/>). IDENTITY, EXTENSIONS, SPECTRAL, HIERARCHY and ATONAL_MODAL are
+///         excluded from similarity scoring.
 ///     </para>
 ///     <para>
-///         See <c>OPTIC-K_Embedding_Schema_v1.3.1.md</c> for the complete specification.
+///         The newest written specification is <c>Documentation/Schema/OPTIC-K_Embedding_Schema_v1.4.1.md</c>;
+///         later changes are documented on the partitions and constants in this file.
 ///     </para>
 /// </summary>
 public static class EmbeddingSchema
@@ -141,7 +144,7 @@ public static class EmbeddingSchema
         Partitions.Where(p => p.Role == PartitionRole.Similarity);
 
     /// <summary>
-    ///     Compact dimension — sum of similarity partition dims (112 for v1.7).
+    ///     Compact dimension — sum of similarity partition dims (124 for v1.8; 112 for v1.7).
     ///     Used by the OPTK v4 binary format to drop info-only partitions from storage.
     /// </summary>
     public static int CompactDimension =>
@@ -216,20 +219,35 @@ public static class EmbeddingSchema
     ///     Writes a partition-sized <paramref name="slice"/> into its raw-vector offset.
     ///     The single place the layout's offsets are applied on the write side.
     /// </summary>
+    /// <exception cref="ArgumentException">The slice is not exactly the partition's size.</exception>
     public static void WriteInto<T>(Span<T> raw, string partitionName, ReadOnlySpan<T> slice) =>
-        slice.CopyTo(raw.Slice(GetPartition(partitionName).Start, slice.Length));
+        slice.CopyTo(raw.Slice(SizedPartition(partitionName, slice.Length).Start, slice.Length));
 
     /// <summary>
     ///     Writes a <c>double</c> partition slice into a <c>float</c> raw vector (corpus side),
     ///     converting element-wise. Preserves the prior <c>Array.ConvertAll</c> semantics.
     /// </summary>
+    /// <exception cref="ArgumentException">The slice is not exactly the partition's size.</exception>
     public static void WriteInto(Span<float> raw, string partitionName, ReadOnlySpan<double> slice)
     {
-        var start = GetPartition(partitionName).Start;
+        var start = SizedPartition(partitionName, slice.Length).Start;
         for (var i = 0; i < slice.Length; i++)
         {
             raw[start + i] = (float)slice[i];
         }
+    }
+
+    private static EmbeddingPartition SizedPartition(string partitionName, int sliceLength)
+    {
+        var partition = GetPartition(partitionName);
+        if (sliceLength != partition.Dim)
+        {
+            throw new ArgumentException(
+                $"Partition '{partitionName}' has {partition.Dim} dims but the slice has {sliceLength}.",
+                nameof(sliceLength));
+        }
+
+        return partition;
     }
 
     /// <summary>
@@ -403,7 +421,7 @@ public static class EmbeddingSchema
     /// <summary>Number of dimensions in EXTENSIONS partition.</summary>
     public const int ExtensionsDim = 18;
 
-    /// <summary>Ending index of EXTENSIONS (exclusive, = TotalDimension).</summary>
+    /// <summary>Ending index of EXTENSIONS (exclusive; SPECTRAL starts here).</summary>
     public const int ExtensionsEnd = 96;
 
     #endregion
@@ -832,7 +850,7 @@ public static class EmbeddingSchema
     #endregion
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PARTITION 9: HIERARCHY (149-156) — NEW in v1.5/v1.6
+    // PARTITION 9: HIERARCHY (149-163) — NEW in v1.5/v1.6
     // Structural complexity and hierarchical depth.
     // ═══════════════════════════════════════════════════════════════════════════
 
@@ -842,7 +860,7 @@ public static class EmbeddingSchema
     public const int HierarchyOffset = 149;
 
     /// <summary>Number of dimensions in HIERARCHY partition.</summary>
-    public const int HierarchyDim = 8;
+    public const int HierarchyDim = 15;
 
     /// <summary>End of HIERARCHY partition (exclusive).</summary>
     public const int HierarchyEnd = HierarchyOffset + HierarchyDim;
@@ -856,7 +874,7 @@ public static class EmbeddingSchema
     #endregion
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PARTITION 10: ATONAL MODAL (164-180) — NEW in v1.7
+    // PARTITION 10: ATONAL MODAL (164-227) — NEW in v1.7
     // Bridge between tonal modes and atonal modal families.
     // Maps EVERY set class to a structural modal coordinate.
     // ═══════════════════════════════════════════════════════════════════════════
@@ -867,7 +885,7 @@ public static class EmbeddingSchema
     public const int AtonalModalOffset = 164;
 
     /// <summary>Number of dimensions in ATONAL_MODAL partition.</summary>
-    public const int AtonalModalDim = 17;
+    public const int AtonalModalDim = 64;
 
     /// <summary>End of ATONAL_MODAL partition (exclusive).</summary>
     public const int AtonalModalEnd = AtonalModalOffset + AtonalModalDim;
