@@ -29,14 +29,17 @@ module ChordParser =
             attempt (pstring "maj" .>> notFollowedBy digit >>% Major)
             attempt (pstring "MAJ" .>> notFollowedBy digit >>% Major)
             attempt (pstring "Maj" .>> notFollowedBy digit >>% Major)
-            stringReturn "M" Major; stringReturn "Δ" Major ])
+            // "M" must not start "Maj7"/"MAJ7", which pExtension reads as a major seventh.
+            attempt (pstring "M" .>> notFollowedBy (pstring "aj" <|> pstring "AJ") >>% Major)
+            stringReturn "Δ" Major ])
         // Minor — bare "m" must not be the start of "ma" (which belongs to the major family)
         choice [
             stringReturn "min" Minor; stringReturn "MIN" Minor; stringReturn "mi" Minor
             stringReturn "-" Minor
             attempt (pstring "m" .>> notFollowedBy (pstring "a") >>% Minor) ]
         // Dim
-        choice [ stringReturn "dim" Diminished; stringReturn "DIM" Diminished; stringReturn "°" Diminished; stringReturn "o" Diminished ]
+        choice [ stringReturn "dim" Diminished; stringReturn "DIM" Diminished; stringReturn "°" Diminished
+                 attempt (pstring "o" .>> notFollowedBy (pstring "mit") >>% Diminished) ]
         // Aug
         choice [ stringReturn "aug" Augmented; stringReturn "AUG" Augmented; stringReturn "+" Augmented ]
         // Sus
@@ -53,6 +56,12 @@ module ChordParser =
         attempt (stringReturn "maj9" (Extension "maj9"))
         attempt (stringReturn "maj11" (Extension "maj11"))
         attempt (stringReturn "maj13" (Extension "maj13"))
+        attempt (stringReturn "Maj7" (Extension "maj7"))
+        attempt (stringReturn "MAJ7" (Extension "maj7"))
+        attempt (stringReturn "Maj9" (Extension "maj9"))
+        attempt (stringReturn "MAJ9" (Extension "maj9"))
+        attempt (stringReturn "sus4" (Extension "sus4"))
+        attempt (stringReturn "sus2" (Extension "sus2"))
         attempt (stringReturn "m7b5" (Extension "m7b5"))
         attempt (stringReturn "-7b5" (Extension "m7b5"))
         attempt (stringReturn "6/9" (Extension "6/9"))
@@ -73,17 +82,30 @@ module ChordParser =
             Alteration(defaultArg acc Natural, deg))
     ]
 
+    /// "omit3", "no5", "(no 3)" (the rendered form).
+    let pOmission =
+        attempt (
+            pipe3
+                (choice [ attempt (pstring "(no "); attempt (pstring "(no"); attempt (pstring "omit"); pstring "no" ])
+                (pstring "3" <|> pstring "5")
+                (opt (pchar ')'))
+                (fun _ degree _ -> Omission degree))
+
     let pChord = 
         pipe5 
             pNote 
             (opt pAccidental) 
             (opt pQuality) 
-            (many (pExtension <|> pAlteration))
+            (many (pOmission <|> pExtension <|> pAlteration))
             (opt (pstring "/" >>. pipe2 pNote (opt pAccidental) (fun n acc -> (n, defaultArg acc Natural))))
             (fun root acc qual comps bass -> 
                 { Root = root.ToUpper(); RootAccidental = defaultArg acc Natural; Quality = qual; Components = comps; Bass = bass })
 
+    /// Parses a whole chord symbol: anything left after the symbol (other than trailing whitespace)
+    /// is an error, so "C7sus4" is rejected instead of being read as "C7".
+    let pChordSymbol = pChord .>> spaces .>> eof
+
     let parse chordStr =
-        match run pChord chordStr with
+        match run pChordSymbol chordStr with
         | Success(result, _, _) -> Result.Ok result
         | Failure(errorMsg, _, _) -> Result.Error errorMsg

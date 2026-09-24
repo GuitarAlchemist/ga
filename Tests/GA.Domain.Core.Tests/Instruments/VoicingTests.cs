@@ -72,6 +72,33 @@ public class VoicingTests
         });
     }
 
+    // A barre is one finger across fretted strings: open strings share "fret 0" but are not a barre.
+    // Frets listed from string 6 (low E) to string 1 (high E), -1 = muted.
+    [TestCase(new[] { 0, 3, 2, 0, 1, 0 }, false)]  // open C with E in the bass
+    [TestCase(new[] { 0, 2, 2, 1, 0, 0 }, false)]  // open E
+    [TestCase(new[] { 3, 2, 0, 0, 0, 3 }, false)]  // open G
+    [TestCase(new[] { -1, 0, 2, 2, 1, 0 }, false)] // open Am
+    [TestCase(new[] { 1, 3, 3, 2, 1, 1 }, true)]   // F barre chord
+    [TestCase(new[] { 3, 5, 5, 4, 3, 3 }, true)]   // G barre chord on the 3rd fret
+    public void HasBarre_IgnoresOpenStrings(int[] fretsLowToHigh, bool expected)
+    {
+        var positions = fretsLowToHigh
+            .Select((fret, i) => fret < 0 ? Muted(6 - i) : Played(6 - i, fret))
+            .Reverse()
+            .ToArray();
+
+        Assert.That(Make(positions).HasBarre(), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void HasBarre_FalseForThreeOpenStrings()
+    {
+        // Open G chord (3-2-0-0-0-3 from low E): three open strings, no barre.
+        var openG = Make(Played(1, 3), Played(2, 0), Played(3, 0), Played(4, 0), Played(5, 2), Played(6, 3));
+
+        Assert.That(openG.HasBarre(), Is.False);
+    }
+
     [Test]
     public void Equality_IsBasedOnDiagram_NotNoteArrays()
     {

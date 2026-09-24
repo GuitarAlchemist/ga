@@ -80,16 +80,10 @@ public abstract partial record Interval
                 return true;
             }
 
-            Accidental accidental;
-            if (string.IsNullOrEmpty(prefix))
-            {
-                accidental = Accidental.Natural;
-            }
-            else if (!Accidental.TryParse(prefix, null, out accidental))
-            {
-                // The prefix is neither a quality (P, m, M, d, A, ...) nor an accidental (#, b, ...) - not an interval
+            // No prefix means natural; any other prefix must be an accidental (e.g. "13" is not a third)
+            var accidental = Accidental.Natural;
+            if (!string.IsNullOrEmpty(prefix) && !Accidental.TryParse(prefix, null, out accidental))
                 return false;
-            }
 
             if (!IntervalQuality.TryGetFromAccidental(size.Consonance, accidental, out quality))
                 return false;

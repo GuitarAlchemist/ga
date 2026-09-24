@@ -9,9 +9,8 @@ public class LazyWithExpirationTests
     {
         // Arrange
         var counter = 0;
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
-            TimeSpan.FromMilliseconds(200), () => now);
+            TimeSpan.FromMilliseconds(200));
 
         // Act
         var v1 = lazy.Value;
@@ -24,20 +23,19 @@ public class LazyWithExpirationTests
     }
 
     [Test]
+    [Category("Timing")]
     public void Recomputes_AfterExpiration_OnNextAccess()
     {
         // Arrange
         var counter = 0;
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
-            TimeSpan.FromMilliseconds(60), () => now);
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMilliseconds(60));
 
         // Act
-        var first = lazy.Value; // starts expiration window on first access
+        var first = lazy.Value; // starts expiration timer on first access
         Assert.That(first, Is.EqualTo(1));
 
-        // Advance the fake clock past expiration; no real waiting involved.
-        now = now.AddMilliseconds(120);
+        // Wait for expiration to elapse with a small buffer
+        Thread.Sleep(120);
 
         var second = lazy.Value; // should recompute now
 
@@ -51,9 +49,7 @@ public class LazyWithExpirationTests
     {
         // Arrange
         var counter = 0;
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
-            TimeSpan.FromSeconds(5), () => now);
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromSeconds(5));
 
         // Act
         var first = lazy.Value;
@@ -67,17 +63,21 @@ public class LazyWithExpirationTests
     }
 
     [Test]
+    [Category("Timing")]
     public void ConcurrentAccess_InitializesOnlyOnce_BeforeExpiration()
     {
         // Arrange
         var counter = 0;
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
-            TimeSpan.FromMilliseconds(500), () => now);
+        var lazy = new LazyWithExpiration<int>(() =>
+        {
+            // Simulate work
+            Thread.Sleep(20);
+            return Interlocked.Increment(ref counter);
+        }, TimeSpan.FromMilliseconds(500));
 
         // Act
         var results = new int[16];
-        Assert.DoesNotThrow(() => Parallel.For(0, results.Length, i => { results[i] = lazy.Value; }));
+        Parallel.For(0, results.Length, i => { results[i] = lazy.Value; });
 
         // Assert
         foreach (var r in results)
@@ -90,38 +90,97 @@ public class LazyWithExpirationTests
     }
 
     [Test]
-    public void ValueNotComputed_UntilFirstAccess()
+    [Category("Timing")]
+    public void TimerStartsOnFirstAccess_NotOnConstruction()
     {
-        // Arrange
+        // This test ensures that accessing Value triggers the expiration timer; until then, value is not created.
         var counter = 0;
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter),
-            TimeSpan.FromMilliseconds(200), () => now);
+        var expiration = TimeSpan.FromMilliseconds(200);
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), expiration);
 
-        // Advancing the clock without accessing Value should not trigger computation.
-        now = now.AddMilliseconds(400);
+        // Wait longer than expiration but without accessing Value; timer should not have started yet.
+        Thread.Sleep(400);
         Assert.That(counter, Is.EqualTo(0), "Factory should not be called before first Value access");
 
-        // Act
         var first = lazy.Value;
-
-        // Assert
         Assert.That(first, Is.EqualTo(1));
+
+        // Spin until expiration fires (or we hit a hard cap). Threadpool-scheduled Timer
+        // callbacks under CI load can lag past a fixed Thread.Sleep — observed 525ms on
+        // a slow runner where expiration=100ms + Sleep(300) still saw counter=1. The
+        // window is intentionally generous (10x expiration) so this only flips when the
+        // timer is genuinely broken, not when CI is busy.
+        var deadline = DateTime.UtcNow + TimeSpan.FromMilliseconds(expiration.TotalMilliseconds * 10);
+        int second;
+        do
+        {
+            Thread.Sleep(50);
+            second = lazy.Value;
+        }
+        while (second == 1 && DateTime.UtcNow < deadline);
+
+        Assert.That(second, Is.EqualTo(2));
     }
 
     [Test]
-    public void DefaultConstructor_UsesRealClock_AndStillWorks()
+    [Category("Timing")]
+    public void PendingExpirations_DoNotHoldThreadPoolThreads()
     {
-        // Arrange
+        // Each value used to park a pool thread in Thread.Sleep until it expired, so a few dozen
+        // values starved unrelated work queued to the pool.
+        var lazies = Enumerable.Range(0, Environment.ProcessorCount * 4 + 16)
+            .Select(i => new LazyWithExpiration<int>(() => i, TimeSpan.FromSeconds(3)))
+            .ToList();
+        foreach (var lazy in lazies)
+        {
+            _ = lazy.Value;
+        }
+
+        using var unrelatedWorkRan = new ManualResetEventSlim();
+        ThreadPool.UnsafeQueueUserWorkItem(static done => done.Set(), unrelatedWorkRan, preferLocal: false);
+
+        Assert.That(unrelatedWorkRan.Wait(TimeSpan.FromSeconds(1)), Is.True,
+            "work queued to the thread pool should not wait for pending expirations");
+    }
+
+    [Test]
+    public void ExpiresAfterTheWindowMeasuredFromFirstAccess_WithAManualClock()
+    {
+        var clock = new ManualTimeProvider();
         var counter = 0;
-        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromMinutes(5));
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.FromSeconds(10), clock);
 
-        // Act
-        var v1 = lazy.Value;
-        var v2 = lazy.Value;
+        clock.Advance(TimeSpan.FromMinutes(5)); // before first access: the window has not started
+        Assert.That(lazy.Value, Is.EqualTo(1));
 
-        // Assert
-        Assert.That(v1, Is.EqualTo(1));
-        Assert.That(v2, Is.EqualTo(1));
+        clock.Advance(TimeSpan.FromSeconds(9));
+        Assert.That(lazy.Value, Is.EqualTo(1));
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        Assert.That(lazy.Value, Is.EqualTo(2));
+
+        clock.Advance(TimeSpan.FromSeconds(9));
+        Assert.That(lazy.Value, Is.EqualTo(2), "the new window starts at the recompute");
+    }
+
+    [Test]
+    public void ZeroExpiration_RecomputesOnEveryAccess()
+    {
+        var counter = 0;
+        var lazy = new LazyWithExpiration<int>(() => Interlocked.Increment(ref counter), TimeSpan.Zero, new ManualTimeProvider());
+
+        Assert.That(lazy.Value, Is.EqualTo(1));
+        Assert.That(lazy.Value, Is.EqualTo(2));
+    }
+
+    private sealed class ManualTimeProvider : TimeProvider
+    {
+        private long _timestamp;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp() => _timestamp;
+
+        public void Advance(TimeSpan by) => _timestamp += by.Ticks;
     }
 }

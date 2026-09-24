@@ -170,14 +170,12 @@ export const DemerzelFaceOverlay: React.FC<DemerzelFaceOverlayProps> = ({
     };
     stateRef.current = state;
 
-    // Load face model — suppress KTX2 texture errors during parsing.
-    // The model loads fine without KTX2 since we override materials with holoMat.
-    const origError = console.error;
-    console.error = (...args: unknown[]) => {
-      if (typeof args[0] === 'string' && args[0].includes('KTX2')) return; // suppress
-      if (args[0] instanceof Error && args[0].message.includes('KTX2')) return;
-      origError.apply(console, args);
-    };
+    // Load face model. The model renders fine without its KTX2 textures since
+    // every material is replaced by holoMat below, so a KTX2 decode error is
+    // harmless here — but it is left visible. Replacing console.error to hide
+    // it also hid every unrelated error logged while the model was parsing,
+    // and the `no morph targets` early return below never restored it, so a
+    // model without blend shapes silenced the console for the rest of the page.
     const loader = new GLTFLoader();
     loader.load(src, (gltf) => {
       const root = gltf.scene;
@@ -226,9 +224,7 @@ export const DemerzelFaceOverlay: React.FC<DemerzelFaceOverlayProps> = ({
 
       applyPreset(state, 'calm');
       console.log(`[DemerzelFaceOverlay] Loaded ${state.shapeMap.size} blend shapes, bbox: ${bsize.x.toFixed(3)}x${bsize.y.toFixed(3)}x${bsize.z.toFixed(3)}`);
-      console.error = origError; // restore after successful load
     }, undefined, (err) => {
-      console.error = origError;
       const msg = err instanceof Error ? err.message : String(err);
       if (!msg.includes('KTX2')) {
         console.warn('[DemerzelFaceOverlay] GLTF load error:', msg);

@@ -198,6 +198,20 @@ public class ProductionOrchestrator(
 
         var message = hookCtx.CurrentMessage;
 
+        // ── Deterministic algebra fast-path (parity with AnswerAsync) ─────────
+        // Algebra prompts are pure finite math: answer them without embeddings or
+        // the LLM, exactly as the non-streaming path does, so the AG-UI stream
+        // does not depend on an embedding endpoint for them.
+        var algebraFastPath = await TryAnswerWithAlgebraFastPathAsync(
+            req, message, sessionId, correlationId, activity: null, Stopwatch.StartNew(), ct);
+        if (algebraFastPath is not null)
+        {
+            foreach (var word in algebraFastPath.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            return algebraFastPath;
+        }
+
         // ── Follow-up context enrichment for the routing pass ────────────────
         // Same enrichment as the non-streaming AnswerAsync path (see task #168).
         // The streaming path is the one the React demo uses, so without this
@@ -309,7 +323,16 @@ public class ProductionOrchestrator(
         return response;
     }
 
-    public async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
+    /// <remarks>
+    /// <c>virtual</c> so a host adapter test can substitute a stub orchestrator
+    /// and assert on the <see cref="ChatRequest"/> it actually receives. Without
+    /// that seam the session-identity invariant on
+    /// <c>GaChatbot.Api.Services.ProductionChatOrchestratorClient.AnswerAsync</c>
+    /// is only pinned on a helper nothing forces that method to call — a gap an
+    /// independent review closed by re-inlining the original defect with the
+    /// whole suite still green. See <c>ProductionChatOrchestratorClientTests</c>.
+    /// </remarks>
+    public virtual async Task<ChatResponse> AnswerAsync(ChatRequest req, CancellationToken ct = default)
     {
         using var activity = ChatbotActivitySource.StartActivity(ChatbotActivitySource.OrchestratorAnswer, req.Message);
         var sw = Stopwatch.StartNew();

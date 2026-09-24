@@ -77,8 +77,9 @@ public static class ValueObjectUtils<TSelf>
             return true;
         }
 
+        // Same normalization as EnsureValueRange: wrap into [minValue, maxValue]
         var count = maxValue - minValue + 1;
-        if (normalize)
+        if (normalize && count > 0)
         {
             value = minValue + (value - minValue).Mod(count);
         }

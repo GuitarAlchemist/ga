@@ -3,6 +3,7 @@ namespace GA.Domain.Core.Tests.Instruments;
 using System;
 using System.Linq;
 using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives.Notes;
 using NUnit.Framework;
 
 /// <summary>
@@ -69,6 +70,30 @@ public class FretboardTests
         {
             Assert.That(positions, Is.Not.Empty);
             Assert.That(positions.All(fretboard.IsValidPosition), Is.True);
+        });
+    }
+
+    // Notes are records of different types (Chromatic, Sharp, Flat, Accidented): a Sharp C never
+    // equals the Chromatic C that GetNote returns, so matching must compare pitch classes.
+    [Test]
+    public void GetPositionsForNote_MatchesByPitchClass_WhateverTheNoteType()
+    {
+        var fretboard = Fretboard.CreateGuitar(12);
+        string[] Locations(Note note) =>
+            [.. fretboard.GetPositionsForNote(note).Select(p => $"{p.Location.Str.Value}:{p.Location.Fret.Value}")];
+
+        var expected = Locations(Note.Chromatic.C);
+
+        Assert.Multiple(() =>
+        {
+            // C on a 12-fret guitar: strings 1..6 at frets 8, 1, 5, 10, 3, 8
+            Assert.That(expected, Is.EquivalentTo(new[] { "1:8", "2:1", "3:5", "4:10", "5:3", "6:8" }));
+            Assert.That(Locations(Note.Sharp.C), Is.EqualTo(expected));
+            Assert.That(Locations(Note.Flat.C), Is.EqualTo(expected));
+            Assert.That(Locations(Note.Accidented.C), Is.EqualTo(expected));
+            Assert.That(Locations(new Note.Accidented(NaturalNote.B, Accidental.Sharp)), Is.EqualTo(expected));
+            Assert.That(fretboard.GetPositionsForNote(Note.Sharp.C).OfType<Position.Played>()
+                .All(p => p.MidiNote.PitchClass.Value == 0), Is.True);
         });
     }
 }

@@ -27,14 +27,13 @@ public sealed class Chord : IEquatable<Chord>
         Root = root;
         Formula = formula;
 
-        // Build notes from formula
-        List<Note.Accidented> notes = [root.ToAccidented()];
+        // Build notes from formula, each spelled with the letter of its chord degree
+        var accidentedRoot = root.ToAccidented();
+        var semitonesFromRoot = formula.Intervals.Select(i => i.Interval.Semitones.Value % 12).ToHashSet();
+        List<Note.Accidented> notes = [accidentedRoot];
         foreach (var interval in formula.Intervals)
         {
-            // Transpose by adding semitones to pitch class value
-            var newPitchClassValue = (root.PitchClass.Value + interval.Interval.Semitones.Value) % 12;
-            var newNote = new PitchClass { Value = newPitchClassValue }.ToChromaticNote().ToAccidented();
-            notes.Add(newNote);
+            notes.Add(SpellChordTone(accidentedRoot, interval.Interval.Semitones.Value, semitonesFromRoot));
         }
 
         Notes = new(notes);
@@ -60,6 +59,15 @@ public sealed class Chord : IEquatable<Chord>
         // Analyze the chord to determine formula
         Formula = AnalyzeChordFormula();
         Symbol = GenerateSymbol();
+    }
+
+    private Chord(Chord source, AccidentedNoteCollection notes)
+    {
+        Root = source.Root;
+        Formula = source.Formula;
+        Symbol = source.Symbol;
+        PitchClassSet = source.PitchClassSet;
+        Notes = notes;
     }
 
     // Splits a chord symbol into root (A-G with optional #/b) and a suffix describing quality/extension.
@@ -118,6 +126,54 @@ public sealed class Chord : IEquatable<Chord>
         return true;
     }
 
+    /// <summary>
+    ///     Spells a chord tone with the letter of its chord degree (root letter + 2 letters per third,
+    ///     so the third of C minor is Eb, not D#), then the accidental the interval needs.
+    /// </summary>
+    /// <remarks>
+    ///     Falls back to the sharp spelling if the letter would need more than a double accidental.
+    /// </remarks>
+    private static Note.Accidented SpellChordTone(Note.Accidented root, int semitones, IReadOnlySet<int> semitonesFromRoot)
+    {
+        var pitchClass = (root.PitchClass.Value + semitones) % 12;
+        var letterSteps = GetChordToneDegree(semitones % 12, semitonesFromRoot) - 1;
+        var letter = NaturalNote.FromValue((root.NaturalNote.Value + letterSteps) % 7);
+        var offset = ((pitchClass - letter.PitchClass.Value) % 12 + 18) % 12 - 6; // -6..5
+
+        return offset switch
+        {
+            0 => new(letter),
+            >= -2 and <= 2 => new(letter, Accidental.FromValue(offset)),
+            _ => new PitchClass { Value = pitchClass }.ToChromaticNote().ToAccidented()
+        };
+    }
+
+    /// <summary>
+    ///     Gets the degree (1-7, compound degrees reduced: 9 → 2, 11 → 4, 13 → 6) that a chord tone
+    ///     <paramref name="semitones" /> (0-11) above the root is spelled as, given the other tones.
+    /// </summary>
+    private static int GetChordToneDegree(int semitones, IReadOnlySet<int> semitonesFromRoot)
+    {
+        var hasMajorThird = semitonesFromRoot.Contains(4);
+        var hasPerfectFifth = semitonesFromRoot.Contains(7);
+        var isDiminishedSeventh = semitonesFromRoot.Contains(3) && semitonesFromRoot.Contains(6) &&
+                                  !hasPerfectFifth && !semitonesFromRoot.Contains(10) && !semitonesFromRoot.Contains(11);
+
+        return semitones switch
+        {
+            0 => 1,
+            1 or 2 => 2, // b9, 9 or sus2
+            3 => hasMajorThird ? 2 : 3, // #9 beside a major third, otherwise the minor third
+            4 => 3,
+            5 => 4, // 11 or sus4
+            6 => hasPerfectFifth ? 4 : 5, // #11 beside a perfect fifth, otherwise b5
+            7 => 5,
+            8 => hasPerfectFifth ? 6 : 5, // b13 beside a perfect fifth, otherwise #5
+            9 => isDiminishedSeventh ? 7 : 6, // diminished seventh (Bbb in Cdim7), otherwise 6 or 13
+            _ => 7
+        };
+    }
+
     private static bool TryParseSuffix(string suffix, out ChordFormula? formula)
     {
         var s = suffix.Trim().ToLowerInvariant().Replace(" ", "");
@@ -134,6 +190,8 @@ public sealed class Chord : IEquatable<Chord>
             "7" => ChordFormula.Dominant7,
             "maj7" or "△7" => ChordFormula.Major7,
             "m7" or "min7" or "-7" => ChordFormula.Minor7,
+            "mmaj7" or "minmaj7" or "m(maj7)" =>
+                ChordFormula.FromSemitones("Minor major 7th", 3, 7, 11),
             "dim7" or "°7" => ChordFormula.FromSemitones("Diminished 7th", 3, 6, 9),
             "m7b5" or "ø7" => ChordFormula.FromSemitones("Half Diminished 7th", 3, 6, 10),
             "9" => ChordFormula.FromSemitones("Dominant 9th", 4, 7, 10, 14),
@@ -191,12 +249,11 @@ public sealed class Chord : IEquatable<Chord>
     public PitchClassSet PitchClassSet { get; }
 
     /// <summary>
-    ///     Gets whether this is an inverted chord
+    ///     Gets whether this is an inverted chord (a note other than the root is in the bass)
     /// </summary>
     /// <remarks>
-    ///     Compared by pitch class: <see cref="Notes" /> holds <see cref="Note.Accidented" /> instances while
-    ///     <see cref="Root" /> may be any <see cref="Note" /> subtype, so record equality across subtypes would always
-    ///     report an inversion (even in root position).
+    ///     Compares pitch classes: <see cref="Root" /> keeps the caller's note type while <see cref="Notes" />
+    ///     are <see cref="Note.Accidented" />, and records of different types never compare equal.
     /// </remarks>
     public bool IsInverted => Notes[0].PitchClass != Root.PitchClass;
 
@@ -250,24 +307,31 @@ public sealed class Chord : IEquatable<Chord>
             throw new ArgumentOutOfRangeException(nameof(inversion));
         }
 
-        if (inversion == 0)
+        var rotation = (inversion - GetInversion() + Notes.Count) % Notes.Count;
+        if (rotation == 0)
         {
             return this;
         }
 
         var notesList = Notes.ToList();
-        var invertedNotes = notesList.Skip(inversion).Concat(notesList.Take(inversion));
+        var invertedNotes = notesList.Skip(rotation).Concat(notesList.Take(rotation));
 
-        return new(new(invertedNotes.ToList()), Root);
+        return new(this, new(invertedNotes.ToList()));
     }
 
     private ChordFormula AnalyzeChordFormula()
     {
         List<ChordFormulaInterval> intervals = [];
 
-        foreach (var note in Notes.Skip(1)) // Skip root
+        // Measure every note from the root, wherever the root sits in the voicing: skipping the
+        // first note skipped the bass, which drops a chord tone from an inverted chord.
+        var semitoneValues = Notes
+            .Select(note => (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12)
+            .Where(semitones => semitones != 0)
+            .Distinct();
+
+        foreach (var semitones in semitoneValues)
         {
-            var semitones = (note.PitchClass.Value - Root.PitchClass.Value + 12) % 12;
             var interval = new Interval.Chromatic(Semitones.FromValue(semitones));
 
             var function = ChordFunctionExtensions.FromSemitones(semitones);
@@ -293,28 +357,7 @@ public sealed class Chord : IEquatable<Chord>
             symbol = Root.ToString();
         }
 
-        symbol += Quality switch
-        {
-            ChordQuality.Minor => "m",
-            ChordQuality.Diminished => "dim",
-            ChordQuality.Augmented => "aug",
-            _ => ""
-        };
-
-        symbol += Extension switch
-        {
-            ChordExtension.Seventh => "7",
-            ChordExtension.Ninth => "9",
-            ChordExtension.Eleventh => "11",
-            ChordExtension.Thirteenth => "13",
-            ChordExtension.Add9 => "add9",
-            ChordExtension.Sixth => "6",
-            ChordExtension.Sus2 => "sus2",
-            ChordExtension.Sus4 => "sus4",
-            _ => ""
-        };
-
-        return symbol;
+        return symbol + Formula.GetSymbolSuffix();
     }
 
     public override bool Equals(object? obj) => Equals(obj as Chord);

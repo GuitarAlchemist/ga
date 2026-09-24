@@ -1,20 +1,19 @@
 ﻿namespace GA.Core.Utilities;
 
-using System.Threading;
-
 /// <summary>
-///     A lazily-computed value that automatically recomputes itself once it has expired.
+///     A lazily computed value that is recomputed on the first access after it expires. The
+///     expiration window starts on the first access to <see cref="Value" />, not at construction.
 /// </summary>
-/// <typeparam name="T">The type of the value</typeparam>
+/// <remarks>
+///     Expiration is checked against a timestamp on access. It used to be driven by a thread-pool
+///     task blocked in <c>Thread.Sleep</c> for each value, which starved unrelated pool work.
+/// </remarks>
 public class LazyWithExpiration<T>
 {
     private readonly TimeSpan _expirationTime;
     private readonly Func<T> _func;
-    private readonly Func<DateTimeOffset> _timeProvider;
-    private readonly Lock _lock = new();
-    private T _value = default!;
-    private DateTimeOffset _expiresAt;
-    private bool _hasValue;
+    private readonly TimeProvider _timeProvider;
+    private Entry _entry;
 
     /// <summary>
     ///     Initializes a new instance of the LazyWithExpiration class
@@ -24,27 +23,19 @@ public class LazyWithExpiration<T>
     public LazyWithExpiration(
         Func<T> func,
         TimeSpan expirationTime)
-        : this(func, expirationTime, () => DateTimeOffset.UtcNow)
+        : this(func, expirationTime, TimeProvider.System)
     {
     }
 
-    /// <summary>
-    ///     Initializes a new instance of the LazyWithExpiration class with an injectable time source.
-    ///     Intended for deterministic testing; defaults to the real clock otherwise.
-    /// </summary>
-    /// <param name="func">The factory function used to (re)compute the value</param>
-    /// <param name="expirationTime">The duration for which a computed value remains valid</param>
-    /// <param name="timeProvider">A function returning the current time</param>
     public LazyWithExpiration(
         Func<T> func,
         TimeSpan expirationTime,
-        Func<DateTimeOffset> timeProvider)
+        TimeProvider timeProvider)
     {
-        _func = func;
         _expirationTime = expirationTime;
+        _func = func;
         _timeProvider = timeProvider;
-
-        Reset();
+        _entry = new(func);
     }
 
     /// <summary>
@@ -54,28 +45,38 @@ public class LazyWithExpiration<T>
     {
         get
         {
-            lock (_lock)
+            while (true)
             {
-                if (!_hasValue || _timeProvider() >= _expiresAt)
+                var entry = Volatile.Read(ref _entry);
+                var now = _timeProvider.GetTimestamp();
+                if (entry.TryStart(now, out var startedAt)
+                    || _timeProvider.GetElapsedTime(startedAt, now) < _expirationTime)
                 {
-                    _value = _func();
-                    _expiresAt = _timeProvider() + _expirationTime;
-                    _hasValue = true;
+                    return entry.Lazy.Value;
                 }
 
-                return _value;
+                // Expired: replace this entry (unless another caller or Reset already did) and retry.
+                Interlocked.CompareExchange(ref _entry, new(_func), entry);
             }
         }
     }
 
-    /// <summary>
-    ///     Forces the value to be recomputed on the next access
-    /// </summary>
-    public void Reset()
+    public void Reset() => Volatile.Write(ref _entry, new(_func));
+
+    private sealed class Entry(Func<T> func)
     {
-        lock (_lock)
+        private const long NotStarted = long.MinValue;
+        private long _startedAt = NotStarted;
+
+        public Lazy<T> Lazy { get; } = new(func);
+
+        /// <summary>Starts the expiration window at <paramref name="now" /> if this is the first access.</summary>
+        /// <returns><c>true</c> when this call started the window.</returns>
+        public bool TryStart(long now, out long startedAt)
         {
-            _hasValue = false;
+            var previous = Interlocked.CompareExchange(ref _startedAt, now, NotStarted);
+            startedAt = previous == NotStarted ? now : previous;
+            return previous == NotStarted;
         }
     }
 }

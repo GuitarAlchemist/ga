@@ -23,7 +23,7 @@ Strict bottom-up five-layer model:
 
 1. **Core** — `GA.Core`, `GA.Domain.Core` (pure primitives: Note, Interval, Fretboard)
 2. **Domain** — `GA.Business.Core`, `GA.Business.Config`, `GA.BSP.Core` (logic, YAML, BSP)
-3. **Analysis** — `GA.Business.Core.Harmony`, `GA.Business.Core.Fretboard` (chord/scale, voice leading, spectral)
+3. **Analysis** — `GA.Domain.Services` (chord/scale analysis, voicing generation and analysis, voice leading, spectral)
 4. **AI/ML** — `GA.Business.ML` (embeddings, vector search, RAG, OPTIC-K schema)
 5. **Orchestration** — `GA.Business.Core.Orchestration`, `GA.Business.Assets`, `GA.Business.Intelligence`
 
@@ -54,7 +54,7 @@ Apps live in `Apps/`: `ga-server/GaApi` (ASP.NET + SignalR + GraphQL), `GaChatbo
 
 GA collaborates with sibling repos via JSON-on-disk contracts (the canonical handoff pattern across the GuitarAlchemist ecosystem). Sibling clones are typically peers under the same parent directory:
 
-- **ix** (`../ix/`, Rust ML algorithms): produces `state/voicings/optick.index` consumed by GA's RAG layer; produces SAE artifacts at `state/quality/optick-sae/<date>/optick-sae-artifact.json` per `docs/contracts/2026-05-02-optick-sae-artifact.contract.md` (schema: `docs/contracts/optick-sae-artifact.schema.json`).
+- **ix** (`../ix/`, Rust ML algorithms): reads `state/voicings/optick.index` (written by GA's `Demos/Music Theory/FretboardVoicingsCLI`, see `.claude/skills/optic-k-rebuild`, and consumed by GA's RAG layer); produces SAE artifacts at `state/quality/optick-sae/<date>/optick-sae-artifact.json` per `docs/contracts/2026-05-02-optick-sae-artifact.contract.md` (schema: `docs/contracts/optick-sae-artifact.schema.json`).
 - **Demerzel** (`../Demerzel/`, governance + IXQL): orchestrates the QA Architect tribunal per `docs/contracts/2026-05-02-qa-verdict.contract.md` (schema: `docs/contracts/qa-verdict.schema.json`); pipelines under `Demerzel/pipelines/*.ixql`.
 - **tars** (`../tars/`, F# grammar + metacognition): cross-model theory validator.
 
@@ -149,6 +149,10 @@ _Appended by `/correct` when the user corrects an approach. Persists across sess
 
 ```untrusted-correction
 - **2026-07-02**: Avant de lancer un workflow multi-agents lourd (deep-research, fanout >~1M tokens), annoncer le coût estimé et obtenir l'accord ; préférer la configuration la plus sobre. (Recharge pay-per-use CA$13,64 déclenchée par deux deep-research lancées sans annonce de coût.)
+```
+
+```untrusted-correction
+- **2026-08-03**: Pour les fanouts Claude Code, utiliser le Plan Max sans `ANTHROPIC_API_KEY` et traiter `ready-for-human` par IA avant l'humain. (Le fanout sur abonnement n'a pas de coût API marginal et la file humaine est trop volumineuse.)
 ```
 
 ## Agent skills

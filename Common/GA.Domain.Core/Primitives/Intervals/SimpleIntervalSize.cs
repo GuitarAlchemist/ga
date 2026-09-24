@@ -166,12 +166,7 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     public static bool TryParse(string? s, IFormatProvider? provider, out SimpleIntervalSize result)
     {
         result = default;
-        if (!int.TryParse(s, NumberStyles.Integer, provider ?? CultureInfo.InvariantCulture, out var i))
-        {
-            return false;
-        }
-
-        if (i is < _minValue or > _maxValue)
+        if (!int.TryParse(s, provider, out var i) || i is < _minValue or > _maxValue)
         {
             return false;
         }
