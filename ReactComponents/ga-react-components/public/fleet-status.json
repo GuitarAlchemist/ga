@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "f443e232160d4bc7bdbc731c0f4dd72e919635a6",
-    "generatedAt": "2026-09-24T14:29:13.444670+00:00",
+    "commitSha": "17b8091bdcfabde8a8ad23c67dd0b9edffc04397",
+    "generatedAt": "2026-09-24T14:31:17.932322+00:00",
     "repoCount": 5,
-    "totalPRs": 23
+    "totalPRs": 22
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 5,
+      "prCount": 4,
       "prs": [
         {
           "ageDays": 0,
@@ -122,7 +122,7 @@
           "failingChecks": 1,
           "headRef": "feat/ix-pipeline-editor",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 728,
           "title": "feat(ga-react-components): ComfyUI-style editor for IX pipelines (tracer bullet)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/728"
@@ -134,7 +134,7 @@
           "failingChecks": 1,
           "headRef": "fix/claude-review-classifier-pin",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 727,
           "title": "fix(ci): pin the review workflow to the revision with the classifier fix",
           "url": "https://github.com/GuitarAlchemist/ga/pull/727"
@@ -146,7 +146,7 @@
           "failingChecks": 1,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
@@ -158,22 +158,10 @@
           "failingChecks": 0,
           "headRef": "codex/630-packet-runner",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 634,
           "title": "feat(harness): advance one reconciliation packet",
           "url": "https://github.com/GuitarAlchemist/ga/pull/634"
-        },
-        {
-          "ageDays": 52,
-          "author": "spareilleux",
-          "createdAt": "2026-08-02T17:27:09Z",
-          "failingChecks": 1,
-          "headRef": "codex/630-reconciliation-snapshot",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 633,
-          "title": "feat(harness): add read-only work reconciliation snapshot",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/633"
         }
       ]
     },
