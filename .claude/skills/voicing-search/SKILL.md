@@ -101,7 +101,7 @@ Meaningful score spread across top-20 (> 0.005) distinguishes OPTIC-K from the p
 
 - Pair with `GaParseChord` to pre-validate the user's chord input before searching.
 - Pair with `GaChordSubstitutions` to search for voicings of each substitute chord.
-- Use `ga_generate_voicing_embedding` (separate tool) if you need the raw 228-dim vector for a specific voicing.
+- Use `ga_generate_voicing_embedding` (separate tool) for a specific voicing's vector: `layout="raw"` (default) is the full `EmbeddingSchema.TotalDimension` (240) generator vector; `layout="compact"` is the `EmbeddingSchema.CompactDimension` (124) row layout stored in `optick.index`, the query shape IX's `ix_optick_search` expects.
 
 ## Limitations
 

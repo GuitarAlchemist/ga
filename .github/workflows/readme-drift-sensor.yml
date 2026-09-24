@@ -103,6 +103,14 @@ jobs:
           DATE: ${{ steps.survey.outputs.date }}
         shell: pwsh
         run: |
+          # Self-heal the label before any issue op. `gh issue create --label`
+          # hard-fails with "could not add label: 'readme-drift' not found" when
+          # the label is absent, which silently broke this sensor for 5+ weekly
+          # runs (2026-06-15 .. 2026-07-13 all red) while it kept committing
+          # snapshots the dashboard consumed. --force is idempotent and also
+          # repairs colour/description if the label was auto-created bare.
+          gh label create readme-drift --color 5319E7 `
+            --description "Tracking issue for cross-repo README staleness" --force
           $report = Get-Content "state/quality/readme-drift/${env:DATE}.json" -Raw | ConvertFrom-Json
           $stale  = $report.repos | Where-Object { $_.status -in @('stale','very-stale') }
           if (-not $stale) {
@@ -127,7 +135,11 @@ jobs:
             $n = $existing[0].number
             Write-Host "Updating existing issue #$n"
             $body | gh issue comment $n -F -
-            gh issue edit $n --title "README drift — ${env:DATE} (${($stale.Count)} stale)"
+            # $(...) is the subexpression operator; ${...} is variable-NAME syntax,
+            # so ${($stale.Count)} looks up a variable literally named
+            # "($stale.Count)" and yields nothing. Latent until an issue exists —
+            # this branch had never run, because creation failed on the label.
+            gh issue edit $n --title "README drift — ${env:DATE} ($($stale.Count) stale)"
           } else {
             Write-Host "Opening new tracking issue"
             $body | gh issue create --title "README drift — ${env:DATE} ($($stale.Count) stale)" --label readme-drift -F -

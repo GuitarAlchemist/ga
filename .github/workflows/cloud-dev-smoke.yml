@@ -1,0 +1,35 @@
+name: Cloud Dev Smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.devcontainer/**'
+      - 'Scripts/cloud-*.sh'
+      - '.github/workflows/cloud-dev-smoke.yml'
+      - 'Common/GA.Business.ML/Agents/**'
+      - 'Tests/Common/GA.Business.ML.Tests/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-dev-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-devcontainer:
+    name: Validate Codespaces environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build devcontainer and run bounded validation
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: bash Scripts/cloud-validate.sh

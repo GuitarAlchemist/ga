@@ -1,41 +1,7 @@
 # Context decay report
 
-_Generated: 2026-07-25T09:53:07Z_
+_Generated: 2026-09-23T13:29:25Z_
 
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/three-best-practices/`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.env.local`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/ai-copilot`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/api`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/chatbot`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/graphql`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/hubs`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/panels/diatonic`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/codestral`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/ollama`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/voxtral`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/*`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/fleet`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/ga-chat`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `<Route path="/test/<kebab-name>" element={<App><YourTest /></App>} />`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@mui/x-tree-view`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@react-three/fiber`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `Apps/GaChatbot.Api/appsettings.json`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ReactComponents/ga-react-components/`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `TestIndex.tsx`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `demos.guitaralchemist.com`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/architecture/layers.md`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/best-practices/showcase-demo-end-to-end-qa-2026-05-12.md`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ag-ui-scale-event-sse-streaming-frontend-bridge.md`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/playwright-tests-against-ghost-ui-2026-05-06.md`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ga-react-components.js`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `hmr.overlay`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `optimizeDeps.include`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/components/GAChatPanel/`
-- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/pages/<Name>Test.tsx`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/*`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/agui/stream`
 - `Apps/GaChatbot.Api/CONTEXT.md` → missing: `/api/chatbot/chat`
@@ -117,3 +83,37 @@ _Generated: 2026-07-25T09:53:07Z_
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/2026-05-07-mcp-withtools-overload-resolution-trap.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `docs/solutions/runtime-errors/fsharp-module-init-closure-registry.md`
 - `Common/GA.Business.Core.Orchestration/Plugins/CONTEXT.md` → missing: `skills/<name>/SKILL.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `${VITE_GA_API_URL ?? 'https://localhost:7001'}`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.agent/skills/react-frontend-engineering/SKILL.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/r3f-best-practices/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.claude/skills/three-best-practices/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `.env.local`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/ai-copilot`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/api`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/chatbot`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/graphql`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/hubs`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/panels/diatonic`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/codestral`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/ollama`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/proxy/voxtral`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/*`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/fleet`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `/test/ga-chat`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `<Route path="/test/<kebab-name>" element={<App><YourTest /></App>} />`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@mui/x-tree-view`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `@react-three/fiber`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `Apps/GaChatbot.Api/appsettings.json`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ReactComponents/ga-react-components/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `TestIndex.tsx`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `demos.guitaralchemist.com`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/architecture/layers.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/best-practices/showcase-demo-end-to-end-qa-2026-05-12.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/2026-03-10-ag-ui-scale-event-sse-streaming-frontend-bridge.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `docs/solutions/integration-issues/playwright-tests-against-ghost-ui-2026-05-06.md`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `ga-react-components.js`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `hmr.overlay`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `optimizeDeps.include`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/components/GAChatPanel/`
+- `ReactComponents/ga-react-components/CONTEXT.md` → missing: `src/pages/<Name>Test.tsx`

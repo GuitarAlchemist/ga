@@ -124,7 +124,7 @@ Cadences:
   - Name: "Chromatic Mediant (Metal)"
     Category: "Metal"
     Description: "Transition to distant third-related chord"
-    RomanNumerals: [ "i", "biii" ]
+    RomanNumerals: [ "i", "iii" ]
     InKey: "E Minor"
     Chords: [ "Em", "Gm" ]
 

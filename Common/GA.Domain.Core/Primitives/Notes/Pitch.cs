@@ -38,7 +38,16 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
     #endregion
 
-    private MidiNote GetMidiNote() => MidiNote.Create(Octave, PitchClass);
+    /// <summary>
+    ///     Gets the number of semitones between the C that starts <see cref="Octave" /> and this pitch.
+    /// </summary>
+    /// <remarks>
+    ///     Octave numbers change at C (scientific pitch notation), so a spelling that crosses the B/C boundary
+    ///     falls outside 0-11: Cb4 is -1 (B3) and B#3 is 12 (C4).
+    /// </remarks>
+    protected virtual int SemitonesAboveOctaveC => PitchClass.Value;
+
+    private MidiNote GetMidiNote() => MidiNote.FromValue((Octave.Value - Octave.Min.Value) * 12 + SemitonesAboveOctaveC);
 
     #region Chromatic Pitch
 
@@ -73,6 +82,10 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
     {
         /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
+
+        /// <inheritdoc />
+        protected override int SemitonesAboveOctaveC =>
+            Note.NaturalNote.PitchClass.Value + (Note.SharpAccidental?.Value ?? 0);
 
         /// <summary>
         ///     Gets a sharp pitch from a pitch (e.g. C#/Db => C#)
@@ -241,6 +254,10 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         /// <inheritdoc />
         public override PitchClass PitchClass => Note.PitchClass;
 
+        /// <inheritdoc />
+        protected override int SemitonesAboveOctaveC =>
+            Note.NaturalNote.PitchClass.Value + (Note.FlatAccidental?.Value ?? 0);
+
         /// <summary>
         ///     Gets a flat pitch from a pitch (e.g. C#/Db => Db)
         /// </summary>
@@ -282,17 +299,19 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Flat D(Octave octave) => new(Notes.Note.Flat.D, octave);
 
-        public static Flat DFlat(Octave octave) => new(Notes.Note.Flat.D, octave);
+        public static Flat DFlat(Octave octave) => new(Notes.Note.Flat.DFlat, octave);
 
         public static Flat E(Octave octave) => new(Notes.Note.Flat.E, octave);
 
+        public static Flat EFlat(Octave octave) => new(Notes.Note.Flat.EFlat, octave);
+
         public static Flat F(Octave octave) => new(Notes.Note.Flat.F, octave);
 
-        public static Flat FFlat(Octave octave) => new(Notes.Note.Flat.G, octave);
+        public static Flat FFlat(Octave octave) => new(Notes.Note.Flat.FFlat, octave);
 
         public static Flat G(Octave octave) => new(Notes.Note.Flat.G, octave);
 
-        public static Flat GFlat(Octave octave) => new(Notes.Note.Flat.A, octave);
+        public static Flat GFlat(Octave octave) => new(Notes.Note.Flat.GFlat, octave);
 
         public static Flat A(Octave octave) => new(Notes.Note.Flat.A, octave);
 
@@ -300,11 +319,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
 
         public static Flat B(Octave octave) => new(Notes.Note.Flat.B, octave);
 
+        public static Flat BFlat(Octave octave) => new(Notes.Note.Flat.BFlat, octave);
+
         public static Flat C0 => Flat0(Notes.Note.Flat.C);
         public static Flat CFlat0 => Flat0(Notes.Note.Flat.CFlat);
         public static Flat D0 => Flat0(Notes.Note.Flat.D);
         public static Flat DFlat0 => Flat0(Notes.Note.Flat.DFlat);
         public static Flat E0 => Flat0(Notes.Note.Flat.E);
+        public static Flat EFlat0 => Flat0(Notes.Note.Flat.EFlat);
         public static Flat F0 => Flat0(Notes.Note.Flat.F);
         public static Flat FFlat0 => Flat0(Notes.Note.Flat.FFlat);
         public static Flat G0 => Flat0(Notes.Note.Flat.G);
@@ -312,12 +334,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A0 => Flat0(Notes.Note.Flat.A);
         public static Flat AFlat0 => Flat0(Notes.Note.Flat.AFlat);
         public static Flat B0 => Flat0(Notes.Note.Flat.B);
+        public static Flat BFlat0 => Flat0(Notes.Note.Flat.BFlat);
 
         public static Flat C1 => Flat1(Notes.Note.Flat.C);
         public static Flat CFlat1 => Flat1(Notes.Note.Flat.CFlat);
         public static Flat D1 => Flat1(Notes.Note.Flat.D);
         public static Flat DFlat1 => Flat1(Notes.Note.Flat.DFlat);
         public static Flat E1 => Flat1(Notes.Note.Flat.E);
+        public static Flat EFlat1 => Flat1(Notes.Note.Flat.EFlat);
         public static Flat F1 => Flat1(Notes.Note.Flat.F);
         public static Flat FFlat1 => Flat1(Notes.Note.Flat.FFlat);
         public static Flat G1 => Flat1(Notes.Note.Flat.G);
@@ -325,12 +349,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A1 => Flat1(Notes.Note.Flat.A);
         public static Flat AFlat1 => Flat1(Notes.Note.Flat.AFlat);
         public static Flat B1 => Flat1(Notes.Note.Flat.B);
+        public static Flat BFlat1 => Flat1(Notes.Note.Flat.BFlat);
 
         public static Flat C2 => Flat2(Notes.Note.Flat.C);
         public static Flat CFlat2 => Flat2(Notes.Note.Flat.CFlat);
         public static Flat D2 => Flat2(Notes.Note.Flat.D);
         public static Flat DFlat2 => Flat2(Notes.Note.Flat.DFlat);
         public static Flat E2 => Flat2(Notes.Note.Flat.E);
+        public static Flat EFlat2 => Flat2(Notes.Note.Flat.EFlat);
         public static Flat F2 => Flat2(Notes.Note.Flat.F);
         public static Flat FFlat2 => Flat2(Notes.Note.Flat.FFlat);
         public static Flat G2 => Flat2(Notes.Note.Flat.G);
@@ -338,12 +364,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A2 => Flat2(Notes.Note.Flat.A);
         public static Flat AFlat2 => Flat2(Notes.Note.Flat.AFlat);
         public static Flat B2 => Flat2(Notes.Note.Flat.B);
+        public static Flat BFlat2 => Flat2(Notes.Note.Flat.BFlat);
 
         public static Flat C3 => Flat3(Notes.Note.Flat.C);
         public static Flat CFlat3 => Flat3(Notes.Note.Flat.CFlat);
         public static Flat D3 => Flat3(Notes.Note.Flat.D);
         public static Flat DFlat3 => Flat3(Notes.Note.Flat.DFlat);
         public static Flat E3 => Flat3(Notes.Note.Flat.E);
+        public static Flat EFlat3 => Flat3(Notes.Note.Flat.EFlat);
         public static Flat F3 => Flat3(Notes.Note.Flat.F);
         public static Flat FFlat3 => Flat3(Notes.Note.Flat.FFlat);
         public static Flat G3 => Flat3(Notes.Note.Flat.G);
@@ -351,12 +379,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A3 => Flat3(Notes.Note.Flat.A);
         public static Flat AFlat3 => Flat3(Notes.Note.Flat.AFlat);
         public static Flat B3 => Flat3(Notes.Note.Flat.B);
+        public static Flat BFlat3 => Flat3(Notes.Note.Flat.BFlat);
 
         public static Flat C4 => Flat4(Notes.Note.Flat.C);
         public static Flat CFlat4 => Flat4(Notes.Note.Flat.CFlat);
         public static Flat D4 => Flat4(Notes.Note.Flat.D);
         public static Flat DFlat4 => Flat4(Notes.Note.Flat.DFlat);
         public static Flat E4 => Flat4(Notes.Note.Flat.E);
+        public static Flat EFlat4 => Flat4(Notes.Note.Flat.EFlat);
         public static Flat F4 => Flat4(Notes.Note.Flat.F);
         public static Flat FFlat4 => Flat4(Notes.Note.Flat.FFlat);
         public static Flat G4 => Flat4(Notes.Note.Flat.G);
@@ -364,12 +394,14 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A4 => Flat4(Notes.Note.Flat.A);
         public static Flat AFlat4 => Flat4(Notes.Note.Flat.AFlat);
         public static Flat B4 => Flat4(Notes.Note.Flat.B);
+        public static Flat BFlat4 => Flat4(Notes.Note.Flat.BFlat);
 
         public static Flat C5 => Flat5(Notes.Note.Flat.C);
         public static Flat CFlat5 => Flat5(Notes.Note.Flat.CFlat);
         public static Flat D5 => Flat5(Notes.Note.Flat.D);
         public static Flat DFlat5 => Flat5(Notes.Note.Flat.DFlat);
         public static Flat E5 => Flat5(Notes.Note.Flat.E);
+        public static Flat EFlat5 => Flat5(Notes.Note.Flat.EFlat);
         public static Flat F5 => Flat5(Notes.Note.Flat.F);
         public static Flat FFlat5 => Flat5(Notes.Note.Flat.FFlat);
         public static Flat G5 => Flat5(Notes.Note.Flat.G);
@@ -377,6 +409,7 @@ public abstract record Pitch(Octave Octave) : IComparable<Pitch>,
         public static Flat A5 => Flat5(Notes.Note.Flat.A);
         public static Flat AFlat5 => Flat5(Notes.Note.Flat.AFlat);
         public static Flat B5 => Flat5(Notes.Note.Flat.B);
+        public static Flat BFlat5 => Flat5(Notes.Note.Flat.BFlat);
 
         private static Flat Flat0(Note.Flat note) => new(note, 0);
 
