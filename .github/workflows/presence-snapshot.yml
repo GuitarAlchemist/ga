@@ -45,8 +45,6 @@ jobs:
       - name: Checkout GA
         uses: actions/checkout@v4
         with:
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN can't be one (GuitarAlchemist/Demerzel#902).
-          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,7 +56,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 Scripts/presence-snapshot.py --root .
 
-      - name: Commit + push if changed
+      - name: Commit if changed
+        id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -71,14 +70,13 @@ jobs:
           fi
 
           git commit -m "chore(presence): snapshot $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           # Retry on a non-fast-forward race: other [skip ci] chore workflows
           # commit to main concurrently (same pattern as fleet-status.yml).
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "::warning::push failed (attempt ${attempt}); rebasing on origin/main and retrying."
-            git pull --rebase origin main || true
-          done
-          echo "::error::Could not push presence snapshot after 3 attempts."
-          exit 1
+          attempts: 3

@@ -62,26 +62,22 @@ jobs:
 
       # Auto-commit for small updates (<=10 commits behind)
       - name: Auto-commit small update
+        id: commit
         if: steps.check.outputs.behind != '0' && steps.check.outputs.behind <= 10
-        env:
-          RULESET_BYPASS_SSH_KEY: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
         run: |
           BEHIND=${{ steps.check.outputs.behind }}
           git commit -m "chore: update Demerzel submodule ($BEHIND commits)"
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN
-          # can't be one (GuitarAlchemist/Demerzel#902). Set up for this push only:
-          # the chore/update-demerzel* branch push in the next step keeps the token.
-          # With the secret empty, push to origin exactly as before.
-          MAIN_REMOTE=origin
-          if [ -n "$RULESET_BYPASS_SSH_KEY" ]; then
-            (umask 077 && printf '%s\n' "$RULESET_BYPASS_SSH_KEY" > "$RUNNER_TEMP/bypass_key")
-            # github.com's ed25519 host key, as published by GET https://api.github.com/meta
-            echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/bypass_known_hosts"
-            export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/bypass_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/bypass_known_hosts"
-            MAIN_REMOTE="git@github.com:${GITHUB_REPOSITORY}.git"
-          fi
-          git push "$MAIN_REMOTE" main
+          echo "committed=true" >> "$GITHUB_OUTPUT"
           echo "### Auto-updated Demerzel submodule ($BEHIND commits)" >> $GITHUB_STEP_SUMMARY
+
+      # Only this push goes over the deploy key: the chore/update-demerzel* branch
+      # push in the next step keeps the token.
+      - name: Push the small update to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: main
 
       # Create PR for large updates (>10 commits behind)
       - name: Create PR for large update

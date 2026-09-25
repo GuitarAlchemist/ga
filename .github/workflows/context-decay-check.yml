@@ -24,9 +24,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN can't be one (GuitarAlchemist/Demerzel#902).
-          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
 
       - name: Scan CONTEXT.md files for broken references
         id: scan
@@ -114,6 +111,7 @@ jobs:
             --color "fbca04" 2>/dev/null || true
 
       - name: Comment on most recent context-health PR (or write to file)
+        id: commit
         if: steps.scan.outputs.found_any == '1'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -136,11 +134,20 @@ jobs:
             git add state/context-decay-report.md
             if ! git diff --cached --quiet; then
               git commit -m "chore(context): daily decay report [skip ci]"
-              git push || echo "(push failed — likely main protected, report remains in artifacts)"
+              echo "committed=true" >> "$GITHUB_OUTPUT"
             else
               echo "(no changes to commit)"
             fi
           fi
+
+      - name: Push the decay report
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: HEAD
+          # A failed push leaves the report in the artifact below.
+          required: 'false'
 
       - name: Upload report as artifact
         if: always()

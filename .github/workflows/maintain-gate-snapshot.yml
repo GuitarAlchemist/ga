@@ -46,8 +46,6 @@ jobs:
       - name: Checkout ga
         uses: actions/checkout@v4
         with:
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN can't be one (GuitarAlchemist/Demerzel#902).
-          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Checkout ix sibling
@@ -93,6 +91,7 @@ jobs:
           echo "produced=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit snapshot if new
+        id: commit
         if: steps.produce.outputs.produced == 'true'
         env:
           DATE: ${{ steps.produce.outputs.snapshot_date }}
@@ -106,7 +105,14 @@ jobs:
             exit 0
           fi
           git commit -m "chore(quality): maintain-gate snapshot ${DATE} [skip ci]"
-          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the snapshot
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: HEAD
 
       - name: Upload snapshot artifact
         if: always()

@@ -45,8 +45,6 @@ jobs:
       - name: Checkout GA
         uses: actions/checkout@v4
         with:
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN can't be one (GuitarAlchemist/Demerzel#902).
-          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           path: ga
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -116,7 +114,8 @@ jobs:
         run: |
           python Scripts/fleet-status-generate.py --root .
 
-      - name: Commit + push if changed
+      - name: Commit if changed
+        id: commit
         working-directory: ga
         run: |
           git config user.name  "github-actions[bot]"
@@ -132,13 +131,13 @@ jobs:
           fi
 
           git commit -m "chore(fleet): fleet-status snapshot $(date -u +%Y-%m-%d) [skip ci]"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./ga/.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          working-directory: ga
           # Retry on a non-fast-forward race: other [skip ci] chore workflows commit to main concurrently.
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "::warning::push failed (attempt ${attempt}); rebasing on origin/main and retrying."
-            git pull --rebase origin main || true
-          done
-          echo "::error::Could not push fleet-status after 3 attempts."
-          exit 1
+          attempts: 3

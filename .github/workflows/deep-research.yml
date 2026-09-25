@@ -71,6 +71,8 @@ jobs:
     if: needs.gate.outputs.token_present == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      report: ${{ steps.report.outputs.changed }}
     steps:
       - name: Checkout repository (brings the committed source cache)
         uses: actions/checkout@v4
@@ -125,41 +127,30 @@ jobs:
             Do not commit — the workflow's commit step handles that.
           claude_args: '--model claude-sonnet-5 --allowed-tools "Workflow,Agent,Read,Write,Glob,Grep,WebSearch,WebFetch,Bash(date:*),Bash(mkdir:*),Bash(sha256sum:*),Bash(echo:*)"'
 
-      - name: Commit report + source cache
+      # The report and cache are committed and pushed by the `publish` job, on a
+      # fresh runner the agent never touched, so nothing Claude wrote here can
+      # reach the ruleset-bypass key. (claude-code-action also leaves origin on
+      # its app token, revoked by the time a later step here could push.)
+      - name: Check for a report
+        id: report
         shell: bash
-        env:
-          RULESET_BYPASS_SSH_KEY: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add state/research/ state/research-cache/ 2>/dev/null || true
-          if git diff --cached --quiet; then
+          if [ -n "$(git status --porcelain -- state/research/ state/research-cache/)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
             echo "::warning::No report produced — nothing to commit (check the run log)."
-            exit 0
           fi
 
-          git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${{ env.SLUG }}) [skip ci]"
-          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN
-          # can't be one (GuitarAlchemist/Demerzel#902). Set up for this push only:
-          # not at checkout, so the Claude step never holds the key; and claude-code-action
-          # leaves origin on its app token, revoked by the time this step runs.
-          # With the secret empty, push to origin exactly as before.
-          MAIN_REMOTE=origin
-          if [ -n "$RULESET_BYPASS_SSH_KEY" ]; then
-            (umask 077 && printf '%s\n' "$RULESET_BYPASS_SSH_KEY" > "$RUNNER_TEMP/bypass_key")
-            # github.com's ed25519 host key, as published by GET https://api.github.com/meta
-            echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/bypass_known_hosts"
-            export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/bypass_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/bypass_known_hosts"
-            MAIN_REMOTE="git@github.com:${GITHUB_REPOSITORY}.git"
-          fi
-          for attempt in 1 2 3; do
-            if git push "$MAIN_REMOTE" HEAD:main; then exit 0; fi
-            echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
-            git pull --rebase "$MAIN_REMOTE" main || true
-          done
-          echo "::error::Could not push the report after 3 attempts."
-          exit 1
+      - name: Hand the report and source cache to the publish job
+        if: steps.report.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deep-research-handoff
+          # Two search paths: the artifact root is their common parent, state/.
+          path: |
+            state/research/
+            state/research-cache/
+          retention-days: 1
 
       - name: Upload report artifact
         if: always()
@@ -169,3 +160,52 @@ jobs:
           path: state/research/
           retention-days: 90
           if-no-files-found: ignore
+
+  publish:
+    name: Commit report + source cache
+    needs: research
+    if: needs.research.outputs.report == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Pinned to main like the research job: the report lands on main
+          # whatever ref the workflow was dispatched on (Codex P1, PR #506).
+          ref: main
+          fetch-depth: 1
+
+      - name: Take the report and source cache from the research job
+        uses: actions/download-artifact@v4
+        with:
+          name: deep-research-handoff
+          path: state/
+
+      - name: Commit report + source cache
+        id: commit
+        shell: bash
+        env:
+          # Checked against ^[A-Za-z0-9._-]{1,64}$ by the research job; this job runs only if it passed.
+          SLUG: ${{ inputs.slug }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add state/research/ state/research-cache/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "::warning::Report identical to main — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${SLUG}) [skip ci]"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the report to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          attempts: 3
