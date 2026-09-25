@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4d2f0c84f43f397593d4c07741a90d86da6ae0bc",
-    "generatedAt": "2026-09-25T04:05:43.211462+00:00",
+    "commitSha": "0d5426e74a9a9094a733c187e820a1c71578a8a5",
+    "generatedAt": "2026-09-25T04:26:52.799959+00:00",
     "repoCount": 5,
-    "totalPRs": 24
+    "totalPRs": 23
   },
   "repos": [
     {
@@ -113,31 +113,19 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 6,
+      "prCount": 5,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
           "createdAt": "2026-09-25T04:04:45Z",
-          "failingChecks": 0,
+          "failingChecks": 1,
           "headRef": "fix/ai-copilot-crash",
           "isDraft": false,
           "mergeable": "MERGEABLE",
           "number": 737,
           "title": "fix(ga-client): /ai-copilot mounts again",
           "url": "https://github.com/GuitarAlchemist/ga/pull/737"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-25T03:54:53Z",
-          "failingChecks": 1,
-          "headRef": "fix/vextab-course-findings",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 736,
-          "title": "fix: VexTab parser, chatbot vextab blocks and their rendering (VexTab course findings)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/736"
         },
         {
           "ageDays": 0,
