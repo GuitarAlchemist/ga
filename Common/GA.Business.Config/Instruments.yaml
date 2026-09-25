@@ -1110,11 +1110,11 @@ Ukulele:
   SopranoConcertAndTenorC:
     DisplayName: "Soprano Concert And Tenor C"
     FullName: Soprano C, Concert & Tenor C
-    Tuning: C6 G4 C4 E4 A4
+    Tuning: G4 C4 E4 A4
   SopranoConcertAndTenorD:
     DisplayName: "Soprano Concert And Tenor D"
     FullName: Soprano, Concert & Tenor D
-    Tuning: D6 A4 D4 F#4 B4
+    Tuning: A4 D4 F#4 B4
   Baritone:
     DisplayName: "Baritone"
     Tuning: D4 G3 B4 E4
@@ -1124,11 +1124,11 @@ Ukulele:
   BanjoOrBanjoleteC:
     DisplayName: "Banjo Or Banjolete C"
     FullName: Ukulele Banjo or Banjolele C
-    Tuning: C6 G4 C4 E4 A4
+    Tuning: G4 C4 E4 A4
   BanjoOrBanjoleteD:
     DisplayName: "Banjo Or Banjolete D"
     FullName: Ukulele Banjo or Banjolele D
-    Tuning: D6 A4 D4 F#4 B4
+    Tuning: A4 D4 F#4 B4
 
 Vihuela:
   DisplayName: "Vihuela"

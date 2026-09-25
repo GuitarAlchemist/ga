@@ -93,6 +93,18 @@ public class InstrumentsConfigTests
         Assert.That(unparsable, Is.Empty);
     }
 
+    // "C6" and "D6" are the names of the ukulele's C and D tunings (the chord the open strings sound),
+    // not a fifth pitch: a ukulele and a banjolele have four strings.
+    [TestCase("SopranoConcertAndTenorC", "G4 C4 E4 A4")]
+    [TestCase("SopranoConcertAndTenorD", "A4 D4 F#4 B4")]
+    [TestCase("BanjoOrBanjoleteC", "G4 C4 E4 A4")]
+    [TestCase("BanjoOrBanjoleteD", "A4 D4 F#4 B4")]
+    public void UkuleleTunings_DoNotStartWithTheirName(string tuningName, string expected)
+    {
+        var tuning = InstrumentsConfig.tryGetInstrument("Ukulele").Value.Tunings.Single(t => t.Name == tuningName);
+        Assert.That(tuning.Tuning, Is.EqualTo(expected));
+    }
+
     [Test]
     public void ReloadConfig_DoesNotThrowException() => Assert.DoesNotThrow(() => InstrumentsConfig.reloadConfig());
 }
