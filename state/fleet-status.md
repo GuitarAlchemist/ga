@@ -18,10 +18,10 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#732](https://github.com/GuitarAlchemist/ga/pull/732) | fix: barre detection, minimum fingers, difficulty label and unplayable | 0d | MERGEABLE | 1 | spareilleux |
-| [#728](https://github.com/GuitarAlchemist/ga/pull/728) | feat(ga-react-components): ComfyUI-style editor for IX pipelines (trac | 0d | MERGEABLE | 1 | spareilleux |
-| [#727](https://github.com/GuitarAlchemist/ga/pull/727) | fix(ci): pin the review workflow to the revision with the classifier f | 0d | MERGEABLE | 1 | spareilleux |
-| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 53d | MERGEABLE | 1 | spareilleux |
+| [#732](https://github.com/GuitarAlchemist/ga/pull/732) | fix: barre detection, minimum fingers, difficulty label and unplayable | 0d | UNKNOWN | 1 | spareilleux |
+| [#728](https://github.com/GuitarAlchemist/ga/pull/728) | feat(ga-react-components): ComfyUI-style editor for IX pipelines (trac | 0d | UNKNOWN | 1 | spareilleux |
+| [#727](https://github.com/GuitarAlchemist/ga/pull/727) | fix(ci): pin the review workflow to the revision with the classifier f | 0d | UNKNOWN | 1 | spareilleux |
+| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 53d | UNKNOWN | 1 | spareilleux |
 
 ### ix (7 open)
 
@@ -88,6 +88,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-25T04:35:34.168603+00:00 UTC_
+_Generated: 2026-09-25T10:46:30.998104+00:00 UTC_
 
-_Commit: `a5820ad4e7a4`_
+_Commit: `32d33f8fe6fd`_
