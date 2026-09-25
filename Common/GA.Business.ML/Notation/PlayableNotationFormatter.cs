@@ -3,6 +3,7 @@ namespace GA.Business.ML.Notation;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using GA.Business.DSL.Parsers;
 
 /// <summary>
 /// Formats known playable guitar positions for the chatbot notation renderer.
@@ -16,10 +17,12 @@ public static partial class PlayableNotationFormatter
         """
         Playable notation:
         - When you include exact playable guitar frets, include a fenced `vextab` block immediately after the shape.
-        - Use GA VexTab token format `string/fret`, with string 6 = low E and string 1 = high E.
-        - Example:
+        - Write VexTab: a `tabstave` line, then a `notes` line. A chord is `(fret/string.fret/string...)`,
+          fret first, lowest string first, with string 6 = low E and string 1 = high E; leave muted strings out.
+        - Example, open C (x-3-2-0-1-0):
           ```vextab
-          5/3 4/2 3/0 2/1 1/0
+          tabstave
+          notes :w (3/5.2/4.0/3.1/2.0/1)
           ```
         - Only emit a `vextab` block when the frets are known. Do not invent exact tabs.
         """;
@@ -37,7 +40,9 @@ public static partial class PlayableNotationFormatter
 
     /// <summary>
     /// Converts a six-string chord diagram in chord-chart order (lowest string first), such as
-    /// <c>x-3-2-0-1-0</c> or <c>x32010</c>, into the GA VexTab token format consumed by the mini UI.
+    /// <c>x-3-2-0-1-0</c> or <c>x32010</c>, into VexTab: a stave and one whole-note chord,
+    /// <c>tabstave</c> then <c>notes :w (3/5.2/4.0/3.1/2.0/1)</c>, fret before string as VexTab
+    /// writes them, muted strings left out.
     /// Diagrams read from GA voicings must go through <see cref="ToChartOrder"/> first, or use the
     /// overload taking <see cref="DiagramStringOrder.HighToLow"/>.
     /// </summary>
@@ -46,7 +51,7 @@ public static partial class PlayableNotationFormatter
 
     /// <summary>
     /// Converts a six-string chord diagram whose fret tokens are in <paramref name="order"/>
-    /// into the GA VexTab token format (string 6 = low E), lowest string first.
+    /// into VexTab (string 6 = low E), lowest string first.
     /// </summary>
     public static string? TryFormatChordDiagramAsVexTab(string? diagram, DiagramStringOrder order)
     {
@@ -65,10 +70,35 @@ public static partial class PlayableNotationFormatter
                 continue;
             }
 
-            tokens.Add(FormattableString.Invariant($"{guitarString}/{fret}"));
+            tokens.Add(FormattableString.Invariant($"{fret}/{guitarString}"));
         }
 
-        return tokens.Count == 0 ? null : string.Join(" ", tokens);
+        return tokens.Count == 0 ? null : $"tabstave\nnotes :w ({string.Join(".", tokens)})";
+    }
+
+    /// <summary>
+    /// Counts the fenced <c>vextab</c> blocks of a markdown text, and how many of them are VexTab
+    /// that GA's VexTab parser reads.
+    /// </summary>
+    public static (int Blocks, int Valid) CountVexTabBlocks(string? markdown)
+    {
+        if (string.IsNullOrEmpty(markdown))
+        {
+            return (0, 0);
+        }
+
+        var blocks = 0;
+        var valid = 0;
+        foreach (Match match in VexTabFenceRegex().Matches(markdown.ReplaceLineEndings("\n")))
+        {
+            blocks++;
+            if (VexTabParser.parse(match.Groups["body"].Value).IsOk)
+            {
+                valid++;
+            }
+        }
+
+        return (blocks, valid);
     }
 
     /// <summary>
@@ -95,7 +125,7 @@ public static partial class PlayableNotationFormatter
     {
         if (string.IsNullOrWhiteSpace(markdown))
         {
-            return new NotationAugmentationResult(markdown ?? string.Empty, 0, 0);
+            return new NotationAugmentationResult(markdown ?? string.Empty, 0, 0, 0, 0);
         }
 
         var lines = markdown.ReplaceLineEndings("\n").Split('\n');
@@ -154,7 +184,9 @@ public static partial class PlayableNotationFormatter
             }
         }
 
-        return new NotationAugmentationResult(builder.ToString().TrimEnd(), diagramCount, addedFenceCount);
+        var text = builder.ToString().TrimEnd();
+        var (blocks, valid) = CountVexTabBlocks(text);
+        return new NotationAugmentationResult(text, diagramCount, addedFenceCount, blocks, valid);
     }
 
     /// <summary>
@@ -251,6 +283,9 @@ public static partial class PlayableNotationFormatter
     [GeneratedRegex(@"^\s*[xX0-9]{6}\s*$")]
     private static partial Regex CompactDiagramRegex();
 
+    [GeneratedRegex(@"^[ \t]*```vextab[ \t]*\n(?<body>.*?)^[ \t]*```", RegexOptions.Multiline | RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex VexTabFenceRegex();
+
     [GeneratedRegex(@"(?<![\w/])(?<diagram>(?:[xX]|\d{1,2})(?:-(?:[xX]|\d{1,2})){5})(?![\w/])")]
     private static partial Regex InlineDiagramRegex();
 
@@ -285,7 +320,14 @@ public enum DiagramStringOrder
     HighToLow,
 }
 
+/// <param name="Text">The markdown, with the fences added.</param>
+/// <param name="DiagramCount">Chord diagrams found in it.</param>
+/// <param name="AddedFenceCount">Fenced <c>vextab</c> blocks added after them.</param>
+/// <param name="VexTabBlockCount">Fenced <c>vextab</c> blocks in the final text, added or written by the model.</param>
+/// <param name="ValidVexTabBlockCount">Of those, the ones GA's VexTab parser reads.</param>
 public sealed record NotationAugmentationResult(
     string Text,
     int DiagramCount,
-    int AddedFenceCount);
+    int AddedFenceCount,
+    int VexTabBlockCount,
+    int ValidVexTabBlockCount);
