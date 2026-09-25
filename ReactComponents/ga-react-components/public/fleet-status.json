@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "6eb363ed907c0de184a496b5482e65b752dda763",
-    "generatedAt": "2026-09-25T03:56:53.658028+00:00",
+    "commitSha": "4d2f0c84f43f397593d4c07741a90d86da6ae0bc",
+    "generatedAt": "2026-09-25T04:05:43.211462+00:00",
     "repoCount": 5,
     "totalPRs": 24
   },
@@ -118,26 +118,26 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-09-25T03:54:53Z",
+          "createdAt": "2026-09-25T04:04:45Z",
           "failingChecks": 0,
-          "headRef": "fix/vextab-course-findings",
+          "headRef": "fix/ai-copilot-crash",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 736,
-          "title": "fix: VexTab parser, chatbot vextab blocks and their rendering (VexTab course findings)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/736"
+          "mergeable": "MERGEABLE",
+          "number": 737,
+          "title": "fix(ga-client): /ai-copilot mounts again",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/737"
         },
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-09-25T03:36:06Z",
+          "createdAt": "2026-09-25T03:54:53Z",
           "failingChecks": 1,
-          "headRef": "fix/caged-string-order",
+          "headRef": "fix/vextab-course-findings",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 735,
-          "title": "fix: CAGED shape detection reads the strings in the order voicings store them",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/735"
+          "mergeable": "MERGEABLE",
+          "number": 736,
+          "title": "fix: VexTab parser, chatbot vextab blocks and their rendering (VexTab course findings)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/736"
         },
         {
           "ageDays": 0,
@@ -146,7 +146,7 @@
           "failingChecks": 1,
           "headRef": "fix/playability-analyzer",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 732,
           "title": "fix: barre detection, minimum fingers, difficulty label and unplayable voicings in VoicingPhysicalAnalyzer",
           "url": "https://github.com/GuitarAlchemist/ga/pull/732"
@@ -158,7 +158,7 @@
           "failingChecks": 1,
           "headRef": "feat/ix-pipeline-editor",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 728,
           "title": "feat(ga-react-components): ComfyUI-style editor for IX pipelines (tracer bullet)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/728"
@@ -170,7 +170,7 @@
           "failingChecks": 1,
           "headRef": "fix/claude-review-classifier-pin",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 727,
           "title": "fix(ci): pin the review workflow to the revision with the classifier fix",
           "url": "https://github.com/GuitarAlchemist/ga/pull/727"
@@ -182,7 +182,7 @@
           "failingChecks": 1,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
