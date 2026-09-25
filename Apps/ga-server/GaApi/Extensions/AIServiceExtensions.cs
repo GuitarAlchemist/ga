@@ -92,6 +92,11 @@ public static class AiServiceExtensions
             // Kokoro-82M TTS — local Apache 2.0 provider, ~85x smaller than Voxtral
             services.AddHttpClient<IKokoroTtsService, KokoroTtsService>();
 
+            // A global provider gate would also block provider-free deterministic skills.
+            if (configuration.GetValue<bool>("Chatbot:Readiness:ProviderCheck"))
+                services.AddSingleton<IChatReadinessProbe, GaApiChatReadinessProbe>();
+            services.AddSingleton<IFallbackChatHandler, GaApiFallbackChatHandler>();
+
             var chatProvider = configuration["AI:ChatProvider"] ?? "ollama";
 
             if (string.Equals(chatProvider, "claude", StringComparison.OrdinalIgnoreCase))

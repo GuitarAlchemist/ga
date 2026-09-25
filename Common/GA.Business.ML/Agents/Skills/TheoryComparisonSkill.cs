@@ -158,6 +158,7 @@ public sealed class TheoryComparisonSkill(ILogger<TheoryComparisonSkill> logger)
 
     private static AgentResponse CannotHandle() => new()
     {
+        Declined   = true,
         AgentId    = AgentIds.Theory,
         Result     = string.Empty,
         Confidence = 0.0f,

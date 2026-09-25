@@ -1,12 +1,12 @@
 {
   "domain": "voicing-analysis",
-  "emitted_at": "2026-09-24T03:34:40.2315782Z",
+  "emitted_at": "2026-09-24T14:58:49.5445409Z",
   "metric_name": "voicing_analysis_avg_pass_rate",
   "metric_value": 1,
   "oracle_status": "ok",
   "summary": "All 4 voicing metrics at 100% across 313,047 voicings.",
   "problems": [],
-  "Timestamp": "2026-09-24T03:34:40.2257124Z",
+  "Timestamp": "2026-09-24T14:58:49.5367284Z",
   "Corpus": {
     "Guitar": 297910,
     "Bass": 7795,
@@ -58,7 +58,7 @@
       },
       {
         "Name": "Emaj7",
-        "Count": 398
+        "Count": 394
       },
       {
         "Name": "Ebdim/Gb",
@@ -82,7 +82,7 @@
       },
       {
         "Name": "Ddim/F",
-        "Count": 370
+        "Count": 371
       },
       {
         "Name": "Adim/C",
@@ -146,9 +146,9 @@
   },
   "AnalyzerExceptions": [],
   "Performance": {
-    "RuntimeSeconds": 6.3797307,
-    "VoicingsPerSec": 49068.999103676906,
-    "PeakWorkingSetMb": 422.16796875
+    "RuntimeSeconds": 8.3961021,
+    "VoicingsPerSec": 37284.80147948653,
+    "PeakWorkingSetMb": 403.88671875
   },
   "IssueSamples": {
     "NullChordName": [],

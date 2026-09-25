@@ -25,7 +25,7 @@ public readonly struct ValueList<T> : IReadOnlyList<T>, IEquatable<ValueList<T>>
     /// </summary>
     /// <param name="index">The zero-based index of the element to get</param>
     /// <returns>The element at the specified index</returns>
-    public T this[int index] => _values[index];
+    public T this[int index] => (_values ?? [])[index];
 
     /// <summary>
     ///     Returns an enumerator that iterates through the list

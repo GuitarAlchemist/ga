@@ -69,7 +69,7 @@ public readonly record struct Finger : IStaticValueObjectList<Finger>
     /// <summary>
     /// Gets all Finger values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<Finger>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<Finger>.ValuesList;
 
     /// <summary>
     /// Gets the cached span representing the full finger range.

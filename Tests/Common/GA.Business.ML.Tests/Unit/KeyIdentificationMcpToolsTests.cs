@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Tests.Unit;
 
 using GA.Business.ML.Agents.Mcp;
+using GA.Domain.Services.Tonal;
 
 [TestFixture]
 public class KeyIdentificationMcpToolsTests
@@ -180,6 +181,33 @@ public class KeyIdentificationMcpToolsTests
             Assert.That(result.Error.IndexOf('\r'), Is.EqualTo(-1));
             Assert.That(result.Error.IndexOf(esc),  Is.EqualTo(-1));
             Assert.That(result.Error.All(c => !char.IsControl(c)), Is.True);
+        }
+    }
+
+    [Test]
+    public void IdentifyKey_TextbookCadences_ReturnsExpectedKeys()
+    {
+        var testCases = new[]
+        {
+            (Query: "Dm7 G7",         ExpectedKey: "C major"),
+            (Query: "Dm7 G7 Cmaj7",   ExpectedKey: "C major"),
+            (Query: "Am7 D7 Gmaj7",   ExpectedKey: "G major"),
+            (Query: "Em7 A7 Dmaj7",   ExpectedKey: "D major"),
+            (Query: "Dm G",           ExpectedKey: "C major"),
+            (Query: "G7 C",           ExpectedKey: "C major"),
+            (Query: "F G C",           ExpectedKey: "C major"),
+            (Query: "C Am F",         ExpectedKey: "C major")
+        };
+
+        foreach (var tc in testCases)
+        {
+            var result = KeyIdentificationMcpTools.IdentifyKey(tc.Query);
+            Assert.That(result.Error, Is.Null, $"Query '{tc.Query}' failed with error: {result.Error}");
+            Assert.That(result.TopCandidates, Is.Not.Empty, $"Query '{tc.Query}' returned no top candidates.");
+
+            var matchedKeys = result.TopCandidates.Select(c => c.Key).ToList();
+            Assert.That(matchedKeys, Contains.Item(tc.ExpectedKey),
+                $"Query '{tc.Query}' should have identified key '{tc.ExpectedKey}' among top candidates but got {string.Join(", ", matchedKeys)}");
         }
     }
 

@@ -6,7 +6,6 @@ using GA.Business.Core.Orchestration.AgUi;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.ML.Agents;
 using Services;
-using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatRequest;
 
 /// <summary>
 /// AG-UI protocol endpoint for Guitar Alchemist.
@@ -14,23 +13,13 @@ using OrchestratorChatRequest = GA.Business.Core.Orchestration.Models.ChatReques
 /// so that React components (DiatonicChordTable, VexTabViewer) receive structured
 /// domain data alongside the streaming text answer.
 /// </summary>
-/// <remarks>
-/// The non-streaming JSON endpoint (<see cref="AgUiJson"/>) goes through
-/// <see cref="IChatApplicationService"/> so the readiness / trace / fallback
-/// decorator stack applies — codex CLI 2026-05-08 P1 #7 QA flagged that
-/// AG-UI was bypassing the stack. The streaming endpoint
-/// (<see cref="AgUiStream"/>) still calls <see cref="IHarmonicChatOrchestrator"/>
-/// directly because <see cref="IChatApplicationService"/> doesn't yet expose
-/// a streaming surface; tracking as a P1 #7 follow-up.
-/// </remarks>
+/// <remarks>Both transports use IChatIntake for validation, gating, and decorated dispatch.</remarks>
 [ApiController]
 [Route("api/chatbot")]
 public class AgUiChatController(
     ILogger<AgUiChatController> logger,
     IChatIntake chatIntake,
-    IHarmonicChatOrchestrator orchestrator,
-    ContextualChordService contextualChordService,
-    ILlmConcurrencyGate concurrencyGate) : ControllerBase
+    ContextualChordService contextualChordService) : ControllerBase
 {
     /// <summary>
     ///     Returns all registered orchestrator skills with their name and description.
@@ -53,17 +42,10 @@ public class AgUiChatController(
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> AgUiJson([FromBody] RunAgentInput input, CancellationToken cancellationToken)
     {
-        var userMessage = input.Messages
-            .LastOrDefault(m => m.Role == "user")?.Content?.Trim();
+        var (userMessage, history) = SplitCurrentTurn(input.Messages);
 
         if (string.IsNullOrWhiteSpace(userMessage))
             return BadRequest("No user message found in the request.");
-
-        var history = input.Messages
-            .Where(m => m.Content is not null)
-            .Select(m => new GA.Business.Core.Orchestration.Models.ConversationTurn(
-                m.Role, m.Content!, DateTimeOffset.UtcNow))
-            .ToList();
 
         // Phase C P1 (task #107 INFO-003) — server-issued cookie is the SessionId
         // source. ThreadId is a client-controlled AG-UI state primitive, NOT a
@@ -79,10 +61,10 @@ public class AgUiChatController(
         return result.Match<IActionResult>(
             response => Ok(new
             {
-                answer      = response.NaturalLanguageAnswer,
-                routing     = response.Routing,
-                candidates  = response.Candidates,
-                filters     = response.QueryFilters,
+                answer = response.NaturalLanguageAnswer,
+                routing = response.Routing,
+                candidates = response.Candidates,
+                filters = response.QueryFilters,
                 progression = response.Progression,
             }),
             error => error switch
@@ -105,8 +87,7 @@ public class AgUiChatController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task AgUiStream([FromBody] RunAgentInput input, CancellationToken cancellationToken)
     {
-        var userMessage = input.Messages
-            .LastOrDefault(m => m.Role == "user")?.Content?.Trim();
+        var (userMessage, history) = SplitCurrentTurn(input.Messages);
 
         if (string.IsNullOrWhiteSpace(userMessage))
         {
@@ -125,59 +106,60 @@ public class AgUiChatController(
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
 
         Response.StatusCode = StatusCodes.Status200OK;
-        Response.Headers.Append("Content-Type",       "text/event-stream");
-        Response.Headers.Append("Cache-Control",      "no-cache");
-        Response.Headers.Append("X-Accel-Buffering",  "no");
+        Response.Headers.Append("Content-Type", "text/event-stream");
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("X-Accel-Buffering", "no");
 
         await Response.StartAsync(cancellationToken);
 
-        var writer   = new AgUiEventWriter(Response);
+        var writer = new AgUiEventWriter(Response);
         var threadId = input.ThreadId;     // AG-UI client-side state primitive
-        var runId    = AgUiEventWriter.NewRunId();
-        var msgId    = $"msg_{runId[..8]}";
-
-        if (!await concurrencyGate.TryEnterAsync(cancellationToken))
-        {
-            await writer.WriteRunErrorAsync("Service is busy. Please try again.", "SERVICE_BUSY", cancellationToken);
-            return;
-        }
+        var runId = AgUiEventWriter.NewRunId();
+        var msgId = $"msg_{runId[..8]}";
 
         try
         {
-            // ── 1. RUN_STARTED ─────────────────────────────────────────────────
-            await writer.WriteRunStartedAsync(threadId, runId, cancellationToken);
-
-            // ── 2. Initial STATE_SNAPSHOT (empty domain state) ─────────────────
-            await writer.WriteStateSnapshotAsync(new
+            var started = false;
+            async Task StartTextAsync()
             {
-                key            = (string?)null,
-                mode           = (string?)null,
-                chords         = Array.Empty<object>(),
-                candidates     = Array.Empty<object>(),
-                progression    = Array.Empty<string>(),
-                analysisPhase  = "idle",
-                lastError      = (string?)null,
-            }, cancellationToken);
+                if (started) return;
+                await writer.WriteRunStartedAsync(threadId, runId, cancellationToken);
+                await writer.WriteStateSnapshotAsync(new
+                {
+                    key = (string?)null,
+                    mode = (string?)null,
+                    chords = Array.Empty<object>(),
+                    candidates = Array.Empty<object>(),
+                    progression = Array.Empty<string>(),
+                    analysisPhase = "idle",
+                    lastError = (string?)null,
+                }, cancellationToken);
+                await writer.WriteTextStartAsync(msgId, cancellationToken);
+                started = true;
+            }
 
-            // ── 3. Invoke orchestrator with true token streaming ────────────────
-            // INFO-003: use the server-issued cookie session ID for memory
-            // partitioning, NOT the client-controlled threadId. ThreadId is
-            // the AG-UI protocol's notion of "which conversation thread" for
-            // event correlation; it MUST NOT be used as a server-side memory
-            // partition key — that would be a session-fixation vulnerability
-            // identical in shape to VULN-001 (PR #163 audit, closed for the
-            // /api/chatbot surface). Phase C P1 (task #107) extends that fix
-            // to AG-UI.
-            var chatRequest = new OrchestratorChatRequest(userMessage, sessionId);
-
-            // ── 4. Stream text tokens, emit STEP_STARTED after streaming completes
-            await writer.WriteTextStartAsync(msgId, cancellationToken);
-
-            var response = await orchestrator.AnswerStreamingAsync(
-                chatRequest,
-                async token => await writer.WriteTextChunkAsync(msgId, token, cancellationToken),
+            var result = await chatIntake.IntakeStreamingAsync(
+                new ChatIntakeRequest(userMessage, sessionId, history),
+                async token =>
+                {
+                    await StartTextAsync();
+                    await writer.WriteTextChunkAsync(msgId, token, cancellationToken);
+                },
                 cancellationToken);
+            if (result.IsFailure)
+            {
+                var (message, code) = result.GetErrorOrThrow() switch
+                {
+                    ChatIntakeError.Busy => ("Service is busy. Please try again.", "SERVICE_BUSY"),
+                    ChatIntakeError.Validation validation => (validation.Reason, "INVALID_REQUEST"),
+                    _ => ("Failed to process message. Please try again.", "INTERNAL_ERROR")
+                };
+                await writer.WriteRunErrorAsync(message, code, cancellationToken);
+                return;
+            }
 
+            var response = result.GetValueOrThrow();
+            await StartTextAsync();
             await writer.WriteTextEndAsync(msgId, cancellationToken);
 
             var routing = response.Routing ?? new AgentRoutingMetadata("direct", 0f, "none");
@@ -186,9 +168,9 @@ public class AgUiChatController(
             await writer.WriteStepStartedAsync(routing.AgentId, runId, cancellationToken);
 
             // ── 6. Domain CUSTOM events ─────────────────────────────────────────
-            var filters       = response.QueryFilters;
-            var finalKey      = filters?.Key;
-            var finalMode     = (string?)null;
+            var filters = response.QueryFilters;
+            var finalKey = filters?.Key;
+            var finalMode = (string?)null;
 
             if (finalKey is not null)
             {
@@ -232,10 +214,29 @@ public class AgUiChatController(
             logger.LogError(ex, "Error in AG-UI stream for run {RunId}", runId);
             await writer.WriteRunErrorAsync("Failed to process message. Please try again.", "INTERNAL_ERROR", cancellationToken);
         }
-        finally
+    }
+
+    // The last user message is the current turn. History carries only the other nonblank turns,
+    // because the orchestrator treats ChatRequest.History as prior context (GaChatbot.Api parity).
+    private static (string? Message, List<ConversationTurn> History) SplitCurrentTurn(IReadOnlyList<AgUiMessage> messages)
+    {
+        var currentIndex = -1;
+        for (var i = messages.Count - 1; i >= 0; i--)
         {
-            concurrencyGate.Release();
+            if (messages[i].Role == "user")
+            {
+                currentIndex = i;
+                break;
+            }
         }
+
+        List<ConversationTurn> history =
+        [
+            .. messages
+                .Where((message, index) => index != currentIndex && !string.IsNullOrWhiteSpace(message.Content))
+                .Select(message => new ConversationTurn(message.Role, message.Content!, DateTimeOffset.UtcNow))
+        ];
+        return (currentIndex < 0 ? null : messages[currentIndex].Content?.Trim(), history);
     }
 }
 

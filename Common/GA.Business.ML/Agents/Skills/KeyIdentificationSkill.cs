@@ -1,6 +1,7 @@
 namespace GA.Business.ML.Agents.Skills;
 
 using System.Text;
+using GA.Domain.Services.Tonal;
 using Microsoft.Extensions.AI;
 
 /// <summary>
@@ -56,7 +57,8 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
                               "Please write them as standard chord names, e.g. \"Am F C G\".",
                 Confidence  = 0.3f,
                 Evidence    = [],
-                Assumptions = ["No parseable chord symbols found"]
+                Assumptions = ["No parseable chord symbols found"],
+                Declined    = chords.Count == 0
             };
 
         var topScore      = candidates[0].MatchCount;
