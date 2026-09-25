@@ -3,6 +3,7 @@ namespace GA.Domain.Core.Tests.Instruments;
 using System;
 using GA.Domain.Core.Instruments;
 using GA.Domain.Core.Instruments.Primitives;
+using GA.Domain.Core.Primitives.Notes;
 using NUnit.Framework;
 
 /// <summary>
@@ -37,6 +38,25 @@ public class TuningTests
             Assert.That(high.PitchClass.Value, Is.EqualTo(4));
             Assert.That(low.PitchClass.Value, Is.EqualTo(4));
             Assert.That(high > low, Is.True, "String 1 should sound higher than string 6");
+        });
+    }
+
+    // A tuning is written from one end of the neck to the other, usually from the bass side. A re-entrant
+    // string (the 5-string banjo's short drone, the ukulele's high G) sits at one end but is not the lowest
+    // pitch, so the first-vs-last pitch comparison alone can pick the wrong end.
+    [TestCase("G4 D3 G3 B3 D4", "D4", "G4")] // 5-string banjo, open G: string 5 is the high drone
+    [TestCase("G4 C3 G3 B3 D4", "D4", "G4")] // 5-string banjo, C tuning
+    [TestCase("G4 C4 E4 A4", "A4", "G4")] // re-entrant ukulele
+    [TestCase("E2 A2 D3 G3 B3 E4", "E4", "E2")] // written from the bass side
+    [TestCase("E4 B3 G3 D3 A2 E2", "E4", "E2")] // written from the treble side
+    public void Indexer_NumbersStringsFromTheTrebleSide(string written, string string1, string lastString)
+    {
+        var tuning = new Tuning(PitchCollection.Parse(written));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(tuning[(Str)1].ToString(), Is.EqualTo(string1));
+            Assert.That(tuning[(Str)tuning.StringCount].ToString(), Is.EqualTo(lastString));
         });
     }
 
