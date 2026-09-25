@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "103d790046c25e7ebc86e0548a6743a499be2ff8",
-    "generatedAt": "2026-09-25T03:44:30.017821+00:00",
+    "commitSha": "6eb363ed907c0de184a496b5482e65b752dda763",
+    "generatedAt": "2026-09-25T03:56:53.658028+00:00",
     "repoCount": 5,
     "totalPRs": 24
   },
@@ -118,6 +118,18 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
+          "createdAt": "2026-09-25T03:54:53Z",
+          "failingChecks": 0,
+          "headRef": "fix/vextab-course-findings",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 736,
+          "title": "fix: VexTab parser, chatbot vextab blocks and their rendering (VexTab course findings)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/736"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
           "createdAt": "2026-09-25T03:36:06Z",
           "failingChecks": 1,
           "headRef": "fix/caged-string-order",
@@ -126,18 +138,6 @@
           "number": 735,
           "title": "fix: CAGED shape detection reads the strings in the order voicings store them",
           "url": "https://github.com/GuitarAlchemist/ga/pull/735"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-25T03:30:49Z",
-          "failingChecks": 1,
-          "headRef": "fix/course-theory-config",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 734,
-          "title": "fix: instruments config, re-entrant tunings, normal form, list converters (course findings)",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/734"
         },
         {
           "ageDays": 0,

@@ -18,8 +18,8 @@ _No open PRs._
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#736](https://github.com/GuitarAlchemist/ga/pull/736) | fix: VexTab parser, chatbot vextab blocks and their rendering (VexTab  | 0d | UNKNOWN | 0 | spareilleux |
 | [#735](https://github.com/GuitarAlchemist/ga/pull/735) | fix: CAGED shape detection reads the strings in the order voicings sto | 0d | UNKNOWN | 1 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/ga/pull/734) | fix: instruments config, re-entrant tunings, normal form, list convert | 0d | UNKNOWN | 1 | spareilleux |
 | [#732](https://github.com/GuitarAlchemist/ga/pull/732) | fix: barre detection, minimum fingers, difficulty label and unplayable | 0d | UNKNOWN | 1 | spareilleux |
 | [#728](https://github.com/GuitarAlchemist/ga/pull/728) | feat(ga-react-components): ComfyUI-style editor for IX pipelines (trac | 0d | UNKNOWN | 1 | spareilleux |
 | [#727](https://github.com/GuitarAlchemist/ga/pull/727) | fix(ci): pin the review workflow to the revision with the classifier f | 0d | UNKNOWN | 1 | spareilleux |
@@ -90,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-25T03:44:30.017821+00:00 UTC_
+_Generated: 2026-09-25T03:56:53.658028+00:00 UTC_
 
-_Commit: `103d790046c2`_
+_Commit: `6eb363ed907c`_
