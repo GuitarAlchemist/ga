@@ -1,6 +1,7 @@
 import React from "react";
 import { Note } from "./Note";
 import { NoteLabel } from "./NoteLabel";
+import { angleToCoordinates } from "../Common/geometryUtils";
 
 interface NoteGroupProps {
     index: number;
@@ -36,13 +37,16 @@ export const NoteGroup: React.FC<NoteGroupProps> = ({
                                                         labelRadius,
                                                         lineWidth
                                                     }) => {
+    // Same convention as Note and NoteLabel (0 degrees at the top), so the
+    // spoke ends on its dot.
+    const spokeEnd = angleToCoordinates(angle, radius, center, center);
     return (
         <>
             <line
                 x1={center}
                 y1={center}
-                x2={center + radius * Math.cos(angle * Math.PI / 180)}
-                y2={center + radius * Math.sin(angle * Math.PI / 180)}
+                x2={spokeEnd.x}
+                y2={spokeEnd.y}
                 stroke="#333"
                 strokeWidth={lineWidth}
             />
