@@ -47,6 +47,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN can't be one (GuitarAlchemist/Demerzel#902).
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
           fetch-depth: 50  # need recent commit dates for stale-plan detection
 
       - name: Assemble proposal (lightweight, no Claude runtime in CI)

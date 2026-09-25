@@ -127,6 +127,8 @@ jobs:
 
       - name: Commit report + source cache
         shell: bash
+        env:
+          RULESET_BYPASS_SSH_KEY: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -138,10 +140,23 @@ jobs:
           fi
 
           git commit -m "chore(research): deep-research-frugal report $(date -u +%Y-%m-%d) (${{ env.SLUG }}) [skip ci]"
+          # Push to main over the write deploy key, the ruleset's bypass actor; GITHUB_TOKEN
+          # can't be one (GuitarAlchemist/Demerzel#902). Set up for this push only:
+          # not at checkout, so the Claude step never holds the key; and claude-code-action
+          # leaves origin on its app token, revoked by the time this step runs.
+          # With the secret empty, push to origin exactly as before.
+          MAIN_REMOTE=origin
+          if [ -n "$RULESET_BYPASS_SSH_KEY" ]; then
+            (umask 077 && printf '%s\n' "$RULESET_BYPASS_SSH_KEY" > "$RUNNER_TEMP/bypass_key")
+            # github.com's ed25519 host key, as published by GET https://api.github.com/meta
+            echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/bypass_known_hosts"
+            export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/bypass_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/bypass_known_hosts"
+            MAIN_REMOTE="git@github.com:${GITHUB_REPOSITORY}.git"
+          fi
           for attempt in 1 2 3; do
-            if git push origin HEAD:main; then exit 0; fi
+            if git push "$MAIN_REMOTE" HEAD:main; then exit 0; fi
             echo "::warning::push failed (attempt ${attempt}); rebasing and retrying."
-            git pull --rebase origin main || true
+            git pull --rebase "$MAIN_REMOTE" main || true
           done
           echo "::error::Could not push the report after 3 attempts."
           exit 1
