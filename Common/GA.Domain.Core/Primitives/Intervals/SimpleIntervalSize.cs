@@ -180,7 +180,7 @@ public readonly record struct SimpleIntervalSize : IParsable<SimpleIntervalSize>
     #region IIntervalSize<IntervalSize> Members
 
     public static IReadOnlyCollection<SimpleIntervalSize> Items => ValueObjectUtils<SimpleIntervalSize>.Items;
-    public static IReadOnlyList<int> Values => ValueObjectUtils<SimpleIntervalSize>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<SimpleIntervalSize>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full simple interval size range.

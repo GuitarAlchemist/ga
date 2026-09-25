@@ -145,7 +145,7 @@ public readonly record struct PitchClass : IStaticValueObjectList<PitchClass>,
     /// <summary>
     ///     Gets all PitchClass values (automatically memoized).
     /// </summary>
-    public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClass>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<PitchClass>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full pitch class range.

@@ -212,7 +212,7 @@ public readonly record struct NaturalNote : IStaticValueObjectList<NaturalNote>,
     #region IStaticReadonlyCollection<NaturalNote> Members
 
     public static IReadOnlyCollection<NaturalNote> Items => GetItems();
-    public static IReadOnlyList<int> Values => ValueObjectUtils<NaturalNote>.Values;
+    public static IReadOnlyList<int> Values => ValueObjectUtils<NaturalNote>.ValuesList;
 
     /// <summary>
     ///     Gets the cached span representing the full natural note range.

@@ -179,14 +179,20 @@ public static class VoicingGenerator
 
         if (parallel)
         {
-            // Use channels for parallel processing with ordering preserved
+            // Windows are generated in parallel, and each producer also builds its voicings' diagrams and
+            // drops the duplicates inside its window, which is most of the work. The consumer then emits
+            // the windows in fret order, so the stream is exactly the sequential one: the same voicings in
+            // the same order on every run. It used to follow thread scheduling, and doing the diagrams on
+            // the single consumer made the parallel path slower than the sequential one.
             var channel = Channel.CreateUnbounded<(int WindowIndex, List<Voicing> Voicings)>(new()
             {
                 SingleReader = true,
                 SingleWriter = false
             });
 
-            // Producer: Generate voicings for each window in parallel
+            // Cancelled when the consumer stops early, so the producers do not generate every window
+            using var producerCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
             var producerTask = Task.Run(async () =>
             {
                 Exception? completionError = null;
@@ -197,7 +203,7 @@ public static class VoicingGenerator
                         new ParallelOptions
                         {
                             MaxDegreeOfParallelism = Environment.ProcessorCount,
-                            CancellationToken = cancellationToken
+                            CancellationToken = producerCancellation.Token
                         },
                         async (startFret, ct) =>
                         {
@@ -213,7 +219,17 @@ public static class VoicingGenerator
                                 minPlayedNotes,
                                 windowSize);
 
-                            await channel.Writer.WriteAsync((startFret, voicings), ct);
+                            var seenInWindow = new HashSet<string>(voicings.Count);
+                            var unique = new List<Voicing>(voicings.Count);
+                            foreach (var voicing in voicings)
+                            {
+                                if (seenInWindow.Add(voicing.Diagram))
+                                {
+                                    unique.Add(voicing);
+                                }
+                            }
+
+                            await channel.Writer.WriteAsync((startFret, unique), ct);
                         });
                 }
                 catch (Exception ex)
@@ -226,36 +242,33 @@ public static class VoicingGenerator
                 }
             });
 
-            // Consumer: Process results as they come in
-            // For true streaming we can't guarantee global order perfectly without buffering,
-            // but we can yield window-by-window if we want to stream out faster.
-            // However, to maintain the original contract of deduplication across windows,
-            // we really should just lock the HashSet or accept that dedupe might drift if we don't strictly order windows.
-            // But since windows overlap, strict ordering is better for the seenDiagrams logic.
-
-            // To fix "stalled" UI, we will process windows as they complete, but we must be careful with duplicate detection.
-            // The safest parallel way is to collect all, sort, then dedupe.
-            // BUT that blocks the UI until ALL valid voicings are generated (millions).
-
-            // ALTERNATIVE: Use a concurrent dictionary for seen diagrams and yield immediately.
-            // We lose strict fret-order, but indexing doesn't care about order.
-
-            var seenDiagrams = new ConcurrentDictionary<string, byte>();
-
-            // Just stream results as they are ready
-            await foreach (var result in channel.Reader.ReadAllAsync(cancellationToken))
+            try
             {
-                foreach (var voicing in result.Voicings)
+                var seenDiagrams = new HashSet<string>();
+                var pending = new Dictionary<int, List<Voicing>>();
+                var nextWindow = 0;
+
+                await foreach (var result in channel.Reader.ReadAllAsync(cancellationToken))
                 {
-                    var diagram = voicing.Diagram;
-                    if (seenDiagrams.TryAdd(diagram, 0))
+                    pending.Add(result.WindowIndex, result.Voicings);
+                    while (pending.Remove(nextWindow, out var window))
                     {
-                        yield return voicing;
+                        nextWindow++;
+                        foreach (var voicing in window)
+                        {
+                            if (seenDiagrams.Add(voicing.Diagram))
+                            {
+                                yield return voicing;
+                            }
+                        }
                     }
                 }
             }
-
-            await producerTask;
+            finally
+            {
+                await producerCancellation.CancelAsync();
+                await producerTask;
+            }
         }
         else
         {
