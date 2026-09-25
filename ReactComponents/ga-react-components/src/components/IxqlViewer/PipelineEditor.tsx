@@ -124,6 +124,9 @@ export const PipelineEditor: React.FC = () => {
     const seq = ++validationSeq.current;
     setReport(null);
     setValidateError(null);
+    // A result shown next to an edited graph would be misattributed; `run`
+    // also drops any response that finishes after this change.
+    setRunOutput(null);
     if (spec.steps.length === 0) return;
     const handle = setTimeout(() => {
       postJson('/ix-pipeline/validate', spec)
@@ -218,11 +221,18 @@ export const PipelineEditor: React.FC = () => {
   }, []);
 
   const run = useCallback(() => {
+    // Bound to the spec validation generation: an edit bumps validationSeq,
+    // and a run started before it no longer publishes its output.
+    const seq = validationSeq.current;
     setRunning(true);
     setRunOutput(null);
     postJson('/ix-pipeline/run', spec)
-      .then((r) => setRunOutput(r.ok ? JSON.stringify(r.result, null, 2) : `Error: ${r.error}`))
-      .catch((e: unknown) => setRunOutput(`Error: ${String(e)}`))
+      .then((r) => {
+        if (seq === validationSeq.current) setRunOutput(r.ok ? JSON.stringify(r.result, null, 2) : `Error: ${r.error}`);
+      })
+      .catch((e: unknown) => {
+        if (seq === validationSeq.current) setRunOutput(`Error: ${String(e)}`);
+      })
       .finally(() => setRunning(false));
   }, [spec]);
 
