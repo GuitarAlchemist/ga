@@ -215,6 +215,9 @@ module VexTabTypes =
         | BarLine of BarLineType
         | TupletMarker of Tuplet
         | AnnotationItem of Annotation
+        /// A duration written in the middle of a notes line (`notes :q 5/3 :8 7/3`);
+        /// it applies to the notes that follow it.
+        | DurationItem of Duration
 
     // ============================================================================
     // TEXT LINES
@@ -276,6 +279,17 @@ module VexTabTypes =
     // ============================================================================
     // HELPER FUNCTIONS
     // ============================================================================
+
+    /// A tabstave with no option set: what `tabstave` alone means.
+    /// The parser starts from this, so that parsing then generating doesn't add options
+    /// the source didn't have (VexTab's own default is notation=false, tablature=true).
+    let emptyTabstave =
+        { Notation = None
+          Tablature = None
+          Clef = None
+          Key = None
+          Time = None
+          Tuning = None }
 
     /// Create a default tabstave with common settings
     let defaultTabstave =
