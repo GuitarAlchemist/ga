@@ -115,6 +115,23 @@ public class KeyIdentificationServiceTests
         Assert.That(results[0].Key, Is.EqualTo("F# minor"));
     }
 
+    // Relative keys tie on every progression that stays diatonic; the first chord's key wins,
+    // not the alphabet.
+    [TestCase(new[] { "Am", "F", "C", "G" }, "A minor")]
+    [TestCase(new[] { "C", "G", "Am", "F" }, "C major")]
+    [TestCase(new[] { "Em", "C", "G", "D" }, "E minor")]
+    [TestCase(new[] { "G", "D", "Em", "C" }, "G major")]
+    [TestCase(new[] { "Dm7", "G7" }, "C major")] // neither tied key opens it: the major one
+    public void Identify_RelativeKeyTie_GoesToTheKeyOfTheFirstChord(string[] chords, string expected) =>
+        Assert.That(KeyIdentificationService.Identify(chords)[0].Key, Is.EqualTo(expected));
+
+    [TestCase("A minor", "E7", true)]
+    [TestCase("A minor", "E", true)]
+    [TestCase("A minor", "Em", true)]
+    [TestCase("C major", "E7", false)]
+    public void IsChordDiatonic_HarmonicMinorDominant_BelongsToTheMinorKey(string key, string chord, bool expected) =>
+        Assert.That(KeyIdentificationService.IsChordDiatonic(key, chord), Is.EqualTo(expected));
+
     // ── Extensions stripped correctly ─────────────────────────────────────────
 
     [Test]

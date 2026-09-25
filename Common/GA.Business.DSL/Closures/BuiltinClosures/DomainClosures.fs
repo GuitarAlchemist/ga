@@ -348,10 +348,29 @@ let private scoreKey rootPc (offsets: int[]) (chordPcs: int list) =
     let diatonic = offsets |> Array.map (fun o -> (rootPc + o) % 12) |> Set.ofArray
     chordPcs |> List.filter diatonic.Contains |> List.length
 
-let private romanFor rootPc (offsets: int[]) (romans: string[]) chordPc =
+let private romanDigits = [| "I"; "II"; "III"; "IV"; "V"; "VI"; "VII" |]
+
+/// Roman numeral of a chord in a key: the degree comes from the scale, the case and sign from the
+/// chord itself, so E7 in A minor is V (harmonic minor), not the natural-minor v.
+let private romanFor rootPc (offsets: int[]) (ast: ChordAst) =
+    let chordPc = (noteToSemitone ast.Root + accToSemitone ast.RootAccidental + 120) % 12
+    // Bm7b5 parses as a minor quality with a flat fifth; the -7b5 spelling as one extension.
+    let halfDiminished =
+        ast.Components
+        |> List.exists (function
+            | Extension "m7b5" -> true
+            | Alteration (Flat, "5") -> ast.Quality = Some Minor
+            | _ -> false)
     offsets
     |> Array.tryFindIndex (fun o -> (rootPc + o) % 12 = chordPc)
-    |> Option.map (fun i -> romans.[i])
+    |> Option.map (fun i ->
+        let digits = romanDigits.[i]
+        match ast.Quality with
+        | _ when halfDiminished -> digits.ToLowerInvariant() + "ø"
+        | Some Minor -> digits.ToLowerInvariant()
+        | Some Diminished -> digits.ToLowerInvariant() + "°"
+        | Some Augmented -> digits + "+"
+        | _ -> digits)
     |> Option.defaultValue "?"
 
 /// Infer the key of a chord progression and label each chord with a Roman numeral.
@@ -376,12 +395,10 @@ let analyzeProgression : GaClosure =
                       |> Array.map (fun sym ->
                           match svc.Parse sym with
                           | Result.Error _ -> None
-                          | Result.Ok ast  ->
-                              let pc = (noteToSemitone ast.Root + accToSemitone ast.RootAccidental + 120) % 12
-                              Some (sym, pc))
-                  let validPcs =
+                          | Result.Ok ast  -> Some (sym, ast))
+                  let valid =
                       parsed |> Array.choose (Option.map snd) |> Array.toList
-                  if validPcs.IsEmpty then
+                  if valid.IsEmpty then
                       return Error (GaError.DomainError "Could not parse any chord symbols")
                   else
                       // Identify candidate keys via KeyIdentificationService
@@ -389,17 +406,8 @@ let analyzeProgression : GaClosure =
                       if candidates.Count = 0 then
                           return Error (GaError.DomainError "Could not identify key for the given chords")
                       else
-                          let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
-                          let bestCandidate =
-                              candidates
-                              |> Seq.sortByDescending (fun cand ->
-                                  let keyRoot = cand.Key.Split(' ').[0]
-                                  let rootStr, acc = splitNoteAcc keyRoot
-                                  let keyRootPc = (noteToSemitone rootStr + accToSemitone acc + 12) % 12
-                                  let firstPcMatch = if (keyRootPc + 12) % 12 = firstPc then 1 else 0
-                                  let isMajor = if cand.Key.EndsWith("major", System.StringComparison.OrdinalIgnoreCase) then 1 else 0
-                                  cand.MatchCount, firstPcMatch, isMajor)
-                              |> Seq.head
+                          // Identify already weighs the cadence and breaks ties (first chord, then major).
+                          let bestCandidate = candidates.[0]
 
                           let keyParts = bestCandidate.Key.Split(' ')
                           let keyName = keyParts.[0]
@@ -409,7 +417,6 @@ let analyzeProgression : GaClosure =
                           let keyRootPc = (noteToSemitone keyRootStr + accToSemitone keyAcc + 12) % 12
 
                           let offsets = if scaleName = "major" then majorOffsets else minorOffsets
-                          let romans  = if scaleName = "major" then majorRomans  else minorRomans
 
                           let matches =
                               symbols
@@ -424,8 +431,8 @@ let analyzeProgression : GaClosure =
                                   sprintf "%-6s" s) |> String.concat " "
                           let romLine =
                               parsed |> Array.map (fun p ->
-                                  let r = p |> Option.map (fun (_, pc) ->
-                                      romanFor keyRootPc offsets romans pc) |> Option.defaultValue "?"
+                                  let r = p |> Option.map (fun (_, ast) ->
+                                      romanFor keyRootPc offsets ast) |> Option.defaultValue "?"
                                   sprintf "%-6s" r) |> String.concat " "
                           let result =
                               sprintf "Key: %s %s  (confidence %s)\n%s\n%s"
@@ -733,17 +740,8 @@ let progressionCompletion : GaClosure =
                       if candidates.Count = 0 then
                           return Error (GaError.DomainError "Could not identify key for the given chords")
                       else
-                          let firstPc = validPcs |> List.tryHead |> Option.defaultValue 0
-                          let bestCandidate =
-                              candidates
-                              |> Seq.sortByDescending (fun cand ->
-                                  let keyRoot = cand.Key.Split(' ').[0]
-                                  let rootStr, acc = splitNoteAcc keyRoot
-                                  let keyRootPc = (noteToSemitone rootStr + accToSemitone acc + 12) % 12
-                                  let firstPcMatch = if (keyRootPc + 12) % 12 = firstPc then 1 else 0
-                                  let isMajor = if cand.Key.EndsWith("major", System.StringComparison.OrdinalIgnoreCase) then 1 else 0
-                                  cand.MatchCount, firstPcMatch, isMajor)
-                              |> Seq.head
+                          // Identify already weighs the cadence and breaks ties (first chord, then major).
+                          let bestCandidate = candidates.[0]
 
                           let keyParts = bestCandidate.Key.Split(' ')
                           let keyName = keyParts.[0]
