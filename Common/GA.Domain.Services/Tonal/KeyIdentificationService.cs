@@ -156,8 +156,9 @@ public static partial class KeyIdentificationService
 
     /// <summary>
     /// Scores all 30 major/minor keys using pitch-class arithmetic and returns candidates
-    /// with at least one diatonic match, sorted by descending match count plus cadence weight,
-    /// then by key name.
+    /// with at least one diatonic match, sorted by descending match count plus cadence weight.
+    /// Ties go to the key whose tonic triad opens the progression, then to the major key, then
+    /// to the key name.
     /// </summary>
     /// <remarks>
     ///     Pitch content alone cannot separate a key from its relative when a secondary dominant is
@@ -166,6 +167,9 @@ public static partial class KeyIdentificationService
     ///     dominant then tonic (an authentic cadence) adds two. A progression that merely stops on a
     ///     chord adds nothing, so relative keys stay tied and a half cadence does not promote the key
     ///     of its last chord.
+    ///     A tie is common: a key and its relative share every diatonic triad. It goes to the key
+    ///     whose tonic triad is the first chord (<c>Am F C G</c> is A minor, <c>C G Am F</c> C major),
+    ///     then to the major key. Callers take this order as it is, so every tool names the same key.
     ///     <see cref="KeyCandidate.MatchCount" /> stays the plain diatonic count.
     /// </remarks>
     public static IReadOnlyList<KeyCandidate> Identify(IEnumerable<string> chordSymbols)
@@ -211,10 +215,15 @@ public static partial class KeyIdentificationService
                     RelativeKey: kd.RelativeName,
                     MatchCount: matchCount,
                     TotalChords: parsed.Count,
-                    DiatonicSet: kd.DiatonicSymbols), Cadence: CadenceWeight(kd, ordered));
+                    DiatonicSet: kd.DiatonicSymbols),
+                    Cadence: CadenceWeight(kd, ordered),
+                    OpensOnTonic: ordered[0].RootPc == kd.DiatonicTriads[0].RootPc
+                                  && ordered[0].Quality == kd.DiatonicTriads[0].Quality);
             })
             .Where(s => s.Candidate.MatchCount > 0)
             .OrderByDescending(s => s.Candidate.MatchCount + s.Cadence)
+            .ThenByDescending(s => s.OpensOnTonic)
+            .ThenByDescending(s => s.Candidate.Key.EndsWith("major", StringComparison.OrdinalIgnoreCase))
             .ThenBy(s => s.Candidate.Key)
             .Select(s => s.Candidate)];
     }
@@ -248,6 +257,15 @@ public static partial class KeyIdentificationService
         if (!parsed.HasValue) return false;
 
         var (rootPc, quality) = parsed.Value;
+
+        // In a minor key the dominant is conventionally major (harmonic minor): E and E7 belong to
+        // A minor when a progression is labelled. Identify does not count them, so that a V7/vi in
+        // a major key does not pull toward the relative minor; see CadenceWeight.
+        var isMinorKey = keyData.Name.Contains("minor", StringComparison.OrdinalIgnoreCase);
+        if (isMinorKey && rootPc == keyData.DiatonicTriads[4].RootPc
+                       && quality is ChordQuality.Major or ChordQuality.Dominant)
+            return true;
+
         return keyData.DiatonicTriads.Any(t =>
         {
             if (t.RootPc != rootPc) return false;

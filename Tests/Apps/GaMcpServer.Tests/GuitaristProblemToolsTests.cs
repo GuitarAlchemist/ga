@@ -65,6 +65,51 @@ public sealed class GuitaristProblemToolsTests
         }
     }
 
+    // A key and its relative share every chord, so the order of these ties used to be alphabetical
+    // (Am F C G gave A minor, G D Em C gave E minor) while the tool description promised C major.
+    [TestCase(new[] { "Am", "F", "C", "G" }, "A minor")]
+    [TestCase(new[] { "C", "G", "Am", "F" }, "C major")]
+    [TestCase(new[] { "G", "D", "Em", "C" }, "G major")]
+    // V7 -> i decides it, although D opens the progression: the tools used to re-sort by count
+    // and pick D major.
+    [TestCase(new[] { "D", "C#7", "F#m" }, "F# minor")]
+    public async Task KeyTools_AgreeOnTheKey(string[] chords, string expected)
+    {
+        using var doc = JsonDocument.Parse(GaKeyFromProgressionTool.GaKeyFromProgression(chords));
+        var analysis = await GaDslTool.GaAnalyzeProgression(string.Join(' ', chords));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(doc.RootElement.GetProperty("bestGuess").GetString(), Is.EqualTo(expected));
+            Assert.That(analysis, Does.StartWith($"Key: {expected} "));
+        });
+    }
+
+    // E7 in A minor is the harmonic-minor dominant: numbered V, from the chord, and counted in the key.
+    [Test]
+    public async Task GaAnalyzeProgression_MinorKeyDominant_IsVAndInTheKey()
+    {
+        var analysis = await GaDslTool.GaAnalyzeProgression("Am Dm E7 Am");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(lines[0], Does.StartWith("Key: A minor").And.Contain("(confidence 4/4)"));
+            Assert.That(lines[2].Split(' ', StringSplitOptions.RemoveEmptyEntries),
+                Is.EqualTo(new[] { "i", "iv", "V", "i" }));
+        });
+    }
+
+    [Test]
+    public async Task GaAnalyzeProgression_NumeralsFollowTheChordQuality()
+    {
+        var analysis = await GaDslTool.GaAnalyzeProgression("C Bdim Bm7b5 Caug");
+        var lines = analysis.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        Assert.That(lines[2].Split(' ', StringSplitOptions.RemoveEmptyEntries),
+            Is.EqualTo(new[] { "I", "vii°", "viiø", "I+" }));
+    }
+
     [Test]
     public async Task GaAnalyzeProgression_G7_C_LabelsG7AsV_And_C_AsI()
     {

@@ -165,7 +165,8 @@ public static class GaKeyFromProgressionTool
         "Detect the musical key from a chord progression. " +
         "Pass the chords as an array (e.g. [\"Am\",\"F\",\"C\",\"G\"]). " +
         "Returns the top 3 key candidates with confidence scores and matching chord lists. " +
-        "Example: Am F C G → best guess C major (4/4 chords diatonic, 100%).")]
+        "Relative keys share their chords, so a tie goes to the key whose tonic opens the progression. " +
+        "Example: C G Am F → best guess C major (4/4 chords diatonic, 100%); Am F C G → A minor.")]
     public static string GaKeyFromProgression(
         [Description("Array of chord symbols in the progression, e.g. [\"Am\",\"F\",\"C\",\"G\"]")]
         string[] chords)
@@ -177,15 +178,11 @@ public static class GaKeyFromProgressionTool
         if (parsedCandidates.Count == 0)
             return JsonSerializer.Serialize(new { error = "Could not parse or identify any candidate keys." });
 
-        var firstChordPc = GuitaristHelpers.ChordRootPc(chords[0]);
-
         var candidates = parsedCandidates
             .Select(c =>
             {
                 var parts = c.Key.Split(' ');
-                var keyName = parts[0];
                 var mode = parts[1];
-                var keyRootPc = GuitaristHelpers.ChordRootPc(keyName);
 
                 var matchingChords = chords.Where(chord => KeyIdentificationService.IsChordDiatonic(c.Key, chord)).ToList();
                 var score = matchingChords.Count;
@@ -195,14 +192,11 @@ public static class GaKeyFromProgressionTool
                     key = c.Key,
                     mode,
                     score,
-                    keyRootPc,
                     matchingChords
                 };
             })
+            // Keep Identify's order: it weighs the cadence and breaks ties the same way for every caller.
             .Where(x => x.score > 0)
-            .OrderByDescending(x => x.score)
-            .ThenByDescending(x => x.keyRootPc == firstChordPc ? 1 : 0)
-            .ThenByDescending(x => x.mode.Equals("major", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
             .Select(x => new
             {
                 key = x.key,
