@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpec, defaultArgsText, issuesByStep, nextStepId, type ValidationReport } from './pipelineSpec';
+import { buildSpec, defaultArgsText, issuesByStep, nextStepId, typeErrors, type ValidationReport } from './pipelineSpec';
 
 describe('buildSpec', () => {
   it('turns edges into depends_on and parses arguments (shape from docs/pipelines/dag-execution.md)', () => {
@@ -78,5 +78,38 @@ describe('helpers', () => {
     expect(byStep.get('a')?.errors).toHaveLength(1);
     expect(byStep.get('b')?.errors[0]).toContain('unknown tool');
     expect(byStep.get('')?.errors).toEqual(['no steps']);
+  });
+});
+
+describe('argument types', () => {
+  // ix_stats as ix_node_catalog declares it.
+  const stats = { data: { type: 'array', items: { type: 'number' } } };
+  const build = (argsText: string) =>
+    buildSpec([{ id: 's1', tool: 'ix_stats', argsText }], [], { ix_stats: ['data'] }, { ix_stats: stats }).argErrors;
+
+  it('accepts a list of numbers', () => {
+    expect(build('{"data":[1,2,3]}')).toEqual({});
+  });
+
+  it('flags an item of the wrong type, which ix_pipeline_validate lets through', () => {
+    expect(build('{"data":["not-a-number"]}').s1).toBe('data[0]: expected number');
+  });
+
+  it('flags a value of the wrong type', () => {
+    expect(build('{"data":"1,2,3"}').s1).toBe('data: expected array');
+  });
+
+  it('leaves $step.field references to run time', () => {
+    expect(build('{"data":"$s0.values"}')).toEqual({});
+    expect(typeErrors({ data: [1, '$s0.mean'] }, stats)).toEqual([]);
+  });
+
+  it('reports the null placeholder as unfilled, not as mistyped', () => {
+    expect(build('{"data":null}').s1).toContain('still null');
+  });
+
+  it('accepts types it does not model and union types', () => {
+    expect(typeErrors({ a: 1, b: 'x' }, { a: { type: ['number', 'null'] }, b: { type: 'custom' } })).toEqual([]);
+    expect(typeErrors({ n: 1.5 }, { n: { type: 'integer' } })).toEqual(['n: expected integer']);
   });
 });

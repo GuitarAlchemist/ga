@@ -6,8 +6,15 @@ export interface CatalogNode {
   name: string;
   description: string;
   required_inputs: string[];
-  input_schema?: { properties?: Record<string, { type?: string; description?: string }> };
+  input_schema?: { properties?: Record<string, SchemaProperty> };
   approval?: { tier?: string; effect?: string };
+}
+
+/** The part of a JSON Schema property the editor checks. */
+export interface SchemaProperty {
+  type?: string | string[];
+  description?: string;
+  items?: { type?: string | string[] };
 }
 
 /** A step as edited: arguments stay raw JSON text until the spec is built. */
@@ -67,6 +74,7 @@ export function buildSpec(
   steps: EditorStep[],
   edges: EditorEdge[],
   requiredByTool: Record<string, string[]> = {},
+  propertiesByTool: Record<string, Record<string, SchemaProperty> | undefined> = {},
 ): { spec: PipelineSpec; argErrors: Record<string, string> } {
   const argErrors: Record<string, string> = {};
   const specSteps = steps.map((step) => {
@@ -76,7 +84,9 @@ export function buildSpec(
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         args = parsed as Record<string, unknown>;
         const unfilled = (requiredByTool[step.tool] ?? []).filter((k) => args[k] === null);
+        const mistyped = typeErrors(args, propertiesByTool[step.tool] ?? {});
         if (unfilled.length > 0) argErrors[step.id] = `required input(s) still null: ${unfilled.join(', ')}`;
+        else if (mistyped.length > 0) argErrors[step.id] = mistyped.join('; ');
       } else {
         argErrors[step.id] = 'arguments must be a JSON object';
       }
@@ -89,6 +99,47 @@ export function buildSpec(
       : { id: step.id, tool: step.tool, arguments: args };
   });
   return { spec: { steps: specSteps }, argErrors };
+}
+
+function matchesType(value: unknown, type: string | string[] | undefined): boolean {
+  if (type === undefined) return true;
+  const types = Array.isArray(type) ? type : [type];
+  return types.some((t) => {
+    switch (t) {
+      case 'number': return typeof value === 'number';
+      case 'integer': return typeof value === 'number' && Number.isInteger(value);
+      case 'string': return typeof value === 'string';
+      case 'boolean': return typeof value === 'boolean';
+      case 'array': return Array.isArray(value);
+      case 'object': return value !== null && typeof value === 'object' && !Array.isArray(value);
+      case 'null': return value === null;
+      default: return true; // a type the editor does not model: leave it to IX
+    }
+  });
+}
+
+/** A `$step.field` reference is resolved at run time, so its type is unknown here. */
+const isReference = (v: unknown) => typeof v === 'string' && v.startsWith('$');
+
+/**
+ * Checks each supplied argument, and each item of an array argument, against
+ * the catalog's declared type. ix_pipeline_validate does not check argument
+ * types, so without this `{"data": ["x"]}` for a list of numbers reads as
+ * valid and fails only at run time. Nulls are the required-input check's job.
+ */
+export function typeErrors(args: Record<string, unknown>, properties: Record<string, SchemaProperty>): string[] {
+  const out: string[] = [];
+  for (const [key, value] of Object.entries(args)) {
+    const prop = properties[key];
+    if (!prop || value === null || isReference(value)) continue;
+    if (!matchesType(value, prop.type)) {
+      out.push(`${key}: expected ${[prop.type].flat().join(' | ')}`);
+    } else if (Array.isArray(value) && prop.items?.type !== undefined) {
+      const bad = value.findIndex((item) => !isReference(item) && !matchesType(item, prop.items?.type));
+      if (bad >= 0) out.push(`${key}[${bad}]: expected ${[prop.items.type].flat().join(' | ')}`);
+    }
+  }
+  return out;
 }
 
 /** Groups validation errors and warnings by step id; step-less ones go under ''. */

@@ -115,7 +115,18 @@ export const PipelineEditor: React.FC = () => {
     () => Object.fromEntries((catalog ?? []).map((n) => [n.name, n.required_inputs])),
     [catalog],
   );
-  const { spec, argErrors } = useMemo(() => buildSpec(steps, edges, requiredByTool), [steps, edges, requiredByTool]);
+  const propertiesByTool = useMemo(
+    () => Object.fromEntries((catalog ?? []).map((n) => [n.name, n.input_schema?.properties])),
+    [catalog],
+  );
+  const { spec, argErrors } = useMemo(
+    () => buildSpec(steps, edges, requiredByTool, propertiesByTool),
+    [steps, edges, requiredByTool, propertiesByTool],
+  );
+  // One status for the header: the graph can be valid for IX while a step's
+  // own arguments are not, and Run already requires both.
+  const locallyValid = Object.keys(argErrors).length === 0;
+  const pipelineValid = report?.valid === true && locallyValid;
 
   // Live validation, debounced. Every spec change invalidates the previous
   // report at once (so Run cannot fire on a spec that was never validated),
@@ -239,7 +250,7 @@ export const PipelineEditor: React.FC = () => {
   const selected = steps.find((s) => s.id === selectedId) ?? null;
   const selectedNode = selected ? catalog?.find((n) => n.name === selected.tool) : undefined;
   const filtered = (catalog ?? []).filter((n) => n.name.toLowerCase().includes(filter.toLowerCase()));
-  const canRun = steps.length > 0 && report?.valid === true && Object.keys(argErrors).length === 0 && !running;
+  const canRun = steps.length > 0 && pipelineValid && !running;
   const globalIssues = issues.get('');
   const selectedErrors = selected
     ? [...(argErrors[selected.id] ? [argErrors[selected.id]] : []), ...(issues.get(selected.id)?.errors ?? [])]
@@ -321,8 +332,8 @@ export const PipelineEditor: React.FC = () => {
       <Box component="aside" sx={{ ...sidePanel, width: 340, borderLeft: 1, borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
           <Typography variant="subtitle2">Pipeline</Typography>
-          <Typography variant="caption" sx={{ color: report?.valid ? 'success.main' : 'text.secondary' }}>
-            {steps.length === 0 ? 'empty' : report ? (report.valid ? '✓ valid' : '✕ invalid') : 'validating…'}
+          <Typography variant="caption" sx={{ color: pipelineValid ? 'success.main' : 'text.secondary' }}>
+            {steps.length === 0 ? 'empty' : report || !locallyValid ? (pipelineValid ? '✓ valid' : '✕ invalid') : 'validating…'}
           </Typography>
           <Button variant="contained" size="small" onClick={run} disabled={!canRun} sx={{ ml: 'auto' }}>
             {running ? 'Running…' : 'Run'}
