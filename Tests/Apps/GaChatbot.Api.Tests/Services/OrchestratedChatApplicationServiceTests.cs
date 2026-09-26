@@ -194,7 +194,7 @@ public sealed class OrchestratedChatApplicationServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(result.NaturalLanguageAnswer, Does.Contain("```vextab"));
-            Assert.That(result.NaturalLanguageAnswer, Does.Contain("6/10 5/13 4/10"));
+            Assert.That(result.NaturalLanguageAnswer, Does.Contain("notes :w (10/6.13/5.10/4)"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("orchestration.route"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("agent.semantic_result"));
             Assert.That(result.Trace?.Steps.Select(step => step.Name), Does.Contain("notation.vextab"));
@@ -206,6 +206,11 @@ public sealed class OrchestratedChatApplicationServiceTests
         {
             Assert.That(notationStep.Attributes["notation.diagram.count"], Is.EqualTo(1));
             Assert.That(notationStep.Attributes["notation.vextab.added_count"], Is.EqualTo(1));
+            // The block the service added is VexTab that GA's parser reads.
+            Assert.That(notationStep.Attributes["notation.vextab.block_count"], Is.EqualTo(1));
+            Assert.That(notationStep.Attributes["notation.vextab.valid_count"], Is.EqualTo(1));
+            // The server draws nothing, so the trace names no renderer.
+            Assert.That(notationStep.Attributes, Does.Not.ContainKey("notation.renderer"));
         });
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { TextField, FormControlLabel, Checkbox, Box, Button } from '@mui/material';
 
 interface NoteSelectorProps {
@@ -12,10 +12,22 @@ const NotesSelector: React.FC<NoteSelectorProps> = ({ onNotesChange }) => {
     const [toggledNotes, setToggledNotes] = useState<string[]>([]);
     const [useTextInput, setUseTextInput] = useState(true);
 
+    const notes = useMemo(
+        () => useTextInput ? textNotes.split(' ').filter(note => allNotes.includes(note)) : toggledNotes,
+        [textNotes, toggledNotes, useTextInput]
+    );
+
+    // Report the notes when they change, not when the parent passes a new
+    // handler: a parent that re-renders with a fresh callback after storing
+    // the notes would otherwise re-run this effect and loop.
+    const onNotesChangeRef = useRef(onNotesChange);
+    useLayoutEffect(() => {
+        onNotesChangeRef.current = onNotesChange;
+    }, [onNotesChange]);
+
     useEffect(() => {
-        const notes = useTextInput ? textNotes.split(' ').filter(note => allNotes.includes(note)) : toggledNotes;
-        onNotesChange(notes);
-    }, [textNotes, toggledNotes, useTextInput, onNotesChange]);
+        onNotesChangeRef.current(notes);
+    }, [notes]);
 
     const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setTextNotes(event.target.value);

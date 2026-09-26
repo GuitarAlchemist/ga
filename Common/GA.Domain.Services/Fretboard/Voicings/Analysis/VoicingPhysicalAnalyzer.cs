@@ -175,8 +175,9 @@ public static class VoicingPhysicalAnalyzer
             fingerAssignment = "1:barre";
         }
 
-        // Check if thumb is likely required (low bass note on string 6 with spread voicing)
-        var requiresThumb = playability.HandStretch >= 5 && layout.FretPositions[0] > 0;
+        // Check if thumb is likely required (low bass note on string 6 with spread voicing).
+        // FretPositions holds string 1 (high E) first, so string 6 is the last entry.
+        var requiresThumb = playability.HandStretch >= 5 && layout.FretPositions[^1] > 0;
 
         // Check for physically impossible voicings
         var isImpossible = playability.HandStretch > 6 || playability.MinimumFingers > 4;
@@ -289,8 +290,11 @@ public static class VoicingPhysicalAnalyzer
 
     private static string? DetectCagedShape(PhysicalLayout layout)
     {
-        var frets = layout.FretPositions;
-        if (frets.Length != 6) return null;
+        if (layout.FretPositions.Length != 6) return null;
+
+        // FretPositions holds string 1 (high E) first, as Voicing.Positions does; the shapes below are
+        // written the way guitarists read them, string 6 (low E) first, so index 0 is string 6.
+        var frets = layout.FretPositions.Reverse().ToArray();
 
         // Basic E-Shape detection (Root on 6th string)
         // Pattern relative to barre/nut: 0-2-2-1-0-0
@@ -299,7 +303,6 @@ public static class VoicingPhysicalAnalyzer
         // Find the "base" fret (min played fret, treated as 0 or barre)
         // For E-shape, base is the fret on string 6 (Index 0).
         var baseFret = frets[0];
-        if (baseFret < 0) return null; // Root must be on string 6
 
         // Check relative pattern: 2, 2, 1, 0, 0
         // S6: base
@@ -312,8 +315,9 @@ public static class VoicingPhysicalAnalyzer
         // Allow muted high strings for "power chord" variations or variations
         // But strictly, full E-shape:
 
-        var match = true;
-        if (frets[1] != baseFret + 2) match = false;
+        // Root must be on string 6; when it is muted, the A and C shapes below may still match
+        var match = baseFret >= 0;
+        if (match && frets[1] != baseFret + 2) match = false;
         if (match && frets[2] != baseFret + 2) match = false;
         if (match && frets[3] != baseFret + 1) match = false;
 

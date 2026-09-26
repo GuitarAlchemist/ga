@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Box } from '@mui/material';
 import NotesSelector from "./NotesSelector";
 import {BraceletNotation, KeyboardDiagram} from "./index.ts";
@@ -9,28 +9,18 @@ interface MusicNotationDisplayProps {
 
 const ScaleSelector: React.FC<MusicNotationDisplayProps> = ({ onNotesChange }) => {
     const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
-    const [scale, setScale] = useState(0);
+    // Derived from the notes, so it is computed rather than stored.
+    const scale = useMemo(() => calculateScale(selectedNotes), [selectedNotes]);
+
+    // Report when the notes change, not when the parent passes a new handler.
+    const onNotesChangeRef = useRef(onNotesChange);
+    useLayoutEffect(() => {
+        onNotesChangeRef.current = onNotesChange;
+    }, [onNotesChange]);
 
     useEffect(() => {
-        onNotesChange(selectedNotes);
-    }, [selectedNotes, onNotesChange]);
-
-    const handleNotesChange = (notes: string[]) => {
-        setSelectedNotes(notes);
-        setScale(calculateScale(notes));
-    };
-
-    const calculateScale = (notes: string[]): number => {
-        const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        let scaleNumber = 0;
-        notes.forEach(note => {
-            const index = allNotes.indexOf(note);
-            if (index !== -1) {
-                scaleNumber |= (1 << index);
-            }
-        });
-        return scaleNumber;
-    };
+        onNotesChangeRef.current(selectedNotes);
+    }, [selectedNotes]);
 
     // Unused function - kept for future use
     // const generateVexTabNotation = (notes: string[]): string => {
@@ -39,7 +29,7 @@ const ScaleSelector: React.FC<MusicNotationDisplayProps> = ({ onNotesChange }) =
 
     return (
         <Box>
-            <NotesSelector onNotesChange={handleNotesChange} />
+            <NotesSelector onNotesChange={setSelectedNotes} />
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
                 <Box>
@@ -52,5 +42,17 @@ const ScaleSelector: React.FC<MusicNotationDisplayProps> = ({ onNotesChange }) =
         </Box>
     );
 };
+
+function calculateScale(notes: string[]): number {
+    const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    let scaleNumber = 0;
+    notes.forEach(note => {
+        const index = allNotes.indexOf(note);
+        if (index !== -1) {
+            scaleNumber |= (1 << index);
+        }
+    });
+    return scaleNumber;
+}
 
 export default ScaleSelector;

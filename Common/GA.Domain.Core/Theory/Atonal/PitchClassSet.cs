@@ -323,7 +323,7 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// <summary>
     ///     True is this pitch class set is expressed in normal form, false otherwise
     /// </summary>
-    public bool IsNormalForm => ToNormalForm().SequenceEqual(this);
+    public bool IsNormalForm => SetTables.NormalFormMasks[Id.Value] == Id.Value;
 
     public bool IsClusterFree => Id.IsClusterFree;
 
@@ -409,69 +409,18 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
     /// Console.WriteLine(normalForm);  // Outputs: {0, 3, 8}
     /// </code>
     /// </example>
+    /// <remarks>
+    ///     Each rotation puts one member on 0; the one kept has the smallest spread between its largest
+    ///     and smallest circular gap, ties broken by the lexicographically smaller gap sequence and then
+    ///     by the earlier member. This is not the textbook normal form, which minimises the span from the
+    ///     first pitch class to the last. The answer for each of the 4,096 sets is computed once, on 12-bit
+    ///     masks, and read from <see cref="SetTables.NormalFormMasks" /> afterwards. The set returned is
+    ///     shared between callers: it is immutable.
+    /// </remarks>
     public PitchClassSet ToNormalForm()
     {
-        var normalForm = new List<PitchClass>();
-        var minInterval = int.MaxValue;
-        var rotations = GenerateRotations(this).ToImmutableArray();
-
-        foreach (var rotation in rotations)
-        {
-            var intervalVector = CalculateIntervals(rotation);
-            var intervalSpan = intervalVector.Max() - intervalVector.Min();
-            if (intervalSpan < minInterval)
-            {
-                minInterval = intervalSpan; // Reset min interval
-                normalForm = [.. rotation];
-                continue;
-            }
-
-            if (intervalSpan == minInterval
-                &&
-                IsMoreCompact(intervalVector, CalculateIntervals(normalForm)))
-            {
-                normalForm = [.. rotation];
-            }
-        }
-
-        var result = new PitchClassSet(normalForm);
-
-        return result;
-
-        static ImmutableArray<int> CalculateIntervals(IReadOnlyList<PitchClass> pitchClasses)
-        {
-            var intervals = ImmutableArray.CreateBuilder<int>();
-            for (var i = 0; i < pitchClasses.Count; i++)
-            {
-                var nextIndex = (i + 1) % pitchClasses.Count; // Wraps around to the start
-                var interval = (pitchClasses[nextIndex] - pitchClasses[i]).Value;
-                intervals.Add(interval);
-            }
-
-            return intervals.ToImmutable();
-        }
-
-        static IEnumerable<ImmutableSortedSet<PitchClass>> GenerateRotations(PitchClassSet pitchClassSet)
-        {
-            var builder = ImmutableSortedSet.CreateBuilder<PitchClass>();
-            foreach (var basePitchClass in pitchClassSet)
-            {
-                builder.Clear();
-                foreach (var pitchClass in pitchClassSet)
-                {
-                    builder.Add(pitchClass - basePitchClass);
-                }
-
-                yield return builder.ToImmutable();
-            }
-        }
-
-        static bool IsMoreCompact(IEnumerable<int> vector1, IEnumerable<int> vector2)
-        {
-            return vector1
-                .Zip(vector2, (v1, v2) => v1.CompareTo(v2))
-                .FirstOrDefault(cmp => cmp != 0) < 0;
-        }
+        var mask = SetTables.NormalFormMasks[Id.Value];
+        return SetTables.NormalForms[mask] ??= FromId(new(mask));
     }
 
     public PrintableReadOnlyCollection<Note.Accidented> GetDiatonicNotes()
@@ -589,74 +538,162 @@ public sealed class PitchClassSet : IStaticReadonlyCollection<PitchClassSet>,
         return candidateKeys.FirstOrDefault();
     }
 
-    public IReadOnlyCollection<Key> GetCompatibleKeys() => Key.Items
-        .Where(key => IsSubsetOf(key.PitchClassSet))
-        .OrderBy(key => key.KeySignature.AccidentalCount)
-        .ToImmutableList();
-
-    public Key? FindClosestDiatonicKey2()
+    /// <summary>
+    ///     The keys whose seven pitch classes contain this set, fewest accidentals first (ties in
+    ///     <see cref="Key.Items" /> order). Computed once per set and shared: the list is immutable.
+    /// </summary>
+    public IReadOnlyCollection<Key> GetCompatibleKeys()
     {
-        var dict = new Dictionary<Key, IReadOnlyCollection<PitchClass>>();
-        foreach (var key in Key.Items)
-        {
-            var accidentedKeyNotes = key.Notes.Where(note => note.Accidental != null);
-            var accidentedPitchClasses = accidentedKeyNotes.Select(note => note.PitchClass).ToImmutableArray();
-
-            dict.Add(key, accidentedPitchClasses);
-        }
-
-        // Find the closest key
-        var normalForm =
-            IsNormalForm ? this : ToNormalForm();
-        // Determine if the pitch class set likely represents a minor scale/chord
-        var containsMinorThird = normalForm.Contains(Note.Chromatic.DSharpOrEFlat.PitchClass);
-
-        var expectedKeyMode = containsMinorThird ? KeyMode.Minor : KeyMode.Major;
-        var closestKey = IdentifyClosestKey(this, dict.AsReadOnly(), expectedKeyMode);
-
-        return closestKey ?? Key.Major.C;
+        var cache = SetTables.CompatibleKeys;
+        return cache[Id.Value] ??= SetTables.ComputeCompatibleKeys(Id.Value);
     }
 
-    private static Key? IdentifyClosestKey(
-        PitchClassSet normalForm,
-        IReadOnlyDictionary<Key, IReadOnlyCollection<PitchClass>> items,
-        KeyMode expectedKeyMode)
+    /// <summary>
+    ///     The key sharing the most pitch classes with this set. Ties go to the expected mode (minor when
+    ///     the normal form contains pitch class 3), then to the key that comes first in
+    ///     <see cref="Key.Items" />.
+    /// </summary>
+    public Key? FindClosestDiatonicKey2()
     {
-        var list =
-            new List<(Key Key, PrintableReadOnlyCollection<Note.KeyNote> Matches,
-                PrintableReadOnlyCollection<PitchClass>)>();
-        foreach (var (key, _) in items)
+        var mask = Id.Value;
+        var expectMinor = (SetTables.NormalFormMasks[mask] & (1 << 3)) != 0;
+
+        // Replacing only on a strictly better score, or on an equal score that moves to the expected
+        // mode, keeps the first of equals: what OrderByDescending(count).ThenByDescending(mode).First()
+        // returned, without the four collections per key it built to get there.
+        var keys = SetTables.Keys;
+        var best = keys[0];
+        var bestScore = -1;
+        var bestExpected = false;
+        foreach (var candidate in keys)
         {
-            var matches = new List<Note.KeyNote>();
-            var keyNotes = key.Notes.ToImmutableList();
-            foreach (var keyNote in keyNotes)
+            var score = BitOperations.PopCount((uint)(mask & candidate.Mask));
+            var expected = candidate.IsMinor == expectMinor;
+            if (score > bestScore || (score == bestScore && expected && !bestExpected))
             {
-                if (normalForm.Contains(keyNote.PitchClass))
-                {
-                    matches.Add(keyNote);
-                }
+                (best, bestScore, bestExpected) = (candidate, score, expected);
+            }
+        }
+
+        return best.Key;
+    }
+
+    /// <summary>
+    ///     Tables over the 4,096 twelve-bit sets, built on first use. A set is a 12-bit mask (bit p for
+    ///     pitch class p), so transposing is rotating the mask and counting shared pitch classes is a
+    ///     population count.
+    /// </summary>
+    private static class SetTables
+    {
+        internal static readonly (Key Key, int Mask, bool IsMinor)[] Keys =
+        [
+            .. Key.Items.Select(key => (key,
+                key.Notes.Aggregate(0, (mask, note) => mask | 1 << note.PitchClass.Value),
+                key.KeyMode == KeyMode.Minor))
+        ];
+
+        internal static readonly int[] NormalFormMasks = [.. Enumerable.Range(0, 4096).Select(NormalFormMask)];
+
+        internal static readonly IReadOnlyCollection<Key>?[] CompatibleKeys = new IReadOnlyCollection<Key>?[4096];
+
+        internal static readonly PitchClassSet?[] NormalForms = new PitchClassSet?[4096];
+
+        internal static IReadOnlyCollection<Key> ComputeCompatibleKeys(int mask) =>
+        [
+            .. Keys.Where(k => (mask & ~k.Mask) == 0)
+                .OrderBy(k => k.Key.KeySignature.AccidentalCount)
+                .Select(k => k.Key)
+        ];
+
+        private static int Rotr12(int value, int n) => ((value >> n) | (value << (12 - n))) & 0xFFF;
+
+        private static int NormalFormMask(int set)
+        {
+            if (set == 0)
+            {
+                return 0;
             }
 
-            var pMatches = matches.AsReadOnly().AsPrintable();
-            var pPitchClasses = matches.Select(note => note.PitchClass).OrderBy(pitchClass => pitchClass)
-                .ToImmutableList().AsPrintable();
-            list.Add((key, pMatches, pPitchClasses));
+            Span<int> gaps = stackalloc int[12];
+            Span<int> bestGaps = stackalloc int[12];
+            var count = BitOperations.PopCount((uint)set);
+            var best = 0;
+            var bestSpan = int.MaxValue;
+
+            // Members in ascending order, and a rotation replaces the incumbent only when strictly better
+            for (var member = 0; member < 12; member++)
+            {
+                if ((set & (1 << member)) == 0)
+                {
+                    continue;
+                }
+
+                var rotation = Rotr12(set, member);
+                Gaps(rotation, count, gaps);
+                var span = Span(gaps[..count]);
+                if (span > bestSpan || (span == bestSpan && !MoreCompact(gaps[..count], bestGaps[..count])))
+                {
+                    continue;
+                }
+
+                best = rotation;
+                bestSpan = span;
+                gaps[..count].CopyTo(bestGaps);
+            }
+
+            return best;
+
+            // The gap from each member to the next around the circle; a single note's gap to itself is 0
+            static void Gaps(int rotation, int count, Span<int> gaps)
+            {
+                if (count == 1)
+                {
+                    gaps[0] = 0;
+                    return;
+                }
+
+                var previous = 0;
+                var index = 0;
+                for (var pitchClass = 1; pitchClass < 12; pitchClass++)
+                {
+                    if ((rotation & (1 << pitchClass)) == 0)
+                    {
+                        continue;
+                    }
+
+                    gaps[index++] = pitchClass - previous;
+                    previous = pitchClass;
+                }
+
+                gaps[index] = 12 - previous;
+            }
+
+            static int Span(ReadOnlySpan<int> gaps)
+            {
+                int min = gaps[0], max = gaps[0];
+                foreach (var gap in gaps)
+                {
+                    min = Math.Min(min, gap);
+                    max = Math.Max(max, gap);
+                }
+
+                return max - min;
+            }
+
+            // The first gap that differs decides; equal sequences are not more compact
+            static bool MoreCompact(ReadOnlySpan<int> candidate, ReadOnlySpan<int> incumbent)
+            {
+                for (var i = 0; i < candidate.Length; i++)
+                {
+                    if (candidate[i] != incumbent[i])
+                    {
+                        return candidate[i] < incumbent[i];
+                    }
+                }
+
+                return false;
+            }
         }
-
-        // Result
-        if (list.Count == 0)
-        {
-            return null;
-        }
-
-        var result =
-            list
-                .OrderByDescending(tuple => tuple.Matches.Count)
-                .ThenByDescending(tuple => tuple.Key.KeyMode == expectedKeyMode) // prioritize expected key mode
-                .First()
-                .Key;
-
-        return result;
     }
 
     #region Innner Classes

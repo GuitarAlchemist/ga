@@ -1,4 +1,5 @@
 export { IxqlViewer } from './IxqlViewer';
+export { PipelineEditor } from './PipelineEditor';
 export { parseIxql } from './IxqlParser';
 export { analyzeLolli } from './LolliAnalyzer';
 export { analyzeAmdahl } from './AmdahlAnalyzer';

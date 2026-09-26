@@ -196,7 +196,10 @@ public sealed class RoutedChatApplicationService(
             {
                 ["notation.diagram.count"] = notation.DiagramCount,
                 ["notation.vextab.added_count"] = notation.AddedFenceCount,
-                ["notation.format"] = "vextab",
-                ["notation.renderer"] = "vexflow"
+                ["notation.vextab.block_count"] = notation.VexTabBlockCount,
+                // Blocks GA's VexTab parser reads. The server draws nothing: which renderer draws
+                // the blocks is up to the client, so the trace doesn't claim one.
+                ["notation.vextab.valid_count"] = notation.ValidVexTabBlockCount,
+                ["notation.format"] = "vextab"
             });
 }
