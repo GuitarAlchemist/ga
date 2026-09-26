@@ -1,6 +1,6 @@
 {
   "schema": "action-boundary-v0.1.0",
-  "generated_at": "2026-07-02T15:22:47.769722Z",
+  "generated_at": "2026-08-02T21:24:55.773434Z",
   "generated_by": "Scripts/action-boundary-aggregate.py",
   "repo": "GuitarAlchemist/ga",
   "sources": {
@@ -17,6 +17,10 @@
       "state/quality/**",
       "state/governance/**",
       ".claude/skills/**",
+      "Common/GA.Business.ML/Agents/Skills/**",
+      "Common/GA.Business.ML/Agents/Mcp/**",
+      "Tests/Common/GA.Business.ML.Tests/Unit/*SkillTests.cs",
+      "Tests/Common/GA.Business.ML.Tests/Unit/*McpToolsTests.cs",
       "BACKLOG.md",
       "README.md",
       "AGENTS.md",

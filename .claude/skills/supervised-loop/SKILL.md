@@ -25,12 +25,14 @@ GA has a **5-layer strict bottom-up architecture** (per `CLAUDE.md`):
 5. Orchestration — `GA.Business.Core.Orchestration`, `GA.Business.Assets`,
    `GA.Business.Intelligence`, Apps
 
-The supervised loop **only operates within layer 4/5 + frontend/docs/scripts**
-on the initial rollout. Layers 1-3 (`Common/GA.Business.Core/**` and
-below) are in `protected_paths` because a regression there fans out across
-every consumer. The OPTIC-K embedding dimension (240-dim) is a one-way
-door and is also protected. Widen the scope only after several clean
-cycles and explicit operator review.
+The initial code rollout is narrower than "layer 4/5": it permits only
+`Common/GA.Business.ML/Agents/Skills/**` and
+`Common/GA.Business.ML/Agents/Mcp/**`, with matching
+`*SkillTests.cs` / `*McpToolsTests.cs` files under the ML unit-test folder.
+Frontend/docs/scripts/state paths remain available as listed in
+`ga.loop-policy.json`. Layers 1-3, all other code/test paths, and the
+OPTIC-K embedding surface remain unavailable by default. Widen only through
+an operator-reviewed change to the protected policy file.
 
 ## When to use
 
@@ -45,9 +47,10 @@ cycles and explicit operator review.
   `workflowMode != "loop-eligible"` -> abort with reason.
 - `.STOP` file at repo root -> abort.
 - HALT-ALL marker present at `$HOME/.demerzel/HALT-ALL` and active -> abort.
-- `ga.loop-policy.json` missing `allow_edit` or `protected_paths` -> abort.
-  (The risk-scoring policy lives in `agent-blackbox.policy.json`; the loop
-  scope lives separately to keep the risk-scoring policy pristine.)
+- `ga.loop-policy.json` fails `Test-GaLoopPolicy` (scope, L0-L3,
+  postflight, promotion gates, exact-SHA evidence, or independent-review
+  contract) -> abort. The risk-scoring policy remains separate in
+  `agent-blackbox.policy.json`.
 - Any diff touches a path in `protected_paths` -> abort, do not commit.
 - **`pwsh Scripts/supervised-loop-preflight.ps1` emits `LOOP_READY=false`
   -> abort with the reason it printed; do not try to repair the gate.**
@@ -70,6 +73,10 @@ cycles and explicit operator review.
 - editing `mcp-servers/**` (third-party)
 - editing `Common/GA.Business.ML/Embeddings/**` (OPTIC-K one-way door)
 - editing `Common/GA.Business.Core/**` (lowest-layer fanout)
+- editing GA product code outside `Common/GA.Business.ML/Agents/Skills/**`
+  and `Common/GA.Business.ML/Agents/Mcp/**`
+- editing tests outside the two filename families explicitly listed in
+  `allow_edit`
 - editing `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` (golden corpus)
 - editing `AllProjects.slnx`, `global.json`, `Directory.Build.*`,
   `Directory.Packages.props` (build-critical)
@@ -126,7 +133,9 @@ risk-policy-derived view informs the post-cycle risk report.
 
 Also run `pwsh Scripts/supervised-loop-preflight.ps1`. It must print
 `LOOP_READY=true` on its last line and exit 0. If not, abort with its
-reason.
+reason. This is verification **L0**. L0-L3 here mean verification depth,
+not GA autonomy level; their commands are canonical in
+`ga.loop-policy.json.verification_levels`.
 
 ### Step 3: Pick one backlog slice
 
@@ -140,6 +149,8 @@ is designed to supervise:
 - `voicing-analysis` (state/quality/voicing-analysis/*.json)
 - `dsl-eval` (state/quality/dsl-eval/prompts.json)
 - `readme-drift` (state/quality/readme-drift/)
+- bounded agent-skill or in-process MCP-tool changes in the two allowed
+  layer-4 source seams, with matching allowed unit tests
 
 Do **not** pick anything that touches `Common/GA.Business.Core/**`,
 `Common/GA.Business.ML/Embeddings/**` (OPTIC-K), `docs/contracts/**`,
@@ -153,28 +164,31 @@ Write a plain text plan inline with:
 
 1. Goal (one sentence).
 2. Files you will create or edit (must all match `allow_edit`).
-3. Verifier commands. For GA, the canonical oracle is:
-   ```powershell
-   dotnet build AllProjects.slnx -c Debug
-   pwsh Scripts/run-all-tests.ps1 -BackendOnly -SkipBuild
-   ```
-   Frontend slices add `npm run build && npm run lint` in
-   `ReactComponents/ga-react-components`.
+3. Verifier commands from `ga.loop-policy.json.verification_levels`:
+   L1 is the focused project test, L2 is `bash Scripts/cloud-validate.sh`
+   (`pwsh Scripts/cloud-validate.ps1` on Windows), and L3 is the full
+   solution build/test merge gate. Frontend slices also run the L3
+   conditional frontend commands in the declared working directory.
 4. Stop condition (matches a hard refusal above or repeated verify failure).
 
 ### Step 5: Implement one slice
 
 - Edit only inside `allow_edit`.
 - Keep the diff under ~200 lines and one logical concern.
-- Add or update a test under `Tests/**` or the relevant
-  `*.Tests` project for any code change. **Reminder:**
-  `Tests/Apps/GaChatbot.Api.Tests/Corpus/prompts.yaml` is in
-  `protected_paths` — other test files are editable.
-- Run the oracle. If it fails, attempt one targeted fix. If it still
+- For a code change, add or update a test matching the corresponding
+  allowed filename family. A test elsewhere under `Tests/**` remains out
+  of scope.
+- Run L1 and L2. If either fails, attempt one targeted fix. If it still
   fails, **stop** and emit the cycle evidence with
   `exit_reason: verify_failed`.
 - The pre-commit hook (`Scripts/install-git-hooks.ps1`) runs `dotnet
   format` + build. Honour it; do not bypass.
+
+A draft PR may be opened or updated only after L0, L1, and L2 pass for the
+submitted head. Do not mark it ready: ready-for-merge additionally requires
+L3, the Agent Blackbox postflight supplied through GA #630, and the required
+`Independent Review Verdict` check from a separate reviewer identity/context.
+An author comment is not review evidence. This skill never merges.
 
 ### Step 6: Emit cycle evidence
 
@@ -182,18 +196,26 @@ Write `state/governance/supervised-loop-cycle.json` with shape:
 
 ```json
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "cycle_id": "<uuid or YYYYMMDD-HHMMSS-slug>",
   "started_at": "<ISO 8601 UTC>",
   "finished_at": "<ISO 8601 UTC>",
   "branch": "<current branch>",
+  "base_sha": "<exact 40-character base SHA>",
+  "head_sha": "<exact 40-character submitted head SHA>",
   "goal": "<one-line description of the slice>",
   "roadmap_item": "<exact bullet text from BACKLOG.md or ga-loop-status.json>",
   "files_changed": ["..."],
   "allow_edit_violation": false,
   "protected_path_touched": false,
-  "verify_result": "pass | fail | skipped",
-  "verify_command": "dotnet build AllProjects.slnx -c Debug && pwsh Scripts/run-all-tests.ps1 -BackendOnly -SkipBuild",
+  "verification_results": {
+    "L0": "pass | fail | skipped",
+    "L1": "pass | fail | skipped",
+    "L2": "pass | fail | skipped",
+    "L3": "pass | fail | skipped"
+  },
+  "postflight_status": "pass | fail | pending_external_dependency",
+  "independent_review_status": "pass | fail | pending",
   "exit_reason": "completed | verify_failed | preflight_failed | protected_path | overseer_blocked | stop_marker | halt_all | manual"
 }
 ```
