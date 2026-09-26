@@ -2,12 +2,13 @@ import {defineConfig, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'path'
-import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync } from 'fs'
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync, appendFileSync, mkdirSync } from 'fs'
 import { execFileSync, spawn } from 'child_process'
 import type { Plugin } from 'vite'
 import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals, parseValueCatalog, parseMaintainGate, maintainAgeHours, isMaintainStale, classifyQualitySnapshot } from './src/dev-data/parsers'
 import type { BacklogPayload, LoopsGoalsProjection, QualitySnapshotKind } from './src/dev-data/parsers'
 import { callIxTool, resolveIxMcpBin } from './dev-server/ixMcpBridge'
+import { JEV_API_URL, JEV_MAX_PAYLOAD_BYTES, JEV_PRICE_PER_MILLION_USD, buildAdvicePayload, readAdvice, usageCostUsd, type ProposalSummary } from './src/components/IxqlViewer/jevAdvice'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -2871,6 +2872,35 @@ function ixPipelinePlugin(): Plugin {
     const proposals = new Map<string, { id: string; title: string; author: string; base_revision: number | null; created_at: string; spec: unknown }>();
     let proposalSeq = 0;
 
+    // Jev advisor ledger: outside every repo; JSON lines of advice, errors and
+    // the user's decisions. The cap is this feature's share of the user's $1.
+    const JEV_CAP_USD = 0.05;
+    const JEV_MAX_CALLS_PER_RUN = 30;
+    let jevCallsThisRun = 0;
+    const jevLedger = path.join(process.env.USERPROFILE ?? process.env.HOME ?? '.', '.cache', 'ga-pipeline-editor', 'jev-shadow.jsonl');
+    const appendJev = (entry: Record<string, unknown>) => {
+        mkdirSync(path.dirname(jevLedger), { recursive: true });
+        appendFileSync(jevLedger, JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n');
+    };
+    const jevStats = () => {
+        const rows = existsSync(jevLedger)
+            ? readFileSync(jevLedger, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as Record<string, unknown>)
+            : [];
+        const advice = new Map<string, string>();
+        let calls = 0, spend = 0, decided = 0, agreed = 0;
+        for (const r of rows) {
+            if (r.kind === 'advice' || r.kind === 'error') { calls++; spend += Number(r.cost_usd) || 0; }
+            if (r.kind === 'advice') advice.set(String(r.proposal_id), String((r.advice as { recommendation?: string })?.recommendation));
+            if (r.kind === 'outcome' && advice.has(String(r.proposal_id))) {
+                decided++;
+                // "review" leaves the call to the user, so it agrees with either.
+                const rec = advice.get(String(r.proposal_id));
+                if (rec === 'review' || rec === r.decision) agreed++;
+            }
+        }
+        return { calls, spend_usd: spend, cap_usd: JEV_CAP_USD, decided, agreed };
+    };
+
     const sendJson = (res: import('http').ServerResponse, status: number, body: unknown) => {
         res.writeHead(status, { 'Content-Type': 'application/json' });
         res.end(typeof body === 'string' ? body : JSON.stringify(body));
@@ -2986,6 +3016,68 @@ function ixPipelinePlugin(): Plugin {
                     };
                     proposals.set(proposal.id, proposal);
                     sendJson(res, 201, { id: proposal.id, status: 'pending: the user reviews it in the editor' });
+                });
+            });
+
+            // Jev shadow advisor. One call per user click, never automatic;
+            // the key comes from TYPESAFE_API_KEY and is never echoed. Every
+            // call and every human decision is appended to a ledger outside
+            // the repo, which also enforces the spend cap across restarts.
+            // No retries: a failed call is reported, not repeated.
+            server.middlewares.use('/ix-pipeline/advise', (req, res, next) => {
+                if (!gateLocal(req, res, 'ix-pipeline')) return;
+                const sub = (req.url ?? '/').replace(/^\/+|\?.*$/g, '');
+                if (req.method === 'GET' && sub === 'stats') { sendJson(res, 200, jevStats()); return; }
+                if (req.method !== 'POST') { next(); return; }
+                if (sub === 'outcome') {
+                    readJson(req, res, (body) => {
+                        const b = (body ?? {}) as { proposal_id?: unknown; decision?: unknown };
+                        if (typeof b.proposal_id !== 'string' || (b.decision !== 'accept' && b.decision !== 'reject')) {
+                            sendJson(res, 400, { error: 'body must be {"proposal_id":"…","decision":"accept"|"reject"}' });
+                            return;
+                        }
+                        appendJev({ kind: 'outcome', proposal_id: b.proposal_id, decision: b.decision });
+                        sendJson(res, 200, jevStats());
+                    });
+                    return;
+                }
+                if (sub) { next(); return; }
+                readJson(req, res, (body) => {
+                    const b = (body ?? {}) as { proposal_id?: unknown; summary?: ProposalSummary };
+                    const key = process.env.TYPESAFE_API_KEY;
+                    if (!key) { sendJson(res, 503, { error: 'TYPESAFE_API_KEY is not set for the dev server' }); return; }
+                    if (typeof b.proposal_id !== 'string' || !b.summary) { sendJson(res, 400, { error: 'body must be {"proposal_id":"…","summary":{…}}' }); return; }
+                    const payload = JSON.stringify(buildAdvicePayload(b.summary));
+                    const bytes = Buffer.byteLength(payload);
+                    const stats = jevStats();
+                    // Tokens are unknown before the call; a byte count bounds them.
+                    const estimate = (bytes / 1_000_000) * JEV_PRICE_PER_MILLION_USD * 2;
+                    if (bytes > JEV_MAX_PAYLOAD_BYTES) { sendJson(res, 413, { error: `advice payload ${bytes} B exceeds ${JEV_MAX_PAYLOAD_BYTES} B` }); return; }
+                    if (jevCallsThisRun >= JEV_MAX_CALLS_PER_RUN || stats.spend_usd + estimate > JEV_CAP_USD) {
+                        sendJson(res, 429, { error: `Jev advisor budget reached (${stats.calls} calls, $${stats.spend_usd.toFixed(6)} of $${JEV_CAP_USD}; ${jevCallsThisRun}/${JEV_MAX_CALLS_PER_RUN} this run)` });
+                        return;
+                    }
+                    jevCallsThisRun++;
+                    const started = Date.now();
+                    fetch(JEV_API_URL, {
+                        method: 'POST',
+                        redirect: 'error',
+                        signal: AbortSignal.timeout(20_000),
+                        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+                        body: payload,
+                    })
+                        .then(async (r) => {
+                            if (!r.ok) throw new Error(`Jev HTTP ${r.status}; not retried`);
+                            const advice = readAdvice(await r.json());
+                            const cost = usageCostUsd(advice.usage);
+                            appendJev({ kind: 'advice', proposal_id: b.proposal_id, advice, cost_usd: cost, bytes, elapsed_ms: Date.now() - started });
+                            sendJson(res, 200, { advice, cost_usd: cost, stats: jevStats() });
+                        })
+                        .catch((e: unknown) => {
+                            // A failed call may still have been billed; count it at the estimate.
+                            appendJev({ kind: 'error', proposal_id: b.proposal_id, cost_usd: estimate, error: String(e instanceof Error ? e.message : e).slice(0, 200) });
+                            sendJson(res, 502, { error: String(e instanceof Error ? e.message : e) });
+                        });
                 });
             });
         },

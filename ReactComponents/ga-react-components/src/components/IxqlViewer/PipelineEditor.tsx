@@ -37,8 +37,10 @@ import {
   type CatalogNode,
   type EditorEdge,
   type EditorStep,
+  type SpecDiff,
   type ValidationReport,
 } from './pipelineSpec';
+import type { JevAdvice, ProposalSummary } from './jevAdvice';
 import gaHarmonicFieldSpec from './examples/ga-harmonic-field.pipeline.json?raw';
 
 interface StepNodeData {
@@ -245,10 +247,52 @@ export const PipelineEditor: React.FC = () => {
       return { p, diff: null, error: e instanceof Error ? e.message : String(e) };
     }
   }), [proposals, spec]);
-  const dismiss = useCallback((id: string) => {
+  // Jev shadow advice, per proposal: shown and recorded with the user's
+  // decision, never read by Accept or Reject.
+  const [advice, setAdvice] = useState<Record<string, { advice?: JevAdvice; error?: string; asking?: boolean }>>({});
+  const [jevStats, setJevStats] = useState<{ calls: number; spend_usd: number; cap_usd: number; decided: number; agreed: number } | null>(null);
+  useEffect(() => {
+    fetch('/ix-pipeline/advise/stats')
+      .then(async (res) => { if (res.ok) setJevStats(await res.json()); })
+      .catch(() => { /* no ledger yet */ });
+  }, []);
+  const askJev = useCallback((p: Proposal, diff: SpecDiff) => {
+    const approval = new Map((catalog ?? []).map((n) => [n.name, n.approval]));
+    const graph = specToGraph(p.spec);
+    const toolAfter = new Map(graph.steps.map((s) => [s.id, s.tool]));
+    const toolBefore = new Map(spec.steps.map((s) => [s.id, s.tool]));
+    const summary: ProposalSummary = {
+      title: p.title,
+      author: p.author,
+      based_on_current: p.base_revision === null || p.base_revision === revision,
+      added: diff.added.map((id) => {
+        const tool = toolAfter.get(id) ?? '';
+        return { id, tool, tier: approval.get(tool)?.tier, effect: approval.get(tool)?.effect };
+      }),
+      removed: diff.removed.map((id) => ({ id, tool: toolBefore.get(id) ?? '' })),
+      changed: Object.entries(diff.changed).map(([id, fields]) => ({ id, fields })),
+      steps_before: spec.steps.length,
+      steps_after: graph.steps.length,
+    };
+    setAdvice((a) => ({ ...a, [p.id]: { asking: true } }));
+    fetch('/ix-pipeline/advise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proposal_id: p.id, summary }) })
+      .then(async (res) => {
+        const json = (await res.json()) as { advice?: JevAdvice; stats?: typeof jevStats; error?: string };
+        if (!res.ok || !json.advice) throw new Error(json.error ?? `HTTP ${res.status}`);
+        setAdvice((a) => ({ ...a, [p.id]: { advice: json.advice } }));
+        if (json.stats) setJevStats(json.stats);
+      })
+      .catch((e: unknown) => setAdvice((a) => ({ ...a, [p.id]: { error: e instanceof Error ? e.message : String(e) } })));
+  }, [catalog, spec, revision]);
+  const dismiss = useCallback((id: string, decision: 'accept' | 'reject') => {
     setProposals((prev) => prev.filter((p) => p.id !== id));
     void fetch(`/ix-pipeline/proposals/${encodeURIComponent(id)}`, { method: 'DELETE' });
-  }, []);
+    if (advice[id]?.advice) {
+      fetch('/ix-pipeline/advise/outcome', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proposal_id: id, decision }) })
+        .then(async (res) => { if (res.ok) setJevStats(await res.json()); })
+        .catch(() => { /* the ledger misses one outcome; nothing acts on it */ });
+    }
+  }, [advice]);
 
   const addStep = useCallback((node: CatalogNode) => {
     const id = nextStepId(steps);
@@ -545,6 +589,11 @@ export const PipelineEditor: React.FC = () => {
         {reviewed.length > 0 && (
           <Box component="section" sx={{ mt: 1.5 }}>
             <Typography variant="subtitle2">Agent proposals ({reviewed.length})</Typography>
+            {jevStats && (
+              <Typography variant="caption" component="div" color="text.secondary">
+                Jev shadow: {jevStats.calls} calls · ${jevStats.spend_usd.toFixed(5)} of ${jevStats.cap_usd} · agreed with you {jevStats.agreed}/{jevStats.decided}
+              </Typography>
+            )}
             {reviewed.map(({ p, diff, error }) => {
               const changedIds = diff ? Object.keys(diff.changed) : [];
               const noop = diff && diff.added.length + diff.removed.length + changedIds.length === 0;
@@ -565,17 +614,37 @@ export const PipelineEditor: React.FC = () => {
                       {changedIds.map((id) => <Box key={id} sx={{ color: 'warning.main' }}>~ {id} ({diff.changed[id].join(', ')})</Box>)}
                     </Typography>
                   )}
+                  {advice[p.id]?.advice && (() => {
+                    const a = advice[p.id].advice!;
+                    return (
+                      <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 0.5 }} title="Shadow advice: recorded next to your decision, never acted on">
+                        Jev (shadow): <b>{a.recommendation}</b> ({Math.round(a.confidence * 100)}%) · risk {a.risk.toFixed(1)}/2 · matches title {Math.round(a.matches_title * 100)}%
+                      </Typography>
+                    );
+                  })()}
+                  {advice[p.id]?.error && <Issue kind="warning">Jev: {advice[p.id].error}</Issue>}
                   <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
                     <Button
                       size="small"
                       variant="contained"
                       disabled={!diff}
                       title="Replaces the graph; it is then validated as usual and nothing runs until you click Run"
-                      onClick={() => { loadSpec(JSON.stringify(p.spec)); dismiss(p.id); }}
+                      onClick={() => { loadSpec(JSON.stringify(p.spec)); dismiss(p.id, 'accept'); }}
                     >
                       Accept
                     </Button>
-                    <Button size="small" onClick={() => dismiss(p.id)}>Reject</Button>
+                    <Button size="small" onClick={() => dismiss(p.id, 'reject')}>Reject</Button>
+                    {diff && !advice[p.id]?.advice && (
+                      <Button
+                        size="small"
+                        disabled={advice[p.id]?.asking}
+                        onClick={() => askJev(p, diff)}
+                        title="One paid TypeSafe call (a fraction of a cent); sends step ids, tool names and approval tiers, never arguments"
+                        sx={{ ml: 'auto' }}
+                      >
+                        {advice[p.id]?.asking ? 'Asking…' : 'Ask Jev'}
+                      </Button>
+                    )}
                   </Box>
                 </Box>
               );
