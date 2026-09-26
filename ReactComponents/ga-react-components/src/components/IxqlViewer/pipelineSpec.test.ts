@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpec, defaultArgsText, issuesByStep, layeredPositions, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
+import { buildSpec, bundleEdges, defaultArgsText, groupOf, groupedPositions, issuesByStep, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
 
 describe('buildSpec', () => {
   it('turns edges into depends_on and parses arguments (shape from docs/pipelines/dag-execution.md)', () => {
@@ -135,25 +135,35 @@ describe('specToGraph', () => {
   });
 });
 
-describe('layeredPositions', () => {
-  const s = (id: string) => ({ id, tool: 't', argsText: '{}' });
+describe('sections', () => {
+  const st = (id: string, tool = 'ix_stats') => ({ id, tool, argsText: '{}' });
 
-  it('puts a step below its deepest dependency', () => {
-    const pos = layeredPositions([s('a'), s('b'), s('c')], [{ source: 'a', target: 'b' }, { source: 'b', target: 'c' }]);
-    expect(pos.a.y).toBeLessThan(pos.b.y);
-    expect(pos.b.y).toBeLessThan(pos.c.y);
+  it('groups by id prefix, else by tool', () => {
+    expect(groupOf(st('delta_I_IV'))).toBe('delta');
+    expect(groupOf(st('s1', 'ix_pca'))).toBe('ix_pca');
   });
 
-  it('wraps a wide layer and does not overlap steps', () => {
-    const many = Array.from({ length: 20 }, (_, i) => s(`n${i}`));
-    const pos = layeredPositions(many, [], { perRow: 8 });
-    const keys = new Set(Object.values(pos).map((p) => `${p.x},${p.y}`));
-    expect(keys.size).toBe(20);
-    expect(Math.max(...Object.values(pos).map((p) => p.x))).toBe(7 * 210);
+  it('bundles edges between sections and drops edges inside one', () => {
+    const steps = [st('a_1'), st('a_2'), st('b_1'), st('b_2')];
+    const edges = [
+      { source: 'a_1', target: 'b_1' }, { source: 'a_2', target: 'b_1' },
+      { source: 'a_1', target: 'b_2' }, { source: 'b_1', target: 'b_2' },
+    ];
+    expect(bundleEdges(steps, edges)).toEqual([{ source: 'a', target: 'b', count: 3 }]);
   });
 
-  it('survives a cycle', () => {
-    const pos = layeredPositions([s('a'), s('b')], [{ source: 'a', target: 'b' }, { source: 'b', target: 'a' }]);
-    expect(Object.keys(pos).sort()).toEqual(['a', 'b']);
+  it('wraps a row of sections wider than maxRowWidth', () => {
+    const steps = [st('a_1'), st('b_1'), st('c_1')];
+    const pos = groupedPositions(steps, [], { dx: 100, gapX: 0, maxRowWidth: 200 });
+    expect(pos.a_1.y).toBe(pos.b_1.y);
+    expect(pos.c_1.y).toBeGreaterThan(pos.a_1.y);
+    expect(pos.c_1.x).toBe(0);
+  });
+
+  it('keeps a section together and below the section it reads from', () => {
+    const steps = [st('a_1'), st('a_2'), st('a_3'), st('b_1')];
+    const pos = groupedPositions(steps, [{ source: 'a_1', target: 'b_1' }], { cols: 2 });
+    expect(pos.b_1.y).toBeGreaterThan(Math.max(pos.a_1.y, pos.a_2.y, pos.a_3.y));
+    expect(new Set(Object.values(pos).map((p) => `${p.x},${p.y}`)).size).toBe(4);
   });
 });

@@ -24,9 +24,11 @@ import { Box, Button, List, ListItemButton, TextField, Typography, useTheme } fr
 
 import {
   buildSpec,
+  bundleEdges,
   defaultArgsText,
+  groupOf,
+  groupedPositions,
   issuesByStep,
-  layeredPositions,
   nextStepId,
   specToGraph,
   type CatalogNode,
@@ -73,7 +75,43 @@ const StepNode: React.FC<NodeProps<StepNodeData>> = ({ data }) => {
   );
 };
 
-const nodeTypes = { step: StepNode };
+interface SectionNodeData {
+  name: string;
+  count: number;
+  width: number;
+  height: number;
+}
+
+// Background frame for one section (ComfyUI-style group). Its handles are
+// only anchors for the bundled edges between sections.
+const SectionNode: React.FC<NodeProps<SectionNodeData>> = ({ data }) => (
+  <Box
+    sx={{
+      width: data.width,
+      height: data.height,
+      border: 1,
+      borderStyle: 'dashed',
+      borderColor: 'divider',
+      borderRadius: 2,
+      bgcolor: 'action.hover',
+      px: 1.5,
+      py: 0.5,
+      pointerEvents: 'none',
+    }}
+  >
+    <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.5 }}>
+      {data.name} · {data.count}
+    </Typography>
+    <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
+  </Box>
+);
+
+const nodeTypes = { step: StepNode, section: SectionNode };
+const SECTION = 'section:';
+// Rough step-node footprint, for sizing the section frames around them.
+const STEP_W = 195;
+const STEP_H = 72;
 
 async function postJson(url: string, body: unknown): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -177,7 +215,32 @@ export const PipelineEditor: React.FC = () => {
     setSelectedId((cur) => (cur && gone.has(cur) ? null : cur));
   }, []);
 
-  const flowNodes: Node<StepNodeData>[] = useMemo(
+  const sectionNodes: Node<SectionNodeData>[] = useMemo(() => {
+    const boxes = new Map<string, { minX: number; minY: number; maxX: number; maxY: number; count: number }>();
+    for (const step of steps) {
+      const p = positions[step.id];
+      if (!p) continue;
+      const g = groupOf(step);
+      const b = boxes.get(g) ?? { minX: p.x, minY: p.y, maxX: p.x, maxY: p.y, count: 0 };
+      boxes.set(g, {
+        minX: Math.min(b.minX, p.x), minY: Math.min(b.minY, p.y),
+        maxX: Math.max(b.maxX, p.x), maxY: Math.max(b.maxY, p.y), count: b.count + 1,
+      });
+    }
+    return [...boxes].map(([name, b]) => ({
+      id: SECTION + name,
+      type: 'section',
+      position: { x: b.minX - 16, y: b.minY - 30 },
+      data: { name, count: b.count, width: b.maxX - b.minX + STEP_W + 32, height: b.maxY - b.minY + STEP_H + 46 },
+      draggable: false,
+      selectable: false,
+      deletable: false,
+      focusable: false,
+      zIndex: -1,
+    }));
+  }, [steps, positions]);
+
+  const stepNodes: Node<StepNodeData>[] = useMemo(
     () =>
       steps.map((step) => {
         const i = issues.get(step.id);
@@ -193,14 +256,36 @@ export const PipelineEditor: React.FC = () => {
       }),
     [steps, positions, issues, argErrors, selectedId],
   );
+  const flowNodes: Node[] = useMemo(() => [...sectionNodes, ...stepNodes], [sectionNodes, stepNodes]);
 
   const edgeColor = theme.palette.text.secondary;
   const accentColor = theme.palette.primary.main;
-  const flowEdges: Edge[] = useMemo(
-    () =>
-      edges.map((e) => {
+  // Edges between sections are drawn as one bundle per pair of sections.
+  // A step's own edges are drawn in full while it is selected, and edges
+  // inside a section always are.
+  const flowEdges: Edge[] = useMemo(() => {
+    const group = new Map(steps.map((s) => [s.id, groupOf(s)]));
+    const bundles: Edge[] = bundleEdges(steps, edges).map((b) => ({
+      id: `bundle:${b.source}->${b.target}`,
+      source: SECTION + b.source,
+      target: SECTION + b.target,
+      label: b.count > 1 ? `×${b.count}` : undefined,
+      selectable: false,
+      deletable: false,
+      style: { stroke: edgeColor, strokeWidth: 1.5 + Math.min(b.count, 10) * 0.25, opacity: 0.8 },
+      labelStyle: { fill: edgeColor, fontSize: 11 },
+      labelBgStyle: { fill: theme.palette.background.default },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
+    }));
+    const detailed = edges
+      .filter((e) => {
         const id = `${e.source}->${e.target}`;
-        const color = id === selectedEdgeId ? accentColor : edgeColor;
+        return group.get(e.source) === group.get(e.target)
+          || e.source === selectedId || e.target === selectedId || id === selectedEdgeId;
+      })
+      .map((e) => {
+        const id = `${e.source}->${e.target}`;
+        const color = id === selectedEdgeId || e.source === selectedId || e.target === selectedId ? accentColor : edgeColor;
         return {
           id,
           source: e.source,
@@ -209,14 +294,14 @@ export const PipelineEditor: React.FC = () => {
           style: { stroke: color, strokeWidth: id === selectedEdgeId ? 2.5 : 1.5 },
           markerEnd: { type: MarkerType.ArrowClosed, color },
         };
-      }),
-    [edges, edgeColor, accentColor, selectedEdgeId],
-  );
+      });
+    return [...bundles, ...detailed];
+  }, [steps, edges, edgeColor, accentColor, selectedEdgeId, selectedId, theme.palette.background.default]);
 
   // `steps` is the model: a keyboard "remove" deletes the step and its edges;
   // position changes only move it.
   const onNodesChange = useCallback((changes: NodeChange[]) => {
-    const removed = changes.flatMap((c) => (c.type === 'remove' ? [c.id] : []));
+    const removed = changes.flatMap((c) => (c.type === 'remove' && !c.id.startsWith(SECTION) ? [c.id] : []));
     if (removed.length > 0) removeSteps(removed);
     const moves = changes.filter((c) => c.type !== 'remove');
     if (moves.length === 0) return;
@@ -244,7 +329,7 @@ export const PipelineEditor: React.FC = () => {
       const graph = specToGraph(JSON.parse(specJson));
       setSteps(graph.steps);
       setEdges(graph.edges);
-      setPositions(layeredPositions(graph.steps, graph.edges));
+      setPositions(groupedPositions(graph.steps, graph.edges));
       setSelectedId(null);
       setSelectedEdgeId(null);
       setImportError(null);
@@ -347,7 +432,7 @@ export const PipelineEditor: React.FC = () => {
           onNodesChange={onNodesChange}
           onConnect={onConnect}
           onEdgesDelete={onEdgesDelete}
-          onNodeClick={(_e, n) => { setSelectedId(n.id); setSelectedEdgeId(null); }}
+          onNodeClick={(_e, n) => { if (!n.id.startsWith(SECTION)) { setSelectedId(n.id); setSelectedEdgeId(null); } }}
           onEdgeClick={(_e, ed) => { setSelectedEdgeId(ed.id); setSelectedId(null); }}
           onPaneClick={() => { setSelectedId(null); setSelectedEdgeId(null); }}
           deleteKeyCode={['Delete']}
@@ -400,7 +485,10 @@ export const PipelineEditor: React.FC = () => {
         {globalIssues?.errors.map((m) => <Issue key={m} kind="error">{m}</Issue>)}
         {globalIssues?.warnings.map((m) => <Issue key={m} kind="warning">{m}</Issue>)}
         {report?.execution_order && (
-          <Typography variant="caption" color="text.secondary">Order: {report.execution_order.join(' → ')}</Typography>
+          <Box component="details" sx={{ color: 'text.secondary', fontSize: 12 }}>
+            <summary>Execution order ({report.execution_order.length})</summary>
+            {report.execution_order.join(' → ')}
+          </Box>
         )}
 
         {selected && (

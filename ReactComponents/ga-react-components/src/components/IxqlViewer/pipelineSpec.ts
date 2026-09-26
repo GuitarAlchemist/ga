@@ -187,39 +187,109 @@ export function specToGraph(spec: unknown): { steps: EditorStep[]; edges: Editor
 }
 
 /**
- * Top-down layered layout: a step's layer is one past its deepest dependency,
- * and a layer wider than `perRow` wraps onto extra rows. Cycles (which the
- * validator reports) are cut rather than looped on.
+ * The section a step belongs to: the prefix of an id like `delta_I_IV`
+ * (`delta`), or the tool for ids without one (`s1`). Sections are a view
+ * only; nothing about them reaches the spec.
  */
-export function layeredPositions(
+export function groupOf(step: EditorStep): string {
+  const cut = step.id.indexOf('_');
+  return cut > 0 ? step.id.slice(0, cut) : step.tool;
+}
+
+export interface GroupBundle {
+  source: string;
+  target: string;
+  count: number;
+}
+
+/** Edges between two different sections, merged into one bundle per pair. */
+export function bundleEdges(steps: EditorStep[], edges: EditorEdge[]): GroupBundle[] {
+  const group = new Map(steps.map((s) => [s.id, groupOf(s)]));
+  const counts = new Map<string, GroupBundle>();
+  for (const e of edges) {
+    const a = group.get(e.source);
+    const b = group.get(e.target);
+    if (!a || !b || a === b) continue;
+    const key = `${a}\u0000${b}`;
+    const cur = counts.get(key) ?? { source: a, target: b, count: 0 };
+    cur.count++;
+    counts.set(key, cur);
+  }
+  return [...counts.values()];
+}
+
+/**
+ * Section layout: sections are laid out as layers (a section sits one row
+ * below the deepest section it depends on), side by side within a row and
+ * ordered by where their inputs are, and each section packs its steps in a
+ * small grid. A row wider than `maxRowWidth` wraps. Cycles between sections
+ * are cut.
+ */
+export function groupedPositions(
   steps: EditorStep[],
   edges: EditorEdge[],
-  { perRow = 8, dx = 210, dy = 120, layerGap = 60 } = {},
+  { cols = 3, dx = 225, dy = 95, gapX = 70, gapY = 110, maxRowWidth = 2200 } = {},
 ): Record<string, { x: number; y: number }> {
-  const deps = new Map<string, string[]>(steps.map((s) => [s.id, []]));
-  for (const e of edges) deps.get(e.target)?.push(e.source);
+  const members = new Map<string, string[]>();
+  for (const s of steps) {
+    const g = groupOf(s);
+    if (!members.has(g)) members.set(g, []);
+    members.get(g)!.push(s.id);
+  }
+  const parents = new Map<string, Set<string>>([...members.keys()].map((g) => [g, new Set<string>()]));
+  for (const b of bundleEdges(steps, edges)) parents.get(b.target)?.add(b.source);
+
   const layer = new Map<string, number>();
   const visiting = new Set<string>();
-  const depth = (id: string): number => {
-    const known = layer.get(id);
+  const depth = (g: string): number => {
+    const known = layer.get(g);
     if (known !== undefined) return known;
-    if (visiting.has(id)) return 0;
-    visiting.add(id);
-    const d = Math.max(-1, ...(deps.get(id) ?? []).filter((p) => deps.has(p)).map(depth)) + 1;
-    visiting.delete(id);
-    layer.set(id, d);
+    if (visiting.has(g)) return 0;
+    visiting.add(g);
+    const d = Math.max(-1, ...[...(parents.get(g) ?? [])].map(depth)) + 1;
+    visiting.delete(g);
+    layer.set(g, d);
     return d;
   };
-  const byLayer: string[][] = [];
-  for (const s of steps) (byLayer[depth(s.id)] ??= []).push(s.id);
+  const rows: string[][] = [];
+  for (const g of members.keys()) (rows[depth(g)] ??= []).push(g);
+
+  const size = (g: string) => {
+    const n = members.get(g)!.length;
+    const c = Math.min(cols, n);
+    return { c, w: c * dx, h: Math.ceil(n / c) * dy };
+  };
+  const centerX = new Map<string, number>();
   const out: Record<string, { x: number; y: number }> = {};
   let y = 0;
-  for (const ids of byLayer) {
-    if (!ids) continue;
-    ids.forEach((id, i) => {
-      out[id] = { x: (i % perRow) * dx, y: y + Math.floor(i / perRow) * dy };
-    });
-    y += Math.ceil(ids.length / perRow) * dy + layerGap;
+  for (const row of rows) {
+    if (!row) continue;
+    // Barycenter ordering: a section goes under the sections it reads from.
+    const bary = (g: string) => {
+      const xs = [...(parents.get(g) ?? [])].map((p) => centerX.get(p)).filter((v): v is number => v !== undefined);
+      return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : Number.POSITIVE_INFINITY;
+    };
+    const ordered = row
+      .map((g, i) => ({ g, i, b: bary(g) }))
+      .sort((p, q) => (p.b === q.b ? p.i - q.i : p.b - q.b))
+      .map((p) => p.g);
+    let x = 0;
+    let rowH = 0;
+    for (const g of ordered) {
+      const { c, w, h } = size(g);
+      if (x > 0 && x + w > maxRowWidth) {
+        y += rowH + gapY;
+        x = 0;
+        rowH = 0;
+      }
+      members.get(g)!.forEach((id, i) => {
+        out[id] = { x: x + (i % c) * dx, y: y + Math.floor(i / c) * dy };
+      });
+      centerX.set(g, x + w / 2);
+      x += w + gapX;
+      rowH = Math.max(rowH, h);
+    }
+    y += rowH + gapY;
   }
   return out;
 }
