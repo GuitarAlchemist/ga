@@ -222,13 +222,18 @@ public static class VoicingPhysicalAnalyzer
 
     /// <summary>
     ///     The fret of the barre the index finger has to make, or null when the voicing needs none.
-    ///     A barre is the lowest fretted fret held on both outermost played strings, across at least
-    ///     three strings, with no open string in between (strings in between are fretted at that fret
-    ///     or higher, or muted and damped by the finger). This counts the E-shape <c>133211</c> as well
-    ///     as the A-shape <c>x13331</c>, and no open chord, whose outermost strings are open.
+    ///     A barre is needed only when there are more fretted notes than <see cref="MaxFrettingFingers"/>:
+    ///     up to that, every note can have its own finger, as in the sparse grip <c>1x2x1x</c>. The barre
+    ///     is then the lowest fretted fret held on both outermost played strings, across at least three
+    ///     strings, with no open string in between (strings in between are fretted at that fret or higher,
+    ///     or muted and damped by the finger). This counts the E-shape <c>133211</c> as well as the A-shape
+    ///     <c>x13331</c>, and no open chord, whose outermost strings are open. A partial barre on a higher
+    ///     fret, like the ring finger at fret 3 in <c>x12333</c>, is not detected.
     /// </summary>
     internal static int? DetectBarreFret(int[] fretPositions)
     {
+        if (fretPositions.Count(f => f > 0) <= MaxFrettingFingers) return null;
+
         var first = Array.FindIndex(fretPositions, f => f >= 0);
         var last = Array.FindLastIndex(fretPositions, f => f >= 0);
         if (first < 0 || last - first < 2) return null;

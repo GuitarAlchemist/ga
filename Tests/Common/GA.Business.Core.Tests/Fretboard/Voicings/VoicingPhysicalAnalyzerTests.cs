@@ -43,6 +43,7 @@ public class VoicingPhysicalAnalyzerTests
     [TestCase("x02210", TestName = "Open Am")]
     [TestCase("xx3211", TestName = "Four-string F")]
     [TestCase("x355xx", TestName = "Power chord")]
+    [TestCase("1x2x1x", TestName = "Sparse grip held by three fingers")]
     public void OpenOrPartialShape_IsNotABarreChord(string chart)
     {
         var playability = Playability(chart);
