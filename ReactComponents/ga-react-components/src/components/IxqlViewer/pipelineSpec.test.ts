@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpec, defaultArgsText, issuesByStep, nextStepId, typeErrors, type ValidationReport } from './pipelineSpec';
+import { buildSpec, defaultArgsText, issuesByStep, layeredPositions, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
 
 describe('buildSpec', () => {
   it('turns edges into depends_on and parses arguments (shape from docs/pipelines/dag-execution.md)', () => {
@@ -111,5 +111,49 @@ describe('argument types', () => {
   it('accepts types it does not model and union types', () => {
     expect(typeErrors({ a: 1, b: 'x' }, { a: { type: ['number', 'null'] }, b: { type: 'custom' } })).toEqual([]);
     expect(typeErrors({ n: 1.5 }, { n: { type: 'integer' } })).toEqual(['n: expected integer']);
+  });
+});
+
+describe('specToGraph', () => {
+  it('round-trips through buildSpec', () => {
+    const spec = {
+      steps: [
+        { id: 'a', tool: 'ix_stats', arguments: { data: [1, 2] } },
+        { id: 'b', tool: 'ix_stats', arguments: { data: ['$a.mean'] }, depends_on: ['a'] },
+      ],
+    };
+    const { steps, edges } = specToGraph(spec);
+    expect(edges).toEqual([{ source: 'a', target: 'b' }]);
+    expect(buildSpec(steps, edges).spec).toEqual(spec);
+  });
+
+  it('refuses shapes it cannot represent', () => {
+    expect(() => specToGraph({})).toThrow('"steps" array');
+    expect(() => specToGraph({ steps: [{ id: 'a', tool: 'x' }, { id: 'a', tool: 'y' }] })).toThrow('duplicate');
+    expect(() => specToGraph({ steps: [{ id: 'a', tool: 'x', depends_on: ['nope'] }] })).toThrow('unknown step "nope"');
+    expect(() => specToGraph({ steps: [{ id: 'a' }] })).toThrow('"tool"');
+  });
+});
+
+describe('layeredPositions', () => {
+  const s = (id: string) => ({ id, tool: 't', argsText: '{}' });
+
+  it('puts a step below its deepest dependency', () => {
+    const pos = layeredPositions([s('a'), s('b'), s('c')], [{ source: 'a', target: 'b' }, { source: 'b', target: 'c' }]);
+    expect(pos.a.y).toBeLessThan(pos.b.y);
+    expect(pos.b.y).toBeLessThan(pos.c.y);
+  });
+
+  it('wraps a wide layer and does not overlap steps', () => {
+    const many = Array.from({ length: 20 }, (_, i) => s(`n${i}`));
+    const pos = layeredPositions(many, [], { perRow: 8 });
+    const keys = new Set(Object.values(pos).map((p) => `${p.x},${p.y}`));
+    expect(keys.size).toBe(20);
+    expect(Math.max(...Object.values(pos).map((p) => p.x))).toBe(7 * 210);
+  });
+
+  it('survives a cycle', () => {
+    const pos = layeredPositions([s('a'), s('b')], [{ source: 'a', target: 'b' }, { source: 'b', target: 'a' }]);
+    expect(Object.keys(pos).sort()).toEqual(['a', 'b']);
   });
 });

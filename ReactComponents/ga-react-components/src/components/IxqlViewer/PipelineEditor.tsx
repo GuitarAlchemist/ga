@@ -26,12 +26,15 @@ import {
   buildSpec,
   defaultArgsText,
   issuesByStep,
+  layeredPositions,
   nextStepId,
+  specToGraph,
   type CatalogNode,
   type EditorEdge,
   type EditorStep,
   type ValidationReport,
 } from './pipelineSpec';
+import gaHarmonicFieldSpec from './examples/ga-harmonic-field.pipeline.json?raw';
 
 interface StepNodeData {
   step: EditorStep;
@@ -100,6 +103,9 @@ export const PipelineEditor: React.FC = () => {
   const [runOutput, setRunOutput] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const validationSeq = useRef(0);
+  const [importError, setImportError] = useState<string | null>(null);
+  // Bumped on every load so React Flow remounts and fits the new graph.
+  const [graphVersion, setGraphVersion] = useState(0);
 
   useEffect(() => {
     fetch('/ix-pipeline/catalog')
@@ -231,6 +237,38 @@ export const PipelineEditor: React.FC = () => {
     setEdges((prev) => prev.filter((e) => !gone.has(`${e.source}->${e.target}`)));
   }, []);
 
+  // Replaces the whole graph. Nothing is kept from the previous one: a
+  // half-merged import would validate a pipeline nobody wrote.
+  const loadSpec = useCallback((specJson: string) => {
+    try {
+      const graph = specToGraph(JSON.parse(specJson));
+      setSteps(graph.steps);
+      setEdges(graph.edges);
+      setPositions(layeredPositions(graph.steps, graph.edges));
+      setSelectedId(null);
+      setSelectedEdgeId(null);
+      setImportError(null);
+      setGraphVersion((v) => v + 1);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
+  const importFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) file.text().then(loadSpec, (err: unknown) => setImportError(String(err)));
+  }, [loadSpec]);
+
+  const exportSpec = useCallback(() => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pipeline.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [spec]);
+
   const run = useCallback(() => {
     // Bound to the spec validation generation: an edit bumps validationSeq,
     // and a run started before it no longer publishes its output.
@@ -302,6 +340,7 @@ export const PipelineEditor: React.FC = () => {
         }}
       >
         <ReactFlow
+          key={graphVersion}
           nodes={flowNodes}
           edges={flowEdges}
           nodeTypes={nodeTypes}
@@ -339,6 +378,24 @@ export const PipelineEditor: React.FC = () => {
             {running ? 'Running…' : 'Run'}
           </Button>
         </Box>
+        <Box sx={{ display: 'flex', gap: 0.5, mb: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => loadSpec(gaHarmonicFieldSpec)}
+            title="C major harmonic field: ICV motion, substitutions, harmonic paths, clustering, T/S/D functions (53 steps)"
+          >
+            GA example
+          </Button>
+          <Button size="small" variant="outlined" component="label">
+            Import
+            <input hidden type="file" accept=".json,application/json" onChange={importFile} />
+          </Button>
+          <Button size="small" variant="outlined" onClick={exportSpec} disabled={steps.length === 0}>
+            Export
+          </Button>
+        </Box>
+        {importError && <Issue kind="error">Import: {importError}</Issue>}
         {validateError && <Issue kind="error">Validator: {validateError}</Issue>}
         {globalIssues?.errors.map((m) => <Issue key={m} kind="error">{m}</Issue>)}
         {globalIssues?.warnings.map((m) => <Issue key={m} kind="warning">{m}</Issue>)}

@@ -155,3 +155,71 @@ export function issuesByStep(report: ValidationReport | null): Map<string, { err
   for (const w of report.warnings ?? []) slot(w.step ?? '').warnings.push(w.message);
   return out;
 }
+
+/**
+ * The editor graph for a spec (the inverse of `buildSpec`): arguments become
+ * pretty-printed JSON text and every `depends_on` entry becomes an edge.
+ * Throws on a shape the editor cannot represent, so an import fails loudly
+ * instead of loading half a pipeline.
+ */
+export function specToGraph(spec: unknown): { steps: EditorStep[]; edges: EditorEdge[] } {
+  const raw = (spec as { steps?: unknown } | null)?.steps;
+  if (!Array.isArray(raw)) throw new Error('spec must be an object with a "steps" array');
+  const steps: EditorStep[] = [];
+  const edges: EditorEdge[] = [];
+  const seen = new Set<string>();
+  raw.forEach((s, i) => {
+    const step = s as { id?: unknown; tool?: unknown; arguments?: unknown; depends_on?: unknown };
+    if (typeof step.id !== 'string' || !step.id) throw new Error(`step ${i}: "id" must be a non-empty string`);
+    if (typeof step.tool !== 'string' || !step.tool) throw new Error(`step ${step.id}: "tool" must be a non-empty string`);
+    if (seen.has(step.id)) throw new Error(`duplicate step id "${step.id}"`);
+    seen.add(step.id);
+    steps.push({ id: step.id, tool: step.tool, argsText: JSON.stringify(step.arguments ?? {}, null, 2) });
+    const deps = step.depends_on ?? [];
+    if (!Array.isArray(deps) || deps.some((d) => typeof d !== 'string')) {
+      throw new Error(`step ${step.id}: "depends_on" must be an array of step ids`);
+    }
+    for (const d of deps as string[]) edges.push({ source: d, target: step.id });
+  });
+  const unknown = edges.find((e) => !seen.has(e.source));
+  if (unknown) throw new Error(`step ${unknown.target} depends on unknown step "${unknown.source}"`);
+  return { steps, edges };
+}
+
+/**
+ * Top-down layered layout: a step's layer is one past its deepest dependency,
+ * and a layer wider than `perRow` wraps onto extra rows. Cycles (which the
+ * validator reports) are cut rather than looped on.
+ */
+export function layeredPositions(
+  steps: EditorStep[],
+  edges: EditorEdge[],
+  { perRow = 8, dx = 210, dy = 120, layerGap = 60 } = {},
+): Record<string, { x: number; y: number }> {
+  const deps = new Map<string, string[]>(steps.map((s) => [s.id, []]));
+  for (const e of edges) deps.get(e.target)?.push(e.source);
+  const layer = new Map<string, number>();
+  const visiting = new Set<string>();
+  const depth = (id: string): number => {
+    const known = layer.get(id);
+    if (known !== undefined) return known;
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
+    const d = Math.max(-1, ...(deps.get(id) ?? []).filter((p) => deps.has(p)).map(depth)) + 1;
+    visiting.delete(id);
+    layer.set(id, d);
+    return d;
+  };
+  const byLayer: string[][] = [];
+  for (const s of steps) (byLayer[depth(s.id)] ??= []).push(s.id);
+  const out: Record<string, { x: number; y: number }> = {};
+  let y = 0;
+  for (const ids of byLayer) {
+    if (!ids) continue;
+    ids.forEach((id, i) => {
+      out[id] = { x: (i % perRow) * dx, y: y + Math.floor(i / perRow) * dy };
+    });
+    y += Math.ceil(ids.length / perRow) * dy + layerGap;
+  }
+  return out;
+}
