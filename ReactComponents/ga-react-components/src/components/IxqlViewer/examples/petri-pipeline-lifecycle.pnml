@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="n1" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <name>
+      <text>pipeline-lifecycle</text>
+    </name>
+    <page id="page1">
+      <place id="work">
+        <name>
+          <text>work</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="producer">
+        <name>
+          <text>producer</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="free">
+        <name>
+          <text>free</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="queued">
+        <name>
+          <text>queued</text>
+        </name>
+      </place>
+      <place id="consumer">
+        <name>
+          <text>consumer</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="processing">
+        <name>
+          <text>processing</text>
+        </name>
+      </place>
+      <place id="produced">
+        <name>
+          <text>produced</text>
+        </name>
+      </place>
+      <place id="consumed">
+        <name>
+          <text>consumed</text>
+        </name>
+      </place>
+      <place id="producer_faulted">
+        <name>
+          <text>producer faulted</text>
+        </name>
+      </place>
+      <place id="succeeded">
+        <name>
+          <text>succeeded</text>
+        </name>
+      </place>
+      <place id="failed">
+        <name>
+          <text>failed</text>
+        </name>
+      </place>
+      <place id="cancelled">
+        <name>
+          <text>cancelled</text>
+        </name>
+      </place>
+      <transition id="write">
+        <name>
+          <text>write</text>
+        </name>
+      </transition>
+      <transition id="producer_fail">
+        <name>
+          <text>producer fails</text>
+        </name>
+      </transition>
+      <transition id="read">
+        <name>
+          <text>read</text>
+        </name>
+      </transition>
+      <transition id="consume">
+        <name>
+          <text>consume</text>
+        </name>
+      </transition>
+      <transition id="consumer_fail">
+        <name>
+          <text>consumer fails</text>
+        </name>
+      </transition>
+      <transition id="settle_success">
+        <name>
+          <text>settle success</text>
+        </name>
+      </transition>
+      <transition id="settle_producer_failure">
+        <name>
+          <text>settle producer failure</text>
+        </name>
+      </transition>
+      <transition id="cancel">
+        <name>
+          <text>cancel</text>
+        </name>
+      </transition>
+      <arc id="a1" source="work" target="write" />
+      <arc id="a2" source="producer" target="write" />
+      <arc id="a3" source="free" target="write" />
+      <arc id="a4" source="write" target="queued" />
+      <arc id="a5" source="write" target="produced" />
+      <arc id="a6" source="work" target="producer_fail" />
+      <arc id="a7" source="producer" target="producer_fail" />
+      <arc id="a8" source="producer_fail" target="producer_faulted" />
+      <arc id="a9" source="queued" target="read" />
+      <arc id="a10" source="consumer" target="read" />
+      <arc id="a11" source="read" target="processing" />
+      <arc id="a12" source="read" target="free" />
+      <arc id="a13" source="processing" target="consume" />
+      <arc id="a14" source="consume" target="consumed" />
+      <arc id="a15" source="processing" target="consumer_fail" />
+      <arc id="a16" source="produced" target="consumer_fail" />
+      <arc id="a17" source="consumer_fail" target="failed" />
+      <arc id="a18" source="produced" target="settle_success" />
+      <arc id="a19" source="consumed" target="settle_success" />
+      <arc id="a20" source="settle_success" target="succeeded" />
+      <arc id="a21" source="producer_faulted" target="settle_producer_failure" />
+      <arc id="a22" source="consumer" target="settle_producer_failure" />
+      <arc id="a23" source="settle_producer_failure" target="failed" />
+      <arc id="a24" source="work" target="cancel" />
+      <arc id="a25" source="producer" target="cancel" />
+      <arc id="a26" source="consumer" target="cancel" />
+      <arc id="a27" source="cancel" target="cancelled" />
+    </page>
+  </net>
+</pnml>

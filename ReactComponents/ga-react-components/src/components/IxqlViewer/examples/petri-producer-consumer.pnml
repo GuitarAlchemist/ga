@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="n1" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <name>
+      <text>producer-consumer</text>
+    </name>
+    <page id="page1">
+      <place id="ready">
+        <name>
+          <text>ready</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="produced">
+        <name>
+          <text>produced</text>
+        </name>
+      </place>
+      <place id="free">
+        <name>
+          <text>free</text>
+        </name>
+        <initialMarking>
+          <text>2</text>
+        </initialMarking>
+      </place>
+      <place id="full">
+        <name>
+          <text>full</text>
+        </name>
+      </place>
+      <place id="waiting">
+        <name>
+          <text>waiting</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="taken">
+        <name>
+          <text>taken</text>
+        </name>
+      </place>
+      <transition id="produce">
+        <name>
+          <text>produce</text>
+        </name>
+      </transition>
+      <transition id="deposit">
+        <name>
+          <text>deposit</text>
+        </name>
+      </transition>
+      <transition id="take">
+        <name>
+          <text>take</text>
+        </name>
+      </transition>
+      <transition id="consume">
+        <name>
+          <text>consume</text>
+        </name>
+      </transition>
+      <arc id="a1" source="ready" target="produce" />
+      <arc id="a2" source="produce" target="produced" />
+      <arc id="a3" source="produced" target="deposit" />
+      <arc id="a4" source="free" target="deposit" />
+      <arc id="a5" source="deposit" target="full" />
+      <arc id="a6" source="deposit" target="ready" />
+      <arc id="a7" source="full" target="take" />
+      <arc id="a8" source="waiting" target="take" />
+      <arc id="a9" source="take" target="taken" />
+      <arc id="a10" source="take" target="free" />
+      <arc id="a11" source="taken" target="consume" />
+      <arc id="a12" source="consume" target="waiting" />
+    </page>
+  </net>
+</pnml>
