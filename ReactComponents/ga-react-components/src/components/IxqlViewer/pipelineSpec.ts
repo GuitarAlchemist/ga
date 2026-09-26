@@ -293,3 +293,45 @@ export function groupedPositions(
   }
   return out;
 }
+
+/** What a proposed spec changes, step by step, relative to the current one. */
+export interface SpecDiff {
+  added: string[];
+  removed: string[];
+  /** Step id -> what changed: `tool`, `arguments`, `depends_on`. */
+  changed: Record<string, string[]>;
+}
+
+/** JSON with object keys sorted, so key order never reads as a change. */
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${canonical(o[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v) ?? 'null';
+}
+
+/**
+ * Step-level diff of two specs, shown to the user before an agent's proposal
+ * replaces the graph. Both specs must already be well formed (`specToGraph`).
+ */
+export function diffSpecs(current: PipelineSpec, proposed: PipelineSpec): SpecDiff {
+  const before = new Map(current.steps.map((s) => [s.id, s]));
+  const after = new Map(proposed.steps.map((s) => [s.id, s]));
+  const changed: Record<string, string[]> = {};
+  for (const [id, b] of after) {
+    const a = before.get(id);
+    if (!a) continue;
+    const what: string[] = [];
+    if (a.tool !== b.tool) what.push('tool');
+    if (canonical(a.arguments ?? {}) !== canonical(b.arguments ?? {})) what.push('arguments');
+    if (canonical([...(a.depends_on ?? [])].sort()) !== canonical([...(b.depends_on ?? [])].sort())) what.push('depends_on');
+    if (what.length > 0) changed[id] = what;
+  }
+  return {
+    added: [...after.keys()].filter((id) => !before.has(id)),
+    removed: [...before.keys()].filter((id) => !after.has(id)),
+    changed,
+  };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpec, bundleEdges, defaultArgsText, groupOf, groupedPositions, issuesByStep, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
+import { buildSpec, bundleEdges, defaultArgsText, diffSpecs, groupOf, groupedPositions, issuesByStep, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
 
 describe('buildSpec', () => {
   it('turns edges into depends_on and parses arguments (shape from docs/pipelines/dag-execution.md)', () => {
@@ -165,5 +165,30 @@ describe('sections', () => {
     const pos = groupedPositions(steps, [{ source: 'a_1', target: 'b_1' }], { cols: 2 });
     expect(pos.b_1.y).toBeGreaterThan(Math.max(pos.a_1.y, pos.a_2.y, pos.a_3.y));
     expect(new Set(Object.values(pos).map((p) => `${p.x},${p.y}`)).size).toBe(4);
+  });
+});
+
+describe('diffSpecs', () => {
+  const cur = {
+    steps: [
+      { id: 'a', tool: 'ix_stats', arguments: { data: [1, 2], x: 1 } },
+      { id: 'b', tool: 'ix_fft', arguments: {}, depends_on: ['a'] },
+      { id: 'c', tool: 'ix_pca', arguments: {} },
+    ],
+  };
+
+  it('reports added, removed and changed steps', () => {
+    const next = {
+      steps: [
+        { id: 'a', tool: 'ix_stats', arguments: { x: 1, data: [1, 2] } },
+        { id: 'b', tool: 'ix_fft', arguments: { n: 4 } },
+        { id: 'd', tool: 'ix_kmeans', arguments: {} },
+      ],
+    };
+    expect(diffSpecs(cur, next)).toEqual({ added: ['d'], removed: ['c'], changed: { b: ['arguments', 'depends_on'] } });
+  });
+
+  it('is empty for the same pipeline', () => {
+    expect(diffSpecs(cur, cur)).toEqual({ added: [], removed: [], changed: {} });
   });
 });

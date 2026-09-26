@@ -4,6 +4,8 @@
 // depends_on, live ix_pipeline_validate with errors pinned to their node,
 // and Run via ix_pipeline_run. Talks to the local-only /ix-pipeline/*
 // dev-server routes (vite.config.ts → dev-server/ixMcpBridge.ts).
+// Agents can read the shown pipeline and propose a replacement; a proposal
+// only reaches the graph through the user's Accept (see vite.config.ts).
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
@@ -26,6 +28,7 @@ import {
   buildSpec,
   bundleEdges,
   defaultArgsText,
+  diffSpecs,
   groupOf,
   groupedPositions,
   issuesByStep,
@@ -120,6 +123,16 @@ async function postJson(url: string, body: unknown): Promise<{ ok: boolean; resu
   return { ok: json.ok === true, result: json.result, error: json.error };
 }
 
+/** A pending agent proposal, as the dev server stores it (not yet checked). */
+interface Proposal {
+  id: string;
+  title: string;
+  author: string;
+  base_revision: number | null;
+  created_at: string;
+  spec: unknown;
+}
+
 const Issue: React.FC<{ kind: 'error' | 'warning'; children: React.ReactNode }> = ({ kind, children }) => (
   <Typography variant="caption" component="div" sx={{ color: `${kind}.main` }}>
     {kind === 'error' ? '✕' : '⚠'} {children}
@@ -198,6 +211,44 @@ export const PipelineEditor: React.FC = () => {
   }, [spec]);
 
   const issues = useMemo(() => issuesByStep(report), [report]);
+
+  // Agent connectivity. The shown pipeline is mirrored to /ix-pipeline/current
+  // so an agent can read what it is patching; its proposals arrive as whole
+  // specs and wait here until the user accepts or rejects them.
+  const [revision, setRevision] = useState<number | null>(null);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      fetch('/ix-pipeline/current', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spec }) })
+        .then(async (res) => { if (res.ok) setRevision(((await res.json()) as { revision: number }).revision); })
+        .catch(() => setRevision(null));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [spec]);
+  useEffect(() => {
+    let alive = true;
+    const poll = () => fetch('/ix-pipeline/proposals')
+      .then(async (res) => {
+        const json = (await res.json()) as { proposals?: Proposal[] };
+        if (alive && res.ok && json.proposals) setProposals(json.proposals);
+      })
+      .catch(() => { /* dev server restarting; the next poll retries */ });
+    void poll();
+    const timer = setInterval(poll, 2000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
+  const reviewed = useMemo(() => proposals.map((p) => {
+    try {
+      const graph = specToGraph(p.spec);
+      return { p, diff: diffSpecs(spec, buildSpec(graph.steps, graph.edges).spec), error: null };
+    } catch (e) {
+      return { p, diff: null, error: e instanceof Error ? e.message : String(e) };
+    }
+  }), [proposals, spec]);
+  const dismiss = useCallback((id: string) => {
+    setProposals((prev) => prev.filter((p) => p.id !== id));
+    void fetch(`/ix-pipeline/proposals/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }, []);
 
   const addStep = useCallback((node: CatalogNode) => {
     const id = nextStepId(steps);
@@ -488,6 +539,47 @@ export const PipelineEditor: React.FC = () => {
           <Box component="details" sx={{ color: 'text.secondary', fontSize: 12 }}>
             <summary>Execution order ({report.execution_order.length})</summary>
             {report.execution_order.join(' → ')}
+          </Box>
+        )}
+
+        {reviewed.length > 0 && (
+          <Box component="section" sx={{ mt: 1.5 }}>
+            <Typography variant="subtitle2">Agent proposals ({reviewed.length})</Typography>
+            {reviewed.map(({ p, diff, error }) => {
+              const changedIds = diff ? Object.keys(diff.changed) : [];
+              const noop = diff && diff.added.length + diff.removed.length + changedIds.length === 0;
+              return (
+                <Box key={p.id} sx={{ border: 1, borderColor: 'primary.main', borderRadius: 1, p: 0.75, my: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{p.title}</Typography>
+                  <Typography variant="caption" component="div" color="text.secondary">
+                    by {p.author}
+                    {p.base_revision !== null && revision !== null && p.base_revision !== revision
+                      && ` · based on revision ${p.base_revision}, the graph is now at ${revision}: accepting also undoes your edits since`}
+                  </Typography>
+                  {error && <Issue kind="error">not a valid pipeline: {error}</Issue>}
+                  {diff && (
+                    <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace' }}>
+                      {noop && 'no change'}
+                      {diff.added.length > 0 && <Box sx={{ color: 'success.main' }}>+ {diff.added.join(', ')}</Box>}
+                      {diff.removed.length > 0 && <Box sx={{ color: 'error.main' }}>− {diff.removed.join(', ')}</Box>}
+                      {changedIds.map((id) => <Box key={id} sx={{ color: 'warning.main' }}>~ {id} ({diff.changed[id].join(', ')})</Box>)}
+                    </Typography>
+                  )}
+                  <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disabled={!diff}
+                      title="Replaces the graph; it is then validated as usual and nothing runs until you click Run"
+                      onClick={() => { loadSpec(JSON.stringify(p.spec)); dismiss(p.id); }}
+                    >
+                      Accept
+                    </Button>
+                    <Button size="small" onClick={() => dismiss(p.id)}>Reject</Button>
+                  </Box>
+                </Box>
+              );
+            })}
           </Box>
         )}
 

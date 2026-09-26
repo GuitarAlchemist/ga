@@ -2866,6 +2866,10 @@ function ixPipelinePlugin(): Plugin {
     const repoRoot = path.resolve(__dirname, '../..');
     const MAX_BODY = 256 * 1024;
     let catalogCache: string | null = null;
+    const MAX_PROPOSALS = 20;
+    let current: { revision: number; spec: unknown } | null = null;
+    const proposals = new Map<string, { id: string; title: string; author: string; base_revision: number | null; created_at: string; spec: unknown }>();
+    let proposalSeq = 0;
 
     const sendJson = (res: import('http').ServerResponse, status: number, body: unknown) => {
         res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -2931,6 +2935,59 @@ function ixPipelinePlugin(): Plugin {
                     });
                 });
             }
+
+            // Agent proposals. The editor publishes the pipeline it shows to
+            // /ix-pipeline/current (a read-only mirror for agents: the editor
+            // never loads from it). An agent reads it, then POSTs a whole
+            // proposed spec to /ix-pipeline/proposals:
+            //   curl -s localhost:5190/ix-pipeline/current
+            //   curl -s -X POST localhost:5190/ix-pipeline/proposals \
+            //     -H 'Content-Type: application/json' \
+            //     -d '{"title":"…","author":"…","base_revision":N,"spec":{"steps":[…]}}'
+            // Nothing here validates, applies or runs a proposal: the editor
+            // shows its diff, and only the user's Accept puts it in the graph,
+            // where the usual validation applies and Run stays a manual click.
+            server.middlewares.use('/ix-pipeline/current', (req, res, next) => {
+                if (req.method !== 'GET' && req.method !== 'PUT') { next(); return; }
+                if (!gateLocal(req, res, 'ix-pipeline')) return;
+                if (req.method === 'GET') {
+                    if (current) sendJson(res, 200, current);
+                    else sendJson(res, 404, { error: 'no pipeline published yet: open the editor' });
+                    return;
+                }
+                readJson(req, res, (body) => {
+                    const spec = (body as { spec?: { steps?: unknown } } | null)?.spec;
+                    if (!Array.isArray(spec?.steps)) { sendJson(res, 400, { error: 'body must be {"spec":{"steps":[…]}}' }); return; }
+                    current = { revision: (current?.revision ?? 0) + 1, spec };
+                    sendJson(res, 200, { revision: current.revision });
+                });
+            });
+            server.middlewares.use('/ix-pipeline/proposals', (req, res, next) => {
+                if (!gateLocal(req, res, 'ix-pipeline')) return;
+                const id = (req.url ?? '/').replace(/^\/+|\?.*$/g, '');
+                if (req.method === 'GET' && !id) { sendJson(res, 200, { proposals: [...proposals.values()] }); return; }
+                if (req.method === 'DELETE' && id) {
+                    sendJson(res, proposals.delete(id) ? 200 : 404, { deleted: id });
+                    return;
+                }
+                if (req.method !== 'POST' || id) { next(); return; }
+                if (proposals.size >= MAX_PROPOSALS) { sendJson(res, 429, { error: `at most ${MAX_PROPOSALS} pending proposals` }); return; }
+                readJson(req, res, (body) => {
+                    const b = (body ?? {}) as { title?: unknown; author?: unknown; base_revision?: unknown; spec?: { steps?: unknown } };
+                    if (typeof b.title !== 'string' || !b.title.trim()) { sendJson(res, 400, { error: '"title" must be a non-empty string' }); return; }
+                    if (!Array.isArray(b.spec?.steps)) { sendJson(res, 400, { error: '"spec" must be {"steps":[…]}' }); return; }
+                    const proposal = {
+                        id: `p${++proposalSeq}`,
+                        title: b.title.slice(0, 200),
+                        author: typeof b.author === 'string' ? b.author.slice(0, 100) : 'unknown agent',
+                        base_revision: typeof b.base_revision === 'number' ? b.base_revision : null,
+                        created_at: new Date().toISOString(),
+                        spec: b.spec,
+                    };
+                    proposals.set(proposal.id, proposal);
+                    sendJson(res, 201, { id: proposal.id, status: 'pending: the user reviews it in the editor' });
+                });
+            });
         },
     };
 }
