@@ -62,12 +62,22 @@ jobs:
 
       # Auto-commit for small updates (<=10 commits behind)
       - name: Auto-commit small update
+        id: commit
         if: steps.check.outputs.behind != '0' && steps.check.outputs.behind <= 10
         run: |
           BEHIND=${{ steps.check.outputs.behind }}
           git commit -m "chore: update Demerzel submodule ($BEHIND commits)"
-          git push origin main
+          echo "committed=true" >> "$GITHUB_OUTPUT"
           echo "### Auto-updated Demerzel submodule ($BEHIND commits)" >> $GITHUB_STEP_SUMMARY
+
+      # Only this push goes over the deploy key: the chore/update-demerzel* branch
+      # push in the next step keeps the token.
+      - name: Push the small update to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: main
 
       # Create PR for large updates (>10 commits behind)
       - name: Create PR for large update

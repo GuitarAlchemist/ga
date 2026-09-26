@@ -296,6 +296,7 @@ jobs:
           echo "snapshot_date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Commit snapshot if new
+        id: commit
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           # One of the two stage steps ran; the other's outputs are empty.
@@ -318,7 +319,14 @@ jobs:
             exit 0
           fi
           git commit -m "chore(quality): embeddings snapshot ${DATE} [skip ci]"
-          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the snapshot
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          refspec: HEAD
 
       - name: Upload snapshot artifact
         if: always()
