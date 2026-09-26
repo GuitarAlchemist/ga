@@ -7,6 +7,7 @@ import { execFileSync, spawn } from 'child_process'
 import type { Plugin } from 'vite'
 import { parseBacklog, extractDocTitle, binActivityByDay, projectLoopsGoals, parseValueCatalog, parseMaintainGate, maintainAgeHours, isMaintainStale, classifyQualitySnapshot } from './src/dev-data/parsers'
 import type { BacklogPayload, LoopsGoalsProjection, QualitySnapshotKind } from './src/dev-data/parsers'
+import { callIxTool, resolveIxMcpBin } from './dev-server/ixMcpBridge'
 
 // Load ALL env vars (not just VITE_*) from .env.local for proxy auth injection
 try {
@@ -2852,9 +2853,91 @@ function sentruxPlugin(): Plugin {
     };
 }
 
+// ---------------------------------------------------------------------------
+// IX pipeline editor bridge — /ix-pipeline/{catalog,validate,run}.
+//
+// Forwards to the IX MCP server (ix-mcp, stdio) via dev-server/ixMcpBridge.
+// ALL routes are local-only (gateLocal): `run` executes IX tools, and even
+// the read-only routes spawn a process per request, which the public tunnel
+// must not be able to trigger. Binary: IX_MCP_BIN, else ../ix/target/
+// {release,debug}/ix-mcp. The catalog is cached for the dev-server lifetime.
+// ---------------------------------------------------------------------------
+function ixPipelinePlugin(): Plugin {
+    const repoRoot = path.resolve(__dirname, '../..');
+    const MAX_BODY = 256 * 1024;
+    let catalogCache: string | null = null;
+
+    const sendJson = (res: import('http').ServerResponse, status: number, body: unknown) => {
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(typeof body === 'string' ? body : JSON.stringify(body));
+    };
+
+    const forward = async (res: import('http').ServerResponse, tool: string, args: unknown) => {
+        const bin = resolveIxMcpBin(repoRoot);
+        if (!bin) {
+            sendJson(res, 503, { error: 'ix-mcp not found', hint: 'build ix (cargo build -p ix-agent --bin ix-mcp) or set IX_MCP_BIN' });
+            return null;
+        }
+        try {
+            const result = await callIxTool(bin, tool, args);
+            if (result.isError) {
+                sendJson(res, 200, { ok: false, error: result.text });
+                return null;
+            }
+            return result.text;
+        } catch (e) {
+            sendJson(res, 502, { error: String(e instanceof Error ? e.message : e) });
+            return null;
+        }
+    };
+
+    const readJson = (req: import('http').IncomingMessage, res: import('http').ServerResponse, onBody: (v: unknown) => void) => {
+        let body = '';
+        let tooBig = false;
+        req.on('data', (chunk: Buffer) => {
+            body += chunk.toString();
+            if (body.length > MAX_BODY) tooBig = true;
+        });
+        req.on('end', () => {
+            if (tooBig) { sendJson(res, 413, { error: 'body too large' }); return; }
+            try { onBody(JSON.parse(body)); } catch { sendJson(res, 400, { error: 'invalid JSON body' }); }
+        });
+    };
+
+    return {
+        name: 'ix-pipeline',
+        configureServer(server) {
+            server.middlewares.use('/ix-pipeline/catalog', (req, res, next) => {
+                if (req.method !== 'GET') { next(); return; }
+                if (!gateLocal(req, res, 'ix-pipeline')) return;
+                if (catalogCache) { sendJson(res, 200, catalogCache); return; }
+                void forward(res, 'ix_node_catalog', {}).then((text) => {
+                    if (text === null) return;
+                    catalogCache = text;
+                    sendJson(res, 200, text);
+                });
+            });
+            for (const [route, tool] of [['validate', 'ix_pipeline_validate'], ['run', 'ix_pipeline_run']] as const) {
+                server.middlewares.use(`/ix-pipeline/${route}`, (req, res, next) => {
+                    if (req.method !== 'POST') { next(); return; }
+                    if (!gateLocal(req, res, 'ix-pipeline')) return;
+                    readJson(req, res, (spec) => {
+                        void forward(res, tool, spec).then((text) => {
+                            if (text === null) return;
+                            // validate returns JSON; run may return JSON or plain text.
+                            try { sendJson(res, 200, { ok: true, result: JSON.parse(text) }); }
+                            catch { sendJson(res, 200, { ok: true, result: text }); }
+                        });
+                    });
+                });
+            }
+        },
+    };
+}
+
 export default defineConfig({
     // 3d-force-graph WebGPU bug fixed via patch-package (see patches/3d-force-graph+1.79.1.patch)
-    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin(), sentruxPlugin()],
+    plugins: [react(), dts(), godotStaticPlugin(), primeRadiantControlPlugin(), devDataPlugin(), sentruxPlugin(), ixPipelinePlugin()],
     server: {
         port: 5176,
         host: true,
