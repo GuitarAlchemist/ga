@@ -271,7 +271,25 @@ export const PipelineEditor: React.FC = () => {
         </List>
       </Box>
 
-      <Box component="main" sx={{ flex: 1, position: 'relative' }}>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          position: 'relative',
+          // reactflow's stylesheet paints its chrome white; follow the theme so
+          // the canvas stays readable in dark mode.
+          '& .react-flow__controls-button': {
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            borderBottomColor: 'divider',
+            '& svg': { fill: 'currentColor' },
+            '&:hover': { bgcolor: 'action.hover' },
+          },
+          '& .react-flow__attribution': { bgcolor: 'transparent', '& a': { color: 'text.secondary' } },
+          '& .react-flow__edge-path': { stroke: theme.palette.text.secondary },
+          '& .react-flow__handle': { bgcolor: 'text.primary', borderColor: 'background.paper' },
+        }}
+      >
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
