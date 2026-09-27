@@ -145,5 +145,11 @@
       <arc id="a26" source="consumer" target="cancel" />
       <arc id="a27" source="cancel" target="cancelled" />
     </page>
+    <toolspecific tool="ga-pipeline-editor" version="1">
+      <!-- The three ends lesson 17 names; any other dead marking is a deadlock. -->
+      <finalMarking><token place="succeeded" count="1"/><token place="free" count="1"/></finalMarking>
+      <finalMarking><token place="failed" count="1"/><token place="free" count="1"/></finalMarking>
+      <finalMarking><token place="cancelled" count="1"/><token place="free" count="1"/></finalMarking>
+    </toolspecific>
   </net>
 </pnml>

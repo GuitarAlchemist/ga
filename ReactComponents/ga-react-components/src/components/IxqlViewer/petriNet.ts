@@ -16,11 +16,20 @@ export interface PetriArc {
   weight: number;
 }
 
+/** Tokens per place; a place left out holds none. */
+export type Marking = Record<string, number>;
+
 export interface PetriNet {
   name: string;
   places: PetriPlace[];
   transitions: string[];
   arcs: PetriArc[];
+  /**
+   * The ends the net is meant to reach, when it declares them (PNML
+   * `<toolspecific tool="ga-pipeline-editor">` → `<finalMarking>` →
+   * `<token place count>`). Only these are called a success.
+   */
+  finalMarkings?: Marking[];
 }
 
 /** Reads a PNML Place/Transition net (ISO/IEC 15909-2). Throws on anything else. */
@@ -49,7 +58,16 @@ export function parsePnml(xml: string): PetriNet {
     target: a.getAttribute('target') ?? '',
     weight: count(text(a, 'inscription'), `arc ${a.getAttribute('id')}`) ?? 1,
   }));
-  const result = { name: text(net, 'name') ?? net.getAttribute('id') ?? 'net', places, transitions, arcs };
+  const placeIds = new Set(places.map((p) => p.id));
+  const finalMarkings = [...net.getElementsByTagName('toolspecific')]
+    .filter((ts) => ts.getAttribute('tool') === 'ga-pipeline-editor')
+    .flatMap((ts) => [...ts.getElementsByTagName('finalMarking')])
+    .map((fm) => Object.fromEntries([...fm.getElementsByTagName('token')].map((tok) => {
+      const place = tok.getAttribute('place') ?? '';
+      if (!placeIds.has(place)) throw new Error(`final marking: unknown place "${place}"`);
+      return [place, count(tok.getAttribute('count') ?? '1', `final marking of ${place}`) ?? 1];
+    })));
+  const result = { name: text(net, 'name') ?? net.getAttribute('id') ?? 'net', places, transitions, arcs, finalMarkings };
   const problem = netProblems(result)[0];
   if (problem) throw new Error(problem);
   return result;
@@ -177,21 +195,26 @@ export function readReport(raw: unknown): PetriReport {
  * asks (success, failure, cancellation): a marked place whose name reads as
  * an outcome. Anything else is an unexplained deadlock.
  *
- * A success needs every token accounted for: each marked place is an outcome,
- * or a resource holding exactly its `initial` tokens again (a capacity token
- * released at the end). One job done while another is stuck mid-way is a
- * deadlock, not a success.
+ * A success is never read from names: a marked `done1` says nothing of the
+ * tokens stuck or missing elsewhere. Only a marking equal to one of the
+ * net's declared `finals` is a success, and once the net declares any, every
+ * other end is a deadlock. Without declared finals, an end that reads as a
+ * success is `unverified`.
  */
 export function classifyDeadMarking(
   m: DeadMarking,
-  initial: Record<string, number> = {},
-): 'success' | 'failure' | 'cancelled' | 'deadlock' {
-  const marked = Object.keys(m.tokens).filter((p) => m.tokens[p] > 0);
-  const names = marked.map((p) => p.toLowerCase());
-  if (names.some((p) => /cancel/.test(p))) return 'cancelled';
-  if (names.some((p) => /fail|fault|error/.test(p))) return 'failure';
-  const success = (p: string) => /succe|done|complete/.test(p.toLowerCase());
-  const accounted = marked.every((p) => success(p) || m.tokens[p] === initial[p]);
-  if (accounted && marked.some(success)) return 'success';
+  finals: Marking[] = [],
+): 'success' | 'failure' | 'cancelled' | 'deadlock' | 'unverified' {
+  const marked = Object.keys(m.tokens).filter((p) => m.tokens[p] > 0).map((p) => p.toLowerCase());
+  if (marked.some((p) => /cancel/.test(p))) return 'cancelled';
+  if (marked.some((p) => /fail|fault|error/.test(p))) return 'failure';
+  if (finals.length > 0) return finals.some((f) => sameMarking(m.tokens, f)) ? 'success' : 'deadlock';
+  if (marked.some((p) => /succe|done|complete/.test(p))) return 'unverified';
   return 'deadlock';
+}
+
+/** Whether two markings put the same tokens on every place. */
+export function sameMarking(a: Marking, b: Marking): boolean {
+  const places = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return [...places].every((p) => (a[p] ?? 0) === (b[p] ?? 0));
 }
