@@ -1,32 +1,16 @@
-// AUTO-GENERATED from /DESIGN.md (sha 93797784). DO NOT EDIT.
+// AUTO-GENERATED from /DESIGN.md (sha aa4b213d). DO NOT EDIT.
 // Re-run: `npm run gen:theme` from ReactComponents/ga-react-components.
 // Source of truth: DESIGN.md at the repo root.
 // Plan: docs/plans/2026-05-23-arch-design-md-adoption-plan.md (Phase 2).
 //
 // Generator: scripts/gen-theme-from-design.mjs
-// Generated: 2026-05-23T20:12:55.533Z
+// Generated: 2026-09-27T01:56:49.362Z
 
-import { createTheme } from '@mui/material/styles';
+import { createTheme, type ThemeOptions } from '@mui/material/styles';
 
-export const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: { main: '#1d4ed8' },
-    secondary: { main: '#06b6d4' },
-    success: { main: '#168a4a' },
-    warning: { main: '#b56a00' },
-    error: { main: '#c2410c' },
-    background: {
-      default: '#f6f7f9',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#172033',
-      secondary: '#6c7278',
-      disabled: '#9ca3af',
-    },
-    divider: '#e0e0e0',
-  },
+// Typography, shape and spacing are shared by the light and dark themes;
+// only the palette differs (DESIGN.md `colors` / `colors-dark`).
+const shared: ThemeOptions = {
   typography: {
     fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     h1: { fontSize: "28px", fontWeight: 700, lineHeight: 1.2 },
@@ -43,7 +27,45 @@ export const theme = createTheme({
     borderRadius: 6,
   },
   spacing: 8,  // base unit; sx={{ p: 2 }} => 16px === DESIGN.md spacing.md
-});
+};
+
+export const theme = createTheme({ ...shared, palette: {
+    mode: 'light',
+    primary: { main: '#1d4ed8' },
+    secondary: { main: '#06b6d4' },
+    success: { main: '#168a4a' },
+    warning: { main: '#b56a00' },
+    error: { main: '#c2410c' },
+    background: {
+      default: '#f6f7f9',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#172033',
+      secondary: '#6c7278',
+      disabled: '#9ca3af',
+    },
+    divider: '#e0e0e0',
+  } });
+
+export const darkTheme = createTheme({ ...shared, palette: {
+    mode: 'dark',
+    primary: { main: '#58a6ff' },
+    secondary: { main: '#22d3ee' },
+    success: { main: '#3fb950' },
+    warning: { main: '#d29922' },
+    error: { main: '#ff7b72' },
+    background: {
+      default: '#0f141b',
+      paper: '#161b22',
+    },
+    text: {
+      primary: '#e6edf3',
+      secondary: '#9da7b3',
+      disabled: '#6e7681',
+    },
+    divider: '#30363d',
+  } });
 
 // Exposed for components that need design tokens MUI's theme doesn't model
 // (border, surface-alt, primary-soft, rounded.pill / xl, elevation, etc.).
@@ -65,6 +87,22 @@ export const designTokens = {
     "text-disabled": "#9ca3af",
     "border": "#d7dce5",
     "divider": "#e0e0e0"
+  },
+  "colors-dark": {
+    "primary": "#58a6ff",
+    "primary-soft": "#388bfd",
+    "secondary": "#22d3ee",
+    "success": "#3fb950",
+    "warning": "#d29922",
+    "error": "#ff7b72",
+    "neutral": "#0f141b",
+    "surface": "#161b22",
+    "surface-alt": "#1c2330",
+    "text-primary": "#e6edf3",
+    "text-secondary": "#9da7b3",
+    "text-disabled": "#6e7681",
+    "border": "#30363d",
+    "divider": "#30363d"
   },
   "typography": {
     "fontFamily": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",

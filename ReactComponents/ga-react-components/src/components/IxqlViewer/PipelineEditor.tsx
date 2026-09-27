@@ -4,6 +4,8 @@
 // depends_on, live ix_pipeline_validate with errors pinned to their node,
 // and Run via ix_pipeline_run. Talks to the local-only /ix-pipeline/*
 // dev-server routes (vite.config.ts → dev-server/ixMcpBridge.ts).
+// Agents can read the shown pipeline and propose a replacement; a proposal
+// only reaches the graph through the user's Accept (see vite.config.ts).
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
@@ -24,14 +26,22 @@ import { Box, Button, List, ListItemButton, TextField, Typography, useTheme } fr
 
 import {
   buildSpec,
+  bundleEdges,
   defaultArgsText,
+  diffSpecs,
+  groupOf,
+  groupedPositions,
   issuesByStep,
   nextStepId,
+  specToGraph,
   type CatalogNode,
   type EditorEdge,
   type EditorStep,
+  type SpecDiff,
   type ValidationReport,
 } from './pipelineSpec';
+import type { JevAdvice, ProposalSummary } from './jevAdvice';
+import gaHarmonicFieldSpec from './examples/ga-harmonic-field.pipeline.json?raw';
 
 interface StepNodeData {
   step: EditorStep;
@@ -70,13 +80,59 @@ const StepNode: React.FC<NodeProps<StepNodeData>> = ({ data }) => {
   );
 };
 
-const nodeTypes = { step: StepNode };
+interface SectionNodeData {
+  name: string;
+  count: number;
+  width: number;
+  height: number;
+}
+
+// Background frame for one section (ComfyUI-style group). Its handles are
+// only anchors for the bundled edges between sections.
+const SectionNode: React.FC<NodeProps<SectionNodeData>> = ({ data }) => (
+  <Box
+    sx={{
+      width: data.width,
+      height: data.height,
+      border: 1,
+      borderStyle: 'dashed',
+      borderColor: 'divider',
+      borderRadius: 2,
+      bgcolor: 'action.hover',
+      px: 1.5,
+      py: 0.5,
+      pointerEvents: 'none',
+    }}
+  >
+    <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.5 }}>
+      {data.name} · {data.count}
+    </Typography>
+    <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
+  </Box>
+);
+
+const nodeTypes = { step: StepNode, section: SectionNode };
+const SECTION = 'section:';
+// Rough step-node footprint, for sizing the section frames around them.
+const STEP_W = 195;
+const STEP_H = 72;
 
 async function postJson(url: string, body: unknown): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const json = (await res.json()) as { ok?: boolean; result?: unknown; error?: string };
   if (!res.ok) return { ok: false, error: json.error ?? `HTTP ${res.status}` };
   return { ok: json.ok === true, result: json.result, error: json.error };
+}
+
+/** A pending agent proposal, as the dev server stores it (not yet checked). */
+interface Proposal {
+  id: string;
+  title: string;
+  author: string;
+  base_revision: number | null;
+  created_at: string;
+  spec: unknown;
 }
 
 const Issue: React.FC<{ kind: 'error' | 'warning'; children: React.ReactNode }> = ({ kind, children }) => (
@@ -100,6 +156,9 @@ export const PipelineEditor: React.FC = () => {
   const [runOutput, setRunOutput] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const validationSeq = useRef(0);
+  const [importError, setImportError] = useState<string | null>(null);
+  // Bumped on every load so React Flow remounts and fits the new graph.
+  const [graphVersion, setGraphVersion] = useState(0);
 
   useEffect(() => {
     fetch('/ix-pipeline/catalog')
@@ -115,7 +174,18 @@ export const PipelineEditor: React.FC = () => {
     () => Object.fromEntries((catalog ?? []).map((n) => [n.name, n.required_inputs])),
     [catalog],
   );
-  const { spec, argErrors } = useMemo(() => buildSpec(steps, edges, requiredByTool), [steps, edges, requiredByTool]);
+  const propertiesByTool = useMemo(
+    () => Object.fromEntries((catalog ?? []).map((n) => [n.name, n.input_schema?.properties])),
+    [catalog],
+  );
+  const { spec, argErrors } = useMemo(
+    () => buildSpec(steps, edges, requiredByTool, propertiesByTool),
+    [steps, edges, requiredByTool, propertiesByTool],
+  );
+  // One status for the header: the graph can be valid for IX while a step's
+  // own arguments are not, and Run already requires both.
+  const locallyValid = Object.keys(argErrors).length === 0;
+  const pipelineValid = report?.valid === true && locallyValid;
 
   // Live validation, debounced. Every spec change invalidates the previous
   // report at once (so Run cannot fire on a spec that was never validated),
@@ -144,6 +214,86 @@ export const PipelineEditor: React.FC = () => {
 
   const issues = useMemo(() => issuesByStep(report), [report]);
 
+  // Agent connectivity. The shown pipeline is mirrored to /ix-pipeline/current
+  // so an agent can read what it is patching; its proposals arrive as whole
+  // specs and wait here until the user accepts or rejects them.
+  const [revision, setRevision] = useState<number | null>(null);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      fetch('/ix-pipeline/current', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spec }) })
+        .then(async (res) => { if (res.ok) setRevision(((await res.json()) as { revision: number }).revision); })
+        .catch(() => setRevision(null));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [spec]);
+  useEffect(() => {
+    let alive = true;
+    const poll = () => fetch('/ix-pipeline/proposals')
+      .then(async (res) => {
+        const json = (await res.json()) as { proposals?: Proposal[] };
+        if (alive && res.ok && json.proposals) setProposals(json.proposals);
+      })
+      .catch(() => { /* dev server restarting; the next poll retries */ });
+    void poll();
+    const timer = setInterval(poll, 2000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
+  const reviewed = useMemo(() => proposals.map((p) => {
+    try {
+      const graph = specToGraph(p.spec);
+      return { p, diff: diffSpecs(spec, buildSpec(graph.steps, graph.edges).spec), error: null };
+    } catch (e) {
+      return { p, diff: null, error: e instanceof Error ? e.message : String(e) };
+    }
+  }), [proposals, spec]);
+  // Jev shadow advice, per proposal: shown and recorded with the user's
+  // decision, never read by Accept or Reject.
+  const [advice, setAdvice] = useState<Record<string, { advice?: JevAdvice; error?: string; asking?: boolean }>>({});
+  const [jevStats, setJevStats] = useState<{ calls: number; spend_usd: number; cap_usd: number; decided: number; agreed: number } | null>(null);
+  useEffect(() => {
+    fetch('/ix-pipeline/advise/stats')
+      .then(async (res) => { if (res.ok) setJevStats(await res.json()); })
+      .catch(() => { /* no ledger yet */ });
+  }, []);
+  const askJev = useCallback((p: Proposal, diff: SpecDiff) => {
+    const approval = new Map((catalog ?? []).map((n) => [n.name, n.approval]));
+    const graph = specToGraph(p.spec);
+    const toolAfter = new Map(graph.steps.map((s) => [s.id, s.tool]));
+    const toolBefore = new Map(spec.steps.map((s) => [s.id, s.tool]));
+    const summary: ProposalSummary = {
+      title: p.title,
+      author: p.author,
+      based_on_current: p.base_revision === null || p.base_revision === revision,
+      added: diff.added.map((id) => {
+        const tool = toolAfter.get(id) ?? '';
+        return { id, tool, tier: approval.get(tool)?.tier, effect: approval.get(tool)?.effect };
+      }),
+      removed: diff.removed.map((id) => ({ id, tool: toolBefore.get(id) ?? '' })),
+      changed: Object.entries(diff.changed).map(([id, fields]) => ({ id, fields })),
+      steps_before: spec.steps.length,
+      steps_after: graph.steps.length,
+    };
+    setAdvice((a) => ({ ...a, [p.id]: { asking: true } }));
+    fetch('/ix-pipeline/advise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proposal_id: p.id, summary }) })
+      .then(async (res) => {
+        const json = (await res.json()) as { advice?: JevAdvice; stats?: typeof jevStats; error?: string };
+        if (!res.ok || !json.advice) throw new Error(json.error ?? `HTTP ${res.status}`);
+        setAdvice((a) => ({ ...a, [p.id]: { advice: json.advice } }));
+        if (json.stats) setJevStats(json.stats);
+      })
+      .catch((e: unknown) => setAdvice((a) => ({ ...a, [p.id]: { error: e instanceof Error ? e.message : String(e) } })));
+  }, [catalog, spec, revision]);
+  const dismiss = useCallback((id: string, decision: 'accept' | 'reject') => {
+    setProposals((prev) => prev.filter((p) => p.id !== id));
+    void fetch(`/ix-pipeline/proposals/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (advice[id]?.advice) {
+      fetch('/ix-pipeline/advise/outcome', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ proposal_id: id, decision }) })
+        .then(async (res) => { if (res.ok) setJevStats(await res.json()); })
+        .catch(() => { /* the ledger misses one outcome; nothing acts on it */ });
+    }
+  }, [advice]);
+
   const addStep = useCallback((node: CatalogNode) => {
     const id = nextStepId(steps);
     const n = steps.length;
@@ -160,7 +310,32 @@ export const PipelineEditor: React.FC = () => {
     setSelectedId((cur) => (cur && gone.has(cur) ? null : cur));
   }, []);
 
-  const flowNodes: Node<StepNodeData>[] = useMemo(
+  const sectionNodes: Node<SectionNodeData>[] = useMemo(() => {
+    const boxes = new Map<string, { minX: number; minY: number; maxX: number; maxY: number; count: number }>();
+    for (const step of steps) {
+      const p = positions[step.id];
+      if (!p) continue;
+      const g = groupOf(step);
+      const b = boxes.get(g) ?? { minX: p.x, minY: p.y, maxX: p.x, maxY: p.y, count: 0 };
+      boxes.set(g, {
+        minX: Math.min(b.minX, p.x), minY: Math.min(b.minY, p.y),
+        maxX: Math.max(b.maxX, p.x), maxY: Math.max(b.maxY, p.y), count: b.count + 1,
+      });
+    }
+    return [...boxes].map(([name, b]) => ({
+      id: SECTION + name,
+      type: 'section',
+      position: { x: b.minX - 16, y: b.minY - 30 },
+      data: { name, count: b.count, width: b.maxX - b.minX + STEP_W + 32, height: b.maxY - b.minY + STEP_H + 46 },
+      draggable: false,
+      selectable: false,
+      deletable: false,
+      focusable: false,
+      zIndex: -1,
+    }));
+  }, [steps, positions]);
+
+  const stepNodes: Node<StepNodeData>[] = useMemo(
     () =>
       steps.map((step) => {
         const i = issues.get(step.id);
@@ -176,14 +351,36 @@ export const PipelineEditor: React.FC = () => {
       }),
     [steps, positions, issues, argErrors, selectedId],
   );
+  const flowNodes: Node[] = useMemo(() => [...sectionNodes, ...stepNodes], [sectionNodes, stepNodes]);
 
   const edgeColor = theme.palette.text.secondary;
   const accentColor = theme.palette.primary.main;
-  const flowEdges: Edge[] = useMemo(
-    () =>
-      edges.map((e) => {
+  // Edges between sections are drawn as one bundle per pair of sections.
+  // A step's own edges are drawn in full while it is selected, and edges
+  // inside a section always are.
+  const flowEdges: Edge[] = useMemo(() => {
+    const group = new Map(steps.map((s) => [s.id, groupOf(s)]));
+    const bundles: Edge[] = bundleEdges(steps, edges).map((b) => ({
+      id: `bundle:${b.source}->${b.target}`,
+      source: SECTION + b.source,
+      target: SECTION + b.target,
+      label: b.count > 1 ? `×${b.count}` : undefined,
+      selectable: false,
+      deletable: false,
+      style: { stroke: edgeColor, strokeWidth: 1.5 + Math.min(b.count, 10) * 0.25, opacity: 0.8 },
+      labelStyle: { fill: edgeColor, fontSize: 11 },
+      labelBgStyle: { fill: theme.palette.background.default },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
+    }));
+    const detailed = edges
+      .filter((e) => {
         const id = `${e.source}->${e.target}`;
-        const color = id === selectedEdgeId ? accentColor : edgeColor;
+        return group.get(e.source) === group.get(e.target)
+          || e.source === selectedId || e.target === selectedId || id === selectedEdgeId;
+      })
+      .map((e) => {
+        const id = `${e.source}->${e.target}`;
+        const color = id === selectedEdgeId || e.source === selectedId || e.target === selectedId ? accentColor : edgeColor;
         return {
           id,
           source: e.source,
@@ -192,14 +389,14 @@ export const PipelineEditor: React.FC = () => {
           style: { stroke: color, strokeWidth: id === selectedEdgeId ? 2.5 : 1.5 },
           markerEnd: { type: MarkerType.ArrowClosed, color },
         };
-      }),
-    [edges, edgeColor, accentColor, selectedEdgeId],
-  );
+      });
+    return [...bundles, ...detailed];
+  }, [steps, edges, edgeColor, accentColor, selectedEdgeId, selectedId, theme.palette.background.default]);
 
   // `steps` is the model: a keyboard "remove" deletes the step and its edges;
   // position changes only move it.
   const onNodesChange = useCallback((changes: NodeChange[]) => {
-    const removed = changes.flatMap((c) => (c.type === 'remove' ? [c.id] : []));
+    const removed = changes.flatMap((c) => (c.type === 'remove' && !c.id.startsWith(SECTION) ? [c.id] : []));
     if (removed.length > 0) removeSteps(removed);
     const moves = changes.filter((c) => c.type !== 'remove');
     if (moves.length === 0) return;
@@ -220,6 +417,38 @@ export const PipelineEditor: React.FC = () => {
     setEdges((prev) => prev.filter((e) => !gone.has(`${e.source}->${e.target}`)));
   }, []);
 
+  // Replaces the whole graph. Nothing is kept from the previous one: a
+  // half-merged import would validate a pipeline nobody wrote.
+  const loadSpec = useCallback((specJson: string) => {
+    try {
+      const graph = specToGraph(JSON.parse(specJson));
+      setSteps(graph.steps);
+      setEdges(graph.edges);
+      setPositions(groupedPositions(graph.steps, graph.edges));
+      setSelectedId(null);
+      setSelectedEdgeId(null);
+      setImportError(null);
+      setGraphVersion((v) => v + 1);
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
+  const importFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) file.text().then(loadSpec, (err: unknown) => setImportError(String(err)));
+  }, [loadSpec]);
+
+  const exportSpec = useCallback(() => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pipeline.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [spec]);
+
   const run = useCallback(() => {
     // Bound to the spec validation generation: an edit bumps validationSeq,
     // and a run started before it no longer publishes its output.
@@ -239,7 +468,7 @@ export const PipelineEditor: React.FC = () => {
   const selected = steps.find((s) => s.id === selectedId) ?? null;
   const selectedNode = selected ? catalog?.find((n) => n.name === selected.tool) : undefined;
   const filtered = (catalog ?? []).filter((n) => n.name.toLowerCase().includes(filter.toLowerCase()));
-  const canRun = steps.length > 0 && report?.valid === true && Object.keys(argErrors).length === 0 && !running;
+  const canRun = steps.length > 0 && pipelineValid && !running;
   const globalIssues = issues.get('');
   const selectedErrors = selected
     ? [...(argErrors[selected.id] ? [argErrors[selected.id]] : []), ...(issues.get(selected.id)?.errors ?? [])]
@@ -271,15 +500,34 @@ export const PipelineEditor: React.FC = () => {
         </List>
       </Box>
 
-      <Box component="main" sx={{ flex: 1, position: 'relative' }}>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          position: 'relative',
+          // reactflow's stylesheet paints its chrome white; follow the theme so
+          // the canvas stays readable in dark mode.
+          '& .react-flow__controls-button': {
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            borderBottomColor: 'divider',
+            '& svg': { fill: 'currentColor' },
+            '&:hover': { bgcolor: 'action.hover' },
+          },
+          '& .react-flow__attribution': { bgcolor: 'transparent', '& a': { color: 'text.secondary' } },
+          '& .react-flow__edge-path': { stroke: theme.palette.text.secondary },
+          '& .react-flow__handle': { bgcolor: 'text.primary', borderColor: 'background.paper' },
+        }}
+      >
         <ReactFlow
+          key={graphVersion}
           nodes={flowNodes}
           edges={flowEdges}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onConnect={onConnect}
           onEdgesDelete={onEdgesDelete}
-          onNodeClick={(_e, n) => { setSelectedId(n.id); setSelectedEdgeId(null); }}
+          onNodeClick={(_e, n) => { if (!n.id.startsWith(SECTION)) { setSelectedId(n.id); setSelectedEdgeId(null); } }}
           onEdgeClick={(_e, ed) => { setSelectedEdgeId(ed.id); setSelectedId(null); }}
           onPaneClick={() => { setSelectedId(null); setSelectedEdgeId(null); }}
           deleteKeyCode={['Delete']}
@@ -303,18 +551,105 @@ export const PipelineEditor: React.FC = () => {
       <Box component="aside" sx={{ ...sidePanel, width: 340, borderLeft: 1, borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
           <Typography variant="subtitle2">Pipeline</Typography>
-          <Typography variant="caption" sx={{ color: report?.valid ? 'success.main' : 'text.secondary' }}>
-            {steps.length === 0 ? 'empty' : report ? (report.valid ? '✓ valid' : '✕ invalid') : 'validating…'}
+          <Typography variant="caption" sx={{ color: pipelineValid ? 'success.main' : 'text.secondary' }}>
+            {steps.length === 0 ? 'empty' : report || !locallyValid ? (pipelineValid ? '✓ valid' : '✕ invalid') : 'validating…'}
           </Typography>
           <Button variant="contained" size="small" onClick={run} disabled={!canRun} sx={{ ml: 'auto' }}>
             {running ? 'Running…' : 'Run'}
           </Button>
         </Box>
+        <Box sx={{ display: 'flex', gap: 0.5, mb: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => loadSpec(gaHarmonicFieldSpec)}
+            title="C major harmonic field: ICV motion, substitutions, harmonic paths, clustering, T/S/D functions (53 steps)"
+          >
+            GA example
+          </Button>
+          <Button size="small" variant="outlined" component="label">
+            Import
+            <input hidden type="file" accept=".json,application/json" onChange={importFile} />
+          </Button>
+          <Button size="small" variant="outlined" onClick={exportSpec} disabled={steps.length === 0}>
+            Export
+          </Button>
+        </Box>
+        {importError && <Issue kind="error">Import: {importError}</Issue>}
         {validateError && <Issue kind="error">Validator: {validateError}</Issue>}
         {globalIssues?.errors.map((m) => <Issue key={m} kind="error">{m}</Issue>)}
         {globalIssues?.warnings.map((m) => <Issue key={m} kind="warning">{m}</Issue>)}
         {report?.execution_order && (
-          <Typography variant="caption" color="text.secondary">Order: {report.execution_order.join(' → ')}</Typography>
+          <Box component="details" sx={{ color: 'text.secondary', fontSize: 12 }}>
+            <summary>Execution order ({report.execution_order.length})</summary>
+            {report.execution_order.join(' → ')}
+          </Box>
+        )}
+
+        {reviewed.length > 0 && (
+          <Box component="section" sx={{ mt: 1.5 }}>
+            <Typography variant="subtitle2">Agent proposals ({reviewed.length})</Typography>
+            {jevStats && (
+              <Typography variant="caption" component="div" color="text.secondary">
+                Jev shadow: {jevStats.calls} calls · ${jevStats.spend_usd.toFixed(5)} of ${jevStats.cap_usd} · agreed with you {jevStats.agreed}/{jevStats.decided}
+              </Typography>
+            )}
+            {reviewed.map(({ p, diff, error }) => {
+              const changedIds = diff ? Object.keys(diff.changed) : [];
+              const noop = diff && diff.added.length + diff.removed.length + changedIds.length === 0;
+              return (
+                <Box key={p.id} sx={{ border: 1, borderColor: 'primary.main', borderRadius: 1, p: 0.75, my: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{p.title}</Typography>
+                  <Typography variant="caption" component="div" color="text.secondary">
+                    by {p.author}
+                    {p.base_revision !== null && revision !== null && p.base_revision !== revision
+                      && ` · based on revision ${p.base_revision}, the graph is now at ${revision}: accepting also undoes your edits since`}
+                  </Typography>
+                  {error && <Issue kind="error">not a valid pipeline: {error}</Issue>}
+                  {diff && (
+                    <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace' }}>
+                      {noop && 'no change'}
+                      {diff.added.length > 0 && <Box sx={{ color: 'success.main' }}>+ {diff.added.join(', ')}</Box>}
+                      {diff.removed.length > 0 && <Box sx={{ color: 'error.main' }}>− {diff.removed.join(', ')}</Box>}
+                      {changedIds.map((id) => <Box key={id} sx={{ color: 'warning.main' }}>~ {id} ({diff.changed[id].join(', ')})</Box>)}
+                    </Typography>
+                  )}
+                  {advice[p.id]?.advice && (() => {
+                    const a = advice[p.id].advice!;
+                    return (
+                      <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 0.5 }} title="Shadow advice: recorded next to your decision, never acted on">
+                        Jev (shadow): <b>{a.recommendation}</b> ({Math.round(a.confidence * 100)}%) · risk {a.risk.toFixed(1)}/2 · matches title {Math.round(a.matches_title * 100)}%
+                      </Typography>
+                    );
+                  })()}
+                  {advice[p.id]?.error && <Issue kind="warning">Jev: {advice[p.id].error}</Issue>}
+                  <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disabled={!diff}
+                      title="Replaces the graph; it is then validated as usual and nothing runs until you click Run"
+                      onClick={() => { loadSpec(JSON.stringify(p.spec)); dismiss(p.id, 'accept'); }}
+                    >
+                      Accept
+                    </Button>
+                    <Button size="small" onClick={() => dismiss(p.id, 'reject')}>Reject</Button>
+                    {diff && !advice[p.id]?.advice && (
+                      <Button
+                        size="small"
+                        disabled={advice[p.id]?.asking}
+                        onClick={() => askJev(p, diff)}
+                        title="One paid TypeSafe call (a fraction of a cent); sends step ids, tool names and approval tiers, never arguments"
+                        sx={{ ml: 'auto' }}
+                      >
+                        {advice[p.id]?.asking ? 'Asking…' : 'Ask Jev'}
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
         )}
 
         {selected && (

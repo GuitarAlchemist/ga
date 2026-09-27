@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpec, defaultArgsText, issuesByStep, nextStepId, type ValidationReport } from './pipelineSpec';
+import { buildSpec, bundleEdges, defaultArgsText, diffSpecs, groupOf, groupedPositions, issuesByStep, nextStepId, specToGraph, typeErrors, type ValidationReport } from './pipelineSpec';
 
 describe('buildSpec', () => {
   it('turns edges into depends_on and parses arguments (shape from docs/pipelines/dag-execution.md)', () => {
@@ -78,5 +78,117 @@ describe('helpers', () => {
     expect(byStep.get('a')?.errors).toHaveLength(1);
     expect(byStep.get('b')?.errors[0]).toContain('unknown tool');
     expect(byStep.get('')?.errors).toEqual(['no steps']);
+  });
+});
+
+describe('argument types', () => {
+  // ix_stats as ix_node_catalog declares it.
+  const stats = { data: { type: 'array', items: { type: 'number' } } };
+  const build = (argsText: string) =>
+    buildSpec([{ id: 's1', tool: 'ix_stats', argsText }], [], { ix_stats: ['data'] }, { ix_stats: stats }).argErrors;
+
+  it('accepts a list of numbers', () => {
+    expect(build('{"data":[1,2,3]}')).toEqual({});
+  });
+
+  it('flags an item of the wrong type, which ix_pipeline_validate lets through', () => {
+    expect(build('{"data":["not-a-number"]}').s1).toBe('data[0]: expected number');
+  });
+
+  it('flags a value of the wrong type', () => {
+    expect(build('{"data":"1,2,3"}').s1).toBe('data: expected array');
+  });
+
+  it('leaves $step.field references to run time', () => {
+    expect(build('{"data":"$s0.values"}')).toEqual({});
+    expect(typeErrors({ data: [1, '$s0.mean'] }, stats)).toEqual([]);
+  });
+
+  it('reports the null placeholder as unfilled, not as mistyped', () => {
+    expect(build('{"data":null}').s1).toContain('still null');
+  });
+
+  it('accepts types it does not model and union types', () => {
+    expect(typeErrors({ a: 1, b: 'x' }, { a: { type: ['number', 'null'] }, b: { type: 'custom' } })).toEqual([]);
+    expect(typeErrors({ n: 1.5 }, { n: { type: 'integer' } })).toEqual(['n: expected integer']);
+  });
+});
+
+describe('specToGraph', () => {
+  it('round-trips through buildSpec', () => {
+    const spec = {
+      steps: [
+        { id: 'a', tool: 'ix_stats', arguments: { data: [1, 2] } },
+        { id: 'b', tool: 'ix_stats', arguments: { data: ['$a.mean'] }, depends_on: ['a'] },
+      ],
+    };
+    const { steps, edges } = specToGraph(spec);
+    expect(edges).toEqual([{ source: 'a', target: 'b' }]);
+    expect(buildSpec(steps, edges).spec).toEqual(spec);
+  });
+
+  it('refuses shapes it cannot represent', () => {
+    expect(() => specToGraph({})).toThrow('"steps" array');
+    expect(() => specToGraph({ steps: [{ id: 'a', tool: 'x' }, { id: 'a', tool: 'y' }] })).toThrow('duplicate');
+    expect(() => specToGraph({ steps: [{ id: 'a', tool: 'x', depends_on: ['nope'] }] })).toThrow('unknown step "nope"');
+    expect(() => specToGraph({ steps: [{ id: 'a' }] })).toThrow('"tool"');
+  });
+});
+
+describe('sections', () => {
+  const st = (id: string, tool = 'ix_stats') => ({ id, tool, argsText: '{}' });
+
+  it('groups by id prefix, else by tool', () => {
+    expect(groupOf(st('delta_I_IV'))).toBe('delta');
+    expect(groupOf(st('s1', 'ix_pca'))).toBe('ix_pca');
+  });
+
+  it('bundles edges between sections and drops edges inside one', () => {
+    const steps = [st('a_1'), st('a_2'), st('b_1'), st('b_2')];
+    const edges = [
+      { source: 'a_1', target: 'b_1' }, { source: 'a_2', target: 'b_1' },
+      { source: 'a_1', target: 'b_2' }, { source: 'b_1', target: 'b_2' },
+    ];
+    expect(bundleEdges(steps, edges)).toEqual([{ source: 'a', target: 'b', count: 3 }]);
+  });
+
+  it('wraps a row of sections wider than maxRowWidth', () => {
+    const steps = [st('a_1'), st('b_1'), st('c_1')];
+    const pos = groupedPositions(steps, [], { dx: 100, gapX: 0, maxRowWidth: 200 });
+    expect(pos.a_1.y).toBe(pos.b_1.y);
+    expect(pos.c_1.y).toBeGreaterThan(pos.a_1.y);
+    expect(pos.c_1.x).toBe(0);
+  });
+
+  it('keeps a section together and below the section it reads from', () => {
+    const steps = [st('a_1'), st('a_2'), st('a_3'), st('b_1')];
+    const pos = groupedPositions(steps, [{ source: 'a_1', target: 'b_1' }], { cols: 2 });
+    expect(pos.b_1.y).toBeGreaterThan(Math.max(pos.a_1.y, pos.a_2.y, pos.a_3.y));
+    expect(new Set(Object.values(pos).map((p) => `${p.x},${p.y}`)).size).toBe(4);
+  });
+});
+
+describe('diffSpecs', () => {
+  const cur = {
+    steps: [
+      { id: 'a', tool: 'ix_stats', arguments: { data: [1, 2], x: 1 } },
+      { id: 'b', tool: 'ix_fft', arguments: {}, depends_on: ['a'] },
+      { id: 'c', tool: 'ix_pca', arguments: {} },
+    ],
+  };
+
+  it('reports added, removed and changed steps', () => {
+    const next = {
+      steps: [
+        { id: 'a', tool: 'ix_stats', arguments: { x: 1, data: [1, 2] } },
+        { id: 'b', tool: 'ix_fft', arguments: { n: 4 } },
+        { id: 'd', tool: 'ix_kmeans', arguments: {} },
+      ],
+    };
+    expect(diffSpecs(cur, next)).toEqual({ added: ['d'], removed: ['c'], changed: { b: ['arguments', 'depends_on'] } });
+  });
+
+  it('is empty for the same pipeline', () => {
+    expect(diffSpecs(cur, cur)).toEqual({ added: [], removed: [], changed: {} });
   });
 });
