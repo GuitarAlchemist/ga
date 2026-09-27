@@ -15,6 +15,21 @@ colors:
   text-disabled: "#9ca3af"
   border: "#d7dce5"
   divider: "#e0e0e0"
+colors-dark:
+  primary: "#58a6ff"
+  primary-soft: "#388bfd"
+  secondary: "#22d3ee"
+  success: "#3fb950"
+  warning: "#d29922"
+  error: "#ff7b72"
+  neutral: "#0f141b"
+  surface: "#161b22"
+  surface-alt: "#1c2330"
+  text-primary: "#e6edf3"
+  text-secondary: "#9da7b3"
+  text-disabled: "#6e7681"
+  border: "#30363d"
+  divider: "#30363d"
 typography:
   fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   fontFamily-mono: "ui-monospace, SFMono-Regular, 'Cascadia Code', Consolas, monospace"
@@ -156,7 +171,7 @@ Two shadow tokens. Most cards use `card`. Only the chatbot hero uses `hero`.
 
 - **Three.js / R3F demo colors:** scene-specific (sunflower yellow, sand-dune ochre, ocean blue gradients, fluffy-grass green). Out of scope — each demo is its own visual essay.
 - **VexFlow / music notation:** locked to VexFlow's defaults (black on white) for sheet-music clarity.
-- **Dark mode:** not yet defined. When added, every token here gets a dark counterpart; the structure stays.
+- **Dark mode:** `colors-dark` gives every colour token a dark counterpart, with the same keys; typography, spacing, radii and elevation are shared. The generator emits it as `darkTheme` next to `theme`. Pages that follow the OS colour scheme (`useOsTheme`) switch between the two; other pages stay light.
 - **Animation / motion:** no timing or easing tokens yet. Transitions today use MUI's defaults.
 
 ## Revisit
