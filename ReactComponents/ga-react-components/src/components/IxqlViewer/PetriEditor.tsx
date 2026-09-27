@@ -137,6 +137,7 @@ export const PetriEditor: React.FC = () => {
     setInspected(null);
     setError(null);
   }, [net]);
+  const initialTokens = useMemo(() => Object.fromEntries(net.places.map((p) => [p.id, p.tokens])), [net.places]);
 
   const problems = useMemo(() => netProblems(net), [net]);
 
@@ -400,10 +401,11 @@ export const PetriEditor: React.FC = () => {
             </Typography>
             <Typography variant="caption" color="text.secondary" component="p">
               Each terminal state a runtime test must tell apart, with the shortest firing sequence reaching it. The
-              outcome is read from the place names; click one to show it on the net.
+              outcome is read from the place names, and a success leaves no token outside an outcome place except a
+              resource back to its initial count; click one to show it on the net.
             </Typography>
             {report.deadMarkings.map((m, i) => {
-              const outcome = classifyDeadMarking(m);
+              const outcome = classifyDeadMarking(m, initialTokens);
               const marking = Object.entries(m.tokens).map(([p, n]) => `${p}=${n}`).join(' ');
               const active = inspected === m;
               return (

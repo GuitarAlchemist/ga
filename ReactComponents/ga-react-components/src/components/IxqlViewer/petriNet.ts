@@ -176,11 +176,22 @@ export function readReport(raw: unknown): PetriReport {
  * Names a terminal marking after the terminal places it marks, as lesson 17
  * asks (success, failure, cancellation): a marked place whose name reads as
  * an outcome. Anything else is an unexplained deadlock.
+ *
+ * A success needs every token accounted for: each marked place is an outcome,
+ * or a resource holding exactly its `initial` tokens again (a capacity token
+ * released at the end). One job done while another is stuck mid-way is a
+ * deadlock, not a success.
  */
-export function classifyDeadMarking(m: DeadMarking): 'success' | 'failure' | 'cancelled' | 'deadlock' {
-  const marked = Object.keys(m.tokens).filter((p) => m.tokens[p] > 0).map((p) => p.toLowerCase());
-  if (marked.some((p) => /cancel/.test(p))) return 'cancelled';
-  if (marked.some((p) => /fail|fault|error/.test(p))) return 'failure';
-  if (marked.some((p) => /succe|done|complete/.test(p))) return 'success';
+export function classifyDeadMarking(
+  m: DeadMarking,
+  initial: Record<string, number> = {},
+): 'success' | 'failure' | 'cancelled' | 'deadlock' {
+  const marked = Object.keys(m.tokens).filter((p) => m.tokens[p] > 0);
+  const names = marked.map((p) => p.toLowerCase());
+  if (names.some((p) => /cancel/.test(p))) return 'cancelled';
+  if (names.some((p) => /fail|fault|error/.test(p))) return 'failure';
+  const success = (p: string) => /succe|done|complete/.test(p.toLowerCase());
+  const accounted = marked.every((p) => success(p) || m.tokens[p] === initial[p]);
+  if (accounted && marked.some(success)) return 'success';
   return 'deadlock';
 }

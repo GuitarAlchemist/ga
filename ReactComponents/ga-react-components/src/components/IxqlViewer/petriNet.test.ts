@@ -105,4 +105,18 @@ describe('classifyDeadMarking', () => {
     expect(classifyDeadMarking({ tokens: { cancelled: 1 }, witness: [] })).toBe('cancelled');
     expect(classifyDeadMarking({ tokens: { q: 1 }, witness: [] })).toBe('deadlock');
   });
+
+  // Two jobs share one capacity token; the broken release keeps it, so job 2
+  // is tested but never admitted (IX_PETRI_CHECKPOINT_PILOT, case B).
+  const initial = { ready1: 1, ready2: 1, cap: 1 };
+
+  it('does not call a deadlock with a job left mid-way a success', () => {
+    expect(classifyDeadMarking({ tokens: { done1: 1, tested2: 1 }, witness: [] }, initial)).toBe('deadlock');
+    expect(classifyDeadMarking({ tokens: { done2: 1, tested1: 1 }, witness: [] }, initial)).toBe('deadlock');
+  });
+
+  it('calls a success the end where the resource is back to its initial tokens', () => {
+    expect(classifyDeadMarking({ tokens: { cap: 1, done1: 1, done2: 1 }, witness: [] }, initial)).toBe('success');
+    expect(classifyDeadMarking({ tokens: { cap: 2, done1: 1, done2: 1 }, witness: [] }, initial)).toBe('deadlock');
+  });
 });
