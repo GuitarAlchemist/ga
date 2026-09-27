@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "b013e4393ccecaa2f5a3045dddfb13956981355c",
-    "generatedAt": "2026-09-26T16:41:22.183652+00:00",
+    "commitSha": "d67d04bdb04742ba338518e28197e6035cb80e90",
+    "generatedAt": "2026-09-27T02:51:30.172171+00:00",
     "repoCount": 5,
-    "totalPRs": 23
+    "totalPRs": 24
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 3,
+      "prCount": 2,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-26T16:26:48Z",
-          "failingChecks": 0,
-          "headRef": "feat/pipeline-editor-os-theme",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 740,
-          "title": "feat(pipeline-editor): follow the OS colour scheme",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/740"
-        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -140,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/738"
         },
         {
-          "ageDays": 54,
+          "ageDays": 55,
           "author": "spareilleux",
           "createdAt": "2026-08-02T21:29:06Z",
           "failingChecks": 2,
@@ -165,8 +153,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-27T02:12:13Z",
+          "failingChecks": 0,
+          "headRef": "feat/duckdb-query-tool",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 357,
+          "title": "feat(ix-agent): ix_duckdb_query, DuckDB SQL over caller-supplied rows",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/357"
+        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -174,7 +174,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 356,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ix/pull/356"
@@ -186,7 +186,7 @@
           "failingChecks": 1,
           "headRef": "fix/manual-tools-approval-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 352,
           "title": "fix(ix-agent): route manual MCP tools through the approval gate",
           "url": "https://github.com/GuitarAlchemist/ix/pull/352"
@@ -204,7 +204,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:53Z",
           "failingChecks": 0,
@@ -216,7 +216,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:51Z",
           "failingChecks": 0,
@@ -228,7 +228,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:49Z",
           "failingChecks": 0,
@@ -258,14 +258,14 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-09-26T02:01:31Z",
+          "createdAt": "2026-09-27T01:43:34Z",
           "failingChecks": 0,
-          "headRef": "fix/plan-and-execute-unreachable",
+          "headRef": "feat/graph-editor-slice-1",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 325,
-          "title": "fix: let the selector reach PlanAndExecute",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/325"
+          "number": 327,
+          "title": "feat: describe what a tool expects and what it does, so a graph can be drawn",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/327"
         },
         {
           "ageDays": 1,
@@ -280,7 +280,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-09-17T23:04:23Z",
           "failingChecks": 0,
@@ -307,8 +307,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 11,
+      "prCount": 12,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-26T18:43:46Z",
+          "failingChecks": 0,
+          "headRef": "docs/thresholds-table-overlay",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 1133,
+          "title": "docs(logic): declare the Governance Thresholds table an overlay on the ladder",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1133"
+        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -316,7 +328,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -328,19 +340,19 @@
           "failingChecks": 0,
           "headRef": "fix/freshness-head-sha-correlation",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1121,
           "title": "fix(loop-health): correlate an event-producer run by head_sha alone",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1121"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-09-23T00:02:47Z",
           "failingChecks": 0,
           "headRef": "fix/streeling-spanish-accents",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1120,
           "title": "fix(streeling): restore stripped Spanish accents in 12 course modules",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1120"
@@ -358,7 +370,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-09-17T22:51:32Z",
           "failingChecks": 0,
@@ -382,7 +394,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1098"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-09-15T01:44:19Z",
           "failingChecks": 1,
@@ -394,7 +406,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1091"
         },
         {
-          "ageDays": 11,
+          "ageDays": 12,
           "author": "spareilleux",
           "createdAt": "2026-09-14T21:16:08Z",
           "failingChecks": 1,
@@ -418,7 +430,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
         },
         {
-          "ageDays": 42,
+          "ageDays": 43,
           "author": "spareilleux",
           "createdAt": "2026-08-14T18:13:24Z",
           "failingChecks": 2,
@@ -430,7 +442,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 69,
+          "ageDays": 70,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
