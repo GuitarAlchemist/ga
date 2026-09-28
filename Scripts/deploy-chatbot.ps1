@@ -12,7 +12,7 @@
       .deploy/releases/<sha>/   one `dotnet publish` output per deployed commit
       .deploy/current           junction to the running release
       .deploy/run-chatbot.cmd   launcher run by the scheduled task (restarts on exit)
-      .deploy/logs/             stdout, stderr and restart logs
+      .deploy/logs/             stdout, stderr and restart logs (rotated at 10 MB, one old copy)
     The host runs with the worktree root as its working directory, so it finds
     `state/` (telemetry) and `.git` (QA summary) there, and keeps them across releases.
 
@@ -163,8 +163,10 @@ else {
     if (-not (Test-Path -LiteralPath (Join-Path $DeployRoot '.git') -PathType Leaf)) {
         throw "$DeployRoot exists but is not a git worktree."
     }
-    $dirty = git -C $DeployRoot status --porcelain --untracked-files=no
-    if ($dirty) { throw "Deploy worktree has tracked changes; it must stay clean:`n$dirty" }
+    # Untracked files count too: SDK projects compile any stray *.cs under the project
+    # directory, so the binary would no longer match the ref. Only .deploy is ours.
+    $dirty = git -C $DeployRoot status --porcelain -- . ':(exclude).deploy'
+    if ($dirty) { throw "Deploy worktree has local changes or untracked files; it must match the ref exactly:`n$dirty" }
     Invoke-Git -C $DeployRoot checkout --detach --quiet $sha
 }
 Write-Host "  Commit: $(git -C $DeployRoot log -1 --format='%h %s')"
@@ -175,8 +177,9 @@ dotnet publish (Join-Path $DeployRoot 'Apps/GaChatbot.Api/GaChatbot.Api.csproj')
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 
 # 3. Launcher and scheduled task (idempotent). The launcher loops so a crash restarts
-#    the host. The task starts it at logon and again every 5 minutes in case the
-#    launcher itself died; IgnoreNew makes a repetition a no-op while it runs.
+#    the host, and rotates each log past 10 MB (one old copy) before every start. The
+#    task starts it at logon and again every 5 minutes in case the launcher itself
+#    died; IgnoreNew makes a repetition a no-op while it runs.
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $opticIndex = Join-Path $mainCheckout 'state\voicings\optick.index'
 $indexLine = if (Test-Path -LiteralPath $opticIndex) { "set GA_OPTICK_INDEX_PATH=$opticIndex" } else { 'rem optick.index not found; voicing search degrades to CPU' }
@@ -189,10 +192,17 @@ set ASPNETCORE_URLS=$localBase
 $indexLine
 cd /d "$DeployRoot"
 :run
+call :rotate "$logDir\chatbot.out.log"
+call :rotate "$logDir\chatbot.err.log"
+call :rotate "$logDir\restarts.log"
 "$currentLink\GaChatbot.Api.exe" >> "$logDir\chatbot.out.log" 2>> "$logDir\chatbot.err.log"
 echo %date% %time% GaChatbot.Api exited with code %errorlevel%, restarting in 10 s >> "$logDir\restarts.log"
 ping -n 11 127.0.0.1 > nul
 goto run
+
+:rotate
+if exist "%~1" for %%F in ("%~1") do if %%~zF GTR 10485760 move /y "%~1" "%~1.1" > nul
+exit /b
 "@ | Set-Content -LiteralPath $launcher -Encoding ascii
 
 $user = "$env:USERDOMAIN\$env:USERNAME"
