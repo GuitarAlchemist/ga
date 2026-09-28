@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "4f138516cf8fc19798765417c61eccfd7015faa1",
-    "generatedAt": "2026-09-28T04:45:54.197478+00:00",
+    "commitSha": "bc7964eec778f584098370a8a91e0942f50bf679",
+    "generatedAt": "2026-09-28T12:18:18.659207+00:00",
     "repoCount": 5,
-    "totalPRs": 26
+    "totalPRs": 24
   },
   "repos": [
     {
@@ -241,43 +241,19 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 5,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-09-27T17:32:20Z",
-          "failingChecks": 0,
-          "headRef": "feat/graph-editor-validate-run",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 333,
-          "title": "feat: check a graph before running it, and refuse to run what nobody approved (graph editor, slice 3 of 3)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/333"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-27T17:07:34Z",
-          "failingChecks": 0,
-          "headRef": "feat/graph-editor-catalog",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 332,
-          "title": "feat: tell an editor what can go in a graph (graph editor, slice 2 of 3)",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/332"
-        },
-        {
-          "ageDays": 1,
-          "author": "spareilleux",
-          "createdAt": "2026-09-27T01:43:34Z",
+          "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
-          "headRef": "feat/graph-editor-slice-1",
+          "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
-          "number": 327,
-          "title": "feat: describe what a tool expects and what it does, so a graph can be drawn",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/327"
+          "mergeable": "MERGEABLE",
+          "number": 337,
+          "title": "fix: let the required check run on a pull request that is not based on main",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/337"
         },
         {
           "ageDays": 2,
