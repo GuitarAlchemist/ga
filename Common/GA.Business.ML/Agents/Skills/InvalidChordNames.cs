@@ -14,7 +14,8 @@ using System.Text.RegularExpressions;
 /// A token is an invalid chord name when it is shaped like a chord symbol (an
 /// uppercase letter, an optional accidental, then a chord suffix) but its root letter
 /// is outside A–G. A capital with no suffix ("I", "X") is never one, and a bare "M"
-/// counts as a quality only before a digit ("CM7"), so "PM" is not one either.
+/// counts as a quality only before a digit ("CM7"), so "PM" is not one either. An I or
+/// V root ("V7", "I7") is a Roman numeral, not an invalid chord name.
 /// </para>
 /// <para>
 /// The check fires only when the request has <see cref="ImprovisationSkill"/>'s
@@ -48,6 +49,9 @@ public static partial class InvalidChordNames
         {
             // A bare capital ("I", "X" in "X-ray") has no chord suffix: not a chord name.
             if (m.Groups["suffix"].Length == 0) continue;
+            // "V7", "I7": Roman-numeral harmony, which the skill answers by asking for a key.
+            // Longer numerals ("IV7", "VII7") never match the whole-token regex.
+            if (m.Groups["root"].Value[0] is 'I' or 'V') continue;
             if (IsOpeningInterjection(message, m)) continue;
             if (!tokens.Contains(m.Value)) tokens.Add(m.Value);
         }

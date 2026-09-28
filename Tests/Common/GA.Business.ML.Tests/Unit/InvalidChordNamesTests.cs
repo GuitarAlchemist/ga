@@ -21,6 +21,8 @@ public class InvalidChordNamesTests
     [TestCase("Q7, which arpeggio should I use?", new[] { "Q7" })]
     [TestCase("Hm, which arpeggio fits Q7?", new[] { "Q7" })]
     [TestCase("A friend asked which arpeggio fits Hm Q7", new[] { "Hm", "Q7" })]
+    // A Roman numeral next to an invalid name is left out of the decline.
+    [TestCase("which arpeggio fits V7 and Q7", new[] { "Q7" })]
     public void Find_ReturnsEachInvalidChordName(string message, string[] expected)
     {
         Assert.That(InvalidChordNames.Find(message), Is.EqualTo(expected));
@@ -44,6 +46,10 @@ public class InvalidChordNamesTests
     [TestCase("what scale should I practice at 7 PM")]
     [TestCase("which mode did Madden solo in")]
     [TestCase("I'm trying to improvise, what scale helps?")]
+    // Roman-numeral harmony keeps the skill's route, which asks for a key.
+    [TestCase("what scale for V7?")]
+    [TestCase("which arpeggio fits the V7b9")]
+    [TestCase("what scale over I7")]
     public void Find_ReturnsNothing_ForValidOrNonChordRequests(string message)
     {
         Assert.That(InvalidChordNames.Find(message), Is.Empty);
