@@ -3,7 +3,9 @@ namespace GaChatbot.Api.Services;
 using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.ML.Agents.Intents;
+using GA.Business.ML.Extensions;
 using GaChatbot.Api.Controllers;
+using Microsoft.Extensions.AI;
 
 public interface IChatProviderReadinessProbe
 {
@@ -15,7 +17,9 @@ public interface IChatProviderReadinessProbe
 /// serve a request". Was previously shallow — just an HTTP GET to /api/tags —
 /// which let /status report healthy while live API was wedged because the
 /// configured chat / embedding models were not installed. Deepened in PR #96
-/// to verify model presence end-to-end via the provider's installed-model list.
+/// to verify model presence end-to-end via the provider's installed-model list,
+/// and again to run one real embedding: a provider can list its models while
+/// being unable to load any of them.
 /// </summary>
 public sealed class ChatProviderReadinessProbe(
     IConfiguration configuration,
@@ -38,6 +42,29 @@ public sealed class ChatProviderReadinessProbe(
     /// HTTP-client timeouts.
     /// </summary>
     private static readonly TimeSpan RoundTripTimeout = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Text embedded by the embedding probe. Its content is irrelevant; the
+    /// call only has to make the provider load the model and run it.
+    /// </summary>
+    private const string EmbeddingProbeText = "readiness probe";
+
+    /// <summary>
+    /// How long an embedding probe outcome is reused. /status is public and the
+    /// chat page refreshes it after every answer, so a status call must not cost
+    /// a model run each time. A recovered provider shows green within this window.
+    /// </summary>
+    private static readonly TimeSpan EmbeddingProbeCacheTtl = TimeSpan.FromSeconds(30);
+
+    private readonly SemaphoreSlim _embeddingProbeGate = new(1, 1);
+    private (DateTime At, bool Success, string Diagnostic)? _lastEmbeddingProbe;
+
+    /// <summary>
+    /// Ceiling on one embedding call. A warm call takes well under a second; a
+    /// cold model load takes seconds (10 s measured right after an Ollama
+    /// reinstall), so the ceiling is sized for a cold load.
+    /// </summary>
+    public TimeSpan EmbeddingProbeTimeout { get; init; } = TimeSpan.FromSeconds(10);
 
     public async Task<ChatbotStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
@@ -72,7 +99,85 @@ public sealed class ChatProviderReadinessProbe(
                 : $"{providerStatus.Message} | Round-trip: {roundTrip.Diagnostic}";
         }
 
+        // Embedding probe: /api/tags only proves the provider process answers.
+        // On 2026-09-27 an interrupted Ollama update deleted its model runtime;
+        // /api/tags stayed 200 while every embed and generate call failed, and
+        // /status reported ready. One real embedding catches that.
+        var embedding = await TryEmbeddingAsync(cancellationToken);
+        providerStatus.EmbeddingRoundTripOk = embedding?.Success;
+        if (embedding is { Success: false } failed)
+        {
+            providerStatus.IsAvailable = false;
+            providerStatus.Message = string.IsNullOrEmpty(providerStatus.Message)
+                ? failed.Diagnostic
+                : $"{providerStatus.Message} | Embedding: {failed.Diagnostic}";
+        }
+
         return providerStatus;
+    }
+
+    /// <summary>
+    /// Embeds one short text with the generator the semantic router uses
+    /// (the <c>routing</c> purpose, else the default generator). Returns
+    /// <see langword="null"/> when no embedder is registered: embeddings are
+    /// optional in this host, so there is nothing to probe. Outcomes are
+    /// cached for <see cref="EmbeddingProbeCacheTtl"/> and concurrent callers
+    /// share one call.
+    /// </summary>
+    private async Task<(bool Success, string Diagnostic)?> TryEmbeddingAsync(CancellationToken outerCt)
+    {
+        var generator = serviceProvider.GetService<IEmbeddingGeneratorFactory>()?.Create("routing")
+            ?? serviceProvider.GetService<IEmbeddingGenerator<string, Embedding<float>>>();
+        if (generator is null)
+        {
+            return null;
+        }
+
+        await _embeddingProbeGate.WaitAsync(outerCt);
+        try
+        {
+            if (_lastEmbeddingProbe is { } cached && DateTime.UtcNow - cached.At < EmbeddingProbeCacheTtl)
+            {
+                return (cached.Success, cached.Diagnostic);
+            }
+
+            var result = await RunEmbeddingProbeAsync(generator, outerCt);
+            _lastEmbeddingProbe = (DateTime.UtcNow, result.Success, result.Diagnostic);
+            return result;
+        }
+        finally
+        {
+            _embeddingProbeGate.Release();
+        }
+    }
+
+    private async Task<(bool Success, string Diagnostic)> RunEmbeddingProbeAsync(
+        IEmbeddingGenerator<string, Embedding<float>> generator,
+        CancellationToken outerCt)
+    {
+        try
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(outerCt);
+            timeoutCts.CancelAfter(EmbeddingProbeTimeout);
+
+            var sw = Stopwatch.StartNew();
+            var embeddings = await generator.GenerateAsync([EmbeddingProbeText], cancellationToken: timeoutCts.Token);
+            sw.Stop();
+
+            var dimensions = embeddings.Count > 0 ? embeddings[0].Vector.Length : 0;
+            return dimensions > 0
+                ? (true, $"ok, {dimensions} dims in {sw.ElapsedMilliseconds}ms")
+                : (false, $"embedding call returned no vector in {sw.ElapsedMilliseconds}ms");
+        }
+        catch (OperationCanceledException) when (!outerCt.IsCancellationRequested)
+        {
+            return (false, $"embedding timed out after {EmbeddingProbeTimeout.TotalSeconds}s");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Embedding probe threw");
+            return (false, $"embedding threw {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     /// <summary>

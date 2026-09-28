@@ -603,7 +603,8 @@ public sealed class ChatbotStatus
 {
     /// <summary>
     /// True iff the chatbot can serve a request: provider HTTP reachable AND
-    /// configured chat model installed AND configured embedding model installed.
+    /// configured chat model installed AND configured embedding model installed
+    /// AND the orchestrator round-trip and the embedding probe succeed.
     /// </summary>
     public bool IsAvailable { get; set; }
 
@@ -639,6 +640,15 @@ public sealed class ChatbotStatus
     /// <see cref="ProviderReachable"/>: catalog skills don't need Ollama.
     /// </summary>
     public bool? OrchestratorRoundTripOk { get; set; }
+
+    /// <summary>
+    /// True iff one real embedding with the routing embedder returned a vector
+    /// within the probe's timeout; <see langword="null"/> when no embedder is
+    /// registered. Catches a provider that lists its models but cannot load
+    /// them (e.g. its model runtime is missing), which
+    /// <see cref="EmbeddingModelInstalled"/> cannot see.
+    /// </summary>
+    public bool? EmbeddingRoundTripOk { get; set; }
 
     public DateTime Timestamp { get; set; }
 }
