@@ -31,6 +31,7 @@ import {
   analyzeArgs,
   canConnect,
   classifyDeadMarking,
+  finalsWithout,
   netProblems,
   parsePnml,
   petriLayout,
@@ -135,12 +136,14 @@ export const PetriEditor: React.FC = () => {
   const [graphVersion, setGraphVersion] = useState(0);
   const seq = useRef(0);
 
-  // A verdict belongs to the net it was computed for; any edit drops it.
+  // A verdict belongs to the net it was computed for; any edit drops it, and
+  // an analysis still running, which can no longer clear the flag itself.
   useEffect(() => {
     seq.current++;
     setReport(null);
     setInspected(null);
     setError(null);
+    setAnalysing(false);
   }, [net]);
 
   const problems = useMemo(() => netProblems(net), [net]);
@@ -190,6 +193,7 @@ export const PetriEditor: React.FC = () => {
       transitions: n.transitions.filter((t) => !gone.has(t)),
       arcs: n.arcs.filter((a) => !gone.has(a.source) && !gone.has(a.target)),
     }));
+    setFinals((fs) => finalsWithout(fs, gone));
     setSelectedId((cur) => (cur && gone.has(cur) ? null : cur));
   }, []);
 

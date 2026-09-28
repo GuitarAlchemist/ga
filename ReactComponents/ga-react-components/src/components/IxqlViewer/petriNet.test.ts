@@ -5,12 +5,24 @@ import {
   analyzeArgs,
   canConnect,
   classifyDeadMarking,
+  finalsWithout,
   netProblems,
   parsePnml,
   petriLayout,
   readReport,
+  type Marking,
   type PetriNet,
 } from './petriNet';
+
+describe('finalsWithout', () => {
+  it('drops a final that needs a token on a deleted place, and nothing else', () => {
+    const finals: Marking[] = [{ done: 1, free: 1 }, { failed: 1, free: 1 }, { done: 1, spare: 0 }];
+    expect(finalsWithout(finals, new Set(['failed']))).toEqual([{ done: 1, free: 1 }, { done: 1, spare: 0 }]);
+    // A zero entry says nothing: it goes, and the final stays.
+    expect(finalsWithout(finals, new Set(['spare', 't1']))).toEqual([{ done: 1, free: 1 }, { failed: 1, free: 1 }, { done: 1 }]);
+    expect(finalsWithout(finals, new Set(['free']))).toEqual([{ done: 1, spare: 0 }]);
+  });
+});
 
 // `ix_petri_analyze` output captured from ix-mcp for the net
 // p(1) -> t -> q: its one dead marking and witness.

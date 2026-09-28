@@ -227,3 +227,14 @@ export function sameMarking(a: Marking, b: Marking): boolean {
   const places = new Set([...Object.keys(a), ...Object.keys(b)]);
   return [...places].every((p) => (a[p] ?? 0) === (b[p] ?? 0));
 }
+
+/**
+ * The declared finals once the `gone` nodes are deleted. A final that needs a
+ * token on a deleted place can no longer be reached, so it is dropped rather
+ * than rewritten into some other end; a zero entry for one says nothing.
+ */
+export function finalsWithout(finals: Marking[], gone: Set<string>): Marking[] {
+  return finals
+    .filter((f) => ![...gone].some((p) => (f[p] ?? 0) > 0))
+    .map((f) => Object.fromEntries(Object.entries(f).filter(([p]) => !gone.has(p))));
+}
