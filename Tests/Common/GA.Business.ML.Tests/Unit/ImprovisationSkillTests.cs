@@ -309,4 +309,23 @@ public class ImprovisationSkillTests
         Assert.That(response.Evidence.Any(e => e.StartsWith("A:") && !e.StartsWith("Am")),
             Is.True, $"A major must be classified major, not minor. Evidence: {string.Join(" | ", response.Evidence)}");
     }
+
+    // ga#745: a request naming only invalid chords is declined by the skill itself,
+    // with a confidence above the chat fallback threshold (Chatbot:FallbackMinConfidence,
+    // 0.25 by default), so the LLM fallback does not replace the decline with invented theory.
+    [Test]
+    public async Task ExecuteAsync_InvalidChordNames_DeclinesAboveTheFallbackThreshold()
+    {
+        var skill = MakeSkill(); // extractor is null! — must not be called
+        var response = await skill.ExecuteAsync("which arpeggio fits Hm Q7");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Result, Does.Contain("don't recognize"));
+            Assert.That(response.Result, Does.Contain("\"Hm\" and \"Q7\""));
+            Assert.That(response.Result, Does.Not.Contain("also known as"));
+            Assert.That(response.Confidence, Is.GreaterThan(0.25f));
+            Assert.That(response.AgentId, Is.EqualTo("skill.improvisation"));
+        });
+    }
 }

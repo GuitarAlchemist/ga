@@ -103,19 +103,47 @@ public sealed partial class ImprovisationSkill(
     public bool CanHandle(string message)
     {
         if (string.IsNullOrWhiteSpace(message)) return false;
-        var q = message.ToLowerInvariant();
-        // Whole-word match so a keyword embedded in an unrelated word doesn't
-        // fire (e.g. "solo" inside "Solomon" — see ga#261).
-        var hasImprovIntent = ImprovKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
-        if (!hasImprovIntent) return false;
+        if (!HasImprovIntent(message)) return false;
         // Require a real chord token (uppercase root + accidental/quality/digit).
         // Without IgnoreCase, bare lowercase "a"/"e" articles never trigger.
         return ChordSuffixRegex().IsMatch(message)
                || ChordWithSpacedQualityRegex().IsMatch(message);
     }
 
+    // Whole-word match so a keyword embedded in an unrelated word doesn't
+    // fire (e.g. "solo" inside "Solomon" — see ga#261). Shared with
+    // InvalidChordNames, which declines requests naming only invalid chords.
+    internal static bool HasImprovIntent(string message)
+    {
+        var q = message.ToLowerInvariant();
+        return ImprovKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
+    }
+
+    // A valid chord anywhere in the message: a suffixed symbol ("Am", "G7"), a
+    // spaced quality ("C major") or a run of two or more chords ("Am F C G").
+    internal static bool NamesValidChord(string message) =>
+        ChordSuffixRegex().IsMatch(message)
+        || ChordWithSpacedQualityRegex().IsMatch(message)
+        || ExtractChordRun(message).Count >= 2;
+
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        // Invalid chord names only ("which arpeggio fits Hm Q7", ga#745): decline with
+        // a confidence above the chat fallback threshold, so the answer is not replaced
+        // by the LLM, which would invent theory about the tokens.
+        var invalid = InvalidChordNames.Find(message);
+        if (invalid.Count > 0)
+        {
+            return new AgentResponse
+            {
+                AgentId = $"skill.{Name.ToLowerInvariant()}",
+                Result = InvalidChordNames.Decline(invalid),
+                Confidence = InvalidChordNames.DeclineConfidence,
+                Evidence = [],
+                Assumptions = [$"Not chord names (root outside A-G): {string.Join(", ", invalid)}."],
+            };
+        }
+
         // Progression path (v2): if the query names two or more chord symbols,
         // classify each independently and return per-chord arpeggio + scales.
         // Checked BEFORE the single-chord extractor, whose ExtractAsync collapses
