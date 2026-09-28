@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "449147d3037fd3c68787601fb4337f18319a66a7",
-    "generatedAt": "2026-09-28T04:42:19.099995+00:00",
+    "commitSha": "4f138516cf8fc19798765417c61eccfd7015faa1",
+    "generatedAt": "2026-09-28T04:45:54.197478+00:00",
     "repoCount": 5,
-    "totalPRs": 27
+    "totalPRs": 26
   },
   "repos": [
     {
@@ -113,7 +113,7 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
         {
           "ageDays": 0,
@@ -126,18 +126,6 @@
           "number": 749,
           "title": "fix(chat): decline arpeggio requests that name only invalid chords (#745)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/749"
-        },
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-09-28T03:35:23Z",
-          "failingChecks": 0,
-          "headRef": "ops/chatbot-deploy-hardening",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 748,
-          "title": "ops(chatbot): real-embedding readiness, clean deploy with durable start, unelevated Ollama",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/748"
         },
         {
           "ageDays": 2,
