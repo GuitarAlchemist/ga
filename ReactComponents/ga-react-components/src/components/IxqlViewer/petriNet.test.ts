@@ -154,6 +154,15 @@ describe('final markings in PNML', () => {
     expect(() => parsePnml(final('<token place="q" count="-1"/>'))).toThrow('not a non-negative integer');
   });
 
+  it('refuses an empty count or a place listed twice in a final marking', () => {
+    const final = (tok: string) => pnml(`<toolspecific tool="ga-pipeline-editor" version="1"><finalMarking>${tok}</finalMarking></toolspecific>`);
+    expect(() => parsePnml(final('<token place="q" count=""/>'))).toThrow('not a non-negative integer');
+    expect(() => parsePnml(final('<token place="q" count=" "/>'))).toThrow('not a non-negative integer');
+    expect(() => parsePnml(final('<token place="q" count="1"/><token place="q" count="2"/>')))
+      .toThrow('place "q" is listed twice');
+    expect(parsePnml(final('<token place="q"/>')).finalMarkings).toEqual([{ q: 1 }]);
+  });
+
   it('declares the lesson 14 lifecycle ends', () => {
     const net = parsePnml(lifecyclePnml);
     expect(net.finalMarkings).toHaveLength(3);

@@ -62,11 +62,20 @@ export function parsePnml(xml: string): PetriNet {
   const finalMarkings = [...net.getElementsByTagName('toolspecific')]
     .filter((ts) => ts.getAttribute('tool') === 'ga-pipeline-editor')
     .flatMap((ts) => [...ts.getElementsByTagName('finalMarking')])
-    .map((fm) => Object.fromEntries([...fm.getElementsByTagName('token')].map((tok) => {
-      const place = tok.getAttribute('place') ?? '';
-      if (!placeIds.has(place)) throw new Error(`final marking: unknown place "${place}"`);
-      return [place, count(tok.getAttribute('count') ?? '1', `final marking of ${place}`) ?? 1];
-    })));
+    .map((fm) => {
+      // A final is the only success a net can declare, so a malformed one is
+      // refused rather than read as some other marking.
+      const seen = new Set<string>();
+      return Object.fromEntries([...fm.getElementsByTagName('token')].map((tok) => {
+        const place = tok.getAttribute('place') ?? '';
+        if (!placeIds.has(place)) throw new Error(`final marking: unknown place "${place}"`);
+        if (seen.has(place)) throw new Error(`final marking: place "${place}" is listed twice`);
+        seen.add(place);
+        const raw = tok.getAttribute('count') ?? '1';
+        if (!/^\d+$/.test(raw)) throw new Error(`final marking of ${place}: "${raw}" is not a non-negative integer`);
+        return [place, Number(raw)];
+      }));
+    });
   const result = { name: text(net, 'name') ?? net.getAttribute('id') ?? 'net', places, transitions, arcs, finalMarkings };
   const problem = netProblems(result)[0];
   if (problem) throw new Error(problem);
