@@ -1,0 +1,66 @@
+{
+  "started_utc": "2026-09-28T01:36:06+00:00",
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "captures": [
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 374.7,
+      "frames": [],
+      "case": "P1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:06+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 562.8,
+      "frames": [],
+      "case": "P1",
+      "repeat": 2,
+      "at_utc": "2026-09-28T01:36:09+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 215.2,
+      "frames": [],
+      "case": "P1",
+      "repeat": 3,
+      "at_utc": "2026-09-28T01:36:11+00:00"
+    },
+    {
+      "prompt": "what arpeggios work over Dm7 G7 Cmaj7",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 176.9,
+      "frames": [],
+      "case": "P2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:13+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits C A Dm G",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 369.4,
+      "frames": [],
+      "case": "N1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:16+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Hm Q7",
+      "status": null,
+      "transport_error": "HTTPError: HTTP Error 502: Bad Gateway",
+      "total_ms": 170.5,
+      "frames": [],
+      "case": "N2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:18+00:00"
+    }
+  ]
+}

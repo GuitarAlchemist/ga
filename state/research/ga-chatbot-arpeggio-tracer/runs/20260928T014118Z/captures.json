@@ -1,0 +1,96 @@
+{
+  "started_utc": "2026-09-28T01:41:20+00:00",
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "captures": [
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 4198.8,
+      "frames": [
+        {
+          "t_ms": 4198.6,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "P1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:41:24+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 561.8,
+      "frames": [
+        {
+          "t_ms": 561.5,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "P1",
+      "repeat": 2,
+      "at_utc": "2026-09-28T01:41:27+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 924.4,
+      "frames": [
+        {
+          "t_ms": 916.9,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "P1",
+      "repeat": 3,
+      "at_utc": "2026-09-28T01:41:30+00:00"
+    },
+    {
+      "prompt": "what arpeggios work over Dm7 G7 Cmaj7",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 656.2,
+      "frames": [
+        {
+          "t_ms": 656.0,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "P2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:41:32+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits C A Dm G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 457.7,
+      "frames": [
+        {
+          "t_ms": 457.5,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "N1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:41:35+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Hm Q7",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 1080.5,
+      "frames": [
+        {
+          "t_ms": 1080.3,
+          "data": "{\"error\":\"Failed to process message. Please try again.\"}"
+        }
+      ],
+      "case": "N2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:41:38+00:00"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "captured_utc": "2026-09-28T02:25:19.131Z",
+  "url": "https://demos.guitaralchemist.com/chatbot/",
+  "li_count": 1,
+  "assistant_html": "<div class=\"md-line\">Over <strong>Am – F – C – G</strong>, for each chord:</div><div class=\"md-line\">&nbsp;</div><ul><li><strong>Am</strong> → arpeggio <strong>Am</strong>, play <strong>A Aeolian (natural minor)</strong> (diatonic minor — fits most i chords).- <strong>F</strong> → arpeggio <strong>F</strong>, play <strong>F Ionian (major)</strong> (diatonic, includes the 7 — careful on the IV chord).- <strong>C</strong> → arpeggio <strong>C</strong>, play <strong>C Ionian (major)</strong> (diatonic, includes the 7 — careful on the IV chord).- <strong>G</strong> → arpeggio <strong>G</strong>, play <strong>G Ionian (major)</strong> (diatonic, includes the 7 — careful on the IV chord).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them.</li></ul>",
+  "submitted_prompt": "which arpeggio fits Am F C G",
+  "note": "Submitted through the public page's own form handler (DOM click on the Send button; wmux 'click eN' did not dispatch the submit). Screenshot unavailable: wmux browser.screenshot timed out."
+}
