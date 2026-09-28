@@ -173,7 +173,9 @@ public sealed class ChatProviderReadinessProbe(
         {
             return (false, $"embedding timed out after {EmbeddingProbeTimeout.TotalSeconds}s");
         }
-        catch (Exception ex)
+        // A caller that goes away is not a provider failure: let its cancellation
+        // propagate so it never reaches the shared cache.
+        catch (Exception ex) when (!outerCt.IsCancellationRequested)
         {
             logger.LogWarning(ex, "Embedding probe threw");
             return (false, $"embedding threw {ex.GetType().Name}: {ex.Message}");

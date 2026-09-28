@@ -543,6 +543,38 @@ public class ChatProviderReadinessProbeTests
     }
 
     [Test]
+    public void GetStatusAsync_CallerCancelsDuringEmbedding_PropagatesAndDoesNotCacheFailure()
+    {
+        // A disconnecting /status caller must not leave a cached failure behind
+        // for the next 30 s of unrelated callers. The generator cancels the
+        // caller while the embedding is in flight.
+        CancellationTokenSource? caller = null;
+        var embeddings = new FakeEmbeddingGenerator(async ct =>
+        {
+            await caller!.CancelAsync();
+            await Task.Delay(Timeout.Infinite, ct);
+            return [];
+        });
+        var probe = CreateProbe(
+            HealthyOllamaConfig,
+            JsonOk(HealthyTagsBody),
+            intents: [new FakeCatalogIntent("skill.beginnerchords", "ok")],
+            embeddings: embeddings);
+
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            using var cts = new CancellationTokenSource();
+            caller = cts;
+            Assert.That(
+                async () => await probe.GetStatusAsync(cts.Token),
+                Throws.InstanceOf<OperationCanceledException>());
+        }
+
+        Assert.That(embeddings.Calls, Is.EqualTo(2),
+            "the second caller must run its own probe instead of reading a cached failure");
+    }
+
+    [Test]
     public async Task GetStatusAsync_RoutingEmbedderConfigured_ProbesRoutingEmbedder()
     {
         // The router embeds with the "routing" purpose (bge-large in production),
@@ -585,7 +617,7 @@ public class ChatProviderReadinessProbeTests
             new(async ct =>
             {
                 await Task.Delay(Timeout.Infinite, ct);
-                return new GeneratedEmbeddings<Embedding<float>>();
+                return [];
             });
 
         public Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
