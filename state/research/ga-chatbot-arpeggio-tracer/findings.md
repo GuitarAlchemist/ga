@@ -67,7 +67,7 @@ The first slice is **not** yet a correct, complete public answer. Blocking defec
 
 **Live prompt corpus** (`PromptCorpusTests.EveryPrompt_SatisfiesItsInvariants`, in-process host, local Ollama after the repair), run 2026-09-28: this branch 53/70 active prompts pass (N1 passes); unmodified `origin/main` 52/69. The same 17 prompts fail on both (diatonic chords in G/D/F major and A minor, transposition, common tones with null `ga.dsl` grounding, ii-V-I in Bb, E-flat/B-flat relative minor, typo and upper-case diatonic routing); only the first failing substring differs between runs, which points to LLM variance rather than this change. This is far below the last-known-good 98.08 % (2026-07-19) and needs its own diagnosis; it is not caused by this branch.
 
-Not changed here: key-aware scale advice (a musical design decision: infer the key and prefer the diatonic mode, e.g. F Lydian / G Mixolydian / D Dorian in C major) and the invalid-input fallback. Both need their own issue and acceptance test.
+Not changed here: key-aware scale advice (a musical design decision: infer the key and prefer the diatonic mode, e.g. F Lydian / G Mixolydian / D Dorian in C major) and the invalid-input fallback. Tracked as #744 (key-aware advice) and #745 (invalid-input fallback); the GaApi REST SSE newline contract is #746 and the 17-prompt live corpus regression is #747.
 
 ## Open
 
