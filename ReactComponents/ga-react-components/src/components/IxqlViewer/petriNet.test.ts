@@ -163,6 +163,13 @@ describe('final markings in PNML', () => {
     expect(parsePnml(final('<token place="q"/>')).finalMarkings).toEqual([{ q: 1 }]);
   });
 
+  it('refuses a final count too large to hold exactly', () => {
+    const final = (tok: string) => pnml(`<toolspecific tool="ga-pipeline-editor" version="1"><finalMarking>${tok}</finalMarking></toolspecific>`);
+    expect(() => parsePnml(final(`<token place="q" count="${'9'.repeat(400)}"/>`))).toThrow('not a non-negative integer');
+    expect(() => parsePnml(final('<token place="q" count="9007199254740992"/>'))).toThrow('not a non-negative integer');
+    expect(parsePnml(final('<token place="q" count="9007199254740991"/>')).finalMarkings).toEqual([{ q: 9007199254740991 }]);
+  });
+
   it('declares the lesson 14 lifecycle ends', () => {
     const net = parsePnml(lifecyclePnml);
     expect(net.finalMarkings).toHaveLength(3);

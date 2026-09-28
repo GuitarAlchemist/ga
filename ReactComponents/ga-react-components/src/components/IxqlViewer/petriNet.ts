@@ -72,8 +72,13 @@ export function parsePnml(xml: string): PetriNet {
         if (seen.has(place)) throw new Error(`final marking: place "${place}" is listed twice`);
         seen.add(place);
         const raw = tok.getAttribute('count') ?? '1';
-        if (!/^\d+$/.test(raw)) throw new Error(`final marking of ${place}: "${raw}" is not a non-negative integer`);
-        return [place, Number(raw)];
+        // Digits alone can still overflow to Infinity or round: the count must
+        // come back exactly.
+        const n = Number(raw);
+        if (!/^\d+$/.test(raw) || !Number.isSafeInteger(n)) {
+          throw new Error(`final marking of ${place}: "${raw}" is not a non-negative integer up to ${Number.MAX_SAFE_INTEGER}`);
+        }
+        return [place, n];
       }));
     });
   const result = { name: text(net, 'name') ?? net.getAttribute('id') ?? 'net', places, transitions, arcs, finalMarkings };
