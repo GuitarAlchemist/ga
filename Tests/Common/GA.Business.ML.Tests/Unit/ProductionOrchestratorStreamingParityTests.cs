@@ -34,6 +34,31 @@ public class ProductionOrchestratorStreamingParityTests
         });
     }
 
+    // ga#745: a request naming only invalid chords scores below every intent. Both
+    // paths must decline it after semantic dispatch and before the LLM agent router,
+    // whose answer (or the chat fallback behind it) invented theory about "Hm Q7".
+    [TestCase("AnswerAsync")]
+    [TestCase("AnswerStreamingAsync")]
+    public void InvalidChordDecline_RunsAfterSemanticDispatch_BeforeTheAgentRouter(string method)
+    {
+        var body = MethodBody(LoadOrchestratorSource(), method);
+
+        var semantic = new[] { "TryDispatchViaIntentAsync(", "intentRouter.RouteAsync(" }
+            .Select(call => body.IndexOf(call, StringComparison.Ordinal))
+            .Where(index => index >= 0)
+            .DefaultIfEmpty(-1)
+            .Min();
+        var decline = body.IndexOf("DeclineInvalidChordNames(", StringComparison.Ordinal);
+        var agentRouter = body.IndexOf("router.RouteAsync(req.Message", StringComparison.Ordinal);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(decline, Is.GreaterThanOrEqualTo(0), $"{method} does not decline invalid chord names");
+            Assert.That(decline, Is.GreaterThan(semantic), $"{method} must try semantic dispatch first");
+            Assert.That(agentRouter, Is.GreaterThan(decline), $"{method} must decline before the LLM agent router");
+        });
+    }
+
     private static string MethodBody(string source, string method)
     {
         // The declaration may carry modifiers between "public" and "async" (AnswerAsync is virtual).

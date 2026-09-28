@@ -10,6 +10,7 @@ using GA.Business.Core.Orchestration.Trace;
 using GA.Business.ML.Agents;
 using GA.Business.ML.Agents.Hooks;
 using GA.Business.ML.Agents.Intents;
+using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Embeddings;
 using GA.Business.ML.Retrieval;
 using GA.Business.ML.Tabs;
@@ -252,6 +253,16 @@ public class ProductionOrchestrator(
                 Candidates: [],
                 Routing: deterministicRouting with { Confidence = Math.Max(deterministicRouting.Confidence, agentResponse.Confidence) },
                 DebugParams: new { Mode = "DeterministicAgent", Agent = deterministicAgent.AgentId });
+        }
+
+        // Invalid chord names only (ga#745): decline before the LLM agent path.
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
+        {
+            foreach (var word in invalidChordResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                await onToken(word + " ");
+
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
+            return invalidChordResp;
         }
 
         // Route the request and extract filters in parallel (same as AnswerAsync)
@@ -535,6 +546,35 @@ public class ProductionOrchestrator(
                 activity, sw, ct);
         }
 
+        // Invalid chord names only (ga#745): decline before the LLM agent path.
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
+        {
+            sw.Stop();
+            activity?.SetTag("orchestration.branch", InvalidChordNames.RoutingMethod);
+            activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
+
+            // OnResponseSent for parity with every other dispatch path (MemoryHook, analytics).
+            var declineSentCtx = new ChatHookContext
+            {
+                OriginalMessage = req.Message,
+                CurrentMessage  = message,
+                CorrelationId   = correlationId,
+                SessionId       = sessionId,
+                Response        = new AgentResponse
+                {
+                    AgentId    = invalidChordResp.Routing!.AgentId,
+                    Result     = invalidChordResp.NaturalLanguageAnswer,
+                    Confidence = InvalidChordNames.DeclineConfidence,
+                },
+            };
+            foreach (var hook in _hooks)
+                await hook.OnResponseSent(declineSentCtx, ct);
+
+            return invalidChordResp;
+        }
+
         // Parallelise — both calls consume req.Message with no mutual dependency
         var filtersTask = queryUnderstandingService.ExtractFiltersAsync(req.Message, ct);
         var routingTask = router.RouteAsync(req.Message, ct);
@@ -775,6 +815,29 @@ public class ProductionOrchestrator(
             await hook.OnResponseSent(sentCtx, ct);
 
         return algebraResponse;
+    }
+
+    /// <summary>
+    /// Declines an improvisation request that names only invalid chords ("which
+    /// arpeggio fits Hm Q7", ga#745). Such a request scores below every intent, and
+    /// the LLM agent path, or the chat fallback behind it, then invents theory about
+    /// the tokens. The routing confidence stays above the fallback threshold so the
+    /// decline is the answer. Returns null when the message is not such a request.
+    /// The caller records history and runs hooks, each at its path's usual point.
+    /// </summary>
+    private static ChatResponse? DeclineInvalidChordNames(string message)
+    {
+        var invalid = InvalidChordNames.Find(message);
+        if (invalid.Count == 0) return null;
+
+        return new ChatResponse(
+            NaturalLanguageAnswer: InvalidChordNames.Decline(invalid),
+            Candidates: [],
+            Routing: new AgentRoutingMetadata(
+                "skill.improvisation",
+                InvalidChordNames.DeclineConfidence,
+                InvalidChordNames.RoutingMethod),
+            DebugParams: new { Mode = "InvalidChordNames", Tokens = invalid });
     }
 
     private bool TrySelectDeterministicAgent(
