@@ -17,6 +17,10 @@ public class InvalidChordNamesTests
     [TestCase("what scale over X7alt", new[] { "X7alt" })]
     [TestCase("which arpeggios work over Hmaj7 and W9", new[] { "Hmaj7", "W9" })]
     [TestCase("improvise over Rm7b5 Rm7b5", new[] { "Rm7b5" })]
+    // An opening chord-shaped token is not an interjection; an opening "A" article is not a chord.
+    [TestCase("Q7, which arpeggio should I use?", new[] { "Q7" })]
+    [TestCase("Hm, which arpeggio fits Q7?", new[] { "Q7" })]
+    [TestCase("A friend asked which arpeggio fits Hm Q7", new[] { "Hm", "Q7" })]
     public void Find_ReturnsEachInvalidChordName(string message, string[] expected)
     {
         Assert.That(InvalidChordNames.Find(message), Is.EqualTo(expected));
@@ -27,6 +31,9 @@ public class InvalidChordNamesTests
     [TestCase("what scale can I use to solo over Cmaj7?")]
     [TestCase("what scale over G13")]
     [TestCase("which arpeggio fits Am and Q7")]
+    [TestCase("which arpeggio fits C and Q7")]
+    [TestCase("which arpeggio fits Q7 and F#")]
+    [TestCase("which arpeggio fits A and Q7")]
     [TestCase("which scale fits C major")]
     // No improvisation intent: not a chord request at all.
     [TestCase("Hm Q7 is my username")]

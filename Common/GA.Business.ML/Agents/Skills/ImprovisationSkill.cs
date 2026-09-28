@@ -120,11 +120,22 @@ public sealed partial class ImprovisationSkill(
     }
 
     // A valid chord anywhere in the message: a suffixed symbol ("Am", "G7"), a
-    // spaced quality ("C major") or a run of two or more chords ("Am F C G").
+    // spaced quality ("C major") or a bare root, alone ("C" in "fits C and Q7") or
+    // in a run ("Am F C G"). A capital "A" opening a sentence before a lowercase
+    // word ("A friend asked...") is the article, not a chord.
     internal static bool NamesValidChord(string message) =>
         ChordSuffixRegex().IsMatch(message)
         || ChordWithSpacedQualityRegex().IsMatch(message)
-        || ExtractChordRun(message).Count >= 2;
+        || ChordTokenRegex().Matches(message).Any(m => !IsSentenceArticle(message, m));
+
+    private static bool IsSentenceArticle(string message, Match match)
+    {
+        if (match.Value != "A") return false;
+        var before = message[..match.Index].TrimEnd();
+        var opensSentence = before.Length == 0 || before[^1] is '.' or '!' or '?';
+        var after = message[(match.Index + match.Length)..];
+        return opensSentence && after.Length >= 2 && after[0] == ' ' && char.IsLower(after[1]);
+    }
 
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {

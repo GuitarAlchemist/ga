@@ -20,7 +20,8 @@ using System.Text.RegularExpressions;
 /// The check fires only when the request has <see cref="ImprovisationSkill"/>'s
 /// intent and names no valid chord, so a request that mixes valid and invalid
 /// chords keeps its current route. An interjection opening the message ("Hm, which
-/// mode is brightest?") is not read as a chord.
+/// mode is brightest?") is not read as a chord; a chord-shaped token opening it
+/// ("Q7, which arpeggio should I use?") still is.
 /// </para>
 /// </remarks>
 public static partial class InvalidChordNames
@@ -76,8 +77,13 @@ public static partial class InvalidChordNames
         return answer + " Name the chords again and I'll give the arpeggio and scales for each.";
     }
 
+    // Only a real interjection is exempt: "Hm, which mode...", not "Q7, which arpeggio...".
+    // These are the interjections the regex matches ("Hmm" and "Uh" never do).
+    private static readonly string[] Interjections = ["Hm", "Um", "Mm"];
+
     private static bool IsOpeningInterjection(string message, Match match) =>
-        message[..match.Index].Trim().Length == 0
+        Interjections.Contains(match.Value)
+        && message[..match.Index].Trim().Length == 0
         && match.Index + match.Length < message.Length
         && message[match.Index + match.Length] is ',' or '.' or '!' or '?' or '…';
 

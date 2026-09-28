@@ -256,11 +256,12 @@ public class ProductionOrchestrator(
         }
 
         // Invalid chord names only (ga#745): decline before the LLM agent path.
-        if (DeclineInvalidChordNames(message, sessionId) is { } invalidChordResp)
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
         {
             foreach (var word in invalidChordResp.NaturalLanguageAnswer.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 await onToken(word + " ");
 
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
             return invalidChordResp;
         }
 
@@ -546,11 +547,31 @@ public class ProductionOrchestrator(
         }
 
         // Invalid chord names only (ga#745): decline before the LLM agent path.
-        if (DeclineInvalidChordNames(message, sessionId) is { } invalidChordResp)
+        if (DeclineInvalidChordNames(message) is { } invalidChordResp)
         {
             sw.Stop();
             activity?.SetTag("orchestration.branch", InvalidChordNames.RoutingMethod);
             activity?.SetTag("orchestration.elapsed_ms", sw.ElapsedMilliseconds);
+
+            historyStore.AddTurn(sessionId, "assistant", invalidChordResp.NaturalLanguageAnswer);
+
+            // OnResponseSent for parity with every other dispatch path (MemoryHook, analytics).
+            var declineSentCtx = new ChatHookContext
+            {
+                OriginalMessage = req.Message,
+                CurrentMessage  = message,
+                CorrelationId   = correlationId,
+                SessionId       = sessionId,
+                Response        = new AgentResponse
+                {
+                    AgentId    = invalidChordResp.Routing!.AgentId,
+                    Result     = invalidChordResp.NaturalLanguageAnswer,
+                    Confidence = InvalidChordNames.DeclineConfidence,
+                },
+            };
+            foreach (var hook in _hooks)
+                await hook.OnResponseSent(declineSentCtx, ct);
+
             return invalidChordResp;
         }
 
@@ -802,16 +823,15 @@ public class ProductionOrchestrator(
     /// the LLM agent path, or the chat fallback behind it, then invents theory about
     /// the tokens. The routing confidence stays above the fallback threshold so the
     /// decline is the answer. Returns null when the message is not such a request.
+    /// The caller records history and runs hooks, each at its path's usual point.
     /// </summary>
-    private ChatResponse? DeclineInvalidChordNames(string message, string sessionId)
+    private static ChatResponse? DeclineInvalidChordNames(string message)
     {
         var invalid = InvalidChordNames.Find(message);
         if (invalid.Count == 0) return null;
 
-        var answer = InvalidChordNames.Decline(invalid);
-        historyStore.AddTurn(sessionId, "assistant", answer);
         return new ChatResponse(
-            NaturalLanguageAnswer: answer,
+            NaturalLanguageAnswer: InvalidChordNames.Decline(invalid),
             Candidates: [],
             Routing: new AgentRoutingMetadata(
                 "skill.improvisation",
