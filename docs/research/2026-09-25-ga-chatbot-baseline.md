@@ -19,7 +19,7 @@ superseded_by: null
 
 **Date:** 2026-09-25  
 **Type:** research; [Wayfinder question #75](https://github.com/GuitarAlchemist/.github/issues/75), planning only  
-**Source revision:** local `dc2e74cbd992a298f67efb928b5b3754615e1924` (`feat/589-performance-intent-tracer`); the working tree also has unrelated uncommitted edits. Live observations below are time-specific.
+**Source revision:** [`dc2e74cb`](https://github.com/GuitarAlchemist/ga/commit/dc2e74cbd992a298f67efb928b5b3754615e1924) (branch `feat/589-performance-intent-tracer`; its changes reached `main` in squash commit `a9c2cb27`, #598, so the exact tree is reachable only through that branch); the working tree also has unrelated uncommitted edits. Live observations below are time-specific.
 
 **Publication scope:** this is a note-only research snapshot rooted at the recorded commit. Repository links identify the tracked source at that revision; observations explicitly attributed to uncommitted work remain provisional and are not published source changes. No live POST or deployment validation is implied by publication.
 
@@ -88,7 +88,7 @@ Acceptance for that bounded execution task:
 1. A real browser visit to `/chatbot/` loads the page and its relative status endpoint, submits the prompt, and displays a complete answer. Capture the page, request URL, timestamp, response status, elapsed time, and answer as reviewable evidence; do not infer host identity from route names alone.
 2. The public SSE has a `routing` frame naming `skill.improvisation`, nonempty answer text, a terminal `[DONE]`, and no error frame. The UI shows the same answer. Measure time to first text and total completion before setting a latency threshold.
 3. A deterministic oracle checks one suggestion per input chord, in order; `Am` has a minor-compatible arpeggio; no `Amm7`; suggestions preserve each written chord's quality. Add a borrowed/secondary-chord counterexample (A major in C major) that must not silently receive Aeolian/natural-C advice. Invalid or ambiguous input must visibly decline or state uncertainty, not invent certainty.
-4. Add the tracer and its negative/neighboring cases to the corpus and the routing-eval **input** set, then require a real, non-degraded run with route, answer-shape, and forbidden-content assertions. Record failure rate and latency alongside the snapshot; `pass_pct: null` or a carried-forward value is not a pass.
+4. Keep the existing corpus entry for the tracer prompt (do not add it twice); add its negative/neighboring cases to the corpus and the tracer family to the routing-eval **input** set, then require a real, non-degraded run with route, answer-shape, and forbidden-content assertions. Record failure rate and latency alongside the snapshot; `pass_pct: null` or a carried-forward value is not a pass.
 
 **Rollback signal for a subsequent rollout:** restore the previous deployed version or ingress target if the public page/status loses availability, the controlled stream loses its terminal frame, a musical oracle fails, or error/latency worsens beyond the measured pre-change baseline. Do not delete the old host until the rollback path and GaApi parity have been exercised. No deployment or rollback was performed in this study.
 

@@ -29,7 +29,7 @@ The `VoicingAgent` retrieval path is the best *candidate* because it is user-fac
 
 The GA chatbot team needs to know where C# work can improve user-visible voicing answers without changing musical meaning. The open [cross-repo research ticket](https://github.com/GuitarAlchemist/.github/issues/81) asks for a baseline, a minimized counterexample strategy, and a criterion for rejecting unnecessary formal machinery.
 
-This assessment is from checkout `dc2e74cbd992a298f67efb928b5b3754615e1924` plus a **dirty working tree** on 2026-09-25. In particular, `Voicing.cs`, `PitchClassSet.cs`, and other domain files had uncommitted edits. This note does not attribute those edits to a commit or treat them as a released baseline.
+This assessment is from checkout [`dc2e74cb`](https://github.com/GuitarAlchemist/ga/commit/dc2e74cbd992a298f67efb928b5b3754615e1924) (branch `feat/589-performance-intent-tracer`; its changes reached `main` in squash commit `a9c2cb27`, #598, so the exact tree is reachable only through that branch) plus a **dirty working tree** on 2026-09-25. In particular, `Voicing.cs`, `PitchClassSet.cs`, and other domain files had uncommitted edits. This note does not attribute those edits to a commit or treat them as a released baseline.
 
 The research branch publishes only this note and its companion chatbot study. Source links identify tracked files at the recorded commit; dirty-worktree observations and local telemetry aggregates still require independent reproduction before a delivery decision.
 
