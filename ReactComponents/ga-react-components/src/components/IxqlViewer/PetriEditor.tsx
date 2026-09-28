@@ -35,7 +35,9 @@ import {
   parsePnml,
   petriLayout,
   readReport,
+  sameMarking,
   type DeadMarking,
+  type Marking,
   type PetriNet,
   type PetriReport,
 } from './petriNet';
@@ -115,7 +117,7 @@ const nodeTypes = { place: PlaceNode, transition: TransitionNode };
 const arcId = (a: { source: string; target: string }) => `${a.source}->${a.target}`;
 const EMPTY: PetriNet = { name: 'net', places: [], transitions: [], arcs: [] };
 const VERDICT_MARK = { holds: '✓', fails: '✕', unknown: '?' } as const;
-const OUTCOME_COLOR = { success: 'success.main', failure: 'error.main', cancelled: 'warning.main', deadlock: 'error.main' } as const;
+const OUTCOME_COLOR = { success: 'success.main', failure: 'error.main', cancelled: 'warning.main', deadlock: 'error.main', unverified: 'info.main' } as const;
 
 export const PetriEditor: React.FC = () => {
   const theme = useTheme();
@@ -124,6 +126,9 @@ export const PetriEditor: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedArc, setSelectedArc] = useState<string | null>(null);
   const [report, setReport] = useState<PetriReport | null>(null);
+  // The ends the net is meant to reach. Kept apart from `net`: declaring one
+  // changes no reachable marking, so it must not drop the report.
+  const [finals, setFinals] = useState<Marking[]>([]);
   const [inspected, setInspected] = useState<DeadMarking | null>(null);
   const [analysing, setAnalysing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +149,7 @@ export const PetriEditor: React.FC = () => {
     try {
       const parsed = parsePnml(pnml);
       setNet(parsed);
+      setFinals(parsed.finalMarkings ?? []);
       setPositions(petriLayout(parsed));
       setSelectedId(null);
       setSelectedArc(null);
@@ -399,11 +405,14 @@ export const PetriEditor: React.FC = () => {
               Dead markings ({report.deadMarkings.length})
             </Typography>
             <Typography variant="caption" color="text.secondary" component="p">
-              Each terminal state a runtime test must tell apart, with the shortest firing sequence reaching it. The
-              outcome is read from the place names; click one to show it on the net.
+              Each terminal state a runtime test must tell apart, with the shortest firing sequence reaching it; click
+              one to show it on the net. Failure and cancellation are read from the place names. Only an end the net
+              declares final is a success (mark it here, or in the PNML); until the net declares one, an end that reads
+              as a success is unverified, and once it does, every other end is a deadlock.
             </Typography>
             {report.deadMarkings.map((m, i) => {
-              const outcome = classifyDeadMarking(m);
+              const outcome = classifyDeadMarking(m, finals);
+              const isFinal = finals.some((f) => sameMarking(f, m.tokens));
               const marking = Object.entries(m.tokens).map(([p, n]) => `${p}=${n}`).join(' ');
               const active = inspected === m;
               return (
@@ -416,6 +425,16 @@ export const PetriEditor: React.FC = () => {
                   }}
                 >
                   <Typography variant="caption" sx={{ color: OUTCOME_COLOR[outcome], fontWeight: 600 }}>{outcome}</Typography>
+                  <Button
+                    size="small"
+                    sx={{ ml: 1, py: 0, minWidth: 0, fontSize: 11 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFinals((fs) => (isFinal ? fs.filter((f) => !sameMarking(f, m.tokens)) : [...fs, m.tokens]));
+                    }}
+                  >
+                    {isFinal ? 'unmark final' : 'mark final'}
+                  </Button>
                   <Typography variant="caption" component="div" sx={{ fontFamily: 'monospace' }}>{marking}</Typography>
                   <Typography variant="caption" component="div" color="text.secondary">
                     {m.witness.length ? m.witness.join(' → ') : '(initial marking)'}

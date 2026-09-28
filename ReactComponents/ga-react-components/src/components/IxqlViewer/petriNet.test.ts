@@ -99,10 +99,72 @@ describe('readReport', () => {
 });
 
 describe('classifyDeadMarking', () => {
-  it('names outcomes after their terminal places', () => {
-    expect(classifyDeadMarking({ tokens: { succeeded: 1 }, witness: [] })).toBe('success');
+  it('names failure and cancellation after their terminal places', () => {
     expect(classifyDeadMarking({ tokens: { failed: 1, producer_faulted: 1 }, witness: [] })).toBe('failure');
     expect(classifyDeadMarking({ tokens: { cancelled: 1 }, witness: [] })).toBe('cancelled');
     expect(classifyDeadMarking({ tokens: { q: 1 }, witness: [] })).toBe('deadlock');
+  });
+
+  it('never calls a marking a success from its place names alone', () => {
+    expect(classifyDeadMarking({ tokens: { succeeded: 1 }, witness: [] })).toBe('unverified');
+    expect(classifyDeadMarking({ tokens: { done1: 1, tested2: 1 }, witness: [] })).toBe('unverified');
+  });
+
+  // Two jobs share one capacity token (IX_PETRI_CHECKPOINT_PILOT, case B);
+  // the model's one intended end is both jobs done and the capacity back.
+  const finals = [{ cap: 1, done1: 1, done2: 1 }];
+  const dead = (tokens: Record<string, number>) => classifyDeadMarking({ tokens, witness: [] }, finals);
+
+  it('calls a success only a declared final marking', () => {
+    expect(dead({ cap: 1, done1: 1, done2: 1 })).toBe('success');
+    expect(dead({ done1: 1, done2: 1, cap: 1, overlap_seen: 0 })).toBe('success');
+  });
+
+  it('calls any other end a deadlock once finals are declared', () => {
+    // Release keeps the capacity: job 2 tested, never admitted.
+    expect(dead({ done1: 1, tested2: 1 })).toBe('deadlock');
+    expect(dead({ done2: 1, tested1: 1 })).toBe('deadlock');
+    // Codex review: job 2 never started, or the capacity is gone.
+    expect(dead({ done1: 1, ready2: 1 })).toBe('deadlock');
+    expect(dead({ done1: 1, done2: 1 })).toBe('deadlock');
+    expect(dead({ cap: 2, done1: 1, done2: 1 })).toBe('deadlock');
+  });
+});
+
+describe('final markings in PNML', () => {
+  const pnml = (finals: string) => '<pnml><net id="n" type="http://www.pnml.org/version-2009/grammar/ptnet"><page id="g">'
+    + '<place id="p"><initialMarking><text>1</text></initialMarking></place><place id="q"/>'
+    + '<transition id="t"/><arc id="a1" source="p" target="t"/><arc id="a2" source="t" target="q"/></page>'
+    + finals + '</net></pnml>';
+
+  it('reads the final markings a net declares', () => {
+    const net = parsePnml(pnml('<toolspecific tool="ga-pipeline-editor" version="1">'
+      + '<finalMarking><token place="q" count="1"/></finalMarking></toolspecific>'));
+    expect(net.places.map((p) => p.id)).toEqual(['p', 'q']);
+    expect(net.finalMarkings).toEqual([{ q: 1 }]);
+  });
+
+  it('has none when the net declares none', () => {
+    expect(parsePnml(pnml('')).finalMarkings).toEqual([]);
+  });
+
+  it('refuses a final marking over an unknown place or a bad count', () => {
+    const final = (tok: string) => pnml(`<toolspecific tool="ga-pipeline-editor" version="1"><finalMarking>${tok}</finalMarking></toolspecific>`);
+    expect(() => parsePnml(final('<token place="nope" count="1"/>'))).toThrow('unknown place "nope"');
+    expect(() => parsePnml(final('<token place="q" count="-1"/>'))).toThrow('not a non-negative integer');
+  });
+
+  it('refuses an empty count or a place listed twice in a final marking', () => {
+    const final = (tok: string) => pnml(`<toolspecific tool="ga-pipeline-editor" version="1"><finalMarking>${tok}</finalMarking></toolspecific>`);
+    expect(() => parsePnml(final('<token place="q" count=""/>'))).toThrow('not a non-negative integer');
+    expect(() => parsePnml(final('<token place="q" count=" "/>'))).toThrow('not a non-negative integer');
+    expect(() => parsePnml(final('<token place="q" count="1"/><token place="q" count="2"/>')))
+      .toThrow('place "q" is listed twice');
+    expect(parsePnml(final('<token place="q"/>')).finalMarkings).toEqual([{ q: 1 }]);
+  });
+
+  it('declares the lesson 14 lifecycle ends', () => {
+    const net = parsePnml(lifecyclePnml);
+    expect(net.finalMarkings).toHaveLength(3);
   });
 });
