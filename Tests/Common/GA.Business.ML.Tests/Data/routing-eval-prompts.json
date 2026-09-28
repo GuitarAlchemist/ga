@@ -1,7 +1,7 @@
 {
-  "version": "0.6.0",
-  "description": "Labeled prompt set for SemanticIntentRouter evaluation. v0.3 (task #106): grew labeled corpus to ≥5 prompts per intent (was avg 1.7/intent at v0.1.1). New prompts tagged 'v0.3-seed' — drafted by the harness author as plausible candidates; some routing-ambiguity is expected. Operator should spot-check after the first v0.3 eval run and either confirm or relabel any seed whose routing diverges from human intuition.\n\nIntent count: 16 (unchanged from v0.2). In-scope prompt count: 86.\n\nHISTORY:\n  v0.1.0: initial 27 prompts, average 1.7/intent — insufficient for stable per-intent F1.\n  v0.1.1: dropped skill.fretspan (regex-routed in production, not semantic), relabeled 'G mixolydian' from scaleinfo→modes, rephrased the progressionmood prompt to match production's transform semantics.\n  v0.2  : harness reflect-loads production IIntent set (PR #168). Corpus unchanged.\n  v0.3  : grew labeled corpus to ≥5 prompts per intent. Per-intent F1 now has enough support to be statistically meaningful.\n  v0.6  : added 8 out-of-scope (non-music) prompts tagged 'oos' with expectedIntentId '__none__'. The router SHOULD decline these (RouteAsync returns null) so the caller can refuse a non-music query instead of forcing it into the nearest skill. Harness now reports an OOS-decline rate — the baseline the report's two-step-OOS-gate recommendation needs. OOS prompts are excluded from per-intent precision/recall but an OOS query that wrongly routes to a skill counts against that skill's precision (a true false-positive).\n\nKNOWN GAPS: still missing labeled prompts for AlgebraIntent, TabOptimizeIntent, TabAnalyzeIntent, VoicingIntent (the four non-skill intents that live in GA.Business.Core.Orchestration). The v0.2 harness doesn't load them either, so this is consistent.",
-  "lastUpdated": "2026-05-30",
+  "version": "0.7.0",
+  "description": "Labeled prompt set for SemanticIntentRouter evaluation. v0.3 (task #106): grew labeled corpus to ≥5 prompts per intent (was avg 1.7/intent at v0.1.1). New prompts tagged 'v0.3-seed' — drafted by the harness author as plausible candidates; some routing-ambiguity is expected. Operator should spot-check after the first v0.3 eval run and either confirm or relabel any seed whose routing diverges from human intuition.\n\nIntent count: 16 (unchanged from v0.2). In-scope prompt count: 86.\n\nHISTORY:\n  v0.1.0: initial 27 prompts, average 1.7/intent — insufficient for stable per-intent F1.\n  v0.1.1: dropped skill.fretspan (regex-routed in production, not semantic), relabeled 'G mixolydian' from scaleinfo→modes, rephrased the progressionmood prompt to match production's transform semantics.\n  v0.2  : harness reflect-loads production IIntent set (PR #168). Corpus unchanged.\n  v0.3  : grew labeled corpus to ≥5 prompts per intent. Per-intent F1 now has enough support to be statistically meaningful.\n  v0.6  : added 8 out-of-scope (non-music) prompts tagged 'oos' with expectedIntentId '__none__'. The router SHOULD decline these (RouteAsync returns null) so the caller can refuse a non-music query instead of forcing it into the nearest skill. Harness now reports an OOS-decline rate — the baseline the report's two-step-OOS-gate recommendation needs. OOS prompts are excluded from per-intent precision/recall but an OOS query that wrongly routes to a skill counts against that skill's precision (a true false-positive).\n  v0.7  : added skill.improvisation with 5 held-out progression/solo prompts tagged 'v0.7-tracer' (none verbatim from the skill's ExamplePrompts). Source: the 2026-09-28 public progression-arpeggio tracer (state/research/ga-chatbot-arpeggio-tracer/).\n\nKNOWN GAPS: still missing labeled prompts for AlgebraIntent, TabOptimizeIntent, TabAnalyzeIntent, VoicingIntent (the four non-skill intents that live in GA.Business.Core.Orchestration). The v0.2 harness doesn't load them either, so this is consistent.",
+  "lastUpdated": "2026-09-28",
   "intentIdsCovered": [
     "skill.chordinfo",
     "skill.scaleinfo",
@@ -18,7 +18,8 @@
     "skill.commontones",
     "skill.diatonicchords",
     "skill.keyidentification",
-    "skill.progressioncompletion"
+    "skill.progressioncompletion",
+    "skill.improvisation"
   ],
   "prompts": [
     { "id": "ci-1",  "prompt": "what notes are in Cmaj7?",                              "expectedIntentId": "skill.chordinfo",          "tags": ["common"] },
@@ -203,6 +204,12 @@
     { "id": "adv-4", "prompt": "how does Mixolydian flavor brighten rock progressions",  "expectedIntentId": "skill.progressionmood",       "tags": ["v0.4-adversarial", "mode-name-non-modes-context"] },
     { "id": "adv-5", "prompt": "what is the tonic chord in G major",                     "expectedIntentId": "skill.diatonicchords",        "tags": ["v0.4-adversarial", "tonic-overlap"] },
     { "id": "adv-6", "prompt": "name the I chord in A major",                            "expectedIntentId": "skill.diatonicchords",        "tags": ["v0.4-adversarial", "tonic-overlap"] },
+
+    { "id": "imp-1", "prompt": "which arpeggio fits C A Dm G",                            "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
+    { "id": "imp-2", "prompt": "what arpeggios should I play over Em C G D",              "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
+    { "id": "imp-3", "prompt": "give me an arpeggio for each chord in Bm G D A",          "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
+    { "id": "imp-4", "prompt": "what scale should I solo with over a D7",                 "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
+    { "id": "imp-5", "prompt": "which arpeggios fit over F Dm Bb C",                      "expectedIntentId": "skill.improvisation",      "tags": ["v0.7-tracer"] },
 
     { "id": "oos-1", "prompt": "what's the weather in Paris today",                       "expectedIntentId": "__none__", "tags": ["v0.6-oos", "non-music"] },
     { "id": "oos-2", "prompt": "write me a haiku about the ocean",                        "expectedIntentId": "__none__", "tags": ["v0.6-oos", "non-music"] },

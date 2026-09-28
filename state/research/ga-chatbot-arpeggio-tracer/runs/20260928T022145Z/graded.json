@@ -1,0 +1,777 @@
+{
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "started_utc": "2026-09-28T02:21:46+00:00",
+  "results": [
+    {
+      "case": "P1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:40+00:00",
+      "agentId": "skill.improvisation",
+      "routingMethod": "orchestrator-skill-semantic",
+      "routing_ms": 53202.5,
+      "first_text_ms": 53202.6,
+      "total_ms": 53203.9,
+      "passed": 17,
+      "checks_total": 19,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "552 chars"
+        },
+        {
+          "check": "route",
+          "pass": true,
+          "detail": "agentId=skill.improvisation"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": true,
+          "detail": "got=['Am', 'F', 'C', 'G']"
+        },
+        {
+          "check": "Am: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Am -> C E A vs C E A"
+        },
+        {
+          "check": "Am: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "A Aeolian (natural minor) -> C D E F G A B"
+        },
+        {
+          "check": "Am: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "F: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "F -> C F A vs C F A"
+        },
+        {
+          "check": "F: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "F Ionian (major) -> C D E F G A Bb"
+        },
+        {
+          "check": "F: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: Bb"
+        },
+        {
+          "check": "C: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "C -> C E G vs C E G"
+        },
+        {
+          "check": "C: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "C Ionian (major) -> C D E F G A B"
+        },
+        {
+          "check": "C: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "G: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "G -> D G B vs D G B"
+        },
+        {
+          "check": "G: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "G Ionian (major) -> C D E F# G A B"
+        },
+        {
+          "check": "G: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: F#"
+        }
+      ],
+      "per_chord": [
+        {
+          "chord": "Am",
+          "arpeggio": "Am",
+          "lead_scale": "A Aeolian (natural minor)",
+          "chord_tones": "C E A",
+          "arpeggio_tones": "C E A",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "F",
+          "arpeggio": "F",
+          "lead_scale": "F Ionian (major)",
+          "chord_tones": "C F A",
+          "arpeggio_tones": "C F A",
+          "scale_notes": "C D E F G A Bb",
+          "outside_key": "Bb"
+        },
+        {
+          "chord": "C",
+          "arpeggio": "C",
+          "lead_scale": "C Ionian (major)",
+          "chord_tones": "C E G",
+          "arpeggio_tones": "C E G",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "G",
+          "arpeggio": "G",
+          "lead_scale": "G Ionian (major)",
+          "chord_tones": "D G B",
+          "arpeggio_tones": "D G B",
+          "scale_notes": "C D E F# G A B",
+          "outside_key": "F#"
+        }
+      ],
+      "answer": "Over **Am – F – C – G**, for each chord:\n\n- **Am** → arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor — fits most i chords).- **F** → arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **C** → arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **G** → arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+    },
+    {
+      "case": "P1",
+      "repeat": 2,
+      "at_utc": "2026-09-28T02:22:42+00:00",
+      "agentId": "skill.improvisation",
+      "routingMethod": "orchestrator-skill-semantic",
+      "routing_ms": 219.4,
+      "first_text_ms": 219.4,
+      "total_ms": 222.6,
+      "passed": 17,
+      "checks_total": 19,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "552 chars"
+        },
+        {
+          "check": "route",
+          "pass": true,
+          "detail": "agentId=skill.improvisation"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": true,
+          "detail": "got=['Am', 'F', 'C', 'G']"
+        },
+        {
+          "check": "Am: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Am -> C E A vs C E A"
+        },
+        {
+          "check": "Am: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "A Aeolian (natural minor) -> C D E F G A B"
+        },
+        {
+          "check": "Am: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "F: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "F -> C F A vs C F A"
+        },
+        {
+          "check": "F: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "F Ionian (major) -> C D E F G A Bb"
+        },
+        {
+          "check": "F: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: Bb"
+        },
+        {
+          "check": "C: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "C -> C E G vs C E G"
+        },
+        {
+          "check": "C: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "C Ionian (major) -> C D E F G A B"
+        },
+        {
+          "check": "C: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "G: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "G -> D G B vs D G B"
+        },
+        {
+          "check": "G: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "G Ionian (major) -> C D E F# G A B"
+        },
+        {
+          "check": "G: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: F#"
+        }
+      ],
+      "per_chord": [
+        {
+          "chord": "Am",
+          "arpeggio": "Am",
+          "lead_scale": "A Aeolian (natural minor)",
+          "chord_tones": "C E A",
+          "arpeggio_tones": "C E A",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "F",
+          "arpeggio": "F",
+          "lead_scale": "F Ionian (major)",
+          "chord_tones": "C F A",
+          "arpeggio_tones": "C F A",
+          "scale_notes": "C D E F G A Bb",
+          "outside_key": "Bb"
+        },
+        {
+          "chord": "C",
+          "arpeggio": "C",
+          "lead_scale": "C Ionian (major)",
+          "chord_tones": "C E G",
+          "arpeggio_tones": "C E G",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "G",
+          "arpeggio": "G",
+          "lead_scale": "G Ionian (major)",
+          "chord_tones": "D G B",
+          "arpeggio_tones": "D G B",
+          "scale_notes": "C D E F# G A B",
+          "outside_key": "F#"
+        }
+      ],
+      "answer": "Over **Am – F – C – G**, for each chord:\n\n- **Am** → arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor — fits most i chords).- **F** → arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **C** → arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **G** → arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+    },
+    {
+      "case": "P1",
+      "repeat": 3,
+      "at_utc": "2026-09-28T02:22:44+00:00",
+      "agentId": "skill.improvisation",
+      "routingMethod": "orchestrator-skill-semantic",
+      "routing_ms": 147.9,
+      "first_text_ms": 147.9,
+      "total_ms": 148.2,
+      "passed": 17,
+      "checks_total": 19,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "552 chars"
+        },
+        {
+          "check": "route",
+          "pass": true,
+          "detail": "agentId=skill.improvisation"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": true,
+          "detail": "got=['Am', 'F', 'C', 'G']"
+        },
+        {
+          "check": "Am: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Am -> C E A vs C E A"
+        },
+        {
+          "check": "Am: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "A Aeolian (natural minor) -> C D E F G A B"
+        },
+        {
+          "check": "Am: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "F: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "F -> C F A vs C F A"
+        },
+        {
+          "check": "F: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "F Ionian (major) -> C D E F G A Bb"
+        },
+        {
+          "check": "F: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: Bb"
+        },
+        {
+          "check": "C: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "C -> C E G vs C E G"
+        },
+        {
+          "check": "C: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "C Ionian (major) -> C D E F G A B"
+        },
+        {
+          "check": "C: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "G: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "G -> D G B vs D G B"
+        },
+        {
+          "check": "G: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "G Ionian (major) -> C D E F# G A B"
+        },
+        {
+          "check": "G: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: F#"
+        }
+      ],
+      "per_chord": [
+        {
+          "chord": "Am",
+          "arpeggio": "Am",
+          "lead_scale": "A Aeolian (natural minor)",
+          "chord_tones": "C E A",
+          "arpeggio_tones": "C E A",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "F",
+          "arpeggio": "F",
+          "lead_scale": "F Ionian (major)",
+          "chord_tones": "C F A",
+          "arpeggio_tones": "C F A",
+          "scale_notes": "C D E F G A Bb",
+          "outside_key": "Bb"
+        },
+        {
+          "chord": "C",
+          "arpeggio": "C",
+          "lead_scale": "C Ionian (major)",
+          "chord_tones": "C E G",
+          "arpeggio_tones": "C E G",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "G",
+          "arpeggio": "G",
+          "lead_scale": "G Ionian (major)",
+          "chord_tones": "D G B",
+          "arpeggio_tones": "D G B",
+          "scale_notes": "C D E F# G A B",
+          "outside_key": "F#"
+        }
+      ],
+      "answer": "Over **Am – F – C – G**, for each chord:\n\n- **Am** → arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor — fits most i chords).- **F** → arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **C** → arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **G** → arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+    },
+    {
+      "case": "P2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:46+00:00",
+      "agentId": "skill.improvisation",
+      "routingMethod": "orchestrator-skill-semantic",
+      "routing_ms": 198.5,
+      "first_text_ms": 198.5,
+      "total_ms": 198.8,
+      "passed": 16,
+      "checks_total": 16,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "409 chars"
+        },
+        {
+          "check": "route",
+          "pass": true,
+          "detail": "agentId=skill.improvisation"
+        },
+        {
+          "check": "forbidden 'Dmm7' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": true,
+          "detail": "got=['Dm7', 'G7', 'Cmaj7']"
+        },
+        {
+          "check": "Dm7: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Dm7 -> C D F A vs C D F A"
+        },
+        {
+          "check": "Dm7: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "D Dorian -> C D E F G A B"
+        },
+        {
+          "check": "Dm7: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "G7: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "G7 -> D F G B vs D F G B"
+        },
+        {
+          "check": "G7: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "G Mixolydian -> C D E F G A B"
+        },
+        {
+          "check": "G7: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "Cmaj7: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Cmaj7 -> C E G B vs C E G B"
+        },
+        {
+          "check": "Cmaj7: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "C Ionian (major) -> C D E F G A B"
+        },
+        {
+          "check": "Cmaj7: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        }
+      ],
+      "per_chord": [
+        {
+          "chord": "Dm7",
+          "arpeggio": "Dm7",
+          "lead_scale": "D Dorian",
+          "chord_tones": "C D F A",
+          "arpeggio_tones": "C D F A",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "G7",
+          "arpeggio": "G7",
+          "lead_scale": "G Mixolydian",
+          "chord_tones": "D F G B",
+          "arpeggio_tones": "D F G B",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "Cmaj7",
+          "arpeggio": "Cmaj7",
+          "lead_scale": "C Ionian (major)",
+          "chord_tones": "C E G B",
+          "arpeggio_tones": "C E G B",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        }
+      ],
+      "answer": "Over **Dm7 – G7 – Cmaj7**, for each chord:\n\n- **Dm7** → arpeggio **Dm7**, play **D Dorian** (natural 6 — modern jazz default).- **G7** → arpeggio **G7**, play **G Mixolydian** (diatonic dominant — natural choice for V chords).- **Cmaj7** → arpeggio **Cmaj7**, play **C Ionian (major)** (diatonic — the safe choice).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+    },
+    {
+      "case": "N1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:48+00:00",
+      "agentId": "skill.improvisation",
+      "routingMethod": "orchestrator-skill-semantic",
+      "routing_ms": 191.9,
+      "first_text_ms": 191.9,
+      "total_ms": 192.0,
+      "passed": 17,
+      "checks_total": 19,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "552 chars"
+        },
+        {
+          "check": "route",
+          "pass": true,
+          "detail": "agentId=skill.improvisation"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": true,
+          "detail": "got=['C', 'A', 'Dm', 'G']"
+        },
+        {
+          "check": "C: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "C -> C E G vs C E G"
+        },
+        {
+          "check": "C: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "C Ionian (major) -> C D E F G A B"
+        },
+        {
+          "check": "C: lead scale stays in the progression's key",
+          "pass": true,
+          "detail": "outside key: -"
+        },
+        {
+          "check": "A: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "A -> C# E A vs C# E A"
+        },
+        {
+          "check": "A: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "A Ionian (major) -> C# D E F# Ab A B"
+        },
+        {
+          "check": "A: secondary-dominant guard (keeps C#, no C)",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "Dm: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "Dm -> D F A vs D F A"
+        },
+        {
+          "check": "Dm: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "D Aeolian (natural minor) -> C D E F G A Bb"
+        },
+        {
+          "check": "Dm: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: Bb"
+        },
+        {
+          "check": "G: arpeggio preserves written quality",
+          "pass": true,
+          "detail": "G -> D G B vs D G B"
+        },
+        {
+          "check": "G: lead scale contains every chord tone",
+          "pass": true,
+          "detail": "G Ionian (major) -> C D E F# G A B"
+        },
+        {
+          "check": "G: lead scale stays in the progression's key",
+          "pass": false,
+          "detail": "outside key: F#"
+        }
+      ],
+      "per_chord": [
+        {
+          "chord": "C",
+          "arpeggio": "C",
+          "lead_scale": "C Ionian (major)",
+          "chord_tones": "C E G",
+          "arpeggio_tones": "C E G",
+          "scale_notes": "C D E F G A B",
+          "outside_key": ""
+        },
+        {
+          "chord": "A",
+          "arpeggio": "A",
+          "lead_scale": "A Ionian (major)",
+          "chord_tones": "C# E A",
+          "arpeggio_tones": "C# E A",
+          "scale_notes": "C# D E F# Ab A B"
+        },
+        {
+          "chord": "Dm",
+          "arpeggio": "Dm",
+          "lead_scale": "D Aeolian (natural minor)",
+          "chord_tones": "D F A",
+          "arpeggio_tones": "D F A",
+          "scale_notes": "C D E F G A Bb",
+          "outside_key": "Bb"
+        },
+        {
+          "chord": "G",
+          "arpeggio": "G",
+          "lead_scale": "G Ionian (major)",
+          "chord_tones": "D G B",
+          "arpeggio_tones": "D G B",
+          "scale_notes": "C D E F# G A B",
+          "outside_key": "F#"
+        }
+      ],
+      "answer": "Over **C – A – Dm – G**, for each chord:\n\n- **C** → arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **A** → arpeggio **A**, play **A Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).- **Dm** → arpeggio **Dm**, play **D Aeolian (natural minor)** (diatonic minor — fits most i chords).- **G** → arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 — careful on the IV chord).Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+    },
+    {
+      "case": "N2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:51+00:00",
+      "agentId": "fallback-direct",
+      "routingMethod": "low-confidence-fallback",
+      "routing_ms": 932.9,
+      "first_text_ms": 933.0,
+      "total_ms": 933.1,
+      "passed": 7,
+      "checks_total": 8,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": true,
+          "detail": "status=200 err=None"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": true,
+          "detail": "293 chars"
+        },
+        {
+          "check": "forbidden 'Hm arpeggio' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "forbidden 'Q7 arpeggio' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no fabricated per-chord arpeggio line",
+          "pass": true,
+          "detail": "0 lines"
+        },
+        {
+          "check": "declines or states uncertainty (heuristic)",
+          "pass": false,
+          "detail": ""
+        }
+      ],
+      "per_chord": [],
+      "answer": "The note Hm Q7 (also known as H) is a perfect 4th above the note Q.To create an arpeggio based on this note, you'll need to find a chord that includes H and its neighboring notes.Since Hm Q7 is a perfect 4th above Q, we can use the chord progression of Q, then move 4 semitones up to get to H."
+    }
+  ]
+}

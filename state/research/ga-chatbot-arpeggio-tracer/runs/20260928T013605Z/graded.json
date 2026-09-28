@@ -1,0 +1,317 @@
+{
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "started_utc": "2026-09-28T01:36:06+00:00",
+  "results": [
+    {
+      "case": "P1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:06+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 374.7,
+      "passed": 2,
+      "checks_total": 7,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "route",
+          "pass": false,
+          "detail": "agentId=None"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": false,
+          "detail": "got=[]"
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    },
+    {
+      "case": "P1",
+      "repeat": 2,
+      "at_utc": "2026-09-28T01:36:09+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 562.8,
+      "passed": 2,
+      "checks_total": 7,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "route",
+          "pass": false,
+          "detail": "agentId=None"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": false,
+          "detail": "got=[]"
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    },
+    {
+      "case": "P1",
+      "repeat": 3,
+      "at_utc": "2026-09-28T01:36:11+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 215.2,
+      "passed": 2,
+      "checks_total": 7,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "route",
+          "pass": false,
+          "detail": "agentId=None"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": false,
+          "detail": "got=[]"
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    },
+    {
+      "case": "P2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:13+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 176.9,
+      "passed": 2,
+      "checks_total": 7,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "route",
+          "pass": false,
+          "detail": "agentId=None"
+        },
+        {
+          "check": "forbidden 'Dmm7' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": false,
+          "detail": "got=[]"
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    },
+    {
+      "case": "N1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:16+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 369.4,
+      "passed": 2,
+      "checks_total": 7,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "route",
+          "pass": false,
+          "detail": "agentId=None"
+        },
+        {
+          "check": "forbidden 'Amm' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "one line per chord, in order",
+          "pass": false,
+          "detail": "got=[]"
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    },
+    {
+      "case": "N2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T01:36:18+00:00",
+      "agentId": null,
+      "routingMethod": null,
+      "routing_ms": null,
+      "first_text_ms": null,
+      "total_ms": 170.5,
+      "passed": 4,
+      "checks_total": 8,
+      "checks": [
+        {
+          "check": "transport",
+          "pass": false,
+          "detail": "status=None err=HTTPError: HTTP Error 502: Bad Gateway"
+        },
+        {
+          "check": "terminal [DONE]",
+          "pass": false,
+          "detail": ""
+        },
+        {
+          "check": "no error frame",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "nonempty answer",
+          "pass": false,
+          "detail": "0 chars"
+        },
+        {
+          "check": "forbidden 'Hm arpeggio' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "forbidden 'Q7 arpeggio' absent",
+          "pass": true,
+          "detail": ""
+        },
+        {
+          "check": "no fabricated per-chord arpeggio line",
+          "pass": true,
+          "detail": "0 lines"
+        },
+        {
+          "check": "declines or states uncertainty (heuristic)",
+          "pass": false,
+          "detail": ""
+        }
+      ],
+      "per_chord": [],
+      "answer": ""
+    }
+  ]
+}
