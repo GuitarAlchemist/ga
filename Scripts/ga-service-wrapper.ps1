@@ -21,12 +21,11 @@ Write-Output "Started cloudflared tunnel (PID $($procs[-1].Id))"
 $procs += Start-Process -FilePath "npm" -ArgumentList "run dev" -WorkingDirectory "$RepoRoot\ReactComponents\ga-react-components" -WindowStyle Hidden -PassThru -RedirectStandardOutput "$LogDir\vite.log" -RedirectStandardError "$LogDir\vite-err.log"
 Write-Output "Started Vite dev server (PID $($procs[-1].Id))"
 
-# 4. Ollama (if installed)
-$ollamaPath = Get-Command ollama -ErrorAction SilentlyContinue
-if ($ollamaPath) {
-    $procs += Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -PassThru -RedirectStandardOutput "$LogDir\ollama.log" -RedirectStandardError "$LogDir\ollama-err.log"
-    Write-Output "Started Ollama (PID $($procs[-1].Id))"
-}
+# Ollama is NOT started here. The Ollama app in the user's Startup folder owns it.
+# This wrapper runs elevated at boot; an elevated `ollama serve` locks ollama.exe,
+# so the app's unelevated auto-updater cannot replace it. On 2026-09-27 the update
+# aborted and its rollback deleted the model runtime (lib\ollama), which broke
+# every embed and generate call. See docs/runbooks/chatbot-deploy.md.
 
 # Monitor loop — restart crashed processes
 while ($true) {
