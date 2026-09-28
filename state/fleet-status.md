@@ -14,31 +14,31 @@ _24 open PR(s) across 5 repos._
 
 _No open PRs._
 
-### ga (3 open)
+### ga (2 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#749](https://github.com/GuitarAlchemist/ga/pull/749) | fix(chat): decline arpeggio requests that name only invalid chords (#7 | 0d | UNKNOWN | 0 | spareilleux |
 | [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 3d | UNKNOWN | 1 | spareilleux |
-| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 56d | UNKNOWN | 2 | spareilleux |
+| [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 57d | UNKNOWN | 2 | spareilleux |
 
 ### ix (5 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#356](https://github.com/GuitarAlchemist/ix/pull/356) | ci: push to main over the deploy key, and run CI under the merge queue | 3d | MERGEABLE | 1 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 12d | CONFLICTING | 1 | spareilleux |
-| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 15d | MERGEABLE | 0 | spareilleux |
-| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 15d | MERGEABLE | 0 | spareilleux |
-| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 15d | MERGEABLE | 0 | spareilleux |
+| [#356](https://github.com/GuitarAlchemist/ix/pull/356) | ci: push to main over the deploy key, and run CI under the merge queue | 3d | UNKNOWN | 1 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 12d | UNKNOWN | 1 | spareilleux |
+| [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 15d | UNKNOWN | 0 | spareilleux |
+| [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 15d | UNKNOWN | 0 | spareilleux |
+| [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 15d | UNKNOWN | 0 | spareilleux |
 
-### tars (3 open)
+### tars (4 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#343](https://github.com/GuitarAlchemist/tars/pull/343) | fix: stop opening every internal of Tars.Core to reach one test hook | 0d | MERGEABLE | 0 | spareilleux |
 | [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 0d | MERGEABLE | 1 | spareilleux |
 | [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 3d | MERGEABLE | 1 | spareilleux |
-| [#307](https://github.com/GuitarAlchemist/tars/pull/307) | Add the missing MIT LICENSE the README advertises, and stop tracking t | 10d | MERGEABLE | 0 | spareilleux |
+| [#307](https://github.com/GuitarAlchemist/tars/pull/307) | Add the missing MIT LICENSE the README advertises, and stop tracking t | 11d | MERGEABLE | 0 | spareilleux |
 
 ### Demerzel (13 open)
 
@@ -50,13 +50,13 @@ _No open PRs._
 | [#1121](https://github.com/GuitarAlchemist/Demerzel/pull/1121) | fix(loop-health): correlate an event-producer run by head_sha alone | 5d | MERGEABLE | 0 | spareilleux |
 | [#1120](https://github.com/GuitarAlchemist/Demerzel/pull/1120) | fix(streeling): restore stripped Spanish accents in 12 course modules | 5d | MERGEABLE | 0 | spareilleux |
 | [#1114](https://github.com/GuitarAlchemist/Demerzel/pull/1114) | feat(contracts): validate Gaia continuity receipts | 7d | MERGEABLE | 2 | spareilleux |
-| [#1102](https://github.com/GuitarAlchemist/Demerzel/pull/1102) | fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002,  | 10d | MERGEABLE | 0 | spareilleux |
+| [#1102](https://github.com/GuitarAlchemist/Demerzel/pull/1102) | fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002,  | 11d | MERGEABLE | 0 | spareilleux |
 | [#1098](https://github.com/GuitarAlchemist/Demerzel/pull/1098) | docs(streeling): French and Spanish translations of 14 modules | 11d | CONFLICTING | 0 | spareilleux |
 | [#1091](https://github.com/GuitarAlchemist/Demerzel/pull/1091) | fix(streeling): factual errors in MUS-006, MUS-002 and GTR-002 | 13d | MERGEABLE | 1 | spareilleux |
-| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 13d | MERGEABLE | 1 | spareilleux |
+| [#1088](https://github.com/GuitarAlchemist/Demerzel/pull/1088) | feat(seldon): first PR-lifecycle Markov transitions artifact + schema  | 14d | MERGEABLE | 1 | spareilleux |
 | [#1084](https://github.com/GuitarAlchemist/Demerzel/pull/1084) | ci(registry-check): gate capability-registry breaking changes with ix- | 14d | MERGEABLE | 1 | spareilleux |
 | [#994](https://github.com/GuitarAlchemist/Demerzel/pull/994) | feat: govern Gaia epistemic research proposals | 45d | CONFLICTING | 2 | spareilleux |
-| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 71d | CONFLICTING | 1 | spareilleux |
+| [#734](https://github.com/GuitarAlchemist/Demerzel/pull/734) | feat(assets): ComfyUI Slice 0 — governed generative-asset pipeline (sc | 72d | CONFLICTING | 1 | spareilleux |
 
 ## Install-audit fleet score
 
@@ -90,6 +90,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-09-28T20:23:07.996435+00:00 UTC_
+_Generated: 2026-09-28T23:32:58.730370+00:00 UTC_
 
-_Commit: `e697fc94f4b0`_
+_Commit: `d7efd4142908`_
