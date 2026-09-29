@@ -25,9 +25,15 @@ public class InvalidChordDeclineTests
 {
     private const string InvalidChordPrompt = "which arpeggio fits Hm Q7";
 
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task InvalidChords_AreDeclinedWithoutTheLlm_AndRecorded(bool streaming)
+    // "fingering" is an explicit voicing term. The request must not reach the voicing agent,
+    // whose query extractor falls back to the LLM on chord symbols it cannot parse.
+    private const string InvalidChordVoicingPrompt = "which arpeggio fingering fits Hm Q7";
+
+    [TestCase(InvalidChordPrompt, false)]
+    [TestCase(InvalidChordPrompt, true)]
+    [TestCase(InvalidChordVoicingPrompt, false)]
+    [TestCase(InvalidChordVoicingPrompt, true)]
+    public async Task InvalidChords_AreDeclinedWithoutTheLlm_AndRecorded(string prompt, bool streaming)
     {
         var chat = new CountingChatClient();
         var hook = new RecordingHook();
@@ -36,7 +42,7 @@ public class InvalidChordDeclineTests
         var orchestrator = scope.ServiceProvider.GetRequiredService<ProductionOrchestrator>();
         var history = factory.Services.GetRequiredService<ConversationHistoryStore>();
         var sessionId = $"ga745-{streaming}";
-        var request = new ChatRequest(InvalidChordPrompt, SessionId: sessionId);
+        var request = new ChatRequest(prompt, SessionId: sessionId);
 
         var streamed = new List<string>();
         var response = streaming

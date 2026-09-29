@@ -863,6 +863,15 @@ public class ProductionOrchestrator(
             return false;
         }
 
+        // Invalid chord names (ga#745) are left to DeclineInvalidChordNames: the voicing
+        // agent's query extractor falls back to the LLM on chord symbols it cannot parse.
+        if (InvalidChordNames.Find(message).Count > 0)
+        {
+            agent = null!;
+            routing = null!;
+            return false;
+        }
+
         if (IsExplicitVoicingRequest(message)
             && router.Agents.FirstOrDefault(a => a.AgentId == AgentIds.Voicing) is { } voicingAgent)
         {
