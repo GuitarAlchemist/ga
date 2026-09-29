@@ -648,7 +648,37 @@ public class ChatbotApiSurfaceTests
         Assert.That(events, Has.Count.EqualTo(1));
 
         var error = JsonSerializer.Deserialize<JsonElement>(events[0]);
-        Assert.That(error.GetProperty("error").GetString(), Is.EqualTo("Service is busy. Please try again in a few seconds."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(error.GetProperty("type").GetString(), Is.EqualTo("error"));
+            Assert.That(error.GetProperty("error").GetString(), Is.EqualTo("Service is busy. Please try again in a few seconds."));
+        });
+    }
+
+    [Test]
+    public async Task ChatStream_WhenApplicationServiceThrowsMidStream_EmitsTypedErrorAndNoDone()
+    {
+        using var factory = CreateFactory(chatService: new ThrowingChatApplicationService());
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/chatbot/chat/stream", new { message = "Explain C major." });
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        // The failure comes after the routing event and a partial answer, so a client cannot
+        // tell it from a text chunk by position; the page's reader relies on its type (#760).
+        var events = await ReadSseDataLinesAsync(response);
+        Assert.That(events, Has.Count.EqualTo(3));
+        var routing = JsonSerializer.Deserialize<JsonElement>(events[0]);
+        var error = JsonSerializer.Deserialize<JsonElement>(events[2]);
+        Assert.Multiple(() =>
+        {
+            Assert.That(routing.GetProperty("type").GetString(), Is.EqualTo("routing"));
+            Assert.That(events[1], Is.EqualTo("partial answer"));
+            Assert.That(error.GetProperty("type").GetString(), Is.EqualTo("error"));
+            Assert.That(error.GetProperty("error").GetString(), Is.EqualTo("Failed to process message. Please try again."));
+            Assert.That(events, Does.Not.Contain("[DONE]"));
+        });
     }
 
     [Test]

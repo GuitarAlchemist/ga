@@ -737,6 +737,9 @@
   // Backend emits a single routing JSON event first (with the full trace),
   // then text chunks, then `[DONE]`. We render the trace as soon as routing
   // arrives so the right panel populates before the answer text streams in.
+  // A failure is sent as `{"type":"error","error":"…"}` with no `[DONE]`
+  // after it, before or after the routing event; we throw so the caller
+  // reports it and keeps it out of the conversation history.
   async function consumeSseStream(response, signal) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -767,6 +770,14 @@
 
         if (data === '[DONE]') {
           return { answer, routing };
+        }
+
+        if (data.startsWith('{') && data.includes('"error"')) {
+          let parsed = null;
+          try { parsed = JSON.parse(data); } catch { /* a text chunk */ }
+          if (parsed?.type === 'error' && typeof parsed.error === 'string') {
+            throw new Error(parsed.error);
+          }
         }
 
         // First event is routing JSON (begins with `{`). Subsequent events
