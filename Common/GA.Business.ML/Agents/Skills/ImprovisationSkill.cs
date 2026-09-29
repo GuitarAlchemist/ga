@@ -122,11 +122,15 @@ public sealed partial class ImprovisationSkill(
     // A valid chord anywhere in the message: a suffixed symbol ("Am", "G7"), a
     // spaced quality ("C major") or a bare root, alone ("C" in "fits C and Q7") or
     // in a run ("Am F C G"). A capital "A" opening a sentence before a lowercase
-    // word ("A friend asked...") is the article, not a chord.
-    internal static bool NamesValidChord(string message) =>
-        ChordSuffixRegex().IsMatch(message)
-        || ChordWithSpacedQualityRegex().IsMatch(message)
-        || ChordTokenRegex().Matches(message).Any(m => !IsSentenceArticle(message, m));
+    // word ("A friend asked...") is the article, not a chord, and a key ("in the
+    // key of C") is not one either.
+    internal static bool NamesValidChord(string message)
+    {
+        var chords = KeyNameRegex().Replace(message, " ");
+        return ChordSuffixRegex().IsMatch(chords)
+               || ChordWithSpacedQualityRegex().IsMatch(chords)
+               || ChordTokenRegex().Matches(chords).Any(m => !IsSentenceArticle(chords, m));
+    }
 
     private static bool IsSentenceArticle(string message, Match match)
     {
@@ -488,6 +492,11 @@ public sealed partial class ImprovisationSkill(
 
     [GeneratedRegex(@"\b[A-G][#b]?\s+(?:[Mm]ajor|[Mm]inor|[Mm]aj|[Mm]in|[Dd]im|[Aa]ug|[Ss]us)\b")]
     private static partial Regex ChordWithSpacedQualityRegex();
+
+    // A key named after "key of": "key of C", "key of Bb minor", "key of C#m". Not "key
+    // of Cmaj7": the trailing guard rejects a longer suffix.
+    [GeneratedRegex(@"\bkey\s+of\s+[A-G][#b]?(?:m|min|\s+(?:[Mm]ajor|[Mm]inor))?(?![\w#])")]
+    private static partial Regex KeyNameRegex();
 
     // Progression tokenizer (v2). Captures each chord symbol in a run, longest
     // quality alternation first so "Cmaj7" is one token, not "C" + "maj7". The
