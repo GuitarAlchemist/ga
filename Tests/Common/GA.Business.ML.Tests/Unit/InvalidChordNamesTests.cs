@@ -19,6 +19,7 @@ public class InvalidChordNamesTests
     [TestCase("improvise over Rm7b5 Rm7b5", new[] { "Rm7b5" })]
     // An opening chord-shaped token is not an interjection; an opening "A" article is not a chord.
     [TestCase("Q7, which arpeggio should I use?", new[] { "Q7" })]
+    [TestCase("Q7: which arpeggio should I use?", new[] { "Q7" })]
     [TestCase("Hm, which arpeggio fits Q7?", new[] { "Q7" })]
     [TestCase("A friend asked which arpeggio fits Hm Q7", new[] { "Hm", "Q7" })]
     // A Roman numeral next to an invalid name is left out of the decline.
@@ -43,6 +44,10 @@ public class InvalidChordNamesTests
     [TestCase("Hmm, which arpeggio should I learn first?")]
     [TestCase("Um, what scale should I use?")]
     [TestCase("Hm, which mode is brightest?")]
+    [TestCase("Hm: which arpeggio should I learn?")]
+    [TestCase("Um; what scale should I use?")]
+    [TestCase("Hm - which mode is brightest?")]
+    [TestCase("Mm—which arpeggio should I learn?")]
     [TestCase("what scale should I practice at 7 PM")]
     [TestCase("which mode did Madden solo in")]
     [TestCase("I'm trying to improvise, what scale helps?")]

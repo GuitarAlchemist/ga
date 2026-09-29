@@ -85,11 +85,15 @@ public static partial class InvalidChordNames
     // These are the interjections the regex matches ("Hmm" and "Uh" never do).
     private static readonly string[] Interjections = ["Hm", "Um", "Mm"];
 
-    private static bool IsOpeningInterjection(string message, Match match) =>
-        Interjections.Contains(match.Value)
-        && message[..match.Index].Trim().Length == 0
-        && match.Index + match.Length < message.Length
-        && message[match.Index + match.Length] is ',' or '.' or '!' or '?' or '…';
+    // The separator may follow a space, as a spaced dash does ("Hm - which mode...").
+    private static bool IsOpeningInterjection(string message, Match match)
+    {
+        var rest = message[(match.Index + match.Length)..].TrimStart();
+        return Interjections.Contains(match.Value)
+            && message[..match.Index].Trim().Length == 0
+            && rest.Length > 0
+            && rest[0] is ',' or '.' or '!' or '?' or '…' or ':' or ';' or '-' or '–' or '—';
+    }
 
     // Uppercase root outside A-G, optional accidental, then a chord suffix: a quality,
     // an extension, alterations. Find skips an empty suffix. Whole token only: "Hmm" and
