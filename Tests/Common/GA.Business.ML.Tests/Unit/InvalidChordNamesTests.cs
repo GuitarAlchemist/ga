@@ -24,6 +24,10 @@ public class InvalidChordNamesTests
     [TestCase("A friend asked which arpeggio fits Hm Q7", new[] { "Hm", "Q7" })]
     // A Roman numeral next to an invalid name is left out of the decline.
     [TestCase("which arpeggio fits V7 and Q7", new[] { "Q7" })]
+    // A root named as the key is not a chord, so it does not keep the request's route.
+    [TestCase("which arpeggio fits Q7 in the key of C", new[] { "Q7" })]
+    [TestCase("what scale over X7alt in the key of Bb minor", new[] { "X7alt" })]
+    [TestCase("which arpeggio fits Q7 in the key of C#m", new[] { "Q7" })]
     public void Find_ReturnsEachInvalidChordName(string message, string[] expected)
     {
         Assert.That(InvalidChordNames.Find(message), Is.EqualTo(expected));
@@ -38,6 +42,8 @@ public class InvalidChordNamesTests
     [TestCase("which arpeggio fits Q7 and F#")]
     [TestCase("which arpeggio fits A and Q7")]
     [TestCase("which scale fits C major")]
+    [TestCase("which arpeggio fits G7 and Q7 in the key of C")]
+    [TestCase("which arpeggio fits Q7 and C in the key of G")]
     // No improvisation intent: not a chord request at all.
     [TestCase("Hm Q7 is my username")]
     // Interjections, times and words that only look chord-like.
