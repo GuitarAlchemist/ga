@@ -12,6 +12,7 @@ using GA.Business.ML.Search;
 using GA.Domain.Services.Atonal.Grothendieck;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -53,33 +54,61 @@ public class RoutingEvalHarness
     // without recompiling the harness.
     private static readonly string EmbeddingEndpoint =
         Environment.GetEnvironmentVariable("GA_EMBED_ENDPOINT") ?? "http://localhost:11434";
-    private static readonly string EmbeddingModel =
-        Environment.GetEnvironmentVariable("GA_EMBED_MODEL") ?? "nomic-embed-text";
-    // The SAME threshold production routes with. Defaults to the production const
-    // (not a hardcoded literal) — this was 0.65f while production sat at 0.55f
-    // (dropped 2026-05-13), so the last baseline measured a threshold prod never
-    // used. Sourcing the const makes that drift impossible by default;
-    // RouterThreshold_DefaultMatchesProductionDefault guards it.
+    // The embedder/threshold pair the harness measures DEFAULTS to the pair
+    // production routes with, read from the chatbot host's appsettings with the
+    // same keys and fallbacks production binds (ChatbotOrchestrationExtensions +
+    // DefaultEmbeddingGeneratorFactory). Hardcoded defaults drifted twice: 0.65
+    // while prod sat at 0.55 (dropped 2026-05-13), then nomic-embed-text @ 0.55
+    // after prod moved to bge-large @ 0.64 (plan #420 Phase 2), so manual runs
+    // measured a router prod never ran. RoutingDefaults_FollowProductionConfig
+    // guards it.
     //
-    // GA_ROUTER_MIN_CONFIDENCE overrides it because the threshold is embedder-
-    // SPECIFIC (plan #420 Phase 2): a stronger embedder scores higher, so the
-    // bge-large baseline must be measured at its recalibrated threshold (~0.64),
-    // mirroring AI:Routing:MinConfidence in production appsettings. The ratchet
-    // sets GA_EMBED_MODEL + GA_ROUTER_MIN_CONFIDENCE together so the gate measures
-    // the embedder/threshold pair production actually deploys.
+    // GA_EMBED_MODEL / GA_ROUTER_MIN_CONFIDENCE still override, together, because
+    // the threshold is embedder-SPECIFIC: a stronger embedder scores higher, so a
+    // bake-off candidate must be measured at its own recalibrated threshold.
+    private const string ProductionAppsettings = "Apps/GaChatbot.Api/appsettings.json";
+    private static readonly IConfiguration? ProductionConfig = LoadProductionConfig();
+    private static readonly string EmbeddingModel =
+        ResolveEmbeddingModel(Environment.GetEnvironmentVariable("GA_EMBED_MODEL"), ProductionConfig);
     private static readonly float RouterMinConfidence =
-        ResolveRouterMinConfidence(Environment.GetEnvironmentVariable("GA_ROUTER_MIN_CONFIDENCE"));
+        ResolveRouterMinConfidence(Environment.GetEnvironmentVariable("GA_ROUTER_MIN_CONFIDENCE"), ProductionConfig);
 
     /// <summary>
-    /// Parses an explicit threshold override, falling back to the production
-    /// const for null/blank/garbage/out-of-range input. Pure + testable so the
-    /// drift guard can assert the default path without touching process env.
+    /// Loads <see cref="ProductionAppsettings"/> by walking up from the test bin
+    /// dir. Null when the file is not found; the drift guard then fails loudly
+    /// instead of the harness silently measuring the fallbacks.
     /// </summary>
-    internal static float ResolveRouterMinConfidence(string? raw) =>
+    private static IConfiguration? LoadProductionConfig()
+    {
+        for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
+        {
+            var path = Path.Combine(d.FullName, ProductionAppsettings);
+            if (File.Exists(path))
+                return new ConfigurationBuilder().AddJsonFile(path, optional: false).Build();
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// An explicit model override wins; otherwise production's routing model
+    /// (<c>AI:Embedding:routing:Model</c>), otherwise the global default embedder.
+    /// </summary>
+    internal static string ResolveEmbeddingModel(string? raw, IConfiguration? production) =>
+        !string.IsNullOrWhiteSpace(raw) ? raw
+        : production?.GetValue<string>("AI:Embedding:routing:Model") is { } model && !string.IsNullOrWhiteSpace(model) ? model
+        : "nomic-embed-text";
+
+    /// <summary>
+    /// Parses an explicit threshold override; null/blank/garbage/out-of-range
+    /// input falls back to production's <c>AI:Routing:MinConfidence</c>, then to
+    /// the const, exactly as production binds it. Pure + testable so the drift
+    /// guard can assert the default path without touching process env.
+    /// </summary>
+    internal static float ResolveRouterMinConfidence(string? raw, IConfiguration? production) =>
         float.TryParse(raw, System.Globalization.NumberStyles.Float,
             System.Globalization.CultureInfo.InvariantCulture, out var v) && v is > 0f and <= 1f
             ? v
-            : SemanticIntentRouter.DefaultMinConfidence;
+            : production?.GetValue<float?>("AI:Routing:MinConfidence") ?? SemanticIntentRouter.DefaultMinConfidence;
 
     // Sentinel expectedIntentId for out-of-scope prompts: the router SHOULD
     // decline these (return null) so the caller can refuse a non-music query
@@ -173,27 +202,52 @@ public class RoutingEvalHarness
     }
 
     /// <summary>
-    /// Guards the threshold-drift bug: absent an explicit override, the harness
-    /// MUST measure the same confidence threshold production routes with. Asserts
-    /// the resolver's DEFAULT path (null/blank/garbage → the const) rather than the
-    /// env-driven field, so it stays green when the ratchet sets an explicit
-    /// GA_ROUTER_MIN_CONFIDENCE for a recalibrated embedder. Fails loudly the moment
-    /// someone re-hardcodes a literal default — exactly how the harness drifted to
-    /// 0.65 while prod sat at 0.55. Fast, no Ollama, runs in CI.
+    /// Guards the router-config drift bug: absent an explicit override, the harness
+    /// MUST measure the embedder/threshold pair production routes with. Asserts the
+    /// resolvers' DEFAULT paths against in-memory configs rather than the env-driven
+    /// fields, so it stays green when a bake-off sets explicit overrides, and that
+    /// the real production appsettings is found. Fails loudly the moment someone
+    /// re-hardcodes a literal default — exactly how the harness drifted to 0.65
+    /// while prod sat at 0.55, then to nomic @ 0.55 while prod ran bge-large @ 0.64.
+    /// Fast, no Ollama, runs in CI.
     /// </summary>
     [Test]
     [Category("Fast")]
-    public void RouterThreshold_DefaultMatchesProductionDefault() => Assert.Multiple(() =>
-                                                                          {
-                                                                              Assert.That(ResolveRouterMinConfidence(null), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                                                                                  "no override → harness must measure production's default threshold.");
-                                                                              Assert.That(ResolveRouterMinConfidence(""), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                                                                                  "blank override → production default.");
-                                                                              Assert.That(ResolveRouterMinConfidence("not-a-number"), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
-                                                                                  "garbage override must fall back to the const, never silently route at 0.");
-                                                                              Assert.That(ResolveRouterMinConfidence("0.64"), Is.EqualTo(0.64f).Within(1e-6f),
-                                                                                  "a valid override is honoured (the bge-large recalibration path).");
-                                                                          });
+    public void RoutingDefaults_FollowProductionConfig()
+    {
+        var production = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AI:Embedding:routing:Model"] = "prod-embedder",
+                ["AI:Routing:MinConfidence"] = "0.64",
+            })
+            .Build();
+        var unset = new ConfigurationBuilder().Build();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ProductionConfig, Is.Not.Null,
+                $"{ProductionAppsettings} not found above {AppContext.BaseDirectory}: the harness would measure the fallbacks, not production's router.");
+
+            Assert.That(ResolveEmbeddingModel(null, production), Is.EqualTo("prod-embedder"),
+                "no override → harness must measure production's routing embedder.");
+            Assert.That(ResolveEmbeddingModel("  ", production), Is.EqualTo("prod-embedder"),
+                "blank override → production's routing embedder.");
+            Assert.That(ResolveEmbeddingModel("candidate", production), Is.EqualTo("candidate"),
+                "a model override is honoured (the embedder bake-off path).");
+            Assert.That(ResolveEmbeddingModel(null, unset), Is.EqualTo("nomic-embed-text"),
+                "no routing override in config → the global default embedder, as in production.");
+
+            Assert.That(ResolveRouterMinConfidence(null, production), Is.EqualTo(0.64f).Within(1e-6f),
+                "no override → harness must measure production's configured threshold.");
+            Assert.That(ResolveRouterMinConfidence("not-a-number", production), Is.EqualTo(0.64f).Within(1e-6f),
+                "garbage override must fall back to production's threshold, never silently route at 0.");
+            Assert.That(ResolveRouterMinConfidence("0.7", production), Is.EqualTo(0.7f).Within(1e-6f),
+                "a valid override is honoured (a recalibrated candidate threshold).");
+            Assert.That(ResolveRouterMinConfidence(null, unset), Is.EqualTo(SemanticIntentRouter.DefaultMinConfidence),
+                "no threshold in config → the const, as in production.");
+        });
+    }
 
     [Test]
     [Explicit("Requires live Ollama embedding endpoint. Run manually for baselines.")]
