@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "9cde2373b3ea605836eaf30874bdb5c21da466c3",
-    "generatedAt": "2026-09-30T03:04:59.659947+00:00",
+    "commitSha": "44a2266431f3e37465976c05be1e7bca1ea1b44c",
+    "generatedAt": "2026-09-30T11:32:34.141086+00:00",
     "repoCount": 5,
-    "totalPRs": 31
+    "totalPRs": 33
   },
   "repos": [
     {
@@ -113,8 +113,20 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 2,
+      "prCount": 3,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-30T03:05:02Z",
+          "failingChecks": 0,
+          "headRef": "fix/760-sse-error-event",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 766,
+          "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/766"
+        },
         {
           "ageDays": 4,
           "author": "spareilleux",
@@ -174,7 +186,7 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
@@ -232,7 +244,7 @@
       "prCount": 3,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 1,
@@ -244,7 +256,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
@@ -283,8 +295,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 21,
+      "prCount": 22,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-09-30T03:17:45Z",
+          "failingChecks": 0,
+          "headRef": "codex/streeling-mat017",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 1155,
+          "title": "docs(streeling): MAT-017 non-negative matrix factorisation (EN/FR/ES)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1155"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -418,7 +442,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-09-23T03:34:27Z",
           "failingChecks": 0,
