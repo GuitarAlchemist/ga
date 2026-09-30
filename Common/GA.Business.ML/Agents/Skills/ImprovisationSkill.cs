@@ -494,8 +494,9 @@ public sealed partial class ImprovisationSkill(
     private static partial Regex ChordWithSpacedQualityRegex();
 
     // A key named after "key of": "key of C", "key of Bb minor", "key of C#m". Not "key
-    // of Cmaj7": the trailing guard rejects a longer suffix.
-    [GeneratedRegex(@"\bkey\s+of\s+[A-G][#b]?(?:m|min|\s+(?:[Mm]ajor|[Mm]inor))?(?![\w#])")]
+    // of Cmaj7": the trailing guard rejects a longer suffix. Only "key of" ignores case
+    // ("Key of C: ..."); the root stays an uppercase A-G.
+    [GeneratedRegex(@"\b(?i:key\s+of)\s+[A-G][#b]?(?:m|min|\s+(?:[Mm]ajor|[Mm]inor))?(?![\w#])")]
     private static partial Regex KeyNameRegex();
 
     // Progression tokenizer (v2). Captures each chord symbol in a run, longest
