@@ -17,12 +17,24 @@ using GA.Domain.Core.Theory.Tonal;
 public static partial class KeyIdentificationService
 {
     /// <summary>Result for one candidate key.</summary>
+    /// <remarks>
+    ///     <see cref="Identify"/> orders candidates by <see cref="Score"/>, the diatonic count plus
+    ///     <see cref="CadenceWeight"/>. A caller that groups tied keys groups on the score: on the
+    ///     count alone a minor ii–V–i ties with its relative major, which it resolves away from (#771).
+    /// </remarks>
     public record KeyCandidate(
         string Key,
         string RelativeKey,
         int MatchCount,
         int TotalChords,
-        string[] DiatonicSet);
+        string[] DiatonicSet)
+    {
+        /// <summary>2 when the progression ends on this key's V then I (an authentic cadence), else 0.</summary>
+        public int CadenceWeight { get; init; }
+
+        /// <summary>The ranking score <see cref="Identify"/> orders by.</summary>
+        public int Score => MatchCount + CadenceWeight;
+    }
 
     // ── Internal chord quality model ──────────────────────────────────────────
 
@@ -135,7 +147,8 @@ public static partial class KeyIdentificationService
         var normalizedQuality = s[rootStr.Length..].ToLowerInvariant();
         var isDominant = chord.Contains('7') &&
                          string.IsNullOrEmpty(normalizedQuality) &&
-                         !chord.Contains("maj", StringComparison.OrdinalIgnoreCase);
+                         !chord.Contains("maj", StringComparison.OrdinalIgnoreCase) &&
+                         !chord.Contains('Δ');
 
         if (isDominant)
         {
@@ -215,13 +228,12 @@ public static partial class KeyIdentificationService
                     RelativeKey: kd.RelativeName,
                     MatchCount: matchCount,
                     TotalChords: parsed.Count,
-                    DiatonicSet: kd.DiatonicSymbols),
-                    Cadence: CadenceWeight(kd, ordered),
+                    DiatonicSet: kd.DiatonicSymbols) { CadenceWeight = CadenceWeight(kd, ordered) },
                     OpensOnTonic: ordered[0].RootPc == kd.DiatonicTriads[0].RootPc
                                   && ordered[0].Quality == kd.DiatonicTriads[0].Quality);
             })
             .Where(s => s.Candidate.MatchCount > 0)
-            .OrderByDescending(s => s.Candidate.MatchCount + s.Cadence)
+            .OrderByDescending(s => s.Candidate.Score)
             .ThenByDescending(s => s.OpensOnTonic)
             .ThenByDescending(s => s.Candidate.Key.EndsWith("major", StringComparison.OrdinalIgnoreCase))
             .ThenBy(s => s.Candidate.Key)
@@ -290,13 +302,17 @@ public static partial class KeyIdentificationService
     }
 
     /// <summary>
-    /// Extracts chord symbols from free-form text.
-    /// Handles "Am F C G", "Am, F, C, G", "I play Am then F..." etc.
+    /// Extracts chord symbols from free-form text, in order and with repeats.
+    /// Handles "Am F C G", "Am, F, C, G", "I play Am then F..." etc.; ♭ and ♯ are read as b and #.
     /// </summary>
+    /// <remarks>
+    /// The repeats stay: <see cref="Identify"/> counts distinct chords, but its cadence weight reads
+    /// the last two as written, and "C D G C" deduplicated to "C D G" ends on V–I of G major (#771).
+    /// </remarks>
     public static IReadOnlyList<string> ExtractChords(string query)
     {
-        var matches = ChordPattern().Matches(query);
-        return [.. matches.Select(m => m.Value).Distinct(StringComparer.OrdinalIgnoreCase)];
+        var matches = ChordPattern().Matches(query.Replace('♭', 'b').Replace('♯', '#'));
+        return [.. matches.Select(m => m.Value)];
     }
 
     /// <summary>Detects whether a query is asking to identify the key.</summary>
@@ -308,20 +324,31 @@ public static partial class KeyIdentificationService
                 q.Contains("key am i") || q.Contains("key is this") ||
                 q.Contains("key do these") || q.Contains("key are these") ||
                 q.Contains("find the key") || q.Contains("determine the key"))
-               && ExtractChords(query).Count >= 2;
+               && ExtractChords(query).Distinct(StringComparer.Ordinal).Count() >= 2;
     }
 
-    // Strips extensions (7, maj7, sus4, add9…) and normalises enharmonics
-    // e.g. "G7" → "G", "Cmaj7" → "C", "Am7" → "Am", "Bdim7" → "Bdim", "A#m" → "Bbm"
+    // Reduces a chord symbol to its triad and normalises enharmonics, e.g. "G7" → "G",
+    // "Cmaj7" → "C", "CΔ7" → "C", "Am7" → "Am", "Bdim7" → "Bdim", "B°" → "Bdim", "A#m" → "Bbm".
+    // A half-diminished chord ("Bm7b5", "Bø7") has a diminished triad, so it becomes "Bdim"
+    // before the extension is cut; cutting from the first digit left "Bm" (#771). A slash
+    // chord keeps its upper chord: the bass note doesn't change the triad.
     private static string NormalizeChord(string chord)
     {
-        var s = Regex.Replace(chord.Trim(), "min", "m", RegexOptions.IgnoreCase);
+        var s = chord.Trim();
+        var slash = s.IndexOf('/');
+        if (slash > 0) s = s[..slash];
+        s = Regex.Replace(s, "min", "m", RegexOptions.IgnoreCase);
+        s = Regex.Replace(s, @"(?:m7b5|ø|°).*$", "dim");
+        s = Regex.Replace(s, @"Δ.*$", "");
         s = Regex.Replace(s, @"(maj|aug|sus|add)?\d+.*$", "", RegexOptions.IgnoreCase);
         return s.Replace("A#", "Bb").Replace("D#", "Eb").Replace("G#", "Ab");
     }
 
     // The root is case-sensitive: with IgnoreCase, prose such as "I am composing" yielded the chord
     // "am", so a message with no chords got a key analysis instead of a decline.
-    [GeneratedRegex(@"\b[A-G][b#]?(?:maj|Maj|min|m|dim|aug|sus|add)?\d*(?:b5|#5|b9|#9|#11|b13)?\b", RegexOptions.None)]
+    // It ends with (?!\w), not \b: there is no word boundary between "#" and a space, so "F# B"
+    // gave the sharp back and matched "F" (#771). ø and Δ are letters, so \b also skipped Cø7 and
+    // CΔ7, and read C° as C.
+    [GeneratedRegex(@"\b[A-G][b#]?(?:maj|Maj|min|m|dim|aug|sus|add|ø|Δ|°)?\d*(?:b5|#5|b9|#9|#11|b13)?(?:/[A-G][b#]?)?(?!\w)", RegexOptions.None)]
     private static partial Regex ChordPattern();
 }
