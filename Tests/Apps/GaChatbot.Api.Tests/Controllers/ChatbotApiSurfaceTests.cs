@@ -644,19 +644,19 @@ public class ChatbotApiSurfaceTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(response.Content.Headers.ContentType?.MediaType, Is.EqualTo("text/event-stream"));
 
-        var events = await ReadSseDataLinesAsync(response);
+        var events = ReadSseEvents(await response.Content.ReadAsStringAsync());
         Assert.That(events, Has.Count.EqualTo(1));
 
-        var error = JsonSerializer.Deserialize<JsonElement>(events[0]);
+        var error = JsonSerializer.Deserialize<JsonElement>(events[0].Data);
         Assert.Multiple(() =>
         {
-            Assert.That(error.GetProperty("type").GetString(), Is.EqualTo("error"));
+            Assert.That(events[0].Name, Is.EqualTo("error"));
             Assert.That(error.GetProperty("error").GetString(), Is.EqualTo("Service is busy. Please try again in a few seconds."));
         });
     }
 
     [Test]
-    public async Task ChatStream_WhenApplicationServiceThrowsMidStream_EmitsTypedErrorAndNoDone()
+    public async Task ChatStream_WhenApplicationServiceThrowsMidStream_EmitsNamedErrorEventAndNoDone()
     {
         using var factory = CreateFactory(chatService: new ThrowingChatApplicationService());
         using var client = factory.CreateClient();
@@ -665,19 +665,38 @@ public class ChatbotApiSurfaceTests
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
-        // The failure comes after the routing event and a partial answer, so a client cannot
-        // tell it from a text chunk by position; the page's reader relies on its type (#760).
-        var events = await ReadSseDataLinesAsync(response);
+        // The failure comes after the routing event and a partial answer, and an answer chunk can
+        // be any text, so only the SSE event name tells the page's reader it is an error (#760).
+        var events = ReadSseEvents(await response.Content.ReadAsStringAsync());
         Assert.That(events, Has.Count.EqualTo(3));
-        var routing = JsonSerializer.Deserialize<JsonElement>(events[0]);
-        var error = JsonSerializer.Deserialize<JsonElement>(events[2]);
+        var routing = JsonSerializer.Deserialize<JsonElement>(events[0].Data);
+        var error = JsonSerializer.Deserialize<JsonElement>(events[2].Data);
         Assert.Multiple(() =>
         {
+            Assert.That(events[0].Name, Is.Null);
             Assert.That(routing.GetProperty("type").GetString(), Is.EqualTo("routing"));
-            Assert.That(events[1], Is.EqualTo("partial answer"));
-            Assert.That(error.GetProperty("type").GetString(), Is.EqualTo("error"));
+            Assert.That(events[1], Is.EqualTo(new SseEvent(null, "partial answer")));
+            Assert.That(events[2].Name, Is.EqualTo("error"));
             Assert.That(error.GetProperty("error").GetString(), Is.EqualTo("Failed to process message. Please try again."));
-            Assert.That(events, Does.Not.Contain("[DONE]"));
+            Assert.That(events.Select(e => e.Data), Does.Not.Contain("[DONE]"));
+        });
+    }
+
+    [Test]
+    public async Task ChatStream_AnswerChunkShapedLikeAnErrorPayload_IsNotAnErrorEvent()
+    {
+        var fake = new FakeChatApplicationService("{\"error\":\"example\"}");
+        using var factory = CreateFactory(chatService: fake);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/chatbot/chat/stream", new { message = "Show me an error payload." });
+
+        var events = ReadSseEvents(await response.Content.ReadAsStringAsync());
+        Assert.Multiple(() =>
+        {
+            Assert.That(events, Does.Contain(new SseEvent(null, "{\"error\":\"example\"}")));
+            Assert.That(events.Select(e => e.Name), Has.None.EqualTo("error"));
+            Assert.That(events[^1].Data, Is.EqualTo("[DONE]"));
         });
     }
 
@@ -1019,6 +1038,23 @@ public class ChatbotApiSurfaceTests
         return reader.ReadToEnd();
     }
 
+    private sealed record SseEvent(string? Name, string Data);
+
+    // Events are separated by a blank line; `event:` names one, and its `data:` lines join with '\n'.
+    private static List<SseEvent> ReadSseEvents(string body) =>
+        [
+            .. body
+            .Replace("\r", string.Empty)
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries)
+            .Select(block => block.Split('\n'))
+            .Where(lines => lines.Any(line => line.StartsWith("data: ", StringComparison.Ordinal)))
+            .Select(lines => new SseEvent(
+                lines.FirstOrDefault(line => line.StartsWith("event:", StringComparison.Ordinal))?["event:".Length..].Trim(),
+                string.Join('\n', lines
+                    .Where(line => line.StartsWith("data: ", StringComparison.Ordinal))
+                    .Select(line => line["data: ".Length..]))))
+        ];
+
     private static List<string> ReadSseDataLines(string body) =>
         [
             .. body
@@ -1057,7 +1093,7 @@ public class ChatbotApiSurfaceTests
             @params = parameters
         });
 
-    private sealed class FakeChatApplicationService : IChatApplicationService
+    private sealed class FakeChatApplicationService(string answer = "fake answer") : IChatApplicationService
     {
         public ChatExecutionRequest? LastRequest { get; private set; }
 
@@ -1074,7 +1110,7 @@ public class ChatbotApiSurfaceTests
         {
             LastRequest = request;
             return Task.FromResult(new ChatExecutionResult(
-                "fake answer",
+                answer,
                 new AgentRoutingMetadata("fake-agent", 0.75f, "fake-route"),
                 new GroundingMetadata("test", "fixture", "unit"),
                 CreateFakeTrace()));
@@ -1089,7 +1125,7 @@ public class ChatbotApiSurfaceTests
                 Routing: new AgentRoutingMetadata("fake-agent", 0.75f, "fake-route"),
                 Grounding: new GroundingMetadata("test", "fixture", "unit"),
                 Trace: CreateFakeTrace());
-            yield return new ChatStreamUpdate("fake answer");
+            yield return new ChatStreamUpdate(answer);
             await Task.Yield();
             yield return new ChatStreamUpdate(IsCompleted: true);
         }

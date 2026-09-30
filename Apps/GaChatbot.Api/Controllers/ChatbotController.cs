@@ -490,10 +490,14 @@ public sealed class ChatbotController(
         await Response.Body.FlushAsync(cancellationToken);
     }
 
-    // The type tells an error event from an answer chunk: both are plain `data:` events,
-    // and no `[DONE]` follows an error.
-    private Task WriteSseErrorAsync(string message, CancellationToken cancellationToken) =>
-        WriteSseLineAsync(JsonSerializer.Serialize(new { type = "error", error = message }, JsonOptions), cancellationToken);
+    // A failure goes out as a named `error` event, and no `[DONE]` follows it. An answer chunk can be
+    // any text, including JSON shaped like this payload, but WriteSseLineAsync prefixes every line of
+    // it with `data: `, so only this writer emits an `event:` line.
+    private async Task WriteSseErrorAsync(string message, CancellationToken cancellationToken)
+    {
+        await Response.WriteAsync("event: error\n", cancellationToken);
+        await WriteSseLineAsync(JsonSerializer.Serialize(new { error = message }, JsonOptions), cancellationToken);
+    }
 
     private static List<ConversationTurn>? ToConversationTurns(List<ChatMessage>? history) =>
         history?
