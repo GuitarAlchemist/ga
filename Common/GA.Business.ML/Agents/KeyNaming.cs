@@ -49,15 +49,20 @@ public static class KeyNaming
     }
 
     /// <summary>
-    ///     The relative key's name (e.g. <c>"A minor"</c> for C major), found by matching pitch-class
-    ///     set across the opposite mode, or <c>"none"</c> if no sibling shares the PC set.
+    ///     The relative key's name (e.g. <c>"A minor"</c> for C major): the key of the opposite mode
+    ///     with the same key signature, or <c>"none"</c> if no standard key has it.
     /// </summary>
+    /// <remarks>
+    ///     Matching the pitch-class set instead is ambiguous for the enharmonic twins (B/Cb, F#/Gb
+    ///     and C#/Db major, G#/Ab, D#/Eb and A#/Bb minor), and <see cref="Key.Items"/> lists the flat
+    ///     twin first: B major came out as "Ab minor", not G# minor, contradicting
+    ///     <see cref="Skills.RelativeKeySkill"/> (issue #769).
+    /// </remarks>
     public static string RelativeKeyName(Key key)
     {
-        var mask = key.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value));
-        var sibling = Key.Items.FirstOrDefault(k =>
-            k.KeyMode != key.KeyMode &&
-            k.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value)) == mask);
+        var otherMode = key.KeyMode == KeyMode.Major ? KeyMode.Minor : KeyMode.Major;
+        var sibling = Key.GetItems(otherMode)
+            .FirstOrDefault(k => k.KeySignature.Value == key.KeySignature.Value);
 
         return sibling is null
             ? "none"
