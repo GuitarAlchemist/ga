@@ -8,6 +8,7 @@ using GA.Business.ML.Agents.Intents;
 using GA.Business.ML.Agents.Plugins;
 using GA.Business.ML.Agents.Skills;
 using GA.Business.ML.Extensions;
+using GA.Business.ML.Providers;
 using GA.Business.ML.Search;
 using GA.Domain.Services.Atonal.Grothendieck;
 using Microsoft.Extensions.AI;
@@ -91,12 +92,18 @@ public class RoutingEvalHarness
 
     /// <summary>
     /// An explicit model override wins; otherwise production's routing model
-    /// (<c>AI:Embedding:routing:Model</c>), otherwise the global default embedder.
+    /// (<c>AI:Embedding:routing:Model</c>); otherwise the global default embedder,
+    /// which for the Ollama provider is <c>Ollama:EmbeddingModel</c> or
+    /// <see cref="OllamaProvider.DefaultEmbeddingModel"/>
+    /// (<see cref="OllamaProvider.CreateEmbeddingGeneratorFromConfig"/>). The harness
+    /// embeds through Ollama only, so a non-Ollama <c>AI:EmbeddingProvider</c> cannot
+    /// be mirrored here.
     /// </summary>
     internal static string ResolveEmbeddingModel(string? raw, IConfiguration? production) =>
         !string.IsNullOrWhiteSpace(raw) ? raw
         : production?.GetValue<string>("AI:Embedding:routing:Model") is { } model && !string.IsNullOrWhiteSpace(model) ? model
-        : "nomic-embed-text";
+        : production?.GetValue<string>("Ollama:EmbeddingModel") is { } global && !string.IsNullOrWhiteSpace(global) ? global
+        : OllamaProvider.DefaultEmbeddingModel;
 
     /// <summary>
     /// Parses an explicit threshold override; null/blank/garbage/out-of-range
@@ -223,6 +230,9 @@ public class RoutingEvalHarness
             })
             .Build();
         var unset = new ConfigurationBuilder().Build();
+        var globalOnly = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Ollama:EmbeddingModel"] = "global-embedder" })
+            .Build();
 
         Assert.Multiple(() =>
         {
@@ -235,8 +245,10 @@ public class RoutingEvalHarness
                 "blank override → production's routing embedder.");
             Assert.That(ResolveEmbeddingModel("candidate", production), Is.EqualTo("candidate"),
                 "a model override is honoured (the embedder bake-off path).");
-            Assert.That(ResolveEmbeddingModel(null, unset), Is.EqualTo("nomic-embed-text"),
-                "no routing override in config → the global default embedder, as in production.");
+            Assert.That(ResolveEmbeddingModel(null, globalOnly), Is.EqualTo("global-embedder"),
+                "no routing override in config → the global Ollama embedder, as in production.");
+            Assert.That(ResolveEmbeddingModel(null, unset), Is.EqualTo(OllamaProvider.DefaultEmbeddingModel),
+                "no embedding model configured at all → Ollama's default, as in production.");
 
             Assert.That(ResolveRouterMinConfidence(null, production), Is.EqualTo(0.64f).Within(1e-6f),
                 "no override → harness must measure production's configured threshold.");
