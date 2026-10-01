@@ -233,6 +233,14 @@ public sealed class SemanticIntentRouter(
             shadow.LogShadow(query, queryVec, prodChosenForShadow);
         }
 
+        // JEV SHADOW (default OFF; never affects routing): when GA_ROUTER_JEV_SHADOW=1
+        // and TYPESAFE_API_KEY is set, TypeSafe Jev classifies the same query over the
+        // same candidates in the background and its pick is logged next to
+        // production's. Enabling it sends the user's message to api.typesafe.ai.
+        // Observe returns immediately and never throws.
+        JevRoutingShadow.Instance?.Observe(
+            query, candidates, top.Score >= MinConfidence ? top.Intent.Id : null, top.Score, margin);
+
         // Query-embedding sink (Contract B for ix-duck's out-of-domain lens): persist
         // the EXACT vector the router scored with — not a re-embed — plus the decision
         // it drove, so the OOD lens can flag queries far from the in-domain reference
