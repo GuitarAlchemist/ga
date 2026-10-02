@@ -48,7 +48,7 @@ public sealed class IntentEmbeddingWarmupService(
 
             // The query content doesn't matter — we just want the router to
             // populate its example-embedding cache during this call.
-            await router.RouteAsync("warmup", scope.ServiceProvider, cancellationToken);
+            await router.RouteAsync(SemanticIntentRouter.WarmupQuery, scope.ServiceProvider, cancellationToken);
 
             sw.Stop();
             logger.LogInformation(

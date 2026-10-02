@@ -299,7 +299,11 @@ public sealed class JevRoutingShadow
             return (record with { Status = "invalid", Detail = "response is not JSON" }, null);
         }
 
-        double? cost = parsed.InputTokens is { } t ? t / 1e6 * InputPricePerMillionUsd : null;
+        // Output tokens are charged at the input rate too, as jevAdvice.ts does: the
+        // published rate card prices input only, and a budget cap must not undercount.
+        double? cost = parsed.InputTokens is { } t
+            ? (t + (parsed.OutputTokens ?? 0)) / 1e6 * InputPricePerMillionUsd
+            : null;
         record = record with { InputTokens = parsed.InputTokens, OutputTokens = parsed.OutputTokens };
         if (parsed.Error is not null)
             return (record with { Status = parsed.Status, Detail = parsed.Error }, cost);
@@ -464,8 +468,8 @@ public sealed record JevShadowRecord
     [JsonPropertyName("input_tokens")] public long? InputTokens { get; init; }
     [JsonPropertyName("output_tokens")] public long? OutputTokens { get; init; }
 
-    /// <summary>Charged against the budget: rate-card cost of the reported input
-    /// tokens, or the estimate when usage is unknown.</summary>
+    /// <summary>Charged against the budget: the reported input and output tokens at
+    /// the input rate, or the estimate when usage is unknown.</summary>
     [JsonPropertyName("cost_usd")] public double? CostUsd { get; init; }
 
     [JsonPropertyName("cost_known")] public bool? CostKnown { get; init; }

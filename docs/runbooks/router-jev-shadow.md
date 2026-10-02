@@ -38,8 +38,11 @@ To disable it, unset `GA_ROUTER_JEV_SHADOW` and restart.
 
 - It builds the question ix Stage 3 measured. The instructions and the
   `__none__` option are copied verbatim from ix
-  `state/router-spike/jev/options-full.json`. The other options are the live
-  intents' descriptions.
+  `state/router-spike/jev/options-full.json`. The other options are the
+  descriptions of the intents production has just scored, so both pick from the
+  same set.
+- It skips the startup warmup query (`SemanticIntentRouter.WarmupQuery`), which
+  is not user traffic.
 - It runs in the background: the user's answer never waits for Jev.
 - Each call has a 2.5 s timeout. At most 2 calls are in flight at once. A call is
   never retried.
@@ -53,14 +56,16 @@ To disable it, unset `GA_ROUTER_JEV_SHADOW` and restart.
 
 ## Budget
 
-Each row records `cost_usd`: the reported input tokens at $0.042 per 1M. When
-usage is unknown (timeout, network error), the row records a conservative
-estimate of one token per request byte instead.
+Each row records `cost_usd`: the reported input and output tokens, both at the
+input rate of $0.042 per 1M. The published rate card prices input only, so this
+overcounts on purpose. When usage is unknown (timeout, network error), the row
+records a conservative estimate of one token per request byte instead.
 
 The cap counts every row already in the log directory, so a restart does not
 reset it. To allow more spend, raise `GA_ROUTER_JEV_SHADOW_BUDGET_USD`.
 
-ix Stage 3 averaged about $0.00012 per call, so $0.05 covers roughly 400 queries.
+ix Stage 3 averaged about 2,900 input and 400 output tokens per call, which is
+$0.00014 counted this way, so $0.05 covers roughly 350 queries.
 
 ## Log
 

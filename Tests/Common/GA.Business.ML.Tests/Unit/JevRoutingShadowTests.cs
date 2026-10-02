@@ -63,7 +63,8 @@ public class JevRoutingShadowTests
         Assert.That(record.JevConfidence, Is.EqualTo(0.9));
         Assert.That(record.Agree, Is.True);
         Assert.That(record.InputTokens, Is.EqualTo(3000));
-        Assert.That(record.CostUsd, Is.EqualTo(3000 / 1e6 * JevRoutingShadow.InputPricePerMillionUsd).Within(1e-12));
+        Assert.That(record.CostUsd, Is.EqualTo((3000 + 400) / 1e6 * JevRoutingShadow.InputPricePerMillionUsd).Within(1e-12),
+            "output tokens are charged too, so the budget never undercounts");
         Assert.That(record.CostKnown, Is.True);
         Assert.That(record.OptionsSha256, Has.Length.EqualTo(64));
 
