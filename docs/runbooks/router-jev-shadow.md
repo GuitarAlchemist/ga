@@ -22,17 +22,31 @@ traffic, which no set so far contains.
 
 ## Enable
 
-Set these in the GaChatbot.Api process environment, then restart it:
+The shadow reads these variables from the GaChatbot.Api process environment:
 
-```powershell
-$env:GA_ROUTER_JEV_SHADOW = "1"
-$env:TYPESAFE_API_KEY = "<key>"                    # never logged
-$env:GA_ROUTER_JEV_SHADOW_BUDGET_USD = "0.05"      # optional; default 0.05
-$env:GA_ROUTER_JEV_SHADOW_DIR = "C:\...\shadow"    # optional
-```
+| Variable | Value |
+|---|---|
+| `GA_ROUTER_JEV_SHADOW` | `1` turns it on |
+| `TYPESAFE_API_KEY` | the key; never logged |
+| `GA_ROUTER_JEV_SHADOW_BUDGET_USD` | optional; default `0.05` |
+| `GA_ROUTER_JEV_SHADOW_DIR` | optional log directory |
 
 Without `TYPESAFE_API_KEY` the shadow stays off even when the flag is set.
-To disable it, unset `GA_ROUTER_JEV_SHADOW` and restart.
+
+On the deployed public chatbot (`docs/runbooks/chatbot-deploy.md`):
+
+- Keep `TYPESAFE_API_KEY` in the user environment, which the scheduled task inherits. Never put it in a file.
+- Put the flag in the operator-owned `.deploy\local-env.cmd` of the deploy worktree, so it survives redeploys:
+
+  ```bat
+  set GA_ROUTER_JEV_SHADOW=1
+  ```
+
+- Restart the launcher (`Stop-ScheduledTask GA-Chatbot-5252`, then `Start-ScheduledTask GA-Chatbot-5252`) or redeploy.
+
+Do not set `GA_ROUTER_JEV_SHADOW` in the user environment. GaApi and local harness runs would then call Jev too.
+
+To disable it, delete the line and restart the launcher.
 
 ## What it does per query
 
