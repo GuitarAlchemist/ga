@@ -83,6 +83,49 @@ public class RoutingTelemetryLogTests
     }
 
     [Test]
+    public void TrafficSourceScope_StampsSrcOnlyInsideTheScope()
+    {
+        using (RoutingTelemetryLog.BeginTrafficSource("reddit"))
+        {
+            RoutingTelemetryLog.Append(SampleMatch());
+        }
+        RoutingTelemetryLog.Append(SampleMatch());
+
+        var lines = File.ReadAllLines(RoutingTelemetryLog.CurrentDayFile());
+        using var tagged = JsonDocument.Parse(lines[0]);
+        using var untagged = JsonDocument.Parse(lines[1]);
+        Assert.That(tagged.RootElement.GetProperty("src").GetString(), Is.EqualTo("reddit"));
+        Assert.That(untagged.RootElement.TryGetProperty("src", out _), Is.False, "an untagged request omits src");
+        Assert.That(RoutingTelemetryLog.CurrentTrafficSource, Is.Null, "dispose restores the previous tag");
+    }
+
+    [Test]
+    public async Task TrafficSource_FlowsIntoAsyncWork()
+    {
+        // The router appends deep inside the request's async flow, possibly on another thread.
+        using (RoutingTelemetryLog.BeginTrafficSource("gh"))
+        {
+            await Task.Run(() => RoutingTelemetryLog.Append(SampleMatch()));
+        }
+
+        Assert.That(RoutingTelemetryLog.ReadRecent().Single().Source, Is.EqualTo("gh"));
+    }
+
+    [TestCase("reddit", "reddit")]
+    [TestCase("Reddit", "reddit")]
+    [TestCase("reddit)", "reddit")]
+    [TestCase("  gh-793 ", "gh-793")]
+    [TestCase("abcdefghijklmnopqrstuvwxyz0123456789", "abcdefghijklmnopqrstuvwxyz012345")]
+    [TestCase(")reddit", null)]
+    [TestCase("<script>", null)]
+    [TestCase("", null)]
+    [TestCase(null, null)]
+    public void NormalizeTrafficSource_KeepsOnlyAShortTagPrefix(string? raw, string? expected)
+    {
+        Assert.That(RoutingTelemetryLog.NormalizeTrafficSource(raw), Is.EqualTo(expected));
+    }
+
+    [Test]
     public void DisableEnvVar_SuppressesWrites()
     {
         Environment.SetEnvironmentVariable(RoutingTelemetryLog.DisableEnvVar, "1");
