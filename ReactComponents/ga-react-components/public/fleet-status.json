@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "ef51c135b0b03e801854670b703b51482f189374",
-    "generatedAt": "2026-10-02T01:47:04.211979+00:00",
+    "commitSha": "0fcaf839760ed78f3b0721e338369e589b701c42",
+    "generatedAt": "2026-10-02T02:20:35.387968+00:00",
     "repoCount": 5,
-    "totalPRs": 52
+    "totalPRs": 49
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 6,
+      "prCount": 5,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-10-01T16:44:12Z",
-          "failingChecks": 0,
-          "headRef": "feat/router-jev-shadow",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 786,
-          "title": "feat(routing): add an opt-in Jev shadow classifier next to the router",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/786"
-        },
         {
           "ageDays": 1,
           "author": "spareilleux",
@@ -201,20 +189,8 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 6,
+      "prCount": 5,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-10-01T16:50:57Z",
-          "failingChecks": 0,
-          "headRef": "feat/362-aco",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 364,
-          "title": "feat(ix-optimize): ant colony optimization for the symmetric TSP (ix#362)",
-          "url": "https://github.com/GuitarAlchemist/ix/pull/364"
-        },
         {
           "ageDays": 6,
           "author": "spareilleux",
@@ -289,20 +265,8 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-10-01T23:30:25Z",
-          "failingChecks": 1,
-          "headRef": "fix/ask-again-for-code",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 368,
-          "title": "fix: send an evolve answer that shows no code back to the executor",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/368"
-        },
         {
           "ageDays": 2,
           "author": "spareilleux",
@@ -550,7 +514,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1154"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-09-30T01:58:52Z",
           "failingChecks": 0,
@@ -748,7 +712,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -760,7 +724,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -772,7 +736,7 @@
           "failingChecks": 2,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -784,7 +748,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
