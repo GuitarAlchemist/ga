@@ -76,8 +76,8 @@
     }
   ],
   "meta": {
-    "commitSha": "acf65f388c5540ea05e93183e81d6623fb9e0a07",
-    "generatedAt": "2026-10-02T03:40:29.664192+00:00",
+    "commitSha": "16d536751920cfa4bf65177ca83e29451d230d74",
+    "generatedAt": "2026-10-02T11:32:51.313950+00:00",
     "repoCount": 5,
     "totalPRs": 50
   },
@@ -189,8 +189,20 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 5,
+      "prCount": 6,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-02T05:18:26Z",
+          "failingChecks": 0,
+          "headRef": "feat/jev-stage4-human-questions",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 365,
+          "title": "feat(router-spike): Jev Stage 4 on human-written Music Stack Exchange titles",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/365"
+        },
         {
           "ageDays": 6,
           "author": "spareilleux",
@@ -265,20 +277,8 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 4,
+      "prCount": 3,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-10-02T03:21:25Z",
-          "failingChecks": 0,
-          "headRef": "fix/evolve-run-executor-code",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 371,
-          "title": "fix: run the evolve executor's code and send failures back once",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/371"
-        },
         {
           "ageDays": 3,
           "author": "spareilleux",
@@ -286,19 +286,19 @@
           "failingChecks": 1,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -310,7 +310,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"

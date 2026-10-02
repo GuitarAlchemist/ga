@@ -24,24 +24,24 @@ _No open PRs._
 | [#738](https://github.com/GuitarAlchemist/ga/pull/738) | ci: push to main over the deploy key, and run CI under the merge queue | 6d | UNKNOWN | 1 | spareilleux |
 | [#637](https://github.com/GuitarAlchemist/ga/pull/637) | feat(harness): align AFK policy and readiness gates | 60d | UNKNOWN | 2 | spareilleux |
 
-### ix (5 open)
+### ix (6 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
+| [#365](https://github.com/GuitarAlchemist/ix/pull/365) | feat(router-spike): Jev Stage 4 on human-written Music Stack Exchange  | 0d | MERGEABLE | 0 | spareilleux |
 | [#356](https://github.com/GuitarAlchemist/ix/pull/356) | ci: push to main over the deploy key, and run CI under the merge queue | 6d | MERGEABLE | 1 | spareilleux |
 | [#346](https://github.com/GuitarAlchemist/ix/pull/346) | ci: compile and test dark features (claude-cli, resp-server, reservoir | 15d | MERGEABLE | 1 | spareilleux |
 | [#335](https://github.com/GuitarAlchemist/ix/pull/335) | docs(metrics): human attention budget and rubber-stamp detection (#216 (draft) | 18d | MERGEABLE | 0 | spareilleux |
 | [#334](https://github.com/GuitarAlchemist/ix/pull/334) | feat(ix-quality-trend): Methodology Guard usefulness metrics (#219) (draft) | 18d | MERGEABLE | 0 | spareilleux |
 | [#333](https://github.com/GuitarAlchemist/ix/pull/333) | feat(ix-evolution): fractal mutation and recursive crossover operators (draft) | 18d | MERGEABLE | 0 | spareilleux |
 
-### tars (4 open)
+### tars (3 open)
 
 | # | Title | Age | Mergeable | Failing checks | Author |
 |---|---|---:|---|---:|---|
-| [#371](https://github.com/GuitarAlchemist/tars/pull/371) | fix: run the evolve executor's code and send failures back once | 0d | MERGEABLE | 0 | spareilleux |
-| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 3d | UNKNOWN | 1 | spareilleux |
-| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 3d | UNKNOWN | 1 | spareilleux |
-| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 6d | UNKNOWN | 1 | spareilleux |
+| [#346](https://github.com/GuitarAlchemist/tars/pull/346) | docs: stop calling a project file a one-way door | 3d | MERGEABLE | 1 | spareilleux |
+| [#337](https://github.com/GuitarAlchemist/tars/pull/337) | fix: let the required check run on a pull request that is not based on | 4d | MERGEABLE | 1 | spareilleux |
+| [#319](https://github.com/GuitarAlchemist/tars/pull/319) | ci: push to main over the deploy key, and run CI under the merge queue | 6d | MERGEABLE | 1 | spareilleux |
 
 ### Demerzel (36 open)
 
@@ -116,6 +116,6 @@ _No open PRs._
 
 ---
 
-_Generated: 2026-10-02T03:40:29.664192+00:00 UTC_
+_Generated: 2026-10-02T11:32:51.313950+00:00 UTC_
 
-_Commit: `acf65f388c55`_
+_Commit: `16d536751920`_
