@@ -45,8 +45,12 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
     /// <summary>
     /// Closure name that the SKILL.md body teaches the LLM to dispatch
     /// via <c>ga_dsl_eval</c> — used in <see cref="StaticEvidenceTags"/> below.
+    /// <c>null</c> for a reference skill, whose SKILL.md is verified reference
+    /// text that grounds the LLM's answer with no closure to dispatch: such a
+    /// skill is not expected to call <c>ga_dsl_eval</c>, so skipping it is not
+    /// logged as a failure.
     /// </summary>
-    protected abstract string ClosureName { get; }
+    protected virtual string? ClosureName => null;
 
     /// <summary>
     /// One-line graceful-degradation message returned when the inner
@@ -92,7 +96,9 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
     /// or just produced a plausible-looking answer from training data.
     /// </summary>
     private string[] StaticEvidenceTags =>
-        [$"Source: skills/{SkillFolderName}/SKILL.md", $"Closure: {ClosureName} (via ga_dsl_eval)"];
+        ClosureName is null
+            ? [$"Source: skills/{SkillFolderName}/SKILL.md"]
+            : [$"Source: skills/{SkillFolderName}/SKILL.md", $"Closure: {ClosureName} (via ga_dsl_eval)"];
 
     /// <inheritdoc />
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
@@ -111,7 +117,12 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
             var calledDslEval = innerEvidence.Any(e => e.Contains("ga_dsl_eval", StringComparison.Ordinal));
 
             var combinedEvidence = StaticEvidenceTags.Concat(innerEvidence).ToList();
-            if (calledDslEval)
+            if (ClosureName is null)
+            {
+                // Reference skill: the SKILL.md body is the grounding, so there is
+                // no closure to have skipped and nothing to warn about.
+            }
+            else if (calledDslEval)
             {
                 // Sentinel tag picked up by OrchestratorSkillIntent so Path B
                 // responses surface a real grounding block on the chat wire,
