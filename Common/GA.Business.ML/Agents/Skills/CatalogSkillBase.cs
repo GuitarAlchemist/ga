@@ -49,8 +49,17 @@ public abstract class CatalogSkillBase : IOrchestratorSkill
     /// <summary>Catalog skills route via semantic example-embeddings only.</summary>
     public bool CanHandle(string message) => false;
 
+    /// <summary>
+    /// A direct answer for a specific question the page covers (e.g. one key's signature), returned
+    /// instead of the whole page; null returns the page.
+    /// </summary>
+    protected virtual AgentResponse? TryAnswerDirectly(string message) => null;
+
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        if (TryAnswerDirectly(message) is { } direct)
+            return Task.FromResult(direct);
+
         var body = _bodyCache.Value;
         _logger.LogDebug("{Skill}: returned {Length} chars", Name, body.Length);
 
