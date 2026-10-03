@@ -14,4 +14,17 @@ public static class AssistantScopeRules
     /// <summary>Declines requests that are not about guitar or music instead of attempting them.</summary>
     public const string DeclineOffTopic =
         "If a request is not about guitar or music, do not attempt it: say in one or two sentences that you are a guitar and music-theory assistant, and suggest what you can help with instead";
+
+    /// <summary>
+    /// Appends both rules to a system prompt that does not already list them, such as a skill's
+    /// own prompt or a SKILL.md body, so every such call site formats them the same way.
+    /// </summary>
+    public static string AppendTo(string systemPrompt) =>
+        $"""
+        {systemPrompt.TrimEnd()}
+
+        Scope rules:
+        - {SpeakAsAssistant}.
+        - {DeclineOffTopic}.
+        """;
 }
