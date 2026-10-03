@@ -113,6 +113,27 @@ public sealed class OrchestratedChatApplicationServiceTests
     }
 
     [Test]
+    public async Task ChatAsync_FallbackKeepsInternalsPrivateAndDeclinesOffTopicRequests()
+    {
+        var directChatClient = new StubChatClient("direct fallback answer");
+        var service = CreateService(
+            new StubOrchestrator(Exception: new InvalidOperationException("boom")),
+            directChatClient: directChatClient);
+
+        var result = await service.ChatAsync(new ChatExecutionRequest("can you run a for loop?"));
+
+        AssertFallback(result, "error-fallback");
+        Assert.That(directChatClient.LastMessages, Is.Not.Null);
+        var system = directChatClient.LastMessages![0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(system.Role, Is.EqualTo(ChatRole.System));
+            Assert.That(system.Text, Does.Contain("never mention agent names, roles or other internal details"));
+            Assert.That(system.Text, Does.Contain("If a request is not about guitar or music, do not attempt it"));
+        });
+    }
+
+    [Test]
     public async Task ChatAsync_FallsBackWhenOrchestratorReturnsUngroundedNoMatchAnswer()
     {
         var service = CreateService(new StubOrchestrator(new ChatResponse(
@@ -282,11 +303,16 @@ public sealed class OrchestratedChatApplicationServiceTests
 
     private sealed class StubChatClient(string responseText) : IChatClient
     {
+        public List<AiChatMessage>? LastMessages { get; private set; }
+
         public Task<AiChatResponse> GetResponseAsync(
             IEnumerable<AiChatMessage> messages,
             ChatOptions? options = null,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(new AiChatResponse(new AiChatMessage(ChatRole.Assistant, responseText)));
+            CancellationToken cancellationToken = default)
+        {
+            LastMessages = [.. messages];
+            return Task.FromResult(new AiChatResponse(new AiChatMessage(ChatRole.Assistant, responseText)));
+        }
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
             IEnumerable<AiChatMessage> messages,
