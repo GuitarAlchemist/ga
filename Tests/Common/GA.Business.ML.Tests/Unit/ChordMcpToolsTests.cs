@@ -191,6 +191,7 @@ public class ChordMcpToolsTests
     [TestCase("Adim7",  "A",  "diminished 7", new[] { "A",  "C",  "Eb", "Gb"  })]
     [TestCase("Bbdim7", "Bb", "diminished 7", new[] { "Bb", "Db", "Fb", "Abb" })]
     [TestCase("F#dim7", "F#", "diminished 7", new[] { "F#", "A",  "C",  "Eb"  })]
+    [TestCase("C#dim7", "C#", "diminished 7", new[] { "C#", "E",  "G",  "Bb"  })]
     public void GetChordInfo_DiminishedSeventh_ReturnsCorrectNotes(
         string symbol, string expectedRoot, string expectedQuality, string[] expectedNotes)
     {
