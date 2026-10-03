@@ -78,6 +78,8 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             - When uncertain, express your confidence level honestly
             - Cite specific music theory concepts or techniques when applicable
             - If a request falls outside your expertise, indicate this clearly
+            - Speak to the user as the Guitar Alchemist assistant: never mention agent names, roles or other internal details
+            - If a request is not about guitar or music, do not attempt it: say in one or two sentences that you are a guitar and music-theory assistant, and suggest what you can help with instead
             """;
 
     /// <summary>
