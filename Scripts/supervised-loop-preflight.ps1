@@ -44,7 +44,7 @@ function Emit-Result {
 Write-Host "[preflight] supervised-loop preflight starting (GA)"
 Write-Host "[preflight] root: $root"
 
-# 1. Loop policy parses and exposes the required arrays.
+# 1. Loop policy parses and satisfies the GA AFK readiness contract.
 $loopPolicyFull = Join-Path $root $LoopPolicyPath
 if (-not (Test-Path -LiteralPath $loopPolicyFull)) {
     Emit-Result -Ready:$false -Reason "loop_policy_missing"
@@ -56,13 +56,18 @@ try {
     Emit-Result -Ready:$false -Reason "loop_policy_invalid_json"
 }
 
-if (-not $loopPolicy.allow_edit -or $loopPolicy.allow_edit.Count -eq 0) {
-    Emit-Result -Ready:$false -Reason "loop_policy_missing_allow_edit"
+try {
+    Import-Module (Join-Path $PSScriptRoot 'LoopPolicy.psm1') -Force
+    $policyVerdict = Test-GaLoopPolicy -Policy $loopPolicy
+} catch {
+    [Console]::Error.WriteLine("[preflight] loop policy validator failed: $($_.Exception.Message)")
+    Emit-Result -Ready:$false -Reason "loop_policy_validator_failed"
 }
-if (-not $loopPolicy.protected_paths -or $loopPolicy.protected_paths.Count -eq 0) {
-    Emit-Result -Ready:$false -Reason "loop_policy_missing_protected_paths"
+if (-not $policyVerdict.Valid) {
+    [Console]::Error.WriteLine("[preflight] loop policy contract invalid: $($policyVerdict.Problems -join ', ')")
+    Emit-Result -Ready:$false -Reason "loop_policy_contract_invalid"
 }
-Write-Host "[preflight] loop policy ok: $($loopPolicy.allow_edit.Count) allow_edit, $($loopPolicy.protected_paths.Count) protected"
+Write-Host "[preflight] loop policy ok: $($loopPolicy.allow_edit.Count) allow_edit, $($loopPolicy.protected_paths.Count) protected, L0-L3 canonical"
 
 # 2. Risk policy still exists and parses (load-bearing for the oracle).
 $riskPolicyFull = Join-Path $root $RiskPolicyPath
