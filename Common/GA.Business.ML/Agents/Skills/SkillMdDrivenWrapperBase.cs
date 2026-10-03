@@ -112,9 +112,12 @@ public abstract class SkillMdDrivenWrapperBase : IOrchestratorSkill
             // The inner skill records every tool call as a "tools.invoked: <name>"
             // entry in Evidence. Path B should always go through ga_dsl_eval —
             // if it didn't, the answer is LLM-only and we want both the trace
-            // and the confidence to reflect that. Roadmap P0 #1.
+            // and the confidence to reflect that. Roadmap P0 #1. A reference skill
+            // has no closure, so a ga_dsl_eval call it happens to make is not
+            // evidence for its answer and must not lift the LLM-only cap.
             var innerEvidence = inner.Evidence ?? [];
-            var calledDslEval = innerEvidence.Any(e => e.Contains("ga_dsl_eval", StringComparison.Ordinal));
+            var calledDslEval = ClosureName is not null &&
+                                innerEvidence.Any(e => e.Contains("ga_dsl_eval", StringComparison.Ordinal));
 
             var combinedEvidence = StaticEvidenceTags.Concat(innerEvidence).ToList();
             if (ClosureName is null)

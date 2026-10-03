@@ -96,6 +96,36 @@ public class FunctionalHarmonySkillTests
     }
 
     [Test]
+    public async Task ExecuteAsync_ReferenceSkillCallingDslEval_KeepsTheLlmOnlyCap()
+    {
+        // With no allowed-tools the model sees every tool, so it may call
+        // ga_dsl_eval for something unrelated. A reference skill has no closure,
+        // so that call is not evidence for the answer: the 0.5 cap stays.
+        const string fakeAnswer = "A deceptive cadence is V(7) to vi.";
+        var client = new Mock<IChatClient>();
+        client.Setup(c => c.GetResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatResponse(
+            [
+                new ChatMessage(ChatRole.Assistant, [new FunctionCallContent("call-1", "ga_dsl_eval")]),
+                new ChatMessage(ChatRole.Assistant, fakeAnswer),
+            ]));
+        var skill = new FunctionalHarmonySkill(EmptyTools(), FactoryFor(client.Object), NullLoggerFactory.Instance);
+
+        var response = await skill.ExecuteAsync("what is a deceptive cadence");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(response.Evidence, Has.Some.EqualTo("tools.invoked: ga_dsl_eval"),
+                "the call itself stays in the audit trail");
+            Assert.That(response.Evidence, Has.None.StartsWith("grounding.source"));
+            Assert.That(response.Confidence, Is.LessThanOrEqualTo(0.5f));
+        });
+    }
+
+    [Test]
     public void SkillMd_IsAReferenceSkillWithNoFretNumbers()
     {
         var skillMd = LoadSkillMd();
@@ -129,6 +159,8 @@ public class FunctionalHarmonySkillTests
     [TestCase("| Half (HC) | Any chord → V")]
     [TestCase("| Plagal | IV → I")]
     [TestCase("| Deceptive | V(7) → vi")]
+    [TestCase("| vi (VI in minor) |")]
+    [TestCase("| I (i in minor) |")]
     [TestCase("the 7th F falls a half step to E, the 5th of Am")]
     public void SkillMd_StatesVettedFact(string fact)
     {

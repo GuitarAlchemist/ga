@@ -97,8 +97,8 @@ You answer questions about how chords function and resolve in tonal harmony. The
 | Imperfect authentic (IAC) | V(7) → I with an inversion or with the 3rd or 5th in the top voice; also vii°6 → I | I | Closes, less final |
 | Half (HC) | Any chord → V (I → V, ii → V, IV → V, iv6 → V) | V | Open, unfinished |
 | Phrygian half | iv6 → V in minor, bass b6 → 5 (Ab → G in C minor) | V | Open |
-| Plagal | IV → I, the "Amen" cadence; iv → i in minor | I | Soft close |
-| Deceptive | V(7) → vi (V → VI in minor) | vi | Expected tonic replaced |
+| Plagal | IV → I, the "Amen" cadence; iv → i in minor | I (i in minor) | Soft close |
+| Deceptive | V(7) → vi (V → VI in minor) | vi (VI in minor) | Expected tonic replaced |
 
 - A half cadence ends on V, so it is not an imperfect authentic cadence: both authentic cadences end on I. A plagal cadence also ends on I, but comes from IV instead of V.
 - A half cadence stops on V, so nothing resolves in it: the leading tone B (and F, if V7) is left hanging.
