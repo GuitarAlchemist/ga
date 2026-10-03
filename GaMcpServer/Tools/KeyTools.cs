@@ -1,5 +1,6 @@
 ﻿namespace GaMcpServer.Tools;
 
+using GA.Business.ML.Agents.Mcp;
 using GA.Domain.Core.Primitives;
 using GA.Domain.Core.Primitives.Intervals;
 using GA.Domain.Core.Primitives.Notes;
@@ -101,7 +102,7 @@ public static class KeyTool
     {
         if (!Enum.TryParse<AccidentalKind>(accidentalKind, true, out var kind))
         {
-            throw new McpException($"Invalid accidental kind: {accidentalKind}. Use 'Sharp' or 'Flat'.");
+            throw new McpException($"Invalid accidental kind: {McpEchoSanitizer.SanitizeEcho(accidentalKind)}. Use 'Sharp' or 'Flat'.");
         }
 
         return Key.Items
@@ -159,7 +160,7 @@ public static class KeyTool
             candidate.Root.Accidental == key.Root.Accidental)
             ?? Key.Items.FirstOrDefault(candidate =>
                 candidate.KeyMode == targetMode && candidate.Root.PitchClass == key.Root.PitchClass)
-            ?? throw new McpException($"Parallel key not found for: {keyName}");
+            ?? throw new McpException($"Parallel key not found for: {McpEchoSanitizer.SanitizeEcho(keyName)}");
 
         return parallelKey.ToString();
     }
@@ -249,7 +250,7 @@ public static class KeyTool
     {
         if (!Enum.TryParse<KeyMode>(mode, true, out var keyMode))
         {
-            throw new McpException($"Invalid mode: {mode}. Use 'Major' or 'Minor'.");
+            throw new McpException($"Invalid mode: {McpEchoSanitizer.SanitizeEcho(mode)}. Use 'Major' or 'Minor'.");
         }
 
         var key = Key.Items.FirstOrDefault(k =>
@@ -257,7 +258,8 @@ public static class KeyTool
             k.KeyMode == keyMode);
 
         return key?.ToString()
-               ?? throw new McpException($"No key found with root {rootNote} and mode {mode}");
+               ?? throw new McpException(
+                   $"No key found with root {McpEchoSanitizer.SanitizeEcho(rootNote)} and mode {McpEchoSanitizer.SanitizeEcho(mode)}");
     }
 
     /// <summary>The key name format every key tool expects: the strings <see cref="GetAllKeys"/> returns.</summary>
@@ -282,7 +284,7 @@ public static class KeyTool
 
         var hint = SuggestKeyName(keyName) is { } suggestion ? $" Did you mean '{suggestion}'?" : "";
         throw new McpException(
-            $"Key not found: '{keyName}'. Use the get_all_keys format: 'Key of C' for C major, 'Key of Am' for A minor.{hint}");
+            $"Key not found: '{McpEchoSanitizer.SanitizeEcho(keyName)}'. Use the get_all_keys format: 'Key of C' for C major, 'Key of Am' for A minor.{hint}");
     }
 
     private static string? SuggestKeyName(string? keyName)
