@@ -125,6 +125,22 @@ public class RoutingTelemetryLogTests
         Assert.That(RoutingTelemetryLog.NormalizeTrafficSource(raw), Is.EqualTo(expected));
     }
 
+    [TestCase("theory-qa", true)]
+    [TestCase("Theory-QA", true)]
+    [TestCase("probe-reddit-sim", true)]
+    [TestCase("probe-", true)]
+    [TestCase("probe", false)]
+    [TestCase("reddit", false)]
+    [TestCase("theory-qa2", false)]
+    [TestCase("gh-793", false)]
+    [TestCase(null, false)]
+    public void IsSyntheticTrafficSource_MatchesOnlyEvalAndProbeTags(string? raw, bool synthetic)
+    {
+        // Checked on the normalized tag, exactly as the request scope holds it.
+        Assert.That(RoutingTelemetryLog.IsSyntheticTrafficSource(RoutingTelemetryLog.NormalizeTrafficSource(raw)),
+            Is.EqualTo(synthetic));
+    }
+
     [Test]
     public void DisableEnvVar_SuppressesWrites()
     {

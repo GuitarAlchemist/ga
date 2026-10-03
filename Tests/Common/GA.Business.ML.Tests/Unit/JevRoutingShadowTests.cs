@@ -161,6 +161,54 @@ public class JevRoutingShadowTests
         Assert.That(handler.Calls, Is.Zero);
     }
 
+    [TestCase("theory-qa")]
+    [TestCase("probe-reddit-sim")]
+    public async Task EvalOrProbeTraffic_IsSkippedWithoutACallOrCost(string source)
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+        var shadow = Shadow(handler);
+
+        var record = await shadow.ObserveAsync(
+            "what notes are in Cmaj7", JevRoutingShadow.Criteria(Intents), "chordinfo", 0.8, 0.1, source);
+
+        Assert.That(record.Status, Is.EqualTo("skipped_source"));
+        Assert.That(record.Detail, Is.EqualTo(source));
+        Assert.That(record.CostUsd, Is.Null);
+        Assert.That(handler.Calls, Is.Zero, "eval traffic must never reach api.typesafe.ai");
+        Assert.That(shadow.SpentUsd, Is.Zero, "eval traffic must not spend the real-traffic budget");
+        Assert.That(LogLines(), Has.Count.EqualTo(1), "the skip is still one logged outcome");
+    }
+
+    [TestCase(null)]
+    [TestCase("reddit")]
+    [TestCase("probe")]
+    [TestCase("theory-qa2")]
+    public async Task RealTraffic_IsStillClassified(string? source)
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+
+        var record = await Shadow(handler).ObserveAsync(
+            "what notes are in Cmaj7", JevRoutingShadow.Criteria(Intents), "chordinfo", 0.8, 0.1, source);
+
+        Assert.That(record.Status, Is.EqualTo("ok"));
+        Assert.That(handler.Calls, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Observe_TakesTheTrafficSourceOfTheRequestItServes()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+        var shadow = Shadow(handler);
+
+        // run_eval.py sends source "theory-qa"; the chatbot host scopes it per request.
+        using (RoutingTelemetryLog.BeginTrafficSource("theory-qa"))
+            shadow.Observe("what notes are in Cmaj7", Intents, "chordinfo", 0.8, 0.1);
+
+        await WaitUntil(() => LogLines().Count == 1);
+        Assert.That(JsonNode.Parse(LogLines()[0])!["status"]!.GetValue<string>(), Is.EqualTo("skipped_source"));
+        Assert.That(handler.Calls, Is.Zero);
+    }
+
     [Test]
     public async Task Observe_ReturnsBeforeTheCall_AndCapsCallsInFlight()
     {

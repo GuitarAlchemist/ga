@@ -79,6 +79,27 @@ public static class RoutingTelemetryLog
         return match.Success ? match.Value : null;
     }
 
+    /// <summary>
+    ///     The one list of traffic-source tags that mark the repo's own eval and probe runs,
+    ///     never a real user: <c>theory-qa</c> (sent by <c>Scripts/theory-qa/run_eval.py</c>)
+    ///     and any tag starting with <see cref="SyntheticTrafficSourcePrefix"/>. Paid observers
+    ///     such as <see cref="JevRoutingShadow"/> skip them, so a QA run cannot spend a budget
+    ///     meant for real traffic.
+    /// </summary>
+    private static readonly HashSet<string> SyntheticTrafficSources = new(StringComparer.Ordinal) { "theory-qa" };
+
+    /// <summary>Prefix of ad-hoc probe tags (<c>probe-reddit-sim</c>, ...); see <see cref="IsSyntheticTrafficSource"/>.</summary>
+    public const string SyntheticTrafficSourcePrefix = "probe-";
+
+    /// <summary>
+    ///     True when the normalized <paramref name="trafficSource"/> (as held by
+    ///     <see cref="CurrentTrafficSource"/>) is an eval or probe tag rather than real traffic.
+    /// </summary>
+    public static bool IsSyntheticTrafficSource(string? trafficSource) =>
+        trafficSource is not null
+        && (SyntheticTrafficSources.Contains(trafficSource)
+            || trafficSource.StartsWith(SyntheticTrafficSourcePrefix, StringComparison.Ordinal));
+
     private sealed class TrafficSourceScope(string? previous) : IDisposable
     {
         public void Dispose() => _trafficSource.Value = previous;
