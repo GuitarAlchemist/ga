@@ -236,7 +236,8 @@ jobs:
           # ── 5. Persist state ─────────────────────────────────────────────
           echo "$new_state" | jq --indent 2 . > "$state_file"
 
-      - name: Commit + push if inbox or poller state changed
+      - name: Commit if inbox or poller state changed
+        id: commit
         shell: bash
         run: |
           git config user.name  "github-actions[bot]"
@@ -250,4 +251,10 @@ jobs:
           fi
 
           git commit -m "chore(algedonic): ecosystem-health poll $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
-          git push origin HEAD:main
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}

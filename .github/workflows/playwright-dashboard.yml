@@ -258,6 +258,7 @@ jobs:
           retention-days: 14
 
       - name: Commit snapshot back to main
+        id: commit
         # Only commit on push-to-main runs (not on PRs — PR runs are
         # informational and shouldn't pollute git history). Also gated on
         # reachability: a skipped (deploy-down) run produces no snapshot, so
@@ -274,10 +275,16 @@ jobs:
             exit 0
           fi
           git commit -m "chore(e2e): dashboard playwright snapshot $(date -u +%Y-%m-%dT%H-%M-%SZ) [skip ci]"
-          # Pull-rebase in case quality-snapshot or another auto-commit
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the snapshot to main
+        if: always() && steps.commit.outputs.committed == 'true'
+        uses: ./.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          # Rebase and retry in case quality-snapshot or another auto-commit
           # workflow pushed in the meantime.
-          git pull --rebase origin main || true
-          git push origin HEAD:main
+          attempts: 2
 
       - name: Fail the job if any tests failed
         # We continue-on-error'd the test step so the snapshot+commit could
