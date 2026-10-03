@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using GA.Business.Core.Orchestration.Models;
 using GA.Business.Core.Orchestration.Trace;
+using GA.Business.ML.Agents.Intents;
 using GaChatbot.Api.Helpers;
 using GaChatbot.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,9 @@ public sealed class ChatbotController(
         // committed to the wire. Validation already ran above, so malformed
         // requests still don't get a cookie.
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
+        // Routing telemetry written while serving this request carries the page's ?ref= tag.
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source);
 
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
@@ -126,6 +130,9 @@ public sealed class ChatbotController(
         // turned away with 503 should still carry a session into their retry,
         // otherwise a busy moment silently starts them a new conversation.
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
+
+        // Routing telemetry written while serving this request carries the page's ?ref= tag.
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source);
 
         if (!await concurrencyGate.TryEnterAsync(cancellationToken))
         {
@@ -568,6 +575,15 @@ public sealed class ChatRequest
     public List<ChatMessage>? ConversationHistory { get; set; }
 
     public bool UseSemanticSearch { get; set; } = true;
+
+    /// <summary>
+    /// Optional traffic-source tag copied from the page URL's <c>?ref=</c> (e.g.
+    /// <c>reddit</c>), so routing telemetry can attribute each question to the
+    /// channel that brought it. Deliberately unvalidated: a malformed tag must
+    /// never turn a question away, so RoutingTelemetryLog.NormalizeTrafficSource
+    /// keeps a short <c>[a-z0-9-]</c> prefix and drops the rest.
+    /// </summary>
+    public string? Source { get; set; }
 
     public const int MaxConversationHistoryTurns = 50;
     public const int MaxConversationTurnContentChars = 2000;

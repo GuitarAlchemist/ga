@@ -2,6 +2,7 @@ namespace GA.Business.ML.Agents.Intents;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 /// <summary>
 ///     Append-only per-day JSONL telemetry for <see cref="SemanticIntentRouter"/>
@@ -36,6 +37,53 @@ public static class RoutingTelemetryLog
     /// </summary>
     public const string DisableEnvVar = "GA_ROUTING_NO_TELEMETRY";
 
+    /// <summary>Longest traffic-source tag kept; see <see cref="NormalizeTrafficSource"/>.</summary>
+    public const int MaxTrafficSourceLength = 32;
+
+    private static readonly Regex TrafficSourcePrefix =
+        new($"^[a-z0-9-]{{1,{MaxTrafficSourceLength}}}", RegexOptions.CultureInvariant);
+
+    private static readonly AsyncLocal<string?> _trafficSource = new();
+
+    /// <summary>
+    ///     The traffic-source tag of the request being served (the page's <c>?ref=</c>,
+    ///     e.g. <c>reddit</c>), or null. The HTTP host scopes it per request with
+    ///     <see cref="BeginTrafficSource"/>, and <see cref="Append"/> stamps it on every
+    ///     record written in that async flow, so the router needs no source parameter.
+    /// </summary>
+    public static string? CurrentTrafficSource => _trafficSource.Value;
+
+    /// <summary>
+    ///     Sets <see cref="CurrentTrafficSource"/> to the normalized <paramref name="rawSource"/>
+    ///     for the caller's async flow, and restores the previous value on dispose.
+    /// </summary>
+    public static IDisposable BeginTrafficSource(string? rawSource)
+    {
+        var previous = _trafficSource.Value;
+        _trafficSource.Value = NormalizeTrafficSource(rawSource);
+        return new TrafficSourceScope(previous);
+    }
+
+    /// <summary>
+    ///     Keeps the leading run of <c>[a-z0-9-]</c> of the lower-cased tag, at most
+    ///     <see cref="MaxTrafficSourceLength"/> characters, or returns null when that run is
+    ///     empty. The tag names a channel, so free text never reaches the log, and a link
+    ///     pasted with trailing punctuation (<c>reddit)</c>) still counts as <c>reddit</c>.
+    /// </summary>
+    public static string? NormalizeTrafficSource(string? rawSource)
+    {
+        if (string.IsNullOrWhiteSpace(rawSource)) return null;
+        var head = rawSource.Trim();
+        if (head.Length > MaxTrafficSourceLength) head = head[..MaxTrafficSourceLength];
+        var match = TrafficSourcePrefix.Match(head.ToLowerInvariant());
+        return match.Success ? match.Value : null;
+    }
+
+    private sealed class TrafficSourceScope(string? previous) : IDisposable
+    {
+        public void Dispose() => _trafficSource.Value = previous;
+    }
+
     /// <summary>
     ///     Resolves the directory holding the rolling JSONL files. Override via
     ///     <c>GA_ROUTING_TELEMETRY_DIR</c>; default is
@@ -67,6 +115,7 @@ public static class RoutingTelemetryLog
     public static void Append(RoutingTelemetryRecord record)
     {
         if (Environment.GetEnvironmentVariable(DisableEnvVar) == "1") return;
+        if (record.Source is null && _trafficSource.Value is { } source) record = record with { Source = source };
 
         try
         {
@@ -155,6 +204,11 @@ public sealed record RoutingTelemetryRecord
     /// <summary>Routing latency in milliseconds (includes the query embedding call).</summary>
     [JsonPropertyName("ms")]
     public double LatencyMs { get; init; }
+
+    /// <summary>Traffic-source tag of the request (e.g. <c>reddit</c>), or null when untagged.
+    /// See <see cref="RoutingTelemetryLog.BeginTrafficSource"/>.</summary>
+    [JsonPropertyName("src")]
+    public string? Source { get; init; }
 }
 
 /// <summary>One candidate intent in a logged routing decision.</summary>

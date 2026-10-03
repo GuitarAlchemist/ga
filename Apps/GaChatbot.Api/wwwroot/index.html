@@ -513,6 +513,8 @@
   const statusText = document.getElementById('statusText');
   const examples = document.getElementById('examples');
   const tracePanel = document.getElementById('tracePanel');
+  // Channel tag from the link that brought the visitor (e.g. ?ref=reddit); the server normalizes it.
+  const trafficSource = new URLSearchParams(window.location.search).get('ref');
   const history = [];
   const CHAT_CLIENT_TIMEOUT_MS = 190000;
   let activeController = null;
@@ -967,7 +969,7 @@
       const response = await fetch('api/chatbot/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, conversationHistory: history }),
+        body: JSON.stringify({ message, conversationHistory: history, source: trafficSource }),
         signal: activeController.signal
       });
 
