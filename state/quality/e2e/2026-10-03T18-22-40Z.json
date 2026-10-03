@@ -1,0 +1,43 @@
+{
+  "schema": "post-merge-smoke-v1",
+  "run_at": "2026-10-03T18:22:40Z",
+  "head_sha": "8605bbe61d700401da898a4cf030d89959d7495c",
+  "all_passed": true,
+  "tunnel_down": false,
+  "unreachable_count": 0,
+  "checks": [
+    {
+      "url": "https://demos.guitaralchemist.com/test",
+      "status": 200,
+      "ok": true,
+      "latency_ms": 259,
+      "size_bytes": 1391,
+      "content_marker": "Guitar Alchemist",
+      "content_marker_found": true,
+      "unreachable": false,
+      "gateway_error": false
+    },
+    {
+      "url": "https://demos.guitaralchemist.com/chatbot/",
+      "status": 200,
+      "ok": true,
+      "latency_ms": 379,
+      "size_bytes": 39934,
+      "content_marker": "GA Chatbot",
+      "content_marker_found": true,
+      "unreachable": false,
+      "gateway_error": false
+    },
+    {
+      "url": "https://demos.guitaralchemist.com/dev-data/manifest",
+      "status": 200,
+      "ok": true,
+      "latency_ms": 5840,
+      "size_bytes": 563145,
+      "content_marker": "schema_version",
+      "content_marker_found": true,
+      "unreachable": false,
+      "gateway_error": false
+    }
+  ]
+}
