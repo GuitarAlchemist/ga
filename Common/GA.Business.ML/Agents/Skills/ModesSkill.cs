@@ -185,21 +185,28 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         if (familyHit is not null && asksForFamilyListing)
             return Task.FromResult(FormatFamily(familyHit, families.Count));
 
-        // 2) Specific mode by name (e.g. "what is lydian dominant").
+        // 2) Two or more modes named ("difference between Dorian and Aeolian") →
+        //    compare them. Before this, the longest alias won and the answer
+        //    described Aeolian alone.
+        var namedModes = FindNamedModes(families, query);
+        if (namedModes.Count >= 2)
+            return Task.FromResult(FormatComparison(namedModes));
+
+        // 3) Specific mode by name (e.g. "what is lydian dominant").
         var modeHit = TryFindModeByName(families, query);
         if (modeHit is var (modeFamily, modeData) && modeFamily is not null && modeData is not null)
-            return Task.FromResult(FormatSingleMode(modeFamily, modeData));
+            return Task.FromResult(FormatSingleMode(modeFamily, modeData, FindRootBefore(message ?? string.Empty, modeData)));
 
-        // 3) Family name without an explicit listing pattern — interpret as
+        // 4) Family name without an explicit listing pattern — interpret as
         //    "tell me about that family" (e.g. "harmonic minor").
         if (familyHit is not null)
             return Task.FromResult(FormatFamily(familyHit, families.Count));
 
-        // 4) "Other / more / non-diatonic / all" → cross-family summary.
+        // 5) "Other / more / non-diatonic / all" → cross-family summary.
         if (AsksForBroadOverview(query))
             return Task.FromResult(FormatAllFamilies(families));
 
-        // 5) Default → diatonic family. Same behaviour as the legacy
+        // 6) Default → diatonic family. Same behaviour as the legacy
         //    "what are the modes of the major scale" answer.
         var diatonic = families.FirstOrDefault(f =>
             f.Name.Contains("Major Scale", StringComparison.OrdinalIgnoreCase));
@@ -254,6 +261,34 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
                 return (family, mode);
         }
         return (null, null);
+    }
+
+    /// <summary>
+    /// Every distinct mode named in the query, in query order. Aliases are matched
+    /// longest first on word boundaries and their span is blanked, so the "lydian"
+    /// inside "lydian dominant" or "mixolydian" is not counted as a second mode.
+    /// </summary>
+    private static List<(ModesConfig.ModalFamilyInfo Family, ModesConfig.ModeData Mode)> FindNamedModes(
+        IReadOnlyList<ModesConfig.ModalFamilyInfo> families,
+        string lowerQuery)
+    {
+        var aliasedModes = families
+            .SelectMany(f => f.Modes
+                .SelectMany(m => GetAllAliasesForMode(m).Select(a => (Alias: a, Family: f, Mode: m))))
+            .Where(t => !string.IsNullOrWhiteSpace(t.Alias))
+            .OrderByDescending(t => t.Alias.Length);
+
+        var remaining = lowerQuery.ToCharArray();
+        var found = new List<(int Position, ModesConfig.ModalFamilyInfo Family, ModesConfig.ModeData Mode)>();
+        foreach (var (alias, family, mode) in aliasedModes)
+        {
+            var hit = Regex.Match(new string(remaining), $@"(?<![\p{{L}}\p{{N}}#]){Regex.Escape(alias)}(?![\p{{L}}\p{{N}}#])");
+            if (!hit.Success) continue;
+            for (var i = hit.Index; i < hit.Index + hit.Length; i++) remaining[i] = ' ';
+            if (found.All(f => f.Mode.Name != mode.Name || f.Family.Name != family.Name))
+                found.Add((hit.Index, family, mode));
+        }
+        return found.OrderBy(f => f.Position).Select(f => (f.Family, f.Mode)).ToList();
     }
 
     /// <summary>
@@ -387,14 +422,20 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
 
     // ── Output formatting ────────────────────────────────────────────────────
 
-    private AgentResponse FormatSingleMode(ModesConfig.ModalFamilyInfo family, ModesConfig.ModeData mode)
+    private AgentResponse FormatSingleMode(ModesConfig.ModalFamilyInfo family, ModesConfig.ModeData mode, string? root = null)
     {
         var sb = new StringBuilder();
         var degree = family.Modes.ToList().FindIndex(m => m.Name == mode.Name) + 1;
         sb.Append($"**{mode.Name}** is mode {degree} of the **{StripFamilySuffix(family.Name)}** family");
         if (!string.IsNullOrWhiteSpace(mode.Notes))
         {
-            sb.Append($"; on C its notes are `{mode.Notes}`");
+            // The YAML spells every mode on C; a root the user named ("E mixolydian")
+            // used to be ignored, so the answer listed C Mixolydian.
+            var onRoot = root is null ? null : TransposeNotes(mode.Notes, root);
+            if (onRoot is not null)
+                sb.Append($"; on {root} its notes are `{onRoot}`");
+            else
+                sb.Append($"; on C its notes are `{mode.Notes}`");
             var formula = ComputeFormulaFromNotes(mode.Notes);
             if (!string.IsNullOrEmpty(formula))
                 sb.Append($" (formula `{formula}`)");
@@ -422,6 +463,65 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
                 $"Source: ModesConfig.GetModalFamilies()",
                 $"Family: {family.Name} ({family.Modes.Count} modes)",
                 $"Mode: {mode.Name} (degree {degree})",
+            ],
+        };
+    }
+
+    private AgentResponse FormatComparison(
+        IReadOnlyList<(ModesConfig.ModalFamilyInfo Family, ModesConfig.ModeData Mode)> modes)
+    {
+        var sb = new StringBuilder();
+        var formulas = new List<(string Name, string[] Tokens)>();
+        foreach (var (family, mode) in modes)
+        {
+            var degree = family.Modes.ToList().FindIndex(m => m.Name == mode.Name) + 1;
+            var formula = ComputeFormulaFromNotes(mode.Notes);
+            sb.Append($"- **{mode.Name}** is mode {degree} of the **{StripFamilySuffix(family.Name)}** family");
+            if (!string.IsNullOrWhiteSpace(mode.Notes))
+                sb.Append($"; on C: `{mode.Notes}`");
+            if (!string.IsNullOrEmpty(formula))
+            {
+                sb.Append($" (formula `{formula}`)");
+                formulas.Add((mode.Name, formula.Split(' ')));
+            }
+            sb.AppendLine(".");
+        }
+
+        // Degree by degree, which alterations each mode uses ("6" vs "b6").
+        if (formulas.Count == modes.Count)
+        {
+            static string DegreeOf(string token) => token.TrimStart('b', '#');
+            var degrees = formulas.SelectMany(f => f.Tokens.Select(DegreeOf)).Distinct()
+                .OrderBy(int.Parse).ToList();
+            var differences = new List<string>();
+            foreach (var d in degrees)
+            {
+                var perMode = formulas
+                    .Select(f => (f.Name, Value: string.Join("/", f.Tokens.Where(t => DegreeOf(t) == d))))
+                    .ToList();
+                if (perMode.Select(p => p.Value).Distinct().Count() > 1)
+                    differences.Add($"degree {d}: " + string.Join(", ",
+                        perMode.Select(p => $"{p.Name} `{(p.Value.Length == 0 ? "none" : p.Value)}`")));
+            }
+
+            sb.AppendLine();
+            sb.Append(differences.Count == 0
+                ? "They use the same degrees."
+                : "Differences: " + string.Join("; ", differences) + ".");
+        }
+
+        logger.LogDebug("ModesSkill: returning comparison of {Modes}",
+            string.Join(", ", modes.Select(m => m.Mode.Name)));
+
+        return new AgentResponse
+        {
+            AgentId    = AgentIds.Theory,
+            Result     = sb.ToString(),
+            Confidence = 1.0f,
+            Evidence   =
+            [
+                $"Source: ModesConfig.GetModalFamilies()",
+                $"Compared: {string.Join(", ", modes.Select(m => $"{m.Mode.Name} ({m.Family.Name})"))}",
             ],
         };
     }
@@ -773,27 +873,80 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
             { "G##", 9 }, { "A##", 11 }, { "B##", 1 },
         };
 
-    // C major reference: semitone offset for each natural degree 1..7.
+    // Major-scale reference: semitone offset for each natural degree 1..7.
     private static readonly int[] DegreeSemitones = [0, 2, 4, 5, 7, 9, 11];
+
+    private const string Letters = "CDEFGAB";
+
+    /// <summary>
+    /// The note name written right before one of the mode's names ("E mixolydian",
+    /// "F# lydian dominant"), normalised to "E" / "F#", or null. A bare lowercase "a"
+    /// is the article ("what is a dorian scale"), not the note A.
+    /// </summary>
+    private static string? FindRootBefore(string message, ModesConfig.ModeData mode)
+    {
+        foreach (var alias in GetAllAliasesForMode(mode).Where(a => a.Length > 0).OrderByDescending(a => a.Length))
+        {
+            var hit = Regex.Match(message,
+                $@"(?<![\p{{L}}\p{{N}}#])(?<root>[A-G][#b]?|[b-g][#b]?|a[#b])\s+(?i:{Regex.Escape(alias)})(?![\p{{L}}\p{{N}}#])");
+            if (hit.Success)
+            {
+                var root = hit.Groups["root"].Value;
+                return char.ToUpperInvariant(root[0]) + root[1..];
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Respells a mode written on its first note onto <paramref name="root"/>, keeping
+    /// each note's letter distance from the root (C Mixolydian → E F# G# A B C# D on E).
+    /// Null when a note would need more than a double accidental.
+    /// </summary>
+    private static string? TransposeNotes(string notes, string root)
+    {
+        var tokens = notes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length == 0 ||
+            !PitchSemitone.TryGetValue(tokens[0], out var fromSemi) ||
+            !PitchSemitone.TryGetValue(root, out var rootSemi))
+            return null;
+        var fromLetter = Letters.IndexOf(tokens[0][0]);
+        var rootLetter = Letters.IndexOf(root[0]);
+
+        var spelled = new List<string>(tokens.Length);
+        foreach (var token in tokens)
+        {
+            if (!PitchSemitone.TryGetValue(token, out var semi)) return null;
+            var letter = Letters[(rootLetter + Letters.IndexOf(token[0]) - fromLetter + 7) % 7];
+            var target = (rootSemi + semi - fromSemi + 24) % 12;
+            var diff = target - PitchSemitone[letter.ToString()];
+            if (diff > 6) diff -= 12;
+            if (diff < -6) diff += 12;
+            if (Math.Abs(diff) > 2) return null;
+            spelled.Add(letter + (diff > 0 ? new string('#', diff) : new string('b', -diff)));
+        }
+        return string.Join(" ", spelled);
+    }
 
     private static string ComputeFormulaFromNotes(string notes)
     {
         if (string.IsNullOrWhiteSpace(notes)) return string.Empty;
         var tokens = notes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (tokens.Length == 0) return string.Empty;
+        if (tokens.Length == 0 || !PitchSemitone.TryGetValue(tokens[0], out var rootSemi))
+            return string.Empty;
+        var rootLetter = Letters.IndexOf(tokens[0][0]);
 
         var parts = new List<string>(tokens.Length);
         for (var i = 0; i < tokens.Length; i++)
         {
             if (!PitchSemitone.TryGetValue(tokens[i], out var semi))
                 return string.Empty;  // unknown token — bail rather than guess
-            // For scales of <=7 notes, position maps directly to degree slot.
-            // For 8-note (Bebop) or longer scales, modulo 7 keeps the reference
-            // sensible — the formula notation is still recognizable.
-            var slot = i % 7;
-            var expected = DegreeSemitones[slot];
+            // The degree is the letter distance from the root, not the position in
+            // the list: position broke every scale that skips a letter — major
+            // pentatonic C D E G A came out as "1 2 3 ##4 ##5" instead of "1 2 3 5 6".
+            var degree = (Letters.IndexOf(tokens[i][0]) - rootLetter + 7) % 7;
+            var expected = (rootSemi + DegreeSemitones[degree]) % 12;
             var diff = semi - expected;
-            // Normalize across octave boundary for late notes in 8+-note scales.
             if (diff > 6) diff -= 12;
             if (diff < -6) diff += 12;
             var acc = diff switch
@@ -805,7 +958,7 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
                   2 => "##",
                   _ => string.Empty  // out of expected range — omit accidental rather than emit garbage
             };
-            parts.Add($"{acc}{i + 1}");
+            parts.Add($"{acc}{degree + 1}");
         }
         return string.Join(" ", parts);
     }

@@ -59,7 +59,7 @@ From C counter-clockwise, each step adds one flat:
 | 8 | Ab major | Bb Eb Ab Db |
 | 7 | Db major | Bb Eb Ab Db Gb |
 | 6 | Gb major | Bb Eb Ab Db Gb Cb |
-| 5 (≡ C# major) | Cb major | Bb Eb Ab Db Gb Cb Fb (all 7 flats) |
+| 5 (≡ B major) | Cb major | Bb Eb Ab Db Gb Cb Fb (all 7 flats) |
 
 Order of added flats: **B – E – A – D – G – C – F** (mnemonic: *Battle Ends And Down Goes Charles' Father* — reverse of the sharps order).
 
@@ -88,7 +88,7 @@ Each major key shares its key signature with its **relative minor** — three se
 
 ## Enharmonic equivalence at the bottom of the circle
 
-At the 6 o'clock position three keys collide:
+At the bottom of the circle (positions 5, 6 and 7) three pairs of keys collide:
 
 - **F# major (6 sharps)** ≡ **Gb major (6 flats)** — same pitches, different spelling.
 - **C# major (7 sharps)** ≡ **Db major (5 flats)** — Db is usually preferred (fewer accidentals, no double-sharps).
@@ -102,7 +102,7 @@ doesn't pick one over the other — both spell the same harmony.
 
 ## Why it's useful
 
-- **Modulation by fifth** is the smoothest key change: only one note changes (the new key's leading tone). C → G changes only F to F#.
+- **Modulation by fifth** is the smoothest key change: only one note changes (up a fifth it becomes the new key's leading tone; down a fifth, its fourth degree). C → G changes only F to F#; C → F changes only B to Bb.
 - **Cadences are often V–I or ii–V–I**, which trace the circle counter-clockwise — every dominant resolution is a step counter-clockwise.
 - **Chord progressions in pop and folk** often cycle through circle-of-fifths motion (vi–ii–V–I).
 
