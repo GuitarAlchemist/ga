@@ -82,16 +82,13 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         new(@"\b(?:how\s+many\s+(?<acc>sharps|flats|accidentals)|key\s+signature)\s+(?:in|of|for)?\s+(?<key>[A-Ga-g][b#♭♯]?)\s*(?<quality>maj(?:or)?|min(?:or)?)?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Map pitch-letter spellings → semitone PC (0..11)
-    private static readonly Dictionary<string, int> RootPc = new(StringComparer.OrdinalIgnoreCase)
+    // Circle-of-fifths position of each natural letter (C = 0). A sharp adds seven
+    // fifths and a flat takes seven away, so every spelled root has a position:
+    // G# = 8, Cb = -7. Replaces a root → pitch-class table that had no Cb, Fb, E#
+    // or B# and let roots outside the arrays below read as 0 accidentals (#769).
+    private static readonly Dictionary<char, int> LetterFifths = new()
     {
-        ["C"]  = 0,  ["C#"] = 1, ["Db"] = 1, ["C♯"] = 1, ["D♭"] = 1,
-        ["D"]  = 2,  ["D#"] = 3, ["Eb"] = 3, ["D♯"] = 3, ["E♭"] = 3,
-        ["E"]  = 4,
-        ["F"]  = 5,  ["F#"] = 6, ["Gb"] = 6, ["F♯"] = 6, ["G♭"] = 6,
-        ["G"]  = 7,  ["G#"] = 8, ["Ab"] = 8, ["G♯"] = 8, ["A♭"] = 8,
-        ["A"]  = 9,  ["A#"] = 10, ["Bb"] = 10, ["A♯"] = 10, ["B♭"] = 10,
-        ["B"]  = 11,
+        ['F'] = -1, ['C'] = 0, ['G'] = 1, ['D'] = 2, ['A'] = 3, ['E'] = 4, ['B'] = 5,
     };
 
     // Circle-of-fifths position → key letter for major keys (sharps positive, flats negative)
@@ -135,12 +132,12 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         // place flats at low indices — F# major incorrectly returned "Ebm"
         // instead of "D#m". Caught by the 2026-05-13 multi-LLM correctness
         // review (PR #210). Now: relative minor shares the key signature, so
-        // its index in MinorByFifth equals the major's index in MajorByFifth.
-        var fifthsIndex = TryMajorIndex(majorKey);
-        if (fifthsIndex is null)
+        // its index in MinorByFifth is the major key's signature + 7.
+        if (SignatureOf(majorKey, isMinor: false) is not { } sharps)
             return CannotParse(majorKey);
-        var relMinor = MinorByFifth[fifthsIndex.Value];
-        var sharps = fifthsIndex.Value - 7;
+        if (IsTheoretical(sharps))
+            return AnswerTheoreticalRelative(majorKey, isMinor: false, sharps);
+        var relMinor = MinorByFifth[sharps + 7];
         var sb = new StringBuilder();
         sb.AppendLine($"The relative minor of **{majorKey} major** is **{relMinor}**.");
         sb.AppendLine();
@@ -154,11 +151,11 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
         // user's input spelling rather than a fixed flat-preference. G# minor
         // now correctly returns "B major" (5 sharps) instead of "Cb major"
         // (7 flats).
-        var fifthsIndex = TryMinorIndex(minorKey);
-        if (fifthsIndex is null)
+        if (SignatureOf(minorKey, isMinor: true) is not { } sharps)
             return CannotParse(minorKey);
-        var relMajor = MajorByFifth[fifthsIndex.Value];
-        var sharps = fifthsIndex.Value - 7;
+        if (IsTheoretical(sharps))
+            return AnswerTheoreticalRelative(minorKey, isMinor: true, sharps);
+        var relMajor = MajorByFifth[sharps + 7];
         var sb = new StringBuilder();
         sb.AppendLine($"The relative major of **{minorKey} minor** is **{relMajor} major**.");
         sb.AppendLine();
@@ -168,20 +165,19 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerParallelMinor(string majorKey)
     {
-        if (!RootPc.TryGetValue(majorKey, out _))
+        if (SignatureOf(majorKey, isMinor: false) is not { } sharpsMaj)
             return CannotParse(majorKey);
-        var sharpsMaj = MajorSharpsFlats(majorKey);
         var sharpsMin = sharpsMaj - 3;  // parallel minor sits 3 positions counter-clockwise on the circle of fifths
         var sb = new StringBuilder();
         sb.AppendLine($"The parallel minor of **{majorKey} major** is **{majorKey} minor**.");
         sb.AppendLine();
-        sb.AppendLine($"Same root note (**{majorKey}**) but different scales — the parallel minor lowers the 3rd, 6th, and 7th degrees. {majorKey} major has {KeySignatureBlurb(sharpsMaj)}; {majorKey} minor has {KeySignatureBlurb(sharpsMin)} (three positions counter-clockwise on the circle of fifths).");
+        sb.AppendLine($"Same root note (**{majorKey}**) but different scales — the parallel minor lowers the 3rd, 6th, and 7th degrees. {majorKey} major has {KeySignatureBlurb(sharpsMaj)}; {majorKey} minor has {KeySignatureBlurb(sharpsMin)} (three positions counter-clockwise on the circle of fifths).{TheoreticalNote(majorKey, isMinor: false, sharpsMaj)}{TheoreticalNote(majorKey, isMinor: true, sharpsMin)}");
         return Result(sb.ToString(), $"parallel-minor({majorKey})");
     }
 
     private AgentResponse AnswerParallelMajor(string minorKey)
     {
-        if (!RootPc.TryGetValue(minorKey, out _))
+        if (SignatureOf(minorKey, isMinor: true) is null)
             return CannotParse(minorKey);
         var sb = new StringBuilder();
         sb.AppendLine($"The parallel major of **{minorKey} minor** is **{minorKey} major**.");
@@ -192,37 +188,54 @@ public sealed class RelativeKeySkill(ILogger<RelativeKeySkill> logger) : IOrches
 
     private AgentResponse AnswerKeySignature(string key, bool isMinor)
     {
-        if (!RootPc.TryGetValue(key, out _))
+        if (SignatureOf(key, isMinor) is not { } sharps)
             return CannotParse(key);
-        var sharps = isMinor ? MinorSharpsFlats(key) : MajorSharpsFlats(key);
-        var qualityWord = isMinor ? "minor" : "major";
+        var qualityWord = Quality(isMinor);
         return Result(
-            $"**{key} {qualityWord}** has {KeySignatureBlurb(sharps)}.",
+            $"**{key} {qualityWord}** has {KeySignatureBlurb(sharps)}.{TheoreticalNote(key, isMinor, sharps)}",
             $"key-signature({key} {qualityWord}={sharps})");
     }
 
-    private static int? TryMajorIndex(string majorKey)
+    // G# major would need 8 sharps (a double sharp counts as two), so neither array
+    // lists it; a score writes its enharmonic twin, Ab major, and the relative key
+    // follows from that.
+    private AgentResponse AnswerTheoreticalRelative(string key, bool isMinor, int sharps)
     {
-        for (var i = 0; i < MajorByFifth.Length; i++)
-            if (string.Equals(MajorByFifth[i], majorKey, StringComparison.OrdinalIgnoreCase))
-                return i;
-        return null;
+        var written = Written(sharps);
+        var writtenLabel = KeyLabel(written, isMinor);
+        var relative = KeyLabel(written, !isMinor);
+        return Result(
+            $"**{key} {Quality(isMinor)}** is a theoretical key ({KeySignatureBlurb(sharps)}), usually written as **{writtenLabel}** ({KeySignatureBlurb(written)}). The relative {Quality(!isMinor)} of {writtenLabel} is **{relative}**.",
+            $"relative-{Quality(!isMinor)}({key} {Quality(isMinor)}={sharps}, written {writtenLabel}→{relative})");
     }
 
-    private static int? TryMinorIndex(string minorKey)
+    /// <summary>
+    /// The key signature of a spelled root, in sharps (positive) or flats (negative):
+    /// the root's circle-of-fifths position for a major key, three fifths lower for a
+    /// minor key. Beyond ±7 the key is theoretical. Null if the token isn't a root.
+    /// </summary>
+    private static int? SignatureOf(string root, bool isMinor)
     {
-        var withM = minorKey.EndsWith("m", StringComparison.OrdinalIgnoreCase) ? minorKey : minorKey + "m";
-        for (var i = 0; i < MinorByFifth.Length; i++)
-            if (string.Equals(MinorByFifth[i], withM, StringComparison.OrdinalIgnoreCase))
-                return i;
-        return null;
+        if (root.Length is 0 or > 2 || !LetterFifths.TryGetValue(root[0], out var fifths))
+            return null;
+        var accidental = root.Length == 1 ? 0 : root[1] switch { '#' => 7, 'b' => -7, _ => (int?)null };
+        return fifths + accidental - (isMinor ? 3 : 0);
     }
 
-    private static int MajorSharpsFlats(string majorKey) =>
-        TryMajorIndex(majorKey) is { } i ? i - 7 : 0;
+    private static bool IsTheoretical(int sharps) => Math.Abs(sharps) > 7;
 
-    private static int MinorSharpsFlats(string minorKey) =>
-        TryMinorIndex(minorKey) is { } i ? i - 7 : 0;
+    // The enharmonic twin twelve fifths away, back inside ±7.
+    private static int Written(int sharps) => sharps > 7 ? sharps - 12 : sharps + 12;
+
+    private static string KeyLabel(int sharps, bool isMinor) =>
+        isMinor ? $"{MinorByFifth[sharps + 7][..^1]} minor" : $"{MajorByFifth[sharps + 7]} major";
+
+    private static string Quality(bool isMinor) => isMinor ? "minor" : "major";
+
+    private static string TheoreticalNote(string root, bool isMinor, int sharps) =>
+        IsTheoretical(sharps)
+            ? $" {root} {Quality(isMinor)} is a theoretical key, usually written as **{KeyLabel(Written(sharps), isMinor)}** ({KeySignatureBlurb(Written(sharps))})."
+            : string.Empty;
 
     private static string KeySignatureBlurb(int sharpsFlats) =>
         sharpsFlats switch

@@ -28,6 +28,21 @@ public class ScaleMcpToolsTests
         Assert.That(result.Mode,         Is.EqualTo(mode));
     }
 
+    // Issue #769: the relative key shares the key signature. Matching the pitch-class
+    // set picked the flat twin that Key.Items lists first (B major → "Ab minor").
+    [TestCase("B",  "major", "G# minor")]
+    [TestCase("F#", "major", "D# minor")]
+    [TestCase("C#", "major", "A# minor")]
+    [TestCase("G#", "minor", "B major")]
+    [TestCase("D#", "minor", "F# major")]
+    [TestCase("A#", "minor", "C# major")]
+    [TestCase("Cb", "major", "Ab minor")]
+    [TestCase("Ab", "minor", "Cb major")]
+    [TestCase("Gb", "major", "Eb minor")]
+    [TestCase("Eb", "minor", "Gb major")]
+    public void GetKeyNotes_RelativeKey_SharesTheKeySignature(string root, string mode, string expected) =>
+        Assert.That(ScaleMcpTools.GetKeyNotes(root, mode).RelativeKey, Is.EqualTo(expected));
+
     [TestCase("major", "major")]
     [TestCase("MAJOR", "major")]
     [TestCase("Major", "major")]
