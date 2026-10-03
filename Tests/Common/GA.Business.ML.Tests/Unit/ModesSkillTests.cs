@@ -27,6 +27,28 @@ public sealed class ModesSkillTests
         Assert.That(response.Result, Does.Not.Contain("Differences"));
     }
 
+    // The parent scale named as context is not a second mode to compare (Codex review on #800).
+    [TestCase("What is Dorian b2 in melodic minor?", "**Dorian b2**")]
+    [TestCase("Explain Phrygian dominant from the harmonic minor scale", "**Phrygian Dominant**")]
+    [TestCase("Is Lydian the fourth mode of the major scale?", "**Lydian**")]
+    public async Task ParentScaleAsContext_DescribesTheModeAlone(string question, string heading)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Result, Does.StartWith(heading));
+        Assert.That(response.Result, Does.Not.Contain("Differences"));
+    }
+
+    [TestCase("What is the difference between melodic minor and Dorian b2?")]
+    [TestCase("Melodic minor vs Dorian b2")]
+    [TestCase("Should I play harmonic minor or Phrygian dominant over E7?")]
+    public async Task ParentScaleWithComparisonWording_StillCompares(string question)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Result, Does.Contain("Differences"));
+    }
+
     // A 2026-10-03 baseline question: "E mixolydian" was answered with C Mixolydian's notes.
     [TestCase("What notes are in E mixolydian?", "on E its notes are `E F# G# A B C# D`")]
     [TestCase("What is F# lydian dominant", "on F# its notes are `F# G# A# B# C# D# E`")]

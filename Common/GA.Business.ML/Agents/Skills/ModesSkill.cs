@@ -149,6 +149,10 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex QuestionLeadInRegex();
 
+    [GeneratedRegex(@"\b(differ\w*|compar\w*|contrast\w*|versus|vs|between|or)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ComparisonWordingRegex();
+
     public Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
         var query = (message ?? string.Empty).ToLowerInvariant();
@@ -188,7 +192,21 @@ public sealed partial class ModesSkill(ILogger<ModesSkill> logger) : IOrchestrat
         // 2) Two or more modes named ("difference between Dorian and Aeolian") →
         //    compare them. Before this, the longest alias won and the answer
         //    described Aeolian alone.
+        //    Without comparison wording, a family's first mode named beside another
+        //    of its modes is context ("Dorian b2 in melodic minor"), not a second mode.
         var namedModes = FindNamedModes(families, query);
+        if (namedModes.Count >= 2 && !ComparisonWordingRegex().IsMatch(query))
+        {
+            namedModes = namedModes
+                .Where(n => n.Mode.Name != n.Family.Modes[0].Name ||
+                            !namedModes.Any(o => o.Family.Name == n.Family.Name && o.Mode.Name != n.Mode.Name))
+                .ToList();
+            if (namedModes.Count == 1)
+            {
+                var (family, mode) = namedModes[0];
+                return Task.FromResult(FormatSingleMode(family, mode, FindRootBefore(message ?? string.Empty, mode)));
+            }
+        }
         if (namedModes.Count >= 2)
             return Task.FromResult(FormatComparison(namedModes));
 
