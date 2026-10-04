@@ -64,6 +64,8 @@ internal static partial class CagedShapeVoicing
             candidates = candidates.Where(c => c.Groups["acc"].Success || c.Groups["accword"].Success || c.Groups["q"].Success || c.Groups["word"].Success).ToList();
         if (candidates.Count != 1) return null;
         var chord = candidates[0];
+        // "C major 7", "C minor seventh", "C sus4", "C/G": the chord goes on past the triad.
+        if (ExtensionRegex().IsMatch(rest, chord.Index + chord.Length)) return null;
 
         var suffix = chord.Groups["q"].Value;
         var word = chord.Groups["word"].Value.ToLowerInvariant();
@@ -76,16 +78,20 @@ internal static partial class CagedShapeVoicing
             ? (chord.Groups["accword"].Value.StartsWith("f", StringComparison.OrdinalIgnoreCase) ? "b" : "#")
             : NormalizeAccidental(chord.Groups["acc"].Value);
         var rootName = chord.Groups["root"].Value + accidental;
-        return Build(rootName, isMinor, shape);
+        return Build(rootName, isMinor, shape, BarreRegex().IsMatch(message));
     }
 
-    /// <summary>Spells <paramref name="rootName"/> major or minor in the given CAGED shape.</summary>
-    internal static Result Build(string rootName, bool isMinor, char shape)
+    /// <summary>
+    ///     Spells <paramref name="rootName"/> major or minor in the given CAGED shape. With
+    ///     <paramref name="barre"/>, a shape that would keep an open string moves up an octave.
+    /// </summary>
+    internal static Result Build(string rootName, bool isMinor, char shape, bool barre = false)
     {
         var template = Templates[(shape, isMinor)];
         var rootPc = PitchClassOf(rootName);
         var rootFret = ((rootPc - OpenPitchClasses[template.RootString]) % 12 + 12) % 12;
-        if (rootFret + template.Offsets.Where(o => o.HasValue).Min()!.Value < 0) rootFret += 12;
+        var lowestOffset = template.Offsets.Where(o => o.HasValue).Min()!.Value;
+        if (rootFret + lowestOffset < 0 || (barre && rootFret + lowestOffset == 0)) rootFret += 12;
 
         var frets = template.Offsets.Select(o => o.HasValue ? rootFret + o.Value : (int?)null).ToArray();
 
@@ -178,4 +184,11 @@ internal static partial class CagedShapeVoicing
     // A capital root, an optional accidental ("Bb", "B flat", "B-flat") and triad suffix, then an optional qualifying word.
     [GeneratedRegex(@"(?<![\w#♯♭])(?<root>[A-G])(?:(?<acc>#|b|♯|♭)|[\s-]+(?<accword>(?i:flat|sharp))(?![a-z]))?(?<q>maj|min|m)?(?![\w#♯♭])(?:\s+(?<word>(?i:major|minor|maj|min|chord|barre|triad)))?")]
     private static partial Regex ChordRegex();
+
+    // What may follow the triad's name and changes the chord: a number, an extension or quality word, a symbol or a slash bass.
+    [GeneratedRegex(@"\G\s*(?:[\d°ø+Δ/]|(?i:add|sus|suspended|dim|diminished|aug|augmented|dom|dominant|half|seventh|seven|sixth|six|ninth|nine|eleventh|thirteenth)(?![a-z]))")]
+    private static partial Regex ExtensionRegex();
+
+    [GeneratedRegex(@"(?i)\bbarre(?:d)?\b|\bbar\s+chords?\b")]
+    private static partial Regex BarreRegex();
 }

@@ -20,6 +20,9 @@ public class KeySignatureAnswersTests
     [TestCase("how many flats in E flat major", "**Eb major** has 3 flats. The flats are Bb, Eb, Ab. Its relative minor, C minor, shares this key signature.")]
     [TestCase("How many sharps does F-sharp minor have?", "**F# minor** has 3 sharps. The sharps are F#, C#, G#. Its relative major, A major, shares this key signature.")]
     [TestCase("how many sharps does C major have","**C major** has no sharps or flats. Its relative minor, A minor, shares this key signature.")]
+    [TestCase("how many sharps in d?", "**D major** has 2 sharps. The sharps are F#, C#. Its relative minor, B minor, shares this key signature.")]
+    [TestCase("key signature for e", "**E major** has 4 sharps. The sharps are F#, C#, G#, D#. Its relative minor, C# minor, shares this key signature.")]
+    [TestCase("how many flats in b flat?", "**Bb major** has 2 flats. The flats are Bb, Eb. Its relative minor, G minor, shares this key signature.")]
     public void KeyToSignature(string question, string expected) =>
         Assert.That(Answer(question), Is.EqualTo(expected));
 
@@ -47,6 +50,7 @@ public class KeySignatureAnswersTests
     [TestCase("What notes are in A major?")]
     [TestCase("How many sharps does a key signature have?")]
     [TestCase("What's the key signature of a song?")]
+    [TestCase("How many sharps are in a key signature?")]
     public void OtherQuestions_AreNotKeySignatureQuestions(string question) =>
         Assert.That(KeySignatureAnswers.TryAnswer(question, out _, out _), Is.False);
 
@@ -69,6 +73,8 @@ public class KeySignatureAnswersTests
 
     [TestCase("How many sharps are in the key of A major?", "**A major** has 3 sharps.")]
     [TestCase("which major key has 4 flats?", "**Ab major** has 4 flats")]
+    [TestCase("how many sharps in d?", "**D major** has 2 sharps.")]
+    [TestCase("key signature for f#", "**F# major** has 6 sharps. The sharps are F#, C#, G#, D#, A#, E#.")]
     public async Task RelativeKeySkill_AnswersBothDirections(string question, string expected)
     {
         var skill = new RelativeKeySkill(NullLogger<RelativeKeySkill>.Instance);

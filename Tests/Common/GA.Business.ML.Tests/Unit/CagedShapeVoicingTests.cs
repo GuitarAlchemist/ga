@@ -48,6 +48,26 @@ public class CagedShapeVoicingTests
         });
     }
 
+    // An explicit barre request never keeps an open string: the open shapes move up an octave.
+    [TestCaseSource(nameof(AllShapes))]
+    public void EveryBarreShape_SoundsTheTriad_WithoutAnOpenString(string root, bool minor, char shape)
+    {
+        var result = CagedShapeVoicing.Build(root, minor, shape, barre: true);
+
+        var frets = result.Diagram.Split('-').Select(f => f == "x" ? (int?)null : int.Parse(f)).ToArray();
+        var sounding = frets.Select((f, s) => f is { } fret ? (StandardTuning[s] + fret) % 12 : (int?)null)
+            .Where(pc => pc.HasValue).Select(pc => pc!.Value).ToList();
+        var rootPc = PitchClass(root);
+        var triad = new[] { rootPc, (rootPc + (minor ? 3 : 4)) % 12, (rootPc + 7) % 12 };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(frets.Where(f => f.HasValue), Has.All.InRange(1, 15), result.Diagram);
+            Assert.That(sounding.Distinct(), Is.EquivalentTo(triad), result.Diagram);
+            Assert.That(sounding[0], Is.EqualTo(rootPc), $"{result.Diagram}: the bass must be the root");
+        });
+    }
+
     [TestCase("C", false, 'A', "x-3-5-5-5-3")]
     [TestCase("C", false, 'E', "8-10-10-9-8-8")]
     [TestCase("C", false, 'C', "x-3-2-0-1-0")]
@@ -94,7 +114,23 @@ public class CagedShapeVoicingTests
         Assert.That((result!.ChordName, result.Shape), Is.EqualTo((chord, shape)));
     }
 
+    // "barre" asks for the closed form: the open E and A chords move to the 12th fret.
+    [TestCase("E major barre chord using the E shape", "12-14-14-13-12-12")]
+    [TestCase("A major barre chord using the A shape", "x-12-14-14-14-12")]
+    [TestCase("Am barre chord in the A shape", "x-12-14-14-13-12")]
+    [TestCase("D major as a bar chord in the D shape", "x-x-12-14-15-14")]
+    [TestCase("E major in the E shape", "0-2-2-1-0-0")]
+    [TestCase(QaQuestion, "x-3-5-5-5-3")]
+    public void ExplicitBarre_SelectsTheClosedForm(string question, string diagram) =>
+        Assert.That(CagedShapeVoicing.TryCreate(question)?.Diagram, Is.EqualTo(diagram));
+
     [TestCase("Cmaj7 in the A shape")]
+    [TestCase("C major 7 in the A shape")]
+    [TestCase("C minor seventh in the E shape")]
+    [TestCase("C maj7 in the A shape")]
+    [TestCase("C sus4 in the A shape")]
+    [TestCase("C dominant 7 in the E shape")]
+    [TestCase("C/G in the A shape")]
     [TestCase("Show me the E shape barre chord")]
     [TestCase("Cmaj7 drop2 jazz voicings")]
     [TestCase("what does a shape mean in CAGED")]

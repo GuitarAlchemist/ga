@@ -40,11 +40,17 @@ internal static class KeySignatureAnswers
         !string.IsNullOrWhiteSpace(message)
         && (SignatureToKeyPattern.IsMatch(message) || MatchKeyToSignature(message) is not null);
 
-    // A lowercase letter is a key only with a quality ("e minor", "bbm"), so the article in
-    // "how many sharps does a key signature have" is not read as A major.
+    // "how many sharps in d?", "key signature for f#": right after in/of/for and ending the clause.
+    private static readonly Regex BareKeyLeadIn = new(@"\b(?:in|of|for)\s+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ClauseEnd = new(@"\G\s*(?:[?.!,;:]|$)", RegexOptions.Compiled);
+
+    // A lowercase letter is a key only with a quality ("e minor", "bbm") or as the bare object of
+    // in/of/for that ends the clause, so the article in "how many sharps does a key signature have"
+    // or "how many sharps are in a key signature" is not read as A major.
     private static Match? MatchKeyToSignature(string message) =>
         KeyToSignaturePattern.Match(message) is { Success: true } match
-        && (char.IsUpper(match.Groups["key"].Value[0]) || match.Groups["quality"].Success || match.Groups["m"].Success)
+        && (char.IsUpper(match.Groups["key"].Value[0]) || match.Groups["quality"].Success || match.Groups["m"].Success
+            || (BareKeyLeadIn.IsMatch(message[..match.Groups["key"].Index]) && ClauseEnd.IsMatch(message, match.Index + match.Length)))
             ? match
             : null;
 
