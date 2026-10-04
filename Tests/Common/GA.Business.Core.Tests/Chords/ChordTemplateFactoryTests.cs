@@ -26,6 +26,18 @@ public class ChordTemplateFactoryTests
                 "Diminished triads should be produced.");
         });
     }
+    // The full generation ran its three scale groups twice, and the natural minor modes, which are the major
+    // scale's modes under the same names, repeated the major ones
+    [Test]
+    public void GenerateAllPossibleChords_YieldsEachTemplateOnce()
+    {
+        var templates = ChordTemplateFactory.GenerateAllPossibleChords()
+            .Select(t => (t.GetParentScale()?.Name, t.GetScaleDegree(), t.StackingType, t.Extension, t.Name, t.PitchClassSet.Id))
+            .ToList();
+
+        Assert.That(templates.Count, Is.EqualTo(templates.Distinct().Count()));
+    }
+
     [Test]
     public void GenerateAllPossibleChords_ReturnsNonEmptyCollection()
     {
