@@ -84,6 +84,24 @@ public class ChordSymbolParserTests
     public void Parse_ReadsEachToneOfTheSymbol(string symbol, int[] pitchClasses) =>
         Assert.That(new ChordSymbolParser().Parse(symbol).PitchClassSet.Select(pc => pc.Value), Is.EqualTo(pitchClasses));
 
+    // The note after the slash is the bass, chord tone or not
+    [TestCase("C", 0, false)]
+    [TestCase("C/E", 4, true)]
+    [TestCase("C/G", 7, true)]
+    [TestCase("C/F#", 6, true)]
+    [TestCase("Am7/G", 7, true)]
+    [TestCase("D/F#", 6, true)]
+    [TestCase("C6/9", 0, false)]
+    public void Parse_PutsTheSlashBassInTheBass(string symbol, int bass, bool inverted)
+    {
+        var chord = new ChordSymbolParser().Parse(symbol);
+        Assert.Multiple(() =>
+        {
+            Assert.That(chord.Bass.PitchClass.Value, Is.EqualTo(bass));
+            Assert.That(chord.IsInverted, Is.EqualTo(inverted));
+        });
+    }
+
     [Test]
     public void TryParse_ReturnsTrue_On_ValidSymbols()
     {

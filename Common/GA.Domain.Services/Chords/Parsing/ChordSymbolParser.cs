@@ -54,12 +54,14 @@ public class ChordSymbolParser
 
         var formula = ParseChordSuffix(suffix)
                       ?? throw new ArgumentException($"Unknown chord symbol: {symbol}", nameof(symbol));
-        if (bass is not null)
+        if (bass is null)
         {
-            formula = WithBass(formula, (bass.PitchClass.Value - root.PitchClass.Value + 12) % 12);
+            return new(root, formula, symbol);
         }
 
-        return new(root, formula, symbol);
+        // The bass note comes first, as in an inversion: C/E is E G C, so its Bass is E
+        var chord = new Chord(root, WithBass(formula, (bass.PitchClass.Value - root.PitchClass.Value + 12) % 12), symbol);
+        return chord.ToInversion(chord.Notes.ToList().FindIndex(n => n.PitchClass == bass.PitchClass));
     }
 
     /// <summary>
