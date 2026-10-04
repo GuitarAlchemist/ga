@@ -223,6 +223,7 @@
         AlternateNames:
           - Romanian
           - Ukrainian Dorian
+          - Dorian Sharp 4
       - Name: Phrygian Dominant
         Notes: C Db E F G Ab Bb
         Description: Fifth mode of harmonic minor
@@ -238,7 +239,7 @@
         Notes: C D# E F# G A B
         Description: Sixth mode of harmonic minor
         AlternateNames:
-          - 'Lydian Augmented #2'
+          - Lydian Sharp 2
       - Name: Ultralocrian
         Notes: C Db Eb Fb Gb Ab Bbb
         Description: Seventh mode of harmonic minor
@@ -283,6 +284,7 @@
         AlternateNames:
           - Half Diminished
           - Aeolian b5
+          - Locrian Natural 2
       - Name: Altered
         Notes: C Db Eb Fb Gb Ab Bb
         Description: Seventh mode of melodic minor
@@ -430,22 +432,22 @@
         AlternateNames:
           - Major Chord
       - Name: Minor Triad First Inversion
-        Notes: C Eb Ab
+        Notes: C E A
         Description: First inversion of minor triad
         AlternateNames:
-          - Minor 6/4
+          - Minor 6/3
       - Name: Minor Triad Second Inversion
-        Notes: C F A
+        Notes: C F Ab
         Description: Second inversion of minor triad
         AlternateNames:
           - Minor 6/4
       - Name: Major Triad First Inversion
-        Notes: C F Ab
+        Notes: C Eb Ab
         Description: First inversion of major triad
         AlternateNames:
-          - Major 6/4
+          - Major 6/3
       - Name: Major Triad Second Inversion
-        Notes: C E A
+        Notes: C F A
         Description: Second inversion of major triad
         AlternateNames:
           - Major 6/4
@@ -463,17 +465,17 @@
         AlternateNames:
           - Diminished Chord
       - Name: Diminished Triad First Inversion
-        Notes: C E A
+        Notes: C Eb A
         Description: First inversion of diminished triad
         AlternateNames:
-          - Diminished 6/4
+          - Diminished 6/3
       - Name: Diminished Triad Second Inversion
-        Notes: C F# Bb
+        Notes: C F# A
         Description: Second inversion of diminished triad
         AlternateNames:
           - Diminished 6/4
   - Name: Augmented Triad Family
-    IntervalClassVector: <0 1 0 0 2 0>
+    IntervalClassVector: <0 0 0 3 0 0>
     Modes:
       - Name: Augmented Triad
         Notes: C E G#
@@ -481,12 +483,12 @@
         AlternateNames:
           - Augmented Chord
       - Name: Augmented Triad First Inversion
-        Notes: C F A
+        Notes: C E G#
         Description: First inversion of augmented triad
         AlternateNames:
-          - Augmented 6/4
+          - Augmented 6/3
       - Name: Augmented Triad Second Inversion
-        Notes: C Eb F#
+        Notes: C E G#
         Description: Second inversion of augmented triad
         AlternateNames:
           - Augmented 6/4
@@ -628,7 +630,7 @@
         Notes: C D Eb F# G A B
       - Name: Mixolydian b2
         Notes: C Db E F G A Bb
-      - Name: Lydian Augmented #2
+      - Name: 'Lydian Augmented #2'
         Notes: C D# E F# G# A B
       - Name: Locrian bb7
         Notes: C Db Eb F Gb Ab Bbb
@@ -636,7 +638,7 @@
     Modes:
       - Name: Double Harmonic (Byzantine)
         Notes: C Db E F G Ab B
-      - Name: Lydian #2 #6
+      - Name: 'Lydian #2 #6'
         Notes: C D# E F# G A# B
       - Name: Ultraphrygian
         Notes: C Db Eb Fb G Ab Bbb
@@ -652,7 +654,7 @@
         AlternateNames:
           - Persian
           - Arabic
-      - Name: Ionian Augmented #2
+      - Name: 'Ionian Augmented #2'
         Notes: C D# E F G# A B
       - Name: Locrian bb3 bb7
         Notes: C Db Ebb F Gb Ab Bbb
@@ -660,15 +662,15 @@
     Modes:
       - Name: Neapolitan Minor
         Notes: C Db Eb F G Ab B
-      - Name: Lydian #6
+      - Name: 'Lydian #6'
         Notes: C D E F# G A# B
       - Name: Mixolydian Augmented
         Notes: C D E F G# A Bb
-      - Name: Aeolian #4 (Lydian Diminished)
+      - Name: 'Aeolian #4 (Lydian Diminished)'
         Notes: C D Eb F# G Ab Bb
       - Name: Locrian n3
         Notes: C Db E F Gb Ab Bb
-      - Name: Ionian #2
+      - Name: 'Ionian #2'
         Notes: C D# E F G A B
       - Name: Ultralocrian bb3
         Notes: C Db Ebb Fb Gb Ab Bbb
@@ -676,9 +678,9 @@
     Modes:
       - Name: Neapolitan Major
         Notes: C Db Eb F G A B
-      - Name: Lydian Augmented #6
+      - Name: 'Lydian Augmented #6'
         Notes: C D E F# G# A# B
-      - Name: Lydian Dominant #5
+      - Name: 'Lydian Dominant #5'
         Notes: C D E F# G# A Bb
       - Name: Lydian Minor (Lydian b6 b7)
         Notes: C D E F# G Ab Bb
