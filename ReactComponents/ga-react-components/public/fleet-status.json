@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "850a5d64f4d7a913a3f260ab7cb35f8918504d93",
-    "generatedAt": "2026-10-04T03:40:22.435725+00:00",
+    "commitSha": "8c06d761c99807d94f0069c3bccde1a2fa62a30a",
+    "generatedAt": "2026-10-04T11:29:31.718760+00:00",
     "repoCount": 5,
-    "totalPRs": 24
+    "totalPRs": 28
   },
   "repos": [
     {
@@ -113,8 +113,44 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 5,
+      "prCount": 8,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-04T07:07:35Z",
+          "failingChecks": 0,
+          "headRef": "fix/music-theory-names",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 810,
+          "title": "fix(domain): tritone scale notes, diminished mode names, equal divisions",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/810"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-04T06:32:26Z",
+          "failingChecks": 0,
+          "headRef": "fix/797-yaml-knowledge-files",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 808,
+          "title": "fix(config): load the three music-knowledge YAML files (#797)",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/808"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-04T03:41:20Z",
+          "failingChecks": 0,
+          "headRef": "fix/chatbot-no-invented-frets",
+          "isDraft": false,
+          "mergeable": "UNKNOWN",
+          "number": 807,
+          "title": "fix(chatbot): stop ungrounded chat prompts from inviting invented frets",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/807"
+        },
         {
           "ageDays": 3,
           "author": "spareilleux",
@@ -122,7 +158,7 @@
           "failingChecks": 0,
           "headRef": "fix/771-key-identification",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 780,
           "title": "fix(keys): read the progression as written \u2014 sharps before a space, \u266d/\u266f, \u00f8/\u00b0/m7b5, \u0394, slash chords and repeats (#771)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/780"
@@ -134,7 +170,7 @@
           "failingChecks": 0,
           "headRef": "fix/769-relative-keys",
           "isDraft": false,
-          "mergeable": "CONFLICTING",
+          "mergeable": "UNKNOWN",
           "number": 779,
           "title": "fix(skills): name the relative key by key signature, and theoretical keys past seven accidentals (#769)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/779"
@@ -146,7 +182,7 @@
           "failingChecks": 0,
           "headRef": "fix/760-sse-error-event",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 766,
           "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
@@ -158,7 +194,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 738,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ga/pull/738"
@@ -170,7 +206,7 @@
           "failingChecks": 2,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
@@ -270,14 +306,14 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-10-04T01:41:53Z",
+          "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 0,
-          "headRef": "feat/evolve-on-claude-code",
+          "headRef": "feat/evolve-api-teacher",
           "isDraft": false,
           "mergeable": "MERGEABLE",
-          "number": 379,
-          "title": "feat: run evolve on Claude Code with --model claude:<model>",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/379"
+          "number": 381,
+          "title": "feat: let evolve's teacher run on a paid API with openai:, gemini: or anthropic:",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
           "ageDays": 5,
@@ -286,19 +322,19 @@
           "failingChecks": 1,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -310,7 +346,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
@@ -331,8 +367,20 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 10,
+      "prCount": 11,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-04T06:04:53Z",
+          "failingChecks": 0,
+          "headRef": "codex/streeling-mus014",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 1185,
+          "title": "feat(streeling): MUS-014 inversions and the bass line (EN/FR/ES)",
+          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1185"
+        },
         {
           "ageDays": 3,
           "author": "spareilleux",
