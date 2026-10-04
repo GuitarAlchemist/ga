@@ -161,6 +161,69 @@ public class JevRoutingShadowTests
         Assert.That(handler.Calls, Is.Zero);
     }
 
+    [TestCase("theory-qa")]
+    [TestCase("probe-reddit-sim")]
+    public async Task EvalOrProbeTraffic_IsSkippedWithoutACallOrCost(string source)
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+        var shadow = Shadow(handler);
+
+        var record = await shadow.ObserveAsync(
+            "what notes are in Cmaj7", JevRoutingShadow.Criteria(Intents), "chordinfo", 0.8, 0.1, source);
+
+        Assert.That(record.Status, Is.EqualTo("skipped_source"));
+        Assert.That(record.Detail, Is.EqualTo(source));
+        Assert.That(record.CostUsd, Is.Null);
+        Assert.That(handler.Calls, Is.Zero, "eval traffic must never reach api.typesafe.ai");
+        Assert.That(shadow.SpentUsd, Is.Zero, "eval traffic must not spend the real-traffic budget");
+        Assert.That(LogLines(), Has.Count.EqualTo(1), "the skip is still one logged outcome");
+    }
+
+    [TestCase(null)]
+    [TestCase("reddit")]
+    [TestCase("probe")]
+    [TestCase("theory-qa2")]
+    public async Task RealTraffic_IsStillClassified(string? source)
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+
+        var record = await Shadow(handler).ObserveAsync(
+            "what notes are in Cmaj7", JevRoutingShadow.Criteria(Intents), "chordinfo", 0.8, 0.1, source);
+
+        Assert.That(record.Status, Is.EqualTo("ok"));
+        Assert.That(handler.Calls, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task Observe_TakesTheTrafficSourceOfTheRequestItServes()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+        var shadow = Shadow(handler);
+
+        // run_eval.py sends source "theory-qa" from this machine; the chatbot host scopes it per request.
+        using (RoutingTelemetryLog.BeginTrafficSource("theory-qa", fromLocalHost: true))
+            shadow.Observe("what notes are in Cmaj7", Intents, "chordinfo", 0.8, 0.1);
+
+        await WaitUntil(() => LogLines().Count == 1);
+        Assert.That(JsonNode.Parse(LogLines()[0])!["status"]!.GetValue<string>(), Is.EqualTo("skipped_source"));
+        Assert.That(handler.Calls, Is.Zero);
+    }
+
+    // Codex review on #804: a public caller sending source "theory-qa" must not opt out of the shadow.
+    [Test]
+    public async Task Observe_ClassifiesASyntheticTagFromAPublicCaller()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(Json(Answer("chordinfo"))));
+        var shadow = Shadow(handler);
+
+        using (RoutingTelemetryLog.BeginTrafficSource("theory-qa", fromLocalHost: false))
+            shadow.Observe("what notes are in Cmaj7", Intents, "chordinfo", 0.8, 0.1);
+
+        await WaitUntil(() => handler.Calls == 1);
+        await WaitUntil(() => LogLines().Count == 1);
+        Assert.That(JsonNode.Parse(LogLines()[0])!["status"]!.GetValue<string>(), Is.EqualTo("ok"));
+    }
+
     [Test]
     public async Task Observe_ReturnsBeforeTheCall_AndCapsCallsInFlight()
     {
@@ -192,8 +255,17 @@ public class JevRoutingShadowTests
 
     private List<string> LogLines() =>
         Directory.Exists(_dir)
-            ? [.. Directory.EnumerateFiles(_dir, "*.jsonl").SelectMany(File.ReadAllLines)]
+            ? [.. Directory.EnumerateFiles(_dir, "*.jsonl").SelectMany(CompleteLines)]
             : [];
+
+    // The shadow appends from a background task: File.ReadAllLines would refuse to share the file
+    // with that writer (or make its append fail). Read shared, keeping only finished lines.
+    private static string[] CompleteLines(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd().Split('\n')[..^1];
+    }
 
     private static async Task WaitUntil(Func<bool> condition)
     {

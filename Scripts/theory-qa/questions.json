@@ -1,0 +1,537 @@
+{
+  "schema": "theory-qa-questions/v1",
+  "grading": "Answers are normalized first (♭->b, ♯->#, 'B flat'->'Bb', unicode dashes->'-', superscript digits->digits, markdown ** __ ` removed); then every must_match must hit and no must_not_match may hit. Matching is case-insensitive; (?-i:...) marks case-sensitive note names. Fail-closed: an empty answer, a request error or a regex error is a fail.",
+  "questions": [
+    {
+      "id": "chord-bbmaj7",
+      "q": "What notes are in a Bbmaj7 chord?",
+      "topic": "chord-spelling",
+      "expected": "Bb D F A",
+      "must_match": [
+        "(?-i:\\bBb(?![#b\\w]))",
+        "(?-i:\\bD(?![#b\\w]))",
+        "(?-i:\\bF(?![#b\\w]))",
+        "(?-i:\\bA(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "enharmonic\\w*[^.\\n]{0,20}(?-i:G#)",
+        "(?-i:\\bBb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bD(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bF(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bAb(?![#b\\w]))"
+      ],
+      "verified_by": "ga_chord_intervals Bbmaj7 = P1 M3 P5 M7; letter spelling derived",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "chord-fsharp-m7b5",
+      "q": "how do I spell F#m7b5?",
+      "topic": "chord-spelling",
+      "expected": "F# A C E",
+      "must_match": [
+        "(?-i:\\bF\\#(?![#b\\w]))",
+        "(?-i:\\bA(?![#b\\w]))",
+        "(?-i:\\bC(?![#b\\w]))",
+        "(?-i:\\bE(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bF\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bA(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC\\#(?![#b\\w]))",
+        "(?-i:\\bF\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bA(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bEb(?![#b\\w]))"
+      ],
+      "verified_by": "derived (ga_chord_intervals F#m7b5 returns P1 m3 P5 m7 and drops the b5: GA tool bug)"
+    },
+    {
+      "id": "chord-db7",
+      "q": "Spell a Db7 chord for me",
+      "topic": "chord-spelling",
+      "expected": "Db F Ab Cb (Cb is the correct 7th; B tolerated by the regex, flag manually)",
+      "must_match": [
+        "(?-i:\\bDb(?![#b\\w]))",
+        "(?-i:\\bF(?![#b\\w]))",
+        "(?-i:\\bAb(?![#b\\w]))",
+        "(?-i:\\bCb(?![#b\\w])|\\bB(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bDb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bF(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bAb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC(?![#b\\w]))",
+        "(?-i:\\bDb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bF(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bA(?![#b\\w]))"
+      ],
+      "verified_by": "ga_chord_intervals Db7 = P1 M3 P5 m7; letter spelling derived"
+    },
+    {
+      "id": "chord-ebm9",
+      "q": "What notes are in Ebm9?",
+      "topic": "chord-spelling",
+      "expected": "Eb Gb Bb Db F (F#/C# tolerated by the regex, flag manually)",
+      "must_match": [
+        "(?-i:\\bEb(?![#b\\w]))",
+        "(?-i:\\bGb(?![#b\\w])|\\bF\\#(?![#b\\w]))",
+        "(?-i:\\bBb(?![#b\\w]))",
+        "(?-i:\\bDb(?![#b\\w])|\\bC\\#(?![#b\\w]))",
+        "(?-i:\\bF(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bEb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bBb(?![#b\\w]))",
+        "(?-i:\\bEb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bGb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bBb(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bD(?![#b\\w]))"
+      ],
+      "verified_by": "derived (ga_chord_intervals Ebm9 returns P1 m3 P5 M9 and drops the m7: GA tool bug)"
+    },
+    {
+      "id": "chord-csharp-dim7",
+      "q": "what notes are in a C#dim7 chord",
+      "topic": "chord-spelling",
+      "expected": "C# E G Bb (Bb is the correct d7; A# tolerated by the regex, flag manually)",
+      "must_match": [
+        "(?-i:\\bC\\#(?![#b\\w]))",
+        "(?-i:\\bE(?![#b\\w]))",
+        "(?-i:\\bG(?![#b\\w]))",
+        "(?-i:\\bBb(?![#b\\w])|\\bA\\#(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bC\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bE(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bB(?![#b\\w]))",
+        "(?-i:\\bC\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bE(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG\\#(?![#b\\w]))"
+      ],
+      "verified_by": "derived (ga_chord_intervals C#dim7 returns P1 m3 TT m7; a dim7 has a d7: GA tool bug)"
+    },
+    {
+      "id": "interval-c-ab",
+      "q": "What is the interval between C and A flat?",
+      "topic": "intervals",
+      "expected": "minor sixth (8 semitones)",
+      "must_match": [
+        "minor\\s*(?:6|6th|sixth)\\b|\\bm6\\b"
+      ],
+      "must_not_match": [],
+      "verified_by": "derived: 8 semitones, letter distance C..A = 6th",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "interval-b-f",
+      "q": "what interval is B up to F?",
+      "topic": "intervals",
+      "expected": "diminished fifth (tritone, 6 semitones)",
+      "must_match": [
+        "diminished\\s*(?:5|5th|fifth)\\b|\\bd5\\b|\\btritone\\b"
+      ],
+      "must_not_match": [
+        "(?-i:\\bF\\b) is a raised (?:fourth|4th)"
+      ],
+      "verified_by": "derived: 6 semitones, letter distance B..F = 5th"
+    },
+    {
+      "id": "key-a-major-sharps",
+      "q": "How many sharps are in the key of A major?",
+      "topic": "keys",
+      "expected": "3: F# C# G#",
+      "must_match": [
+        "\\b(?:3|three)\\b",
+        "(?-i:\\bF\\#(?![#b\\w]))",
+        "(?-i:\\bC\\#(?![#b\\w]))",
+        "(?-i:\\bG\\#(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "≡\\s*(?-i:C#)\\s*major\\)\\s*\\|\\s*(?-i:Cb)\\s*major"
+      ],
+      "verified_by": "ga get_scale_notes A major = A B C# D E F# G#",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "key-relative-minor-e",
+      "q": "What is the relative minor of E major?",
+      "topic": "keys",
+      "expected": "C# minor",
+      "must_match": [
+        "(?-i:C#)\\s*(?:m\\b|min\\b|minor)"
+      ],
+      "must_not_match": [],
+      "verified_by": "ga get_scale_notes E major (6th degree C#) and C# minor share one pitch set",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "key-relative-major-gm",
+      "q": "whats the relative major of G minor",
+      "topic": "keys",
+      "expected": "Bb major",
+      "must_match": [
+        "(?-i:\\bBb)\\s*(?:major|maj\\b|M\\b)"
+      ],
+      "must_not_match": [
+        "(?-i:\\bA#)\\s*(?:major|maj\\b)"
+      ],
+      "verified_by": "derived: b3 of G minor = Bb (ga get_scale_notes G minor has the right pitch classes but spells them A#/D#: GA tool spelling bug)"
+    },
+    {
+      "id": "key-four-flats",
+      "q": "which major key has 4 flats?",
+      "topic": "keys",
+      "expected": "Ab major (Bb Eb Ab Db)",
+      "must_match": [
+        "(?-i:\\bAb(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bG#)\\s*major",
+        "(?-i:\\bEb)\\s*major[^.\\n]{0,40}\\b(?:4|four)\\s+flats"
+      ],
+      "verified_by": "derived: flat order Bb Eb Ab Db; 4 flats = Ab major"
+    },
+    {
+      "id": "diatonic-g-major",
+      "q": "What chords are in the key of G major?",
+      "topic": "diatonic-chords",
+      "expected": "G Am Bm C D Em F#dim",
+      "must_match": [
+        "(?-i:\\bAm(?![a-z])|\\bA\\s?minor\\b|\\bA\\s?m\\b)",
+        "(?-i:\\bBm(?![a-z])|\\bB\\s?minor\\b|\\bB\\s?m\\b)",
+        "(?-i:\\bEm(?![a-z])|\\bE\\s?minor\\b|\\bE\\s?m\\b)",
+        "(?-i:F#\\s*(?:dim|°|o\\b|diminished|m7b5|ø))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bF\\s*(?:dim\\b|°|maj\\b|major\\b))",
+        "(?-i:\\bDm(?![a-z])|\\bD\\s?minor\\b)",
+        "(?-i:\\bCm(?![a-z])|\\bC\\s?minor\\b)"
+      ],
+      "verified_by": "ga get_scale_notes G major = G A B C D E F#; triad qualities derived",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "diatonic-d-minor",
+      "q": "what are the diatonic chords in D minor?",
+      "topic": "diatonic-chords",
+      "expected": "Dm Edim F Gm Am Bb C (harmonic-minor A/A7 as V is also correct)",
+      "must_match": [
+        "(?-i:\\bBb(?![#b\\w]))",
+        "(?-i:\\bE\\s?(?:dim|°|o\\b|diminished|m7b5|ø))",
+        "(?-i:\\bGm(?![a-z])|\\bG\\s?minor\\b|\\bG\\s?m\\b)"
+      ],
+      "must_not_match": [
+        "(?-i:\\bA\\#(?![#b\\w]))",
+        "(?-i:\\bG\\W+B\\W+Db\\b)"
+      ],
+      "verified_by": "derived: D natural minor = D E F G A Bb C"
+    },
+    {
+      "id": "scale-a-minor-pentatonic",
+      "q": "What notes are in the A minor pentatonic scale?",
+      "topic": "scales-modes",
+      "expected": "A C D E G",
+      "must_match": [
+        "(?-i:\\bA(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bD(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bE(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG(?![#b\\w]))"
+      ],
+      "must_not_match": [],
+      "verified_by": "derived: minor pentatonic = 1 b3 4 5 b7",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "mode-dorian-vs-aeolian",
+      "q": "What is the difference between the Dorian and Aeolian modes?",
+      "topic": "scales-modes",
+      "expected": "Dorian has a natural (major) 6th; Aeolian has b6",
+      "must_match": [
+        "dorian",
+        "aeolian",
+        "(?:raised|natural|major)\\s*(?:6|6th|sixth)\\b|\\b(?:6|6th|sixth)\\s*(?:degree\\s*)?(?:is\\s*)?(?:raised|natural|major)|\\b6\\b[^\\n]{0,80}\\bb6\\b|\\bb6\\b[^\\n]{0,80}\\b6\\b"
+      ],
+      "must_not_match": [
+        "dorian\\s*\\(b2",
+        "\\b1\\W+b2\\W+b?3\\W+4\\W+5\\W+b6\\W+b7\\b",
+        "tonic\\s*\\|\\s*(?:m\\s?maj\\s?7|minor[\\s-]?major)",
+        "dorian[^.\\n]{0,40}\\b(?:minor\\s?7|m7)\\s?b9"
+      ],
+      "verified_by": "ga get_mode_info Dorian = C D Eb F G A Bb; Aeolian = C D Eb F G Ab Bb",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "scale-a-harmonic-minor",
+      "q": "notes in A harmonic minor?",
+      "topic": "scales-modes",
+      "expected": "A B C D E F G#",
+      "must_match": [
+        "(?-i:\\bA(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bB(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bD(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bE(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bF(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG\\#(?![#b\\w]))|(?m-i:^\\W*A(?![#b\\w])[^\\n]*\\n\\W*B(?![#b\\w])[^\\n]*\\n\\W*C(?![#b\\w])[^\\n]*\\n\\W*D(?![#b\\w])[^\\n]*\\n\\W*E(?![#b\\w])[^\\n]*\\n\\W*F(?![#b\\w])[^\\n]*\\n\\W*G\\#(?![#b\\w]))"
+      ],
+      "must_not_match": [],
+      "verified_by": "ga get_scale_notes A minor = A B C D E F G, plus raised 7th (derived)"
+    },
+    {
+      "id": "scale-c-blues",
+      "q": "What notes are in the C blues scale?",
+      "topic": "scales-modes",
+      "expected": "C Eb F Gb(F#) G Bb",
+      "must_match": [
+        "(?-i:\\bEb(?![#b\\w])|\\bD\\#(?![#b\\w]))",
+        "(?-i:\\bGb(?![#b\\w])|\\bF\\#(?![#b\\w]))",
+        "(?-i:\\bBb(?![#b\\w])|\\bA\\#(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?:½|1/2|half)[\\s-]?(?:tone|step)?\\W+whole\\W+half\\W+half\\W+whole\\W+whole"
+      ],
+      "verified_by": "derived: blues = 1 b3 4 b5 5 b7"
+    },
+    {
+      "id": "scale-melodic-minor-formula",
+      "q": "What's the formula for the melodic minor scale?",
+      "topic": "scales-modes",
+      "expected": "ascending 1 2 b3 4 5 6 7 (natural minor with raised 6th and 7th)",
+      "must_match": [
+        "\\b1\\W+2\\W+b3\\W+4\\W+5\\W+6\\W+7\\b|rais\\w*\\s+(?:both\\s+)?(?:the\\s+)?(?:6th|6|sixth)(?:\\s+degree)?\\s+and\\s+(?:(?:a|the)\\s+)?(?:rais\\w*\\s+)?(?:the\\s+)?(?:7th|7|seventh)|(?-i:\\bW\\W+H\\W+W\\W+W\\W+W\\W+W\\W+H\\b)|\\bwhole\\W+half\\W+whole\\W+whole\\W+whole\\W+whole\\W+half\\b"
+      ],
+      "must_not_match": [],
+      "verified_by": "derived"
+    },
+    {
+      "id": "mode-e-mixolydian",
+      "q": "what notes are in E mixolydian",
+      "topic": "scales-modes",
+      "expected": "E F# G# A B C# D",
+      "must_match": [
+        "(?-i:\\bE(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bF\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bG\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bA(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bB(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bC\\#(?![#b\\w])(?:\\W|\\([^)\\n]{0,24}\\)|\\band\\b)+\\bD(?![#b\\w]))"
+      ],
+      "must_not_match": [],
+      "verified_by": "ga get_mode_info Mixolydian = C D E F G A Bb, transposed to E (derived)"
+    },
+    {
+      "id": "scale-harmonic-minor-why",
+      "q": "Why is the harmonic minor scale called harmonic?",
+      "topic": "scales-modes",
+      "expected": "raised 7th gives a leading tone, so a major V / V7 in minor",
+      "must_match": [
+        "leading[\\s-]?tone|raised\\s*(?:the\\s*)?(?:7|7th|seventh)|(?:7|7th|seventh)\\s*(?:degree\\s*)?(?:is\\s*)?raised",
+        "(?-i:\\bV7?\\b)|dominant"
+      ],
+      "must_not_match": [
+        "(?-i:\\bA\\s*(?:->|→)\\s*A#)|leading[\\s-]?tone\\s*\\((?-i:A#)\\)"
+      ],
+      "verified_by": "derived",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "harmony-v7-resolve",
+      "q": "Why does a dominant seventh chord want to resolve?",
+      "topic": "functional-harmony",
+      "expected": "tritone between 3rd and b7; 3rd (leading tone) up to the tonic root; 7th down to the 3rd of I",
+      "must_match": [
+        "tritone|leading[\\s-]?tone"
+      ],
+      "must_not_match": [
+        "\\bb3 of (?-i:V)",
+        "leading[\\s-]?tone\\)?\\s*(?:→|->|-|–|:|to|resolves to|moves to|goes to|resolves (?:up|down) to|moves (?:up|down) to)\\s*(?:the\\s+)?(?:3rd|third)\\s+of",
+        "(?:7th|seventh|b7)\\)?\\s*(?:→|->|-|–|:|to|resolves to|moves to|goes to|resolves (?:up|down) to|moves (?:up|down) to)\\s*(?:the\\s+)?(?:5th|fifth)\\s+of\\s+(?:(?-i:I)\\b|the tonic)",
+        "\\b(?:rises?|moves? up|goes up)\\s+(?:by\\s+)?a\\s+half[\\s-]?step\\s+to\\s+the\\s+tonic'?s\\s+(?:3rd|third)",
+        "tonic'?s (?:third|3rd) and (?:fifth|5th),? respectively",
+        "(?:seventh|7th)\\s*(?:\\([^)]{0,6}\\)\\s*)?down two frets",
+        "(?:b7|7th|seventh)[^.\\n|]{0,40}\\bdown\\b[^.\\n|]{0,30}\\bto (?:the )?tonic'?s (?:5th|fifth)",
+        "half[\\s-]?step above the tonic'?s (?:5th|fifth)",
+        "half[\\s-]?step below the tonic'?s (?:3rd|third)",
+        "resolves to (?:the )?(?:3rd|third) and (?:5th|fifth) of (?-i:I)\\b"
+      ],
+      "verified_by": "derived: G7 = G B D F; B->C, F->E",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "harmony-tritone-sub",
+      "q": "What is a tritone substitution?",
+      "topic": "functional-harmony",
+      "expected": "V7 replaced by the dominant 7 a tritone away (bII7); they share the 3rd/7th tritone, swapped",
+      "must_match": [
+        "tritone",
+        "(?-i:\\bbII7?\\b)|\\bb2\\b|flat(?:ted)?\\s*(?:ii|two|2|2nd|second)\\b|(?-i:\\bDb7\\b)|a tritone (?:away|above|below|from)"
+      ],
+      "must_not_match": [
+        "(?-i:\\bG7\\b)\\s*(?:→|->|-|:)\\s*(?-i:\\bBb\\b)\\s*\\(\\s*b?7",
+        "(?-i:\\bDb7\\b)\\s*(?:→|->|-|:)\\s*(?-i:\\bGb\\b)\\s*\\(\\s*b?7",
+        "root moves (?:down|up) a (?:diminished fifth|tritone)\\s*\\(or (?:up|down) a perfect (?:fourth|4th)\\)",
+        "(?-i:\\bB\\b)\\s*\\(enharmonically (?-i:C#)\\)",
+        "(?-i:Cb)\\s*\\((?-i:B)\\)\\s*a half[\\s-]?step|chromatic\\s*\\((?-i:G)\\s*(?:->|→)\\s*(?-i:Db)\\)",
+        "slide it a half[\\s-]?step[^.\\n]{0,40}preserving the tension"
+      ],
+      "verified_by": "derived: G7 = G B D F, Db7 = Db F Ab Cb; shared tritone B/Cb-F",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "harmony-secondary-dominant",
+      "q": "what's the secondary dominant of the V chord in C major?",
+      "topic": "functional-harmony",
+      "expected": "D7 (V/V) = D F# A C",
+      "must_match": [
+        "(?-i:\\bD7\\b|\\bD\\s*(?:major|dom))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bD-7\\b)"
+      ],
+      "verified_by": "derived: V of C = G; dominant of G = D7"
+    },
+    {
+      "id": "harmony-neapolitan",
+      "q": "What is a Neapolitan chord?",
+      "topic": "functional-harmony",
+      "expected": "major triad on b2 (bII), usually 1st inversion (N6), predominant leading to V",
+      "must_match": [
+        "(?-i:\\bbII\\b|\\bbII6\\b|\\bN6?\\b)|\\bb2\\b|flat(?:ted)?\\s*(?:ii|two|2|2nd|second|supertonic)\\b|lowered\\s*(?:2|2nd|second|supertonic)\\b",
+        "first inversion|1st inversion|(?-i:\\bN6\\b|bII6)"
+      ],
+      "must_not_match": [
+        "phrygian\\s+half[\\s-]?cadence",
+        "borrowed from the parallel major",
+        "\\{\\s*1\\s*,\\s*4\\s*,\\s*8\\s*\\}",
+        "(?-i:\\bN66\\b)",
+        "(?-i:bII)\\s*-\\s*(?-i:bVI)\\s*-\\s*(?-i:bVII)",
+        "scale degree (?-i:bIII)|bass\\s*\\((?-i:bIII)\\)",
+        "half[\\s-]?step motion from the (?-i:bII) bass",
+        "bass note[^.\\n]{0,40}down a half[\\s-]?step to the tonic"
+      ],
+      "verified_by": "derived (standard definition)",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "harmony-augmented-sixth",
+      "q": "What is an augmented sixth chord and how does it resolve?",
+      "topic": "functional-harmony",
+      "expected": "predominant built on b6 with #4 (Italian/French/German); the +6 resolves outward to an octave on 5 (V)",
+      "must_match": [
+        "italian|french|german",
+        "(?-i:\\bV\\b)|dominant"
+      ],
+      "must_not_match": [
+        "resolv\\w*\\s+inward",
+        "(?-i:\\bAb\\W+Bb\\W+C\\W+F#)",
+        "parallel octaves in the german",
+        "\\(b6\\)[^.\\n]{0,15}\\b(?:up|rises?|moves up)\\b|\\(#4\\)[^.\\n]{0,15}\\b(?:down|falls?|moves down)\\b",
+        "(?-i:\\bAb\\W+C\\W+(?:Eb\\W+)?D#)"
+      ],
+      "verified_by": "derived (standard definition)"
+    },
+    {
+      "id": "harmony-ii-v-i-bb",
+      "q": "give me a ii V I in Bb",
+      "topic": "functional-harmony",
+      "expected": "Cm7 F7 Bbmaj7",
+      "must_match": [
+        "(?-i:\\bC\\s?m(?:in(?:or)?)?7?(?![a-z]))|(?-i:\\bC\\s?min)",
+        "(?-i:\\bF\\s?7\\b|\\bF\\s?(?:dom|major))",
+        "(?-i:\\bBb(?![#b\\w]))|(?-i:\\bBb(?:maj7|Δ|M7|maj))"
+      ],
+      "must_not_match": [
+        "(?-i:\\bA\\#(?![#b\\w]))"
+      ],
+      "verified_by": "derived: Bb major ii = Cm7, V = F7, I = Bbmaj7"
+    },
+    {
+      "id": "cadence-half-vs-plagal",
+      "q": "What makes a half cadence different from a plagal cadence?",
+      "topic": "cadences",
+      "expected": "half cadence ends on V; plagal is IV-I",
+      "must_match": [
+        "(?-i:\\bV\\b)|dominant",
+        "(?-i:\\bIV)\\s*(?:→|->|-|–|to)\\s*(?-i:I)\\b|subdominant\\s+(?:chord\\s+)?(?:to|→|->)\\s+(?:the\\s+)?tonic|\\bamen\\b"
+      ],
+      "must_not_match": [
+        "half cadence[^.\\n]{0,100}imperfect authentic|imperfect authentic[^.\\n]{0,80}final chord is not",
+        "(?:seventh|7th)\\s*\\(\\s*scale degree 2\\s*\\)",
+        "(?-i:\\bG\\W+B\\W+Db\\b)",
+        "half cadence variants?\\W+(?-i:V)\\W*64\\W*(?:-|→|->)\\W*(?-i:I)\\b",
+        "fifth of (?-i:V) \\(scale degree 5\\)",
+        "plagal[^.\\n]{0,40}ends on (?:the\\s+)?(?:subdominant|(?-i:IV)\\b)",
+        "half cadence[^.\\n]{0,40}\\((?-i:V)\\s*(?:->|→)\\s*(?-i:I)\\)"
+      ],
+      "verified_by": "derived (standard definition)",
+      "origin": "theory_quality.py"
+    },
+    {
+      "id": "cadence-deceptive",
+      "q": "what is a deceptive cadence",
+      "topic": "cadences",
+      "expected": "V -> vi (major key)",
+      "must_match": [
+        "(?-i:\\bV7?\\s*(?:→|->|-|–|to)\\s*(?:vi|VI|bVI)\\b)|five to six|dominant\\s+(?:chord\\s+)?(?:to|→|->|resolv\\w* to|moves to)\\s+(?:the\\s+)?(?:submediant|six)"
+      ],
+      "must_not_match": [
+        "leading[\\s-]?tone[^.\\n]{0,60}resolves down a half[\\s-]?step to the tonic",
+        "fifth of the (?-i:V) chord[^.\\n]{0,80}\\((?-i:G)\\s*(?:→|->)\\s*(?-i:A)\\b",
+        "(?:5th|fifth) of (?-i:V) becomes the root of (?-i:vi)",
+        "major (?:3rd|third) of the (?-i:vi)\\b"
+      ],
+      "verified_by": "derived (standard definition)"
+    },
+    {
+      "id": "voice-leading-g7-c",
+      "q": "In a G7 to C resolution, where should the notes B and F go?",
+      "topic": "voice-leading",
+      "expected": "B up to C; F down to E",
+      "must_match": [
+        "(?-i:\\bB\\b)[^\\n]{0,60}(?-i:\\bC\\b)",
+        "(?-i:\\bF\\b)[^\\n]{0,60}(?-i:\\bE\\b)"
+      ],
+      "must_not_match": [
+        "(?-i:\\bF\\b)\\s*(?:→|->|-|–|:|to|resolves to|moves to|goes to|resolves (?:up|down) to|moves (?:up|down) to)\\s*(?-i:G\\b|F#)",
+        "(?-i:\\bB\\b)\\s*(?:→|->|-|–|:|to|resolves to|moves to|goes to|resolves (?:up|down) to|moves (?:up|down) to)\\s*(?-i:A\\b)",
+        "(?-i:\\bB\\b)\\s*(?:→|->)\\s*(?-i:C#)"
+      ],
+      "verified_by": "derived: G7 = G B D F; B->C, F->E"
+    },
+    {
+      "id": "guitar-standard-tuning",
+      "q": "what are the open string notes in standard tuning?",
+      "topic": "guitar",
+      "expected": "E A D G B E (low to high)",
+      "must_match": [
+        "(?-i:\\bE\\d?\\b[\\s\\S]{0,40}?\\bA\\d?\\b[\\s\\S]{0,40}?\\bD\\d?\\b[\\s\\S]{0,40}?\\bG\\d?\\b[\\s\\S]{0,40}?\\bB\\d?\\b[\\s\\S]{0,40}?\\bE\\d?\\b|\\bE\\d?\\b[\\s\\S]{0,40}?\\bB\\d?\\b[\\s\\S]{0,40}?\\bG\\d?\\b[\\s\\S]{0,40}?\\bD\\d?\\b[\\s\\S]{0,40}?\\bA\\d?\\b[\\s\\S]{0,40}?\\bE\\d?\\b)"
+      ],
+      "must_not_match": [],
+      "verified_by": "ga get_tuning Guitar Standard = E2 A2 D3 G3 B3 E4"
+    },
+    {
+      "id": "guitar-low-e-fret-5",
+      "q": "what note is on the 5th fret of the low E string?",
+      "topic": "guitar",
+      "expected": "A",
+      "must_match": [
+        "(?-i:\\bA(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?:5th|fifth)\\s+fret[^.\\n]{0,40}\\b(?:is|=|gives(?: you)?)\\s+(?:an?\\s+)?(?-i:(?:G#|Ab|A#|Bb|B|G))(?![\\w#])"
+      ],
+      "verified_by": "derived from ga get_tuning (E2 + 5 semitones = A2)"
+    },
+    {
+      "id": "guitar-g-string-fret-7",
+      "q": "which note is at the 7th fret on the G string",
+      "topic": "guitar",
+      "expected": "D",
+      "must_match": [
+        "(?-i:\\bD(?![#b\\w]))"
+      ],
+      "must_not_match": [
+        "(?:7th|seventh)\\s+fret[^.\\n]{0,40}\\b(?:is|=|gives(?: you)?)\\s+(?:an?\\s+)?(?-i:(?:C#|Db|D#|Eb|C|E))(?![\\w#])",
+        "(?:fourth|4th) above the open (?-i:G)"
+      ],
+      "verified_by": "derived from ga get_tuning (G3 + 7 semitones = D4)"
+    },
+    {
+      "id": "guitar-caged",
+      "q": "what is the CAGED system?",
+      "topic": "guitar",
+      "expected": "five open-chord shapes (C A G E D) moved up the neck to play any chord/scale in five positions",
+      "must_match": [
+        "(?-i:C\\W*A\\W*G\\W*E\\W*D)",
+        "shape"
+      ],
+      "must_not_match": [
+        "\\b(?-i:D)[\\s-]?shape\\W+root on the (?:5th|fifth) string",
+        "half[\\s-]?step adds a flat",
+        "6th string for [^.\\n)]{0,12}(?-i:D)-?\\s?shapes?",
+        "3rd string, 3rd fret \\((?-i:C)\\)|6th string, open \\((?-i:G)\\)"
+      ],
+      "verified_by": "n/a (concept)"
+    },
+    {
+      "id": "guitar-c-barre-a-shape",
+      "q": "where do I play a C major barre chord using the A shape?",
+      "topic": "guitar",
+      "expected": "barre at the 3rd fret, root on the A string (x35553)",
+      "must_match": [
+        "(?:3rd|third)\\s+fret|x\\W?3\\W?5\\W?5\\W?5\\W?3"
+      ],
+      "must_not_match": [
+        "a[\\s-]?shape up two frets|4th fret on the (?-i:B) string",
+        "\\((?-i:E)\\)\\s*-\\s*4th string|2nd string, 6th fret",
+        "5th string, 5th fret \\(the (?-i:C)|3rd string, 5th fret \\(the (?-i:E)\\)"
+      ],
+      "verified_by": "derived from ga get_tuning (A2 + 3 semitones = C3)"
+    }
+  ]
+}

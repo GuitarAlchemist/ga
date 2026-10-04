@@ -45,6 +45,8 @@ public static class RoutingTelemetryLog
 
     private static readonly AsyncLocal<string?> _trafficSource = new();
 
+    private static readonly AsyncLocal<bool> _syntheticTraffic = new();
+
     /// <summary>
     ///     The traffic-source tag of the request being served (the page's <c>?ref=</c>,
     ///     e.g. <c>reddit</c>), or null. The HTTP host scopes it per request with
@@ -54,13 +56,24 @@ public static class RoutingTelemetryLog
     public static string? CurrentTrafficSource => _trafficSource.Value;
 
     /// <summary>
+    ///     True while serving the repo's own eval or probe run: a synthetic tag
+    ///     (<see cref="IsSyntheticTrafficSource"/>) on a request the host vouched for with
+    ///     <c>fromLocalHost</c>. The tag alone is client input, so it is never enough: a public
+    ///     caller sending <c>source: "theory-qa"</c> is still real traffic.
+    /// </summary>
+    public static bool IsSyntheticTraffic => _syntheticTraffic.Value;
+
+    /// <summary>
     ///     Sets <see cref="CurrentTrafficSource"/> to the normalized <paramref name="rawSource"/>
     ///     for the caller's async flow, and restores the previous value on dispose.
+    ///     <paramref name="fromLocalHost"/> is the host's own judgement that the request came
+    ///     straight from this machine; only then can the tag mark <see cref="IsSyntheticTraffic"/>.
     /// </summary>
-    public static IDisposable BeginTrafficSource(string? rawSource)
+    public static IDisposable BeginTrafficSource(string? rawSource, bool fromLocalHost = false)
     {
-        var previous = _trafficSource.Value;
+        var previous = (_trafficSource.Value, _syntheticTraffic.Value);
         _trafficSource.Value = NormalizeTrafficSource(rawSource);
+        _syntheticTraffic.Value = fromLocalHost && IsSyntheticTrafficSource(_trafficSource.Value);
         return new TrafficSourceScope(previous);
     }
 
@@ -79,9 +92,31 @@ public static class RoutingTelemetryLog
         return match.Success ? match.Value : null;
     }
 
-    private sealed class TrafficSourceScope(string? previous) : IDisposable
+    /// <summary>
+    ///     The one list of traffic-source tags that mark the repo's own eval and probe runs,
+    ///     never a real user: <c>theory-qa</c> (sent by <c>Scripts/theory-qa/run_eval.py</c>)
+    ///     and any tag starting with <see cref="SyntheticTrafficSourcePrefix"/>. On a local request
+    ///     (<see cref="IsSyntheticTraffic"/>), paid observers such as <see cref="JevRoutingShadow"/>
+    ///     skip them, so a QA run cannot spend a budget meant for real traffic, and
+    ///     <see cref="QueryEmbeddingLog"/> keeps them out of the real-query corpus.
+    /// </summary>
+    private static readonly HashSet<string> SyntheticTrafficSources = new(StringComparer.Ordinal) { "theory-qa" };
+
+    /// <summary>Prefix of ad-hoc probe tags (<c>probe-reddit-sim</c>, ...); see <see cref="IsSyntheticTrafficSource"/>.</summary>
+    public const string SyntheticTrafficSourcePrefix = "probe-";
+
+    /// <summary>
+    ///     True when the normalized <paramref name="trafficSource"/> (as held by
+    ///     <see cref="CurrentTrafficSource"/>) is an eval or probe tag rather than real traffic.
+    /// </summary>
+    public static bool IsSyntheticTrafficSource(string? trafficSource) =>
+        trafficSource is not null
+        && (SyntheticTrafficSources.Contains(trafficSource)
+            || trafficSource.StartsWith(SyntheticTrafficSourcePrefix, StringComparison.Ordinal));
+
+    private sealed class TrafficSourceScope((string? Source, bool Synthetic) previous) : IDisposable
     {
-        public void Dispose() => _trafficSource.Value = previous;
+        public void Dispose() => (_trafficSource.Value, _syntheticTraffic.Value) = previous;
     }
 
     /// <summary>

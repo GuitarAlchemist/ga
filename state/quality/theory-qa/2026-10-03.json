@@ -1,0 +1,526 @@
+{
+  "domain": "theory-qa",
+  "emitted_at": "2026-10-03T19:07:48Z",
+  "metric_name": "theory_answer_accuracy",
+  "metric_value": 0.5,
+  "oracle_status": "warn",
+  "summary": "17/34 answers T/P (0.50): T 17, P 0, U 0, D 0, F 17, C 0; regex gate 27/34; release 8605bbe6, gpt-oss:120b-cloud",
+  "problems": [
+    {
+      "code": "key-a-major-sharps",
+      "verdict": "F",
+      "shape": [
+        "wrong-skill",
+        "concept"
+      ],
+      "message": "Dumps the whole circle-of-fifths document instead of answering \"3 sharps: F# C# G#\". The document says \"5 (= C# major) | Cb major\"; Cb major is enharmonic to B major (position 5), C# major is enharmonic to Db (position 7)."
+    },
+    {
+      "code": "diatonic-d-minor",
+      "verdict": "F",
+      "shape": [
+        "tab"
+      ],
+      "message": "Triads are right; the voicings are not. Dm VexTab (1/6.1/5.3/4.2/3) = F Bb F A, not xx0231. \"E dim 7-10-11-9-8-7\" = B G C# E G B (C#m7b5/B); Edim is E G Bb. \"Bb Barre at 1 (1-3-3-3-1-1)\" = F C F Bb C F (Fsus4); Bb is x13331. F VexTab = F Bb F Bb C# F; Gm VexTab = G C G C D G (Gsus4); Am VexTab = A D A C# F. Only the C VexTab spells its chord."
+    },
+    {
+      "code": "scale-a-minor-pentatonic",
+      "verdict": "F",
+      "shape": [
+        "wrong-skill"
+      ],
+      "message": "Answers with the 7-note A natural minor (A B C D E F G); A minor pentatonic is A C D E G."
+    },
+    {
+      "code": "mode-dorian-vs-aeolian",
+      "verdict": "F",
+      "shape": [
+        "wrong-skill",
+        "incomplete"
+      ],
+      "message": "Describes only Aeolian (on C); no comparison. Dorian = 1 2 b3 4 5 6 b7: it differs from Aeolian only by the natural 6th."
+    },
+    {
+      "code": "scale-melodic-minor-formula",
+      "verdict": "F",
+      "shape": [
+        "tab",
+        "incomplete"
+      ],
+      "message": "Regex floor: no degree formula (1 2 b3 4 5 6 7, i.e. natural minor with raised 6th and 7th); the step pattern W-H-W-W-W-W-H is right. The \"A melodic minor\" tab plays D E F# A B C# E F# A B C# (no C, no G#: D major material, not A B C D E F# G#); it says it starts on the low E at fret 5 but starts on the A string; the VexTab is malformed."
+    },
+    {
+      "code": "mode-e-mixolydian",
+      "verdict": "F",
+      "shape": [
+        "wrong-skill"
+      ],
+      "message": "Gives C Mixolydian (C D E F G A Bb); E Mixolydian is E F# G# A B C# D."
+    },
+    {
+      "code": "scale-harmonic-minor-why",
+      "verdict": "F",
+      "shape": [
+        "spelling"
+      ],
+      "message": "\"raising the 7th a half-step (e.g., A -> A# in A natural minor)\": the 7th of A minor is G, raised to G# (the answer itself then gives V = E-G#-B). The rest of the explanation is right."
+    },
+    {
+      "code": "harmony-v7-resolve",
+      "verdict": "F",
+      "shape": [
+        "concept",
+        "tab"
+      ],
+      "message": "\"the 3rd and the 7th (e.g., B b in a G7)\": G7 has B natural; the tritone is B-F. \"the chord sits a half-step below the tonic's root ... (G -> Ab -> A -> C)\": the root falls a fifth G -> C. Table \"3rd (B) -> 3rd of I (E)\": B rises to C. \"7th (F) -> 5th of I (G) - down a step\": F falls to E. \"tritone (B-F) resolves to ... (E-G)\": it resolves to C-E. G7 VexTab = G A E G C E (comment 320001 is right, but says low E muted); C VexTab = A F A B plus an invalid 1/0; \"G7 shape at 3rd fret\" VexTab is at fret 1 = F Bb F B C. Regex passed: new phrasing."
+    },
+    {
+      "code": "harmony-tritone-sub",
+      "verdict": "F",
+      "shape": [
+        "tab"
+      ],
+      "message": "Theory is right (G7/Db7, shared B=Cb and F, Dm7-Db7-Cmaj7). \"Full-root Db7 x45464\" = Db G B F Ab: D string fret 5 is G, not a Db7 tone (Db7 = x46464). \"Rootless drop-2 9-8-10-9 on A D G B\" = F# Bb F Ab, not Db7; its claimed notes \"Db, Ab, C, F\" are Dbmaj7 (Db7 has Cb) and include the root of a \"rootless\" voicing."
+    },
+    {
+      "code": "harmony-secondary-dominant",
+      "verdict": "F",
+      "shape": [
+        "tab"
+      ],
+      "message": "V/V = D7 (D F# A C) is right. The \"open D7\" VexTab (0/4.2/3.1/2.0/1) = D A C E has no F#, the third; \"String 1 2nd fret = E\": high e fret 2 is F# (open D7 = xx0212). Also \"V-to-V resolution\" for V/V -> V."
+    },
+    {
+      "code": "harmony-neapolitan",
+      "verdict": "F",
+      "shape": [
+        "concept"
+      ],
+      "message": "\"called Neapolitan-6: the interval between the bass and the soprano is a sixth\": the 6 is the figured bass of first inversion. \"bass ... to the dominant root (F -> E)\" and \"falls a whole step\": in C the bass F rises a whole step to G. \"Db -> C# -> D\": bII falls a diminished third to the leading tone B (often via C over the cadential 6/4). \"Ab -> B up a half step\": Ab falls a half step to G (Ab-B is an augmented second)."
+    },
+    {
+      "code": "harmony-augmented-sixth",
+      "verdict": "F",
+      "shape": [
+        "tab",
+        "spelling"
+      ],
+      "message": "It/Fr/Ger spellings in C (Ab C F#, Ab C D F#, Ab C Eb F#) and the outward resolution are right. French D called \"b2\": it is scale degree 2. Shapes: Italian 4-x-1-2-1-1 = Ab Eb A C F; French 4-3-1-2-1-1 = Ab C Eb A C F (\"3rd-fret A string for the D\": A3 is C); German 4-2-1-2-1-1 = Ab B Eb A C F (\"2nd-fret A string (Eb)\": A2 is B). \"G7\" 320003 = G B D G B G, a G triad. \"top F# (1st-fret high e)\": e fret 1 is F. The VexTabs disagree with the ASCII and are also wrong."
+    },
+    {
+      "code": "harmony-ii-v-i-bb",
+      "verdict": "F",
+      "shape": [
+        "concept",
+        "tab"
+      ],
+      "message": "Chords are right (Cm7 x35343, F7 131211, Bbmaj7 x13231). Voice-leading tips are wrong: \"C down a half-step to B (the b7 of F7)\": the b7 of F7 is Eb, and C is a common tone. \"G (D string 5 -> 1) drops a perfect fourth\": G -> Eb is a major third. \"F (5 of F7)\": F is the root. \"C (1st string 1)\": e fret 1 is F. \"Eb (b7) moves down to A\": Eb falls to D, the 3rd of Bbmaj7. \"Open-position F7\" is a 1st-fret barre."
+    },
+    {
+      "code": "cadence-half-vs-plagal",
+      "verdict": "F",
+      "shape": [
+        "concept"
+      ],
+      "message": "\"a half cadence that begins on the tonic (I-V) is classified as an imperfect authentic cadence\": an IAC ends on I; I-V is a half cadence. \"the seventh resolves down a step (b7 -> 6)\": the 7th of V7 is scale degree 4 and falls to 3. Plagal \"soprano 2 -> 1\" and \"tenor stays on common tone 5\": IV is 4-6-1, the common tone is 1. \"bass moves stepwise from 4 to 1\": 4 -> 1 is a fourth. I listed as a pre-dominant."
+    },
+    {
+      "code": "cadence-deceptive",
+      "verdict": "F",
+      "shape": [
+        "concept",
+        "tab"
+      ],
+      "message": "Leading tone \"usually resolves downward ... B -> A\": in V-vi it normally rises B -> C (doubled third of vi). \"D -> C ... a half-step\": whole step. \"tritone (B-F) resolves to A-E\": to C-E. D chord \"x-0-2-3-2-0\" = A E Bb C# E (D = xx0232). \"3rd fret on the B string (B)\": it is D. \"Beethoven 5, 2nd movement (C minor)\": that movement is in Ab major."
+    },
+    {
+      "code": "voice-leading-g7-c",
+      "verdict": "F",
+      "shape": [
+        "tab"
+      ],
+      "message": "Prose is right (B up to C, F down to E). G7 VexTab (3/6.3/5.2/4.0/3) = G C E G, no B or F; its comment says A string fret 2 = A (B) and G string fret 1 = G (Ab). C VexTab (3/5.3/4.0/2) = C F B. \"B (2nd string, 2nd fret) -> C (2nd string, open)\": B string fret 2 is C# and open is B; the move is open B -> fret 1 C."
+    },
+    {
+      "code": "guitar-c-barre-a-shape",
+      "verdict": "F",
+      "shape": [
+        "wrong-skill"
+      ],
+      "message": "Voicing search with tags [the] returned ten Cadd9/D, Cadd9/E and Cadd9 shapes (labels correct, e.g. x-5-5-7-5-8 = D G D E C). It never answers: A-shape C barre = x-3-5-5-5-3 at the 3rd fret."
+    }
+  ],
+  "release": "8605bbe6",
+  "release_source": "caller (deploy lead); the status payload carries no release and .deploy/current was not read",
+  "model": "gpt-oss:120b-cloud",
+  "endpoint": "http://localhost:5252/api/chatbot/chat",
+  "source_tag": "theory-qa",
+  "window_utc": {
+    "start": "2026-10-03T18:57:34+00:00",
+    "end": "2026-10-03T19:01:41+00:00"
+  },
+  "regex_gate": {
+    "pass": 27,
+    "fail": 7,
+    "infra_errors": 0,
+    "regex_pass_but_judged_F": [
+      "cadence-deceptive",
+      "diatonic-d-minor",
+      "harmony-augmented-sixth",
+      "harmony-ii-v-i-bb",
+      "harmony-neapolitan",
+      "harmony-secondary-dominant",
+      "harmony-tritone-sub",
+      "harmony-v7-resolve",
+      "scale-harmonic-minor-why",
+      "voice-leading-g7-c"
+    ]
+  },
+  "latency_s": {
+    "n": 34,
+    "mean": 7.29,
+    "p50": 5.55,
+    "p90": 16.99,
+    "max": 33.01
+  },
+  "by_route": {
+    "fallback-direct": {
+      "n": 15,
+      "T": 6,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 9,
+      "C": 0,
+      "shapes": {
+        "tab": 8,
+        "incomplete": 1,
+        "spelling": 2,
+        "concept": 2
+      }
+    },
+    "skill.chordinfo": {
+      "n": 4,
+      "T": 4,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 0,
+      "C": 0,
+      "shapes": {}
+    },
+    "skill.circleoffifths": {
+      "n": 1,
+      "T": 0,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 1,
+      "C": 0,
+      "shapes": {
+        "wrong-skill": 1,
+        "concept": 1
+      }
+    },
+    "skill.interval": {
+      "n": 1,
+      "T": 1,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 0,
+      "C": 0,
+      "shapes": {}
+    },
+    "skill.modes": {
+      "n": 2,
+      "T": 0,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 2,
+      "C": 0,
+      "shapes": {
+        "wrong-skill": 2,
+        "incomplete": 1
+      }
+    },
+    "skill.relativekey": {
+      "n": 2,
+      "T": 2,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 0,
+      "C": 0,
+      "shapes": {}
+    },
+    "skill.scaleinfo": {
+      "n": 1,
+      "T": 0,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 1,
+      "C": 0,
+      "shapes": {
+        "wrong-skill": 1
+      }
+    },
+    "technique": {
+      "n": 1,
+      "T": 1,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 0,
+      "C": 0,
+      "shapes": {}
+    },
+    "theory": {
+      "n": 6,
+      "T": 3,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 3,
+      "C": 0,
+      "shapes": {
+        "concept": 3,
+        "tab": 1
+      }
+    },
+    "voicing": {
+      "n": 1,
+      "T": 0,
+      "P": 0,
+      "U": 0,
+      "D": 0,
+      "F": 1,
+      "C": 0,
+      "shapes": {
+        "wrong-skill": 1
+      }
+    }
+  },
+  "by_topic": {
+    "cadences": {
+      "n": 2,
+      "ok": 0,
+      "not_ok": 2
+    },
+    "chord-spelling": {
+      "n": 5,
+      "ok": 5,
+      "not_ok": 0
+    },
+    "diatonic-chords": {
+      "n": 2,
+      "ok": 1,
+      "not_ok": 1
+    },
+    "functional-harmony": {
+      "n": 6,
+      "ok": 0,
+      "not_ok": 6
+    },
+    "guitar": {
+      "n": 5,
+      "ok": 4,
+      "not_ok": 1
+    },
+    "intervals": {
+      "n": 2,
+      "ok": 2,
+      "not_ok": 0
+    },
+    "keys": {
+      "n": 4,
+      "ok": 3,
+      "not_ok": 1
+    },
+    "scales-modes": {
+      "n": 7,
+      "ok": 2,
+      "not_ok": 5
+    },
+    "voice-leading": {
+      "n": 1,
+      "ok": 0,
+      "not_ok": 1
+    }
+  },
+  "by_shape": {
+    "concept": 6,
+    "incomplete": 2,
+    "spelling": 2,
+    "tab": 9,
+    "wrong-skill": 5
+  },
+  "verdicts": {
+    "chord-bbmaj7": "T",
+    "chord-fsharp-m7b5": "T",
+    "chord-db7": "T",
+    "chord-ebm9": "T",
+    "chord-csharp-dim7": "T",
+    "interval-c-ab": "T",
+    "interval-b-f": "T",
+    "key-a-major-sharps": "F",
+    "key-relative-minor-e": "T",
+    "key-relative-major-gm": "T",
+    "key-four-flats": "T",
+    "diatonic-g-major": "T",
+    "diatonic-d-minor": "F",
+    "scale-a-minor-pentatonic": "F",
+    "mode-dorian-vs-aeolian": "F",
+    "scale-a-harmonic-minor": "T",
+    "scale-c-blues": "T",
+    "scale-melodic-minor-formula": "F",
+    "mode-e-mixolydian": "F",
+    "scale-harmonic-minor-why": "F",
+    "harmony-v7-resolve": "F",
+    "harmony-tritone-sub": "F",
+    "harmony-secondary-dominant": "F",
+    "harmony-neapolitan": "F",
+    "harmony-augmented-sixth": "F",
+    "harmony-ii-v-i-bb": "F",
+    "cadence-half-vs-plagal": "F",
+    "cadence-deceptive": "F",
+    "voice-leading-g7-c": "F",
+    "guitar-standard-tuning": "T",
+    "guitar-low-e-fret-5": "T",
+    "guitar-g-string-fret-7": "T",
+    "guitar-caged": "T",
+    "guitar-c-barre-a-shape": "F"
+  },
+  "tool_disagreements": [
+    {
+      "tool": "ga_chord_intervals",
+      "input": "F#m7b5",
+      "tool_said": "P1, m3, P5, m7",
+      "derivation": "F# A C E = P1 m3 d5 m7 (F#-C: 5 letters, 6 semitones)"
+    },
+    {
+      "tool": "ga_chord_intervals",
+      "input": "Ebm9",
+      "tool_said": "P1, m3, P5, M9",
+      "derivation": "Eb Gb Bb Db F = P1 m3 P5 m7 M9 (m7 dropped)"
+    },
+    {
+      "tool": "ga_chord_intervals",
+      "input": "C#dim7",
+      "tool_said": "P1, m3, TT, m7",
+      "derivation": "C# E G Bb = P1 m3 d5 d7 (C#-Bb: 7 letters, 9 semitones)"
+    },
+    {
+      "tool": "ga_diatonic_chords",
+      "input": "D minor",
+      "tool_said": "Dm, Edim, F, Gm, Am, A#, C",
+      "derivation": "D natural minor has Bb (D E F G A Bb C); the VI chord is Bb, not A#"
+    },
+    {
+      "tool": "get_scale_notes",
+      "input": "Ab major",
+      "tool_said": "Unknown root note 'Ab'. Use sharps",
+      "derivation": "Ab major = Ab Bb C Db Eb F G (4 flats); the tool rejects flat roots"
+    },
+    {
+      "tool": "get_key_signature_info",
+      "input": "A major",
+      "tool_said": "error",
+      "derivation": "A major: 3 sharps F# C# G#"
+    },
+    {
+      "tool": "get_relative_key",
+      "input": "E major",
+      "tool_said": "error",
+      "derivation": "E major -> C# minor (6th degree), 4 sharps"
+    }
+  ],
+  "tool_disagreements_note": "These disagreements came from the session's ga MCP server, started with `dotnet run --no-build` from a build months older than the deployed release. They describe that stale build, not current GA code: for at least the m7b5 intervals, current code is right. Kept as recorded; re-check each against a fresh build before filing it as a GA bug.",
+  "baseline": {
+    "kind": "dev baseline, same release, no redeploy in between",
+    "window_utc": {
+      "start": "2026-10-03T18:48:31Z",
+      "end": "2026-10-03T18:50:49Z"
+    },
+    "source": "scratchpad/stage4/theory-eval/baseline-manual.md + runs/baseline-regraded/summary.json",
+    "accuracy_T_or_P": 0.441,
+    "regex_gate_pass": 20,
+    "verdicts": {
+      "chord-bbmaj7": "F",
+      "chord-fsharp-m7b5": "T",
+      "chord-db7": "T",
+      "chord-ebm9": "T",
+      "chord-csharp-dim7": "T",
+      "interval-c-ab": "T",
+      "interval-b-f": "T",
+      "key-a-major-sharps": "F",
+      "key-relative-minor-e": "T",
+      "key-relative-major-gm": "T",
+      "key-four-flats": "T",
+      "diatonic-g-major": "F",
+      "diatonic-d-minor": "F",
+      "scale-a-minor-pentatonic": "F",
+      "mode-dorian-vs-aeolian": "F",
+      "scale-a-harmonic-minor": "F",
+      "scale-c-blues": "F",
+      "scale-melodic-minor-formula": "T",
+      "mode-e-mixolydian": "F",
+      "scale-harmonic-minor-why": "T",
+      "harmony-v7-resolve": "F",
+      "harmony-tritone-sub": "F",
+      "harmony-secondary-dominant": "P",
+      "harmony-neapolitan": "F",
+      "harmony-augmented-sixth": "F",
+      "harmony-ii-v-i-bb": "F",
+      "cadence-half-vs-plagal": "F",
+      "cadence-deceptive": "F",
+      "voice-leading-g7-c": "F",
+      "guitar-standard-tuning": "T",
+      "guitar-low-e-fret-5": "T",
+      "guitar-g-string-fret-7": "T",
+      "guitar-caged": "F",
+      "guitar-c-barre-a-shape": "F"
+    }
+  },
+  "comparison": {
+    "note": "Nothing was redeployed between the two runs: every change is run-to-run variance of the LLM routes.",
+    "fixes": [
+      "chord-bbmaj7",
+      "diatonic-g-major",
+      "scale-a-harmonic-minor",
+      "scale-c-blues",
+      "guitar-caged"
+    ],
+    "regressions": [
+      "scale-melodic-minor-formula",
+      "scale-harmonic-minor-why",
+      "harmony-secondary-dominant"
+    ],
+    "unchanged_F": [
+      "cadence-deceptive",
+      "cadence-half-vs-plagal",
+      "diatonic-d-minor",
+      "guitar-c-barre-a-shape",
+      "harmony-augmented-sixth",
+      "harmony-ii-v-i-bb",
+      "harmony-neapolitan",
+      "harmony-tritone-sub",
+      "harmony-v7-resolve",
+      "key-a-major-sharps",
+      "mode-dorian-vs-aeolian",
+      "mode-e-mixolydian",
+      "scale-a-minor-pentatonic",
+      "voice-leading-g7-c"
+    ],
+    "route_changes": {
+      "guitar-caged": {
+        "baseline": "theory",
+        "now": "technique"
+      }
+    }
+  },
+  "run_dir": "C:/Users/spare/AppData/Local/Temp/claude/C--Users-spare-source-repos-ix/16f62590-0d0a-4ded-9ff5-65b291b83d23/scratchpad/stage4/theory-qa-runs/20261003T185716Z",
+  "judge": "theory-qa agent (Claude), one sample per question; fret claims decoded with fretcheck.py in run_dir"
+}
