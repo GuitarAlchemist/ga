@@ -161,6 +161,8 @@ public class MusicalKnowledgeServiceTests
         Assert.That(leadTechniques, Is.Not.Empty, "Should find lead guitar techniques");
         Assert.That(GuitarTechniquesService.FindTechniqueByName("Legato Playing")?.Applications.Select(a => a.Name),
             Is.EqualTo(new[] { "Hammer-ons", "Pull-offs", "Slides", "Trills" }));
+        Assert.That(GuitarTechniquesService.FindTechniqueByName("Sweep Picking")?.PracticeSteps, Has.Count.EqualTo(4)
+            .And.Contains("Build speed gradually"), "The YAML's practice steps load into PracticeSteps");
         // Display technique details
         Console.WriteLine("=== Guitar Techniques ===");
         Console.WriteLine($"Total techniques loaded: {allTechniques.Count}");
