@@ -38,6 +38,10 @@ public sealed class IntervalSkill(ILogger<IntervalSkill> logger) : IOrchestrator
         "What's a perfect fifth?",
         "What is a major sixth?",
         "Define a minor third",
+        // Tritone anchor — added 2026-10-03 with FunctionalHarmonySkill, whose
+        // "What does tritone substitution mean?" example otherwise out-scored
+        // this skill on "what is a tritone" (in-6).
+        "Define a tritone",
         // "[interval name] up/above/below [note]" pattern.
         "Minor third up from D",
         "Perfect fourth above C",
