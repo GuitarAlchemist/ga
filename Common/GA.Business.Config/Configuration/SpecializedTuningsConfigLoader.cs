@@ -280,10 +280,8 @@ public static class SpecializedTuningsService
                 errors.Add($"Specialized tuning '{tuning.Name}' has no category");
             }
 
-            if (!tuning.Configuration.Any() && !tuning.PitchClasses.Any())
-            {
-                errors.Add($"Specialized tuning '{tuning.Name}' has no configuration or pitch classes");
-            }
+            // An entry without Configuration or PitchClasses is a family (Tenor, Microtonal, Studio Layering...),
+            // whose tunings sit in sub-lists that SpecializedTuningDefinition doesn't map: it stays valid.
         }
 
         return (errors.Count == 0, errors);

@@ -24,7 +24,7 @@ public class GuitarTechniqueDefinition
     public List<string> Songs { get; set; } = [];
     public List<string> Benefits { get; set; } = [];
     public List<string> Rules { get; set; } = [];
-    public Dictionary<string, object> Practice { get; set; } = [];
+    public List<string> Practice { get; set; } = [];
 }
 
 public class GuitarTechniqueExample
@@ -186,8 +186,7 @@ public static class GuitarTechniquesConfigLoader
                         Songs = ["N/A"],
                         Benefits = ["Speed", "Consistency"],
                         Rules = ["Relaxed grip"],
-                        Practice = new()
-                            { { "Minutes", 10 } }
+                        Practice = ["10 minutes"]
                     }
                 ]
             };
@@ -217,8 +216,7 @@ public static class GuitarTechniquesConfigLoader
                         Songs = ["N/A"],
                         Benefits = ["Speed", "Consistency"],
                         Rules = ["Relaxed grip"],
-                        Practice = new()
-                            { { "Minutes", 10 } }
+                        Practice = ["10 minutes"]
                     }
                 ]
             };
