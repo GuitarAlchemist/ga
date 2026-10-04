@@ -20,6 +20,7 @@ export type GodotInboundMessage =
   | { type: 'governance:select'; nodeId: string }
   | { type: 'governance:algedonic'; signal: unknown }
   | { type: 'governance:belief'; nodeId: string; state: string; confidence: number }
+  | { type: 'governance:render'; target: string; action: 'on' | 'off' | 'toggle' }
   | { type: 'demerzel:emotion'; emotion: string }
   | { type: 'demerzel:speaking'; speaking: boolean }
   | { type: 'demerzel:auto-cycle'; enabled: boolean };
@@ -30,6 +31,7 @@ export type GodotOutboundMessage =
   | { type: 'godot:node-clicked'; nodeId: string }
   | { type: 'godot:algedonic'; severity: string; description: string }
   | { type: 'godot:camera-changed'; position: { x: number; y: number; z: number } }
+  | { type: 'godot:render-applied'; target: string; action: string; applied: boolean; style: string; rings: number }
   | { type: 'demerzel:emotion-changed'; emotion: string };
 
 // ---------------------------------------------------------------------------
@@ -111,6 +113,9 @@ export const GodotScene: React.FC<GodotSceneProps> = ({
           break;
         case 'godot:node-clicked':
           onNodeClick?.(msg.nodeId);
+          break;
+        case 'godot:render-applied':
+          console.log(`[Godot] RENDER ${msg.target} ${msg.action}: applied=${msg.applied} style=${msg.style} rings=${msg.rings}`);
           break;
         default:
           break;
@@ -305,6 +310,15 @@ export function setDemerzelEmotion(emotion: string): void {
 export function setDemerzelSpeaking(speaking: boolean): void {
   const iframe = findGodotIframe();
   iframe?.contentWindow?.postMessage({ type: 'demerzel:speaking', speaking }, '*');
+}
+
+/** Forward an IXQL RENDER command to the Godot scene. False when no Godot iframe is open. */
+export function postGodotRender(target: string, action: 'on' | 'off' | 'toggle'): boolean {
+  const iframe = findGodotIframe();
+  if (!iframe?.contentWindow) return false;
+  const msg: GodotInboundMessage = { type: 'governance:render', target, action };
+  iframe.contentWindow.postMessage(msg, '*');
+  return true;
 }
 
 /** Enable/disable auto-cycling of Demerzel's emotions */
