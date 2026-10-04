@@ -23,6 +23,7 @@ public class KeySignatureAnswersTests
     [TestCase("how many sharps in d?", "**D major** has 2 sharps. The sharps are F#, C#. Its relative minor, B minor, shares this key signature.")]
     [TestCase("key signature for e", "**E major** has 4 sharps. The sharps are F#, C#, G#, D#. Its relative minor, C# minor, shares this key signature.")]
     [TestCase("how many flats in b flat?", "**Bb major** has 2 flats. The flats are Bb, Eb. Its relative minor, G minor, shares this key signature.")]
+    [TestCase("key signature for f#", "**F# major** has 6 sharps. The sharps are F#, C#, G#, D#, A#, E#. Its relative minor, D# minor, shares this key signature.")]
     public void KeyToSignature(string question, string expected) =>
         Assert.That(Answer(question), Is.EqualTo(expected));
 

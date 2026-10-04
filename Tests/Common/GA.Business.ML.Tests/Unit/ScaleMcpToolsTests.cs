@@ -15,6 +15,11 @@ public class ScaleMcpToolsTests
     [TestCase("A",  "minor",  new[] { "A", "B", "C", "D", "E", "F", "G" },              "no sharps or flats", "C major")]
     [TestCase("E",  "minor",  new[] { "E", "F#", "G", "A", "B", "C", "D" },             "1 sharp",            "G major")]
     [TestCase("F#", "minor",  new[] { "F#", "G#", "A", "B", "C#", "D", "E" },           "3 sharps",           "A major")]
+    // The relative key shares the key signature, not just the notes: F# major's is D# minor, not Eb minor.
+    [TestCase("F#", "major",  new[] { "F#", "G#", "A#", "B", "C#", "D#", "E#" },        "6 sharps",           "D# minor")]
+    [TestCase("C#", "major",  new[] { "C#", "D#", "E#", "F#", "G#", "A#", "B#" },       "7 sharps",           "A# minor")]
+    [TestCase("Gb", "major",  new[] { "Gb", "Ab", "Bb", "Cb", "Db", "Eb", "F" },        "6 flats",            "Eb minor")]
+    [TestCase("D#", "minor",  new[] { "D#", "E#", "F#", "G#", "A#", "B", "C#" },        "6 sharps",           "F# major")]
     public void GetKeyNotes_KnownKeys_ReturnsCorrectNotesAndSignature(
         string root, string mode, string[] expectedNotes,
         string expectedSignature, string expectedRelativeKey)
