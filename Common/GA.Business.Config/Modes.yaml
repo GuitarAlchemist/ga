@@ -199,7 +199,7 @@
         CompositionTips:
           - Best as passing/modal color rather than tonic home.
   - Name: Harmonic Minor Family
-    IntervalClassVector: <2 4 3 5 4 3>
+    IntervalClassVector: <3 3 5 4 4 2>
     Modes:
       - Name: Harmonic Minor
         Notes: C D Eb F G Ab B
@@ -240,13 +240,13 @@
         AlternateNames:
           - 'Lydian Augmented #2'
       - Name: Ultralocrian
-        Notes: C Db Eb Fb Gb Ab Bb
+        Notes: C Db Eb Fb Gb Ab Bbb
         Description: Seventh mode of harmonic minor
         AlternateNames:
           - Superlocrian bb7
           - Altered bb7
   - Name: Melodic Minor Family
-    IntervalClassVector: <2 4 5 3 6 2>
+    IntervalClassVector: <2 5 4 4 4 2>
     Modes:
       - Name: Melodic Minor
         Notes: C D Eb F G A B
@@ -290,7 +290,7 @@
           - Super Locrian
           - Diminished Whole Tone
   - Name: Major Pentatonic Family
-    IntervalClassVector: <0 3 2 2 2 1>
+    IntervalClassVector: <0 3 2 1 4 0>
     Modes:
       - Name: Major Pentatonic
         Notes: C D E G A
@@ -303,22 +303,22 @@
         AlternateNames:
           - Suspended Pentatonic
       - Name: Blues Minor
-        Notes: C Eb F G Bb
+        Notes: C Eb F Ab Bb
         Description: Third mode of major pentatonic
         AlternateNames:
-          - Minor Pentatonic
+          - Man Gong
       - Name: Blues Major
-        Notes: C E F A Bb
+        Notes: C D F G A
         Description: Fourth mode of major pentatonic
         AlternateNames:
           - Ritusen
       - Name: Minor Pentatonic
-        Notes: C D F G A
+        Notes: C Eb F G Bb
         Description: Fifth mode of major pentatonic
         AlternateNames:
-          - Man Gong
+          - Pentatonic Minor
   - Name: Whole Tone Family
-    IntervalClassVector: <0 6 0 0 6 0>
+    IntervalClassVector: <0 6 0 6 0 3>
     Modes:
       - Name: Whole Tone
         Notes: C D E F# G# Bb
@@ -326,7 +326,7 @@
         AlternateNames:
           - Whole Tone Scale
   - Name: Diminished Family
-    IntervalClassVector: <4 6 4 6 4 4>
+    IntervalClassVector: <4 4 8 4 4 4>
     Modes:
       - Name: Diminished (Half-Whole)
         Notes: C Db Eb E F# G A Bb
@@ -341,7 +341,7 @@
           - Whole-Half Diminished
           - Dominant Diminished
   - Name: Blues Scale Family
-    IntervalClassVector: <1 4 3 2 5 0>
+    IntervalClassVector: <2 3 3 2 4 1>
     Modes:
       - Name: Blues Scale
         Notes: C Eb F F# G Bb
@@ -349,7 +349,7 @@
         AlternateNames:
           - Blues Scale
   - Name: Chromatic Family
-    IntervalClassVector: <11 11 11 11 11 6>
+    IntervalClassVector: <12 12 12 12 12 6>
     Modes:
       - Name: Chromatic
         Notes: C C# D D# E F F# G G# A A# B
@@ -655,7 +655,7 @@
       - Name: Ionian Augmented #2
         Notes: C D# E F G# A B
       - Name: Locrian bb3 bb7
-        Notes: C Dbb Ebb F Gb Ab Bbb
+        Notes: C Db Ebb F Gb Ab Bbb
   - Name: Neapolitan Minor Family
     Modes:
       - Name: Neapolitan Minor
@@ -671,7 +671,7 @@
       - Name: Ionian #2
         Notes: C D# E F G A B
       - Name: Ultralocrian bb3
-        Notes: C Dbb Eb F Gb Ab Bbb
+        Notes: C Db Ebb Fb Gb Ab Bbb
   - Name: Neapolitan Major Family
     Modes:
       - Name: Neapolitan Major
@@ -680,14 +680,14 @@
         Notes: C D E F# G# A# B
       - Name: Lydian Dominant #5
         Notes: C D E F# G# A Bb
-      - Name: Lydian Minor (Lydian b3 b7)
-        Notes: C D Eb F# G A Bb
+      - Name: Lydian Minor (Lydian b6 b7)
+        Notes: C D E F# G Ab Bb
       - Name: Major Locrian
-        Notes: C D Eb F Gb Ab Bb
-      - Name: Altered Dominant n2 (Locrian n2 n7)
-        Notes: C D Eb F Gb Ab B
+        Notes: C D E F Gb Ab Bb
+      - Name: Altered Dominant n2 (Locrian n2 b4)
+        Notes: C D Eb Fb Gb Ab Bb
       - Name: Altered bb3
-        Notes: C Dbb Eb Fb Gb Ab Bb
+        Notes: C Db Ebb Fb Gb Ab Bb
   - Name: Dominant Bebop Family
     Modes:
       - Name: Dominant Bebop
@@ -701,11 +701,11 @@
       - Name: Dominant Bebop Mode 5
         Notes: C D Eb E F G A Bb
       - Name: Dominant Bebop Mode 6
-        Notes: C Db D Eb F G A Bb
+        Notes: C Db D Eb F G Ab Bb
       - Name: Dominant Bebop Mode 7
-        Notes: C C# D E F G A B
+        Notes: C C# D E F# G A B
       - Name: Dominant Bebop Mode 8
-        Notes: C C# D# E F# G# A# B
+        Notes: C Db Eb F Gb Ab Bb B
   - Name: Major Bebop Family
     Modes:
       - Name: Major Bebop
@@ -715,15 +715,15 @@
       - Name: Major Bebop Mode 3
         Notes: C Db Eb E F G Ab Bb
       - Name: Major Bebop Mode 4
-        Notes: C D Eb F G Ab A B
+        Notes: C D D# E F# G A B
       - Name: Major Bebop Mode 5
-        Notes: C Db Eb F Gb G Bb B
+        Notes: C C# D E F G A Bb
       - Name: Major Bebop Mode 6
-        Notes: C D E F F# A Bb B
+        Notes: C Db Eb E Gb Ab A B
       - Name: Major Bebop Mode 7
-        Notes: C D Eb E G Ab A Bb
+        Notes: C D Eb F G Ab Bb B
       - Name: Major Bebop Mode 8
-        Notes: C Db D F Gb G Ab B
+        Notes: C Db Eb F Gb Ab A Bb
   - Name: Prometheus Family
     Modes:
       - Name: Prometheus
@@ -733,11 +733,11 @@
       - Name: Prometheus Mode 3
         Notes: C D F Gb Ab Bb
       - Name: Prometheus Mode 4
-        Notes: C Eb E G A Bb
+        Notes: C Eb E Gb Ab Bb
       - Name: Prometheus Mode 5
-        Notes: C C# E F# G# A
+        Notes: C Db Eb F G A
       - Name: Prometheus Mode 6
-        Notes: C D# F G G# B
+        Notes: C D E F# G# B
   - Name: Enigmatic Family
     Modes:
       - Name: Enigmatic
@@ -745,31 +745,31 @@
       - Name: Enigmatic Mode 2
         Notes: C D# F G A Bb B
       - Name: Enigmatic Mode 3
-        Notes: C D E Gb G Ab Bb
+        Notes: C D E F# G Ab Bbb
       - Name: Enigmatic Mode 4
-        Notes: C D E F Gb Ab B
+        Notes: C D E F Gb Abb Bb
       - Name: Enigmatic Mode 5
-        Notes: C D Eb F G B Bb
+        Notes: C D Eb Fb Gbb Ab Bb
       - Name: Enigmatic Mode 6
-        Notes: C Db Eb F A G# B
+        Notes: C Db Ebb Fbb Gb Ab Bb
       - Name: Enigmatic Mode 7
-        Notes: C D E G# F# A# B
+        Notes: C Db Ebb F G A B
   - Name: Hungarian Major Family
     Modes:
       - Name: Hungarian Major
         Notes: C D# E F# G A Bb
       - Name: Hungarian Major Mode 2
-        Notes: C Db Eb F Gb Ab A
+        Notes: C Db Eb Fb Gb Abb Bbb
       - Name: Hungarian Major Mode 3
-        Notes: C D E F G G# B
+        Notes: C D Eb F Gb Ab B
       - Name: Hungarian Major Mode 4
-        Notes: C D Eb F F# A Bb
+        Notes: C Db Eb Fb Gb A Bb
       - Name: Hungarian Major Mode 5
-        Notes: C Db Eb E G Ab Bb
+        Notes: C D Eb F G# A B
       - Name: Hungarian Major Mode 6
-        Notes: C D D# F# G A B
+        Notes: C Db Eb F# G A Bb
       - Name: Hungarian Major Mode 7
-        Notes: C C# E F G A Bb
+        Notes: C D E# F# G# A B
   - Name: Hirajoshi Family
     Modes:
       - Name: Hirajoshi
@@ -787,13 +787,13 @@
       - Name: In Sen
         Notes: C Db F G Bb
       - Name: In Sen Mode 2
-        Notes: C E F Ab Bb
+        Notes: C E F# A B
       - Name: In Sen Mode 3
-        Notes: C Db F G A
+        Notes: C D F G Ab
       - Name: In Sen Mode 4
-        Notes: C E F G B
+        Notes: C Eb F Gb Bb
       - Name: In Sen Mode 5
-        Notes: C Db Eb G Ab
+        Notes: C D Eb G A
   - Name: Diminished (Octatonic) Family
     Modes:
       - Name: Whole-Half Diminished
