@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "7bf47b267e07c3133894b09d3c73b14729b7ae6b",
-    "generatedAt": "2026-10-04T03:38:38.038999+00:00",
+    "commitSha": "850a5d64f4d7a913a3f260ab7cb35f8918504d93",
+    "generatedAt": "2026-10-04T03:40:22.435725+00:00",
     "repoCount": 5,
-    "totalPRs": 25
+    "totalPRs": 24
   },
   "repos": [
     {
@@ -113,20 +113,8 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 6,
+      "prCount": 5,
       "prs": [
-        {
-          "ageDays": 0,
-          "author": "spareilleux",
-          "createdAt": "2026-10-03T20:54:56Z",
-          "failingChecks": 0,
-          "headRef": "fix/harmony-concept-answers",
-          "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 805,
-          "title": "feat(chatbot): ground functional-harmony concept answers in a verified skill",
-          "url": "https://github.com/GuitarAlchemist/ga/pull/805"
-        },
         {
           "ageDays": 3,
           "author": "spareilleux",
@@ -210,7 +198,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 356,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ix/pull/356"
@@ -222,7 +210,7 @@
           "failingChecks": 1,
           "headRef": "ci/dark-feature-rows",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "ci: compile and test dark features (claude-cli, resp-server, reservoir, maintain-gate, code-semantic)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/346"
@@ -234,7 +222,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-216-attention-budget",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 335,
           "title": "docs(metrics): human attention budget and rubber-stamp detection (#216)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
@@ -246,7 +234,7 @@
           "failingChecks": 0,
           "headRef": "claude/ix-219-guard-metrics",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 334,
           "title": "feat(ix-quality-trend): Methodology Guard usefulness metrics (#219)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
@@ -258,7 +246,7 @@
           "failingChecks": 0,
           "headRef": "feat/ix-204-fractal-operators",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 333,
           "title": "feat(ix-evolution): fractal mutation and recursive crossover operators (#204)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/333"
@@ -286,7 +274,7 @@
           "failingChecks": 0,
           "headRef": "feat/evolve-on-claude-code",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 379,
           "title": "feat: run evolve on Claude Code with --model claude:<model>",
           "url": "https://github.com/GuitarAlchemist/tars/pull/379"
@@ -298,7 +286,7 @@
           "failingChecks": 1,
           "headRef": "docs/fsproj-not-a-one-way-door",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 346,
           "title": "docs: stop calling a project file a one-way door",
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
@@ -310,7 +298,7 @@
           "failingChecks": 1,
           "headRef": "fix/required-check-runs-on-stacked-prs",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 337,
           "title": "fix: let the required check run on a pull request that is not based on main",
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
@@ -322,7 +310,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 319,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/tars/pull/319"
@@ -352,7 +340,7 @@
           "failingChecks": 1,
           "headRef": "codex/streeling-cyb003",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1164,
           "title": "docs(streeling): CYB-003 variety measured by state spaces (EN rewrite, FR/ES)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1164"
@@ -364,7 +352,7 @@
           "failingChecks": 0,
           "headRef": "docs/thresholds-table-overlay",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1133,
           "title": "docs(logic): declare the Governance Thresholds table an overlay on the ladder",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1133"
@@ -376,7 +364,7 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1126,
           "title": "ci: run under the merge queue",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
@@ -388,7 +376,7 @@
           "failingChecks": 0,
           "headRef": "fix/freshness-head-sha-correlation",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1121,
           "title": "fix(loop-health): correlate an event-producer run by head_sha alone",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1121"
@@ -400,7 +388,7 @@
           "failingChecks": 2,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
@@ -412,7 +400,7 @@
           "failingChecks": 0,
           "headRef": "fix/streeling-jazz-and-academy",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1102,
           "title": "fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002, CYB-002, NET-001, GAA-002 and GAA-003",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1102"
@@ -424,7 +412,7 @@
           "failingChecks": 1,
           "headRef": "feat/596-pr-lifecycle-markov",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1088,
           "title": "feat(seldon): first PR-lifecycle Markov transitions artifact + schema binding (#596)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
@@ -436,7 +424,7 @@
           "failingChecks": 1,
           "headRef": "ci/registry-check-gate",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1084,
           "title": "ci(registry-check): gate capability-registry breaking changes with ix-registry-check",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
@@ -448,7 +436,7 @@
           "failingChecks": 2,
           "headRef": "codex/epistemic-research-governance",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 994,
           "title": "feat: govern Gaia epistemic research proposals",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
@@ -460,7 +448,7 @@
           "failingChecks": 1,
           "headRef": "feat/comfyui-slice0-asset-pipeline",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 734,
           "title": "feat(assets): ComfyUI Slice 0 \u2014 governed generative-asset pipeline (scaffolding)",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/734"
