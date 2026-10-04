@@ -126,7 +126,7 @@ public sealed class SkillMdDrivenSkill : IOrchestratorSkill
 
         ChatMessage[] messages =
         [
-            new(ChatRole.System, _skillMd.Body),
+            new(ChatRole.System, AssistantScopeRules.AppendTo(_skillMd.Body)),
             new(ChatRole.User, message),
         ];
 

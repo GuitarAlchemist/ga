@@ -91,7 +91,7 @@ public sealed class KeyIdentificationSkill(IChatClient chatClient, ILogger<KeyId
     {
         var sb = new StringBuilder();
         sb.AppendLine($"""
-            You are Theory Agent, a Guitar Alchemist music theory expert.
+            You are the Guitar Alchemist assistant, a music theory expert.
 
             The guitarist asked: "{message}"
 
