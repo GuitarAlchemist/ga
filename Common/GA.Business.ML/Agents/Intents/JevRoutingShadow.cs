@@ -30,9 +30,9 @@ using System.Text.Json.Serialization;
 /// Spend is capped by <c>GA_ROUTER_JEV_SHADOW_BUDGET_USD</c> (default
 /// <see cref="DefaultBudgetUsd"/>), cumulative over every row already in the log
 /// directory, so a restart does not reset it. A call whose usage is unknown
-/// (timeout, network error) is charged a conservative estimate. Requests tagged as
-/// the repo's own eval or probe traffic
-/// (<see cref="RoutingTelemetryLog.IsSyntheticTrafficSource"/>: <c>theory-qa</c>,
+/// (timeout, network error) is charged a conservative estimate. Local requests tagged
+/// as the repo's own eval or probe traffic
+/// (<see cref="RoutingTelemetryLog.IsSyntheticTraffic"/>: <c>theory-qa</c>,
 /// <c>probe-*</c>) are never sent: they log a <c>skipped_source</c> row and cost
 /// nothing, so a QA run cannot spend the budget meant for real traffic.
 /// </para>
@@ -167,9 +167,9 @@ public sealed class JevRoutingShadow
         try
         {
             // Snapshot now: intents may be scoped to the request, which ends before the call does;
-            // so may the request's traffic-source tag.
+            // so may the request's traffic-source tag, passed on only when the host vouched for it.
             var criteria = Criteria(intents);
-            var trafficSource = RoutingTelemetryLog.CurrentTrafficSource;
+            var trafficSource = RoutingTelemetryLog.IsSyntheticTraffic ? RoutingTelemetryLog.CurrentTrafficSource : null;
             _ = Task.Run(() => ObserveAsync(query, criteria, prodChosen, prodConfidence, margin, trafficSource));
         }
         catch

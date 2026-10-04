@@ -141,6 +141,21 @@ public class RoutingTelemetryLogTests
             Is.EqualTo(synthetic));
     }
 
+    // The tag is client input: only a request the host vouched for as local counts as eval traffic.
+    [TestCase("theory-qa", true, true)]
+    [TestCase("theory-qa", false, false)]
+    [TestCase("probe-reddit-sim", true, true)]
+    [TestCase("reddit", true, false)]
+    public void IsSyntheticTraffic_NeedsASyntheticTagFromTheLocalHost(string source, bool fromLocalHost, bool synthetic)
+    {
+        using (RoutingTelemetryLog.BeginTrafficSource(source, fromLocalHost))
+        {
+            Assert.That(RoutingTelemetryLog.IsSyntheticTraffic, Is.EqualTo(synthetic));
+            Assert.That(RoutingTelemetryLog.CurrentTrafficSource, Is.EqualTo(source), "the tag is still recorded");
+        }
+        Assert.That(RoutingTelemetryLog.IsSyntheticTraffic, Is.False, "dispose restores the previous state");
+    }
+
     [Test]
     public void DisableEnvVar_SuppressesWrites()
     {

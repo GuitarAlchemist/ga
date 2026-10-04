@@ -39,7 +39,7 @@ public sealed class ChatbotController(
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
 
         // Routing telemetry written while serving this request carries the page's ?ref= tag.
-        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source);
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source, LocalCaller.IsDirect(HttpContext));
 
         Response.StatusCode = StatusCodes.Status200OK;
         Response.Headers.Append("Content-Type", "text/event-stream");
@@ -132,7 +132,7 @@ public sealed class ChatbotController(
         var sessionId = HttpChatSessionCookie.GetOrIssue(HttpContext);
 
         // Routing telemetry written while serving this request carries the page's ?ref= tag.
-        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source);
+        using var trafficSource = RoutingTelemetryLog.BeginTrafficSource(request.Source, LocalCaller.IsDirect(HttpContext));
 
         if (!await concurrencyGate.TryEnterAsync(cancellationToken))
         {
