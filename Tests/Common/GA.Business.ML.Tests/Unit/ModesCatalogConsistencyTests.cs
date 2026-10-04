@@ -99,17 +99,19 @@ public sealed class ModesCatalogConsistencyTests
         Assert.That(family.Modes.Single(m => m.Name == mode).Notes, Is.EqualTo(notes));
     }
 
-    // Each inversion transposed so that its bass is C: C major's first inversion, E G C, is C Eb Ab
+    // Each inversion transposed so that its bass is C: C major's first inversion, E G C, is C Eb Ab. The spelling
+    // keeps the intervals above the bass: G# C E, a diminished fourth and a minor sixth, is C Fb Ab
     [TestCase("Major Triad First Inversion", "C Eb Ab")]
     [TestCase("Major Triad Second Inversion", "C F A")]
     [TestCase("Minor Triad First Inversion", "C E A")]
     [TestCase("Minor Triad Second Inversion", "C F Ab")]
-    public void TriadInversions_HaveTheNotesOfTheirName(string mode, string notes)
-    {
-        var family = ModesConfig.GetModalFamilies().Single(f => f.Name == "Major Triad Family");
-
-        Assert.That(family.Modes.Single(m => m.Name == mode).Notes, Is.EqualTo(notes));
-    }
+    [TestCase("Diminished Triad First Inversion", "C Eb A")]
+    [TestCase("Diminished Triad Second Inversion", "C F# A")]
+    [TestCase("Augmented Triad First Inversion", "C E Ab")]
+    [TestCase("Augmented Triad Second Inversion", "C Fb Ab")]
+    public void TriadInversions_HaveTheNotesOfTheirName(string mode, string notes) =>
+        Assert.That(ModesConfig.GetModalFamilies().SelectMany(f => f.Modes).Single(m => m.Name == mode).Notes,
+            Is.EqualTo(notes));
 
     // Unquoted, YAML reads " #" as the start of a comment, and "Lydian #2 #6" came back as "Lydian"
     [TestCase("Lydian #2 #6", "Double Harmonic Family")]

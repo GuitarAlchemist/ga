@@ -483,12 +483,12 @@
         AlternateNames:
           - Augmented Chord
       - Name: Augmented Triad First Inversion
-        Notes: C E G#
+        Notes: C E Ab
         Description: First inversion of augmented triad
         AlternateNames:
           - Augmented 6/3
       - Name: Augmented Triad Second Inversion
-        Notes: C E G#
+        Notes: C Fb Ab
         Description: Second inversion of augmented triad
         AlternateNames:
           - Augmented 6/4
