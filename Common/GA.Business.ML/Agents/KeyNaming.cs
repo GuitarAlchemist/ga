@@ -49,18 +49,13 @@ public static class KeyNaming
     }
 
     /// <summary>
-    ///     The relative key's name (e.g. <c>"A minor"</c> for C major), found by matching pitch-class
-    ///     set across the opposite mode, or <c>"none"</c> if no sibling shares the PC set.
+    ///     The relative key's name (e.g. <c>"A minor"</c> for C major): the opposite mode on the same
+    ///     key signature. Matching pitch-class sets instead also accepted the enharmonic key, so F#
+    ///     major (6 sharps) came out as Eb minor (6 flats) rather than D# minor.
     /// </summary>
     public static string RelativeKeyName(Key key)
     {
-        var mask = key.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value));
-        var sibling = Key.Items.FirstOrDefault(k =>
-            k.KeyMode != key.KeyMode &&
-            k.Notes.Aggregate(0, (acc, n) => acc | (1 << n.PitchClass.Value)) == mask);
-
-        return sibling is null
-            ? "none"
-            : $"{sibling.Root} {(sibling.KeyMode == KeyMode.Major ? "major" : "minor")}";
+        Key relative = key.KeyMode == KeyMode.Major ? new Key.Minor(key.KeySignature) : new Key.Major(key.KeySignature);
+        return $"{relative.Root} {(relative.KeyMode == KeyMode.Major ? "major" : "minor")}";
     }
 }
