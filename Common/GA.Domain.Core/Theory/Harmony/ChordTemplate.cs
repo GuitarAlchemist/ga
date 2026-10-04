@@ -81,5 +81,6 @@ public abstract record ChordTemplate
             new(new PitchClassSet(formula.Intervals.Select(i => (PitchClass)i.Interval.Semitones.Value).Concat([(PitchClass)0])), formula, name);
     }
 
-    public override string ToString() => Name;
+    // sealed: otherwise each derived record synthesizes its own ToString, which lists every property
+    public sealed override string ToString() => Name;
 }
