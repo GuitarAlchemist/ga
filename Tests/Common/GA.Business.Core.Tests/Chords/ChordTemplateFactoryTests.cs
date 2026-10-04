@@ -26,13 +26,13 @@ public class ChordTemplateFactoryTests
                 "Diminished triads should be produced.");
         });
     }
-    // The full generation ran its three scale groups twice, and the natural minor modes, which are the major
-    // scale's modes under the same names, repeated the major ones
+    // The full generation ran its three scale groups twice. A natural minor mode's template differs from the major
+    // mode's with the same name only by the mode's parent scale (A B C D E F G instead of C D E F G A B)
     [Test]
     public void GenerateAllPossibleChords_YieldsEachTemplateOnce()
     {
         var templates = ChordTemplateFactory.GenerateAllPossibleChords()
-            .Select(t => (t.GetParentScale()?.Name, t.GetScaleDegree(), t.StackingType, t.Extension, t.Name, t.PitchClassSet.Id))
+            .Select(t => (t.GetParentScale()?.ParentScale.ToString(), t.GetParentScale()?.Name, t.GetScaleDegree(), t.StackingType, t.Extension, t.Name, t.PitchClassSet.Id))
             .ToList();
 
         Assert.That(templates.Count, Is.EqualTo(templates.Distinct().Count()));

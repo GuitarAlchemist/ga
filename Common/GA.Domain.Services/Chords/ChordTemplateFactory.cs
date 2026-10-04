@@ -97,10 +97,6 @@ public static class ChordTemplateFactory
     ///     Generates chords from traditional scale modes (major, natural minor, harmonic minor, melodic minor).
     ///     These are the most commonly used scales in Western music.
     /// </summary>
-    /// <remarks>
-    ///     The natural minor scale is the major scale's Aeolian mode: <see cref="NaturalMinorMode" />'s seven modes are
-    ///     the major scale's, under the same names, so the major modes cover it.
-    /// </remarks>
     private static IEnumerable<ChordTemplate> GenerateFromTraditionalScales()
     {
         // Major scale modes
@@ -127,6 +123,16 @@ public static class ChordTemplateFactory
         foreach (var degree in MelodicMinorScaleDegree.Items)
         {
             var mode = MelodicMinorMode.Get(degree);
+            foreach (var chord in GenerateFromScaleMode(mode))
+            {
+                yield return chord;
+            }
+        }
+
+        // Natural minor modes
+        foreach (var degree in NaturalMinorScaleDegree.Items)
+        {
+            var mode = NaturalMinorMode.Get(degree);
             foreach (var chord in GenerateFromScaleMode(mode))
             {
                 yield return chord;
