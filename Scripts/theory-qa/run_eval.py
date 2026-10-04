@@ -156,7 +156,13 @@ def main():
         print(f"infrastructure failure: cannot read questions: {e}", file=sys.stderr)
         return 2
     if args.only:
-        wanted = set(args.only.split(","))
+        wanted = {i.strip() for i in args.only.split(",") if i.strip()}
+        unknown = wanted - {q["id"] for q in questions}
+        if unknown:
+            # an empty selection would grade nothing and still exit 0
+            print(f"infrastructure failure: --only names unknown question ids: {', '.join(sorted(unknown))}",
+                  file=sys.stderr)
+            return 2
         questions = [q for q in questions if q["id"] in wanted]
     if args.target == "ollama" and not args.model:
         print("infrastructure failure: --target ollama needs --model", file=sys.stderr)

@@ -118,11 +118,13 @@ measures both, on a fixed question set, the same way every run.
      `verdicts` (id → verdict);
    - with `--samples N`: grade every sample. `metric_value` is then the share
      of all graded answers, and `verdicts` maps each id to its list of verdicts.
-   If a snapshot already exists for today, write `<date>-2.json`, never
-   overwrite. `state/quality/.snapshot-registry.json` registers this domain:
-   check the envelope with `pwsh Scripts/validate-quality-snapshots.ps1
-   -Advisory` (no `theory-qa` FAIL line). The registry glob only matches
-   `<date>.json`, so a `-2` file is not validated.
+   If a snapshot already exists for today, keep it by renaming it to
+   `<date>-<n>.json` (the next free `n` from 1), then write the new run as
+   `<date>.json`: the quality scorecard and the registry glob only read
+   `<date>.json`, so it must always hold the latest run.
+   `state/quality/.snapshot-registry.json` registers this domain: check the
+   envelope with `pwsh Scripts/validate-quality-snapshots.ps1 -Advisory` (no
+   `theory-qa` FAIL line).
 8. **Compare** with the previous snapshot: list regressions (was `T`/`P`, now
    `D`/`F`/`C`) and fixes.
 
