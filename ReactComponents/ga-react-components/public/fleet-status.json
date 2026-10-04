@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "8605bbe61d700401da898a4cf030d89959d7495c",
-    "generatedAt": "2026-10-03T18:22:54.002803+00:00",
+    "commitSha": "7bf47b267e07c3133894b09d3c73b14729b7ae6b",
+    "generatedAt": "2026-10-04T03:38:38.038999+00:00",
     "repoCount": 5,
-    "totalPRs": 24
+    "totalPRs": 25
   },
   "repos": [
     {
@@ -113,40 +113,52 @@
         "verdict": "warn"
       },
       "name": "ga",
-      "prCount": 5,
+      "prCount": 6,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-03T20:54:56Z",
+          "failingChecks": 0,
+          "headRef": "fix/harmony-concept-answers",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 805,
+          "title": "feat(chatbot): ground functional-harmony concept answers in a verified skill",
+          "url": "https://github.com/GuitarAlchemist/ga/pull/805"
+        },
+        {
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:50:29Z",
           "failingChecks": 0,
           "headRef": "fix/771-key-identification",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 780,
           "title": "fix(keys): read the progression as written \u2014 sharps before a space, \u266d/\u266f, \u00f8/\u00b0/m7b5, \u0394, slash chords and repeats (#771)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/780"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:34:07Z",
           "failingChecks": 0,
           "headRef": "fix/769-relative-keys",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 779,
           "title": "fix(skills): name the relative key by key signature, and theoretical keys past seven accidentals (#769)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/779"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-09-30T03:05:02Z",
           "failingChecks": 0,
           "headRef": "fix/760-sse-error-event",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 766,
           "title": "fix(chat): type the stream's error event and stop the page from rendering it as an answer (#760)",
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
@@ -158,19 +170,19 @@
           "failingChecks": 1,
           "headRef": "ci/merge-queue-deploy-key",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 738,
           "title": "ci: push to main over the deploy key, and run CI under the merge queue",
           "url": "https://github.com/GuitarAlchemist/ga/pull/738"
         },
         {
-          "ageDays": 61,
+          "ageDays": 62,
           "author": "spareilleux",
           "createdAt": "2026-08-02T21:29:06Z",
           "failingChecks": 2,
           "headRef": "codex/629-policy-readiness",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 637,
           "title": "feat(harness): align AFK policy and readiness gates",
           "url": "https://github.com/GuitarAlchemist/ga/pull/637"
@@ -270,17 +282,17 @@
         {
           "ageDays": 0,
           "author": "spareilleux",
-          "createdAt": "2026-10-03T17:51:59Z",
-          "failingChecks": 1,
-          "headRef": "feat/evolve-best-of-n",
+          "createdAt": "2026-10-04T01:41:53Z",
+          "failingChecks": 0,
+          "headRef": "feat/evolve-on-claude-code",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
-          "number": 377,
-          "title": "feat: answer again while the examples fail, with evolve --run-code",
-          "url": "https://github.com/GuitarAlchemist/tars/pull/377"
+          "mergeable": "UNKNOWN",
+          "number": 379,
+          "title": "feat: run evolve on Claude Code with --model claude:<model>",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/379"
         },
         {
-          "ageDays": 4,
+          "ageDays": 5,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 1,
@@ -334,7 +346,7 @@
       "prCount": 10,
       "prs": [
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:10:41Z",
           "failingChecks": 1,
@@ -346,7 +358,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1164"
         },
         {
-          "ageDays": 6,
+          "ageDays": 7,
           "author": "spareilleux",
           "createdAt": "2026-09-26T18:43:46Z",
           "failingChecks": 0,
@@ -370,7 +382,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 10,
+          "ageDays": 11,
           "author": "spareilleux",
           "createdAt": "2026-09-23T03:34:27Z",
           "failingChecks": 0,
@@ -382,19 +394,19 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1121"
         },
         {
-          "ageDays": 12,
+          "ageDays": 13,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 2,
           "headRef": "codex/gaia76-continuity-consumer-r0",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 1114,
           "title": "feat(contracts): validate Gaia continuity receipts",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-09-17T22:51:32Z",
           "failingChecks": 0,
@@ -406,7 +418,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1102"
         },
         {
-          "ageDays": 18,
+          "ageDays": 19,
           "author": "spareilleux",
           "createdAt": "2026-09-14T21:16:08Z",
           "failingChecks": 1,
@@ -442,7 +454,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 76,
+          "ageDays": 77,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
