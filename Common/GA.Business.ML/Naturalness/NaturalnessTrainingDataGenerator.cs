@@ -157,6 +157,8 @@ public class NaturalnessTrainingDataGenerator(ITabCorpusRepository repository)
         // Real logic needs finger assignment.
         // Let's use avg fret delta as primary.
 
-        return $"{deltaAvg:F2},{deltaAvg:F2},{changedStrings},{deltaStretch},{sharedStrings}";
+        // Invariant culture: under fr-FR, 2.50 would be written 2,50 and split into two values by the comma-separated reader
+        return FormattableString.Invariant(
+            $"{deltaAvg:F2},{deltaAvg:F2},{changedStrings},{deltaStretch},{sharedStrings}");
     }
 }
