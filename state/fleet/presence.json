@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-10-04T01:44:14.598368Z",
+  "generated_at": "2026-10-05T07:13:43.828286Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "green",
   "limbs": [
@@ -9,8 +9,8 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T20:02:16Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37150073000",
+      "last_heartbeat": "2026-10-04T17:42:25Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37221531416",
       "detail": "latest completed run: skipped"
     },
     {
@@ -18,8 +18,8 @@
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-04T01:18:34Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37167613026",
+      "last_heartbeat": "2026-10-05T01:51:14Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37253053734",
       "detail": "latest completed run: skipped"
     },
     {
@@ -27,8 +27,8 @@
       "kind": "review-lane",
       "workflow": "claude-code-review.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T20:55:00Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37153240983",
+      "last_heartbeat": "2026-10-04T22:34:16Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37240518920",
       "detail": "latest completed run: success"
     },
     {
@@ -36,8 +36,8 @@
       "kind": "sensor",
       "workflow": "post-merge-smoke.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T18:22:23Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37143937640",
+      "last_heartbeat": "2026-10-04T03:39:50Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37174709736",
       "detail": "latest completed run: success"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T22:59:36Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37160278629",
+      "last_heartbeat": "2026-10-05T05:32:38Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37268251417",
       "detail": "latest completed run: success"
     },
     {
@@ -54,8 +54,8 @@
       "kind": "sensor",
       "workflow": "quality-snapshot.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T18:22:23Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37143937596",
+      "last_heartbeat": "2026-10-04T03:39:50Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37174709745",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-03T18:22:23Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37143937613",
+      "last_heartbeat": "2026-10-04T11:29:04Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/37198887037",
       "detail": "latest completed run: success"
     },
     {
@@ -103,7 +103,7 @@
       "id": "sensor:algedonic-inbox",
       "kind": "sensor",
       "status": "green",
-      "last_heartbeat": "2026-10-03T10:46:31Z",
+      "last_heartbeat": "2026-10-04T11:27:43Z",
       "evidence": "state/algedonic/inbox.jsonl",
       "detail": "last 24h: critical=0 fail=0 warn=1 (warn does not degrade presence)"
     }
