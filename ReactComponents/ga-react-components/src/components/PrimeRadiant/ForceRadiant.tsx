@@ -1218,7 +1218,7 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
       // The grommet lives in the Godot scene, not in this post-fx chain.
       if (cmd.target === 'grommet') {
         if (!postGodotRender('grommet', cmd.action)) {
-          console.warn('[IXQL] RENDER GROMMET: the Godot viewer is not open');
+          console.warn('[IXQL] RENDER GROMMET: the Godot viewer is not open or not ready');
         }
         return;
       }

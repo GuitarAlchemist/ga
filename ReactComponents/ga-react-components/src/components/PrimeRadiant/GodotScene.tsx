@@ -312,10 +312,19 @@ export function setDemerzelSpeaking(speaking: boolean): void {
   iframe?.contentWindow?.postMessage({ type: 'demerzel:speaking', speaking }, '*');
 }
 
-/** Forward an IXQL RENDER command to the Godot scene. False when no Godot iframe is open. */
+// Godot only queues governance:* messages once its listener is installed, which is when it
+// posts godot:ready; anything posted earlier is lost. A remounted iframe has a new window.
+const readyGodotWindows = new WeakSet<object>();
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (ev: MessageEvent) => {
+    if ((ev.data as { type?: unknown } | null)?.type === 'godot:ready' && ev.source) readyGodotWindows.add(ev.source);
+  });
+}
+
+/** Forward an IXQL RENDER command to the Godot scene. False when no Godot iframe is open and ready. */
 export function postGodotRender(target: string, action: 'on' | 'off' | 'toggle'): boolean {
   const iframe = findGodotIframe();
-  if (!iframe?.contentWindow) return false;
+  if (!iframe?.contentWindow || !readyGodotWindows.has(iframe.contentWindow)) return false;
   const msg: GodotInboundMessage = { type: 'governance:render', target, action };
   iframe.contentWindow.postMessage(msg, '*');
   return true;
