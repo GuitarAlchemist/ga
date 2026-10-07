@@ -313,11 +313,19 @@ export function setDemerzelSpeaking(speaking: boolean): void {
 }
 
 // Godot only queues governance:* messages once its listener is installed, which is when it
-// posts godot:ready; anything posted earlier is lost. A remounted iframe has a new window.
+// posts godot:ready; anything posted earlier is lost. A remounted iframe has a new window; a
+// reloaded one keeps its window, so the mark goes with the page that posted it.
 const readyGodotWindows = new WeakSet<object>();
 if (typeof window !== 'undefined') {
   window.addEventListener('message', (ev: MessageEvent) => {
-    if ((ev.data as { type?: unknown } | null)?.type === 'godot:ready' && ev.source) readyGodotWindows.add(ev.source);
+    if ((ev.data as { type?: unknown } | null)?.type !== 'godot:ready' || !ev.source) return;
+    const godot = ev.source as Window;
+    readyGodotWindows.add(godot);
+    try {
+      godot.addEventListener('pagehide', () => readyGodotWindows.delete(godot), { once: true });
+    } catch {
+      // A cross-origin Godot page: its reloads cannot be seen from here.
+    }
   });
 }
 

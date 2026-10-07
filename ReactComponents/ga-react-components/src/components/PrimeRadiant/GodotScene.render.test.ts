@@ -46,6 +46,16 @@ describe('postGodotRender', () => {
     expect(postGodotRender('grommet', 'off')).toBe(true);
   });
 
+  it('waits for a reloaded Godot page to say it is ready again', () => {
+    const iframe = godotIframe();
+    godotReady(iframe);
+    iframe.contentWindow!.dispatchEvent(new Event('pagehide'));
+
+    expect(postGodotRender('grommet', 'on')).toBe(false);
+    godotReady(iframe);
+    expect(postGodotRender('grommet', 'on')).toBe(true);
+  });
+
   it('returns false when no Godot iframe is open', () => {
     expect(postGodotRender('grommet', 'toggle')).toBe(false);
   });
