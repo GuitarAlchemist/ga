@@ -81,6 +81,7 @@ jobs:
           echo "date=$date"               >> $env:GITHUB_OUTPUT
 
       - name: Commit snapshot if new
+        id: commit
         working-directory: ga
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
@@ -94,7 +95,15 @@ jobs:
             exit 0
           fi
           git commit -m "chore(quality): readme-drift snapshot ${DATE} [skip ci]"
-          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push the snapshot
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./ga/.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          working-directory: ga
+          refspec: HEAD
 
       - name: Open or update tracking issue
         working-directory: ga
