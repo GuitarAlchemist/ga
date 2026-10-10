@@ -138,6 +138,7 @@ paket-files/
 # Ignore temp files
 *.txt
 !README.txt
+!/.github/vulnerability-baseline.txt
 
 # Ignore cache indexes
 Apps/ga-server/GaApi/cache/
