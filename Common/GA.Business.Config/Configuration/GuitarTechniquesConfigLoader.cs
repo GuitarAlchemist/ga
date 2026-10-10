@@ -24,7 +24,13 @@ public class GuitarTechniqueDefinition
     public List<string> Songs { get; set; } = [];
     public List<string> Benefits { get; set; } = [];
     public List<string> Rules { get; set; } = [];
+    // The object GA.Knowledge.Service has always published (the fallback's Minutes); the YAML's list of practice
+    // steps loads into PracticeSteps
+    [YamlIgnore]
     public Dictionary<string, object> Practice { get; set; } = [];
+
+    [YamlMember(Alias = "Practice")]
+    public List<string> PracticeSteps { get; set; } = [];
 }
 
 public class GuitarTechniqueExample
