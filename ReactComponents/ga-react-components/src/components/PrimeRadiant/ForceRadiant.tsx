@@ -80,7 +80,7 @@ import { PlanetPiP } from './PlanetPiP';
 const LiveNotebook = React.lazy(() => import('./LiveNotebook').then(m => ({ default: m.LiveNotebook })));
 import { TriageDropZone, pushToTriage } from './TriageDropZone';
 import { IcicleDrawer } from './IcicleDrawer';
-import { setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
+import { postGodotRender, setDemerzelEmotion, setDemerzelSpeaking } from './GodotScene';
 const GodotScene = React.lazy(() => import('./GodotScene').then(m => ({ default: m.GodotScene })));
 import { DemerzelFaceOverlay } from './DemerzelFaceOverlay';
 const GisPanel = React.lazy(() => import('./GisPanel').then(m => ({ default: m.GisPanel })));
@@ -1215,6 +1215,13 @@ export const ForceRadiant: React.FC<ForceRadiantProps> = ({
 
     // ── RENDER <target> ON|OFF|TOGGLE ──
     if (cmd.type === 'render') {
+      // The grommet lives in the Godot scene, not in this post-fx chain.
+      if (cmd.target === 'grommet') {
+        if (!postGodotRender('grommet', cmd.action)) {
+          console.warn('[IXQL] RENDER GROMMET: the Godot viewer is not open or not ready');
+        }
+        return;
+      }
       const passMap: Record<string, React.MutableRefObject<ShaderPass | null>> = {
         moebius: moebiusPassRef,
         caustics: causticsPassRef,
