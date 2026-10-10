@@ -130,6 +130,35 @@ public class KeyIdentificationMcpToolsTests
             "Top-level TotalChords MUST equal candidate-level TotalChords (post tuple-dedup); the LLM payload must not contain two disagreeing totals");
     }
 
+    // Issue #771: RecognizedChords keeps the progression as written, so the return to I reaches
+    // the cadence weight, and the top set is the head of Identify's order, so the key the cadence
+    // puts first is not joined by keys that merely share its match count.
+    [Test]
+    public void IdentifyKey_ReturnToTheTonic_PutsCMajorAloneOnTop()
+    {
+        var result = KeyIdentificationMcpTools.IdentifyKey("what key is C D G C in?");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Error, Is.Null);
+            Assert.That(result.RecognizedChords, Is.EqualTo(new[] { "C", "D", "G", "C" }));
+            Assert.That(result.TotalChords, Is.EqualTo(3), "distinct chords, as each candidate counts them");
+            Assert.That(result.TopCandidates.Select(c => c.Key), Is.EqualTo(new[] { "C major" }));
+            Assert.That(result.TopCandidates[0].AuthenticCadence, Is.True);
+            Assert.That(result.PartialMatches.Select(c => c.Key), Has.None.EqualTo("C major"));
+        });
+    }
+
+    // Issue #771: once Bm7b5 reads as a diminished triad, A minor and C major each match two
+    // chords; the V7–i ending is what separates them, so C major is not tied on top.
+    [Test]
+    public void IdentifyKey_MinorTwoFiveOne_PutsAMinorAloneOnTop()
+    {
+        var result = KeyIdentificationMcpTools.IdentifyKey("Bm7b5 E7 Am");
+
+        Assert.That(result.TopCandidates.Select(c => c.Key), Is.EqualTo(new[] { "A minor" }));
+    }
+
     // ── Error paths ───────────────────────────────────────────────────────────
 
     [Test]
