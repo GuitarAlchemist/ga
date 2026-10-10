@@ -74,6 +74,9 @@ public sealed class Chord : IEquatable<Chord>
     private static readonly Regex _symbolRegex =
         new("^([A-G][#b]?)(.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // A capital M alone or before a number is major, as in "CM7"; lower-cased, it would read as minor
+    private static readonly Regex _majorMRegex = new(@"^M(?=\d|$)", RegexOptions.Compiled);
+
     /// <summary>
     ///     Parses a chord symbol (e.g. "C", "Cm", "Cmaj7", "F#m7b5") into a <see cref="Chord" />.
     /// </summary>
@@ -176,7 +179,7 @@ public sealed class Chord : IEquatable<Chord>
 
     private static bool TryParseSuffix(string suffix, out ChordFormula? formula)
     {
-        var s = suffix.Trim().ToLowerInvariant().Replace(" ", "");
+        var s = _majorMRegex.Replace(suffix.Trim(), "maj").ToLowerInvariant().Replace(" ", "");
         formula = s switch
         {
             "" or "maj" or "major" => ChordFormula.Major,
