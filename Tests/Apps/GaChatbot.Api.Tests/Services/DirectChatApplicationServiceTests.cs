@@ -10,8 +10,10 @@ using AiChatResponse = Microsoft.Extensions.AI.ChatResponse;
 public sealed class DirectChatApplicationServiceTests
 {
     [Test]
-    public async Task ChatAsync_SendsVexTabOutputContractInSystemPrompt()
+    public async Task ChatAsync_ForbidsInventedFretsInSystemPrompt()
     {
+        // The direct prompt (also the full-mode fallback) has no voicing source. Invited to write
+        // VexTab, the model invented wrong shapes in 17 of 34 theory answers (2026-10-03 eval).
         var chatClient = new RecordingChatClient("answer");
         var service = new DirectChatApplicationService(chatClient, new ReadyProbe());
 
@@ -22,8 +24,9 @@ public sealed class DirectChatApplicationServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(system.Role, Is.EqualTo(ChatRole.System));
-            Assert.That(system.Text, Does.Contain("fenced `vextab` block"));
-            Assert.That(system.Text, Does.Contain("string 6 = low E"));
+            Assert.That(system.Text, Does.Contain("do not write fret numbers, tablature, chord diagrams"));
+            Assert.That(system.Text, Does.Contain("Name the chord and its notes instead"));
+            Assert.That(system.Text, Does.Not.Contain("fenced `vextab` block"));
         });
     }
 
