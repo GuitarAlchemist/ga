@@ -89,6 +89,70 @@ public class NeoRiemannianConfigTests
     public void GetOctatonicCycles_ReturnsThreeCyclesOfEightTriadsAlternatingPAndR() =>
         AssertCycles(NeoRiemannianConfig.GetOctatonicCycles(), 3, 8, "P", "R");
 
+    /// <summary>
+    ///     The remark above the hexatonic cycles of the YAML file: the roots of a cycle form an augmented triad,
+    ///     and the notes of its six triads a hexatonic set, that triad and the one a semitone below.
+    /// </summary>
+    [Test]
+    public void HexatonicCycle_HasTheRootsOfAnAugmentedTriadAndTheNotesOfTwo()
+    {
+        var cycles = NeoRiemannianConfig.GetHexatonicCycles().ToList();
+
+        Assert.That(cycles, Has.Count.EqualTo(4));
+        Assert.Multiple(() =>
+        {
+            foreach (var cycle in cycles)
+            {
+                var roots = Sorted(cycle.Triads.Select(Root));
+
+                Assert.That(roots, Is.EqualTo(new[] { roots[0], roots[0] + 4, roots[0] + 8 }), cycle.Name);
+                Assert.That(Sorted(cycle.Triads.SelectMany(Notes)),
+                    Is.EqualTo(Sorted(roots.Concat(roots.Select(root => (root + 11) % 12)))), cycle.Name);
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The remark above the octatonic cycles: the roots of a cycle form a diminished seventh, the notes of its
+    ///     eight triads an octatonic collection, and the i and j of <c>OCT(i,j)</c> are two pitch classes, a
+    ///     semitone apart, that this collection alone holds together.
+    /// </summary>
+    [Test]
+    public void OctatonicCycle_IsNamedAfterTwoPitchClassesOnlyItHoldsTogether()
+    {
+        var cycles = NeoRiemannianConfig.GetOctatonicCycles()
+            .Select(cycle => (cycle.Name, Roots: Sorted(cycle.Triads.Select(Root)),
+                Notes: Sorted(cycle.Triads.SelectMany(Notes))))
+            .ToList();
+
+        Assert.That(cycles, Has.Count.EqualTo(3));
+        Assert.Multiple(() =>
+        {
+            foreach (var cycle in cycles)
+            {
+                var first = cycle.Roots[0];
+                var named = cycle.Name[4..^1].Split(',').Select(int.Parse).ToList(); // "OCT(0,1)" names 0 and 1
+
+                Assert.That(cycle.Roots, Is.EqualTo(new[] { first, first + 3, first + 6, first + 9 }), cycle.Name);
+                Assert.That(cycle.Notes, Has.Count.EqualTo(8), cycle.Name);
+                Assert.That(named[1] - named[0], Is.EqualTo(1), cycle.Name);
+                Assert.That(cycles.Where(other => named.All(pc => other.Notes.Contains(pc))).Select(other => other.Name),
+                    Is.EqualTo(new[] { cycle.Name }), cycle.Name);
+            }
+        });
+    }
+
+    private static int Root(string triad) => Array.IndexOf(Roots, triad.Split('_')[0]);
+
+    private static int[] Notes(string triad)
+    {
+        var root = Root(triad);
+        var third = triad.EndsWith("_maj", StringComparison.Ordinal) ? 4 : 3;
+        return [root, (root + third) % 12, (root + 7) % 12];
+    }
+
+    private static List<int> Sorted(IEnumerable<int> pitchClasses) => [.. pitchClasses.Distinct().Order()];
+
     private static void AssertCycles(IEnumerable<NeoRiemannianConfig.Cycle> source, int count, int length,
         string evenStep, string oddStep)
     {
