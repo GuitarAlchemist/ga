@@ -1,6 +1,6 @@
 {
   "schema": "presence-snapshot-v0.1.0",
-  "generated_at": "2026-10-15T18:24:48.061393Z",
+  "generated_at": "2026-10-16T21:24:59.885803Z",
   "repo": "GuitarAlchemist/ga",
   "overall": "yellow",
   "limbs": [
@@ -9,17 +9,17 @@
       "kind": "delegation-lane",
       "workflow": "jules-auto-delegate.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-15T12:07:49Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38732326038",
-      "detail": "latest completed run: skipped"
+      "last_heartbeat": "2026-10-16T11:26:03Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38893742197",
+      "detail": "latest completed run: success"
     },
     {
       "id": "lane:claude-mention",
       "kind": "delegation-lane",
       "workflow": "claude.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-15T12:07:48Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38732324878",
+      "last_heartbeat": "2026-10-16T10:17:23Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38886237344",
       "detail": "latest completed run: skipped"
     },
     {
@@ -45,8 +45,8 @@
       "kind": "sensor",
       "workflow": "ecosystem-health.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-15T14:15:44Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38749813798",
+      "last_heartbeat": "2026-10-16T19:47:06Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38957456282",
       "detail": "latest completed run: success"
     },
     {
@@ -63,8 +63,8 @@
       "kind": "sensor",
       "workflow": "fleet-status.yml",
       "status": "green",
-      "last_heartbeat": "2026-10-15T10:31:08Z",
-      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38720836458",
+      "last_heartbeat": "2026-10-16T10:18:19Z",
+      "evidence": "https://github.com/GuitarAlchemist/ga/actions/runs/38886336655",
       "detail": "latest completed run: success"
     },
     {
@@ -103,7 +103,7 @@
       "id": "sensor:algedonic-inbox",
       "kind": "sensor",
       "status": "green",
-      "last_heartbeat": "2026-10-15T10:29:40Z",
+      "last_heartbeat": "2026-10-16T10:17:15Z",
       "evidence": "state/algedonic/inbox.jsonl",
       "detail": "last 24h: critical=0 fail=0 warn=1 (warn does not degrade presence)"
     }
