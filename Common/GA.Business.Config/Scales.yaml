@@ -236,7 +236,7 @@ EightToneSpanish:
   RelatedScales: [ "PhrygianDominant" ]
 
 Tritone:
-  Notes: "C Db E F# G A"
+  Notes: "C Db E Gb G Bb"
   AlternateNames: [ "Petrushka Scale" ]
   Category: "Theoretical"
   Usage: "Used in some 20th-century classical music, notably by Stravinsky"
