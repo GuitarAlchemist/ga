@@ -10,8 +10,10 @@ using GA.Business.Config;
 /// <remarks>
 /// A 2026-10-03 audit found 36 modes that broke the rotation rule (the pentatonic modes 3–5 swapped,
 /// most Hungarian major, Enigmatic, In Sen, Prometheus and bebop modes wrong) and 7 wrong vectors.
-/// The chord and triad families list chord qualities rather than rotations, and the 16 "modes" of the
-/// all-interval tetrachord family are not rotations of one set, so those are left out.
+/// The seventh chord family lists chord qualities rather than rotations, the major triad family holds the
+/// major and the minor triads with their inversions, and the 16 "modes" of the all-interval tetrachord
+/// family are not rotations of one set, so those are left out; the diminished and augmented triads'
+/// inversions are their rotations.
 /// </remarks>
 [TestFixture]
 public sealed class ModesCatalogConsistencyTests
@@ -23,7 +25,7 @@ public sealed class ModesCatalogConsistencyTests
 
     private static bool IsRotationFamily(string familyName) =>
         !familyName.Contains("Chord Family", StringComparison.Ordinal) &&
-        !familyName.Contains("Triad Family", StringComparison.Ordinal) &&
+        familyName != "Major Triad Family" &&
         familyName != "All Interval Tetrachord Family";
 
     private static int PitchClass(string note)
@@ -96,4 +98,50 @@ public sealed class ModesCatalogConsistencyTests
 
         Assert.That(family.Modes.Single(m => m.Name == mode).Notes, Is.EqualTo(notes));
     }
+
+    // Each inversion transposed so that its bass is C: C major's first inversion, E G C, is C Eb Ab. The spelling
+    // keeps the intervals above the bass: G# C E, a diminished fourth and a minor sixth, is C Fb Ab
+    [TestCase("Major Triad First Inversion", "C Eb Ab")]
+    [TestCase("Major Triad Second Inversion", "C F A")]
+    [TestCase("Minor Triad First Inversion", "C E A")]
+    [TestCase("Minor Triad Second Inversion", "C F Ab")]
+    [TestCase("Diminished Triad First Inversion", "C Eb A")]
+    [TestCase("Diminished Triad Second Inversion", "C F# A")]
+    [TestCase("Augmented Triad First Inversion", "C E Ab")]
+    [TestCase("Augmented Triad Second Inversion", "C Fb Ab")]
+    public void TriadInversions_HaveTheNotesOfTheirName(string mode, string notes) =>
+        Assert.That(ModesConfig.GetModalFamilies().SelectMany(f => f.Modes).Single(m => m.Name == mode).Notes,
+            Is.EqualTo(notes));
+
+    // Unquoted, YAML reads " #" as the start of a comment, and "Lydian #2 #6" came back as "Lydian"
+    [TestCase("Lydian #2 #6", "Double Harmonic Family")]
+    [TestCase("Ionian Augmented #2", "Double Harmonic Family")]
+    [TestCase("Aeolian #4 (Lydian Diminished)", "Neapolitan Minor Family")]
+    [TestCase("Lydian Dominant #5", "Neapolitan Major Family")]
+    public void ModeNames_KeepWhatFollowsASharp(string name, string family)
+    {
+        var mode = ModesConfig.TryGetModeByName(name);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mode?.Value.Name, Is.EqualTo(name));
+            Assert.That(mode?.Value.FamilyName?.Value, Is.EqualTo(family));
+        });
+    }
+
+    [TestCase("Super Locrian", "Altered")]
+    [TestCase("Altered bb7", "Ultralocrian")]
+    [TestCase("Acoustic Scale", "Lydian Dominant")]
+    [TestCase("Spanish Phrygian", "Phrygian Dominant")]
+    [TestCase("Locrian Natural 2", "Locrian #2")]
+    [TestCase("Dorian Sharp 4", "Dorian #4")]
+    [TestCase("Lydian Sharp 2", "Lydian #2")]
+    public void TryGetModeByName_FindsAModeByItsAlternateName(string alternateName, string expected) =>
+        Assert.That(ModesConfig.TryGetModeByName(alternateName)?.Value.Name, Is.EqualTo(expected));
+
+    // "Whole-Half Diminished" is a mode of the octatonic family and an alternate name in the diminished family
+    [Test]
+    public void TryGetModeByName_PrefersAModesOwnName() =>
+        Assert.That(ModesConfig.TryGetModeByName("Whole-Half Diminished")?.Value.FamilyName?.Value,
+            Is.EqualTo("Diminished (Octatonic) Family"));
 }
