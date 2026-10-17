@@ -10,7 +10,7 @@ const cMajorChord: FretboardPosition[] = [
   { string: 2, fret: 0, label: 'G', color: '#51cf66' },
   { string: 3, fret: 2, label: 'E', color: '#4dabf7' },
   { string: 4, fret: 3, label: 'C', color: '#ff6b6b', emphasized: true },
-  { string: 5, fret: 3, label: 'C', color: '#ff6b6b', emphasized: true },
+  { string: 5, fret: 3, label: 'G', color: '#51cf66' },
 ];
 
 export const RealisticFretboardTest: React.FC = () => {
