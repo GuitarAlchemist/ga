@@ -19,7 +19,9 @@ public class ChordSymbolParserTests
 
     private static readonly string[] _invalidSymbols =
     [
-        "", " ", "Hmaj7", "R7", "7", "#C", "Z"
+        "", " ", "Hmaj7", "R7", "7", "#C", "Z",
+        // Unknown suffixes, and words of a chat message: none is a major triad
+        "Cwobble", "Can", "Give", "and", "a", "compare", "Cmaj7 jazz voicings"
     ];
 
     [Test]
@@ -58,6 +60,46 @@ public class ChordSymbolParserTests
                 Assert.That(chord, Is.Null);
             });
         }
+    }
+
+    [TestCase("CM7", new[] { 0, 4, 7, 11 })]
+    [TestCase("CM", new[] { 0, 4, 7 })]
+    [TestCase("CΔ7", new[] { 0, 4, 7, 11 })]
+    [TestCase("Cmi7", new[] { 0, 3, 7, 10 })]
+    [TestCase("Co7", new[] { 0, 3, 6, 9 })]
+    [TestCase("C+7", new[] { 0, 4, 8, 10 })]
+    [TestCase("Cm(maj7)", new[] { 0, 3, 7, 11 })]
+    [TestCase("Cm(b5)", new[] { 0, 3, 6 })]
+    [TestCase("C7b5", new[] { 0, 4, 6, 10 })]
+    [TestCase("C7#11", new[] { 0, 4, 6, 7, 10 })]
+    [TestCase("C9#11", new[] { 0, 2, 4, 6, 7, 10 })]
+    [TestCase("C7b9#11", new[] { 0, 1, 4, 6, 7, 10 })]
+    [TestCase("C7(b9,#11)", new[] { 0, 1, 4, 6, 7, 10 })]
+    [TestCase("C7#9b13", new[] { 0, 3, 4, 7, 8, 10 })]
+    [TestCase("Cmaj7#11", new[] { 0, 4, 6, 7, 11 })]
+    [TestCase("C7alt", new[] { 0, 1, 3, 4, 6, 8, 10 })]
+    [TestCase("C9sus4", new[] { 0, 2, 5, 7, 10 })]
+    [TestCase("C/F#", new[] { 0, 4, 6, 7 })]
+    [TestCase("C5", new[] { 0, 7 })]
+    public void Parse_ReadsEachToneOfTheSymbol(string symbol, int[] pitchClasses) =>
+        Assert.That(new ChordSymbolParser().Parse(symbol).PitchClassSet.Select(pc => pc.Value), Is.EqualTo(pitchClasses));
+
+    // The note after the slash is the bass, chord tone or not
+    [TestCase("C", 0, false)]
+    [TestCase("C/E", 4, true)]
+    [TestCase("C/G", 7, true)]
+    [TestCase("C/F#", 6, true)]
+    [TestCase("Am7/G", 7, true)]
+    [TestCase("D/F#", 6, true)]
+    [TestCase("C6/9", 0, false)]
+    public void Parse_PutsTheSlashBassInTheBass(string symbol, int bass, bool inverted)
+    {
+        var chord = new ChordSymbolParser().Parse(symbol);
+        Assert.Multiple(() =>
+        {
+            Assert.That(chord.Bass.PitchClass.Value, Is.EqualTo(bass));
+            Assert.That(chord.IsInverted, Is.EqualTo(inverted));
+        });
     }
 
     [Test]
