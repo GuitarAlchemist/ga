@@ -20,6 +20,9 @@ public sealed record ChordClassificationContext
     public bool IsRootless { get; init; }
     public bool IsOpenVoicing { get; init; }
     public string? DropVoicing { get; init; }
+
+    /// <summary>True for a shell voicing: the root in the bass, a third and a seventh, nothing else.</summary>
+    public bool IsShellVoicing { get; init; }
     public int NoteCount { get; init; }
     public int IntervalSpread { get; init; }
 
