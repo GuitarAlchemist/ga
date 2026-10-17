@@ -1,0 +1,94 @@
+# Pushes a commit made earlier in the job over the write deploy key, the
+# bypass actor of the merge-queue ruleset on main. GITHUB_TOKEN can't be one:
+# the GitHub Actions integration has no org installation record
+# (GuitarAlchemist/Demerzel#902).
+#
+# The key is on disk only while this step runs: it is written to $RUNNER_TEMP,
+# used for the push and deleted when the step exits, so whatever the job ran
+# before (npm install, cargo builds, an agent) never had it within reach. Keep
+# this step right after the commit, with nothing third-party in between.
+#
+# With the secret empty, it pushes to origin with whatever credential the
+# checkout left, as the workflows did before.
+name: Push with the ruleset-bypass deploy key
+description: Push the job's commit over the RULESET_BYPASS_SSH_KEY deploy key, loaded for this step only.
+
+inputs:
+  ssh-key:
+    description: Private half of the write deploy key (secrets.RULESET_BYPASS_SSH_KEY). Empty pushes to origin instead.
+    required: false
+    default: ''
+  refspec:
+    description: What to push, as in `git push <remote> <refspec>`. `HEAD` pushes the current branch to the branch of the same name.
+    required: false
+    default: 'HEAD:main'
+  attempts:
+    description: Push attempts. Between two attempts the commit is rebased onto the fetched destination branch; a conflict stops at once.
+    required: false
+    default: '1'
+  required:
+    description: "'false' turns a push that never lands into a warning instead of a failed step."
+    required: false
+    default: 'true'
+  working-directory:
+    description: The repository to push from.
+    required: false
+    default: '.'
+
+runs:
+  using: composite
+  steps:
+    - name: Push
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SSH_KEY: ${{ inputs.ssh-key }}
+        REFSPEC: ${{ inputs.refspec }}
+        ATTEMPTS: ${{ inputs.attempts }}
+        REQUIRED: ${{ inputs.required }}
+      run: |
+        give_up() {
+          if [ "$REQUIRED" = false ]; then echo "::warning::$1"; exit 0; fi
+          echo "::error::$1"; exit 1
+        }
+
+        # The destination branch: after the colon, or the current branch for `HEAD`.
+        case "$REFSPEC" in
+          *:*) dest=${REFSPEC#*:} ;;
+          HEAD) dest=$(git symbolic-ref --short HEAD 2>/dev/null || echo HEAD) ;;
+          *) dest=$REFSPEC ;;
+        esac
+        dest=${dest#refs/heads/}
+
+        remote=origin
+        if [ -n "$SSH_KEY" ]; then
+          key=$(mktemp "$RUNNER_TEMP/deploy-key.XXXXXX")   # mode 0600
+          trap 'rm -f "$key" "$key.known_hosts"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$key"
+          # github.com's ed25519 host key, as published by GET https://api.github.com/meta
+          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$key.known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$key.known_hosts"
+          # No git hooks while the key is on disk: a hook planted earlier in the job would run with it.
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null
+          remote="git@github.com:${GITHUB_REPOSITORY}.git"
+
+          # The key bypasses review, so only the job's own commit may ride it onto
+          # main: a run dispatched on another branch must not carry that branch in.
+          if [ "$dest" = main ]; then
+            git fetch --quiet "$remote" main || give_up "could not fetch main to check what the push would carry."
+            git merge-base --is-ancestor HEAD^ FETCH_HEAD ||
+              give_up "HEAD^ is not on main, so this push would carry unreviewed commits past the merge queue; was the workflow dispatched on another branch?"
+          fi
+        fi
+
+        for attempt in $(seq "$ATTEMPTS"); do
+          if git push "$remote" "$REFSPEC"; then exit 0; fi
+          [ "$attempt" -lt "$ATTEMPTS" ] || break
+          echo "::warning::push failed (attempt $attempt of $ATTEMPTS); rebasing onto $dest and retrying."
+          git fetch --quiet "$remote" "$dest" || continue
+          if ! git rebase --quiet FETCH_HEAD; then
+            git rebase --abort || true
+            give_up "rebasing onto $dest conflicted; nothing was pushed."
+          fi
+        done
+        give_up "could not push $REFSPEC after $ATTEMPTS attempt(s)."

@@ -119,7 +119,8 @@ jobs:
               --snapshots-dir state/quality \
               --out docs/quality/README.md
 
-      - name: Commit + push if changed
+      - name: Commit if changed
+        id: commit
         working-directory: ga
         env:
           DATE: ${{ env.DATE }}
@@ -142,22 +143,16 @@ jobs:
           fi
 
           git commit -m "chore(quality): snapshot ${DATE} [skip ci]"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Push to main
+        if: steps.commit.outputs.committed == 'true'
+        uses: ./ga/.github/actions/push-with-deploy-key
+        with:
+          ssh-key: ${{ secrets.RULESET_BYPASS_SSH_KEY }}
+          working-directory: ga
           # main moves while this job runs (~40 min), so a plain push is
           # routinely rejected as non-fast-forward. Rebase onto the current
           # tip and retry; snapshot paths are date-namespaced so the rebase
           # is conflict-free unless a same-day run already landed.
-          for attempt in 1 2 3 4 5; do
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "Push rejected (attempt ${attempt}); rebasing onto latest main."
-            git fetch origin main
-            if ! git rebase origin/main; then
-              git rebase --abort
-              echo "::error::Rebase conflict while landing snapshot ${DATE}; manual attention needed."
-              exit 1
-            fi
-          done
-          echo "::error::Push still rejected after 5 rebase attempts."
-          exit 1
+          attempts: 5
