@@ -27,22 +27,12 @@ public class ScaleVideoUrlById() : LazyIndexerBase<PitchClassSetId, Uri>(LoadVid
     private static IReadOnlyDictionary<PitchClassSetId, Uri> LoadVideoUrls()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = "GA.Domain.Core.Scales.Data.scale_video_urls.json";
+        // Embedded by GA.Domain.Core.csproj, under the default name: the root namespace, then the file's folder
+        var resourceName = "GA.Domain.Core.Theory.Tonal.Scales.Data.scale_video_urls.json";
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)
         {
-            // Fallback: try loading from file path during development
-            var filePath = Path.Combine(
-                Path.GetDirectoryName(assembly.Location) ?? "",
-                "Scales", "Data", "scale_video_urls.json");
-
-            if (File.Exists(filePath))
-            {
-                var json = File.ReadAllText(filePath);
-                return ParseJson(json);
-            }
-
             return new Dictionary<PitchClassSetId, Uri>();
         }
 
