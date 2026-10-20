@@ -32,7 +32,7 @@ proprietary and separately licensed, so `Brutal.Fmod` is not used.
 | Milestone | Status | Evidence |
 |---|---|---|
 | M0: discover and scope | PASS | [ACK and M0 report](https://github.com/GuitarAlchemist/gaia/issues/257#issuecomment-6282507425) |
-| M1: one window, input, clean close | NOT RUN: blocked on host memory headroom | `run-m1.ps1` writes `evidence/m1-<stamp>.md` |
+| M1: one window, input, clean close | PASS, 7/7 checks, 2026-10-19 | [evidence/m1-20261019-233551.md](evidence/m1-20261019-233551.md) |
 | M2: a small Observatory-relevant visual slice | NOT RUN | |
 | M3: measurements | NOT RUN | |
 | M4: report and continue/park recommendation | NOT RUN | |
@@ -62,3 +62,21 @@ takes a screenshot and sends Esc. It records each check as PASS, FAIL or NOT RUN
 - the clean exit;
 - leftover processes;
 - whether the Godot processes running beside it were left alone.
+
+### M1 result (2026-10-19)
+
+- **Run:** all seven checks passed. The window opened 167 ms after start, `b` and Esc arrived through `OnKey`, the app
+  exited with code 0 and left no process. Peak working set was 36 MB.
+- **Host:** the run budget was lowered, with the operator's agreement, to 6 GB of commit headroom and 4 GB free. The
+  host stayed at 139–140 of 148.6 GB committed throughout.
+- **Pause keys:** the log also shows Pause presses that nobody typed. They are a known quirk of this host (the focused
+  window receives Pause about 5 times a second), not a BRUTAL event.
+- **Loop rate:** about 58 iterations per second, set by `Thread.Sleep(1)` and Windows' 15.6 ms timer. It is not a frame
+  rate: nothing is drawn.
+- **Native binaries:** the Windows `glfw3.dll` in `Ahwoo.Brutal.Glfw` 2026.10.4 is unsigned. Its SHA-256 is in the
+  evidence.
+- **Preview dependency:** the restore pulls `Microsoft.Extensions.ObjectPool` 11.0.0-preview transitively.
+- **Earlier runs:** an earlier run passed every check, but its screen copy caught the desktop around the window; it was
+  discarded and the script now captures the window alone (`PrintWindow`). A run in between failed the key checks
+  because the script started the app without a console (`-NoNewWindow`), which broke focus. That was a harness bug,
+  reverted, not a BRUTAL result.

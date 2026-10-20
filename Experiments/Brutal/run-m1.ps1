@@ -7,7 +7,7 @@ param([double]$MaxCommitGB = 125, [double]$MinFreeGB = 8)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $proj = Join-Path $root 'HelloBrutal'
-$stamp = Get-Date -Format 'yyyyMMdd-HHmm'
+$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $out = Join-Path $root "evidence"
 New-Item -ItemType Directory -Force $out | Out-Null
 $md = Join-Path $out "m1-$stamp.md"
@@ -101,12 +101,21 @@ $shell.SendKeys('b')
 Start-Sleep -Milliseconds 700
 if ($hwnd -ne [IntPtr]::Zero) {
     Add-Type -AssemblyName System.Drawing
-    Add-Type -Namespace M1 -Name Win -MemberDefinition '[DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r); public struct RECT { public int L, T, R, B; }'
+    Add-Type -Namespace M1 -Name Win -MemberDefinition @'
+[DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+[DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
+[DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
+public struct RECT { public int L, T, R, B; }
+'@
+    # Physical pixels, and the window alone (PW_RENDERFULLCONTENT): nothing else on the screen gets into the evidence.
+    [void][M1.Win]::SetProcessDPIAware()
     $r = New-Object M1.Win+RECT
     [void][M1.Win]::GetWindowRect($hwnd, [ref]$r)
     $bmp = New-Object Drawing.Bitmap ($r.R - $r.L), ($r.B - $r.T)
     $g = [Drawing.Graphics]::FromImage($bmp)
-    $g.CopyFromScreen($r.L, $r.T, 0, 0, $bmp.Size)
+    $dc = $g.GetHdc()
+    [void][M1.Win]::PrintWindow($hwnd, $dc, 2)
+    $g.ReleaseHdc($dc)
     $bmp.Save((Join-Path $out "m1-$stamp.png"))
     $g.Dispose(); $bmp.Dispose()
 }
