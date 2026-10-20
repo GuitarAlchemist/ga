@@ -456,6 +456,8 @@ frames, worst second 59.
 Tried and dropped:
 - **The swarm's instances written in parallel**, 1,024 a task: 12,618 frames in 24 s against 17,780 for one loop, and
   the write's p95 3.11 ms against 0.84. The tasks contend with Jolt's worker and its threads for the cores.
+  Again in slices of 2,048 on at most four tasks: at 40,000 machines the median frame fell from about 2.5 to 2.0 ms,
+  but p99 rose from about 9 to 11.6 ms; at 10,000, the worst second fell from 763 to 445 frames.
 - **More Jolt threads.** At 40,000 machines, 6, 12 and 20 threads gave the same update: 11.1, 11.0 and 10.6 ms. At
   10,000, 3 threads cost 0.2 ms more than 6.
 - **Jolt's solver settings.** `PhysicsSystem_GetPhysicsSettings` is missing from `jolt.dll`, so the current settings
@@ -466,6 +468,8 @@ Tried and dropped:
 - **Mailbox** (`--mailbox`, three images) gave 17,949 frames in 24 s, the same as with no vsync, without tearing.
 - **Towers drawn before the machines**, for depth to reject more before shading: the scene took 0.89 ms on the GPU,
   against 0.86 ms in the usual order.
+- **A top-level structure built for fast tracing** rather than fast building: 0.21 ms to build and 0.84 ms of scene,
+  against 0.20 and 0.87. The scene's own shading is most of the GPU's time: 0.58 ms without ray queries.
 
 The summary now also reads four GPU timestamps a frame (Vulkan timestamp queries): start, ray-tracing structure built,
 scene drawn, end. At 10,000 machines the GPU sets the pace; at 40,000, the CPU's writing of the instances does.
