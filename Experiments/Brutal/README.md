@@ -481,7 +481,7 @@ the check did the work it describes; "loads" means the assembly loaded and nothi
 | Monitor.Host | loads | loaded Brutal.Monitor.Host 1.0.0.0: 3 public types, among them Monitor, MonitorLoggerProvider, MonitorLoggingStats (loaded only) | 0.3 |
 
 Coverage:
-- **This table:** 35 packages. The Sdl row covers SDL, SDL_image, SDL_ttf and SDL_mixer; the Texture row covers Texture
+- **This table:** 36 packages. The Sdl row covers SDL, SDL_image, SDL_ttf and SDL_mixer; the Texture row covers Texture
   and Texture.Abstractions.
 - **Colossus:** the other 12, at work: Core, Numerics, Glfw, Vulkan, Vulkan.Abstractions, ShaderC, Jolt, ImGui,
   ImGui.Backends, ImPlot, Gltf and OpenAl. Its panel also puts Localization and ImGui.FreeType to work.
