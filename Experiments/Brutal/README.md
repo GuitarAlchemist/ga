@@ -255,7 +255,7 @@ from Gaussian bumps, which looks at the figure and speaks, then disperses again.
 
 Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N` (default 10,000), `--seconds T`, `--immediate`
 (no vsync), `--images N` (swapchain images, default 2) and `--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
-The sound takes `--mute`, `--no-sound`, `--no-voice` and `--face-file PATH` (below).
+The sound takes `--mute`, `--no-sound`, `--no-voice` and `--face-file PATH` (below); `--lang fr|en` sets the panel's language.
 The capture copies the swapchain image to a host buffer, so it also works where a desktop screenshot cannot (a locked
 session, or a window with no vsync).
 
@@ -413,6 +413,12 @@ The voice plugins on this machine are mirrored, read-only: the scene reads their
 
 With sound, the mirror and the city, vsync over 25 s gave 1,422 frames, p50 16.66 ms, p99 18.60, worst second 60.
 
+**Panel.** The panel reads in French or English: `--lang fr|en`, the system's language by default, and L switches
+it. The strings go through BRUTAL's localisation (`Ahwoo.Brutal.Localization`): each string's id is its English
+text, and a provider answers with the French one. The font is Segoe UI, rasterised by FreeType through
+`Ahwoo.Brutal.ImGui.FreeType`. It is read from Windows' font folder at run time and not shipped; without it, ImGui's
+own font is used. In French, vsync over 20 s gave 1,121 frames, worst second 59.
+
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The
   DLL exports 3,674 names. This was measured by matching the assembly's P/Invoke imports against the DLL's export table.
@@ -478,7 +484,7 @@ Coverage:
 - **This table:** 35 packages. The Sdl row covers SDL, SDL_image, SDL_ttf and SDL_mixer; the Texture row covers Texture
   and Texture.Abstractions.
 - **Colossus:** the other 12, at work: Core, Numerics, Glfw, Vulkan, Vulkan.Abstractions, ShaderC, Jolt, ImGui,
-  ImGui.Backends, ImPlot, Gltf and OpenAl.
+  ImGui.Backends, ImPlot, Gltf and OpenAl. Its panel also puts Localization and ImGui.FreeType to work.
 - **Left out:** FMOD (`Ahwoo.Brutal.Fmod`), because FMOD itself is proprietary, under Firelight's own licence and
   terms. The `com.IvanMurzak.Brutal.MCP.*` packages on NuGet are not BRUTAL's (another publisher) and were not used.
 

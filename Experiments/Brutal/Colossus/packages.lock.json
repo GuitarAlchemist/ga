@@ -62,6 +62,16 @@
           "CommunityToolkit.HighPerformance": "8.4.2"
         }
       },
+      "Ahwoo.BRUTAL.ImGui.FreeType": {
+        "type": "Direct",
+        "requested": "[2026.10.2, 2026.10.2]",
+        "resolved": "2026.10.2",
+        "contentHash": "Whf2GkxSN+5UOijNnNrFVNM4lRJ+1HsRtI1bGHSiTiYpiaeQsIGa+6w0k9TfS5IO5x2ZlVFsgUjpHvfmipGcdg==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.FreeType": "2026.10.1",
+          "Ahwoo.BRUTAL.ImGui": "2026.10.2"
+        }
+      },
       "Ahwoo.BRUTAL.ImPlot": {
         "type": "Direct",
         "requested": "[2026.10.2, 2026.10.2]",
@@ -83,6 +93,16 @@
           "Ahwoo.BRUTAL.Memory": "2026.10.1",
           "Ahwoo.BRUTAL.Numerics": "2026.10.1",
           "Ahwoo.BRUTAL.Strings": "2026.10.1"
+        }
+      },
+      "Ahwoo.BRUTAL.Localization": {
+        "type": "Direct",
+        "requested": "[2026.10.2, 2026.10.2]",
+        "resolved": "2026.10.2",
+        "contentHash": "Ypy1nTfokf75iMQ4NZNMY37pTKCsRiyEMT/wg4FPFyGyFFykWsxeub5fiwvFtgV0Msb2cqc3bF1ioTDlqNcAhw==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Logging": "2026.10.2"
         }
       },
       "Ahwoo.BRUTAL.OpenAl": {
@@ -146,6 +166,15 @@
           "Microsoft.Extensions.Logging.Console": "10.0.0"
         }
       },
+      "Ahwoo.BRUTAL.FreeType": {
+        "type": "Transitive",
+        "resolved": "2026.10.1",
+        "contentHash": "l5b21GDUXURH05w3tSIC0+uxzt6M9kLjGhrpeWSOUE/+1GnMpkNYIxu4X2WlatTfRpISPNcy/cedWkS3rFUisA==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.ZLib": "2026.10.1"
+        }
+      },
       "Ahwoo.BRUTAL.Gli": {
         "type": "Transitive",
         "resolved": "2026.10.1",
@@ -170,15 +199,6 @@
         "dependencies": {
           "Ahwoo.BRUTAL.Core": "2026.10.1",
           "Ahwoo.BRUTAL.Numerics": "2026.10.1"
-        }
-      },
-      "Ahwoo.BRUTAL.Localization": {
-        "type": "Transitive",
-        "resolved": "2026.10.2",
-        "contentHash": "Ypy1nTfokf75iMQ4NZNMY37pTKCsRiyEMT/wg4FPFyGyFFykWsxeub5fiwvFtgV0Msb2cqc3bF1ioTDlqNcAhw==",
-        "dependencies": {
-          "Ahwoo.BRUTAL.Core": "2026.10.1",
-          "Ahwoo.BRUTAL.Logging": "2026.10.2"
         }
       },
       "Ahwoo.BRUTAL.Logging": {
@@ -258,6 +278,11 @@
           "Ahwoo.BRUTAL.Numerics": "2026.10.1",
           "Ahwoo.BRUTAL.Stb": "2026.10.2"
         }
+      },
+      "Ahwoo.BRUTAL.ZLib": {
+        "type": "Transitive",
+        "resolved": "2026.10.1",
+        "contentHash": "dh0cBEl4oaDBe1mafpdjT+nMSMyqmMBaOKxv/MWdTawUAn5Ohn/6doKNXn5/etySVfeNCCGYyNphblfoN6HWQQ=="
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Transitive",

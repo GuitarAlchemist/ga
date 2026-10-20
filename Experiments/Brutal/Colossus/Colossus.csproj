@@ -20,8 +20,10 @@
     <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.Jolt" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Localization" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ImGui" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ImGui.Backends" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.FreeType" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ImPlot" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.OpenAl" Version="[2026.10.2]" />
   </ItemGroup>

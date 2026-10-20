@@ -15,6 +15,8 @@
 
 using System.Buffers.Binary;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,8 +25,10 @@ using Brutal.GlfwApi;
 using Brutal.GltfApi;
 using Brutal.ImGuiApi;
 using Brutal.ImGuiApi.Backends;
+using Brutal.ImGuiApi.FreeType;
 using Brutal.ImPlotApi;
 using Brutal.JoltApi;
+using Brutal.Localization;
 using Brutal.Numerics;
 using Brutal.Pointers;
 using Brutal.ShaderCApi;
@@ -916,6 +920,17 @@ internal static unsafe class Colossus
         ImGui.StyleColorsDark();
         var io = ImGui.GetIO();
         io.IniFilename = default;
+        // The panel's font: Segoe UI from the system, rasterised by FreeType (ImGui.FreeType), when it is there.
+        var fontFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "segoeui.ttf");
+        if (File.Exists(fontFile))
+        {
+            io.Fonts.SetFontLoader(ImGuiFreeType.GetFontLoader());
+            io.Fonts.AddFontFromFileTTF(fontFile, 17f);
+        }
+
+        var langAt = Array.IndexOf(args, "--lang");
+        _french = langAt >= 0 && langAt + 1 < args.Length ? args[langAt + 1] == "fr" : CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "fr";
+        LStrings.SetLocalizedStringProvider(Translate);
         var platform = new GlfwBackend(window, GlfwBackend.ClientApi.Vulkan);
         var renderer = new VulkanBackend(new VulkanBackend.CreateInfo
         {
@@ -1071,6 +1086,12 @@ internal static unsafe class Colossus
                 autoCycle = false;
             }
 
+            if (ImGui.IsKeyPressed(ImGuiKey.L, false))
+            {
+                _french = !_french;
+                LStrings.RemoveAll();
+            }
+
             if (ImGui.IsKeyPressed(ImGuiKey.C, false))
             {
                 preset = (preset + 1) % 3;
@@ -1121,32 +1142,32 @@ internal static unsafe class Colossus
 
             // The panel.
             ImGui.SetNextWindowPos(new float2(14f, 14f), ImGuiCond.FirstUseEver);
-            if (ImGui.Begin("BRUTAL showcase"u8, ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.Begin($"{L("BRUTAL showcase")}###panel", ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.Text($"{io.Framerate:F0} fps ({vsyncNote}), frame {frameMs:F2} ms");
-                ImGui.Text($"Jolt: {_ids.Length} bodies, {physicsMs:F2} ms a step, {threads} threads");
-                ImGui.Text($"Vulkan: {staticInstances.Length + _ids.Length} instances in {drawCalls} draw calls, HDR, MSAA 4x, bloom");
-                ImGui.Text($"Swarm: {(assembled ? "face" : "cloud")}{(errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty)}");
+                ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
+                ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
+                ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"), staticInstances.Length + _ids.Length, drawCalls));
+                ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
                 ImGui.Separator();
-                if (ImGui.Button(assembled ? "Disperse"u8 : "Assemble"u8))
+                if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
                 {
                     assembled = !assembled;
                     autoCycle = false;
                 }
 
                 ImGui.SameLine();
-                ImGui.Checkbox("Auto cycle"u8, ref autoCycle);
+                ImGui.Checkbox($"{L("Auto cycle")}###cycle", ref autoCycle);
                 ImGui.SameLine();
-                ImGui.Checkbox("Speaking"u8, ref speaking);
-                ImGui.SliderFloat("Swarm speed"u8, ref speedScale, 0.2f, 3f);
-                ImGui.SliderFloat("Cohesion"u8, ref cohesion, 0.2f, 4f);
-                ImGui.SliderFloat("Exposure"u8, ref exposure, 0.3f, 4f);
-                ImGui.SliderFloat("Bloom"u8, ref bloomStrength, 0f, 0.6f);
-                ImGui.SliderInt("Swarm size"u8, ref requested, 500, 20000);
+                ImGui.Checkbox($"{L("Speaking")}###speaking", ref speaking);
+                ImGui.SliderFloat($"{L("Swarm speed")}###speed", ref speedScale, 0.2f, 3f);
+                ImGui.SliderFloat($"{L("Cohesion")}###cohesion", ref cohesion, 0.2f, 4f);
+                ImGui.SliderFloat($"{L("Exposure")}###exposure", ref exposure, 0.3f, 4f);
+                ImGui.SliderFloat($"{L("Bloom")}###bloom", ref bloomStrength, 0f, 0.6f);
+                ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, 20000);
                 if (requested != _ids.Length)
                 {
                     ImGui.SameLine();
-                    if (ImGui.Button("Rebuild"u8))
+                    if (ImGui.Button($"{L("Rebuild")}###rebuild"))
                     {
                         DestroySwarm(bodies);
                         BuildSwarm(bodies, requested);
@@ -1154,49 +1175,49 @@ internal static unsafe class Colossus
                     }
                 }
 
-                if (ImGui.Button("Shoulder"u8))
+                if (ImGui.Button($"{L("Shoulder")}###shoulder"))
                 {
                     preset = 0;
                 }
 
                 ImGui.SameLine();
-                if (ImGui.Button("Wide"u8))
+                if (ImGui.Button($"{L("Wide")}###wide"))
                 {
                     preset = 1;
                 }
 
                 ImGui.SameLine();
-                if (ImGui.Button("Face"u8))
+                if (ImGui.Button($"{L("Face")}###faceview"))
                 {
                     preset = 2;
                 }
 
                 ImGui.SameLine();
-                ImGui.Checkbox("Drift"u8, ref drift);
+                ImGui.Checkbox($"{L("Drift")}###drift", ref drift);
                 if (rtx)
                 {
-                    ImGui.Checkbox("RTX: traced sun shadows and reflections"u8, ref rtxOn);
+                    ImGui.Checkbox($"{L("RTX: traced sun shadows and reflections")}###rtx", ref rtxOn);
                 }
                 else
                 {
-                    ImGui.Text("RTX: no ray queries on this GPU, or --no-rtx"u8);
+                    ImGui.Text(L("RTX: no ray queries on this GPU, or --no-rtx"));
                 }
 
                 if (sound is not null)
                 {
-                    ImGui.Checkbox("Sound"u8, ref soundOn);
+                    ImGui.Checkbox($"{L("Sound")}###sound", ref soundOn);
                     ImGui.SameLine();
-                    ImGui.SliderFloat("Volume"u8, ref volume, 0f, 1f);
+                    ImGui.SliderFloat($"{L("Volume")}###volume", ref volume, 0f, 1f);
                 }
                 else
                 {
-                    ImGui.Text($"Sound: {soundNote}");
+                    ImGui.Text(string.Format(L("Sound: {0}"), soundNote));
                 }
 
                 var heard = !mirror.Present ? "not running" : voice ? "a voice speaks" : hearing > 0.3f ? "hearing you" : mirror.FaceState ?? "quiet";
-                ImGui.Checkbox("Mirror the voice plugins"u8, ref mirrorOn);
+                ImGui.Checkbox($"{L("Mirror the voice plugins")}###mirror", ref mirrorOn);
                 ImGui.SameLine();
-                ImGui.Text($"({heard})");
+                ImGui.Text($"({L(heard)})");
                 Array.Copy(frameHistory, 1, frameHistory, 0, History - 1);
                 Array.Copy(physicsHistory, 1, physicsHistory, 0, History - 1);
                 for (var i = 0; i < History - 1; i++)
@@ -1212,13 +1233,13 @@ internal static unsafe class Colossus
                     ImPlot.SetupAxes(default, "ms"u8, ImPlotAxisFlags.NoTickLabels);
                     ImPlot.SetupAxisLimits(ImAxis.X1, 0, History - 1, ImPlotCond.Always);
                     ImPlot.SetupAxisLimits(ImAxis.Y1, 0, 25, ImPlotCond.Always);
-                    ImPlot.PlotLine("frame"u8, frameHistory);
+                    ImPlot.PlotLine(L("frame"), frameHistory);
                     ImPlot.PlotLine("Jolt"u8, physicsHistory);
                     ImPlot.EndPlot();
                 }
 
-                ImGui.Text("Space assemble   C camera   drag turn   wheel zoom   Esc quit"u8);
-                ImGui.Text("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"u8);
+                ImGui.Text(L("Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"));
+                ImGui.Text(L("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"));
             }
 
             ImGui.End();
@@ -1596,6 +1617,67 @@ internal static unsafe class Colossus
     {
         var angle = _phase[i] + (t * _speed[i]);
         return new SN.Vector3(MathF.Cos(angle) * _radius[i], _height[i] + (MathF.Sin((t * 0.6f) + (_phase[i] * 3f)) * 3f), -6f + (MathF.Sin(angle) * _radius[i] * 0.7f));
+    }
+
+    // The panel's language (--lang en|fr, or the system's; L switches it), through BRUTAL's localisation: each string's
+    // id is its English text, and the provider answers with its French text while the panel is in French.
+    private static bool _french;
+
+    private static readonly Dictionary<string, string> French = new()
+    {
+        ["BRUTAL showcase"] = "Vitrine BRUTAL",
+        ["{0:F0} fps ({1}), frame {2:F2} ms"] = "{0:F0} i/s ({1}), image {2:F2} ms",
+        ["vsync"] = "vsync",
+        ["no vsync"] = "sans vsync",
+        ["Jolt: {0} bodies, {1:F2} ms a step, {2} threads"] = "Jolt : {0} corps, {1:F2} ms par pas, {2} fils",
+        ["Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"] = "Vulkan : {0} instances en {1} appels de dessin, HDR, MSAA 4x, halo",
+        ["Swarm: {0}"] = "Essaim : {0}",
+        ["face"] = "visage",
+        ["cloud"] = "nuée",
+        ["Disperse"] = "Disperser",
+        ["Assemble"] = "Assembler",
+        ["Auto cycle"] = "Cycle auto",
+        ["Speaking"] = "Parole",
+        ["Swarm speed"] = "Vitesse de l'essaim",
+        ["Cohesion"] = "Cohésion",
+        ["Exposure"] = "Exposition",
+        ["Bloom"] = "Halo",
+        ["Swarm size"] = "Taille de l'essaim",
+        ["Rebuild"] = "Reconstruire",
+        ["Shoulder"] = "Épaule",
+        ["Wide"] = "Large",
+        ["Face"] = "Visage",
+        ["Drift"] = "Dérive",
+        ["RTX: traced sun shadows and reflections"] = "RTX : ombres du soleil et reflets tracés",
+        ["RTX: no ray queries on this GPU, or --no-rtx"] = "RTX : pas de ray queries sur ce GPU, ou --no-rtx",
+        ["Sound"] = "Son",
+        ["Volume"] = "Volume",
+        ["Sound: {0}"] = "Son : {0}",
+        ["Mirror the voice plugins"] = "Refléter les plugins de voix",
+        ["not running"] = "absents",
+        ["a voice speaks"] = "une voix parle",
+        ["hearing you"] = "il vous entend",
+        ["quiet"] = "silence",
+        ["idle"] = "au repos",
+        ["working"] = "au travail",
+        ["waiting"] = "attend",
+        ["done"] = "terminé",
+        ["failed"] = "échec",
+        ["frame"] = "image",
+        ["Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"] = "Espace assembler   C caméra   glisser tourner   molette zoom   L langue   Échap quitter",
+        ["Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"] = "Fait avec BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot et OpenAL Soft",
+    };
+
+    private static string L(string english)
+    {
+        var s = LStrings.GetOrCreate(english, english);
+        return string.IsNullOrEmpty(s.Localized) ? s.Template : s.Localized;
+    }
+
+    private static bool Translate(LString s, [NotNullWhen(true)] out string? text)
+    {
+        text = null;
+        return _french && French.TryGetValue(s.Template, out text);
     }
 
     // How open the mouth is while the face speaks, from 0 to 1: syllables, in phrases.
