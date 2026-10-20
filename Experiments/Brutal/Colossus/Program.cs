@@ -10,7 +10,11 @@
 // --no-rtx (no ray queries), --rtx-off (ray queries unticked at start), --images N (swapchain images, default 2),
 // --capture T1,T2,... (save the window's image at those seconds, as
 // colossus-<T>s.png in the working directory), --mute (sound at zero), --no-sound (no audio device),
-// --no-voice (don't mirror the voice plugins), --face-file PATH (voice-avatar's faceFile, to follow its state).
+// --no-voice (don't mirror the voice plugins), --face-file PATH (voice-avatar's faceFile, to follow its state),
+// --hidden (an invisible window, for measuring without covering the desktop), --mailbox (no vsync and no tearing:
+// each new image replaces the one waiting, where the driver offers it). To compare speeds: --physics-hz N (Jolt steps a
+// second, default 120, 0 = every frame), --jolt-threads N, --body-threads N (tasks steering and reading the bodies),
+// --serial (wait for each step), --locking (the locking body interface), --face-collide (machines collide in the face).
 // The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
 
 using System.Buffers.Binary;
@@ -74,7 +78,9 @@ internal static unsafe class Colossus
     private const int Width = 1600;
     private const int Height = 900;
     private const int FramesInFlight = 2;
-    private const int MaxInstances = 40_000;
+    // The largest swarm, and every instance drawn: the swarm, the city's 400-odd towers and solids, and room to spare.
+    private const int MaxSwarm = 40_000;
+    private const int MaxInstances = MaxSwarm + 1_024;
     private const int History = 300;
     private const int ApiVersion13 = (1 << 22) | (3 << 12);
     private const VkFormat HdrFormat = VkFormat.R16G16B16A16SFloat;
@@ -394,10 +400,15 @@ internal static unsafe class Colossus
 
     // The swarm, in arrays indexed alike.
     private static uint[] _ids = [];
-    private static BodyState[] _states = [];
+    // Two buffers of every body's state: the one drawn, and the one Jolt's worker reads the next step into.
+    private static BodyState[] _states = [], _statesBack = [];
     private static SN.Vector3[] _faceP = [], _faceN = [], _dirs = [];
     private static float[] _eye = [], _mouth = [], _jaw = [], _phase = [], _radius = [], _height = [], _speed = [];
     private static float _memberRadius;
+
+    // How many tasks steer and read the bodies, 2,048 at a time (--body-threads; 1 is one loop). They run on the step's
+    // worker while Jolt's own threads are idle.
+    private static int _bodyThreads = 4;
 
     // The head the swarm forms, when head/head_points.bin is there: points on a generated head (see the README), 9 floats
     // each (position, normal, eye, mouth and jaw weights), in an order where any first n cover it evenly.
@@ -408,8 +419,9 @@ internal static unsafe class Colossus
     public static int Run(string[] args)
     {
         var limit = Arg(args, "--seconds", 0);
-        var swarm = (int)Arg(args, "--swarm", 10000);
+        var swarm = Math.Clamp((int)Arg(args, "--swarm", 10000), 1, MaxSwarm);
         var immediate = args.Contains("--immediate");
+        var mailbox = args.Contains("--mailbox");
         var captureAt = Array.IndexOf(args, "--capture");
         var captures = captureAt >= 0 && captureAt + 1 < args.Length ? args[captureAt + 1].Split(',').Select(double.Parse).Order().ToArray() : [];
         var nextCapture = 0;
@@ -433,6 +445,11 @@ internal static unsafe class Colossus
 
         Glfw.WindowHint(GlfwWindowHint.ClientApi, 0);
         Glfw.WindowHint(GlfwWindowHint.Resizable, 0);
+        if (args.Contains("--hidden"))
+        {
+            Glfw.WindowHint(GlfwWindowHint.Visible, 0);
+        }
+
         var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "BRUTAL showcase: the swarm", Size = new int2(Width, Height) });
 
         var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var extensionCount);
@@ -520,7 +537,8 @@ internal static unsafe class Colossus
         var modeCount = physical.GetSurfacePresentModesKHR_Count(surface);
         var modes = new VkPresentModeKHR[modeCount];
         physical.GetSurfacePresentModesKHR_Write(surface, modes);
-        var presentMode = immediate && modes.Contains(VkPresentModeKHR.ImmediateKHR) ? VkPresentModeKHR.ImmediateKHR : VkPresentModeKHR.FifoKHR;
+        var presentMode = mailbox && modes.Contains(VkPresentModeKHR.MailboxKHR) ? VkPresentModeKHR.MailboxKHR
+            : immediate && modes.Contains(VkPresentModeKHR.ImmediateKHR) ? VkPresentModeKHR.ImmediateKHR : VkPresentModeKHR.FifoKHR;
 
         var caps = physical.GetSurfaceCapabilitiesKHR(surface);
         var extent = caps.CurrentExtent.Width == -1 ? new VkExtent2D { Width = Width, Height = Height } : caps.CurrentExtent;
@@ -947,7 +965,7 @@ internal static unsafe class Colossus
         Jolt.RegisterDefaultAllocator();
         Factory.Instance = Factory.Create();
         Jolt.RegisterTypes();
-        var threads = Math.Clamp(Environment.ProcessorCount - 2, 1, 6);
+        var threads = (int)Arg(args, "--jolt-threads", Math.Clamp(Environment.ProcessorCount - 2, 1, 6));
         // With the fallback: the package's TempAllocatorImpl.Create(64 MB) aborts the process (0xC0000409) in the first
         // Update that has moving bodies, as if it held far less than asked, while the same size with a malloc fallback runs.
         var temp = TempAllocatorImplWithMallocFallback.Create(64u * 1024 * 1024);
@@ -957,13 +975,20 @@ internal static unsafe class Colossus
         broadPhaseLayers.MapObjectToBroadPhaseLayer(1, 1);
         var layerPairs = ObjectLayerPairFilterTable.Create(2);
         layerPairs.EnableCollision(0, 1);
-        layerPairs.EnableCollision(1, 1);
+        if (!args.Contains("--no-self-collide"))
+        {
+            layerPairs.EnableCollision(1, 1);
+        }
         var objectVsBroadPhase = ObjectVsBroadPhaseLayerFilterTable.Create(broadPhaseLayers, 2, layerPairs, 2);
         var physics = PhysicsSystem.Create();
-        physics.Init(40_000, 0, 262_144, 131_072, broadPhaseLayers, objectVsBroadPhase, layerPairs);
+        // Room for the walkway and the figure beside a full swarm: at 40,000 machines and 40,000 bodies, the last ones
+        // came back invalid, and destroying them crashed.
+        physics.Init(MaxInstances, 0, 262_144, 131_072, broadPhaseLayers, objectVsBroadPhase, layerPairs);
         physics.SetGravity(new float3(0f, -9.81f, 0f));
-        var bodies = physics.GetBodyInterface();
-
+        // The bodies are steered and read only by the step's worker, before and after its step, and this thread touches
+        // them only once that worker is done, so the interface that takes no lock is safe; it halves the cost of the
+        // 30,000 calls a step. --locking compares.
+        var bodies = args.Contains("--locking") ? physics.GetBodyInterface() : physics.GetBodyInterfaceNoLock();
 
         // The scene: the city is drawn only; the walkway and the figure also stand in the simulation.
         var rng = new Random(7);
@@ -1019,6 +1044,11 @@ internal static unsafe class Colossus
         }
 
         BuildSwarm(bodies, swarm);
+        // Jolt asks for this after adding bodies one at a time, which leaves the broad phase's tree unbalanced. At 40,000
+        // machines it changed nothing measurable: Jolt rebuilds the tree as it steps.
+        physics.OptimizeBroadPhase();
+
+        _bodyThreads = (int)Arg(args, "--body-threads", 4);
         physics.OptimizeBroadPhase();
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
 
@@ -1044,14 +1074,37 @@ internal static unsafe class Colossus
 
         var frameTimes = new List<double>(1 << 16);
         var physicsTimes = new List<double>(1 << 16);
-        var physicsWatch = new Stopwatch();
+        var serial = args.Contains("--serial");
+        Task<PhysicsUpdateError>? stepping = null;
+        var physicsHz = Arg(args, "--physics-hz", 120);
+        // The machines stop colliding with each other once they form the face: each flies to its own point of the head's
+        // blue noise, so they hardly touch, and the contacts doubled Jolt's step. --face-collide keeps them.
+        var faceNoCollide = !args.Contains("--face-collide");
+        bool collideOff = false;
+        double lastKick = 0, lastRead = 0;
+        var kickDt = 1f / 60f;
+        var stepMs = 0.0;
+        // The worker's step in its three parts, for the summary.
+        string[] stepParts = ["steer", "update", "read"];
+        var stepTimes = stepParts.Select(_ => new List<double>(1 << 16)).ToArray();
         double simTime = 0, last = clock.Elapsed.TotalSeconds, cycleStart = last, nextLog = last + 1, physicsMs = 0, frameMs = 0;
         var lastLogFrame = 0;
         var worstSecond = int.MaxValue;
         var frame = 0;
         var errors = PhysicsUpdateError.None;
         var reason = "window closed";
-        var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : "no vsync";
+        var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
+
+        // Where each frame's time goes, phase by phase, for the summary.
+        string[] phases = ["steer", "step", "read", "panel", "wait", "write", "record", "present", "events"];
+        var phaseTimes = phases.Select(_ => new List<double>(1 << 16)).ToArray();
+        var mark = Stopwatch.GetTimestamp();
+        void Lap(int k)
+        {
+            var t = Stopwatch.GetTimestamp();
+            phaseTimes[k].Add((t - mark) * 1000.0 / Stopwatch.Frequency);
+            mark = t;
+        }
 
         var clears = stackalloc VkClearValue[2];
         while (!window.ShouldClose)
@@ -1071,6 +1124,9 @@ internal static unsafe class Colossus
             frameMs = (now - last) * 1000.0;
             last = now;
 
+            // ImString's shared arena (8 MB) holds each frame's formatted panel text and is never emptied by the binding:
+            // without this, the panel throws once it fills, after some thousands of frames.
+            ImString.SharedStorage.Clear();
             platform.NewFrame();
             renderer.NewFrame();
             ImGui.NewFrame();
@@ -1118,22 +1174,74 @@ internal static unsafe class Colossus
                 assembled = (c >= 6.0 && c < 24.0) || voice || (mirrorOn && mirror.FaceState is "working" or "waiting");
             }
 
-            // One step a frame, as long as the frame (clamped): steer every body toward its target, step Jolt, read every
-            // body back. Catching up with several fixed steps after a hitch made each frame longer than the last.
+            // Jolt steps on a worker while this thread draws, at most --physics-hz times a second (default 120; 0 steps
+            // every frame and waits for each). When a step is due and the last one is done, its bodies are swapped in for
+            // drawing and the next starts on the worker: steer every body toward its target, step as long as the time
+            // since the last step (smoothed and clamped), read every body back into the other buffer. A step longer than
+            // its period does not hold the frame: until it is done, the frames go on drawing the last one, each machine
+            // moved on along its velocity. Catching up with several fixed steps after a hitch made each frame longer than
+            // the last. --serial waits for each step as soon as it starts.
             var stepDt = Math.Clamp(frameDt, 1f / 240f, 1f / 30f);
             var mouth = voice || speaking ? Speech((float)simTime) : 0f;
-            physicsWatch.Restart();
-            Steer(bodies, (float)simTime, assembled, mouth, cohesion, speedScale);
-            var error = physics.Update(stepDt, 1, temp, jobs);
-            if (error != PhysicsUpdateError.None)
+            Lap(8);
+            if (stepping is null || physicsHz <= 0 || (stepping.IsCompleted && now - lastKick >= 1.0 / physicsHz))
             {
-                errors |= error;
+                // The step that ran has read every body back into the second buffer: swap it in for drawing.
+                if (stepping is not null)
+                {
+                    errors |= stepping.Result;
+                    physicsMs = stepMs;
+                    physicsTimes.Add(physicsMs);
+                    (_states, _statesBack) = (_statesBack, _states);
+                    lastRead = now;
+                }
+
+                Lap(1);
+                Lap(2);
+                kickDt = physicsHz <= 0 ? stepDt : kickDt + ((Math.Clamp((float)(now - lastKick), 1f / 240f, 1f / 30f) - kickDt) * 0.12f);
+                lastKick = now;
+                var (dt, t0, together, open, pull, pace) = (kickDt, (float)simTime, assembled, mouth, cohesion, speedScale);
+                var (from, into) = (_states, _statesBack);
+                simTime += dt;
+                stepping = Task.Run(() =>
+                {
+                    // On the worker, while this thread draws from the same buffer: steer from the bodies as drawn, step,
+                    // and read every body back into the other buffer.
+                    var started = Stopwatch.GetTimestamp();
+                    if (faceNoCollide && together != collideOff)
+                    {
+                        collideOff = together;
+                        if (together)
+                        {
+                            layerPairs.DisableCollision(1, 1);
+                        }
+                        else
+                        {
+                            layerPairs.EnableCollision(1, 1);
+                        }
+                    }
+
+                    Steer(bodies, from, t0, together, open, pull, pace);
+                    var steered = Stopwatch.GetTimestamp();
+                    var stepError = physics.Update(dt, 1, temp, jobs);
+                    var updated = Stopwatch.GetTimestamp();
+                    ReadStates(bodies, into);
+                    var done = Stopwatch.GetTimestamp();
+                    stepMs = (done - started) * 1000.0 / Stopwatch.Frequency;
+                    stepTimes[0].Add((steered - started) * 1000.0 / Stopwatch.Frequency);
+                    stepTimes[1].Add((updated - steered) * 1000.0 / Stopwatch.Frequency);
+                    stepTimes[2].Add((done - updated) * 1000.0 / Stopwatch.Frequency);
+                    return stepError;
+                });
+                if (serial)
+                {
+                    stepping.Wait();
+                }
+
+                Lap(0);
             }
 
-            ReadStates(bodies);
-            simTime += stepDt;
-            physicsMs = physicsWatch.Elapsed.TotalMilliseconds;
-            physicsTimes.Add(physicsMs);
+            var ahead = (float)Math.Min(now - lastRead, 1.0 / 30.0);
 
             glow += ((assembled ? 1f : 0f) - glow) * Math.Min(1f, frameDt * 0.8f);
             // The eyes brighten as the microphone hears the user, and pulse while voice-avatar waits for them.
@@ -1163,14 +1271,17 @@ internal static unsafe class Colossus
                 ImGui.SliderFloat($"{L("Cohesion")}###cohesion", ref cohesion, 0.2f, 4f);
                 ImGui.SliderFloat($"{L("Exposure")}###exposure", ref exposure, 0.3f, 4f);
                 ImGui.SliderFloat($"{L("Bloom")}###bloom", ref bloomStrength, 0f, 0.6f);
-                ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, 20000);
+                ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, MaxSwarm);
                 if (requested != _ids.Length)
                 {
                     ImGui.SameLine();
                     if (ImGui.Button($"{L("Rebuild")}###rebuild"))
                     {
+                        stepping?.Wait();
+                        stepping = null;
                         DestroySwarm(bodies);
                         BuildSwarm(bodies, requested);
+                        physics.OptimizeBroadPhase();
                         physics.OptimizeBroadPhase();
                     }
                 }
@@ -1283,6 +1394,7 @@ internal static unsafe class Colossus
             }
 
             // The frame: wait for this slot, fill its instances, record the scene and the panel, submit, present.
+            Lap(3);
             var slot = frame % FramesInFlight;
             device.WaitForFences([fences[slot]], true, -1);
             var result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out var imageIndex);
@@ -1292,11 +1404,13 @@ internal static unsafe class Colossus
                 break;
             }
 
+            Lap(4);
             device.ResetFences([fences[slot]]);
             device.ResetCommandPool(pools[slot], VkCommandPoolResetFlags.None);
             var target = new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
-            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, rt, slot, staticInstances.Length);
+            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length);
+            Lap(5);
 
             var cb = commands[slot];
             cb.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
@@ -1389,6 +1503,7 @@ internal static unsafe class Colossus
                     },
                 ],
                 fences[slot]);
+            Lap(6);
             var presentIndex = imageIndex;
             result = queue.PresentKHR(new VkPresentInfoKHR
             {
@@ -1398,6 +1513,7 @@ internal static unsafe class Colossus
                 Swapchains = &swapchain,
                 ImageIndices = &presentIndex,
             });
+            Lap(7);
             if (result == VkResult.ErrorOutOfDateKHR)
             {
                 reason = "swapchain out of date";
@@ -1423,7 +1539,7 @@ internal static unsafe class Colossus
             if (now >= nextLog)
             {
                 Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}");
-                if (now >= 2)
+                if (now >= 3)
                 {
                     worstSecond = Math.Min(worstSecond, frame - lastLogFrame);
                 }
@@ -1434,6 +1550,7 @@ internal static unsafe class Colossus
         }
 
         var seconds = clock.Elapsed.TotalSeconds;
+        stepping?.Wait();
         sound?.Dispose();
         device.WaitIdle();
         renderer.Dispose();
@@ -1506,8 +1623,14 @@ internal static unsafe class Colossus
 
         frameTimes.Sort();
         physicsTimes.Sort();
+        foreach (var times in phaseTimes.Concat(stepTimes))
+        {
+            times.Sort();
+        }
         static double P(List<double> xs, double q) => xs.Count == 0 ? double.NaN : xs[Math.Min(xs.Count - 1, (int)(q * xs.Count))];
         Console.WriteLine($"SWARM summary: {frame} frames in {seconds:F1} s; frame ms p50 {P(frameTimes, 0.5):F2} p95 {P(frameTimes, 0.95):F2} p99 {P(frameTimes, 0.99):F2}, worst second {(worstSecond == int.MaxValue ? 0 : worstSecond)} frames; Jolt step ms p50 {P(physicsTimes, 0.5):F2} p95 {P(physicsTimes, 0.95):F2} p99 {P(physicsTimes, 0.99):F2} max {(physicsTimes.Count > 0 ? physicsTimes[^1] : double.NaN):F2}; Jolt errors: {errors}");
+        Console.WriteLine("SWARM phases ms p50/p95: " + string.Join(", ", phases.Select((n, k) => $"{n} {P(phaseTimes[k], 0.5):F2}/{P(phaseTimes[k], 0.95):F2}")));
+        Console.WriteLine("SWARM Jolt step parts ms p50/p95: " + string.Join(", ", stepParts.Select((n, k) => $"{n} {P(stepTimes[k], 0.5):F2}/{P(stepTimes[k], 0.95):F2}")));
         Console.WriteLine($"SWARM peak working set {Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024)} MB; closed by {reason}");
         return 0;
     }
@@ -1532,6 +1655,7 @@ internal static unsafe class Colossus
         var sphere = SphereShapeSettings.Create(_memberRadius);
         _ids = new uint[n];
         _states = new BodyState[n];
+        _statesBack = new BodyState[n];
         _faceP = new SN.Vector3[n];
         _faceN = new SN.Vector3[n];
         _dirs = new SN.Vector3[n];
@@ -1586,18 +1710,21 @@ internal static unsafe class Colossus
             _ids[i] = bodies.CreateAndAddBody(settings, Activation.Activate);
         }
 
-        ReadStates(bodies);
+        ReadStates(bodies, _states);
     }
 
     // Every body's pose and velocity, one call each. The bulk read, BodyLockInterface.GetBodyStates, is declared by the
     // binding but its entry point is missing from the package's jolt.dll (2026.10.2, win-x64).
-    private static void ReadStates(BodyInterface bodies)
+    private static void ReadStates(BodyInterface bodies, BodyState[] into)
     {
-        for (var i = 0; i < _ids.Length; i++)
+        ForBodies(_ids.Length, (start, end) =>
         {
-            bodies.GetPositionAndRotation(_ids[i], out _states[i].Position, out _states[i].Rotation);
-            _states[i].LinearVelocity = bodies.GetLinearVelocity(_ids[i]);
-        }
+            for (var i = start; i < end; i++)
+            {
+                bodies.GetPositionAndRotation(_ids[i], out into[i].Position, out into[i].Rotation);
+                into[i].LinearVelocity = bodies.GetLinearVelocity(_ids[i]);
+            }
+        });
     }
 
     private static void DestroySwarm(BodyInterface bodies)
@@ -1700,53 +1827,75 @@ internal static unsafe class Colossus
 
     // Each body's new velocity: toward its target, capped, with a little turbulence so the swarm never looks rigid.
     // When the face speaks, its jaw drops with each syllable, as far as mouth (0 to 1) says.
-    private static void Steer(BodyInterface bodies, float t, bool assembled, float mouth, float cohesion, float speedScale)
+    private static void Steer(BodyInterface bodies, BodyState[] from, float t, bool assembled, float mouth, float cohesion, float speedScale)
     {
         var max = 28f * speedScale;
         var stir = assembled ? 0.25f : 2f;
-        for (var i = 0; i < _ids.Length; i++)
+        ForBodies(_ids.Length, (start, end) =>
         {
-            var p = V(_states[i].Position);
-            var v = V(_states[i].LinearVelocity);
-            SN.Vector3 target;
-            if (assembled)
+            for (var i = start; i < end; i++)
             {
-                target = _faceP[i] + (new SN.Vector3(0f, -1.6f, -0.4f) * (mouth * _jaw[i]));
-            }
-            else
-            {
-                target = Cloud(i, t);
-            }
+                var p = V(from[i].Position);
+                var v = V(from[i].LinearVelocity);
+                SN.Vector3 target;
+                if (assembled)
+                {
+                    target = _faceP[i] + (new SN.Vector3(0f, -1.6f, -0.4f) * (mouth * _jaw[i]));
+                }
+                else
+                {
+                    target = Cloud(i, t);
+                }
 
-            var desired = (target - p) * cohesion;
-            var length = desired.Length();
-            if (length > max)
-            {
-                desired *= max / length;
-            }
+                var desired = (target - p) * cohesion;
+                var length = desired.Length();
+                if (length > max)
+                {
+                    desired *= max / length;
+                }
 
-            desired += stir * new SN.Vector3(MathF.Sin((t * 1.3f) + (i * 0.37f)), MathF.Sin((t * 1.7f) + (i * 0.73f)), MathF.Cos((t * 1.1f) + (i * 0.51f)));
-            bodies.SetLinearVelocity(_ids[i], F(v + ((desired - v) * 0.15f)));
+                desired += stir * new SN.Vector3(MathF.Sin((t * 1.3f) + (i * 0.37f)), MathF.Sin((t * 1.7f) + (i * 0.73f)), MathF.Cos((t * 1.1f) + (i * 0.51f)));
+                bodies.SetLinearVelocity(_ids[i], F(v + ((desired - v) * 0.15f)));
+            }
+        });
+    }
+
+    // Runs range over [0, n) in slices of 2,048 bodies, on up to _bodyThreads tasks. Each body is touched by one task
+    // only, and Jolt locks its list of active bodies itself, so the interface without locks stays safe.
+    private static void ForBodies(int n, Action<int, int> range)
+    {
+        const int Slice = 2048;
+        if (_bodyThreads <= 1 || n <= Slice)
+        {
+            range(0, n);
+            return;
         }
+
+        Parallel.For(0, (n + Slice - 1) / Slice, new ParallelOptions { MaxDegreeOfParallelism = _bodyThreads }, k => range(k * Slice, Math.Min(n, (k + 1) * Slice)));
     }
 
     // The swarm's instances: each machine a long box, pointing where it flies, or out of the face once it has settled;
-    // the face's eyes glow as it forms, brighter as it hears the user, and its mouth with each syllable.
-    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, RayScene? rt, int slot, int first)
+    // the face's eyes glow as it forms, brighter as it hears the user, and its mouth with each syllable. Each machine is
+    // drawn ahead of Jolt's last step by its velocity, for the time since that step. Each machine turns toward where it
+    // heads by a share of the way that depends on the frame's time, so it turns as fast at 60 frames a second as at 700.
+    // Written in parallel, a thousand machines a task, the frames got slower and their tail longer: the tasks contend
+    // with Jolt's worker and its jobs for the cores. One loop it stays.
+    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, float ahead, float frameDt, RayScene? rt, int slot, int first)
     {
         var n = Math.Min(_ids.Length, o.Length);
         var scale = SN.Matrix4x4.CreateScale(_memberRadius * 1.7f, _memberRadius * 0.9f, _memberRadius * 3.8f);
         var flat = SN.Matrix4x4.CreateScale(_memberRadius * 2.4f, _memberRadius * 0.7f, _memberRadius * 4.2f);
+        var turn = 1f - MathF.Pow(0.8f, frameDt * 60f);
         for (var i = 0; i < n; i++)
         {
-            var p = V(_states[i].Position);
             var v = V(_states[i].LinearVelocity);
+            var p = V(_states[i].Position) + (v * ahead);
             // Settled on the face, a machine lies flat like a scale: its length down the slope, its thin side out.
             var normal = _faceN[i];
             var settled = glow > 0.5f && v.LengthSquared() <= 4f;
             var slope = MathF.Abs(normal.Y) > 0.95f ? SN.Vector3.UnitZ - (normal * normal.Z) : (normal * normal.Y) - SN.Vector3.UnitY;
             var want = v.LengthSquared() > 4f ? SN.Vector3.Normalize(v) : settled ? SN.Vector3.Normalize(slope) : _dirs[i];
-            var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, 0.2f));
+            var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, turn));
             _dirs[i] = d;
             var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
             var emission = ((_eye[i] * 5f * (1f + (1.5f * hearing))) + (_mouth[i] * 2.5f * speech)) * glow;

@@ -254,7 +254,8 @@ city of towers. Above it, 6,000 machines circle, each one a Jolt rigid body. The
 from Gaussian bumps, which looks at the figure and speaks, then disperses again.
 
 Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N` (default 10,000), `--seconds T`, `--immediate`
-(no vsync), `--images N` (swapchain images, default 2) and `--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
+(no vsync), `--mailbox` (no vsync and no tearing), `--images N` (swapchain images, default 2), `--hidden` (an invisible window,
+for measuring) and `--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
 The sound takes `--mute`, `--no-sound`, `--no-voice` and `--face-file PATH` (below); `--lang fr|en` sets the panel's language.
 The capture copies the swapchain image to a host buffer, so it also works where a desktop screenshot cannot (a locked
 session, or a window with no vsync).
@@ -419,6 +420,53 @@ text, and a provider answers with the French one. The font is Segoe UI, rasteris
 `Ahwoo.Brutal.ImGui.FreeType`. It is read from Windows' font folder at run time and not shipped; without it, ImGui's
 own font is used. In French, vsync over 20 s gave 1,121 frames, worst second 59.
 
+**Frame rate** (asked as « Image par seconde, expérimente à fond »). Each run below is 20 or 24 s in a hidden,
+muted window (`--hidden --mute`), at 1600×900 with RTX on, on the RTX 5080. The summary also times each phase of the
+frame, and the three parts of Jolt's step.
+
+| Change, each on top of the last (10,000 machines, uncapped) | Frames in 24 s | Frame ms p50 / p95 / p99 | Worst second |
+|---|---|---|---|
+| Before: one step a frame on the render thread, the locking body interface | — | 5.99 / — / — | — |
+| The body interface without locks: it halves the cost of the 30,000 calls a step | — | 5.04 / — / — | — |
+| Jolt steps on a worker while the frame draws | — | 4.19 / — / — | — |
+| Jolt at most 120 times a second; between steps each machine is drawn moved on along its velocity | 16,347 | 1.12 / — / — | — |
+| Steering and reading the bodies moved onto the worker, into a second buffer of states | 18,853 | 1.13 / 1.80 / 3.40 | 743 |
+| A frame no longer waits for a step that has not finished | 18,639 | 1.12 / 1.66 / 3.63 | 770 |
+
+The other changes:
+- **No collisions in the face.** Once the machines form the face, they stop colliding with each other
+  (`ObjectLayerPairFilterTable.DisableCollision`, switched at run time). The Jolt step's p95 fell from 5.59 to 2.71 ms
+  and its maximum from 14.59 to 3.45. Captures of the face with and without collisions look the same. `--face-collide`
+  keeps them.
+- **The bodies in slices.** On the worker, four tasks steer and read the bodies, 2,048 at a time, while Jolt's own
+  threads are idle (`--body-threads N`; 1 is one loop). At 40,000 machines, steering fell from 4.92 to 2.06 ms and
+  reading from 3.97 to 1.68 ms, so the step fell from 20.4 to 15.7 ms.
+- **Larger swarms.** The panel's slider and `--swarm` now reach 40,000 machines.
+
+| Machines, uncapped | Frames | Frame ms p50 / p95 | Worst second | Jolt step p50 |
+|---|---|---|---|---|
+| 20,000, a frame waiting for its step | 9,084 in 24 s | 1.54 / 8.78 | 206 | 8.35 ms |
+| 20,000, no waiting | 14,224 in 24 s | 1.42 / 2.37 | 565 | 8.70 ms |
+| 40,000, a frame waiting for its step | about 45 a second, then a crash on exit (below) | — | — | about 20 ms |
+| 40,000, no waiting, four tasks on the bodies | 6,492 in 20 s | 2.60 / 4.40 | 306 | 15.69 ms |
+
+With vsync, 40,000 machines gave 1,366 frames in 24 s, p50 16.66 ms, p99 19.52, worst second 60. 10,000 gave 1,372
+frames, worst second 59.
+
+Tried and dropped:
+- **The swarm's instances written in parallel**, 1,024 a task: 12,618 frames in 24 s against 17,780 for one loop, and
+  the write's p95 3.11 ms against 0.84. The tasks contend with Jolt's worker and its threads for the cores.
+- **More Jolt threads.** At 40,000 machines, 6, 12 and 20 threads gave the same update: 11.1, 11.0 and 10.6 ms. At
+  10,000, 3 threads cost 0.2 ms more than 6.
+- **Jolt's solver settings.** `PhysicsSystem_GetPhysicsSettings` is missing from `jolt.dll`, so the current settings
+  cannot be read and changed. Settings built from Jolt's documented defaults (4 velocity steps) made the first step take
+  30 s.
+- **`OptimizeBroadPhase`** after adding the swarm changed nothing measurable at 40,000, since Jolt rebuilds the tree as it
+  steps. The call stays, as Jolt asks for it.
+- **Mailbox** (`--mailbox`, three images) gave 17,949 frames in 24 s, the same as with no vsync, without tearing.
+
+The GPU now sets the pace: with RTX, a frame of 10,000 machines takes about 1.1 ms; with `--no-rtx`, 0.73 ms.
+
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The
   DLL exports 3,674 names. This was measured by matching the assembly's P/Invoke imports against the DLL's export table.
@@ -432,6 +480,13 @@ own font is used. In French, vsync over 20 s gave 1,121 frames, worst second 59.
   hold far less than it was asked for. The thread pool and the static bodies were each ruled out.
 - **Uneven frames under vsync:** with three swapchain images, the frames came back unevenly under vsync, at about 5 ms
   then 28 ms, although each was shown for one refresh. Two images and a smoothed time step made the motion even.
+- **A full body pool fails silently.** With room for 40,000 bodies, 40,000 machines and the walkway's static bodies did
+  not fit. `CreateAndAddBody` returned invalid ids for the last machines, and destroying them on exit crashed the process
+  (0xC0000005 in `BodyInterface_DestroyBody`). The pool now has room for 1,024 bodies beside the largest swarm.
+
+Found in `Ahwoo.Brutal.ImGui` 2026.10.2: the binding's string arena, `ImString.SharedStorage` (8 MB), is never emptied.
+Every interpolated string in the panel takes room in it, so after a few thousand frames ImGui throws "Cannot grow beyond
+MaxCapacity". Uncapped, that took seconds. The scene now calls `ImString.SharedStorage.Clear()` at the start of each frame.
 
 The licence's logo and `NOTICE.txt` requirements apply to distributed builds. This showcase is a local experiment and is
 not distributed.
