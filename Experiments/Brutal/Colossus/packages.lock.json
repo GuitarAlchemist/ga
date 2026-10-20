@@ -24,6 +24,17 @@
           "Ahwoo.BRUTAL.Numerics": "2026.10.1"
         }
       },
+      "Ahwoo.BRUTAL.Gltf": {
+        "type": "Direct",
+        "requested": "[2026.10.2, 2026.10.2]",
+        "resolved": "2026.10.2",
+        "contentHash": "QfR1B55absBSVBBf0csbadlm0pi6xs5KYgv8XBQ6wolmWaHtyPE1MGtbvMoh63KNK4EcN1xmm483MRRgagwZFA==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1",
+          "Ahwoo.BRUTAL.Texture": "2026.10.2"
+        }
+      },
       "Ahwoo.BRUTAL.ImGui": {
         "type": "Direct",
         "requested": "[2026.10.2, 2026.10.2]",
@@ -122,12 +133,30 @@
           "Microsoft.Extensions.Logging.Console": "10.0.0"
         }
       },
+      "Ahwoo.BRUTAL.Gli": {
+        "type": "Transitive",
+        "resolved": "2026.10.1",
+        "contentHash": "5K37+1zX5QhQhafDdDaX+DuvwtucBb9lN8dugZUKIRuoSUdvBVfewJrRG/UOXYIqaFqg1ZSmGb8OuiffEzxPtQ==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1"
+        }
+      },
       "Ahwoo.BRUTAL.Interop": {
         "type": "Transitive",
         "resolved": "2026.10.1",
         "contentHash": "II3gRgjwbT6KdiPGEGsoT818lLjP86geLbiK1xo8p1Uukp25FKVF2rtccXsmHjbEkqDnlPBGrnDEBT1Cyi+org==",
         "dependencies": {
           "Ahwoo.BRUTAL.Core": "2026.10.1"
+        }
+      },
+      "Ahwoo.BRUTAL.Ktx": {
+        "type": "Transitive",
+        "resolved": "2026.10.1",
+        "contentHash": "mbGwOwxLqbnvPpq/DofaPixjTHOxIuhUiU0mrxnoSbkHtkSbVw14r2mGFd55Qn7CnO9F7lQYA+Df1vPmMP99fg==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1"
         }
       },
       "Ahwoo.BRUTAL.Localization": {
@@ -180,6 +209,16 @@
           "Ahwoo.BRUTAL.Numerics": "2026.10.1"
         }
       },
+      "Ahwoo.BRUTAL.Stb": {
+        "type": "Transitive",
+        "resolved": "2026.10.2",
+        "contentHash": "1Z9QdhtFrn5CpfjUS9NYpySBtdumGFGEgjoMm+l0FPfMV9WPuMFQek/tXXOorXGMcJtm53afuRjODyMqpX4+MA==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1",
+          "Ahwoo.BRUTAL.Strings": "2026.10.1"
+        }
+      },
       "Ahwoo.BRUTAL.Strings": {
         "type": "Transitive",
         "resolved": "2026.10.1",
@@ -192,6 +231,19 @@
           "Microsoft.Extensions.Logging": "10.0.0",
           "Microsoft.Extensions.Logging.Console": "10.0.0",
           "Microsoft.Extensions.ObjectPool": "11.0.0-preview.5.26302.115"
+        }
+      },
+      "Ahwoo.BRUTAL.Texture": {
+        "type": "Transitive",
+        "resolved": "2026.10.2",
+        "contentHash": "fCsCLvsuB3/hYByuUoCjUjJ93HUqETz2Z7aK9L3qyJkXzZqyBecYd49NxZ1SQH5TRxNyj5RBftF62T8jmnn9gw==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Gli": "2026.10.1",
+          "Ahwoo.BRUTAL.Interop": "2026.10.1",
+          "Ahwoo.BRUTAL.Ktx": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1",
+          "Ahwoo.BRUTAL.Stb": "2026.10.2"
         }
       },
       "CommunityToolkit.HighPerformance": {

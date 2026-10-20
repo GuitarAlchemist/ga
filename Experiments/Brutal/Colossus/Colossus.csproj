@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Ahwoo.Brutal.Core" Version="[2026.10.1]" />
     <PackageReference Include="Ahwoo.Brutal.Glfw" Version="[2026.10.4]" />
+    <PackageReference Include="Ahwoo.Brutal.Gltf" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.Vulkan" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
@@ -28,6 +29,7 @@
   <ItemGroup>
     <None Include="textures\*.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="head\head_points.bin" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="city\towers.glb" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

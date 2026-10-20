@@ -265,8 +265,9 @@ session, or a window with no vsync).
 - wheel: zoom;
 - Esc: quit.
 
-**Rendering.** The scene is about 1,500 lines in one file. Every object is an instance of one cube mesh, 8,753 of them in
-a single draw call.
+**Rendering.** The scene is about 2,000 lines in one file. The towers are 12 variants modelled in Blender (below) and
+read with BRUTAL's glTF loader (`Ahwoo.Brutal.Gltf`). Everything else is an instance of one cube mesh. That makes 10,407
+instances in 13 draw calls: one for each tower variant, and one for every cube.
 - The scene pass renders in HDR, with 4x MSAA and reversed infinite depth.
 - Towers get procedural windows, which fade to their average where a cell gets smaller than two pixels.
 - Machines get seams and a pulsing eye.
@@ -334,6 +335,25 @@ Then `bake_blender.py` (Blender 5.2, headless) turns the mesh into the swarm's t
 - **Weights:** each point gets a normal and three weights:
   - eyes and mouth, which glow;
   - jaw, which drops with each syllable.
+
+**The city** (`Colossus/city/`). `build_towers.py` models 12 tower variants in Blender 5.2, headless, from seeds. They
+are original brutalist massing, made from boxes and cylinders by rule:
+- **Masses:** a shaft in two to four stacked masses, each set back from the one below or cantilevered over it.
+- **Facades:** each mass gets one of three: ribbon windows set 0.45 m behind concrete spandrels; an egg-crate grid of
+  piers and deep spandrels; or vertical fins.
+- **Extras:** a windowless service core, plant floors with louvres, a cantilevered crown, roof plant, vents, a mast,
+  and amber warning lamps.
+
+They are exported as one GLB (`towers.glb`, 12 meshes, about 1 MB). The materials are named concrete, glass, metal and
+lamp, and the scene shades each by its name:
+- **Concrete:** the facade texture.
+- **Glass:** lit cells, one floor high and 1.6 m wide.
+- **Metal:** the hull texture.
+- **Lamps:** they glow.
+
+The 420 towers of the ring are those variants, each turned and scaled. The boxes remain the fallback when the file is
+missing. With the city and 10,000 machines, vsync over 22 s gave 1,254 frames, worst second 60, and the GPU about 17 %
+busy.
 
 `head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
 along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.

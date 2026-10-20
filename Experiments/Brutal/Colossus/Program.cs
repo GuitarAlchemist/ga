@@ -1,12 +1,14 @@
 // A BRUTAL showcase for the evaluation (GuitarAlchemist/gaia#257). An original scene: a lone figure stands at the end
 // of a walkway in a city of dark towers, and a swarm of machines, each one a Jolt rigid body, circles above, then
-// gathers into a colossal face that looks at the figure and speaks. Every object is an instance of one cube mesh, drawn
-// with Vulkan in a single draw call; a Dear ImGui panel with an ImPlot graph shows the timings and steers the swarm.
+// gathers into a colossal head that looks at the figure and speaks. The towers are modelled in Blender and loaded with
+// BRUTAL's glTF reader; everything else is an instance of one cube. Vulkan draws it all in one draw call per tower
+// variant plus one; a Dear ImGui panel with an ImPlot graph shows the timings and steers the swarm.
 // The scene renders in HDR with 4x MSAA and reversed depth; a second pass adds the sky, a bloom built from the image's own
 // mips, ACES tone mapping, a vignette and grain, then the panel.
 // Keys: Space assembles or disperses, C changes the camera, a drag turns it, the wheel zooms, Esc quits.
 // Arguments: --swarm N (bodies, default 10000), --seconds T (time limit, 0 = none), --immediate (no vsync),
-// --capture T1,T2,... (save the window's image at those seconds, as colossus-<T>s.png in the working directory).
+// --images N (swapchain images, default 2), --capture T1,T2,... (save the window's image at those seconds, as
+// colossus-<T>s.png in the working directory).
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -15,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Brutal;
 using Brutal.GlfwApi;
+using Brutal.GltfApi;
 using Brutal.ImGuiApi;
 using Brutal.ImGuiApi.Backends;
 using Brutal.ImPlotApi;
@@ -29,14 +32,16 @@ using SN = System.Numerics;
 return Colossus.Run(args);
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct MeshVertex(SN.Vector3 pos, SN.Vector3 normal)
+// One mesh vertex; Material picks a building's surface (0 concrete, 1 glass, 2 metal, 3 lamp) and is 0 on the cube.
+internal struct MeshVertex(SN.Vector3 pos, SN.Vector3 normal, float material = 0f)
 {
     public SN.Vector3 Pos = pos;
     public SN.Vector3 Normal = normal;
+    public float Material = material;
 }
 
-// One drawn box: its model matrix, its albedo and, in Color.W, how much it glows; Extra.X is its kind (0 plain, 1 machine,
-// 2 tower, 3 lamp) and Extra.Y a seed.
+// One drawn instance: its model matrix, its albedo and, in Color.W, how much it glows; Extra.X is its kind (0 plain,
+// 1 machine, 2 box tower, 3 lamp, 4 modelled tower) and Extra.Y a seed.
 [StructLayout(LayoutKind.Sequential)]
 internal struct Drawn(SN.Matrix4x4 model, SN.Vector4 color, SN.Vector4 extra = default)
 {
@@ -127,6 +132,7 @@ internal static unsafe class Colossus
         layout(location = 5) in vec4 iModel3;
         layout(location = 6) in vec4 iColor;
         layout(location = 7) in vec4 iExtra;
+        layout(location = 8) in float inMaterial;
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         layout(location = 0) out vec3 vWorld;
         layout(location = 1) out vec3 vNormal;
@@ -137,6 +143,7 @@ internal static unsafe class Colossus
         layout(location = 6) flat out vec4 vExtra;
         layout(location = 7) flat out vec3 vTangent;
         layout(location = 8) flat out vec3 vBitangent;
+        layout(location = 9) flat out float vMaterial;
         void main()
         {
             mat4 model = mat4(iModel0, iModel1, iModel2, iModel3);
@@ -149,6 +156,7 @@ internal static unsafe class Colossus
             vScale = vec3(length(iModel0.xyz), length(iModel1.xyz), length(iModel2.xyz));
             vUnitNormal = inNormal;
             vExtra = iExtra;
+            vMaterial = inMaterial;
             // The face's texture axes, in the same order as the fragment shader's box mapping.
             vTangent = normalize(mat3(model) * (abs(inNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)));
             vBitangent = normalize(mat3(model) * (abs(inNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
@@ -170,6 +178,7 @@ internal static unsafe class Colossus
         layout(location = 6) flat in vec4 vExtra;
         layout(location = 7) flat in vec3 vTangent;
         layout(location = 8) flat in vec3 vBitangent;
+        layout(location = 9) flat in float vMaterial;
         layout(set = 0, binding = 0) uniform sampler2DArray surfaces;
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         layout(location = 0) out vec4 outColor;
@@ -192,7 +201,8 @@ internal static unsafe class Colossus
             vec3 emit = albedo * vColor.a;
             float shine = 0.0;
             float rough = 0.8;
-            vec3 p = vUnit * vScale;
+            // Modelled towers map in their own metres, so that window cells keep to the floors at any scale.
+            vec3 p = kind > 3.5 ? vUnit : vUnit * vScale;
             vec2 st = vec2(dot(p, abs(vUnitNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)),
                 dot(p, abs(vUnitNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
             if (kind > 0.5 && kind < 1.5)
@@ -225,6 +235,48 @@ internal static unsafe class Colossus
                 n = bumped(map, n, 3.0);
                 rough = map.b;
                 shine = 0.6;
+            }
+            else if (kind > 3.5)
+            {
+                // A modelled tower: concrete with the facade texture, glass with lit cells of 1.6 by 3.2 m (one floor),
+                // metal with the hull texture, and amber lamps that breathe.
+                float mat = vMaterial;
+                if (mat < 0.5)
+                {
+                    vec2 uv = vec2(st.x / 12.8, -st.y / 12.8) + vExtra.y * vec2(3.7, 1.3);
+                    vec4 map = texture(surfaces, vec3(uv, 3.0));
+                    albedo = pow(texture(surfaces, vec3(uv, 2.0)).rgb, vec3(2.2)) * 0.32;
+                    n = bumped(map, n, 3.0);
+                    rough = map.b;
+                    shine = 0.35;
+                }
+                else if (mat < 1.5)
+                {
+                    vec2 cell = vec2(st.x / 1.6, st.y / 3.2);
+                    vec2 f = fract(cell);
+                    float pane = step(0.06, f.x) * step(f.x, 0.94);
+                    float r = hash12(floor(cell) + vec2(vExtra.y * 97.0, dot(vUnitNormal, vec3(1.0, 2.0, 3.0)) * 13.0));
+                    float lit = step(r, 0.1);
+                    vec3 lamp = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.42), fract(r * 9.1)) * 2.4;
+                    float fade = clamp(1.0 - (max(fwidth(cell.x), fwidth(cell.y)) - 0.25) * 4.0, 0.0, 1.0);
+                    emit += mix(vec3(1.0, 0.56, 0.26) * 0.12, pane * lit * lamp, fade);
+                    albedo = vec3(0.02, 0.022, 0.025);
+                    rough = 0.12;
+                    shine = 1.0;
+                }
+                else if (mat < 2.5)
+                {
+                    vec2 uv = st / 2.4 + vExtra.y * vec2(5.1, 2.9);
+                    vec4 map = texture(surfaces, vec3(uv, 1.0));
+                    albedo = pow(texture(surfaces, vec3(uv, 0.0)).rgb, vec3(2.2)) * 0.35;
+                    n = bumped(map, n, 2.0);
+                    rough = map.b;
+                    shine = 1.0;
+                }
+                else
+                {
+                    emit = vec3(1.0, 0.45, 0.12) * (4.0 + 2.0 * sin(t * 2.0 + vExtra.y * 31.0));
+                }
             }
 
             float ndl = max(dot(n, sun), 0.0);
@@ -651,9 +703,11 @@ internal static unsafe class Colossus
         var compositeLayout = device.CreatePipelineLayout([setLayout], [pushRange], null);
         var compositePipeline = Pipeline(device, compositeLayout, renderPass, compositeVertex, compositeFragment, scene: false);
 
-        // One cube, and per frame in flight an instance buffer that stays mapped.
+        // One cube, then the modelled towers, and per frame in flight an instance buffer that stays mapped.
         var cube = new List<MeshVertex>();
         Cube(cube);
+        var cubeCount = cube.Count;
+        var towerVariants = LoadTowers(Path.Combine(AppContext.BaseDirectory, "city", "towers.glb"), cube);
         var meshSize = new ByteSize((nuint)(cube.Count * sizeof(MeshVertex)));
         var meshBuffer = device.CreateBuffer(new VkBufferCreateInfo { Size = meshSize, Usage = VkBufferUsageFlags.VertexBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
         var meshMemory = device.AllocateMemory(physical, meshBuffer, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
@@ -810,7 +864,7 @@ internal static unsafe class Colossus
         // The scene: the city is drawn only; the walkway and the figure also stand in the simulation.
         var rng = new Random(7);
         var statics = new List<Drawn>();
-        City(statics, rng);
+        var towers = City(statics, rng, towerVariants);
         foreach (var (c, size, color) in Solids())
         {
             Box(statics, c, size, 0f, color, 0f);
@@ -818,7 +872,27 @@ internal static unsafe class Colossus
             bodies.CreateAndAddBody(settings, Activation.DontActivate);
         }
 
-        var staticInstances = statics.ToArray();
+        // The towers first, grouped by variant: one draw call each, then one for every box.
+        var towerRanges = new (int First, int Count)[towerVariants.Length];
+        var ordered = new List<Drawn>();
+        for (var v = 0; v < towerVariants.Length; v++)
+        {
+            towerRanges[v] = (ordered.Count, 0);
+            foreach (var (variant, placed) in towers)
+            {
+                if (variant == v)
+                {
+                    ordered.Add(placed);
+                }
+            }
+
+            towerRanges[v].Count = ordered.Count - towerRanges[v].First;
+        }
+
+        var towerInstances = ordered.Count;
+        var drawCalls = 1 + towerRanges.Count(r => r.Count > 0);
+        ordered.AddRange(statics);
+        var staticInstances = ordered.ToArray();
         BuildSwarm(bodies, swarm);
         physics.OptimizeBroadPhase();
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
@@ -928,7 +1002,7 @@ internal static unsafe class Colossus
             {
                 ImGui.Text($"{io.Framerate:F0} fps ({vsyncNote}), frame {frameMs:F2} ms");
                 ImGui.Text($"Jolt: {_ids.Length} bodies, {physicsMs:F2} ms a step, {threads} threads");
-                ImGui.Text($"Vulkan: {staticInstances.Length + _ids.Length} instances in one draw call, HDR, MSAA 4x, bloom");
+                ImGui.Text($"Vulkan: {staticInstances.Length + _ids.Length} instances in {drawCalls} draw calls, HDR, MSAA 4x, bloom");
                 ImGui.Text($"Swarm: {(assembled ? "face" : "cloud")}{(errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty)}");
                 ImGui.Separator();
                 if (ImGui.Button(assembled ? "Disperse"u8 : "Assemble"u8))
@@ -1070,7 +1144,14 @@ internal static unsafe class Colossus
             cb.PushConstants(layout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&push, sizeof(Push)));
             cb.BindVertexBuffer(0, meshBuffer);
             cb.BindVertexBuffer(1, instanceBuffers[slot]);
-            cb.Draw(cube.Count, drawn, 0, 0);
+            cb.Draw(cubeCount, drawn - towerInstances, 0, towerInstances);
+            for (var v = 0; v < towerVariants.Length; v++)
+            {
+                if (towerRanges[v].Count > 0)
+                {
+                    cb.Draw(towerVariants[v].Count, towerRanges[v].Count, towerVariants[v].First, towerRanges[v].First);
+                }
+            }
             cb.EndRenderPass();
 
             // The bloom's mips: each level a linear blit of the one above, then every level for the second pass to read.
@@ -1463,7 +1544,7 @@ internal static unsafe class Colossus
         }
 
         var floats = new float[count * 9];
-        Buffer.BlockCopy(bytes, 8, floats, 0, floats.Length * 4);
+        System.Buffer.BlockCopy(bytes, 8, floats, 0, floats.Length * 4);
         return floats;
     }
 
@@ -1487,10 +1568,12 @@ internal static unsafe class Colossus
         yield return (new SN.Vector3(0f, 1.78f, FigureZ), new SN.Vector3(0.2f, 0.24f, 0.22f), cloth);
     }
 
-    // The city: dark towers on a wide ring rising from the abyss, with amber lights, leaving the walkway's view open.
-    private static void City(List<Drawn> o, Random rng)
+    // The city: towers on a wide ring rising from the abyss, leaving the walkway's view open. With the modelled towers
+    // (city/towers.glb), each is one of their variants, turned and scaled; without them, a box with amber lights.
+    private static List<(int Variant, Drawn Instance)> City(List<Drawn> o, Random rng, (int First, int Count, float Width)[] variants)
     {
         var tower = new SN.Vector3(0.05f, 0.045f, 0.04f);
+        var placed = new List<(int, Drawn)>();
         for (var i = 0; i < 420; i++)
         {
             var a = rng.NextSingle() * MathF.Tau;
@@ -1499,6 +1582,20 @@ internal static unsafe class Colossus
             var z = MathF.Sin(a) * r;
             if (MathF.Abs(x) < 14f && z > 0f)
             {
+                continue;
+            }
+
+            if (variants.Length > 0)
+            {
+                var v = rng.Next(variants.Length);
+                var s = 0.6f + (rng.NextSingle() * 0.45f);
+                if (MathF.Abs(x) < 14f + (variants[v].Width * s) && z > 0f)
+                {
+                    continue;
+                }
+
+                var model = SN.Matrix4x4.CreateScale(s) * SN.Matrix4x4.CreateRotationY(rng.NextSingle() * MathF.Tau) * SN.Matrix4x4.CreateTranslation(x, -90f, z);
+                placed.Add((v, new Drawn(model, new SN.Vector4(tower, 0f), new SN.Vector4(4f, i * 0.1373f % 1f, 0f, 0f))));
                 continue;
             }
 
@@ -1524,6 +1621,57 @@ internal static unsafe class Colossus
                 Box(o, center + SN.Vector3.Transform(local, rot), new SN.Vector3(0.7f, 0.7f, 0.7f), yaw, Amber, 6f, 3f);
             }
         }
+
+        return placed;
+    }
+
+    // The modelled towers, through BRUTAL's glTF loader: every mesh of the file is a variant, appended to the vertices as
+    // plain triangles; each primitive's material name gives its surface. Returns each variant's vertex range and its
+    // largest half width, or nothing when the file is missing.
+    private static (int First, int Count, float Width)[] LoadTowers(string path, List<MeshVertex> o)
+    {
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        using var gltf = new GltfLoader(path);
+        var json = gltf.GltfJson;
+        var variants = new List<(int, int, float)>();
+        foreach (var mesh in json.Meshes.OrderBy(m => m.Name, StringComparer.Ordinal))
+        {
+            var first = o.Count;
+            var width = 0f;
+            foreach (var primitive in mesh.Primitives)
+            {
+                var material = primitive.Material is int m ? json.Materials[m].Name switch
+                {
+                    "glass" => 1f,
+                    "metal" => 2f,
+                    "lamp" => 3f,
+                    _ => 0f,
+                } : 0f;
+                var positions = MemoryMarshal.Cast<byte, SN.Vector3>(gltf.GetAccessorBufferSpan(primitive.Attributes["POSITION"]));
+                var normals = MemoryMarshal.Cast<byte, SN.Vector3>(gltf.GetAccessorBufferSpan(primitive.Attributes["NORMAL"]));
+                var indices = json.Accessors[primitive.Indices!.Value];
+                var data = gltf.GetAccessorBufferSpan(primitive.Indices.Value);
+                for (var k = 0; k < indices.Count; k++)
+                {
+                    var at = indices.ComponentType switch
+                    {
+                        Accessor.ComponentTypeEnum.UnsignedShort => BinaryPrimitives.ReadUInt16LittleEndian(data[(k * 2)..]),
+                        Accessor.ComponentTypeEnum.UnsignedByte => data[k],
+                        _ => (int)BinaryPrimitives.ReadUInt32LittleEndian(data[(k * 4)..]),
+                    };
+                    o.Add(new MeshVertex(positions[at], normals[at], material));
+                    width = MathF.Max(width, MathF.Max(MathF.Abs(positions[at].X), MathF.Abs(positions[at].Z)));
+                }
+            }
+
+            variants.Add((first, o.Count - first, width));
+        }
+
+        return [.. variants];
     }
 
     private static void Box(List<Drawn> o, SN.Vector3 c, SN.Vector3 size, float yaw, SN.Vector3 color, float emission, float kind = 0f, float seed = 0f)
@@ -1786,13 +1934,14 @@ internal static unsafe class Colossus
                 new() { Location = 5, Binding = 1, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(12) },
                 new() { Location = 6, Binding = 1, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(16) },
                 new() { Location = 7, Binding = 1, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(20) },
+                new() { Location = 8, Binding = 0, Format = VkFormat.R32SFloat, Offset = ByteSize.Of<float>(6) },
             };
             var vertexInput = scene
                 ? new VkPipelineVertexInputStateCreateInfo
                 {
                     VertexBindingDescriptionCount = 2,
                     VertexBindingDescriptions = bindings,
-                    VertexAttributeDescriptionCount = 8,
+                    VertexAttributeDescriptionCount = 9,
                     VertexAttributeDescriptions = attributes,
                 }
                 : new VkPipelineVertexInputStateCreateInfo();
