@@ -85,6 +85,19 @@
           "Ahwoo.BRUTAL.Strings": "2026.10.1"
         }
       },
+      "Ahwoo.BRUTAL.OpenAl": {
+        "type": "Direct",
+        "requested": "[2026.10.2, 2026.10.2]",
+        "resolved": "2026.10.2",
+        "contentHash": "Du/Gz+8JUC01FvF9gtVjb/JaHLXzkQRsWVKMBGusXmMMlohLeS61hw/mL+qjZCuIJfNM99NyzO1aAZtryVrhsQ==",
+        "dependencies": {
+          "Ahwoo.BRUTAL.Core": "2026.10.1",
+          "Ahwoo.BRUTAL.Interop": "2026.10.1",
+          "Ahwoo.BRUTAL.Numerics": "2026.10.1",
+          "Ahwoo.BRUTAL.Strings": "2026.10.1",
+          "CommunityToolkit.HighPerformance": "8.4.2"
+        }
+      },
       "Ahwoo.BRUTAL.ShaderC": {
         "type": "Direct",
         "requested": "[2026.10.2, 2026.10.2]",

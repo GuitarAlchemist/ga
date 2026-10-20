@@ -9,7 +9,9 @@
 // Arguments: --swarm N (bodies, default 10000), --seconds T (time limit, 0 = none), --immediate (no vsync),
 // --no-rtx (no ray queries), --rtx-off (ray queries unticked at start), --images N (swapchain images, default 2),
 // --capture T1,T2,... (save the window's image at those seconds, as
-// colossus-<T>s.png in the working directory).
+// colossus-<T>s.png in the working directory), --mute (sound at zero), --no-sound (no audio device),
+// --no-voice (don't mirror the voice plugins), --face-file PATH (voice-avatar's faceFile, to follow its state).
+// The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -408,6 +410,16 @@ internal static unsafe class Colossus
         var captures = captureAt >= 0 && captureAt + 1 < args.Length ? args[captureAt + 1].Split(',').Select(double.Parse).Order().ToArray() : [];
         var nextCapture = 0;
         var clock = Stopwatch.StartNew();
+        var faceAt = Array.IndexOf(args, "--face-file");
+        var mirror = new VoiceMirror(faceAt >= 0 && faceAt + 1 < args.Length ? args[faceAt + 1] : null);
+        // The sound is synthesised on a worker while the window and the device come up.
+        var soundTask = args.Contains("--no-sound")
+            ? Task.FromResult<(Soundscape? Sound, string Note)>((null, "off (--no-sound)"))
+            : Task.Run(() =>
+            {
+                var opened = Soundscape.TryOpen(out var note);
+                return (Sound: opened, Note: note);
+            });
 
         if (!Glfw.Init())
         {
@@ -996,7 +1008,13 @@ internal static unsafe class Colossus
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
 
         // State the panel steers.
-        bool assembled = false, autoCycle = true, speaking = true, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
+        // With the voice plugins running, the face speaks when Claude's voice does; without them, on its own.
+        mirror.Poll(0);
+        var (sound, soundNote) = soundTask.Result;
+        Console.WriteLine($"SOUND {soundNote}; voice plugins {(mirror.Present ? "running" : "not running")}");
+        bool assembled = false, autoCycle = true, speaking = !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
+        bool mirrorOn = !args.Contains("--no-voice"), soundOn = !args.Contains("--mute");
+        float volume = 0.6f, hearing = 0f;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
         int requested = swarm, preset = 0, shownPreset = -1;
         var camEye = new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f);
@@ -1070,17 +1088,21 @@ internal static unsafe class Colossus
                 zoom = Math.Clamp(zoom * MathF.Pow(0.9f, io.MouseWheel), 0.2f, 3f);
             }
 
+            // The voice plugins: while a voice speaks, or voice-avatar works or waits, the cycle holds the face.
+            mirror.Poll(now);
+            var voice = mirrorOn && mirror.Speaking;
             if (autoCycle)
             {
                 var c = (now - cycleStart) % 32.0;
-                assembled = c >= 6.0 && c < 24.0;
+                assembled = (c >= 6.0 && c < 24.0) || voice || (mirrorOn && mirror.FaceState is "working" or "waiting");
             }
 
             // One step a frame, as long as the frame (clamped): steer every body toward its target, step Jolt, read every
             // body back. Catching up with several fixed steps after a hitch made each frame longer than the last.
             var stepDt = Math.Clamp(frameDt, 1f / 240f, 1f / 30f);
+            var mouth = voice || speaking ? Speech((float)simTime) : 0f;
             physicsWatch.Restart();
-            Steer(bodies, (float)simTime, assembled, speaking, cohesion, speedScale);
+            Steer(bodies, (float)simTime, assembled, mouth, cohesion, speedScale);
             var error = physics.Update(stepDt, 1, temp, jobs);
             if (error != PhysicsUpdateError.None)
             {
@@ -1093,6 +1115,9 @@ internal static unsafe class Colossus
             physicsTimes.Add(physicsMs);
 
             glow += ((assembled ? 1f : 0f) - glow) * Math.Min(1f, frameDt * 0.8f);
+            // The eyes brighten as the microphone hears the user, and pulse while voice-avatar waits for them.
+            var listening = !mirrorOn ? 0f : Math.Max(mirror.Hearing, mirror.FaceState == "waiting" ? 0.5f + (0.5f * MathF.Sin((float)now * 3f)) : 0f);
+            hearing += (listening - hearing) * Math.Min(1f, frameDt * 8f);
 
             // The panel.
             ImGui.SetNextWindowPos(new float2(14f, 14f), ImGuiCond.FirstUseEver);
@@ -1156,6 +1181,22 @@ internal static unsafe class Colossus
                 {
                     ImGui.Text("RTX: no ray queries on this GPU, or --no-rtx"u8);
                 }
+
+                if (sound is not null)
+                {
+                    ImGui.Checkbox("Sound"u8, ref soundOn);
+                    ImGui.SameLine();
+                    ImGui.SliderFloat("Volume"u8, ref volume, 0f, 1f);
+                }
+                else
+                {
+                    ImGui.Text($"Sound: {soundNote}");
+                }
+
+                var heard = !mirror.Present ? "not running" : voice ? "a voice speaks" : hearing > 0.3f ? "hearing you" : mirror.FaceState ?? "quiet";
+                ImGui.Checkbox("Mirror the voice plugins"u8, ref mirrorOn);
+                ImGui.SameLine();
+                ImGui.Text($"({heard})");
                 Array.Copy(frameHistory, 1, frameHistory, 0, History - 1);
                 Array.Copy(physicsHistory, 1, physicsHistory, 0, History - 1);
                 for (var i = 0; i < History - 1; i++)
@@ -1177,7 +1218,7 @@ internal static unsafe class Colossus
                 }
 
                 ImGui.Text("Space assemble   C camera   drag turn   wheel zoom   Esc quit"u8);
-                ImGui.Text("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui and ImPlot"u8);
+                ImGui.Text("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"u8);
             }
 
             ImGui.End();
@@ -1213,6 +1254,12 @@ internal static unsafe class Colossus
             SN.Matrix4x4.Invert(viewProj, out var inverseViewProj);
             var push = new Push { Matrix = viewProj, Eye = new SN.Vector4(camEye, (float)now), Sun = new SN.Vector4(SunDir, exposure), Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? 1f : 0f, 0f, 0f) };
             var skyPush = push with { Matrix = inverseViewProj };
+            if (sound is not null)
+            {
+                // The colossus's own chant stays silent while another voice speaks, and everything ducks under it.
+                var (centre, speed) = Motion();
+                sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled, voice ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, soundOn ? volume : 0f, frameDt);
+            }
 
             // The frame: wait for this slot, fill its instances, record the scene and the panel, submit, present.
             var slot = frame % FramesInFlight;
@@ -1228,8 +1275,7 @@ internal static unsafe class Colossus
             device.ResetCommandPool(pools[slot], VkCommandPoolResetFlags.None);
             var target = new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
-            var speech = speaking ? Speech((float)simTime) : 0f;
-            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, speech, rt, slot, staticInstances.Length);
+            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, rt, slot, staticInstances.Length);
 
             var cb = commands[slot];
             cb.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
@@ -1367,6 +1413,7 @@ internal static unsafe class Colossus
         }
 
         var seconds = clock.Elapsed.TotalSeconds;
+        sound?.Dispose();
         device.WaitIdle();
         renderer.Dispose();
         platform.Dispose();
@@ -1554,9 +1601,24 @@ internal static unsafe class Colossus
     // How open the mouth is while the face speaks, from 0 to 1: syllables, in phrases.
     private static float Speech(float t) => MathF.Max(0f, MathF.Sin(t * 7f)) * (0.55f + (0.45f * MathF.Sin(t * 1.3f)));
 
+    // The swarm's centre and mean speed, for the sound.
+    private static (SN.Vector3 Centre, float Speed) Motion()
+    {
+        var sum = SN.Vector3.Zero;
+        var speed = 0f;
+        for (var i = 0; i < _ids.Length; i++)
+        {
+            sum += V(_states[i].Position);
+            speed += V(_states[i].LinearVelocity).Length();
+        }
+
+        var n = Math.Max(1, _ids.Length);
+        return (sum / n, speed / n);
+    }
+
     // Each body's new velocity: toward its target, capped, with a little turbulence so the swarm never looks rigid.
-    // When the face speaks, its jaw drops with each syllable.
-    private static void Steer(BodyInterface bodies, float t, bool assembled, bool speaking, float cohesion, float speedScale)
+    // When the face speaks, its jaw drops with each syllable, as far as mouth (0 to 1) says.
+    private static void Steer(BodyInterface bodies, float t, bool assembled, float mouth, float cohesion, float speedScale)
     {
         var max = 28f * speedScale;
         var stir = assembled ? 0.25f : 2f;
@@ -1567,12 +1629,7 @@ internal static unsafe class Colossus
             SN.Vector3 target;
             if (assembled)
             {
-                target = _faceP[i];
-                if (speaking)
-                {
-                    var open = Speech(t) * _jaw[i];
-                    target += new SN.Vector3(0f, -1.6f, -0.4f) * open;
-                }
+                target = _faceP[i] + (new SN.Vector3(0f, -1.6f, -0.4f) * (mouth * _jaw[i]));
             }
             else
             {
@@ -1592,8 +1649,8 @@ internal static unsafe class Colossus
     }
 
     // The swarm's instances: each machine a long box, pointing where it flies, or out of the face once it has settled;
-    // the face's eyes glow as it forms, and its mouth with each syllable.
-    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, RayScene? rt, int slot, int first)
+    // the face's eyes glow as it forms, brighter as it hears the user, and its mouth with each syllable.
+    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, RayScene? rt, int slot, int first)
     {
         var n = Math.Min(_ids.Length, o.Length);
         var scale = SN.Matrix4x4.CreateScale(_memberRadius * 1.7f, _memberRadius * 0.9f, _memberRadius * 3.8f);
@@ -1610,7 +1667,7 @@ internal static unsafe class Colossus
             var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, 0.2f));
             _dirs[i] = d;
             var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
-            var emission = ((_eye[i] * 5f) + (_mouth[i] * 2.5f * speech)) * glow;
+            var emission = ((_eye[i] * 5f * (1f + (1.5f * hearing))) + (_mouth[i] * 2.5f * speech)) * glow;
             var model = (settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up);
             rt?.Write(slot, first + i, model, 0, false, swarm: true);
             o[i] = new Drawn(model, new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));

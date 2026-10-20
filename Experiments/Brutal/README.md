@@ -249,12 +249,13 @@ starting:
 ## Showcase: Colossus (2026-10-20)
 
 Asked after M4: « Je veux voir ce que brutal a dans le ventre ». `Colossus/` uses more of BRUTAL at once: Vulkan, Jolt,
-Dear ImGui and ImPlot. It is an original scene with no outside assets. A lone figure stands at the end of a walkway in a
+Dear ImGui, ImPlot, glTF and OpenAL. It is an original scene with no outside assets. A lone figure stands at the end of a walkway in a
 city of towers. Above it, 6,000 machines circle, each one a Jolt rigid body. They gather into a colossal face, built
 from Gaussian bumps, which looks at the figure and speaks, then disperses again.
 
 Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N` (default 10,000), `--seconds T`, `--immediate`
 (no vsync), `--images N` (swapchain images, default 2) and `--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
+The sound takes `--mute`, `--no-sound`, `--no-voice` and `--face-file PATH` (below).
 The capture copies the swapchain image to a host buffer, so it also works where a desktop screenshot cannot (a locked
 session, or a window with no vsync).
 
@@ -385,6 +386,32 @@ reconstruction, frame generation, and the path tracer.
 
 `head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
 along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.
+
+**Sound and voice** (asked as « intégrer du son, de la voix, le full duplex … le plugin … les avatars »). `Sound.cs`
+plays the scene through BRUTAL's OpenAL binding (`Ahwoo.Brutal.OpenAl` 2026.10.2, which ships OpenAL Soft 1.25.2 under
+the LGPL with its licence texts). Every sound is synthesised in C# at start, on a worker while the window comes up
+(170 ms); nothing is recorded or downloaded.
+- **Swarm:** 44 small motors a little out of tune, so they beat, with the rush of air past them. It sits at the swarm's
+  centre and grows louder and higher as the machines fly faster.
+- **Wind:** low noise in gusts, a thin whistle through the towers and a deep drone, around the listener.
+- **Chant:** while the face speaks on its own, two low voices a fifth apart (55 and 82.5 Hz) through the formants of an
+  "o", swelling with each syllable, at the face.
+- **Rushes:** a rising one as the swarm assembles, ending in a low thud, and a falling one as it disperses.
+- **Space:** the listener is the camera; the sounds are mono, so OpenAL places them. An EFX reverb (the canyon preset)
+  carries them across the city when the device has EFX.
+- **Seams:** each loop holds a whole number of cycles of its tones, and its noise is filtered round the loop twice, so
+  it loops without a click.
+
+The voice plugins on this machine are mirrored, read-only: the scene reads their state files and never writes them.
+- While Claude's voice speaks (`piper-voice`'s `courtesy\piper-speaking`, or another session's or guest voice), the
+  face assembles, its jaw moves, its own chant stays silent, and the scene ducks.
+- As the microphone hears the user (`voice-listen`'s `level`), the eyes brighten and the scene ducks.
+- With `--face-file PATH`, the scene reads voice-avatar's `faceFile`: while the state is working or waiting, the face
+  holds; while it waits for the user, the eyes pulse.
+- Without the plugins, the face speaks on its own. `--no-voice` turns the mirror off, `--mute` starts at volume zero,
+  and `--no-sound` opens no audio device. With no device, the scene runs silent.
+
+With sound, the mirror and the city, vsync over 25 s gave 1,422 frames, p50 16.66 ms, p99 18.60, worst second 60.
 
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The

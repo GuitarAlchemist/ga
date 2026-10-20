@@ -23,6 +23,7 @@
     <PackageReference Include="Ahwoo.Brutal.ImGui" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ImGui.Backends" Version="[2026.10.2]" />
     <PackageReference Include="Ahwoo.Brutal.ImPlot" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.OpenAl" Version="[2026.10.2]" />
   </ItemGroup>
 
   <!-- The surface textures, made with ComfyUI and Blender: see the README. -->
