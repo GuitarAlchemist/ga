@@ -355,6 +355,34 @@ The 420 towers of the ring are those variants, each turned and scaled. The boxes
 missing. With the city and 10,000 machines, vsync over 22 s gave 1,254 frames, worst second 60, and the GPU about 17 %
 busy.
 
+**RTX** (asked as « max out comme l'observatoire »). When the GPU has ray queries, the scene traces against the whole
+scene, unless `--no-rtx` is given. `--rtx-off` starts with it unticked, and the panel toggles it.
+- **Device:** `VK_KHR_acceleration_structure` and `VK_KHR_ray_query`, with buffer device addresses, all through BRUTAL's
+  bindings.
+- **Bottom level:** one structure for the cube and one for each tower variant, built once from the vertex buffer.
+- **Top level:** one per frame in flight over all 10,407 instances, rebuilt each frame as the swarm moves.
+- **Shader:** one ray toward the sun for the shadow. On glass and metal, one more ray along the mirror direction: what it
+  meets replaces the sky in the reflection, as a dark facade or a lamp, hazed by its distance.
+- **Masks:**
+  - the swarm shades the city, the walkway and the figure, but not itself; otherwise its machines hid each other's
+    light and the head read as a silhouette;
+  - lamps appear only in reflections.
+
+| Run (10,000 machines, the city) | Frames | Note |
+|---|---|---|
+| uncapped, `--no-rtx`, 12 s | p50 4.82 ms, p99 12.04 | GPU about 17 % busy |
+| uncapped, RTX, 12 s | p50 5.15 ms, p99 12.91 | GPU about 28 % busy |
+| vsync, RTX, 22 s | 1,256 frames, p50 16.66 ms, p99 18.11, worst second 60 | GPU about 11 % busy |
+
+One trap on the way: the first version took 22.6 ms a frame with the GPU 5 % busy. Two CPU costs added up:
+- it read each machine's matrix back from the mapped instance buffer, which is write-combined memory;
+- it filled `VkAccelerationStructureInstanceKHR` through the binding's bit-field setters, about 2 µs an instance.
+
+The swarm now writes its ray-tracing instances as it writes its draw instances, as raw 64-byte records.
+
+The Observatory's other RTX features need NVIDIA's SDKs, which BRUTAL does not bind, so they are not here: DLSS, ray
+reconstruction, frame generation, and the path tracer.
+
 `head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
 along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.
 

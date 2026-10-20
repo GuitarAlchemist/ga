@@ -7,7 +7,8 @@
 // mips, ACES tone mapping, a vignette and grain, then the panel.
 // Keys: Space assembles or disperses, C changes the camera, a drag turns it, the wheel zooms, Esc quits.
 // Arguments: --swarm N (bodies, default 10000), --seconds T (time limit, 0 = none), --immediate (no vsync),
-// --images N (swapchain images, default 2), --capture T1,T2,... (save the window's image at those seconds, as
+// --no-rtx (no ray queries), --rtx-off (ray queries unticked at start), --images N (swapchain images, default 2),
+// --capture T1,T2,... (save the window's image at those seconds, as
 // colossus-<T>s.png in the working directory).
 
 using System.Buffers.Binary;
@@ -23,6 +24,7 @@ using Brutal.ImGuiApi.Backends;
 using Brutal.ImPlotApi;
 using Brutal.JoltApi;
 using Brutal.Numerics;
+using Brutal.Pointers;
 using Brutal.ShaderCApi;
 using Brutal.Strings;
 using Brutal.VulkanApi;
@@ -180,6 +182,9 @@ internal static unsafe class Colossus
         layout(location = 8) flat in vec3 vBitangent;
         layout(location = 9) flat in float vMaterial;
         layout(set = 0, binding = 0) uniform sampler2DArray surfaces;
+        #ifdef RTX
+        layout(set = 0, binding = 1) uniform accelerationStructureEXT scene;
+        #endif
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         layout(location = 0) out vec4 outColor;
         const vec3 SunColor = vec3(1.0, 0.56, 0.26);
@@ -279,15 +284,50 @@ internal static unsafe class Colossus
                 }
             }
 
-            float ndl = max(dot(n, sun), 0.0);
+            // RTX: one ray toward the sun for its shadow; on glass and metal, one along the mirror direction, whose hit
+            // replaces the sky in the reflection: a dark facade or a lamp, hazed by its distance.
+            float shadow = 1.0;
+            vec3 traced = vec3(-1.0);
+            #ifdef RTX
+            if (pc.params.y > 0.5)
+            {
+                vec3 origin = vWorld + normalize(vNormal) * 0.04;
+                rayQueryEXT q;
+                // The swarm shades the city, the walkway and the figure, but not itself: its machines would hide each other's
+                // sunlight and the head would read as a silhouette.
+                uint casters = kind > 0.5 && kind < 1.5 ? 0x01u : 0x05u;
+                rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, casters, origin, 0.02, sun, 800.0);
+                while (rayQueryProceedEXT(q)) {}
+                if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionNoneEXT)
+                {
+                    shadow = 0.0;
+                }
+
+                if (shine > 0.5)
+                {
+                    vec3 r = reflect(-v, n);
+                    rayQueryEXT m;
+                    rayQueryInitializeEXT(m, scene, gl_RayFlagsOpaqueEXT, 0xFF, origin, 0.05, r, 900.0);
+                    while (rayQueryProceedEXT(m)) {}
+                    if (rayQueryGetIntersectionTypeEXT(m, true) != gl_RayQueryCommittedIntersectionNoneEXT)
+                    {
+                        float d = rayQueryGetIntersectionTEXT(m, true);
+                        bool lamp = rayQueryGetIntersectionInstanceCustomIndexEXT(m, true) == 1;
+                        vec3 hit = lamp ? vec3(1.0, 0.45, 0.12) * 4.0 : vec3(0.025, 0.02, 0.016) + SunColor * 0.04;
+                        traced = mix(hit, sky(r, sun, t) * 0.55, 1.0 - exp(-d * 0.0028));
+                    }
+                }
+            }
+            #endif
+            float ndl = max(dot(n, sun), 0.0) * shadow;
             vec3 ambient = mix(vec3(0.07, 0.035, 0.015), vec3(0.035, 0.035, 0.045), n.y * 0.5 + 0.5);
             vec3 fill = vec3(0.16, 0.17, 0.22) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0);
             float back = pow(1.0 - max(dot(n, v), 0.0), 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
             vec3 h = normalize(sun + v);
             vec3 spec = SunColor * pow(max(dot(n, h), 0.0), mix(180.0, 12.0, rough)) * mix(3.0, 0.3, rough) * shine * ndl;
             float fresnel = 0.3 + 0.7 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
-            vec3 env = shine > 0.0 ? sky(reflect(-v, n), sun, t) * fresnel * (1.0 - rough) * 0.5 * shine : vec3(0.0);
-            vec3 c = albedo * (ambient + fill + SunColor * 1.8 * ndl) + spec + env + SunColor * back * 1.4 + emit;
+            vec3 env = shine > 0.0 ? (traced.x >= 0.0 ? traced : sky(reflect(-v, n), sun, t)) * fresnel * (1.0 - rough) * 0.5 * shine : vec3(0.0);
+            vec3 c = albedo * (ambient + fill + SunColor * 1.8 * ndl) + spec + env + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + emit;
             float fog = 1.0 - exp(-dist * 0.0028);
             fog = max(fog, clamp(-vWorld.y / 140.0, 0.0, 1.0) * (1.0 - exp(-dist * 0.012)));
             c = mix(c, sky(-v, sun, t) * 0.55, fog);
@@ -427,12 +467,25 @@ internal static unsafe class Colossus
             return 1;
         }
 
+        // RTX, when the GPU has ray queries and --no-rtx is not given: the scene's shader traces the sun's shadows and the
+        // reflections on glass and metal against acceleration structures of the whole scene.
+        var hasRayQuery = new VkPhysicalDeviceRayQueryFeaturesKHR();
+        var hasAccel = new VkPhysicalDeviceAccelerationStructureFeaturesKHR { Next = &hasRayQuery };
+        var has12 = new VkPhysicalDeviceVulkan12Features { Next = &hasAccel };
+        var features2 = new VkPhysicalDeviceFeatures2 { Next = &has12 };
+        physical.GetFeatures2(ref features2);
+        var rtx = !args.Contains("--no-rtx") && hasRayQuery.RayQuery && hasAccel.AccelerationStructure && has12.BufferDeviceAddress;
+        var rayQueryOn = new VkPhysicalDeviceRayQueryFeaturesKHR { RayQuery = true };
+        var accelOn = new VkPhysicalDeviceAccelerationStructureFeaturesKHR { Next = &rayQueryOn, AccelerationStructure = true };
+        var vulkan12On = new VkPhysicalDeviceVulkan12Features { Next = &accelOn, BufferDeviceAddress = true };
+
         var priority = 1.0f;
         var queueInfo = new VkDeviceQueueCreateInfo { QueueFamilyIndex = family, QueueCount = 1, QueuePriorities = &priority };
         var device = physical.CreateDevice(new DeviceEx.CreateInfo
         {
-            Extensions = ["VK_KHR_swapchain"],
+            Extensions = rtx ? ["VK_KHR_swapchain", "VK_KHR_acceleration_structure", "VK_KHR_ray_query", "VK_KHR_deferred_host_operations"] : ["VK_KHR_swapchain"],
             QueueCreateInfos = new ReadOnlySpan<VkDeviceQueueCreateInfo>(&queueInfo, 1),
+            Next = rtx ? &vulkan12On : null,
         });
         var queue = device.GetQueue(family, 0);
 
@@ -664,7 +717,9 @@ internal static unsafe class Colossus
         }, null);
 
         var vertexModule = Shader(device, VertexShader, ShaderKind.VertexShader, "swarm.vert");
-        var fragmentModule = Shader(device, FragmentShader, ShaderKind.FragmentShader, "swarm.frag");
+        var fragmentModule = rtx
+            ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n"), ShaderKind.FragmentShader, "swarm-rtx.frag", vulkan13: true)
+            : Shader(device, FragmentShader, ShaderKind.FragmentShader, "swarm.frag");
         var compositeVertex = Shader(device, CompositeVertexShader, ShaderKind.VertexShader, "composite.vert");
         var compositeFragment = Shader(device, CompositeFragmentShader, ShaderKind.FragmentShader, "composite.frag");
         var pushRange = new VkPushConstantRange
@@ -690,12 +745,19 @@ internal static unsafe class Colossus
         {
             Bindings = [new VkDescriptorSetLayoutBinding { DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }],
         }, null);
+        // The scene's set: its textures and, with RTX, the frame's top-level acceleration structure; one set a frame in flight.
+        VkDescriptorSetLayoutBinding[] sceneBindings = rtx
+            ? [new VkDescriptorSetLayoutBinding { Binding = 0, DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit },
+               new VkDescriptorSetLayoutBinding { Binding = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }]
+            : [new VkDescriptorSetLayoutBinding { Binding = 0, DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }];
+        var sceneSetLayout = device.CreateDescriptorSetLayout(new DescriptorSetLayoutEx.CreateInfo { Bindings = sceneBindings }, null);
         var descriptorPool = device.CreateDescriptorPool(new DescriptorPoolEx.CreateInfo
         {
-            MaxSets = 2,
-            PoolSizes = [new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 2 }],
+            MaxSets = 1 + FramesInFlight,
+            PoolSizes = [new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 + FramesInFlight },
+                         new VkDescriptorPoolSize { Type = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = FramesInFlight }],
         }, null);
-        var layout = device.CreatePipelineLayout([setLayout], [pushRange], null);
+        var layout = device.CreatePipelineLayout([sceneSetLayout], [pushRange], null);
         var pipeline = Pipeline(device, layout, sceneRenderPass, vertexModule, fragmentModule, scene: true);
         var hdrSet = device.AllocateDescriptorSet(descriptorPool, setLayout);
         var hdrInfo = new VkDescriptorImageInfo { Sampler = sampler, ImageView = hdrMipsView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
@@ -709,9 +771,20 @@ internal static unsafe class Colossus
         var cubeCount = cube.Count;
         var towerVariants = LoadTowers(Path.Combine(AppContext.BaseDirectory, "city", "towers.glb"), cube);
         var meshSize = new ByteSize((nuint)(cube.Count * sizeof(MeshVertex)));
-        var meshBuffer = device.CreateBuffer(new VkBufferCreateInfo { Size = meshSize, Usage = VkBufferUsageFlags.VertexBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
-        var meshMemory = device.AllocateMemory(physical, meshBuffer, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
-        device.BindBufferMemory(meshBuffer, meshMemory, memoryOffset: ByteSize.Zero);
+        VkBuffer meshBuffer;
+        VkDeviceMemory meshMemory;
+        if (rtx)
+        {
+            // The ray queries' bottom-level structures read their triangles from this buffer too.
+            meshBuffer = AddressBuffer(device, physical, meshSize.Value, VkBufferUsageFlags.VertexBufferBit | VkBufferUsageFlags.AccelerationStructureBuildInputReadOnlyBitKHR, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, out meshMemory);
+        }
+        else
+        {
+            meshBuffer = device.CreateBuffer(new VkBufferCreateInfo { Size = meshSize, Usage = VkBufferUsageFlags.VertexBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
+            meshMemory = device.AllocateMemory(physical, meshBuffer, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+            device.BindBufferMemory(meshBuffer, meshMemory, memoryOffset: ByteSize.Zero);
+        }
+
         var meshMapped = device.MapMemory<MeshVertex>(new MapInfo(meshMemory) { Region = new MapRegion { Size = meshSize } });
         cube.ToArray().AsSpan().CopyTo(new Span<MeshVertex>((MeshVertex*)meshMapped, cube.Count));
         device.UnmapMemory(meshMemory);
@@ -810,9 +883,13 @@ internal static unsafe class Colossus
             MaxLod = texLevels,
             MaxAnisotropy = 1f,
         }, null);
-        var texSet = device.AllocateDescriptorSet(descriptorPool, setLayout);
+        var sceneSets = new VkDescriptorSet[FramesInFlight];
         var texInfo = new VkDescriptorImageInfo { Sampler = repeatSampler, ImageView = texView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
-        device.UpdateDescriptorSets([new VkWriteDescriptorSet { DstSet = texSet, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &texInfo }], []);
+        for (var i = 0; i < FramesInFlight; i++)
+        {
+            sceneSets[i] = device.AllocateDescriptorSet(descriptorPool, sceneSetLayout);
+            device.UpdateDescriptorSets([new VkWriteDescriptorSet { DstSet = sceneSets[i], DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &texInfo }], []);
+        }
 
         // For --capture: a host buffer the window's image is copied into.
         var readbackSize = new ByteSize((nuint)(extent.Width * extent.Height * 4));
@@ -893,12 +970,33 @@ internal static unsafe class Colossus
         var drawCalls = 1 + towerRanges.Count(r => r.Count > 0);
         ordered.AddRange(statics);
         var staticInstances = ordered.ToArray();
+        // RTX: one bottom-level structure for the cube and one per tower variant, built once; per frame in flight, a
+        // top-level structure over every instance, rebuilt each frame as the swarm moves. The static instances are written
+        // once; lamps are left out of the shadow rays.
+        var rt = rtx ? new RayScene(device, physical, queue, commands[0], meshBuffer, cubeCount, towerVariants, FramesInFlight, MaxInstances) : null;
+        if (rt is not null)
+        {
+            for (var i = 0; i < FramesInFlight; i++)
+            {
+                for (var k = 0; k < staticInstances.Length; k++)
+                {
+                    var variant = Array.FindIndex(towerRanges, r => k >= r.First && k < r.First + r.Count);
+                    var lamp = staticInstances[k].Extra.X > 2.5f && staticInstances[k].Extra.X < 3.5f;
+                    rt.Write(i, k, staticInstances[k].Model, variant < 0 || k >= towerInstances ? 0 : 1 + variant, lamp);
+                }
+
+                var accel = rt.Tlas[i];
+                var accelWrite = new VkWriteDescriptorSetAccelerationStructureKHR { AccelerationStructureCount = 1, AccelerationStructures = &accel };
+                device.UpdateDescriptorSets([new VkWriteDescriptorSet { Next = &accelWrite, DstSet = sceneSets[i], DstBinding = 1, DescriptorCount = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR }], []);
+            }
+        }
+
         BuildSwarm(bodies, swarm);
         physics.OptimizeBroadPhase();
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
 
         // State the panel steers.
-        bool assembled = false, autoCycle = true, speaking = true, drift = true;
+        bool assembled = false, autoCycle = true, speaking = true, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
         int requested = swarm, preset = 0, shownPreset = -1;
         var camEye = new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f);
@@ -1050,6 +1148,14 @@ internal static unsafe class Colossus
 
                 ImGui.SameLine();
                 ImGui.Checkbox("Drift"u8, ref drift);
+                if (rtx)
+                {
+                    ImGui.Checkbox("RTX: traced sun shadows and reflections"u8, ref rtxOn);
+                }
+                else
+                {
+                    ImGui.Text("RTX: no ray queries on this GPU, or --no-rtx"u8);
+                }
                 Array.Copy(frameHistory, 1, frameHistory, 0, History - 1);
                 Array.Copy(physicsHistory, 1, physicsHistory, 0, History - 1);
                 for (var i = 0; i < History - 1; i++)
@@ -1105,7 +1211,7 @@ internal static unsafe class Colossus
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
             var viewProj = SN.Matrix4x4.CreateLookAt(camEye, camTarget, SN.Vector3.UnitY) * projection;
             SN.Matrix4x4.Invert(viewProj, out var inverseViewProj);
-            var push = new Push { Matrix = viewProj, Eye = new SN.Vector4(camEye, (float)now), Sun = new SN.Vector4(SunDir, exposure), Params = new SN.Vector4(bloomStrength, 0f, 0f, 0f) };
+            var push = new Push { Matrix = viewProj, Eye = new SN.Vector4(camEye, (float)now), Sun = new SN.Vector4(SunDir, exposure), Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? 1f : 0f, 0f, 0f) };
             var skyPush = push with { Matrix = inverseViewProj };
 
             // The frame: wait for this slot, fill its instances, record the scene and the panel, submit, present.
@@ -1123,10 +1229,15 @@ internal static unsafe class Colossus
             var target = new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
             var speech = speaking ? Speech((float)simTime) : 0f;
-            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, speech);
+            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, speech, rt, slot, staticInstances.Length);
 
             var cb = commands[slot];
             cb.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
+            if (rt is not null)
+            {
+                rt.Build(cb, slot, drawn);
+            }
+
             clears[0] = new VkClearValue { Color = new VkClearColorValue { Float32 = new float4(0f, 0f, 0f, 0f) } };
             clears[1] = new VkClearValue { DepthStencil = new VkClearDepthStencilValue { Depth = 0f } };
             cb.BeginRenderPass(new VkRenderPassBeginInfo
@@ -1140,7 +1251,7 @@ internal static unsafe class Colossus
             cb.BindPipeline(VkPipelineBindPoint.Graphics, pipeline);
             cb.SetViewport(firstViewport: 0, [new VkViewport { Width = extent.Width, Height = extent.Height, MinDepth = 0f, MaxDepth = 1f }]);
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
-            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [texSet], []);
+            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [sceneSets[slot]], []);
             cb.PushConstants(layout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&push, sizeof(Push)));
             cb.BindVertexBuffer(0, meshBuffer);
             cb.BindVertexBuffer(1, instanceBuffers[slot]);
@@ -1276,6 +1387,7 @@ internal static unsafe class Colossus
             device.DestroyCommandPool(pools[i], null);
         }
 
+        rt?.Dispose();
         device.DestroyBuffer(meshBuffer, null);
         device.FreeMemory(meshMemory, null);
         device.UnmapMemory(readbackMemory);
@@ -1287,6 +1399,7 @@ internal static unsafe class Colossus
         device.DestroyPipelineLayout(compositeLayout, null);
         descriptorPool.Dispose();
         setLayout.Dispose();
+        sceneSetLayout.Dispose();
         device.DestroySampler(sampler, null);
         device.DestroySampler(repeatSampler, null);
         device.DestroyImageView(texView, null);
@@ -1480,7 +1593,7 @@ internal static unsafe class Colossus
 
     // The swarm's instances: each machine a long box, pointing where it flies, or out of the face once it has settled;
     // the face's eyes glow as it forms, and its mouth with each syllable.
-    private static int WriteSwarm(Span<Drawn> o, float glow, float speech)
+    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, RayScene? rt, int slot, int first)
     {
         var n = Math.Min(_ids.Length, o.Length);
         var scale = SN.Matrix4x4.CreateScale(_memberRadius * 1.7f, _memberRadius * 0.9f, _memberRadius * 3.8f);
@@ -1498,7 +1611,9 @@ internal static unsafe class Colossus
             _dirs[i] = d;
             var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
             var emission = ((_eye[i] * 5f) + (_mouth[i] * 2.5f * speech)) * glow;
-            o[i] = new Drawn((settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up), new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));
+            var model = (settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up);
+            rt?.Write(slot, first + i, model, 0, false, swarm: true);
+            o[i] = new Drawn(model, new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));
         }
 
         return n;
@@ -1897,10 +2012,222 @@ internal static unsafe class Colossus
         SubresourceRange = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, BaseMipLevel = baseLevel, LevelCount = levels, LayerCount = layers },
     };
 
-    private static VkShaderModule Shader(Device device, string source, ShaderKind kind, string name)
+    // A buffer whose device address the GPU may take (the RTX path's buffers); its memory is allocated to allow that.
+    private static VkBuffer AddressBuffer(Device device, PhysicalDevice physical, ulong size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, out VkDeviceMemory memory)
     {
+        var buffer = device.CreateBuffer(new VkBufferCreateInfo { Size = new ByteSize((nuint)size), Usage = usage | VkBufferUsageFlags.ShaderDeviceAddressBit, SharingMode = VkSharingMode.Exclusive }, null);
+        var needs = device.GetBufferMemoryRequirements(buffer);
+        var flags = new VkMemoryAllocateFlagsInfo { Flags = VkMemoryAllocateFlags.DeviceAddressBit };
+        memory = device.AllocateMemory(new VkMemoryAllocateInfo { Next = &flags, AllocationSize = needs.Size, MemoryTypeIndex = physical.FindMemoryType(needs.MemoryTypeBits, properties) }, null);
+        device.BindBufferMemory(buffer, memory, memoryOffset: ByteSize.Zero);
+        return buffer;
+    }
+
+    // The ray queries' scene. Bottom-level acceleration structures for the cube and for each tower variant, built once
+    // from the mesh buffer; per frame in flight, a top-level one over every instance, from an instance buffer that stays
+    // mapped. Instance masks: 1 for the city and the walkway, 4 for the swarm, 2 for lamps, which only reflections see.
+    private sealed class RayScene : IDisposable
+    {
+        private readonly Device _device;
+        private readonly List<(VkBuffer Buffer, VkDeviceMemory Memory)> _buffers = [];
+        private readonly List<VkAccelerationStructureKHR> _structures = [];
+        private readonly ulong[] _blas;
+        private readonly VkDeviceAddress[] _scratch;
+        private readonly VkDeviceAddress[] _instances;
+        private readonly nint[] _mapped;
+
+        public RayScene(Device device, PhysicalDevice physical, Queue queue, CommandBuffer cb, VkBuffer mesh, int cubeCount, (int First, int Count, float Width)[] variants, int frames, int maxInstances)
+        {
+            _device = device;
+            var meshAddress = device.GetBufferDeviceAddress(mesh);
+            var ranges = new List<(int First, int Count)> { (0, cubeCount) };
+            ranges.AddRange(variants.Select(v => (v.First, v.Count)));
+            var vertices = ranges.Max(r => r.First + r.Count);
+            var n = ranges.Count;
+            var geometries = new VkAccelerationStructureGeometryKHR[n];
+            var infos = new VkAccelerationStructureBuildGeometryInfoKHR[n];
+            var rangeInfos = new VkAccelerationStructureBuildRangeInfoKHR[n];
+            var scratchOffsets = new ulong[n];
+            ulong scratchTotal = 0;
+            _blas = new ulong[n];
+            for (var i = 0; i < n; i++)
+            {
+                geometries[i] = new VkAccelerationStructureGeometryKHR
+                {
+                    GeometryType = VkGeometryTypeKHR.TrianglesKHR,
+                    Flags = VkGeometryFlagsKHR.OpaqueBitKHR,
+                    Geometry = new VkAccelerationStructureGeometryDataKHR
+                    {
+                        Triangles = new VkAccelerationStructureGeometryTrianglesDataKHR
+                        {
+                            VertexFormat = VkFormat.R32G32B32SFloat,
+                            VertexData = new VkDeviceOrHostAddressConstKHR { DeviceAddress = meshAddress },
+                            VertexStride = (ByteSize64)(ulong)sizeof(MeshVertex),
+                            MaxVertex = vertices - 1,
+                            IndexType = VkIndexType.NoneKHR,
+                        },
+                    },
+                };
+                rangeInfos[i] = new VkAccelerationStructureBuildRangeInfoKHR { PrimitiveCount = ranges[i].Count / 3, FirstVertex = ranges[i].First };
+            }
+
+            fixed (VkAccelerationStructureGeometryKHR* g = geometries)
+            fixed (VkAccelerationStructureBuildRangeInfoKHR* r = rangeInfos)
+            {
+                for (var i = 0; i < n; i++)
+                {
+                    infos[i] = new VkAccelerationStructureBuildGeometryInfoKHR
+                    {
+                        Type = VkAccelerationStructureTypeKHR.BottomLevelKHR,
+                        Flags = VkBuildAccelerationStructureFlagsKHR.PreferFastTraceBitKHR,
+                        Mode = VkBuildAccelerationStructureModeKHR.BuildKHR,
+                        GeometryCount = 1,
+                        Geometries = g + i,
+                    };
+                    var sizes = new VkAccelerationStructureBuildSizesInfoKHR();
+                    device.GetAccelerationStructureBuildSizesKHR(VkAccelerationStructureBuildTypeKHR.DeviceKHR, infos[i], [rangeInfos[i].PrimitiveCount], sizes);
+                    infos[i].DstAccelerationStructure = Create(physical, VkAccelerationStructureTypeKHR.BottomLevelKHR, sizes.AccelerationStructureSize.Value, out _blas[i]);
+                    scratchOffsets[i] = scratchTotal;
+                    scratchTotal += (sizes.BuildScratchSize.Value + 255) & ~255ul;
+                }
+
+                var scratch = Track(AddressBuffer(device, physical, scratchTotal, VkBufferUsageFlags.StorageBufferBit, VkMemoryPropertyFlags.DeviceLocalBit, out var scratchMemory), scratchMemory);
+                var scratchAddress = device.GetBufferDeviceAddress(scratch).Value;
+                var pointers = new Ptr<VkAccelerationStructureBuildRangeInfoKHR>[n];
+                for (var i = 0; i < n; i++)
+                {
+                    infos[i].ScratchData = new VkDeviceOrHostAddressKHR { DeviceAddress = new VkDeviceAddress(scratchAddress + scratchOffsets[i]) };
+                    pointers[i] = new Ptr<VkAccelerationStructureBuildRangeInfoKHR>(r + i);
+                }
+
+                cb.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
+                cb.BuildAccelerationStructuresKHR(infos, pointers);
+                cb.End();
+                var handle = cb.Handle;
+                queue.Submit([new VkSubmitInfo { CommandBufferCount = 1, CommandBuffers = &handle }], default);
+                device.WaitIdle();
+            }
+
+            Tlas = new VkAccelerationStructureKHR[frames];
+            _scratch = new VkDeviceAddress[frames];
+            _instances = new VkDeviceAddress[frames];
+            _mapped = new nint[frames];
+            for (var f = 0; f < frames; f++)
+            {
+                var size = (ulong)(maxInstances * sizeof(VkAccelerationStructureInstanceKHR));
+                var instances = Track(AddressBuffer(device, physical, size, VkBufferUsageFlags.AccelerationStructureBuildInputReadOnlyBitKHR, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, out var instanceMemory), instanceMemory);
+                _mapped[f] = (nint)device.MapMemory<VkAccelerationStructureInstanceKHR>(new MapInfo(instanceMemory) { Region = new MapRegion { Size = new ByteSize((nuint)size) } });
+                _instances[f] = device.GetBufferDeviceAddress(instances);
+                var geometry = TopGeometry(_instances[f]);
+                var info = new VkAccelerationStructureBuildGeometryInfoKHR
+                {
+                    Type = VkAccelerationStructureTypeKHR.TopLevelKHR,
+                    Flags = VkBuildAccelerationStructureFlagsKHR.PreferFastBuildBitKHR,
+                    Mode = VkBuildAccelerationStructureModeKHR.BuildKHR,
+                    GeometryCount = 1,
+                    Geometries = &geometry,
+                };
+                var sizes = new VkAccelerationStructureBuildSizesInfoKHR();
+                device.GetAccelerationStructureBuildSizesKHR(VkAccelerationStructureBuildTypeKHR.DeviceKHR, info, [maxInstances], sizes);
+                Tlas[f] = Create(physical, VkAccelerationStructureTypeKHR.TopLevelKHR, sizes.AccelerationStructureSize.Value, out _);
+                var tlasScratch = Track(AddressBuffer(device, physical, sizes.BuildScratchSize.Value, VkBufferUsageFlags.StorageBufferBit, VkMemoryPropertyFlags.DeviceLocalBit, out var tlasScratchMemory), tlasScratchMemory);
+                _scratch[f] = device.GetBufferDeviceAddress(tlasScratch);
+            }
+        }
+
+        public VkAccelerationStructureKHR[] Tlas { get; }
+
+        // Instance k of frame slot f: its model matrix (System.Numerics, row vectors) as Vulkan's 3 by 4 rows, and the
+        // structure of mesh m (0 the cube, 1 + v tower variant v).
+        // Written field by field into the mapped buffer, in VkAccelerationStructureInstanceKHR's layout: the binding's
+        // bit-field setters cost about 2 µs an instance, too much for 10,000 a frame.
+        public void Write(int f, int k, in SN.Matrix4x4 m, int mesh, bool lamp, bool swarm = false)
+        {
+            var p = (RawInstance*)_mapped[f] + k;
+            p->X = new SN.Vector4(m.M11, m.M21, m.M31, m.M41);
+            p->Y = new SN.Vector4(m.M12, m.M22, m.M32, m.M42);
+            p->Z = new SN.Vector4(m.M13, m.M23, m.M33, m.M43);
+            p->CustomAndMask = (lamp ? 1u : 0u) | ((lamp ? 0x02u : swarm ? 0x04u : 0x01u) << 24);
+            p->OffsetAndFlags = (uint)VkGeometryInstanceFlagsKHR.TriangleFacingCullDisableBitKHR << 24;
+            p->Structure = _blas[mesh];
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RawInstance
+        {
+            public SN.Vector4 X, Y, Z;
+            public uint CustomAndMask, OffsetAndFlags;
+            public ulong Structure;
+        }
+
+        // Rebuilds slot f's top-level structure over its first count instances, before the scene pass reads it.
+        public void Build(CommandBuffer cb, int f, int count)
+        {
+            var geometry = TopGeometry(_instances[f]);
+            var info = new VkAccelerationStructureBuildGeometryInfoKHR
+            {
+                Type = VkAccelerationStructureTypeKHR.TopLevelKHR,
+                Flags = VkBuildAccelerationStructureFlagsKHR.PreferFastBuildBitKHR,
+                Mode = VkBuildAccelerationStructureModeKHR.BuildKHR,
+                DstAccelerationStructure = Tlas[f],
+                GeometryCount = 1,
+                Geometries = &geometry,
+                ScratchData = new VkDeviceOrHostAddressKHR { DeviceAddress = _scratch[f] },
+            };
+            var range = new VkAccelerationStructureBuildRangeInfoKHR { PrimitiveCount = count };
+            cb.BuildAccelerationStructuresKHR([info], [new Ptr<VkAccelerationStructureBuildRangeInfoKHR>(&range)]);
+            cb.PipelineBarrier(VkPipelineStageFlags.AccelerationStructureBuildBitKHR, VkPipelineStageFlags.FragmentShaderBit, VkDependencyFlags.None,
+                [new VkMemoryBarrier { SrcAccessMask = VkAccessFlags.AccelerationStructureWriteBitKHR, DstAccessMask = VkAccessFlags.AccelerationStructureReadBitKHR }], [], []);
+        }
+
+        public void Dispose()
+        {
+            foreach (var s in _structures)
+            {
+                _device.DestroyAccelerationStructureKHR(s, null);
+            }
+
+            foreach (var (buffer, memory) in _buffers)
+            {
+                _device.DestroyBuffer(buffer, null);
+                _device.FreeMemory(memory, null);
+            }
+        }
+
+        private static VkAccelerationStructureGeometryKHR TopGeometry(VkDeviceAddress instances) => new()
+        {
+            GeometryType = VkGeometryTypeKHR.InstancesKHR,
+            Geometry = new VkAccelerationStructureGeometryDataKHR
+            {
+                Instances = new VkAccelerationStructureGeometryInstancesDataKHR { Data = new VkDeviceOrHostAddressConstKHR { DeviceAddress = instances } },
+            },
+        };
+
+        private VkAccelerationStructureKHR Create(PhysicalDevice physical, VkAccelerationStructureTypeKHR type, ulong size, out ulong address)
+        {
+            var buffer = Track(AddressBuffer(_device, physical, size, VkBufferUsageFlags.AccelerationStructureStorageBitKHR, VkMemoryPropertyFlags.DeviceLocalBit, out var memory), memory);
+            var structure = _device.CreateAccelerationStructureKHR(new VkAccelerationStructureCreateInfoKHR { Buffer = buffer, Size = (ByteSize64)size, Type = type }, null);
+            _structures.Add(structure);
+            address = _device.GetAccelerationStructureDeviceAddressKHR(new VkAccelerationStructureDeviceAddressInfoKHR { AccelerationStructure = structure }).Value;
+            return structure;
+        }
+
+        private VkBuffer Track(VkBuffer buffer, VkDeviceMemory memory)
+        {
+            _buffers.Add((buffer, memory));
+            return buffer;
+        }
+    }
+
+    private static VkShaderModule Shader(Device device, string source, ShaderKind kind, string name, bool vulkan13 = false)    {
         var compiler = ShaderC.CreateCompiler();
         var options = ShaderC.CreateCompilerOptions();
+        if (vulkan13)
+        {
+            // Ray queries need SPIR-V 1.4 or later.
+            options.SetTargetEnv(TargetEnv.Vulkan, (uint)EnvVersion.Vulkan_1_3);
+        }
+
         using var result = compiler.Compile(Encoding.UTF8.GetBytes(source), kind, Utf8.GetBytes(name + "\0"), Utf8.GetBytes("main\0"), options);
         var module = device.CreateShaderModule(new VkShaderModuleCreateInfo { CodeSize = result.GetLength(), Code = (int*)result.GetBytes() }, null);
         options.Dispose();
