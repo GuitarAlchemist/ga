@@ -429,3 +429,65 @@ With sound, the mirror and the city, vsync over 25 s gave 1,422 frames, p50 16.6
 
 The licence's logo and `NOTICE.txt` requirements apply to distributed builds. This showcase is a local experiment and is
 not distributed.
+
+## Tour: every package (2026-10-20)
+
+Asked as « tester tous les features … de Brutal », then « autant qu'on peut ». `Tour/` references every Ahwoo.Brutal
+package on NuGet but FMOD, 48 in all, at exact versions with a lock file. It runs one small check a package in one
+process. Where a package can work without a window or a user, the check makes it do real work; otherwise it loads the
+native library and asks its version. Each check is timed and its failure caught, so one package cannot stop the tour.
+Run it with `dotnet run -c Release` in `Tour/`; it prints this table (RTX 5080, Windows 11, 2026-10-20). "works" means
+the check did the work it describes; "loads" means the assembly loaded and nothing more was tried.
+
+| Package | Result | What the check did | ms |
+|---|---|---|---|
+| Box2D | works | Box2D 3.1.1: a crate dropped from 10 m rests on the ground at y = 1.000 after 3 s | 15.5 |
+| Concurrency | works | 64 jobs on 4 runners summed 0..6.4M: 20479996800000 | 12.5 |
+| Logging | works | a message reached a custom ILoggerProvider: "Information: The colossus wakes" | 28.8 |
+| Localization | works | "The colossus speaks" became "Le colosse parle" | 4.8 |
+| Stb | works | wrote a 64x64 PNG (263 bytes) and read the same pixels back | 4.7 |
+| Texture | works | loaded the PNG as R8G8B8A8_UNorm, 64x64 | 10.5 |
+| MeshOptimizer | works | sphere of 16384 triangles: vertex cache reordered, simplified to 1638 triangles (target 10 %), error 3.29E-003 | 7.4 |
+| Sdl | works | SDL 3.4.12, SDL_image 3.4.4, SDL_ttf 3.2.2, SDL_mixer 3.2.4 | 7.9 |
+| NotCurses | works | notcurses 3.0.17 (version only: it takes over the terminal) | 3.1 |
+| NativeFileDialog | works | nfd initialised and shut down (no dialog opened: it needs a user) | 0.8 |
+| RenderDoc | works | RenderDoc is not loaded in this process: the in-app API binds only when RenderDoc launches or injects the app | 10.0 |
+| ZLib | works | zlib 1.3.2.1-motley (native only, for FreeType and libpng) | 1.2 |
+| FreeType | works | FreeType 2.14.3 (native only, for ImGui.FreeType and SDL_ttf) | 1.3 |
+| Slang | works | Slang 2026.7: compiled a compute shader to 126 bytes of SPIR-V | 274.6 |
+| Ktx | works | 256x256 RGBA (262144 bytes) compressed to Basis Universal, written as KTX2 (4995 bytes), read back and transcoded to BC7 | 141.4 |
+| Gli | works | a 128x128 texture with 8 mips saved as DDS (87528 bytes) and read back, last mip 1x1 | 9.0 |
+| RakNet | works | two peers on 127.0.0.1:61234: connected and delivered "the swarm gathers" reliably in 76 ms | 550.6 |
+| OpenGl | works | OpenGL 4.6.0 on NVIDIA GeForce RTX 5080/PCIe/SSE2, in a hidden GLFW window | 4410.9 |
+| Vulkan.Vma | works | Vulkan 1.3 on DiscreteGpu, no window: VMA placed a 256 MB storage buffer in memory type 1 | 160.2 |
+| ImGui.FreeType | works | Dear ImGui loaded segoeui.ttf through FreeType: "Le colosse parle" at 18 px is 96.0 x 18.0 px | 9.6 |
+| Collections | loads | loaded Brutal.Collections 1.0.0.0: 12 public types, among them IFreeListIndexPool, FreeListIndexPool, Name`1 (loaded only) | 1.6 |
+| Memory | loads | loaded Brutal.Memory 1.0.0.0: 4 public types, among them Mem, ISize, ISize2D (loaded only) | 0.1 |
+| Strings | loads | loaded Brutal.Strings 1.0.0.0: 21 public types, among them IString`1, IString8, IString8Extensions (loaded only) | 0.6 |
+| Maths | loads | loaded Brutal.Maths 1.0.0.0: 1 public types, among them RandomExtensions (loaded only) | 0.2 |
+| Interop | loads | loaded Brutal.Interop 1.0.0.0: 8 public types, among them IInteropHandle`2, InteropHandleAttribute, InteropHandleMarshaller`2 (loaded only) | 0.1 |
+| Render.Mesh | loads | loaded Brutal.Render.Mesh 1.0.0.0: 8 public types, among them IVertexBufferMap`1, IIndexBufferStorage, IMeshStorage`1 (loaded only) | 0.3 |
+| Render.Common | loads | loaded Brutal.Render.Common 1.0.0.0: no public types (loaded only) | 0.2 |
+| Render.Debug | loads | loaded Brutal.Render.Debug 1.0.0.0: no public types (loaded only) | 0.2 |
+| ImGui.Abstractions | loads | loaded Brutal.ImGui.Abstractions 1.0.0.0: 20 public types, among them ConsoleColor, ConsoleLineColors, ConsoleLogEntry (loaded only) | 1.3 |
+| ImGui.Extensions | loads | loaded Brutal.ImGui.Extensions 1.0.0.0: 2 public types, among them ImGuiCompatibilityEx, ImGuiEx (loaded only) | 0.3 |
+| Monitor.Common | loads | loaded Brutal.Monitor.Common 1.0.0.0: 4 public types, among them CrashTailSnapshot, DumpType, CollectorOptions (loaded only) | 0.3 |
+| Monitor.Host | loads | loaded Brutal.Monitor.Host 1.0.0.0: 3 public types, among them Monitor, MonitorLoggerProvider, MonitorLoggingStats (loaded only) | 0.3 |
+
+Coverage:
+- **This table:** 35 packages. The Sdl row covers SDL, SDL_image, SDL_ttf and SDL_mixer; the Texture row covers Texture
+  and Texture.Abstractions.
+- **Colossus:** the other 12, at work: Core, Numerics, Glfw, Vulkan, Vulkan.Abstractions, ShaderC, Jolt, ImGui,
+  ImGui.Backends, ImPlot, Gltf and OpenAl.
+- **Left out:** FMOD (`Ahwoo.Brutal.Fmod`), because FMOD itself is proprietary, under Firelight's own licence and
+  terms. The `com.IvanMurzak.Brutal.MCP.*` packages on NuGet are not BRUTAL's (another publisher) and were not used.
+
+Found on the way:
+- **Slang: composition crashes.** `ISession.CreateCompositeComponentType` of a module and its entry point ended the
+  process with an access violation inside the binding's COM stub, which no `catch` can stop. Linking the entry point
+  on its own works, and that is what the check does.
+- **Render.Common and Render.Debug are empty.** Both assemblies load and export no public types.
+- **RenderDoc binds only under RenderDoc.** `RenderDoc.Initialize` returns false unless RenderDoc launched or injected
+  the process, so the check records that and moves on.
+- **Not run:** NotCurses and NativeFileDialog only start and stop, because one takes over the terminal and the other
+  waits for a user.
