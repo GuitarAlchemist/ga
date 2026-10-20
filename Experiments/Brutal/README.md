@@ -464,8 +464,24 @@ Tried and dropped:
 - **`OptimizeBroadPhase`** after adding the swarm changed nothing measurable at 40,000, since Jolt rebuilds the tree as it
   steps. The call stays, as Jolt asks for it.
 - **Mailbox** (`--mailbox`, three images) gave 17,949 frames in 24 s, the same as with no vsync, without tearing.
+- **Towers drawn before the machines**, for depth to reject more before shading: the scene took 0.89 ms on the GPU,
+  against 0.86 ms in the usual order.
 
-The GPU now sets the pace: with RTX, a frame of 10,000 machines takes about 1.1 ms; with `--no-rtx`, 0.73 ms.
+The summary now also reads four GPU timestamps a frame (Vulkan timestamp queries): start, ray-tracing structure built,
+scene drawn, end. At 10,000 machines the GPU sets the pace; at 40,000, the CPU's writing of the instances does.
+
+| Run, uncapped, 16 s | Frame ms p50 | GPU ms p50: top-level structure / scene / post and panel / total | CPU: instances written |
+|---|---|---|---|
+| 10,000 machines, RTX | 1.16 | 0.19 / 0.87 / 0.07 / 1.14 | 0.47 ms |
+| 10,000 machines, `--no-rtx` | 0.73 | 0 / 0.58 / 0.08 / 0.65 | 0.45 ms |
+| 40,000 machines, RTX | 2.65 | 0.33 / 1.45 / 0.08 / 1.86 | 1.93 ms |
+
+So the ray queries cost about 0.3 ms of the scene and the structure's rebuild 0.2 ms. The worker also works out the
+swarm's centre and mean speed for the sound after each step; done each frame on this thread, it took 0.18 ms at
+40,000 machines.
+
+A five-minute run, uncapped, gave 234,446 frames (781 a second), p50 1.16 ms, p99 3.20, worst second 625, no Jolt
+error, and a peak working set of 300 MB.
 
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The

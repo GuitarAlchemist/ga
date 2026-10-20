@@ -843,6 +843,13 @@ internal static unsafe class Colossus
             acquired[i] = device.CreateSemaphore(new VkSemaphoreCreateInfo(), null);
         }
 
+        // Four GPU timestamps a frame in flight: start, ray-tracing structure built, scene drawn, end. Each slot's are
+        // read once its fence says the frame is done, for the summary.
+        var queryPool = device.CreateQueryPool(new VkQueryPoolCreateInfo { QueryType = VkQueryType.Timestamp, QueryCount = 4 * FramesInFlight }, null);
+        var tickMs = physical.GetProperties().Limits.TimestampPeriod / 1e6;
+        string[] gpuParts = ["tlas", "scene", "post", "total"];
+        var gpuTimes = gpuParts.Select(_ => new List<double>(1 << 16)).ToArray();
+
         // The surface textures, made with ComfyUI and Blender (see the README): one 2D array, uploaded once through a
         // staging buffer, then mipmapped by blits.
         string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh"];
@@ -1084,6 +1091,8 @@ internal static unsafe class Colossus
         double lastKick = 0, lastRead = 0;
         var kickDt = 1f / 60f;
         var stepMs = 0.0;
+        // The swarm's centre and mean speed, for the sound: worked out by the worker after each step, off the frame.
+        (SN.Vector3 Centre, float Speed) stepMotion = default, motion = default;
         // The worker's step in its three parts, for the summary.
         string[] stepParts = ["steer", "update", "read"];
         var stepTimes = stepParts.Select(_ => new List<double>(1 << 16)).ToArray();
@@ -1191,6 +1200,7 @@ internal static unsafe class Colossus
                 {
                     errors |= stepping.Result;
                     physicsMs = stepMs;
+                    motion = stepMotion;
                     physicsTimes.Add(physicsMs);
                     (_states, _statesBack) = (_statesBack, _states);
                     lastRead = now;
@@ -1226,6 +1236,7 @@ internal static unsafe class Colossus
                     var stepError = physics.Update(dt, 1, temp, jobs);
                     var updated = Stopwatch.GetTimestamp();
                     ReadStates(bodies, into);
+                    stepMotion = Motion(into);
                     var done = Stopwatch.GetTimestamp();
                     stepMs = (done - started) * 1000.0 / Stopwatch.Frequency;
                     stepTimes[0].Add((steered - started) * 1000.0 / Stopwatch.Frequency);
@@ -1389,7 +1400,7 @@ internal static unsafe class Colossus
             if (sound is not null)
             {
                 // The colossus's own chant stays silent while another voice speaks, and everything ducks under it.
-                var (centre, speed) = Motion();
+                var (centre, speed) = motion;
                 sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled, voice ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, soundOn ? volume : 0f, frameDt);
             }
 
@@ -1397,6 +1408,18 @@ internal static unsafe class Colossus
             Lap(3);
             var slot = frame % FramesInFlight;
             device.WaitForFences([fences[slot]], true, -1);
+            if (frame >= FramesInFlight)
+            {
+                Span<ulong> ticks = stackalloc ulong[4];
+                if (device.GetQueryPoolResults(queryPool, slot * 4, 4, MemoryMarshal.AsBytes(ticks), (ByteSize64)8ul, VkQueryResultFlags._64Bit) == VkResult.Success)
+                {
+                    gpuTimes[0].Add((ticks[1] - ticks[0]) * tickMs);
+                    gpuTimes[1].Add((ticks[2] - ticks[1]) * tickMs);
+                    gpuTimes[2].Add((ticks[3] - ticks[2]) * tickMs);
+                    gpuTimes[3].Add((ticks[3] - ticks[0]) * tickMs);
+                }
+            }
+
             var result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out var imageIndex);
             if (result == VkResult.ErrorOutOfDateKHR)
             {
@@ -1414,10 +1437,14 @@ internal static unsafe class Colossus
 
             var cb = commands[slot];
             cb.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
+            cb.ResetQueryPool(queryPool, slot * 4, 4);
+            cb.WriteTimestamp(VkPipelineStageFlags.TopOfPipeBit, queryPool, slot * 4);
             if (rt is not null)
             {
                 rt.Build(cb, slot, drawn);
             }
+
+            cb.WriteTimestamp(VkPipelineStageFlags.BottomOfPipeBit, queryPool, (slot * 4) + 1);
 
             clears[0] = new VkClearValue { Color = new VkClearColorValue { Float32 = new float4(0f, 0f, 0f, 0f) } };
             clears[1] = new VkClearValue { DepthStencil = new VkClearDepthStencilValue { Depth = 0f } };
@@ -1445,6 +1472,7 @@ internal static unsafe class Colossus
                 }
             }
             cb.EndRenderPass();
+            cb.WriteTimestamp(VkPipelineStageFlags.BottomOfPipeBit, queryPool, (slot * 4) + 2);
 
             // The bloom's mips: each level a linear blit of the one above, then every level for the second pass to read.
             cb.PipelineBarrier(VkPipelineStageFlags.FragmentShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
@@ -1483,6 +1511,7 @@ internal static unsafe class Colossus
                     [Barrier(images[imageIndex], 0, 1, VkImageLayout.TransferSrcOptimal, VkImageLayout.PresentSrcKHR, default, default)]);
             }
 
+            cb.WriteTimestamp(VkPipelineStageFlags.BottomOfPipeBit, queryPool, (slot * 4) + 3);
             cb.End();
 
             var waitStage = VkPipelineStageFlags.ColorAttachmentOutputBit;
@@ -1572,6 +1601,7 @@ internal static unsafe class Colossus
             device.DestroyCommandPool(pools[i], null);
         }
 
+        device.DestroyQueryPool(queryPool, null);
         rt?.Dispose();
         device.DestroyBuffer(meshBuffer, null);
         device.FreeMemory(meshMemory, null);
@@ -1623,13 +1653,14 @@ internal static unsafe class Colossus
 
         frameTimes.Sort();
         physicsTimes.Sort();
-        foreach (var times in phaseTimes.Concat(stepTimes))
+        foreach (var times in phaseTimes.Concat(stepTimes).Concat(gpuTimes))
         {
             times.Sort();
         }
         static double P(List<double> xs, double q) => xs.Count == 0 ? double.NaN : xs[Math.Min(xs.Count - 1, (int)(q * xs.Count))];
         Console.WriteLine($"SWARM summary: {frame} frames in {seconds:F1} s; frame ms p50 {P(frameTimes, 0.5):F2} p95 {P(frameTimes, 0.95):F2} p99 {P(frameTimes, 0.99):F2}, worst second {(worstSecond == int.MaxValue ? 0 : worstSecond)} frames; Jolt step ms p50 {P(physicsTimes, 0.5):F2} p95 {P(physicsTimes, 0.95):F2} p99 {P(physicsTimes, 0.99):F2} max {(physicsTimes.Count > 0 ? physicsTimes[^1] : double.NaN):F2}; Jolt errors: {errors}");
         Console.WriteLine("SWARM phases ms p50/p95: " + string.Join(", ", phases.Select((n, k) => $"{n} {P(phaseTimes[k], 0.5):F2}/{P(phaseTimes[k], 0.95):F2}")));
+        Console.WriteLine("SWARM GPU ms p50/p95: " + string.Join(", ", gpuParts.Select((n, k) => $"{n} {P(gpuTimes[k], 0.5):F2}/{P(gpuTimes[k], 0.95):F2}")));
         Console.WriteLine("SWARM Jolt step parts ms p50/p95: " + string.Join(", ", stepParts.Select((n, k) => $"{n} {P(stepTimes[k], 0.5):F2}/{P(stepTimes[k], 0.95):F2}")));
         Console.WriteLine($"SWARM peak working set {Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024)} MB; closed by {reason}");
         return 0;
@@ -1811,14 +1842,14 @@ internal static unsafe class Colossus
     private static float Speech(float t) => MathF.Max(0f, MathF.Sin(t * 7f)) * (0.55f + (0.45f * MathF.Sin(t * 1.3f)));
 
     // The swarm's centre and mean speed, for the sound.
-    private static (SN.Vector3 Centre, float Speed) Motion()
+    private static (SN.Vector3 Centre, float Speed) Motion(BodyState[] states)
     {
         var sum = SN.Vector3.Zero;
         var speed = 0f;
         for (var i = 0; i < _ids.Length; i++)
         {
-            sum += V(_states[i].Position);
-            speed += V(_states[i].LinearVelocity).Length();
+            sum += V(states[i].Position);
+            speed += V(states[i].LinearVelocity).Length();
         }
 
         var n = Math.Max(1, _ids.Length);
