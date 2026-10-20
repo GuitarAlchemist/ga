@@ -5,14 +5,16 @@
 // variant plus one; a Dear ImGui panel with an ImPlot graph shows the timings and steers the swarm.
 // The scene renders in HDR with 4x MSAA and reversed depth; a second pass adds the sky, a bloom built from the image's own
 // mips, ACES tone mapping, a vignette and grain, then the panel.
-// Keys: Space assembles or disperses, C changes the camera, a drag turns it, the wheel zooms, Esc quits.
+// Keys: Space assembles or disperses, C changes the camera, H hides the panel, a drag turns it, the wheel zooms, Esc
+// quits.
 // Arguments: --swarm N (bodies, default 10000), --seconds T (time limit, 0 = none), --immediate (no vsync),
 // --no-rtx (no ray queries), --rtx-off (ray queries unticked at start), --images N (swapchain images, default 2),
 // --capture T1,T2,... (save the window's image at those seconds, as
 // colossus-<T>s.png in the working directory), --mute (sound at zero), --no-sound (no audio device),
 // --no-voice (don't mirror the voice plugins), --face-file PATH (voice-avatar's faceFile, to follow its state),
 // --hidden (an invisible window, for measuring without covering the desktop), --mailbox (no vsync and no tearing:
-// each new image replaces the one waiting, where the driver offers it). To compare speeds: --physics-hz N (Jolt steps a
+// each new image replaces the one waiting, where the driver offers it), --no-panel (the panel starts hidden, for a
+// stream: H shows it). To compare speeds: --physics-hz N (Jolt steps a
 // second, default 120, 0 = every frame), --jolt-threads N, --body-threads N (tasks steering and reading the bodies),
 // --serial (wait for each step), --locking (the locking body interface), --face-collide (machines collide in the face).
 // The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
@@ -1208,7 +1210,7 @@ internal static unsafe class Colossus
         Console.WriteLine($"SOUND {soundNote}; voice plugins {(mirror.Present ? "running" : "not running")}");
         Console.WriteLine($"VOICE {ttsNote}; {script.Length} lines");
         bool assembled = false, autoCycle = true, speaking = tts is not null || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
-        bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute");
+        bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute"), panelOn = !args.Contains("--no-panel");
         float volume = recording ? 0.9f : 0.6f, hearing = 0f;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
         int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : 0, shownPreset = -1;
@@ -1335,6 +1337,11 @@ internal static unsafe class Colossus
             if (ImGui.IsKeyPressed(ImGuiKey.C, false))
             {
                 preset = (preset + 1) % 4;
+            }
+
+            if (ImGui.IsKeyPressed(ImGuiKey.H, false))
+            {
+                panelOn = !panelOn;
             }
 
             bool overPanel = io.WantCaptureMouse;
@@ -1475,7 +1482,7 @@ internal static unsafe class Colossus
             hearing += (listening - hearing) * Math.Min(1f, frameDt * 8f);
 
             // The panel, but not in a recording.
-            if (!recording)
+            if (!recording && panelOn)
             {
                 ImGui.SetNextWindowPos(new float2(14f, 14f), ImGuiCond.FirstUseEver);
                 if (ImGui.Begin($"{L("BRUTAL showcase")}###panel", ImGuiWindowFlags.AlwaysAutoResize))
@@ -1596,7 +1603,7 @@ internal static unsafe class Colossus
                         ImPlot.EndPlot();
                     }
 
-                    ImGui.Text(L("Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"));
+                    ImGui.Text(L("Space assemble   C camera   H panel   drag turn   wheel zoom   L language   Esc quit"));
                     ImGui.Text(L("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"));
                 }
 
@@ -2135,7 +2142,7 @@ internal static unsafe class Colossus
         ["done"] = "terminé",
         ["failed"] = "échec",
         ["frame"] = "image",
-        ["Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"] = "Espace assembler   C caméra   glisser tourner   molette zoom   L langue   Échap quitter",
+        ["Space assemble   C camera   H panel   drag turn   wheel zoom   L language   Esc quit"] = "Espace assembler   C caméra   H panneau   glisser tourner   molette zoom   L langue   Échap quitter",
         ["Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"] = "Fait avec BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot et OpenAL Soft",
     };
 

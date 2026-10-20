@@ -504,6 +504,11 @@ error, and a peak working set of 300 MB.
   50°) and a little handheld sway, and they cut hard: a crane over the city, low behind the figure, the face from below,
   round the head, the eyes, a crane back, the street, high above, the other shoulder, the profile, a push in, a last crane.
   The style is borrowed; the shots and everything in them are the scene's own.
+- **Stream.** H hides the panel, and `--no-panel` starts without it. `--cinematic --no-panel --no-voice` is the clean
+  view for an audience. It was streamed live on 2026-10-20 with demo-cast, a Claude Code skill:
+  - Windows Graphics Capture took the window, even with the session locked;
+  - process loopback took only the scene's sound;
+  - ffmpeg made HLS segments: 720p30 H.264 on NVENC, with AAC sound.
 - **Video.** `--record FILE.mp4` renders the cinematic to a video, through ffmpeg:
   - **Clock.** Time advances exactly 1/60 s a frame, whatever the machine's pace, and Jolt steps in step with it.
   - **Image.** Each frame's image is read back and piped raw to ffmpeg. Each pair of frames is blended into one, which
