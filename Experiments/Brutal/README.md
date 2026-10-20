@@ -245,3 +245,55 @@ starting:
   did not reproduce. Settling it needs a quiet view and more alternated pairs.
 - **Upstream:** the unsigned binaries could be reported there. This evaluation does not touch other repositories.
 - **This PR:** it is a draft. Merge it as a record, or close it if the prototype should not live in GA.
+
+## Showcase: Colossus (2026-10-20)
+
+Asked after M4: « Je veux voir ce que brutal a dans le ventre ». `Colossus/` uses more of BRUTAL at once: Vulkan, Jolt,
+Dear ImGui and ImPlot. It is an original scene with no outside assets. A lone figure stands at the end of a walkway in a
+city of towers. Above it, 6,000 machines circle, each one a Jolt rigid body. They gather into a colossal face, built
+from Gaussian bumps, which looks at the figure and speaks, then disperses again.
+
+Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N`, `--seconds T` and `--immediate` (no vsync).
+
+**Keys:**
+- Space: assemble or disperse;
+- C: change the camera;
+- drag: turn the camera;
+- wheel: zoom;
+- Esc: quit.
+
+**Rendering.** The scene is about 1,500 lines in one file. Every object is an instance of one cube mesh, 8,753 of them in
+a single draw call.
+- The scene pass renders in HDR, with 4x MSAA and reversed infinite depth.
+- Towers get procedural windows, which fade to their average where a cell gets smaller than two pixels.
+- Machines get seams and a pulsing eye.
+- A second pass adds:
+  - the sky, with a low sun and bands of smog;
+  - a bloom built by blitting the HDR image's mips;
+  - ACES tone mapping, split toning, a vignette and grain.
+- The panel then draws over it.
+
+**Measured** on the RTX 5080, at 1600×900:
+
+| Run | Frame time | Jolt step (6,000 bodies, 6 threads) | Other |
+|---|---|---|---|
+| vsync, 20 s | p50 16.69 ms, p95 18.36, p99 19.86 | p50 3.24 ms, p99 4.21 | — |
+| uncapped | about 270 fps | — | GPU about 10 % busy |
+| any run | — | — | peak working set 224 MB |
+
+**Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
+- **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The
+  DLL exports 3,674 names. This was measured by matching the assembly's P/Invoke imports against the DLL's export table.
+  Three of them stopped this scene, and each has a way around it:
+  - `BoxShape_Create_3`: use `BoxShapeSettings.Create` instead;
+  - `SphereShape_Create_3`: use `SphereShapeSettings.Create` instead;
+  - `BodyLockInterface_GetBodyStates`: read each body through `BodyInterface` instead.
+- **Abort in the temp allocator:** `TempAllocatorImpl.Create(64 MB)` aborts the process with 0xC0000409 in the first
+  `PhysicsSystem.Update` that has moving bodies. The same scene runs with `TempAllocatorMalloc`, or with
+  `TempAllocatorImplWithMallocFallback` of the same size. It also runs with no moving bodies. So the allocator seems to
+  hold far less than it was asked for. The thread pool and the static bodies were each ruled out.
+- **Uneven frames under vsync:** with three swapchain images, the frames came back unevenly under vsync, at about 5 ms
+  then 28 ms, although each was shown for one refresh. Two images and a smoothed time step made the motion even.
+
+The licence's logo and `NOTICE.txt` requirements apply to distributed builds. This showcase is a local experiment and is
+not distributed.

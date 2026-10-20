@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A BRUTAL showcase for the evaluation (GuitarAlchemist/gaia#257): an original scene where a swarm of machines,
+       simulated with Jolt, gathers into a colossal face before a lone figure. Vulkan, Jolt, Dear ImGui and ImPlot,
+       all through BRUTAL's bindings. Exact versions and a lock file. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ahwoo.Brutal.Core" Version="[2026.10.1]" />
+    <PackageReference Include="Ahwoo.Brutal.Glfw" Version="[2026.10.4]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Vulkan.Abstractions" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ShaderC" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.Jolt" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImGui.Backends" Version="[2026.10.2]" />
+    <PackageReference Include="Ahwoo.Brutal.ImPlot" Version="[2026.10.2]" />
+  </ItemGroup>
+
+</Project>
