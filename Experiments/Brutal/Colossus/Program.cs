@@ -5,9 +5,12 @@
 // The scene renders in HDR with 4x MSAA and reversed depth; a second pass adds the sky, a bloom built from the image's own
 // mips, ACES tone mapping, a vignette and grain, then the panel.
 // Keys: Space assembles or disperses, C changes the camera, a drag turns it, the wheel zooms, Esc quits.
-// Arguments: --swarm N (bodies, default 6000), --seconds T (time limit, 0 = none), --immediate (no vsync).
+// Arguments: --swarm N (bodies, default 6000), --seconds T (time limit, 0 = none), --immediate (no vsync),
+// --capture T1,T2,... (save the window's image at those seconds, as colossus-<T>s.png in the working directory).
 
+using System.Buffers.Binary;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 using Brutal;
@@ -132,6 +135,8 @@ internal static unsafe class Colossus
         layout(location = 4) flat out vec3 vScale;
         layout(location = 5) flat out vec3 vUnitNormal;
         layout(location = 6) flat out vec4 vExtra;
+        layout(location = 7) flat out vec3 vTangent;
+        layout(location = 8) flat out vec3 vBitangent;
         void main()
         {
             mat4 model = mat4(iModel0, iModel1, iModel2, iModel3);
@@ -144,12 +149,17 @@ internal static unsafe class Colossus
             vScale = vec3(length(iModel0.xyz), length(iModel1.xyz), length(iModel2.xyz));
             vUnitNormal = inNormal;
             vExtra = iExtra;
+            // The face's texture axes, in the same order as the fragment shader's box mapping.
+            vTangent = normalize(mat3(model) * (abs(inNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)));
+            vBitangent = normalize(mat3(model) * (abs(inNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
         }
         """;
 
     // The scene in HDR: the low sun, a warm bounce from the abyss, a cool fill from the city, a backlit rim, the sun's
-    // highlight on metal; machines get seams and a pulsing eye, towers rows of windows; then the haze, coloured by the sky.
-    // Alpha marks geometry, so that the second pass puts the sky only where nothing was drawn.
+    // highlight and the sky's reflection on metal. Machines and tower sides are box-mapped with the surface textures
+    // (albedo, then normal, roughness and height): machines get a pulsing eye, towers panels of which a few are lit.
+    // Then the haze, coloured by the sky. Alpha marks geometry, so that the second pass puts the sky only where nothing
+    // was drawn.
     private const string FragmentShader = "#version 450\n" + SkyGlsl + """
         layout(location = 0) in vec3 vWorld;
         layout(location = 1) in vec3 vNormal;
@@ -158,9 +168,17 @@ internal static unsafe class Colossus
         layout(location = 4) flat in vec3 vScale;
         layout(location = 5) flat in vec3 vUnitNormal;
         layout(location = 6) flat in vec4 vExtra;
+        layout(location = 7) flat in vec3 vTangent;
+        layout(location = 8) flat in vec3 vBitangent;
+        layout(set = 0, binding = 0) uniform sampler2DArray surfaces;
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         layout(location = 0) out vec4 outColor;
         const vec3 SunColor = vec3(1.0, 0.56, 0.26);
+        vec3 bumped(vec4 map, vec3 n, float strength)
+        {
+            vec2 d = (map.rg * 2.0 - 1.0) * strength;
+            return normalize(n + vTangent * d.x + vBitangent * d.y);
+        }
         void main()
         {
             vec3 n = normalize(vNormal);
@@ -173,29 +191,40 @@ internal static unsafe class Colossus
             vec3 albedo = vColor.rgb;
             vec3 emit = albedo * vColor.a;
             float shine = 0.0;
+            float rough = 0.8;
+            vec3 p = vUnit * vScale;
+            vec2 st = vec2(dot(p, abs(vUnitNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)),
+                dot(p, abs(vUnitNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
             if (kind > 0.5 && kind < 1.5)
             {
-                float seam = smoothstep(0.0, 0.06, abs(fract(vUnit.z * 3.0 + 0.5) - 0.5));
-                albedo *= 0.55 + 0.45 * seam;
-                shine = 0.9;
+                vec2 uv = st / 1.2 + vExtra.y * vec2(7.31, 3.17);
+                vec4 map = texture(surfaces, vec3(uv, 1.0));
+                albedo = pow(texture(surfaces, vec3(uv, 0.0)).rgb, vec3(2.2)) * 0.45;
+                n = bumped(map, n, 2.0);
+                rough = map.b;
+                shine = 1.0;
                 float eye = (1.0 - smoothstep(0.18, 0.32, length(vUnit.xy))) * step(0.49, vUnit.z);
                 emit += vec3(1.0, 0.3, 0.06) * eye * (2.5 + 1.5 * sin(t * 6.0 + vExtra.y * 40.0));
             }
             else if (kind > 1.5 && kind < 2.5 && abs(vUnitNormal.y) < 0.5)
             {
-                // Where a window cell shrinks under two pixels, the pattern fades to its average: no shimmer far away.
-                vec3 p = vUnit * vScale;
-                vec2 cell = vec2((abs(vUnitNormal.x) > 0.5 ? p.z : p.x) / 1.6, p.y / 3.0);
+                // One texture tile is 8 by 4 panels of 1.6 by 3 m; a few panels are lit, their glass streaked by the
+                // texture. Where a panel shrinks under two pixels, the lights fade to their average: no shimmer far away.
+                vec2 cell = vec2(st.x / 1.6, st.y / 3.0);
                 vec2 f = fract(cell);
-                float window = step(0.25, f.x) * step(f.x, 0.75) * step(0.3, f.y) * step(f.y, 0.7);
+                vec2 uv = vec2(cell.x / 8.0, -cell.y / 4.0);
+                vec4 surface = texture(surfaces, vec3(uv, 2.0));
+                vec4 map = texture(surfaces, vec3(uv, 3.0));
+                float window = step(0.1, f.x) * step(f.x, 0.9) * step(0.08, f.y) * step(f.y, 0.92);
                 float r = hash12(floor(cell) + vec2(vExtra.y * 97.0, dot(vUnitNormal, vec3(1.0, 2.0, 3.0)) * 13.0));
                 float lit = step(r, 0.08);
                 vec3 lamp = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.7, 0.4), fract(r * 9.1)) * 2.2;
                 float fade = clamp(1.0 - (max(fwidth(cell.x), fwidth(cell.y)) - 0.25) * 4.0, 0.0, 1.0);
-                vec3 pattern = window * (lit * lamp + (1.0 - lit) * vec3(0.012, 0.011, 0.012));
-                emit += mix(vec3(1.0, 0.56, 0.26) * 0.035, pattern, fade);
-                albedo *= mix(1.0, 0.75 + 0.25 * step(0.5, fract(cell.x * 0.5)), fade);
-                shine = 0.35 * window * fade;
+                emit += mix(vec3(1.0, 0.56, 0.26) * 0.1, window * lit * lamp * (0.45 + 0.8 * surface.r), fade);
+                albedo = pow(surface.rgb, vec3(2.2)) * 0.25;
+                n = bumped(map, n, 3.0);
+                rough = map.b;
+                shine = 0.6;
             }
 
             float ndl = max(dot(n, sun), 0.0);
@@ -203,8 +232,10 @@ internal static unsafe class Colossus
             vec3 fill = vec3(0.16, 0.17, 0.22) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0);
             float back = pow(1.0 - max(dot(n, v), 0.0), 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
             vec3 h = normalize(sun + v);
-            vec3 spec = SunColor * pow(max(dot(n, h), 0.0), 60.0) * 3.0 * shine * ndl;
-            vec3 c = albedo * (ambient + fill + SunColor * 1.8 * ndl) + spec + SunColor * back * 1.4 + emit;
+            vec3 spec = SunColor * pow(max(dot(n, h), 0.0), mix(180.0, 12.0, rough)) * mix(3.0, 0.3, rough) * shine * ndl;
+            float fresnel = 0.3 + 0.7 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+            vec3 env = shine > 0.0 ? sky(reflect(-v, n), sun, t) * fresnel * (1.0 - rough) * 0.5 * shine : vec3(0.0);
+            vec3 c = albedo * (ambient + fill + SunColor * 1.8 * ndl) + spec + env + SunColor * back * 1.4 + emit;
             float fog = 1.0 - exp(-dist * 0.0028);
             fog = max(fog, clamp(-vWorld.y / 140.0, 0.0, 1.0) * (1.0 - exp(-dist * 0.012)));
             c = mix(c, sky(-v, sun, t) * 0.55, fog);
@@ -275,6 +306,9 @@ internal static unsafe class Colossus
         var limit = Arg(args, "--seconds", 0);
         var swarm = (int)Arg(args, "--swarm", 6000);
         var immediate = args.Contains("--immediate");
+        var captureAt = Array.IndexOf(args, "--capture");
+        var captures = captureAt >= 0 && captureAt + 1 < args.Length ? args[captureAt + 1].Split(',').Select(double.Parse).Order().ToArray() : [];
+        var nextCapture = 0;
         var clock = Stopwatch.StartNew();
 
         if (!Glfw.Init())
@@ -377,7 +411,7 @@ internal static unsafe class Colossus
             ImageColorSpace = surfaceFormat.ColorSpace,
             ImageExtent = extent,
             ImageArrayLayers = 1,
-            ImageUsage = VkImageUsageFlags.ColorAttachmentBit,
+            ImageUsage = VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransferSrcBit,
             ImageSharingMode = VkSharingMode.Exclusive,
             PreTransform = caps.CurrentTransform,
             CompositeAlpha = VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
@@ -581,10 +615,7 @@ internal static unsafe class Colossus
             Offset = ByteSize.Zero,
             Size = ByteSize.Of<Push>(),
         };
-        var layout = device.CreatePipelineLayout([], [pushRange], null);
-        var pipeline = Pipeline(device, layout, sceneRenderPass, vertexModule, fragmentModule, scene: true);
-
-        // The second pass reads every mip of the HDR image through one sampler.
+        // The second pass reads every mip of the HDR image through one sampler; the scene reads its textures through another.
         var sampler = device.CreateSampler(new VkSamplerCreateInfo
         {
             MagFilter = VkFilter.Linear,
@@ -603,9 +634,11 @@ internal static unsafe class Colossus
         }, null);
         var descriptorPool = device.CreateDescriptorPool(new DescriptorPoolEx.CreateInfo
         {
-            MaxSets = 1,
-            PoolSizes = [new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 }],
+            MaxSets = 2,
+            PoolSizes = [new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 2 }],
         }, null);
+        var layout = device.CreatePipelineLayout([setLayout], [pushRange], null);
+        var pipeline = Pipeline(device, layout, sceneRenderPass, vertexModule, fragmentModule, scene: true);
         var hdrSet = device.AllocateDescriptorSet(descriptorPool, setLayout);
         var hdrInfo = new VkDescriptorImageInfo { Sampler = sampler, ImageView = hdrMipsView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
         device.UpdateDescriptorSets([new VkWriteDescriptorSet { DstSet = hdrSet, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &hdrInfo }], []);
@@ -642,6 +675,91 @@ internal static unsafe class Colossus
             fences[i] = device.CreateFence(new VkFenceCreateInfo { Flags = VkFenceCreateFlags.SignaledBit }, null);
             acquired[i] = device.CreateSemaphore(new VkSemaphoreCreateInfo(), null);
         }
+
+        // The surface textures, made with ComfyUI and Blender (see the README): one 2D array, uploaded once through a
+        // staging buffer, then mipmapped by blits.
+        string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh"];
+        var texels = new List<byte[]>();
+        var texSize = 0;
+        foreach (var name in textureFiles)
+        {
+            texels.Add(LoadPng(Path.Combine(AppContext.BaseDirectory, "textures", name + ".png"), out texSize, out _));
+        }
+
+        var texLevels = (int)Math.Log2(texSize) + 1;
+        var layerBytes = texSize * texSize * 4;
+        var stagingSize = new ByteSize((nuint)(layerBytes * textureFiles.Length));
+        var staging = device.CreateBuffer(new VkBufferCreateInfo { Size = stagingSize, Usage = VkBufferUsageFlags.TransferSrcBit, SharingMode = VkSharingMode.Exclusive }, null);
+        var stagingMemory = device.AllocateMemory(physical, staging, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+        device.BindBufferMemory(staging, stagingMemory, memoryOffset: ByteSize.Zero);
+        var stagingMapped = (byte*)device.MapMemory<byte>(new MapInfo(stagingMemory) { Region = new MapRegion { Size = stagingSize } });
+        for (var i = 0; i < texels.Count; i++)
+        {
+            texels[i].CopyTo(new Span<byte>(stagingMapped + (i * layerBytes), layerBytes));
+        }
+
+        device.UnmapMemory(stagingMemory);
+        var texImage = device.CreateImage(new VkImageCreateInfo
+        {
+            ImageType = VkImageType._2D,
+            Format = VkFormat.R8G8B8A8UNorm,
+            Extent = new VkExtent3D { Width = texSize, Height = texSize, Depth = 1 },
+            MipLevels = texLevels,
+            ArrayLayers = textureFiles.Length,
+            Samples = VkSampleCountFlags._1Bit,
+            Tiling = VkImageTiling.Optimal,
+            Usage = VkImageUsageFlags.TransferSrcBit | VkImageUsageFlags.TransferDstBit | VkImageUsageFlags.SampledBit,
+            SharingMode = VkSharingMode.Exclusive,
+            InitialLayout = VkImageLayout.Undefined,
+        }, null);
+        var texMemory = device.AllocateMemory(physical, texImage, VkMemoryPropertyFlags.DeviceLocalBit, null);
+        device.BindImageMemory(texImage, texMemory, ByteSize.Zero);
+        var texView = device.CreateImageView(new VkImageViewCreateInfo
+        {
+            Image = texImage,
+            ViewType = VkImageViewType._2DArray,
+            Format = VkFormat.R8G8B8A8UNorm,
+            SubresourceRange = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, LevelCount = texLevels, LayerCount = textureFiles.Length },
+        }, null);
+        var upload = commands[0];
+        upload.Begin(new VkCommandBufferBeginInfo { Flags = VkCommandBufferUsageFlags.OneTimeSubmitBit });
+        upload.PipelineBarrier(VkPipelineStageFlags.TopOfPipeBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+            [Barrier(texImage, 0, texLevels, VkImageLayout.Undefined, VkImageLayout.TransferDstOptimal, default, VkAccessFlags.TransferWriteBit, textureFiles.Length)]);
+        upload.CopyBufferToImage(staging, texImage, VkImageLayout.TransferDstOptimal,
+            [new VkBufferImageCopy { ImageSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, LayerCount = textureFiles.Length }, ImageExtent = new VkExtent3D { Width = texSize, Height = texSize, Depth = 1 } }]);
+        upload.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+            [Barrier(texImage, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.TransferSrcOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.TransferReadBit, textureFiles.Length)]);
+        Downsample(upload, texImage, texSize, texSize, texLevels, textureFiles.Length);
+        upload.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.FragmentShaderBit, VkDependencyFlags.None, [], [],
+            [Barrier(texImage, 0, texLevels, VkImageLayout.TransferSrcOptimal, VkImageLayout.ShaderReadOnlyOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.ShaderReadBit, textureFiles.Length)]);
+        upload.End();
+        var uploadHandle = upload.Handle;
+        queue.Submit([new VkSubmitInfo { CommandBufferCount = 1, CommandBuffers = &uploadHandle }], default);
+        device.WaitIdle();
+        device.DestroyBuffer(staging, null);
+        device.FreeMemory(stagingMemory, null);
+        var repeatSampler = device.CreateSampler(new VkSamplerCreateInfo
+        {
+            MagFilter = VkFilter.Linear,
+            MinFilter = VkFilter.Linear,
+            MipmapMode = VkSamplerMipmapMode.Linear,
+            AddressModeU = VkSamplerAddressMode.Repeat,
+            AddressModeV = VkSamplerAddressMode.Repeat,
+            AddressModeW = VkSamplerAddressMode.Repeat,
+            MinLod = 0f,
+            MaxLod = texLevels,
+            MaxAnisotropy = 1f,
+        }, null);
+        var texSet = device.AllocateDescriptorSet(descriptorPool, setLayout);
+        var texInfo = new VkDescriptorImageInfo { Sampler = repeatSampler, ImageView = texView, ImageLayout = VkImageLayout.ShaderReadOnlyOptimal };
+        device.UpdateDescriptorSets([new VkWriteDescriptorSet { DstSet = texSet, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &texInfo }], []);
+
+        // For --capture: a host buffer the window's image is copied into.
+        var readbackSize = new ByteSize((nuint)(extent.Width * extent.Height * 4));
+        var readback = device.CreateBuffer(new VkBufferCreateInfo { Size = readbackSize, Usage = VkBufferUsageFlags.TransferDstBit, SharingMode = VkSharingMode.Exclusive }, null);
+        var readbackMemory = device.AllocateMemory(physical, readback, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+        device.BindBufferMemory(readback, readbackMemory, memoryOffset: ByteSize.Zero);
+        var readbackMapped = (nint)(byte*)device.MapMemory<byte>(new MapInfo(readbackMemory) { Region = new MapRegion { Size = readbackSize } });
 
         // Dear ImGui and ImPlot, on GLFW and on this render pass.
         ImGui.CreateContext();
@@ -718,6 +836,7 @@ internal static unsafe class Colossus
         var physicsWatch = new Stopwatch();
         double simTime = 0, last = clock.Elapsed.TotalSeconds, cycleStart = last, nextLog = last + 1, physicsMs = 0, frameMs = 0;
         var lastLogFrame = 0;
+        var worstSecond = int.MaxValue;
         var frame = 0;
         var errors = PhysicsUpdateError.None;
         var reason = "window closed";
@@ -941,6 +1060,7 @@ internal static unsafe class Colossus
             cb.BindPipeline(VkPipelineBindPoint.Graphics, pipeline);
             cb.SetViewport(firstViewport: 0, [new VkViewport { Width = extent.Width, Height = extent.Height, MinDepth = 0f, MaxDepth = 1f }]);
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
+            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [texSet], []);
             cb.PushConstants(layout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&push, sizeof(Push)));
             cb.BindVertexBuffer(0, meshBuffer);
             cb.BindVertexBuffer(1, instanceBuffers[slot]);
@@ -950,23 +1070,7 @@ internal static unsafe class Colossus
             // The bloom's mips: each level a linear blit of the one above, then every level for the second pass to read.
             cb.PipelineBarrier(VkPipelineStageFlags.FragmentShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
                 [Barrier(hdrImage, 1, BloomLevels - 1, VkImageLayout.Undefined, VkImageLayout.TransferDstOptimal, default, VkAccessFlags.TransferWriteBit)]);
-            int mipWidth = (int)extent.Width, mipHeight = (int)extent.Height;
-            for (var level = 1; level < BloomLevels; level++)
-            {
-                var blit = new VkImageBlit
-                {
-                    SrcSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, MipLevel = level - 1, LayerCount = 1 },
-                    DstSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, MipLevel = level, LayerCount = 1 },
-                };
-                blit.SrcOffsets[1] = new VkOffset3D { X = mipWidth, Y = mipHeight, Z = 1 };
-                mipWidth = Math.Max(1, mipWidth / 2);
-                mipHeight = Math.Max(1, mipHeight / 2);
-                blit.DstOffsets[1] = new VkOffset3D { X = mipWidth, Y = mipHeight, Z = 1 };
-                cb.BlitImage(hdrImage, VkImageLayout.TransferSrcOptimal, hdrImage, VkImageLayout.TransferDstOptimal, [blit], VkFilter.Linear);
-                cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
-                    [Barrier(hdrImage, level, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.TransferSrcOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.TransferReadBit)]);
-            }
-
+            Downsample(cb, hdrImage, (int)extent.Width, (int)extent.Height, BloomLevels, 1);
             cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.FragmentShaderBit, VkDependencyFlags.None, [], [],
                 [Barrier(hdrImage, 0, BloomLevels, VkImageLayout.TransferSrcOptimal, VkImageLayout.ShaderReadOnlyOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.ShaderReadBit)]);
 
@@ -989,6 +1093,17 @@ internal static unsafe class Colossus
             cb.Draw(3, 1, 0, 0);
             renderer.RenderDrawData(ImGui.GetDrawData(), cb);
             cb.EndRenderPass();
+            var capturing = nextCapture < captures.Length && now >= captures[nextCapture];
+            if (capturing)
+            {
+                cb.PipelineBarrier(VkPipelineStageFlags.ColorAttachmentOutputBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], 0, 1, VkImageLayout.PresentSrcKHR, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ColorAttachmentWriteBit, VkAccessFlags.TransferReadBit)]);
+                cb.CopyImageToBuffer(images[imageIndex], VkImageLayout.TransferSrcOptimal, readback,
+                    [new VkBufferImageCopy { ImageSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, LayerCount = 1 }, ImageExtent = new VkExtent3D { Width = extent.Width, Height = extent.Height, Depth = 1 } }]);
+                cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.BottomOfPipeBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], 0, 1, VkImageLayout.TransferSrcOptimal, VkImageLayout.PresentSrcKHR, default, default)]);
+            }
+
             cb.End();
 
             var waitStage = VkPipelineStageFlags.ColorAttachmentOutputBit;
@@ -1024,7 +1139,17 @@ internal static unsafe class Colossus
                 break;
             }
 
-            if (frame > 0)
+            if (capturing)
+            {
+                device.WaitIdle();
+                var file = $"colossus-{captures[nextCapture]:0.#}s.png";
+                SavePng(file, new ReadOnlySpan<byte>((byte*)readbackMapped, (int)(extent.Width * extent.Height * 4)), (int)extent.Width, (int)extent.Height);
+                Console.WriteLine($"SWARM captured {file} at {now:F1} s ({(assembled ? "face" : "cloud")})");
+                nextCapture++;
+                last = clock.Elapsed.TotalSeconds; // the capture's wait is not a frame time
+            }
+
+            if (frame > 0 && !capturing)
             {
                 frameTimes.Add(frameMs);
             }
@@ -1033,6 +1158,11 @@ internal static unsafe class Colossus
             if (now >= nextLog)
             {
                 Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}");
+                if (now >= 2)
+                {
+                    worstSecond = Math.Min(worstSecond, frame - lastLogFrame);
+                }
+
                 lastLogFrame = frame;
                 nextLog += 1;
             }
@@ -1061,6 +1191,9 @@ internal static unsafe class Colossus
 
         device.DestroyBuffer(meshBuffer, null);
         device.FreeMemory(meshMemory, null);
+        device.UnmapMemory(readbackMemory);
+        device.DestroyBuffer(readback, null);
+        device.FreeMemory(readbackMemory, null);
         device.DestroyPipeline(pipeline, null);
         device.DestroyPipeline(compositePipeline, null);
         device.DestroyPipelineLayout(layout, null);
@@ -1068,6 +1201,10 @@ internal static unsafe class Colossus
         descriptorPool.Dispose();
         setLayout.Dispose();
         device.DestroySampler(sampler, null);
+        device.DestroySampler(repeatSampler, null);
+        device.DestroyImageView(texView, null);
+        device.DestroyImage(texImage, null);
+        device.FreeMemory(texMemory, null);
         device.DestroyShaderModule(vertexModule, null);
         device.DestroyShaderModule(fragmentModule, null);
         device.DestroyShaderModule(compositeVertex, null);
@@ -1102,7 +1239,7 @@ internal static unsafe class Colossus
         frameTimes.Sort();
         physicsTimes.Sort();
         static double P(List<double> xs, double q) => xs.Count == 0 ? double.NaN : xs[Math.Min(xs.Count - 1, (int)(q * xs.Count))];
-        Console.WriteLine($"SWARM summary: {frame} frames in {seconds:F1} s; frame ms p50 {P(frameTimes, 0.5):F2} p95 {P(frameTimes, 0.95):F2} p99 {P(frameTimes, 0.99):F2}; Jolt step ms p50 {P(physicsTimes, 0.5):F2} p95 {P(physicsTimes, 0.95):F2} p99 {P(physicsTimes, 0.99):F2} max {(physicsTimes.Count > 0 ? physicsTimes[^1] : double.NaN):F2}; Jolt errors: {errors}");
+        Console.WriteLine($"SWARM summary: {frame} frames in {seconds:F1} s; frame ms p50 {P(frameTimes, 0.5):F2} p95 {P(frameTimes, 0.95):F2} p99 {P(frameTimes, 0.99):F2}, worst second {(worstSecond == int.MaxValue ? 0 : worstSecond)} frames; Jolt step ms p50 {P(physicsTimes, 0.5):F2} p95 {P(physicsTimes, 0.95):F2} p99 {P(physicsTimes, 0.99):F2} max {(physicsTimes.Count > 0 ? physicsTimes[^1] : double.NaN):F2}; Jolt errors: {errors}");
         Console.WriteLine($"SWARM peak working set {Process.GetCurrentProcess().PeakWorkingSet64 / (1024 * 1024)} MB; closed by {reason}");
         return 0;
     }
@@ -1391,7 +1528,164 @@ internal static unsafe class Colossus
         return (image, memory, device.CreateImageView(View(image, format, aspect), null));
     }
 
-    private static VkImageMemoryBarrier Barrier(VkImage image, int baseLevel, int levels, VkImageLayout from, VkImageLayout to, VkAccessFlags src, VkAccessFlags dst) => new()
+    // Each level from 1 on becomes a linear blit of the one above. Level 0 must be in TransferSrc and the others in
+    // TransferDst; all of them end in TransferSrc.
+    private static void Downsample(CommandBuffer cb, VkImage image, int width, int height, int levels, int layers)
+    {
+        for (var level = 1; level < levels; level++)
+        {
+            var blit = new VkImageBlit
+            {
+                SrcSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, MipLevel = level - 1, LayerCount = layers },
+                DstSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, MipLevel = level, LayerCount = layers },
+            };
+            blit.SrcOffsets[1] = new VkOffset3D { X = width, Y = height, Z = 1 };
+            width = Math.Max(1, width / 2);
+            height = Math.Max(1, height / 2);
+            blit.DstOffsets[1] = new VkOffset3D { X = width, Y = height, Z = 1 };
+            cb.BlitImage(image, VkImageLayout.TransferSrcOptimal, image, VkImageLayout.TransferDstOptimal, [blit], VkFilter.Linear);
+            cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+                [Barrier(image, level, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.TransferSrcOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.TransferReadBit, layers)]);
+        }
+    }
+
+    // A small PNG reader for the textures: 8-bit RGB or RGBA, not interlaced, as Blender writes them. Returns RGBA.
+    private static byte[] LoadPng(string path, out int width, out int height)
+    {
+        var bytes = File.ReadAllBytes(path);
+        var idat = new MemoryStream();
+        var channels = 0;
+        width = height = 0;
+        for (var at = 8; at + 8 <= bytes.Length;)
+        {
+            var length = BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(at));
+            var type = Encoding.ASCII.GetString(bytes, at + 4, 4);
+            var data = bytes.AsSpan(at + 8, length);
+            if (type == "IHDR")
+            {
+                width = BinaryPrimitives.ReadInt32BigEndian(data);
+                height = BinaryPrimitives.ReadInt32BigEndian(data[4..]);
+                if (data[8] != 8 || (data[9] != 2 && data[9] != 6) || data[12] != 0)
+                {
+                    throw new InvalidDataException($"{path}: only 8-bit RGB or RGBA PNGs, not interlaced");
+                }
+
+                channels = data[9] == 6 ? 4 : 3;
+            }
+            else if (type == "IDAT")
+            {
+                idat.Write(data);
+            }
+
+            at += 12 + length;
+        }
+
+        var stride = width * channels;
+        var raw = new byte[height * (stride + 1)];
+        idat.Position = 0;
+        using (var z = new ZLibStream(idat, CompressionMode.Decompress))
+        {
+            z.ReadExactly(raw);
+        }
+
+        var pixels = new byte[width * height * 4];
+        var prev = new byte[stride];
+        var line = new byte[stride];
+        for (var y = 0; y < height; y++)
+        {
+            var filter = raw[y * (stride + 1)];
+            raw.AsSpan((y * (stride + 1)) + 1, stride).CopyTo(line);
+            for (var x = 0; x < stride; x++)
+            {
+                int a = x >= channels ? line[x - channels] : 0, b = prev[x], c = x >= channels ? prev[x - channels] : 0;
+                line[x] += filter switch
+                {
+                    1 => (byte)a,
+                    2 => (byte)b,
+                    3 => (byte)((a + b) / 2),
+                    4 => (byte)Paeth(a, b, c),
+                    _ => (byte)0,
+                };
+            }
+
+            for (var x = 0; x < width; x++)
+            {
+                var o = ((y * width) + x) * 4;
+                pixels[o] = line[x * channels];
+                pixels[o + 1] = line[(x * channels) + 1];
+                pixels[o + 2] = line[(x * channels) + 2];
+                pixels[o + 3] = channels == 4 ? line[(x * channels) + 3] : (byte)255;
+            }
+
+            (prev, line) = (line, prev);
+        }
+
+        return pixels;
+    }
+
+    // Writes the swapchain's BGRA pixels as an 8-bit RGB PNG, every row unfiltered.
+    private static void SavePng(string path, ReadOnlySpan<byte> bgra, int width, int height)
+    {
+        var raw = new byte[height * ((width * 3) + 1)];
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                int i = ((y * width) + x) * 4, o = (y * ((width * 3) + 1)) + 1 + (x * 3);
+                raw[o] = bgra[i + 2];
+                raw[o + 1] = bgra[i + 1];
+                raw[o + 2] = bgra[i];
+            }
+        }
+
+        var packed = new MemoryStream();
+        using (var z = new ZLibStream(packed, CompressionLevel.SmallestSize, leaveOpen: true))
+        {
+            z.Write(raw);
+        }
+
+        using var file = File.Create(path);
+        file.Write([137, 80, 78, 71, 13, 10, 26, 10]);
+        var header = new byte[13];
+        BinaryPrimitives.WriteInt32BigEndian(header, width);
+        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), height);
+        header[8] = 8;
+        header[9] = 2;
+        Chunk(file, "IHDR", header);
+        Chunk(file, "IDAT", packed.ToArray());
+        Chunk(file, "IEND", []);
+
+        static void Chunk(Stream s, string type, ReadOnlySpan<byte> data)
+        {
+            Span<byte> word = stackalloc byte[4];
+            BinaryPrimitives.WriteInt32BigEndian(word, data.Length);
+            s.Write(word);
+            var body = new byte[4 + data.Length];
+            Encoding.ASCII.GetBytes(type, body);
+            data.CopyTo(body.AsSpan(4));
+            s.Write(body);
+            var crc = 0xFFFFFFFFu;
+            foreach (var b in body)
+            {
+                crc ^= b;
+                for (var k = 0; k < 8; k++)
+                {
+                    crc = (crc & 1) != 0 ? 0xEDB88320u ^ (crc >> 1) : crc >> 1;
+                }
+            }
+
+            BinaryPrimitives.WriteUInt32BigEndian(word, ~crc);
+            s.Write(word);
+        }
+    }
+
+    private static int Paeth(int a, int b, int c)
+    {
+        int p = a + b - c, pa = Math.Abs(p - a), pb = Math.Abs(p - b), pc = Math.Abs(p - c);
+        return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+    }
+
+    private static VkImageMemoryBarrier Barrier(VkImage image, int baseLevel, int levels, VkImageLayout from, VkImageLayout to, VkAccessFlags src, VkAccessFlags dst, int layers = 1) => new()
     {
         SrcAccessMask = src,
         DstAccessMask = dst,
@@ -1400,7 +1694,7 @@ internal static unsafe class Colossus
         SrcQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
         DstQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
         Image = image,
-        SubresourceRange = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, BaseMipLevel = baseLevel, LevelCount = levels, LayerCount = 1 },
+        SubresourceRange = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, BaseMipLevel = baseLevel, LevelCount = levels, LayerCount = layers },
     };
 
     private static VkShaderModule Shader(Device device, string source, ShaderKind kind, string name)

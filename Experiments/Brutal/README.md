@@ -253,7 +253,10 @@ Dear ImGui and ImPlot. It is an original scene with no outside assets. A lone fi
 city of towers. Above it, 6,000 machines circle, each one a Jolt rigid body. They gather into a colossal face, built
 from Gaussian bumps, which looks at the figure and speaks, then disperses again.
 
-Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N`, `--seconds T` and `--immediate` (no vsync).
+Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N`, `--seconds T`, `--immediate` (no vsync) and
+`--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
+The capture copies the swapchain image to a host buffer, so it also works where a desktop screenshot cannot (a locked
+session, or a window with no vsync).
 
 **Keys:**
 - Space: assemble or disperse;
@@ -267,6 +270,7 @@ a single draw call.
 - The scene pass renders in HDR, with 4x MSAA and reversed infinite depth.
 - Towers get procedural windows, which fade to their average where a cell gets smaller than two pixels.
 - Machines get seams and a pulsing eye.
+- Machines and towers are box-mapped with two texture sets (below): albedo, a tangent-space normal, and roughness.
 - A second pass adds:
   - the sky, with a low sun and bands of smog;
   - a bloom built by blitting the HDR image's mips;
@@ -280,6 +284,28 @@ a single draw call.
 | vsync, 20 s | p50 16.69 ms, p95 18.36, p99 19.86 | p50 3.24 ms, p99 4.21 | — |
 | uncapped | about 270 fps | — | GPU about 10 % busy |
 | any run | — | — | peak working set 224 MB |
+| textured, vsync, 22 s | 1,261 frames, p50 16.66 ms, p95 16.98, p99 17.69 | p50 3.52 ms, p99 4.09 | 60.0 fps |
+| textured, uncapped, 22 s | p50 4.09 ms, p95 6.28, p99 10.00 | p50 2.76 ms, p99 7.68 | about 240 fps |
+
+Two traps in measuring this:
+- **A locked session throttles vsync.** While Windows shows its lock screen, a vsync'd window gets about 4 frames a second
+  (about 264 ms each, the GPU idle). This happened with every build, the oldest included. Uncapped runs are not affected.
+- **The desktop in use stalls the loop.** In two of four vsync runs taken while the desktop was in use, one frame took
+  about 1 s. A temporary timer put all of it in `Glfw.PollEvents`, that is in Windows' window messages, not in the
+  rendering. The summary now gives the worst full second's frame count, which shows such a stall at once.
+
+**Textures** (`Colossus/textures/`, 512² PNGs). Two seamless albedos were generated locally with ComfyUI:
+- **Model:** Z-Image-Turbo (`Tongyi-MAI/Z-Image-Turbo`, Apache-2.0), in Comfy-Org's repackage (Apache-2.0), with the
+  Qwen3-4B text encoder (Apache-2.0). These were already on the machine; nothing was downloaded.
+- **Workflow:** 8 steps, then the image offset by half and the seam cross repainted.
+- **Prompts and seeds:** they are in `generate_comfyui.py`; hull is seed 1207, facade seed 2026.
+
+Blender 5.2 then baked each albedo, headless with factory settings (`bake_blender.py`):
+- a tangent-space normal map, from a Bump node on its luminance;
+- a roughness map, from the same luminance.
+
+It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the four PNGs into one texture
+array with mips; its own PNG reader is in `Program.cs`.
 
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The

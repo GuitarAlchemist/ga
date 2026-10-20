@@ -24,4 +24,9 @@
     <PackageReference Include="Ahwoo.Brutal.ImPlot" Version="[2026.10.2]" />
   </ItemGroup>
 
+  <!-- The surface textures, made with ComfyUI and Blender: see the README. -->
+  <ItemGroup>
+    <None Include="textures\*.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
