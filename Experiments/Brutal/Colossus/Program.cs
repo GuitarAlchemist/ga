@@ -16,6 +16,12 @@
 // second, default 120, 0 = every frame), --jolt-threads N, --body-threads N (tasks steering and reading the bodies),
 // --serial (wait for each step), --locking (the locking body interface), --face-collide (machines collide in the face).
 // The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
+// The colossus speaks its lines (voice/lines.fr.txt) through Piper, a local neural text-to-speech (Speech.cs), and says
+// what is typed in the panel: --piper PATH and --voice MODEL choose the engine and model, --lines FILE the lines,
+// --no-tts keeps the wordless chant. C cycles the cameras to a cinematic (--cinematic starts in it): hard cuts between slow
+// moves, in black bands.
+// --record FILE.mp4 renders a video at a fixed 60 frames a second through ffmpeg (--ffmpeg PATH), its sound mixed by
+// OpenAL for each frame, in the cinematic, for --seconds (default 60), in about --record-mb megabytes (default 8).
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -94,6 +100,118 @@ internal static unsafe class Colossus
     private const float FaceA = 13f;
     private const float FaceB = 18f;
     private const float FigureZ = 40f;
+
+    // The cinematic's black bands, each this share of the height: 2.39:1 on a 16:9 window.
+    private const float Letterbox = 0.128f;
+    private const string Credits = "Colossus  ·  BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, OpenAL Soft  ·  voix : Piper, SIWIS (CC BY 4.0)";
+
+    // The cinematic: shots cut hard one to the next, each a slow move between two framings with its own focal length and
+    // a little handheld sway, over two of the swarm's 32-second cycles; time 0 is 3 s before the face forms.
+    private readonly record struct Shot(double Start, SN.Vector3 EyeFrom, SN.Vector3 EyeTo, SN.Vector3 LookFrom, SN.Vector3 LookTo, float Fov, float Sway);
+
+    private static readonly Shot[] Shots =
+    [
+        // A crane over the city toward the swarm.
+        new(0.0, new(-170f, 175f, 210f), new(-125f, 140f, 155f), new(0f, 30f, 0f), new(0f, 26f, 0f), 45f, 0.15f),
+        // Low behind the figure, looking up as the face forms.
+        new(4.0, new(2.2f, 1.1f, 47f), new(1.5f, 1.4f, 44.5f), FaceCenter + new SN.Vector3(0f, 4f, 0f), FaceCenter, 46f, 0.03f),
+        // The face from below and to the left.
+        new(8.5, FaceCenter + new SN.Vector3(-18f, -16f, 28f), FaceCenter + new SN.Vector3(-13f, -14f, 24f), FaceCenter + new SN.Vector3(0f, 1f, 0f), FaceCenter + new SN.Vector3(0f, 2f, 0f), 30f, 0.08f),
+        // Round the head.
+        new(12.5, FaceCenter + new SN.Vector3(52f, 4f, 30f), FaceCenter + new SN.Vector3(-36f, 8f, 50f), FaceCenter, FaceCenter, 36f, 0.05f),
+        // The eyes.
+        new(17.0, FaceCenter + new SN.Vector3(5f, 6f, 54f), FaceCenter + new SN.Vector3(2f, 5f, 46f), FaceCenter + new SN.Vector3(0f, 4f, 0f), FaceCenter + new SN.Vector3(0f, 4f, 0f), 20f, 0.04f),
+        // A crane back and up from the figure as the swarm lets go.
+        new(21.0, new(1.5f, 2f, 46f), new(-25f, 40f, 110f), FaceCenter, new(0f, 26f, 0f), 44f, 0.06f),
+        // Down in the street among the towers.
+        new(27.0, new(-48f, 3f, 52f), new(-30f, 4f, 46f), new(0f, 30f, 0f), new(0f, 24f, 0f), 36f, 0.08f),
+        // High above as it gathers again.
+        new(32.5, new(55f, 120f, 70f), new(35f, 95f, 55f), new(0f, 22f, -4f), FaceCenter, 42f, 0.1f),
+        // Over the figure's other shoulder.
+        new(37.5, new(-2.2f, 2.3f, 46f), new(-1.6f, 2f, 44.5f), FaceCenter + new SN.Vector3(0f, 2f, 0f), FaceCenter, 32f, 0.03f),
+        // In profile.
+        new(43.5, FaceCenter + new SN.Vector3(-34f, 0f, 16f), FaceCenter + new SN.Vector3(-30f, 2f, 10f), FaceCenter, FaceCenter, 40f, 0.05f),
+        // A slow push in, face on.
+        new(49.5, FaceCenter + new SN.Vector3(0f, 2f, 62f), FaceCenter + new SN.Vector3(0f, 3f, 36f), FaceCenter + new SN.Vector3(0f, 2f, 0f), FaceCenter + new SN.Vector3(0f, 3f, 0f), 30f, 0.03f),
+        // A last crane up and away.
+        new(56.0, new(0f, 5f, 58f), new(0f, 75f, 150f), new(0f, 24f, 0f), new(0f, 30f, 0f), 50f, 0.08f),
+    ];
+
+    private const double CinematicLength = 64.0;
+
+    private static (SN.Vector3 Eye, SN.Vector3 Target, float Fov) Cinematic(double time)
+    {
+        var t = ((time % CinematicLength) + CinematicLength) % CinematicLength;
+        var k = Shots.Length - 1;
+        while (k > 0 && Shots[k].Start > t)
+        {
+            k--;
+        }
+
+        var shot = Shots[k];
+        var end = k + 1 < Shots.Length ? Shots[k + 1].Start : CinematicLength;
+        var u = (float)((t - shot.Start) / (end - shot.Start));
+        // Half steady, half eased: the move starts and ends gently but never stops.
+        var s = 0.5f * (u + (u * u * (3f - (2f * u))));
+        var w = (float)time;
+        var sway = new SN.Vector3(
+            MathF.Sin(w * 1.3f) + (0.5f * MathF.Sin((w * 2.9f) + 1f)),
+            MathF.Sin((w * 1.7f) + 2f) + (0.4f * MathF.Sin(w * 3.7f)),
+            MathF.Sin((w * 1.1f) + 4f)) * shot.Sway;
+        var eye = SN.Vector3.Lerp(shot.EyeFrom, shot.EyeTo, s) + sway;
+        var target = SN.Vector3.Lerp(shot.LookFrom, shot.LookTo, s) + (sway * 0.5f);
+        return (eye, target, shot.Fov);
+    }
+
+    // ffmpeg: the frames come raw on its standard input, 60 a second; each pair is blended into one frame of a 30-frame
+    // video (a light motion blur), scaled to 1280×720 and kept nearly lossless until Finish makes the small one.
+    private static Process StartEncoder(string ffmpeg, string video, int width, int height)
+    {
+        var info = new ProcessStartInfo(ffmpeg) { RedirectStandardInput = true, UseShellExecute = false };
+        foreach (var arg in new[]
+        {
+            "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgra", "-s", $"{width}x{height}", "-r", "60", "-i", "-",
+            "-vf", "tmix=frames=2,fps=30,scale=1280:720:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-preset", "veryfast",
+            "-crf", "14", video,
+        })
+        {
+            info.ArgumentList.Add(arg);
+        }
+
+        return Process.Start(info) ?? throw new InvalidOperationException("ffmpeg did not start");
+    }
+
+    // The small video: H.264 in two passes at the bitrate that fits --record-mb (default 8 MB), with the sound as AAC at
+    // 96 kb/s, brought to -16 LUFS for a phone's speaker.
+    private static bool Finish(string ffmpeg, string video, string audio, string output, double seconds, double megabytes)
+    {
+        var kbps = (int)(((megabytes * 8192) / seconds) - 96 - 24);
+        var log = output + ".pass";
+        string[] input = ["-y", "-loglevel", "error", "-i", video];
+        string[] encode = ["-c:v", "libx264", "-preset", "slow", "-b:v", $"{kbps}k", "-passlogfile", log];
+        var ok = Run([.. input, .. encode, "-pass", "1", "-an", "-f", "null", "-"])
+            && Run([.. input, "-f", "s16le", "-ar", "48000", "-ac", "2", "-i", audio, .. encode, "-pass", "2",
+                "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-c:a", "aac", "-b:a", "96k", "-shortest", "-movflags", "+faststart", output]);
+        foreach (var file in Directory.EnumerateFiles(Path.GetDirectoryName(output)!, Path.GetFileName(log) + "*"))
+        {
+            File.Delete(file);
+        }
+
+        return ok;
+
+        bool Run(string[] args)
+        {
+            var info = new ProcessStartInfo(ffmpeg) { UseShellExecute = false };
+            foreach (var arg in args)
+            {
+                info.ArgumentList.Add(arg);
+            }
+
+            using var process = Process.Start(info) ?? throw new InvalidOperationException("ffmpeg did not start");
+            process.WaitForExit();
+            return process.ExitCode == 0;
+        }
+    }
 
     private static readonly SN.Vector3 Metal = new(0.05f, 0.045f, 0.04f);
     private static readonly SN.Vector3 Amber = new(1.0f, 0.55f, 0.18f);
@@ -393,7 +511,8 @@ internal static unsafe class Colossus
             vec2 p = vUv - 0.5;
             c *= 1.0 - dot(p, p) * 0.55;
             c = pow(c, vec3(1.0 / 2.2));
-            c += (hash12(gl_FragCoord.xy + fract(pc.eye.w) * 640.0) - 0.5) / 160.0;
+            c += (hash12(gl_FragCoord.xy + fract(pc.eye.w) * 640.0) - 0.5) / 160.0 * (1.0 - pc.params.z);
+            c = abs(vUv.y - 0.5) > 0.5 - pc.params.w ? vec3(0.0) : c;
             outColor = vec4(c, 1.0);
         }
         """;
@@ -422,6 +541,19 @@ internal static unsafe class Colossus
         var swarm = Math.Clamp((int)Arg(args, "--swarm", 10000), 1, MaxSwarm);
         var immediate = args.Contains("--immediate");
         var mailbox = args.Contains("--mailbox");
+        string? ArgText(string name)
+        {
+            var at = Array.IndexOf(args, name);
+            return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
+        }
+
+        // --record FILE: a video at a fixed 60 frames a second, whatever the machine's pace, encoded by ffmpeg.
+        var recordFile = ArgText("--record") is { } recordArg ? Path.GetFullPath(recordArg) : null;
+        var recording = recordFile is not null;
+        if (recording && limit <= 0)
+        {
+            limit = 60;
+        }
         var captureAt = Array.IndexOf(args, "--capture");
         var captures = captureAt >= 0 && captureAt + 1 < args.Length ? args[captureAt + 1].Split(',').Select(double.Parse).Order().ToArray() : [];
         var nextCapture = 0;
@@ -433,9 +565,19 @@ internal static unsafe class Colossus
             ? Task.FromResult<(Soundscape? Sound, string Note)>((null, "off (--no-sound)"))
             : Task.Run(() =>
             {
-                var opened = Soundscape.TryOpen(out var note);
+                string note;
+                var opened = recording ? Soundscape.TryOpenLoopback(out note) : Soundscape.TryOpen(out note);
                 return (Sound: opened, Note: note);
             });
+
+        // The colossus's voice (Speech.cs): Piper makes its lines on a worker while the window comes up.
+        var ttsNote = "off (--no-tts)";
+        var tts = args.Contains("--no-tts") ? null : Voice.Find(ArgText("--piper"), ArgText("--voice"), out ttsNote);
+        var linesFile = ArgText("--lines") ?? Path.Combine(AppContext.BaseDirectory, "voice", "lines.fr.txt");
+        string[] script = File.Exists(linesFile) ? [.. File.ReadAllLines(linesFile).Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith('#'))] : [];
+        var linesTask = tts is null || script.Length == 0
+            ? Task.FromResult(Array.Empty<(string Text, short[] Pcm)>())
+            : Task.Run(() => script.Select(line => (Text: line, Pcm: tts.Say(line))).ToArray());
 
         if (!Glfw.Init())
         {
@@ -1064,11 +1206,20 @@ internal static unsafe class Colossus
         mirror.Poll(0);
         var (sound, soundNote) = soundTask.Result;
         Console.WriteLine($"SOUND {soundNote}; voice plugins {(mirror.Present ? "running" : "not running")}");
-        bool assembled = false, autoCycle = true, speaking = !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
-        bool mirrorOn = !args.Contains("--no-voice"), soundOn = !args.Contains("--mute");
-        float volume = 0.6f, hearing = 0f;
+        Console.WriteLine($"VOICE {ttsNote}; {script.Length} lines");
+        bool assembled = false, autoCycle = true, speaking = tts is not null || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
+        bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute");
+        float volume = recording ? 0.9f : 0.6f, hearing = 0f;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
-        int requested = swarm, preset = 0, shownPreset = -1;
+        int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : 0, shownPreset = -1;
+        // The lines made, the next one and when; a line typed in the panel while Piper makes it; the subtitle shown.
+        var lines = Array.Empty<(string Text, short[] Pcm)>();
+        var nextLine = 0;
+        double nextLineAt = 0;
+        var wasTalking = false;
+        Task<(string Text, short[] Pcm)>? saying = null;
+        var typed = new ImInputString(240);
+        var subtitle = string.Empty;
         var camEye = new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f);
         var camTarget = FaceCenter;
         var frameHistory = new float2[History];
@@ -1081,7 +1232,7 @@ internal static unsafe class Colossus
 
         var frameTimes = new List<double>(1 << 16);
         var physicsTimes = new List<double>(1 << 16);
-        var serial = args.Contains("--serial");
+        var serial = args.Contains("--serial") || recording;
         Task<PhysicsUpdateError>? stepping = null;
         var physicsHz = Arg(args, "--physics-hz", 120);
         // The machines stop colliding with each other once they form the face: each flies to its own point of the head's
@@ -1104,6 +1255,29 @@ internal static unsafe class Colossus
         var reason = "window closed";
         var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
 
+        // The recording: each frame's image goes to ffmpeg as it is made, and OpenAL's mix of the same sixtieth of a
+        // second to a raw file; the two are put together when the scene ends. The face forms 3 s in.
+        Process? encoder = null;
+        FileStream? audioOut = null;
+        var audioFrame = new short[Soundscape.SampleRate / 60 * 2];
+        var ffmpeg = ArgText("--ffmpeg") ?? "ffmpeg";
+        if (recording)
+        {
+            try
+            {
+                linesTask.Wait();
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"VOICE failed: {e.InnerException?.Message}");
+            }
+
+            cycleStart = -3.0;
+            last = -1.0 / 60.0;
+            encoder = StartEncoder(ffmpeg, recordFile + ".video.mp4", (int)extent.Width, (int)extent.Height);
+            audioOut = File.Create(recordFile + ".pcm");
+        }
+
         // Where each frame's time goes, phase by phase, for the summary.
         string[] phases = ["steer", "step", "read", "panel", "wait", "write", "record", "present", "events"];
         var phaseTimes = phases.Select(_ => new List<double>(1 << 16)).ToArray();
@@ -1116,10 +1290,11 @@ internal static unsafe class Colossus
         }
 
         var clears = stackalloc VkClearValue[2];
+        Span<ulong> ticks = stackalloc ulong[4];
         while (!window.ShouldClose)
         {
             Glfw.PollEvents();
-            var now = clock.Elapsed.TotalSeconds;
+            var now = recording ? frame / 60.0 : clock.Elapsed.TotalSeconds;
             if (limit > 0 && now >= limit)
             {
                 reason = "time limit";
@@ -1129,7 +1304,7 @@ internal static unsafe class Colossus
             // The simulation and the camera step by the smoothed interval: a frame that comes back early or late is still
             // shown for one refresh, so stepping by its raw interval would make the motion judder.
             smoothDt += ((float)Math.Min(now - last, 0.1) - smoothDt) * 0.12f;
-            var frameDt = smoothDt;
+            var frameDt = recording ? 1f / 60f : smoothDt;
             frameMs = (now - last) * 1000.0;
             last = now;
 
@@ -1159,7 +1334,7 @@ internal static unsafe class Colossus
 
             if (ImGui.IsKeyPressed(ImGuiKey.C, false))
             {
-                preset = (preset + 1) % 3;
+                preset = (preset + 1) % 4;
             }
 
             bool overPanel = io.WantCaptureMouse;
@@ -1177,10 +1352,48 @@ internal static unsafe class Colossus
             // The voice plugins: while a voice speaks, or voice-avatar works or waits, the cycle holds the face.
             mirror.Poll(now);
             var voice = mirrorOn && mirror.Speaking;
+            // The colossus speaks its lines once the face has formed, one at a time with a pause between them, while no
+            // other voice speaks; a typed line as soon as Piper has made it. The face holds while it speaks.
+            if (lines.Length == 0 && linesTask.IsCompletedSuccessfully)
+            {
+                lines = linesTask.Result;
+            }
+
+            var talking = sound?.Speaking ?? false;
+            if (wasTalking && !talking)
+            {
+                nextLineAt = now + 2.0;
+                subtitle = string.Empty;
+            }
+
+            if (sound is not null && saying is { IsCompleted: true })
+            {
+                if (saying.IsCompletedSuccessfully)
+                {
+                    sound.Speak(saying.Result.Pcm, tts!.Rate);
+                    subtitle = saying.Result.Text;
+                    talking = true;
+                }
+                else
+                {
+                    Console.WriteLine($"VOICE failed: {saying.Exception?.InnerException?.Message}");
+                }
+
+                saying = null;
+            }
+            else if (sound is not null && lines.Length > 0 && speaking && !voice && assembled && glow > 0.85f && !talking && now >= nextLineAt)
+            {
+                sound.Speak(lines[nextLine].Pcm, tts!.Rate);
+                subtitle = lines[nextLine].Text;
+                nextLine = (nextLine + 1) % lines.Length;
+                talking = true;
+            }
+
+            wasTalking = talking;
             if (autoCycle)
             {
                 var c = (now - cycleStart) % 32.0;
-                assembled = (c >= 6.0 && c < 24.0) || voice || (mirrorOn && mirror.FaceState is "working" or "waiting");
+                assembled = (c >= 6.0 && c < 24.0) || voice || talking || saying is not null || (mirrorOn && mirror.FaceState is "working" or "waiting");
             }
 
             // Jolt steps on a worker while this thread draws, at most --physics-hz times a second (default 120; 0 steps
@@ -1191,7 +1404,9 @@ internal static unsafe class Colossus
             // moved on along its velocity. Catching up with several fixed steps after a hitch made each frame longer than
             // the last. --serial waits for each step as soon as it starts.
             var stepDt = Math.Clamp(frameDt, 1f / 240f, 1f / 30f);
-            var mouth = voice || speaking ? Speech((float)simTime) : 0f;
+            // The jaw follows the spoken line's loudness; without a voice, or while another voice speaks, the syllables of
+            // the wordless chant.
+            var mouth = talking ? MathF.Min(1f, (sound?.SpeechLevel ?? 0f) * 1.3f) : voice || (speaking && tts is null) ? Speech((float)simTime) : 0f;
             Lap(8);
             if (stepping is null || physicsHz <= 0 || (stepping.IsCompleted && now - lastKick >= 1.0 / physicsHz))
             {
@@ -1259,149 +1474,221 @@ internal static unsafe class Colossus
             var listening = !mirrorOn ? 0f : Math.Max(mirror.Hearing, mirror.FaceState == "waiting" ? 0.5f + (0.5f * MathF.Sin((float)now * 3f)) : 0f);
             hearing += (listening - hearing) * Math.Min(1f, frameDt * 8f);
 
-            // The panel.
-            ImGui.SetNextWindowPos(new float2(14f, 14f), ImGuiCond.FirstUseEver);
-            if (ImGui.Begin($"{L("BRUTAL showcase")}###panel", ImGuiWindowFlags.AlwaysAutoResize))
+            // The panel, but not in a recording.
+            if (!recording)
             {
-                ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
-                ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
-                ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"), staticInstances.Length + _ids.Length, drawCalls));
-                ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
-                ImGui.Separator();
-                if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
+                ImGui.SetNextWindowPos(new float2(14f, 14f), ImGuiCond.FirstUseEver);
+                if (ImGui.Begin($"{L("BRUTAL showcase")}###panel", ImGuiWindowFlags.AlwaysAutoResize))
                 {
-                    assembled = !assembled;
-                    autoCycle = false;
-                }
-
-                ImGui.SameLine();
-                ImGui.Checkbox($"{L("Auto cycle")}###cycle", ref autoCycle);
-                ImGui.SameLine();
-                ImGui.Checkbox($"{L("Speaking")}###speaking", ref speaking);
-                ImGui.SliderFloat($"{L("Swarm speed")}###speed", ref speedScale, 0.2f, 3f);
-                ImGui.SliderFloat($"{L("Cohesion")}###cohesion", ref cohesion, 0.2f, 4f);
-                ImGui.SliderFloat($"{L("Exposure")}###exposure", ref exposure, 0.3f, 4f);
-                ImGui.SliderFloat($"{L("Bloom")}###bloom", ref bloomStrength, 0f, 0.6f);
-                ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, MaxSwarm);
-                if (requested != _ids.Length)
-                {
-                    ImGui.SameLine();
-                    if (ImGui.Button($"{L("Rebuild")}###rebuild"))
+                    ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
+                    ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
+                    ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"), staticInstances.Length + _ids.Length, drawCalls));
+                    ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
+                    ImGui.Separator();
+                    if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
                     {
-                        stepping?.Wait();
-                        stepping = null;
-                        DestroySwarm(bodies);
-                        BuildSwarm(bodies, requested);
-                        physics.OptimizeBroadPhase();
-                        physics.OptimizeBroadPhase();
+                        assembled = !assembled;
+                        autoCycle = false;
                     }
-                }
 
-                if (ImGui.Button($"{L("Shoulder")}###shoulder"))
-                {
-                    preset = 0;
-                }
-
-                ImGui.SameLine();
-                if (ImGui.Button($"{L("Wide")}###wide"))
-                {
-                    preset = 1;
-                }
-
-                ImGui.SameLine();
-                if (ImGui.Button($"{L("Face")}###faceview"))
-                {
-                    preset = 2;
-                }
-
-                ImGui.SameLine();
-                ImGui.Checkbox($"{L("Drift")}###drift", ref drift);
-                if (rtx)
-                {
-                    ImGui.Checkbox($"{L("RTX: traced sun shadows and reflections")}###rtx", ref rtxOn);
-                }
-                else
-                {
-                    ImGui.Text(L("RTX: no ray queries on this GPU, or --no-rtx"));
-                }
-
-                if (sound is not null)
-                {
-                    ImGui.Checkbox($"{L("Sound")}###sound", ref soundOn);
                     ImGui.SameLine();
-                    ImGui.SliderFloat($"{L("Volume")}###volume", ref volume, 0f, 1f);
-                }
-                else
-                {
-                    ImGui.Text(string.Format(L("Sound: {0}"), soundNote));
+                    ImGui.Checkbox($"{L("Auto cycle")}###cycle", ref autoCycle);
+                    ImGui.SameLine();
+                    ImGui.Checkbox($"{L("Speaking")}###speaking", ref speaking);
+                    ImGui.SliderFloat($"{L("Swarm speed")}###speed", ref speedScale, 0.2f, 3f);
+                    ImGui.SliderFloat($"{L("Cohesion")}###cohesion", ref cohesion, 0.2f, 4f);
+                    ImGui.SliderFloat($"{L("Exposure")}###exposure", ref exposure, 0.3f, 4f);
+                    ImGui.SliderFloat($"{L("Bloom")}###bloom", ref bloomStrength, 0f, 0.6f);
+                    ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, MaxSwarm);
+                    if (requested != _ids.Length)
+                    {
+                        ImGui.SameLine();
+                        if (ImGui.Button($"{L("Rebuild")}###rebuild"))
+                        {
+                            stepping?.Wait();
+                            stepping = null;
+                            DestroySwarm(bodies);
+                            BuildSwarm(bodies, requested);
+                            physics.OptimizeBroadPhase();
+                        }
+                    }
+
+                    if (ImGui.Button($"{L("Shoulder")}###shoulder"))
+                    {
+                        preset = 0;
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{L("Wide")}###wide"))
+                    {
+                        preset = 1;
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{L("Face")}###faceview"))
+                    {
+                        preset = 2;
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"{L("Cinematic")}###cinematic"))
+                    {
+                        preset = 3;
+                    }
+
+                    ImGui.SameLine();
+                    ImGui.Checkbox($"{L("Drift")}###drift", ref drift);
+                    if (rtx)
+                    {
+                        ImGui.Checkbox($"{L("RTX: traced sun shadows and reflections")}###rtx", ref rtxOn);
+                    }
+                    else
+                    {
+                        ImGui.Text(L("RTX: no ray queries on this GPU, or --no-rtx"));
+                    }
+
+                    if (sound is not null)
+                    {
+                        ImGui.Checkbox($"{L("Sound")}###sound", ref soundOn);
+                        ImGui.SameLine();
+                        ImGui.SliderFloat($"{L("Volume")}###volume", ref volume, 0f, 1f);
+                    }
+                    else
+                    {
+                        ImGui.Text(string.Format(L("Sound: {0}"), soundNote));
+                    }
+
+                    var heard = !mirror.Present ? "not running" : voice ? "a voice speaks" : hearing > 0.3f ? "hearing you" : mirror.FaceState ?? "quiet";
+                    ImGui.Checkbox($"{L("Mirror the voice plugins")}###mirror", ref mirrorOn);
+                    ImGui.SameLine();
+                    ImGui.Text($"({L(heard)})");
+                    if (tts is not null)
+                    {
+                        ImGui.SetNextItemWidth(320f);
+                        if (ImGui.InputText($"{L("Say")}###say", typed, ImGuiInputTextFlags.EnterReturnsTrue, default, default) && !typed.IsEmpty && saying is null)
+                        {
+                            var text = typed.ToString();
+                            typed.Clear();
+                            saying = Task.Run(() => (text, tts.Say(text)));
+                        }
+                    }
+                    else
+                    {
+                        ImGui.Text(string.Format(L("Voice: {0}"), ttsNote));
+                    }
+                    Array.Copy(frameHistory, 1, frameHistory, 0, History - 1);
+                    Array.Copy(physicsHistory, 1, physicsHistory, 0, History - 1);
+                    for (var i = 0; i < History - 1; i++)
+                    {
+                        frameHistory[i] = new float2(i, frameHistory[i].Y);
+                        physicsHistory[i] = new float2(i, physicsHistory[i].Y);
+                    }
+
+                    frameHistory[History - 1] = new float2(History - 1, (float)frameMs);
+                    physicsHistory[History - 1] = new float2(History - 1, (float)physicsMs);
+                    if (ImPlot.BeginPlot("##timings"u8, new float2(-1f, 130f)))
+                    {
+                        ImPlot.SetupAxes(default, "ms"u8, ImPlotAxisFlags.NoTickLabels);
+                        ImPlot.SetupAxisLimits(ImAxis.X1, 0, History - 1, ImPlotCond.Always);
+                        ImPlot.SetupAxisLimits(ImAxis.Y1, 0, 25, ImPlotCond.Always);
+                        ImPlot.PlotLine(L("frame"), frameHistory);
+                        ImPlot.PlotLine("Jolt"u8, physicsHistory);
+                        ImPlot.EndPlot();
+                    }
+
+                    ImGui.Text(L("Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"));
+                    ImGui.Text(L("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"));
                 }
 
-                var heard = !mirror.Present ? "not running" : voice ? "a voice speaks" : hearing > 0.3f ? "hearing you" : mirror.FaceState ?? "quiet";
-                ImGui.Checkbox($"{L("Mirror the voice plugins")}###mirror", ref mirrorOn);
-                ImGui.SameLine();
-                ImGui.Text($"({L(heard)})");
-                Array.Copy(frameHistory, 1, frameHistory, 0, History - 1);
-                Array.Copy(physicsHistory, 1, physicsHistory, 0, History - 1);
-                for (var i = 0; i < History - 1; i++)
-                {
-                    frameHistory[i] = new float2(i, frameHistory[i].Y);
-                    physicsHistory[i] = new float2(i, physicsHistory[i].Y);
-                }
-
-                frameHistory[History - 1] = new float2(History - 1, (float)frameMs);
-                physicsHistory[History - 1] = new float2(History - 1, (float)physicsMs);
-                if (ImPlot.BeginPlot("##timings"u8, new float2(-1f, 130f)))
-                {
-                    ImPlot.SetupAxes(default, "ms"u8, ImPlotAxisFlags.NoTickLabels);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, 0, History - 1, ImPlotCond.Always);
-                    ImPlot.SetupAxisLimits(ImAxis.Y1, 0, 25, ImPlotCond.Always);
-                    ImPlot.PlotLine(L("frame"), frameHistory);
-                    ImPlot.PlotLine("Jolt"u8, physicsHistory);
-                    ImPlot.EndPlot();
-                }
-
-                ImGui.Text(L("Space assemble   C camera   drag turn   wheel zoom   L language   Esc quit"));
-                ImGui.Text(L("Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"));
+                ImGui.End();
             }
 
-            ImGui.End();
+            // The subtitle, under the face's line: in the cinematic, on the lower black band. While recording, the credits
+            // on the upper one.
+            const ImGuiWindowFlags Overlay = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoInputs
+                | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoSavedSettings;
+            if (subtitle.Length > 0)
+            {
+                ImGui.SetNextWindowPos(new float2(extent.Width / 2f, extent.Height - (preset == 3 ? Letterbox * extent.Height / 2f : 80f)), ImGuiCond.Always, new float2(0.5f, 0.5f));
+                ImGui.SetNextWindowBgAlpha(0.45f);
+                if (ImGui.Begin("###subtitle"u8, Overlay | (preset == 3 ? ImGuiWindowFlags.NoBackground : ImGuiWindowFlags.None)))
+                {
+                    ImGui.PushFont(default, 30f);
+                    ImGui.PushTextWrapPos(extent.Width * 0.72f);
+                    ImGui.Text(subtitle);
+                    ImGui.PopTextWrapPos();
+                    ImGui.PopFont();
+                }
+
+                ImGui.End();
+            }
+
+            if (recording)
+            {
+                ImGui.SetNextWindowPos(new float2(extent.Width / 2f, Letterbox * extent.Height / 2f), ImGuiCond.Always, new float2(0.5f, 0.5f));
+                if (ImGui.Begin("###credits"u8, Overlay | ImGuiWindowFlags.NoBackground))
+                {
+                    ImGui.TextDisabled(Credits);
+                }
+
+                ImGui.End();
+            }
+
             ImGui.Render();
 
-            // Camera: a preset, turned by the drag, zoomed by the wheel, drifting slowly, eased in.
-            if (preset != shownPreset)
+            // Camera: a preset, turned by the drag, zoomed by the wheel, drifting slowly, eased in; or the cinematic, its shots
+            // cut hard, in time with the swarm's cycle.
+            var fov = 55f;
+            if (preset == 3)
             {
-                shownPreset = preset;
-                yawOffset = pitchOffset = 0f;
-                zoom = 1f;
+                (camEye, camTarget, fov) = Cinematic(now - cycleStart - 3.0);
+                shownPreset = 3;
             }
-
-            var (presetEye, presetTarget) = preset switch
+            else
             {
-                1 => (new SN.Vector3(-38f, 14f, 78f), new SN.Vector3(0f, 18f, 10f)),
-                2 => (new SN.Vector3(6f, 22f, 32f), FaceCenter),
-                _ => (new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f), FaceCenter),
-            };
-            var offset = presetEye - presetTarget;
-            var distance = offset.Length() * zoom;
-            var yaw = MathF.Atan2(offset.X, offset.Z) + yawOffset + (drift ? MathF.Sin((float)now * 0.06f) * 0.15f : 0f);
-            var pitch = Math.Clamp(MathF.Asin(offset.Y / offset.Length()) + pitchOffset, -1.2f, 1.3f);
-            var wantEye = presetTarget + (distance * new SN.Vector3(MathF.Cos(pitch) * MathF.Sin(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Cos(yaw)));
-            var ease = Math.Min(1f, frameDt * 2.5f);
-            camEye = SN.Vector3.Lerp(camEye, wantEye, ease);
-            camTarget = SN.Vector3.Lerp(camTarget, presetTarget, ease);
-            var projection = SN.Matrix4x4.CreatePerspectiveFieldOfView(55f * MathF.PI / 180f, extent.Width / (float)extent.Height, Near, 1000f);
+                if (preset != shownPreset)
+                {
+                    shownPreset = preset;
+                    yawOffset = pitchOffset = 0f;
+                    zoom = 1f;
+                }
+
+                var (presetEye, presetTarget) = preset switch
+                {
+                    1 => (new SN.Vector3(-38f, 14f, 78f), new SN.Vector3(0f, 18f, 10f)),
+                    2 => (new SN.Vector3(6f, 22f, 32f), FaceCenter),
+                    _ => (new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f), FaceCenter),
+                };
+                var offset = presetEye - presetTarget;
+                var distance = offset.Length() * zoom;
+                var yaw = MathF.Atan2(offset.X, offset.Z) + yawOffset + (drift ? MathF.Sin((float)now * 0.06f) * 0.15f : 0f);
+                var pitch = Math.Clamp(MathF.Asin(offset.Y / offset.Length()) + pitchOffset, -1.2f, 1.3f);
+                var wantEye = presetTarget + (distance * new SN.Vector3(MathF.Cos(pitch) * MathF.Sin(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Cos(yaw)));
+                var ease = Math.Min(1f, frameDt * 2.5f);
+                camEye = SN.Vector3.Lerp(camEye, wantEye, ease);
+                camTarget = SN.Vector3.Lerp(camTarget, presetTarget, ease);
+            }
+            var projection = SN.Matrix4x4.CreatePerspectiveFieldOfView(fov * MathF.PI / 180f, extent.Width / (float)extent.Height, Near, 1000f);
             projection.M33 = 0f; // reversed, infinite depth: 1 at the near plane, 0 at infinity
             projection.M43 = Near;
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
             var viewProj = SN.Matrix4x4.CreateLookAt(camEye, camTarget, SN.Vector3.UnitY) * projection;
             SN.Matrix4x4.Invert(viewProj, out var inverseViewProj);
-            var push = new Push { Matrix = viewProj, Eye = new SN.Vector4(camEye, (float)now), Sun = new SN.Vector4(SunDir, exposure), Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? 1f : 0f, 0f, 0f) };
+            // A recording fades in from black and out to it, without grain so it compresses; the cinematic's black bands.
+            var fade = recording ? (float)Math.Clamp(Math.Min(now / 1.2, (limit - now) / 2.0), 0.0, 1.0) : 1f;
+            var push = new Push
+            {
+                Matrix = viewProj,
+                Eye = new SN.Vector4(camEye, (float)now),
+                Sun = new SN.Vector4(SunDir, exposure * fade),
+                Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? 1f : 0f, recording ? 1f : 0f, preset == 3 ? Letterbox : 0f),
+            };
             var skyPush = push with { Matrix = inverseViewProj };
             if (sound is not null)
             {
                 // The colossus's own chant stays silent while another voice speaks, and everything ducks under it.
                 var (centre, speed) = motion;
-                sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled, voice ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, soundOn ? volume : 0f, frameDt);
+                sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled, voice || talking ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, (soundOn ? volume : 0f) * fade, frameDt);
             }
 
             // The frame: wait for this slot, fill its instances, record the scene and the panel, submit, present.
@@ -1410,7 +1697,6 @@ internal static unsafe class Colossus
             device.WaitForFences([fences[slot]], true, -1);
             if (frame >= FramesInFlight)
             {
-                Span<ulong> ticks = stackalloc ulong[4];
                 if (device.GetQueryPoolResults(queryPool, slot * 4, 4, MemoryMarshal.AsBytes(ticks), (ByteSize64)8ul, VkQueryResultFlags._64Bit) == VkResult.Success)
                 {
                     gpuTimes[0].Add((ticks[1] - ticks[0]) * tickMs);
@@ -1500,7 +1786,7 @@ internal static unsafe class Colossus
             cb.Draw(3, 1, 0, 0);
             renderer.RenderDrawData(ImGui.GetDrawData(), cb);
             cb.EndRenderPass();
-            var capturing = nextCapture < captures.Length && now >= captures[nextCapture];
+            var capturing = recording || (nextCapture < captures.Length && now >= captures[nextCapture]);
             if (capturing)
             {
                 cb.PipelineBarrier(VkPipelineStageFlags.ColorAttachmentOutputBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
@@ -1552,11 +1838,25 @@ internal static unsafe class Colossus
             if (capturing)
             {
                 device.WaitIdle();
-                var file = $"colossus-{captures[nextCapture]:0.#}s.png";
-                SavePng(file, new ReadOnlySpan<byte>((byte*)readbackMapped, (int)(extent.Width * extent.Height * 4)), (int)extent.Width, (int)extent.Height);
-                Console.WriteLine($"SWARM captured {file} at {now:F1} s ({(assembled ? "face" : "cloud")})");
-                nextCapture++;
-                last = clock.Elapsed.TotalSeconds; // the capture's wait is not a frame time
+                var image = new ReadOnlySpan<byte>((byte*)readbackMapped, (int)(extent.Width * extent.Height * 4));
+                if (recording)
+                {
+                    encoder!.StandardInput.BaseStream.Write(image);
+                    if (sound is not null)
+                    {
+                        sound.Render(audioFrame, audioFrame.Length / 2);
+                    }
+
+                    audioOut!.Write(MemoryMarshal.AsBytes(audioFrame.AsSpan()));
+                }
+                else
+                {
+                    var file = $"colossus-{captures[nextCapture]:0.#}s.png";
+                    SavePng(file, image, (int)extent.Width, (int)extent.Height);
+                    Console.WriteLine($"SWARM captured {file} at {now:F1} s ({(assembled ? "face" : "cloud")})");
+                    nextCapture++;
+                    last = clock.Elapsed.TotalSeconds; // the capture's wait is not a frame time
+                }
             }
 
             if (frame > 0 && !capturing)
@@ -1580,6 +1880,19 @@ internal static unsafe class Colossus
 
         var seconds = clock.Elapsed.TotalSeconds;
         stepping?.Wait();
+        if (encoder is not null)
+        {
+            encoder.StandardInput.Close();
+            encoder.WaitForExit();
+            audioOut!.Dispose();
+            var muxed = Finish(ffmpeg, recordFile + ".video.mp4", recordFile + ".pcm", recordFile!, frame / 60.0, Arg(args, "--record-mb", 8));
+            Console.WriteLine(muxed ? $"SWARM recorded {recordFile}: {frame} frames, {new FileInfo(recordFile!).Length / 1024} KB" : $"SWARM recording failed: see ffmpeg above");
+            if (muxed)
+            {
+                File.Delete(recordFile + ".video.mp4");
+                File.Delete(recordFile + ".pcm");
+            }
+        }
         sound?.Dispose();
         device.WaitIdle();
         renderer.Dispose();
@@ -1746,17 +2059,14 @@ internal static unsafe class Colossus
 
     // Every body's pose and velocity, one call each. The bulk read, BodyLockInterface.GetBodyStates, is declared by the
     // binding but its entry point is missing from the package's jolt.dll (2026.10.2, win-x64).
-    private static void ReadStates(BodyInterface bodies, BodyState[] into)
+    private static void ReadStates(BodyInterface bodies, BodyState[] into) => ForBodies(_ids.Length, (start, end) =>
     {
-        ForBodies(_ids.Length, (start, end) =>
+        for (var i = start; i < end; i++)
         {
-            for (var i = start; i < end; i++)
-            {
-                bodies.GetPositionAndRotation(_ids[i], out into[i].Position, out into[i].Rotation);
-                into[i].LinearVelocity = bodies.GetLinearVelocity(_ids[i]);
-            }
-        });
-    }
+            bodies.GetPositionAndRotation(_ids[i], out into[i].Position, out into[i].Rotation);
+            into[i].LinearVelocity = bodies.GetLinearVelocity(_ids[i]);
+        }
+    });
 
     private static void DestroySwarm(BodyInterface bodies)
     {
@@ -1796,6 +2106,9 @@ internal static unsafe class Colossus
         ["Assemble"] = "Assembler",
         ["Auto cycle"] = "Cycle auto",
         ["Speaking"] = "Parole",
+        ["Cinematic"] = "Cinématique",
+        ["Say"] = "Dire",
+        ["Voice: {0}"] = "Voix : {0}",
         ["Swarm speed"] = "Vitesse de l'essaim",
         ["Cohesion"] = "Cohésion",
         ["Exposure"] = "Exposition",

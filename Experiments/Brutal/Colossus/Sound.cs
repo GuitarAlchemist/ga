@@ -4,6 +4,9 @@
 // - the wind: low noise in gusts with a whistle through the towers and a deep drone, all round the listener;
 // - the colossus's chant: a low voice on a fifth through three vowel formants, swelling with each syllable, at the face;
 // - a rising rush as the swarm assembles, ending in a low thud, and a falling one as it disperses.
+// The colossus's spoken lines (Speech.cs) play at the face, a little deeper and slower than the voice made them, with
+// the swarm and the wind lowered under them; their loudness moves the jaw.
+// For --record, a loopback device plays nowhere: the scene renders the mix itself, a video frame's worth at a time.
 // The listener is the camera. A reverb (EFX) sends everything out across the city when the device has it.
 // Every loop is a whole number of cycles of each of its tones, and its noise is filtered round the loop twice, so the
 // loops have no seam.
@@ -24,7 +27,11 @@ internal sealed class Soundscape : IDisposable
     private readonly Device _device;
     private readonly Context _context;
     private readonly AlBuffer[] _buffers;
-    private readonly AlSource _swarm, _wind, _chant, _rush;
+    private readonly AlSource _swarm, _wind, _chant, _rush, _speech;
+    private readonly LoopbackDevice? _loopback;
+    private AlBuffer _spoken;
+    private float[] _envelope = [];
+    private float _talk;
     private readonly AlBuffer _assemble, _disperse;
     private readonly AlAuxiliaryEffectSlot _slot;
     private readonly EaxReverbEffect _reverb;
@@ -34,10 +41,11 @@ internal sealed class Soundscape : IDisposable
 
     public string Note { get; }
 
-    private Soundscape(Device device, Context context, long started)
+    private Soundscape(Device device, Context context, long started, LoopbackDevice? loopback = null)
     {
         _device = device;
         _context = context;
+        _loopback = loopback;
         var rng = new Random(2610);
         _buffers = Al.GenBuffers(5);
         Upload(_buffers[0], Swarm(rng));
@@ -48,14 +56,19 @@ internal sealed class Soundscape : IDisposable
         _assemble = _buffers[3];
         _disperse = _buffers[4];
 
-        var sources = Al.GenSources(4);
-        (_swarm, _wind, _chant, _rush) = (sources[0], sources[1], sources[2], sources[3]);
+        var sources = Al.GenSources(5);
+        (_swarm, _wind, _chant, _rush, _speech) = (sources[0], sources[1], sources[2], sources[3], sources[4]);
         foreach (var s in sources)
         {
             s.ReferenceDistance = 40f;
             s.RolloffFactor = 0.6f;
             s.Gain = 0f;
         }
+
+        // A colossal voice carries: it fades little with distance.
+        _speech.ReferenceDistance = 90f;
+        _speech.RolloffFactor = 0.25f;
+        _speech.Pitch = 0.86f;
 
         _wind.SourceRelative = true;
         _wind.Position = new float3(0f, 0f, 0f);
@@ -84,7 +97,7 @@ internal sealed class Soundscape : IDisposable
             _hasReverb = false;
         }
 
-        var name = Alc.GetDefaultAllDevicesSpecifier() ?? "default device";
+        var name = loopback is not null ? "loopback, 48 kHz stereo (recording)" : Alc.GetDefaultAllDevicesSpecifier() ?? "default device";
         Note = $"{name}{(_hasReverb ? ", EFX reverb" : ", no EFX")}, synthesised in {(System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms";
     }
 
@@ -110,6 +123,93 @@ internal sealed class Soundscape : IDisposable
         }
     }
 
+    // A device that plays nowhere, for --record: Render mixes the next samples into the caller's buffer.
+    public static Soundscape? TryOpenLoopback(out string note)
+    {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        LoopbackDevice? device = null;
+        try
+        {
+            device = LoopbackDevice.Open();
+            var context = device.CreateContext(new Context.CreateInfo
+            {
+                Attributes = [(AlcContextAttribute.Frequency, Rate), (AlcContextAttribute.FormatChannels, (int)AlcChannelLayout.Stereo), (AlcContextAttribute.FormatType, (int)AlcSampleType.Short)],
+            });
+            context.MakeCurrent();
+            var sound = new Soundscape(context.Device, context, started, device);
+            note = sound.Note;
+            return sound;
+        }
+        catch (Exception e) when (e is AlException or AlcException or AlExtensionException or DllNotFoundException or EntryPointNotFoundException or InvalidOperationException)
+        {
+            device?.Dispose();
+            note = $"no sound ({e.GetType().Name}: {e.Message})";
+            return null;
+        }
+    }
+
+    // The next frames of the mix, as interleaved 16-bit stereo at 48 kHz (a loopback device only).
+    public void Render(Span<short> stereo, int frames) => _loopback!.Render(stereo, frames);
+
+    public static int SampleRate => Rate;
+
+    // A line is being spoken, and how loud it is now, from 0 to 1.
+    public bool Speaking { get; private set; }
+
+    public float SpeechLevel { get; private set; }
+
+    // Speaks one line of 16-bit mono audio at its rate, cutting off any line still playing.
+    public void Speak(short[] pcm, int rate)
+    {
+        _speech.Stop();
+        _speech.Buffer = default;
+        if (!_spoken.IsNull())
+        {
+            Al.DeleteBuffers([_spoken]);
+        }
+
+        var peak = 1;
+        foreach (var v in pcm)
+        {
+            peak = Math.Max(peak, Math.Abs((int)v));
+        }
+
+        // Normalised to a peak of 0.9, and its loudness every hundredth of a second, the loudest at 1.
+        var loud = new short[pcm.Length];
+        for (var i = 0; i < pcm.Length; i++)
+        {
+            loud[i] = (short)(pcm[i] * 0.9f * short.MaxValue / peak);
+        }
+
+        var window = Math.Max(1, rate / 100);
+        _envelope = new float[(pcm.Length / window) + 1];
+        var top = 1e-6f;
+        for (var k = 0; k < _envelope.Length; k++)
+        {
+            var sum = 0.0;
+            var end = Math.Min(pcm.Length, (k + 1) * window);
+            for (var i = k * window; i < end; i++)
+            {
+                sum += (double)loud[i] * loud[i];
+            }
+
+            _envelope[k] = (float)Math.Sqrt(sum / window);
+            top = MathF.Max(top, _envelope[k]);
+        }
+
+        for (var k = 0; k < _envelope.Length; k++)
+        {
+            _envelope[k] /= top;
+        }
+
+        _spoken = Al.GenBuffers(1)[0];
+        _spoken.SetData(AlFormat.Mono16, MemoryMarshal.AsBytes(loud.AsSpan()), rate);
+        _speech.Buffer = _spoken;
+        _speech.Gain = 1f;
+        _speech.Play();
+        Speaking = true;
+    }
+
     // One frame: the listener at the camera; the swarm's hum from its centre, by its speed; the chant at the face, by
     // how open the mouth is; a rush when the swarm turns. duck (0 to 1) lowers everything while a voice speaks.
     public void Update(SN.Vector3 eye, SN.Vector3 target, SN.Vector3 swarmCentre, float swarmSpeed, SN.Vector3 face, bool assembled, float chant, float duck, float volume, float dt)
@@ -120,11 +220,21 @@ internal sealed class Soundscape : IDisposable
         _duck += ((1f - (0.7f * duck)) - _duck) * MathF.Min(1f, dt * 4f);
         Al.Listener.Gain = volume * _duck;
 
+        _speech.Position = F(face);
+        if (Speaking)
+        {
+            Speaking = _speech.State == AlSourceState.Playing;
+            var at = (int)(_speech.SecOffset * 100f);
+            SpeechLevel = Speaking && at < _envelope.Length ? _envelope[at] : 0f;
+        }
+
+        _talk += ((Speaking ? 1f : 0f) - _talk) * MathF.Min(1f, dt * 3f);
+        var under = 1f - (0.5f * _talk);
         var fly = Math.Clamp(swarmSpeed / 18f, 0f, 1f);
         _swarm.Position = F(swarmCentre);
-        _swarm.Gain = 0.18f + (0.62f * fly);
+        _swarm.Gain = (0.18f + (0.62f * fly)) * under;
         _swarm.Pitch = 0.82f + (0.4f * fly);
-        _wind.Gain = 0.32f;
+        _wind.Gain = 0.32f * under;
         _chantGain += ((MathF.Pow(chant, 0.7f) * 0.9f) - _chantGain) * MathF.Min(1f, dt * 14f);
         _chant.Position = F(face);
         _chant.Gain = _chantGain;
@@ -143,13 +253,18 @@ internal sealed class Soundscape : IDisposable
 
     public void Dispose()
     {
-        foreach (var s in new[] { _swarm, _wind, _chant, _rush })
+        foreach (var s in new[] { _swarm, _wind, _chant, _rush, _speech })
         {
             s.Stop();
         }
 
-        Al.DeleteSources([_swarm, _wind, _chant, _rush]);
+        _speech.Buffer = default;
+        Al.DeleteSources([_swarm, _wind, _chant, _rush, _speech]);
         Al.DeleteBuffers(_buffers);
+        if (!_spoken.IsNull())
+        {
+            Al.DeleteBuffers([_spoken]);
+        }
         if (_hasReverb)
         {
             _slot.Delete();
@@ -158,7 +273,14 @@ internal sealed class Soundscape : IDisposable
 
         Context.MakeCurrent(null);
         _context.Dispose();
-        _device.Dispose();
+        if (_loopback is not null)
+        {
+            _loopback.Dispose();
+        }
+        else
+        {
+            _device.Dispose();
+        }
     }
 
     private static float3 F(SN.Vector3 v) => new(v.X, v.Y, v.Z);

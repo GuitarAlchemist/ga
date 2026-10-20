@@ -487,6 +487,36 @@ swarm's centre and mean speed for the sound after each step; done each frame on 
 A five-minute run, uncapped, gave 234,446 frames (781 a second), p50 1.16 ms, p99 3.20, worst second 625, no Jolt
 error, and a peak working set of 300 MB.
 
+**Voice, cinematic and video** (asked as « j'aimerais que ça parle … du vrai TTS », « des cinématiques à la GTA V », then
+« une vidéo avec le son, et … je veux pas qu'elle pèse lourd »).
+- **Text-to-speech.** The colossus speaks its lines (`Colossus/voice/lines.fr.txt`, original) with Piper, a local neural
+  text-to-speech (`Speech.cs`). The scene runs `piper` itself, one process per line: the text goes in on its standard
+  input, and raw 16-bit audio comes back on its standard output. A line takes about 0.9 s to make, half of it loading
+  the model. Lines typed in the panel's Say field are spoken the same way. Nothing is downloaded or sent anywhere.
+- **The voice.** By default the scene uses piper-voice's install on this machine: `fr_FR-siwis-medium`. Its model card
+  gives the SIWIS dataset, CC BY 4.0, and says it was fine-tuned from Piper's lessac voice. The lessac dataset's licence
+  is for non-commercial use, so the voice, and any video of it, are for non-commercial use, with the credit shown.
+  `--piper` and `--voice` choose another engine or model; `--no-tts` keeps the wordless chant.
+- **In the scene.** A line plays at the face, at 0.86 of its pitch, so deeper and slower, through the reverb. The swarm and
+  the wind drop to half under it. Its loudness, measured every 10 ms, opens the jaw, and the subtitle shows it.
+- **Cinematic.** C or the panel's Cinematic button, or `--cinematic`, switches to 12 shots over two of the swarm's
+  cycles (64 s), in 2.39:1 black bands. Each shot is a slow move between two framings with its own focal length (20 to
+  50°) and a little handheld sway, and they cut hard: a crane over the city, low behind the figure, the face from below,
+  round the head, the eyes, a crane back, the street, high above, the other shoulder, the profile, a push in, a last crane.
+  The style is borrowed; the shots and everything in them are the scene's own.
+- **Video.** `--record FILE.mp4` renders the cinematic to a video, through ffmpeg:
+  - **Clock.** Time advances exactly 1/60 s a frame, whatever the machine's pace, and Jolt steps in step with it.
+  - **Image.** Each frame's image is read back and piped raw to ffmpeg. Each pair of frames is blended into one, which
+    gives 30 frames a second with a light motion blur, scaled to 1280×720.
+  - **Sound.** OpenAL Soft's loopback device (`ALC_SOFT_loopback`, BRUTAL's `LoopbackDevice`) plays nowhere: the scene
+    renders exactly 800 samples of the mix per frame, so the sound stays in sync.
+  - **Encoding.** H.264 in two passes, at the bitrate that fits `--record-mb` (default 8), with AAC at 96 kb/s brought to
+    -16 LUFS.
+  - **Finish.** It fades in and out, and the grain is off, so that it compresses.
+- **Result.** 60 s took about 4.5 minutes to render. The file is 7,976 KB, at -15.9 LUFS, and carries all five lines with
+  their subtitles. It took three takes to place the cameras: in the first, the opening shot was among the towers, and the
+  orbit and the eyes went inside the head; in the second, the profile stood inside a tower. The first take, encoded in
+  one pass at a fixed quality, weighed 20 MB.
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The
   DLL exports 3,674 names. This was measured by matching the assembly's P/Invoke imports against the DLL's export table.
