@@ -2,7 +2,8 @@
 // through BRUTAL's bindings: the ring of 16 piers with their lintels, the floor and the central pedestal and statue, as
 // flat-shaded boxes with a depth buffer. The camera orbits the axis by itself; the arrow keys turn and tilt it, W and S
 // move it in and out. It closes on Esc or after a time limit (seconds, first argument, default 10) and prints its
-// frame times. Present mode: immediate (no vsync) when available, unless --vsync. A fixed-size window: a swapchain
+// frame times. Present mode: immediate (no vsync) when available, unless --vsync; --cap N then limits it to N frames a
+// second (M3). A fixed-size window: a swapchain
 // that goes out of date ends the run rather than being rebuilt.
 
 using System.Diagnostics;
@@ -73,6 +74,8 @@ internal static unsafe class HallSlice
     {
         var limit = TimeSpan.FromSeconds(args.Length > 0 && double.TryParse(args[0], out var s) ? s : 10.0);
         var vsync = args.Contains("--vsync");
+        var capAt = Array.IndexOf(args, "--cap");
+        var cap = capAt >= 0 && capAt + 1 < args.Length && int.TryParse(args[capAt + 1], out var capValue) ? capValue : 0;
         var clock = Stopwatch.StartNew();
 
         if (!Glfw.Init())
@@ -368,6 +371,18 @@ internal static unsafe class HallSlice
         };
 
         Console.WriteLine($"M2 present mode {presentMode}, {images.Length} swapchain images, {extent.Width}x{extent.Height}");
+        if (cap > 0)
+        {
+            Console.WriteLine($"M2 frame cap {cap} fps");
+            if (OperatingSystem.IsWindows())
+            {
+                _ = TimeBeginPeriod(1); // 1 ms sleeps, so the cap paces frames without spinning the whole time
+            }
+        }
+
+        var period = cap > 0 ? 1.0 / cap : 0.0;
+        var nextFrame = 0.0;
+        var lastPresent = 0.0;
         var frameTimes = new List<double>(100_000);
         var frame = 0;
         var last = clock.Elapsed.TotalSeconds;
@@ -464,18 +479,44 @@ internal static unsafe class HallSlice
             if (firstFrame < 0)
             {
                 firstFrame = t;
+                nextFrame = t;
                 Console.WriteLine($"M2 first frame presented after {t * 1000:F0} ms");
             }
             else
             {
-                frameTimes.Add((t - now) * 1000.0);
+                frameTimes.Add((t - lastPresent) * 1000.0); // present to present
             }
 
+            lastPresent = t;
             frame++;
+            if (cap > 0)
+            {
+                // Pace to the cap: sleep while more than 1.5 ms is left, then spin. A frame that falls more than one
+                // period behind resets the schedule instead of bursting to catch up.
+                nextFrame += period;
+                if (clock.Elapsed.TotalSeconds - nextFrame > period)
+                {
+                    nextFrame = clock.Elapsed.TotalSeconds;
+                }
+
+                while (nextFrame - clock.Elapsed.TotalSeconds > 0.0015)
+                {
+                    Thread.Sleep(1);
+                }
+
+                while (clock.Elapsed.TotalSeconds < nextFrame)
+                {
+                    Thread.SpinWait(20);
+                }
+            }
         }
 
         var loopSeconds = (clock.Elapsed - loopStart).TotalSeconds;
         var cpu = Process.GetCurrentProcess().TotalProcessorTime - cpuStart;
+        if (cap > 0 && OperatingSystem.IsWindows())
+        {
+            _ = TimeEndPeriod(1);
+        }
 
         // Clean shutdown, in reverse order of creation.
         device.WaitIdle();
@@ -517,6 +558,12 @@ internal static unsafe class HallSlice
         Console.WriteLine($"M2 closed by {reason} after {clock.Elapsed.TotalSeconds:F2} s, {keys} camera keys");
         return 0;
     }
+
+    [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+    private static extern uint TimeBeginPeriod(uint milliseconds);
+
+    [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+    private static extern uint TimeEndPeriod(uint milliseconds);
 
     private static VkImageViewCreateInfo View(VkImage image, VkFormat format, VkImageAspectFlags aspect) => new()
     {

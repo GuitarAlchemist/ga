@@ -36,7 +36,7 @@ proprietary and separately licensed, so `Brutal.Fmod` is not used.
 | M0: discover and scope | PASS | [ACK and M0 report](https://github.com/GuitarAlchemist/gaia/issues/257#issuecomment-6282507425) |
 | M1: one window, input, clean close | PASS, 7/7 checks, 2026-10-19 | [evidence/m1-20261019-233551.md](evidence/m1-20261019-233551.md) |
 | M2: a small Observatory-relevant visual slice | PASS, 11/11 checks with vsync, 2026-10-19; uncapped, it starves the RTX view | [evidence/m2-20261019-235332.md](evidence/m2-20261019-235332.md) (vsync), [evidence/m2-20261019-235218.md](evidence/m2-20261019-235218.md) (uncapped) |
-| M3: measurements | NOT RUN | |
+| M3: measurements | INCONCLUSIVE, 2026-10-20: up to a 1,000 fps cap the view holds; uncapped, the collapse did not come back, and the view varies on its own | [evidence/m3-20261020-000131.md](evidence/m3-20261020-000131.md) (sweep), [evidence/m3-20261020-000727.md](evidence/m3-20261020-000727.md) (controls) |
 | M4: report and continue/park recommendation | NOT RUN | |
 
 ## M1
@@ -142,3 +142,63 @@ afterwards.
   uncapped run also predates that logging, so its binary differs from the committed one by those lines.
 - **Not done from the proposal:** no recording, as the screenshots and logs carry the evidence; and keys instead of a
   mouse drag and wheel for the camera.
+
+## M3
+
+`HallSlice` now takes `--cap N`: it paces frames to N a second with 1 ms sleeps and a short spin. It also records frame
+times from one present to the next; M2 measured from the start of a frame's work to its present. `run-m3.ps1` gates on
+memory and builds once. It then runs HallSlice for 15 s per setting, 6 s apart: a vsync soak first, then each cap. For
+each run it reads the RTX view's frame rate from its `FPSLOG` lines, both during the run and in the pause before. A cap
+of -1 runs a control: the same window, with no HallSlice.
+
+```powershell
+pwsh -Command "& ./Experiments/Brutal/run-m3.ps1 -FpsLog <log> -Caps @(60,120,240,480,1000,0)"   # -File would pass -Caps as one string
+```
+
+### M3 result (2026-10-20): inconclusive
+
+- **Question:** at which frame cap does HallSlice leave the RTX view at 60 fps?
+- **Hypothesis, written before measuring:** the view holds with HallSlice capped at 240 fps, and collapses somewhere
+  between 1,000 fps and uncapped.
+
+Sweep, [m3-20261020-000131](evidence/m3-20261020-000131.md):
+
+| HallSlice | Its fps | Frame ms p50 / p99 / max | View fps min / median | Whole card: GPU %, W |
+|---|---|---|---|---|
+| vsync, 60 s | 60 | 16.67 / 17.56 / 66.5 | 56 / 60 | 29, 100 |
+| cap 60 | 60 | 16.66 / 17.23 / 19.1 | 60 / 60 | 28, 102 |
+| cap 120 | 120 | 8.33 / 8.93 / 9.7 | 59 / 60 | 29, 102 |
+| cap 240 | 240 | 4.17 / 4.71 / 5.2 | 60 / 60 | 30, 103 |
+| cap 480 | 469 | 2.08 / 5.55 / 30.6 | 59 / 60 | 29, 104 |
+| cap 1000 | 980 | 1.00 / 2.94 / 9.4 | 60 / 60 | 30, 107 |
+| uncapped | 10,803 | 0.064 / 0.63 / 11.5 | 51 / 59 | 48, 115 |
+
+Controls alternated with uncapped runs, [m3-20261020-000727](evidence/m3-20261020-000727.md):
+
+| Start | Run | View fps min / median | Whole card: GPU %, W |
+|---|---|---|---|
+| 00:07:52 | control | 57 / 60 | 25, 96 |
+| 00:08:13 | uncapped, 12,480 fps | 60 / 60 | 51, 117 |
+| 00:08:36 | control | 60 / 60 | 28, 91 |
+| 00:08:57 | uncapped, 12,052 fps | 60 / 60 | 50, 117 |
+| 00:09:19 | control | 49 / 57 | 27, 89 |
+| 00:09:40 | uncapped, 10,308 fps | 38 / 51 | 50, 110 |
+
+- **Capped:** at every cap up to 1,000 fps, the view kept a median of 60 fps.
+  - Its minimum of 59 at caps 120 and 480 is its counter alternating between 59 and 61. It does that with nothing
+    beside it too.
+  - The sweep's evidence marks those rows "drops" because that run's threshold was exactly 60. The script now allows
+    2 fps (`-Tolerance`).
+- **Uncapped:** across four runs, the view's minimum was 60, 60, 51 and 38. M2's fall to 2–3 fps did not come back.
+- **The view varies on its own:** two of the three controls dipped too, to 57 and to 49, with nothing running beside it.
+  Its scene moves (flyovers, timed events), so its load changes from one 15 s window to the next.
+- **Verdict:** inconclusive.
+  - The capped half agrees with the hypothesis.
+  - The collapse is neither confirmed nor ruled out. M2's single observation stands, and the controls are too noisy to
+    show a smaller effect.
+- **Recommendation:** a BRUTAL tool next to the RTX view should still be capped. Uncapped, HallSlice took the card from
+  about 27 % to 50 % busy and from about 90 W to 115 W, and nothing it draws needs more than a capped rate.
+- **To settle it:** a quiet view (fixed camera, timed events off) and more alternated pairs. That changes the live
+  view's state, so it is the operator's call.
+- **Afterwards:** the RTX view was running at the end of the runs. It stopped about 12 minutes later: its log ends at
+  00:21:53 on renderer errors, like an earlier hang on 2026-10-19. Whether it crashed or was closed is not known.
