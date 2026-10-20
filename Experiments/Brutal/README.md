@@ -253,8 +253,8 @@ Dear ImGui and ImPlot. It is an original scene with no outside assets. A lone fi
 city of towers. Above it, 6,000 machines circle, each one a Jolt rigid body. They gather into a colossal face, built
 from Gaussian bumps, which looks at the figure and speaks, then disperses again.
 
-Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N`, `--seconds T`, `--immediate` (no vsync) and
-`--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
+Run it with `dotnet run -c Release` in `Colossus/`. It takes `--swarm N` (default 10,000), `--seconds T`, `--immediate`
+(no vsync), `--images N` (swapchain images, default 2) and `--capture T1,T2,...`, which saves the window's image at those seconds as `colossus-<T>s.png` in the working directory.
 The capture copies the swapchain image to a host buffer, so it also works where a desktop screenshot cannot (a locked
 session, or a window with no vsync).
 
@@ -286,6 +286,11 @@ a single draw call.
 | any run | — | — | peak working set 224 MB |
 | textured, vsync, 22 s | 1,261 frames, p50 16.66 ms, p95 16.98, p99 17.69 | p50 3.52 ms, p99 4.09 | 60.0 fps |
 | textured, uncapped, 22 s | p50 4.09 ms, p95 6.28, p99 10.00 | p50 2.76 ms, p99 7.68 | about 240 fps |
+| head, 10,000 bodies, vsync, 22 s, 2 images | 1,258 frames, p50 16.65 ms, p95 18.22, p99 20.77 | p50 6.12 ms, p99 8.01 | worst second 60 frames |
+| the same, 3 images, two runs | 1,257 and 1,266 frames, p50 about 12.5 ms, p95 about 28.8 | p50 about 6.0 ms | worst second 60 frames |
+
+With three images the frames still come at 60 a second, but the loop's own timings alternate short and long; two
+images keep them even, so two stay the default.
 
 Two traps in measuring this:
 - **A locked session throttles vsync.** While Windows shows its lock screen, a vsync'd window gets about 4 frames a second
@@ -306,6 +311,32 @@ Blender 5.2 then baked each albedo, headless with factory settings (`bake_blende
 
 It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the four PNGs into one texture
 array with mips; its own PNG reader is in `Program.cs`.
+
+**The head** (`Colossus/head/`). The swarm now forms a sculpted head, generated locally rather than built from Gaussian
+bumps. The bumps remain the fallback when the file is missing.
+
+It is made in two steps (2026-10-20). First, `generate_comfyui.py` runs ComfyUI:
+- **Portrait:** Z-Image-Turbo paints a frontal portrait of an imaginary marble bust, seed 7311, prompt in the script.
+  The bust is androgynous and ageless, and the prompt names no one.
+- **Cut-out:** BiRefNet (MIT) removes the background.
+- **Mesh:** TRELLIS.2 (`microsoft/TRELLIS.2-4B`, MIT; int8 build) turns the portrait into a mesh. It runs in ComfyUI's
+  native nodes, with DINOv3 ViT-L features (DINOv3 License). The graph is learn's ga-lab `ga-3d-trellis2` workflow,
+  shape stage only. Built with DINOv3.
+
+The models were already on the machine; nothing was downloaded. The run took 141 s.
+
+Then `bake_blender.py` (Blender 5.2, headless) turns the mesh into the swarm's targets:
+- **Cleanup:** it smooths the mesh. It keeps the largest connected piece, and only the outer skin: a triangle whose
+  normal ray meets the mesh again is dropped. TRELLIS.2 left internal walls, and 26,202 of 135,729 triangles remain.
+- **Selection:** it keeps what faces the figure, down to the upper neck.
+- **Sampling:** it samples 20,000 points as blue noise in progressive order, so that the first n of them cover the
+  head evenly for any swarm size.
+- **Weights:** each point gets a normal and three weights:
+  - eyes and mouth, which glow;
+  - jaw, which drops with each syllable.
+
+`head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
+along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.
 
 **Found in the packages** (Ahwoo.Brutal.Jolt 2026.10.2, win-x64):
 - **Missing entry points:** 774 of the 3,246 entry points the binding declares are not exported by its `jolt.dll`. The

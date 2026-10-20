@@ -5,7 +5,7 @@
 // The scene renders in HDR with 4x MSAA and reversed depth; a second pass adds the sky, a bloom built from the image's own
 // mips, ACES tone mapping, a vignette and grain, then the panel.
 // Keys: Space assembles or disperses, C changes the camera, a drag turns it, the wheel zooms, Esc quits.
-// Arguments: --swarm N (bodies, default 6000), --seconds T (time limit, 0 = none), --immediate (no vsync),
+// Arguments: --swarm N (bodies, default 10000), --seconds T (time limit, 0 = none), --immediate (no vsync),
 // --capture T1,T2,... (save the window's image at those seconds, as colossus-<T>s.png in the working directory).
 
 using System.Buffers.Binary;
@@ -298,13 +298,19 @@ internal static unsafe class Colossus
     private static uint[] _ids = [];
     private static BodyState[] _states = [];
     private static SN.Vector3[] _faceP = [], _faceN = [], _dirs = [];
-    private static float[] _eye = [], _mouth = [], _phase = [], _radius = [], _height = [], _speed = [];
+    private static float[] _eye = [], _mouth = [], _jaw = [], _phase = [], _radius = [], _height = [], _speed = [];
     private static float _memberRadius;
+
+    // The head the swarm forms, when head/head_points.bin is there: points on a generated head (see the README), 9 floats
+    // each (position, normal, eye, mouth and jaw weights), in an order where any first n cover it evenly.
+    private static readonly float[] Head = LoadHead(Path.Combine(AppContext.BaseDirectory, "head", "head_points.bin"));
+    private const float HeadScale = 42f;
+    private static readonly SN.Vector3 HeadCenter = new(0f, 22f, -6f);
 
     public static int Run(string[] args)
     {
         var limit = Arg(args, "--seconds", 0);
-        var swarm = (int)Arg(args, "--swarm", 6000);
+        var swarm = (int)Arg(args, "--swarm", 10000);
         var immediate = args.Contains("--immediate");
         var captureAt = Array.IndexOf(args, "--capture");
         var captures = captureAt >= 0 && captureAt + 1 < args.Length ? args[captureAt + 1].Split(',').Select(double.Parse).Order().ToArray() : [];
@@ -397,7 +403,7 @@ internal static unsafe class Colossus
 
         var caps = physical.GetSurfaceCapabilitiesKHR(surface);
         var extent = caps.CurrentExtent.Width == -1 ? new VkExtent2D { Width = Width, Height = Height } : caps.CurrentExtent;
-        var imageCount = Math.Max(caps.MinImageCount, 2);
+        var imageCount = Math.Max(caps.MinImageCount, (int)Arg(args, "--images", 2));
         if (caps.MaxImageCount != 0)
         {
             imageCount = Math.Min(imageCount, caps.MaxImageCount);
@@ -1042,7 +1048,7 @@ internal static unsafe class Colossus
             device.ResetCommandPool(pools[slot], VkCommandPoolResetFlags.None);
             var target = new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
-            var speech = speaking ? 0.5f + (0.5f * MathF.Sin((float)simTime * 7f)) : 0f;
+            var speech = speaking ? Speech((float)simTime) : 0f;
             var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, speech);
 
             var cb = commands[slot];
@@ -1269,6 +1275,7 @@ internal static unsafe class Colossus
         _dirs = new SN.Vector3[n];
         _eye = new float[n];
         _mouth = new float[n];
+        _jaw = new float[n];
         _phase = new float[n];
         _radius = new float[n];
         _height = new float[n];
@@ -1279,20 +1286,36 @@ internal static unsafe class Colossus
             _radius[i] = 18f + (rng.NextSingle() * 24f);
             _height[i] = 12f + (rng.NextSingle() * 36f);
             _speed[i] = 0.12f + (rng.NextSingle() * 0.2f);
-            float x, y;
-            do
+            if (Head.Length > 0)
             {
-                x = ((rng.NextSingle() * 2f) - 1f) * FaceA;
-                y = ((rng.NextSingle() * 2f) - 1f) * FaceB;
+                // Past the file's last point, reuse the points with a little offset.
+                var k = i % (Head.Length / 9) * 9;
+                var jitter = i < Head.Length / 9 ? SN.Vector3.Zero : new SN.Vector3(rng.NextSingle() - 0.5f, rng.NextSingle() - 0.5f, rng.NextSingle() - 0.5f) * 0.004f;
+                _faceP[i] = HeadCenter + (HeadScale * (new SN.Vector3(Head[k], Head[k + 1], Head[k + 2]) + jitter));
+                _faceN[i] = new SN.Vector3(Head[k + 3], Head[k + 4], Head[k + 5]);
+                _eye[i] = Head[k + 6];
+                _mouth[i] = Head[k + 7];
+                _jaw[i] = Head[k + 8];
             }
-            while ((x * x / (FaceA * FaceA)) + (y * y / (FaceB * FaceB)) > 1f);
+            else
+            {
+                float x, y;
+                do
+                {
+                    x = ((rng.NextSingle() * 2f) - 1f) * FaceA;
+                    y = ((rng.NextSingle() * 2f) - 1f) * FaceB;
+                }
+                while ((x * x / (FaceA * FaceA)) + (y * y / (FaceB * FaceB)) > 1f);
 
-            var z = Depth(x, y);
-            const float e = 0.05f;
-            _faceP[i] = FaceCenter + new SN.Vector3(x, y, z);
-            _faceN[i] = SN.Vector3.Normalize(new SN.Vector3(-(Depth(x + e, y) - z) / e, -(Depth(x, y + e) - z) / e, 1f));
-            _eye[i] = MathF.Max(G(x - 4.6f, y - 3.5f, 1.7f, 1.0f), G(x + 4.6f, y - 3.5f, 1.7f, 1.0f));
-            _mouth[i] = G(x, y + 8.6f, 4.5f, 1.3f);
+                var z = Depth(x, y);
+                const float e = 0.05f;
+                _faceP[i] = FaceCenter + new SN.Vector3(x, y, z);
+                _faceN[i] = SN.Vector3.Normalize(new SN.Vector3(-(Depth(x + e, y) - z) / e, -(Depth(x, y + e) - z) / e, 1f));
+                _eye[i] = MathF.Max(G(x - 4.6f, y - 3.5f, 1.7f, 1.0f), G(x + 4.6f, y - 3.5f, 1.7f, 1.0f));
+                _mouth[i] = G(x, y + 8.6f, 4.5f, 1.3f);
+                _jaw[i] = y < -8.6f ? G(x, y + 11f, 5f, 2.5f) : 0f;
+            }
+
             _dirs[i] = SN.Vector3.UnitZ;
             var start = Cloud(i, 0f) + new SN.Vector3(rng.NextSingle() - 0.5f, rng.NextSingle() - 0.5f, rng.NextSingle() - 0.5f);
             using var settings = BodyCreationSettings.Create(sphere, F(start), new floatQuat(0f, 0f, 0f, 1f), MotionType.Dynamic, 1);
@@ -1334,8 +1357,11 @@ internal static unsafe class Colossus
         return new SN.Vector3(MathF.Cos(angle) * _radius[i], _height[i] + (MathF.Sin((t * 0.6f) + (_phase[i] * 3f)) * 3f), -6f + (MathF.Sin(angle) * _radius[i] * 0.7f));
     }
 
+    // How open the mouth is while the face speaks, from 0 to 1: syllables, in phrases.
+    private static float Speech(float t) => MathF.Max(0f, MathF.Sin(t * 7f)) * (0.55f + (0.45f * MathF.Sin(t * 1.3f)));
+
     // Each body's new velocity: toward its target, capped, with a little turbulence so the swarm never looks rigid.
-    // When the face speaks, the points around its mouth move.
+    // When the face speaks, its jaw drops with each syllable.
     private static void Steer(BodyInterface bodies, float t, bool assembled, bool speaking, float cohesion, float speedScale)
     {
         var max = 28f * speedScale;
@@ -1350,7 +1376,8 @@ internal static unsafe class Colossus
                 target = _faceP[i];
                 if (speaking)
                 {
-                    target.Y += MathF.Sin((t * 7f) + (_faceP[i].X * 0.3f)) * 0.9f * _mouth[i];
+                    var open = Speech(t) * _jaw[i];
+                    target += new SN.Vector3(0f, -1.6f, -0.4f) * open;
                 }
             }
             else
@@ -1376,16 +1403,21 @@ internal static unsafe class Colossus
     {
         var n = Math.Min(_ids.Length, o.Length);
         var scale = SN.Matrix4x4.CreateScale(_memberRadius * 1.7f, _memberRadius * 0.9f, _memberRadius * 3.8f);
+        var flat = SN.Matrix4x4.CreateScale(_memberRadius * 2.4f, _memberRadius * 0.7f, _memberRadius * 4.2f);
         for (var i = 0; i < n; i++)
         {
             var p = V(_states[i].Position);
             var v = V(_states[i].LinearVelocity);
-            var want = v.LengthSquared() > 4f ? SN.Vector3.Normalize(v) : glow > 0.5f ? _faceN[i] : _dirs[i];
+            // Settled on the face, a machine lies flat like a scale: its length down the slope, its thin side out.
+            var normal = _faceN[i];
+            var settled = glow > 0.5f && v.LengthSquared() <= 4f;
+            var slope = MathF.Abs(normal.Y) > 0.95f ? SN.Vector3.UnitZ - (normal * normal.Z) : (normal * normal.Y) - SN.Vector3.UnitY;
+            var want = v.LengthSquared() > 4f ? SN.Vector3.Normalize(v) : settled ? SN.Vector3.Normalize(slope) : _dirs[i];
             var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, 0.2f));
             _dirs[i] = d;
-            var up = MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
+            var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
             var emission = ((_eye[i] * 5f) + (_mouth[i] * 2.5f * speech)) * glow;
-            o[i] = new Drawn(scale * SN.Matrix4x4.CreateWorld(p, d, up), new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));
+            o[i] = new Drawn((settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up), new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));
         }
 
         return n;
@@ -1414,6 +1446,26 @@ internal static unsafe class Colossus
     }
 
     private static float G(float dx, float dy, float sx, float sy) => MathF.Exp(-((dx * dx / (sx * sx)) + (dy * dy / (sy * sy))));
+
+    // The head's points (see Head), or none when the file is missing or not one of ours: the face is then procedural.
+    private static float[] LoadHead(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        var bytes = File.ReadAllBytes(path);
+        var count = bytes.Length >= 8 && bytes.AsSpan(0, 4).SequenceEqual("CHD1"u8) ? BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(4)) : 0;
+        if (count <= 0 || bytes.Length != 8 + (count * 36))
+        {
+            return [];
+        }
+
+        var floats = new float[count * 9];
+        Buffer.BlockCopy(bytes, 8, floats, 0, floats.Length * 4);
+        return floats;
+    }
 
     // What stands in the simulation as well as on screen: the walkway, its piers, and the figure at its end.
     private static IEnumerable<(SN.Vector3 Center, SN.Vector3 Size, SN.Vector3 Color)> Solids()
