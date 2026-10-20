@@ -37,7 +37,7 @@ proprietary and separately licensed, so `Brutal.Fmod` is not used.
 | M1: one window, input, clean close | PASS, 7/7 checks, 2026-10-19 | [evidence/m1-20261019-233551.md](evidence/m1-20261019-233551.md) |
 | M2: a small Observatory-relevant visual slice | PASS, 11/11 checks with vsync, 2026-10-19; uncapped, it starves the RTX view | [evidence/m2-20261019-235332.md](evidence/m2-20261019-235332.md) (vsync), [evidence/m2-20261019-235218.md](evidence/m2-20261019-235218.md) (uncapped) |
 | M3: measurements | INCONCLUSIVE, 2026-10-20: up to a 1,000 fps cap the view holds; uncapped, the collapse did not come back, and the view varies on its own | [evidence/m3-20261020-000131.md](evidence/m3-20261020-000131.md) (sweep), [evidence/m3-20261020-000727.md](evidence/m3-20261020-000727.md) (controls) |
-| M4: report and continue/park recommendation | NOT RUN | |
+| M4: report and continue/park recommendation | DONE, 2026-10-20: park for the Observatory; re-enter only for a small C# tool on GA's code | [M4](#m4-report-and-recommendation) |
 
 ## M1
 
@@ -202,3 +202,46 @@ Controls alternated with uncapped runs, [m3-20261020-000727](evidence/m3-2026102
   view's state, so it is the operator's call.
 - **Afterwards:** the RTX view was still running at the end of the runs. Its log ends at 00:21:53, and the machine was
   restarted afterwards (booted at 2026-10-20 00:23).
+
+## M4: report and recommendation
+
+**Recommendation: park BRUTAL for the Observatory.** Re-enter only for one narrow case, under conditions. The decision
+is the epic owner's.
+
+### What M0–M3 showed
+
+| Area | Finding |
+|---|---|
+| Fit | Godot already gives the Observatory its scene, path tracing with DLSS, and the web build. BRUTAL is a set of bindings: everything above the API (scene, materials, lighting, export) would be ours to write. |
+| Effort | Upstream has no project files, build scripts or rendering sample. A first lit scene with a depth buffer took about 650 lines, half of them Vulkan set-up and tear-down (M2). |
+| Performance | Fast and small. The window opened in 167 ms (M1). The first frame came in 0.53–0.85 s, with shaders compiled in 141–208 ms. Peak working set was 141–208 MB, and CPU 0.2 % under vsync (M2, M3). |
+| Coexistence | Beside the RTX view it must be capped. One uncapped run took the view from 60 to 2–3 fps (M2). Four more did not repeat that, but they doubled the card's load (M3). |
+| Supply chain | Four native binaries are unsigned: `glfw3.dll`, `shaderc_shared.dll`, `SPIRV-Tools-shared.dll` and `VulkanEx.dll`. A .NET 10 project pulls `Microsoft.Extensions.ObjectPool` 11.0.0-preview transitively. At M0, each package had a single published version. |
+| Licence | MIT-based, with attribution. Any distributed build must credit Ahwoo, show the unaltered BRUTAL logo before its primary function, and ship `NOTICE.txt`. |
+| Web | Not evaluated. The packages used here target desktop windows (GLFW) and Vulkan, and none of them gives the Observatory a web build. |
+
+### Why park
+
+- **It adds work:** it replaces nothing Godot does for the Observatory, and it would add a renderer to write and
+  maintain.
+- **Supply chain:** the unsigned native binaries and the preview dependency would need work before anything built on it
+  ships.
+- **Licence:** the logo-before-start requirement applies to every distributed build, small tools included.
+
+### When to re-enter
+
+One case could suit it: a small native C# tool built around GA's own .NET code, where a full engine is more than the
+tool needs. A fretboard or voicing visualiser, or a debug panel with upstream's ImGui bindings, are examples. Before
+starting:
+
+- build the native binaries from upstream's source, or verify them against published hashes;
+- accept the licence's credit, logo and `NOTICE.txt` for anything distributed;
+- pin exact versions and keep the lock files, as here;
+- apply a frame cap and the memory gate whenever it runs next to the RTX view.
+
+### Left open
+
+- **The collapse:** whether uncapped rendering really collapses the RTX view rests on one observation (M2), which M3
+  did not reproduce. Settling it needs a quiet view and more alternated pairs.
+- **Upstream:** the unsigned binaries could be reported there. This evaluation does not touch other repositories.
+- **This PR:** it is a draft. Merge it as a record, or close it if the prototype should not live in GA.
