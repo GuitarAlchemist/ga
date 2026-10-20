@@ -200,5 +200,5 @@ Controls alternated with uncapped runs, [m3-20261020-000727](evidence/m3-2026102
   about 27 % to 50 % busy and from about 90 W to 115 W, and nothing it draws needs more than a capped rate.
 - **To settle it:** a quiet view (fixed camera, timed events off) and more alternated pairs. That changes the live
   view's state, so it is the operator's call.
-- **Afterwards:** the RTX view was running at the end of the runs. It stopped about 12 minutes later: its log ends at
-  00:21:53 on renderer errors, like an earlier hang on 2026-10-19. Whether it crashed or was closed is not known.
+- **Afterwards:** the RTX view was still running at the end of the runs. Its log ends at 00:21:53, and the machine was
+  restarted afterwards (booted at 2026-10-20 00:23).
