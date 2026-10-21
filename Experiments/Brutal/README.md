@@ -710,3 +710,146 @@ Found on the way:
   the process, so the check records that and moves on.
 - **Not run:** NotCurses and NativeFileDialog only start and stop, because one takes over the terminal and the other
   waits for a user.
+
+## Lego: composable scenes (2026-10-21)
+
+Asked by gaia: « Prototype de scènes déclaratives composables, « Lego fractal » », a first slice that composes BRUTAL
+scenes from reusable, nested blocks, « comme on compose une vue avec une bibliothèque déclarative F# ». The demo is a
+column, then a colonnade of columns, then a temple of colonnades, then a sanctuary of temples around temples. No block
+copies another's logic: each one uses the others with its own arguments and transforms.
+
+![Sanctuary, level 2](evidence/lego-sanctuary-20261021.png)
+![Temple with column@2](evidence/lego-temple-20261021.png)
+
+| Where | What |
+|---|---|
+| `Lego/` (F#, a library) | Describes, generates and validates scenes, and draws nothing. Its only reference is FSharp.Core from the SDK. |
+| `Lego.Cli/` (F#) | Runs the logic tests, lists the blocks, and prints a scene's description or refusal as JSON. |
+| `HallSlice/` (C#, M2) | `--lego` materializes a validated scene with M2's own `Box`, vertex buffer and pipeline. |
+
+There is no second engine and no second registry. Lego has no parser and no text language: blocks are F# values.
+
+**Conventions.**
+- **Units and axes.** Lengths are in metres. +Y is up, +X east and +Z south. A yaw is in degrees and turns +X toward
+  −Z.
+- **Transforms.** A transform scales, then turns, then moves. Matrices are System.Numerics': a part's world matrix is its
+  local matrix times its parent's.
+- **Boxes.** A box stands on its frame's floor and is centred on its vertical axis. Its colour is linear RGB in [0, 1].
+- **Parts.** A block's function returns parts:
+  - `Box`;
+  - `Use` (a named instance of a block, with arguments);
+  - `Move`;
+  - `Group`;
+  - `Attach` (a part placed in the frame of a named anchor of an instance in the same block).
+
+**Three stages, kept apart.**
+1. **Generation** (`Generate.run`) expands the tree and never throws. Where it cannot go on (a missing block, bad
+   arguments, a cycle, a budget spent, a block function that throws), it records the problem on that instance, expands
+   nothing below it, and carries on with the rest.
+2. **Validation** (`Validate.check`) is the one gate. It collects every problem, checks every box (sizes finite and
+   above zero, placements finite, colours in [0, 1]) and the counts. Only validation makes a `Scene`, because its
+   constructor is internal.
+3. **Materialization** (`HallSlice/LegoAdapter.cs`) turns a `Scene`'s boxes into vertices, and `SliceMesh` puts them in
+   one vertex buffer. A refused scene never reaches the engine: HallSlice prints the reasons and exits with code 2 before
+   it opens a window.
+
+There is no hot reload and no reconciliation.
+
+**Seeds and versions.** Each instance draws its numbers from its own seed. That seed is SplitMix64 of the scene's seed
+mixed with FNV-1a of the instance's path and `name@version`. A block's version is part of its identity: `column@1` and
+`column@2` sit side by side, and a name alone means its highest version. The same block, arguments, seed, limits and
+versions give the same canonical JSON and the same SHA-256 (`lego-scene/1`, `hash`).
+
+**Budgets.** The standard limits are depth 8, 4,096 instances and 20,000 boxes. Once a budget is spent, nothing more
+expands, so the draft stops growing.
+
+**Refusals.** Each problem has a path, a block, a kind and a message, for example `column (column@2): argument 'height':
+50 is outside [2, 20]` (`lego-errors/1`). The kinds:
+
+| Group | Kinds |
+|---|---|
+| Arguments and blocks | bad-argument, missing-block, duplicate-block, build-failed |
+| Structure | missing-instance, missing-anchor, duplicate-name, cycle |
+| Limits | too-deep, too-many-instances, too-many-boxes |
+| Shape | bad-shape |
+
+A cycle is the same block with the same arguments on its own ancestor chain, and its message shows the chain:
+`ping@1 > pong@1 > ping@1`. A block that uses itself with other arguments, as the sanctuary does with its level, is
+recursion, bounded by the budgets.
+
+**The blocks.**
+
+| Block | What it is | Boxes |
+|---|---|---|
+| `column@1` | A plinth, 4 drums of 2 turned squares, an echinus and an abacus. Anchors: base, top. | 11 |
+| `column@2` | The same, with 4 squares a drum and a shaft that tapers, with a slight swell. | 19 |
+| `colonnade@1` | `count` columns along +X under an entablature set on the first column's `top` anchor. | 79 at the defaults |
+| `temple@1` | 6 × 11 columns as four colonnades, steps, a cella and a roof on the front colonnade's `top`. | 405 |
+| `sanctuary@1` | A temple, with a sanctuary one level lower scaled by 0.38 at each corner of its plaza. | 8,505 at level 2 |
+
+Level 3 of the sanctuary needs about 34,000 boxes and is refused with too-many-boxes.
+
+**Run.**
+```
+dotnet run -c Release --project Lego.Cli -- test
+dotnet run -c Release --project Lego.Cli -- blocks
+dotnet run -c Release --project Lego.Cli -- describe temple --seed 7 --arg column=2
+HallSlice/bin/Release/net10.0/HallSlice.exe 8 --lego sanctuary --seed 7 [--arg level=2] [--hidden] [--capture FILE.png] [--cycles 100]
+```
+
+**Logic tests** (`Lego.Cli test`, no engine): 17 passed, 0 failed. They check:
+- that the same input gives the same JSON and hash;
+- that another seed changes the stones and not the plan;
+- versions;
+- yaw and transform order;
+- the colonnade's spacing and the temple's flanks, by position;
+- that the entablature and the roof follow their anchors when the height changes;
+- the three budgets;
+- every kind of refusal, with its message;
+- that a bad shape passes generation and stops at validation;
+- that 198 malformed requests throw nothing;
+- the three JSON formats;
+- that 20 repeated descriptions keep nothing in memory.
+
+**Graphic validation** (HallSlice, hidden window, RTX 5080, 1280 × 720, uncapped). This is separate from the logic tests:
+it shows that the scene renders and how fast, not that each pixel is right.
+
+| Scene | Boxes | Generated and validated | Frames | p99 |
+|---|---|---|---|---|
+| `sanctuary`, seed 7, level 2 | 8,505 | 214 ms | 2,223 fps | 0.82 ms |
+| `temple`, seed 7, `column=2` | 645 | 60 ms | 12,639 fps | 0.22 ms |
+
+`--cycles 100` on the sanctuary described the scene 100 more times, materialized each one and disposed it:
+- 0 hash mismatches;
+- live meshes were 1 before and 1 after, and 0 at exit;
+- private memory grew 10.7 MB over the first 10 cycles (allocator warm-up), then −9.3 MB over the next 90.
+
+M2's hall still draws as before through the new `Box`.
+
+**The smallest IX hook.** IX's registry can run `Lego.Cli describe <block[@version]> --seed N --arg name=value` and read
+standard output. The JSON carries a `format` tag (`lego-scene/1` or `lego-errors/1`) and, when valid, a `hash`. The exit
+code is 0 when the scene is valid and 2 when it is refused. `Lego.Cli blocks` (`lego-library/1`) lists what may be
+asked, with each parameter's kind, default and bounds. This is generation and validation only: nothing is drawn, and
+nothing in IXQL, ixctl or their contracts changes.
+
+**F# and BRUTAL.** No incompatibility found.
+- HallSlice (C#) references the F# project directly.
+- FSharp.Core comes from the SDK and reaches HallSlice's lock file as a transitive package.
+- No BRUTAL package changed, and nothing else was added.
+- The repository's C# style rules do not apply to F# files.
+
+**Limits.**
+- **Boxes only.** There are no meshes, materials or instancing. Every box is 36 vertices in one host-visible buffer,
+  and identical blocks share no GPU resource.
+- **Validation checks shape, not sense.** It does not catch overlaps, such as columns through the cella with odd
+  arguments, or structures that could not stand.
+- **The sanctuary's spacing was computed, not proven.** The corner temples clear their parent up to level 2 at scale
+  0.38. Other scales are not proven.
+- **Renaming changes the stones.** Seeds follow paths, so renaming an instance changes its draws. That is by design.
+- **Reproducibility across machines is not verified.** The hash rests on float32 System.Numerics arithmetic. The same
+  run gives the same hash on this machine; x64 against ARM64 is not verified.
+- **GPU memory is not read.** `--cycles` measures live meshes and process memory, not VRAM: no
+  `VK_EXT_memory_budget`.
+- **New blocks need a rebuild.** Blocks are code; a new block means compiling the library.
+- **Framing is a host choice.** The ground under the scene and the camera framed on its bounds are HallSlice's, not
+  the scene's.

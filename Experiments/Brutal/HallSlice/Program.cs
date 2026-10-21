@@ -5,6 +5,11 @@
 // frame times. Present mode: immediate (no vsync) when available, unless --vsync; --cap N then limits it to N frames a
 // second (M3). A fixed-size window: a swapchain
 // that goes out of date ends the run rather than being rebuilt.
+//
+// Lego (gaia's "fractal Lego"): --lego <block[@version]> [--seed N] [--arg name=value]... draws a Lego scene instead of
+// the hall, framed by its bounds; a scene Lego refuses ends the run with code 2 before any window opens. --hidden keeps
+// the window off screen, --capture FILE.png saves frame 120, and --cycles N then describes and materializes the scene
+// N more times, dropping each, and prints what was left behind.
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -17,6 +22,7 @@ using Brutal.ShaderCApi;
 using Brutal.Strings;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
+using LegoScene = Lego.Scene;
 using SN = System.Numerics;
 
 return HallSlice.Run(args);
@@ -77,6 +83,30 @@ internal static unsafe class HallSlice
         var capAt = Array.IndexOf(args, "--cap");
         var cap = capAt >= 0 && capAt + 1 < args.Length && int.TryParse(args[capAt + 1], out var capValue) ? capValue : 0;
         var clock = Stopwatch.StartNew();
+        var hidden = args.Contains("--hidden");
+        var capture = Option(args, "--capture");
+        var cycles = int.TryParse(Option(args, "--cycles"), out var cycleCount) ? cycleCount : 0;
+        var legoSpec = Option(args, "--lego");
+        var legoArgs = args.Where((a, i) => i > 0 && args[i - 1] == "--arg").ToArray();
+        var seedText = Option(args, "--seed");
+        var seed = 0UL;
+        if (seedText is not null && !ulong.TryParse(seedText, out seed))
+        {
+            Console.Error.WriteLine($"LEGO refused: the seed '{seedText}' is not a whole number from 0 to {ulong.MaxValue}");
+            return 2;
+        }
+
+        LegoScene? scene = null;
+        if (legoSpec is not null)
+        {
+            scene = LegoAdapter.Validated(legoSpec, seed, legoArgs);
+            if (scene is null)
+            {
+                return 2;
+            }
+
+            Console.WriteLine($"LEGO {scene.Draft.Root.Block} seed {seed}: {scene.Draft.Instances} instances, {scene.Boxes.Count} boxes, {Lego.Describe.hash(scene)}, generated and validated in {clock.Elapsed.TotalMilliseconds:F0} ms");
+        }
 
         if (!Glfw.Init())
         {
@@ -86,7 +116,13 @@ internal static unsafe class HallSlice
 
         Glfw.WindowHint(GlfwWindowHint.ClientApi, 0);
         Glfw.WindowHint(GlfwWindowHint.Resizable, 0);
-        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "Hall slice (BRUTAL)", Size = new int2(Width, Height) });
+        if (hidden)
+        {
+            Glfw.WindowHint(GlfwWindowHint.Visible, 0);
+        }
+
+        var title = scene is null ? "Hall slice (BRUTAL)" : $"Lego {scene.Draft.Root.Block} (BRUTAL)";
+        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = title, Size = new int2(Width, Height) });
 
         // Instance with the extensions GLFW needs to present, and the window's surface.
         var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var extensionCount);
@@ -192,7 +228,7 @@ internal static unsafe class HallSlice
             ImageColorSpace = surfaceFormat.ColorSpace,
             ImageExtent = extent,
             ImageArrayLayers = 1,
-            ImageUsage = VkImageUsageFlags.ColorAttachmentBit,
+            ImageUsage = VkImageUsageFlags.ColorAttachmentBit | (capture is null ? default : VkImageUsageFlags.TransferSrcBit),
             ImageSharingMode = VkSharingMode.Exclusive,
             PreTransform = caps.CurrentTransform,
             CompositeAlpha = VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
@@ -304,21 +340,24 @@ internal static unsafe class HallSlice
         var layout = device.CreatePipelineLayout([], [pushRange], null);
         var pipeline = Pipeline(device, layout, renderPass, vertexModule, fragmentModule);
 
-        // The hall's geometry, in a host-visible vertex buffer.
-        var vertices = Hall();
-        var bufferSize = new ByteSize((nuint)(vertices.Length * sizeof(Vertex)));
-        var vertexBuffer = device.CreateBuffer(new VkBufferCreateInfo
-        {
-            Size = bufferSize,
-            Usage = VkBufferUsageFlags.VertexBufferBit,
-            SharingMode = VkSharingMode.Exclusive,
-        }, null);
-        var vertexMemory = device.AllocateMemory(physical, vertexBuffer, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
-        device.BindBufferMemory(vertexBuffer, vertexMemory, memoryOffset: ByteSize.Zero);
-        var mapped = device.MapMemory<Vertex>(new MapInfo(vertexMemory) { Region = new MapRegion { Size = bufferSize } });
-        vertices.AsSpan().CopyTo(new Span<Vertex>((Vertex*)mapped, vertices.Length));
-        device.UnmapMemory(vertexMemory);
+        // The geometry, the hall's or the Lego scene's, in a host-visible vertex buffer.
+        var vertices = scene is null ? Hall() : LegoAdapter.Vertices(scene);
+        var mesh = new SliceMesh(device, physical, vertices);
         Console.WriteLine($"M2 geometry: {vertices.Length / 36} boxes, {vertices.Length} vertices");
+
+        // --capture: frame 120's pixels, copied from the swapchain image into a host-visible buffer.
+        const int CaptureFrame = 120;
+        var readbackSize = new ByteSize((nuint)(extent.Width * extent.Height * 4));
+        var readback = default(VkBuffer);
+        var readbackMemory = default(VkDeviceMemory);
+        var readbackMapped = nint.Zero;
+        if (capture is not null)
+        {
+            readback = device.CreateBuffer(new VkBufferCreateInfo { Size = readbackSize, Usage = VkBufferUsageFlags.TransferDstBit, SharingMode = VkSharingMode.Exclusive }, null);
+            readbackMemory = device.AllocateMemory(physical, readback, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+            device.BindBufferMemory(readback, readbackMemory, memoryOffset: ByteSize.Zero);
+            readbackMapped = (nint)(byte*)device.MapMemory<byte>(new MapInfo(readbackMemory) { Region = new MapRegion { Size = readbackSize } });
+        }
 
         // Per frame in flight: a command pool and buffer, a fence and an image-acquired semaphore.
         var pools = new VkCommandPool[FramesInFlight];
@@ -334,7 +373,19 @@ internal static unsafe class HallSlice
         }
 
         // Camera: orbits the axis by itself; arrows turn and tilt, W and S move in and out.
-        float yaw = 0.6f, pitch = 0.32f, distance = 27f;
+        float yaw = 0.6f, pitch = 0.32f, distance = 27f, closest = 6f, farthest = 60f, far = 200f;
+        var target = new SN.Vector3(0f, 2.5f, 0f);
+        if (scene is not null)
+        {
+            // A Lego scene: the camera aims at the middle of its bounds, far enough back to keep them in frame.
+            var radius = Math.Max(SN.Vector3.Distance(scene.Min, scene.Max) / 2f, 1f);
+            target = (scene.Min + scene.Max) / 2f;
+            pitch = 0.45f;
+            distance = LegoAdapter.Distance(scene, target, pitch, extent.Width / (float)extent.Height);
+            (closest, farthest) = (0.25f * distance, 2.5f * distance);
+            far = farthest + (2f * radius);
+        }
+
         var keys = 0;
         var reason = "window closed";
         window.OnKey += (w, key, scancode, action, mods) =>
@@ -350,8 +401,8 @@ internal static unsafe class HallSlice
                 case GlfwKey.Right: yaw += 0.15f; break;
                 case GlfwKey.Up: pitch = Math.Min(pitch + 0.08f, 1.3f); break;
                 case GlfwKey.Down: pitch = Math.Max(pitch - 0.08f, 0.05f); break;
-                case GlfwKey.W: distance = Math.Max(distance - 1.5f, 6f); break;
-                case GlfwKey.S: distance = Math.Min(distance + 1.5f, 60f); break;
+                case GlfwKey.W: distance = Math.Max(distance - (closest / 4f), closest); break;
+                case GlfwKey.S: distance = Math.Min(distance + (closest / 4f), farthest); break;
                 case GlfwKey.Escape:
                     reason = "Esc";
                     w.ShouldClose = true;
@@ -415,9 +466,8 @@ internal static unsafe class HallSlice
             device.ResetFences([fences[slot]]);
             device.ResetCommandPool(pools[slot], VkCommandPoolResetFlags.None);
 
-            var target = new SN.Vector3(0f, 2.5f, 0f);
             var eye = target + (distance * new SN.Vector3(MathF.Cos(pitch) * MathF.Cos(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Sin(yaw)));
-            var projection = SN.Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, extent.Width / (float)extent.Height, 0.1f, 200f);
+            var projection = SN.Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, extent.Width / (float)extent.Height, 0.1f, far);
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
             var viewProj = SN.Matrix4x4.CreateLookAt(eye, target, SN.Vector3.UnitY) * projection;
 
@@ -437,9 +487,20 @@ internal static unsafe class HallSlice
             cb.SetViewport(firstViewport: 0, [new VkViewport { Width = extent.Width, Height = extent.Height, MinDepth = 0f, MaxDepth = 1f }]);
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
             cb.PushConstants(layout, VkShaderStageFlags.VertexBit, offset: 0, new ReadOnlySpan<byte>(&viewProj, sizeof(SN.Matrix4x4)));
-            cb.BindVertexBuffer(0, vertexBuffer);
-            cb.Draw(vertices.Length, 1, 0, 0);
+            cb.BindVertexBuffer(0, mesh.Buffer);
+            cb.Draw(mesh.Count, 1, 0, 0);
             cb.EndRenderPass();
+            var capturing = capture is not null && frame == CaptureFrame;
+            if (capturing)
+            {
+                cb.PipelineBarrier(VkPipelineStageFlags.ColorAttachmentOutputBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], VkImageLayout.PresentSrcKHR, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ColorAttachmentWriteBit, VkAccessFlags.TransferReadBit)]);
+                cb.CopyImageToBuffer(images[imageIndex], VkImageLayout.TransferSrcOptimal, readback,
+                    [new VkBufferImageCopy { ImageSubresource = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, LayerCount = 1 }, ImageExtent = new VkExtent3D { Width = extent.Width, Height = extent.Height, Depth = 1 } }]);
+                cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.BottomOfPipeBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], VkImageLayout.TransferSrcOptimal, VkImageLayout.PresentSrcKHR, default, default)]);
+            }
+
             cb.End();
 
             var waitStage = VkPipelineStageFlags.ColorAttachmentOutputBit;
@@ -489,6 +550,14 @@ internal static unsafe class HallSlice
 
             lastPresent = t;
             frame++;
+            if (capturing)
+            {
+                device.WaitIdle();
+                LegoAdapter.SavePng(capture!, new ReadOnlySpan<byte>((byte*)readbackMapped, (int)(extent.Width * extent.Height * 4)), extent.Width, extent.Height);
+                Console.WriteLine($"LEGO captured {capture} at frame {CaptureFrame}");
+                lastPresent = clock.Elapsed.TotalSeconds; // the capture's wait is not a frame time
+            }
+
             if (cap > 0)
             {
                 // Pace to the cap: sleep while more than 1.5 ms is left, then spin. A frame that falls more than one
@@ -518,6 +587,48 @@ internal static unsafe class HallSlice
             _ = TimeEndPeriod(1);
         }
 
+        if (capture is not null && frame <= CaptureFrame)
+        {
+            Console.WriteLine($"LEGO no capture: the run ended after {frame} frames, before frame {CaptureFrame}");
+        }
+
+        // --cycles: the scene described and materialized again and again, each mesh dropped; the scene must come out the
+        // same each time and leave nothing behind.
+        if (cycles > 0 && scene is not null)
+        {
+            device.WaitIdle();
+            var hash = Lego.Describe.hash(scene);
+            var mismatches = 0;
+            using var process = Process.GetCurrentProcess();
+            double Private()
+            {
+                GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+                GC.WaitForPendingFinalizers();
+                process.Refresh();
+                return process.PrivateMemorySize64 / (1024.0 * 1024.0);
+            }
+
+            void Cycle(int count)
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    var again = LegoAdapter.Validated(legoSpec!, seed, legoArgs)!;
+                    mismatches += Lego.Describe.hash(again) == hash ? 0 : 1;
+                    using var dropped = new SliceMesh(device, physical, LegoAdapter.Vertices(again));
+                }
+            }
+
+            // The first cycles warm the allocators up (the GC's and the driver's); what grows after them accumulates.
+            var warm = Math.Min(10, cycles);
+            var (liveBefore, start) = (SliceMesh.Live, Private());
+            var cycleClock = Stopwatch.StartNew();
+            Cycle(warm);
+            var warmed = Private();
+            Cycle(cycles - warm);
+            var end = Private();
+            Console.WriteLine($"LEGO cycles {cycles} in {cycleClock.Elapsed.TotalSeconds:F1} s: {mismatches} hash mismatches; meshes live {liveBefore} before, {SliceMesh.Live} after; private memory {warmed - start:+0.0;-0.0} MB over the first {warm}, {end - warmed:+0.0;-0.0} MB over the next {cycles - warm}");
+        }
+
         // Clean shutdown, in reverse order of creation.
         device.WaitIdle();
         for (var i = 0; i < FramesInFlight; i++)
@@ -527,8 +638,19 @@ internal static unsafe class HallSlice
             device.DestroyCommandPool(pools[i], null);
         }
 
-        device.DestroyBuffer(vertexBuffer, null);
-        device.FreeMemory(vertexMemory, null);
+        if (capture is not null)
+        {
+            device.UnmapMemory(readbackMemory);
+            device.DestroyBuffer(readback, null);
+            device.FreeMemory(readbackMemory, null);
+        }
+
+        mesh.Dispose();
+        if (scene is not null)
+        {
+            Console.WriteLine($"LEGO meshes live at exit: {SliceMesh.Live}");
+        }
+
         device.DestroyPipeline(pipeline, null);
         device.DestroyPipelineLayout(layout, null);
         device.DestroyShaderModule(vertexModule, null);
@@ -564,6 +686,26 @@ internal static unsafe class HallSlice
 
     [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
     private static extern uint TimeEndPeriod(uint milliseconds);
+
+    // The value after the option name, if both are there.
+    private static string? Option(string[] args, string name)
+    {
+        var at = Array.IndexOf(args, name);
+        return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
+    }
+
+    // A colour image's layout change, as Colossus writes it.
+    private static VkImageMemoryBarrier Barrier(VkImage image, VkImageLayout from, VkImageLayout to, VkAccessFlags src, VkAccessFlags dst) => new()
+    {
+        SrcAccessMask = src,
+        DstAccessMask = dst,
+        OldLayout = from,
+        NewLayout = to,
+        SrcQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+        DstQueueFamilyIndex = VK.QUEUE_FAMILY_IGNORED,
+        Image = image,
+        SubresourceRange = new VkImageSubresourceRange { AspectMask = VkImageAspectFlags.ColorBit, LevelCount = 1, LayerCount = 1 },
+    };
 
     private static VkImageViewCreateInfo View(VkImage image, VkFormat format, VkImageAspectFlags aspect) => new()
     {
@@ -676,11 +818,18 @@ internal static unsafe class HallSlice
     }
 
     // A box of the given size centred on c, turned by yaw about the vertical axis (its local x points away from the
-    // hall's axis when yaw is a ring angle), as 12 triangles with one normal per face.
-    private static void Box(List<Vertex> o, SN.Vector3 c, SN.Vector3 size, float yaw, SN.Vector3 color)
+    // hall's axis when yaw is a ring angle).
+    private static void Box(List<Vertex> o, SN.Vector3 c, SN.Vector3 size, float yaw, SN.Vector3 color) =>
+        Box(o, SN.Matrix4x4.CreateRotationY(-yaw) * SN.Matrix4x4.CreateTranslation(c - new SN.Vector3(0f, size.Y / 2f, 0f)), size, color);
+
+    // A box standing on its frame's floor and centred on its vertical axis, as Lego's are, placed by its world matrix,
+    // as 12 triangles with one normal per face (turned by the matrix's inverse transpose, so a scaled box keeps them).
+    internal static void Box(List<Vertex> o, SN.Matrix4x4 world, SN.Vector3 size, SN.Vector3 color)
     {
-        var rot = SN.Matrix4x4.CreateRotationY(-yaw);
+        _ = SN.Matrix4x4.Invert(world, out var inverse);
+        var normals = SN.Matrix4x4.Transpose(inverse);
         var h = size / 2f;
+        var c = new SN.Vector3(0f, h.Y, 0f);
         ReadOnlySpan<(SN.Vector3 N, SN.Vector3 U, SN.Vector3 V)> faces =
         [
             (SN.Vector3.UnitX, SN.Vector3.UnitY, SN.Vector3.UnitZ),
@@ -692,8 +841,8 @@ internal static unsafe class HallSlice
         ];
         foreach (var (n, u, v) in faces)
         {
-            SN.Vector3 Corner(float su, float sv) => c + SN.Vector3.Transform(h * (n + (su * u) + (sv * v)), rot);
-            var normal = SN.Vector3.TransformNormal(n, rot);
+            SN.Vector3 Corner(float su, float sv) => SN.Vector3.Transform(c + (h * (n + (su * u) + (sv * v))), world);
+            var normal = SN.Vector3.Normalize(SN.Vector3.TransformNormal(n, normals));
             var p00 = Corner(-1, -1);
             var p10 = Corner(1, -1);
             var p11 = Corner(1, 1);

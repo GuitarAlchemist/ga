@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Lego (GuitarAlchemist/gaia, "fractal Lego"): BRUTAL scenes composed from typed, nested, parameterised blocks.
+       It describes, generates and validates; it draws nothing. HallSlice materializes its scenes. FSharp.Core comes
+       from the SDK, as the repository's Directory.Build.props asks; nothing else is referenced. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Space.fs" />
+    <Compile Include="Seeds.fs" />
+    <Compile Include="Model.fs" />
+    <Compile Include="Generate.fs" />
+    <Compile Include="Validate.fs" />
+    <Compile Include="Describe.fs" />
+    <Compile Include="Blocks.fs" />
+    <Compile Include="Api.fs" />
+  </ItemGroup>
+
+</Project>
