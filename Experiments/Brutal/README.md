@@ -1039,20 +1039,40 @@ it does.
 In the visible run, path traced, the face drew 40 to 60 frames a second. The Lego block, close to the camera, drew 26 to
 33. Each 4K capture stalled the frames for about 3 s while the PNG was written. That happens only in tests.
 
-**Frame generation (DLSS-G) is not wired.** The observatory has it (F8), and Streamline finds `sl.dlss_g` here too. On
-this machine it would show nothing more:
-- **The screen.** It runs at 59 Hz. In its 1600 × 900 window the Colossus already draws 60 frames a second, path
-  traced included. In 4K full screen, path traced, it draws 26 to 60, which is where frame generation would help.
-- **No vsync.** On Vulkan, Streamline does not support vsync with frame generation, so it would only add tearing (the
-  observatory's notes, `artpass/dlss/NOTES.md`).
-- **Focus.** It generates nothing without the window's focus.
+**Frame generation** (asked as « c'est lent en full screen, non? », answered "Brancher DLSS-G"). `--fg` turns on
+DLSS-G, 2x by default (`--fg 3` or `--fg 4` for more). It needs `--dlss`, and it works best with `--fullscreen`. In
+manual hooking, the Colossus now gives Streamline:
+- **The window.** Its surface is made through Streamline's `vkCreateWin32SurfaceKHR`, once the device is attached.
+  Before that, the call crashed; with GLFW's surface, the swapchain failed with "Could not find a window corresponding
+  to this application".
+- **The swapchain.** It is created, read, acquired and destroyed through Streamline's proxies, in mailbox mode, since
+  Vulkan frame generation has no vsync.
+- **Reflex and the markers.** Reflex is in low-latency mode. Each frame sleeps in Reflex, then marks the simulation,
+  the submit and the present.
+- **The options.** They are set once, before the tags. Depth and motion vectors are already tagged until the present.
 
-Wiring it would mean, in manual hooking:
-- the swapchain through Streamline's proxies;
-- Reflex and its latency markers;
-- a HUD-less colour tag.
+Each second, the log gives the frames drawn and the frames shown. At the end, it prints `DLSS-G summary`.
 
-It is worth doing for a screen of 120 Hz or more.
+| Run, cinematic, `--dlss quality --rr --pt --fg` | GPU ms, p50 / p95 | Drawn a second | Shown a second |
+|---|---|---|---|
+| 1600 × 900, hidden, 25 s | 7.35 / 8.99 | 120 to 125 | the same: nothing generated |
+| 4K full screen, visible, 90 s | 23.82 / 41.03 | 33 on average (19 to 64) | 66 on average (38 to 128) |
+
+- **In 4K.** Every frame drawn was shown twice: 6,057 shown for 3,031 drawn. The same scene without `--fg` drew 26 to 60
+  a second. With it, the screen shows 46 to 128 a second through the face and the Lego block. That is the 59 Hz screen's
+  rate or more, most of the time.
+- **The cost.** The generated frames cost about 3 ms of GPU in 4K: 23.82 ms at p50, against 20.93 ms without
+  `--fg`. So the drawn rate falls a little.
+- **Hidden.** With the window hidden, nothing is generated, which is as expected: frame generation needs a visible,
+  focused window.
+- **Warnings.** Streamline warns that vsync interval 1 is not supported with frame generation. It warns too that no
+  backbuffer extent was given.
+
+**To verify:**
+- The panel and subtitles are drawn into the same image, so the generated frames interpolate them too. A HUD-less colour
+  tag would keep them sharp. The runs above had neither.
+- On a 59 Hz screen, mailbox drops what the screen cannot show, so frame pacing should be judged by eye.
+- Nothing was measured over 120 Hz.
 
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They

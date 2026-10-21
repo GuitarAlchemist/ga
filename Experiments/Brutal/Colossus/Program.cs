@@ -1366,11 +1366,14 @@ internal static unsafe class Colossus
         var dlssAt = Array.IndexOf(args, "--dlss");
         var dlssName = dlssAt >= 0 && dlssAt + 1 < args.Length && Dlss.Modes.ContainsKey(args[dlssAt + 1]) ? args[dlssAt + 1] : "dlaa";
         var rayAsked = args.Contains("--rr");
+        // --fg [2|3|4]: frame generation, that many frames shown for each one drawn (2 by default).
+        var fgAt = Array.IndexOf(args, "--fg");
+        var fgAsked = fgAt < 0 ? 0 : fgAt + 1 < args.Length && int.TryParse(args[fgAt + 1], out var fgCount) ? Math.Clamp(fgCount, 2, 4) : 2;
         var dlssNote = "";
         Dlss? dlss = null;
-        if (dlssAt >= 0 || rayAsked)
+        if (dlssAt >= 0 || rayAsked || fgAsked > 0)
         {
-            dlss = Dlss.Load(ArgText("--sl-path") ?? Dlss.DefaultFolder, args.Contains("--sl-verbose"), rayAsked, out var why);
+            dlss = Dlss.Load(ArgText("--sl-path") ?? Dlss.DefaultFolder, args.Contains("--sl-verbose"), rayAsked, fgAsked, out var why);
             dlssNote = why;
         }
 
@@ -1495,6 +1498,21 @@ internal static unsafe class Colossus
             dlss = null;
         }
 
+        // Frame generation finds its window by the surface: once Streamline knows the instance, the window gets a new
+        // surface through its proxy, in place of GLFW's.
+        if (dlss is { FrameGeneration: true })
+        {
+            var slSurface = dlss.CreateSurface(instance.VkHandle, Brutal.GlfwApi.Win32.Win32Extensions.GetWin32Window(window), Marshal.GetHINSTANCE(typeof(Program).Module));
+            if (slSurface == 0)
+            {
+                dlss.NoFrameGeneration("Streamline's vkCreateWin32SurfaceKHR failed");
+            }
+            else
+            {
+                instance.DestroySurfaceKHR(surface, null);
+                surface = new VkSurfaceKHR((nint)slSurface);
+            }
+        }
 
         var formatCount = physical.GetSurfaceFormatsKHR_Count(surface);
         var formats = new VkSurfaceFormatKHR[formatCount];
@@ -1511,7 +1529,10 @@ internal static unsafe class Colossus
         var modeCount = physical.GetSurfacePresentModesKHR_Count(surface);
         var modes = new VkPresentModeKHR[modeCount];
         physical.GetSurfacePresentModesKHR_Write(surface, modes);
-        var presentMode = mailbox && modes.Contains(VkPresentModeKHR.MailboxKHR) ? VkPresentModeKHR.MailboxKHR
+        // Frame generation has no vsync on Vulkan: mailbox, which does not tear, or else immediate.
+        var frameGen = dlss is { FrameGeneration: true };
+        var presentMode = frameGen ? (modes.Contains(VkPresentModeKHR.MailboxKHR) ? VkPresentModeKHR.MailboxKHR : VkPresentModeKHR.ImmediateKHR)
+            : mailbox && modes.Contains(VkPresentModeKHR.MailboxKHR) ? VkPresentModeKHR.MailboxKHR
             : immediate && modes.Contains(VkPresentModeKHR.ImmediateKHR) ? VkPresentModeKHR.ImmediateKHR : VkPresentModeKHR.FifoKHR;
 
         var caps = physical.GetSurfaceCapabilitiesKHR(surface);
@@ -1522,7 +1543,16 @@ internal static unsafe class Colossus
             imageCount = Math.Min(imageCount, caps.MaxImageCount);
         }
 
-        var swapchain = device.CreateSwapchainKHR(new VkSwapchainCreateInfoKHR
+        var swapchainUsage = VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransferSrcBit;
+        var proxied = frameGen ? dlss!.CreateSwapchain(device.VkHandle, (ulong)surface.VkHandle, imageCount, (int)surfaceFormat.Format, (int)surfaceFormat.ColorSpace,
+            extent.Width, extent.Height, (uint)swapchainUsage, (int)caps.CurrentTransform, (int)presentMode) : 0;
+        if (frameGen && proxied == 0)
+        {
+            dlss!.NoFrameGeneration("Streamline's vkCreateSwapchainKHR failed");
+            frameGen = false;
+        }
+
+        var swapchain = proxied != 0 ? new VkSwapchainKHR((nint)proxied) : device.CreateSwapchainKHR(new VkSwapchainCreateInfoKHR
         {
             Surface = surface,
             MinImageCount = imageCount,
@@ -1530,15 +1560,23 @@ internal static unsafe class Colossus
             ImageColorSpace = surfaceFormat.ColorSpace,
             ImageExtent = extent,
             ImageArrayLayers = 1,
-            ImageUsage = VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransferSrcBit,
+            ImageUsage = swapchainUsage,
             ImageSharingMode = VkSharingMode.Exclusive,
             PreTransform = caps.CurrentTransform,
             CompositeAlpha = VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
             PresentMode = presentMode,
             Clipped = true,
         }, null);
-        var images = new VkImage[device.GetSwapchainImagesKHR_Count(swapchain)];
-        device.GetSwapchainImagesKHR_Write(swapchain, images);
+        VkImage[] images;
+        if (proxied != 0)
+        {
+            images = [.. dlss!.SwapchainImages(device.VkHandle, proxied).Select(h => new VkImage((nint)h))];
+        }
+        else
+        {
+            images = new VkImage[device.GetSwapchainImagesKHR_Count(swapchain)];
+            device.GetSwapchainImagesKHR_Write(swapchain, images);
+        }
 
         const VkFormat depthFormat = VkFormat.D32SFloat;
         var depthImage = device.CreateImage(new VkImageCreateInfo
@@ -2259,6 +2297,11 @@ internal static unsafe class Colossus
             Console.WriteLine(ray ? "Ray Reconstruction on" : $"Ray Reconstruction off: {(dlss.RayNote.Length > 0 ? dlss.RayNote : "no RTX rays to denoise")}");
         }
 
+        if (fgAsked > 0)
+        {
+            Console.WriteLine(frameGen ? $"DLSS-G on, {fgAsked}x, present {presentMode}" : $"DLSS-G off: {dlss?.FrameNote ?? dlssNote}");
+        }
+
         // State the panel steers.
         // With the voice plugins running, the face speaks when Claude's voice does; without them, on its own.
         mirror.Poll(0);
@@ -2316,6 +2359,9 @@ internal static unsafe class Colossus
         var stepTimes = stepParts.Select(_ => new List<double>(1 << 16)).ToArray();
         double simTime = 0, last = clock.Elapsed.TotalSeconds, cycleStart = last, nextLog = last + 1, physicsMs = 0, frameMs = 0;
         var lastLogFrame = 0;
+        // With frame generation: the frames shown, the renderer's and the generated ones, and the last status reported.
+        long shown = 0, lastLogShown = 0;
+        var frameStatus = 0u;
         var worstSecond = int.MaxValue;
         var frame = 0;
         var errors = PhysicsUpdateError.None;
@@ -2361,6 +2407,7 @@ internal static unsafe class Colossus
         while (!window.ShouldClose)
         {
             Glfw.PollEvents();
+            dlss?.BeginFrame((uint)frame);
             var now = recording ? frame / 60.0 : clock.Elapsed.TotalSeconds;
             if (limit > 0 && now >= limit)
             {
@@ -2809,7 +2856,19 @@ internal static unsafe class Colossus
                 }
             }
 
-            var result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out var imageIndex);
+            dlss?.Mark(Dlss.SimulationEnd);
+            VkResult result;
+            int imageIndex;
+            if (frameGen)
+            {
+                result = (VkResult)dlss!.Acquire(device.VkHandle, (ulong)swapchain.VkHandle, (ulong)acquired[slot].VkHandle, out var index);
+                imageIndex = (int)index;
+            }
+            else
+            {
+                result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out imageIndex);
+            }
+
             if (result == VkResult.ErrorOutOfDateKHR)
             {
                 reason = "swapchain out of date";
@@ -2967,6 +3026,7 @@ internal static unsafe class Colossus
             var commandHandle = cb.Handle;
             var waitSemaphore = acquired[slot];
             var signalSemaphore = renderDone[imageIndex];
+            dlss?.Mark(Dlss.RenderSubmitStart);
             queue.Submit(
                 [
                     new VkSubmitInfo
@@ -2981,8 +3041,10 @@ internal static unsafe class Colossus
                     },
                 ],
                 fences[slot]);
+            dlss?.Mark(Dlss.RenderSubmitEnd);
             Lap(6);
             var presentIndex = imageIndex;
+            dlss?.Mark(Dlss.PresentStart);
             // With Streamline, through its proxy, which its common plugin needs once a frame.
             result = dlss is not null
                 ? (VkResult)dlss.Present(queue.VkHandle, (ulong)signalSemaphore.VkHandle, (ulong)swapchain.VkHandle, (uint)presentIndex)
@@ -2994,6 +3056,18 @@ internal static unsafe class Colossus
                     Swapchains = &swapchain,
                     ImageIndices = &presentIndex,
                 });
+            dlss?.Mark(Dlss.PresentEnd);
+            if (frameGen)
+            {
+                var (presented, status) = dlss!.FrameStatus();
+                shown += presented;
+                if (status != frameStatus)
+                {
+                    Console.WriteLine($"DLSS-G status 0x{status:x} at {now:F1} s");
+                    frameStatus = status;
+                }
+            }
+
             Lap(7);
             if (result == VkResult.ErrorOutOfDateKHR)
             {
@@ -3003,7 +3077,15 @@ internal static unsafe class Colossus
 
             if (capturing)
             {
-                device.WaitIdle();
+                if (frameGen)
+                {
+                    dlss!.WaitIdle(device.VkHandle);
+                }
+                else
+                {
+                    device.WaitIdle();
+                }
+
                 var image = new ReadOnlySpan<byte>((byte*)readbackMapped, (int)(extent.Width * extent.Height * 4));
                 if (recording)
                 {
@@ -3033,7 +3115,9 @@ internal static unsafe class Colossus
             frame++;
             if (now >= nextLog)
             {
-                Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}");
+                Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}"
+                    + (frameGen ? $", {shown - lastLogShown} shown" : ""));
+                lastLogShown = shown;
                 if (now >= 3)
                 {
                     worstSecond = Math.Min(worstSecond, frame - lastLogFrame);
@@ -3060,7 +3144,19 @@ internal static unsafe class Colossus
             }
         }
         sound?.Dispose();
+        if (frameGen)
+        {
+            // The proxies' swapchain goes before Streamline does.
+            dlss!.WaitIdle(device.VkHandle);
+            dlss.DestroySwapchain(device.VkHandle, (ulong)swapchain.VkHandle);
+        }
+
         device.WaitIdle();
+        if (frameGen)
+        {
+            Console.WriteLine($"DLSS-G summary: {shown} frames shown for {frame} drawn");
+        }
+
         dlss?.Shutdown();
         renderer.Dispose();
         platform.Dispose();
@@ -3161,7 +3257,11 @@ internal static unsafe class Colossus
         device.DestroyImageView(depthView, null);
         device.DestroyImage(depthImage, null);
         device.FreeMemory(depthMemory, null);
-        device.DestroySwapchainKHR(swapchain, null);
+        if (!frameGen)
+        {
+            device.DestroySwapchainKHR(swapchain, null);
+        }
+
         device.Dispose();
         instance.DestroySurfaceKHR(surface, null);
         instance.Dispose();
