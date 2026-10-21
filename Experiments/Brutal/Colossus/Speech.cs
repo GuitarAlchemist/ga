@@ -51,8 +51,9 @@ internal sealed class Voice
         }
     }
 
-    // Speaks one line: a fresh piper process, which loads the model (about half a second) and synthesises the line, a
-    // little slower than its natural pace. Returns the audio at Rate.
+    // Speaks one line: a fresh piper process, which loads the model (about half a second) and synthesises the line fast,
+    // at 0.62 of its natural length: the scene plays it at 0.56 of its pitch, which also slows it, so it comes out at a
+    // brisk, angry pace. Returns the audio at Rate.
     public short[] Say(string text)
     {
         var info = new ProcessStartInfo(_piper)
@@ -64,7 +65,7 @@ internal sealed class Voice
             CreateNoWindow = true,
             StandardInputEncoding = new UTF8Encoding(false),
         };
-        foreach (var arg in new[] { "--model", _model, "--output_raw", "--length_scale", "1.12", "--sentence_silence", "0.35" })
+        foreach (var arg in new[] { "--model", _model, "--output_raw", "--length_scale", "0.62", "--sentence_silence", "0.2" })
         {
             info.ArgumentList.Add(arg);
         }

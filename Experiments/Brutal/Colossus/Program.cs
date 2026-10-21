@@ -20,7 +20,9 @@
 // The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
 // The colossus speaks its lines (voice/lines.fr.txt) through Piper, a local neural text-to-speech (Speech.cs), and says
 // what is typed in the panel: --piper PATH and --voice MODEL choose the engine and model, --lines FILE the lines,
-// --no-tts keeps the wordless chant. C cycles the cameras to a cinematic (--cinematic starts in it): hard cuts between slow
+// --no-tts keeps the wordless chant. The subtitles follow the panel's language (--lang en|fr, L), in English from
+// voice/lines.en.txt; --no-subtitles hides them, and --cues FILE appends each line, timed and in both languages, for a
+// stream's player to subtitle in its viewer's language. C cycles the cameras to a cinematic (--cinematic starts in it): hard cuts between slow
 // moves, in black bands.
 // --record FILE.mp4 renders a video at a fixed 60 frames a second through ffmpeg (--ffmpeg PATH), its sound mixed by
 // OpenAL for each frame, in the cinematic, for --seconds (default 60), in about --record-mb megabytes (default 8).
@@ -32,6 +34,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using Brutal;
 using Brutal.GlfwApi;
 using Brutal.GltfApi;
@@ -576,7 +579,19 @@ internal static unsafe class Colossus
         var ttsNote = "off (--no-tts)";
         var tts = args.Contains("--no-tts") ? null : Voice.Find(ArgText("--piper"), ArgText("--voice"), out ttsNote);
         var linesFile = ArgText("--lines") ?? Path.Combine(AppContext.BaseDirectory, "voice", "lines.fr.txt");
-        string[] script = File.Exists(linesFile) ? [.. File.ReadAllLines(linesFile).Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith('#'))] : [];
+        static string[] ReadLines(string file) => File.Exists(file) ? [.. File.ReadAllLines(file).Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith('#'))] : [];
+        var script = ReadLines(linesFile);
+
+        // The same lines in English, line for line, from lines.en.txt beside them: the subtitles in English, and cues.
+        var inEnglish = ReadLines(Path.Combine(Path.GetDirectoryName(linesFile) ?? ".", "lines.en.txt"));
+        var english = new Dictionary<string, string>();
+        for (var i = 0; i < script.Length && script.Length == inEnglish.Length; i++)
+        {
+            english.TryAdd(script[i], inEnglish[i]);
+        }
+
+        var cuesFile = ArgText("--cues");
+        var subtitlesOn = !args.Contains("--no-subtitles");
         var linesTask = tts is null || script.Length == 0
             ? Task.FromResult(Array.Empty<(string Text, short[] Pcm)>())
             : Task.Run(() => script.Select(line => (Text: line, Pcm: tts.Say(line))).ToArray());
@@ -1379,6 +1394,7 @@ internal static unsafe class Colossus
                 {
                     sound.Speak(saying.Result.Pcm, tts!.Rate);
                     subtitle = saying.Result.Text;
+                    Cue(cuesFile, subtitle, english, saying.Result.Pcm.Length / (double)tts.Rate / Soundscape.SpeechPitch);
                     talking = true;
                 }
                 else
@@ -1392,6 +1408,7 @@ internal static unsafe class Colossus
             {
                 sound.Speak(lines[nextLine].Pcm, tts!.Rate);
                 subtitle = lines[nextLine].Text;
+                Cue(cuesFile, subtitle, english, lines[nextLine].Pcm.Length / (double)tts.Rate / Soundscape.SpeechPitch);
                 nextLine = (nextLine + 1) % lines.Length;
                 talking = true;
             }
@@ -1614,7 +1631,7 @@ internal static unsafe class Colossus
             // on the upper one.
             const ImGuiWindowFlags Overlay = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoInputs
                 | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoSavedSettings;
-            if (subtitle.Length > 0)
+            if (subtitle.Length > 0 && subtitlesOn)
             {
                 ImGui.SetNextWindowPos(new float2(extent.Width / 2f, extent.Height - (preset == 3 ? Letterbox * extent.Height / 2f : 80f)), ImGuiCond.Always, new float2(0.5f, 0.5f));
                 ImGui.SetNextWindowBgAlpha(0.45f);
@@ -1622,7 +1639,7 @@ internal static unsafe class Colossus
                 {
                     ImGui.PushFont(default, 30f);
                     ImGui.PushTextWrapPos(extent.Width * 0.72f);
-                    ImGui.Text(subtitle);
+                    ImGui.Text(_french || !english.TryGetValue(subtitle, out var translated) ? subtitle : translated);
                     ImGui.PopTextWrapPos();
                     ImGui.PopFont();
                 }
@@ -2145,6 +2162,38 @@ internal static unsafe class Colossus
         ["Space assemble   C camera   H panel   drag turn   wheel zoom   L language   Esc quit"] = "Espace assembler   C caméra   H panneau   glisser tourner   molette zoom   L langue   Échap quitter",
         ["Built with BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot and OpenAL Soft"] = "Fait avec BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, ImPlot et OpenAL Soft",
     };
+
+    // A stream's cue for a line the colossus starts saying (--cues FILE): one JSON line with the wall-clock time it starts,
+    // how long it lasts, and its French and English text, for a player to show in its own viewer's language.
+    private static void Cue(string? file, string text, Dictionary<string, string> english, double seconds)
+    {
+        if (file is null)
+        {
+            return;
+        }
+
+        using var buffer = new MemoryStream();
+        using (var json = new Utf8JsonWriter(buffer))
+        {
+            json.WriteStartObject();
+            json.WriteNumber("at"u8, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            json.WriteNumber("ms"u8, (int)(seconds * 1000));
+            json.WriteString("fr"u8, text);
+            json.WriteString("en"u8, english.GetValueOrDefault(text, text));
+            json.WriteEndObject();
+        }
+
+        try
+        {
+            using var output = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            output.Write(buffer.GetBuffer(), 0, (int)buffer.Length);
+            output.WriteByte((byte)'\n');
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine($"CUES failed: {e.Message}");
+        }
+    }
 
     private static string L(string english)
     {

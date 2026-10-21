@@ -497,8 +497,11 @@ error, and a peak working set of 300 MB.
   gives the SIWIS dataset, CC BY 4.0, and says it was fine-tuned from Piper's lessac voice. The lessac dataset's licence
   is for non-commercial use, so the voice, and any video of it, are for non-commercial use, with the credit shown.
   `--piper` and `--voice` choose another engine or model; `--no-tts` keeps the wordless chant.
-- **In the scene.** A line plays at the face, at 0.86 of its pitch, so deeper and slower, through the reverb. The swarm and
-  the wind drop to half under it. Its loudness, measured every 10 ms, opens the jaw, and the subtitle shows it.
+- **In the scene.** A line plays at the face, through the reverb. The swarm and the wind drop to half under it.
+  - **An angry giant.** Asked on 2026-10-20 for a voice « plus grave et plus en colère », « pas assez masculine », « un
+    peu plus grave ». The line gets a low shelf under 400 Hz, a 50 Hz roughness and a tanh drive. It then plays at 0.56
+    of its pitch, ten semitones down, formants included. Piper speaks it at 0.62 of its length, so it comes out at a
+    brisk pace. Its loudness, measured every 10 ms, opens the jaw, and the subtitle shows it.
 - **Cinematic.** C or the panel's Cinematic button, or `--cinematic`, switches to 12 shots over two of the swarm's
   cycles (64 s), in 2.39:1 black bands. Each shot is a slow move between two framings with its own focal length (20 to
   50°) and a little handheld sway, and they cut hard: a crane over the city, low behind the figure, the face from below,
@@ -509,6 +512,11 @@ error, and a peak working set of 300 MB.
   - Windows Graphics Capture took the window, even with the session locked;
   - process loopback took only the scene's sound;
   - ffmpeg made HLS segments: 720p30 H.264 on NVENC, with AAC sound.
+- **Languages.** `--lang en`, or L, shows the panel and the subtitles in English, from `voice/lines.en.txt`. The voice
+  stays French, the only one installed. For a stream, `--cues FILE` appends each line as it starts, timed and in both
+  languages, and `--no-subtitles` keeps the subtitles out of the picture. demo-cast's page then subtitles each viewer in
+  the language they pick. Through the public link, a headless Chrome showed the English line in step with the picture,
+  5.2 s behind the scene.
 - **Video.** `--record FILE.mp4` renders the cinematic to a video, through ffmpeg:
   - **Clock.** Time advances exactly 1/60 s a frame, whatever the machine's pace, and Jolt steps in step with it.
   - **Image.** Each frame's image is read back and piped raw to ffmpeg. Each pair of frames is blended into one, which

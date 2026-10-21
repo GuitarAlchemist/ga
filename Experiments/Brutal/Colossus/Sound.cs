@@ -4,8 +4,8 @@
 // - the wind: low noise in gusts with a whistle through the towers and a deep drone, all round the listener;
 // - the colossus's chant: a low voice on a fifth through three vowel formants, swelling with each syllable, at the face;
 // - a rising rush as the swarm assembles, ending in a low thud, and a falling one as it disperses.
-// The colossus's spoken lines (Speech.cs) play at the face, a little deeper and slower than the voice made them, with
-// the swarm and the wind lowered under them; their loudness moves the jaw.
+// The colossus's spoken lines (Speech.cs) play at the face, made harsh and played ten semitones down, so a light voice
+// becomes an angry giant's, with the swarm and the wind lowered under them; their loudness moves the jaw.
 // For --record, a loopback device plays nowhere: the scene renders the mix itself, a video frame's worth at a time.
 // The listener is the camera. A reverb (EFX) sends everything out across the city when the device has it.
 // Every loop is a whole number of cycles of each of its tones, and its noise is filtered round the loop twice, so the
@@ -22,6 +22,9 @@ using SN = System.Numerics;
 
 internal sealed class Soundscape : IDisposable
 {
+    // The spoken lines play ten semitones down, formants too: a giant's chest. Piper speaks fast to make up for it.
+    public const float SpeechPitch = 0.56f;
+
     private const int Rate = 48000;
 
     private readonly Device _device;
@@ -68,7 +71,7 @@ internal sealed class Soundscape : IDisposable
         // A colossal voice carries: it fades little with distance.
         _speech.ReferenceDistance = 90f;
         _speech.RolloffFactor = 0.25f;
-        _speech.Pitch = 0.86f;
+        _speech.Pitch = SpeechPitch;
 
         _wind.SourceRelative = true;
         _wind.Position = new float3(0f, 0f, 0f);
@@ -174,11 +177,26 @@ internal sealed class Soundscape : IDisposable
             peak = Math.Max(peak, Math.Abs((int)v));
         }
 
+        // An angry giant from a light voice, before the source's pitch takes it all down by ten semitones: a low shelf
+        // under 400 Hz for the chest, a 50 Hz roughness for the growl, and a tanh drive that flattens the peaks.
+        var x = new float[pcm.Length];
+        var low = 0f;
+        var a = 1f - MathF.Exp(-2f * MathF.PI * 400f / rate);
+        var crest = 1e-6f;
+        for (var i = 0; i < pcm.Length; i++)
+        {
+            var s = (float)pcm[i] / peak;
+            low += a * (s - low);
+            s = (s + (0.8f * low)) * (0.7f + (0.3f * MathF.Abs(MathF.Sin(MathF.PI * 50f * i / rate))));
+            x[i] = MathF.Tanh(2.5f * s);
+            crest = MathF.Max(crest, MathF.Abs(x[i]));
+        }
+
         // Normalised to a peak of 0.9, and its loudness every hundredth of a second, the loudest at 1.
         var loud = new short[pcm.Length];
         for (var i = 0; i < pcm.Length; i++)
         {
-            loud[i] = (short)(pcm[i] * 0.9f * short.MaxValue / peak);
+            loud[i] = (short)(x[i] * 0.9f * short.MaxValue / crest);
         }
 
         var window = Math.Max(1, rate / 100);
