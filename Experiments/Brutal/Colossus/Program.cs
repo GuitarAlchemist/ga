@@ -1552,7 +1552,7 @@ internal static unsafe class Colossus
             frameGen = false;
         }
 
-        var swapchain = proxied != 0 ? new VkSwapchainKHR((nint)proxied) : device.CreateSwapchainKHR(new VkSwapchainCreateInfoKHR
+        var swapchainInfo = new VkSwapchainCreateInfoKHR
         {
             Surface = surface,
             MinImageCount = imageCount,
@@ -1566,7 +1566,8 @@ internal static unsafe class Colossus
             CompositeAlpha = VkCompositeAlphaFlagsKHR.OpaqueBitKHR,
             PresentMode = presentMode,
             Clipped = true,
-        }, null);
+        };
+        var swapchain = proxied != 0 ? new VkSwapchainKHR((nint)proxied) : device.CreateSwapchainKHR(swapchainInfo, null);
         VkImage[] images;
         if (proxied != 0)
         {
@@ -2366,6 +2367,7 @@ internal static unsafe class Colossus
         var frame = 0;
         var errors = PhysicsUpdateError.None;
         var reason = "window closed";
+        var stale = false;
         var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
 
         // The recording: each frame's image goes to ffmpeg as it is made, and OpenAL's mix of the same sixtieth of a
@@ -2857,16 +2859,119 @@ internal static unsafe class Colossus
             }
 
             dlss?.Mark(Dlss.SimulationEnd);
-            VkResult result;
-            int imageIndex;
-            if (frameGen)
+            // Windows puts the swapchain out of date when the window is minimised or the display changes. The window's
+            // size is fixed, so the swapchain is made again at the same size and the frame tries again; minimised, the
+            // scene waits for the window to come back. BRUTAL's wrapper throws for this error instead of returning it.
+            // With frame generation, it goes through Streamline's proxies, the old one destroyed first.
+            var result = VkResult.ErrorOutOfDateKHR;
+            var imageIndex = 0;
+            for (var attempt = 0; attempt < 3 && result == VkResult.ErrorOutOfDateKHR; attempt++)
             {
-                result = (VkResult)dlss!.Acquire(device.VkHandle, (ulong)swapchain.VkHandle, (ulong)acquired[slot].VkHandle, out var index);
-                imageIndex = (int)index;
-            }
-            else
-            {
-                result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out imageIndex);
+                if (stale)
+                {
+                    if (frameGen)
+                    {
+                        dlss!.WaitIdle(device.VkHandle);
+                    }
+                    else
+                    {
+                        device.WaitIdle();
+                    }
+
+                    var size = physical.GetSurfaceCapabilitiesKHR(surface).CurrentExtent;
+                    while ((size.Width == 0 || size.Height == 0) && !window.ShouldClose)
+                    {
+                        Thread.Sleep(100);
+                        Glfw.PollEvents();
+                        size = physical.GetSurfaceCapabilitiesKHR(surface).CurrentExtent;
+                    }
+
+                    if (size.Width != extent.Width || size.Height != extent.Height)
+                    {
+                        break;
+                    }
+
+                    var fresh = frameGen ? default : device.CreateSwapchainKHR(swapchainInfo with { OldSwapchain = swapchain }, null);
+                    if (!frameGen && device.GetSwapchainImagesKHR_Count(fresh) != images.Length)
+                    {
+                        device.DestroySwapchainKHR(fresh, null);
+                        break;
+                    }
+
+                    for (var i = 0; i < images.Length; i++)
+                    {
+                        device.DestroyFramebuffer(framebuffers[i], null);
+                        device.DestroyImageView(views[i], null);
+                        (framebuffers[i], views[i]) = (default, default);
+                    }
+
+                    if (frameGen)
+                    {
+                        dlss!.DestroySwapchain(device.VkHandle, (ulong)swapchain.VkHandle);
+                        swapchain = default;
+                        var made = dlss.CreateSwapchain(device.VkHandle, (ulong)surface.VkHandle, imageCount, (int)surfaceFormat.Format, (int)surfaceFormat.ColorSpace,
+                            extent.Width, extent.Height, (uint)swapchainUsage, (int)caps.CurrentTransform, (int)presentMode);
+                        var handles = made != 0 ? dlss.SwapchainImages(device.VkHandle, made) : [];
+                        if (handles.Length != images.Length)
+                        {
+                            if (made != 0)
+                            {
+                                dlss.DestroySwapchain(device.VkHandle, made);
+                            }
+
+                            break;
+                        }
+
+                        swapchain = new VkSwapchainKHR((nint)made);
+                        for (var i = 0; i < images.Length; i++)
+                        {
+                            images[i] = new VkImage((nint)handles[i]);
+                        }
+                    }
+                    else
+                    {
+                        device.DestroySwapchainKHR(swapchain, null);
+                        swapchain = fresh;
+                        device.GetSwapchainImagesKHR_Write(swapchain, images);
+                    }
+
+                    for (var i = 0; i < images.Length; i++)
+                    {
+                        views[i] = device.CreateImageView(View(images[i], surfaceFormat.Format, VkImageAspectFlags.ColorBit), null);
+                        pair[0] = views[i];
+                        framebuffers[i] = device.CreateFramebuffer(new VkFramebufferCreateInfo
+                        {
+                            RenderPass = renderPass,
+                            AttachmentCount = 2,
+                            Attachments = pair,
+                            Width = extent.Width,
+                            Height = extent.Height,
+                            Layers = 1,
+                        }, null);
+                    }
+
+                    Console.WriteLine($"SWARM swapchain made again at {now:F1} s");
+                    last = clock.Elapsed.TotalSeconds; // the wait is not a frame time
+                }
+
+                if (frameGen)
+                {
+                    result = (VkResult)dlss!.Acquire(device.VkHandle, (ulong)swapchain.VkHandle, (ulong)acquired[slot].VkHandle, out var index);
+                    imageIndex = (int)index;
+                }
+                else
+                {
+                    try
+                    {
+                        result = device.AcquireNextImageKHR(swapchain, -1, acquired[slot], default, out imageIndex);
+                    }
+                    catch (VkResultError e) when (e.Message.Contains("OUT_OF_DATE"))
+                    {
+                        result = VkResult.ErrorOutOfDateKHR;
+                    }
+                }
+
+                stale = result == VkResult.ErrorOutOfDateKHR;
             }
 
             if (result == VkResult.ErrorOutOfDateKHR)
@@ -3046,16 +3151,24 @@ internal static unsafe class Colossus
             var presentIndex = imageIndex;
             dlss?.Mark(Dlss.PresentStart);
             // With Streamline, through its proxy, which its common plugin needs once a frame.
-            result = dlss is not null
-                ? (VkResult)dlss.Present(queue.VkHandle, (ulong)signalSemaphore.VkHandle, (ulong)swapchain.VkHandle, (uint)presentIndex)
-                : queue.PresentKHR(new VkPresentInfoKHR
-                {
-                    WaitSemaphoreCount = 1,
-                    WaitSemaphores = &signalSemaphore,
-                    SwapchainCount = 1,
-                    Swapchains = &swapchain,
-                    ImageIndices = &presentIndex,
-                });
+            try
+            {
+                result = dlss is not null
+                    ? (VkResult)dlss.Present(queue.VkHandle, (ulong)signalSemaphore.VkHandle, (ulong)swapchain.VkHandle, (uint)presentIndex)
+                    : queue.PresentKHR(new VkPresentInfoKHR
+                    {
+                        WaitSemaphoreCount = 1,
+                        WaitSemaphores = &signalSemaphore,
+                        SwapchainCount = 1,
+                        Swapchains = &swapchain,
+                        ImageIndices = &presentIndex,
+                    });
+            }
+            catch (VkResultError e) when (e.Message.Contains("OUT_OF_DATE"))
+            {
+                result = VkResult.ErrorOutOfDateKHR;
+            }
+
             dlss?.Mark(Dlss.PresentEnd);
             if (frameGen)
             {
@@ -3069,11 +3182,8 @@ internal static unsafe class Colossus
             }
 
             Lap(7);
-            if (result == VkResult.ErrorOutOfDateKHR)
-            {
-                reason = "swapchain out of date";
-                break;
-            }
+            // Out of date: the next frame makes the swapchain again before it acquires.
+            stale = result == VkResult.ErrorOutOfDateKHR;
 
             if (capturing)
             {
@@ -3148,7 +3258,10 @@ internal static unsafe class Colossus
         {
             // The proxies' swapchain goes before Streamline does.
             dlss!.WaitIdle(device.VkHandle);
-            dlss.DestroySwapchain(device.VkHandle, (ulong)swapchain.VkHandle);
+            if (swapchain.VkHandle != 0)
+            {
+                dlss.DestroySwapchain(device.VkHandle, (ulong)swapchain.VkHandle);
+            }
         }
 
         device.WaitIdle();
