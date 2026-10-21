@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "69e55e8c55e742dfc678a5e86e5ac1ad109001b5",
-    "generatedAt": "2026-10-20T10:36:11.994121+00:00",
+    "commitSha": "4a5f8002808c263ffa83e5897f634602710fce5f",
+    "generatedAt": "2026-10-21T10:48:01.753896+00:00",
     "repoCount": 5,
-    "totalPRs": 58
+    "totalPRs": 57
   },
   "repos": [
     {
@@ -116,7 +116,7 @@
       "prCount": 20,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 2,
@@ -128,7 +128,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/839"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-10-13T01:49:33Z",
           "failingChecks": 1,
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/835"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-10-11T22:01:56Z",
           "failingChecks": 0,
@@ -152,7 +152,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/833"
         },
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-10-06T23:58:38Z",
           "failingChecks": 0,
@@ -164,7 +164,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/826"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T22:34:12Z",
           "failingChecks": 0,
@@ -176,7 +176,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/823"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T20:48:18Z",
           "failingChecks": 0,
@@ -188,7 +188,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/820"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T20:13:17Z",
           "failingChecks": 0,
@@ -200,7 +200,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/819"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T19:15:38Z",
           "failingChecks": 0,
@@ -212,7 +212,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/818"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T19:15:36Z",
           "failingChecks": 0,
@@ -224,7 +224,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/817"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T19:15:34Z",
           "failingChecks": 0,
@@ -236,7 +236,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/816"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T16:47:04Z",
           "failingChecks": 1,
@@ -248,7 +248,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/812"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T15:52:36Z",
           "failingChecks": 0,
@@ -260,7 +260,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/811"
         },
         {
-          "ageDays": 16,
+          "ageDays": 17,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:07:35Z",
           "failingChecks": 0,
@@ -272,7 +272,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/810"
         },
         {
-          "ageDays": 16,
+          "ageDays": 17,
           "author": "spareilleux",
           "createdAt": "2026-10-04T06:32:26Z",
           "failingChecks": 0,
@@ -284,7 +284,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/808"
         },
         {
-          "ageDays": 16,
+          "ageDays": 17,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -296,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/807"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:50:29Z",
           "failingChecks": 0,
@@ -308,7 +308,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/780"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-09-30T23:34:07Z",
           "failingChecks": 0,
@@ -320,7 +320,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/779"
         },
         {
-          "ageDays": 20,
+          "ageDays": 21,
           "author": "spareilleux",
           "createdAt": "2026-09-30T03:05:02Z",
           "failingChecks": 0,
@@ -332,7 +332,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/766"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-09-25T13:36:46Z",
           "failingChecks": 1,
@@ -344,7 +344,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/738"
         },
         {
-          "ageDays": 78,
+          "ageDays": 79,
           "author": "spareilleux",
           "createdAt": "2026-08-02T21:29:06Z",
           "failingChecks": 2,
@@ -372,34 +372,34 @@
       "prCount": 18,
       "prs": [
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-10-20T01:33:14Z",
           "failingChecks": 0,
           "headRef": "docs/pr-coordination-protocol",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 396,
           "title": "docs(contracts): coord block schema, fixtures, dedup and recovery rules",
           "url": "https://github.com/GuitarAlchemist/ix/pull/396"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-10-20T01:33:12Z",
           "failingChecks": 1,
           "headRef": "exp/polyglot-s1",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 395,
           "title": "feat(ix-wasm): WASI pipeline stages in wasmi, on main without the loop stack",
           "url": "https://github.com/GuitarAlchemist/ix/pull/395"
         },
         {
-          "ageDays": 0,
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-10-20T01:33:10Z",
-          "failingChecks": 1,
+          "failingChecks": 2,
           "headRef": "exp/ixctl",
           "isDraft": true,
           "mergeable": "MERGEABLE",
@@ -408,7 +408,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/394"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-10-18T22:44:13Z",
           "failingChecks": 1,
@@ -420,43 +420,43 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/393"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-10-18T22:42:15Z",
           "failingChecks": 0,
           "headRef": "chore/allowlist-read-only-2026-10-18",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 392,
           "title": "chore(claude): allow thirteen more read-only tools without a prompt",
           "url": "https://github.com/GuitarAlchemist/ix/pull/392"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-10-18T22:41:09Z",
           "failingChecks": 0,
           "headRef": "prototype/ix-control",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 391,
           "title": "prototype(ix-control): control-plane feeds and the scene cast",
           "url": "https://github.com/GuitarAlchemist/ix/pull/391"
         },
         {
-          "ageDays": 1,
+          "ageDays": 2,
           "author": "spareilleux",
           "createdAt": "2026-10-18T22:35:13Z",
           "failingChecks": 0,
           "headRef": "prototype/probes",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 390,
           "title": "prototype(probes): hot-reloading Go probe host, template probes and DuckDB views",
           "url": "https://github.com/GuitarAlchemist/ix/pull/390"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-10-18T01:35:36Z",
           "failingChecks": 1,
@@ -468,7 +468,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/389"
         },
         {
-          "ageDays": 2,
+          "ageDays": 3,
           "author": "spareilleux",
           "createdAt": "2026-10-17T20:06:48Z",
           "failingChecks": 0,
@@ -480,19 +480,19 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/388"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-10-16T17:52:09Z",
           "failingChecks": 1,
           "headRef": "feat/ix-loop",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 383,
           "title": "feat(ix-loop): agentic loops in sandboxed Lua that run, judge and write loops (ADR-0011)",
           "url": "https://github.com/GuitarAlchemist/ix/pull/383"
         },
         {
-          "ageDays": 9,
+          "ageDays": 10,
           "author": "spareilleux",
           "createdAt": "2026-10-10T19:34:52Z",
           "failingChecks": 0,
@@ -504,7 +504,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/377"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T19:44:23Z",
           "failingChecks": 1,
@@ -516,7 +516,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/368"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T18:09:53Z",
           "failingChecks": 1,
@@ -528,7 +528,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/367"
         },
         {
-          "ageDays": 15,
+          "ageDays": 16,
           "author": "spareilleux",
           "createdAt": "2026-10-04T15:45:49Z",
           "failingChecks": 1,
@@ -540,7 +540,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/366"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-09-25T13:36:51Z",
           "failingChecks": 1,
@@ -552,7 +552,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/356"
         },
         {
-          "ageDays": 36,
+          "ageDays": 37,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:53Z",
           "failingChecks": 0,
@@ -564,7 +564,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/335"
         },
         {
-          "ageDays": 36,
+          "ageDays": 37,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:51Z",
           "failingChecks": 0,
@@ -576,7 +576,7 @@
           "url": "https://github.com/GuitarAlchemist/ix/pull/334"
         },
         {
-          "ageDays": 36,
+          "ageDays": 37,
           "author": "spareilleux",
           "createdAt": "2026-09-13T18:06:49Z",
           "failingChecks": 0,
@@ -601,10 +601,22 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
         {
           "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-21T01:31:37Z",
+          "failingChecks": 1,
+          "headRef": "fix/benchmark-bank-compared-outside",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 405,
+          "title": "fix: compare the basic to expert problems' examples outside the solution's process",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/405"
+        },
+        {
+          "ageDays": 1,
           "author": "spareilleux",
           "createdAt": "2026-10-20T04:48:36Z",
           "failingChecks": 0,
@@ -616,7 +628,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/402"
         },
         {
-          "ageDays": 7,
+          "ageDays": 8,
           "author": "spareilleux",
           "createdAt": "2026-10-13T02:09:29Z",
           "failingChecks": 1,
@@ -628,7 +640,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
         },
         {
-          "ageDays": 16,
+          "ageDays": 17,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 1,
@@ -640,7 +652,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/381"
         },
         {
-          "ageDays": 21,
+          "ageDays": 22,
           "author": "spareilleux",
           "createdAt": "2026-09-29T03:17:50Z",
           "failingChecks": 1,
@@ -652,7 +664,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 22,
+          "ageDays": 23,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
@@ -664,7 +676,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/337"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-09-25T13:36:49Z",
           "failingChecks": 1,
@@ -691,82 +703,70 @@
         "verdict": "warn"
       },
       "name": "Demerzel",
-      "prCount": 14,
+      "prCount": 12,
       "prs": [
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-10-16T22:16:12Z",
           "failingChecks": 0,
           "headRef": "docs/streeling-ix-research",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1233,
           "title": "feat(streeling): open the Department of IX Research, with IXR-001",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1233"
         },
         {
-          "ageDays": 4,
-          "author": "spareilleux",
-          "createdAt": "2026-10-15T14:42:24Z",
-          "failingChecks": 0,
-          "headRef": "claude/fix-corpus-dangling-links",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 1225,
-          "title": "fix(streeling): correct the relative depth of nine out-of-corpus links",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1225"
-        },
-        {
-          "ageDays": 5,
+          "ageDays": 6,
           "author": "spareilleux",
           "createdAt": "2026-10-14T13:49:58Z",
           "failingChecks": 0,
           "headRef": "claude/streeling-psy-w3-fr-es",
           "isDraft": false,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1220,
           "title": "feat(streeling): the ten wave-3 Psychohistory modules in French and Spanish",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1220"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-10-12T06:45:07Z",
           "failingChecks": 2,
           "headRef": "codex/streeling-review-contract",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1211,
           "title": "docs(streeling): draft exact-source human review contract",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1211"
         },
         {
-          "ageDays": 8,
+          "ageDays": 9,
           "author": "spareilleux",
           "createdAt": "2026-10-11T16:50:48Z",
           "failingChecks": 1,
           "headRef": "codex/streeling-project-pilot",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "CONFLICTING",
           "number": 1207,
           "title": "docs(streeling): project-grounded course pilot and publication evidence",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1207"
         },
         {
-          "ageDays": 13,
+          "ageDays": 14,
           "author": "spareilleux",
           "createdAt": "2026-10-07T04:13:37Z",
           "failingChecks": 1,
           "headRef": "codex/streeling-cyb004-025-20261007",
           "isDraft": true,
-          "mergeable": "UNKNOWN",
+          "mergeable": "MERGEABLE",
           "number": 1195,
           "title": "docs(streeling): draft 22 Cybernetics courses with offline controls",
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1195"
         },
         {
-          "ageDays": 23,
+          "ageDays": 24,
           "author": "spareilleux",
           "createdAt": "2026-09-26T18:43:46Z",
           "failingChecks": 0,
@@ -778,7 +778,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1133"
         },
         {
-          "ageDays": 24,
+          "ageDays": 25,
           "author": "spareilleux",
           "createdAt": "2026-09-25T12:30:30Z",
           "failingChecks": 1,
@@ -790,7 +790,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1126"
         },
         {
-          "ageDays": 29,
+          "ageDays": 30,
           "author": "spareilleux",
           "createdAt": "2026-09-21T03:02:23Z",
           "failingChecks": 2,
@@ -802,19 +802,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1114"
         },
         {
-          "ageDays": 32,
-          "author": "spareilleux",
-          "createdAt": "2026-09-17T22:51:32Z",
-          "failingChecks": 0,
-          "headRef": "fix/streeling-jazz-and-academy",
-          "isDraft": false,
-          "mergeable": "UNKNOWN",
-          "number": 1102,
-          "title": "fix(streeling): factual errors in MUS-005, MUS-004, MUS-003, MCL-002, CYB-002, NET-001, GAA-002 and GAA-003",
-          "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1102"
-        },
-        {
-          "ageDays": 35,
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-09-14T21:16:08Z",
           "failingChecks": 1,
@@ -826,7 +814,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1088"
         },
         {
-          "ageDays": 35,
+          "ageDays": 36,
           "author": "spareilleux",
           "createdAt": "2026-09-14T13:05:50Z",
           "failingChecks": 1,
@@ -838,7 +826,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/1084"
         },
         {
-          "ageDays": 66,
+          "ageDays": 67,
           "author": "spareilleux",
           "createdAt": "2026-08-14T18:13:24Z",
           "failingChecks": 2,
@@ -850,7 +838,7 @@
           "url": "https://github.com/GuitarAlchemist/Demerzel/pull/994"
         },
         {
-          "ageDays": 93,
+          "ageDays": 94,
           "author": "spareilleux",
           "createdAt": "2026-07-18T22:08:16Z",
           "failingChecks": 1,
