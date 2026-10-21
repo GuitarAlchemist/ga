@@ -9,7 +9,8 @@
 // Lego (gaia's "fractal Lego"): --lego <block[@version]> [--seed N] [--arg name=value]... draws a Lego scene instead of
 // the hall, framed by its bounds; a scene Lego refuses ends the run with code 2 before any window opens. --hidden keeps
 // the window off screen, --capture FILE.png saves frame 120, and --cycles N then describes and materializes the scene
-// N more times, dropping each, and prints what was left behind.
+// N more times, dropping each, and prints what was left behind. --tour SECONDS shows the blocks one after another, from
+// one column to a sanctuary of twenty-one temples, each built and framed in turn, then again with the next seed.
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -88,6 +89,12 @@ internal static unsafe class HallSlice
         var cycles = int.TryParse(Option(args, "--cycles"), out var cycleCount) ? cycleCount : 0;
         var legoSpec = Option(args, "--lego");
         var legoArgs = args.Where((a, i) => i > 0 && args[i - 1] == "--arg").ToArray();
+        var tour = double.TryParse(Option(args, "--tour"), out var tourSeconds) ? tourSeconds : 0.0;
+        if (tour > 0)
+        {
+            (legoSpec, legoArgs) = TourSteps[0];
+        }
+
         var seedText = Option(args, "--seed");
         var seed = 0UL;
         if (seedText is not null && !ulong.TryParse(seedText, out seed))
@@ -121,7 +128,7 @@ internal static unsafe class HallSlice
             Glfw.WindowHint(GlfwWindowHint.Visible, 0);
         }
 
-        var title = scene is null ? "Hall slice (BRUTAL)" : $"Lego {scene.Draft.Root.Block} (BRUTAL)";
+        var title = scene is null ? "Hall slice (BRUTAL)" : tour > 0 ? "Lego tour (BRUTAL)" : $"Lego {scene.Draft.Root.Block} (BRUTAL)";
         var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = title, Size = new int2(Width, Height) });
 
         // Instance with the extensions GLFW needs to present, and the window's surface.
@@ -373,17 +380,23 @@ internal static unsafe class HallSlice
         }
 
         // Camera: orbits the axis by itself; arrows turn and tilt, W and S move in and out.
-        float yaw = 0.6f, pitch = 0.32f, distance = 27f, closest = 6f, farthest = 60f, far = 200f;
+        float yaw = 0.6f, pitch = 0.32f, distance = 27f, closest = 6f, farthest = 60f, radius = 20f;
         var target = new SN.Vector3(0f, 2.5f, 0f);
-        if (scene is not null)
+        var (targetGoal, distanceGoal) = (target, distance);
+        void Frame(LegoScene framed)
         {
             // A Lego scene: the camera aims at the middle of its bounds, far enough back to keep them in frame.
-            var radius = Math.Max(SN.Vector3.Distance(scene.Min, scene.Max) / 2f, 1f);
-            target = (scene.Min + scene.Max) / 2f;
+            radius = Math.Max(SN.Vector3.Distance(framed.Min, framed.Max) / 2f, 1f);
+            targetGoal = (framed.Min + framed.Max) / 2f;
             pitch = 0.45f;
-            distance = LegoAdapter.Distance(scene, target, pitch, extent.Width / (float)extent.Height);
-            (closest, farthest) = (0.25f * distance, 2.5f * distance);
-            far = farthest + (2f * radius);
+            distanceGoal = LegoAdapter.Distance(framed, targetGoal, pitch, extent.Width / (float)extent.Height);
+            (closest, farthest) = (0.25f * distanceGoal, 2.5f * distanceGoal);
+        }
+
+        if (scene is not null)
+        {
+            Frame(scene);
+            (target, distance) = (targetGoal, distanceGoal);
         }
 
         var keys = 0;
@@ -401,8 +414,8 @@ internal static unsafe class HallSlice
                 case GlfwKey.Right: yaw += 0.15f; break;
                 case GlfwKey.Up: pitch = Math.Min(pitch + 0.08f, 1.3f); break;
                 case GlfwKey.Down: pitch = Math.Max(pitch - 0.08f, 0.05f); break;
-                case GlfwKey.W: distance = Math.Max(distance - (closest / 4f), closest); break;
-                case GlfwKey.S: distance = Math.Min(distance + (closest / 4f), farthest); break;
+                case GlfwKey.W: distanceGoal = Math.Max(distanceGoal - (closest / 4f), closest); break;
+                case GlfwKey.S: distanceGoal = Math.Min(distanceGoal + (closest / 4f), farthest); break;
                 case GlfwKey.Escape:
                     reason = "Esc";
                     w.ShouldClose = true;
@@ -438,6 +451,8 @@ internal static unsafe class HallSlice
         var frame = 0;
         var last = clock.Elapsed.TotalSeconds;
         var firstFrame = -1.0;
+        var step = 0;
+        var nextStep = last + tour;
         var clears = stackalloc VkClearValue[2];
         var cpuStart = Process.GetCurrentProcess().TotalProcessorTime;
         var loopStart = clock.Elapsed;
@@ -451,8 +466,33 @@ internal static unsafe class HallSlice
             }
 
             var now = clock.Elapsed.TotalSeconds;
-            yaw += (float)(now - last) * 0.2f;
+            var dt = (float)(now - last);
+            yaw += dt * 0.2f;
             last = now;
+            if (tour > 0 && now >= nextStep)
+            {
+                // The tour's next step: the old mesh dropped once the GPU is done with it, the next one made and framed.
+                step++;
+                nextStep = now + tour;
+                var (spec, stepArgs) = TourSteps[step % TourSteps.Length];
+                var stepSeed = seed + (ulong)(step / TourSteps.Length);
+                var next = LegoAdapter.Validated(spec, stepSeed, stepArgs);
+                if (next is not null)
+                {
+                    device.WaitIdle();
+                    mesh.Dispose();
+                    mesh = new SliceMesh(device, physical, LegoAdapter.Vertices(next));
+                    scene = next;
+                    Frame(next);
+                    Console.WriteLine($"LEGO tour {step}: {next.Draft.Root.Block} {string.Join(' ', stepArgs)} seed {stepSeed}: {next.Draft.Instances} instances, {next.Boxes.Count} boxes");
+                }
+            }
+
+            // The hall's camera jumps with its keys; a Lego scene's glides to its new framing.
+            var follow = scene is null ? 1f : 1f - MathF.Exp(-2.5f * dt);
+            target = SN.Vector3.Lerp(target, targetGoal, follow);
+            distance += (distanceGoal - distance) * follow;
+            var far = scene is null ? 200f : (3f * distance) + (2f * radius) + 10f;
 
             var slot = frame % FramesInFlight;
             device.WaitForFences([fences[slot]], true, -1);
@@ -594,7 +634,7 @@ internal static unsafe class HallSlice
 
         // --cycles: the scene described and materialized again and again, each mesh dropped; the scene must come out the
         // same each time and leave nothing behind.
-        if (cycles > 0 && scene is not null)
+        if (cycles > 0 && scene is not null && tour == 0)
         {
             device.WaitIdle();
             var hash = Lego.Describe.hash(scene);
@@ -686,6 +726,18 @@ internal static unsafe class HallSlice
 
     [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
     private static extern uint TimeEndPeriod(uint milliseconds);
+
+    // --tour: from one column to a sanctuary of twenty-one temples, the same blocks composed again and again.
+    private static readonly (string Spec, string[] Args)[] TourSteps =
+    [
+        ("column@1", []),
+        ("column@2", []),
+        ("colonnade", []),
+        ("temple", []),
+        ("temple", ["column=2"]),
+        ("sanctuary", ["level=1"]),
+        ("sanctuary", ["level=2"]),
+    ];
 
     // The value after the option name, if both are there.
     private static string? Option(string[] args, string name)

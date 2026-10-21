@@ -795,7 +795,17 @@ dotnet run -c Release --project Lego.Cli -- test
 dotnet run -c Release --project Lego.Cli -- blocks
 dotnet run -c Release --project Lego.Cli -- describe temple --seed 7 --arg column=2
 HallSlice/bin/Release/net10.0/HallSlice.exe 8 --lego sanctuary --seed 7 [--arg level=2] [--hidden] [--capture FILE.png] [--cycles 100]
+HallSlice/bin/Release/net10.0/HallSlice.exe 180 --tour 6 --vsync --seed 7
 ```
+
+`--tour SECONDS` shows the composition step by step, a step every SECONDS:
+1. `column@1`, then `column@2`;
+2. a colonnade;
+3. a temple, then a temple with `column=2`;
+4. a sanctuary of 5 temples, then one of 21.
+
+Each step is generated, validated and materialized while the window runs. The previous mesh is disposed once the GPU
+is idle, and the camera glides to the new framing. Each round after the first uses the next seed.
 
 **Logic tests** (`Lego.Cli test`, no engine): 17 passed, 0 failed. They check:
 - that the same input gives the same JSON and hash;
