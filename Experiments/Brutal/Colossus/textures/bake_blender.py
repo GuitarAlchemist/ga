@@ -1,15 +1,17 @@
 # Bakes Colossus's surface maps in Blender (headless, factory settings): from each seamless albedo, a tangent-space
 # normal map through a Bump node, and a roughness map; packs normal X, normal Y, roughness and height into one RGBA PNG,
 # and writes the albedo again at the same size, without the generator's metadata.
-# Usage: blender -b --factory-startup --python bake.py -- <albedo dir> <out dir>
+# Usage: blender -b --factory-startup --python bake.py -- <albedo dir> <out dir> [name ...] (all of them by default)
 import os
 import sys
 
 import bpy
 import numpy as np
 
-src, dst = sys.argv[sys.argv.index("--") + 1:][:2]
+src, dst, *wanted = sys.argv[sys.argv.index("--") + 1:]
 SIZE = 512
+# Each texture and its bump strength.
+STRENGTHS = {"hull": 0.6, "facade": 0.8, "concrete": 0.7, "cladding": 0.4}
 os.makedirs(dst, exist_ok=True)
 
 scene = bpy.context.scene
@@ -30,7 +32,9 @@ def save(pixels, name, colorspace):
     img.save()
 
 
-for name, strength in (("hull", 0.6), ("facade", 0.8)):
+for name, strength in STRENGTHS.items():
+    if wanted and name not in wanted:
+        continue
     albedo = bpy.data.images.load(os.path.join(src, f"{name}_00001_.png"))
     albedo.scale(SIZE, SIZE)
     mat = bpy.data.materials.new(name)

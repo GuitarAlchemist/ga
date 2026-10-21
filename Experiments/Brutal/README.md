@@ -307,13 +307,39 @@ Two traps in measuring this:
   Qwen3-4B text encoder (Apache-2.0). These were already on the machine; nothing was downloaded.
 - **Workflow:** 8 steps, then the image offset by half and the seam cross repainted.
 - **Prompts and seeds:** they are in `generate_comfyui.py`; hull is seed 1207, facade seed 2026.
+- **Concrete and cladding** (2026-10-20, asked as « plus de verre, métal, béton », « utilise ComfyUI et Blender pour
+  les textures »): two more, the same way and with the same model, seeds 1965 and 1972. One is board-formed concrete
+  with tie holes, the other brushed metal panels.
 
 Blender 5.2 then baked each albedo, headless with factory settings (`bake_blender.py`):
 - a tangent-space normal map, from a Bump node on its luminance;
 - a roughness map, from the same luminance.
 
-It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the four PNGs into one texture
+It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the eight PNGs into one texture
 array with mips; its own PNG reader is in `Program.cs`.
+
+**Materials and RTX** (2026-10-20, asked as « une scène plus jolie (plus de verre, métal, béton) », « plus de features
+NVIDIA »). One shader function gives every surface, and the reflections call it again where their rays land.
+- **Tower styles.** Each modelled tower takes a style from its seed:
+  - mirror glass walls;
+  - bronze or steel cladding;
+  - raw concrete;
+  - the facade texture's panels.
+
+  The mesh's own glass, metal and lamps stay as modelled.
+- **Curtain walls.** Glass comes in cells of 1.6 m by one floor, with mullions and a spandrel at each slab. A few offices
+  are lit from their ceilings, and some panes have their blinds down. Each pane leans a little, so that reflections break
+  from pane to pane.
+- **Lighting.** GGX highlights and Schlick's Fresnel. A cooler sky and fill light set the shade against the warm sun.
+- **Ray queries.**
+  - The sun's shadows take two rays through its disc, so their edges soften.
+  - Ambient occlusion takes four rays of up to 6 m.
+  - A mirror ray on glass and metal lands on a surface that is shaded in full: its material, read from the mesh and
+    instance buffers, the sun on it and its own shadow ray.
+  - The rays' noise is fixed on the screen, so a still view does not shimmer.
+- **Cost.** The scene pass went from 0.85 to about 3 ms of GPU a frame (p95 6 ms), well within 60 frames a second.
+- **Not done.** DLSS, frame generation and Reflex: they need NVIDIA's Streamline in the Vulkan renderer, with motion
+  vectors and jitter.
 
 **The head** (`Colossus/head/`). The swarm now forms a sculpted head, generated locally rather than built from Gaussian
 bumps. The bumps remain the fallback when the file is missing.
@@ -507,13 +533,29 @@ error, and a peak working set of 300 MB.
   50°) and a little handheld sway, and they cut hard: a crane over the city, low behind the figure, the face from below,
   round the head, the eyes, a crane back, the street, high above, the other shoulder, the profile, a push in, a last crane.
   The style is borrowed; the shots and everything in them are the scene's own.
+  - **Towers cast** (2026-10-20, « la vidéo devra avoir des cinématiques sympa »). Once the city is built, three shots
+    are remade round towers in front of the face, which they cast in the style they show:
+    - the opening climbs the foot of a mirror-glass tower, then tilts down to the swarm;
+    - the street becomes a track behind a concrete tower;
+    - the profile becomes a track beside bronze cladding that pans to the face.
+
+    Every shot is checked against the towers. A move that would pass through one comes in toward its subject, or
+    rises, until it is clear: one shot, filmed at a fixed spot, had shown the inside of a wall.
 - **Stream.** H hides the panel, and `--no-panel` starts without it. `--cinematic --no-panel --no-voice` is the clean
   view for an audience. It was streamed live on 2026-10-20 with demo-cast, a Claude Code skill:
   - Windows Graphics Capture took the window, even with the session locked;
   - process loopback took only the scene's sound;
   - ffmpeg made HLS segments: 720p30 H.264 on NVENC, with AAC sound.
-- **Languages.** `--lang en`, or L, shows the panel and the subtitles in English, from `voice/lines.en.txt`. The voice
-  stays French, the only one installed. For a stream, `--cues FILE` appends each line as it starts, timed and in both
+- **A better, open voice** (2026-10-20, « trouve une voix mieux et open source »). The five lines are now recorded ahead
+  in French and in English (`voice/fr`, `voice/en`; `voice/README.md` gives the voices and their licences):
+  - **Model:** Chatterbox Multilingual (MIT), run offline from its local cache.
+  - **Voices:** two donated voices, given under CC0 for speech synthesis: Erick in French, Darius in English.
+  - **Check:** Whisper heard each line back word for word.
+
+  The scene plays the panel's language, five semitones down in French and two in English, through the same growl.
+  Piper still says what is typed. The video's credits name the voice heard.
+- **Languages.** `--lang en`, or L, shows the panel and the subtitles in English, from `voice/lines.en.txt`. For a
+  stream, `--cues FILE` appends each line as it starts, timed and in both
   languages, and `--no-subtitles` keeps the subtitles out of the picture. demo-cast's page then subtitles each viewer in
   the language they pick. Through the public link, a headless Chrome showed the English line in step with the picture,
   5.2 s behind the scene.

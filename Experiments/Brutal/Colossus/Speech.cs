@@ -87,4 +87,50 @@ internal sealed class Voice
         Buffer.BlockCopy(audio.GetBuffer(), 0, pcm, 0, pcm.Length * 2);
         return pcm;
     }
+
+    // A line recorded ahead (voice/fr/1.wav, ...): a 16-bit mono PCM WAV, its samples and rate, or null when the file is
+    // missing or not that format.
+    public static (short[] Pcm, int Rate)? ReadWav(string file)
+    {
+        if (!File.Exists(file))
+        {
+            return null;
+        }
+
+        var bytes = File.ReadAllBytes(file);
+        if (bytes.Length < 12 || Encoding.ASCII.GetString(bytes, 0, 4) != "RIFF" || Encoding.ASCII.GetString(bytes, 8, 4) != "WAVE")
+        {
+            return null;
+        }
+
+        int rate = 0, at = 12;
+        while (at + 8 <= bytes.Length)
+        {
+            var id = Encoding.ASCII.GetString(bytes, at, 4);
+            var size = BitConverter.ToInt32(bytes, at + 4);
+            var body = at + 8;
+            if (size < 0 || body + size > bytes.Length)
+            {
+                return null;
+            }
+
+            if (id == "fmt ")
+            {
+                var pcm16Mono = size >= 16 && BitConverter.ToInt16(bytes, body) == 1 && BitConverter.ToInt16(bytes, body + 2) == 1
+                    && BitConverter.ToInt16(bytes, body + 14) == 16;
+                rate = pcm16Mono ? BitConverter.ToInt32(bytes, body + 4) : -1;
+            }
+            else if (id == "data" && rate > 0)
+            {
+                var pcm = new short[size / 2];
+                Buffer.BlockCopy(bytes, body, pcm, 0, pcm.Length * 2);
+                return (pcm, rate);
+            }
+
+            // Chunks are padded to an even size.
+            at = body + size + (size & 1);
+        }
+
+        return null;
+    }
 }

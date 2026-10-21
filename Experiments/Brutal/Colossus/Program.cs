@@ -18,9 +18,10 @@
 // second, default 120, 0 = every frame), --jolt-threads N, --body-threads N (tasks steering and reading the bodies),
 // --serial (wait for each step), --locking (the locking body interface), --face-collide (machines collide in the face).
 // The sound is OpenAL (Sound.cs): a synthesised swarm, wind, chant and rushes, placed in the scene, under a reverb.
-// The colossus speaks its lines (voice/lines.fr.txt) through Piper, a local neural text-to-speech (Speech.cs), and says
-// what is typed in the panel: --piper PATH and --voice MODEL choose the engine and model, --lines FILE the lines,
-// --no-tts keeps the wordless chant. The subtitles follow the panel's language (--lang en|fr, L), in English from
+// The colossus speaks its lines (voice/lines.fr.txt) in the panel's language, from recordings made ahead with free voices
+// (voice/fr, voice/en: see voice/README.md), and says what is typed in the panel through Piper, a local neural
+// text-to-speech (Speech.cs): --piper PATH and --voice MODEL choose the engine and model, --lines FILE other lines (which
+// Piper speaks), --no-tts keeps the wordless chant. The subtitles follow the panel's language (--lang en|fr, L), in English from
 // voice/lines.en.txt; --no-subtitles hides them, and --cues FILE appends each line, timed and in both languages, for a
 // stream's player to subtitle in its viewer's language. C cycles the cameras to a cinematic (--cinematic starts in it): hard cuts between slow
 // moves, in black bands.
@@ -108,13 +109,18 @@ internal static unsafe class Colossus
 
     // The cinematic's black bands, each this share of the height: 2.39:1 on a 16:9 window.
     private const float Letterbox = 0.128f;
-    private const string Credits = "Colossus  ·  BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, OpenAL Soft  ·  voix : Piper, SIWIS (CC BY 4.0)";
+    private const string Credits = "Colossus  ·  BRUTAL (Ahwoo), Jolt Physics, Dear ImGui, OpenAL Soft  ·  ";
+
+    // The voice's credit, after the others: the recorded lines' (voice/README.md), or Piper's.
+    private const string RecordedVoice = "Chatterbox (Resemble AI, MIT), Erick & Darius (Kyutai voice donations, CC0)";
+    private const string PiperVoice = "Piper, SIWIS (CC BY 4.0)";
 
     // The cinematic: shots cut hard one to the next, each a slow move between two framings with its own focal length and
-    // a little handheld sway, over two of the swarm's 32-second cycles; time 0 is 3 s before the face forms.
+    // a little handheld sway, over two of the swarm's 32-second cycles; time 0 is 3 s before the face forms. Three of
+    // them are remade around towers of the city once it is built (DirectedShots).
     private readonly record struct Shot(double Start, SN.Vector3 EyeFrom, SN.Vector3 EyeTo, SN.Vector3 LookFrom, SN.Vector3 LookTo, float Fov, float Sway);
 
-    private static readonly Shot[] Shots =
+    private static Shot[] Shots =
     [
         // A crane over the city toward the swarm.
         new(0.0, new(-170f, 175f, 210f), new(-125f, 140f, 155f), new(0f, 30f, 0f), new(0f, 26f, 0f), 45f, 0.15f),
@@ -166,6 +172,106 @@ internal static unsafe class Colossus
         var eye = SN.Vector3.Lerp(shot.EyeFrom, shot.EyeTo, s) + sway;
         var target = SN.Vector3.Lerp(shot.LookFrom, shot.LookTo, s) + (sway * 0.5f);
         return (eye, target, shot.Fov);
+    }
+
+    // A modelled tower's style, as the scene's shader picks it from its seed (surface): glass walls under 0.3, bronze
+    // under 0.375, steel under 0.45, raw concrete under 0.8, the facade texture's panels above.
+    private static float Style(float seed) => seed * 7.13f % 1f;
+
+    // Remakes three of the cinematic's shots round towers of the city as built, and casts each tower in the style its
+    // shot shows, through its seed: up the foot of a glass curtain wall, then a tilt down to the face; a track behind a
+    // concrete tower that hides the face, until it shows past its edge; a track beside bronze cladding, panning from the
+    // tower to the face. Each shot takes the tower nearest the face, in front of it, tall enough and not yet cast, whose
+    // shot passes clear of every tower; a shot with no tower to fit it stays as it was. Each tower: its instance, its
+    // mesh's top and half width before scaling. Returns the shots, and the towers cast with their new seeds.
+    private static (Shot[] Shots, List<(int Tower, float Seed)> Cast) DirectedShots(Shot[] shots, List<(Drawn Tower, float Top, float Width)> towers)
+    {
+        var placed = towers.Select((t, i) =>
+        {
+            var m = t.Tower.Model;
+            var scale = new SN.Vector3(m.M11, m.M12, m.M13).Length();
+            return (Index: i, Center: new SN.Vector3(m.M41, 0f, m.M43), Half: t.Width * scale, Top: m.M42 + (t.Top * scale));
+        }).ToList();
+
+        // Clear of a tower: above it, or outside the circle round its footprint, with 3 m to spare.
+        bool Clear(SN.Vector3 p) => placed.All(t => p.Y > t.Top + 3f || SN.Vector2.Distance(new(p.X, p.Z), new(t.Center.X, t.Center.Z)) > (t.Half * 1.42f) + 3f);
+        bool PathClear(SN.Vector3 a, SN.Vector3 b) => Enumerable.Range(0, 9).All(i => Clear(SN.Vector3.Lerp(a, b, i / 8f)));
+        var face = new SN.Vector3(FaceCenter.X, 0f, FaceCenter.Z);
+        var cast = new List<(int Tower, float Seed)>();
+
+        // The first shot make frames round a tower, on either side of it, and that tower cast with seed.
+        Shot? Cast(float minTop, float seed, Func<SN.Vector3, float, float, SN.Vector3, SN.Vector3, Shot?> make)
+        {
+            foreach (var t in placed.Where(t => t.Top > minTop && t.Center.Z > 10f && cast.All(c => c.Tower != t.Index)).OrderBy(t => SN.Vector3.Distance(t.Center, face)))
+            {
+                var toFace = SN.Vector3.Normalize(face - t.Center);
+                var across = new SN.Vector3(-toFace.Z, 0f, toFace.X);
+                if ((make(t.Center, t.Half, t.Top, toFace, across) ?? make(t.Center, t.Half, t.Top, toFace, -across)) is { } shot)
+                {
+                    cast.Add((t.Index, seed));
+                    return shot;
+                }
+            }
+
+            return null;
+        }
+
+        var result = shots.ToArray();
+        // 0: up the foot of a glass curtain wall, looking high up it, then down to the swarm as it gathers. Seed 0.4418
+        // is the glass style (0.15).
+        result[0] = Cast(40f, 0.4418f, (c, half, top, toFace, across) =>
+        {
+            var from = c + (across * ((half * 1.42f) + 5f)) + (toFace * half * 0.3f) + new SN.Vector3(0f, -24f, 0f);
+            var to = from + (toFace * 8f) + new SN.Vector3(0f, 12f, 0f);
+            return PathClear(from, to) ? new Shot(shots[0].Start, from, to, c + (toFace * half * 0.3f) + new SN.Vector3(0f, top * 0.8f, 0f), FaceCenter, 55f, 0.05f) : null;
+        }) ?? shots[0];
+        // 6: behind a concrete tower that hides the face, tracking sideways until the face shows past its edge; at the
+        // face's height, or higher to pass over the towers around, as long as the tower still rises 20 m above the
+        // camera. Seed 0.505 is raw concrete (0.6).
+        result[6] = Cast(FaceCenter.Y + FaceB, 0.505f, (c, half, top, toFace, across) =>
+        {
+            foreach (var height in new[] { FaceCenter.Y, FaceCenter.Y + 14f, FaceCenter.Y + 28f })
+            {
+                var back = c - (toFace * ((half * 1.42f) + 14f)) + new SN.Vector3(0f, height, 0f);
+                var from = back - (across * half * 0.2f);
+                var to = back + (across * ((half * 2.2f) + 14f));
+                if (top > height + 20f && PathClear(from, to))
+                {
+                    return new Shot(shots[6].Start, from, to, FaceCenter, FaceCenter + new SN.Vector3(0f, 2f, 0f), 34f, 0.04f);
+                }
+            }
+
+            return null;
+        }) ?? shots[6];
+        // 9: beside bronze cladding, panning from the tower's upper corner to the face. Seed 0.4684 is bronze (0.34).
+        result[9] = Cast(FaceCenter.Y + 10f, 0.4684f, (c, half, top, toFace, across) =>
+        {
+            var side = c + (across * ((half * 1.42f) + 4f));
+            var from = side - (toFace * half * 0.8f) + new SN.Vector3(0f, 8f, 0f);
+            var to = side + (toFace * half * 0.6f) + new SN.Vector3(0f, 14f, 0f);
+            var corner = c + (toFace * half) + new SN.Vector3(0f, MathF.Min(top - 4f, FaceCenter.Y + 10f), 0f);
+            return PathClear(from, to) ? new Shot(shots[9].Start, from, to, corner, FaceCenter, 45f, 0.05f) : null;
+        }) ?? shots[9];
+        Console.WriteLine($"CINEMATIC towers cast: {string.Join(", ", cast.Select(c => $"{c.Tower} at {placed[c.Tower].Center} as {Style(c.Seed):0.00}"))}");
+
+        // Any other shot whose move would pass through a tower moves in toward what it looks at until it is clear, or
+        // else rises, so that the camera never ends up inside a wall.
+        for (var i = 0; i < result.Length; i++)
+        {
+            var s = result[i];
+            if (PathClear(s.EyeFrom, s.EyeTo))
+            {
+                continue;
+            }
+
+            var moved = Enumerable.Range(1, 7).Select(k => s with { EyeFrom = SN.Vector3.Lerp(s.EyeFrom, s.LookFrom, k / 10f), EyeTo = SN.Vector3.Lerp(s.EyeTo, s.LookTo, k / 10f) })
+                .Concat(Enumerable.Range(1, 8).Select(k => s with { EyeFrom = s.EyeFrom + new SN.Vector3(0f, k * 10f, 0f), EyeTo = s.EyeTo + new SN.Vector3(0f, k * 10f, 0f) }))
+                .FirstOrDefault(m => PathClear(m.EyeFrom, m.EyeTo), s);
+            Console.WriteLine($"CINEMATIC shot {i} at {s.Start} s passed through a tower: {(moved == s ? "left as it is" : $"now from {moved.EyeFrom} to {moved.EyeTo}")}");
+            result[i] = moved;
+        }
+
+        return (result, cast);
     }
 
     // ffmpeg: the frames come raw on its standard input, 60 a second; each pair is blended into one frame of a 30-frame
@@ -300,9 +406,13 @@ internal static unsafe class Colossus
         }
         """;
 
-    // The scene in HDR: the low sun, a warm bounce from the abyss, a cool fill from the city, a backlit rim, the sun's
-    // highlight and the sky's reflection on metal. Machines and tower sides are box-mapped with the surface textures
-    // (albedo, then normal, roughness and height): machines get a pulsing eye, towers panels of which a few are lit.
+    // The scene in HDR. One function, surface, gives every material, and the RTX reflections call it again where their
+    // rays land: raw concrete cast in board formwork, glass curtain walls, bronze and steel cladding, the facade
+    // texture's panels and lamps on the modelled towers, each tower in a style of its own; machines with their hull and
+    // pulsing eye; the walkway's concrete. Lighting: the low sun, a warm bounce from the abyss, a cool fill from the city,
+    // a backlit rim, GGX highlights and Schlick's Fresnel. With RTX: soft sun shadows (two rays in the sun's disc),
+    // ambient occlusion (four short rays), and a mirror ray on glass and metal whose hit is shaded in full: its surface,
+    // the sun on it and its own shadow ray. The rays' noise is fixed on screen, so that a still view does not shimmer.
     // Then the haze, coloured by the sky. Alpha marks geometry, so that the second pass puts the sky only where nothing
     // was drawn.
     private const string FragmentShader = "#version 450\n" + SkyGlsl + """
@@ -319,152 +429,323 @@ internal static unsafe class Colossus
         layout(set = 0, binding = 0) uniform sampler2DArray surfaces;
         #ifdef RTX
         layout(set = 0, binding = 1) uniform accelerationStructureEXT scene;
+        // Where a reflection lands: the mesh's vertices (MeshVertex: position, normal, material, seven floats) and the
+        // frame's instances (Drawn), in the order of the top-level structure.
+        layout(std430, set = 0, binding = 2) readonly buffer Mesh { float mesh[]; };
+        struct Instance { mat4 model; vec4 color; vec4 extra; };
+        layout(std430, set = 0, binding = 3) readonly buffer Instances { Instance instances[]; };
         #endif
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         layout(location = 0) out vec4 outColor;
         const vec3 SunColor = vec3(1.0, 0.56, 0.26);
-        vec3 bumped(vec4 map, vec3 n, float strength)
+        const vec3 Bronze = vec3(0.55, 0.36, 0.2);
+        const vec3 Steel = vec3(0.42, 0.43, 0.45);
+        const vec3 DarkSteel = vec3(0.22, 0.22, 0.23);
+
+        // A surface: its diffuse colour, or its reflectance where it is metal; its glow; a bump along the face's two
+        // texture axes; its roughness; its reflectance head-on where it is not metal; how much it is metal.
+        struct Surface { vec3 albedo; vec3 emit; vec2 bump; float rough; float f0; float metal; };
+
+        // Coordinates on the face's plane, in the same box mapping as the vertex shader's tangents.
+        vec2 boxST(vec3 p, vec3 un)
         {
-            vec2 d = (map.rg * 2.0 - 1.0) * strength;
-            return normalize(n + vTangent * d.x + vBitangent * d.y);
+            return vec2(dot(p, abs(un.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)),
+                dot(p, abs(un.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
         }
+
+        // A texture layer tiled every tile metres: with the pixel's own derivatives (footprint < 0), or, where a ray
+        // lands, at the level of detail for a footprint of that many metres.
+        vec4 tex(vec2 uv, float layer, float tile, float footprint)
+        {
+            if (footprint < 0.0)
+            {
+                return texture(surfaces, vec3(uv, layer));
+            }
+
+            return textureLod(surfaces, vec3(uv, layer), log2(max(footprint * float(textureSize(surfaces, 0).x) / tile, 1.0)));
+        }
+
+        // A curtain wall in cells 1.6 m wide and one floor high: panes between mullions, a spandrel at each slab, a few
+        // offices lit (most warm, some cool), some panes with their blinds down. Each pane leans a little, as real glass
+        // does, so that reflections break from pane to pane. px is a pixel's size in metres: as a cell shrinks under two
+        // pixels, the panes fade to their average, so that nothing shimmers far away. f0 is the glass's reflectance head
+        // on: mirror glass reflects more and shows less of the offices behind it.
+        Surface curtain(vec2 st, vec3 un, float seed, float floorHeight, float px, float f0)
+        {
+            vec2 cell = vec2(st.x / 1.6, st.y / floorHeight);
+            vec2 f = fract(cell);
+            vec2 id = floor(cell) + vec2(seed * 97.0, dot(un, vec3(1.0, 2.0, 3.0)) * 13.0);
+            float r = hash12(id);
+            float r2 = hash12(id + 17.0);
+            float fade = clamp(1.0 - (px / 1.6 - 0.25) * 4.0, 0.0, 1.0);
+            float frame = (1.0 - step(0.05, f.x) * step(f.x, 0.95) * step(0.03, f.y) * step(f.y, 0.8)) * fade;
+            float blinds = step(0.84, fract(r * 23.7)) * (1.0 - f0);
+            float lit = step(r, 0.07) * (1.0 - f0);
+            vec3 light = fract(r * 9.1) < 0.7 ? mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.42), fract(r * 5.3)) * 2.0 : vec3(0.7, 0.82, 1.0) * 1.4;
+            // An office's light: brightest under its ceiling, dimmer toward its floor and the pane's sides.
+            float room = (0.3 + 0.7 * smoothstep(0.0, 0.8, f.y)) * (0.7 + 0.3 * sin(3.14159 * f.x));
+            Surface s;
+            s.albedo = mix(mix(vec3(0.012, 0.016, 0.02) * (0.7 + 0.6 * r2), vec3(0.11, 0.095, 0.08), blinds * fade), DarkSteel, frame);
+            s.emit = mix(vec3(1.0, 0.56, 0.26) * 0.1 * (1.0 - f0), lit * (1.0 - frame) * light * room, fade);
+            s.bump = (vec2(r, r2) - 0.5) * 0.05 * fade * (1.0 - frame);
+            s.rough = mix(0.04 + 0.06 * r2, 0.35, frame);
+            s.f0 = f0;
+            s.metal = frame;
+            return s;
+        }
+
+        // Raw concrete cast in formwork, from the concrete texture (panels of 2.4 by 1.2 m with their tie holes, a tile
+        // every 4.8 m), its tone mottled over tens of metres so that the tiles do not repeat, and rain streaks running
+        // down, which fade to their average as they shrink under a pixel (px, in metres).
+        Surface concrete(vec2 st, float seed, float footprint, float px)
+        {
+            vec2 q = st + seed * vec2(37.0, 11.0);
+            vec2 uv = vec2(q.x, -q.y) / 4.8;
+            vec4 map = tex(uv, 5.0, 4.8, footprint);
+            float tone = 0.65 + 0.45 * noise(q * 0.08) + 0.15 * noise(q * 0.6);
+            float rain = mix(0.06, smoothstep(0.5, 0.9, noise(vec2(q.x * 1.7, q.y * 0.045))) * 0.4, clamp(1.0 - px / 0.3, 0.0, 1.0));
+            Surface s;
+            s.albedo = pow(tex(uv, 4.0, 4.8, footprint).rgb, vec3(2.2)) * 0.32 * tone * (1.0 - rain);
+            s.emit = vec3(0.0);
+            s.bump = (map.rg * 2.0 - 1.0) * 1.5;
+            s.rough = mix(0.75, 0.95, map.b) - rain * 0.3;
+            s.f0 = 0.03;
+            s.metal = 0.0;
+            return s;
+        }
+
+        // Metal cladding, from the cladding texture (brushed panels of 1.2 by 2.4 m, a tile every 4.8 m): bronze, steel
+        // or dark steel.
+        Surface cladding(vec2 st, float seed, vec3 tint, float footprint)
+        {
+            vec2 uv = vec2(st.x, -st.y) / 4.8 + seed * vec2(5.1, 2.9);
+            vec4 map = tex(uv, 7.0, 4.8, footprint);
+            Surface s;
+            s.albedo = tint * (0.45 + 0.7 * dot(tex(uv, 6.0, 4.8, footprint).rgb, vec3(0.3, 0.6, 0.1)));
+            s.emit = vec3(0.0);
+            s.bump = (map.rg * 2.0 - 1.0) * 1.0;
+            s.rough = 0.15 + 0.35 * map.b;
+            s.f0 = 0.04;
+            s.metal = 1.0;
+            return s;
+        }
+
+        // The facade texture's concrete panels, a tile every 12.8 m.
+        Surface facade(vec2 st, float seed, float footprint)
+        {
+            vec2 uv = vec2(st.x / 12.8, -st.y / 12.8) + seed * vec2(3.7, 1.3);
+            vec4 map = tex(uv, 3.0, 12.8, footprint);
+            Surface s;
+            s.albedo = pow(tex(uv, 2.0, 12.8, footprint).rgb, vec3(2.2)) * 0.32;
+            s.emit = vec3(0.0);
+            s.bump = (map.rg * 2.0 - 1.0) * 3.0;
+            s.rough = map.b;
+            s.f0 = 0.04;
+            s.metal = 0.0;
+            return s;
+        }
+
+        // The surface of an instance of kind (0 plain, 1 machine, 2 box tower, 3 lamp, 4 modelled tower) where the mesh's
+        // material is mat: unit is the point in the mesh's own space, p in metres on the instance, st on the face's plane,
+        // un the mesh's normal. footprint and px are a pixel's size in metres (footprint < 0: the pixel's derivatives).
+        Surface surface(float kind, float mat, vec4 color, float seed, vec3 unit, vec3 p, vec2 st, vec3 un, vec3 scale, float footprint, float px, float t)
+        {
+            Surface s = Surface(color.rgb, color.rgb * color.a, vec2(0.0), 0.8, 0.04, 0.0);
+            bool side = abs(un.y) < 0.5;
+            if (kind > 0.5 && kind < 1.5)
+            {
+                // A machine: its hull, and its eye, which pulses.
+                vec2 uv = st / 1.2 + seed * vec2(7.31, 3.17);
+                vec4 map = tex(uv, 1.0, 1.2, footprint);
+                s.albedo = pow(tex(uv, 0.0, 1.2, footprint).rgb, vec3(2.2)) * 0.45;
+                s.bump = (map.rg * 2.0 - 1.0) * 2.0;
+                s.rough = map.b;
+                s.f0 = 0.15;
+                float eye = (1.0 - smoothstep(0.18, 0.32, length(unit.xy))) * step(0.49, unit.z);
+                s.emit += vec3(1.0, 0.3, 0.06) * eye * (2.5 + 1.5 * sin(t * 6.0 + seed * 40.0));
+            }
+            else if (kind > 1.5 && kind < 2.5)
+            {
+                // A box tower, when towers.glb is missing: glass on its sides, concrete on its roof.
+                s = side ? curtain(st, un, seed, 3.0, px, 0.2) : concrete(st, seed, footprint, px);
+            }
+            else if (kind > 3.5)
+            {
+                // A modelled tower, in a style chosen by its seed: its walls in glass, clad in bronze or steel, in raw
+                // concrete, or in the facade texture's panels. The mesh's own glass, metal and lamps stay as modelled.
+                float style = fract(seed * 7.13);
+                if (mat > 2.5)
+                {
+                    s.albedo = vec3(0.0);
+                    s.emit = vec3(1.0, 0.45, 0.12) * (4.0 + 2.0 * sin(t * 2.0 + seed * 31.0));
+                }
+                else if ((mat > 0.5 && mat < 1.5) || (side && style < 0.3))
+                {
+                    s = curtain(st, un, seed, 3.2, px, style < 0.3 ? 0.45 : 0.2);
+                }
+                else if (mat > 1.5 || (side && style < 0.45))
+                {
+                    s = cladding(st, seed, mat > 1.5 ? DarkSteel : style < 0.375 ? Bronze : Steel, footprint);
+                }
+                else
+                {
+                    s = style < 0.8 ? concrete(st, seed, footprint, px) : facade(st, seed, footprint);
+                }
+            }
+            else if (kind < 0.5 && min(scale.x, min(scale.y, scale.z)) > 1.0)
+            {
+                // The walkway and its piers; the figure, smaller, keeps its cloth.
+                s = concrete(st, seed, footprint, px);
+            }
+
+            return s;
+        }
+
+        // The light that does not come from the sun: a warm bounce from the abyss below, the cool sky above.
+        vec3 skylight(vec3 n)
+        {
+            return mix(vec3(0.07, 0.035, 0.015), vec3(0.03, 0.04, 0.065), n.y * 0.5 + 0.5);
+        }
+
+        // Interleaved gradient noise: a fixed pattern on screen, which spreads a few rays evenly between neighbours.
+        float ign(vec2 p)
+        {
+            return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+        }
+
         void main()
         {
-            vec3 n = normalize(vNormal);
+            vec3 ng = normalize(vNormal);
             vec3 toEye = pc.eye.xyz - vWorld;
             float dist = length(toEye);
             vec3 v = toEye / dist;
             vec3 sun = pc.sun.xyz;
             float t = pc.eye.w;
             float kind = vExtra.x;
-            vec3 albedo = vColor.rgb;
-            vec3 emit = albedo * vColor.a;
-            float shine = 0.0;
-            float rough = 0.8;
             // Modelled towers map in their own metres, so that window cells keep to the floors at any scale.
             vec3 p = kind > 3.5 ? vUnit : vUnit * vScale;
-            vec2 st = vec2(dot(p, abs(vUnitNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)),
-                dot(p, abs(vUnitNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
-            if (kind > 0.5 && kind < 1.5)
-            {
-                vec2 uv = st / 1.2 + vExtra.y * vec2(7.31, 3.17);
-                vec4 map = texture(surfaces, vec3(uv, 1.0));
-                albedo = pow(texture(surfaces, vec3(uv, 0.0)).rgb, vec3(2.2)) * 0.45;
-                n = bumped(map, n, 2.0);
-                rough = map.b;
-                shine = 1.0;
-                float eye = (1.0 - smoothstep(0.18, 0.32, length(vUnit.xy))) * step(0.49, vUnit.z);
-                emit += vec3(1.0, 0.3, 0.06) * eye * (2.5 + 1.5 * sin(t * 6.0 + vExtra.y * 40.0));
-            }
-            else if (kind > 1.5 && kind < 2.5 && abs(vUnitNormal.y) < 0.5)
-            {
-                // One texture tile is 8 by 4 panels of 1.6 by 3 m; a few panels are lit, their glass streaked by the
-                // texture. Where a panel shrinks under two pixels, the lights fade to their average: no shimmer far away.
-                vec2 cell = vec2(st.x / 1.6, st.y / 3.0);
-                vec2 f = fract(cell);
-                vec2 uv = vec2(cell.x / 8.0, -cell.y / 4.0);
-                vec4 surface = texture(surfaces, vec3(uv, 2.0));
-                vec4 map = texture(surfaces, vec3(uv, 3.0));
-                float window = step(0.1, f.x) * step(f.x, 0.9) * step(0.08, f.y) * step(f.y, 0.92);
-                float r = hash12(floor(cell) + vec2(vExtra.y * 97.0, dot(vUnitNormal, vec3(1.0, 2.0, 3.0)) * 13.0));
-                float lit = step(r, 0.08);
-                vec3 lamp = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.7, 0.4), fract(r * 9.1)) * 2.2;
-                float fade = clamp(1.0 - (max(fwidth(cell.x), fwidth(cell.y)) - 0.25) * 4.0, 0.0, 1.0);
-                emit += mix(vec3(1.0, 0.56, 0.26) * 0.1, window * lit * lamp * (0.45 + 0.8 * surface.r), fade);
-                albedo = pow(surface.rgb, vec3(2.2)) * 0.25;
-                n = bumped(map, n, 3.0);
-                rough = map.b;
-                shine = 0.6;
-            }
-            else if (kind > 3.5)
-            {
-                // A modelled tower: concrete with the facade texture, glass with lit cells of 1.6 by 3.2 m (one floor),
-                // metal with the hull texture, and amber lamps that breathe.
-                float mat = vMaterial;
-                if (mat < 0.5)
-                {
-                    vec2 uv = vec2(st.x / 12.8, -st.y / 12.8) + vExtra.y * vec2(3.7, 1.3);
-                    vec4 map = texture(surfaces, vec3(uv, 3.0));
-                    albedo = pow(texture(surfaces, vec3(uv, 2.0)).rgb, vec3(2.2)) * 0.32;
-                    n = bumped(map, n, 3.0);
-                    rough = map.b;
-                    shine = 0.35;
-                }
-                else if (mat < 1.5)
-                {
-                    vec2 cell = vec2(st.x / 1.6, st.y / 3.2);
-                    vec2 f = fract(cell);
-                    float pane = step(0.06, f.x) * step(f.x, 0.94);
-                    float r = hash12(floor(cell) + vec2(vExtra.y * 97.0, dot(vUnitNormal, vec3(1.0, 2.0, 3.0)) * 13.0));
-                    float lit = step(r, 0.1);
-                    vec3 lamp = mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.42), fract(r * 9.1)) * 2.4;
-                    float fade = clamp(1.0 - (max(fwidth(cell.x), fwidth(cell.y)) - 0.25) * 4.0, 0.0, 1.0);
-                    emit += mix(vec3(1.0, 0.56, 0.26) * 0.12, pane * lit * lamp, fade);
-                    albedo = vec3(0.02, 0.022, 0.025);
-                    rough = 0.12;
-                    shine = 1.0;
-                }
-                else if (mat < 2.5)
-                {
-                    vec2 uv = st / 2.4 + vExtra.y * vec2(5.1, 2.9);
-                    vec4 map = texture(surfaces, vec3(uv, 1.0));
-                    albedo = pow(texture(surfaces, vec3(uv, 0.0)).rgb, vec3(2.2)) * 0.35;
-                    n = bumped(map, n, 2.0);
-                    rough = map.b;
-                    shine = 1.0;
-                }
-                else
-                {
-                    emit = vec3(1.0, 0.45, 0.12) * (4.0 + 2.0 * sin(t * 2.0 + vExtra.y * 31.0));
-                }
-            }
+            vec2 st = boxST(p, vUnitNormal);
+            float px = max(max(fwidth(st.x), fwidth(st.y)), 1e-4);
+            Surface s = surface(kind, vMaterial, vColor, vExtra.y, vUnit, p, st, vUnitNormal, vScale, -1.0, px, t);
+            vec3 n = normalize(ng + vTangent * s.bump.x + vBitangent * s.bump.y);
+            float mirror = (1.0 - s.rough) * (1.0 - s.rough);
+            float fog = 1.0 - exp(-dist * 0.0028);
+            fog = max(fog, clamp(-vWorld.y / 140.0, 0.0, 1.0) * (1.0 - exp(-dist * 0.012)));
 
-            // RTX: one ray toward the sun for its shadow; on glass and metal, one along the mirror direction, whose hit
-            // replaces the sky in the reflection: a dark facade or a lamp, hazed by its distance.
             float shadow = 1.0;
+            float ao = 1.0;
             vec3 traced = vec3(-1.0);
             #ifdef RTX
             if (pc.params.y > 0.5)
             {
-                vec3 origin = vWorld + normalize(vNormal) * 0.04;
-                rayQueryEXT q;
-                // The swarm shades the city, the walkway and the figure, but not itself: its machines would hide each other's
-                // sunlight and the head would read as a silhouette.
+                vec3 origin = vWorld + ng * 0.04;
+                vec2 noise2 = vec2(ign(gl_FragCoord.xy), ign(gl_FragCoord.xy + vec2(47.0, 17.0)));
+                // The swarm shades the city, the walkway and the figure, but not itself: its machines would hide each
+                // other's sunlight and the head would read as a silhouette. Two rays through the sun's disc, widened to
+                // 1.4 degrees by the haze, soften the shadows' edges.
                 uint casters = kind > 0.5 && kind < 1.5 ? 0x01u : 0x05u;
-                rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, casters, origin, 0.02, sun, 800.0);
-                while (rayQueryProceedEXT(q)) {}
-                if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionNoneEXT)
+                vec3 sx = normalize(cross(sun, vec3(0.0, 1.0, 0.0)));
+                vec3 sy = cross(sun, sx);
+                shadow = 0.0;
+                for (int i = 0; i < 2; i++)
                 {
-                    shadow = 0.0;
+                    float a = 6.2831853 * fract(noise2.x + float(i) * 0.5);
+                    vec3 d = normalize(sun + (sx * cos(a) + sy * sin(a)) * sqrt(fract(noise2.y + float(i) * 0.5)) * 0.012);
+                    rayQueryEXT q;
+                    rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, casters, origin, 0.02, d, 800.0);
+                    while (rayQueryProceedEXT(q)) {}
+                    shadow += rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? 0.5 : 0.0;
                 }
 
-                if (shine > 0.5)
+                // Ambient occlusion: four rays over the hemisphere, cosine-weighted, up to 6 m, against the city and the
+                // walkway; a near hit darkens more than a far one. Not on the machines, nor deep in the haze.
+                if ((kind < 0.5 || kind > 1.5) && fog < 0.9)
+                {
+                    vec3 bx = normalize(abs(ng.y) < 0.99 ? cross(ng, vec3(0.0, 1.0, 0.0)) : cross(ng, vec3(1.0, 0.0, 0.0)));
+                    vec3 by = cross(ng, bx);
+                    float occluded = 0.0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float u = fract(noise2.x + float(i) * 0.25);
+                        float a = 6.2831853 * fract(noise2.y + float(i) * 0.618034);
+                        vec3 d = normalize((bx * cos(a) + by * sin(a)) * sqrt(u) + ng * sqrt(1.0 - u));
+                        rayQueryEXT q;
+                        rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, 0x01u, origin, 0.02, d, 6.0);
+                        while (rayQueryProceedEXT(q)) {}
+                        if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionNoneEXT)
+                        {
+                            occluded += 1.0 - rayQueryGetIntersectionTEXT(q, true) / 6.0;
+                        }
+                    }
+
+                    ao = 1.0 - occluded * 0.25 * 0.85;
+                }
+
+                // The mirror ray, on glass and metal: where it lands, that surface lit by the sun (behind its own shadow
+                // ray) and the abyss's bounce, glowing if it glows, with the sky in it if it shines, hazed by distance.
+                if (mirror > 0.2)
                 {
                     vec3 r = reflect(-v, n);
+                    r = normalize(r + ng * max(0.02 - dot(r, ng), 0.0));
                     rayQueryEXT m;
                     rayQueryInitializeEXT(m, scene, gl_RayFlagsOpaqueEXT, 0xFF, origin, 0.05, r, 900.0);
                     while (rayQueryProceedEXT(m)) {}
                     if (rayQueryGetIntersectionTypeEXT(m, true) != gl_RayQueryCommittedIntersectionNoneEXT)
                     {
                         float d = rayQueryGetIntersectionTEXT(m, true);
-                        bool lamp = rayQueryGetIntersectionInstanceCustomIndexEXT(m, true) == 1;
-                        vec3 hit = lamp ? vec3(1.0, 0.45, 0.12) * 4.0 : vec3(0.025, 0.02, 0.016) + SunColor * 0.04;
-                        traced = mix(hit, sky(r, sun, t) * 0.55, 1.0 - exp(-d * 0.0028));
+                        Instance hit = instances[rayQueryGetIntersectionInstanceIdEXT(m, true)];
+                        uint at = (uint(rayQueryGetIntersectionInstanceCustomIndexEXT(m, true)) + uint(rayQueryGetIntersectionPrimitiveIndexEXT(m, true)) * 3u) * 7u;
+                        vec2 bc = rayQueryGetIntersectionBarycentricsEXT(m, true);
+                        vec3 hun = normalize(vec3(mesh[at + 3u], mesh[at + 4u], mesh[at + 5u]) * (1.0 - bc.x - bc.y)
+                            + vec3(mesh[at + 10u], mesh[at + 11u], mesh[at + 12u]) * bc.x
+                            + vec3(mesh[at + 17u], mesh[at + 18u], mesh[at + 19u]) * bc.y);
+                        mat4x3 w2o = rayQueryGetIntersectionWorldToObjectEXT(m, true);
+                        vec3 hp = origin + r * d;
+                        vec3 hunit = w2o * vec4(hp, 1.0);
+                        vec3 hscale = vec3(length(hit.model[0].xyz), length(hit.model[1].xyz), length(hit.model[2].xyz));
+                        vec3 hpm = hit.extra.x > 3.5 ? hunit : hunit * hscale;
+                        float foot = (dist + d) * 0.0012;
+                        Surface hs = surface(hit.extra.x, mesh[at + 6u], hit.color, hit.extra.y, hunit, hpm, boxST(hpm, hun), hun, hscale, foot, foot, t);
+                        vec3 hn = normalize(hun * mat3(w2o));
+                        hn = dot(hn, r) > 0.0 ? -hn : hn;
+                        float hl = max(dot(hn, sun), 0.0);
+                        if (hl > 0.0)
+                        {
+                            rayQueryEXT q;
+                            rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, 0x05u, hp + hn * 0.05, 0.02, sun, 800.0);
+                            while (rayQueryProceedEXT(q)) {}
+                            hl = rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? hl : 0.0;
+                        }
+
+                        vec3 hf0 = mix(vec3(hs.f0), hs.albedo, hs.metal);
+                        vec3 hF = hf0 + (1.0 - hf0) * pow(1.0 - max(dot(hn, -r), 0.0), 5.0);
+                        vec3 lit = hs.albedo * (1.0 - hs.metal) * (skylight(hn) + SunColor * 1.8 * hl) + hs.emit
+                            + hF * sky(reflect(r, hn), sun, t) * (1.0 - hs.rough) * (1.0 - hs.rough);
+                        traced = mix(lit, sky(r, sun, t) * 0.55, 1.0 - exp(-d * 0.0028));
                     }
                 }
             }
             #endif
+
+            // The sun's GGX highlight and the reflection, weighed by Schlick's Fresnel; the reflection of a rough surface
+            // fades to the ambient light. Metals reflect their colour and are not diffuse.
             float ndl = max(dot(n, sun), 0.0) * shadow;
-            vec3 ambient = mix(vec3(0.07, 0.035, 0.015), vec3(0.035, 0.035, 0.045), n.y * 0.5 + 0.5);
-            vec3 fill = vec3(0.16, 0.17, 0.22) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0);
-            float back = pow(1.0 - max(dot(n, v), 0.0), 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
+            float nv = max(dot(n, v), 1e-3);
+            vec3 f0 = mix(vec3(s.f0), s.albedo, s.metal);
+            vec3 fresnel = f0 + (1.0 - f0) * pow(1.0 - nv, 5.0);
             vec3 h = normalize(sun + v);
-            vec3 spec = SunColor * pow(max(dot(n, h), 0.0), mix(180.0, 12.0, rough)) * mix(3.0, 0.3, rough) * shine * ndl;
-            float fresnel = 0.3 + 0.7 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
-            vec3 env = shine > 0.0 ? (traced.x >= 0.0 ? traced : sky(reflect(-v, n), sun, t)) * fresnel * (1.0 - rough) * 0.5 * shine : vec3(0.0);
-            vec3 c = albedo * (ambient + fill + SunColor * 1.8 * ndl) + spec + env + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + emit;
-            float fog = 1.0 - exp(-dist * 0.0028);
-            fog = max(fog, clamp(-vWorld.y / 140.0, 0.0, 1.0) * (1.0 - exp(-dist * 0.012)));
+            float a2 = pow(max(s.rough * s.rough, 0.03), 2.0);
+            float nh = max(dot(n, h), 0.0);
+            float lh = max(dot(sun, h), 0.1);
+            float dd = nh * nh * (a2 - 1.0) + 1.0;
+            vec3 spec = SunColor * 1.8 * (a2 / (3.14159 * dd * dd)) * 0.25 / (lh * lh) * (f0 + (1.0 - f0) * pow(1.0 - lh, 5.0)) * ndl;
+            vec3 ambient = skylight(n) * ao;
+            vec3 fill = vec3(0.2, 0.25, 0.38) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0) * ao;
+            float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
+            vec3 reflected = traced.x >= 0.0 ? traced : sky(reflect(-v, n), sun, t);
+            vec3 env = fresnel * mix(ambient * 2.0, reflected, mirror);
+            vec3 c = s.albedo * (1.0 - s.metal) * (1.0 - fresnel) * (ambient + fill + SunColor * 1.8 * ndl) + spec + env
+                + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + s.emit;
             c = mix(c, sky(-v, sun, t) * 0.55, fog);
             outColor = vec4(c, 1.0);
         }
@@ -590,9 +871,31 @@ internal static unsafe class Colossus
             english.TryAdd(script[i], inEnglish[i]);
         }
 
+        // The lines recorded ahead, line for line, in each language (voice/fr/1.wav, voice/en/1.wav, ...; voice/README.md
+        // says with what voices), when all of them are there: the colossus then speaks in the panel's language, and Piper
+        // only what is typed. Not with --lines or --no-tts.
+        (short[] Pcm, int Rate)[]? Recorded(string lang)
+        {
+            var found = new (short[] Pcm, int Rate)[script.Length];
+            for (var i = 0; i < found.Length; i++)
+            {
+                if (Voice.ReadWav(Path.Combine(AppContext.BaseDirectory, "voice", lang, $"{i + 1}.wav")) is not { } line)
+                {
+                    return null;
+                }
+
+                found[i] = line;
+            }
+
+            return found.Length > 0 ? found : null;
+        }
+
+        var ownLines = args.Contains("--no-tts") || ArgText("--lines") is not null;
+        var recordedFr = ownLines ? null : Recorded("fr");
+        var recordedEn = ownLines ? null : Recorded("en");
         var cuesFile = ArgText("--cues");
         var subtitlesOn = !args.Contains("--no-subtitles");
-        var linesTask = tts is null || script.Length == 0
+        var linesTask = tts is null || script.Length == 0 || (recordedFr is not null && recordedEn is not null)
             ? Task.FromResult(Array.Empty<(string Text, short[] Pcm)>())
             : Task.Run(() => script.Select(line => (Text: line, Pcm: tts.Say(line))).ToArray());
 
@@ -938,17 +1241,21 @@ internal static unsafe class Colossus
         {
             Bindings = [new VkDescriptorSetLayoutBinding { DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }],
         }, null);
-        // The scene's set: its textures and, with RTX, the frame's top-level acceleration structure; one set a frame in flight.
+        // The scene's set: its textures and, with RTX, the frame's top-level acceleration structure, the mesh's vertices and
+        // the frame's instances, for the surfaces the reflections land on; one set a frame in flight.
         VkDescriptorSetLayoutBinding[] sceneBindings = rtx
             ? [new VkDescriptorSetLayoutBinding { Binding = 0, DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit },
-               new VkDescriptorSetLayoutBinding { Binding = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }]
+               new VkDescriptorSetLayoutBinding { Binding = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit },
+               new VkDescriptorSetLayoutBinding { Binding = 2, DescriptorType = VkDescriptorType.StorageBuffer, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit },
+               new VkDescriptorSetLayoutBinding { Binding = 3, DescriptorType = VkDescriptorType.StorageBuffer, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }]
             : [new VkDescriptorSetLayoutBinding { Binding = 0, DescriptorType = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1, StageFlags = VkShaderStageFlags.FragmentBit }];
         var sceneSetLayout = device.CreateDescriptorSetLayout(new DescriptorSetLayoutEx.CreateInfo { Bindings = sceneBindings }, null);
         var descriptorPool = device.CreateDescriptorPool(new DescriptorPoolEx.CreateInfo
         {
             MaxSets = 1 + FramesInFlight,
             PoolSizes = [new VkDescriptorPoolSize { Type = VkDescriptorType.CombinedImageSampler, DescriptorCount = 1 + FramesInFlight },
-                         new VkDescriptorPoolSize { Type = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = FramesInFlight }],
+                         new VkDescriptorPoolSize { Type = VkDescriptorType.AccelerationStructureKHR, DescriptorCount = FramesInFlight },
+                         new VkDescriptorPoolSize { Type = VkDescriptorType.StorageBuffer, DescriptorCount = 2 * FramesInFlight }],
         }, null);
         var layout = device.CreatePipelineLayout([sceneSetLayout], [pushRange], null);
         var pipeline = Pipeline(device, layout, sceneRenderPass, vertexModule, fragmentModule, scene: true);
@@ -968,8 +1275,9 @@ internal static unsafe class Colossus
         VkDeviceMemory meshMemory;
         if (rtx)
         {
-            // The ray queries' bottom-level structures read their triangles from this buffer too.
-            meshBuffer = AddressBuffer(device, physical, meshSize.Value, VkBufferUsageFlags.VertexBufferBit | VkBufferUsageFlags.AccelerationStructureBuildInputReadOnlyBitKHR, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, out meshMemory);
+            // The ray queries' bottom-level structures read their triangles from this buffer too, and the scene's shader
+            // the normals and materials where a reflection lands.
+            meshBuffer = AddressBuffer(device, physical, meshSize.Value, VkBufferUsageFlags.VertexBufferBit | VkBufferUsageFlags.StorageBufferBit | VkBufferUsageFlags.AccelerationStructureBuildInputReadOnlyBitKHR, VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, out meshMemory);
         }
         else
         {
@@ -992,7 +1300,7 @@ internal static unsafe class Colossus
         var acquired = new VkSemaphore[FramesInFlight];
         for (var i = 0; i < FramesInFlight; i++)
         {
-            instanceBuffers[i] = device.CreateBuffer(new VkBufferCreateInfo { Size = instanceSize, Usage = VkBufferUsageFlags.VertexBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
+            instanceBuffers[i] = device.CreateBuffer(new VkBufferCreateInfo { Size = instanceSize, Usage = VkBufferUsageFlags.VertexBufferBit | VkBufferUsageFlags.StorageBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
             instanceMemory[i] = device.AllocateMemory(physical, instanceBuffers[i], VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
             device.BindBufferMemory(instanceBuffers[i], instanceMemory[i], memoryOffset: ByteSize.Zero);
             instanceMapped[i] = (nint)(Drawn*)device.MapMemory<Drawn>(new MapInfo(instanceMemory[i]) { Region = new MapRegion { Size = instanceSize } });
@@ -1011,7 +1319,7 @@ internal static unsafe class Colossus
 
         // The surface textures, made with ComfyUI and Blender (see the README): one 2D array, uploaded once through a
         // staging buffer, then mipmapped by blits.
-        string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh"];
+        string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh", "concrete_albedo", "concrete_nrh", "cladding_albedo", "cladding_nrh"];
         var texels = new List<byte[]>();
         var texSize = 0;
         foreach (var name in textureFiles)
@@ -1160,6 +1468,15 @@ internal static unsafe class Colossus
         var rng = new Random(7);
         var statics = new List<Drawn>();
         var towers = City(statics, rng, towerVariants);
+        // The cinematic's shots round towers, and the towers they cast in the style each shot shows.
+        var tops = towerVariants.Select(v => cube.Skip(v.First).Take(v.Count).Max(m => m.Pos.Y)).ToArray();
+        (Shots, var cast) = DirectedShots(Shots, [.. towers.Select(p => (p.Instance, tops[p.Variant], towerVariants[p.Variant].Width))]);
+        foreach (var (k, seed) in cast)
+        {
+            var (variant, hero) = towers[k];
+            hero.Extra.Y = seed;
+            towers[k] = (variant, hero);
+        }
         foreach (var (c, size, color) in Solids())
         {
             Box(statics, c, size, 0f, color, 0f);
@@ -1205,7 +1522,12 @@ internal static unsafe class Colossus
 
                 var accel = rt.Tlas[i];
                 var accelWrite = new VkWriteDescriptorSetAccelerationStructureKHR { AccelerationStructureCount = 1, AccelerationStructures = &accel };
-                device.UpdateDescriptorSets([new VkWriteDescriptorSet { Next = &accelWrite, DstSet = sceneSets[i], DstBinding = 1, DescriptorCount = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR }], []);
+                var meshInfo = new VkDescriptorBufferInfo { Buffer = meshBuffer, Range = meshSize };
+                var instanceInfo = new VkDescriptorBufferInfo { Buffer = instanceBuffers[i], Range = instanceSize };
+                device.UpdateDescriptorSets(
+                    [new VkWriteDescriptorSet { Next = &accelWrite, DstSet = sceneSets[i], DstBinding = 1, DescriptorCount = 1, DescriptorType = VkDescriptorType.AccelerationStructureKHR },
+                     new VkWriteDescriptorSet { DstSet = sceneSets[i], DstBinding = 2, DescriptorCount = 1, DescriptorType = VkDescriptorType.StorageBuffer, BufferInfo = &meshInfo },
+                     new VkWriteDescriptorSet { DstSet = sceneSets[i], DstBinding = 3, DescriptorCount = 1, DescriptorType = VkDescriptorType.StorageBuffer, BufferInfo = &instanceInfo }], []);
             }
         }
 
@@ -1223,8 +1545,9 @@ internal static unsafe class Colossus
         mirror.Poll(0);
         var (sound, soundNote) = soundTask.Result;
         Console.WriteLine($"SOUND {soundNote}; voice plugins {(mirror.Present ? "running" : "not running")}");
-        Console.WriteLine($"VOICE {ttsNote}; {script.Length} lines");
-        bool assembled = false, autoCycle = true, speaking = tts is not null || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
+        Console.WriteLine($"VOICE {ttsNote}; {script.Length} lines{(recordedFr is null ? "" : ", recorded in French")}{(recordedEn is null ? "" : ", recorded in English")}");
+        var hasVoice = tts is not null || recordedFr is not null || recordedEn is not null;
+        bool assembled = false, autoCycle = true, speaking = hasVoice || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
         bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute"), panelOn = !args.Contains("--no-panel");
         float volume = recording ? 0.9f : 0.6f, hearing = 0f;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
@@ -1392,7 +1715,7 @@ internal static unsafe class Colossus
             {
                 if (saying.IsCompletedSuccessfully)
                 {
-                    sound.Speak(saying.Result.Pcm, tts!.Rate);
+                    sound.Speak(saying.Result.Pcm, tts!.Rate, Soundscape.SpeechPitch);
                     subtitle = saying.Result.Text;
                     Cue(cuesFile, subtitle, english, saying.Result.Pcm.Length / (double)tts.Rate / Soundscape.SpeechPitch);
                     talking = true;
@@ -1404,12 +1727,16 @@ internal static unsafe class Colossus
 
                 saying = null;
             }
-            else if (sound is not null && lines.Length > 0 && speaking && !voice && assembled && glow > 0.85f && !talking && now >= nextLineAt)
+            else if (sound is not null && ((_french ? recordedFr : recordedEn) is not null || lines.Length > 0) && speaking && !voice && assembled && glow > 0.85f && !talking && now >= nextLineAt)
             {
-                sound.Speak(lines[nextLine].Pcm, tts!.Rate);
-                subtitle = lines[nextLine].Text;
-                Cue(cuesFile, subtitle, english, lines[nextLine].Pcm.Length / (double)tts.Rate / Soundscape.SpeechPitch);
-                nextLine = (nextLine + 1) % lines.Length;
+                // The recording in the panel's language, or Piper's French.
+                var (pcm, rate, pitch) = (_french ? recordedFr : recordedEn) is { } recorded
+                    ? (recorded[nextLine].Pcm, recorded[nextLine].Rate, _french ? Soundscape.FrenchPitch : Soundscape.EnglishPitch)
+                    : (lines[nextLine].Pcm, tts!.Rate, Soundscape.SpeechPitch);
+                sound.Speak(pcm, rate, pitch);
+                subtitle = script[nextLine];
+                Cue(cuesFile, subtitle, english, pcm.Length / (double)rate / pitch);
+                nextLine = (nextLine + 1) % script.Length;
                 talking = true;
             }
 
@@ -1430,7 +1757,7 @@ internal static unsafe class Colossus
             var stepDt = Math.Clamp(frameDt, 1f / 240f, 1f / 30f);
             // The jaw follows the spoken line's loudness; without a voice, or while another voice speaks, the syllables of
             // the wordless chant.
-            var mouth = talking ? MathF.Min(1f, (sound?.SpeechLevel ?? 0f) * 1.3f) : voice || (speaking && tts is null) ? Speech((float)simTime) : 0f;
+            var mouth = talking ? MathF.Min(1f, (sound?.SpeechLevel ?? 0f) * 1.3f) : voice || (speaking && !hasVoice) ? Speech((float)simTime) : 0f;
             Lap(8);
             if (stepping is null || physicsHz <= 0 || (stepping.IsCompleted && now - lastKick >= 1.0 / physicsHz))
             {
@@ -1652,7 +1979,7 @@ internal static unsafe class Colossus
                 ImGui.SetNextWindowPos(new float2(extent.Width / 2f, Letterbox * extent.Height / 2f), ImGuiCond.Always, new float2(0.5f, 0.5f));
                 if (ImGui.Begin("###credits"u8, Overlay | ImGuiWindowFlags.NoBackground))
                 {
-                    ImGui.TextDisabled(Credits);
+                    ImGui.TextDisabled($"{Credits}{(_french ? "voix : " : "voice: ")}{((_french ? recordedFr : recordedEn) is not null ? RecordedVoice : PiperVoice)}");
                 }
 
                 ImGui.End();
@@ -2720,6 +3047,7 @@ internal static unsafe class Colossus
         private readonly List<(VkBuffer Buffer, VkDeviceMemory Memory)> _buffers = [];
         private readonly List<VkAccelerationStructureKHR> _structures = [];
         private readonly ulong[] _blas;
+        private readonly uint[] _firstVertex;
         private readonly VkDeviceAddress[] _scratch;
         private readonly VkDeviceAddress[] _instances;
         private readonly nint[] _mapped;
@@ -2730,6 +3058,7 @@ internal static unsafe class Colossus
             var meshAddress = device.GetBufferDeviceAddress(mesh);
             var ranges = new List<(int First, int Count)> { (0, cubeCount) };
             ranges.AddRange(variants.Select(v => (v.First, v.Count)));
+            _firstVertex = [.. ranges.Select(r => (uint)r.First)];
             var vertices = ranges.Max(r => r.First + r.Count);
             var n = ranges.Count;
             var geometries = new VkAccelerationStructureGeometryKHR[n];
@@ -2826,7 +3155,8 @@ internal static unsafe class Colossus
         public VkAccelerationStructureKHR[] Tlas { get; }
 
         // Instance k of frame slot f: its model matrix (System.Numerics, row vectors) as Vulkan's 3 by 4 rows, and the
-        // structure of mesh m (0 the cube, 1 + v tower variant v).
+        // structure of mesh m (0 the cube, 1 + v tower variant v). Its custom index is the mesh's first vertex, from which
+        // the shader finds the triangle a ray hits.
         // Written field by field into the mapped buffer, in VkAccelerationStructureInstanceKHR's layout: the binding's
         // bit-field setters cost about 2 µs an instance, too much for 10,000 a frame.
         public void Write(int f, int k, in SN.Matrix4x4 m, int mesh, bool lamp, bool swarm = false)
@@ -2835,7 +3165,7 @@ internal static unsafe class Colossus
             p->X = new SN.Vector4(m.M11, m.M21, m.M31, m.M41);
             p->Y = new SN.Vector4(m.M12, m.M22, m.M32, m.M42);
             p->Z = new SN.Vector4(m.M13, m.M23, m.M33, m.M43);
-            p->CustomAndMask = (lamp ? 1u : 0u) | ((lamp ? 0x02u : swarm ? 0x04u : 0x01u) << 24);
+            p->CustomAndMask = _firstVertex[mesh] | ((lamp ? 0x02u : swarm ? 0x04u : 0x01u) << 24);
             p->OffsetAndFlags = (uint)VkGeometryInstanceFlagsKHR.TriangleFacingCullDisableBitKHR << 24;
             p->Structure = _blas[mesh];
         }

@@ -33,8 +33,9 @@
     <None Include="textures\*.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="head\head_points.bin" CopyToOutputDirectory="PreserveNewest" />
     <None Include="city\towers.glb" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The colossus's lines, original; Piper speaks them at run time (Speech.cs). -->
+    <!-- The colossus's lines, original, and their recordings (voice/README.md); Piper says what is typed (Speech.cs). -->
     <None Include="voice\lines.*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="voice\fr\*.wav;voice\en\*.wav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

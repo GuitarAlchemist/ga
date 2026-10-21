@@ -22,8 +22,12 @@ using SN = System.Numerics;
 
 internal sealed class Soundscape : IDisposable
 {
-    // The spoken lines play ten semitones down, formants too: a giant's chest. Piper speaks fast to make up for it.
+    // Piper's lines play ten semitones down, formants too: a giant's chest. Piper speaks fast to make up for it.
     public const float SpeechPitch = 0.56f;
+
+    // The recorded lines (voice/fr, voice/en) are already a man's voice: the French goes five semitones down, the
+    // English, deeper to begin with, two.
+    public const float FrenchPitch = 0.75f, EnglishPitch = 0.89f;
 
     private const int Rate = 48000;
 
@@ -71,7 +75,6 @@ internal sealed class Soundscape : IDisposable
         // A colossal voice carries: it fades little with distance.
         _speech.ReferenceDistance = 90f;
         _speech.RolloffFactor = 0.25f;
-        _speech.Pitch = SpeechPitch;
 
         _wind.SourceRelative = true;
         _wind.Position = new float3(0f, 0f, 0f);
@@ -161,10 +164,12 @@ internal sealed class Soundscape : IDisposable
 
     public float SpeechLevel { get; private set; }
 
-    // Speaks one line of 16-bit mono audio at its rate, cutting off any line still playing.
-    public void Speak(short[] pcm, int rate)
+    // Speaks one line of 16-bit mono audio at its rate, played at pitch (which also slows it), cutting off any line still
+    // playing.
+    public void Speak(short[] pcm, int rate, float pitch)
     {
         _speech.Stop();
+        _speech.Pitch = pitch;
         _speech.Buffer = default;
         if (!_spoken.IsNull())
         {
