@@ -974,3 +974,58 @@ stayed near 5 ms. This was not seen in the two final runs or uncapped. It is sti
 - **The swarm ignores the scene.** Its bodies pass through Lego boxes, which are drawn only, like the city.
 - **HallSlice shows no surfaces.** It only brightens glows.
 - **No assets.** Every surface is procedural, and no model, texture or asset was added.
+
+## The swarm builds; path tracing (2026-10-21)
+
+Asked by the author: « continue a ameliorer la scene the swarm - peut etre utilise le systeme de lego et
+Comfyui/blender », then « Fait un max out comme dans la scene de l'observatoir », with full path tracing chosen.
+
+![The swarm builds the propylon, path traced with Ray Reconstruction](evidence/swarm-propylon-pt-20261021.jpg)
+![The swarm builds the tholos, DLAA without path tracing](evidence/swarm-tholos-20261021.jpg)
+![Acropolis on the Colossus, path traced with Ray Reconstruction](evidence/lego-acropolis-pt-20261021.jpg)
+
+**The swarm builds between two faces.** The auto cycle keeps its 32 s, so the cinematic stays in step. It runs a cloud,
+then a face from 6 s, then from 24 s a Lego block, a different one each cycle: `tholos`, `temple` (temple@2) and
+`propylon`.
+- **Points.** At start the Colossus asks `Lego.Api.Describe` for each block, seed 7. It spreads one point per machine
+  over the block's boxes, by area: on their sides and tops, not under them. No point lies inside another box, so two
+  boxes that touch take none where they meet.
+- **Placement.** Each block is centred on the face's centre and scaled to fit 28 m across and 22 m high. It turns
+  slowly.
+- **The machines.** A machine settles flat on its box's face. Its hull takes the box's colour, with a faint glow of that
+  colour, and a brazier's flames light theirs. The tint rides in the instance's kind, from 1 to 1.4, so the rays see it
+  too.
+- **Collisions.** Bodies do not collide while they build, as while they form the face.
+
+**Path tracing.** `--pt` (with RTX) follows one path a pixel, up to three bounces, in place of the ambient, fill, rim,
+occlusion and mirror rays.
+- **Each bounce** picks the specular lobe (GGX) or the diffuse one (cosine), by how much the surface reflects.
+- **Where the path lands**, it adds that surface's glow and the sun, behind a shadow ray.
+- **A path that leaves the scene** brings the sky's light without the sun's disc, which the shadow rays already count.
+- **Unchanged:** the sun on the first surface and its highlight.
+
+One path a pixel is noisy: `--rr` denoises it.
+
+Measured on an RTX 5080: hidden window, 1600 × 900, 10,000 swarm bodies, GPU timestamps, vsync.
+
+| Run | GPU ms, p50 / p95 | Frame ms, p50 / p95 |
+|---|---|---|
+| `--cinematic --dlss` (DLAA, no path tracing), 36 s with the tholos | 2.54 / 4.28 | 16.66 / 17.67 |
+| `--dlss --rr --pt` (DLAA), 15 s | 12.72 / 13.71 | 16.53 / 33.04 |
+| `--lego acropolis --dlss --rr --pt` (DLAA), 15 s | 11.85 / 13.08 | 16.63 / 33.29 |
+| `--cinematic --dlss --rr --pt` (DLAA), 98 s with the three blocks | 12.43 / 20.68 | 16.90 / 33.98 |
+| `--cinematic --dlss quality --rr --pt`, 98 s with the three blocks | 7.24 / 11.74 | 16.64 / 17.95 |
+
+The full max out that holds 60 fps is therefore `--dlss quality --rr --pt`. At DLAA, the paths outgrow the frame at
+p95. The propylon image was taken before the machines' own glow was lowered from 0.25 to 0.1.
+
+*To verify.*
+- These runs used a hidden window; a visible one is still to check.
+- Frame generation (DLSS-G) is not wired: Streamline finds `sl.dlss_g` but the Colossus does not ask for it.
+
+**Limits.**
+- **Points by area, not by eye.** A column gets as many machines as a wall of the same area. Thin parts, such as the
+  acroteria, can get none.
+- **The block floats.** It stands at the face's height, not on the walkway.
+- **No ComfyUI or Blender.** ComfyUI was not running, and the blocks needed no asset: every surface is still
+  procedural.

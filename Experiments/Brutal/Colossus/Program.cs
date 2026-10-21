@@ -31,12 +31,14 @@
 // DLAA at the window's size by default, or rendered smaller and upscaled. NVIDIA's DLLs are not in the repository: --sl-path
 // DIR names their folder (Streamline 2.14.1's bin), --sl-verbose prints Streamline's log. Without them, the MSAA as before.
 // --rr adds DLSS Ray Reconstruction (in --dlss's mode, DLAA by default), which denoises the RTX rays: each pixel traces
-// fewer of them, and glass and metal reflect through their roughness.
+// fewer of them, and glass and metal reflect through their roughness. --pt path traces: each pixel follows one path of up
+// to three bounces (GGX or diffuse, the sun's shadow ray at each), which brings all the light but the sun's in place
+// of the ambient, fill, rim, occlusion and mirror rays; best with --rr, which denoises the paths.
 // --lego BLOCK[@VERSION] (--lego-seed N, --lego-arg name=value...) sets a Lego scene (../Lego, gaia's "fractal Lego") on a
 // mesa behind the face, where the city's towers give way to it. It is generated and validated before the window opens:
 // a refused scene ends the run with code 2. Its boxes are instances of the cube like every other static, so the RTX rays,
 // DLSS and Ray Reconstruction light them as they do the rest. C's cameras gain a fifth, the default here, which orbits
-// the scene.
+// the scene and sways.
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -611,6 +613,8 @@ internal static unsafe class Colossus
                 vec2 uv = st / 1.2 + seed * vec2(7.31, 3.17);
                 vec4 map = tex(uv, 1.0, 1.2, footprint);
                 s.albedo = pow(tex(uv, 0.0, 1.2, footprint).rgb, vec3(2.2)) * 0.45;
+                // Settled on a Lego block (kind 1 to 1.4), the hull takes the box's colour, its grain still showing.
+                s.albedo = mix(s.albedo, color.rgb * (0.7 + s.albedo), clamp((kind - 1.0) * 2.5, 0.0, 1.0));
                 s.bump = (map.rg * 2.0 - 1.0) * 2.0;
                 s.rough = map.b;
                 s.f0 = 0.15;
@@ -733,11 +737,17 @@ internal static unsafe class Colossus
             return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
         }
 
-        #ifdef RR
         // Ray Reconstruction gathers the rays over the frames and between neighbours: one through the sun's disc and two
         // for the occlusion suffice. Without it, two and four.
+        #ifdef RR
         const int ShadowRays = 1;
         const int OcclusionRays = 2;
+        #else
+        const int ShadowRays = 2;
+        const int OcclusionRays = 4;
+        #endif
+
+        #if defined(RR) || defined(PT)
 
         // A microfacet's normal around n, drawn from the GGX normals that the view v sees (Heitz, 2018) at roughness
         // alpha; u is two numbers in [0, 1). A reflection about it follows the surface's own spread.
@@ -757,7 +767,9 @@ internal static unsafe class Colossus
             vec3 m = normalize(vec3(alpha * nh.x, alpha * nh.y, max(nh.z, 1e-4)));
             return normalize(tx * m.x + ty * m.y + n * m.z);
         }
+        #endif
 
+        #ifdef RR
         // The specular reflectance over the hemisphere for reflectance f0 head on, at roughness alpha, seen at nv: the
         // fit that NVIDIA's guide to Ray Reconstruction gives (Ray Tracing Gems, chapter 32). v * mat2(...) is HLSL's
         // mul(matrix, v) with the matrix's rows in that order.
@@ -772,9 +784,119 @@ internal static unsafe class Colossus
             bias *= clamp(f0.g * 50.0, 0.0, 1.0);
             return f0 * max(scale, 0.0) + max(bias, 0.0);
         }
-        #else
-        const int ShadowRays = 2;
-        const int OcclusionRays = 4;
+        #endif
+
+        #ifdef PT
+        // --pt, path tracing: each pixel follows one path of up to Bounces bounces from its surface instead of the
+        // ambient, fill, rim, occlusion and mirror rays. At each bounce it picks the specular lobe (the mirror of a GGX
+        // microfacet) or the diffuse one (cosine-weighted) by how much the surface reflects. Where the ray lands it adds
+        // that surface's glow and the sun on it, behind its own shadow ray, hazed by distance. A ray that leaves the scene
+        // brings the sky's light without the sun's disc, which the shadow rays already count. One path a pixel is
+        // noisy: Ray Reconstruction gathers the paths over the frames and between neighbours.
+        const int Bounces = 3;
+
+        struct Hit { vec3 p; vec3 n; float d; Surface s; };
+
+        // Where a ray from o along r first lands (the city, the swarm or a lamp), that surface, and its normal turned
+        // toward the ray; false where the ray leaves the scene. footprint: a pixel's size in metres where the ray starts.
+        bool trace(vec3 o, vec3 r, float footprint, float t, out Hit h)
+        {
+            rayQueryEXT m;
+            rayQueryInitializeEXT(m, scene, gl_RayFlagsOpaqueEXT, 0xFF, o, 0.03, r, 900.0);
+            while (rayQueryProceedEXT(m)) {}
+            if (rayQueryGetIntersectionTypeEXT(m, true) == gl_RayQueryCommittedIntersectionNoneEXT)
+            {
+                return false;
+            }
+
+            h.d = rayQueryGetIntersectionTEXT(m, true);
+            Instance hit = instances[rayQueryGetIntersectionInstanceIdEXT(m, true)];
+            uint at = (uint(rayQueryGetIntersectionInstanceCustomIndexEXT(m, true)) + uint(rayQueryGetIntersectionPrimitiveIndexEXT(m, true)) * 3u) * 7u;
+            vec2 bc = rayQueryGetIntersectionBarycentricsEXT(m, true);
+            vec3 hun = normalize(vec3(mesh[at + 3u], mesh[at + 4u], mesh[at + 5u]) * (1.0 - bc.x - bc.y)
+                + vec3(mesh[at + 10u], mesh[at + 11u], mesh[at + 12u]) * bc.x
+                + vec3(mesh[at + 17u], mesh[at + 18u], mesh[at + 19u]) * bc.y);
+            mat4x3 w2o = rayQueryGetIntersectionWorldToObjectEXT(m, true);
+            h.p = o + r * h.d;
+            vec3 hunit = w2o * vec4(h.p, 1.0);
+            vec3 hscale = vec3(length(hit.model[0].xyz), length(hit.model[1].xyz), length(hit.model[2].xyz));
+            vec3 hpm = hit.extra.x > 3.5 && hit.extra.x < 4.5 ? hunit : hunit * hscale;
+            float foot = footprint + h.d * 0.0012;
+            h.s = surface(hit.extra.x, mesh[at + 6u], hit.color, hit.extra.y, hunit, hpm, boxST(hpm, hun), hun, hscale, foot, foot, t);
+            h.n = normalize(hun * mat3(w2o));
+            h.n = dot(h.n, r) > 0.0 ? -h.n : h.n;
+            return true;
+        }
+
+        // 1 where the sun reaches p past the city and the swarm (the lamps cast no shadow), 0 where it does not.
+        float sunlit(vec3 p, vec3 n, vec3 sun)
+        {
+            rayQueryEXT q;
+            rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, 0x05u, p + n * 0.05, 0.02, sun, 800.0);
+            while (rayQueryProceedEXT(q)) {}
+            return rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? 1.0 : 0.0;
+        }
+
+        // The light that reaches the eye from the surface s at p by one path: n its shading normal, g its geometric one, v
+        // toward the eye, footprint a pixel's size there. firstHit: how far the first ray went when it was a reflection,
+        // for Ray Reconstruction, or -1.
+        vec3 pathTrace(vec3 p, vec3 n, vec3 g, vec3 v, Surface s, float footprint, float t, vec3 sun, vec2 pixel, out float firstHit)
+        {
+            vec3 light = vec3(0.0);
+            vec3 weight = vec3(1.0);
+            firstHit = -1.0;
+            for (int b = 0; b < Bounces; b++)
+            {
+                vec2 u = vec2(ign(pixel + vec2(31.0, 7.0) * float(b + 1)), ign(pixel + vec2(11.0, 53.0) * float(b + 1)));
+                float pick = ign(pixel + vec2(97.0, 41.0) * float(b + 1));
+                vec3 f0 = mix(vec3(s.f0), s.albedo, s.metal);
+                vec3 fresnel = f0 + (1.0 - f0) * pow(1.0 - max(dot(n, v), 1e-3), 5.0);
+                float specular = clamp(max(fresnel.r, max(fresnel.g, fresnel.b)) + s.metal, 0.05, 0.95);
+                bool mirror = pick < specular;
+                vec3 r;
+                if (mirror)
+                {
+                    r = reflect(-v, ggxNormal(n, v, max(s.rough * s.rough, 0.002), u));
+                    weight *= fresnel / specular;
+                }
+                else
+                {
+                    vec3 bx = normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, vec3(1.0, 0.0, 0.0)));
+                    vec3 by = cross(n, bx);
+                    float a = 6.2831853 * u.y;
+                    r = normalize((bx * cos(a) + by * sin(a)) * sqrt(u.x) + n * sqrt(1.0 - u.x));
+                    weight *= s.albedo * (1.0 - s.metal) * (1.0 - fresnel) / (1.0 - specular);
+                }
+
+                if (dot(r, g) <= 0.0 || max(weight.r, max(weight.g, weight.b)) < 0.002)
+                {
+                    break;
+                }
+
+                Hit h;
+                if (!trace(p + g * 0.04, r, footprint, t, h))
+                {
+                    float s2 = max(dot(r, sun), 0.0);
+                    light += weight * (sky(r, sun, t) - vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s2) * 40.0);
+                    break;
+                }
+
+                firstHit = b == 0 && mirror ? h.d : firstHit;
+                float sunOn = max(dot(h.n, sun), 0.0);
+                sunOn = sunOn > 0.0 ? sunOn * sunlit(h.p, h.n, sun) : 0.0;
+                float haze = 1.0 - exp(-h.d * 0.0028);
+                light += weight * mix(h.s.albedo * (1.0 - h.s.metal) * SunColor * 1.8 * sunOn + h.s.emit, sky(r, sun, t) * 0.55, haze);
+                weight *= 1.0 - haze;
+                footprint += h.d * 0.0012;
+                p = h.p;
+                n = h.n;
+                g = h.n;
+                v = -r;
+                s = h.s;
+            }
+
+            return light;
+        }
         #endif
 
         void main()
@@ -801,6 +923,8 @@ internal static unsafe class Colossus
             vec3 traced = vec3(-1.0);
             vec3 mirrored = reflect(-v, n);
             float hitDistance = -1.0;
+            vec3 indirect = vec3(0.0);
+            bool pathed = false;
             #ifdef RTX
             if (pc.params.y > 0.5)
             {
@@ -823,6 +947,10 @@ internal static unsafe class Colossus
                     shadow += rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? 1.0 / float(ShadowRays) : 0.0;
                 }
 
+                #ifdef PT
+                indirect = pathTrace(vWorld, n, ng, v, s, dist * 0.0012, t, sun, gl_FragCoord.xy, hitDistance);
+                pathed = true;
+                #else
                 // Ambient occlusion: rays over the hemisphere, cosine-weighted, up to 6 m, against the city and the
                 // walkway; a near hit darkens more than a far one. Not on the machines, nor deep in the haze.
                 if ((kind < 0.5 || kind > 1.5) && fog < 0.9)
@@ -901,6 +1029,7 @@ internal static unsafe class Colossus
                         traced = mix(lit, sky(r, sun, t) * 0.55, 1.0 - exp(-d * 0.0028));
                     }
                 }
+                #endif
             }
             #endif
 
@@ -921,8 +1050,11 @@ internal static unsafe class Colossus
             float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
             vec3 reflected = traced.x >= 0.0 ? traced : sky(mirrored, sun, t);
             vec3 env = fresnel * mix(ambient * 2.0, reflected, mirror);
-            vec3 c = s.albedo * (1.0 - s.metal) * (1.0 - fresnel) * (ambient + fill + SunColor * 1.8 * ndl) + spec + env
-                + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + s.emit;
+            // Path traced, the paths bring all the light but the sun's, and its highlight.
+            vec3 c = pathed
+                ? s.albedo * (1.0 - s.metal) * (1.0 - fresnel) * SunColor * 1.8 * ndl + spec + indirect + s.emit
+                : s.albedo * (1.0 - s.metal) * (1.0 - fresnel) * (ambient + fill + SunColor * 1.8 * ndl) + spec + env
+                    + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + s.emit;
             c = mix(c, sky(-v, sun, t) * 0.55, fog);
             outColor = vec4(c, 1.0);
             #ifdef DLSS
@@ -1054,6 +1186,12 @@ internal static unsafe class Colossus
     private static SN.Vector3[] _faceP = [], _faceN = [], _dirs = [];
     private static float[] _eye = [], _mouth = [], _jaw = [], _phase = [], _radius = [], _height = [], _speed = [];
     private static float _memberRadius;
+
+    // What the swarm builds between two faces, one a cycle in turn: Lego blocks, each a point a machine on its faces
+    // (centred, in metres, front toward +Z), the face's outward normal, and the box's colour with its glow in W.
+    private static readonly string[] Builds = ["tholos", "temple", "propylon"];
+    private static SN.Vector3[][] _buildP = [], _buildN = [];
+    private static SN.Vector4[][] _buildC = [];
 
     // How many tasks steer and read the bodies, 2,048 at a time (--body-threads; 1 is one loop). They run on the step's
     // worker while Jolt's own threads are idle.
@@ -1559,8 +1697,10 @@ internal static unsafe class Colossus
         }, null);
 
         var vertexModule = Shader(device, VertexShader, ShaderKind.VertexShader, "swarm.vert");
+        // --pt: the RTX shaders path trace.
+        var pt = rtx && args.Contains("--pt") ? "#define PT 1\n" : "";
         var fragmentModule = rtx
-            ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n"), ShaderKind.FragmentShader, "swarm-rtx.frag", vulkan13: true)
+            ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n" + pt), ShaderKind.FragmentShader, "swarm-rtx.frag", vulkan13: true)
             : Shader(device, FragmentShader, ShaderKind.FragmentShader, "swarm.frag");
         var compositeVertex = Shader(device, CompositeVertexShader, ShaderKind.VertexShader, "composite.vert");
         var compositeFragment = Shader(device, CompositeFragmentShader, ShaderKind.FragmentShader, "composite.frag");
@@ -1738,7 +1878,7 @@ internal static unsafe class Colossus
             dlssLayout = device.CreatePipelineLayout([sceneSetLayout], [dlssPushRange], null);
             dlssVertexModule = Shader(device, VertexShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.VertexShader, "swarm-dlss.vert");
             dlssFragmentModule = rtx
-                ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n"), ShaderKind.FragmentShader, "swarm-rtx-dlss.frag", vulkan13: true)
+                ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n" + pt), ShaderKind.FragmentShader, "swarm-rtx-dlss.frag", vulkan13: true)
                 : Shader(device, FragmentShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.FragmentShader, "swarm-dlss.frag");
             skyMotionVertex = Shader(device, SkyMotionVertexShader, ShaderKind.VertexShader, "sky-motion.vert");
             skyMotionFragment = Shader(device, SkyMotionFragmentShader, ShaderKind.FragmentShader, "sky-motion.frag");
@@ -1746,7 +1886,7 @@ internal static unsafe class Colossus
             skyMotionPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, skyMotionFragment, scene: false, dlss: true, guides: guideImages.Length);
             if (ray)
             {
-                rayFragmentModule = Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n#define RR 1\n"), ShaderKind.FragmentShader, "swarm-rtx-rr.frag", vulkan13: true);
+                rayFragmentModule = Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n#define RR 1\n" + pt), ShaderKind.FragmentShader, "swarm-rtx-rr.frag", vulkan13: true);
                 raySkyFragment = Shader(device, SkyMotionFragmentShader.Replace("#version 450\n", "#version 450\n#define RR 1\n"), ShaderKind.FragmentShader, "sky-motion-rr.frag");
                 rayPipeline = Pipeline(device, dlssLayout, dlssRenderPass, dlssVertexModule, rayFragmentModule, scene: true, dlss: true, guides: guideImages.Length, writeGuides: true);
                 raySkyPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, raySkyFragment, scene: false, dlss: true, guides: guideImages.Length, writeGuides: true);
@@ -2105,7 +2245,7 @@ internal static unsafe class Colossus
         var lastDrawn = 0;
         SN.Vector3 lastEye = default, lastForward = default;
         var lastViewProj = SN.Matrix4x4.Identity;
-        float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
+        float speedScale = 1f, cohesion = 1.2f, glow = 0f, build = 0f, buildYaw = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
         int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : lego is not null ? 4 : 0, shownPreset = -1;
         var presets = lego is null ? 4 : 5;
         // The lines made, the next one and when; a line typed in the panel while Piper makes it; the subtitle shown.
@@ -2118,6 +2258,7 @@ internal static unsafe class Colossus
         var subtitle = string.Empty;
         var camEye = new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f);
         var camTarget = FaceCenter;
+        var shape = 0;
         var frameHistory = new float2[History];
         var physicsHistory = new float2[History];
         for (var i = 0; i < History; i++)
@@ -2297,10 +2438,19 @@ internal static unsafe class Colossus
             }
 
             wasTalking = talking;
+            // The auto cycle, 32 s: a cloud, a face from 6 s, and from 24 s the cycle's Lego block, one of Builds in turn.
+            var building = false;
             if (autoCycle)
             {
                 var c = (now - cycleStart) % 32.0;
                 assembled = (c >= 6.0 && c < 24.0) || voice || talking || saying is not null || (mirrorOn && mirror.FaceState is "working" or "waiting");
+                building = !assembled && c >= 24.0 && _buildP.Length > 0;
+                if (building)
+                {
+                    shape = (int)Math.Floor((now - cycleStart) / 32.0) % _buildP.Length;
+                    shape = shape < 0 ? shape + _buildP.Length : shape;
+                    buildYaw = -0.55f + (0.07f * (float)(c - 24.0));
+                }
             }
 
             // Jolt steps on a worker while this thread draws, at most --physics-hz times a second (default 120; 0 steps
@@ -2332,7 +2482,7 @@ internal static unsafe class Colossus
                 Lap(2);
                 kickDt = physicsHz <= 0 ? stepDt : kickDt + ((Math.Clamp((float)(now - lastKick), 1f / 240f, 1f / 30f) - kickDt) * 0.12f);
                 lastKick = now;
-                var (dt, t0, together, open, pull, pace) = (kickDt, (float)simTime, assembled, mouth, cohesion, speedScale);
+                var (dt, t0, together, open, pull, pace, form, turn) = (kickDt, (float)simTime, assembled, mouth, cohesion, speedScale, building ? shape : -1, buildYaw);
                 var (from, into) = (_states, _statesBack);
                 simTime += dt;
                 stepping = Task.Run(() =>
@@ -2340,10 +2490,10 @@ internal static unsafe class Colossus
                     // On the worker, while this thread draws from the same buffer: steer from the bodies as drawn, step,
                     // and read every body back into the other buffer.
                     var started = Stopwatch.GetTimestamp();
-                    if (faceNoCollide && together != collideOff)
+                    if (faceNoCollide && (together || form >= 0) != collideOff)
                     {
-                        collideOff = together;
-                        if (together)
+                        collideOff = together || form >= 0;
+                        if (collideOff)
                         {
                             layerPairs.DisableCollision(1, 1);
                         }
@@ -2353,7 +2503,7 @@ internal static unsafe class Colossus
                         }
                     }
 
-                    Steer(bodies, from, t0, together, open, pull, pace);
+                    Steer(bodies, from, t0, together, open, pull, pace, form, turn);
                     var steered = Stopwatch.GetTimestamp();
                     var stepError = physics.Update(dt, 1, temp, jobs);
                     var updated = Stopwatch.GetTimestamp();
@@ -2377,6 +2527,7 @@ internal static unsafe class Colossus
             var ahead = (float)Math.Min(now - lastRead, 1.0 / 30.0);
 
             glow += ((assembled ? 1f : 0f) - glow) * Math.Min(1f, frameDt * 0.8f);
+            build += ((building ? 1f : 0f) - build) * Math.Min(1f, frameDt * 0.8f);
             // The eyes brighten as the microphone hears the user, and pulse while voice-avatar waits for them.
             var listening = !mirrorOn ? 0f : Math.Max(mirror.Hearing, mirror.FaceState == "waiting" ? 0.5f + (0.5f * MathF.Sin((float)now * 3f)) : 0f);
             hearing += (listening - hearing) * Math.Min(1f, frameDt * 8f);
@@ -2390,7 +2541,7 @@ internal static unsafe class Colossus
                     ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
                     ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
                     ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, {2}, bloom"), staticInstances.Length + _ids.Length, drawCalls, dlss is not null && dlssOn ? (ray && rayOn ? "DLSS RR" : "DLSS") : "MSAA 4x"));
-                    ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
+                    ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : building ? "building" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
                     ImGui.Separator();
                     if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
                     {
@@ -2608,7 +2759,7 @@ internal static unsafe class Colossus
             {
                 // The colossus's own chant stays silent while another voice speaks, and everything ducks under it.
                 var (centre, speed) = motion;
-                sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled, voice || talking ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, (soundOn ? volume : 0f) * fade, frameDt);
+                sound.Update(camEye, camTarget, centre, speed, FaceCenter, assembled || building, voice || talking ? 0f : mouth, voice || hearing > 0.3f ? 1f : 0f, (soundOn ? volume : 0f) * fade, frameDt);
             }
 
             // The frame: wait for this slot, fill its instances, record the scene and the panel, submit, present.
@@ -2642,7 +2793,7 @@ internal static unsafe class Colossus
             var useRay = useDlss && rayOn;
             var target = useDlss ? thisFrame.AsSpan() : new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
-            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length);
+            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length, build, shape, buildYaw);
             var forward = SN.Vector3.Normalize(camTarget - camEye);
             var dlssReset = !dlssWasOn || useRay != rayWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
             if (useDlss)
@@ -2836,7 +2987,7 @@ internal static unsafe class Colossus
                 {
                     var file = $"colossus-{captures[nextCapture]:0.#}s.png";
                     SavePng(file, image, (int)extent.Width, (int)extent.Height);
-                    Console.WriteLine($"SWARM captured {file} at {now:F1} s ({(assembled ? "face" : "cloud")})");
+                    Console.WriteLine($"SWARM captured {file} at {now:F1} s ({(assembled ? "face" : building ? Builds[shape] : "cloud")})");
                     nextCapture++;
                     last = clock.Elapsed.TotalSeconds; // the capture's wait is not a frame time
                 }
@@ -3076,7 +3227,109 @@ internal static unsafe class Colossus
         }
 
         ReadStates(bodies, _states);
+        BuildShapes(n);
     }
+
+    // Spreads n points over each Lego block of Builds, by area: on the boxes' sides and tops (the swarm does not hang
+    // under them) and never inside another box, so that two boxes that touch take no points where they meet. Each
+    // block is scaled to fit 28 m across and 22 m high: smaller, the machines lie closer and its shape reads.
+    private static void BuildShapes(int n)
+    {
+        var shapes = new List<(SN.Vector3[] P, SN.Vector3[] N, SN.Vector4[] C)>();
+        foreach (var name in Builds)
+        {
+            var described = Lego.Api.Describe(name, 7UL, []);
+            if (!described.Valid)
+            {
+                Console.Error.WriteLine($"LEGO {name} refused: {described.Problems.First().Message}");
+                continue;
+            }
+
+            var boxes = described.Scene.Boxes.Select(b => SN.Matrix4x4.CreateScale(b.Size) * SN.Matrix4x4.CreateTranslation(0f, b.Size.Y / 2f, 0f) * b.World).ToArray();
+            var inverse = boxes.Select(m => SN.Matrix4x4.Invert(m, out var i) ? i : SN.Matrix4x4.Identity).ToArray();
+            var bounds = boxes.Select(m =>
+            {
+                var c = m.Translation;
+                var half = (Abs(SN.Vector3.TransformNormal(SN.Vector3.UnitX, m)) + Abs(SN.Vector3.TransformNormal(SN.Vector3.UnitY, m)) + Abs(SN.Vector3.TransformNormal(SN.Vector3.UnitZ, m))) / 2f;
+                return (Min: c - half, Max: c + half);
+            }).ToArray();
+
+            // Each box's five faces that are not its underside: centre, the two edges across it, its normal, its area.
+            var faces = new List<(int Box, SN.Vector3 Centre, SN.Vector3 U, SN.Vector3 V, SN.Vector3 N)>();
+            var sum = new List<float>();
+            var total = 0f;
+            for (var b = 0; b < boxes.Length; b++)
+            {
+                var axes = new[] { SN.Vector3.TransformNormal(SN.Vector3.UnitX, boxes[b]), SN.Vector3.TransformNormal(SN.Vector3.UnitY, boxes[b]), SN.Vector3.TransformNormal(SN.Vector3.UnitZ, boxes[b]) };
+                for (var a = 0; a < 3; a++)
+                {
+                    for (var sign = -1f; sign <= 1f; sign += 2f)
+                    {
+                        var normal = SN.Vector3.Normalize(axes[a]) * sign;
+                        var (u, v) = (axes[(a + 1) % 3], axes[(a + 2) % 3]);
+                        var area = SN.Vector3.Cross(u, v).Length();
+                        if (normal.Y < -0.5f || area < 1e-4f)
+                        {
+                            continue;
+                        }
+
+                        faces.Add((b, boxes[b].Translation + (axes[a] * sign / 2f), u, v, normal));
+                        total += area;
+                        sum.Add(total);
+                    }
+                }
+            }
+
+            var rng = new Random(13);
+            var (p, nrm, col) = (new SN.Vector3[n], new SN.Vector3[n], new SN.Vector4[n]);
+            var cumulative = sum.ToArray();
+            for (var i = 0; i < n; i++)
+            {
+                for (var attempt = 0; ; attempt++)
+                {
+                    var k = Array.BinarySearch(cumulative, (i + rng.NextSingle()) / n * total);
+                    var face = faces[Math.Min(k < 0 ? ~k : k, faces.Count - 1)];
+                    var at = face.Centre + (face.U * (rng.NextSingle() - 0.5f)) + (face.V * (rng.NextSingle() - 0.5f));
+                    var probe = at + (face.N * 0.03f);
+                    var inside = false;
+                    for (var b = 0; b < boxes.Length && !inside; b++)
+                    {
+                        if (b != face.Box && probe.X > bounds[b].Min.X && probe.Y > bounds[b].Min.Y && probe.Z > bounds[b].Min.Z && probe.X < bounds[b].Max.X && probe.Y < bounds[b].Max.Y && probe.Z < bounds[b].Max.Z)
+                        {
+                            var local = SN.Vector3.Abs(SN.Vector3.Transform(probe, inverse[b]));
+                            inside = local.X < 0.5f && local.Y < 0.5f && local.Z < 0.5f;
+                        }
+                    }
+
+                    if (!inside || attempt == 12)
+                    {
+                        var box = described.Scene.Boxes[face.Box];
+                        (p[i], nrm[i], col[i]) = (at, face.N, new SN.Vector4(box.Color, box.Surface.Code == 3 ? (float)box.Surface.Strength : 0f));
+                        break;
+                    }
+                }
+            }
+
+            var (min, max) = (p.Aggregate(SN.Vector3.Min), p.Aggregate(SN.Vector3.Max));
+            var size = max - min;
+            var scale = MathF.Min(28f / MathF.Max(size.X, size.Z), 22f / size.Y);
+            for (var i = 0; i < n; i++)
+            {
+                p[i] = (p[i] - ((min + max) / 2f)) * scale;
+            }
+
+            shapes.Add((p, nrm, col));
+        }
+
+        _buildP = shapes.Select(s => s.P).ToArray();
+        _buildN = shapes.Select(s => s.N).ToArray();
+        _buildC = shapes.Select(s => s.C).ToArray();
+    }
+
+    private static SN.Vector3 Abs(SN.Vector3 v) => SN.Vector3.Abs(v);
+
+    // Where a built point stands once its block has turned by yaw about its middle, at the face's centre.
+    private static SN.Vector3 Built(SN.Vector3 p, float cos, float sin) => FaceCenter + new SN.Vector3((p.X * cos) + (p.Z * sin), p.Y, (p.Z * cos) - (p.X * sin));
 
     // Every body's pose and velocity, one call each. The bulk read, BodyLockInterface.GetBodyStates, is declared by the
     // binding but its entry point is missing from the package's jolt.dll (2026.10.2, win-x64).
@@ -3123,6 +3376,7 @@ internal static unsafe class Colossus
         ["Swarm: {0}"] = "Essaim : {0}",
         ["face"] = "visage",
         ["cloud"] = "nuée",
+        ["building"] = "bâtisse",
         ["Disperse"] = "Disperser",
         ["Assemble"] = "Assembler",
         ["Auto cycle"] = "Cycle auto",
@@ -3224,10 +3478,12 @@ internal static unsafe class Colossus
 
     // Each body's new velocity: toward its target, capped, with a little turbulence so the swarm never looks rigid.
     // When the face speaks, its jaw drops with each syllable, as far as mouth (0 to 1) says.
-    private static void Steer(BodyInterface bodies, BodyState[] from, float t, bool assembled, float mouth, float cohesion, float speedScale)
+    // Between two faces, shape (>= 0) names the block of Builds the swarm builds, turned by yaw.
+    private static void Steer(BodyInterface bodies, BodyState[] from, float t, bool assembled, float mouth, float cohesion, float speedScale, int shape, float yaw)
     {
         var max = 28f * speedScale;
-        var stir = assembled ? 0.25f : 2f;
+        var stir = assembled || shape >= 0 ? 0.25f : 2f;
+        var (cos, sin) = (MathF.Cos(yaw), MathF.Sin(yaw));
         ForBodies(_ids.Length, (start, end) =>
         {
             for (var i = start; i < end; i++)
@@ -3238,6 +3494,10 @@ internal static unsafe class Colossus
                 if (assembled)
                 {
                     target = _faceP[i] + (new SN.Vector3(0f, -1.6f, -0.4f) * (mouth * _jaw[i]));
+                }
+                else if (shape >= 0)
+                {
+                    target = Built(_buildP[shape][i], cos, sin);
                 }
                 else
                 {
@@ -3277,8 +3537,12 @@ internal static unsafe class Colossus
     // heads by a share of the way that depends on the frame's time, so it turns as fast at 60 frames a second as at 700.
     // Written in parallel, a thousand machines a task, the frames got slower and their tail longer: the tasks contend
     // with Jolt's worker and its jobs for the cores. One loop it stays.
-    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, float ahead, float frameDt, RayScene? rt, int slot, int first)
+    // Between two faces, build (0 to 1) tints each machine with the colour of the Lego box it settles on, lights it with
+    // that box's glow, and lays it flat on the box: shape names the block, last built, and yaw its turn.
+    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, float ahead, float frameDt, RayScene? rt, int slot, int first, float build, int shape, float yaw)
     {
+        var (cos, sin) = (MathF.Cos(yaw), MathF.Sin(yaw));
+        var built = build > 0.01f && shape >= 0 && shape < _buildP.Length;
         var n = Math.Min(_ids.Length, o.Length);
         var scale = SN.Matrix4x4.CreateScale(_memberRadius * 1.7f, _memberRadius * 0.9f, _memberRadius * 3.8f);
         var flat = SN.Matrix4x4.CreateScale(_memberRadius * 2.4f, _memberRadius * 0.7f, _memberRadius * 4.2f);
@@ -3288,17 +3552,30 @@ internal static unsafe class Colossus
             var v = V(_states[i].LinearVelocity);
             var p = V(_states[i].Position) + (v * ahead);
             // Settled on the face, a machine lies flat like a scale: its length down the slope, its thin side out.
-            var normal = _faceN[i];
-            var settled = glow > 0.5f && v.LengthSquared() <= 4f;
+            var onBlock = built && build > glow;
+            var normal = onBlock ? Built(_buildN[shape][i], cos, sin) - FaceCenter : _faceN[i];
+            var settled = (glow > 0.5f || build > 0.5f) && v.LengthSquared() <= 4f;
             var slope = MathF.Abs(normal.Y) > 0.95f ? SN.Vector3.UnitZ - (normal * normal.Z) : (normal * normal.Y) - SN.Vector3.UnitY;
             var want = v.LengthSquared() > 4f ? SN.Vector3.Normalize(v) : settled ? SN.Vector3.Normalize(slope) : _dirs[i];
             var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, turn));
             _dirs[i] = d;
             var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
             var emission = ((_eye[i] * 5f * (1f + (1.5f * hearing))) + (_mouth[i] * 2.5f * speech)) * glow;
+            var color = SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow);
+            var tint = 0f;
+            if (built)
+            {
+                // The tint rides in the kind, from 1 to 1.4, for the shader and the rays alike. Each machine also glows
+                // faintly in its colour, so the block reads against the haze.
+                var c = _buildC[shape][i];
+                color = SN.Vector3.Lerp(color, new SN.Vector3(c.X, c.Y, c.Z), build);
+                emission += ((MathF.Min(c.W, 12f) * 0.6f) + 0.1f) * build;
+                tint = build;
+            }
+
             var model = (settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up);
             rt?.Write(slot, first + i, model, 0, false, swarm: true);
-            o[i] = new Drawn(model, new SN.Vector4(SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow), emission), new SN.Vector4(1f, i * 0.618034f % 1f, 0f, 0f));
+            o[i] = new Drawn(model, new SN.Vector4(color, emission), new SN.Vector4(1f + (0.4f * tint), i * 0.618034f % 1f, 0f, 0f));
         }
 
         return n;
