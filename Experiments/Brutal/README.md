@@ -408,8 +408,61 @@ One trap on the way: the first version took 22.6 ms a frame with the GPU 5 % bus
 
 The swarm now writes its ray-tracing instances as it writes its draw instances, as raw 64-byte records.
 
-The Observatory's other RTX features need NVIDIA's SDKs, which BRUTAL does not bind, so they are not here: DLSS, ray
-reconstruction, frame generation, and the path tracer.
+**DLSS** (2026-10-21, asked as « On peut rajouter d'autres features Nvidia? »). `--dlss [dlaa|quality|balanced|performance|ultra]`
+replaces the 4x MSAA with NVIDIA DLSS, DLAA by default. BRUTAL does not bind NVIDIA's SDKs, so `Colossus/Streamline.cs`
+loads Streamline 2.14.1 at run time, in its manual hooking mode: BRUTAL's Vulkan calls stay as they are, and Streamline
+learns the instance, device and queue and is shown the images each frame.
+- **No file of NVIDIA's is in the repository.** The DLLs come from a folder on the machine: `--sl-path`, by default
+  `C:\tmp\godot-sl214\bin`, Streamline 2.14.1's `bin` that the Observatory's RTX build fetched.
+- **Each file is checked before it loads.** `sl.interposer.dll`, `sl.common.dll`, `sl.dlss.dll` and `nvngx_dlss.dll` load
+  only once WinVerifyTrust has verified each one, offline, and its signer is NVIDIA Corporation.
+- **Nothing is downloaded.** Over-the-air updates and downloaded plugins stay off.
+- **The NVIDIA App's DLSS override.** With it on, as on this machine, Streamline still loads NVIDIA-signed 2.14.16 plugins
+  from `C:\ProgramData\NVIDIA\NGX\models` in place of the folder's. That is the machine's setting, not the program's.
+- **Without the DLLs, or on another GPU,** Colossus prints `DLSS off: <why>; 4x MSAA` and renders as before. This was
+  checked with a missing folder.
+- **Rendering.**
+  - The scene renders without MSAA at DLSS's size, into colour, depth and motion.
+  - A last pass fills the sky where nothing was drawn; its motion comes from the camera's turn alone.
+  - DLSS writes the window-sized image into the HDR image's first mip, and the bloom and tone mapping go on from there.
+  - The geometry is jittered along Halton (2, 3).
+  - Each machine's motion comes from its matrix in the previous frame, which the CPU keeps.
+  - The rays' noise moves each frame, and DLSS averages it.
+  - The present goes through Streamline's proxy for `vkQueuePresentKHR`, as its manual hooking guide requires.
+- **The sky.** A first version left the sky to the second pass, behind DLSS's upscaled alpha. That alpha was not
+  antialiased, so the towers' edges against the sky came out stepped. The sky is now in DLSS's input. One visible
+  difference from MSAA follows: the bloom also reads the sky, which gives the sun a soft halo.
+- **The panel** shows the mode in a checkbox that switches between DLSS and MSAA live.
+
+| Mode, hidden window, vsync, RTX, 10,000 machines | Render size | GPU ms p50: total (scene + DLSS and post) |
+|---|---|---|
+| MSAA 4x, as without `--dlss` | 1600×900 | 2.64 (2.35 + 0.08) |
+| DLAA | 1600×900 | 2.94 (2.22 + 0.52) |
+| Quality | 1067×600 | 1.89 (1.16 + 0.52) |
+| Performance | 800×450 | 1.62 (0.90 + 0.50) |
+| Ultra performance | 533×300 | 1.43 (0.73 + 0.48) |
+
+Each run held 60 fps (p50 16.66 ms) on the 59 Hz screen, and each total includes the 0.21 ms top-level rebuild.
+
+- **Conventions.** The jitter is the geometry's shift in pixels, and the motion points from where a pixel is to where it
+  was, in UV units. A sharpness measure settled both: the mean Sobel over the head at 19 s was 35.5 as written, 33.2 with
+  the jitter's sign flipped and 33.7 with the motion's.
+- **Delays.**
+  - On this machine, the first DLSS frame ever took 12.5 s, while NGX built its model. The next run had no delay.
+  - A mode's first frame took 1.8 s, once.
+  - Start-up takes about 3.4 s longer with DLSS: Streamline, and the signature checks.
+- **Other checks.**
+  - The cinematic under DLAA: moving machines stay sharp, without trails.
+  - `--no-rtx` with `--dlss quality`.
+  - The panel's switch, off and back on during a run.
+- **A warning, harmless here.** In manual hooking, Streamline says its common plugin's hooks of `vkCmdBindPipeline`,
+  `vkCmdBindDescriptorSets` and `vkBeginCommandBuffer` are unsupported. DLSS runs regardless, because the renderer binds
+  its own state after DLSS.
+
+Not here: frame generation, ray reconstruction and the path tracer. Frame generation would add latency and nothing
+visible on this 59 Hz screen, where the scene already holds 60 fps with about 3 ms of GPU.
+
+Not verified: a visible window (every DLSS run was hidden), a run of hours, another GPU or Windows 10.
 
 `head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
 along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.

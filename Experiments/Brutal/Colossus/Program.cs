@@ -27,12 +27,16 @@
 // moves, in black bands.
 // --record FILE.mp4 renders a video at a fixed 60 frames a second through ffmpeg (--ffmpeg PATH), its sound mixed by
 // OpenAL for each frame, in the cinematic, for --seconds (default 60), in about --record-mb megabytes (default 8).
+// --dlss [dlaa|quality|balanced|performance|ultra] replaces the 4x MSAA with NVIDIA DLSS on a GeForce RTX (Streamline.cs):
+// DLAA at the window's size by default, or rendered smaller and upscaled. NVIDIA's DLLs are not in the repository: --sl-path
+// DIR names their folder (Streamline 2.14.1's bin), --sl-verbose prints Streamline's log. Without them, the MSAA as before.
 
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Compression;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -85,6 +89,15 @@ internal struct Push
     public SN.Vector4 Params;
 }
 
+// What DLSS adds to the scene's constants, after them: the previous frame's view-projection, without jitter, and this
+// frame's jitter in clip units (x, y), with the frame's number for the rays' noise (z).
+[StructLayout(LayoutKind.Sequential)]
+internal struct MotionPush
+{
+    public SN.Matrix4x4 PrevViewProj;
+    public SN.Vector4 Jitter;
+}
+
 internal static unsafe class Colossus
 {
     private const int Width = 1600;
@@ -98,6 +111,7 @@ internal static unsafe class Colossus
     private const VkFormat HdrFormat = VkFormat.R16G16B16A16SFloat;
     private const VkFormat DepthFormat = VkFormat.D32SFloat;
     private const VkSampleCountFlags Msaa = VkSampleCountFlags._4Bit;
+    private const VkFormat MotionFormat = VkFormat.R16G16SFloat;
     private const int BloomLevels = 7;
     private const float Near = 0.1f;
 
@@ -376,7 +390,18 @@ internal static unsafe class Colossus
         layout(location = 6) in vec4 iColor;
         layout(location = 7) in vec4 iExtra;
         layout(location = 8) in float inMaterial;
+        #ifdef DLSS
+        // DLSS: the instance's model matrix in the previous frame, the previous view-projection, and this frame's jitter.
+        layout(location = 9) in vec4 pModel0;
+        layout(location = 10) in vec4 pModel1;
+        layout(location = 11) in vec4 pModel2;
+        layout(location = 12) in vec4 pModel3;
+        layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; mat4 prevViewProj; vec4 jitter; } pc;
+        layout(location = 10) out vec4 vClip;
+        layout(location = 11) out vec4 vPrevClip;
+        #else
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
+        #endif
         layout(location = 0) out vec3 vWorld;
         layout(location = 1) out vec3 vNormal;
         layout(location = 2) out vec4 vColor;
@@ -403,6 +428,11 @@ internal static unsafe class Colossus
             // The face's texture axes, in the same order as the fragment shader's box mapping.
             vTangent = normalize(mat3(model) * (abs(inNormal.x) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)));
             vBitangent = normalize(mat3(model) * (abs(inNormal.y) > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0)));
+            #ifdef DLSS
+            vClip = gl_Position;
+            vPrevClip = pc.prevViewProj * (mat4(pModel0, pModel1, pModel2, pModel3) * vec4(inPos, 1.0));
+            gl_Position.xy += pc.jitter.xy * gl_Position.w;
+            #endif
         }
         """;
 
@@ -435,7 +465,14 @@ internal static unsafe class Colossus
         struct Instance { mat4 model; vec4 color; vec4 extra; };
         layout(std430, set = 0, binding = 3) readonly buffer Instances { Instance instances[]; };
         #endif
+        #ifdef DLSS
+        layout(location = 10) in vec4 vClip;
+        layout(location = 11) in vec4 vPrevClip;
+        layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; mat4 prevViewProj; vec4 jitter; } pc;
+        layout(location = 1) out vec4 outMotion;
+        #else
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
+        #endif
         layout(location = 0) out vec4 outColor;
         const vec3 SunColor = vec3(1.0, 0.56, 0.26);
         const vec3 Bronze = vec3(0.55, 0.36, 0.2);
@@ -610,6 +647,10 @@ internal static unsafe class Colossus
         // Interleaved gradient noise: a fixed pattern on screen, which spreads a few rays evenly between neighbours.
         float ign(vec2 p)
         {
+            #ifdef DLSS
+            // Under DLSS the pattern moves each frame, and DLSS averages the rays' noise over the frames.
+            p += 5.588238 * pc.jitter.z;
+            #endif
             return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
         }
 
@@ -748,6 +789,44 @@ internal static unsafe class Colossus
                 + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + s.emit;
             c = mix(c, sky(-v, sun, t) * 0.55, fog);
             outColor = vec4(c, 1.0);
+            #ifdef DLSS
+            // Where this point was on screen in the previous frame, from where it is now, in UV units.
+            outMotion = vec4((vPrevClip.xy / vPrevClip.w - vClip.xy / vClip.w) * 0.5, 0.0, 0.0);
+            #endif
+        }
+        """;
+
+    // DLSS: the sky, where nothing was drawn (the depth is still the clear's 0, infinitely far), jittered as the scene,
+    // so that DLSS smooths the towers' edges against it too; the second pass then adds no sky of its own. Its motion: a
+    // direction at infinity moves on screen with the camera's turn alone.
+    private const string SkyMotionVertexShader = """
+        #version 450
+        layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; mat4 prevViewProj; vec4 jitter; } pc;
+        layout(location = 0) out vec3 vNear;
+        layout(location = 1) out vec2 vNdc;
+        void main()
+        {
+            vec2 p = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2) * 2.0 - 1.0;
+            vec4 near = inverse(pc.viewProj) * vec4(p, 1.0, 1.0);
+            vNear = near.xyz / near.w;
+            vNdc = p;
+            gl_Position = vec4(p + pc.jitter.xy, 0.0, 1.0);
+        }
+        """;
+
+    private const string SkyMotionFragmentShader = "#version 450\n" + SkyGlsl + """
+        layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; mat4 prevViewProj; vec4 jitter; } pc;
+        layout(location = 0) in vec3 vNear;
+        layout(location = 1) in vec2 vNdc;
+        layout(location = 0) out vec4 outColor;
+        layout(location = 1) out vec4 outMotion;
+        void main()
+        {
+            vec3 dir = normalize(vNear - pc.eye.xyz);
+            vec4 prev = pc.prevViewProj * vec4(dir, 0.0);
+            prev.w = abs(prev.w) < 1e-6 ? 1e-6 : prev.w;
+            outColor = vec4(sky(dir, pc.sun.xyz, pc.eye.w), 1.0);
+            outMotion = vec4((prev.xy / prev.w - vNdc) * 0.5, 0.0, 0.0);
         }
         """;
 
@@ -778,7 +857,12 @@ internal static unsafe class Colossus
             vec4 base = textureLod(hdr, vUv, 0.0);
             vec4 near = pc.invViewProj * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
             vec3 dir = normalize(near.xyz / near.w - pc.eye.xyz);
+            #ifdef DLSS
+            // DLSS's image has the sky already.
+            vec3 c = base.rgb;
+            #else
             vec3 c = base.rgb + sky(dir, pc.sun.xyz, pc.eye.w) * (1.0 - base.a);
+            #endif
             vec2 texel = 1.0 / vec2(textureSize(hdr, 0));
             vec3 bloom = vec3(0.0);
             for (int k = 1; k < 7; k++)
@@ -921,12 +1005,41 @@ internal static unsafe class Colossus
             extensions.Add(Marshal.PtrToStringUTF8((nint)glfwExtensions[i])!);
         }
 
-        var instance = Vulkan.CreateInstance(new Instance.CreateInfo
+        // --dlss: Streamline starts before the instance, which carries the extensions DLSS asks for. If the instance
+        // refuses them, Streamline stops and the instance is made as without --dlss.
+        var dlssAt = Array.IndexOf(args, "--dlss");
+        var dlssName = dlssAt >= 0 && dlssAt + 1 < args.Length && Dlss.Modes.ContainsKey(args[dlssAt + 1]) ? args[dlssAt + 1] : "dlaa";
+        var dlssNote = "";
+        Dlss? dlss = null;
+        if (dlssAt >= 0)
         {
-            AppInfo = new VkApplicationInfo { ApiVersion = ApiVersion13 },
-            EnabledExtensions = extensions,
-            EnabledLayers = [],
-        });
+            dlss = Dlss.Load(ArgText("--sl-path") ?? Dlss.DefaultFolder, args.Contains("--sl-verbose"), out var why);
+            dlssNote = why;
+        }
+
+        Instance instance;
+        try
+        {
+            instance = Vulkan.CreateInstance(new Instance.CreateInfo
+            {
+                AppInfo = new VkApplicationInfo { ApiVersion = ApiVersion13 },
+                EnabledExtensions = dlss is null ? extensions : [.. extensions, .. dlss.InstanceExtensions],
+                EnabledLayers = [],
+            });
+        }
+        catch (Exception e) when (dlss is not null)
+        {
+            dlssNote = $"the Vulkan instance refused DLSS's extensions ({e.Message})";
+            dlss.Shutdown();
+            dlss = null;
+            instance = Vulkan.CreateInstance(new Instance.CreateInfo
+            {
+                AppInfo = new VkApplicationInfo { ApiVersion = ApiVersion13 },
+                EnabledExtensions = extensions,
+                EnabledLayers = [],
+            });
+        }
+
         if (Glfw.CreateWindowSurface(instance.VkHandle, window, out var rawSurface) != 0)
         {
             Console.Error.WriteLine("SWARM FAIL: no window surface");
@@ -973,16 +1086,58 @@ internal static unsafe class Colossus
         var rayQueryOn = new VkPhysicalDeviceRayQueryFeaturesKHR { RayQuery = true };
         var accelOn = new VkPhysicalDeviceAccelerationStructureFeaturesKHR { Next = &rayQueryOn, AccelerationStructure = true };
         var vulkan12On = new VkPhysicalDeviceVulkan12Features { Next = &accelOn, BufferDeviceAddress = true };
+        string[] deviceExtensions = rtx ? ["VK_KHR_swapchain", "VK_KHR_acceleration_structure", "VK_KHR_ray_query", "VK_KHR_deferred_host_operations"] : ["VK_KHR_swapchain"];
 
-        var priority = 1.0f;
-        var queueInfo = new VkDeviceQueueCreateInfo { QueueFamilyIndex = family, QueueCount = 1, QueuePriorities = &priority };
+        // DLSS: its device extensions, its Vulkan 1.2 and 1.3 features and any queues of Streamline's own, after ours in
+        // the same family. If the GPU lacks one, no DLSS.
+        var priorities = stackalloc float[] { 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f };
+        var queueCount = 1;
+        var vulkan13On = new VkPhysicalDeviceVulkan13Features();
+        if (dlss is not null)
+        {
+            var has13 = new VkPhysicalDeviceVulkan13Features();
+            var query = new VkPhysicalDeviceFeatures2 { Next = &has13 };
+            physical.GetFeatures2(ref query);
+            var dlss12 = rtx ? vulkan12On : new VkPhysicalDeviceVulkan12Features();
+            var dlss13 = new VkPhysicalDeviceVulkan13Features();
+            var missing = dlss.DeviceExtensions.Where(e => !physical.ExtensionNames.Contains(e)).ToList();
+            EnableFeatures(&dlss12, &has12, dlss.Features12, missing);
+            EnableFeatures(&dlss13, &has13, dlss.Features13, missing);
+            var familyCount = physical.GetQueueFamilyProperties_Count();
+            var families = new VkQueueFamilyProperties[familyCount];
+            physical.GetQueueFamilyProperties_Write(families);
+            var wanted = 1 + (int)(dlss.GraphicsQueues + dlss.ComputeQueues);
+            if (missing.Count > 0 || wanted > Math.Min(8, (int)families[family].QueueCount))
+            {
+                dlssNote = missing.Count > 0 ? $"the GPU lacks {string.Join(", ", missing)}" : $"DLSS asks for {wanted - 1} more queues than the GPU has";
+                dlss.Shutdown();
+                dlss = null;
+            }
+            else
+            {
+                vulkan12On = dlss12;
+                vulkan13On = dlss13;
+                vulkan13On.Next = &vulkan12On;
+                queueCount = wanted;
+                deviceExtensions = [.. deviceExtensions.Union(dlss.DeviceExtensions)];
+            }
+        }
+
+        var queueInfo = new VkDeviceQueueCreateInfo { QueueFamilyIndex = family, QueueCount = queueCount, QueuePriorities = priorities };
         var device = physical.CreateDevice(new DeviceEx.CreateInfo
         {
-            Extensions = rtx ? ["VK_KHR_swapchain", "VK_KHR_acceleration_structure", "VK_KHR_ray_query", "VK_KHR_deferred_host_operations"] : ["VK_KHR_swapchain"],
+            Extensions = [.. deviceExtensions],
             QueueCreateInfos = new ReadOnlySpan<VkDeviceQueueCreateInfo>(&queueInfo, 1),
-            Next = rtx ? &vulkan12On : null,
+            Next = dlss is not null ? &vulkan13On : rtx ? &vulkan12On : null,
         });
         var queue = device.GetQueue(family, 0);
+        if (dlss is not null && !dlss.Attach(instance.VkHandle, physical.VkHandle, device.VkHandle, (uint)family, out var attachWhy))
+        {
+            dlssNote = attachWhy;
+            dlss.Shutdown();
+            dlss = null;
+        }
+
 
         var formatCount = physical.GetSurfaceFormatsKHR_Count(surface);
         var formats = new VkSurfaceFormatKHR[formatCount];
@@ -1121,7 +1276,9 @@ internal static unsafe class Colossus
         // The scene pass: 4x MSAA colour and depth, resolved into an HDR image whose mips feed the bloom.
         var (msaaImage, msaaMemory, msaaView) = Target(device, physical, extent, HdrFormat, Msaa, 1, VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransientAttachmentBit, VkImageAspectFlags.ColorBit);
         var (sceneDepthImage, sceneDepthMemory, sceneDepthView) = Target(device, physical, extent, DepthFormat, Msaa, 1, VkImageUsageFlags.DepthStencilAttachmentBit, VkImageAspectFlags.DepthBit);
-        var (hdrImage, hdrMemory, hdrView) = Target(device, physical, extent, HdrFormat, VkSampleCountFlags._1Bit, BloomLevels, VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransferSrcBit | VkImageUsageFlags.TransferDstBit | VkImageUsageFlags.SampledBit, VkImageAspectFlags.ColorBit);
+        var hdrUsage = VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.TransferSrcBit | VkImageUsageFlags.TransferDstBit | VkImageUsageFlags.SampledBit
+            | (dlss is not null ? VkImageUsageFlags.StorageBit : 0);
+        var (hdrImage, hdrMemory, hdrView) = Target(device, physical, extent, HdrFormat, VkSampleCountFlags._1Bit, BloomLevels, hdrUsage, VkImageAspectFlags.ColorBit);
         var hdrMipsView = device.CreateImageView(View(hdrImage, HdrFormat, VkImageAspectFlags.ColorBit, BloomLevels), null);
         var sceneAttachments = stackalloc VkAttachmentDescription[]
         {
@@ -1264,6 +1421,132 @@ internal static unsafe class Colossus
         device.UpdateDescriptorSets([new VkWriteDescriptorSet { DstSet = hdrSet, DescriptorCount = 1, DescriptorType = VkDescriptorType.CombinedImageSampler, ImageInfo = &hdrInfo }], []);
         var compositeLayout = device.CreatePipelineLayout([setLayout], [pushRange], null);
         var compositePipeline = Pipeline(device, compositeLayout, renderPass, compositeVertex, compositeFragment, scene: false);
+
+        // DLSS: the scene renders without MSAA, at DLSS's render size, into colour, motion and depth, which DLSS reads and
+        // turns into the HDR image's first mip at the window's size; the bloom and the second pass go on from there as
+        // without DLSS. The colour's alpha still marks geometry: DLSS upscales it, and the second pass puts the sky where it
+        // is not. The previous frame's instances, kept on the CPU, go to a buffer of each frame in flight, for the motion.
+        var dlssMode = Dlss.Modes[dlssName];
+        var renderExtent = extent;
+        VkImage dlssColor = default, dlssMotion = default, dlssDepth = default;
+        VkDeviceMemory dlssColorMemory = default, dlssMotionMemory = default, dlssDepthMemory = default;
+        VkImageView dlssColorView = default, dlssMotionView = default, dlssDepthView = default;
+        VkRenderPass dlssRenderPass = default;
+        VkFramebuffer dlssFramebuffer = default;
+        VkPipelineLayout dlssLayout = default;
+        VkShaderModule dlssVertexModule = default, dlssFragmentModule = default, skyMotionVertex = default, skyMotionFragment = default;
+        VkPipeline dlssPipeline = default, skyMotionPipeline = default, dlssCompositePipeline = default;
+        VkShaderModule dlssCompositeFragment = default;
+        var previousBuffers = new VkBuffer[FramesInFlight];
+        var previousMemory = new VkDeviceMemory[FramesInFlight];
+        var previousMapped = new nint[FramesInFlight];
+        Drawn[] thisFrame = [], lastFrame = [];
+        const VkImageUsageFlags dlssInputUsage = VkImageUsageFlags.ColorAttachmentBit | VkImageUsageFlags.SampledBit;
+        const VkImageUsageFlags dlssDepthUsage = VkImageUsageFlags.DepthStencilAttachmentBit | VkImageUsageFlags.SampledBit;
+        if (dlss is not null)
+        {
+            var (renderWidth, renderHeight) = dlss.RenderSize(dlssMode, extent.Width, extent.Height);
+            renderExtent = new VkExtent2D { Width = renderWidth, Height = renderHeight };
+            (dlssColor, dlssColorMemory, dlssColorView) = Target(device, physical, renderExtent, HdrFormat, VkSampleCountFlags._1Bit, 1, dlssInputUsage, VkImageAspectFlags.ColorBit);
+            (dlssMotion, dlssMotionMemory, dlssMotionView) = Target(device, physical, renderExtent, MotionFormat, VkSampleCountFlags._1Bit, 1, dlssInputUsage, VkImageAspectFlags.ColorBit);
+            (dlssDepth, dlssDepthMemory, dlssDepthView) = Target(device, physical, renderExtent, DepthFormat, VkSampleCountFlags._1Bit, 1, dlssDepthUsage, VkImageAspectFlags.DepthBit);
+            var dlssAttachments = stackalloc VkAttachmentDescription[3];
+            var formats3 = stackalloc VkFormat[] { HdrFormat, MotionFormat, DepthFormat };
+            for (var i = 0; i < 3; i++)
+            {
+                dlssAttachments[i] = new VkAttachmentDescription
+                {
+                    Format = formats3[i],
+                    Samples = VkSampleCountFlags._1Bit,
+                    LoadOp = VkAttachmentLoadOp.Clear,
+                    StoreOp = VkAttachmentStoreOp.Store,
+                    StencilLoadOp = VkAttachmentLoadOp.DontCare,
+                    StencilStoreOp = VkAttachmentStoreOp.DontCare,
+                    InitialLayout = VkImageLayout.Undefined,
+                    FinalLayout = VkImageLayout.ShaderReadOnlyOptimal,
+                };
+            }
+
+            var dlssColorRefs = stackalloc VkAttachmentReference[]
+            {
+                new() { Attachment = 0, Layout = VkImageLayout.ColorAttachmentOptimal },
+                new() { Attachment = 1, Layout = VkImageLayout.ColorAttachmentOptimal },
+            };
+            var dlssDepthRef = new VkAttachmentReference { Attachment = 2, Layout = VkImageLayout.DepthStencilAttachmentOptimal };
+            var dlssSubpass = new VkSubpassDescription
+            {
+                PipelineBindPoint = VkPipelineBindPoint.Graphics,
+                ColorAttachmentCount = 2,
+                ColorAttachments = dlssColorRefs,
+                DepthStencilAttachment = &dlssDepthRef,
+            };
+            // In: the previous frame's DLSS is done reading these images. Out: this frame's DLSS reads them.
+            var dlssDependencies = stackalloc VkSubpassDependency[]
+            {
+                new()
+                {
+                    SrcSubpass = VK.SUBPASS_EXTERNAL,
+                    DstSubpass = 0,
+                    SrcStageMask = VkPipelineStageFlags.ComputeShaderBit | VkPipelineStageFlags.ColorAttachmentOutputBit | VkPipelineStageFlags.LateFragmentTestsBit,
+                    DstStageMask = VkPipelineStageFlags.ColorAttachmentOutputBit | VkPipelineStageFlags.EarlyFragmentTestsBit | VkPipelineStageFlags.LateFragmentTestsBit,
+                    SrcAccessMask = VkAccessFlags.ColorAttachmentWriteBit | VkAccessFlags.DepthStencilAttachmentWriteBit,
+                    DstAccessMask = VkAccessFlags.ColorAttachmentWriteBit | VkAccessFlags.DepthStencilAttachmentWriteBit,
+                },
+                new()
+                {
+                    SrcSubpass = 0,
+                    DstSubpass = VK.SUBPASS_EXTERNAL,
+                    SrcStageMask = VkPipelineStageFlags.ColorAttachmentOutputBit | VkPipelineStageFlags.LateFragmentTestsBit,
+                    DstStageMask = VkPipelineStageFlags.ComputeShaderBit,
+                    SrcAccessMask = VkAccessFlags.ColorAttachmentWriteBit | VkAccessFlags.DepthStencilAttachmentWriteBit,
+                    DstAccessMask = VkAccessFlags.ShaderReadBit,
+                },
+            };
+            dlssRenderPass = device.CreateRenderPass(new VkRenderPassCreateInfo
+            {
+                AttachmentCount = 3,
+                Attachments = dlssAttachments,
+                SubpassCount = 1,
+                Subpasses = &dlssSubpass,
+                DependencyCount = 2,
+                Dependencies = dlssDependencies,
+            }, null);
+            var dlssViews = stackalloc VkImageView[] { dlssColorView, dlssMotionView, dlssDepthView };
+            dlssFramebuffer = device.CreateFramebuffer(new VkFramebufferCreateInfo
+            {
+                RenderPass = dlssRenderPass,
+                AttachmentCount = 3,
+                Attachments = dlssViews,
+                Width = renderExtent.Width,
+                Height = renderExtent.Height,
+                Layers = 1,
+            }, null);
+
+            var dlssPushRange = pushRange with { Size = new ByteSize((nuint)(sizeof(Push) + sizeof(MotionPush))) };
+            dlssLayout = device.CreatePipelineLayout([sceneSetLayout], [dlssPushRange], null);
+            dlssVertexModule = Shader(device, VertexShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.VertexShader, "swarm-dlss.vert");
+            dlssFragmentModule = rtx
+                ? Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n"), ShaderKind.FragmentShader, "swarm-rtx-dlss.frag", vulkan13: true)
+                : Shader(device, FragmentShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.FragmentShader, "swarm-dlss.frag");
+            skyMotionVertex = Shader(device, SkyMotionVertexShader, ShaderKind.VertexShader, "sky-motion.vert");
+            skyMotionFragment = Shader(device, SkyMotionFragmentShader, ShaderKind.FragmentShader, "sky-motion.frag");
+            dlssPipeline = Pipeline(device, dlssLayout, dlssRenderPass, dlssVertexModule, dlssFragmentModule, scene: true, dlss: true);
+            skyMotionPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, skyMotionFragment, scene: false, dlss: true);
+            dlssCompositeFragment = Shader(device, CompositeFragmentShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.FragmentShader, "composite-dlss.frag");
+            dlssCompositePipeline = Pipeline(device, compositeLayout, renderPass, compositeVertex, dlssCompositeFragment, scene: false);
+
+            var previousSize = new ByteSize((nuint)(MaxInstances * sizeof(Drawn)));
+            for (var i = 0; i < FramesInFlight; i++)
+            {
+                previousBuffers[i] = device.CreateBuffer(new VkBufferCreateInfo { Size = previousSize, Usage = VkBufferUsageFlags.VertexBufferBit, SharingMode = VkSharingMode.Exclusive }, null);
+                previousMemory[i] = device.AllocateMemory(physical, previousBuffers[i], VkMemoryPropertyFlags.HostVisibleBit | VkMemoryPropertyFlags.HostCoherentBit, null);
+                device.BindBufferMemory(previousBuffers[i], previousMemory[i], memoryOffset: ByteSize.Zero);
+                previousMapped[i] = (nint)(Drawn*)device.MapMemory<Drawn>(new MapInfo(previousMemory[i]) { Region = new MapRegion { Size = previousSize } });
+            }
+
+            thisFrame = new Drawn[MaxInstances];
+            lastFrame = new Drawn[MaxInstances];
+        }
 
         // One cube, then the modelled towers, and per frame in flight an instance buffer that stays mapped.
         var cube = new List<MeshVertex>();
@@ -1539,6 +1822,11 @@ internal static unsafe class Colossus
         _bodyThreads = (int)Arg(args, "--body-threads", 4);
         physics.OptimizeBroadPhase();
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
+        var dlssLabel = dlss is null ? "" : $"DLSS {(dlssName == "dlaa" ? "DLAA" : dlssName)}, {renderExtent.Width}x{renderExtent.Height} > {extent.Width}x{extent.Height}";
+        if (dlssAt >= 0)
+        {
+            Console.WriteLine(dlss is null ? $"DLSS off: {dlssNote}; 4x MSAA" : dlssLabel);
+        }
 
         // State the panel steers.
         // With the voice plugins running, the face speaks when Claude's voice does; without them, on its own.
@@ -1550,6 +1838,11 @@ internal static unsafe class Colossus
         bool assembled = false, autoCycle = true, speaking = hasVoice || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
         bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute"), panelOn = !args.Contains("--no-panel");
         float volume = recording ? 0.9f : 0.6f, hearing = 0f;
+        // DLSS's switch, and what the next frame needs of this one: whether DLSS ran, the instances drawn, the camera.
+        bool dlssOn = dlss is not null, dlssWasOn = false;
+        var lastDrawn = 0;
+        SN.Vector3 lastEye = default, lastForward = default;
+        var lastViewProj = SN.Matrix4x4.Identity;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
         int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : 0, shownPreset = -1;
         // The lines made, the next one and when; a line typed in the panel while Piper makes it; the subtitle shown.
@@ -1629,7 +1922,7 @@ internal static unsafe class Colossus
             mark = t;
         }
 
-        var clears = stackalloc VkClearValue[2];
+        var clears = stackalloc VkClearValue[3];
         Span<ulong> ticks = stackalloc ulong[4];
         while (!window.ShouldClose)
         {
@@ -1833,7 +2126,7 @@ internal static unsafe class Colossus
                 {
                     ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
                     ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
-                    ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"), staticInstances.Length + _ids.Length, drawCalls));
+                    ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, {2}, bloom"), staticInstances.Length + _ids.Length, drawCalls, dlss is not null && dlssOn ? "DLSS" : "MSAA 4x"));
                     ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
                     ImGui.Separator();
                     if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
@@ -1896,6 +2189,11 @@ internal static unsafe class Colossus
                     else
                     {
                         ImGui.Text(L("RTX: no ray queries on this GPU, or --no-rtx"));
+                    }
+
+                    if (dlss is not null)
+                    {
+                        ImGui.Checkbox($"{dlssLabel}###dlss", ref dlssOn);
                     }
 
                     if (sound is not null)
@@ -2023,7 +2321,8 @@ internal static unsafe class Colossus
             projection.M33 = 0f; // reversed, infinite depth: 1 at the near plane, 0 at infinity
             projection.M43 = Near;
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
-            var viewProj = SN.Matrix4x4.CreateLookAt(camEye, camTarget, SN.Vector3.UnitY) * projection;
+            var view = SN.Matrix4x4.CreateLookAt(camEye, camTarget, SN.Vector3.UnitY);
+            var viewProj = view * projection;
             SN.Matrix4x4.Invert(viewProj, out var inverseViewProj);
             // A recording fades in from black and out to it, without grain so it compresses; the cinematic's black bands.
             var fade = recording ? (float)Math.Clamp(Math.Min(now / 1.2, (limit - now) / 2.0), 0.0, 1.0) : 1f;
@@ -2067,9 +2366,32 @@ internal static unsafe class Colossus
             Lap(4);
             device.ResetFences([fences[slot]]);
             device.ResetCommandPool(pools[slot], VkCommandPoolResetFlags.None);
-            var target = new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
+            // Under DLSS the instances are written on the CPU first, so that the next frame still has them for its motion.
+            // A first frame, a cut or a jump of the camera starts DLSS's history again, its motion then nil.
+            var useDlss = dlss is not null && dlssOn;
+            var target = useDlss ? thisFrame.AsSpan() : new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
             var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length);
+            var forward = SN.Vector3.Normalize(camTarget - camEye);
+            var dlssReset = !dlssWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
+            if (useDlss)
+            {
+                thisFrame.AsSpan(0, drawn).CopyTo(new Span<Drawn>((Drawn*)instanceMapped[slot], drawn));
+                (dlssReset ? thisFrame : lastFrame).AsSpan(0, drawn).CopyTo(new Span<Drawn>((Drawn*)previousMapped[slot], drawn));
+                (thisFrame, lastFrame) = (lastFrame, thisFrame);
+            }
+
+            var jitter = Dlss.Jitter(frame, Dlss.Phases(renderExtent.Width, extent.Width));
+            var motionPush = new MotionPush
+            {
+                PrevViewProj = dlssReset ? viewProj : lastViewProj,
+                Jitter = new SN.Vector4(jitter.X * 2f / renderExtent.Width, jitter.Y * 2f / renderExtent.Height, frame % 64, 0f),
+            };
+            dlssWasOn = useDlss;
+            lastDrawn = drawn;
+            lastEye = camEye;
+            lastForward = forward;
+            lastViewProj = viewProj;
             Lap(5);
 
             var cb = commands[slot];
@@ -2083,21 +2405,31 @@ internal static unsafe class Colossus
 
             cb.WriteTimestamp(VkPipelineStageFlags.BottomOfPipeBit, queryPool, (slot * 4) + 1);
 
+            // Under DLSS: no MSAA, the render size, the motion as a second target and the previous instances as a third input.
+            var sceneExtent = useDlss ? renderExtent : extent;
+            var sceneLayout = useDlss ? dlssLayout : layout;
             clears[0] = new VkClearValue { Color = new VkClearColorValue { Float32 = new float4(0f, 0f, 0f, 0f) } };
-            clears[1] = new VkClearValue { DepthStencil = new VkClearDepthStencilValue { Depth = 0f } };
+            clears[1] = useDlss ? clears[0] : new VkClearValue { DepthStencil = new VkClearDepthStencilValue { Depth = 0f } };
+            clears[2] = new VkClearValue { DepthStencil = new VkClearDepthStencilValue { Depth = 0f } };
             cb.BeginRenderPass(new VkRenderPassBeginInfo
             {
-                RenderPass = sceneRenderPass,
-                Framebuffer = sceneFramebuffer,
-                RenderArea = new VkRect2D { Extent = extent },
-                ClearValueCount = 2,
+                RenderPass = useDlss ? dlssRenderPass : sceneRenderPass,
+                Framebuffer = useDlss ? dlssFramebuffer : sceneFramebuffer,
+                RenderArea = new VkRect2D { Extent = sceneExtent },
+                ClearValueCount = useDlss ? 3 : 2,
                 ClearValues = clears,
             }, VkSubpassContents.Inline);
-            cb.BindPipeline(VkPipelineBindPoint.Graphics, pipeline);
-            cb.SetViewport(firstViewport: 0, [new VkViewport { Width = extent.Width, Height = extent.Height, MinDepth = 0f, MaxDepth = 1f }]);
-            cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
-            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, layout, 0, [sceneSets[slot]], []);
-            cb.PushConstants(layout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&push, sizeof(Push)));
+            cb.BindPipeline(VkPipelineBindPoint.Graphics, useDlss ? dlssPipeline : pipeline);
+            cb.SetViewport(firstViewport: 0, [new VkViewport { Width = sceneExtent.Width, Height = sceneExtent.Height, MinDepth = 0f, MaxDepth = 1f }]);
+            cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = sceneExtent }]);
+            cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, sceneLayout, 0, [sceneSets[slot]], []);
+            cb.PushConstants(sceneLayout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&push, sizeof(Push)));
+            if (useDlss)
+            {
+                cb.PushConstants(sceneLayout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: sizeof(Push), new ReadOnlySpan<byte>(&motionPush, sizeof(MotionPush)));
+                cb.BindVertexBuffer(2, previousBuffers[slot]);
+            }
+
             cb.BindVertexBuffer(0, meshBuffer);
             cb.BindVertexBuffer(1, instanceBuffers[slot]);
             cb.Draw(cubeCount, drawn - towerInstances, 0, towerInstances);
@@ -2108,8 +2440,31 @@ internal static unsafe class Colossus
                     cb.Draw(towerVariants[v].Count, towerRanges[v].Count, towerVariants[v].First, towerRanges[v].First);
                 }
             }
+
+            if (useDlss)
+            {
+                cb.BindPipeline(VkPipelineBindPoint.Graphics, skyMotionPipeline);
+                cb.Draw(3, 1, 0, 0);
+            }
+
             cb.EndRenderPass();
             cb.WriteTimestamp(VkPipelineStageFlags.BottomOfPipeBit, queryPool, (slot * 4) + 2);
+
+            // DLSS writes the HDR image's first mip at the window's size, which the bloom then reads as it read the resolve.
+            if (useDlss)
+            {
+                cb.PipelineBarrier(VkPipelineStageFlags.FragmentShaderBit, VkPipelineStageFlags.ComputeShaderBit, VkDependencyFlags.None, [], [],
+                    [Barrier(hdrImage, 0, 1, VkImageLayout.Undefined, VkImageLayout.General, default, VkAccessFlags.ShaderWriteBit)]);
+                Dlss.Image Input(VkImage image, VkImageView imageView, VkDeviceMemory memory, VkFormat format, VkImageUsageFlags usage) =>
+                    new((ulong)image.VkHandle, (ulong)imageView.VkHandle, (ulong)memory.VkHandle, renderExtent.Width, renderExtent.Height, (uint)format, (uint)usage, (uint)VkImageLayout.ShaderReadOnlyOptimal);
+                dlss!.Evaluate(cb.VkHandle, (uint)frame, dlssMode, view, projection, motionPush.PrevViewProj, jitter, dlssReset, fov * MathF.PI / 180f, Near,
+                    Input(dlssDepth, dlssDepthView, dlssDepthMemory, DepthFormat, dlssDepthUsage),
+                    Input(dlssMotion, dlssMotionView, dlssMotionMemory, MotionFormat, dlssInputUsage),
+                    Input(dlssColor, dlssColorView, dlssColorMemory, HdrFormat, dlssInputUsage),
+                    new Dlss.Image((ulong)hdrImage.VkHandle, (ulong)hdrView.VkHandle, (ulong)hdrMemory.VkHandle, extent.Width, extent.Height, (uint)HdrFormat, (uint)hdrUsage, (uint)VkImageLayout.General));
+                cb.PipelineBarrier(VkPipelineStageFlags.ComputeShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+                    [Barrier(hdrImage, 0, 1, VkImageLayout.General, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ShaderWriteBit, VkAccessFlags.TransferReadBit)]);
+            }
 
             // The bloom's mips: each level a linear blit of the one above, then every level for the second pass to read.
             cb.PipelineBarrier(VkPipelineStageFlags.FragmentShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
@@ -2129,7 +2484,7 @@ internal static unsafe class Colossus
                 ClearValueCount = 2,
                 ClearValues = clears,
             }, VkSubpassContents.Inline);
-            cb.BindPipeline(VkPipelineBindPoint.Graphics, compositePipeline);
+            cb.BindPipeline(VkPipelineBindPoint.Graphics, useDlss ? dlssCompositePipeline : compositePipeline);
             cb.SetViewport(firstViewport: 0, [new VkViewport { Width = extent.Width, Height = extent.Height, MinDepth = 0f, MaxDepth = 1f }]);
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = extent }]);
             cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, compositeLayout, 0, [hdrSet], []);
@@ -2171,14 +2526,17 @@ internal static unsafe class Colossus
                 fences[slot]);
             Lap(6);
             var presentIndex = imageIndex;
-            result = queue.PresentKHR(new VkPresentInfoKHR
-            {
-                WaitSemaphoreCount = 1,
-                WaitSemaphores = &signalSemaphore,
-                SwapchainCount = 1,
-                Swapchains = &swapchain,
-                ImageIndices = &presentIndex,
-            });
+            // With Streamline, through its proxy, which its common plugin needs once a frame.
+            result = dlss is not null
+                ? (VkResult)dlss.Present(queue.VkHandle, (ulong)signalSemaphore.VkHandle, (ulong)swapchain.VkHandle, (uint)presentIndex)
+                : queue.PresentKHR(new VkPresentInfoKHR
+                {
+                    WaitSemaphoreCount = 1,
+                    WaitSemaphores = &signalSemaphore,
+                    SwapchainCount = 1,
+                    Swapchains = &swapchain,
+                    ImageIndices = &presentIndex,
+                });
             Lap(7);
             if (result == VkResult.ErrorOutOfDateKHR)
             {
@@ -2246,6 +2604,7 @@ internal static unsafe class Colossus
         }
         sound?.Dispose();
         device.WaitIdle();
+        dlss?.Shutdown();
         renderer.Dispose();
         platform.Dispose();
         ImPlot.DestroyContext();
@@ -2297,6 +2656,35 @@ internal static unsafe class Colossus
             device.DestroyImage(image, null);
             device.FreeMemory(memory, null);
         }
+
+        if (dlss is not null)
+        {
+            device.DestroyPipeline(dlssPipeline, null);
+            device.DestroyPipeline(skyMotionPipeline, null);
+            device.DestroyPipeline(dlssCompositePipeline, null);
+            device.DestroyPipelineLayout(dlssLayout, null);
+            foreach (var module in new[] { dlssVertexModule, dlssFragmentModule, skyMotionVertex, skyMotionFragment, dlssCompositeFragment })
+            {
+                device.DestroyShaderModule(module, null);
+            }
+
+            device.DestroyFramebuffer(dlssFramebuffer, null);
+            device.DestroyRenderPass(dlssRenderPass, null);
+            foreach (var (image, memory, view) in new[] { (dlssColor, dlssColorMemory, dlssColorView), (dlssMotion, dlssMotionMemory, dlssMotionView), (dlssDepth, dlssDepthMemory, dlssDepthView) })
+            {
+                device.DestroyImageView(view, null);
+                device.DestroyImage(image, null);
+                device.FreeMemory(memory, null);
+            }
+
+            for (var i = 0; i < FramesInFlight; i++)
+            {
+                device.UnmapMemory(previousMemory[i]);
+                device.DestroyBuffer(previousBuffers[i], null);
+                device.FreeMemory(previousMemory[i], null);
+            }
+        }
+
         for (var i = 0; i < images.Length; i++)
         {
             device.DestroySemaphore(renderDone[i], null);
@@ -2449,7 +2837,7 @@ internal static unsafe class Colossus
         ["vsync"] = "vsync",
         ["no vsync"] = "sans vsync",
         ["Jolt: {0} bodies, {1:F2} ms a step, {2} threads"] = "Jolt : {0} corps, {1:F2} ms par pas, {2} fils",
-        ["Vulkan: {0} instances in {1} draw calls, HDR, MSAA 4x, bloom"] = "Vulkan : {0} instances en {1} appels de dessin, HDR, MSAA 4x, halo",
+        ["Vulkan: {0} instances in {1} draw calls, HDR, {2}, bloom"] = "Vulkan : {0} instances en {1} appels de dessin, HDR, {2}, halo",
         ["Swarm: {0}"] = "Essaim : {0}",
         ["face"] = "visage",
         ["cloud"] = "nuée",
@@ -3254,7 +3642,9 @@ internal static unsafe class Colossus
     }
 
     // The scene's pipeline (instanced cubes, MSAA, reversed depth) or the second pass's (one triangle, no vertex input).
-    private static VkPipeline Pipeline(Device device, VkPipelineLayout layout, VkRenderPass renderPass, VkShaderModule vertex, VkShaderModule fragment, bool scene)
+    // Under DLSS, the scene's has no MSAA, a second colour target for the motion and the previous frame's instances as a
+    // third vertex input; the other is the sky's motion.
+    private static VkPipeline Pipeline(Device device, VkPipelineLayout layout, VkRenderPass renderPass, VkShaderModule vertex, VkShaderModule fragment, bool scene, bool dlss = false)
     {
         var entry = "main"u8;
         fixed (byte* entryName = entry)
@@ -3268,6 +3658,7 @@ internal static unsafe class Colossus
             {
                 new() { Binding = 0, Stride = ByteSize.Of<MeshVertex>(), InputRate = VkVertexInputRate.Vertex },
                 new() { Binding = 1, Stride = ByteSize.Of<Drawn>(), InputRate = VkVertexInputRate.Instance },
+                new() { Binding = 2, Stride = ByteSize.Of<Drawn>(), InputRate = VkVertexInputRate.Instance },
             };
             var attributes = stackalloc VkVertexInputAttributeDescription[]
             {
@@ -3280,13 +3671,17 @@ internal static unsafe class Colossus
                 new() { Location = 6, Binding = 1, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(16) },
                 new() { Location = 7, Binding = 1, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(20) },
                 new() { Location = 8, Binding = 0, Format = VkFormat.R32SFloat, Offset = ByteSize.Of<float>(6) },
+                new() { Location = 9, Binding = 2, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Zero },
+                new() { Location = 10, Binding = 2, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(4) },
+                new() { Location = 11, Binding = 2, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(8) },
+                new() { Location = 12, Binding = 2, Format = VkFormat.R32G32B32A32SFloat, Offset = ByteSize.Of<float>(12) },
             };
             var vertexInput = scene
                 ? new VkPipelineVertexInputStateCreateInfo
                 {
-                    VertexBindingDescriptionCount = 2,
+                    VertexBindingDescriptionCount = dlss ? 3 : 2,
                     VertexBindingDescriptions = bindings,
-                    VertexAttributeDescriptionCount = 9,
+                    VertexAttributeDescriptionCount = dlss ? 13 : 9,
                     VertexAttributeDescriptions = attributes,
                 }
                 : new VkPipelineVertexInputStateCreateInfo();
@@ -3299,13 +3694,15 @@ internal static unsafe class Colossus
                 FrontFace = VkFrontFace.CounterClockwise,
                 LineWidth = 1f,
             };
-            var multisample = new VkPipelineMultisampleStateCreateInfo { RasterizationSamples = scene ? Msaa : VkSampleCountFlags._1Bit };
-            var depth = new VkPipelineDepthStencilStateCreateInfo { DepthTestEnable = scene, DepthWriteEnable = scene, DepthCompareOp = VkCompareOp.Greater };
-            var blendAttachment = new VkPipelineColorBlendAttachmentState
+            var multisample = new VkPipelineMultisampleStateCreateInfo { RasterizationSamples = scene && !dlss ? Msaa : VkSampleCountFlags._1Bit };
+            // The sky's motion under DLSS: only where the depth is still the clear's, and without writing it.
+            var depth = new VkPipelineDepthStencilStateCreateInfo { DepthTestEnable = scene || dlss, DepthWriteEnable = scene, DepthCompareOp = scene ? VkCompareOp.Greater : VkCompareOp.GreaterOrEqual };
+            var blendAttachments = stackalloc VkPipelineColorBlendAttachmentState[]
             {
-                ColorWriteMask = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit | VkColorComponentFlags.BBit | VkColorComponentFlags.ABit,
+                new() { ColorWriteMask = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit | VkColorComponentFlags.BBit | VkColorComponentFlags.ABit },
+                new() { ColorWriteMask = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit },
             };
-            var blend = new VkPipelineColorBlendStateCreateInfo { AttachmentCount = 1, Attachments = &blendAttachment };
+            var blend = new VkPipelineColorBlendStateCreateInfo { AttachmentCount = dlss ? 2 : 1, Attachments = blendAttachments };
             var dynamicStates = stackalloc VkDynamicState[] { VkDynamicState.Viewport, VkDynamicState.Scissor };
             var dynamic = new VkPipelineDynamicStateCreateInfo { DynamicStateCount = 2, DynamicStates = dynamicStates };
 
@@ -3333,6 +3730,24 @@ internal static unsafe class Colossus
                 default,
                 new ReadOnlySpan<VkPipeline>(&pipeline, 1));
             return pipeline;
+        }
+    }
+
+    // Turns on, in one of Vulkan's feature structures, the features Streamline names (Vulkan's own camelCase names, which
+    // BRUTAL's fields spell in PascalCase). A feature the GPU lacks, as has reports it, goes to missing instead.
+    private static void EnableFeatures<T>(T* features, T* has, string[] names, List<string> missing) where T : unmanaged
+    {
+        foreach (var name in names)
+        {
+            var field = typeof(T).GetField(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            var offset = field is null ? -1 : (int)Marshal.OffsetOf<T>(field.Name);
+            if (offset < 0 || *(uint*)((byte*)has + offset) == 0)
+            {
+                missing.Add(name);
+                continue;
+            }
+
+            *(uint*)((byte*)features + offset) = 1;
         }
     }
 }
