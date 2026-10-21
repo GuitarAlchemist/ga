@@ -16,6 +16,8 @@ let private shape (b: Placed) =
         Some(BadShape "a box's placement is not finite")
     elif not (inUnit b.Color) then
         Some(BadShape $"a box's colour must be in [0, 1], not {b.Color}")
+    elif not (System.Double.IsFinite b.Surface.Strength) || b.Surface.Strength < 0.0 || b.Surface.Strength > 100.0 then
+        Some(BadShape $"a glow's strength must be in [0, 100], not {b.Surface.Strength}")
     else
         None
 

@@ -70,6 +70,14 @@ let rec private node (w: Utf8JsonWriter) (n: Node) =
         matrix w "world" b.World
         vector w "size" b.Size
         vector w "color" b.Color
+
+        // Stone, the default, is left out, so that a scene without surfaces keeps the bytes and hash it had before them.
+        if b.Surface <> Stone then
+            w.WriteString("surface", b.Surface.Name)
+
+            if b.Surface.Strength > 0.0 then
+                w.WriteNumber("strength", b.Surface.Strength)
+
         w.WriteEndObject()
 
     w.WriteEndArray()

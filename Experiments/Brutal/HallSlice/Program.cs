@@ -727,16 +727,23 @@ internal static unsafe class HallSlice
     [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
     private static extern uint TimeEndPeriod(uint milliseconds);
 
-    // --tour: from one column to a sanctuary of twenty-one temples, the same blocks composed again and again.
+    // --tour: from one column to a sanctuary of twenty-one temples, then from the richer temple to a walled city: the
+    // same blocks composed again and again.
     private static readonly (string Spec, string[] Args)[] TourSteps =
     [
         ("column@1", []),
         ("column@2", []),
         ("colonnade", []),
-        ("temple", []),
-        ("temple", ["column=2"]),
+        ("temple@1", []),
+        ("temple@1", ["column=2"]),
         ("sanctuary", ["level=1"]),
         ("sanctuary", ["level=2"]),
+        ("temple@2", []),
+        ("stoa", []),
+        ("tholos", []),
+        ("agora", []),
+        ("acropolis", []),
+        ("polis", []),
     ];
 
     // The value after the option name, if both are there.

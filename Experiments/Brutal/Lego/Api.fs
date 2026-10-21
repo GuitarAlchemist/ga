@@ -36,7 +36,7 @@ type Described internal (root: BlockId, seed: uint64, result: Result<Scene, Prob
 [<AbstractClass; Sealed>]
 type Api =
     /// The prototype's blocks.
-    static member Library = Blocks.library
+    static member Library = Polis.library
 
     /// name@version, or a name alone for its highest version in the library.
     static member Resolve(library: Library, spec: string) : Result<BlockId, Issue> =
@@ -80,4 +80,4 @@ type Api =
 
     /// spec from the prototype's library, within the standard limits.
     static member Describe(spec: string, seed: uint64, args: string seq) =
-        Api.Describe(Blocks.library, spec, seed, args, Limits.Standard)
+        Api.Describe(Polis.library, spec, seed, args, Limits.Standard)

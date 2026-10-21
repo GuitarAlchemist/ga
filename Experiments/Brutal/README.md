@@ -775,7 +775,8 @@ There is no second engine and no second registry. Lego has no parser and no text
   - `Use` (a named instance of a block, with arguments);
   - `Move`;
   - `Group`;
-  - `Attach` (a part placed in the frame of a named anchor of an instance in the same block).
+  - `Attach` (a part placed in the frame of a named anchor of an instance in the same block);
+  - `Clad` (a part whose boxes have a surface; see the city, below).
 
 **Three stages, kept apart.**
 1. **Generation** (`Generate.run`) expands the tree and never throws. Where it cannot go on (a missing block, bad
@@ -828,7 +829,7 @@ Level 3 of the sanctuary needs about 34,000 boxes and is refused with too-many-b
 ```
 dotnet run -c Release --project Lego.Cli -- test
 dotnet run -c Release --project Lego.Cli -- blocks
-dotnet run -c Release --project Lego.Cli -- describe temple --seed 7 --arg column=2
+dotnet run -c Release --project Lego.Cli -- describe temple@1 --seed 7 --arg column=2
 HallSlice/bin/Release/net10.0/HallSlice.exe 8 --lego sanctuary --seed 7 [--arg level=2] [--hidden] [--capture FILE.png] [--cycles 100]
 HallSlice/bin/Release/net10.0/HallSlice.exe 180 --tour 6 --vsync --seed 7
 ```
@@ -837,12 +838,13 @@ HallSlice/bin/Release/net10.0/HallSlice.exe 180 --tour 6 --vsync --seed 7
 1. `column@1`, then `column@2`;
 2. a colonnade;
 3. a temple, then a temple with `column=2`;
-4. a sanctuary of 5 temples, then one of 21.
+4. a sanctuary of 5 temples, then one of 21;
+5. the city's chain: `temple@2`, a stoa, a tholos, the agora, the acropolis, then the polis.
 
 Each step is generated, validated and materialized while the window runs. The previous mesh is disposed once the GPU
 is idle, and the camera glides to the new framing. Each round after the first uses the next seed.
 
-**Logic tests** (`Lego.Cli test`, no engine): 17 passed, 0 failed. They check:
+**Logic tests** (`Lego.Cli test`, no engine): 17 passed, 0 failed; 20 with the city's three (below). They check:
 - that the same input gives the same JSON and hash;
 - that another seed changes the stones and not the plan;
 - versions;
@@ -884,8 +886,8 @@ nothing in IXQL, ixctl or their contracts changes.
 - The repository's C# style rules do not apply to F# files.
 
 **Limits.**
-- **Boxes only.** There are no meshes, materials or instancing. Every box is 36 vertices in one host-visible buffer,
-  and identical blocks share no GPU resource.
+- **Boxes only.** There are no meshes, textures or instancing. A surface is a hint a host may show or not. In HallSlice
+  every box is 36 vertices in one host-visible buffer, and identical blocks share no GPU resource.
 - **Validation checks shape, not sense.** It does not catch overlaps, such as columns through the cella with odd
   arguments, or structures that could not stand.
 - **The sanctuary's spacing was computed, not proven.** The corner temples clear their parent up to level 2 at scale
@@ -898,3 +900,77 @@ nothing in IXQL, ixctl or their contracts changes.
 - **New blocks need a rebuild.** Blocks are code; a new block means compiling the library.
 - **Framing is a host choice.** The ground under the scene and the camera framed on its bounds are HallSlice's, not
   the scene's.
+
+## Lego: the city, on the Colossus's RTX (2026-10-21)
+
+Asked by the author: « tu augmenteras la qualité et tu essaieras de créer des chaînes encore plus complexes en
+appliquant le même principe », then « je veux tous les features NVIDIA qu'on avait fait pour … le Colosse ».
+
+![Acropolis on the Colossus, DLAA and Ray Reconstruction](evidence/lego-acropolis-rtx-20261021.jpg)
+![Polis on the Colossus, DLAA and Ray Reconstruction](evidence/lego-polis-rtx-20261021.jpg)
+
+**Surfaces.** `Clad(surface, part)` gives a part's boxes a surface: stone (the default), metal, glass, tile, water,
+leaves, or a glow of some strength. A surface passes down the uses, as a style does, and a block's own `Clad` wins.
+Validation refuses a glow outside [0, 100]. The JSON writes a box's surface only when it is not stone, so a scene
+without surfaces keeps its bytes and hash: a test pins the sanctuary's and temple@1's hashes from before.
+
+**The chain.** Each block places the others by name and version, in its own frame or on their anchors.
+
+| Block | Made of | Boxes, seed 7 |
+|---|---|---|
+| `brazier@1` | A bronze tripod and bowl (metal), three flames (glow 8). | 9 |
+| `cypress@1` | A trunk and seven tiers of leaves. | 15 |
+| `temple@2` | Four colonnades of column@2 and two braziers; ten tiers of tiles over a gilt band, gilt acroteria, bronze doors. Its cella and braziers can be left out. | 677 |
+| `stoa@1` | A colonnade, a back wall, a roof of tiles. | 263 |
+| `tholos@1` | 14 columns in a ring, twelve-sided steps, cella and conical roof. | 348 |
+| `propylon@1` | A temple@2 porch (5 × 3, no cella), a stoa on each side, set on its `front` anchor. | 509 |
+| `terrace@1`, `stair@1`, `wall@1`, `tower@1` | The pieces of the citadel and the walls; a tower can carry a brazier. | 17, 30, 25, 19 |
+| `rampart@1` | Towers about every 60 m, walls between them turned to face out, a gate between two taller towers. | 1,087 |
+| `house@1`, `insula@1` | A courtyard house; a block of six houses or gardens. | 11, 66 |
+| `agora@1` | Three stoas facing in, a fountain (water, a gilt figure), braziers, cypresses. | 972 |
+| `theatre@1` | 16 rows of 24 segments round an orchestra, a stage building. | 393 |
+| `acropolis@1` | A terrace, a stair, a propylon on the stair's `top`, and on the terrace's `top` a great temple (8 × 17), a lesser one, a tholos, an altar, cypresses and braziers. | 2,590 |
+| `polis@1` | The rampart, the acropolis, the agora, the theatre, an avenue of cypresses and braziers, and blocks of houses where the rest leave room (`density`). | 6,663 |
+
+The polis has 406 instances and nests five levels deep: polis > acropolis > propylon > temple@2 > colonnade > column.
+temple@1 and the sanctuary are unchanged; a bare `temple` now means `temple@2`.
+
+**On the Colossus.** `Colossus --lego BLOCK[@VERSION] [--lego-seed N] [--lego-arg name=value]` sets the validated scene
+on a mesa that rises from the abyss. The scene is turned to face north, away from the colossus. The city's towers keep
+off the mesa and off the camera's way to it.
+- **Rendering.** Every box is a static instance in the city's TLAS, so it gets the scene's ray-traced shadows and
+  reflections, DLSS (DLAA by default) with Ray Reconstruction under `--rr`, and HDR with bloom and ACES.
+- **Surfaces.** A Lego box is kind 5. Its seed carries its surface's code and a draw of its own. The shader gives each
+  surface its look:
+  - stone: courses and a grain;
+  - metal: a polish;
+  - tiles: their courses;
+  - water: a ripple;
+  - leaves: a rough finish.
+- **Glows.** A glow is a lamp, lit by its strength.
+- **Camera.** Preset 4 frames the mesa and sways slowly; C cycles the presets.
+
+Measured on an RTX 5080: hidden window, 1600 × 900, DLAA with Ray Reconstruction, 10,000 swarm bodies, GPU timestamps.
+
+| Scene | Lego boxes | GPU ms, p50 | Frames |
+|---|---|---|---|
+| `acropolis` | 2,590 | 4.60 | 60 fps under vsync, p95 17.3 ms |
+| `polis` | 6,663 | 3.94 | 60 fps under vsync, p95 17.4 ms |
+
+Uncapped (`--immediate`), the polis took 3.65 ms a frame at p50 with DLAA and 2.39 ms with DLSS Quality. That was
+measured before the twelve-sided rounds and the stone courses.
+
+*To verify.* In two earlier hidden-window runs under vsync, frames fell to about 30 ms after a capture while the GPU
+stayed near 5 ms. This was not seen in the two final runs or uncapped. It is still to check in a visible window.
+
+**Logic tests**: 20 passed, 0 failed. The three new tests check:
+- that the first chain keeps its hashes while the library grows;
+- that a surface passes down the uses unless a block clads its own, and that a glow over 100 is refused;
+- that the polis composes five levels deep, within the budgets, with fewer houses at density 0.
+
+**Limits.**
+- **The layout is a choice, not a solver.** The polis places its acropolis, agora and theatre by number and keeps houses
+  off them. Other widths and depths are bounded, but nothing checks them for overlaps.
+- **The swarm ignores the scene.** Its bodies pass through Lego boxes, which are drawn only, like the city.
+- **HallSlice shows no surfaces.** It only brightens glows.
+- **No assets.** Every surface is procedural, and no model, texture or asset was added.

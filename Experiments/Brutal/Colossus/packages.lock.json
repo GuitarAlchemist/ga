@@ -289,6 +289,11 @@
         "resolved": "8.4.2",
         "contentHash": "2hmtrrU18x6NL3mbuAqwy0KpnoEEJOuK6sH5RKQfD/jHijn2pqvqBUC7WGy9dgNBL9BDA7eOC0kirsNPMp2f4Q=="
       },
+      "FSharp.Core": {
+        "type": "Transitive",
+        "resolved": "10.0.113",
+        "contentHash": "x+9djZzV154V8BsDP21XT4pXTHZIu3ZJW/+eYGNRwQnFhYGDgERFw2d97FpfZ/ByO5CaxrXTqCT6earZ3QmpDQ=="
+      },
       "Microsoft.Extensions.Configuration": {
         "type": "Transitive",
         "resolved": "10.0.0",
@@ -403,6 +408,12 @@
         "type": "Transitive",
         "resolved": "10.0.0",
         "contentHash": "inRnbpCS0nwO/RuoZIAqxQUuyjaknOOnCEZB55KSMMjRhl0RQDttSmLSGsUJN3RQ3ocf5NDLFd2mOQViHqMK5w=="
+      },
+      "lego": {
+        "type": "Project",
+        "dependencies": {
+          "FSharp.Core": "[10.0.113, )"
+        }
       }
     }
   }

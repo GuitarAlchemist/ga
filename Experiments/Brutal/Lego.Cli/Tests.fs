@@ -48,7 +48,7 @@ let private grey = v3 0.5 0.5 0.5
 
 let private lab =
     Library.Of(
-        Blocks.all
+        Polis.all
         @ [ trial "loop" [ Use("again", id "loop", []) ]
             trial "ping" [ Use("pong", id "pong", []) ]
             trial "pong" [ Use("ping", id "ping", []) ]
@@ -57,7 +57,9 @@ let private lab =
             trial "twins" [ Use("a", id "column", []); Use("a", id "column", []) ]
             { trial "broken" [] with Build = fun _ _ -> failwith "no stone today" }
             trial "flat" [ Box(v3 1 0 1, grey) ]
-            trial "garish" [ Box(v3 1 1 1, v3 2 0 0) ] ]
+            trial "garish" [ Box(v3 1 1 1, v3 2 0 0) ]
+            trial "gilded" [ Clad(Metal, Group [ Use("c", id "column", []); Use("b", id "brazier", []) ]) ]
+            trial "sun" [ Clad(Glow 1000.0, Box(v3 1 1 1, grey)) ] ]
     )
 
 let private describe spec args = Api.Describe(lab, spec, 7UL, args, Limits.Standard)
@@ -66,15 +68,15 @@ let private all: (string * (unit -> unit)) list =
     [ "the same block, seed and versions give the same description",
       fun () ->
           let a = Api.Describe("sanctuary", 7UL, [])
-          let b = Api.Describe(Library.Of Blocks.all, "sanctuary@1", 7UL, [], Limits.Standard)
+          let b = Api.Describe(Library.Of Polis.all, "sanctuary@1", 7UL, [], Limits.Standard)
           expect (a.Valid && b.Valid) "both valid"
           expect (a.Json = b.Json) "the same JSON"
           expect (Describe.hash a.Scene = Describe.hash b.Scene) "the same hash"
 
       "another seed changes the stones, not the plan",
       fun () ->
-          let a = Api.Describe("temple", 7UL, [])
-          let b = Api.Describe("temple", 8UL, [])
+          let a = Api.Describe("temple@1", 7UL, [])
+          let b = Api.Describe("temple@1", 8UL, [])
           expect (Describe.hash a.Scene <> Describe.hash b.Scene) "different hashes"
           expect (a.Scene.Boxes.Count = b.Scene.Boxes.Count) "the same boxes"
           expect (a.Scene.Draft.Instances = b.Scene.Draft.Instances) "the same instances"
@@ -85,8 +87,8 @@ let private all: (string * (unit -> unit)) list =
           expect (Api.Resolve(Api.Library, "column") = Ok { Name = "column"; Version = 2 }) "column is column@2"
           expect ((describe "column@1" []).Scene.Boxes.Count = 3 + 2 * 4) "column@1: 2 squares a drum"
           expect ((describe "column@2" []).Scene.Boxes.Count = 3 + 4 * 4) "column@2: 4 squares a drum"
-          let one = (describe "temple" []).Scene
-          let two = (describe "temple" [ "column=2" ]).Scene
+          let one = (describe "temple@1" []).Scene
+          let two = (describe "temple@1" [ "column=2" ]).Scene
           expect ((node "temple/front/c0" one.Draft).Block = { Name = "column"; Version = 1 }) "column@1 by default"
           expect ((node "temple/front/c0" two.Draft).Block = { Name = "column"; Version = 2 }) "column@2 when asked"
           expect (Describe.hash one <> Describe.hash two) "different hashes"
@@ -109,7 +111,7 @@ let private all: (string * (unit -> unit)) list =
       "a temple's flanks run along -Z between its corner columns",
       fun () ->
           // front 6 and side 11 at 2.6 m: 13 m wide and 26 m deep, on steps 1.05 m tall.
-          let d = (describe "temple" []).Scene.Draft
+          let d = (describe "temple@1" []).Scene.Draft
           let at (path: string) = (node path d).World.Translation
           expect (Vector3.Distance(at "temple/front/c0", v3 -6.5 1.05 13) < 1e-3f) "front/c0"
           expect (Vector3.Distance(at "temple/front/c5", v3 6.5 1.05 13) < 1e-3f) "front/c5"
@@ -125,7 +127,7 @@ let private all: (string * (unit -> unit)) list =
               let architrave = d.Root.Boxes.Head.World.Translation
               expect (near architrave.Y (float32 h) && near architrave.X 2f) $"architrave at {architrave} for height {h}"
 
-          let scene = (describe "temple" []).Scene
+          let scene = (describe "temple@1" []).Scene
           let root = scene.Draft.Root
           let cornice = (List.item 5 root.Boxes).World.Translation
           expect (Vector3.Distance(cornice, v3 0 (1.05 + 6.0 + 1.1) 0) < 1e-3f) $"cornice at {cornice}"
@@ -141,16 +143,16 @@ let private all: (string * (unit -> unit)) list =
           expect (kinds over = [ "too-many-boxes" ]) $"level 3: {kinds over}"
           let draft = Generate.run lab Limits.Standard 7UL (id "sanctuary") [ "level", Whole 3 ]
           expect (draft.Boxes <= Limits.Standard.MaxBoxes + 1) $"stopped at {draft.Boxes} boxes"
-          let few = Api.Describe(lab, "temple", 7UL, [], { Limits.Standard with MaxInstances = 10 })
+          let few = Api.Describe(lab, "temple@1", 7UL, [], { Limits.Standard with MaxInstances = 10 })
           expect (kinds few = [ "too-many-instances" ]) $"10 instances: {kinds few}"
-          let shallow = Api.Describe(lab, "temple", 7UL, [], { Limits.Standard with MaxDepth = 1 })
+          let shallow = Api.Describe(lab, "temple@1", 7UL, [], { Limits.Standard with MaxDepth = 1 })
           expect (List.distinct (kinds shallow) = [ "too-deep" ]) $"depth 1: {kinds shallow}"
-          expect (Api.Describe(lab, "temple", 7UL, [], { Limits.Standard with MaxDepth = 2 })).Valid "depth 2 is enough"
+          expect (Api.Describe(lab, "temple@1", 7UL, [], { Limits.Standard with MaxDepth = 2 })).Valid "depth 2 is enough"
 
       "bad arguments are refused, with the reason",
       fun () ->
           describe "column" [ "height=50" ] |> refused "bad-argument" "column (column@2): argument 'height': 50 is outside [2, 20]"
-          describe "temple" [ "colour=1" ] |> refused "bad-argument" "'colour': the block has no such parameter"
+          describe "temple@1" [ "colour=1" ] |> refused "bad-argument" "'colour': the block has no such parameter"
           describe "colonnade" [ "count=2.5" ] |> refused "bad-argument" "2.5 is not a whole number"
           describe "colonnade" [ "count=many" ] |> refused "bad-argument" "'many' is not a number"
           describe "colonnade" [ "count" ] |> refused "bad-argument" "expected name=value"
@@ -161,13 +163,13 @@ let private all: (string * (unit -> unit)) list =
 
       "a missing block, instance or anchor is refused where it is named",
       fun () ->
-          let missing = describe "temple" [ "column=3" ]
+          let missing = describe "temple@1" [ "column=3" ]
           missing |> refused "missing-block" "temple/front/c0 (column@3): no block column@3 in the library"
           expect (List.distinct (kinds missing) = [ "missing-block" ]) $"only missing blocks: {kinds missing}"
           describe "orphan" [] |> refused "missing-instance" "no instance named 'nobody'"
           describe "anchorless" [] |> refused "missing-anchor" "instance 'c' has no anchor 'nowhere'"
           describe "twins" [] |> refused "duplicate-name" "two instances named 'a'"
-          describe "temple@2" [] |> refused "missing-block" "no block temple@2"
+          describe "temple@9" [] |> refused "missing-block" "no block temple@9"
 
       "a cycle is refused, with its chain",
       fun () ->
@@ -176,6 +178,37 @@ let private all: (string * (unit -> unit)) list =
 
       "a block function that fails is refused, not thrown",
       fun () -> describe "broken" [] |> refused "build-failed" "the block's function failed: no stone today"
+
+      "the first chain keeps its hashes while the library grows",
+      fun () ->
+          let hash spec args = Describe.hash (Api.Describe(spec, 7UL, args)).Scene
+          expect (hash "sanctuary" [] = "sha256:adc845f67f56965f97ed28c3f6eb3bdcca85e29d4fee6a13209a3d6e1eab7276") "sanctuary"
+          expect (hash "temple@1" [ "column=2" ] = "sha256:13906c1a13501cb537cdb6bd5d8e4966f92c84ff9d03be5cf04194f0cf4c0472") "temple@1"
+
+      "a surface passes down the uses, unless a block clads its own",
+      fun () ->
+          let d = (describe "gilded" []).Scene.Draft
+          let surfaces path = (node path d).Boxes |> List.map _.Surface |> List.distinct
+          let column, brazier = surfaces "gilded/c", surfaces "gilded/b"
+          expect (column = [ Metal ]) $"the column: {column}"
+          expect (brazier = [ Metal; Glow 8.0 ]) $"the brazier: {brazier}"
+          let temple = (describe "temple@2" []).Scene.Draft
+          expect ((node "temple/front/c0" temple).Boxes |> List.forall (fun b -> b.Surface = Stone)) "columns of stone"
+          expect (temple.Root.Boxes |> List.exists (fun b -> b.Surface = Tile)) "a roof of tiles"
+          let json = (describe "brazier" []).Json
+          expect (json.Contains "\"surface\":\"glow\",\"strength\":8") "the JSON names the glow"
+          describe "sun" [] |> refused "bad-shape" "glow's strength must be in [0, 100]"
+
+      "the city composes the chain, five levels deep",
+      fun () ->
+          let d = describe "polis" []
+          expect d.Valid (messages d)
+          let rec deepest (n: Node) = n.Children |> List.fold (fun m c -> max m (deepest c)) n.Depth
+          expect (deepest d.Scene.Draft.Root = 5) $"depth {deepest d.Scene.Draft.Root}"
+          let column = node "polis/acropolis/propylon/porch/front/c0" d.Scene.Draft
+          expect (column.Block = { Name = "column"; Version = 2 }) "a column of the propylon's porch"
+          expect (d.Scene.Boxes.Count > 5000 && d.Scene.Boxes.Count < Limits.Standard.MaxBoxes) $"{d.Scene.Boxes.Count} boxes"
+          expect ((describe "polis" [ "density=0" ]).Scene.Boxes.Count < d.Scene.Boxes.Count) "fewer houses"
 
       "a bad shape passes generation and stops at validation",
       fun () ->
@@ -190,14 +223,14 @@ let private all: (string * (unit -> unit)) list =
 
       "a library with a block twice is refused",
       fun () ->
-          Api.Describe(Library.Of(Blocks.all @ [ Blocks.colonnade ]), "temple", 7UL, [], Limits.Standard)
+          Api.Describe(Library.Of(Polis.all @ [ Blocks.colonnade ]), "temple", 7UL, [], Limits.Standard)
           |> refused "duplicate-block" "colonnade@1 is defined twice"
 
       "nothing throws, whatever is asked",
       fun () ->
           let mutable asked = 0
 
-          for spec in [ "column"; "colonnade"; "temple"; "sanctuary"; "loop"; "broken"; "flat"; "@"; ""; "a@1@2"; "temple@-1" ] do
+          for spec in [ "column"; "colonnade"; "temple"; "sanctuary"; "polis"; "rampart"; "sun"; "loop"; "broken"; "flat"; "@"; ""; "a@1@2"; "temple@-1" ] do
               for args in [ []; [ "height=-1" ]; [ "count=0" ]; [ "level=5" ]; [ "scale=1e308" ]; [ "=" ] ] do
                   for limits in [ Limits.Standard; { MaxDepth = 0; MaxInstances = 0; MaxBoxes = 0 }; { MaxDepth = 1; MaxInstances = 1; MaxBoxes = 1 } ] do
                       let d = Api.Describe(lab, spec, 7UL, args, limits)
@@ -208,7 +241,7 @@ let private all: (string * (unit -> unit)) list =
 
       "the JSON says what it is",
       fun () ->
-          let d = describe "temple" []
+          let d = describe "temple@1" []
           use scene = JsonDocument.Parse d.Json
           let r = scene.RootElement
           expect (r.GetProperty("format").GetString() = "lego-scene/1") "format"
@@ -219,7 +252,7 @@ let private all: (string * (unit -> unit)) list =
           expect (errors.RootElement.GetProperty("format").GetString() = "lego-errors/1") "errors format"
           expect (errors.RootElement.GetProperty("errors").[0].GetProperty("kind").GetString() = "bad-argument") "errors kind"
           use library = JsonDocument.Parse(Describe.library Api.Library)
-          expect (library.RootElement.GetProperty("blocks").GetArrayLength() = 5) "five blocks"
+          expect (library.RootElement.GetProperty("blocks").GetArrayLength() = Polis.all.Length) "every block"
 
       "describing again and again keeps nothing",
       fun () ->

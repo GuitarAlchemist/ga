@@ -32,6 +32,11 @@
 // DIR names their folder (Streamline 2.14.1's bin), --sl-verbose prints Streamline's log. Without them, the MSAA as before.
 // --rr adds DLSS Ray Reconstruction (in --dlss's mode, DLAA by default), which denoises the RTX rays: each pixel traces
 // fewer of them, and glass and metal reflect through their roughness.
+// --lego BLOCK[@VERSION] (--lego-seed N, --lego-arg name=value...) sets a Lego scene (../Lego, gaia's "fractal Lego") on a
+// mesa behind the face, where the city's towers give way to it. It is generated and validated before the window opens:
+// a refused scene ends the run with code 2. Its boxes are instances of the cube like every other static, so the RTX rays,
+// DLSS and Ray Reconstruction light them as they do the rest. C's cameras gain a fifth, the default here, which orbits
+// the scene.
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -57,6 +62,7 @@ using Brutal.ShaderCApi;
 using Brutal.Strings;
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
+using LegoScene = Lego.Scene;
 using SN = System.Numerics;
 
 return Colossus.Run(args);
@@ -71,7 +77,7 @@ internal struct MeshVertex(SN.Vector3 pos, SN.Vector3 normal, float material = 0
 }
 
 // One drawn instance: its model matrix, its albedo and, in Color.W, how much it glows; Extra.X is its kind (0 plain,
-// 1 machine, 2 box tower, 3 lamp, 4 modelled tower) and Extra.Y a seed.
+// 1 machine, 2 box tower, 3 lamp, 4 modelled tower, 5 Lego box) and Extra.Y a seed (a Lego box's surface code and draw).
 [StructLayout(LayoutKind.Sequential)]
 internal struct Drawn(SN.Matrix4x4 model, SN.Vector4 color, SN.Vector4 extra = default)
 {
@@ -592,9 +598,9 @@ internal static unsafe class Colossus
             return s;
         }
 
-        // The surface of an instance of kind (0 plain, 1 machine, 2 box tower, 3 lamp, 4 modelled tower) where the mesh's
-        // material is mat: unit is the point in the mesh's own space, p in metres on the instance, st on the face's plane,
-        // un the mesh's normal. footprint and px are a pixel's size in metres (footprint < 0: the pixel's derivatives).
+        // The surface of an instance of kind (0 plain, 1 machine, 2 box tower, 3 lamp, 4 modelled tower, 5 Lego box) where
+        // the mesh's material is mat: unit is the point in the mesh's own space, p in metres on the instance, st on the
+        // face's plane, un the mesh's normal. footprint and px are a pixel's size in metres (footprint < 0: the pixel's derivatives).
         Surface surface(float kind, float mat, vec4 color, float seed, vec3 unit, vec3 p, vec2 st, vec3 un, vec3 scale, float footprint, float px, float t)
         {
             Surface s = Surface(color.rgb, color.rgb * color.a, vec2(0.0), 0.8, 0.04, 0.0);
@@ -616,7 +622,7 @@ internal static unsafe class Colossus
                 // A box tower, when towers.glb is missing: glass on its sides, concrete on its roof.
                 s = side ? curtain(st, un, seed, 3.0, px, 0.2) : concrete(st, seed, footprint, px);
             }
-            else if (kind > 3.5)
+            else if (kind > 3.5 && kind < 4.5)
             {
                 // A modelled tower, in a style chosen by its seed: its walls in glass, clad in bronze or steel, in raw
                 // concrete, or in the facade texture's panels. The mesh's own glass, metal and lamps stay as modelled.
@@ -637,6 +643,69 @@ internal static unsafe class Colossus
                 else
                 {
                     s = style < 0.8 ? concrete(st, seed, footprint, px) : facade(st, seed, footprint);
+                }
+            }
+            else if (kind > 4.5)
+            {
+                // A Lego box: its surface's code in the seed's whole part (0 stone, 1 metal, 2 glass, 4 tile, 5 water,
+                // 6 leaves; a glow comes as a lamp) and a draw of its own in the fraction, so that no two stones match.
+                float code = floor(seed + 0.001);
+                float draw = fract(seed);
+                float n = noise(st * 0.9 + vec2(draw * 40.0, code * 7.0));
+                float fine = noise(st * 6.0 + draw * 13.0);
+                s.bump = (vec2(noise(st * 3.1 + draw * 5.0), noise(st.yx * 3.1 + 17.0)) - 0.5) * 0.5;
+                if (code < 0.5)
+                {
+                    // Dressed stone: on the larger faces, courses 0.6 m high of blocks 1.2 m long, each course set half a
+                    // block over, their joints fading as they shrink under a pixel; a soft grain everywhere.
+                    vec2 q = st / vec2(1.2, 0.6);
+                    q.x += 0.5 * mod(floor(q.y), 2.0);
+                    vec2 e = (0.5 - abs(fract(q) - 0.5)) * vec2(1.2, 0.6);
+                    float big = step(2.5, side ? min(scale.y, max(scale.x, scale.z)) : min(scale.x, scale.z));
+                    float joint = big * (1.0 - smoothstep(0.01, 0.03, min(e.x, e.y))) * clamp(1.0 - px / 0.1, 0.0, 1.0);
+                    s.albedo = color.rgb * (0.86 + 0.16 * n + 0.06 * fine) * (1.0 - 0.3 * joint);
+                    s.bump *= 0.3;
+                    s.rough = mix(0.6 + 0.25 * fine, 0.95, joint);
+                    s.f0 = 0.04;
+                }
+                else if (code < 1.5)
+                {
+                    // Gilt and bronze, polished.
+                    s.albedo = color.rgb * (0.9 + 0.2 * n);
+                    s.bump *= 0.3;
+                    s.rough = 0.16 + 0.14 * fine;
+                    s.metal = 1.0;
+                }
+                else if (code < 2.5)
+                {
+                    s.albedo = color.rgb * 0.06;
+                    s.bump = vec2(0.0);
+                    s.rough = 0.05;
+                    s.f0 = 0.08;
+                }
+                else if (code < 4.5)
+                {
+                    // Tiles in courses 0.42 m apart, spaced along the box's longer side as the cover tiles run down a
+                    // roof whose ridge is that side; each course's lip rounds the light.
+                    float along = !side && scale.x < scale.z ? st.y : st.x;
+                    float rib = smoothstep(0.3, 0.5, abs(fract(along / 0.42) - 0.5));
+                    s.albedo = color.rgb * (0.8 + 0.25 * n) * (1.0 - 0.35 * rib);
+                    s.bump.x = sin(along / 0.42 * 6.2832) * 0.8;
+                    s.rough = 0.55 + 0.2 * fine;
+                }
+                else if (code < 5.5)
+                {
+                    // Still water, a slow ripple on it.
+                    s.albedo = color.rgb * 0.15;
+                    s.bump = vec2(sin(st.x * 2.3 + t * 1.3), sin(st.y * 2.9 - t * 1.1)) * 0.06;
+                    s.rough = 0.03;
+                    s.f0 = 0.02;
+                }
+                else
+                {
+                    s.albedo = color.rgb * (0.6 + 0.7 * n) * (0.8 + 0.4 * fine);
+                    s.bump *= 2.0;
+                    s.rough = 0.9;
                 }
             }
             else if (kind < 0.5 && min(scale.x, min(scale.y, scale.z)) > 1.0)
@@ -718,7 +787,7 @@ internal static unsafe class Colossus
             float t = pc.eye.w;
             float kind = vExtra.x;
             // Modelled towers map in their own metres, so that window cells keep to the floors at any scale.
-            vec3 p = kind > 3.5 ? vUnit : vUnit * vScale;
+            vec3 p = kind > 3.5 && kind < 4.5 ? vUnit : vUnit * vScale;
             vec2 st = boxST(p, vUnitNormal);
             float px = max(max(fwidth(st.x), fwidth(st.y)), 1e-4);
             Surface s = surface(kind, vMaterial, vColor, vExtra.y, vUnit, p, st, vUnitNormal, vScale, -1.0, px, t);
@@ -811,7 +880,7 @@ internal static unsafe class Colossus
                         vec3 hp = origin + r * d;
                         vec3 hunit = w2o * vec4(hp, 1.0);
                         vec3 hscale = vec3(length(hit.model[0].xyz), length(hit.model[1].xyz), length(hit.model[2].xyz));
-                        vec3 hpm = hit.extra.x > 3.5 ? hunit : hunit * hscale;
+                        vec3 hpm = hit.extra.x > 3.5 && hit.extra.x < 4.5 ? hunit : hunit * hscale;
                         float foot = (dist + d) * 0.0012;
                         Surface hs = surface(hit.extra.x, mesh[at + 6u], hit.color, hit.extra.y, hunit, hpm, boxST(hpm, hun), hun, hscale, foot, foot, t);
                         vec3 hn = normalize(hun * mat3(w2o));
@@ -1000,6 +1069,34 @@ internal static unsafe class Colossus
     {
         var limit = Arg(args, "--seconds", 0);
         var swarm = Math.Clamp((int)Arg(args, "--swarm", 10000), 1, MaxSwarm);
+
+        // --lego: the scene, generated and validated before anything opens, and where it stands: turned to face north (-z),
+        // away from the colossus, its bounds' middle 40 m behind the face, its back kept off the walkway, its feet on the
+        // mesa's top at y = 0.
+        var legoAt = Array.IndexOf(args, "--lego");
+        LegoScene? lego = null;
+        var legoOffset = SN.Vector3.Zero;
+        var (legoMin, legoMax) = (SN.Vector3.Zero, SN.Vector3.Zero);
+        if (legoAt >= 0)
+        {
+            var legoSeed = (ulong)Arg(args, "--lego-seed", 7);
+            var described = Lego.Api.Describe(legoAt + 1 < args.Length ? args[legoAt + 1] : "", legoSeed, args.Where((a, i) => i > 0 && args[i - 1] == "--lego-arg"));
+            if (!described.Valid)
+            {
+                foreach (var problem in described.Problems)
+                {
+                    Console.Error.WriteLine($"LEGO refused: {problem.Message}");
+                }
+
+                return 2;
+            }
+
+            lego = described.Scene;
+            (legoMin, legoMax) = (new SN.Vector3(-lego.Max.X, lego.Min.Y, -lego.Max.Z), new SN.Vector3(-lego.Min.X, lego.Max.Y, -lego.Min.Z));
+            var middle = (legoMin + legoMax) / 2f;
+            legoOffset = new SN.Vector3(-middle.X, -legoMin.Y, Math.Min(-40f - middle.Z, 10f - legoMax.Z));
+            Console.WriteLine($"LEGO {lego.Draft.Root.Block} seed {legoSeed}: {lego.Draft.Instances} instances, {lego.Boxes.Count} boxes, {Lego.Describe.hash(lego)}");
+        }
         var immediate = args.Contains("--immediate");
         var mailbox = args.Contains("--mailbox");
         string? ArgText(string name)
@@ -1872,7 +1969,19 @@ internal static unsafe class Colossus
         // The scene: the city is drawn only; the walkway and the figure also stand in the simulation.
         var rng = new Random(7);
         var statics = new List<Drawn>();
-        var towers = City(statics, rng, towerVariants);
+        var mesa = lego is null ? default : Mesa(legoMin, legoMax, legoOffset);
+        // The towers keep off the mesa and off the camera's way to it: from the mesa back past the eye, as wide as the eye
+        // sways.
+        (SN.Vector2 Min, SN.Vector2 Max)? clear = null;
+        if (lego is not null)
+        {
+            var view = LegoView(mesa);
+            var sway = 0.5f * (view.Target.Z - view.Eye.Z) + 20f;
+            clear = (new SN.Vector2(MathF.Min(mesa.Min.X, view.Target.X - sway), view.Eye.Z - 20f), new SN.Vector2(MathF.Max(mesa.Max.X, view.Target.X + sway), mesa.Max.Z));
+            Console.WriteLine($"LEGO mesa {mesa.Min} to {mesa.Max}, seen from {view.Eye} toward {view.Target}");
+        }
+
+        var towers = City(statics, rng, towerVariants, clear);
         // The cinematic's shots round towers, and the towers they cast in the style each shot shows.
         var tops = towerVariants.Select(v => cube.Skip(v.First).Take(v.Count).Max(m => m.Pos.Y)).ToArray();
         (Shots, var cast) = DirectedShots(Shots, [.. towers.Select(p => (p.Instance, tops[p.Variant], towerVariants[p.Variant].Width))]);
@@ -1887,6 +1996,23 @@ internal static unsafe class Colossus
             Box(statics, c, size, 0f, color, 0f);
             using var settings = BodyCreationSettings.Create(BoxShapeSettings.Create(F(size / 2f)), F(c), new floatQuat(0f, 0f, 0f, 1f), MotionType.Static, 0);
             bodies.CreateAndAddBody(settings, Activation.DontActivate);
+        }
+
+        if (lego is not null)
+        {
+            // The mesa, rock risen from the abyss like the towers, then every box of the scene: the cube is centred and a
+            // Lego box stands on its frame's floor, hence the half-height lift. Drawn only, like the city.
+            Box(statics, (mesa.Min + mesa.Max) / 2f, mesa.Max - mesa.Min, 0f, new SN.Vector3(0.16f, 0.145f, 0.13f), 0f);
+            var move = SN.Matrix4x4.CreateRotationY(MathF.PI) * SN.Matrix4x4.CreateTranslation(legoOffset);
+            var legoDraw = 0;
+            foreach (var box in lego.Boxes)
+            {
+                // A glow is a lamp, lit by its strength; any other surface is kind 5, its code in the seed's whole part.
+                var model = SN.Matrix4x4.CreateScale(box.Size) * SN.Matrix4x4.CreateTranslation(0f, box.Size.Y / 2f, 0f) * box.World * move;
+                statics.Add(box.Surface.Code == 3
+                    ? new Drawn(model, new SN.Vector4(box.Color, (float)box.Surface.Strength), new SN.Vector4(3f, 0f, 0f, 0f))
+                    : new Drawn(model, new SN.Vector4(box.Color, 0f), new SN.Vector4(5f, box.Surface.Code + legoDraw++ * 0.618034f % 0.99f, 0f, 0f)));
+            }
         }
 
         // The towers first, grouped by variant: one draw call each, then one for every box.
@@ -1936,6 +2062,14 @@ internal static unsafe class Colossus
             }
         }
 
+        // Every instance shares one buffer: the swarm gets what the statics leave.
+        var swarmRoom = Math.Min(MaxSwarm, MaxInstances - staticInstances.Length);
+        if (swarm > swarmRoom)
+        {
+            Console.WriteLine($"SWARM {swarm} bodies do not fit beside {staticInstances.Length} static instances: {swarmRoom}");
+            swarm = swarmRoom;
+        }
+
         BuildSwarm(bodies, swarm);
         // Jolt asks for this after adding bodies one at a time, which leaves the broad phase's tree unbalanced. At 40,000
         // machines it changed nothing measurable: Jolt rebuilds the tree as it steps.
@@ -1972,7 +2106,8 @@ internal static unsafe class Colossus
         SN.Vector3 lastEye = default, lastForward = default;
         var lastViewProj = SN.Matrix4x4.Identity;
         float speedScale = 1f, cohesion = 1.2f, glow = 0f, yawOffset = 0f, pitchOffset = 0f, zoom = 1f, exposure = 1.0f, bloomStrength = 0.12f, smoothDt = 1f / 60f;
-        int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : 0, shownPreset = -1;
+        int requested = swarm, preset = recording || args.Contains("--cinematic") ? 3 : lego is not null ? 4 : 0, shownPreset = -1;
+        var presets = lego is null ? 4 : 5;
         // The lines made, the next one and when; a line typed in the panel while Piper makes it; the subtitle shown.
         var lines = Array.Empty<(string Text, short[] Pcm)>();
         var nextLine = 0;
@@ -2095,7 +2230,7 @@ internal static unsafe class Colossus
 
             if (ImGui.IsKeyPressed(ImGuiKey.C, false))
             {
-                preset = (preset + 1) % 4;
+                preset = (preset + 1) % presets;
             }
 
             if (ImGui.IsKeyPressed(ImGuiKey.H, false))
@@ -2271,7 +2406,7 @@ internal static unsafe class Colossus
                     ImGui.SliderFloat($"{L("Cohesion")}###cohesion", ref cohesion, 0.2f, 4f);
                     ImGui.SliderFloat($"{L("Exposure")}###exposure", ref exposure, 0.3f, 4f);
                     ImGui.SliderFloat($"{L("Bloom")}###bloom", ref bloomStrength, 0f, 0.6f);
-                    ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, MaxSwarm);
+                    ImGui.SliderInt($"{L("Swarm size")}###size", ref requested, 500, swarmRoom);
                     if (requested != _ids.Length)
                     {
                         ImGui.SameLine();
@@ -2439,11 +2574,13 @@ internal static unsafe class Colossus
                 {
                     1 => (new SN.Vector3(-38f, 14f, 78f), new SN.Vector3(0f, 18f, 10f)),
                     2 => (new SN.Vector3(6f, 22f, 32f), FaceCenter),
+                    // The Lego scene, from its front and above, far enough back to take it in; it sways slowly.
+                    4 => (LegoView(mesa).Eye, LegoView(mesa).Target),
                     _ => (new SN.Vector3(1.4f, 1.85f, FigureZ + 6.5f), FaceCenter),
                 };
                 var offset = presetEye - presetTarget;
                 var distance = offset.Length() * zoom;
-                var yaw = MathF.Atan2(offset.X, offset.Z) + yawOffset + (drift ? MathF.Sin((float)now * 0.06f) * 0.15f : 0f);
+                var yaw = MathF.Atan2(offset.X, offset.Z) + yawOffset + (drift ? MathF.Sin((float)now * 0.06f) * 0.15f : 0f) + (preset == 4 ? MathF.Sin((float)now * 0.05f) * 0.5f : 0f);
                 var pitch = Math.Clamp(MathF.Asin(offset.Y / offset.Length()) + pitchOffset, -1.2f, 1.3f);
                 var wantEye = presetTarget + (distance * new SN.Vector3(MathF.Cos(pitch) * MathF.Sin(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Cos(yaw)));
                 var ease = Math.Min(1f, frameDt * 2.5f);
@@ -3233,8 +3370,13 @@ internal static unsafe class Colossus
 
     // The city: towers on a wide ring rising from the abyss, leaving the walkway's view open. With the modelled towers
     // (city/towers.glb), each is one of their variants, turned and scaled; without them, a box with amber lights.
-    private static List<(int Variant, Drawn Instance)> City(List<Drawn> o, Random rng, (int First, int Count, float Width)[] variants)
+    private static List<(int Variant, Drawn Instance)> City(List<Drawn> o, Random rng, (int First, int Count, float Width)[] variants, (SN.Vector2 Min, SN.Vector2 Max)? clear = null)
     {
+        // Whether a tower this wide at x, z would stand on the Lego scene's mesa or in the camera's way to it. A modelled
+        // tower is left out only after its draws, so the others stand where they always do.
+        bool OnMesa(float x, float z, float width) =>
+            clear is { } c && x + width > c.Min.X && x - width < c.Max.X && z + width > c.Min.Y && z - width < c.Max.Y;
+
         var tower = new SN.Vector3(0.05f, 0.045f, 0.04f);
         var placed = new List<(int, Drawn)>();
         for (var i = 0; i < 420; i++)
@@ -3258,7 +3400,17 @@ internal static unsafe class Colossus
                 }
 
                 var model = SN.Matrix4x4.CreateScale(s) * SN.Matrix4x4.CreateRotationY(rng.NextSingle() * MathF.Tau) * SN.Matrix4x4.CreateTranslation(x, -90f, z);
+                if (OnMesa(x, z, variants[v].Width * s))
+                {
+                    continue;
+                }
+
                 placed.Add((v, new Drawn(model, new SN.Vector4(tower, 0f), new SN.Vector4(4f, i * 0.1373f % 1f, 0f, 0f))));
+                continue;
+            }
+
+            if (OnMesa(x, z, 10f))
+            {
                 continue;
             }
 
@@ -3335,6 +3487,21 @@ internal static unsafe class Colossus
         }
 
         return [.. variants];
+    }
+
+    // The Lego scene's mesa: its turned bounds moved into place and widened by 8 m, from the abyss's floor (y = -90) to
+    // y = 0.
+    private static (SN.Vector3 Min, SN.Vector3 Max) Mesa(SN.Vector3 min, SN.Vector3 max, SN.Vector3 offset) =>
+        (new SN.Vector3(min.X + offset.X - 8f, -90f, min.Z + offset.Z - 8f), new SN.Vector3(max.X + offset.X + 8f, 0f, max.Z + offset.Z + 8f));
+
+    // The camera on the Lego scene: aimed a little above the mesa's middle, from the scene's front (north, -z) and
+    // above, as far back as the mesa is wide, the colossus beyond it.
+    private static (SN.Vector3 Eye, SN.Vector3 Target) LegoView((SN.Vector3 Min, SN.Vector3 Max) mesa)
+    {
+        var size = mesa.Max - mesa.Min;
+        var target = new SN.Vector3((mesa.Min.X + mesa.Max.X) / 2f, 4f, (mesa.Min.Z + mesa.Max.Z) / 2f);
+        var reach = 0.75f * MathF.Max(size.X, size.Z);
+        return (target + (reach * SN.Vector3.Normalize(new SN.Vector3(0f, 0.45f, -1f))), target);
     }
 
     private static void Box(List<Drawn> o, SN.Vector3 c, SN.Vector3 size, float yaw, SN.Vector3 color, float emission, float kind = 0f, float seed = 0f)

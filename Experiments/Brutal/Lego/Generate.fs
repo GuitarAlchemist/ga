@@ -75,7 +75,7 @@ let run (library: Library) (limits: Limits) (seed: uint64) (root: BlockId) (args
           Boxes = 0
           Spent = false }
 
-    let rec instance (stack: (BlockId * (string * Value) list) list) (path: string) (depth: int) (world: Matrix4x4) (id: BlockId) (given: (string * Value) list) : Node =
+    let rec instance (stack: (BlockId * (string * Value) list) list) (path: string) (depth: int) (world: Matrix4x4) (surface: Surface) (id: BlockId) (given: (string * Value) list) : Node =
         let seedHere = Seeds.derive seed path (string id)
 
         let node (issues: Issue list) (args: (string * Value) list) : Node =
@@ -125,18 +125,19 @@ let run (library: Library) (limits: Limits) (seed: uint64) (root: BlockId) (args
 
                         match built with
                         | Error message -> node [ BuildFailed message ] resolved
-                        | Ok built -> assemble ((id, resolved) :: stack) path depth world (node [] resolved) built
+                        | Ok built -> assemble ((id, resolved) :: stack) path depth world surface (node [] resolved) built
 
     // A block's parts placed in the world: boxes counted against the budget, instances expanded and named, then each
-    // Attach in the frame of its instance's anchor, in the order the parts give them.
-    and assemble stack path depth world (self: Node) (built: Built) : Node =
+    // Attach in the frame of its instance's anchor, in the order the parts give them. Each part carries the surface it
+    // inherits, from the instance or from the nearest Clad around it.
+    and assemble stack path depth world inherited (self: Node) (built: Built) : Node =
         let boxes = ResizeArray<Placed>()
         let children = ResizeArray<Node>()
         let issues = ResizeArray<Issue>()
         let named = Dictionary<string, Node>()
-        let attaches = Queue<string * string * Part>()
+        let attaches = Queue<string * string * Part * Surface>()
 
-        let rec walk (frame: Matrix4x4) (part: Part) =
+        let rec walk (frame: Matrix4x4) (surface: Surface) (part: Part) =
             match part with
             | Box(size, color) ->
                 if not budget.Spent then
@@ -149,23 +150,25 @@ let run (library: Library) (limits: Limits) (seed: uint64) (root: BlockId) (args
                         boxes.Add(
                             { World = frame
                               Size = size
-                              Color = color }: Placed
+                              Color = color
+                              Surface = surface }: Placed
                         )
+            | Clad(clad, inner) -> walk frame clad inner
             | Use(name, block, args) ->
                 if named.ContainsKey name then
                     issues.Add(DuplicateName name)
                 else
-                    let child = instance stack $"{path}/{name}" (depth + 1) frame block args
+                    let child = instance stack $"{path}/{name}" (depth + 1) frame surface block args
                     named[name] <- child
                     children.Add child
-            | Attach(target, anchor, inner) -> attaches.Enqueue((target, anchor, inner))
-            | Move(t, inner) -> walk (Space.matrix t * frame) inner
-            | Group parts -> parts |> List.iter (walk frame)
+            | Attach(target, anchor, inner) -> attaches.Enqueue((target, anchor, inner, surface))
+            | Move(t, inner) -> walk (Space.matrix t * frame) surface inner
+            | Group parts -> parts |> List.iter (walk frame surface)
 
-        built.Parts |> List.iter (walk world)
+        built.Parts |> List.iter (walk world inherited)
 
         while attaches.Count > 0 do
-            let target, anchor, inner = attaches.Dequeue()
+            let target, anchor, inner, surface = attaches.Dequeue()
 
             match named.TryGetValue target with
             | false, _ -> issues.Add(MissingInstance target)
@@ -173,7 +176,7 @@ let run (library: Library) (limits: Limits) (seed: uint64) (root: BlockId) (args
             | true, child when not child.Problems.IsEmpty || budget.Spent -> ()
             | true, child ->
                 match child.Anchors |> List.tryFind (fun (name, _) -> name = anchor) with
-                | Some(_, frame) -> walk frame inner
+                | Some(_, frame) -> walk frame surface inner
                 | None -> issues.Add(MissingAnchor(target, anchor))
 
         { self with
@@ -182,7 +185,7 @@ let run (library: Library) (limits: Limits) (seed: uint64) (root: BlockId) (args
             Anchors = built.Anchors |> List.map (fun (name, t) -> name, Space.matrix t * world)
             Problems = issues |> Seq.map (fun issue -> ({ Path = path; Block = self.Block; Issue = issue }: Problem)) |> List.ofSeq }
 
-    let rootNode = instance [] root.Name 0 Matrix4x4.Identity root args
+    let rootNode = instance [] root.Name 0 Matrix4x4.Identity Stone root args
 
     { Root = rootNode
       Seed = seed

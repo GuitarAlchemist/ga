@@ -46,11 +46,52 @@ type Args(values: Map<string, Value>) =
         | Some(Whole w) -> w
         | _ -> invalidArg (nameof name) $"the block has no whole parameter '{name}'"
 
+/// How a box's surface is finished, for hosts that can show it: stone (the default), metal, glass, tile, water,
+/// leaves, or a glow of some strength (fire, lamps). A host that cannot show one draws the box in its colour.
+type Surface =
+    | Stone
+    | Metal
+    | Glass
+    | Tile
+    | Water
+    | Leaves
+    | Glow of strength: float
+
+    /// A number for hosts: 0 stone, 1 metal, 2 glass, 3 glow, 4 tile, 5 water, 6 leaves.
+    member this.Code =
+        match this with
+        | Stone -> 0
+        | Metal -> 1
+        | Glass -> 2
+        | Glow _ -> 3
+        | Tile -> 4
+        | Water -> 5
+        | Leaves -> 6
+
+    /// A glow's strength; 0 for any other surface.
+    member this.Strength =
+        match this with
+        | Glow s -> s
+        | _ -> 0.0
+
+    member this.Name =
+        match this with
+        | Stone -> "stone"
+        | Metal -> "metal"
+        | Glass -> "glass"
+        | Glow _ -> "glow"
+        | Tile -> "tile"
+        | Water -> "water"
+        | Leaves -> "leaves"
+
 /// What a block is made of, in its own frame.
 type Part =
     /// A box standing on its frame's floor and centred on its vertical axis: x and z from -size/2 to size/2, y from 0
     /// to size.Y. Its colour is in linear RGB, each channel in [0, 1].
     | Box of size: Vector3 * color: Vector3
+    /// A part whose boxes have this surface, and the boxes of the blocks it uses too, unless they say otherwise: a
+    /// surface passes down the scene as a style does. The root's is stone.
+    | Clad of Surface * Part
     /// An instance of a block (another, or this one with other arguments), named for paths and anchors. Its arguments
     /// left out take their defaults.
     | Use of name: string * block: BlockId * args: (string * Value) list
@@ -159,11 +200,12 @@ type Problem =
 
         $"{this.Path} ({this.Block}): {what}"
 
-/// A box in the scene: its world matrix (applied to the box of Part.Box), its size and its colour.
+/// A box in the scene: its world matrix (applied to the box of Part.Box), its size, its colour and its surface.
 type Placed =
     { World: Matrix4x4
       Size: Vector3
-      Color: Vector3 }
+      Color: Vector3
+      Surface: Surface }
 
 /// An expanded instance: where it is, what it was given, what it made, and what went wrong there.
 type Node =

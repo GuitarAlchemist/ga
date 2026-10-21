@@ -37,7 +37,8 @@ internal static class LegoAdapter
         HallSlice.Box(vertices, SN.Matrix4x4.CreateTranslation(middle.X, scene.Min.Y - 0.11f, middle.Z), new SN.Vector3(1.15f * size.X, 0.1f, 1.15f * size.Z), new SN.Vector3(0.16f, 0.15f, 0.14f));
         foreach (var box in scene.Boxes)
         {
-            HallSlice.Box(vertices, box.World, box.Size, box.Color);
+            // The slice has no surfaces: a glow is only drawn brighter.
+            HallSlice.Box(vertices, box.World, box.Size, box.Surface.Code == 3 ? SN.Vector3.Min(SN.Vector3.One, box.Color * 1.6f) : box.Color);
         }
 
         return [.. vertices];
