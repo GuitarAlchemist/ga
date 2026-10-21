@@ -30,6 +30,8 @@
 // --dlss [dlaa|quality|balanced|performance|ultra] replaces the 4x MSAA with NVIDIA DLSS on a GeForce RTX (Streamline.cs):
 // DLAA at the window's size by default, or rendered smaller and upscaled. NVIDIA's DLLs are not in the repository: --sl-path
 // DIR names their folder (Streamline 2.14.1's bin), --sl-verbose prints Streamline's log. Without them, the MSAA as before.
+// --rr adds DLSS Ray Reconstruction (in --dlss's mode, DLAA by default), which denoises the RTX rays: each pixel traces
+// fewer of them, and glass and metal reflect through their roughness.
 
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -112,6 +114,8 @@ internal static unsafe class Colossus
     private const VkFormat DepthFormat = VkFormat.D32SFloat;
     private const VkSampleCountFlags Msaa = VkSampleCountFlags._4Bit;
     private const VkFormat MotionFormat = VkFormat.R16G16SFloat;
+    // Ray Reconstruction's guides: diffuse and specular reflectance, normal with roughness, the reflection's hit distance.
+    private static readonly VkFormat[] GuideFormats = [VkFormat.R16G16B16A16SFloat, VkFormat.R16G16B16A16SFloat, VkFormat.R16G16B16A16SFloat, VkFormat.R16SFloat];
     private const int BloomLevels = 7;
     private const float Near = 0.1f;
 
@@ -470,6 +474,12 @@ internal static unsafe class Colossus
         layout(location = 11) in vec4 vPrevClip;
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; mat4 prevViewProj; vec4 jitter; } pc;
         layout(location = 1) out vec4 outMotion;
+        #ifdef RR
+        layout(location = 2) out vec4 outDiffuse;
+        layout(location = 3) out vec4 outSpecular;
+        layout(location = 4) out vec4 outNormal;
+        layout(location = 5) out float outHit;
+        #endif
         #else
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         #endif
@@ -654,6 +664,50 @@ internal static unsafe class Colossus
             return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
         }
 
+        #ifdef RR
+        // Ray Reconstruction gathers the rays over the frames and between neighbours: one through the sun's disc and two
+        // for the occlusion suffice. Without it, two and four.
+        const int ShadowRays = 1;
+        const int OcclusionRays = 2;
+
+        // A microfacet's normal around n, drawn from the GGX normals that the view v sees (Heitz, 2018) at roughness
+        // alpha; u is two numbers in [0, 1). A reflection about it follows the surface's own spread.
+        vec3 ggxNormal(vec3 n, vec3 v, float alpha, vec2 u)
+        {
+            vec3 tx = normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, vec3(1.0, 0.0, 0.0)));
+            vec3 ty = cross(n, tx);
+            vec3 vh = normalize(vec3(alpha * dot(v, tx), alpha * dot(v, ty), max(dot(v, n), 1e-4)));
+            float len2 = dot(vh.xy, vh.xy);
+            vec3 t1 = len2 > 0.0 ? vec3(-vh.y, vh.x, 0.0) * inversesqrt(len2) : vec3(1.0, 0.0, 0.0);
+            vec3 t2 = cross(vh, t1);
+            float r = sqrt(u.x);
+            float phi = 6.2831853 * u.y;
+            float p1 = r * cos(phi);
+            float p2 = mix(sqrt(1.0 - p1 * p1), r * sin(phi), 0.5 * (1.0 + vh.z));
+            vec3 nh = p1 * t1 + p2 * t2 + sqrt(max(0.0, 1.0 - p1 * p1 - p2 * p2)) * vh;
+            vec3 m = normalize(vec3(alpha * nh.x, alpha * nh.y, max(nh.z, 1e-4)));
+            return normalize(tx * m.x + ty * m.y + n * m.z);
+        }
+
+        // The specular reflectance over the hemisphere for reflectance f0 head on, at roughness alpha, seen at nv: the
+        // fit that NVIDIA's guide to Ray Reconstruction gives (Ray Tracing Gems, chapter 32). v * mat2(...) is HLSL's
+        // mul(matrix, v) with the matrix's rows in that order.
+        vec3 specularAlbedo(vec3 f0, float alpha, float nv)
+        {
+            vec4 x = vec4(1.0, nv, nv * nv, nv * nv * nv);
+            vec4 y = vec4(1.0, alpha, alpha * alpha, alpha * alpha * alpha);
+            float bias = dot(x.xy * mat2(0.99044, -1.28514, 1.29678, -0.755907), y.xy)
+                / dot(x.xyw * mat3(1.0, 2.92338, 59.4188, 20.3225, -27.0302, 222.592, 121.563, 626.13, 316.627), y.xyw);
+            float scale = dot(x.xy * mat2(0.0365463, 3.32707, 9.0632, -9.04756), y.xy)
+                / dot(x.xzw * mat3(1.0, 3.59685, -1.36772, 9.04401, -16.3174, 9.22949, 5.56589, 19.7886, -20.2123), y.xyw);
+            bias *= clamp(f0.g * 50.0, 0.0, 1.0);
+            return f0 * max(scale, 0.0) + max(bias, 0.0);
+        }
+        #else
+        const int ShadowRays = 2;
+        const int OcclusionRays = 4;
+        #endif
+
         void main()
         {
             vec3 ng = normalize(vNormal);
@@ -676,38 +730,40 @@ internal static unsafe class Colossus
             float shadow = 1.0;
             float ao = 1.0;
             vec3 traced = vec3(-1.0);
+            vec3 mirrored = reflect(-v, n);
+            float hitDistance = -1.0;
             #ifdef RTX
             if (pc.params.y > 0.5)
             {
                 vec3 origin = vWorld + ng * 0.04;
                 vec2 noise2 = vec2(ign(gl_FragCoord.xy), ign(gl_FragCoord.xy + vec2(47.0, 17.0)));
                 // The swarm shades the city, the walkway and the figure, but not itself: its machines would hide each
-                // other's sunlight and the head would read as a silhouette. Two rays through the sun's disc, widened to
-                // 1.4 degrees by the haze, soften the shadows' edges.
+                // other's sunlight and the head would read as a silhouette. Rays through the sun's disc, widened to 1.4
+                // degrees by the haze, soften the shadows' edges.
                 uint casters = kind > 0.5 && kind < 1.5 ? 0x01u : 0x05u;
                 vec3 sx = normalize(cross(sun, vec3(0.0, 1.0, 0.0)));
                 vec3 sy = cross(sun, sx);
                 shadow = 0.0;
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < ShadowRays; i++)
                 {
-                    float a = 6.2831853 * fract(noise2.x + float(i) * 0.5);
-                    vec3 d = normalize(sun + (sx * cos(a) + sy * sin(a)) * sqrt(fract(noise2.y + float(i) * 0.5)) * 0.012);
+                    float a = 6.2831853 * fract(noise2.x + float(i) / float(ShadowRays));
+                    vec3 d = normalize(sun + (sx * cos(a) + sy * sin(a)) * sqrt(fract(noise2.y + float(i) / float(ShadowRays))) * 0.012);
                     rayQueryEXT q;
                     rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, casters, origin, 0.02, d, 800.0);
                     while (rayQueryProceedEXT(q)) {}
-                    shadow += rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? 0.5 : 0.0;
+                    shadow += rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? 1.0 / float(ShadowRays) : 0.0;
                 }
 
-                // Ambient occlusion: four rays over the hemisphere, cosine-weighted, up to 6 m, against the city and the
+                // Ambient occlusion: rays over the hemisphere, cosine-weighted, up to 6 m, against the city and the
                 // walkway; a near hit darkens more than a far one. Not on the machines, nor deep in the haze.
                 if ((kind < 0.5 || kind > 1.5) && fog < 0.9)
                 {
                     vec3 bx = normalize(abs(ng.y) < 0.99 ? cross(ng, vec3(0.0, 1.0, 0.0)) : cross(ng, vec3(1.0, 0.0, 0.0)));
                     vec3 by = cross(ng, bx);
                     float occluded = 0.0;
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < OcclusionRays; i++)
                     {
-                        float u = fract(noise2.x + float(i) * 0.25);
+                        float u = fract(noise2.x + float(i) / float(OcclusionRays));
                         float a = 6.2831853 * fract(noise2.y + float(i) * 0.618034);
                         vec3 d = normalize((bx * cos(a) + by * sin(a)) * sqrt(u) + ng * sqrt(1.0 - u));
                         rayQueryEXT q;
@@ -719,21 +775,32 @@ internal static unsafe class Colossus
                         }
                     }
 
-                    ao = 1.0 - occluded * 0.25 * 0.85;
+                    ao = 1.0 - occluded / float(OcclusionRays) * 0.85;
                 }
 
                 // The mirror ray, on glass and metal: where it lands, that surface lit by the sun (behind its own shadow
                 // ray) and the abyss's bounce, glowing if it glows, with the sky in it if it shines, hazed by distance.
+                // Under Ray Reconstruction it leaves about one of the surface's microfacets, drawn anew each frame, and
+                // the reflections blur as the surfaces are rough.
                 if (mirror > 0.2)
                 {
+                    #ifdef RR
+                    vec2 noise3 = vec2(ign(gl_FragCoord.xy + vec2(13.0, 71.0)), ign(gl_FragCoord.xy + vec2(89.0, 29.0)));
+                    vec3 r = reflect(-v, ggxNormal(n, v, s.rough * s.rough, noise3));
+                    #else
                     vec3 r = reflect(-v, n);
+                    #endif
                     r = normalize(r + ng * max(0.02 - dot(r, ng), 0.0));
+                    #ifdef RR
+                    mirrored = r;
+                    #endif
                     rayQueryEXT m;
                     rayQueryInitializeEXT(m, scene, gl_RayFlagsOpaqueEXT, 0xFF, origin, 0.05, r, 900.0);
                     while (rayQueryProceedEXT(m)) {}
                     if (rayQueryGetIntersectionTypeEXT(m, true) != gl_RayQueryCommittedIntersectionNoneEXT)
                     {
                         float d = rayQueryGetIntersectionTEXT(m, true);
+                        hitDistance = d;
                         Instance hit = instances[rayQueryGetIntersectionInstanceIdEXT(m, true)];
                         uint at = (uint(rayQueryGetIntersectionInstanceCustomIndexEXT(m, true)) + uint(rayQueryGetIntersectionPrimitiveIndexEXT(m, true)) * 3u) * 7u;
                         vec2 bc = rayQueryGetIntersectionBarycentricsEXT(m, true);
@@ -783,7 +850,7 @@ internal static unsafe class Colossus
             vec3 ambient = skylight(n) * ao;
             vec3 fill = vec3(0.2, 0.25, 0.38) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0) * ao;
             float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
-            vec3 reflected = traced.x >= 0.0 ? traced : sky(reflect(-v, n), sun, t);
+            vec3 reflected = traced.x >= 0.0 ? traced : sky(mirrored, sun, t);
             vec3 env = fresnel * mix(ambient * 2.0, reflected, mirror);
             vec3 c = s.albedo * (1.0 - s.metal) * (1.0 - fresnel) * (ambient + fill + SunColor * 1.8 * ndl) + spec + env
                 + SunColor * back * 1.4 * (0.6 + 0.4 * shadow) + s.emit;
@@ -792,6 +859,16 @@ internal static unsafe class Colossus
             #ifdef DLSS
             // Where this point was on screen in the previous frame, from where it is now, in UV units.
             outMotion = vec4((vPrevClip.xy / vPrevClip.w - vClip.xy / vClip.w) * 0.5, 0.0, 0.0);
+            #endif
+            #ifdef RR
+            // Ray Reconstruction's guides: the surface without its light. Its diffuse reflectance (at least 0.04, as in
+            // NVIDIA's own renderer) and its specular one over the hemisphere, which the haze turns toward the sky's, as it
+            // does the colour; its shading normal in world space and its roughness; how far its reflection ray went, or
+            // -1 where none went or it met only sky.
+            outDiffuse = vec4(mix(max(s.albedo * (1.0 - s.metal), vec3(0.04)), sky(-v, sun, t) * 0.55, fog), 1.0);
+            outSpecular = vec4(clamp(specularAlbedo(f0, s.rough * s.rough, nv), 0.0, 1.0) * (1.0 - fog), 1.0);
+            outNormal = vec4(n, s.rough);
+            outHit = hitDistance;
             #endif
         }
         """;
@@ -820,6 +897,12 @@ internal static unsafe class Colossus
         layout(location = 1) in vec2 vNdc;
         layout(location = 0) out vec4 outColor;
         layout(location = 1) out vec4 outMotion;
+        #ifdef RR
+        layout(location = 2) out vec4 outDiffuse;
+        layout(location = 3) out vec4 outSpecular;
+        layout(location = 4) out vec4 outNormal;
+        layout(location = 5) out float outHit;
+        #endif
         void main()
         {
             vec3 dir = normalize(vNear - pc.eye.xyz);
@@ -827,6 +910,14 @@ internal static unsafe class Colossus
             prev.w = abs(prev.w) < 1e-6 ? 1e-6 : prev.w;
             outColor = vec4(sky(dir, pc.sun.xyz, pc.eye.w), 1.0);
             outMotion = vec4((prev.xy / prev.w - vNdc) * 0.5, 0.0, 0.0);
+            #ifdef RR
+            // Ray Reconstruction's guides for the sky, as NVIDIA's own renderer gives them: its colour as the diffuse
+            // reflectance, no specular, a normal facing the camera, no reflection ray.
+            outDiffuse = vec4(max(outColor.rgb, vec3(0.04)), 1.0);
+            outSpecular = vec4(0.0);
+            outNormal = vec4(-dir, 0.0);
+            outHit = -1.0;
+            #endif
         }
         """;
 
@@ -1009,11 +1100,12 @@ internal static unsafe class Colossus
         // refuses them, Streamline stops and the instance is made as without --dlss.
         var dlssAt = Array.IndexOf(args, "--dlss");
         var dlssName = dlssAt >= 0 && dlssAt + 1 < args.Length && Dlss.Modes.ContainsKey(args[dlssAt + 1]) ? args[dlssAt + 1] : "dlaa";
+        var rayAsked = args.Contains("--rr");
         var dlssNote = "";
         Dlss? dlss = null;
-        if (dlssAt >= 0)
+        if (dlssAt >= 0 || rayAsked)
         {
-            dlss = Dlss.Load(ArgText("--sl-path") ?? Dlss.DefaultFolder, args.Contains("--sl-verbose"), out var why);
+            dlss = Dlss.Load(ArgText("--sl-path") ?? Dlss.DefaultFolder, args.Contains("--sl-verbose"), rayAsked, out var why);
             dlssNote = why;
         }
 
@@ -1426,16 +1518,20 @@ internal static unsafe class Colossus
         // turns into the HDR image's first mip at the window's size; the bloom and the second pass go on from there as
         // without DLSS. The colour's alpha still marks geometry: DLSS upscales it, and the second pass puts the sky where it
         // is not. The previous frame's instances, kept on the CPU, go to a buffer of each frame in flight, for the motion.
+        // With Ray Reconstruction (and RTX), the pass has four more targets, its guides, which its own pipelines write.
         var dlssMode = Dlss.Modes[dlssName];
         var renderExtent = extent;
+        var ray = dlss is not null && dlss.RayReconstruction && rtx;
         VkImage dlssColor = default, dlssMotion = default, dlssDepth = default;
         VkDeviceMemory dlssColorMemory = default, dlssMotionMemory = default, dlssDepthMemory = default;
         VkImageView dlssColorView = default, dlssMotionView = default, dlssDepthView = default;
+        var guideImages = new (VkImage Image, VkDeviceMemory Memory, VkImageView View)[ray ? 4 : 0];
         VkRenderPass dlssRenderPass = default;
         VkFramebuffer dlssFramebuffer = default;
         VkPipelineLayout dlssLayout = default;
         VkShaderModule dlssVertexModule = default, dlssFragmentModule = default, skyMotionVertex = default, skyMotionFragment = default;
-        VkPipeline dlssPipeline = default, skyMotionPipeline = default, dlssCompositePipeline = default;
+        VkShaderModule rayFragmentModule = default, raySkyFragment = default;
+        VkPipeline dlssPipeline = default, skyMotionPipeline = default, dlssCompositePipeline = default, rayPipeline = default, raySkyPipeline = default;
         VkShaderModule dlssCompositeFragment = default;
         var previousBuffers = new VkBuffer[FramesInFlight];
         var previousMemory = new VkDeviceMemory[FramesInFlight];
@@ -1450,15 +1546,22 @@ internal static unsafe class Colossus
             (dlssColor, dlssColorMemory, dlssColorView) = Target(device, physical, renderExtent, HdrFormat, VkSampleCountFlags._1Bit, 1, dlssInputUsage, VkImageAspectFlags.ColorBit);
             (dlssMotion, dlssMotionMemory, dlssMotionView) = Target(device, physical, renderExtent, MotionFormat, VkSampleCountFlags._1Bit, 1, dlssInputUsage, VkImageAspectFlags.ColorBit);
             (dlssDepth, dlssDepthMemory, dlssDepthView) = Target(device, physical, renderExtent, DepthFormat, VkSampleCountFlags._1Bit, 1, dlssDepthUsage, VkImageAspectFlags.DepthBit);
-            var dlssAttachments = stackalloc VkAttachmentDescription[3];
-            var formats3 = stackalloc VkFormat[] { HdrFormat, MotionFormat, DepthFormat };
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < guideImages.Length; i++)
+            {
+                guideImages[i] = Target(device, physical, renderExtent, GuideFormats[i], VkSampleCountFlags._1Bit, 1, dlssInputUsage, VkImageAspectFlags.ColorBit);
+            }
+
+            // Colour, motion, depth, then the guides, which every pixel of Ray Reconstruction's frames writes.
+            var attachmentCount = 3 + guideImages.Length;
+            var dlssAttachments = stackalloc VkAttachmentDescription[7];
+            var formats7 = stackalloc VkFormat[] { HdrFormat, MotionFormat, DepthFormat, GuideFormats[0], GuideFormats[1], GuideFormats[2], GuideFormats[3] };
+            for (var i = 0; i < attachmentCount; i++)
             {
                 dlssAttachments[i] = new VkAttachmentDescription
                 {
-                    Format = formats3[i],
+                    Format = formats7[i],
                     Samples = VkSampleCountFlags._1Bit,
-                    LoadOp = VkAttachmentLoadOp.Clear,
+                    LoadOp = i < 3 ? VkAttachmentLoadOp.Clear : VkAttachmentLoadOp.DontCare,
                     StoreOp = VkAttachmentStoreOp.Store,
                     StencilLoadOp = VkAttachmentLoadOp.DontCare,
                     StencilStoreOp = VkAttachmentStoreOp.DontCare,
@@ -1471,12 +1574,16 @@ internal static unsafe class Colossus
             {
                 new() { Attachment = 0, Layout = VkImageLayout.ColorAttachmentOptimal },
                 new() { Attachment = 1, Layout = VkImageLayout.ColorAttachmentOptimal },
+                new() { Attachment = 3, Layout = VkImageLayout.ColorAttachmentOptimal },
+                new() { Attachment = 4, Layout = VkImageLayout.ColorAttachmentOptimal },
+                new() { Attachment = 5, Layout = VkImageLayout.ColorAttachmentOptimal },
+                new() { Attachment = 6, Layout = VkImageLayout.ColorAttachmentOptimal },
             };
             var dlssDepthRef = new VkAttachmentReference { Attachment = 2, Layout = VkImageLayout.DepthStencilAttachmentOptimal };
             var dlssSubpass = new VkSubpassDescription
             {
                 PipelineBindPoint = VkPipelineBindPoint.Graphics,
-                ColorAttachmentCount = 2,
+                ColorAttachmentCount = 2 + guideImages.Length,
                 ColorAttachments = dlssColorRefs,
                 DepthStencilAttachment = &dlssDepthRef,
             };
@@ -1504,18 +1611,26 @@ internal static unsafe class Colossus
             };
             dlssRenderPass = device.CreateRenderPass(new VkRenderPassCreateInfo
             {
-                AttachmentCount = 3,
+                AttachmentCount = attachmentCount,
                 Attachments = dlssAttachments,
                 SubpassCount = 1,
                 Subpasses = &dlssSubpass,
                 DependencyCount = 2,
                 Dependencies = dlssDependencies,
             }, null);
-            var dlssViews = stackalloc VkImageView[] { dlssColorView, dlssMotionView, dlssDepthView };
+            var dlssViews = stackalloc VkImageView[7];
+            dlssViews[0] = dlssColorView;
+            dlssViews[1] = dlssMotionView;
+            dlssViews[2] = dlssDepthView;
+            for (var i = 0; i < guideImages.Length; i++)
+            {
+                dlssViews[3 + i] = guideImages[i].View;
+            }
+
             dlssFramebuffer = device.CreateFramebuffer(new VkFramebufferCreateInfo
             {
                 RenderPass = dlssRenderPass,
-                AttachmentCount = 3,
+                AttachmentCount = attachmentCount,
                 Attachments = dlssViews,
                 Width = renderExtent.Width,
                 Height = renderExtent.Height,
@@ -1530,8 +1645,15 @@ internal static unsafe class Colossus
                 : Shader(device, FragmentShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.FragmentShader, "swarm-dlss.frag");
             skyMotionVertex = Shader(device, SkyMotionVertexShader, ShaderKind.VertexShader, "sky-motion.vert");
             skyMotionFragment = Shader(device, SkyMotionFragmentShader, ShaderKind.FragmentShader, "sky-motion.frag");
-            dlssPipeline = Pipeline(device, dlssLayout, dlssRenderPass, dlssVertexModule, dlssFragmentModule, scene: true, dlss: true);
-            skyMotionPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, skyMotionFragment, scene: false, dlss: true);
+            dlssPipeline = Pipeline(device, dlssLayout, dlssRenderPass, dlssVertexModule, dlssFragmentModule, scene: true, dlss: true, guides: guideImages.Length);
+            skyMotionPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, skyMotionFragment, scene: false, dlss: true, guides: guideImages.Length);
+            if (ray)
+            {
+                rayFragmentModule = Shader(device, FragmentShader.Replace("#version 450\n", "#version 460\n#extension GL_EXT_ray_query : require\n#define RTX 1\n#define DLSS 1\n#define RR 1\n"), ShaderKind.FragmentShader, "swarm-rtx-rr.frag", vulkan13: true);
+                raySkyFragment = Shader(device, SkyMotionFragmentShader.Replace("#version 450\n", "#version 450\n#define RR 1\n"), ShaderKind.FragmentShader, "sky-motion-rr.frag");
+                rayPipeline = Pipeline(device, dlssLayout, dlssRenderPass, dlssVertexModule, rayFragmentModule, scene: true, dlss: true, guides: guideImages.Length, writeGuides: true);
+                raySkyPipeline = Pipeline(device, dlssLayout, dlssRenderPass, skyMotionVertex, raySkyFragment, scene: false, dlss: true, guides: guideImages.Length, writeGuides: true);
+            }
             dlssCompositeFragment = Shader(device, CompositeFragmentShader.Replace("#version 450\n", "#version 450\n#define DLSS 1\n"), ShaderKind.FragmentShader, "composite-dlss.frag");
             dlssCompositePipeline = Pipeline(device, compositeLayout, renderPass, compositeVertex, dlssCompositeFragment, scene: false);
 
@@ -1823,9 +1945,14 @@ internal static unsafe class Colossus
         physics.OptimizeBroadPhase();
         Console.WriteLine($"SWARM ready after {clock.Elapsed.TotalMilliseconds:F0} ms: {swarm} bodies, {staticInstances.Length} static instances, Jolt on {threads} threads, present {presentMode}");
         var dlssLabel = dlss is null ? "" : $"DLSS {(dlssName == "dlaa" ? "DLAA" : dlssName)}, {renderExtent.Width}x{renderExtent.Height} > {extent.Width}x{extent.Height}";
-        if (dlssAt >= 0)
+        if (dlssAt >= 0 || rayAsked)
         {
             Console.WriteLine(dlss is null ? $"DLSS off: {dlssNote}; 4x MSAA" : dlssLabel);
+        }
+
+        if (rayAsked && dlss is not null)
+        {
+            Console.WriteLine(ray ? "Ray Reconstruction on" : $"Ray Reconstruction off: {(dlss.RayNote.Length > 0 ? dlss.RayNote : "no RTX rays to denoise")}");
         }
 
         // State the panel steers.
@@ -1838,8 +1965,9 @@ internal static unsafe class Colossus
         bool assembled = false, autoCycle = true, speaking = hasVoice || !mirror.Present, drift = true, rtxOn = rtx && !args.Contains("--rtx-off");
         bool mirrorOn = !args.Contains("--no-voice") && !recording, soundOn = !args.Contains("--mute"), panelOn = !args.Contains("--no-panel");
         float volume = recording ? 0.9f : 0.6f, hearing = 0f;
-        // DLSS's switch, and what the next frame needs of this one: whether DLSS ran, the instances drawn, the camera.
-        bool dlssOn = dlss is not null, dlssWasOn = false;
+        // DLSS's and Ray Reconstruction's switches, and what the next frame needs of this one: whether DLSS ran and which,
+        // the instances drawn, the camera.
+        bool dlssOn = dlss is not null, dlssWasOn = false, rayOn = ray, rayWasOn = false;
         var lastDrawn = 0;
         SN.Vector3 lastEye = default, lastForward = default;
         var lastViewProj = SN.Matrix4x4.Identity;
@@ -2126,7 +2254,7 @@ internal static unsafe class Colossus
                 {
                     ImGui.Text(string.Format(L("{0:F0} fps ({1}), frame {2:F2} ms"), io.Framerate, L(vsyncNote), frameMs));
                     ImGui.Text(string.Format(L("Jolt: {0} bodies, {1:F2} ms a step, {2} threads"), _ids.Length, physicsMs, threads));
-                    ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, {2}, bloom"), staticInstances.Length + _ids.Length, drawCalls, dlss is not null && dlssOn ? "DLSS" : "MSAA 4x"));
+                    ImGui.Text(string.Format(L("Vulkan: {0} instances in {1} draw calls, HDR, {2}, bloom"), staticInstances.Length + _ids.Length, drawCalls, dlss is not null && dlssOn ? (ray && rayOn ? "DLSS RR" : "DLSS") : "MSAA 4x"));
                     ImGui.Text(string.Format(L("Swarm: {0}"), L(assembled ? "face" : "cloud")) + (errors != PhysicsUpdateError.None ? $", Jolt: {errors}" : string.Empty));
                     ImGui.Separator();
                     if (ImGui.Button($"{L(assembled ? "Disperse" : "Assemble")}###assemble"))
@@ -2194,6 +2322,11 @@ internal static unsafe class Colossus
                     if (dlss is not null)
                     {
                         ImGui.Checkbox($"{dlssLabel}###dlss", ref dlssOn);
+                        if (ray)
+                        {
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Ray Reconstruction###rr"u8, ref rayOn);
+                        }
                     }
 
                     if (sound is not null)
@@ -2369,11 +2502,12 @@ internal static unsafe class Colossus
             // Under DLSS the instances are written on the CPU first, so that the next frame still has them for its motion.
             // A first frame, a cut or a jump of the camera starts DLSS's history again, its motion then nil.
             var useDlss = dlss is not null && dlssOn;
+            var useRay = useDlss && rayOn;
             var target = useDlss ? thisFrame.AsSpan() : new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
             var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length);
             var forward = SN.Vector3.Normalize(camTarget - camEye);
-            var dlssReset = !dlssWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
+            var dlssReset = !dlssWasOn || useRay != rayWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
             if (useDlss)
             {
                 thisFrame.AsSpan(0, drawn).CopyTo(new Span<Drawn>((Drawn*)instanceMapped[slot], drawn));
@@ -2388,6 +2522,7 @@ internal static unsafe class Colossus
                 Jitter = new SN.Vector4(jitter.X * 2f / renderExtent.Width, jitter.Y * 2f / renderExtent.Height, frame % 64, 0f),
             };
             dlssWasOn = useDlss;
+            rayWasOn = useRay;
             lastDrawn = drawn;
             lastEye = camEye;
             lastForward = forward;
@@ -2419,7 +2554,7 @@ internal static unsafe class Colossus
                 ClearValueCount = useDlss ? 3 : 2,
                 ClearValues = clears,
             }, VkSubpassContents.Inline);
-            cb.BindPipeline(VkPipelineBindPoint.Graphics, useDlss ? dlssPipeline : pipeline);
+            cb.BindPipeline(VkPipelineBindPoint.Graphics, useRay ? rayPipeline : useDlss ? dlssPipeline : pipeline);
             cb.SetViewport(firstViewport: 0, [new VkViewport { Width = sceneExtent.Width, Height = sceneExtent.Height, MinDepth = 0f, MaxDepth = 1f }]);
             cb.SetScissor(firstScissor: 0, [new VkRect2D { Extent = sceneExtent }]);
             cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, sceneLayout, 0, [sceneSets[slot]], []);
@@ -2443,7 +2578,7 @@ internal static unsafe class Colossus
 
             if (useDlss)
             {
-                cb.BindPipeline(VkPipelineBindPoint.Graphics, skyMotionPipeline);
+                cb.BindPipeline(VkPipelineBindPoint.Graphics, useRay ? raySkyPipeline : skyMotionPipeline);
                 cb.Draw(3, 1, 0, 0);
             }
 
@@ -2457,11 +2592,13 @@ internal static unsafe class Colossus
                     [Barrier(hdrImage, 0, 1, VkImageLayout.Undefined, VkImageLayout.General, default, VkAccessFlags.ShaderWriteBit)]);
                 Dlss.Image Input(VkImage image, VkImageView imageView, VkDeviceMemory memory, VkFormat format, VkImageUsageFlags usage) =>
                     new((ulong)image.VkHandle, (ulong)imageView.VkHandle, (ulong)memory.VkHandle, renderExtent.Width, renderExtent.Height, (uint)format, (uint)usage, (uint)VkImageLayout.ShaderReadOnlyOptimal);
+                Dlss.Image Guide(int i) => Input(guideImages[i].Image, guideImages[i].View, guideImages[i].Memory, GuideFormats[i], dlssInputUsage);
                 dlss!.Evaluate(cb.VkHandle, (uint)frame, dlssMode, view, projection, motionPush.PrevViewProj, jitter, dlssReset, fov * MathF.PI / 180f, Near,
                     Input(dlssDepth, dlssDepthView, dlssDepthMemory, DepthFormat, dlssDepthUsage),
                     Input(dlssMotion, dlssMotionView, dlssMotionMemory, MotionFormat, dlssInputUsage),
                     Input(dlssColor, dlssColorView, dlssColorMemory, HdrFormat, dlssInputUsage),
-                    new Dlss.Image((ulong)hdrImage.VkHandle, (ulong)hdrView.VkHandle, (ulong)hdrMemory.VkHandle, extent.Width, extent.Height, (uint)HdrFormat, (uint)hdrUsage, (uint)VkImageLayout.General));
+                    new Dlss.Image((ulong)hdrImage.VkHandle, (ulong)hdrView.VkHandle, (ulong)hdrMemory.VkHandle, extent.Width, extent.Height, (uint)HdrFormat, (uint)hdrUsage, (uint)VkImageLayout.General),
+                    useRay ? new Dlss.Guides(Guide(0), Guide(1), Guide(2), Guide(3)) : null);
                 cb.PipelineBarrier(VkPipelineStageFlags.ComputeShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
                     [Barrier(hdrImage, 0, 1, VkImageLayout.General, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ShaderWriteBit, VkAccessFlags.TransferReadBit)]);
             }
@@ -2662,6 +2799,14 @@ internal static unsafe class Colossus
             device.DestroyPipeline(dlssPipeline, null);
             device.DestroyPipeline(skyMotionPipeline, null);
             device.DestroyPipeline(dlssCompositePipeline, null);
+            if (ray)
+            {
+                device.DestroyPipeline(rayPipeline, null);
+                device.DestroyPipeline(raySkyPipeline, null);
+                device.DestroyShaderModule(rayFragmentModule, null);
+                device.DestroyShaderModule(raySkyFragment, null);
+            }
+
             device.DestroyPipelineLayout(dlssLayout, null);
             foreach (var module in new[] { dlssVertexModule, dlssFragmentModule, skyMotionVertex, skyMotionFragment, dlssCompositeFragment })
             {
@@ -2670,7 +2815,7 @@ internal static unsafe class Colossus
 
             device.DestroyFramebuffer(dlssFramebuffer, null);
             device.DestroyRenderPass(dlssRenderPass, null);
-            foreach (var (image, memory, view) in new[] { (dlssColor, dlssColorMemory, dlssColorView), (dlssMotion, dlssMotionMemory, dlssMotionView), (dlssDepth, dlssDepthMemory, dlssDepthView) })
+            foreach (var (image, memory, view) in new[] { (dlssColor, dlssColorMemory, dlssColorView), (dlssMotion, dlssMotionMemory, dlssMotionView), (dlssDepth, dlssDepthMemory, dlssDepthView) }.Concat(guideImages))
             {
                 device.DestroyImageView(view, null);
                 device.DestroyImage(image, null);
@@ -3643,8 +3788,9 @@ internal static unsafe class Colossus
 
     // The scene's pipeline (instanced cubes, MSAA, reversed depth) or the second pass's (one triangle, no vertex input).
     // Under DLSS, the scene's has no MSAA, a second colour target for the motion and the previous frame's instances as a
-    // third vertex input; the other is the sky's motion.
-    private static VkPipeline Pipeline(Device device, VkPipelineLayout layout, VkRenderPass renderPass, VkShaderModule vertex, VkShaderModule fragment, bool scene, bool dlss = false)
+    // third vertex input; the other is the sky's motion. guides: Ray Reconstruction's targets in the pass, which only
+    // its own pipelines write (writeGuides).
+    private static VkPipeline Pipeline(Device device, VkPipelineLayout layout, VkRenderPass renderPass, VkShaderModule vertex, VkShaderModule fragment, bool scene, bool dlss = false, int guides = 0, bool writeGuides = false)
     {
         var entry = "main"u8;
         fixed (byte* entryName = entry)
@@ -3697,12 +3843,17 @@ internal static unsafe class Colossus
             var multisample = new VkPipelineMultisampleStateCreateInfo { RasterizationSamples = scene && !dlss ? Msaa : VkSampleCountFlags._1Bit };
             // The sky's motion under DLSS: only where the depth is still the clear's, and without writing it.
             var depth = new VkPipelineDepthStencilStateCreateInfo { DepthTestEnable = scene || dlss, DepthWriteEnable = scene, DepthCompareOp = scene ? VkCompareOp.Greater : VkCompareOp.GreaterOrEqual };
+            const VkColorComponentFlags rgba = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit | VkColorComponentFlags.BBit | VkColorComponentFlags.ABit;
             var blendAttachments = stackalloc VkPipelineColorBlendAttachmentState[]
             {
-                new() { ColorWriteMask = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit | VkColorComponentFlags.BBit | VkColorComponentFlags.ABit },
+                new() { ColorWriteMask = rgba },
                 new() { ColorWriteMask = VkColorComponentFlags.RBit | VkColorComponentFlags.GBit },
+                new() { ColorWriteMask = writeGuides ? rgba : 0 },
+                new() { ColorWriteMask = writeGuides ? rgba : 0 },
+                new() { ColorWriteMask = writeGuides ? rgba : 0 },
+                new() { ColorWriteMask = writeGuides ? VkColorComponentFlags.RBit : 0 },
             };
-            var blend = new VkPipelineColorBlendStateCreateInfo { AttachmentCount = dlss ? 2 : 1, Attachments = blendAttachments };
+            var blend = new VkPipelineColorBlendStateCreateInfo { AttachmentCount = dlss ? 2 + guides : 1, Attachments = blendAttachments };
             var dynamicStates = stackalloc VkDynamicState[] { VkDynamicState.Viewport, VkDynamicState.Scissor };
             var dynamic = new VkPipelineDynamicStateCreateInfo { DynamicStateCount = 2, DynamicStates = dynamicStates };
 

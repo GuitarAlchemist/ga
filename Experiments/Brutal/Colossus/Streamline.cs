@@ -5,8 +5,10 @@
 // own Vulkan calls, tells Streamline its instance, device and queue, tags its images each frame, and presents through
 // Streamline's proxy, which its common plugin needs once a frame. Over-the-air updates and downloaded plugins stay off.
 // When anything is missing or fails, Colossus says why and renders with 4x MSAA, as without --dlss.
-// The structures mirror Streamline's headers (sl_core_types.h, sl_consts.h, sl_dlss.h, sl_helpers_vk.h) field by field;
-// Load compares their sizes with the ones MSVC gives the headers, and stops if one differs.
+// Ray Reconstruction (--rr) is DLSS's denoiser for ray-traced light: its plugin and NGX's model load only when asked for,
+// under the same checks, and when they fail DLSS goes on without it.
+// The structures mirror Streamline's headers (sl_core_types.h, sl_consts.h, sl_dlss.h, sl_dlss_d.h, sl_helpers_vk.h)
+// field by field; Load compares their sizes with the ones MSVC gives the headers, and stops if one differs.
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using SN = System.Numerics;
@@ -14,13 +16,16 @@ using SN = System.Numerics;
 internal sealed unsafe class Dlss
 {
     public const string DefaultFolder = @"C:\tmp\godot-sl214\bin";
-    private const uint FeatureDlss = 0;
+    private const uint FeatureDlss = 0, FeatureRay = 1001;
     // Streamline 2.14.1 and its magic number, as sl_version.h builds kSDKVersion.
     private const ulong SdkVersion = (2ul << 48) | (14ul << 32) | (1ul << 16) | 0xfedc;
     private const uint BufferDepth = 0, BufferMotion = 1, BufferInput = 3, BufferOutput = 4;
+    private const uint BufferAlbedo = 7, BufferSpecularAlbedo = 8, BufferNormalRoughness = 14, BufferSpecularHitDistance = 42;
     private const int ValidUntilPresent = 1;
     // Streamline's files that this loads, each checked first: the interposer, the common plugin, DLSS's plugin, NGX's DLSS.
     private static readonly string[] Files = ["sl.interposer.dll", "sl.common.dll", "sl.dlss.dll", "nvngx_dlss.dll"];
+    // And with --rr: Ray Reconstruction's plugin and NGX's model.
+    private static readonly string[] RayFiles = ["sl.dlss_d.dll", "nvngx_dlssd.dll"];
     private static bool _verbose;
 
     // DLSS's settings by name, as Streamline numbers them (DLSSMode).
@@ -206,6 +211,27 @@ internal sealed unsafe class Dlss
         public byte AlphaUpscalingEnabled;
     }
 
+    // DLSSDOptions: Ray Reconstruction's, with the camera's view matrix and its inverse.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RayOptions
+    {
+        public Base Base;
+        public uint Mode;
+        public uint OutputWidth;
+        public uint OutputHeight;
+        public float Sharpness;
+        public float PreExposure;
+        public float ExposureScale;
+        public byte ColorBuffersHdr;
+        public byte IndicatorInvertAxisX;
+        public byte IndicatorInvertAxisY;
+        public uint NormalRoughnessMode;
+        public SN.Matrix4x4 WorldToCameraView;
+        public SN.Matrix4x4 CameraViewToWorld;
+        public byte AlphaUpscalingEnabled;
+        public fixed uint Presets[6];
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct OptimalSettings
     {
@@ -236,6 +262,10 @@ internal sealed unsafe class Dlss
     // An image DLSS reads or writes: its handles, size, format, usage and the layout it is in when DLSS runs.
     public readonly record struct Image(ulong Handle, ulong View, ulong Memory, int Width, int Height, uint Format, uint Usage, uint Layout);
 
+    // What Ray Reconstruction reads besides DLSS's images, at the render size: the surfaces' diffuse and specular
+    // reflectance, their normal in world space with the roughness in alpha, and how far each reflection ray went.
+    public readonly record struct Guides(Image Diffuse, Image Specular, Image NormalRoughness, Image HitDistance);
+
     private static readonly Guid PreferencesType = new(0x1ca10965, 0xbf8e, 0x432b, 0x8d, 0xa1, 0x67, 0x16, 0xd8, 0x79, 0xfb, 0x14);
     private static readonly Guid FeatureRequirementsType = new(0x66714097, 0xac6d, 0x4bc6, 0x89, 0x15, 0x1e, 0x0f, 0x55, 0xa6, 0xb6, 0x1f);
     private static readonly Guid ResourceType = new(0x3a9d70cf, 0x2418, 0x4b72, 0x83, 0x91, 0x13, 0xf8, 0x72, 0x1c, 0x72, 0x61);
@@ -246,6 +276,7 @@ internal sealed unsafe class Dlss
     private static readonly Guid VulkanInfoType = new(0x0eed6fd5, 0x82cd, 0x43a9, 0xbd, 0xb5, 0x47, 0xa5, 0xba, 0x2f, 0x45, 0xd6);
     private static readonly Guid OptionsType = new(0x6ac826e4, 0x4c61, 0x4101, 0xa9, 0x2d, 0x63, 0x8d, 0x42, 0x10, 0x57, 0xb8);
     private static readonly Guid OptimalSettingsType = new(0xef1d0957, 0xfd58, 0x4df7, 0xb5, 0x04, 0x8b, 0x69, 0xd8, 0xaa, 0x6b, 0x76);
+    private static readonly Guid RayOptionsType = new(0x0ad87504, 0x774e, 0x4bf3, 0x96, 0x33, 0xa4, 0x4d, 0x1f, 0x7f, 0x9c, 0xb8);
 
     private readonly delegate* unmanaged<Preferences*, ulong, int> _init;
     private readonly delegate* unmanaged<int> _shutdown;
@@ -260,9 +291,14 @@ internal sealed unsafe class Dlss
     private readonly delegate* unmanaged<nint, byte*, void*> _getDeviceProcAddr;
     private delegate* unmanaged<Options*, OptimalSettings*, int> _getOptimalSettings;
     private delegate* unmanaged<ViewportHandle*, Options*, int> _setOptions;
+    private delegate* unmanaged<ViewportHandle*, RayOptions*, int> _setRayOptions;
     private delegate* unmanaged<nint, PresentInfo*, int> _present;
     private bool _initialised;
     private string? _failed;
+
+    // Whether Ray Reconstruction loaded and runs on this GPU, and if not, why (empty when it was not asked for).
+    public bool RayReconstruction { get; private set; }
+    public string RayNote { get; private set; } = "";
 
     // What DLSS asks of the Vulkan instance and device, from slGetFeatureRequirements.
     public string[] InstanceExtensions { get; private set; } = [];
@@ -288,9 +324,9 @@ internal sealed unsafe class Dlss
         _getDeviceProcAddr = (delegate* unmanaged<nint, byte*, void*>)Export("vkGetDeviceProcAddr");
     }
 
-    // Checks and loads Streamline from the folder, starts it with DLSS alone, and reads what DLSS asks of Vulkan. Null,
-    // with the reason, when that fails at any step.
-    public static Dlss? Load(string folder, bool verbose, out string why)
+    // Checks and loads Streamline from the folder, starts it with DLSS (and Ray Reconstruction when asked for and its files
+    // check out), and reads what they ask of Vulkan. Null, with the reason, when DLSS fails at any step.
+    public static Dlss? Load(string folder, bool verbose, bool rayReconstruction, out string why)
     {
         _verbose = verbose;
         if (!OperatingSystem.IsWindows())
@@ -306,6 +342,7 @@ internal sealed unsafe class Dlss
             ("Resource", sizeof(Resource), 112), ("ResourceTag", sizeof(ResourceTag), 64), ("ViewportHandle", sizeof(ViewportHandle), 40),
             ("AdapterInfo", sizeof(AdapterInfo), 56), ("Constants", sizeof(Constants), 456), ("VulkanInfo", sizeof(VulkanInfo), 96),
             ("DLSSOptions", sizeof(Options), 88), ("DLSSOptimalSettings", sizeof(OptimalSettings), 64), ("VkPresentInfoKHR", sizeof(PresentInfo), 64),
+            ("DLSSDOptions", sizeof(RayOptions), 224),
         ];
         foreach (var (name, size, expected) in sizes)
         {
@@ -331,6 +368,23 @@ internal sealed unsafe class Dlss
             }
         }
 
+        var rayNote = "";
+        foreach (var file in rayReconstruction ? RayFiles : [])
+        {
+            var path = Path.Combine(folder, file);
+            if (!File.Exists(path))
+            {
+                rayNote = $"{path} is missing";
+                break;
+            }
+
+            if (!SignedByNvidia(path, out rayNote))
+            {
+                break;
+            }
+        }
+
+        rayReconstruction &= rayNote.Length == 0;
         Dlss dlss;
         try
         {
@@ -346,8 +400,9 @@ internal sealed unsafe class Dlss
         var pluginPath = (char*)Marshal.StringToHGlobalUni(folder);
         var paths = (char**)NativeMemory.Alloc((nuint)sizeof(char*));
         paths[0] = pluginPath;
-        var features = (uint*)NativeMemory.Alloc(sizeof(uint));
+        var features = (uint*)NativeMemory.Alloc(2 * sizeof(uint));
         features[0] = FeatureDlss;
+        features[1] = FeatureRay;
         var preferences = new Preferences
         {
             Base = Base.Of(PreferencesType, 1),
@@ -359,7 +414,7 @@ internal sealed unsafe class Dlss
             // eLoadDownloadedPlugins.
             Flags = 1ul | 4ul | 128ul,
             FeaturesToLoad = features,
-            NumFeaturesToLoad = 1,
+            NumFeaturesToLoad = rayReconstruction ? 2u : 1u,
             Engine = 0,
             EngineVersion = (byte*)Marshal.StringToHGlobalAnsi("Colossus"),
             // NGX's identifier for an engine of its own: a random UUID made for Colossus.
@@ -390,6 +445,29 @@ internal sealed unsafe class Dlss
         dlss.Features13 = Strings(requirements.VkFeatures13, requirements.VkNumFeatures13);
         dlss.GraphicsQueues = requirements.VkNumGraphicsQueuesRequired;
         dlss.ComputeQueues = requirements.VkNumComputeQueuesRequired;
+
+        // Ray Reconstruction's own asks, added to DLSS's.
+        if (rayReconstruction)
+        {
+            var ray = new FeatureRequirements { Base = Base.Of(FeatureRequirementsType, 2) };
+            result = dlss._getFeatureRequirements(FeatureRay, &ray);
+            if (result != 0 || (ray.Flags & 4) == 0)
+            {
+                rayNote = result != 0 ? $"slGetFeatureRequirements failed ({result})" : "Ray Reconstruction does not run on Vulkan here";
+            }
+            else
+            {
+                dlss.InstanceExtensions = [.. dlss.InstanceExtensions.Union(Strings(ray.VkInstanceExtensions, ray.VkNumInstanceExtensions))];
+                dlss.DeviceExtensions = [.. dlss.DeviceExtensions.Union(Strings(ray.VkDeviceExtensions, ray.VkNumDeviceExtensions))];
+                dlss.Features12 = [.. dlss.Features12.Union(Strings(ray.VkFeatures12, ray.VkNumFeatures12))];
+                dlss.Features13 = [.. dlss.Features13.Union(Strings(ray.VkFeatures13, ray.VkNumFeatures13))];
+                dlss.GraphicsQueues = Math.Max(dlss.GraphicsQueues, ray.VkNumGraphicsQueuesRequired);
+                dlss.ComputeQueues = Math.Max(dlss.ComputeQueues, ray.VkNumComputeQueuesRequired);
+                dlss.RayReconstruction = true;
+            }
+        }
+
+        dlss.RayNote = rayNote;
         why = "";
         return dlss;
     }
@@ -449,6 +527,26 @@ internal sealed unsafe class Dlss
             return false;
         }
 
+        if (RayReconstruction)
+        {
+            function = null;
+            fixed (byte* name = "slDLSSDSetOptions"u8)
+            {
+                result = _isFeatureSupported(FeatureRay, &adapter);
+                if (result == 0)
+                {
+                    result = _getFeatureFunction(FeatureRay, name, &function);
+                }
+            }
+
+            _setRayOptions = (delegate* unmanaged<ViewportHandle*, RayOptions*, int>)function;
+            if (result != 0 || _setRayOptions is null)
+            {
+                RayNote = $"Ray Reconstruction is not supported on this GPU or driver ({result})";
+                RayReconstruction = false;
+            }
+        }
+
         why = "";
         return true;
     }
@@ -487,10 +585,12 @@ internal sealed unsafe class Dlss
 
     // One frame of DLSS, recorded into the command buffer: the camera, the four images and their layouts, then DLSS
     // itself. The matrices carry no jitter; jitter is the one the scene was drawn with, in pixels, as it moved the image.
-    // Motion is in UV units, from where a pixel is to where it was. False, the first time only, when Streamline refuses.
+    // Motion is in UV units, from where a pixel is to where it was. With guides, Ray Reconstruction runs in DLSS's place,
+    // in the same mode. False, the first time only, when Streamline refuses.
     public bool Evaluate(nint commandBuffer, uint frame, uint mode, SN.Matrix4x4 view, SN.Matrix4x4 projection, SN.Matrix4x4 previousViewProjection,
-        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output)
+        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output, Guides? guides = null)
     {
+        var ray = guides is not null && RayReconstruction;
         var viewProjection = view * projection;
         SN.Matrix4x4.Invert(viewProjection, out var clipToWorld);
         SN.Matrix4x4.Invert(projection, out var clipToView);
@@ -534,8 +634,22 @@ internal sealed unsafe class Dlss
             ColorBuffersHdr = 1,
             UseAutoExposure = 1,
         };
-        var resources = stackalloc Resource[4];
-        var tags = stackalloc ResourceTag[4];
+        // Ray Reconstruction's: the normal and roughness packed in one image, the camera's view both ways.
+        var rayOptions = new RayOptions
+        {
+            Base = Base.Of(RayOptionsType, 3),
+            Mode = mode,
+            OutputWidth = (uint)output.Width,
+            OutputHeight = (uint)output.Height,
+            PreExposure = 1f,
+            ExposureScale = 1f,
+            ColorBuffersHdr = 1,
+            NormalRoughnessMode = 1,
+            WorldToCameraView = view,
+            CameraViewToWorld = camera,
+        };
+        var resources = stackalloc Resource[8];
+        var tags = stackalloc ResourceTag[8];
         static void Tag(Resource* resource, ResourceTag* tag, Image image, uint type)
         {
             *resource = new Resource
@@ -559,6 +673,14 @@ internal sealed unsafe class Dlss
         Tag(&resources[1], &tags[1], motion, BufferMotion);
         Tag(&resources[2], &tags[2], input, BufferInput);
         Tag(&resources[3], &tags[3], output, BufferOutput);
+        if (ray)
+        {
+            Tag(&resources[4], &tags[4], guides!.Value.Diffuse, BufferAlbedo);
+            Tag(&resources[5], &tags[5], guides.Value.Specular, BufferSpecularAlbedo);
+            Tag(&resources[6], &tags[6], guides.Value.NormalRoughness, BufferNormalRoughness);
+            Tag(&resources[7], &tags[7], guides.Value.HitDistance, BufferSpecularHitDistance);
+        }
+
         nint token = 0;
         var result = _getNewFrameToken(&token, &frame);
         var step = "slGetNewFrameToken";
@@ -570,14 +692,14 @@ internal sealed unsafe class Dlss
 
         if (result == 0)
         {
-            step = "slDLSSSetOptions";
-            result = _setOptions(&viewport, &options);
+            step = ray ? "slDLSSDSetOptions" : "slDLSSSetOptions";
+            result = ray ? _setRayOptions(&viewport, &rayOptions) : _setOptions(&viewport, &options);
         }
 
         if (result == 0)
         {
             step = "slSetTagForFrame";
-            result = _setTagForFrame(token, &viewport, tags, 4, commandBuffer);
+            result = _setTagForFrame(token, &viewport, tags, ray ? 8u : 4u, commandBuffer);
         }
 
         if (result == 0)
@@ -585,7 +707,7 @@ internal sealed unsafe class Dlss
             step = "slEvaluateFeature";
             var inputs = stackalloc Base*[1];
             inputs[0] = &viewport.Base;
-            result = _evaluateFeature(FeatureDlss, token, inputs, 1, commandBuffer);
+            result = _evaluateFeature(ray ? FeatureRay : FeatureDlss, token, inputs, 1, commandBuffer);
         }
 
         if (result != 0 && _failed is null)
