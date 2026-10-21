@@ -459,10 +459,45 @@ Each run held 60 fps (p50 16.66 ms) on the 59 Hz screen, and each total includes
   `vkCmdBindDescriptorSets` and `vkBeginCommandBuffer` are unsupported. DLSS runs regardless, because the renderer binds
   its own state after DLSS.
 
-Not here: frame generation, ray reconstruction and the path tracer. Frame generation would add latency and nothing
-visible on this 59 Hz screen, where the scene already holds 60 fps with about 3 ms of GPU.
+**Ray Reconstruction (2026-10-21).** The author asked for it as the next NVIDIA feature. `--rr` turns it on, in
+`--dlss`'s mode (DLAA by default), and the panel switches it live. It needs RTX: without rays it has nothing to
+denoise, and Colossus says so.
 
-Not verified: a visible window (every DLSS run was hidden), a run of hours, another GPU or Windows 10.
+- **Loading.** Its plugin (`sl.dlss_d.dll`) and NGX's model (`nvngx_dlssd.dll`) go through the same signature checks as
+  DLSS's, and load only with `--rr`. When they fail, DLSS goes on without them. As for DLSS, the NVIDIA App's override
+  replaced the plugin with its own signed 2.14.16.
+- **Guides.** Four more targets are drawn with the colour at the render size (RGBA16F, and R16F for the distance):
+  - the diffuse reflectance, at least 0.04;
+  - the specular reflectance over the hemisphere, from the fit in NVIDIA's guide;
+  - the shading normal in world space, with the roughness in its alpha;
+  - the reflection ray's hit distance, or -1 where it hit nothing.
+
+  The haze turns the reflectances toward the sky's colour, as it does the colour itself. The sky pass writes the sky's
+  guides as NVIDIA's own Godot renderer does: its colour as the diffuse reflectance, a normal facing the camera. The
+  view matrix and its inverse go in `DLSSDOptions`, in Streamline's row-vector order, which `sl_matrix_helpers.h`
+  confirms. That order is System.Numerics's own.
+- **What it changes.**
+  - Each pixel traces one sun ray instead of two, and two occlusion rays instead of four.
+  - The mirror ray leaves along a GGX microfacet (Heitz's visible normals), drawn anew each frame, so reflections blur
+    with the surface's roughness.
+- **Measured.** The cinematic was rendered at a fixed 60 frames a second (`--record`, 50 s), hidden, at 1600×900:
+
+  | | GPU ms p50 | scene | post (DLSS included) |
+  |---|---|---|---|
+  | DLAA | 2.96 | 1.98 | 0.74 |
+  | DLAA + RR | 3.93 | 1.40 | 2.23 |
+
+  The cheaper rays pay back about half of what Ray Reconstruction costs. The frames at 2 s (a glass curtain wall),
+  30 s and 46 s (bronze) match DLAA's, a little softer on the glass, with no noise and no trails. A 40 s real-time
+  run held 60 fps outside its capture seconds.
+- **Fallback.** `--rr --no-rtx` says "Ray Reconstruction off: no RTX rays to denoise" and renders with DLSS alone.
+
+Not here: frame generation and the path tracer. Frame generation would add latency and nothing visible on this 59 Hz
+screen, where the scene already holds 60 fps with about 3 ms of GPU.
+
+Not verified: a visible window (every DLSS run was hidden), a run of hours, another GPU or Windows 10. Ray
+Reconstruction's panel switch has not been flipped during a run, and its hit distance of -1 for rays that met only sky
+is copied from NVIDIA's renderer rather than measured.
 
 `head_points.bin` is 9 float32 a point, after a `CHD1` header and the count. On the face, each machine lies flat
 along the slope, like a scale. The face reads clearly from 10,000 machines, which is now the default.
