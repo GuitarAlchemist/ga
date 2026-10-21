@@ -267,6 +267,15 @@ session, or a window with no vsync).
 - wheel: zoom;
 - Esc: quit.
 
+**Out of date.** Windows puts the swapchain out of date when the window is minimised or the display changes. The
+Colossus then makes it again at the same size and goes on. While the window is minimised, it waits for it to come back.
+Before, it ended the run there, and that is how the streamed scene stopped by itself. The event log shows one such stop
+on 2026-10-21 at 12:52: `VK_ERROR_OUT_OF_DATE_KHR` from `vkAcquireNextImageKHR`. Checked in a visible 30 s run,
+minimised and restored twice:
+- the swapchain was made again both times;
+- the run reached its time limit;
+- it drew 60 frames a second within two seconds of each return.
+
 **Rendering.** The scene is about 2,000 lines in one file. The towers are 12 variants modelled in Blender (below) and
 read with BRUTAL's glTF loader (`Ahwoo.Brutal.Gltf`). Everything else is an instance of one cube mesh. That makes 10,407
 instances in 13 draw calls: one for each tower variant, and one for every cube.
