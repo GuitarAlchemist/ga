@@ -520,6 +520,13 @@ internal static unsafe class Colossus
             return textureLod(surfaces, vec3(uv, layer), log2(max(footprint * float(textureSize(surfaces, 0).x) / tile, 1.0)));
         }
 
+        // A layer's mean brightness, from its last mip: the Lego surfaces take only their texture's detail, and keep the
+        // box's colour.
+        float meanOf(float layer)
+        {
+            return max(dot(pow(textureLod(surfaces, vec3(0.5, 0.5, layer), 16.0).rgb, vec3(2.2)), vec3(0.2126, 0.7152, 0.0722)), 0.05);
+        }
+
         // A curtain wall in cells 1.6 m wide and one floor high: panes between mullions, a spandrel at each slab, a few
         // offices lit (most warm, some cool), some panes with their blinds down. Each pane leans a little, as real glass
         // does, so that reflections break from pane to pane. px is a pixel's size in metres: as a cell shrinks under two
@@ -660,16 +667,20 @@ internal static unsafe class Colossus
                 s.bump = (vec2(noise(st * 3.1 + draw * 5.0), noise(st.yx * 3.1 + 17.0)) - 0.5) * 0.5;
                 if (code < 0.5)
                 {
-                    // Dressed stone: on the larger faces, courses 0.6 m high of blocks 1.2 m long, each course set half a
-                    // block over, their joints fading as they shrink under a pixel; a soft grain everywhere.
+                    // Dressed marble: the ComfyUI marble's veins over the box's colour, a tile every 3 m, honed; on the
+                    // larger faces, courses 0.6 m high of blocks 1.2 m long, each course set half a block over, their
+                    // joints fading as they shrink under a pixel.
+                    vec2 uv = st / 3.0 + draw * vec2(7.31, 3.17);
+                    vec3 m = pow(tex(uv, 8.0, 3.0, footprint).rgb, vec3(2.2));
+                    vec4 map = tex(uv, 9.0, 3.0, footprint);
                     vec2 q = st / vec2(1.2, 0.6);
                     q.x += 0.5 * mod(floor(q.y), 2.0);
                     vec2 e = (0.5 - abs(fract(q) - 0.5)) * vec2(1.2, 0.6);
                     float big = step(2.5, side ? min(scale.y, max(scale.x, scale.z)) : min(scale.x, scale.z));
                     float joint = big * (1.0 - smoothstep(0.01, 0.03, min(e.x, e.y))) * clamp(1.0 - px / 0.1, 0.0, 1.0);
-                    s.albedo = color.rgb * (0.86 + 0.16 * n + 0.06 * fine) * (1.0 - 0.3 * joint);
-                    s.bump *= 0.3;
-                    s.rough = mix(0.6 + 0.25 * fine, 0.95, joint);
+                    s.albedo = color.rgb * mix(vec3(dot(m, vec3(0.2126, 0.7152, 0.0722))), m, 0.5) / meanOf(8.0) * (0.94 + 0.08 * n) * (1.0 - 0.3 * joint);
+                    s.bump = (map.rg * 2.0 - 1.0) * 0.8;
+                    s.rough = mix(0.45 + 0.3 * map.b, 0.95, joint);
                     s.f0 = 0.04;
                 }
                 else if (code < 1.5)
@@ -692,9 +703,13 @@ internal static unsafe class Colossus
                     // Tiles in courses 0.42 m apart, spaced along the box's longer side as the cover tiles run down a
                     // roof whose ridge is that side; each course's lip rounds the light.
                     float along = !side && scale.x < scale.z ? st.y : st.x;
+                    // The ComfyUI terracotta's burns and cracks, its brightness only, a tile every 2 m.
                     float rib = smoothstep(0.3, 0.5, abs(fract(along / 0.42) - 0.5));
-                    s.albedo = color.rgb * (0.8 + 0.25 * n) * (1.0 - 0.35 * rib);
-                    s.bump.x = sin(along / 0.42 * 6.2832) * 0.8;
+                    vec2 uv = st / 2.0 + draw * vec2(5.1, 2.3);
+                    float clay = dot(pow(tex(uv, 10.0, 2.0, footprint).rgb, vec3(2.2)), vec3(0.2126, 0.7152, 0.0722)) / meanOf(10.0);
+                    s.albedo = color.rgb * clay * (0.9 + 0.15 * n) * (1.0 - 0.35 * rib);
+                    s.bump = (tex(uv, 11.0, 2.0, footprint).rg * 2.0 - 1.0) * 0.6;
+                    s.bump.x += sin(along / 0.42 * 6.2832) * 0.8;
                     s.rough = 0.55 + 0.2 * fine;
                 }
                 else if (code < 5.5)
@@ -1192,6 +1207,7 @@ internal static unsafe class Colossus
     private static readonly string[] Builds = ["tholos", "temple", "propylon"];
     private static SN.Vector3[][] _buildP = [], _buildN = [];
     private static SN.Vector4[][] _buildC = [];
+    private static int _buildGeneration;
 
     // How many tasks steer and read the bodies, 2,048 at a time (--body-threads; 1 is one loop). They run on the step's
     // worker while Jolt's own threads are idle.
@@ -1961,7 +1977,7 @@ internal static unsafe class Colossus
 
         // The surface textures, made with ComfyUI and Blender (see the README): one 2D array, uploaded once through a
         // staging buffer, then mipmapped by blits.
-        string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh", "concrete_albedo", "concrete_nrh", "cladding_albedo", "cladding_nrh"];
+        string[] textureFiles = ["hull_albedo", "hull_nrh", "facade_albedo", "facade_nrh", "concrete_albedo", "concrete_nrh", "cladding_albedo", "cladding_nrh", "marble_albedo", "marble_nrh", "terracotta_albedo", "terracotta_nrh"];
         var texels = new List<byte[]>();
         var texSize = 0;
         foreach (var name in textureFiles)
@@ -2395,7 +2411,8 @@ internal static unsafe class Colossus
             mirror.Poll(now);
             var voice = mirrorOn && mirror.Speaking;
             // The colossus speaks its lines once the face has formed, one at a time with a pause between them, while no
-            // other voice speaks; a typed line as soon as Piper has made it. The face holds while it speaks.
+            // other voice speaks; a typed line as soon as Piper has made it. The face holds while it speaks, so in the auto
+            // cycle no line starts after 19 s: it would eat into the Lego block's turn at 24 s.
             if (lines.Length == 0 && linesTask.IsCompletedSuccessfully)
             {
                 lines = linesTask.Result;
@@ -2424,7 +2441,8 @@ internal static unsafe class Colossus
 
                 saying = null;
             }
-            else if (sound is not null && ((_french ? recordedFr : recordedEn) is not null || lines.Length > 0) && speaking && !voice && assembled && glow > 0.85f && !talking && now >= nextLineAt)
+            else if (sound is not null && ((_french ? recordedFr : recordedEn) is not null || lines.Length > 0) && speaking && !voice && assembled && glow > 0.85f && !talking && now >= nextLineAt
+                && (!autoCycle || (now - cycleStart) % 32.0 < 19.0))
             {
                 // The recording in the panel's language, or Piper's French.
                 var (pcm, rate, pitch) = (_french ? recordedFr : recordedEn) is { } recorded
@@ -3227,14 +3245,19 @@ internal static unsafe class Colossus
         }
 
         ReadStates(bodies, _states);
-        BuildShapes(n);
+        // The blocks are first needed 24 s in: they are made on a worker, and _buildP, set last, says when they are ready.
+        // A rebuild of the swarm drops them until its own are made.
+        _buildP = [];
+        var generation = ++_buildGeneration;
+        Task.Run(() => BuildShapes(n, generation));
     }
 
     // Spreads n points over each Lego block of Builds, by area: on the boxes' sides and tops (the swarm does not hang
     // under them) and never inside another box, so that two boxes that touch take no points where they meet. Each
     // block is scaled to fit 28 m across and 22 m high: smaller, the machines lie closer and its shape reads.
-    private static void BuildShapes(int n)
+    private static void BuildShapes(int n, int generation)
     {
+        var clock = Stopwatch.StartNew();
         var shapes = new List<(SN.Vector3[] P, SN.Vector3[] N, SN.Vector4[] C)>();
         foreach (var name in Builds)
         {
@@ -3321,9 +3344,15 @@ internal static unsafe class Colossus
             shapes.Add((p, nrm, col));
         }
 
-        _buildP = shapes.Select(s => s.P).ToArray();
+        if (generation != _buildGeneration)
+        {
+            return;
+        }
+
         _buildN = shapes.Select(s => s.N).ToArray();
         _buildC = shapes.Select(s => s.C).ToArray();
+        _buildP = shapes.Select(s => s.P).ToArray();
+        Console.WriteLine($"BUILD {string.Join(", ", Builds)}: {n} points each in {clock.ElapsedMilliseconds} ms");
     }
 
     private static SN.Vector3 Abs(SN.Vector3 v) => SN.Vector3.Abs(v);

@@ -11,7 +11,7 @@ import numpy as np
 src, dst, *wanted = sys.argv[sys.argv.index("--") + 1:]
 SIZE = 512
 # Each texture and its bump strength.
-STRENGTHS = {"hull": 0.6, "facade": 0.8, "concrete": 0.7, "cladding": 0.4}
+STRENGTHS = {"hull": 0.6, "facade": 0.8, "concrete": 0.7, "cladding": 0.4, "marble": 0.35, "terracotta": 0.7}
 os.makedirs(dst, exist_ok=True)
 
 scene = bpy.context.scene

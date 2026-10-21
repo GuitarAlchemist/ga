@@ -315,7 +315,7 @@ Blender 5.2 then baked each albedo, headless with factory settings (`bake_blende
 - a tangent-space normal map, from a Bump node on its luminance;
 - a roughness map, from the same luminance.
 
-It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the eight PNGs into one texture
+It packs normal X, normal Y, roughness and height into one RGBA map. The scene loads the PNGs (twelve since the marble and terracotta of 2026-10-21) into one texture
 array with mips; its own PNG reader is in `Program.cs`.
 
 **Materials and RTX** (2026-10-20, asked as « une scène plus jolie (plus de verre, métal, béton) », « plus de features
@@ -973,16 +973,18 @@ stayed near 5 ms. This was not seen in the two final runs or uncapped. It is sti
   off them. Other widths and depths are bounded, but nothing checks them for overlaps.
 - **The swarm ignores the scene.** Its bodies pass through Lego boxes, which are drawn only, like the city.
 - **HallSlice shows no surfaces.** It only brightens glows.
-- **No assets.** Every surface is procedural, and no model, texture or asset was added.
+- **No assets.** Every surface was procedural, and no model, texture or asset was added. The next section adds two
+  textures, marble and terracotta.
 
 ## The swarm builds; path tracing (2026-10-21)
 
 Asked by the author: « continue a ameliorer la scene the swarm - peut etre utilise le systeme de lego et
 Comfyui/blender », then « Fait un max out comme dans la scene de l'observatoir », with full path tracing chosen.
 
-![The swarm builds the propylon, path traced with Ray Reconstruction](evidence/swarm-propylon-pt-20261021.jpg)
+![The swarm builds the propylon: visible window, DLSS Quality, path traced, Ray Reconstruction](evidence/swarm-propylon-pt-20261021.jpg)
 ![The swarm builds the tholos, DLAA without path tracing](evidence/swarm-tholos-20261021.jpg)
-![Acropolis on the Colossus, path traced with Ray Reconstruction](evidence/lego-acropolis-pt-20261021.jpg)
+![Acropolis in marble and terracotta, DLAA and Ray Reconstruction](evidence/lego-acropolis-marble-20261021.jpg)
+![Acropolis path traced with Ray Reconstruction, before the marble](evidence/lego-acropolis-pt-20261021.jpg)
 
 **The swarm builds between two faces.** The auto cycle keeps its 32 s, so the cinematic stays in step. It runs a cloud,
 then a face from 6 s, then from 24 s a Lego block, a different one each cycle: `tholos`, `temple` (temple@2) and
@@ -996,6 +998,8 @@ then a face from 6 s, then from 24 s a Lego block, a different one each cycle: `
   colour, and a brazier's flames light theirs. The tint rides in the instance's kind, from 1 to 1.4, so the rays see it
   too.
 - **Collisions.** Bodies do not collide while they build, as while they form the face.
+- **Timing.** The points are made on a worker at start, in 90 to 150 ms. In the auto cycle the colossus starts no line
+  after 19 s, since the face holds while it speaks and a late line would eat into the block's turn.
 
 **Path tracing.** `--pt` (with RTX) follows one path a pixel, up to three bounces, in place of the ambient, fill, rim,
 occlusion and mirror rays.
@@ -1015,17 +1019,39 @@ Measured on an RTX 5080: hidden window, 1600 × 900, 10,000 swarm bodies, GPU ti
 | `--lego acropolis --dlss --rr --pt` (DLAA), 15 s | 11.85 / 13.08 | 16.63 / 33.29 |
 | `--cinematic --dlss --rr --pt` (DLAA), 98 s with the three blocks | 12.43 / 20.68 | 16.90 / 33.98 |
 | `--cinematic --dlss quality --rr --pt`, 98 s with the three blocks | 7.24 / 11.74 | 16.64 / 17.95 |
+| The same, in a visible window streamed by demo-cast, 100 s | 7.14 / 13.05 | 16.64 / 25.80 |
 
 The full max out that holds 60 fps is therefore `--dlss quality --rr --pt`. At DLAA, the paths outgrow the frame at
-p95. The propylon image was taken before the machines' own glow was lowered from 0.25 to 0.1.
+p95. In the visible window, 78 of the 88 full seconds after start drew exactly 60 frames. The others dipped to between
+23 and 44 frames, at start and around the captures.
 
-*To verify.*
-- These runs used a hidden window; a visible one is still to check.
-- Frame generation (DLSS-G) is not wired: Streamline finds `sl.dlss_g` but the Colossus does not ask for it.
+**Frame generation (DLSS-G) is not wired.** The observatory has it (F8), and Streamline finds `sl.dlss_g` here too. On
+this machine it would show nothing more:
+- **The screen.** It runs at 59 Hz, and the Colossus already draws 60 frames a second, path traced included.
+- **No vsync.** On Vulkan, Streamline does not support vsync with frame generation, so it would only add tearing (the
+  observatory's notes, `artpass/dlss/NOTES.md`).
+- **Focus.** It generates nothing without the window's focus.
+
+Wiring it would mean, in manual hooking:
+- the swapchain through Streamline's proxies;
+- Reflex and its latency markers;
+- a HUD-less colour tag.
+
+It is worth doing for a screen of 120 Hz or more.
+
+**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
+made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
+come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.
+- **Stone.** It now carries the marble's veins and honed finish, a tile every 3 m, under its courses.
+- **Roof tiles.** They carry the terracotta's burns and cracks, a tile every 2 m, under their ribs.
+- **Colour.** Each surface takes only its texture's detail: its brightness over the texture's mean, read from the last
+  mip. The box keeps its own colour.
+
+The texture array grows from 8 layers to 12.
 
 **Limits.**
 - **Points by area, not by eye.** A column gets as many machines as a wall of the same area. Thin parts, such as the
   acroteria, can get none.
 - **The block floats.** It stands at the face's height, not on the walkway.
-- **No ComfyUI or Blender.** ComfyUI was not running, and the blocks needed no asset: every surface is still
-  procedural.
+- **Only Lego statics show the marble.** The swarm's machines keep their hull texture, tinted by the box's colour.
+- **The acropolis's path-traced image** was taken before the marble.

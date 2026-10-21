@@ -18,6 +18,13 @@ JOBS = [
     ("cladding", 1972, "flat orthographic texture photograph of brushed metal facade cladding, large rectangular "
                        "panels with thin recessed joints, fine vertical brushing, faint patina, even diffuse lighting, "
                        "no shadows, seamless metal texture"),
+    # For the Lego blocks: their stone and their roof tiles.
+    ("marble", 480, "flat orthographic texture photograph of a honed white marble slab, warm ivory stone with soft grey "
+                    "veins and a faint golden patina, fine pores, gently worn surface, even diffuse lighting, no shadows, "
+                    "seamless stone texture"),
+    ("terracotta", 432, "flat orthographic texture photograph of weathered terracotta clay, warm orange-red fired clay "
+                        "with darker burnt patches, fine cracks, pale dust and a few lichen spots, even diffuse lighting, "
+                        "no shadows, seamless clay texture"),
 ]
 wanted = sys.argv[1:] or [name for name, _, _ in JOBS]
 
