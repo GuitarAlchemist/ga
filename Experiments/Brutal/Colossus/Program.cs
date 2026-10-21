@@ -37,7 +37,7 @@
 // --lego BLOCK[@VERSION] (--lego-seed N, --lego-arg name=value...) sets a Lego scene (../Lego, gaia's "fractal Lego") on a
 // mesa behind the face, where the city's towers give way to it. It is generated and validated before the window opens:
 // a refused scene ends the run with code 2. Its boxes are instances of the cube like every other static, so the RTX rays,
-// DLSS and Ray Reconstruction light them as they do the rest. C's cameras gain a fifth, the default here, which orbits
+// DLSS and Ray Reconstruction light them as they do the rest. C's cameras gain a fifth, the default here, which frames
 // the scene and sways.
 
 using System.Buffers.Binary;
