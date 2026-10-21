@@ -1338,7 +1338,21 @@ internal static unsafe class Colossus
             Glfw.WindowHint(GlfwWindowHint.Visible, 0);
         }
 
-        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "BRUTAL showcase: the swarm", Size = new int2(Width, Height) });
+        // --fullscreen: a borderless window over the whole primary monitor, at its own resolution.
+        var fullscreen = args.Contains("--fullscreen");
+        var windowSize = new int2(Width, Height);
+        if (fullscreen)
+        {
+            var mode = Glfw.PrimaryMonitor.VideoMode;
+            windowSize = new int2(mode.Width, mode.Height);
+            Glfw.WindowHint(GlfwWindowHint.Decorated, 0);
+        }
+
+        var window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = "BRUTAL showcase: the swarm", Size = windowSize });
+        if (fullscreen)
+        {
+            window.CenterToMonitor(Glfw.PrimaryMonitor);
+        }
 
         var glfwExtensions = Glfw.GetRequiredInstanceExtensions(out var extensionCount);
         var extensions = new HashSet<string>();

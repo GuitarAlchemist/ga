@@ -1025,9 +1025,24 @@ The full max out that holds 60 fps is therefore `--dlss quality --rr --pt`. At D
 p95. In the visible window, 78 of the 88 full seconds after start drew exactly 60 frames. The others dipped to between
 23 and 44 frames, at start and around the captures.
 
+**Full screen** (asked as « on veux essayer en plein ecran »). `--fullscreen` opens a borderless window over the
+whole primary monitor, at its own resolution. In 4K (3840 × 2160) the path tracing no longer holds 60 fps; RTX without
+it does.
+
+| Run, 4K, cinematic | GPU ms, p50 / p95 | Frame ms, p50 / p95 |
+|---|---|---|
+| `--dlss quality` (2560 × 1440 drawn), no path tracing, hidden, 40 s | 6.20 / 9.86 | 16.79 / 33.68 |
+| `--dlss quality --rr --pt`, hidden, 40 s | 19.88 / 34.11 | 20.84 / 34.56 |
+| `--dlss performance --rr --pt` (1920 × 1080 drawn), hidden, 40 s | 17.63 / 32.60 | 20.18 / 40.97 |
+| `--dlss quality --rr --pt`, visible and streamed, 120 s | 20.93 / 35.40 | 21.04 / 35.45 |
+
+In the visible run, path traced, the face drew 40 to 60 frames a second. The Lego block, close to the camera, drew 26 to
+33. Each 4K capture stalled the frames for about 3 s while the PNG was written. That happens only in tests.
+
 **Frame generation (DLSS-G) is not wired.** The observatory has it (F8), and Streamline finds `sl.dlss_g` here too. On
 this machine it would show nothing more:
-- **The screen.** It runs at 59 Hz, and the Colossus already draws 60 frames a second, path traced included.
+- **The screen.** It runs at 59 Hz. In its 1600 × 900 window the Colossus already draws 60 frames a second, path
+  traced included. In 4K full screen, path traced, it draws 26 to 60, which is where frame generation would help.
 - **No vsync.** On Vulkan, Streamline does not support vsync with frame generation, so it would only add tearing (the
   observatory's notes, `artpass/dlss/NOTES.md`).
 - **Focus.** It generates nothing without the window's focus.
