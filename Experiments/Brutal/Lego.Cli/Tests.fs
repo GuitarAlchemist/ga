@@ -254,7 +254,7 @@ let private all: (string * (unit -> unit)) list =
           use library = JsonDocument.Parse(Describe.library Api.Library)
           expect (library.RootElement.GetProperty("blocks").GetArrayLength() = Polis.all.Length) "every block"
 
-      "the kraken: lit eyes and suckers, and arms that reach past its mantle",
+      "the kraken: lit eyes and suckers, arms that reach past its head, a sea and a ship",
       fun () ->
           let d = Api.Describe("kraken", 7UL, [])
           expect d.Valid (messages d)
@@ -265,6 +265,8 @@ let private all: (string * (unit -> unit)) list =
               |> Seq.map (fun b -> let p = b.World.Translation in sqrt (p.X * p.X + p.Z * p.Z))
               |> Seq.max
           expect (reach > 18f) $"the arms reach {reach} m"
+          expect (d.Scene.Boxes |> Seq.exists (fun b -> b.Surface.Code = 5)) "a sea round it"
+          expect (d.Scene.Boxes |> Seq.exists (fun b -> b.World.Translation.Y > 20f && b.Surface.Code <> 3)) "something held high"
           let six = Api.Describe("kraken", 7UL, [ "arms=6" ])
           expect (six.Valid && six.Scene.Boxes.Count < d.Scene.Boxes.Count) "six arms make fewer boxes"
 

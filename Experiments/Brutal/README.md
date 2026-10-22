@@ -1135,21 +1135,34 @@ HUD-less tag and adaptive quality).
 - **To verify:** the moon's disc in 4K, and night in a visible window with frame generation.
 **The kraken** (2026-10-22, asked as « je veux que la sequence "lego" soit comme un kraken robotique geant plutot »).
 The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swarm builds every cycle.
-- **Its shape.** A mantle of plates 1.1 m tall, with a neck, a swell and a dome, ringed with rust and dark grooves, a
-  ridge of fins down its back, two lit eyes in dark bezels and a red beacon on its crown. Eight arms of 44 octagonal
-  segments narrow from root to tip, with a rust collar every third segment and a lit sucker every other one. Half the
-  arms rise and curl back over the mantle; the others sprawl on the ground and lift only their tips. It is 40 m across
-  and 30 m high, against 28 and 22 for the temples.
-- **It writhes.** The swarm's targets move, not the block: past 6 m from the axis, each point turns about it and rises
-  and falls on a wave that runs out along the arms (`Writhe`), stronger towards the tips. The mantle stays still.
-- **Eyes by area.** The swarm samples the block by area, so the eyes are now 3.2 by 2.2 m: at 2 by 1.3 they showed
-  as a few cyan specks in the captures. The larger eyes are *to verify* in a capture.
+- **The kraken of the legends** (asked next as « le kraken doit ressembler un peu plus au kraken des legendes »). The
+  first version, a domed mantle on a neck with eight evenly placed arms, read as a tower with cables in a static
+  render. It became a colossal cephalopod rising from a churning sea:
+  - its plated head is a bag, 17 m wide, that hangs back over the eyes as an octopus's does, with a ridge of fins down
+    its back;
+  - two great round eyes on its flanks, 50 degrees either side of the front, each a glowing lens in a dark rim with a
+    pupil that swells in its middle (a plain bar read as a road sign);
+  - eight arms, 3 m thick at the root and half a metre at the tip, with a rust collar every third segment and a lit
+    sucker every other one. The arms within 70 degrees of the front sprawl towards the viewer and curl their tips; the
+    others rise behind the head, higher than it, and curl theirs in a spiral, so that none hides the face;
+  - the arm nearest 340 degrees climbs to a three-masted ship and coils a turn and a half round its hull, holding it
+    13 m out and 15 m up;
+  - rings of wave crests capped with foam run out from it.
+
+  It is about 42 m across and 30 m high, against 28 and 22 for the temples. The design is original; the ship-seizing
+  sea monster is the public-domain legend, not any one picture of it.
+- **It writhes.** The swarm's targets move, not the block: past 9 m from the axis, each point turns about it and rises
+  and falls on a wave that runs out along the arms (`Writhe`), stronger towards the tips. The head, within about 9 m,
+  stays still; the ship and the waves move with the arms.
+- **Eyes by area.** The swarm samples the block by area, so the details must be metres wide: the eyes are 4.8 m
+  rims round 3.8 m lenses.
 - **Moiré.** The curtain walls' mullions had hard edges a fraction of a pixel wide in the distance, which shimmered as
   the camera moved; they are now antialiased by their screen width. The stars, smaller than a pixel, are now larger and
   dimmer.
-- **Measured.** Hidden, path traced, DLSS Quality: 60 frames every second while the kraken forms (32 to 41 s), apart
-  from the seconds with a capture. Lego tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching
-  past 18 m, and a valid six-armed variant).
+- **Measured.** Hidden, path traced, DLSS Quality: 60 frames every second while the first kraken formed (32 to 41 s),
+  apart from the seconds with a capture; the legend's kraken, in a 41 s run, frame p50 16.64 ms and p95 22.68 ms. Lego
+  tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching past 18 m, a sea, something held
+  above 20 m, and a valid six-armed variant).
 - **To verify:** the writhing and the moiré in a visible window, at 60 fps, from a recording.
 **Machines, not cubes** (2026-10-22, asked as « chaque machine devrait etre plus qu'un cube si possible et avoir sa vie
 propre »). Each machine of the swarm is now a small craft (`Machine`), built in code rather than in Blender, so that no

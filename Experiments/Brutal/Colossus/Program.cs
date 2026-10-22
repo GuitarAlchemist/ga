@@ -3764,7 +3764,7 @@ internal static unsafe class Colossus
     private static SN.Vector3 Writhe(SN.Vector3 p, float t)
     {
         var r = MathF.Sqrt((p.X * p.X) + (p.Z * p.Z));
-        var reach = Math.Clamp((r - 6f) / 8f, 0f, 1f);
+        var reach = Math.Clamp((r - 9f) / 8f, 0f, 1f);
         if (reach <= 0f)
         {
             return p;
