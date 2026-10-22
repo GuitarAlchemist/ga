@@ -554,7 +554,7 @@ let polis: Block =
 /// Every block: the first chain's and the city's.
 let all =
     Blocks.all
-    @ [ stoa; tholos; propylon; terrace; stair; wall; tower; rampart; house; insula; agora; theatre; acropolis; polis ]
+    @ [ stoa; tholos; propylon; terrace; stair; wall; tower; rampart; house; insula; agora; theatre; acropolis; polis; Kraken.kraken ]
 
 /// The library of every block.
 let library = Library.Of all

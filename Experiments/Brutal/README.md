@@ -1133,6 +1133,24 @@ HUD-less tag and adaptive quality).
   night (84 to 104 s) at 60 frames every second, 21 of 21, against 58.7 on average before; day at 59.8 against 56.1.
   GPU 6.66 ms p50 and 11.57 ms p95, against 6.99 and 12.46.
 - **To verify:** the moon's disc in 4K, and night in a visible window with frame generation.
+**The kraken** (2026-10-22, asked as « je veux que la sequence "lego" soit comme un kraken robotique geant plutot »).
+The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swarm builds every cycle.
+- **Its shape.** A mantle of plates 1.1 m tall, with a neck, a swell and a dome, ringed with rust and dark grooves, a
+  ridge of fins down its back, two lit eyes in dark bezels and a red beacon on its crown. Eight arms of 44 octagonal
+  segments narrow from root to tip, with a rust collar every third segment and a lit sucker every other one. Half the
+  arms rise and curl back over the mantle; the others sprawl on the ground and lift only their tips. It is 40 m across
+  and 30 m high, against 28 and 22 for the temples.
+- **It writhes.** The swarm's targets move, not the block: past 6 m from the axis, each point turns about it and rises
+  and falls on a wave that runs out along the arms (`Writhe`), stronger towards the tips. The mantle stays still.
+- **Eyes by area.** The swarm samples the block by area, so the eyes are now 3.2 by 2.2 m: at 2 by 1.3 they showed
+  as a few cyan specks in the captures. The larger eyes are *to verify* in a capture.
+- **Moiré.** The curtain walls' mullions had hard edges a fraction of a pixel wide in the distance, which shimmered as
+  the camera moved; they are now antialiased by their screen width. The stars, smaller than a pixel, are now larger and
+  dimmer.
+- **Measured.** Hidden, path traced, DLSS Quality: 60 frames every second while the kraken forms (32 to 41 s), apart
+  from the seconds with a capture. Lego tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching
+  past 18 m, and a valid six-armed variant).
+- **To verify:** the writhing and the moiré in a visible window, at 60 fps, from a recording.
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.

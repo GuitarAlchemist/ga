@@ -425,7 +425,7 @@ internal static unsafe class Colossus
                 vec2 cell = floor(g);
                 float r = hash12(cell);
                 vec2 at = fract(g) - 0.5 - (vec2(hash12(cell + 17.0), hash12(cell + 31.0)) - 0.5) * 0.6;
-                float star = step(0.97 - 0.03 * milky, r) * smoothstep(0.2, 0.0, length(at)) * (0.3 + 28.0 * max(r - 0.975, 0.0)) * (0.65 + 0.35 * sin(t * 1.7 + r * 90.0));
+                float star = step(0.97 - 0.03 * milky, r) * smoothstep(0.32, 0.0, length(at)) * 0.45 * (0.3 + 28.0 * max(r - 0.975, 0.0)) * (0.65 + 0.35 * sin(t * 1.7 + r * 90.0));
                 c += vec3(0.75, 0.82, 1.0) * star * clear * 0.9;
                 // The moon's halo in the haze, and its disc.
                 float m = max(dot(d, MoonDir), 0.0);
@@ -597,7 +597,12 @@ internal static unsafe class Colossus
             float r = hash12(id);
             float r2 = hash12(id + 17.0);
             float fade = clamp(1.0 - (px / 1.6 - 0.25) * 4.0, 0.0, 1.0);
-            float frame = (1.0 - step(0.05, f.x) * step(f.x, 0.95) * step(0.03, f.y) * step(f.y, 0.8)) * fade;
+            // The mullions and slabs are thin: their edges are filtered over a pixel, or they flicker into moiré as the
+            // camera moves long before the cells fade.
+            vec2 w = vec2(px / 1.6, px / floorHeight) * 0.75;
+            float pane = smoothstep(0.05 - w.x, 0.05 + w.x, f.x) * (1.0 - smoothstep(0.95 - w.x, 0.95 + w.x, f.x))
+                * smoothstep(0.03 - w.y, 0.03 + w.y, f.y) * (1.0 - smoothstep(0.8 - w.y, 0.8 + w.y, f.y));
+            float frame = (1.0 - pane) * fade;
             float blinds = step(0.84, fract(r * 23.7)) * (1.0 - f0);
             float lit = step(r, 0.07) * (1.0 - f0);
             vec3 light = fract(r * 9.1) < 0.7 ? mix(vec3(1.0, 0.42, 0.12), vec3(1.0, 0.72, 0.42), fract(r * 5.3)) * 2.0 : vec3(0.7, 0.82, 1.0) * 1.4;
@@ -1269,8 +1274,9 @@ internal static unsafe class Colossus
     private static float _memberRadius;
 
     // What the swarm builds between two faces, one a cycle in turn: Lego blocks, each a point a machine on its faces
-    // (centred, in metres, front toward +Z), the face's outward normal, and the box's colour with its glow in W.
-    private static readonly string[] Builds = ["tholos", "temple", "propylon"];
+    // (centred, in metres, front toward +Z), the face's outward normal, and the box's colour with its glow in W. The
+    // temples (tholos, temple, propylon) gave way to the giant robotic kraken, whose arms writhe (Writhe).
+    private static readonly string[] Builds = ["kraken"];
     private static SN.Vector3[][] _buildP = [], _buildN = [];
     private static SN.Vector4[][] _buildC = [];
     private static int _buildGeneration;
@@ -3708,7 +3714,9 @@ internal static unsafe class Colossus
 
             var (min, max) = (p.Aggregate(SN.Vector3.Min), p.Aggregate(SN.Vector3.Max));
             var size = max - min;
-            var scale = MathF.Min(28f / MathF.Max(size.X, size.Z), 22f / size.Y);
+            // The kraken is giant: 40 m across its arms and 30 m high.
+            var (across, high) = name == "kraken" ? (40f, 30f) : (28f, 22f);
+            var scale = MathF.Min(across / MathF.Max(size.X, size.Z), high / size.Y);
             for (var i = 0; i < n; i++)
             {
                 p[i] = (p[i] - ((min + max) / 2f)) * scale;
@@ -3729,6 +3737,23 @@ internal static unsafe class Colossus
     }
 
     private static SN.Vector3 Abs(SN.Vector3 v) => SN.Vector3.Abs(v);
+
+    // The kraken's arms writhe: past its mantle, each point turns about the axis and rises and falls, by waves that run
+    // out along the arms, out of step from arm to arm, more toward the tips.
+    private static SN.Vector3 Writhe(SN.Vector3 p, float t)
+    {
+        var r = MathF.Sqrt((p.X * p.X) + (p.Z * p.Z));
+        var reach = Math.Clamp((r - 6f) / 8f, 0f, 1f);
+        if (reach <= 0f)
+        {
+            return p;
+        }
+
+        var wave = (t * 1.6f) - (r * 0.22f) + (MathF.Atan2(p.Z, p.X) * 3f);
+        var turn = 0.16f * reach * MathF.Sin(wave);
+        var (c, s) = (MathF.Cos(turn), MathF.Sin(turn));
+        return new SN.Vector3((p.X * c) - (p.Z * s), p.Y + (2.2f * reach * reach * MathF.Sin((wave * 0.8f) + 1.3f)), (p.X * s) + (p.Z * c));
+    }
 
     // Where a built point stands once its block has turned by yaw about its middle, at the face's centre.
     private static SN.Vector3 Built(SN.Vector3 p, float cos, float sin) => FaceCenter + new SN.Vector3((p.X * cos) + (p.Z * sin), p.Y, (p.Z * cos) - (p.X * sin));
@@ -3892,6 +3917,7 @@ internal static unsafe class Colossus
         var max = 28f * speedScale;
         var stir = assembled || shape >= 0 ? 0.25f : 2f;
         var (cos, sin) = (MathF.Cos(yaw), MathF.Sin(yaw));
+        var writhes = shape >= 0 && shape < Builds.Length && Builds[shape] == "kraken";
         ForBodies(_ids.Length, (start, end) =>
         {
             for (var i = start; i < end; i++)
@@ -3905,7 +3931,7 @@ internal static unsafe class Colossus
                 }
                 else if (shape >= 0)
                 {
-                    target = Built(_buildP[shape][i], cos, sin);
+                    target = Built(writhes ? Writhe(_buildP[shape][i], t) : _buildP[shape][i], cos, sin);
                 }
                 else
                 {

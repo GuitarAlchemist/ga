@@ -17,6 +17,7 @@
     <Compile Include="Validate.fs" />
     <Compile Include="Describe.fs" />
     <Compile Include="Blocks.fs" />
+    <Compile Include="Kraken.fs" />
     <Compile Include="Polis.fs" />
     <Compile Include="Api.fs" />
   </ItemGroup>

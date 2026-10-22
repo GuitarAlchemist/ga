@@ -254,8 +254,21 @@ let private all: (string * (unit -> unit)) list =
           use library = JsonDocument.Parse(Describe.library Api.Library)
           expect (library.RootElement.GetProperty("blocks").GetArrayLength() = Polis.all.Length) "every block"
 
-      "describing again and again keeps nothing",
+      "the kraken: lit eyes and suckers, and arms that reach past its mantle",
       fun () ->
+          let d = Api.Describe("kraken", 7UL, [])
+          expect d.Valid (messages d)
+          let lit = d.Scene.Boxes |> Seq.filter (fun b -> b.Surface.Code = 3) |> Seq.length
+          expect (lit > 100) $"{lit} lit boxes"
+          let reach =
+              d.Scene.Boxes
+              |> Seq.map (fun b -> let p = b.World.Translation in sqrt (p.X * p.X + p.Z * p.Z))
+              |> Seq.max
+          expect (reach > 18f) $"the arms reach {reach} m"
+          let six = Api.Describe("kraken", 7UL, [ "arms=6" ])
+          expect (six.Valid && six.Scene.Boxes.Count < d.Scene.Boxes.Count) "six arms make fewer boxes"
+
+      "describing again and again keeps nothing",      fun () ->
           let before = GC.GetTotalMemory true
 
           for _ in 1..20 do
