@@ -1101,7 +1101,7 @@ HUD-less tag and adaptive quality).
   image is copied out and tagged as Streamline's HUD-less colour, so that the generated frames do not smear the text.
   A hidden run with the panel showed it drawn as before.
 - **Fewer bounces in 4K.** With `--pt`, the paths lose a bounce while the GPU's time goes over 16 ms
-  (`--gpu-budget`), down to one. They win it back below 65 % of that, at most once a second. DLSS's resolution was the
+  (`--gpu-budget`), down to one. They win it back below 65 % of that, no sooner than 20 s after losing it: in the streamed window, at 1600 × 900, the GPU went over the budget at two bounces and under it at one, and the light flickered between them every few seconds. DLSS's resolution was the
   wrong lever: performance over quality took only 2.25 ms off 19.88. In 4K, hidden, 40 s, path traced with DLSS
   quality:
 

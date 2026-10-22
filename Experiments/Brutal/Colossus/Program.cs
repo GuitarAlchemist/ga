@@ -2427,7 +2427,7 @@ internal static unsafe class Colossus
         var reason = "window closed";
         var stale = false;
         var forceNight = args.Contains("--night");
-        var (bounces, bounceChanged, gpuSmooth, gpuBudget) = (3, 0.0, 0.0, (double)Arg(args, "--gpu-budget", 16));
+        var (bounces, bounceChanged, bounceDropped, gpuSmooth, gpuBudget) = (3, 0.0, -100.0, 0.0, (double)Arg(args, "--gpu-budget", 16));
         var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
 
         // The recording: each frame's image goes to ffmpeg as it is made, and OpenAL's mix of the same sixtieth of a
@@ -2922,15 +2922,18 @@ internal static unsafe class Colossus
                     gpuTimes[2].Add((ticks[3] - ticks[2]) * tickMs);
                     gpuTimes[3].Add((ticks[3] - ticks[0]) * tickMs);
                     // --pt: the paths lose a bounce while the GPU is over its budget (16 ms, or --gpu-budget), and win it
-                    // back once well under it, at most one change a second. In 4K a bounce costs more than DLSS's
+                    // back once well under it, no sooner than 20 s after losing it, so that a scene just over the budget
+                    // does not flicker between two levels of light. In 4K a bounce costs more than DLSS's
                     // resolution saves: performance over quality took 2.25 ms off 19.88.
                     gpuSmooth += (((ticks[3] - ticks[0]) * tickMs) - gpuSmooth) * 0.05;
                     if (pt.Length > 0 && now - bounceChanged > 1.0)
                     {
-                        var next = gpuSmooth > gpuBudget && bounces > 1 ? bounces - 1 : gpuSmooth < gpuBudget * 0.65 && bounces < 3 ? bounces + 1 : bounces;
+                        var next = gpuSmooth > gpuBudget && bounces > 1 ? bounces - 1
+                            : gpuSmooth < gpuBudget * 0.65 && bounces < 3 && now - bounceDropped > 20.0 ? bounces + 1 : bounces;
                         if (next != bounces)
                         {
                             Console.WriteLine($"SWARM path bounces {bounces} > {next} at {now:F1} s, GPU {gpuSmooth:F1} ms");
+                            bounceDropped = next < bounces ? now : bounceDropped;
                             (bounces, bounceChanged) = (next, now);
                         }
                     }
