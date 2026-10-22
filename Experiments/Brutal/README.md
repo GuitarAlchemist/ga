@@ -1100,7 +1100,8 @@ HUD-less tag and adaptive quality).
 - **HUD-less colour.** With `--fg`, the panel and subtitles are drawn in a render pass of their own. Before them, the
   image is copied out and tagged as Streamline's HUD-less colour, so that the generated frames do not smear the text.
   A hidden run with the panel showed it drawn as before.
-- **Fewer bounces in 4K.** With `--pt`, the paths lose a bounce while the GPU's time goes over 16 ms
+- **Fewer bounces in 4K.** With `--pt`, the paths lose a bounce while the GPU's time goes over 14 ms (16 ms until the
+  cinematic's closer shots of 2026-10-22, when a frame often missed the vsync before the budget tripped)
   (`--gpu-budget`), down to one. They win it back below 65 % of that, no sooner than 20 s after losing it: in the streamed window, at 1600 × 900, the GPU went over the budget at two bounces and under it at one, and the light flickered between them every few seconds. DLSS's resolution was the
   wrong lever: performance over quality took only 2.25 ms off 19.88. In 4K, hidden, 40 s, path traced with DLSS
   quality:
@@ -1149,8 +1150,9 @@ The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swar
     13 m out and 15 m up;
   - rings of wave crests capped with foam run out from it.
 
-  It is about 42 m across and 30 m high, against 28 and 22 for the temples. The design is original; the ship-seizing
-  sea monster is the public-domain legend, not any one picture of it.
+  In its own units it is about 34 m across (the static render's mesa, less its 8 m margins) and 31 m high; the swarm
+  scales it to 30 m high, against 22 for the temples. The design is original; the ship-seizing sea monster is the
+  public-domain legend, not any one picture of it.
 - **It writhes.** The swarm's targets move, not the block: past 9 m from the axis, each point turns about it and rises
   and falls on a wave that runs out along the arms (`Writhe`), stronger towards the tips. The head, within about 9 m,
   stays still; the ship and the waves move with the arms.
@@ -1175,7 +1177,24 @@ the time, and thin parts would shimmer.
 - **Measured.** Hidden, path traced, DLSS Quality, 42 s: frame p50 16.65 ms, p95 18.29 ms; GPU 7.33 ms p50 and 9.93 ms
   p95, against 6.40 and 10.10 with cubes in the kraken's run before.
 - **To verify:** whether the eyes' specks twinkle on the face at a distance, in a recording.
-**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
+**Cooler cinematics** (2026-10-22, asked as « et les cinematiques pourraient etre un peu plus cool »). A shot can now
+orbit what it looks at (`Arc`) instead of moving in a straight line, change its focal length as it moves (`FovEnd`),
+and lean the horizon (`Roll` to `RollEnd`). The focal length moves by the tangent of half the angle of view, so that a
+push in that widens is a true dolly zoom: the subject holds its size while the world behind it swells.
+- **Kept, and moved.** The orbit round the head is now an arc, banking like a drone; the push in on the eyes and the
+  push in face on are dolly zooms; the face from below leans.
+- **New, for the kraken** (it stands from 21 to 29 s and from 53 to 61 s of the 64 s loop): from the level of its sea
+  on a wide lens, looking up as it stands, the horizon leaning; an orbit round it past the ship in its coils; and one
+  of its eyes in a dolly zoom until the swarm lets go.
+- **Clear of the towers.** The check that keeps the camera out of the towers now follows each shot's real path,
+  arcs included; it moved four shots in toward what they look at.
+- **Measured.** Hidden, path traced, DLSS Quality, 72 s, the new shots with a 16 ms budget: GPU 10.70 ms p50 and
+  16.11 ms p95 (against 7.81 and 11.39 before them), and 44 of 52 seconds at 59 frames or more outside capture
+  seconds, the others at 54 to 58. Hence the 14 ms budget. A second hidden run with it had lower GPU times (8.62 and
+  13.05 ms) but worse frames, so something outside the scene held them (a desktop-automation process was running); its
+  frame counts are not used. The live view that followed held 47 of 49 seconds at 59 or more, with one spike to 26 ms
+  of GPU on a cut to the high shot.
+- **To verify:** the 14 ms budget over a whole loop in a quiet machine, and how often it costs a bounce.**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.
 - **Stone.** It now carries the marble's veins and honed finish, a tile every 3 m, under its courses.

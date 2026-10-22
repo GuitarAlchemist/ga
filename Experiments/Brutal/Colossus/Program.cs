@@ -142,9 +142,18 @@ internal static unsafe class Colossus
     private const string PiperVoice = "Piper, SIWIS (CC BY 4.0)";
 
     // The cinematic: shots cut hard one to the next, each a slow move between two framings with its own focal length and
-    // a little handheld sway, over two of the swarm's 32-second cycles; time 0 is 3 s before the face forms. Three of
+    // a little handheld sway, over two of the swarm's 32-second cycles; time 0 is 3 s before the face forms, so the
+    // kraken stands from 21 to 29 s and from 53 to 61 s. A shot may also orbit what it looks at (Arc) instead of moving in
+    // a straight line, change its focal length as it moves (FovEnd: a push in that widens is a dolly zoom, the subject
+    // holding its size while the world behind it swells), and lean the horizon (Roll to RollEnd, in degrees). Three of
     // them are remade around towers of the city once it is built (DirectedShots).
-    private readonly record struct Shot(double Start, SN.Vector3 EyeFrom, SN.Vector3 EyeTo, SN.Vector3 LookFrom, SN.Vector3 LookTo, float Fov, float Sway);
+    private readonly record struct Shot(double Start, SN.Vector3 EyeFrom, SN.Vector3 EyeTo, SN.Vector3 LookFrom, SN.Vector3 LookTo, float Fov, float Sway, float FovEnd = 0f, float Roll = 0f, float RollEnd = 0f, bool Arc = false);
+
+    // Where the kraken's eyes are, about, while it stands: its block is centred on the face's centre, and turns a little.
+    private static readonly SN.Vector3 KrakenEyes = new(0f, 19.5f, -1f);
+
+    // The indices of the shots that DirectedShots remakes round towers.
+    private const int GlassShot = 0, ConcreteShot = 7, BronzeShot = 10;
 
     private static Shot[] Shots =
     [
@@ -152,14 +161,16 @@ internal static unsafe class Colossus
         new(0.0, new(-170f, 175f, 210f), new(-125f, 140f, 155f), new(0f, 30f, 0f), new(0f, 26f, 0f), 45f, 0.15f),
         // Low behind the figure, looking up as the face forms.
         new(4.0, new(2.2f, 1.1f, 47f), new(1.5f, 1.4f, 44.5f), FaceCenter + new SN.Vector3(0f, 4f, 0f), FaceCenter, 46f, 0.03f),
-        // The face from below and to the left.
-        new(8.5, FaceCenter + new SN.Vector3(-18f, -16f, 28f), FaceCenter + new SN.Vector3(-13f, -14f, 24f), FaceCenter + new SN.Vector3(0f, 1f, 0f), FaceCenter + new SN.Vector3(0f, 2f, 0f), 30f, 0.08f),
-        // Round the head.
-        new(12.5, FaceCenter + new SN.Vector3(52f, 4f, 30f), FaceCenter + new SN.Vector3(-36f, 8f, 50f), FaceCenter, FaceCenter, 36f, 0.05f),
-        // The eyes.
-        new(17.0, FaceCenter + new SN.Vector3(5f, 6f, 54f), FaceCenter + new SN.Vector3(2f, 5f, 46f), FaceCenter + new SN.Vector3(0f, 4f, 0f), FaceCenter + new SN.Vector3(0f, 4f, 0f), 20f, 0.04f),
+        // The face from below and to the left, the horizon leaning.
+        new(8.5, FaceCenter + new SN.Vector3(-18f, -16f, 28f), FaceCenter + new SN.Vector3(-13f, -14f, 24f), FaceCenter + new SN.Vector3(0f, 1f, 0f), FaceCenter + new SN.Vector3(0f, 2f, 0f), 30f, 0.08f, Roll: 7f, RollEnd: 3f),
+        // Round the head, banking like a drone.
+        new(12.5, FaceCenter + new SN.Vector3(52f, 4f, 30f), FaceCenter + new SN.Vector3(-36f, 8f, 50f), FaceCenter, FaceCenter, 36f, 0.05f, Roll: -4f, RollEnd: 4f, Arc: true),
+        // The eyes, in a dolly zoom: the camera pushes in as the lens widens.
+        new(17.0, FaceCenter + new SN.Vector3(5f, 6f, 54f), FaceCenter + new SN.Vector3(2f, 5f, 30f), FaceCenter + new SN.Vector3(0f, 4f, 0f), FaceCenter + new SN.Vector3(0f, 4f, 0f), 20f, 0.04f, FovEnd: 35f),
         // A crane back and up from the figure as the swarm lets go.
-        new(21.0, new(1.5f, 2f, 46f), new(-25f, 40f, 110f), FaceCenter, new(0f, 26f, 0f), 44f, 0.06f),
+        new(21.0, new(1.5f, 2f, 46f), new(-12f, 20f, 78f), FaceCenter, new(0f, 26f, 0f), 44f, 0.06f),
+        // The kraken, from the level of its sea, on a wide lens, looking up at it as it stands, the horizon leaning.
+        new(23.5, new(8f, 11f, 36f), new(5f, 12f, 27f), new(0f, 26f, -4f), new(0f, 22f, -3f), 58f, 0.05f, FovEnd: 52f, Roll: -6f, RollEnd: -2f),
         // Down in the street among the towers.
         new(27.0, new(-48f, 3f, 52f), new(-30f, 4f, 46f), new(0f, 30f, 0f), new(0f, 24f, 0f), 36f, 0.08f),
         // High above as it gathers again.
@@ -168,15 +179,38 @@ internal static unsafe class Colossus
         new(37.5, new(-2.2f, 2.3f, 46f), new(-1.6f, 2f, 44.5f), FaceCenter + new SN.Vector3(0f, 2f, 0f), FaceCenter, 32f, 0.03f),
         // In profile.
         new(43.5, FaceCenter + new SN.Vector3(-34f, 0f, 16f), FaceCenter + new SN.Vector3(-30f, 2f, 10f), FaceCenter, FaceCenter, 40f, 0.05f),
-        // A slow push in, face on.
-        new(49.5, FaceCenter + new SN.Vector3(0f, 2f, 62f), FaceCenter + new SN.Vector3(0f, 3f, 36f), FaceCenter + new SN.Vector3(0f, 2f, 0f), FaceCenter + new SN.Vector3(0f, 3f, 0f), 30f, 0.03f),
+        // A push in, face on, in a dolly zoom.
+        new(49.5, FaceCenter + new SN.Vector3(0f, 2f, 62f), FaceCenter + new SN.Vector3(0f, 3f, 34f), FaceCenter + new SN.Vector3(0f, 2f, 0f), FaceCenter + new SN.Vector3(0f, 3f, 0f), 22f, 0.03f, FovEnd: 39f),
+        // Round the kraken as it stands, past the ship in its coils, banking.
+        new(53.5, new(40f, 30f, 26f), new(-45f, 36f, 21f), new(0f, 24f, -4f), new(0f, 22f, -4f), 40f, 0.05f, Roll: 3f, RollEnd: -5f, Arc: true),
+        // One of its eyes, in a dolly zoom, until the swarm lets go.
+        new(58.0, KrakenEyes + new SN.Vector3(-10f, 1f, 31f), KrakenEyes + new SN.Vector3(-6f, 0.5f, 17f), KrakenEyes + new SN.Vector3(-4f, 0f, 0f), KrakenEyes + new SN.Vector3(-4f, 0f, 0f), 26f, 0.04f, FovEnd: 44f, Roll: 4f, RollEnd: 0f),
         // A last crane up and away.
-        new(56.0, new(0f, 5f, 58f), new(0f, 75f, 150f), new(0f, 24f, 0f), new(0f, 30f, 0f), 50f, 0.08f),
+        new(61.0, new(-10f, 22f, 24f), new(-30f, 62f, 92f), new(0f, 24f, -2f), new(0f, 30f, 0f), 48f, 0.08f),
     ];
 
     private const double CinematicLength = 64.0;
 
-    private static (SN.Vector3 Eye, SN.Vector3 Target, float Fov) Cinematic(double time)
+    // Where a shot's camera is at s (0 to 1, eased): along a straight line, or for an arc, round the vertical axis
+    // through what it looks at, its angle, distance and height each going from the first framing to the last, the short
+    // way round.
+    private static SN.Vector3 EyeAt(in Shot shot, float s)
+    {
+        if (!shot.Arc)
+        {
+            return SN.Vector3.Lerp(shot.EyeFrom, shot.EyeTo, s);
+        }
+
+        var (a, b) = (shot.EyeFrom - shot.LookFrom, shot.EyeTo - shot.LookTo);
+        var from = MathF.Atan2(a.X, a.Z);
+        var turn = MathF.Atan2(b.X, b.Z) - from;
+        turn -= MathF.Tau * MathF.Round(turn / MathF.Tau);
+        var angle = from + (turn * s);
+        var radius = float.Lerp(new SN.Vector2(a.X, a.Z).Length(), new SN.Vector2(b.X, b.Z).Length(), s);
+        return SN.Vector3.Lerp(shot.LookFrom, shot.LookTo, s) + new SN.Vector3(radius * MathF.Sin(angle), float.Lerp(a.Y, b.Y, s), radius * MathF.Cos(angle));
+    }
+
+    private static (SN.Vector3 Eye, SN.Vector3 Target, float Fov, float Roll) Cinematic(double time)
     {
         var t = ((time % CinematicLength) + CinematicLength) % CinematicLength;
         var k = Shots.Length - 1;
@@ -195,11 +229,14 @@ internal static unsafe class Colossus
             MathF.Sin(w * 1.3f) + (0.5f * MathF.Sin((w * 2.9f) + 1f)),
             MathF.Sin((w * 1.7f) + 2f) + (0.4f * MathF.Sin(w * 3.7f)),
             MathF.Sin((w * 1.1f) + 4f)) * shot.Sway;
-        var eye = SN.Vector3.Lerp(shot.EyeFrom, shot.EyeTo, s) + sway;
+        var eye = EyeAt(shot, s) + sway;
         var target = SN.Vector3.Lerp(shot.LookFrom, shot.LookTo, s) + (sway * 0.5f);
-        return (eye, target, shot.Fov);
+        // A dolly zoom keeps its subject's size: the tangent of half the angle of view grows as the distance shrinks.
+        var fov = shot.FovEnd > 0f
+            ? 2f * MathF.Atan(float.Lerp(MathF.Tan(shot.Fov * MathF.PI / 360f), MathF.Tan(shot.FovEnd * MathF.PI / 360f), s)) * 180f / MathF.PI
+            : shot.Fov;
+        return (eye, target, fov, float.Lerp(shot.Roll, shot.RollEnd, s));
     }
-
     // A modelled tower's style, as the scene's shader picks it from its seed (surface): glass walls under 0.3, bronze
     // under 0.375, steel under 0.45, raw concrete under 0.8, the facade texture's panels above.
     private static float Style(float seed) => seed * 7.13f % 1f;
@@ -222,6 +259,7 @@ internal static unsafe class Colossus
         // Clear of a tower: above it, or outside the circle round its footprint, with 3 m to spare.
         bool Clear(SN.Vector3 p) => placed.All(t => p.Y > t.Top + 3f || SN.Vector2.Distance(new(p.X, p.Z), new(t.Center.X, t.Center.Z)) > (t.Half * 1.42f) + 3f);
         bool PathClear(SN.Vector3 a, SN.Vector3 b) => Enumerable.Range(0, 9).All(i => Clear(SN.Vector3.Lerp(a, b, i / 8f)));
+        bool ShotClear(Shot s) => Enumerable.Range(0, 17).All(i => Clear(EyeAt(s, i / 16f)));
         var face = new SN.Vector3(FaceCenter.X, 0f, FaceCenter.Z);
         var cast = new List<(int Tower, float Seed)>();
 
@@ -245,16 +283,16 @@ internal static unsafe class Colossus
         var result = shots.ToArray();
         // 0: up the foot of a glass curtain wall, looking high up it, then down to the swarm as it gathers. Seed 0.4418
         // is the glass style (0.15).
-        result[0] = Cast(40f, 0.4418f, (c, half, top, toFace, across) =>
+        result[GlassShot] = Cast(40f, 0.4418f, (c, half, top, toFace, across) =>
         {
             var from = c + (across * ((half * 1.42f) + 5f)) + (toFace * half * 0.3f) + new SN.Vector3(0f, -24f, 0f);
             var to = from + (toFace * 8f) + new SN.Vector3(0f, 12f, 0f);
-            return PathClear(from, to) ? new Shot(shots[0].Start, from, to, c + (toFace * half * 0.3f) + new SN.Vector3(0f, top * 0.8f, 0f), FaceCenter, 55f, 0.05f) : null;
-        }) ?? shots[0];
-        // 6: behind a concrete tower that hides the face, tracking sideways until the face shows past its edge; at the
+            return PathClear(from, to) ? new Shot(shots[GlassShot].Start, from, to, c + (toFace * half * 0.3f) + new SN.Vector3(0f, top * 0.8f, 0f), FaceCenter, 55f, 0.05f) : null;
+        }) ?? shots[GlassShot];
+        // 7: behind a concrete tower that hides the face, tracking sideways until the face shows past its edge; at the
         // face's height, or higher to pass over the towers around, as long as the tower still rises 20 m above the
         // camera. Seed 0.505 is raw concrete (0.6).
-        result[6] = Cast(FaceCenter.Y + FaceB, 0.505f, (c, half, top, toFace, across) =>
+        result[ConcreteShot] = Cast(FaceCenter.Y + FaceB, 0.505f, (c, half, top, toFace, across) =>
         {
             foreach (var height in new[] { FaceCenter.Y, FaceCenter.Y + 14f, FaceCenter.Y + 28f })
             {
@@ -263,21 +301,21 @@ internal static unsafe class Colossus
                 var to = back + (across * ((half * 2.2f) + 14f));
                 if (top > height + 20f && PathClear(from, to))
                 {
-                    return new Shot(shots[6].Start, from, to, FaceCenter, FaceCenter + new SN.Vector3(0f, 2f, 0f), 34f, 0.04f);
+                    return new Shot(shots[ConcreteShot].Start, from, to, FaceCenter, FaceCenter + new SN.Vector3(0f, 2f, 0f), 34f, 0.04f);
                 }
             }
 
             return null;
-        }) ?? shots[6];
-        // 9: beside bronze cladding, panning from the tower's upper corner to the face. Seed 0.4684 is bronze (0.34).
-        result[9] = Cast(FaceCenter.Y + 10f, 0.4684f, (c, half, top, toFace, across) =>
+        }) ?? shots[ConcreteShot];
+        // 10: beside bronze cladding, panning from the tower's upper corner to the face. Seed 0.4684 is bronze (0.34).
+        result[BronzeShot] = Cast(FaceCenter.Y + 10f, 0.4684f, (c, half, top, toFace, across) =>
         {
             var side = c + (across * ((half * 1.42f) + 4f));
             var from = side - (toFace * half * 0.8f) + new SN.Vector3(0f, 8f, 0f);
             var to = side + (toFace * half * 0.6f) + new SN.Vector3(0f, 14f, 0f);
             var corner = c + (toFace * half) + new SN.Vector3(0f, MathF.Min(top - 4f, FaceCenter.Y + 10f), 0f);
-            return PathClear(from, to) ? new Shot(shots[9].Start, from, to, corner, FaceCenter, 45f, 0.05f) : null;
-        }) ?? shots[9];
+            return PathClear(from, to) ? new Shot(shots[BronzeShot].Start, from, to, corner, FaceCenter, 45f, 0.05f) : null;
+        }) ?? shots[BronzeShot];
         Console.WriteLine($"CINEMATIC towers cast: {string.Join(", ", cast.Select(c => $"{c.Tower} at {placed[c.Tower].Center} as {Style(c.Seed):0.00}"))}");
 
         // Any other shot whose move would pass through a tower moves in toward what it looks at until it is clear, or
@@ -285,14 +323,14 @@ internal static unsafe class Colossus
         for (var i = 0; i < result.Length; i++)
         {
             var s = result[i];
-            if (PathClear(s.EyeFrom, s.EyeTo))
+            if (ShotClear(s))
             {
                 continue;
             }
 
             var moved = Enumerable.Range(1, 7).Select(k => s with { EyeFrom = SN.Vector3.Lerp(s.EyeFrom, s.LookFrom, k / 10f), EyeTo = SN.Vector3.Lerp(s.EyeTo, s.LookTo, k / 10f) })
                 .Concat(Enumerable.Range(1, 8).Select(k => s with { EyeFrom = s.EyeFrom + new SN.Vector3(0f, k * 10f, 0f), EyeTo = s.EyeTo + new SN.Vector3(0f, k * 10f, 0f) }))
-                .FirstOrDefault(m => PathClear(m.EyeFrom, m.EyeTo), s);
+                .FirstOrDefault(ShotClear, s);
             Console.WriteLine($"CINEMATIC shot {i} at {s.Start} s passed through a tower: {(moved == s ? "left as it is" : $"now from {moved.EyeFrom} to {moved.EyeTo}")}");
             result[i] = moved;
         }
@@ -2483,7 +2521,7 @@ internal static unsafe class Colossus
         var reason = "window closed";
         var stale = false;
         var forceNight = args.Contains("--night");
-        var (bounces, bounceChanged, bounceDropped, gpuSmooth, gpuBudget) = (3, 0.0, -100.0, 0.0, (double)Arg(args, "--gpu-budget", 16));
+        var (bounces, bounceChanged, bounceDropped, gpuSmooth, gpuBudget) = (3, 0.0, -100.0, 0.0, (double)Arg(args, "--gpu-budget", 14));
         var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
 
         // The recording: each frame's image goes to ffmpeg as it is made, and OpenAL's mix of the same sixtieth of a
@@ -2909,9 +2947,10 @@ internal static unsafe class Colossus
             // Camera: a preset, turned by the drag, zoomed by the wheel, drifting slowly, eased in; or the cinematic, its shots
             // cut hard, in time with the swarm's cycle.
             var fov = 55f;
+            var roll = 0f;
             if (preset == 3)
             {
-                (camEye, camTarget, fov) = Cinematic(now - cycleStart - 3.0);
+                (camEye, camTarget, fov, roll) = Cinematic(now - cycleStart - 3.0);
                 shownPreset = 3;
             }
             else
@@ -2944,7 +2983,11 @@ internal static unsafe class Colossus
             projection.M33 = 0f; // reversed, infinite depth: 1 at the near plane, 0 at infinity
             projection.M43 = Near;
             projection.M22 = -projection.M22; // Vulkan's clip space has y pointing down
-            var view = SN.Matrix4x4.CreateLookAt(camEye, camTarget, SN.Vector3.UnitY);
+            // The horizon leans by roll degrees: up turns about the line of sight.
+            var camForward = SN.Vector3.Normalize(camTarget - camEye);
+            var camSide = SN.Vector3.Normalize(SN.Vector3.Cross(camForward, SN.Vector3.UnitY));
+            var camUp = (SN.Vector3.Cross(camSide, camForward) * MathF.Cos(roll * MathF.PI / 180f)) + (camSide * MathF.Sin(roll * MathF.PI / 180f));
+            var view = SN.Matrix4x4.CreateLookAt(camEye, camTarget, camUp);
             var viewProj = view * projection;
             SN.Matrix4x4.Invert(viewProj, out var inverseViewProj);
             // A recording fades in from black and out to it, without grain so it compresses; the cinematic's black bands.
@@ -2977,7 +3020,7 @@ internal static unsafe class Colossus
                     gpuTimes[1].Add((ticks[2] - ticks[1]) * tickMs);
                     gpuTimes[2].Add((ticks[3] - ticks[2]) * tickMs);
                     gpuTimes[3].Add((ticks[3] - ticks[0]) * tickMs);
-                    // --pt: the paths lose a bounce while the GPU is over its budget (16 ms, or --gpu-budget), and win it
+                    // --pt: the paths lose a bounce while the GPU is over its budget (14 ms, or --gpu-budget), and win it
                     // back once well under it, no sooner than 20 s after losing it, so that a scene just over the budget
                     // does not flicker between two levels of light. In 4K a bounce costs more than DLSS's
                     // resolution saves: performance over quality took 2.25 ms off 19.88.
