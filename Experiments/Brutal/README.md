@@ -1151,6 +1151,17 @@ The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swar
   from the seconds with a capture. Lego tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching
   past 18 m, and a valid six-armed variant).
 - **To verify:** the writhing and the moiré in a visible window, at 60 fps, from a recording.
+**Machines, not cubes** (2026-10-22, asked as « chaque machine devrait etre plus qu'un cube si possible et avoir sa vie
+propre »). Each machine of the swarm is now a small craft (`Machine`), built in code rather than in Blender, so that no
+asset has to ship: a hull with its corners cut, swelling behind the nose and narrowing to the tail, a pod down each
+flank, an eye over the nose and thrusters at the tails, in 116 flat-shaded triangles. It is drawn in its own draw call
+and has its own bottom-level structure for the rays. It is chunky on purpose: a machine is a few pixels across most of
+the time, and thin parts would shimmer.
+- **Its own life.** Its eye blinks on its own clock. Its thrusters burn with its speed, which rides in the seed's whole
+  part, and go dark once it settles. In flight it banks into its turns and sways a little, each on its own phase.
+- **Measured.** Hidden, path traced, DLSS Quality, 42 s: frame p50 16.65 ms, p95 18.29 ms; GPU 7.33 ms p50 and 9.93 ms
+  p95, against 6.40 and 10.10 with cubes in the kraken's run before.
+- **To verify:** whether the eyes' specks twinkle on the face at a distance, in a recording.
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.

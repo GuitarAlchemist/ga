@@ -678,8 +678,11 @@ internal static unsafe class Colossus
             bool side = abs(un.y) < 0.5;
             if (kind > 0.5 && kind < 1.5)
             {
-                // A machine: its hull, and its eye, which pulses.
-                vec2 uv = st / 1.2 + seed * vec2(7.31, 3.17);
+                // A machine: its hull, its darker pods, an eye over its nose that blinks on its own clock, and thrusters
+                // that burn with its speed, which rides in the seed's whole part (0 to 15).
+                float own = fract(seed);
+                float thrust = floor(seed) / 15.0;
+                vec2 uv = st / 1.2 + own * vec2(7.31, 3.17);
                 vec4 map = tex(uv, 1.0, 1.2, footprint);
                 s.albedo = pow(tex(uv, 0.0, 1.2, footprint).rgb, vec3(2.2)) * 0.45;
                 // Settled on a Lego block (kind 1 to 1.4), the hull takes the box's colour, its grain still showing.
@@ -687,8 +690,22 @@ internal static unsafe class Colossus
                 s.bump = (map.rg * 2.0 - 1.0) * 2.0;
                 s.rough = map.b;
                 s.f0 = 0.15;
-                float eye = (1.0 - smoothstep(0.18, 0.32, length(unit.xy))) * step(0.49, unit.z);
-                s.emit += vec3(1.0, 0.3, 0.06) * eye * (2.5 + 1.5 * sin(t * 6.0 + seed * 40.0));
+                if (mat > 1.5 && mat < 2.5)
+                {
+                    s.albedo *= 0.5;
+                    s.f0 = 0.3;
+                }
+                else if (mat > 2.5 && mat < 3.5)
+                {
+                    float open = step(0.05, fract(t * (0.23 + 0.17 * own) + own * 13.0));
+                    s.albedo = vec3(0.02);
+                    s.emit += vec3(0.45, 0.8, 1.0) * 2.0 * open;
+                }
+                else if (mat > 3.5)
+                {
+                    s.albedo = vec3(0.02);
+                    s.emit += vec3(1.0, 0.3, 0.06) * (0.3 + 4.5 * thrust) * (0.9 + 0.1 * sin(t * 41.0 + own * 90.0));
+                }
             }
             else if (kind > 1.5 && kind < 2.5)
             {
@@ -1270,7 +1287,7 @@ internal static unsafe class Colossus
     // Two buffers of every body's state: the one drawn, and the one Jolt's worker reads the next step into.
     private static BodyState[] _states = [], _statesBack = [];
     private static SN.Vector3[] _faceP = [], _faceN = [], _dirs = [];
-    private static float[] _eye = [], _mouth = [], _jaw = [], _phase = [], _radius = [], _height = [], _speed = [];
+    private static float[] _eye = [], _mouth = [], _jaw = [], _phase = [], _radius = [], _height = [], _speed = [], _bank = [];
     private static float _memberRadius;
 
     // What the swarm builds between two faces, one a cycle in turn: Lego blocks, each a point a machine on its faces
@@ -2071,11 +2088,13 @@ internal static unsafe class Colossus
             lastFrame = new Drawn[MaxInstances];
         }
 
-        // One cube, then the modelled towers, and per frame in flight an instance buffer that stays mapped.
+        // One cube, then the modelled towers and the machine, and per frame in flight an instance buffer that stays mapped.
         var cube = new List<MeshVertex>();
         Cube(cube);
         var cubeCount = cube.Count;
         var towerVariants = LoadTowers(Path.Combine(AppContext.BaseDirectory, "city", "towers.glb"), cube);
+        var machine = Machine(cube);
+        var machineMesh = towerVariants.Length + 1;
         var meshSize = new ByteSize((nuint)(cube.Count * sizeof(MeshVertex)));
         VkBuffer meshBuffer;
         VkDeviceMemory meshMemory;
@@ -2343,7 +2362,7 @@ internal static unsafe class Colossus
         // RTX: one bottom-level structure for the cube and one per tower variant, built once; per frame in flight, a
         // top-level structure over every instance, rebuilt each frame as the swarm moves. The static instances are written
         // once; lamps are left out of the shadow rays.
-        var rt = rtx ? new RayScene(device, physical, queue, commands[0], meshBuffer, cubeCount, towerVariants, FramesInFlight, MaxInstances) : null;
+        var rt = rtx ? new RayScene(device, physical, queue, commands[0], meshBuffer, cubeCount, [.. towerVariants, (machine.First, machine.Count, 0f)], FramesInFlight, MaxInstances) : null;
         if (rt is not null)
         {
             for (var i = 0; i < FramesInFlight; i++)
@@ -3108,7 +3127,7 @@ internal static unsafe class Colossus
             var useRay = useDlss && rayOn;
             var target = useDlss ? thisFrame.AsSpan() : new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
-            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length, build, shape, buildYaw);
+            var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length, build, shape, buildYaw, (float)simTime, machineMesh);
             var forward = SN.Vector3.Normalize(camTarget - camEye);
             var dlssReset = !dlssWasOn || useRay != rayWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
             if (useDlss)
@@ -3170,7 +3189,8 @@ internal static unsafe class Colossus
 
             cb.BindVertexBuffer(0, meshBuffer);
             cb.BindVertexBuffer(1, instanceBuffers[slot]);
-            cb.Draw(cubeCount, drawn - towerInstances, 0, towerInstances);
+            cb.Draw(cubeCount, staticInstances.Length - towerInstances, 0, towerInstances);
+            cb.Draw(machine.Count, drawn - staticInstances.Length, machine.First, staticInstances.Length);
             for (var v = 0; v < towerVariants.Length; v++)
             {
                 if (towerRanges[v].Count > 0)
@@ -3572,6 +3592,7 @@ internal static unsafe class Colossus
         _faceP = new SN.Vector3[n];
         _faceN = new SN.Vector3[n];
         _dirs = new SN.Vector3[n];
+        _bank = new float[n];
         _eye = new float[n];
         _mouth = new float[n];
         _jaw = new float[n];
@@ -3973,7 +3994,9 @@ internal static unsafe class Colossus
     // with Jolt's worker and its jobs for the cores. One loop it stays.
     // Between two faces, build (0 to 1) tints each machine with the colour of the Lego box it settles on, lights it with
     // that box's glow, and lays it flat on the box: shape names the block, last built, and yaw its turn.
-    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, float ahead, float frameDt, RayScene? rt, int slot, int first, float build, int shape, float yaw)
+    // Each machine also lives on its own: in flight it banks into its turns and sways on its own clock, and its
+    // thrusters burn with its speed, which rides in the seed's whole part (0 to 15). mesh is the machine's for the rays.
+    private static int WriteSwarm(Span<Drawn> o, float glow, float speech, float hearing, float ahead, float frameDt, RayScene? rt, int slot, int first, float build, int shape, float yaw, float t, int mesh)
     {
         var (cos, sin) = (MathF.Cos(yaw), MathF.Sin(yaw));
         var built = build > 0.01f && shape >= 0 && shape < _buildP.Length;
@@ -3992,8 +4015,15 @@ internal static unsafe class Colossus
             var slope = MathF.Abs(normal.Y) > 0.95f ? SN.Vector3.UnitZ - (normal * normal.Z) : (normal * normal.Y) - SN.Vector3.UnitY;
             var want = v.LengthSquared() > 4f ? SN.Vector3.Normalize(v) : settled ? SN.Vector3.Normalize(slope) : _dirs[i];
             var d = SN.Vector3.Normalize(SN.Vector3.Lerp(_dirs[i], want, turn));
-            _dirs[i] = d;
             var up = settled && MathF.Abs(SN.Vector3.Dot(d, normal)) < 0.9f ? normal : MathF.Abs(d.Y) > 0.95f ? SN.Vector3.UnitX : SN.Vector3.UnitY;
+            // The bank: against the turn's rate about up, so up leans into the turn, plus a sway of its own; settled, none.
+            var yawRate = SN.Vector3.Dot(SN.Vector3.Cross(_dirs[i], d), up) / MathF.Max(frameDt, 1e-3f);
+            var bank = settled ? 0f : Math.Clamp(-0.6f * yawRate, -0.9f, 0.9f) + (0.18f * MathF.Sin((t * (0.7f + (0.08f * _phase[i]))) + (_phase[i] * 5f)));
+            _bank[i] += (bank - _bank[i]) * turn;
+            _dirs[i] = d;
+            var (bc, bs) = (MathF.Cos(_bank[i]), MathF.Sin(_bank[i]));
+            up = (up * bc) + (SN.Vector3.Cross(d, up) * bs) + (d * (SN.Vector3.Dot(d, up) * (1f - bc)));
+            var thrust = settled ? 0f : Math.Clamp((MathF.Sqrt(v.LengthSquared()) - 1f) / 10f, 0f, 1f);
             var emission = ((_eye[i] * 5f * (1f + (1.5f * hearing))) + (_mouth[i] * 2.5f * speech)) * glow;
             var color = SN.Vector3.Lerp(Metal, Amber, MathF.Min(1f, _eye[i] + (_mouth[i] * speech)) * glow);
             var tint = 0f;
@@ -4008,8 +4038,8 @@ internal static unsafe class Colossus
             }
 
             var model = (settled ? flat : scale) * SN.Matrix4x4.CreateWorld(p, d, up);
-            rt?.Write(slot, first + i, model, 0, false, swarm: true);
-            o[i] = new Drawn(model, new SN.Vector4(color, emission), new SN.Vector4(1f + (0.4f * tint), i * 0.618034f % 1f, 0f, 0f));
+            rt?.Write(slot, first + i, model, mesh, false, swarm: true);
+            o[i] = new Drawn(model, new SN.Vector4(color, emission), new SN.Vector4(1f + (0.4f * tint), (i * 0.618034f % 1f) + MathF.Floor(thrust * 15f), 0f, 0f));
         }
 
         return n;
@@ -4238,6 +4268,64 @@ internal static unsafe class Colossus
             SN.Vector3 Corner(float su, float sv) => 0.5f * (n + (su * u) + (sv * v));
             o.AddRange([new(Corner(-1, -1), n), new(Corner(1, -1), n), new(Corner(1, 1), n), new(Corner(-1, -1), n), new(Corner(1, 1), n), new(Corner(-1, 1), n)]);
         }
+    }
+
+    // A machine in the unit cube, its nose toward -z (where CreateWorld points it): a hull with its corners cut, which
+    // swells behind the nose and narrows to the tail, an eye over the nose (material 3), a pod down each flank (2), and
+    // thrusters at the tail of the hull and of each pod (4). 116 flat-shaded triangles. Chunky on purpose: a machine is
+    // a few pixels across most of the time, and thin parts would shimmer as it moves.
+    private static (int First, int Count) Machine(List<MeshVertex> o)
+    {
+        var first = o.Count;
+        void Tri(SN.Vector3 a, SN.Vector3 b, SN.Vector3 c, SN.Vector3 outward, float material)
+        {
+            var n = SN.Vector3.Normalize(SN.Vector3.Cross(b - a, c - a));
+            if (SN.Vector3.Dot(n, outward) < 0f)
+            {
+                (b, c, n) = (c, b, -n);
+            }
+
+            o.AddRange([new(a, n, material), new(b, n, material), new(c, n, material)]);
+        }
+
+        // Eight points round an axis parallel to z through (x, y), w and h from it to the sides, the corners cut.
+        static SN.Vector3[] Ring(float z, float w, float h, float x, float y) =>
+            [.. new (float U, float V)[] { (1f, 0.45f), (0.45f, 1f), (-0.45f, 1f), (-1f, 0.45f), (-1f, -0.45f), (-0.45f, -1f), (0.45f, -1f), (1f, -0.45f) }
+                .Select(c => new SN.Vector3(x + (c.U * w), y + (c.V * h), z))];
+
+        // A loft through rings (z, half width, half height) round (x, y), capped: its tail (+z) a thruster, its front cap
+        // of material front.
+        void Loft((float Z, float W, float H)[] rings, float x, float y, float side, float front)
+        {
+            var points = rings.Select(r => Ring(r.Z, r.W, r.H, x, y)).ToArray();
+            for (var k = 0; k + 1 < points.Length; k++)
+            {
+                for (var j = 0; j < 8; j++)
+                {
+                    var (a, b, c, d) = (points[k][j], points[k][(j + 1) % 8], points[k + 1][(j + 1) % 8], points[k + 1][j]);
+                    var outward = new SN.Vector3(((a.X + c.X) / 2f) - x, ((a.Y + c.Y) / 2f) - y, 0f);
+                    Tri(a, b, c, outward, side);
+                    Tri(a, c, d, outward, side);
+                }
+            }
+
+            foreach (var (ring, material) in new[] { (points[0], 4f), (points[^1], front) })
+            {
+                var outward = new SN.Vector3(0f, 0f, ring[0].Z > 0f ? 1f : -1f);
+                for (var j = 1; j < 7; j++)
+                {
+                    Tri(ring[0], ring[j], ring[j + 1], outward, material);
+                }
+            }
+        }
+
+        Loft([(0.46f, 0.26f, 0.3f), (0.2f, 0.34f, 0.46f), (-0.18f, 0.3f, 0.42f), (-0.44f, 0.15f, 0.2f)], 0f, 0f, 0f, 3f);
+        foreach (var x in new[] { -0.4f, 0.4f })
+        {
+            Loft([(0.5f, 0.09f, 0.15f), (-0.12f, 0.06f, 0.1f)], x, -0.05f, 2f, 2f);
+        }
+
+        return (first, o.Count - first);
     }
 
     private static VkImageViewCreateInfo View(VkImage image, VkFormat format, VkImageAspectFlags aspect, int levels = 1) => new()
