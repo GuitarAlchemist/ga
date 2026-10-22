@@ -1086,6 +1086,40 @@ Each second, the log gives the frames drawn and the frames shown. At the end, it
   minimised and restored in 1600 × 900 and in 4K, the runs went on to their time limit. But those runs could not keep
   the focus, so they generated nothing, before or after.
 
+**Night, HUD-less colour, fewer bounces in 4K** (asked as « tout? », after the choice of dusk, the NGX plugins, the
+HUD-less tag and adaptive quality).
+- **Night.** Every fourth cycle, the sun sinks below the horizon as the face forms, from 70 s into the four cycles to
+  82 s. Night holds through that cycle's Lego block, and the sun comes back over the next cloud, from 98 s to 110 s.
+  - **The sky.** It turns violet at the horizon and deep blue above, and stars come out where the smog is thin. The
+    abyss keeps its glow.
+  - **The light.** The sun's light fades with its height. Lamps, windows and Lego glows burn three times as bright,
+    and the machines keep theirs. The exposure opens by 60 %.
+  - **Testing.** `--night` keeps it night. With the sun at its usual height, the shaders give the same image as before.
+  - **Measured.** In a 112 s hidden run, path traced, night went from 0.02 at 78 s to 1.00 at 90 s and was back to
+    0.62 at 110 s. The run drew 60 frames a second through it, GPU 6.96 ms p50.
+- **HUD-less colour.** With `--fg`, the panel and subtitles are drawn in a render pass of their own. Before them, the
+  image is copied out and tagged as Streamline's HUD-less colour, so that the generated frames do not smear the text.
+  A hidden run with the panel showed it drawn as before.
+- **Fewer bounces in 4K.** With `--pt`, the paths lose a bounce while the GPU's time goes over 16 ms
+  (`--gpu-budget`), down to one. They win it back below 65 % of that, at most once a second. DLSS's resolution was the
+  wrong lever: performance over quality took only 2.25 ms off 19.88. In 4K, hidden, 40 s, path traced with DLSS
+  quality:
+
+  | | GPU ms, p50 / p95 | Frames a second |
+  |---|---|---|
+  | Three bounces (before) | 19.88 / 34.11 | frame p50 20.84 ms |
+  | Adaptive: one bounce after 13 s | 13.76 / 21.82 | 58.1 on average; 21 of 27 seconds at 59 or 60 |
+
+  At 1600 × 900, the GPU stays near 7 ms, and the paths keep their three bounces.
+- **Streamline's plugins.** Streamline loads its six plugins in version 2.14.16 from the driver's own store
+  (`C:\ProgramData\NVIDIA\NGX\models\sl_*_override_0`), in place of the SDK's 2.14.1. It does this although
+  `eAllowOTA` and `eLoadDownloadedPlugins` are not set. All six carry a valid Authenticode signature from NVIDIA
+  Corporation. The Colossus neither downloads nor ships them.
+
+**To verify:**
+- Night in 4K with frame generation.
+- The HUD-less tag's effect, which needs a visible, focused window with the panel or subtitles.
+- How one bounce looks next to three in 4K. The indirect light is darker with fewer bounces.
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.

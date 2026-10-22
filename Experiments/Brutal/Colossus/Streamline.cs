@@ -23,7 +23,7 @@ internal sealed unsafe class Dlss
     private const uint FeatureDlss = 0, FeatureRay = 1001, FeatureFrames = 1000, FeatureReflex = 3, FeaturePcl = 4;
     // Streamline 2.14.1 and its magic number, as sl_version.h builds kSDKVersion.
     private const ulong SdkVersion = (2ul << 48) | (14ul << 32) | (1ul << 16) | 0xfedc;
-    private const uint BufferDepth = 0, BufferMotion = 1, BufferInput = 3, BufferOutput = 4;
+    private const uint BufferDepth = 0, BufferMotion = 1, BufferHudLess = 2, BufferInput = 3, BufferOutput = 4;
     private const uint BufferAlbedo = 7, BufferSpecularAlbedo = 8, BufferNormalRoughness = 14, BufferSpecularHitDistance = 42;
     private const int ValidUntilPresent = 1;
     // Streamline's files that this loads, each checked first: the interposer, the common plugin, DLSS's plugin, NGX's DLSS.
@@ -923,7 +923,7 @@ internal sealed unsafe class Dlss
     // Motion is in UV units, from where a pixel is to where it was. With guides, Ray Reconstruction runs in DLSS's place,
     // in the same mode. False, the first time only, when Streamline refuses.
     public bool Evaluate(nint commandBuffer, uint frame, uint mode, SN.Matrix4x4 view, SN.Matrix4x4 projection, SN.Matrix4x4 previousViewProjection,
-        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output, Guides? guides = null)
+        SN.Vector2 jitter, bool reset, float fovY, float near, Image depth, Image motion, Image input, Image output, Guides? guides = null, Image? hudLess = null)
     {
         var ray = guides is not null && RayReconstruction;
         var viewProjection = view * projection;
@@ -983,8 +983,8 @@ internal sealed unsafe class Dlss
             WorldToCameraView = view,
             CameraViewToWorld = camera,
         };
-        var resources = stackalloc Resource[8];
-        var tags = stackalloc ResourceTag[8];
+        var resources = stackalloc Resource[9];
+        var tags = stackalloc ResourceTag[9];
         static void Tag(Resource* resource, ResourceTag* tag, Image image, uint type)
         {
             *resource = new Resource
@@ -1016,6 +1016,14 @@ internal sealed unsafe class Dlss
             Tag(&resources[7], &tags[7], guides.Value.HitDistance, BufferSpecularHitDistance);
         }
 
+        // For frame generation, the final image without the panel and subtitles, so that it does not smear them.
+        var count = ray ? 8u : 4u;
+        if (hudLess is { } plain)
+        {
+            Tag(&resources[count], &tags[count], plain, BufferHudLess);
+            count++;
+        }
+
         // The frame's token from BeginFrame, or a new one.
         var token = _tokenFrame == frame ? _token : 0;
         var result = token != 0 ? 0 : _getNewFrameToken(&token, &frame);
@@ -1044,7 +1052,7 @@ internal sealed unsafe class Dlss
         if (result == 0)
         {
             step = "slSetTagForFrame";
-            result = _setTagForFrame(token, &viewport, tags, ray ? 8u : 4u, commandBuffer);
+            result = _setTagForFrame(token, &viewport, tags, count, commandBuffer);
         }
 
         if (result == 0)

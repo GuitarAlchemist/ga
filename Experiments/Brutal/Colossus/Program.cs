@@ -373,19 +373,39 @@ internal static unsafe class Colossus
             f = f * f * (3.0 - 2.0 * f);
             return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x), mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
         }
+        // How far night has fallen: 0 with the sun where it usually hangs, low over the city; 1 once it has set.
+        float nightOf(vec3 sun)
+        {
+            return 1.0 - smoothstep(-0.10, 0.18, sun.y);
+        }
         vec3 sky(vec3 d, vec3 sun, float t)
         {
+            float night = nightOf(sun);
+            float day = 1.0 - night;
             float h = d.y;
+            // At night the horizon cools to violet and the zenith to deep blue; the abyss below keeps its glow.
+            vec3 horizon = mix(vec3(0.50, 0.22, 0.07), vec3(0.07, 0.045, 0.10), night);
             vec3 c = h >= 0.0
-                ? mix(vec3(0.50, 0.22, 0.07), vec3(0.010, 0.008, 0.014), pow(clamp(h, 0.0, 1.0), 0.42))
-                : mix(vec3(0.50, 0.22, 0.07), vec3(0.12, 0.05, 0.018), pow(clamp(-h, 0.0, 1.0), 0.35));
+                ? mix(horizon, mix(vec3(0.010, 0.008, 0.014), vec3(0.003, 0.004, 0.012), night), pow(clamp(h, 0.0, 1.0), 0.42))
+                : mix(horizon, vec3(0.12, 0.05, 0.018), pow(clamp(-h, 0.0, 1.0), 0.35));
             vec2 q = d.xz / (abs(h) + 0.18);
             float smog = noise(q * 1.7 + vec2(t * 0.01, 0.0)) * 0.6 + noise(q * 4.3 - vec2(0.0, t * 0.015)) * 0.4;
             float band = smoothstep(0.35, 0.8, smog) * exp(-abs(h) * 5.0);
             float s = max(dot(d, sun), 0.0);
-            c = mix(c, c * 0.45, band * 0.7) + vec3(1.0, 0.45, 0.15) * band * pow(s, 4.0) * 0.6;
-            c += vec3(1.0, 0.52, 0.2) * (pow(s, 5.0) * 0.55 + pow(s, 48.0) * 1.6);
-            c += vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s) * 40.0;
+            c = mix(c, c * 0.45, band * 0.7) + vec3(1.0, 0.45, 0.15) * band * pow(s, 4.0) * 0.6 * day;
+            c += vec3(1.0, 0.52, 0.2) * (pow(s, 5.0) * 0.55 * (1.0 - 0.6 * night) + pow(s, 48.0) * 1.6 * day);
+            c += vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s) * 40.0 * day;
+            // Stars, where the smog is thin, a few of them brighter, each twinkling at its own pace.
+            if (night > 0.0 && h > 0.0)
+            {
+                vec2 g = d.xz / (h + 0.3) * 260.0;
+                vec2 cell = floor(g);
+                float r = hash12(cell);
+                vec2 at = fract(g) - 0.5 - (vec2(hash12(cell + 17.0), hash12(cell + 31.0)) - 0.5) * 0.6;
+                float star = step(0.975, r) * smoothstep(0.2, 0.0, length(at)) * (0.3 + 28.0 * (r - 0.975)) * (0.65 + 0.35 * sin(t * 1.7 + r * 90.0));
+                c += vec3(0.75, 0.82, 1.0) * star * night * smoothstep(0.04, 0.25, h) * (1.0 - band) * 0.5;
+            }
+
             return c;
         }
 
@@ -492,7 +512,15 @@ internal static unsafe class Colossus
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         #endif
         layout(location = 0) out vec4 outColor;
-        const vec3 SunColor = vec3(1.0, 0.56, 0.26);
+        // The sun's light, and the night's: main dims the one and turns up the city's glows by the other.
+        vec3 SunColor = vec3(1.0, 0.56, 0.26);
+        float Night = 0.0;
+        // How much brighter a glow is at night: three times for lamps, windows and Lego glows; the machines' (kind 1 to
+        // 1.4) not at all, so that a block they build keeps its stone.
+        float nightGlow(float kind)
+        {
+            return abs(kind - 1.2) < 0.25 ? 1.0 : 1.0 + Night * 2.0;
+        }
         const vec3 Bronze = vec3(0.55, 0.36, 0.2);
         const vec3 Steel = vec3(0.42, 0.43, 0.45);
         const vec3 DarkSteel = vec3(0.22, 0.22, 0.23);
@@ -739,7 +767,8 @@ internal static unsafe class Colossus
         // The light that does not come from the sun: a warm bounce from the abyss below, the cool sky above.
         vec3 skylight(vec3 n)
         {
-            return mix(vec3(0.07, 0.035, 0.015), vec3(0.03, 0.04, 0.065), n.y * 0.5 + 0.5);
+            vec3 c = mix(vec3(0.07, 0.035, 0.015), vec3(0.03, 0.04, 0.065), n.y * 0.5 + 0.5);
+            return mix(c, c * vec3(0.35, 0.42, 0.75), Night);
         }
 
         // Interleaved gradient noise: a fixed pattern on screen, which spreads a few rays evenly between neighbours.
@@ -802,13 +831,14 @@ internal static unsafe class Colossus
         #endif
 
         #ifdef PT
-        // --pt, path tracing: each pixel follows one path of up to Bounces bounces from its surface instead of the
+        // --pt, path tracing: each pixel follows one path of up to three bounces from its surface instead of the
         // ambient, fill, rim, occlusion and mirror rays. At each bounce it picks the specular lobe (the mirror of a GGX
         // microfacet) or the diffuse one (cosine-weighted) by how much the surface reflects. Where the ray lands it adds
         // that surface's glow and the sun on it, behind its own shadow ray, hazed by distance. A ray that leaves the scene
         // brings the sky's light without the sun's disc, which the shadow rays already count. One path a pixel is
-        // noisy: Ray Reconstruction gathers the paths over the frames and between neighbours.
-        const int Bounces = 3;
+        // noisy: Ray Reconstruction gathers the paths over the frames and between neighbours. The bounces come in
+        // pc.params.y: fewer while the GPU is over its budget.
+        int bounces() { return int(pc.params.y + 0.5); }
 
         struct Hit { vec3 p; vec3 n; float d; Surface s; };
 
@@ -838,6 +868,7 @@ internal static unsafe class Colossus
             vec3 hpm = hit.extra.x > 3.5 && hit.extra.x < 4.5 ? hunit : hunit * hscale;
             float foot = footprint + h.d * 0.0012;
             h.s = surface(hit.extra.x, mesh[at + 6u], hit.color, hit.extra.y, hunit, hpm, boxST(hpm, hun), hun, hscale, foot, foot, t);
+            h.s.emit *= nightGlow(hit.extra.x);
             h.n = normalize(hun * mat3(w2o));
             h.n = dot(h.n, r) > 0.0 ? -h.n : h.n;
             return true;
@@ -860,7 +891,7 @@ internal static unsafe class Colossus
             vec3 light = vec3(0.0);
             vec3 weight = vec3(1.0);
             firstHit = -1.0;
-            for (int b = 0; b < Bounces; b++)
+            for (int b = 0; b < bounces(); b++)
             {
                 vec2 u = vec2(ign(pixel + vec2(31.0, 7.0) * float(b + 1)), ign(pixel + vec2(11.0, 53.0) * float(b + 1)));
                 float pick = ign(pixel + vec2(97.0, 41.0) * float(b + 1));
@@ -892,7 +923,7 @@ internal static unsafe class Colossus
                 if (!trace(p + g * 0.04, r, footprint, t, h))
                 {
                     float s2 = max(dot(r, sun), 0.0);
-                    light += weight * (sky(r, sun, t) - vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s2) * 40.0);
+                    light += weight * (sky(r, sun, t) - vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s2) * 40.0 * (1.0 - Night));
                     break;
                 }
 
@@ -921,6 +952,8 @@ internal static unsafe class Colossus
             float dist = length(toEye);
             vec3 v = toEye / dist;
             vec3 sun = pc.sun.xyz;
+            Night = nightOf(sun);
+            SunColor *= 1.0 - Night;
             float t = pc.eye.w;
             float kind = vExtra.x;
             // Modelled towers map in their own metres, so that window cells keep to the floors at any scale.
@@ -928,6 +961,7 @@ internal static unsafe class Colossus
             vec2 st = boxST(p, vUnitNormal);
             float px = max(max(fwidth(st.x), fwidth(st.y)), 1e-4);
             Surface s = surface(kind, vMaterial, vColor, vExtra.y, vUnit, p, st, vUnitNormal, vScale, -1.0, px, t);
+            s.emit *= nightGlow(kind);
             vec3 n = normalize(ng + vTangent * s.bump.x + vBitangent * s.bump.y);
             float mirror = (1.0 - s.rough) * (1.0 - s.rough);
             float fog = 1.0 - exp(-dist * 0.0028);
@@ -1026,6 +1060,7 @@ internal static unsafe class Colossus
                         vec3 hpm = hit.extra.x > 3.5 && hit.extra.x < 4.5 ? hunit : hunit * hscale;
                         float foot = (dist + d) * 0.0012;
                         Surface hs = surface(hit.extra.x, mesh[at + 6u], hit.color, hit.extra.y, hunit, hpm, boxST(hpm, hun), hun, hscale, foot, foot, t);
+                        hs.emit *= nightGlow(hit.extra.x);
                         vec3 hn = normalize(hun * mat3(w2o));
                         hn = dot(hn, r) > 0.0 ? -hn : hn;
                         float hl = max(dot(hn, sun), 0.0);
@@ -1061,7 +1096,7 @@ internal static unsafe class Colossus
             float dd = nh * nh * (a2 - 1.0) + 1.0;
             vec3 spec = SunColor * 1.8 * (a2 / (3.14159 * dd * dd)) * 0.25 / (lh * lh) * (f0 + (1.0 - f0) * pow(1.0 - lh, 5.0)) * ndl;
             vec3 ambient = skylight(n) * ao;
-            vec3 fill = vec3(0.2, 0.25, 0.38) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0) * ao;
+            vec3 fill = vec3(0.2, 0.25, 0.38) * (1.0 - 0.6 * Night) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0) * ao;
             float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
             vec3 reflected = traced.x >= 0.0 ? traced : sky(mirrored, sun, t);
             vec3 env = fresnel * mix(ambient * 2.0, reflected, mirror);
@@ -1648,6 +1683,29 @@ internal static unsafe class Colossus
             DependencyCount = 1,
             Dependencies = &dependency,
         }, null);
+
+        // With frame generation, the panel and subtitles are drawn in a pass of their own on the same framebuffers. The
+        // image without them is copied out first, for Streamline's HUD-less tag, so that the generated frames do not
+        // smear the text.
+        var hudPass = default(VkRenderPass);
+        (VkImage Image, VkDeviceMemory Memory, VkImageView View) hudLess = default;
+        const VkImageUsageFlags hudLessUsage = VkImageUsageFlags.TransferDstBit | VkImageUsageFlags.SampledBit;
+        if (frameGen)
+        {
+            attachments[0].LoadOp = VkAttachmentLoadOp.Load;
+            attachments[0].InitialLayout = VkImageLayout.ColorAttachmentOptimal;
+            attachments[1].LoadOp = VkAttachmentLoadOp.DontCare;
+            hudPass = device.CreateRenderPass(new VkRenderPassCreateInfo
+            {
+                AttachmentCount = 2,
+                Attachments = attachments,
+                SubpassCount = 1,
+                Subpasses = &subpass,
+                DependencyCount = 1,
+                Dependencies = &dependency,
+            }, null);
+            hudLess = Target(device, physical, extent, surfaceFormat.Format, VkSampleCountFlags._1Bit, 1, hudLessUsage, VkImageAspectFlags.ColorBit);
+        }
 
         var views = new VkImageView[images.Length];
         var framebuffers = new VkFramebuffer[images.Length];
@@ -2368,6 +2426,8 @@ internal static unsafe class Colossus
         var errors = PhysicsUpdateError.None;
         var reason = "window closed";
         var stale = false;
+        var forceNight = args.Contains("--night");
+        var (bounces, bounceChanged, gpuSmooth, gpuBudget) = (3, 0.0, 0.0, (double)Arg(args, "--gpu-budget", 16));
         var vsyncNote = presentMode == VkPresentModeKHR.FifoKHR ? "vsync" : presentMode == VkPresentModeKHR.MailboxKHR ? "mailbox" : "no vsync";
 
         // The recording: each frame's image goes to ffmpeg as it is made, and OpenAL's mix of the same sixtieth of a
@@ -2533,6 +2593,11 @@ internal static unsafe class Colossus
                     buildYaw = -0.55f + (0.07f * (float)(c - 24.0));
                 }
             }
+
+            // Every fourth cycle, night falls as the face forms and holds through the Lego block; the sun comes back over
+            // the next cloud. --night keeps it night.
+            var evening = autoCycle ? (float)((now - cycleStart) % 128.0) : 0f;
+            var night = forceNight ? 1f : autoCycle ? Smooth(70f, 82f, evening) * (1f - Smooth(98f, 110f, evening)) : 0f;
 
             // Jolt steps on a worker while this thread draws, at most --physics-hz times a second (default 120; 0 steps
             // every frame and waits for each). When a step is due and the last one is done, its bodies are swapped in for
@@ -2832,8 +2897,9 @@ internal static unsafe class Colossus
             {
                 Matrix = viewProj,
                 Eye = new SN.Vector4(camEye, (float)now),
-                Sun = new SN.Vector4(SunDir, exposure * fade),
-                Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? 1f : 0f, recording ? 1f : 0f, preset == 3 ? Letterbox : 0f),
+                // At night the sun sinks below the horizon, and the exposure opens a little for the city's lights.
+                Sun = new SN.Vector4(SN.Vector3.Normalize(SunDir - new SN.Vector3(0f, 0.34f * night, 0f)), exposure * fade * (1f + (0.6f * night))),
+                Params = new SN.Vector4(bloomStrength, rtx && rtxOn ? bounces : 0f, recording ? 1f : 0f, preset == 3 ? Letterbox : 0f),
             };
             var skyPush = push with { Matrix = inverseViewProj };
             if (sound is not null)
@@ -2855,6 +2921,19 @@ internal static unsafe class Colossus
                     gpuTimes[1].Add((ticks[2] - ticks[1]) * tickMs);
                     gpuTimes[2].Add((ticks[3] - ticks[2]) * tickMs);
                     gpuTimes[3].Add((ticks[3] - ticks[0]) * tickMs);
+                    // --pt: the paths lose a bounce while the GPU is over its budget (16 ms, or --gpu-budget), and win it
+                    // back once well under it, at most one change a second. In 4K a bounce costs more than DLSS's
+                    // resolution saves: performance over quality took 2.25 ms off 19.88.
+                    gpuSmooth += (((ticks[3] - ticks[0]) * tickMs) - gpuSmooth) * 0.05;
+                    if (pt.Length > 0 && now - bounceChanged > 1.0)
+                    {
+                        var next = gpuSmooth > gpuBudget && bounces > 1 ? bounces - 1 : gpuSmooth < gpuBudget * 0.65 && bounces < 3 ? bounces + 1 : bounces;
+                        if (next != bounces)
+                        {
+                            Console.WriteLine($"SWARM path bounces {bounces} > {next} at {now:F1} s, GPU {gpuSmooth:F1} ms");
+                            (bounces, bounceChanged) = (next, now);
+                        }
+                    }
                 }
             }
 
@@ -3082,7 +3161,9 @@ internal static unsafe class Colossus
                     Input(dlssMotion, dlssMotionView, dlssMotionMemory, MotionFormat, dlssInputUsage),
                     Input(dlssColor, dlssColorView, dlssColorMemory, HdrFormat, dlssInputUsage),
                     new Dlss.Image((ulong)hdrImage.VkHandle, (ulong)hdrView.VkHandle, (ulong)hdrMemory.VkHandle, extent.Width, extent.Height, (uint)HdrFormat, (uint)hdrUsage, (uint)VkImageLayout.General),
-                    useRay ? new Dlss.Guides(Guide(0), Guide(1), Guide(2), Guide(3)) : null);
+                    useRay ? new Dlss.Guides(Guide(0), Guide(1), Guide(2), Guide(3)) : null,
+                    frameGen ? new Dlss.Image((ulong)hudLess.Image.VkHandle, (ulong)hudLess.View.VkHandle, (ulong)hudLess.Memory.VkHandle, extent.Width, extent.Height,
+                        (uint)surfaceFormat.Format, (uint)hudLessUsage, (uint)VkImageLayout.ShaderReadOnlyOptimal) : null);
                 cb.PipelineBarrier(VkPipelineStageFlags.ComputeShaderBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
                     [Barrier(hdrImage, 0, 1, VkImageLayout.General, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ShaderWriteBit, VkAccessFlags.TransferReadBit)]);
             }
@@ -3111,6 +3192,29 @@ internal static unsafe class Colossus
             cb.BindDescriptorSets(VkPipelineBindPoint.Graphics, compositeLayout, 0, [hdrSet], []);
             cb.PushConstants(compositeLayout, VkShaderStageFlags.VertexBit | VkShaderStageFlags.FragmentBit, offset: 0, new ReadOnlySpan<byte>(&skyPush, sizeof(Push)));
             cb.Draw(3, 1, 0, 0);
+            if (frameGen)
+            {
+                // The image without the panel, for the generated frames; then the panel over it, in its own pass.
+                cb.EndRenderPass();
+                cb.PipelineBarrier(VkPipelineStageFlags.ColorAttachmentOutputBit, VkPipelineStageFlags.TransferBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], 0, 1, VkImageLayout.PresentSrcKHR, VkImageLayout.TransferSrcOptimal, VkAccessFlags.ColorAttachmentWriteBit, VkAccessFlags.TransferReadBit),
+                     Barrier(hudLess.Image, 0, 1, VkImageLayout.Undefined, VkImageLayout.TransferDstOptimal, default, VkAccessFlags.TransferWriteBit)]);
+                var layers = new VkImageSubresourceLayers { AspectMask = VkImageAspectFlags.ColorBit, LayerCount = 1 };
+                cb.CopyImage(images[imageIndex], VkImageLayout.TransferSrcOptimal, hudLess.Image, VkImageLayout.TransferDstOptimal,
+                    [new VkImageCopy { SrcSubresource = layers, DstSubresource = layers, Extent = new VkExtent3D { Width = extent.Width, Height = extent.Height, Depth = 1 } }]);
+                cb.PipelineBarrier(VkPipelineStageFlags.TransferBit, VkPipelineStageFlags.ColorAttachmentOutputBit | VkPipelineStageFlags.FragmentShaderBit, VkDependencyFlags.None, [], [],
+                    [Barrier(images[imageIndex], 0, 1, VkImageLayout.TransferSrcOptimal, VkImageLayout.ColorAttachmentOptimal, VkAccessFlags.TransferReadBit, VkAccessFlags.ColorAttachmentReadBit | VkAccessFlags.ColorAttachmentWriteBit),
+                     Barrier(hudLess.Image, 0, 1, VkImageLayout.TransferDstOptimal, VkImageLayout.ShaderReadOnlyOptimal, VkAccessFlags.TransferWriteBit, VkAccessFlags.ShaderReadBit)]);
+                cb.BeginRenderPass(new VkRenderPassBeginInfo
+                {
+                    RenderPass = hudPass,
+                    Framebuffer = framebuffers[imageIndex],
+                    RenderArea = new VkRect2D { Extent = extent },
+                    ClearValueCount = 2,
+                    ClearValues = clears,
+                }, VkSubpassContents.Inline);
+            }
+
             renderer.RenderDrawData(ImGui.GetDrawData(), cb);
             cb.EndRenderPass();
             var capturing = recording || (nextCapture < captures.Length && now >= captures[nextCapture]);
@@ -3225,7 +3329,7 @@ internal static unsafe class Colossus
             frame++;
             if (now >= nextLog)
             {
-                Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}"
+                Console.WriteLine($"SWARM t={now:F0} s, {frame - lastLogFrame} frames, frame {frameMs:F2} ms, Jolt {physicsMs:F2} ms, {_ids.Length} bodies, {drawn} instances, {(assembled ? "face" : "cloud")}{(night > 0f ? $", night {night:F2}" : "")}{(pt.Length > 0 && bounces < 3 ? $", {bounces} bounces" : "")}"
                     + (frameGen ? $", {shown - lastLogShown} shown" : ""));
                 lastLogShown = shown;
                 if (now >= 3)
@@ -3367,6 +3471,14 @@ internal static unsafe class Colossus
         }
 
         device.DestroyRenderPass(renderPass, null);
+        if (frameGen)
+        {
+            device.DestroyRenderPass(hudPass, null);
+            device.DestroyImageView(hudLess.View, null);
+            device.DestroyImage(hudLess.Image, null);
+            device.FreeMemory(hudLess.Memory, null);
+        }
+
         device.DestroyImageView(depthView, null);
         device.DestroyImage(depthImage, null);
         device.FreeMemory(depthMemory, null);
@@ -3715,6 +3827,12 @@ internal static unsafe class Colossus
     }
 
     // How open the mouth is while the face speaks, from 0 to 1: syllables, in phrases.
+    private static float Smooth(float a, float b, float x)
+    {
+        var u = Math.Clamp((x - a) / (b - a), 0f, 1f);
+        return u * u * (3f - (2f * u));
+    }
+
     private static float Speech(float t) => MathF.Max(0f, MathF.Sin(t * 7f)) * (0.55f + (0.45f * MathF.Sin(t * 1.3f)));
 
     // The swarm's centre and mean speed, for the sound.
