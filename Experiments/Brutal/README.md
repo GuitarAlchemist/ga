@@ -315,7 +315,8 @@ Two traps in measuring this:
 - **Model:** Z-Image-Turbo (`Tongyi-MAI/Z-Image-Turbo`, Apache-2.0), in Comfy-Org's repackage (Apache-2.0), with the
   Qwen3-4B text encoder (Apache-2.0). These were already on the machine; nothing was downloaded.
 - **Workflow:** 8 steps, then the image offset by half and the seam cross repainted.
-- **Prompts and seeds:** they are in `generate_comfyui.py`; hull is seed 1207, facade seed 2026.
+- **Prompts and seeds:** they are in `comfyui/textures.go`; hull is seed 1207, facade seed 2026. From `Colossus/comfyui/`,
+  `go run . textures -workflow <09-seamless.api.json>` makes them; learn-visuals holds that workflow.
 - **Concrete and cladding** (2026-10-20, asked as « plus de verre, métal, béton », « utilise ComfyUI et Blender pour
   les textures »): two more, the same way and with the same model, seeds 1965 and 1972. One is board-formed concrete
   with tie holes, the other brushed metal panels.
@@ -353,8 +354,8 @@ NVIDIA »). One shader function gives every surface, and the reflections call it
 **The head** (`Colossus/head/`). The swarm now forms a sculpted head, generated locally rather than built from Gaussian
 bumps. The bumps remain the fallback when the file is missing.
 
-It is made in two steps (2026-10-20). First, `generate_comfyui.py` runs ComfyUI:
-- **Portrait:** Z-Image-Turbo paints a frontal portrait of an imaginary marble bust, seed 7311, prompt in the script.
+It is made in two steps (2026-10-20). First, `comfyui/` (`go run . head 7311`) runs ComfyUI:
+- **Portrait:** Z-Image-Turbo paints a frontal portrait of an imaginary marble bust, seed 7311, prompt in `head.go`.
   The bust is androgynous and ageless, and the prompt names no one.
 - **Cut-out:** BiRefNet (MIT) removes the background.
 - **Mesh:** TRELLIS.2 (`microsoft/TRELLIS.2-4B`, MIT; int8 build) turns the portrait into a mesh. It runs in ComfyUI's
@@ -1238,7 +1239,7 @@ push in that widens is a true dolly zoom: the subject holds its size while the w
 
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
-come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.
+come from `comfyui/textures.go` (seeds 480 and 432) and `bake_blender.py`.
 - **Stone.** It now carries the marble's veins and honed finish, a tile every 3 m, under its courses.
 - **Roof tiles.** They carry the terracotta's burns and cracks, a tile every 2 m, under their ribs.
 - **Colour.** Each surface takes only its texture's detail: its brightness over the texture's mean, read from the last
@@ -1252,3 +1253,17 @@ The texture array grows from 8 layers to 12.
 - **The block floats.** It stands at the face's height, not on the walkway.
 - **Only Lego statics show the marble.** The swarm's machines keep their hull texture, tinted by the box's colour.
 - **The acropolis's path-traced image** was taken before the marble.
+
+**ComfyUI clients in Go** (2026-10-22, asked as « j'aimerais me débarrasser de Python », « tout écrire en Go »).
+`Colossus/comfyui/`, in Go with its standard library only, replaces the two `generate_comfyui.py` scripts of `head/`
+and `textures/`.
+- **Same graphs.** Before the scripts went, the graphs of the Go port were compared with theirs: two heads (64 nodes)
+  and the six textures (174 nodes) are the same, value for value.
+- **Stricter.** An unknown texture name, a graph ComfyUI refuses (its reason is printed), a failed run or a timeout ends
+  with an error. The texture workflow's path is now given with `-workflow`; no machine path is assumed. `-print`
+  writes the graphs without queueing them.
+- **Tests.** A fake ComfyUI checks the queue, the polling, a failed run and the timeout; every link of the head's
+  graph points at a node of the graph.
+- **Still Python:** the Blender scripts (`bake_blender.py`, `build_towers.py`), which run inside Blender, and
+  `voice/render.py`, which runs Chatterbox on PyTorch.
+- **To verify:** a run against a real ComfyUI. None was made, to leave the GPU to the live view.
