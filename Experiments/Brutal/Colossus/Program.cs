@@ -108,7 +108,7 @@ internal struct MotionPush
     public SN.Vector4 Jitter;
 }
 
-internal static unsafe class Colossus
+internal static unsafe partial class Colossus
 {
     private const int Width = 1600;
     private const int Height = 900;
@@ -749,6 +749,11 @@ internal static unsafe class Colossus
             {
                 // A box tower, when towers.glb is missing: glass on its sides, concrete on its roof.
                 s = side ? curtain(st, un, seed, 3.0, px, 0.2) : concrete(st, seed, footprint, px);
+            }
+            else if (kind > 2.5 && kind < 3.5 && seed > 0.0)
+            {
+                // A roof's or a crane's warning light: a short flash every 1.4 s or so, on its own clock.
+                s.emit *= step(0.8, fract(t * (0.65 + 0.1 * seed) + seed * 7.0));
             }
             else if (kind > 3.5 && kind < 4.5)
             {
@@ -2352,6 +2357,13 @@ internal static unsafe class Colossus
             hero.Extra.Y = seed;
             towers[k] = (variant, hero);
         }
+
+        // The city's life (City.cs): lights, bridges and cranes on the roofs, and lanes of traffic over them. Without the
+        // modelled towers there are no footprints to keep the traffic out of the box towers, so there is none.
+        var footprints = Footprints(towers.Select(p => (p.Instance, tops[p.Variant], towerVariants[p.Variant].Width)));
+        var jibs = Roofs(statics, footprints, out var bridges);
+        _lanes = towerVariants.Length > 0 ? Lanes(footprints, bridges) : [];
+        Console.WriteLine($"CITY {footprints.Count(f => f.Top > 40f)} roof lights, {bridges.Count} bridges, {jibs.Count / 3} cranes, {_lanes.Length} lanes of {_lanes.Sum(l => l.Count)} vehicles");
         foreach (var (c, size, color) in Solids())
         {
             Box(statics, c, size, 0f, color, 0f);
@@ -3170,7 +3182,15 @@ internal static unsafe class Colossus
             var useRay = useDlss && rayOn;
             var target = useDlss ? thisFrame.AsSpan() : new Span<Drawn>((Drawn*)instanceMapped[slot], MaxInstances);
             staticInstances.AsSpan().CopyTo(target);
+            foreach (var jib in jibs)
+            {
+                var k = towerInstances + jib.Index;
+                target[k].Model = jib.At((float)simTime);
+                rt?.Write(slot, k, target[k].Model, 0, target[k].Extra.X > 2.5f);
+            }
+
             var drawn = staticInstances.Length + WriteSwarm(target[staticInstances.Length..], glow, mouth, hearing, ahead, frameDt, rt, slot, staticInstances.Length, build, shape, buildYaw, (float)simTime, machineMesh);
+            drawn += WriteTraffic(target[drawn..], (float)simTime, rt, slot, drawn, machineMesh);
             var forward = SN.Vector3.Normalize(camTarget - camEye);
             var dlssReset = !dlssWasOn || useRay != rayWasOn || drawn != lastDrawn || SN.Vector3.Distance(camEye, lastEye) > 4f || SN.Vector3.Dot(forward, lastForward) < 0.97f;
             if (useDlss)
@@ -4177,7 +4197,9 @@ internal static unsafe class Colossus
             if (variants.Length > 0)
             {
                 var v = rng.Next(variants.Length);
-                var s = 0.6f + (rng.NextSingle() * 0.45f);
+                // A denser, taller core round the face and lower outskirts, and a few supertall towers near it, so that
+                // the skyline rises toward the colossus.
+                var s = (0.6f + (rng.NextSingle() * 0.45f)) * (1.2f - (0.35f * (r - 60f) / 170f)) * (i % 53 == 7 && r < 120f ? 1.35f : 1f);
                 if (MathF.Abs(x) < 14f + (variants[v].Width * s) && z > 0f)
                 {
                     continue;

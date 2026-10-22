@@ -1134,6 +1134,7 @@ HUD-less tag and adaptive quality).
   night (84 to 104 s) at 60 frames every second, 21 of 21, against 58.7 on average before; day at 59.8 against 56.1.
   GPU 6.66 ms p50 and 11.57 ms p95, against 6.99 and 12.46.
 - **To verify:** the moon's disc in 4K, and night in a visible window with frame generation.
+
 **The kraken** (2026-10-22, asked as « je veux que la sequence "lego" soit comme un kraken robotique geant plutot »).
 The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swarm builds every cycle.
 - **The kraken of the legends** (asked next as « le kraken doit ressembler un peu plus au kraken des legendes »). The
@@ -1166,6 +1167,7 @@ The temples gave way to one block, `kraken@1` (`Lego/Kraken.fs`), which the swar
   tests: 21 pass, including the kraken's (more than 100 lit boxes, arms reaching past 18 m, a sea, something held
   above 20 m, and a valid six-armed variant).
 - **To verify:** the writhing and the moiré in a visible window, at 60 fps, from a recording.
+
 **Machines, not cubes** (2026-10-22, asked as « chaque machine devrait etre plus qu'un cube si possible et avoir sa vie
 propre »). Each machine of the swarm is now a small craft (`Machine`), built in code rather than in Blender, so that no
 asset has to ship: a hull with its corners cut, swelling behind the nose and narrowing to the tail, a pod down each
@@ -1177,6 +1179,7 @@ the time, and thin parts would shimmer.
 - **Measured.** Hidden, path traced, DLSS Quality, 42 s: frame p50 16.65 ms, p95 18.29 ms; GPU 7.33 ms p50 and 9.93 ms
   p95, against 6.40 and 10.10 with cubes in the kraken's run before.
 - **To verify:** whether the eyes' specks twinkle on the face at a distance, in a recording.
+
 **Cooler cinematics** (2026-10-22, asked as « et les cinematiques pourraient etre un peu plus cool »). A shot can now
 orbit what it looks at (`Arc`) instead of moving in a straight line, change its focal length as it moves (`FovEnd`),
 and lean the horizon (`Roll` to `RollEnd`). The focal length moves by the tangent of half the angle of view, so that a
@@ -1194,7 +1197,25 @@ push in that widens is a true dolly zoom: the subject holds its size while the w
   13.05 ms) but worse frames, so something outside the scene held them (a desktop-automation process was running); its
   frame counts are not used. The live view that followed held 47 of 49 seconds at 59 or more, with one spike to 26 ms
   of GPU on a cut to the high shot.
-- **To verify:** the 14 ms budget over a whole loop in a quiet machine, and how often it costs a bounce.**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
+- **To verify:** the 14 ms budget over a whole loop in a quiet machine, and how often it costs a bounce.
+
+**A living city** (2026-10-22, asked as « fait moi tout ca », after seven ideas for the city). The first slice is in
+`City.cs`; like the towers, all of it is drawn only, and none of it exists without `towers.glb`.
+- **Skyline.** The towers stand taller toward the face (1.2 times near it, 0.85 at the edge), and one in 53 within
+  120 m of it is a supertall, a third taller again.
+- **Roofs.** Every roof over 40 m carries a red warning light that blinks on its own clock. Five roofs between 30 and
+  75 m carry a crane: a mast, and a jib with its counterweight and a lit tip, turning slowly one way or the other.
+- **Skybridges.** Up to 14 glass corridors, 4 m wide, walled as the box towers are, between towers 25 to 70 m apart
+  and far from the face. They are solid boxes, not cables: a thin line would shimmer.
+- **Air traffic.** Six lanes round the face, one way and the other by turns, a craft every 18 m. Each lane rises 7 m
+  over any roof and 10 m over any bridge in its way, smoothed so that it climbs before and comes down after. The craft
+  are the swarm's machines, longer, leaning into the curve, thrusters at cruise.
+- **Measured.** Hidden, path traced, DLSS Quality, 62 s: 281 roof lights, 11 bridges, 5 cranes and 281 craft; frame
+  p50 16.66 ms, p95 20.54 ms; GPU 7.45 ms p50 and 9.51 ms p95; 44 of 44 seconds outside captures at 59 frames or more.
+  The taller towers moved five shots out of their way.
+- **To verify:** the traffic's lanes against every tower, from above, in a recording.
+
+**Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.
 - **Stone.** It now carries the marble's veins and honed finish, a tile every 3 m, under its courses.
