@@ -378,32 +378,59 @@ internal static unsafe class Colossus
         {
             return 1.0 - smoothstep(-0.10, 0.18, sun.y);
         }
+        // The moon: high behind the face and to its left, so that at night it outlines the swarm against the sky.
+        const vec3 MoonDir = vec3(-0.4209, 0.6414, -0.6414);
+        const vec3 MoonColor = vec3(0.42, 0.52, 0.80) * 0.12;
+        // Its disc, a little larger than the real one, with darker seas; without the halo, which is the sky's.
+        vec3 moonDisc(vec3 d)
+        {
+            float m = dot(d, MoonDir);
+            if (m < 0.9998)
+            {
+                return vec3(0.0);
+            }
+
+            vec3 mx = normalize(cross(MoonDir, vec3(0.0, 1.0, 0.0)));
+            vec2 on = vec2(dot(d, mx), dot(d, cross(mx, MoonDir))) / 0.012;
+            float seas = smoothstep(0.45, 0.75, noise(on * 2.3 + 7.0)) * 0.35 + noise(on * 7.0) * 0.12;
+            return vec3(0.86, 0.89, 0.96) * 2.4 * (1.0 - seas) * smoothstep(0.99991, 0.99994, m);
+        }
         vec3 sky(vec3 d, vec3 sun, float t)
         {
             float night = nightOf(sun);
             float day = 1.0 - night;
             float h = d.y;
-            // At night the horizon cools to violet and the zenith to deep blue; the abyss below keeps its glow.
-            vec3 horizon = mix(vec3(0.50, 0.22, 0.07), vec3(0.07, 0.045, 0.10), night);
+            // At night the horizon cools to a deep blue, warmed near the ground by the city's lights, and the zenith
+            // darkens further; the abyss below dims to an ember.
+            vec3 horizon = mix(vec3(0.50, 0.22, 0.07), vec3(0.016, 0.024, 0.052) + vec3(0.032, 0.022, 0.018) * exp(-max(h, 0.0) * 9.0), night);
             vec3 c = h >= 0.0
-                ? mix(horizon, mix(vec3(0.010, 0.008, 0.014), vec3(0.003, 0.004, 0.012), night), pow(clamp(h, 0.0, 1.0), 0.42))
-                : mix(horizon, vec3(0.12, 0.05, 0.018), pow(clamp(-h, 0.0, 1.0), 0.35));
+                ? mix(horizon, mix(vec3(0.010, 0.008, 0.014), vec3(0.0015, 0.003, 0.010), night), pow(clamp(h, 0.0, 1.0), 0.42))
+                : mix(horizon, mix(vec3(0.12, 0.05, 0.018), vec3(0.022, 0.012, 0.014), night), pow(clamp(-h, 0.0, 1.0), 0.35));
             vec2 q = d.xz / (abs(h) + 0.18);
             float smog = noise(q * 1.7 + vec2(t * 0.01, 0.0)) * 0.6 + noise(q * 4.3 - vec2(0.0, t * 0.015)) * 0.4;
             float band = smoothstep(0.35, 0.8, smog) * exp(-abs(h) * 5.0);
             float s = max(dot(d, sun), 0.0);
             c = mix(c, c * 0.45, band * 0.7) + vec3(1.0, 0.45, 0.15) * band * pow(s, 4.0) * 0.6 * day;
-            c += vec3(1.0, 0.52, 0.2) * (pow(s, 5.0) * 0.55 * (1.0 - 0.6 * night) + pow(s, 48.0) * 1.6 * day);
+            c += vec3(1.0, 0.52, 0.2) * (pow(s, 5.0) * 0.55 * (1.0 - 0.85 * night) + pow(s, 48.0) * 1.6 * day);
             c += vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s) * 40.0 * day;
-            // Stars, where the smog is thin, a few of them brighter, each twinkling at its own pace.
             if (night > 0.0 && h > 0.0)
             {
+                float clear = night * smoothstep(0.04, 0.25, h) * (1.0 - band);
+                // The Milky Way: a faint, uneven band across the sky, thick with small stars.
+                float across = dot(d, vec3(0.30, 0.55, 0.78));
+                float milky = exp(-across * across * 30.0) * (0.45 + 0.55 * noise(d.xz / (h + 0.3) * 6.0 + across * 9.0));
+                c += vec3(0.020, 0.022, 0.032) * milky * clear;
+                // Stars, where the smog is thin, a few of them brighter, each twinkling at its own pace.
                 vec2 g = d.xz / (h + 0.3) * 260.0;
                 vec2 cell = floor(g);
                 float r = hash12(cell);
                 vec2 at = fract(g) - 0.5 - (vec2(hash12(cell + 17.0), hash12(cell + 31.0)) - 0.5) * 0.6;
-                float star = step(0.975, r) * smoothstep(0.2, 0.0, length(at)) * (0.3 + 28.0 * (r - 0.975)) * (0.65 + 0.35 * sin(t * 1.7 + r * 90.0));
-                c += vec3(0.75, 0.82, 1.0) * star * night * smoothstep(0.04, 0.25, h) * (1.0 - band) * 0.5;
+                float star = step(0.97 - 0.03 * milky, r) * smoothstep(0.2, 0.0, length(at)) * (0.3 + 28.0 * max(r - 0.975, 0.0)) * (0.65 + 0.35 * sin(t * 1.7 + r * 90.0));
+                c += vec3(0.75, 0.82, 1.0) * star * clear * 0.9;
+                // The moon's halo in the haze, and its disc.
+                float m = max(dot(d, MoonDir), 0.0);
+                c += (vec3(0.30, 0.36, 0.50) * pow(m, 900.0) * 0.5 + vec3(0.05, 0.07, 0.11) * pow(m, 40.0) * 0.4) * night;
+                c += moonDisc(d) * night;
             }
 
             return c;
@@ -512,8 +539,10 @@ internal static unsafe class Colossus
         layout(push_constant) uniform Push { mat4 viewProj; vec4 eye; vec4 sun; vec4 params; } pc;
         #endif
         layout(location = 0) out vec4 outColor;
-        // The sun's light, and the night's: main dims the one and turns up the city's glows by the other.
+        // The light that casts shadows, and the night's: main fades the sun out at dusk, then brings the moon in from its
+        // own direction, and turns up the city's glows.
         vec3 SunColor = vec3(1.0, 0.56, 0.26);
+        vec3 LightDir = vec3(0.0, 1.0, 0.0);
         float Night = 0.0;
         // How much brighter a glow is at night: three times for lamps, windows and Lego glows; the machines' (kind 1 to
         // 1.4) not at all, so that a block they build keeps its stone.
@@ -923,13 +952,13 @@ internal static unsafe class Colossus
                 if (!trace(p + g * 0.04, r, footprint, t, h))
                 {
                     float s2 = max(dot(r, sun), 0.0);
-                    light += weight * (sky(r, sun, t) - vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s2) * 40.0 * (1.0 - Night));
+                    light += weight * (sky(r, sun, t) - vec3(1.0, 0.86, 0.66) * smoothstep(0.99965, 0.9999, s2) * 40.0 * (1.0 - Night) - moonDisc(r) * Night);
                     break;
                 }
 
                 firstHit = b == 0 && mirror ? h.d : firstHit;
-                float sunOn = max(dot(h.n, sun), 0.0);
-                sunOn = sunOn > 0.0 ? sunOn * sunlit(h.p, h.n, sun) : 0.0;
+                float sunOn = max(dot(h.n, LightDir), 0.0);
+                sunOn = sunOn > 0.0 ? sunOn * sunlit(h.p, h.n, LightDir) : 0.0;
                 float haze = 1.0 - exp(-h.d * 0.0028);
                 light += weight * mix(h.s.albedo * (1.0 - h.s.metal) * SunColor * 1.8 * sunOn + h.s.emit, sky(r, sun, t) * 0.55, haze);
                 weight *= 1.0 - haze;
@@ -953,7 +982,9 @@ internal static unsafe class Colossus
             vec3 v = toEye / dist;
             vec3 sun = pc.sun.xyz;
             Night = nightOf(sun);
-            SunColor *= 1.0 - Night;
+            // The sun's light is gone by mid-dusk, and only then does the moon's rise, so the shadows never jump.
+            LightDir = Night < 0.55 ? sun : MoonDir;
+            SunColor = Night < 0.55 ? SunColor * (1.0 - smoothstep(0.2, 0.55, Night)) : MoonColor * smoothstep(0.55, 0.9, Night);
             float t = pc.eye.w;
             float kind = vExtra.x;
             // Modelled towers map in their own metres, so that window cells keep to the floors at any scale.
@@ -983,13 +1014,13 @@ internal static unsafe class Colossus
                 // other's sunlight and the head would read as a silhouette. Rays through the sun's disc, widened to 1.4
                 // degrees by the haze, soften the shadows' edges.
                 uint casters = kind > 0.5 && kind < 1.5 ? 0x01u : 0x05u;
-                vec3 sx = normalize(cross(sun, vec3(0.0, 1.0, 0.0)));
-                vec3 sy = cross(sun, sx);
+                vec3 sx = normalize(cross(LightDir, vec3(0.0, 1.0, 0.0)));
+                vec3 sy = cross(LightDir, sx);
                 shadow = 0.0;
                 for (int i = 0; i < ShadowRays; i++)
                 {
                     float a = 6.2831853 * fract(noise2.x + float(i) / float(ShadowRays));
-                    vec3 d = normalize(sun + (sx * cos(a) + sy * sin(a)) * sqrt(fract(noise2.y + float(i) / float(ShadowRays))) * 0.012);
+                    vec3 d = normalize(LightDir + (sx * cos(a) + sy * sin(a)) * sqrt(fract(noise2.y + float(i) / float(ShadowRays))) * 0.012);
                     rayQueryEXT q;
                     rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, casters, origin, 0.02, d, 800.0);
                     while (rayQueryProceedEXT(q)) {}
@@ -1063,11 +1094,11 @@ internal static unsafe class Colossus
                         hs.emit *= nightGlow(hit.extra.x);
                         vec3 hn = normalize(hun * mat3(w2o));
                         hn = dot(hn, r) > 0.0 ? -hn : hn;
-                        float hl = max(dot(hn, sun), 0.0);
+                        float hl = max(dot(hn, LightDir), 0.0);
                         if (hl > 0.0)
                         {
                             rayQueryEXT q;
-                            rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, 0x05u, hp + hn * 0.05, 0.02, sun, 800.0);
+                            rayQueryInitializeEXT(q, scene, gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT, 0x05u, hp + hn * 0.05, 0.02, LightDir, 800.0);
                             while (rayQueryProceedEXT(q)) {}
                             hl = rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionNoneEXT ? hl : 0.0;
                         }
@@ -1085,19 +1116,19 @@ internal static unsafe class Colossus
 
             // The sun's GGX highlight and the reflection, weighed by Schlick's Fresnel; the reflection of a rough surface
             // fades to the ambient light. Metals reflect their colour and are not diffuse.
-            float ndl = max(dot(n, sun), 0.0) * shadow;
+            float ndl = max(dot(n, LightDir), 0.0) * shadow;
             float nv = max(dot(n, v), 1e-3);
             vec3 f0 = mix(vec3(s.f0), s.albedo, s.metal);
             vec3 fresnel = f0 + (1.0 - f0) * pow(1.0 - nv, 5.0);
-            vec3 h = normalize(sun + v);
+            vec3 h = normalize(LightDir + v);
             float a2 = pow(max(s.rough * s.rough, 0.03), 2.0);
             float nh = max(dot(n, h), 0.0);
-            float lh = max(dot(sun, h), 0.1);
+            float lh = max(dot(LightDir, h), 0.1);
             float dd = nh * nh * (a2 - 1.0) + 1.0;
             vec3 spec = SunColor * 1.8 * (a2 / (3.14159 * dd * dd)) * 0.25 / (lh * lh) * (f0 + (1.0 - f0) * pow(1.0 - lh, 5.0)) * ndl;
             vec3 ambient = skylight(n) * ao;
             vec3 fill = vec3(0.2, 0.25, 0.38) * (1.0 - 0.6 * Night) * max(dot(n, normalize(vec3(-0.3, 0.45, 1.0))), 0.0) * ao;
-            float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, sun), 0.0), 3.0);
+            float back = pow(1.0 - nv, 4.0) * pow(max(dot(-v, LightDir), 0.0), 3.0);
             vec3 reflected = traced.x >= 0.0 ? traced : sky(mirrored, sun, t);
             vec3 env = fresnel * mix(ambient * 2.0, reflected, mirror);
             // Path traced, the paths bring all the light but the sun's, and its highlight.

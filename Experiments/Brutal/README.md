@@ -1120,6 +1120,19 @@ HUD-less tag and adaptive quality).
 - Night in 4K with frame generation.
 - The HUD-less tag's effect, which needs a visible, focused window with the panel or subtitles.
 - How one bounce looks next to three in 4K. The indirect light is darker with fewer bounces.
+**A real night** (2026-10-22, asked as « Une vraie nuit »: the night looked like a brown dusk).
+- **The sky.** Deep blue down to the horizon, which the city's lights warm only near the ground. The abyss below dims to
+  an ember instead of keeping its orange glow, so the haze between the towers turns blue-grey rather than brown.
+- **The moon.** A procedural disc, a little larger than the real one, with darker seas, high behind the face and to its
+  left (`MoonDir`), in a soft halo. It shows in the cinematic's upward shots beside the head.
+- **Moonlight.** The sun's light is gone by mid-dusk (night 0.55), and only then does the moon's rise, from its own
+  direction (`LightDir`), with its own shadow rays: the swarm and the towers' tops get cool rims, and the shadows never
+  jump. Path traced, the moon's disc is taken out of the escaping rays, as the sun's is, since the shadow rays count it.
+- **Stars.** Brighter, and thicker along a faint, uneven Milky Way, drawn from noise; no photograph is used.
+- **Measured.** Hidden, path traced, DLSS Quality, 116 s through one night, without captures, against the build before:
+  night (84 to 104 s) at 60 frames every second, 21 of 21, against 58.7 on average before; day at 59.8 against 56.1.
+  GPU 6.66 ms p50 and 11.57 ms p95, against 6.99 and 12.46.
+- **To verify:** the moon's disc in 4K, and night in a visible window with frame generation.
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
 come from `generate_comfyui.py` (seeds 480 and 432) and `bake_blender.py`.
