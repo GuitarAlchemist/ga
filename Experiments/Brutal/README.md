@@ -1214,6 +1214,27 @@ push in that widens is a true dolly zoom: the subject holds its size while the w
   p50 16.66 ms, p95 20.54 ms; GPU 7.45 ms p50 and 9.51 ms p95; 44 of 44 seconds outside captures at 59 frames or more.
   The taller towers moved five shots out of their way.
 - **To verify:** the traffic's lanes against every tower, from above, in a recording.
+- **The city reacts to the kraken.** While the swarm builds it, the push constants carry a new `city` vector: the alarm,
+  up in 1.5 s and down in 3, and a blackout that spreads from the face at 45 m a second. The offices go out pane by pane
+  as it passes, and come back from the edge at 60 m a second once the kraken is gone. Every roof light flashes together,
+  twice a second. Four searchlights sweep the kraken's head from about 50 m out, on its flanks and behind it, clear of
+  the walkway where most shots stand. Their beams are analytic: the light scattered toward the eye where a view ray
+  passes closest to each beam's axis, and a pool where a beam lands. A first version blinded every shot near the face:
+  the beams started on the walkway, so the cameras stood inside them. They were moved, and the light seen along a beam
+  is now capped at three times the light seen across it.
+- **Offices come and go.** Each pane draws its light again every 25 to 85 s, on its own clock, and a few more are lit
+  at night.
+- **Rain at night.** Once night has mostly fallen it rains: whatever faces up turns darker and glossy, more so where
+  puddles gather, and faint streaks fall over the image in three layers. The rain's clouds hide most of the stars and
+  the moon. Lightning flashes every 9 s or so, a stroke and its return, lighting the smog from within, with a bolt in
+  the sky at its own bearing.
+- **Measured.** Hidden, path traced, DLSS Quality, `--night`: in 72 s with rain, GPU 8.14 ms p50 and 11.18 ms p95, and
+  52 of 52 seconds outside captures at 59 frames or more. In 46 s centred on the kraken, with the beams as narrowed
+  last, GPU 8.17 ms p50 and 10.62 ms p95, and 25 of 26 seconds at 59 or more, the other at 58; a run with the wider
+  beams before had 15.60 ms p95, enough for the budget to cost a bounce. One capture fell in a flash: the streaks then
+  covered the image, so a flash now brightens them a quarter as much.
+- **To verify:** a bolt in a capture (the flash captured had its bolt out of frame), the searchlights by day, and
+  whether the rain's streaks shimmer in a recording.
 
 **Marble and terracotta** (asked as « peut etre utilise le systeme de lego et Comfyui/blender »). ComfyUI and Blender
 made two more textures for the Lego blocks, the same way and with the same model as the others (`textures/`). They
