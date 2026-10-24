@@ -76,10 +76,10 @@
     }
   ],
   "meta": {
-    "commitSha": "1ead43083953fb0c0e9335c5c2d99d399b991d44",
-    "generatedAt": "2026-10-24T03:22:44.374655+00:00",
+    "commitSha": "9fd7aea23d49286875f53d7293cf370cda73be4b",
+    "generatedAt": "2026-10-24T09:58:17.398304+00:00",
     "repoCount": 5,
-    "totalPRs": 56
+    "totalPRs": 61
   },
   "repos": [
     {
@@ -140,7 +140,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/840"
         },
         {
-          "ageDays": 3,
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-10-20T03:36:58Z",
           "failingChecks": 2,
@@ -284,7 +284,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/811"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:07:35Z",
           "failingChecks": 0,
@@ -296,7 +296,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/810"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-10-04T06:32:26Z",
           "failingChecks": 0,
@@ -308,7 +308,7 @@
           "url": "https://github.com/GuitarAlchemist/ga/pull/808"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-10-04T03:41:20Z",
           "failingChecks": 0,
@@ -393,8 +393,56 @@
         "verdict": "pass"
       },
       "name": "ix",
-      "prCount": 22,
+      "prCount": 26,
       "prs": [
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-24T06:31:39Z",
+          "failingChecks": 0,
+          "headRef": "feat/ixctl-federation-run",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 463,
+          "title": "feat(ixctl): federation keeps the source run and its markers (A-4)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/463"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-24T05:25:08Z",
+          "failingChecks": 0,
+          "headRef": "feat/ixctl-wait-rust",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 462,
+          "title": "feat(ix-ctl): typed Rust and IXQL faces of the plane-side wait, N2 deprecation (B-2b)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/462"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-24T04:24:56Z",
+          "failingChecks": 0,
+          "headRef": "feat/ixctl-wait-op",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 461,
+          "title": "feat(ixctl): one plane-side wait answers the N3 outcome algebra over HTTP and WS (B-2a)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/461"
+        },
+        {
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-24T03:33:41Z",
+          "failingChecks": 0,
+          "headRef": "feat/ixctl-apply-results",
+          "isDraft": true,
+          "mergeable": "MERGEABLE",
+          "number": 460,
+          "title": "feat(ixctl): apply answers one result per named service from one admission snapshot (B-1)",
+          "url": "https://github.com/GuitarAlchemist/ix/pull/460"
+        },
         {
           "ageDays": 0,
           "author": "spareilleux",
@@ -673,16 +721,28 @@
         "verdict": "pass"
       },
       "name": "tars",
-      "prCount": 6,
+      "prCount": 7,
       "prs": [
         {
-          "ageDays": 3,
+          "ageDays": 0,
+          "author": "spareilleux",
+          "createdAt": "2026-10-24T06:06:05Z",
+          "failingChecks": 0,
+          "headRef": "fix/ga-bank-compared-outside",
+          "isDraft": false,
+          "mergeable": "MERGEABLE",
+          "number": 408,
+          "title": "fix: compare GaProblemBank's results outside the solution's process",
+          "url": "https://github.com/GuitarAlchemist/tars/pull/408"
+        },
+        {
+          "ageDays": 4,
           "author": "spareilleux",
           "createdAt": "2026-10-20T04:48:36Z",
           "failingChecks": 0,
           "headRef": "docs/adr-0005-measured-budget",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 402,
           "title": "docs: ADR 0005 records the Claude call count measured after the governor trim",
           "url": "https://github.com/GuitarAlchemist/tars/pull/402"
@@ -694,13 +754,13 @@
           "failingChecks": 1,
           "headRef": "feat/evolve-constraint-check",
           "isDraft": false,
-          "mergeable": "MERGEABLE",
+          "mergeable": "UNKNOWN",
           "number": 392,
           "title": "feat: check the constraints that name code against the code",
           "url": "https://github.com/GuitarAlchemist/tars/pull/392"
         },
         {
-          "ageDays": 19,
+          "ageDays": 20,
           "author": "spareilleux",
           "createdAt": "2026-10-04T07:19:24Z",
           "failingChecks": 1,
@@ -724,7 +784,7 @@
           "url": "https://github.com/GuitarAlchemist/tars/pull/346"
         },
         {
-          "ageDays": 25,
+          "ageDays": 26,
           "author": "spareilleux",
           "createdAt": "2026-09-28T05:06:46Z",
           "failingChecks": 1,
