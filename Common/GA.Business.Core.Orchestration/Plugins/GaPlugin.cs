@@ -59,6 +59,12 @@ public sealed class GaPlugin : IChatPlugin
         services.AddOrchestratorSkillIntent<CommonTonesSkill>();
         services.AddOrchestratorSkillIntent<DiatonicChordsSkill>();
 
+        // Reference Path B skill — the LLM answers functional-harmony concept
+        // questions from the verified skills/functional-harmony/SKILL.md, with
+        // no closure to dispatch. Built 2026-10-03 after the theory QA eval
+        // found cadence/dominant/augmented-sixth questions answered wrongly.
+        services.AddOrchestratorSkillIntent<FunctionalHarmonySkill>();
+
         // Domain-backed key-arithmetic skill (Tier 1 of 2026-05-13 plan).
         // Built 2026-05-13 to close "parallel minor of C major" corpus failure.
         services.AddOrchestratorSkillIntent<RelativeKeySkill>();

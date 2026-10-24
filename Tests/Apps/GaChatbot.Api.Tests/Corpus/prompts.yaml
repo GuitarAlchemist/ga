@@ -491,6 +491,25 @@ prompts:
     max_elapsed_ms: 20000
     retry: 0
 
+  # Secondary-dominant neighbor from the 2026-09-28 public tracer
+  # (state/research/ga-chatbot-arpeggio-tracer/): A major is V/ii in C and must
+  # keep its C#, never receive natural-C Aeolian advice.
+  - prompt: "which arpeggio fits C A Dm G"
+    category: improvisation-progression
+    routes_to: skill.improvisation
+    contains_any: ["A Ionian", "A Mixolydian", "A Phrygian Dominant"]
+    not_contains: ["A Aeolian", "Amm"]
+    min_length: 40
+    max_elapsed_ms: 20000
+    retry: 0
+
+  - prompt: "which arpeggio fits Hm Q7"
+    category: improvisation-progression
+    contains_any: ["couldn't find a chord", "not a valid chord", "don't recognize"]
+    not_contains: ["also known as"]
+    skip: true
+    skip_reason: "Invalid chord names miss the improvisation route and reach the LLM fallback, which invents theory (\"The note Hm Q7 (also known as H) is a perfect 4th above the note Q\") — 2026-09-28 public tracer, case N2."
+
   # Tuning-INFO path (works today via AlternateTuningsSkill). Distinct from the
   # chord-shapes-IN-a-tuning entries below, which still need the voicing tool.
   - prompt: "How do I tune to drop C"

@@ -103,19 +103,62 @@ public sealed partial class ImprovisationSkill(
     public bool CanHandle(string message)
     {
         if (string.IsNullOrWhiteSpace(message)) return false;
-        var q = message.ToLowerInvariant();
-        // Whole-word match so a keyword embedded in an unrelated word doesn't
-        // fire (e.g. "solo" inside "Solomon" — see ga#261).
-        var hasImprovIntent = ImprovKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
-        if (!hasImprovIntent) return false;
+        if (!HasImprovIntent(message)) return false;
         // Require a real chord token (uppercase root + accidental/quality/digit).
         // Without IgnoreCase, bare lowercase "a"/"e" articles never trigger.
         return ChordSuffixRegex().IsMatch(message)
                || ChordWithSpacedQualityRegex().IsMatch(message);
     }
 
+    // Whole-word match so a keyword embedded in an unrelated word doesn't
+    // fire (e.g. "solo" inside "Solomon" — see ga#261). Shared with
+    // InvalidChordNames, which declines requests naming only invalid chords.
+    internal static bool HasImprovIntent(string message)
+    {
+        var q = message.ToLowerInvariant();
+        return ImprovKeywords.Any(k => ChordIntentMatching.ContainsWord(q, k));
+    }
+
+    // A valid chord anywhere in the message: a suffixed symbol ("Am", "G7"), a
+    // spaced quality ("C major") or a bare root, alone ("C" in "fits C and Q7") or
+    // in a run ("Am F C G"). A capital "A" opening a sentence before a lowercase
+    // word ("A friend asked...") is the article, not a chord, and a key ("in the
+    // key of C") is not one either.
+    internal static bool NamesValidChord(string message)
+    {
+        var chords = KeyNameRegex().Replace(message, " ");
+        return ChordSuffixRegex().IsMatch(chords)
+               || ChordWithSpacedQualityRegex().IsMatch(chords)
+               || ChordTokenRegex().Matches(chords).Any(m => !IsSentenceArticle(chords, m));
+    }
+
+    private static bool IsSentenceArticle(string message, Match match)
+    {
+        if (match.Value != "A") return false;
+        var before = message[..match.Index].TrimEnd();
+        var opensSentence = before.Length == 0 || before[^1] is '.' or '!' or '?';
+        var after = message[(match.Index + match.Length)..];
+        return opensSentence && after.Length >= 2 && after[0] == ' ' && char.IsLower(after[1]);
+    }
+
     public async Task<AgentResponse> ExecuteAsync(string message, CancellationToken cancellationToken = default)
     {
+        // Invalid chord names only ("which arpeggio fits Hm Q7", ga#745): decline with
+        // a confidence above the chat fallback threshold, so the answer is not replaced
+        // by the LLM, which would invent theory about the tokens.
+        var invalid = InvalidChordNames.Find(message);
+        if (invalid.Count > 0)
+        {
+            return new AgentResponse
+            {
+                AgentId = $"skill.{Name.ToLowerInvariant()}",
+                Result = InvalidChordNames.Decline(invalid),
+                Confidence = InvalidChordNames.DeclineConfidence,
+                Evidence = [],
+                Assumptions = [$"Not chord names (root outside A-G): {string.Join(", ", invalid)}."],
+            };
+        }
+
         // Progression path (v2): if the query names two or more chord symbols,
         // classify each independently and return per-chord arpeggio + scales.
         // Checked BEFORE the single-chord extractor, whose ExtractAsync collapses
@@ -449,6 +492,12 @@ public sealed partial class ImprovisationSkill(
 
     [GeneratedRegex(@"\b[A-G][#b]?\s+(?:[Mm]ajor|[Mm]inor|[Mm]aj|[Mm]in|[Dd]im|[Aa]ug|[Ss]us)\b")]
     private static partial Regex ChordWithSpacedQualityRegex();
+
+    // A key named after "key of": "key of C", "key of Bb minor", "key of C#m". Not "key
+    // of Cmaj7": the trailing guard rejects a longer suffix. Only "key of" ignores case
+    // ("Key of C: ..."); the root stays an uppercase A-G.
+    [GeneratedRegex(@"\b(?i:key\s+of)\s+[A-G][#b]?(?:m|min|\s+(?:[Mm]ajor|[Mm]inor))?(?![\w#])")]
+    private static partial Regex KeyNameRegex();
 
     // Progression tokenizer (v2). Captures each chord symbol in a run, longest
     // quality alternation first so "Cmaj7" is one token, not "C" + "maj7". The

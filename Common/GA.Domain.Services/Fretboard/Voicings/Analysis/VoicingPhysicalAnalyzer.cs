@@ -12,6 +12,18 @@ using GA.Domain.Core.Instruments.Primitives;
 /// </summary>
 public static class VoicingPhysicalAnalyzer
 {
+    /// <summary>Fingers available to the fretting hand (index to little finger; the thumb is not modelled).</summary>
+    public const int MaxFrettingFingers = 4;
+
+    /// <summary>Score given to a voicing no fingering can hold: the top of the 1-10 scale.</summary>
+    public const double UnplayableDifficultyScore = 10.0;
+
+    /// <summary>Scores below this are labelled "Beginner".</summary>
+    public const double BeginnerScoreLimit = 4.0;
+
+    /// <summary>Scores at or above this are labelled "Advanced".</summary>
+    public const double AdvancedScoreThreshold = 7.0;
+
     public static PhysicalLayout ExtractPhysicalLayout(Voicing voicing)
     {
         var positions = voicing.Positions;
@@ -95,33 +107,19 @@ public static class VoicingPhysicalAnalyzer
         // Calculate hand stretch (legacy field remains raw count for compatibility)
         var handStretch = layout.MaxFret - layout.MinFret;
 
-        // Detect barre requirement
-        var barreRequired = DetectBarreRequirement(layout.FretPositions);
+        // Detect barre requirement (the fret the index finger lies across, if any)
+        var barreFret = DetectBarreFret(layout.FretPositions);
+        var barreRequired = barreFret.HasValue;
 
-        // Estimate minimum fingers needed
-        var uniqueFrets = layout.FretPositions.Where(f => f > 0).Distinct().Count();
-        var minimumFingers = Math.Min(uniqueFrets, 4);
-
-        // Determine difficulty (Modern logic uses spanScore)
-        string difficulty;
-        if (spanScore <= 0.8 && !barreRequired && layout.OpenStrings.Length > 0)
-            difficulty = "Beginner";
-        else if (spanScore > 1.2 || barreRequired && handStretch >= 4)
-            difficulty = "Advanced";
-        else
-            difficulty = "Intermediate";
+        // Minimum fingers needed: a finger lying across several notes of one fret counts once.
+        // Deliberately not capped: more than MaxFrettingFingers means no fingering exists.
+        var minimumFingers = CountMinimumFingers(layout.FretPositions);
 
         // Detect CAGED shape
         var cagedShape = DetectCagedShape(layout);
 
         // Generate barre info
-        string? barreInfo = null;
-        if (barreRequired)
-        {
-            var barreFret = layout.FretPositions.Where(f => f > 0).GroupBy(f => f)
-                .OrderByDescending(g => g.Count()).FirstOrDefault()?.Key;
-            if (barreFret.HasValue) barreInfo = $"Fret {barreFret} barre";
-        }
+        var barreInfo = barreRequired ? $"Fret {barreFret} barre" : null;
 
         // Detect shell voicing family
         string? shellFamily = null;
@@ -140,6 +138,12 @@ public static class VoicingPhysicalAnalyzer
         if (layout.OpenStrings.Length == 0) difficultyScore += 1.0;
         if (minimumFingers == 4) difficultyScore += 1.0;
         difficultyScore = Math.Min(10.0, difficultyScore);
+
+        // A voicing that needs more fingers than a hand has cannot be played, however narrow it is
+        if (minimumFingers > MaxFrettingFingers) difficultyScore = UnplayableDifficultyScore;
+
+        // The label is a banding of the score, so the two cannot disagree
+        var difficulty = DifficultyLabel(difficultyScore);
 
         return new(
             difficulty,
@@ -217,39 +221,72 @@ public static class VoicingPhysicalAnalyzer
 
     // ================== HELPERS ==================
 
-    private static bool DetectBarreRequirement(int[] fretPositions)
+    /// <summary>
+    ///     The fret of the barre the index finger has to make, or null when the voicing needs none.
+    ///     A barre is needed only when there are more fretted notes than <see cref="MaxFrettingFingers"/>:
+    ///     up to that, every note can have its own finger, as in the sparse grip <c>1x2x1x</c>. The barre
+    ///     is then the lowest fretted fret held on both outermost played strings, across at least three
+    ///     strings, with no open string in between (strings in between are fretted at that fret or higher,
+    ///     or muted and damped by the finger). This counts the E-shape <c>133211</c> as well as the A-shape
+    ///     <c>x13331</c>, and no open chord, whose outermost strings are open. A partial barre on a higher
+    ///     fret, like the ring finger at fret 3 in <c>x12333</c>, is not detected.
+    /// </summary>
+    internal static int? DetectBarreFret(int[] fretPositions)
     {
-        // Check for same fret on 3+ adjacent strings
-        for (var i = 0; i < fretPositions.Length - 2; i++)
+        if (fretPositions.Count(f => f > 0) <= MaxFrettingFingers) return null;
+
+        var first = Array.FindIndex(fretPositions, f => f >= 0);
+        var last = Array.FindLastIndex(fretPositions, f => f >= 0);
+        if (first < 0 || last - first < 2) return null;
+
+        var lowestFret = fretPositions.Where(f => f > 0).DefaultIfEmpty(0).Min();
+        if (lowestFret == 0 || fretPositions[first] != lowestFret || fretPositions[last] != lowestFret) return null;
+
+        for (var i = first + 1; i < last; i++)
         {
-            var fret = fretPositions[i];
-            if (fret > 0 &&
-                fretPositions[i + 1] == fret &&
-                fretPositions[i + 2] == fret)
+            if (fretPositions[i] == 0) return null; // an open string cannot ring under a barre
+        }
+
+        return lowestFret;
+    }
+
+    /// <summary>
+    ///     The fewest fingers that can hold every fretted note: each finger stays on one fret and may lie
+    ///     across several notes of that fret, unless an open string or a note on a lower fret lies between
+    ///     them (a muted string between them is damped by the finger). Fingers are ordered along the neck,
+    ///     so any count up to <see cref="MaxFrettingFingers"/> has a legal fingering, and a larger count has none.
+    /// </summary>
+    internal static int CountMinimumFingers(int[] fretPositions)
+    {
+        var fingers = 0;
+        foreach (var fret in fretPositions.Where(f => f > 0).Distinct())
+        {
+            var previous = -1;
+            for (var i = 0; i < fretPositions.Length; i++)
             {
-                return true;
+                if (fretPositions[i] != fret) continue;
+
+                var sharesFinger = previous >= 0;
+                for (var between = previous + 1; sharesFinger && between < i; between++)
+                {
+                    var f = fretPositions[between];
+                    if (f == 0 || (f > 0 && f < fret)) sharesFinger = false;
+                }
+
+                if (!sharesFinger) fingers++;
+                previous = i;
             }
         }
-        return false;
+
+        return fingers;
     }
 
-    private static string CalculateDifficulty(int handStretch, bool barreRequired, int openStringCount)
+    private static string DifficultyLabel(double difficultyScore) => difficultyScore switch
     {
-        // Beginner: Small stretch, no barre, has open strings
-        if (handStretch <= 3 && !barreRequired && openStringCount > 0)
-        {
-            return "Beginner";
-        }
-
-        // Advanced: Large stretch or complex barre
-        if (handStretch >= 5 || barreRequired && handStretch >= 4)
-        {
-            return "Advanced";
-        }
-
-        // Intermediate: Everything else
-        return "Intermediate";
-    }
+        < BeginnerScoreLimit => "Beginner",
+        >= AdvancedScoreThreshold => "Advanced",
+        _ => "Intermediate"
+    };
 
     private static string? DetectCagedShape(PhysicalLayout layout)
     {

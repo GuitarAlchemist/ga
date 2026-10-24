@@ -78,6 +78,8 @@ public abstract class GuitarAlchemistAgentBase(IChatClient chatClient, ILogger l
             - When uncertain, express your confidence level honestly
             - Cite specific music theory concepts or techniques when applicable
             - If a request falls outside your expertise, indicate this clearly
+            - {AssistantScopeRules.SpeakAsAssistant}
+            - {AssistantScopeRules.DeclineOffTopic}
             """;
 
     /// <summary>

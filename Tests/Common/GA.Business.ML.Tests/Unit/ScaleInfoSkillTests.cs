@@ -43,6 +43,48 @@ public class ScaleInfoSkillTests
         Assert.That(skill.ExamplePrompts, Has.Some.Contain("scale"));
     }
 
+    // The 2026-10-03 probe asked "What notes are in the A minor pentatonic scale?" and got the
+    // 7-note A minor scale: KeyPattern matched "A minor" and ignored "pentatonic".
+    [TestCase("What notes are in the A minor pentatonic scale?", "A – C – D – E – G")]
+    [TestCase("Show me the E pentatonic minor scale", "E – G – A – B – D")]
+    [TestCase("F# minor pentatonic notes", "F# – A – B – C# – E")]
+    [TestCase("notes in the C major pentatonic scale", "C – D – E – G – A")]
+    [TestCase("What notes are in the A blues scale?", "A – C – D – Eb – E – G")]
+    [TestCase("notes in the C major blues scale", "C – D – Eb – E – G – A")]
+    [TestCase("What is the G# harmonic minor scale?", "G# – A# – B – C# – D# – E – Fx")]
+    [TestCase("notes in the D melodic minor scale", "D – E – F – G – A – B – C#")]
+    public async Task ScaleVariant_SpellsTheVariantFromTheKey(string question, string notes)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Declined, Is.False, response.Result);
+        Assert.That(response.Result, Does.Contain($"**{notes}**"));
+    }
+
+    [Test]
+    public async Task PlainMinorKey_StillListsSevenNotes()
+    {
+        var response = await MakeSkill().ExecuteAsync("What notes are in the A minor scale?");
+
+        Assert.That(response.Result, Does.Contain("**A – B – C – D – E – F – G**"));
+    }
+
+    [TestCase("notes in the C major bebop scale")]
+    [TestCase("What notes are in A minor dorian?")]
+    [TestCase("What notes are in the A pentatonic scale?")]
+    public async Task ScaleItCannotSpell_Declines(string question)
+    {
+        var response = await MakeSkill().ExecuteAsync(question);
+
+        Assert.That(response.Declined, Is.True, response.Result);
+    }
+
+    [TestCase("What notes are in the A minor pentatonic scale?", true)]
+    [TestCase("What is the G# harmonic minor scale?", true)]
+    [TestCase("notes in the C major bebop scale", false)]
+    public void CanHandle_MatchesSpelledVariantsOnly(string question, bool expected) =>
+        Assert.That(MakeSkill().CanHandle(question), Is.EqualTo(expected));
+
     [Test]
     public void Description_DescribesKeyOrScaleLookup()
     {

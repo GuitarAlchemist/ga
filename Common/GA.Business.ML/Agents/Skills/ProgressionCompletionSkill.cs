@@ -98,7 +98,7 @@ public sealed class ProgressionCompletionSkill(IChatClient chatClient, ILogger<P
             : string.Join(" / ", topTied.Select(c => c.Key));
 
         sb.AppendLine($$"""
-            You are Theory Agent, a Guitar Alchemist music theory expert.
+            You are the Guitar Alchemist assistant, a music theory expert.
 
             The guitarist asked: "{{message}}"
 

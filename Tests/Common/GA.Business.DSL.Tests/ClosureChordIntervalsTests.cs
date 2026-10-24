@@ -55,6 +55,11 @@ public class ClosureChordIntervalsTests
     [TestCase("C7b13", "P1 M3 P5 m7 m13")]
     [TestCase("C7b5", "P1 M3 d5 m7")]
     [TestCase("C7#5", "P1 M3 A5 m7")]
+    // Accidental roots, as a stale GaMcpServer build got them wrong on 2026-10-03
+    // (it dropped the d5 of m7b5 and the m7 of m9, and gave dim7 a m7).
+    [TestCase("F#m7b5", "P1 m3 d5 m7")]
+    [TestCase("Ebm9", "P1 m3 P5 m7 M9")]
+    [TestCase("C#dim7", "P1 m3 d5 d7")]
     public async Task ChordIntervals_MatchTextbookSpelling(string symbol, string expected)
     {
         var value = await Invoke("domain.chordIntervals", ("symbol", symbol));

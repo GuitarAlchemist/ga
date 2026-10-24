@@ -1,0 +1,1 @@
+{"isAvailable":true,"message":"Ollama ready: chat='llama3.2:3b', embedding='nomic-embed-text'.","provider":"ollama","chatModel":"llama3.2:3b","chatModelInstalled":true,"embeddingModel":"nomic-embed-text","embeddingModelInstalled":true,"providerReachable":true,"orchestratorRoundTripOk":true,"timestamp":"2026-09-28T02:21:45.7017313Z"}

@@ -1,0 +1,228 @@
+{
+  "started_utc": "2026-09-28T02:21:46+00:00",
+  "endpoint": "https://demos.guitaralchemist.com/chatbot/api/chatbot/chat/stream",
+  "captures": [
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 53203.9,
+      "frames": [
+        {
+          "t_ms": 53202.5,
+          "data": "{\"type\":\"routing\",\"agentId\":\"skill.improvisation\",\"confidence\":0.85,\"routingMethod\":\"orchestrator-skill-semantic\",\"trace\":{\"traceId\":\"5c6e527a86c4979a227b953a662127a6\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_fa8c17e0647d428b8117519423f1fc3a\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":52966,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":566}},{\"name\":\"orchestration.route\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"query.intent\":null,\"query.quality\":null,\"query.extension\":null,\"query.stacking_type\":null,\"query.note_count\":null,\"query.key\":null}},{\"name\":\"agent.semantic_result\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"grounding.source\":null,\"candidate.count\":0,\"voicing.diagram.count\":0,\"response.length\":564,\"debug.mode\":null,\"debug.agent\":null}},{\"name\":\"notation.vextab\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"notation.diagram.count\":0,\"notation.vextab.added_count\":0,\"notation.format\":\"vextab\",\"notation.renderer\":\"vexflow\"}},{\"name\":\"response.emit\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"response.length\":564,\"response.has_vextab\":false}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "Over **Am \u2013 F \u2013 C \u2013 G**, for each chord:\n\n- **Am** \u2192 arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor \u2014 fits most i chords)."
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "- **F** \u2192 arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "- **C** \u2192 arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "- **G** \u2192 arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+        },
+        {
+          "t_ms": 53202.6,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "P1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:40+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 222.6,
+      "frames": [
+        {
+          "t_ms": 219.4,
+          "data": "{\"type\":\"routing\",\"agentId\":\"skill.improvisation\",\"confidence\":0.85,\"routingMethod\":\"orchestrator-skill-semantic\",\"trace\":{\"traceId\":\"fccc5468e03dd0e73ba69e7f559a6bc6\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_79538a4cfd91490c92b712ffa25e5071\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":20,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":566}},{\"name\":\"orchestration.route\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"query.intent\":null,\"query.quality\":null,\"query.extension\":null,\"query.stacking_type\":null,\"query.note_count\":null,\"query.key\":null}},{\"name\":\"agent.semantic_result\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"grounding.source\":null,\"candidate.count\":0,\"voicing.diagram.count\":0,\"response.length\":564,\"debug.mode\":null,\"debug.agent\":null}},{\"name\":\"notation.vextab\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"notation.diagram.count\":0,\"notation.vextab.added_count\":0,\"notation.format\":\"vextab\",\"notation.renderer\":\"vexflow\"}},{\"name\":\"response.emit\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"response.length\":564,\"response.has_vextab\":false}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 219.4,
+          "data": "Over **Am \u2013 F \u2013 C \u2013 G**, for each chord:\n\n- **Am** \u2192 arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor \u2014 fits most i chords)."
+        },
+        {
+          "t_ms": 219.4,
+          "data": "- **F** \u2192 arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 219.4,
+          "data": "- **C** \u2192 arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 219.4,
+          "data": "- **G** \u2192 arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 219.4,
+          "data": "Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+        },
+        {
+          "t_ms": 219.4,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "P1",
+      "repeat": 2,
+      "at_utc": "2026-09-28T02:22:42+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Am F C G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 148.2,
+      "frames": [
+        {
+          "t_ms": 147.9,
+          "data": "{\"type\":\"routing\",\"agentId\":\"skill.improvisation\",\"confidence\":0.85,\"routingMethod\":\"orchestrator-skill-semantic\",\"trace\":{\"traceId\":\"c1eb7cf528212d7836a5e349be004aaf\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_29f932e3a24148f296c442e0338ecebb\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":19,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":566}},{\"name\":\"orchestration.route\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"query.intent\":null,\"query.quality\":null,\"query.extension\":null,\"query.stacking_type\":null,\"query.note_count\":null,\"query.key\":null}},{\"name\":\"agent.semantic_result\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"grounding.source\":null,\"candidate.count\":0,\"voicing.diagram.count\":0,\"response.length\":564,\"debug.mode\":null,\"debug.agent\":null}},{\"name\":\"notation.vextab\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"notation.diagram.count\":0,\"notation.vextab.added_count\":0,\"notation.format\":\"vextab\",\"notation.renderer\":\"vexflow\"}},{\"name\":\"response.emit\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"response.length\":564,\"response.has_vextab\":false}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 147.9,
+          "data": "Over **Am \u2013 F \u2013 C \u2013 G**, for each chord:\n\n- **Am** \u2192 arpeggio **Am**, play **A Aeolian (natural minor)** (diatonic minor \u2014 fits most i chords)."
+        },
+        {
+          "t_ms": 147.9,
+          "data": "- **F** \u2192 arpeggio **F**, play **F Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 147.9,
+          "data": "- **C** \u2192 arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 147.9,
+          "data": "- **G** \u2192 arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 147.9,
+          "data": "Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+        },
+        {
+          "t_ms": 148.0,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "P1",
+      "repeat": 3,
+      "at_utc": "2026-09-28T02:22:44+00:00"
+    },
+    {
+      "prompt": "what arpeggios work over Dm7 G7 Cmaj7",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 198.8,
+      "frames": [
+        {
+          "t_ms": 198.5,
+          "data": "{\"type\":\"routing\",\"agentId\":\"skill.improvisation\",\"confidence\":0.85,\"routingMethod\":\"orchestrator-skill-semantic\",\"trace\":{\"traceId\":\"9095b714d5e99649a7bc1e5249019eab\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_23c973ddb0e84702a806c5009337ac84\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":60,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":421}},{\"name\":\"orchestration.route\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"query.intent\":null,\"query.quality\":null,\"query.extension\":null,\"query.stacking_type\":null,\"query.note_count\":null,\"query.key\":null}},{\"name\":\"agent.semantic_result\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"grounding.source\":null,\"candidate.count\":0,\"voicing.diagram.count\":0,\"response.length\":419,\"debug.mode\":null,\"debug.agent\":null}},{\"name\":\"notation.vextab\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"notation.diagram.count\":0,\"notation.vextab.added_count\":0,\"notation.format\":\"vextab\",\"notation.renderer\":\"vexflow\"}},{\"name\":\"response.emit\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"response.length\":419,\"response.has_vextab\":false}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 198.5,
+          "data": "Over **Dm7 \u2013 G7 \u2013 Cmaj7**, for each chord:\n\n- **Dm7** \u2192 arpeggio **Dm7**, play **D Dorian** (natural 6 \u2014 modern jazz default)."
+        },
+        {
+          "t_ms": 198.5,
+          "data": "- **G7** \u2192 arpeggio **G7**, play **G Mixolydian** (diatonic dominant \u2014 natural choice for V chords)."
+        },
+        {
+          "t_ms": 198.5,
+          "data": "- **Cmaj7** \u2192 arpeggio **Cmaj7**, play **C Ionian (major)** (diatonic \u2014 the safe choice)."
+        },
+        {
+          "t_ms": 198.5,
+          "data": "Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+        },
+        {
+          "t_ms": 198.5,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "P2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:46+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits C A Dm G",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 192.0,
+      "frames": [
+        {
+          "t_ms": 191.9,
+          "data": "{\"type\":\"routing\",\"agentId\":\"skill.improvisation\",\"confidence\":0.85,\"routingMethod\":\"orchestrator-skill-semantic\",\"trace\":{\"traceId\":\"f4418ea4b20dab182fa4aadad1e24cb8\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_c649292076674b29bc589dce60a578cf\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":30,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":566}},{\"name\":\"orchestration.route\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.85,\"query.intent\":null,\"query.quality\":null,\"query.extension\":null,\"query.stacking_type\":null,\"query.note_count\":null,\"query.key\":null}},{\"name\":\"agent.semantic_result\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"agent.id\":\"skill.improvisation\",\"grounding.source\":null,\"candidate.count\":0,\"voicing.diagram.count\":0,\"response.length\":564,\"debug.mode\":null,\"debug.agent\":null}},{\"name\":\"notation.vextab\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"notation.diagram.count\":0,\"notation.vextab.added_count\":0,\"notation.format\":\"vextab\",\"notation.renderer\":\"vexflow\"}},{\"name\":\"response.emit\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"response.length\":564,\"response.has_vextab\":false}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 191.9,
+          "data": "Over **C \u2013 A \u2013 Dm \u2013 G**, for each chord:\n\n- **C** \u2192 arpeggio **C**, play **C Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 191.9,
+          "data": "- **A** \u2192 arpeggio **A**, play **A Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 191.9,
+          "data": "- **Dm** \u2192 arpeggio **Dm**, play **D Aeolian (natural minor)** (diatonic minor \u2014 fits most i chords)."
+        },
+        {
+          "t_ms": 191.9,
+          "data": "- **G** \u2192 arpeggio **G**, play **G Ionian (major)** (diatonic, includes the 7 \u2014 careful on the IV chord)."
+        },
+        {
+          "t_ms": 191.9,
+          "data": "Each arpeggio spells the chord tones; the scale adds the passing notes for lines between them."
+        },
+        {
+          "t_ms": 191.9,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "N1",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:48+00:00"
+    },
+    {
+      "prompt": "which arpeggio fits Hm Q7",
+      "status": 200,
+      "transport_error": null,
+      "total_ms": 933.1,
+      "frames": [
+        {
+          "t_ms": 932.9,
+          "data": "{\"type\":\"routing\",\"agentId\":\"fallback-direct\",\"confidence\":0,\"routingMethod\":\"low-confidence-fallback\",\"trace\":{\"traceId\":\"8c656985705cc941c0a57b2b3de6fc13\",\"protocol\":\"w3c-trace-context\\u002Botel-genai\\u002Bag-ui\",\"runId\":\"run_2350df625ae64657850556354ab7d364\",\"steps\":[{\"name\":\"chat.request\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"gen_ai.operation.name\":\"chat\",\"chat.mode\":\"full\",\"history.turn_count\":0}},{\"name\":\"orchestration.answer\",\"status\":\"completed\",\"elapsedMs\":263,\"attributes\":{\"timeout.seconds\":180,\"agent.id\":\"skill.improvisation\",\"routing.method\":\"orchestrator-skill-semantic\",\"routing.confidence\":0.2,\"grounding.source\":null,\"candidate.count\":0,\"response.length\":316}},{\"name\":\"orchestration.fallback\",\"status\":\"completed\",\"elapsedMs\":0,\"attributes\":{\"fallback.reason\":\"low-confidence\",\"fallback.target\":\"direct\"}},{\"name\":\"gen_ai.chat.fallback\",\"status\":\"completed\",\"elapsedMs\":526,\"attributes\":{\"gen_ai.system\":\"ollama\",\"agent.id\":\"fallback-direct\",\"routing.method\":\"low-confidence-fallback\",\"timeout.seconds\":15,\"response.length\":299}}]},\"grounding\":null}"
+        },
+        {
+          "t_ms": 933.0,
+          "data": "The note Hm Q7 (also known as H) is a perfect 4th above the note Q."
+        },
+        {
+          "t_ms": 933.0,
+          "data": "To create an arpeggio based on this note, you'll need to find a chord that includes H and its neighboring notes."
+        },
+        {
+          "t_ms": 933.0,
+          "data": "Since Hm Q7 is a perfect 4th above Q, we can use the chord progression of Q, then move 4 semitones up to get to H."
+        },
+        {
+          "t_ms": 933.0,
+          "data": "[DONE]"
+        }
+      ],
+      "case": "N2",
+      "repeat": 1,
+      "at_utc": "2026-09-28T02:22:51+00:00"
+    }
+  ]
+}

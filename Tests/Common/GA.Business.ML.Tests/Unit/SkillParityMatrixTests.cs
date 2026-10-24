@@ -107,6 +107,13 @@ public class SkillParityMatrixTests
             typeof(GA.Business.ML.Agents.Skills.CommonTonesSkill),
             ["ga_dsl_eval"], "dsl-eval"),
 
+        // Reference skill added 2026-10-03 — Path B wrapper with no closure:
+        // the LLM answers functional-harmony concept questions from the
+        // verified SKILL.md body.
+        new("functional-harmony",    "functional-harmony",
+            typeof(GA.Business.ML.Agents.Skills.FunctionalHarmonySkill),
+            [], "reference"),
+
         // MCP-tool-driven skills (SKILL.md → ga_* tool → IOrchestratorSkill)
         new("interval",              "interval",
             typeof(GA.Business.ML.Agents.Skills.IntervalSkill),
