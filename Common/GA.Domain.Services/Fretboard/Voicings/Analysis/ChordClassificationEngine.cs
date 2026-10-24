@@ -159,15 +159,16 @@ public static class ChordClassificationEngine
         yield return ctx.IsOpenVoicing ? "open-voicing" : "closed-voicing";
 
         // Drop-voicing canonical form. Stored e.g. "Drop-2"; canonical key is "drop-2-voicings".
+        // Equality, not a substring: "Drop-2+4" and "Drop-3+4" are neither a drop 2 nor a drop 3.
         if (ctx.DropVoicing is { } d)
         {
             var norm = d.ToLowerInvariant().Replace(" ", "-");
-            if (norm.Contains("drop-2")) yield return "drop-2-voicings";
-            else if (norm.Contains("drop-3")) yield return "drop-3-voicings";
+            if (norm == "drop-2") yield return "drop-2-voicings";
+            else if (norm == "drop-3") yield return "drop-3-voicings";
         }
 
-        // Shell voicing heuristic: rootless + exactly 3 notes covers the canonical jazz shell.
-        if (ctx.IsRootless && ctx.NoteCount == 3)
+        // Shell voicing: the root in the bass, a third and a seventh (VoicingHarmonicAnalyzer.IsShellVoicing)
+        if (ctx.IsShellVoicing)
         {
             yield return "shell-voicing";
         }

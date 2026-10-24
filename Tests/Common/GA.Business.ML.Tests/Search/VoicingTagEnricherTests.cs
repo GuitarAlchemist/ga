@@ -186,19 +186,33 @@ public class VoicingTagEnricherTests
     }
 
     [Test]
-    public void ShellVoicing_RequiresRootlessAnd3Notes()
+    public void ShellVoicing_IsTheRootWithAThirdAndASeventh()
     {
+        // 3x34xx, G7: G2 F3 B3, the root in the bass, then the seventh and the third
         var shell = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "dominant", extension: "7th", noteCount: 3),
+            [43, 53, 59]).ToList();
+        Assert.That(shell, Does.Contain("shell-voicing"));
+
+        // D F A♭ has no seventh, rootless or not
+        var notShell = VoicingTagEnricher.Enrich(
             MakeCharacteristics(quality: "minor", extension: "7th",
                                 isRootless: true, noteCount: 3),
             [62, 65, 68]).ToList();
-        Assert.That(shell, Does.Contain("shell-voicing"));
-
-        var notShell = VoicingTagEnricher.Enrich(
-            MakeCharacteristics(quality: "minor", extension: "7th",
-                                isRootless: false, noteCount: 4),
-            [60, 63, 67, 70]).ToList();
         Assert.That(notShell, Does.Not.Contain("shell-voicing"));
+    }
+
+    [TestCase("Drop-2", "drop-2-voicings")]
+    [TestCase("Drop-3", "drop-3-voicings")]
+    [TestCase("Drop-2+4", null)]
+    [TestCase("Drop-3+4", null)]
+    public void DropVoicingTag_NamesASingleDrop(string dropVoicing, string? expected)
+    {
+        var tags = VoicingTagEnricher.Enrich(
+            MakeCharacteristics(quality: "major", extension: "7th", dropVoicing: dropVoicing),
+            [60, 67, 76, 83]).ToList();
+        string[] expectedTags = expected is null ? [] : [expected];
+        Assert.That(tags.Where(t => t.EndsWith("-voicings")), Is.EqualTo(expectedTags));
     }
 
     // ── Harmless-on-empty ──────────────────────────────────────────────────
