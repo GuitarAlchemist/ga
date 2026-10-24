@@ -36,8 +36,8 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 | 11 | round-trip | `Voicing` → msgpack → `Voicing` is byte-identical | OPTIC-K writer | C |
 | 12 | round-trip | F# YAML record → serialize → deserialize is field-identical | YamlKnowledgeLoader.fs | N |
 | 13 | round-trip | C# `ChordName` → display string → parse produces same `ChordName` | ChordIdentification.cs | T (127 cases) |
-| 14 | algebraic | Neo-Riemannian P, L, R are involutions: T∘T = id | NeoRiemannianConfig.fs | T (by construction) |
-| 15 | algebraic | PLR composites match: L∘P∘R = S, P∘L = N | same | C |
+| 14 | algebraic | Neo-Riemannian P, L, R are involutions: T∘T = id | NeoRiemannianConfig.fs | T (NeoRiemannianConfigTests) |
+| 15 | algebraic | PLR composites match: L∘P∘R = S, R∘L∘P = N | same | T (NeoRiemannianConfigTests) |
 | 16 | algebraic | T12 on any `PitchClassSet` returns the same set | PitchClassSet.cs | C |
 | 17 | algebraic | Double inversion: I∘I = id on PitchClassSet | same | N |
 | 18 | algebraic | Rotating a scale by its cardinality returns the same scale | ModeCatalog.cs | N |
@@ -100,7 +100,7 @@ Produced by ultrathink investigation dispatched 2026-04-17 — see task #85 for 
 | 3 | #19 `PrimeFormId` is self-representative | Silent corruption of equivalence classes → wrong chord IDs | 1-3 violations likely |
 | 4 | #3 YAML strings parse to enum values | Typos ("Sus4" vs "sus4") silently fall through to Unknown | 5-10 violations likely |
 | 5 | #17 Double inversion is identity | Catches PC-set rotation bugs immediately | Low, but cheap |
-| 6 | #15 PLR composites (L∘P∘R = S, P∘L = N) | Protects NeoRiemannian refactors | Medium |
+| 6 | #15 PLR composites (L∘P∘R = S, R∘L∘P = N) | shipped — `NeoRiemannianConfigTests`, S, N and H equal their three-letter words on 24/24 triads | n/a |
 | 7 | #24 `IntervalClassVector` length + sum | Off-by-one in IC histogram | Medium |
 | 8 | #29 `SchemaHashV4` C# ↔ Rust equality (in CI) | Silent schema drift = stale OPTIC-K index | ~once per release |
 | 9 | #30 mmap header dims == schema dims | Build-time rebuild omissions | Once per dim change |
