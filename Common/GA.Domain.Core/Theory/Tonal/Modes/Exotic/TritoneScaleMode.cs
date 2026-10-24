@@ -8,10 +8,11 @@ using Scales;
 ///     A Tritone scale mode (Petrushka scale)
 /// </summary>
 /// <remarks>
-///     The Tritone scale is a symmetrical scale built from alternating half steps and minor thirds.
-///     It consists of the notes C, Db, E, F#, G, A.
+///     The Tritone scale joins two major triads a tritone apart, C E G and Gb Bb Db (the Petrushka chord).
+///     It consists of the notes C, Db, E, Gb, G, Bb.
 ///     It's used in jazz and film scoring, and was notably used by Stravinsky in his ballet "Petrushka".
-///     Due to its symmetrical structure, it has only two distinct modes.
+///     Its steps, a half step, a minor third and a whole step, repeat a tritone higher: it has three distinct
+///     modes and six transpositions.
 ///     <see href="https://en.wikipedia.org/wiki/Tritone_scale" />
 /// </remarks>
 [PublicAPI]
